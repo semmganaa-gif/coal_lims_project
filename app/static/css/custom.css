@@ -1,0 +1,136 @@
+/* static/css/custom.css (ШИНЭЧИЛСЭН - Footer-ийн зайг багасгасан) */
+
+/* 1. Үндсэн өнгөний тохиргоо (Логоноос авсан) */
+:root {
+  /* ER Lab-ийн үндсэн өнгөнүүд */
+  --er-blue: #3a8bc7;
+  --er-yellow: #f7d002;
+  --er-tan: #b99c75;
+  --er-black: #333132;
+  --er-orange: #f0892f;
+  
+  /* Bootstrap-ийн үндсэн өнгийг дарж бичих */
+  --bs-primary: var(--er-blue);     /* Үндсэн өнгө (Цэнхэр) */
+  --bs-dark: var(--er-black);       /* Үндсэн текст (Хар) */
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-info: var(--er-tan);         /* Мэдээлэл (Бор) */
+  --bs-warning: var(--er-orange);   /* Анхааруулга (Улбар шар) */
+  --bs-danger: #dc3545;
+  --bs-light: #f8f9fa;
+  
+  /* LIMS-ийн Загварын өнгө */
+  --lims-bg: #f8f9fa; /* Цэвэрхэн цайвар саарал фон */
+  --lims-surface: #ffffff;
+  --lims-border: rgba(0, 0, 0, 0.08);
+  --lims-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+  --lims-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+  --bs-font-family-sans-serif: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 2. Үндсэн загвар (Body) */
+body {
+  font-family: var(--bs-font-family-sans-serif);
+  background-color: var(--lims-bg); /* Энгийн фон */
+  color: var(--bs-dark);
+  position: relative; 
+  z-index: 1;
+}
+
+/* 3. Navbar (Цэс) */
+.navbar {
+  background-color: var(--lims-surface) !important;
+  border-bottom: 1px solid var(--lims-border);
+  box-shadow: var(--lims-shadow);
+  padding: 0.75rem 1.5rem; 
+}
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none; 
+}
+.navbar-logo {
+  height: 36px; 
+  width: 36px;
+  object-fit: contain;
+}
+.navbar-brand .navbar-subtitle {
+  font-size: 0.9rem;
+  color: var(--bs-dark);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.navbar-nav.ms-auto {
+  align-items: center;
+}
+.navbar-corelink-logo {
+  height: 34px; 
+  width: auto;
+  margin-left: 15px;
+}
+
+/* 4. Картуудыг (Card) жигдлэх */
+.card {
+  border: 1px solid var(--lims-border);
+  border-radius: 0.75rem; 
+  box-shadow: var(--lims-shadow-sm);
+  background-color: var(--lims-surface);
+}
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--lims-border);
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+}
+.card-body {
+  padding: 1.25rem;
+}
+
+/* 5. Товчлуурууд (Button) */
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
+.btn-primary {
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: #327ab8;
+  --bs-btn-hover-border-color: #327ab8;
+}
+
+/* 6. Хүснэгтийн толгой (Ажлын хуудас) */
+.table-light th {
+  background-color: #f1f3f5;
+  color: var(--bs-dark);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+/* 7. Үндсэн Footer (Хөл) */
+/* (!!! ШИНЭЧЛЭЛ) Зайг нь багасгасан */
+.lims-footer {
+  text-align: center;
+  padding: 1rem 1rem 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: var(--bs-secondary);
+}
+
+/* 8. Арын фон (Watermark) */
+body::before {
+  content: "";
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; 
+  background-image: url('../images/corelink.logo.png');
+  background-repeat: repeat;
+  background-position: center center;
+  background-size: 300px;
+  opacity: 0.03;
+}

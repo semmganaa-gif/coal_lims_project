@@ -1,0 +1,408 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ title }}</h1>
+  </div>
+  <p class="text-muted">Химичдийн хадгалсан, ахлахын хяналт шаардлагатай шинжилгээний үр дүн.</p>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="start_date" class="form-label">Эхлэх огноо</label>
+            <input type="date" class="form-control" id="start_date" name="start_date"
+                   value="{{ request.args.get('start_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label for="end_date" class="form-label">Дуусах огноо</label>
+            <input type="date" class="form-control" id="end_date" name="end_date"
+                   value="{{ request.args.get('end_date','') }}">
+          </div>
+          <div class="col-md-4">
+            <label for="sample_name" class="form-label">Дээжний нэр</label>
+            <input type="text" class="form-control" id="sample_name" name="sample_name"
+                   placeholder="Хайх..." value="{{ request.args.get('sample_name','') }}">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Шүүх</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="myGrid" class="ag-theme-quartz" style="height: 600px; width: 100%;"></div>
+
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="reject-form" method="POST">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="rejectModalLabel">Үр дүн буцаах</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Хаах"></button>
+          </div>
+          <div class="modal-body">
+            <p class="small text-muted mb-2" id="reject-sample-info"></p>
+            <input type="hidden" id="reject-result-id" name="result_id" value="">
+            <div class="mb-3">
+              <label class="form-label">Буцаах ангилал <span class="text-danger">*</span></label>
+              <select name="rejection_category" id="rejection_category" class="form-select" required>
+                <option value="">-- Сонгох --</option>
+                <option value="measurement_error">1. Хэмжилтийн / тооцооллын алдаа</option>
+                <option value="documentation_error">2. Бичилт / бүртгэлийн алдаа</option>
+                <option value="equipment_or_env">3. Тоног төхөөрөмж / орчны асуудал</option>
+                <option value="sop_not_followed">4. Журам мөрдөөгүй</option>
+                <option value="incomplete_data">5. Дутуу өгөгдөл</option>
+                <option value="wrong_sample_or_task">6. Буруу дээж / буруу даалгавар</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Нэмэлт тайлбар <span class="text-danger">*</span></label>
+              <textarea name="rejection_comment" id="rejection_comment" rows="3" class="form-control" required>тоо буруу, дахин оруул</textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn" data-bs-dismiss="modal">Цуцлах</button>
+            <button type="submit" class="btn btn-danger">Буцаах</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+/* ----- 1. "МИНИ-ХҮСНЭГТ" ЗУРДАГ ФУНКЦ (Renderer) -----
+   Энэ нь бидний _review_aad.html-ыг орлож буй JavaScript renderer юм. */
+function ReviewDataRenderer(params) {
+  const data = params.data.raw_data || {};
+  const code = params.data.analysis_code;
+
+  // Bootstrap-ийн table стил ашиглана
+  let html = '<table class="table table-sm table-bordered mb-0" style="font-size: 0.8em; width: 100%; margin: 0;">';
+
+  //
+  // ▼▼▼ ЭНЭ ХЭСЭГТ ТАНЫ ШИНЖИЛГЭЭНИЙ ЗАГВАРУУДЫГ НЭМНЭ ▼▼▼
+  //
+
+  // --- 'Aad' (ҮНСЛЭГ) ---
+  if (code === 'Aad') {
+    const p1 = data.p1 || {};
+    const p2 = data.p2 || {};
+    html += `
+      <thead class="table-light">
+        <tr><th>Тигель №</th><th>Хоосон тигель (m1)</th><th>Дээжийн жин (m2)</th><th>Үнстэй тигель (m3)</th><th>Үр дүн</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${p1.num || p1.dish_num || '-'}</td>
+          <td>${p1.m1 || '-'}</td>
+          <td>${p1.m2_sample || p1.m2 || '-'}</td>
+          <td>${p1.m3_ashy || p1.m3 || '-'}</td>
+          <td>${p1.result ? Number(p1.result).toFixed(2) : '-'}</td>
+        </tr>
+        <tr>
+          <td>${p2.num || p2.dish_num || '-'}</td>
+          <td>${p2.m1 || '-'}</td>
+          <td>${p2.m2_sample || p2.m2 || '-'}</td>
+          <td>${p2.m3_ashy || p2.m3 || '-'}</td>
+          <td>${p2.result ? Number(p2.result).toFixed(2) : '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  // --- 'Mad' (ДОТООД ЧИЙГ) ---
+  else if (code === 'Mad') {
+    const p1 = data.p1 || {};
+    const p2 = data.p2 || {};
+    html += `
+      <thead class="table-light">
+        <tr><th>Аяга №</th><th>Хоосон аяга (m1)</th><th>Дээжтэй аяга (m2)</th><th>Хатаасан аяга (m3)</th><th>Үр дүн</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${p1.num || p1.dish_num || '-'}</td>
+          <td>${p1.m1 || '-'}</td>
+          <td>${p1.m2_sample || p1.m2 || '-'}</td>
+          <td>${p1.m3_dish_dry || p1.m3 || '-'}</td>
+          <td>${p1.result ? Number(p1.result).toFixed(2) : '-'}</td>
+        </tr>
+        <tr>
+          <td>${p2.num || p2.dish_num || '-'}</td>
+          <td>${p2.m1 || '-'}</td>
+          <td>${p2.m2_sample || p2.m2 || '-'}</td>
+          <td>${p2.m3_dish_dry || p2.m3 || '-'}</td>
+          <td>${p2.result ? Number(p2.result).toFixed(2) : '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  // --- 'Vad' (ДЭГДЭМХИЙ) ---
+  else if (code === 'Vad') {
+    const p1 = data.p1 || {};
+    const p2 = data.p2 || {};
+    html += `
+      <thead class="table-light">
+        <tr><th>Тигель №</th><th>Хоосон тигель (m1)</th><th>Дээжтэй тигель (m2)</th><th>Үлдэгдэлтэй тигель (m3)</th><th>Үр дүн</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${p1.num || p1.dish_num || '-'}</td>
+          <td>${p1.m1 || '-'}</td>
+          <td>${p1.m2_sample || p1.m2 || '-'}</td>
+          <td>${p1.m3_residue || p1.m3 || '-'}</td>
+          <td>${p1.result ? Number(p1.result).toFixed(2) : '-'}</td>
+        </tr>
+        <tr>
+          <td>${p2.num || p2.dish_num || '-'}</td>
+          <td>${p2.m1 || '-'}</td>
+          <td>${p2.m2_sample || p2.m2 || '-'}</td>
+          <td>${p2.m3_residue || p2.m3 || '-'}</td>
+          <td>${p2.result ? Number(p2.result).toFixed(2) : '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  // --- 'CSN' (ХӨӨЛТИЙН ЗЭРЭГ) ---
+  else if (code === 'CSN') {
+    html += `
+      <thead class="table-light">
+        <tr><th>Утга1</th><th>Утга2</th><th>Утга3</th><th>Утга4</th><th>Утга5</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center">${data.v1 || '-'}</td>
+          <td class="text-center">${data.v2 || '-'}</td>
+          <td class="text-center">${data.v3 || '-'}</td>
+          <td class="text-center">${data.v4 || '-'}</td>
+          <td class="text-center">${data.v5 || '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  // --- 'Gi' (CAKING INDEX) ---
+  else if (code === 'Gi') {
+    const p1 = data.p1 || {};
+    const p2 = data.p2 || {};
+    html += `
+      <thead class="table-light">
+        <tr><th>Тигель №</th><th>Масс-1 (m1)</th><th>Масс-2 (m2)</th><th>Масс-3 (m3)</th><th>Үр дүн</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${p1.num || '-'}</td>
+          <td>${p1.m1 || '-'}</td>
+          <td>${p1.m2 || '-'}</td>
+          <td>${p1.m3 || '-'}</td>
+          <td>${p1.result != null ? p1.result : '-'}</td>
+        </tr>
+        <tr>
+          <td>${p2.num || '-'}</td>
+          <td>${p2.m1 || '-'}</td>
+          <td>${p2.m2 || '-'}</td>
+          <td>${p2.m3 || '-'}</td>
+          <td>${p2.result != null ? p2.result : '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  // --- 'MT' (НИЙТ ЧИЙГ) ---
+  else if (code === 'MT') {
+    const p1 = data.p1 || {};
+    const p2 = data.p2 || {};
+    html += `
+      <thead class="table-light">
+        <tr><th>Бокс №</th><th>m1 (Хоосон)</th><th>m2 (Дээжтэй)</th><th>m3 (Хатаасан)</th><th>Үр дүн</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${p1.num || p1.box_num || '-'}</td>
+          <td>${p1.m1 || '-'}</td>
+          <td>${p1.m2 || '-'}</td>
+          <td>${p1.m3 || '-'}</td>
+          <td>${p1.result ? Number(p1.result).toFixed(2) : '-'}</td>
+        </tr>
+        <tr>
+          <td>${p2.num || p2.box_num || '-'}</td>
+          <td>${p2.m1 || '-'}</td>
+          <td>${p2.m2 || '-'}</td>
+          <td>${p2.m3 || '-'}</td>
+          <td>${p2.result ? Number(p2.result).toFixed(2) : '-'}</td>
+        </tr>
+      </tbody>`;
+  }
+
+  //
+  // ▲▲▲ ЭНЭ ХЭСЭГТ ТАНЫ ШИНЖИЛГЭЭНИЙ ЗАГВАРУУДЫГ НЭМНЭ ▲▲▲
+  //
+
+  else {
+    // Хэрэв загвар байхгүй бол түүхий JSON-ыг харуулна
+    return `<pre style="font-size: 0.8em; max-width: 400px; margin-bottom: 0;">${JSON.stringify(data, null, 2)}</pre>`;
+  }
+
+  html += '</table>';
+  return html;
+}
+
+/* ----- 2. "БУЦААХ/ЗӨВШӨӨРӨХ" ТОВЧ ЗУРДАГ ФУНКЦ (Renderer) ----- */
+function ActionsRenderer(params) {
+  const resultId = params.data.result_id;
+  const sampleCode = params.data.sample_code;
+  const analysisName = params.data.analysis_name;
+
+  // Зөвшөөрөх Form (хуудсыг дахин ачаална)
+  const approveForm = `
+    <form method="post" action="/api/update_result_status/${resultId}/approved" class="d-grid">
+      <button type="submit" class="btn btn-success btn-sm">Зөвшөөрөх</button>
+    </form>
+  `;
+
+  // Буцаах (Modal нээнэ)
+  const rejectButton = `
+    <button
+      type="button"
+      class="btn btn-danger btn-sm btn-open-reject-modal"
+      data-bs-toggle="modal"
+      data-bs-target="#rejectModal"
+      data-result-id="${resultId}"
+      data-sample-code="${sampleCode}"
+      data-analysis-name="${analysisName}"
+    >
+      Буцаах
+    </button>
+  `;
+
+  return `<div class="d-grid gap-1" style="vertical-align: top;">${rejectButton}${approveForm}</div>`;
+}
+
+/* ----- 3. AG-GRID-ИЙН ТОХИРГОО (GridOptions) ----- */
+const gridOptions = {
+  columnDefs: [
+    {
+      headerName: "Дээж / Шинжилгээ",
+      cellRenderer: params => {
+        const p = params.data;
+        const status = p.status;
+        let badge = '';
+        if (status === 'rejected') {
+          badge = '<span class="badge bg-danger ms-1">буцаасан</span>';
+        } else if (status === 'pending_review') {
+          badge = '<span class="badge bg-warning text-dark ms-1">хүлээгдэж</span>';
+        }
+        return `<strong>${p.sample_code}</strong><br><small class="text-muted">${p.analysis_name}</small> ${badge}`;
+      },
+      filter: true,
+      floatingFilter: true,
+      minWidth: 350
+    },
+    {
+      headerName: "Тооцооны үндсэн утгууд",
+      cellRenderer: ReviewDataRenderer,
+      autoHeight: true,
+      minWidth: 350,
+      flex: 1
+    },
+    {
+      headerName: "Тохирц (T)",
+      field: "t_value",
+      width: 100,
+      valueFormatter: p => (p.value !== null && p.value !== undefined) ? Number(p.value).toFixed(4) : '-'
+    },
+    {
+      headerName: "Эцсийн үр дүн / Дундаж",
+      field: "final_value",
+      width: 200,
+      valueFormatter: p => (p.value !== null && p.value !== undefined) ? Number(p.value).toFixed(4) : '-'
+    },
+    {
+      headerName: "Хийсэн / Огноо",
+      cellRenderer: p => `${p.data.user_name}<br><small class="text-muted">${p.data.updated_at}</small>`,
+      width: 180
+    },
+    {
+      headerName: "Үйлдэл",
+      cellRenderer: ActionsRenderer,
+      width: 120,
+      pinned: 'right'
+    }
+  ],
+  rowData: [],
+  rowHeight: null,
+  defaultColDef: {
+    resizable: true,
+    sortable: true,
+    suppressHeaderMenuButton: true,
+    cellStyle: { 'vertical-align': 'top' }
+  },
+  onFirstDataRendered: (params) => {
+    // params.api.autoSizeAllColumns();
+  }
+};
+
+/* ----- 4. ХУУДАС АЧААЛАХАД AG-GRID АЖИЛЛУУЛАХ ----- */
+document.addEventListener("DOMContentLoaded", () => {
+  const gridDiv = document.querySelector("#myGrid");
+  const gridApi = agGrid.createGrid(gridDiv, gridOptions);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const apiUrl = `/api/ahlah_data?${urlParams.toString()}`;
+
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      gridApi.setGridOption('rowData', data);
+    })
+    .catch(error => {
+      console.error('Error fetching data for grid:', error);
+      gridDiv.innerHTML = '<div class="alert alert-danger">Өгөгдөл ачаалахад алдаа гарлаа.</div>';
+    });
+});
+
+/* ----- 5. MODAL-ИЙН SCRIPT ----- */
+$(document).on('click', '.btn-open-reject-modal', function () {
+  $('#reject-result-id').val($(this).data('result-id'));
+  // FIX: this.data(...) биш, $(this).data(...)
+  const analysisName = $(this).data('analysis-name') || '';
+  $('#reject-sample-info').text($(this).data('sample-code') + ' / ' + analysisName);
+});
+
+$('#reject-form').on('submit', function (e) {
+  e.preventDefault();
+  const id = $('#reject-result-id').val();
+  const cat = $('#rejection_category').val();
+  const comment = $('#rejection_comment').val();
+  if (!id || !cat) { alert('Мэдээлэл дутуу'); return; }
+
+  const $btn = $(this).find('button[type="submit"]');
+  $btn.prop('disabled', true).text('Буцааж байна...');
+
+  $.ajax({
+    url: '/api/update_result_status/' + id + '/rejected',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+      rejection_category: cat,
+      rejection_comment: comment
+    }),
+    success: function () {
+      const m = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+      if (m) m.hide();
+      location.reload();
+    },
+    error: function(xhr) {
+      alert(xhr.responseJSON?.message || 'Алдаа гарлаа');
+      $btn.prop('disabled', false).text('Буцаах');
+    }
+  });
+});
+</script>
+{% endblock %}

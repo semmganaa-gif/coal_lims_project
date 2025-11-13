@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set current_qs = request.query_string.decode() %}
+
+<style>
+  :root{
+    --bg: radial-gradient(circle at top, #0f172a 0%, #0f172a 35%, #e2e8f0 36%, #f8fafc 100%);
+    --surface-solid: #ffffff;
+    --muted: #64748b;
+    --text: #0f172a;
+    --primary: #3b82f6;
+    --radius-lg: 16px;
+  }
+
+  body { background: var(--bg); background-attachment: fixed; }
+
+  /* ✅ Дээд хэсгүүд тогтмол; зөвхөн .grid-wrap дотор скроллоно */
+  .page-wrap{
+    height: 100%;
+    display: flex; flex-direction: column; gap: 12px;
+    overflow: hidden;
+  }
+
+  .lims-head{
+    background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
+    backdrop-filter: blur(18px);
+    border:1px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15,23,42,0.12);
+    padding:16px 18px 14px;
+    display:flex; justify-content:space-between; gap:1rem; align-items:center;
+  }
+  .lims-head h1{ font-size:1.05rem; margin:0; font-weight:700; color:var(--text); }
+  .text-muted{ color:var(--muted)!important; }
+
+  .filter-card{
+    background: rgba(248,250,252,0.75);
+    backdrop-filter: blur(16px);
+    border:1px solid rgba(148,163,184,0.18);
+    border-radius:var(--radius-lg);
+    box-shadow: 0 14px 40px rgba(15,23,42,0.03);
+  }
+  .filter-body{ padding: 14px; }
+  .filters-grid{
+    display:grid; grid-template-columns: 320px minmax(0,1fr);
+    gap:14px; align-items:stretch;
+  }
+  @media (max-width: 1100px){ .filters-grid{ grid-template-columns: 1fr; } }
+  .filter-left .form-label{ font-size:.7rem; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:600; margin-bottom:.25rem; }
+  .filter-left .form-control{ border-radius:12px; border:1px solid rgba(148,163,184,0.35); background:#fff; }
+  .filter-actions{ display:flex; gap:8px; }
+  .archive-actions-top{ margin-top:10px; display:flex; gap:8px; }
+  .filter-right{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+  .calendar-card{
+    background:#fff; border:1px solid rgba(148,163,184,0.25); border-radius:14px;
+    min-width: 235px; max-width: 260px; flex:0 0 auto;
+    box-shadow: 0 6px 18px rgba(15,23,42,0.03);
+  }
+  .calendar-header{ display:flex; justify-content:space-between; align-items:center; padding:8px 10px 4px; }
+  .calendar-title{ font-size:.75rem; font-weight:700; color:var(--text); }
+  .calendar-sub{ font-size:.62rem; color:var(--muted); text-transform:uppercase; }
+  .calendar-nav button{ border:none; background:transparent; color:var(--muted); font-size:.75rem; width:22px; height:22px; border-radius:100px; }
+  .calendar-table{ width:100%; border-collapse:separate; border-spacing:2px 3px; padding: 0 8px 5px; }
+  .calendar-table thead th{ text-align:center; font-size:.6rem; font-weight:500; color:var(--muted); }
+  .calendar-day{ text-align:center; font-size:.67rem; padding:3px 0; border-radius:8px; cursor:pointer; }
+  .calendar-day.other-month{ opacity:.35; }
+  .calendar-day.selected{ background: var(--primary); color:#fff; font-weight:600; }
+
+  /* ✅ Grid wrap – үлдсэн бүх өндрийг эзлээд, дотроо скролл */
+  .grid-wrap{ flex: 1 1 auto; min-height: 0; overflow: hidden; }
+
+  .card.table-card{
+    border:1px solid rgba(15,23,42,0.06); border-radius:18px; background:var(--surface-solid);
+    box-shadow:0 10px 30px rgba(15,23,42,0.05);
+    height:100%; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .table-footerbar{ border-top:1px solid rgba(15,23,42,0.06); padding:8px 4px 6px; display:flex; justify-content:space-between; align-items:center; }
+
+  /* ✅ AG Grid compact + курсор */
+  .ag-theme-alpine { --ag-font-size: 11px; --ag-row-height: 28px; --ag-header-height: 26px; --ag-list-item-height: 22px; }
+  .ag-theme-alpine .ag-root-wrapper,
+  .ag-theme-alpine .ag-body-viewport,
+  .ag-theme-alpine .ag-center-cols-viewport,
+  .ag-theme-alpine .ag-header,
+  .ag-theme-alpine .ag-cell { cursor: default; } /* I-beam арилгана */
+  .ag-theme-alpine .ag-floating-filter-body input,
+  .ag-theme-alpine input[type="text"],
+  .ag-theme-alpine input[type="number"] { cursor: text; }
+  .ag-theme-alpine .ag-cell a { cursor: pointer; }
+
+  .ag-theme-alpine .ag-cell { padding:0 6px !important; text-align: left; } /* тоог зүүнээс */
+  .ag-theme-alpine .ag-header-cell, .ag-theme-alpine .ag-header-group-cell { padding:0 6px !important; }
+  .ag-theme-alpine .ag-row { border-color: rgba(15,23,42,0.35) !important; }
+  .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell { border-right:1px solid rgba(15,23,42,0.35) !important; }
+  .ag-body-horizontal-scroll-viewport { height: 12px; }
+
+  .ajax-reject-btn{
+    border:none; background:transparent; font-size:10px; line-height:1; padding:0;
+    width:14px; height:14px; display:inline-flex; align-items:center; justify-content:center;
+    color:#f59e0b; cursor:pointer;
+  }
+  .result-cell-wrapper{ display:flex; align-items:center; gap:4px; height:100%; padding-left:3px; }
+  .ag-theme-alpine .highlight-cell { background-color: rgba(59,130,246,0.08) !important; font-weight:600; }
+</style>
+
+<div class="page-wrap">
+  <div class="lims-head">
+    <div>
+      <h1>{{ title }}</h1>
+      <div class="text-muted">Сүүлийн сонгосон хугацааны LIMS шинжилгээний нэгтгэл.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button id="exportCsvBtn" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-spreadsheet"></i> Excel-д Татах (CSV)</button>
+      <a href="{{ url_for('analysis.sample_summary') }}{% if current_qs %}?{{ current_qs }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-clockwise"></i> Дахин ачаалах
+      </a>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-body">
+      <form method="GET" action="{{ url_for('analysis.sample_summary') }}" id="mainFilterForm">
+        <input type="hidden" name="start_date" id="start_date_hidden" value="{{ request.args.get('start_date', '') }}">
+        <input type="hidden" name="end_date" id="end_date_hidden" value="{{ request.args.get('end_date', '') }}">
+
+        <div class="filters-grid">
+          <div class="filter-left">
+            <div class="mb-3">
+              <label for="filter-name" class="form-label">Дээжний нэр / Нэгж / Төрөл</label>
+              <input id="filter-name" name="filter_name" class="form-control form-control-sm" type="text"
+                     placeholder="ж.нь N2" value="{{ request.args.get('filter_name', '') }}">
+            </div>
+            <div class="filter-actions">
+              <button type="submit" class="btn btn-primary btn-sm" style="flex:auto;"><i class="bi bi-search"></i> Огноог Харах</button>
+              <a href="{{ url_for('analysis.sample_summary') }}" class="btn btn-outline-secondary btn-sm" style="flex:auto;">Цэвэрлэх</a>
+            </div>
+            <div class="archive-actions-top">
+              {% if show_archived %}
+              <button type="button" name="action" value="unarchive" class="btn btn-warning btn-sm" id="archiveBtn"><i class="bi bi-box-arrow-up"></i> Сонгосоныг сэргээх</button>
+              {% else %}
+              <button type="button" name="action" value="archive" class="btn btn-info btn-sm text-white" id="archiveBtn"><i class="bi bi-archive"></i> Сонгосоныг архивлах</button>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="filter-right">
+            {# КАЛЕНДАРИЙГ ХӨНДӨӨГҮЙ — таны одоогийн buildCalendar-ыг ашиглана #}
+            <div class="calendar-card" data-type="start">
+              <div class="calendar-header">
+                <div><div class="calendar-title">Эхлэх огноо</div><div class="calendar-sub" id="startCalLabel">---</div></div>
+                <div class="calendar-nav"><button type="button" data-dir="-1" data-cal="start">&#8249;</button><button type="button" data-dir="1" data-cal="start">&#8250;</button></div>
+              </div>
+              <table class="calendar-table" id="startCalendar"></table>
+            </div>
+
+            <div class="calendar-card" data-type="end">
+              <div class="calendar-header">
+                <div><div class="calendar-title">Дуусах огноо</div><div class="calendar-sub" id="endCalLabel">---</div></div>
+                <div class="calendar-nav"><button type="button" data-dir="-1" data-cal="end">&#8249;</button><button type="button" data-dir="1" data-cal="end">&#8250;</button></div>
+              </div>
+              <table class="calendar-table" id="endCalendar"></table>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+              <div class="form-check form-switch m-0 fs-6">
+                <input class="form-check-input" type="checkbox" role="switch" id="show_archived" name="show_archived"
+                       {% if show_archived %}checked{% endif %} onchange="document.getElementById('mainFilterForm').submit()">
+                <label class="form-check-label ms-1" for="show_archived">Архивыг харах</label>
+              </div>
+              <a href="{{ url_for('analysis.audit_hub') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-clock-history"></i> Аудит</a>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="card table-card">
+      <form method="POST" action="{{ url_for('analysis.sample_summary') }}" id="limsForm" style="display:flex;flex-direction:column;height:100%;">
+        <div id="myGrid" class="ag-theme-alpine" style="width:100%;height:100%;"></div>
+
+        <input type="hidden" name="sample_ids" id="selected_sample_ids">
+        <input type="hidden" name="action" id="action_hidden">
+
+        <div class="table-footerbar"></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
+
+<script>
+/* ----------------------------- CALENDAR: таны одоогийн buildCalendar ----------------------------- */
+function buildCalendar(containerId, labelId, current, selectedStr, onSelect){
+  const cont=document.getElementById(containerId), label=document.getElementById(labelId);
+  cont.innerHTML=""; const y=current.getFullYear(), m=current.getMonth();
+  const months=["1-р сар","2-р сар","3-р сар","4-р сар","5-р сар","6-р сар","7-р сар","8-р сар","9-р сар","10-р сар","11-р сар","12-р сар"];
+  label.textContent=months[m]+" "+y;
+  const thead=document.createElement('thead'), trh=document.createElement('tr');
+  ["Д","М","Л","П","Б","Б","Н"].forEach(d=>{const th=document.createElement('th');th.textContent=d;trh.appendChild(th);});
+  thead.appendChild(trh); cont.appendChild(thead);
+
+  const tbody=document.createElement('tbody');
+  const first=new Date(y,m,1); const start=first.getDay()===0?7:first.getDay();
+  const days=new Date(y,m+1,0).getDate(); const prevDays=new Date(y,m,0).getDate();
+  let day=1,next=1;
+  for(let r=0;r<6;r++){
+    const tr=document.createElement('tr'); let has=false;
+    for(let c=0;c<7;c++){
+      const td=document.createElement('td'); td.className="calendar-day";
+      const idx=r*7+c; let dnum, curr=true;
+      if(idx<start-1){ dnum=prevDays-(start-2-idx); td.classList.add('other-month'); curr=false; }
+      else if(day>days){ dnum=next++; td.classList.add('other-month'); curr=false; }
+      else { dnum=day++; has=true; }
+      td.textContent=dnum;
+      if(curr && selectedStr){
+        const [yy,mm,dd]=selectedStr.split('-').map(Number);
+        if(yy===y && mm===(m+1) && dd===dnum) td.classList.add('selected');
+      }
+      if(curr){
+        td.addEventListener('click', ()=>{
+          const mm=String(m+1).padStart(2,'0'), dd=String(dnum).padStart(2,'0');
+          const iso=`${y}-${mm}-${dd}`; onSelect(iso);
+          buildCalendar(containerId,labelId,current,iso,onSelect);
+        });
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+    if(!has && day>days) break;
+  }
+  cont.appendChild(tbody);
+}
+(function(){
+  const startHidden=document.getElementById('start_date_hidden');
+  const endHidden=document.getElementById('end_date_hidden');
+  const s=startHidden.value, e=endHidden.value;
+  let sCur=s?new Date(s.replace(/-/g,'/')):new Date();
+  let eCur=e?new Date(e.replace(/-/g,'/')):new Date();
+  function nav(cal,dir){
+    if(cal==='start'){ sCur=new Date(sCur.getFullYear(), sCur.getMonth()+dir, 1); renderS(); }
+    else { eCur=new Date(eCur.getFullYear(), eCur.getMonth()+dir, 1); renderE(); }
+  }
+  const renderS=()=>buildCalendar('startCalendar','startCalLabel',sCur,startHidden.value,(iso)=>startHidden.value=iso);
+  const renderE=()=>buildCalendar('endCalendar','endCalLabel',eCur,endHidden.value,(iso)=>endHidden.value=iso);
+  renderS(); renderE();
+  document.querySelectorAll('.calendar-nav button').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.cal, Number(b.dataset.dir))));
+})();
+</script>
+
+<script>
+/* ------------------------------ DATA PREP ------------------------------ */
+const tableData = [
+{%- for sample in samples -%}
+  {
+    "id": "{{ sample.id }}",
+    "name": {{ (sample.name or sample.sample_name or sample.sample_code or None) | tojson }},
+    "sample_code": {{ (sample.sample_code or None) | tojson }},
+    "report_url": "{{ url_for('analysis.sample_report', sample_id=sample.id) }}",
+    "client_name": {{ (sample.client_name or None) | tojson }},
+    "sample_type": {{ (sample.sample_type or None) | tojson }},
+    "received_date": {{ (sample.received_date.strftime('%Y-%m-%d %H:%M') if sample.received_date else None) | tojson }},
+    "analysis_date": {{ (analysis_dates_map.get(sample.id) if analysis_dates_map.get(sample.id) else None) | tojson }}
+    {%- for at in analysis_types %},
+    "{{ at.code }}": {{ (results_map.get(sample.id, {}).get(at.code, None)) | tojson }}
+    {%- endfor %}
+  }{% if not loop.last %},{% endif %}
+{%- endfor %}
+];
+const tableRows = tableData;
+
+/* ---------------------------- AG-GRID CONFIG --------------------------- */
+function toDateOrNull(v){ if(!v) return null; const d=new Date(String(v).replace(' ','T')); return isNaN(d)?null:d; }
+const dateFilterParams={ comparator:(f, cv)=>{ const d=toDateOrNull(cv); if(!d) return -1; const c=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); const ft=f.getTime(); if(c===ft) return 0; return (c<ft?-1:1);} };
+
+const precisionMap={ 'MT':1,'CSN':1,'Gi':0,'X':0,'Y':0,'Qgr,ad':0,'Qgr,ar':0,'Qnet,ar':0,'P':3,'P,d':3,'F':3,'F,d':3,'Cl':3,'Cl,d':3 };
+function formatByCode(code, raw){ if(raw===null||raw===undefined||raw===''||raw==='null') return ''; const n=Number(String(raw).replace(',','').trim()); if(Number.isNaN(n)) return ''; const dp=Object.prototype.hasOwnProperty.call(precisionMap,code)?precisionMap[code]:2; return n.toFixed(dp); }
+
+function sampleNameRenderer(p){
+  const name=p.value || p.data.sample_code || '-';
+  const title=p.data?.name || p.data?.sample_code || '';
+  return `<a class="sample-link" href="${p.data.report_url}" title="${title}">${name}</a>`;
+}
+function resultValueRenderer(p){
+  const data=p.value, code=p.colDef.field;
+  if(data==='null'||data===null) return '';
+  if(data && typeof data==='object'){
+    const raw=(data.value!==undefined && data.value!==null && data.value!=='null')?data.value:'';
+    const val=formatByCode(code, raw);
+    const status=data.status, rid=data.id;
+    if(status==='pending_review' || status==='approved'){
+      return `<div class="result-cell-wrapper" title="${val}">
+                ${status==='pending_review'
+                  ? `<span class="badge bg-warning text-dark" style="font-size:10px;line-height:1;">${val}</span>`
+                  : `<span class="result-value">${val}</span>`}
+                ${rid?`<button type="button" class="ajax-reject-btn" data-result-id="${rid}" title="Буцаах">↩</button>`:''}
+              </div>`;
+    }
+    return `<div class="result-cell-wrapper" title="${val}">
+              <span class="result-value">${val}</span>
+              ${rid?`<button type="button" class="ajax-reject-btn" data-result-id="${rid}" title="Буцаах">↩</button>`:''}
+            </div>`;
+  }
+  return formatByCode(code, data);
+}
+
+/* --------- ColumnDefs --------- */
+const columnDefs = [
+  { headerName:'', field:'_sel', checkboxSelection:true, headerCheckboxSelection:true,
+    headerCheckboxSelectionFilteredOnly:true, width:40,minWidth:40,maxWidth:40, pinned:'left',
+    sortable:false, filter:false, resizable:false, suppressMovable:true, lockPosition:'left',
+    valueGetter:p=>p.data?.id },
+
+  { headerName:'ID', field:'id', minWidth:50, width:60, maxWidth:120, pinned:'left',
+    sortable:true, filter:'agNumberColumnFilter', floatingFilter:true, resizable:true,
+    cellStyle:{textAlign:'left'} },
+
+  { headerName:'Дээжний нэр', field:'name', cellRenderer:sampleNameRenderer,
+    minWidth:220, width:240, pinned:'left', sortable:true, filter:'agTextColumnFilter',
+    floatingFilter:true, floatingFilterComponentParams:{suppressFilterButton:true, debounceMs:250},
+    resizable:true, wrapText:true, autoHeight:true,
+    tooltipValueGetter:p => (p.data?.name || p.data?.sample_code || ''), cellStyle:{lineHeight:'1.1'} },
+
+  { headerName:'Нэгж', field:'client_name', minWidth:110, width:120,
+    sortable:true, filter:'agTextColumnFilter', floatingFilter:true,
+    floatingFilterComponentParams:{suppressFilterButton:true, debounceMs:250}, resizable:true },
+
+  { headerName:'Төрөл', field:'sample_type', minWidth:60, width:65,
+    sortable:true, filter:'agTextColumnFilter', floatingFilter:true,
+    floatingFilterComponentParams:{suppressFilterButton:true, debounceMs:250}, resizable:true },
+
+  { headerName:'Бүртгэсэн', field:'received_date', minWidth:130, width:140,
+    sortable:true, filter:'agDateColumnFilter', filterParams:dateFilterParams, floatingFilter:true,
+    floatingFilterComponentParams:{suppressFilterButton:true}, resizable:true,
+    valueFormatter:p=> (p.value? String(p.value).replace('T',' ').slice(0,16):'') },
+
+  { headerName:'Шинжилсэн', field:'analysis_date', minWidth:130, width:140,
+    sortable:true, filter:'agDateColumnFilter', filterParams:dateFilterParams, floatingFilter:true,
+    floatingFilterComponentParams:{suppressFilterButton:true}, resizable:true,
+    valueFormatter:p=> (p.value? String(p.value).replace('T',' ').slice(0,16):'') },
+
+  {% for at in analysis_types %}
+  { headerName:"{{ at.code|fmt_code }}", field:"{{ at.code }}", cellRenderer:resultValueRenderer,
+    flex:1, minWidth:90, sortable:true, filter:'agNumberColumnFilter', floatingFilter:false,
+    resizable:true, movable:true, cellStyle:{textAlign:'left'},
+    cellClassRules:{ 'highlight-cell':(p)=>{ const v=p.value; if(v==null||v==='') return false; if(typeof v==='object') return (v.value??'').toString().trim()!==''; return v.toString().trim()!==''; } } },
+  {% endfor %}
+];
+
+const COL_STATE_KEY='sample_summary_col_state_v2';
+
+/* ---------------------------- Grid Options ---------------------------- */
+const gridOptions = {
+  columnDefs,
+  rowData: tableRows,
+  defaultColDef:{ resizable:false, sortable:true, filter:true, suppressHeaderMenuButton:true },
+  rowHeight:28, headerHeight:26, floatingFiltersHeight:28,
+  rowSelection:'multiple',
+  pagination:true, paginationPageSize:200,
+  domLayout:'normal',
+  suppressHorizontalScroll:false,
+  alwaysShowVerticalScroll:true,
+  alwaysShowHorizontalScroll:true,
+  getRowId:p=>String(p.data.id),
+  enableBrowserTooltips:true, tooltipShowDelay:200,
+  suppressCellFocus:true,
+
+  onGridReady(p){
+    if(tableRows && tableRows.length>0) p.api.setRowData(tableRows);
+    requestAnimationFrame(()=> p.columnApi.autoSizeColumns(['id'], true));
+    const saved=localStorage.getItem(COL_STATE_KEY);
+    if(saved){ try{ const st=JSON.parse(saved); requestAnimationFrame(()=> p.columnApi.applyColumnState({state:st, applyOrder:true})); }catch(e){} }
+  },
+  onFirstDataRendered:p=>p.columnApi.autoSizeColumns(['client_name','sample_type','received_date','analysis_date'], true),
+  onGridSizeChanged:p=>p.columnApi.autoSizeColumns(['client_name','sample_type','received_date','analysis_date'], true),
+
+  onColumnMoved:p=>localStorage.setItem(COL_STATE_KEY, JSON.stringify(p.columnApi.getColumnState())),
+  onColumnPinned:p=>localStorage.setItem(COL_STATE_KEY, JSON.stringify(p.columnApi.getColumnState())),
+  onColumnVisible:p=>localStorage.setItem(COL_STATE_KEY, JSON.stringify(p.columnApi.getColumnState())),
+  onColumnResized:p=>localStorage.setItem(COL_STATE_KEY, JSON.stringify(p.columnApi.getColumnState())),
+
+  onCellClicked(params){
+    const t=params.event.target;
+    if($(t).hasClass('ajax-reject-btn') || $(t).closest('.ajax-reject-btn').length){
+      const id=$(t).closest('.ajax-reject-btn').data('result-id');
+      if(!confirm("Үр дүнг буцаахад итгэлтэй байна уу?")) return;
+      $.post(`/api/update_result_status/${id}/rejected`)
+        .done(()=>{ alert('Үр дүн амжилттай буцаагдлаа. Хуудсыг шинэчилж байна.'); window.location.reload(); })
+        .fail((xhr)=>{ const m=xhr.responseJSON?xhr.responseJSON.message:'Үйлдэл амжилтгүй. API холболтыг шалгана уу.'; alert('Алдаа: '+m); });
+    }
+  }
+};
+
+/* ---------------------- Init + Actions ---------------------- */
+$(function(){
+  new agGrid.Grid(document.querySelector('#myGrid'), gridOptions);
+
+  $('#archiveBtn').on('click', function(e){
+    e.preventDefault(); if(!gridOptions.api) return;
+    const ids=gridOptions.api.getSelectedNodes().map(n=>n.data.id);
+    const action=$(this).attr('value');
+    if(ids.length===0){ alert("Үйлдэл хийх дээжийг сонгоно уу."); return; }
+    if(!confirm(`Сонгосон ${ids.length} дээжийг ${action==='archive'?'архивлахад':'сэргээхэд'} итгэлтэй байна уу?`)) return;
+    $('#selected_sample_ids').val(ids.join(',')); $('#action_hidden').val(action); $('#limsForm').submit();
+  });
+
+  $('#exportCsvBtn').on('click', function(){
+    if(!gridOptions.api) return;
+    const cell = (p)=> (p.value && typeof p.value==='object') ? (p.value.value??'') : (p.value??'');
+    const head = (p)=> p.column.getColDef().headerName || p.column.getColId();
+    gridOptions.api.exportDataAsCsv({ fileName:'sample_summary.csv', processCellCallback:cell, processHeaderCallback:head, suppressQuotes:false, columnSeparator:',' });
+  });
+});
+</script>
+{% endblock %}

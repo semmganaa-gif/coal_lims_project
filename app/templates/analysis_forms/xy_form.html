@@ -1,0 +1,44 @@
+{# X + Y нэг хуудас #}
+<div class="table-responsive">
+  <table class="table table-sm align-middle" id="xy-analysis-table">
+    <thead>
+      <tr>
+        <th style="width:46px">№</th>
+        <th>Дээжний нэр</th>
+        <th style="width:160px">X (мм)</th>
+        <th style="width:120px">Шалгалт (X)</th>
+        <th style="width:160px">Y (мм)</th>
+        <th style="width:120px">Шалгалт (Y)</th>
+        <th style="width:80px">Үйлдэл</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in samples %}
+      <tr data-sample-id="{{ s.id }}">
+        <td>{{ loop.index }}</td>
+        <td>
+          <div class="fw-semibold">{{ s.sample_code }}</div>
+          <div class="text-muted small">{{ s.client_name or '-' }}</div>
+        </td>
+
+        <td>
+          <input id="sample_{{ s.id }}_x_result" type="number" step="0.1" min="0"
+                 class="form-control form-control-sm form-input" placeholder="X (мм)">
+        </td>
+        <td class="calc-cell-x" data-sample-id="{{ s.id }}">-</td>
+
+        <td>
+          <input id="sample_{{ s.id }}_y_result" type="number" step="0.1" min="0"
+                 class="form-control form-control-sm form-input" placeholder="Y (мм)">
+        </td>
+        <td class="calc-cell-y" data-sample-id="{{ s.id }}">-</td>
+
+        <td>
+          <button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="{{ s.id }}"><i class="bi bi-x"></i></button>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

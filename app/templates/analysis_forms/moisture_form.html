@@ -1,0 +1,186 @@
+﻿{# --- app/templates/analysis_forms/moisture_form.html (ЗАСВАРЛАСАН) --- #}
+{# (X товч + “Буцаагдсан” бейж + буцаасан өгөгдлийг дахин ачаалах) #}
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover"
+         id="moisture-analysis-table"
+         style="min-width: 800px; font-size: 0.85rem;">
+    <thead class="table-light">
+      <tr>
+        <th rowspan="2" class="align-middle text-center">№</th>
+        <th rowspan="2" class="align-middle">Дээжийн нэр</th>
+        <th colspan="4" class="text-center">Түүхий өгөгдөл</th>
+        <th rowspan="2" class="align-middle text-center">Үр дүн (%)</th>
+        <th rowspan="2" class="align-middle text-center">Тохирц (T)</th>
+        <th rowspan="2" class="align-middle text-center">Дундаж %</th>
+        <th rowspan="2" class="align-middle text-center" style="width: 50px;">Үйлдэл</th>
+      </tr>
+      <tr>
+        <th class="text-center">Бюкс №</th>
+        <th class="text-center">Хоосон бюкс (m1)</th>
+        <th class="text-center">Дээжийн жин (m2)</th>
+        <th class="text-center">Хатаасан дээжтэй бюкс (m3)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for sample in samples %}
+      {# 1-р мөр (p1) #}
+      <tr data-sample-id="{{ sample.id }}"
+          data-parallel="1"
+          {% if sample.id in rejected_samples_info %}class="table-warning"{% endif %}>
+        <td rowspan="2" class="align-middle text-center">{{ loop.index }}</td>
+        <td rowspan="2" class="align-middle">
+          {{ sample.sample_code }}
+          {% if sample.id in rejected_samples_info %}
+            <span class="badge bg-danger ms-2"
+                  title="Буцаасан огноо: {{ rejected_samples_info[sample.id].rejected_at }}&#10;Шалтгаан: {{ rejected_samples_info[sample.id].reason }}">
+              Буцаагдсан
+            </span>
+          {% endif %}
+        </td>
+
+        {# p1 inputs #}
+        <td>
+          <input type="text"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p1_num"
+                 placeholder="Бюкс №">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p1_m1"
+                 placeholder="m1">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p1_m2"
+                 placeholder="m2">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p1_m3"
+                 placeholder="m3">
+        </td>
+
+        <td class="align-middle text-center result-cell" data-sample-id="{{ sample.id }}" data-parallel="1">-</td>
+        <td rowspan="2"
+            class="align-middle text-center diff-cell"
+            data-sample-id="{{ sample.id }}">-</td>
+        <td rowspan="2"
+            class="align-middle text-center fw-bold avg-cell"
+            data-sample-id="{{ sample.id }}">-</td>
+
+        <td rowspan="2" class="align-middle text-center">
+          <button class="btn btn-outline-danger btn-sm remove-sample-from-worksheet"
+                  data-sample-id="{{ sample.id }}"
+                  title="Жагсаалтаас хасах">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+      </tr>
+
+      {# 2-р мөр (p2) #}
+      <tr data-sample-id="{{ sample.id }}"
+          data-parallel="2"
+          {% if sample.id in rejected_samples_info %}class="table-warning"{% endif %}>
+        <td>
+          <input type="text"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p2_num"
+                 placeholder="Бюкс №">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p2_m1"
+                 placeholder="m1">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p2_m2"
+                 placeholder="m2">
+        </td>
+        <td>
+          <input type="number" step="0.0001"
+                 class="form-control form-control-sm form-input"
+                 id="sample_{{ sample.id }}_p2_m3"
+                 placeholder="m3">
+        </td>
+        <td class="align-middle text-center result-cell" data-sample-id="{{ sample.id }}" data-parallel="2">-</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="10" class="text-center text-muted py-5">
+          Ажлын жагсаалт хоосон байна. <br>
+          “Дээж сонгох / нэмэх” товчийг дарж шинжилгээ хийх дээжнүүдээ сонгоно уу.
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# 🧩 Буцааж дүргэх жижиг скрипт #}
+<script>
+  // analysis_page.html-ээс ирсэн map
+  const EXISTING_RESULTS = window.EXISTING_RESULTS || {};
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const rows = document.querySelectorAll('#moisture-analysis-table tbody tr[data-sample-id][data-parallel="1"]');
+
+    rows.forEach(function (row) {
+      const sampleId = row.getAttribute('data-sample-id');
+      const saved = EXISTING_RESULTS[sampleId];
+      if (!saved) return;
+
+      const raw = saved.raw_data || {};
+      const p1 = raw.p1 || {};
+      const p2 = raw.p2 || {};
+
+      // -------- p1 ----------
+      // moisture-ийн JS дээрээ бид 'bottle_num', 'm3_dish_dry' гэх нэршил ашигласан
+      const p1num = document.getElementById(`sample_${sampleId}_p1_num`);
+      const p1m1  = document.getElementById(`sample_${sampleId}_p1_m1`);
+      const p1m2  = document.getElementById(`sample_${sampleId}_p1_m2`);
+      const p1m3  = document.getElementById(`sample_${sampleId}_p1_m3`);
+
+      if (p1num) p1num.value = p1.bottle_num || p1.num || '';
+      if (p1m1)  p1m1.value  = p1.m1 ?? '';
+      if (p1m2)  p1m2.value  = p1.m2_sample ?? p1.m2 ?? '';
+      if (p1m3)  p1m3.value  = p1.m3_dish_dry ?? p1.m3 ?? '';
+
+      // -------- p2 ----------
+      const p2num = document.getElementById(`sample_${sampleId}_p2_num`);
+      const p2m1  = document.getElementById(`sample_${sampleId}_p2_m1`);
+      const p2m2  = document.getElementById(`sample_${sampleId}_p2_m2`);
+      const p2m3  = document.getElementById(`sample_${sampleId}_p2_m3`);
+
+      if (p2num) p2num.value = p2.bottle_num || p2.num || '';
+      if (p2m1)  p2m1.value  = p2.m1 ?? '';
+      if (p2m2)  p2m2.value  = p2.m2_sample ?? p2.m2 ?? '';
+      if (p2m3)  p2m3.value  = p2.m3_dish_dry ?? p2.m3 ?? '';
+
+      // -------- үр дүн / diff / avg ----------
+      const p1Cell = row.querySelector('.result-cell[data-parallel="1"]') || row.querySelector('.result-cell');
+      const p2Row  = document.querySelector(`#moisture-analysis-table tbody tr[data-sample-id="${sampleId}"][data-parallel="2"]`);
+      const p2Cell = p2Row ? (p2Row.querySelector('.result-cell[data-parallel="2"]') || p2Row.querySelector('.result-cell')) : null;
+
+      if (p1Cell && p1.result) p1Cell.textContent = parseFloat(p1.result).toFixed(2);
+      if (p2Cell && p2.result) p2Cell.textContent = parseFloat(p2.result).toFixed(2);
+
+      const diffCell = document.querySelector(`.diff-cell[data-sample-id="${sampleId}"]`);
+      const avgCell  = document.querySelector(`.avg-cell[data-sample-id="${sampleId}"]`);
+      if (diffCell && raw.diff) diffCell.textContent = parseFloat(raw.diff).toFixed(2);
+      if (avgCell && raw.avg)   avgCell.textContent  = parseFloat(raw.avg).toFixed(2);
+
+      // хүсвэл тооцоог дахин гүйцэтгэнэ
+      if (typeof window.calculateAndDisplayForRow === 'function') {
+        window.calculateAndDisplayForRow(sampleId, false);
+      }
+    });
+  });
+</script>

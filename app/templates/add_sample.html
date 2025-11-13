@@ -1,0 +1,553 @@
+﻿<form action="{{ url_for('main.index') }}?active_tab=add-pane" method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="row">
+        <!-- ЗҮҮН ТАЛ: ДЭЭЖНИЙ ЖАГСААЛТ + БҮРТГЭХ ТОВЧ -->
+        <div class="col-md-5">
+            <h4>Дээжний жагсаалт</h4>
+            <div id="sample-entry-container"
+                 style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                <p class="text-muted"><i>(Баруун талын тохиргоог хийгээд “Дээж үүсгэх” товчийг дарна уу)</i></p>
+            </div>
+
+            <!-- ✅ БҮРТГЭХ товчийг яг энэ баганын доор байрлууллаа -->
+            <div class="mt-3">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </div>
+
+        <!-- БАРУУН ТАЛ: ТОХИРГОО -->
+        <div class="col-md-7">
+            <h4>Тохиргоо</h4>
+
+            <div id="common-fields">
+                <p><b>{{ form.client_name.label }}:</b><br>
+                    {% for subfield in form.client_name %}
+                      <span style="margin-right: 15px;">{{ subfield }} {{ subfield.label }}</span>
+                    {% endfor %}
+                </p>
+                <p><b>{{ form.sample_type.label }}:</b><br>
+                   <span id="sample-type-container"><i>(Эхлээд дээрээс хүлээлгэн өгсөн нэгжийг сонгоно уу)</i></span>
+                </p>
+                <p><b>{{ form.sample_condition.label }}:</b><br>
+                    {% for subfield in form.sample_condition %}
+                      <span style="margin-right: 15px;">{{ subfield }} {{ subfield.label }}</span>
+                    {% endfor %}
+                </p>
+                <p><b>{{ form.sample_date.label }}:</b> {{ form.sample_date(id="sample_date") }}</p>
+                <p>{{ form.return_sample() }} <b>{{ form.return_sample.label }}</b></p>
+                <p><b>{{ form.delivered_by.label }}:</b><br>
+                   {{ form.delivered_by(size=40, class="form-control form-control-sm") }}</p>
+                <p><b>{{ form.prepared_date.label }}:</b> {{ form.prepared_date(id="prepared_date") }}</p>
+                <p><b>{{ form.prepared_by.label }}:</b><br>
+                   {{ form.prepared_by(size=40, class="form-control form-control-sm") }}</p>
+                <p><b>{{ form.notes.label }}:</b><br>{{ form.notes(rows=3, class="form-control") }}</p>
+            </div>
+            <hr>
+
+            <!-- CHPP тусгай тохиргоо -->
+            <div id="chpp-options" class="unit-specific-options"
+                 style="display: none; background-color: #f0f8ff; padding: 15px; border-radius: 5px;">
+                <h4>CHPP-ийн тусгай тохиргоо</h4>
+
+                <div id="chpp-2-hourly-options" class="chpp-subtype" style="display: none;">
+                    <h5>2 цагийн тохиргоо:</h5>
+                    <p><b>Ажиллаж буй модулиуд:</b><br>
+                        <span style="margin-right: 15px;">{{ form.chpp_2h_mod1() }} {{ form.chpp_2h_mod1.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_2h_mod2() }} {{ form.chpp_2h_mod2.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_2h_mod3() }} {{ form.chpp_2h_mod3.label }}</span>
+                    </p>
+                    <p><b>Бусад сонголт:</b><br>
+                        <span style="margin-right: 15px;">{{ form.chpp_2h_tc_missing(id="chpp_2h_tc_missing") }} {{ form.chpp_2h_tc_missing.label }}</span>
+                    </p>
+                </div>
+
+                <div id="chpp-4-hourly-options" class="chpp-subtype" style="display: none;">
+                    <h5>4 цагийн тохиргоо:</h5>
+                    <p><b>{{ form.chpp_4h_timeslot.label }}:</b> {{ form.chpp_4h_timeslot(class="form-select form-select-sm", id="chpp_4h_timeslot") }}</p>
+                    <p><b>Ажиллаж буй модулиуд:</b><br>
+                        <span style="margin-right: 15px;">{{ form.chpp_4h_mod1(id="chpp_4h_mod1") }} {{ form.chpp_4h_mod1.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_4h_mod2(id="chpp_4h_mod2") }} {{ form.chpp_4h_mod2.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_4h_mod3(id="chpp_4h_mod3") }} {{ form.chpp_4h_mod3.label }}</span>
+                    </p>
+                </div>
+
+                <div id="chpp-12-hourly-options" class="chpp-subtype" style="display: none;">
+                    <h5>12 цагийн тохиргоо:</h5>
+                    <p><b>Ажиллаж буй модулиуд:</b><br>
+                        <span style="margin-right: 15px;">{{ form.chpp_12h_mod1(id="chpp_12h_mod1") }} {{ form.chpp_12h_mod1.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_12h_mod2(id="chpp_12h_mod2") }} {{ form.chpp_12h_mod2.label }}</span>
+                        <span style="margin-right: 15px;">{{ form.chpp_12h_mod3(id="chpp_12h_mod3") }} {{ form.chpp_12h_mod3.label }}</span>
+                    </p>
+                </div>
+
+                <button type="button" class="generate-btn btn btn-info btn-sm mt-3">Дээж үүсгэх</button>
+            </div>
+
+            <!-- UHG/BN/QC/Proc олон үүсгэгч -->
+            <div id="multi-gen-options" class="unit-specific-options"
+                 style="display: none; background-color: #fff0f5; padding: 15px; border-radius: 5px;">
+                 <h4>Дээж үүсгэх тохиргоо (UHG/BN/QC/Proc)</h4>
+                 <p><b>{{ form.location.label }}:</b><br>
+                    {{ form.location(size=40, class="form-control form-control-sm", id="location") }}
+                 </p>
+                 <p id="product-field" style="display: none;">
+                    <b>{{ form.product.label }}:</b><br>
+                    {{ form.product(size=40, class="form-control form-control-sm", id="product") }}
+                 </p>
+                 <p><b>{{ form.sample_count.label }}:</b><br>
+                    {{ form.sample_count(class="form-control form-control-sm", type="number", min="1", id="sample_count") }}
+                 </p>
+                 <button type="button" class="generate-btn btn btn-info btn-sm mt-3">Дээж үүсгэх</button>
+            </div>
+
+            <!-- WTL -->
+            <div id="wtl-options" class="unit-specific-options"
+                 style="display: none; background-color: #f0fff0; padding: 15px; border-radius: 5px;">
+                <h4>WTL-ийн тохиргоо</h4>
+                <div id="wtl-lab-number-field" class="wtl-subtype" style="display: none;">
+                    <p><b>{{ form.lab_number.label }}:</b><br>
+                       {{ form.lab_number(size=40, class="form-control form-control-sm", id="lab_number") }}
+                    </p>
+                    <p class="text-muted"><i>“Бүртгэх” товчийг дарахад сонгосон төрлөөс хамаарч дээжүүд автоматаар үүснэ.</i></p>
+                </div>
+                <div id="wtl-other-field" class="wtl-subtype" style="display: none;">
+                    <p><b>Sample name:</b><br> {{ form.sample_code(size=40, class="form-control form-control-sm") }} </p>
+                </div>
+            </div>
+
+            <!-- LAB -->
+            <div id="lab-options" class="unit-specific-options" style="display: none;">
+                 <h4>LAB нэгжийн тохиргоо</h4>
+                 <p class="text-muted"><i>Энэ нэгжийн дээжний нэр (“CM”, “GBW”, “Test”) доорх “Бүртгэх” товчийг дархад автоматаар үүснэ.</i></p>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+{# Доорх script нь яг өмнө надад явуулсан JS-тэй (updateForm, generateSampleList, etc.) хамт index.html дотор байна.
+   ЭНД script байхгүй байх ёстой, зөвхөн form + layout байна. #}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ------------------------ DATA ------------------------
+  const sampleTypeOptions = {
+    'CHPP':   ['2 hourly', '4 hourly', '12 hourly'],
+    'UHG-Geo':['S','TR','GRD','TE','PE','CQ'],
+    'BN-Geo': ['S','TR','GRD','TE','PE','CQ'],
+    'QC':     ['HCC','SSCC','MASHCC','TC','Fine','Test'],
+    'WTL':    ['WTL','Size','FL','MG','Test'],
+    'Proc':   ['CHP','HCC','SSCC','MASHCC','Test'],
+    'LAB':    ['CM','GBW','Test']
+  };
+
+  const all_12h_samples = [ /* (танайхтай адил) */ 
+    {'name':'SC401','mod':'MOD I','condition':'Чийгтэй'},
+    {'name':'SC402','mod':'MOD I','condition':'Чийгтэй'},
+    {'name':'SC403','mod':'MOD I','condition':'Чийгтэй'},
+    {'name':'SC405','mod':'MOD I','condition':'Чийгтэй'},
+    {'name':'SC406','mod':'MOD I','condition':'Чийгтэй'},
+    {'name':'SC501','mod':'MOD I','condition':'Шингэн'},
+    {'name':'SP502_F','mod':'MOD I','condition':'Шингэн'},
+    {'name':'SP502_Pro','mod':'MOD I','condition':'Шингэн'},
+    {'name':'SP502_Rej','mod':'MOD I','condition':'Шингэн'},
+    {'name':'DR601','mod':'MOD I','condition':'Шингэн'},
+    {'name':'FC601','mod':'MOD I','condition':'Шингэн'},
+    {'name':'FC602','mod':'MOD I','condition':'Шингэн'},
+    {'name':'FCU601','mod':'MOD I','condition':'Шингэн'},
+    {'name':'FCU602','mod':'MOD I','condition':'Шингэн'},
+    {'name':'SC421','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'SC422','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'SC423','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'SC425','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'SC426','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'SC521','mod':'MOD II','condition':'Чийгтэй'},
+    {'name':'DR621','mod':'MOD II','condition':'Шингэн'},
+    {'name':'TBS520_F','mod':'MOD II','condition':'Хуурай'},
+    {'name':'TBS521_Pro','mod':'MOD II','condition':'Хуурай'},
+    {'name':'TBS521_Rej','mod':'MOD II','condition':'Хуурай'},
+    {'name':'TBS522_Pro','mod':'MOD II','condition':'Хуурай'},
+    {'name':'TBS522_Rej','mod':'MOD II','condition':'Хуурай'},
+    {'name':'FC621','mod':'MOD II','condition':'Шингэн'},
+    {'name':'FC622','mod':'MOD II','condition':'Шингэн'},
+    {'name':'FCU621','mod':'MOD II','condition':'Шингэн'},
+    {'name':'FCU622','mod':'MOD II','condition':'Шингэн'},
+    {'name':'SC441','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'SC442','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'SC443','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'SC445','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'SC446','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'SC541','mod':'MOD III','condition':'Чийгтэй'},
+    {'name':'DR641','mod':'MOD III','condition':'Шингэн'},
+    {'name':'TBS540_F','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS541_Pro','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS541_Rej','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS542_Pro','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS542_Rej','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS543_Pro','mod':'MOD III','condition':'Хуурай'},
+    {'name':'TBS543_Rej','mod':'MOD III','condition':'Хуурай'},
+    {'name':'FC641','mod':'MOD III','condition':'Шингэн'},
+    {'name':'FC642','mod':'MOD III','condition':'Шингэн'},
+    {'name':'FCU641','mod':'MOD III','condition':'Шингэн'},
+    {'name':'FCU642','mod':'MOD III','condition':'Шингэн'},
+    {'name':'TH701','mod':'MOD I','condition':'Шингэн'},
+    {'name':'TH721','mod':'MOD II','condition':'Шингэн'},
+    {'name':'TH741','mod':'MOD III','condition':'Шингэн'}
+  ];
+
+  const constant_12h_samples = [
+    {'name':'FP_A','condition':'Чийгтэй'},
+    {'name':'FP_B','condition':'Чийгтэй'},
+    {'name':'FP_C','condition':'Чийгтэй'},
+    {'name':'FP_D','condition':'Чийгтэй'},
+    {'name':'BP_dry','condition':'Чийгтэй'},
+    {'name':'BP_solid','condition':'Шингэн'}
+  ];
+
+  const unitAbbreviations = { 'UHG-Geo': 'U', 'BN-Geo': 'BN' };
+
+  // ------------------------ ELEMENTS ------------------------
+  const clientRadios          = document.querySelectorAll('input[name="client_name"]');
+  const sampleTypeContainer   = document.getElementById('sample-type-container');
+  const unitSpecificSections  = document.querySelectorAll('.unit-specific-options');
+  const chppSection           = document.getElementById('chpp-options');
+  const multiGenSection       = document.getElementById('multi-gen-options');
+  const productField          = document.getElementById('product-field');
+  const labSection            = document.getElementById('lab-options');
+  const wtlSection            = document.getElementById('wtl-options');
+  const wtlSubtypeSections    = document.querySelectorAll('.wtl-subtype');
+  const chppSubtypeSections   = document.querySelectorAll('.chpp-subtype');
+  const entryContainer        = document.getElementById('sample-entry-container');
+
+  // ------------------------ ӨНӨӨДРИЙН ОГНОО ------------------------
+  function getTodayString() {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth()+1).padStart(2,'0');
+    const d = String(today.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  const todayStr = getTodayString();
+  const sampleDateInput   = document.getElementById('sample_date');
+  const preparedDateInput = document.getElementById('prepared_date');
+  if (sampleDateInput && !sampleDateInput.value)   sampleDateInput.value   = todayStr;
+  if (preparedDateInput && !preparedDateInput.value) preparedDateInput.value = todayStr;
+
+  // ------------------------ UI UPDATE ------------------------
+  function updateForm() {
+    const selectedClient = document.querySelector('input[name="client_name"]:checked');
+
+    // бүх тусгай блокуудыг нуух + талбаруудыг reset
+    unitSpecificSections.forEach(s => s.style.display = 'none');
+    entryContainer.innerHTML = `<p class="text-muted"><i>(Тохиргоогоо хийгээд “Дээж үүсгэх” товчийг дарна уу)</i></p>`;
+    sampleTypeContainer.innerHTML = '<i>(Эхлээд дээрээс хүлээлгэн өгсөн нэгжийг сонгоно уу)</i>';
+
+    if (!selectedClient) {
+      labSection.style.display = 'block'; // default LAB
+      return;
+    }
+
+    const clientValue = selectedClient.value;
+    const types = sampleTypeOptions[clientValue] || [];
+    let radiosHtml = '';
+    types.forEach((type, idx) => {
+      const id = `sample_type-${idx}`;
+      radiosHtml += `<span style="margin-right:15px;">
+        <input type="radio" name="sample_type" value="${type}" id="${id}">
+        <label for="${id}">${type}</label>
+      </span>`;
+    });
+    sampleTypeContainer.innerHTML = radiosHtml || '<i>(Төрөл олдсонгүй)</i>';
+
+    // ✔ автоматаар эхний төрлийг сонгоод дэд тохиргоог шинэчлэх
+    const radios = document.querySelectorAll('#sample-type-container input[name="sample_type"]');
+    radios.forEach(r => {
+      r.removeEventListener('change', updateSubOptions);
+      r.addEventListener('change', updateSubOptions);
+    });
+    if (radios.length) {
+      radios[0].checked = true;
+    }
+
+    // Нэгж тус бүрийн хэсгийг харуулах
+    if (clientValue === 'CHPP') {
+      chppSection.style.display = 'block';
+      productField.style.display = 'none';
+      updateSubOptions(); // ✔ шууд дэд хэсгийг харуулна
+    } else if (clientValue === 'UHG-Geo' || clientValue === 'BN-Geo') {
+      multiGenSection.style.display = 'block';
+      productField.style.display = 'none';
+    } else if (clientValue === 'QC') {
+      multiGenSection.style.display = 'block';
+      productField.style.display = 'block';
+    } else if (clientValue === 'WTL') {
+      wtlSection.style.display = 'block';
+      productField.style.display = 'none';
+      updateSubOptions(); // ✔ WTL дэд талбар шууд
+    } else if (clientValue === 'Proc') {
+      multiGenSection.style.display = 'block';
+      productField.style.display = 'block';
+    } else if (clientValue === 'LAB') {
+      labSection.style.display = 'block';
+      productField.style.display = 'none';
+    }
+  }
+
+  function updateSubOptions() {
+    const selectedClient = document.querySelector('input[name="client_name"]:checked');
+    if (!selectedClient) return;
+
+    entryContainer.innerHTML = `<p class="text-muted"><i>(Тохиргоогоо хийгээд “Дээж үүсгэх” товчийг дарна уу)</i></p>`;
+    const selectedTypeRadio = document.querySelector('#sample-type-container input[name="sample_type"]:checked');
+
+    if (selectedClient.value === 'CHPP') {
+      chppSubtypeSections.forEach(s => s.style.display = 'none');
+      if (!selectedTypeRadio) return;
+      const t = selectedTypeRadio.value;
+      if (t === '2 hourly')  document.getElementById('chpp-2-hourly-options').style.display  = 'block';
+      if (t === '4 hourly')  document.getElementById('chpp-4-hourly-options').style.display  = 'block';
+      if (t === '12 hourly') document.getElementById('chpp-12-hourly-options').style.display = 'block';
+    }
+
+    if (selectedClient.value === 'WTL') {
+      wtlSubtypeSections.forEach(s => s.style.display = 'none');
+      if (!selectedTypeRadio) return;
+      const t = selectedTypeRadio.value;
+      if (t === 'WTL' || t === 'Size' || t === 'FL') {
+        document.getElementById('wtl-lab-number-field').style.display = 'block';
+      } else {
+        document.getElementById('wtl-other-field').style.display = 'block';
+      }
+    }
+  }
+
+  // ------------------------ HELPERS ------------------------
+  function get2hShiftCode() {
+    const hour = new Date().getHours();
+    if (hour >= 7 && hour < 9) return '_D1';
+    if (hour >= 9 && hour < 11) return '_D2';
+    if (hour >= 11 && hour < 13) return '_D3';
+    if (hour >= 13 && hour < 15) return '_D4';
+    if (hour >= 15 && hour < 17) return '_D5';
+    if (hour >= 17 && hour < 19) return '_D6';
+    if (hour >= 19 && hour < 21) return '_N1';
+    if (hour >= 21 && hour < 23) return '_N2';
+    if (hour >= 23 || hour < 1) return '_N3';
+    if (hour >= 1 && hour < 3)  return '_N4';
+    if (hour >= 3 && hour < 5)  return '_N5';
+    if (hour >= 5 && hour < 7)  return '_N6';
+    return '_UNKNOWN';
+  }
+  function get12hShiftCode() {
+    const hour = new Date().getHours();
+    return (hour >= 7 && hour < 19) ? '_D' : '_N';
+  }
+  function getFormattedDate() {
+    const dateInput = document.getElementById('sample_date').value;
+    if (!dateInput) return null;
+    const d = new Date(dateInput);
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}${m}${day}`;
+  }
+
+  // ------------------------ GENERATE ------------------------
+  function generateSampleList() {
+    const selectedClientRadio = document.querySelector('input[name="client_name"]:checked');
+    if (!selectedClientRadio) { alert('Хүлээлгэн өгсөн нэгжийг сонгоно уу!'); return; }
+    const selectedClient = selectedClientRadio.value;
+
+    const formattedDate = getFormattedDate();
+    if (!formattedDate) { alert('Дээжний огноог сонгоно уу!'); return; }
+
+    let samplesToGenerate = [];
+    let finalHtml = '';
+    let listType = '';
+
+    if (selectedClient === 'CHPP') {
+      const selectedTypeRadio = document.querySelector('#sample-type-container input[name="sample_type"]:checked');
+      if (!selectedTypeRadio) { alert('Дээжний төрөл сонгоно уу!'); return; }
+      const selectedType = selectedTypeRadio.value;
+
+      if (selectedType === '2 hourly') {
+        listType = 'chpp_2h';
+        const shiftCode = get2hShiftCode();
+        samplesToGenerate.push(`CC_${formattedDate}${shiftCode}`);
+        if (!document.getElementById('chpp_2h_tc_missing').checked) {
+          samplesToGenerate.push(`TC_${formattedDate}${shiftCode}`);
+        }
+        if (document.getElementById('chpp_2h_mod1').checked) samplesToGenerate.push(`PF211_${formattedDate}${shiftCode}`);
+        if (document.getElementById('chpp_2h_mod2').checked) samplesToGenerate.push(`PF221_${formattedDate}${shiftCode}`);
+        if (document.getElementById('chpp_2h_mod3').checked) samplesToGenerate.push(`PF231_${formattedDate}${shiftCode}`);
+
+        finalHtml = `<table class="table table-sm">
+          <thead><tr><th>№</th><th>Дээжний нэр</th><th>Жин (кг)</th></tr></thead><tbody>`;
+        samplesToGenerate.forEach((name, i) => {
+          finalHtml += `<tr>
+            <td>${i+1}</td>
+            <td>${name}<input type="hidden" name="sample_codes" value="${name}"></td>
+            <td><input type="number" step="0.01" name="weights" class="form-control form-control-sm" required></td>
+          </tr>`;
+        });
+        finalHtml += `</tbody></table>`;
+
+      } else if (selectedType === '4 hourly') {
+        listType = 'chpp_4h';
+        const timeSlot = document.getElementById('chpp_4h_timeslot').value;
+        if (!timeSlot) { alert('Цагийн бүс сонгоно уу!'); return; }
+
+        const mod1 = ['CF501','CF502','CF601/602'];
+        const mod2 = ['CF521','CF522','CF621/622'];
+        const mod3 = ['CF541','CF542','CF641/642'];
+
+        if (document.getElementById('chpp_4h_mod1').checked) samplesToGenerate.push(...mod1.map(s => `${s}_${formattedDate}_${timeSlot}`));
+        if (document.getElementById('chpp_4h_mod2').checked) samplesToGenerate.push(...mod2.map(s => `${s}_${formattedDate}_${timeSlot}`));
+        if (document.getElementById('chpp_4h_mod3').checked) samplesToGenerate.push(...mod3.map(s => `${s}_${formattedDate}_${timeSlot}`));
+
+        finalHtml = `<table class="table table-sm">
+          <thead><tr><th>№</th><th>Дээжний нэр</th></tr></thead><tbody>`;
+        samplesToGenerate.forEach((name, i) => {
+          finalHtml += `<tr><td>${i+1}</td><td>${name}<input type="hidden" name="sample_codes" value="${name}"></td></tr>`;
+        });
+        finalHtml += `</tbody></table>`;
+
+      } else if (selectedType === '12 hourly') {
+        listType = 'chpp_12h';
+        const condRadio = document.querySelector('#common-fields input[name="sample_condition"]:checked');
+        if (!condRadio) { alert('Дээжний төлөв байдлыг сонгоно уу!'); return; }
+        const condition = condRadio.value;
+
+        const mods = [];
+        if (document.getElementById('chpp_12h_mod1').checked) mods.push('MOD I');
+        if (document.getElementById('chpp_12h_mod2').checked) mods.push('MOD II');
+        if (document.getElementById('chpp_12h_mod3').checked) mods.push('MOD III');
+
+        const shift = get12hShiftCode();
+        const modSamples = mods.length ? all_12h_samples.filter(s => s.condition === condition && mods.includes(s.mod)) : [];
+        const constSamples = constant_12h_samples.filter(s => s.condition === condition);
+
+        let mod1Html = '<h6><input type="checkbox" class="select-all-column" data-column="mod1"> MOD I</h6>';
+        let mod2Html = '<h6><input type="checkbox" class="select-all-column" data-column="mod2"> MOD II</h6>';
+        let mod3Html = '<h6><input type="checkbox" class="select-all-column" data-column="mod3"> MOD III</h6>';
+        let otherHtml = '<h6><input type="checkbox" class="select-all-column" data-column="other"> Бусад</h6>';
+
+        let c1=0,c2=0,c3=0,cO=0;
+
+        modSamples.forEach(s => {
+          const id = `sample_12h_${s.name.replace(/[\s\/]+/g,'_')}`;
+          const val = `${s.name}_${formattedDate}${shift}`;
+          const cls = (s.mod==='MOD I')?'mod1-checkbox':(s.mod==='MOD II')?'mod2-checkbox':'mod3-checkbox';
+          const box = `<div class="form-check">
+              <input class="form-check-input sample-checkbox ${cls}" type="checkbox" name="sample_codes" value="${val}" id="${id}">
+              <label class="form-check-label" for="${id}">${s.name}</label>
+            </div>`;
+          if (s.mod==='MOD I'){ mod1Html+=box; c1++; }
+          else if (s.mod==='MOD II'){ mod2Html+=box; c2++; }
+          else { mod3Html+=box; c3++; }
+        });
+
+        constSamples.forEach(s => {
+          const id = `sample_12h_const_${s.name.replace(/[\s\/]+/g,'_')}`;
+          const val = `${s.name}_${formattedDate}${shift}`;
+          otherHtml += `<div class="form-check">
+              <input class="form-check-input sample-checkbox other-checkbox" type="checkbox" name="sample_codes" value="${val}" id="${id}">
+              <label class="form-check-label" for="${id}">${s.name}</label>
+            </div>`;
+          cO++;
+        });
+
+        if (c1||c2||c3||cO){
+          finalHtml = `<div class="row">
+            <div class="col-md-3">${c1?mod1Html:''}</div>
+            <div class="col-md-3">${c2?mod2Html:''}</div>
+            <div class="col-md-3">${c3?mod3Html:''}</div>
+            <div class="col-md-3">${cO?otherHtml:''}</div>
+          </div>`;
+        } else {
+          finalHtml = '<p class="text-danger"><i>Сонгосон нөхцөл/модульд тохирох дээж олдсонгүй.</i></p>';
+        }
+      }
+
+    } else if (['UHG-Geo','BN-Geo','QC','Proc'].includes(selectedClient)) {
+      listType = 'multi_gen';
+      const location   = document.getElementById('location').value;
+      const productEl  = document.getElementById('product');
+      const product    = productEl ? productEl.value : '';
+      const countInput = document.getElementById('sample_count');
+      const count      = parseInt(countInput.value, 10);
+      const typeRadio  = document.querySelector('#sample-type-container input[name="sample_type"]:checked');
+
+      if (!typeRadio) { alert('Дээжний төрөл сонгоно уу!'); return; }
+      const sampleType = typeRadio.value;
+      if (!location) { alert('Location оруулна уу!'); return; }
+      if (isNaN(count) || count < 1) { alert('Дээжний тоог зөв оруулна уу (1-ээс их)!'); return; }
+
+      for (let i=1; i<=count; i++){
+        const parts = [];
+        if (selectedClient==='QC' || selectedClient==='Proc') {
+          parts.push(location);
+          if (product) parts.push(product);
+          parts.push(sampleType);
+        } else {
+          const abbr = unitAbbreviations[selectedClient];
+          if (abbr) parts.push(abbr);
+          parts.push(sampleType, location);
+        }
+        parts.push(formattedDate, i);
+        samplesToGenerate.push(parts.join('_'));
+      }
+
+      finalHtml = `<table class="table table-sm">
+        <thead><tr><th>№</th><th>Дээжний нэр</th><th>Жин (кг)</th></tr></thead><tbody>`;
+      samplesToGenerate.forEach((name, idx) => {
+        finalHtml += `<tr>
+          <td>${idx+1}</td>
+          <td>${name}<input type="hidden" name="sample_codes" value="${name}"></td>
+          <td><input type="number" step="0.01" name="weights" class="form-control form-control-sm" required></td>
+        </tr>`;
+      });
+      finalHtml += `</tbody></table>`;
+
+    } else {
+      entryContainer.innerHTML = '<p class="text-muted"><i>Энэ нэгжид/төрөлд автоматаар дээж үүсгэх тохиргоо байхгүй. Доорх “Бүртгэх” товчийг дарна уу.</i></p>';
+      return;
+    }
+
+    if (listType) finalHtml += `<input type="hidden" name="list_type" value="${listType}">`;
+    entryContainer.innerHTML = finalHtml;
+
+    // 12h “баганаар сонгох”
+    document.querySelectorAll('.select-all-column').forEach(master => {
+      master.addEventListener('change', function(){
+        const col = this.getAttribute('data-column');
+        const boxes = document.querySelectorAll(`#sample-entry-container .${col}-checkbox`);
+        boxes.forEach(cb => cb.checked = master.checked);
+        master.indeterminate = false;
+      }, {once:false});
+    });
+    document.querySelectorAll('#sample-entry-container .sample-checkbox').forEach(cb => {
+      cb.addEventListener('change', function(){
+        const colClass = this.classList.contains('mod1-checkbox')?'mod1':
+                         this.classList.contains('mod2-checkbox')?'mod2':
+                         this.classList.contains('mod3-checkbox')?'mod3':
+                         this.classList.contains('other-checkbox')?'other':'';
+        if (!colClass) return;
+        const master = document.querySelector(`.select-all-column[data-column="${colClass}"]`);
+        if (!master) return;
+        const allInCol = document.querySelectorAll(`#sample-entry-container .${colClass}-checkbox`);
+        const allChecked = Array.from(allInCol).every(x => x.checked);
+        const anyChecked = Array.from(allInCol).some(x => x.checked);
+        master.checked = allChecked;
+        master.indeterminate = !allChecked && anyChecked;
+      }, {once:false});
+    });
+  }
+
+  // ------------------------ EVENTS ------------------------
+  clientRadios.forEach(r => r.addEventListener('change', updateForm));
+  document.querySelectorAll('.generate-btn').forEach(btn => btn.addEventListener('click', generateSampleList));
+  updateForm(); // эхний ачаалалт
+});
+</script>

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Бортого тогтмол — жагсаалт</h3>
+
+    {% if can_create %}
+      <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
+        <i class="bi bi-plus-circle"></i> Шинэ тогтмол оруулах
+      </a>
+    {% endif %}
+  </div>
+
+  <p class="text-muted small">
+    Химич: зөвхөн харах. Ахлах/Админ: шинэ тогтмол оруулах боломжтой.
+  </p>
+
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th style="width:140px;">Бортого №</th>
+          <th style="width:120px;">Идэвхтэй</th>
+          <th>Сүүлийн дундаж (m₂)</th>
+          <th style="width:110px;">Темп. (°C)</th>
+          <th style="width:210px;">Тохиргоо хүчинтэй огноо</th>
+          <th style="width:170px;">Үүсгэсэн огноо</th>
+          {% if can_edit_delete %}
+            <th style="width:160px;" class="text-end">Үйлдэл</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bottles %}
+          {% set last = latest_by_bottle.get(b.id) %}
+          <tr>
+            <td>{{ b.serial_no }}</td>
+            <td>
+              {% if b.is_active %}
+                <span class="badge bg-success">Active</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td>{{ ('%.5f' % last.avg_value) if last else '—' }}</td>
+            <td>{{ ('%.1f' % last.temperature_c) if last else '—' }}</td>
+            <td>{{ last.effective_from.strftime('%Y-%m-%d %H:%M') if last and last.effective_from else '—' }}</td>
+            <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '—' }}</td>
+
+            {% if can_edit_delete %}
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('settings.bottle_edit', bottle_id=b.id) }}">
+                  <i class="bi bi-pencil-square"></i> Засах
+                </a>
+
+                <form class="d-inline" method="post"
+                      action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
+                      onsubmit="return confirm('Бортого {{ b.serial_no }}-г бүр мөсөн устгах уу? (түүх өгөгдөл хамт устна)');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i> Устгах
+                  </button>
+                </form>
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

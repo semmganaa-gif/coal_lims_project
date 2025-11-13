@@ -1,0 +1,44 @@
+{# CRI + CSR нэг хуудас #}
+<div class="table-responsive">
+  <table class="table table-sm align-middle" id="cricsr-analysis-table">
+    <thead>
+      <tr>
+        <th style="width:46px">№</th>
+        <th>Дээжний нэр</th>
+        <th style="width:160px">CRI (%)</th>
+        <th style="width:120px">Шалгалт (CRI)</th>
+        <th style="width:160px">CSR (%)</th>
+        <th style="width:120px">Шалгалт (CSR)</th>
+        <th style="width:80px">Үйлдэл</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for s in samples %}
+      <tr data-sample-id="{{ s.id }}">
+        <td>{{ loop.index }}</td>
+        <td>
+          <div class="fw-semibold">{{ s.sample_code }}</div>
+          <div class="text-muted small">{{ s.client_name or '-' }}</div>
+        </td>
+
+        <td>
+          <input id="sample_{{ s.id }}_cri_result" type="number" step="0.1" min="0" max="100"
+                 class="form-control form-control-sm form-input" placeholder="CRI %">
+        </td>
+        <td class="calc-cell-cri" data-sample-id="{{ s.id }}">-</td>
+
+        <td>
+          <input id="sample_{{ s.id }}_csr_result" type="number" step="0.1" min="0" max="100"
+                 class="form-control form-control-sm form-input" placeholder="CSR %">
+        </td>
+        <td class="calc-cell-csr" data-sample-id="{{ s.id }}">-</td>
+
+        <td>
+          <button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="{{ s.id }}"><i class="bi bi-x"></i></button>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

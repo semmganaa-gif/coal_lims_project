@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+  :root{ --grid:#e5e7eb; --head:#f8fafc; }
+  .sheet{ background:#fff; border:1px solid var(--grid); border-radius:12px; padding:10px; }
+  .unit{ margin-bottom:22px; }
+  .unit h5{ margin:6px 0 10px; font-weight:700; }
+  .subgrid{ display:grid; grid-template-columns: repeat(2, minmax(640px,1fr)); gap:12px; }
+  @media (max-width: 1600px){ .subgrid{ grid-template-columns: 1fr; } }
+
+  table.reg{ width:100%; border-collapse:collapse; font-size:12px; }
+  .reg th, .reg td{ border:1px solid #cbd5e1; padding:4px 6px; white-space:nowrap; text-align:right; }
+  .reg thead th{ position:sticky; top:0; background:var(--head); z-index:2; }
+  .left{ text-align:left; background:#eef2ff; font-weight:700; }
+  .cap{ background:#f3f4f6; text-align:left; font-weight:700; }
+  .sum{ font-weight:700; }
+  .toolbar{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+</style>
+
+<div class="sheet">
+  <div class="toolbar">
+    <form method="get">
+      <select name="year" class="form-select form-select-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
+        {% for y in range(year-3, year+2) %}
+          <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ report_url }}"><i class="bi bi-arrow-clockwise"></i> Дахин ачаалах</a>
+    <button class="btn btn-sm btn-success" id="exportAll"><i class="bi bi-file-earmark-spreadsheet"></i> Бүгдийг CSV</button>
+  </div>
+
+  {% for unit, subs in data %}
+    <div class="unit">
+      <h5>{{ unit }}</h5>
+      <div class="subgrid">
+        {% for s in subs %}
+          <div class="table-wrap" style="overflow:auto; max-height:520px;">
+            <table class="reg">
+              <thead>
+                <tr>
+                  <th class="left">{{ s.stype }}</th>
+                  {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                    <th>{{ m }}</th>
+                  {% endfor %}
+                  <th class="sum">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cap">Дээжний тоо</td>
+                  {% for m in range(1,13) %}
+                    <td class="cell cell-samples"
+                        data-kind="samples"
+                        data-unit="{{ unit }}"
+                        data-stype="{{ s.stype }}"
+                        data-month="{{ m }}"
+                        style="cursor:pointer;">
+                      {{ s.sample_cnt[m] }}
+                    </td>
+                  {% endfor %}
+                  <td class="sum">{{ s.sample_total }}</td>
+                </tr>
+
+                {% for code, monthly, row_total in s.prop_rows %}
+                  <tr>
+                    <td class="left">{{ code }}</td>
+                    {% for m in range(1,13) %}
+                      <td class="cell cell-code"
+                          data-kind="code"
+                          data-code="{{ code }}"
+                          data-unit="{{ unit }}"
+                          data-stype="{{ s.stype }}"
+                          data-month="{{ m }}"
+                          style="cursor:pointer;">
+                        {{ monthly[m] }}
+                      </td>
+                    {% endfor %}
+                    <td class="sum">{{ row_total }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+
+  <hr class="my-3">
+  <h5>Grand total (бүх нэгж/төрөл)</h5>
+  <div style="overflow:auto; max-height:520px;">
+    <table class="reg">
+      <thead>
+        <tr>
+          <th class="left">Нэр</th>
+          {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+            <th>{{ m }}</th>
+          {% endfor %}
+          <th class="sum">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cap">Дээжний тоо</td>
+          {% for m in range(1,13) %}<td>{{ grand_samples[m] }}</td>{% endfor %}
+          <td class="sum">{{ grand_samples.values()|sum }}</td>
+        </tr>
+        {% for code, monthly, total in grand_rows %}
+          <tr>
+            <td class="left">{{ code }}</td>
+            {% for m in range(1,13) %}<td>{{ monthly[m] }}</td>{% endfor %}
+            <td class="sum">{{ total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Drill-down Modal -->
+<div class="modal fade" id="cellModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Дэлгэрэнгүй</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="cellInfo" class="mb-2 text-muted"></div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>Sample ID</th>
+                <th>Код</th>
+                <th>Дээжний нэр</th>
+                <th>Дотоод код</th>
+                <th>Огноо</th>
+                <th>Тайлан</th>
+              </tr>
+            </thead>
+            <tbody id="cellRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Хаах</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // CSV экспорт – бүх хүснэгтийг нэг файлд
+  document.getElementById('exportAll').addEventListener('click', ()=>{
+    const blocks = document.querySelectorAll('.unit');
+    const out = [];
+    blocks.forEach(unit=>{
+      const unitTitle = unit.querySelector('h5').innerText.trim();
+      out.push('"' + unitTitle.replace(/"/g,'""') + '"');
+      unit.querySelectorAll('table.reg').forEach(t=>{
+        const subTitle = t.querySelector('thead th.left').innerText.trim();
+        out.push('"' + subTitle.replace(/"/g,'""') + '"');
+        t.querySelectorAll('tr').forEach(tr=>{
+          const cells = [...tr.querySelectorAll('th,td')].map(td => {
+            return '"' + td.innerText.trim().replace(/"/g,'""') + '"';
+          });
+          out.push(cells.join(','));
+        });
+        out.push('');
+      });
+      out.push('');
+    });
+    const blob = new Blob([out.join('\\n')], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'monthly_registers_{{ year }}.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // Drill-down
+  const modalEl = document.getElementById('cellModal');
+  const modal = new bootstrap.Modal(modalEl);
+  const info  = document.getElementById('cellInfo');
+  const body  = document.getElementById('cellRows');
+
+  async function openDetails(params) {
+    const qs = new URLSearchParams(params).toString();
+    const url = `/reports/monthly_registers_strict_cell?${qs}`;
+    body.innerHTML = '<tr><td colspan="6">Түр хүлээнэ үү…</td></tr>';
+    info.textContent = `Нэгж: ${params.unit} · Төрөл: ${params.stype} · Сар: ${params.month} · ` +
+                       (params.kind === 'samples' ? 'Дээжний тоо' : ('Код: ' + params.code));
+    modal.show();
+    try{
+      const r = await fetch(url);
+      const j = await r.json();
+      if(!j.ok){ body.innerHTML = `<tr><td colspan="6">Алдаа: ${j.message||'unknown'}</td></tr>`; return; }
+      if(j.items.length === 0){ body.innerHTML = '<tr><td colspan="6">Хоосон</td></tr>'; return; }
+      body.innerHTML = j.items.map(it=>{
+        const dt = it.analysis_date ? it.analysis_date.replace('T',' ') : '';
+        return `<tr>
+          <td>${it.sample_id}</td>
+          <td>${it.code||''}</td>
+          <td>${it.name||''}</td>
+          <td>${it.sample_code||''}</td>
+          <td>${dt}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="${it.report_url}" target="_blank">Report</a></td>
+        </tr>`;
+      }).join('');
+    }catch(e){
+      body.innerHTML = `<tr><td colspan="6">Сүлжээний алдаа</td></tr>`;
+    }
+  }
+
+  document.querySelectorAll('.cell-samples').forEach(td=>{
+    td.addEventListener('click', ()=>{
+      openDetails({
+        year: {{ year }},
+        unit: td.dataset.unit,
+        stype: td.dataset.stype,
+        month: td.dataset.month,
+        kind: 'samples'
+      });
+    });
+  });
+  document.querySelectorAll('.cell-code').forEach(td=>{
+    td.addEventListener('click', ()=>{
+      openDetails({
+        year: {{ year }},
+        unit: td.dataset.unit,
+        stype: td.dataset.stype,
+        month: td.dataset.month,
+        kind: 'code',
+        code: td.dataset.code
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

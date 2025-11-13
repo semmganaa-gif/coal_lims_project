@@ -1,0 +1,95 @@
+{# Хатуугийн агуулага (Solid) – A/B/C загвар, параллельгүй #}
+{% set _rows = (worksheet_samples if worksheet_samples is defined else samples) %}
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover" id="solid-analysis-table"
+         style="min-width:980px;font-size:.9rem;">
+    <thead class="table-light">
+      <tr>
+        <th class="text-center align-middle" style="width:44px">№</th>
+        <th class="align-middle" style="min-width:220px">Дээжийн нэр</th>
+
+        <th class="text-center align-middle" style="width:160px">
+          Дээжийн жин A (кг)<br><small>(хувин + шингэн)</small>
+        </th>
+        <th class="text-center align-middle" style="width:140px">
+          Хувингийн жин B (кг)
+        </th>
+        <th class="text-center align-middle" style="width:160px">
+          Шингэн дээжийн жин A−B (кг)
+        </th>
+        <th class="text-center align-middle" style="width:160px">
+          Хатаасны дараах дээжийн жин C (кг)
+        </th>
+        <th class="text-center align-middle" style="width:130px">
+          Хатуугийн агуулага, %<br><small>C×100/(A−B)</small>
+        </th>
+
+        <th class="text-center align-middle" style="width:54px">Үйлдэл</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for s in _rows %}
+      {% set sid = s.id %}
+      <tr data-sample-id="{{ sid }}">
+        <td class="text-center align-middle">{{ loop.index }}</td>
+
+        <td class="align-middle">
+          <div>{{ s.sample_code or s.name or s.sample_name }}</div>
+          {% if rejected_samples_info is defined and rejected_samples_info[sid|string] %}
+            {% set info = rejected_samples_info[sid|string] %}
+            <span class="badge bg-danger mt-1"
+                  title="Буцаасан: {{ info.rejected_at }}&#10;Шалтгаан: {{ info.reason }}">Буцаагдсан</span>
+          {% endif %}
+        </td>
+
+        {# A — (bucket + slurry) #}
+        <td>
+          <input id="sample_{{sid}}_A"
+                 class="form-control form-control-sm form-input"
+                 type="number" step="0.001" inputmode="decimal"
+                 placeholder="12.200">
+        </td>
+
+        {# B — bucket #}
+        <td>
+          <input id="sample_{{sid}}_B"
+                 class="form-control form-control-sm form-input"
+                 type="number" step="0.001" inputmode="decimal"
+                 placeholder="1.050">
+        </td>
+
+        {# A−B — auto (readonly) #}
+        <td>
+          <input id="sample_{{sid}}_AB"
+                 class="form-control form-control-sm bg-light"
+                 type="text" readonly placeholder="—">
+        </td>
+
+        {# C — dry #}
+        <td>
+          <input id="sample_{{sid}}_C"
+                 class="form-control form-control-sm form-input"
+                 type="number" step="0.001" inputmode="decimal"
+                 placeholder="3.026">
+        </td>
+
+        {# % — result #}
+        <td class="text-center align-middle fw-bold">
+          <span class="solid-pct" data-sample-id="{{sid}}">-</span>
+        </td>
+
+        <td class="text-center align-middle">
+          <a href="#" class="text-danger remove-sample-from-worksheet"
+             data-sample-id="{{ sid }}" title="Жагсаалтаас хасах">✕</a>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="text-center text-muted py-5">
+        Ажлын жагсаалт хоосон байна. “Дээж сонгох / нэмэх”-ийг дарна уу.
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

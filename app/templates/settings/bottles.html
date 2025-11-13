@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Бортого тогтмол</h3>
+    <a class="btn btn-outline-primary" href="{{ url_for('settings.new_bottle_constant') }}">
+      <i class="bi bi-plus-circle"></i> Хоосон тодорхойлолт (шинэ)
+    </a>
+  </div>
+
+  <div class="alert alert-info small">
+    7.4.1–7.4.8: 20 ± 0.5 °C, 3 хэмжилт, тохирц ≤ <code>0.0015 g</code>.
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>Бортогын №</th><th>Нэршил</th>
+          <th>Идэвхтэй тогтмол</th><th>T (°C)</th><th>Хүчинтэй</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bottles %}
+        {% set ac = active_map.get(b.id) %}
+        <tr>
+          <td>{{ b.id }}</td>
+          <td class="fw-semibold">{{ b.serial_no }}</td>
+          <td>{{ b.label or '' }}</td>
+          <td>
+            {% if ac %}
+              <span class="badge text-bg-success">K = {{ '%.5f'|format(ac.avg_value) }}</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Тогтмолгүй</span>
+            {% endif %}
+          </td>
+          <td>{{ ac.temperature_c if ac else '' }}</td>
+          <td>{{ ac.effective_from.strftime('%Y-%m-%d') if ac else '' }}</td>
+          <td class="text-end">
+            {% if ac and not ac.approved_at %}
+            <form method="post" action="{{ url_for('settings.approve_bottle_constant', const_id=ac.id) }}">
+              <button class="btn btn-sm btn-success">Батлах</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

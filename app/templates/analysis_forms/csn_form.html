@@ -1,0 +1,87 @@
+﻿{# --- templates/analysis_forms/csn_form.html (ЗАСВАРЛАСАН) --- #}
+<div class="table-responsive">
+  <table class="table table-bordered table-hover" id="csn-analysis-table" style="min-width: 800px; font-size: .85rem;">
+    <thead class="table-light">
+      <tr class="text-center">
+        <th style="width: 56px">№</th>
+        <th style="min-width: 220px">Дээжийн нэр</th>
+        <th>Утга 1</th>
+        <th>Утга 2</th>
+        <th>Утга 3</th>
+        <th>Утга 4</th>
+        <th>Утга 5</th>
+        <th>Тохирц (T)</th>
+        <th>Дундаж</th>
+        <th style="min-width: 120px">Тооцоолол</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    {% for sample in samples %}
+      <tr data-sample-id="{{ sample.id }}">
+        <td class="align-middle text-center">{{ loop.index }}</td>
+
+        <td class="align-middle">
+          <div class="fw-semibold">
+            {{ sample.sample_code or sample.name or ('#' ~ sample.id) }}
+            {% if sample.id in rejected_samples_info %}
+              <span
+                class="badge bg-danger ms-2"
+                title="Буцаасан: {{ rejected_samples_info[sample.id].rejected_at }}&#10;Шалтгаан: {{ rejected_samples_info[sample.id].reason }}"
+              >
+                Буцаагдсан
+              </span>
+            {% endif %}
+          </div>
+          <div class="text-muted small">
+            {{ sample.client_name or '' }}{% if sample.sample_type %} · {{ sample.sample_type }}{% endif %}
+          </div>
+        </td>
+
+        {# inputs: v1..v5 #}
+        <td>
+          <input
+            type="number" step="0.5" min="0" max="9" inputmode="decimal"
+            class="form-control form-control-sm text-center form-input"
+            id="sample_{{ sample.id }}_v1" placeholder="0–9">
+        </td>
+        <td>
+          <input
+            type="number" step="0.5" min="0" max="9" inputmode="decimal"
+            class="form-control form-control-sm text-center form-input"
+            id="sample_{{ sample.id }}_v2" placeholder="0–9">
+        </td>
+        <td>
+          <input
+            type="number" step="0.5" min="0" max="9" inputmode="decimal"
+            class="form-control form-control-sm text-center form-input"
+            id="sample_{{ sample.id }}_v3" placeholder="сонголтоор">
+        </td>
+        <td>
+          <input
+            type="number" step "0.5" min="0" max="9" inputmode="decimal"
+            class="form-control form-control-sm text-center form-input"
+            id="sample_{{ sample.id }}_v4" placeholder="сонголтоор">
+        </td>
+        <td>
+          <input
+            type="number" step="0.5" min="0" max="9" inputmode="decimal"
+            class="form-control form-control-sm text-center form-input"
+            id="sample_{{ sample.id }}_v5" placeholder="сонголтоор">
+        </td>
+
+        <td class="align-middle text-center fw-semibold result-cell" data-result-type="t"   data-sample-id="{{ sample.id }}">-</td>
+        <td class="align-middle text-center fw-bold    result-cell" data-result-type="avg" data-sample-id="{{ sample.id }}">-</td>
+        <td class="align-middle text-center small      result-cell" data-result-type="calc" data-sample-id="{{ sample.id }}">-</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="10" class="text-center text-muted py-5">
+          Дээж нэмээгүй байна. <br>
+          “Дээж сонгох / нэмэх” товчийг дарна уу.
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

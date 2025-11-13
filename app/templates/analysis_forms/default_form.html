@@ -1,0 +1,70 @@
+﻿<thead class="table-light text-center">
+    <tr>
+        <th rowspan="2" class="align-middle">â„–</th>
+        <th rowspan="2" class="align-middle">Sample name</th>
+        <th rowspan="2" class="align-middle">Ð¢Ð¸Ð³ÐµÐ»/Ð¡Ð°Ð² â„–</th>
+        <th>Ò®Ñ€ Ð´Ò¯Ð½ 1</th>
+        <th>Ò®Ñ€ Ð´Ò¯Ð½ 2</th>
+        <th rowspan="2" class="align-middle">Ð¢ÑÐ¼Ð´ÑÐ³Ð»ÑÐ»</th>
+    </tr>
+</thead>
+<tbody style="font-size: 0.95em;">
+    {% if samples %}
+        {% for sample in samples %}
+        <!-- Ð”Ð°Ð²Ñ‚Ð°Ð»Ñ‚ 1 -->
+        <tr>
+            <td rowspan="2" class="align-middle text-center">{{ loop.index }}</td>
+            <td rowspan="2" class="align-middle">{{ sample.sample_code }}</td>
+            <td>
+                <input type="text" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-crucible_num_p1"
+                       data-sample-id="{{ sample.id }}" data-parallel="1" data-field="crucible_num">
+            </td>
+            <td>
+                <input type="number" step="any" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-result1_p1"
+                       data-sample-id="{{ sample.id }}" data-parallel="1" data-field="result1">
+            </td>
+            <td>
+                <input type="number" step="any" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-result2_p1"
+                       data-sample-id="{{ sample.id }}" data-parallel="1" data-field="result2">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-notes_p1"
+                       data-sample-id="{{ sample.id }}" data-parallel="1" data-field="notes">
+            </td>
+        </tr>
+        <!-- Ð”Ð°Ð²Ñ‚Ð°Ð»Ñ‚ 2 -->
+        <tr>
+            <td>
+                <input type="text" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-crucible_num_p2"
+                       data-sample-id="{{ sample.id }}" data-parallel="2" data-field="crucible_num">
+            </td>
+            <td>
+                <input type="number" step="any" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-result1_p2"
+                       data-sample-id="{{ sample.id }}" data-parallel="2" data-field="result1">
+            </td>
+            <td>
+                <input type="number" step="any" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-result2_p2"
+                       data-sample-id="{{ sample.id }}" data-parallel="2" data-field="result2">
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm local-storage-input" 
+                       id="input-{{ sample.id }}-notes_p2"
+                       data-sample-id="{{ sample.id }}" data-parallel="2" data-field="notes">
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="6" class="text-center text-muted">Ð­Ð½Ñ ÑˆÐ¸Ð½Ð¶Ð¸Ð»Ð³ÑÑÐ³ Ñ…Ð¸Ð¹Ñ… ÑˆÐ°Ð°Ñ€Ð´Ð»Ð°Ð³Ð°Ñ‚Ð°Ð¹ ÑˆÐ¸Ð½Ñ Ð´ÑÑÐ¶ Ð¾Ð»Ð´ÑÐ¾Ð½Ð³Ò¯Ð¹.</td>
+        </tr>
+    {% endif %}
+</tbody>
+
+

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .audit-hub-container {
+        max-width: 900px;
+        margin-top: 2rem;
+        margin-bottom: 4rem;
+    }
+    .audit-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+    .audit-header h1 {
+        font-weight: 700;
+        color: #212529;
+    }
+    .audit-header .text-muted {
+        font-size: 1.1rem;
+    }
+
+    .nav-tabs .nav-link {
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-bottom-width: 0;
+        margin-right: 4px;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        background-color: #ffffff;
+        border-color: #dee2e6 #dee2e6 #ffffff;
+    }
+    .tab-content {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 0 0.5rem 0.5rem 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .analysis-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        list-style: none;
+        padding-left: 0;
+    }
+    .analysis-list li a {
+        display: block;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        color: #212529;
+        font-weight: 500;
+        transition: all 0.2s ease-in-out;
+    }
+    .analysis-list li a:hover {
+        background-color: #e9ecef;
+        border-color: #ced4da;
+        transform: translateY(-2px);
+    }
+    .analysis-list li a .bi {
+        margin-right: 0.5rem;
+        color: #0d6efd;
+    }
+</style>
+
+<div class="container audit-hub-container">
+    <div class="audit-header">
+        <h1><i class="bi bi-archive-fill me-2"></i>Аудитын мөр</h1>
+        <p class="text-muted">Шинжилгээний төрлөөр ангилсан түүхийн бүртгэлийг харах.</p>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="analysisCategoryTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tech-tab" data-bs-toggle="tab" data-bs-target="#tech" type="button" role="tab" aria-controls="tech" aria-selected="true">Техник шинжилгээ</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button" role="tab" aria-controls="other" aria-selected="false">Бусад шинжилгээ</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="analysisCategoryTabContent">
+        <!-- 1. Техник шинжилгээ -->
+        <div class="tab-pane fade show active" id="tech" role="tabpanel" aria-labelledby="tech-tab">
+            <h5 class="mb-3">Техник шинжилгээ (Technical Analysis)</h5>
+            <ul class="analysis-list">
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='MT') }}">
+                    <i class="bi bi-droplet-half"></i>Нийт чийг (MT)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Mad') }}">
+                    <i class="bi bi-moisture"></i>Аналитик чийг (Mad)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Aad') }}">
+                    <i class="bi bi-fire"></i>Үнс (Aad)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Vad') }}">
+                    <i class="bi bi-wind"></i>Дэгдэмхий бодис (Vad)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='TS') }}">
+                    <i class="bi bi-radioactive"></i>Нийт хүхэр (TS)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='CV') }}">
+                    <i class="bi bi-thermometer-high"></i>Шаталтын дулаан (CV)
+                </a></li>
+            </ul>
+        </div>
+
+        <!-- 2. Бусад шинжилгээ -->
+        <div class="tab-pane fade" id="other" role="tabpanel" aria-labelledby="other-tab">
+            <h5 class="mb-3">Бусад шинжилгээ</h5>
+            <ul class="analysis-list">
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='FM') }}">
+                    <i class="bi bi-grid-3x3"></i>Нунтгалалт (FM)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='CSN') }}">
+                    <i class="bi bi-bar-chart-fill"></i>Коксжилт (CSN)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Gi') }}">
+                    <i class="bi bi-bar-chart"></i>Хатуулаг (Gi)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='TRD') }}">
+                    <i class="bi bi-box"></i>Нягт (TRD)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='P') }}">
+                    <i class="bi bi-lightbulb"></i>Фосфор (P)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='F') }}">
+                    <i class="bi bi-brightness-high"></i>Фтор (F)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Cl') }}">
+                    <i class="bi bi-bug"></i>Хлор (Cl)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='X') }}">
+                    <i class="bi bi-bounding-box"></i>X (Plasticity)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Y') }}">
+                    <i class="bi bi-bounding-box-circles"></i>Y (Plasticity)
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='CRI') }}">
+                    <i class="bi bi-arrow-down-up"></i>CRI
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='CSR') }}">
+                    <i class="bi bi-arrow-repeat"></i>CSR
+                </a></li>
+                <li><a href="{{ url_for('analysis.audit_log_page', analysis_code='Solid') }}">
+                    <i class="bi bi-gem"></i>Хатуу үлдэгдэл (Solid)
+                </a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

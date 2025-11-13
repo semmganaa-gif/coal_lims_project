@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .diff-cell-flagged { color:#dc3545!important; font-weight:700; background:#fff2f2; }
+  .row-rejected { background:#fff8e1!important; border-left:4px solid #ffc107; }
+  .audit-table-wrapper thead th { position:sticky; top:0; background:#9ebfe0; z-index:5; }
+  .raw-json-box{ max-width:420px; white-space:pre-wrap; word-break:break-word; font-size:.7rem; background:#eef6ff; border:1px dashed #e2e8f0; border-radius:6px; padding:4px 6px; }
+</style>
+
+{# ---------- helper: JSON-г dict болгох, утга сонгох ---------- #}
+{% macro pick(d, keys, default='-') -%}
+  {%- set ns = namespace(val=None) -%}
+  {%- for k in keys -%}
+    {%- if ns.val is none and d.get(k) not in [None, ''] -%}
+      {%- set ns.val = d.get(k) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ ns.val if ns.val is not none else default }}
+{%- endmacro %}
+
+{% macro f2(x, dash='-') -%}
+  {%- if x not in [None, ''] -%}{{ "%.2f"|format(x|float) }}{%- else -%}{{ dash }}{%- endif -%}
+{%- endmacro %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-archive-fill me-2"></i>{{ title }}</h1>
+      <p class="text-muted mb-0">Шинжилгээ: <strong>{{ analysis_type.name }}</strong> (код: {{ analysis_type.code }})</p>
+    </div>
+    <a href="{{ url_for('analysis.audit_hub') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Аудитын төв рүү буцах
+    </a>
+  </div>
+
+  <!-- ШҮҮЛТҮҮР -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" action="{{ url_for('analysis.audit_log_page', analysis_code=analysis_type.code) }}">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Эхлэх огноо</label>
+            <input type="date" class="form-control" name="start_date" value="{{ request.args.get('start_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дуусах огноо</label>
+            <input type="date" class="form-control" name="end_date" value="{{ request.args.get('end_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дээжний нэр</label>
+            <input type="text" class="form-control" name="sample_name" value="{{ request.args.get('sample_name','') }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Химич</label>
+            <input type="text" class="form-control" name="user_name" value="{{ request.args.get('user_name','') }}">
+          </div>
+          <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">Шүүх</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ХҮСНЭГТ -->
+  <div class="table-responsive audit-table-wrapper mb-5">
+    <table class="table table-bordered table-hover table-sm align-middle">
+      <thead class="table-light text-center">
+        <tr>
+          <th rowspan="2" style="width:40px;">#</th>
+          <th rowspan="2">Дээж</th>
+          <th colspan="5">Туршилтын жин/үр дүн</th>
+          <th rowspan="2" style="width:90px;">Тохирц</th>
+          <th rowspan="2" style="width:90px;">Дундаж</th>
+          <th rowspan="2">Химич</th>
+          <th rowspan="2">Огноо</th>
+          <th rowspan="2">Шалтгаан / Түүхий өгөгдөл</th>
+        </tr>
+        <tr>
+          <th>№</th>
+          <th>m1</th>
+          <th>m2</th>
+          <th>m3</th>
+          <th>Үр дүн</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if logs %}
+        {% for log in logs %}
+          {# 1) RAW-г аюулгүй задлах #}
+          {% set _rd = get_log_raw_data(log) %}
+          {% set raw_data = {} %}
+          {% if _rd %}
+            {% if _rd is mapping %}
+              {% set raw_data = _rd %}
+            {% elif _rd is string %}
+              {% set _tmp = _rd.strip() %}
+              {% if _tmp and _tmp.startswith('{') and _tmp.endswith('}') %}
+                {% set raw_data = _tmp|loads %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+
+          {% set p1 = raw_data.get('p1', {}) %}
+          {% set p2 = raw_data.get('p2', {}) %}
+          {% set _diff = (raw_data.get('diff') if raw_data.get('diff') not in [None, ''] else None) %}
+          {% set is_flagged = (_diff is not none) and (log.action in ['REJECTED','PENDING_REVIEW']) %}
+          {% set is_rejected = (log.action == 'REJECTED') %}
+
+          {# ----- түлхүүрүүдийн өргөтгөсөн жагсаалт ----- #}
+          {% set NUM_KEYS_MT = [
+            'box_no','box_num','box','num',
+            'crucible_no','crucible_num','tigel_no','tigel_num',
+            'dish_num','bottle_num','can_no','can_num','tin_no','tin_num'
+          ] %}
+          {% set NUM_KEYS_OTH = ['num','crucible_num','bottle_num','dish_num','tigel_no','tigel_num'] %}
+          {% set M1_KEYS_MT  = ['m1_empty','m1_box_empty','m1','empty_box','tare'] %}
+          {% set M2_KEYS_MT  = ['m2_sample','m2_with_sample','m2'] %}
+          {% set M3_KEYS_MT  = ['m3_dried_box','m3_dry','m3','after_dry','m3_box_dry'] %}
+          {% set M3_KEYS_OTH = ['m3_ashy','m3_dish_dry','m3_residue','m3'] %}
+
+          {% if analysis_type.code == 'MT' %}
+            <tr {% if is_rejected %}class="row-rejected"{% endif %}>
+              <td rowspan="2" class="text-center fw-semibold">{{ loop.index }}</td>
+              <td rowspan="2" class="fw-semibold">
+                {{ log.sample.sample_code if log.sample else '-' }}
+              </td>
+
+              <td class="text-center">{{ pick(p1, NUM_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p1, M1_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p1, M2_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p1, M3_KEYS_MT) }}</td>
+              <td class="text-center">{{ f2(p1.get('result')) }}</td>
+
+              <td rowspan="2" class="text-center {% if is_flagged %}diff-cell-flagged{% endif %}">
+                {{ f2(_diff) }}
+              </td>
+              <td rowspan="2" class="text-center fw-bold">
+                {{ f2(raw_data.get('avg')) }}
+              </td>
+              <td rowspan="2">{{ log.user.username if log.user else '-' }}</td>
+              <td rowspan="2">
+                {{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}<br>
+                <span class="badge {% if log.action in ['APPROVED','CREATED_AUTO_APPROVED','UPDATED_AUTO_APPROVED'] %}bg-success{% elif log.action=='REJECTED' %}bg-danger{% elif log.action=='CREATED' %}bg-primary{% else %}bg-secondary{% endif %}">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td rowspan="2">
+                {% if log.reason %}<span class="{% if is_rejected %}text-danger fw-semibold{% endif %}">{{ log.reason }}</span>{% else %}-{% endif %}
+                {% if log.rejection_category %}
+                  <div class="small text-muted mt-1">
+                    ангилал: {{ log.rejection_category }}{% if log.rejection_subcategory %} / {{ log.rejection_subcategory }}{% endif %}
+                  </div>
+                {% endif %}
+                {% if not p1 and not p2 and raw_data %}
+                  <div class="raw-json-box mt-1">{{ raw_data|tojson }}</div>
+                {% endif %}
+              </td>
+            </tr>
+            <tr {% if is_rejected %}class="row-rejected"{% endif %}>
+              <td class="text-center">{{ pick(p2, NUM_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p2, M1_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p2, M2_KEYS_MT) }}</td>
+              <td class="text-center">{{ pick(p2, M3_KEYS_MT) }}</td>
+              <td class="text-center">{{ f2(p2.get('result')) }}</td>
+            </tr>
+
+          {% else %}
+            {% set has_p = (p1 or p2) %}
+            <tr {% if is_rejected %}class="row-rejected"{% endif %}>
+              <td rowspan="2" class="text-center fw-semibold">{{ loop.index }}</td>
+              <td rowspan="2" class="fw-semibold">
+                {{ log.sample.sample_code if log.sample else '-' }}
+              </td>
+
+              {% if has_p %}
+                <td class="text-center">{{ pick(p1, NUM_KEYS_OTH) }}</td>
+                <td class="text-center">{{ p1.get('m1','-') }}</td>
+                <td class="text-center">{{ p1.get('m2_sample') or p1.get('m2','-') }}</td>
+                <td class="text-center">{{ pick(p1, M3_KEYS_OTH) }}</td>
+                <td class="text-center">{{ f2(p1.get('result')) }}</td>
+              {% else %}
+                <td colspan="5">
+                  {% if raw_data %}
+                    <div class="raw-json-box">{{ raw_data|tojson }}</div>
+                  {% else %}-{% endif %}
+                </td>
+              {% endif %}
+
+              <td rowspan="2" class="text-center {% if is_flagged %}diff-cell-flagged{% endif %}">
+                {{ f2(_diff) }}
+              </td>
+              <td rowspan="2" class="text-center fw-bold">
+                {{ f2(raw_data.get('avg')) }}
+              </td>
+              <td rowspan="2">{{ log.user.username if log.user else '-' }}</td>
+              <td rowspan="2">
+                {{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}<br>
+                <span class="badge {% if log.action in ['APPROVED','CREATED_AUTO_APPROVED','UPDATED_AUTO_APPROVED'] %}bg-success{% elif log.action=='REJECTED' %}bg-danger{% elif log.action=='CREATED' %}bg-primary{% else %}bg-secondary{% endif %}">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td rowspan="2">
+                {% if log.reason %}<span class="{% if is_rejected %}text-danger fw-semibold{% endif %}">{{ log.reason }}</span>{% else %}-{% endif %}
+                {% if log.rejection_category %}
+                  <div class="small text-muted mt-1">
+                    ангилал: {{ log.rejection_category }}{% if log.rejection_subcategory %} / {{ log.rejection_subcategory }}{% endif %}
+                  </div>
+                {% endif %}
+                {% if not p1 and not p2 and raw_data %}
+                  <div class="raw-json-box mt-1">{{ raw_data|tojson }}</div>
+                {% endif %}
+              </td>
+            </tr>
+            <tr {% if is_rejected %}class="row-rejected"{% endif %}>
+              {% if has_p %}
+                <td class="text-center">{{ pick(p2, NUM_KEYS_OTH) }}</td>
+                <td class="text-center">{{ p2.get('m1','-') }}</td>
+                <td class="text-center">{{ p2.get('m2_sample') or p2.get('m2','-') }}</td>
+                <td class="text-center">{{ pick(p2, M3_KEYS_OTH) }}</td>
+                <td class="text-center">{{ f2(p2.get('result')) }}</td>
+              {% else %}
+                <td colspan="5"></td>
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="12" class="text-center text-muted py-5">Илэрц олдсонгүй.</td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

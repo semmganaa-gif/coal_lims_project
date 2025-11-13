@@ -1,0 +1,209 @@
+{# app/templates/admin/settings/bottle_constants_bulk.html #}
+{% extends "base.html" %}
+{% set can_edit = current_user.role in ['admin','ahlah'] %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h3 class="mb-1">Бортого тогтмол — шинэ оруулалт (хоосон тодорхойлолт 7.4.1)</h3>
+      <div class="text-muted small">
+        20&nbsp;°C ±0.5 нөхцөлд, сар бүрийн “хоосон тодорхойлолт”-ын 3 хэмжилт (m₁,m₂,m₃) оруулж дундаж автоматаар тооцно.
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('main.index') }}">Буцах</a>
+      <button id="btnSave" class="btn btn-primary"><i class="bi bi-save"></i> Хадгалах</button>
+    </div>
+  </div>
+
+  <div class="alert alert-info py-2">
+    <ul class="small mb-0">
+      <li>Пикнометрийн бортогоны №-г оруулаад 3 хэмжилтээ бичнэ; дундаж нь шууд тооцогдоно.</li>
+      <li>Температур default 20.0 °C. Хэрэв 20±0.5-оос хазайсан бол анхааруулга гарна (хадгалалтыг хориглохгүй).</li>
+      <li>Идэвхтэй/Шинэ тогтмол гэдэг нь <em>effective_to</em> хоосон мөр (хамгийн сүүлчийн бичилт) юм.</li>
+    </ul>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-xl-9">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle" id="tbl">
+          <thead class="table-light">
+            <tr>
+              <th style="width:40px"></th>
+              <th style="min-width:140px">Бортого №</th>
+              <th style="min-width:120px" class="text-center">m₁</th>
+              <th style="min-width:120px" class="text-center">m₂</th>
+              <th style="min-width:120px" class="text-center">m₃</th>
+              <th style="min-width:130px" class="text-center">Дундаж</th>
+              <th style="min-width:120px" class="text-center">Темп (°C)</th>
+              <th style="min-width:190px">Eff. from</th>
+              <th style="min-width:220px">Тэмдэглэл</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+          </tbody>
+        </table>
+      </div>
+      <button id="btnAdd" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-plus-circle"></i> Мөр нэмэх
+      </button>
+      <button id="btnDel" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-trash"></i> Сонгосон мөр устгах
+      </button>
+    </div>
+
+    <div class="col-12 col-xl-3">
+      <div class="card">
+        <div class="card-header py-2"><strong>Идэвхтэй бортогоны жагсаалт</strong></div>
+        <div class="card-body p-2">
+          {% if bottles %}
+            <ul class="list-group list-group-flush small">
+              {% for b in bottles %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span class="fw-semibold">{{ b.serial_no }}</span>
+                  <span class="text-muted">{{ b.label or "" }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <div class="text-muted small">Идэвхтэй бортого алга.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const $tbody = document.getElementById('tbody');
+  const $btnAdd = document.getElementById('btnAdd');
+  const $btnDel = document.getElementById('btnDel');
+  const $btnSave = document.getElementById('btnSave');
+
+  function addRow(prefill={}) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" class="rowchk"></td>
+      <td><input type="text" class="form-control form-control-sm serial" placeholder="ж: PY-001" value="${esc(prefill.serial||'')}"></td>
+      <td><input type="number" step="0.00001" class="form-control form-control-sm t1" value="${esc(prefill.t1??'')}"></td>
+      <td><input type="number" step="0.00001" class="form-control form-control-sm t2" value="${esc(prefill.t2??'')}"></td>
+      <td><input type="number" step="0.00001" class="form-control form-control-sm t3" value="${esc(prefill.t3??'')}"></td>
+      <td><input type="text" class="form-control form-control-sm avg" value="" readonly></td>
+      <td>
+        <input type="number" step="0.01" class="form-control form-control-sm temp" value="${esc(prefill.temp??'20.0')}">
+        <div class="form-text small text-danger d-none warn">20±0.5-оос хазайсан</div>
+      </td>
+      <td><input type="datetime-local" class="form-control form-control-sm eff" value="${nowLocal()}"></td>
+      <td><input type="text" class="form-control form-control-sm remarks" maxlength="255"></td>
+    `;
+    $tbody.appendChild(tr);
+    hookRow(tr);
+    recompute(tr);
+  }
+
+  function hookRow(tr){
+    ['t1','t2','t3'].forEach(cls => {
+      tr.querySelector('.'+cls).addEventListener('input', () => recompute(tr));
+    });
+    tr.querySelector('.temp').addEventListener('input', () => recompute(tr));
+  }
+
+  function recompute(tr){
+    const g = (cls) => parseFloat(tr.querySelector('.'+cls).value);
+    const t1 = g('t1'); const t2 = g('t2'); const t3 = g('t3');
+    const avgEl = tr.querySelector('.avg');
+    if ([t1,t2,t3].every(v => !Number.isNaN(v))){
+      const avg = (t1 + t2 + t3)/3;
+      avgEl.value = avg.toFixed(5);
+    } else {
+      avgEl.value = '';
+    }
+    const temp = parseFloat(tr.querySelector('.temp').value);
+    const warn = tr.querySelector('.warn');
+    if (!Number.isNaN(temp) && (temp < 19.5 || temp > 20.5)) warn.classList.remove('d-none');
+    else warn.classList.add('d-none');
+  }
+
+  function collect(){
+    const rows = [];
+    [...$tbody.querySelectorAll('tr')].forEach(tr => {
+      const serial = tr.querySelector('.serial').value.trim();
+      const t1 = tr.querySelector('.t1').value;
+      const t2 = tr.querySelector('.t2').value;
+      const t3 = tr.querySelector('.t3').value;
+      const tmp = tr.querySelector('.temp').value;
+      const eff = tr.querySelector('.eff').value;
+      const remarks = tr.querySelector('.remarks').value;
+      if (!serial || t1==='' || t2==='' || t3==='') return;
+      rows.push({
+        serial: serial,
+        trial_1: Number(t1),
+        trial_2: Number(t2),
+        trial_3: Number(t3),
+        temperature_c: tmp ? Number(tmp) : 20.0,
+        effective_from: eff || null,
+        remarks: remarks
+      });
+    });
+    return rows;
+  }
+
+  function toast(msg, type='info'){
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
+    el.style.zIndex = 1080;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+  }
+
+  function nowLocal(){
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,16);
+  }
+
+  function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // events
+  $btnAdd.addEventListener('click', () => addRow());
+  $btnDel.addEventListener('click', () => {
+    [...$tbody.querySelectorAll('.rowchk:checked')].forEach(chk => chk.closest('tr').remove());
+  });
+  $btnSave.addEventListener('click', async () => {
+    const rows = collect();
+    if (!rows.length){ toast('Оруулах мөр алга байна.', 'warning'); return; }
+    try{
+      const res = await fetch('{{ url_for("settings.bottles_constants_bulk_save") }}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({rows})
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false){ toast(data.message || 'Алдаа гарлаа', 'danger'); return; }
+      if (data.errors && data.errors.length){
+        toast(`Амжилттай: ${data.created}. Алдаа: ${data.errors.length}.`, 'warning');
+        console.warn('Ошибки:', data.errors);
+      } else {
+        toast(`Амжилттай хадгаллаа (${data.created}).`, 'success');
+      }
+      // талбарыг цэвэрлэе
+      $tbody.innerHTML = '';
+      addRow();
+    }catch(e){
+      console.error(e);
+      toast('Сүлжээ/серверийн алдаа.', 'danger');
+    }
+  });
+
+  // эхлэхдээ нэг мөр
+  addRow();
+})();
+</script>
+{% endblock %}

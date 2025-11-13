@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Бортого — засах</h3>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('settings.bottles_index') }}">
+      ← Жагсаалт руу
+    </a>
+  </div>
+
+  <form method="post" class="card card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Бортого № (serial_no)</label>
+        <input type="text" name="serial_no" class="form-control" value="{{ bottle.serial_no }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Төлөв</label>
+        <select name="is_active" class="form-select">
+          <option value="1" {% if bottle.is_active %}selected{% endif %}>Идэвхтэй</option>
+          <option value="0" {% if not bottle.is_active %}selected{% endif %}>Идэвхгүй</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">Цуцлах</a>
+      <button class="btn btn-primary" type="submit">Хадгалах</button>
+    </div>
+  </form>
+
+  <div class="alert alert-info mt-3">
+    <div class="fw-semibold mb-1">Санамж:</div>
+    <ul class="mb-0">
+      <li>Сарын “хоосон тодорхойлолт”-ын шинэчилсэн m₂-г оруулахдаа <em>“Шинэ тогтмол оруулах”</em> хэсгээр шинэ мөр нэмж хадгална. Өмнөх түүх хадгалагдана.</li>
+      <li>Хэрэв бортого эвдэрч ашиглагдахгүй бол жагсаалтаас “Устгах” товчыг ашиглаж бүртгэлээс гаргана (түүх хамт устахыг анхаар).</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

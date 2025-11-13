@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+  :root{ --gold:#d4a017; --grid:#e5e7eb; --text:#111827; }
+  .report-wrap{
+    height: 100%;
+    display:flex; flex-direction:column; gap:12px;
+    overflow:hidden;
+  }
+  .report-head{
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .sheet{
+    background:#fff; border:1px solid var(--grid); border-radius:10px;
+    height:100%; overflow:auto; padding:10px;
+  }
+  table.report{ width: max(1200px, 100%); border-collapse: collapse; }
+  .report th, .report td{
+    border:1px solid #cbd5e1; padding:6px 8px; font-size:12px; white-space:nowrap; text-align:right;
+  }
+  .report thead th{
+    position: sticky; top: 0; background:#f8fafc; z-index: 2;
+  }
+  .title-cell{
+    text-align:left; font-weight:700; background:#fde68a; color:#1f2937;
+  }
+  .section-title{
+    background:#f3f4f6; font-weight:700; text-align:left;
+  }
+  .sum-cell{ font-weight:700; }
+  .alias-cell{ text-align:left; color:#374151; }
+  .right-sticky{
+    position: sticky; right: 0; background:#fff; z-index:1;
+  }
+  .download{ display:flex; gap:8px; }
+</style>
+
+<div class="report-wrap">
+  <div class="report-head">
+    <h5 class="m-0">{{ title }}</h5>
+    <div class="download">
+      <form method="get" action="">
+        <input type="hidden" name="year" value="{{ year }}">
+        <select name="year" class="form-select form-select-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
+          {% for y in range(year-3, year+2) %}
+          <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      <button class="btn btn-sm btn-success" id="btnExportCsv"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <table class="report" id="reportTable">
+      <thead>
+        <tr>
+          <th class="title-cell">COAL QUALITY<br>PROPERTIES</th>
+          {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+            <th>{{ m }}</th>
+          {% endfor %}
+          <th class="sum-cell">Total</th>
+          <th class="alias-cell right-sticky">Code</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for code, label in property_rows %}
+          <tr>
+            <td class="title-cell">{{ label }}</td>
+            {% for m in range(1,13) %}
+              <td>{{ counts[code][m] }}</td>
+            {% endfor %}
+            <td class="sum-cell">{{ totals_prop[code] }}</td>
+            <td class="alias-cell right-sticky">{{ code }}</td>
+          </tr>
+        {% endfor %}
+        <tr>
+          <td class="section-title">Total</td>
+          {% for m in range(1,13) %}<td class="sum-cell">{{ prop_total_months[m] }}</td>{% endfor %}
+          <td class="sum-cell">{{ prop_total_total }}</td>
+          <td class="alias-cell right-sticky"></td>
+        </tr>
+        <tr><td colspan="15" class="section-title">Sample</td><td class="right-sticky section-title"></td></tr>
+        {% for g in sample_groups %}
+          <tr>
+            <td class="title-cell">{{ g }}</td>
+            {% for m in range(1,13) %}
+              <td>{{ s_counts[g][m] }}</td>
+            {% endfor %}
+            <td class="sum-cell">{{ s_totals[g] }}</td>
+            <td class="alias-cell right-sticky"></td>
+          </tr>
+        {% endfor %}
+        <tr>
+          <td class="section-title">Нийт</td>
+          {% for m in range(1,13) %}<td class="sum-cell">{{ total_row_months[m] }}</td>{% endfor %}
+          <td class="sum-cell">{{ total_row_total }}</td>
+          <td class="right-sticky"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // CSV экспорт (sheet бүхэлд нь)
+  document.getElementById('btnExportCsv').addEventListener('click', () => {
+    const table = document.getElementById('reportTable');
+    let rows = [];
+    for (const tr of table.querySelectorAll('tr')) {
+      const cells = [...tr.querySelectorAll('th,td')].map(td => {
+        let t = td.innerText.trim().replace(/\s+/g,' ');
+        // sticky колон (Code) доторх текстийг ч авна
+        return `"${t.replace(/"/g,'""')}"`;
+      });
+      rows.push(cells.join(','));
+    }
+    const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'monthly_counts_{{ year }}.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+</script>
+{% endblock %}

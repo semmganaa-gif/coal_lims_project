@@ -1,0 +1,150 @@
+{# --- TRD: Харьцангуй нягт (ШИНЭЧИЛСЭН ЗАГВАР) --- #}
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <label class="form-label">Температур (°C) — TRD</label>
+    <input type="number" step="0.1" class="form-control" id="trd-temp-c" value="20.0">
+    <div class="form-text">Kt-ийг 6–35 °C хооронд шугаман интерполяцаар тооцно.</div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Тохирцын зааг (T)</label>
+    <input type="number" step="0.001" class="form-control" id="trd-tol" value="0.02">
+    <div class="form-text">Нягтын параллелийн зөрүүгээс (|p1 − p2| ≤ T) хамааран дундаж зөвшөөрнө.</div>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-hover" id="trd-analysis-table" style="min-width: 900px; font-size: 0.85rem;">
+    <thead class="table-light">
+      <tr>
+        <th rowspan="2" class="align-middle text-center">№</th>
+        <th rowspan="2" class="align-middle">Дээжийн нэр</th>
+        <th colspan="3" class="text-center">Түүхий өгөгдөл</th>
+        <th rowspan="2" class="align-middle text-center">Үр дүн (TRD)</th>
+        <th rowspan="2" class="align-middle text-center">Тохирц (T)</th>
+        <th rowspan="2" class="align-middle text-center">Дундаж</th>
+        <th rowspan="2" class="align-middle text-center" style="width: 50px;">Үйлдэл</th>
+      </tr>
+      <tr>
+        <th class="text-center" title="Бортого №">Бортого №</th>
+        <th class="text-center" title="Нүүрсний жин, g">m (Нүүрс)</th>
+        <th class="text-center" title="Бортого + нүүрс + ус, g">m₁ (Б+Н+У)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for sample in samples %}
+      <tr 
+        data-sample-id="{{ sample.id }}"
+        data-parallel="1"
+        {% if sample.id in rejected_samples_info %}class="table-warning"{% endif %}
+      >
+        <td rowspan="2" class="align-middle text-center">{{ loop.index }}</td>
+        <td rowspan="2" class="align-middle">
+          {{ sample.sample_code }}
+          {% if sample.id in rejected_samples_info %}
+            <span class="badge bg-danger ms-2"
+                  title="Буцаасан огноо: {{ rejected_samples_info[sample.id].rejected_at }}&#10;Шалтгаан: {{ rejected_samples_info[sample.id].reason }}">
+              Буцаагдсан
+            </span>
+          {% endif %}
+        </td>
+
+        {# --- p1 inputs --- #}
+        <td><input type="text" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p1_bottle" placeholder="№"></td>
+        <td><input type="number" step="0.0001" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p1_m"></td>
+        <td><input type="number" step="0.0001" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p1_m1"></td>
+
+        {# --- p1 result --- #}
+        <td class="text-center align-middle fw-semibold trd-cell" data-parallel="1" data-sample-id="{{ sample.id }}">-</td>
+
+        {# --- Results (spanned) --- #}
+        <td rowspan="2" class="text-center align-middle trd-diff" data-sample-id="{{ sample.id }}">-</td>
+        <td rowspan="2" class="text-center align-middle fw-bold trd-avg" data-sample-id="{{ sample.id }}">-</td>
+        <td rowspan="2" class="text-center align-middle">
+          <button class="btn btn-outline-danger btn-sm remove-sample-from-worksheet"
+                  data-sample-id="{{ sample.id }}" title="Жагсаалтаас хасах">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+      </tr>
+      <tr
+        data-sample-id="{{ sample.id }}"
+        data-parallel="2"
+        {% if sample.id in rejected_samples_info %}class="table-warning"{% endif %}
+      >
+        {# --- p2 inputs --- #}
+        <td><input type="text" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p2_bottle" placeholder="№"></td>
+        <td><input type="number" step="0.0001" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p2_m"></td>
+        <td><input type="number" step="0.0001" class="form-control form-control-sm form-input trd-input" id="sample_{{ sample.id }}_p2_m1"></td>
+        
+        {# --- p2 result --- #}
+        <td class="text-center align-middle fw-semibold trd-cell" data-parallel="2" data-sample-id="{{ sample.id }}">-</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="9" class="text-center text-muted py-5">
+        Ажлын жагсаалт хоосон байна. “Дээж сонгох/нэмэх” товчоор жагсаалтаа бүрдүүлнэ үү.
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# 🔐 backend-ээс дамжуулсан Mad map-аа JS-д өгөх #}
+<script>
+  window.MAD_BY_SAMPLE = {{ (mad_results_map or {})|tojson }};
+  window.EXISTING_RESULTS = {{ (existing_results_map or {})|tojson }};
+  window.REJECTED_SAMPLES = {{ (rejected_samples_info or {})|tojson }};
+</script>
+
+{# 🧩 (ШИНЭ) Буцааж дүүргэх скрипт (Vad загвартай ижил) #}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const p1Rows = document.querySelectorAll('#trd-analysis-table tbody tr[data-parallel="1"]');
+
+    p1Rows.forEach(function (row) {
+      const sampleId = row.getAttribute('data-sample-id');
+      const saved = window.EXISTING_RESULTS[sampleId];
+      if (!saved) return; // Хадгалсан зүйлгүй бол орхино
+
+      const raw = saved.raw_data || {};
+      const p1  = raw.p1 || {};
+      const p2  = raw.p2 || {};
+
+      // p1 inputs (Энэ мөрөнд)
+      const p1bottle = document.getElementById(`sample_${sampleId}_p1_bottle`);
+      const p1m  = document.getElementById(`sample_${sampleId}_p1_m`);
+      const p1m1 = document.getElementById(`sample_${sampleId}_p1_m1`);
+      
+      if (p1bottle) p1bottle.value = p1.bottle || '';
+      if (p1m)  p1m.value  = p1.m  ?? '';
+      if (p1m1) p1m1.value = p1.m1 ?? '';
+
+      // p2 inputs (Дараагийн мөрөнд)
+      const p2bottle = document.getElementById(`sample_${sampleId}_p2_bottle`);
+      const p2m  = document.getElementById(`sample_${sampleId}_p2_m`);
+      const p2m1 = document.getElementById(`sample_${sampleId}_p2_m1`);
+
+      if (p2bottle) p2bottle.value = p2.bottle || '';
+      if (p2m)  p2m.value  = p2.m  ?? '';
+      if (p2m1) p2m1.value = p2.m1 ?? '';
+
+      // Үр дүнгийн нүднүүд
+      const p1Cell = row.querySelector('.trd-cell[data-parallel="1"]');
+      const p2Row  = document.querySelector(`#trd-analysis-table tbody tr[data-sample-id="${sampleId}"][data-parallel="2"]`);
+      const p2Cell = p2Row ? p2Row.querySelector('.trd-cell[data-parallel="2"]') : null;
+      
+      const diffCell = row.querySelector('.trd-diff');
+      const avgCell  = row.querySelector('.trd-avg');
+
+      if (p1Cell && p1.result != null) p1Cell.textContent = Number(p1.result).toFixed(3);
+      if (p2Cell && p2.result != null) p2Cell.textContent = Number(p2.result).toFixed(3);
+      if (diffCell && raw.diff != null) diffCell.textContent = Number(raw.diff).toFixed(3);
+      if (avgCell  && raw.avg  != null) avgCell.textContent  = Number(raw.avg).toFixed(3);
+      
+      // Ачаалахад дахин тооцоолох (async-аар бортогоны m2-г авах шаардлагатай)
+      if (typeof window.calculateAndDisplayForRow === 'function') {
+        window.calculateAndDisplayForRow(sampleId, false);
+      }
+    });
+  });
+</script>

@@ -1,0 +1,269 @@
+{# app/templates/analysis_forms/mass_workspace_form.html #}
+<div class="container-fluid p-0">
+
+  <!-- 🧰 Толгой ба үйлдлүүд -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h4 class="mb-1">M — Массын ажлын талбар</h4>
+      <div class="text-muted small">
+        Статус нь <code>new</code> бөгөөд <code>analyses_to_perform</code> дотор <code>"m"</code> байгаа дээжүүд энд харагдана.
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <div class="form-check form-switch me-2">
+        <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
+        <label class="form-check-label" for="toggleIncludeReady">Хадгалсаныг (Ready) хамт харах</label>
+      </div>
+
+      <input id="searchCode" class="form-control" placeholder="Дээжийн кодоор хайх" style="min-width:240px">
+
+      <div class="form-check form-switch ms-1">
+        <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
+        <label class="form-check-label" for="markReadyToggle">Хадгалахад <strong>Mass Ready</strong> болгох</label>
+      </div>
+
+      <button id="btnRefresh" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+      </button>
+      <button id="btnSave" class="btn btn-primary">
+        <i class="bi bi-save"></i> Хадгалах
+      </button>
+    </div>
+  </div>
+
+  <!-- 🧾 Жижиг тайлбар -->
+  <div class="alert alert-info py-2 mb-3">
+    <div class="small mb-1"><strong>Заавар:</strong></div>
+    <ul class="small mb-0 ps-3">
+      <li>Жин (g) оруулаад <em>Хадгалах</em> дарвал сонгосон мөрүүд <code>mass_ready=True</code> болно (унтраалга асаалттай үед).</li>
+      <li>Буруу жин оруулсан бол:
+        <em>↻ Зөвхөн жинг шинэчлэх</em> товчоор Ready төлөв хэвээр засна,
+        эсвэл <em>Unready</em> дарж ажлын жагсаалт руу буцаагаад дахин хадгал.</li>
+      <li><em>🗑 Delete</em> нь тухайн дээжийг бүртгэлээс бүр мөсөн устгана (сервер талд зөвхөн admin/ahlah зөвшөөрнө).</li>
+    </ul>
+  </div>
+
+  <!-- 📋 Хүснэгт -->
+  <div class="table-responsive">
+    <table class="table table-sm align-middle" id="massTable">
+      <thead class="table-light">
+        <tr>
+          <th style="width:36px"><input type="checkbox" id="chkAll"></th>
+          <th style="width:70px">ID</th>
+          <th style="min-width:180px">Дээжийн код</th>
+          <th style="min-width:160px">Захиалагч</th>
+          <th style="min-width:120px">Төрөл</th>
+          <th style="min-width:150px">Ирсэн огноо</th>
+          <th style="min-width:240px">Жин (g)</th>
+          <th style="min-width:180px">Үйлдэл</th>
+        </tr>
+      </thead>
+      <tbody id="massTbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<style>
+  .mw-row-ready{opacity:.7}
+  .mw-badge{font-size:.75rem}
+</style>
+
+<script>
+(() => {
+  const $tbody     = document.getElementById('massTbody');
+  const $chkAll    = document.getElementById('chkAll');
+  const $btnRefresh= document.getElementById('btnRefresh');
+  const $btnSave   = document.getElementById('btnSave');
+  const $markReady = document.getElementById('markReadyToggle');
+  const $toggleInc = document.getElementById('toggleIncludeReady');
+  const $search    = document.getElementById('searchCode');
+
+  // 🔄 Data татах
+  async function fetchEligible() {
+    const inc = $toggleInc.checked ? '1' : '0';
+    const q   = encodeURIComponent($search.value || '');
+    $tbody.innerHTML = `
+      <tr><td colspan="8" class="text-center text-muted py-4">Ачааллаж байна…</td></tr>`;
+    try {
+      const res = await fetch(`/api/mass/eligible?include_ready=${inc}&q=${q}`, {credentials:'same-origin'});
+      const data = await res.json();
+      renderRows(data.samples || []);
+    } catch (e) {
+      console.error(e);
+      $tbody.innerHTML = `
+        <tr><td colspan="8" class="text-center text-danger py-4">Өгөгдөл татахад алдаа гарлаа.</td></tr>`;
+    }
+  }
+
+  // 🧼 escape туслахууд
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const escAttr = s => esc(s);
+
+  function badgeReady(isReady){
+    return isReady
+      ? '<span class="badge text-bg-success mw-badge">Ready</span>'
+      : '<span class="badge text-bg-secondary mw-badge">New</span>';
+  }
+
+  // 🖨️ Мөрүүд буулгах
+  function renderRows(rows) {
+    if (!rows.length) {
+      $tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">
+        Хоосон байна.
+      </td></tr>`;
+      return;
+    }
+    $tbody.innerHTML = rows.map(s => {
+      const rcv = s.received_date || '';
+      const w   = (s.weight ?? '') === null ? '' : (s.weight ?? '');
+      const rowCls = s.mass_ready ? 'mw-row-ready' : '';
+      return `
+        <tr data-id="${s.id}" class="${rowCls}">
+          <td><input type="checkbox" class="row-chk"></td>
+          <td class="text-muted">${s.id}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-semibold">${esc(s.sample_code || '')}</span>
+              ${badgeReady(!!s.mass_ready)}
+            </div>
+          </td>
+          <td>${esc(s.client_name || '')}</td>
+          <td>${esc(s.sample_type || '')}</td>
+          <td><span class="text-nowrap">${esc(rcv)}</span></td>
+          <td style="max-width:260px">
+            <div class="input-group input-group-sm">
+              <input type="number" class="form-control weight-input" placeholder="жишээ: 1500"
+                     step="0.01" min="0" value="${w !== '' ? escAttr(w) : ''}">
+              <span class="input-group-text">g</span>
+              <button class="btn btn-outline-secondary btnUpdateWeight" title="Зөвхөн жинг хадгалах">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+            </div>
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-warning btnUnready" ${s.mass_ready ? '' : 'disabled'} title="Unready болгох">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+              <button class="btn btn-outline-danger btnDelete" title="Бүр мөсөн устгах">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ☑️ Бүгдийг сонгох
+  $chkAll.addEventListener('change', () => {
+    $tbody.querySelectorAll('.row-chk').forEach(chk => chk.checked = $chkAll.checked);
+  });
+
+  // 💾 Сонгогдсоныг хадгалах (mark_ready=true/false)
+  $btnSave.addEventListener('click', async () => {
+    const items = [];
+    $tbody.querySelectorAll('tr').forEach(tr => {
+      const chk = tr.querySelector('.row-chk');
+      if (!chk || !chk.checked) return;
+      const id = Number(tr.dataset.id);
+      const wInput = tr.querySelector('.weight-input');
+      const wVal = wInput && wInput.value !== '' ? Number(wInput.value) : null;
+      if (!id) return;
+      const item = {"sample_id": id};
+      if (wVal !== null && !Number.isNaN(wVal)) item["weight"] = wVal;
+      items.push(item);
+    });
+
+    if (!items.length) { toast('Дээж сонгож, жингээ оруулаад хадгална уу.', 'warning'); return; }
+
+    try {
+      const res = await fetch('/api/mass/save', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({ items, mark_ready: !!$markReady.checked })
+      });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) { toast(data.message || 'Хадгалах үед алдаа.', 'danger'); return; }
+      toast(data.message || 'Амжилттай хадгаллаа.', 'success');
+      await fetchEligible();
+    } catch (e) {
+      console.error(e); toast('Сүлжээ/серверийн алдаа.', 'danger');
+    }
+  });
+
+  // 🧩 Мөр доторх товчлуурууд (update weight / unready / delete)
+  $tbody.addEventListener('click', async (e) => {
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const id = Number(tr.dataset.id);
+
+    // ↻ Only weight update
+    if (e.target.closest('.btnUpdateWeight')) {
+      const w = Number(tr.querySelector('.weight-input').value);
+      if (!isFinite(w)) { toast('Жин буруу байна.', 'warning'); return; }
+      try{
+        const res = await fetch('/api/mass/update_weight', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_id:id, weight:w })
+        });
+        const js = await res.json();
+        if (!res.ok || js.ok === false) { toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'Жин шинэчлэгдлээ.', 'success');
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+
+    // Unready
+    if (e.target.closest('.btnUnready')) {
+      if (!confirm('Энэ дээжийг Unready болгох уу?')) return;
+      try{
+        const res = await fetch('/api/mass/unready', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_ids:[id] })
+        });
+        const js = await res.json();
+        if (!res.ok || js.ok === false) { toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'OK', 'success');
+        fetchEligible();
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+
+    // Delete (server тал эрх шалгана)
+    if (e.target.closest('.btnDelete')) {
+      if (!confirm('Дээжийг бүртгэлээс бүр мөсөн устгах уу? (холбоотой анализ/лог хамт устна)')) return;
+      try{
+        const res = await fetch('/api/mass/delete', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_id:id })
+        });
+        const js = await res.json();
+        if (!res.ok || js.ok === false) { toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'Дээж устгагдлаа.', 'success');
+        fetchEligible();
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+  });
+
+  // 🔁 Шинэчлэх
+  $btnRefresh.addEventListener('click', fetchEligible);
+  $toggleInc.addEventListener('change', fetchEligible);
+  $search.addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchEligible(); });
+
+  // 🧃 жижиг toast
+  function toast(msg, type='info'){
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
+    el.style.zIndex = 1080;
+    el.innerHTML = esc(msg);
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+
+  // ⏱️ Эхлэн ачаалмагц
+  fetchEligible();
+})();
+</script>

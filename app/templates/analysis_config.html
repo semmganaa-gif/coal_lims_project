@@ -1,0 +1,697 @@
+﻿{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 mt-3">
+  <h1>Шинжилгээний тохиргоо (Админ)</h1>
+  <p class="text-muted">Энэ хуудсанд та дээжний төрөл болон нэрний бүтцээс хамаарч ямар шинжилгээнүүд хийгдэхийг тохируулна.</p>
+  <hr>
+
+  {# ========================= ХЭСЭГ 1: ЭНГИЙН ТОХИРГОО ========================= #}
+  <div class="card mb-5">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h3 class="m-0">Энгийн тохиргоо (UHG-Geo, BN-Geo, QC, WTL, LAB)</h3>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="simpleCheckAll">Бүгдийг сонгох</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="simpleUncheckAll">Бүгдийг арилгах</button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <form action="{{ url_for('admin.analysis_config') }}" method="post" id="simpleConfigForm">
+        {{ simple_form.hidden_tag() }}
+
+        <div class="table-responsive matrix-wrap">
+          <table class="table table-bordered table-sm matrix" id="simpleMatrix">
+            <thead class="table-light">
+              <tr>
+                <th class="pin-col" style="min-width:220px">
+                  Нэгж / Дээжний төрөл
+                </th>
+
+                {% for analysis in analysis_types %}
+                <th class="text-center">
+                  <div class="d-flex flex-column align-items-center">
+                    <span class="rotate">{{ analysis.name }}</span>
+                    <div class="d-flex gap-1 mt-1">
+                      <button type="button" class="btn btn-outline-primary btn-sm col-check" data-col="{{ analysis.code }}" title="Энэ баганад бүгдийг сонгох">✓</button>
+                      <button type="button" class="btn btn-outline-danger btn-sm col-uncheck" data-col="{{ analysis.code }}" title="Энэ баганад бүгдийг арилгах">✖</button>
+                    </div>
+                  </div>
+                </th>
+                {% endfor %}
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for profile in simple_profiles %}
+              <tr>
+                <td class="pin-col">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <strong>{{ profile.client_name }}</strong><br>
+                      <small class="text-muted">» {{ profile.sample_type }}</small>
+                    </div>
+                    <div class="d-flex gap-1">
+                      <button type="button" class="btn btn-outline-primary btn-sm row-check" data-row="{{ profile.id }}">Сонгох</button>
+                      <button type="button" class="btn btn-outline-danger btn-sm row-uncheck" data-row="{{ profile.id }}">Арилгах</button>
+                    </div>
+                  </div>
+                </td>
+
+                {% for analysis in analysis_types %}
+                <td class="text-center align-middle">
+                  <input
+                    type="checkbox"
+                    class="form-check-input simple-cb"
+                    name="simple-{{ profile.id }}-analyses"
+                    data-row="{{ profile.id }}"
+                    data-col="{{ analysis.code }}"
+                    value="{{ analysis.code }}"
+                    {% if analysis.code in profile.get_analyses() %}checked{% endif %}
+                  >
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="text-end mt-3">
+          {{ simple_form.submit_simple(class="btn btn-primary") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Wrapper нь scroll контейнер */
+  .matrix-wrap{
+    position: relative;
+    max-height: 70vh;
+    overflow: auto;
+  }
+  /* Матриц өргөжинө (хэвтээ scroll) */
+  table.matrix{
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* Толгойг дээд талд түгжих */
+  .matrix thead th{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #f8f9fa;
+    box-shadow: inset 0 -1px 0 #e5e7eb;
+    vertical-align: bottom;
+  }
+
+  /* Эхний багана (толгой + бүх мөр) зүүн талд түгжих */
+  .matrix .pin-col{
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: #fff;
+    box-shadow: 2px 0 0 #e5e7eb;
+  }
+  .matrix thead .pin-col{
+    z-index: 6;
+    background: #f8f9fa;
+  }
+
+  /* Босоогоор бичих гарчиг */
+  .matrix .rotate{
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    line-height: 1;
+    font-size: .9rem;
+  }
+
+  @supports (-webkit-touch-callout:none){
+    .matrix thead th, .matrix .pin-col{ transform: translateZ(0); }
+  }
+</style>
+
+<script>
+  // ===================== Энгийн тохиргоо — хурдан сонголтууд =====================
+  (function(){
+    const tbl = document.getElementById('simpleMatrix');
+    if(!tbl) return;
+
+    // Бүгд сонгох/арилгах
+    document.getElementById('simpleCheckAll')?.addEventListener('click', ()=>{
+      tbl.querySelectorAll('.simple-cb').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('simpleUncheckAll')?.addEventListener('click', ()=>{
+      tbl.querySelectorAll('.simple-cb').forEach(cb => cb.checked = false);
+    });
+
+    // Баганын бүх нүд
+    tbl.querySelectorAll('.col-check').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const col = btn.dataset.col;
+        tbl.querySelectorAll(`.simple-cb[data-col="${col}"]`).forEach(cb => cb.checked = true);
+      });
+    });
+    tbl.querySelectorAll('.col-uncheck').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const col = btn.dataset.col;
+        tbl.querySelectorAll(`.simple-cb[data-col="${col}"]`).forEach(cb => cb.checked = false);
+      });
+    });
+
+    // Мөрийн бүх нүд
+    tbl.querySelectorAll('.row-check').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = btn.dataset.row;
+        tbl.querySelectorAll(`.simple-cb[data-row="${row}"]`).forEach(cb => cb.checked = true);
+      });
+    });
+    tbl.querySelectorAll('.row-uncheck').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const row = btn.dataset.row;
+        tbl.querySelectorAll(`.simple-cb[data-row="${row}"]`).forEach(cb => cb.checked = false);
+      });
+    });
+  })();
+</script>
+
+{# ========================= ХЭСЭГ 2: БҮТЦИЙН ТОХИРГОО (Pattern) ========================= #}
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <h3 class="m-0">Бүтцийн тохиргоо (CHPP, WTL)</h3>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" type="button" id="exportPatternsBtn">Export JSON</button>
+      <label class="btn btn-outline-secondary btn-sm m-0" for="importPatternsInput">Import JSON</label>
+      <input type="file" id="importPatternsInput" accept="application/json" hidden>
+    </div>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-3">
+      Дээжний нэрний бүтцээс (pattern) хамааруулж шинжилгээ онооно. Жишээ: <code>^CC_</code> (эхлэл), <code>_Dry_</code> (дурын байрлал), <code>_W$</code> (төгсгөл).
+    </p>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <h5 class="mb-2">Одоо байгаа бүтцүүд</h5>
+
+        <div id="conflictSummary" class="alert alert-warning d-none py-2 px-3 mb-3">
+          <strong>Анхаар:</strong> Зарим pattern-ууд давхцаж байна. Дэлгэрэнгүйг жагсаалтаас харна уу.
+        </div>
+
+        <div class="table-responsive" style="max-height: 420px;">
+          <table class="table table-sm table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="min-width: 210px;">Нэрний бүтэц (Pattern)</th>
+                <th style="min-width: 260px;">Хийгдэх шинжилгээнүүд</th>
+                <th style="min-width: 120px;">Эрэмбэ (Priority)</th>
+                <th style="min-width: 120px;">Үйлдэл</th>
+              </tr>
+            </thead>
+            <tbody id="patternListBody">
+              {% for profile in pattern_profiles %}
+              <tr data-pattern="{{ profile.pattern|e }}" data-analyses="{{ profile.get_analyses()|join(',')|e }}" data-priority="{{ profile.priority if profile.priority is not none else 50 }}">
+                <td class="pattern-cell" data-pattern="{{ profile.pattern|e }}">
+                  <div class="text-muted small">{{ profile.description or '' }}</div>
+                </td>
+                <td>
+                  {% for analysis_code in profile.get_analyses() %}
+                    <span class="badge bg-secondary m-1">{{ analysis_map.get(analysis_code, analysis_code) }}</span>
+                  {% else %}
+                    <span class="text-muted fst-italic">Шинжилгээ сонгогдоогүй</span>
+                  {% endfor %}
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ profile.priority if profile.priority is not none else 50 }}</span>
+                </td>
+                <td class="text-center">
+                  <form action="{{ url_for('admin.delete_pattern_profile', profile_id=profile.id) }}" method="post" style="display:inline;" onsubmit="return confirm('Энэ бүтцийг устгахдаа итгэлтэй байна уу?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Устгах</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">Бүртгэгдсэн бүтэц алга.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <h5 class="mb-2">Шинэ бүтцийн тохиргоо нэмэх</h5>
+        <form action="{{ url_for('admin.analysis_config') }}" method="post" class="border p-3 rounded bg-light" novalidate id="patternCreateForm">
+          {{ pattern_form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ pattern_form.pattern.label(class="form-label") }}
+            {{ pattern_form.pattern(class="form-control", placeholder="Жишээ: ^CC_ эсвэл _Dry_") }}
+            <div class="form-text">Regex хэлбэр дэмжинэ. Эхлэл: <code>^</code>, төгсгөл: <code>$</code>.</div>
+            {% for error in pattern_form.pattern.errors %}
+              <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6 mb-3">
+              <label class="form-label">Эрэмбэ (priority)</label>
+              <input name="priority" type="number" class="form-control" placeholder="ж.нь 50" value="50" min="0" step="1">
+              <div class="form-text">Бага тоо = өндөр эрэмбэ.</div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">Match Rule</label>
+              <select name="rule" class="form-select">
+                <option value="winner">Ялагч ялна (priority → хамгийн урт таарал)</option>
+                <option value="merge">Нэгдэх (winner + бусад нэмэлтүүд)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-2 d-flex align-items-center justify-content-between">
+            {{ pattern_form.analyses.label(class="form-label m-0") }}
+            <div class="input-group input-group-sm" style="width: 56%;">
+              <span class="input-group-text">Шүүлтүүр</span>
+              <input type="text" id="analysesFilter" class="form-control" placeholder="код/нэрээр хайх...">
+            </div>
+          </div>
+
+          <div class="border rounded p-2" style="max-height: 220px; overflow-y: auto;" id="analysesBox">
+            {% for subfield in pattern_form.analyses %}
+              <div class="form-check analysis-item">
+                {{ subfield(class="form-check-input", required=false, **{'data-label': subfield.label.text|lower}) }}
+                {{ subfield.label(class="form-check-label") }}
+              </div>
+            {% endfor %}
+          </div>
+          {% for error in pattern_form.analyses.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+          {% endfor %}
+
+          <div class="mt-2 d-flex gap-2">
+            <input type="text" id="bulkCodes" class="form-control form-control-sm" placeholder="Кодууд: MT,Aad,Cl,d ...">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="applyCodesBtn">Кодоор сонгох</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearCodesBtn">Цэвэрлэх</button>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="mb-2">
+            <label class="form-label">Live Preview / Dry-run</label>
+            <textarea id="previewNames" class="form-control" rows="3" placeholder="Жишээ дээжний нэрс (мөр тус бүрт)"></textarea>
+            <div class="form-text">Олон нэр оруулж туршиж болно.</div>
+          </div>
+          <div class="d-flex gap-2 mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="runPreviewBtn">Preview</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearPreviewBtn">Clear</button>
+          </div>
+          <div id="previewResult" class="border rounded p-2 small" style="min-height: 56px; background: #fff;"></div>
+
+          {{ pattern_form.submit_pattern(class="btn btn-success w-100 mt-3") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Full-width layout */
+.container, .container-sm, .container-md, .container-lg, .container-xl, .container-xxl, .container-fluid { max-width: 100% !important; }
+.matrix-wrap { max-height: 70vh; overflow: auto; }
+table.matrix { width: max-content; min-width: 100%; }
+.matrix thead th { background:#f8f9fa; box-shadow: inset 0 -1px 0 #e5e7eb; }
+.matrix td:first-child, .matrix th:first-child { background:#fff; }
+
+/* Жижиг сайжруулалтууд */
+.matrix-wrap .rotate { font-size: .85rem; }
+.analysis-item { transition: background .15s; border-radius: .375rem; padding: .125rem .25rem; }
+.analysis-item:hover { background: #f3f4f6; }
+.conflict-row { background: #fff7ed !important; }
+
+/* Pattern chips UI */
+.pattern-cell { max-width: 640px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.chip { font-size:.75rem; line-height:1; padding:.28rem .5rem; border-radius:999px;
+        background:#eef2ff; color:#1e3a8a; border:1px solid #c7d2fe; white-space:nowrap; }
+.chip.grp { background:#ecfeff; color:#155e75; border-color:#a5f3fc; }
+.chip.more { background:#f1f5f9; color:#334155; border-color:#e2e8f0; cursor:pointer; }
+.chip.tag  { background:#fef9c3; color:#854d0e; border-color:#fde68a; }
+.pattern-raw { font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+               font-size:.78rem; color:#0f172a; background:#f8fafc; border:1px dashed #e2e8f0;
+               padding:.35rem .5rem; border-radius:.5rem; overflow:auto; max-height:110px; }
+.pattern-tools { display:flex; gap:8px; align-items:center; }
+.pattern-tools .btn-sm { padding:.15rem .45rem; }
+</style>
+
+<script>
+/* ===================== 1) Энгийн тохиргоо — хурдан сонголтууд (дахин) ===================== */
+(function(){
+  const tbl = document.getElementById('simpleMatrix');
+  if (!tbl) return;
+
+  document.getElementById('simpleCheckAll')?.addEventListener('click', ()=> {
+    tbl.querySelectorAll('.simple-cb').forEach(cb => cb.checked = true);
+  });
+  document.getElementById('simpleUncheckAll')?.addEventListener('click', ()=> {
+    tbl.querySelectorAll('.simple-cb').forEach(cb => cb.checked = false);
+  });
+
+  tbl.querySelectorAll('.col-check').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const col = btn.dataset.col;
+      tbl.querySelectorAll(`.simple-cb[data-col="${col}"]`).forEach(cb => cb.checked = true);
+    });
+  });
+  tbl.querySelectorAll('.col-uncheck').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const col = btn.dataset.col;
+      tbl.querySelectorAll(`.simple-cb[data-col="${col}"]`).forEach(cb => cb.checked = false);
+    });
+  });
+
+  tbl.querySelectorAll('.row-check').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const row = btn.dataset.row;
+      tbl.querySelectorAll(`.simple-cb[data-row="${row}"]`).forEach(cb => cb.checked = true);
+    });
+  });
+  tbl.querySelectorAll('.row-uncheck').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const row = btn.dataset.row;
+      tbl.querySelectorAll(`.simple-cb[data-row="${row}"]`).forEach(cb => cb.checked = false);
+    });
+  });
+})();
+
+/* ===================== 2) Pattern жагсаалт — conflict checker + export/import ===================== */
+(function(){
+  const rows = Array.from(document.querySelectorAll('#patternListBody tr[data-pattern]'));
+  if (!rows.length) return;
+
+  const patterns = rows.map(r => ({
+    el: r,
+    pattern: r.dataset.pattern,
+    analyses: (r.dataset.analyses || '').split(',').filter(Boolean),
+    priority: Number(r.dataset.priority || 50)
+  }));
+
+  const conflicts = [];
+  for (let i=0; i<patterns.length; i++){
+    for (let j=i+1; j<patterns.length; j++){
+      const a = patterns[i], b = patterns[j];
+      const substr =
+        a.pattern && b.pattern &&
+        (a.pattern.includes(b.pattern) || b.pattern.includes(a.pattern));
+      const general = (!/^(\^|\\b)/.test(a.pattern) && !/(\$|\\b)$/.test(a.pattern)) &&
+                      (!/^(\^|\\b)/.test(b.pattern) && !/(\$|\\b)$/.test(b.pattern));
+      if (substr || general){
+        conflicts.push([a,b]);
+        a.el.classList.add('conflict-row');
+        b.el.classList.add('conflict-row');
+      }
+    }
+  }
+  if (conflicts.length){
+    document.getElementById('conflictSummary')?.classList.remove('d-none');
+  }
+
+  document.getElementById('exportPatternsBtn')?.addEventListener('click', ()=>{
+    const payload = patterns.map(p => ({ pattern: p.pattern, analyses: p.analyses, priority: p.priority }));
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pattern_profiles.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('importPatternsInput')?.addEventListener('change', async (e)=>{
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) throw new Error('JSON array шаардлагатай.');
+      alert(`Импортод ${data.length} pattern байна. Серверт хадгалах POST интеграцыг route дээрээ хэрэгжүүлнэ үү.`);
+    }catch(err){
+      alert('Импорт буруу: ' + err.message);
+    }finally{
+      e.target.value = '';
+    }
+  });
+})();
+
+/* ===================== 3) Pattern нэмэх — analyses хайлт, кодуудаар сонгох, regex шалгалт, preview ===================== */
+(function(){
+  const filter = document.getElementById('analysesFilter');
+  const box = document.getElementById('analysesBox');
+  const items = box ? Array.from(box.querySelectorAll('.analysis-item')) : [];
+
+  filter?.addEventListener('input', ()=>{
+    const q = filter.value.trim().toLowerCase();
+    items.forEach(it=>{
+      const label = (it.querySelector('input')?.dataset.label || '').toLowerCase();
+      it.style.display = (q==='' || label.includes(q)) ? '' : 'none';
+    });
+  });
+
+  const parseCodes = (s)=> s.split(/[,\s]+/).map(v=>v.trim()).filter(Boolean);
+  document.getElementById('applyCodesBtn')?.addEventListener('click', ()=>{
+    const raw = document.getElementById('bulkCodes').value || '';
+    const want = new Set(parseCodes(raw));
+    const checks = box.querySelectorAll('input[type="checkbox"]');
+    let marked = 0;
+    checks.forEach(cb=>{
+      const labelText = cb.nextElementSibling?.innerText?.trim() || '';
+      const code = labelText.split(/\s+/)[0];
+      if (code && want.has(code)){ cb.checked = true; marked++; }
+    });
+    alert(`Сонгосон: ${marked} ш`);
+  });
+  document.getElementById('clearCodesBtn')?.addEventListener('click', ()=>{
+    box.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('bulkCodes').value = '';
+  });
+
+  const form = document.getElementById('patternCreateForm');
+  form?.addEventListener('submit', (e)=>{
+    const patInput = form.querySelector('[name="pattern"]') || form.querySelector('#pattern');
+    if (!patInput) return;
+    const val = (patInput.value || '').trim();
+    if (!val){
+      alert('Pattern хоосон байна.');
+      e.preventDefault(); return;
+    }
+    try{ new RegExp(val); }
+    catch(err){
+      alert('Regex буруу: ' + err.message);
+      e.preventDefault();
+    }
+  });
+
+  function decideWinner(matches){
+    if (!matches.length) return null;
+    matches.sort((a,b)=>{
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      const al = a.pattern.length, bl = b.pattern.length;
+      if (al !== bl) return bl - al;
+      return 0;
+    });
+    return matches[0];
+  }
+
+  document.getElementById('runPreviewBtn')?.addEventListener('click', ()=>{
+    const namesRaw = (document.getElementById('previewNames').value || '').trim();
+    const out = document.getElementById('previewResult');
+    out.innerHTML = '';
+    if (!namesRaw){ out.innerHTML = '<span class="text-muted">Нэр оруулна уу.</span>'; return; }
+
+    const rows = Array.from(document.querySelectorAll('#patternListBody tr[data-pattern]')).map(r=>({
+      pattern: r.dataset.pattern, analyses: (r.dataset.analyses || '').split(',').filter(Boolean),
+      priority: Number(r.dataset.priority || 50)
+    }));
+
+    const newPatEl = form.querySelector('[name="pattern"]');
+    const newPat = newPatEl ? (newPatEl.value || '').trim() : '';
+    const newAnalyses = Array.from(form.querySelectorAll('#analysesBox input[type="checkbox"]:checked'))
+      .map(cb=>cb.nextElementSibling?.innerText?.trim().split(/\s+/)[0]).filter(Boolean);
+    const newPriority = Number((form.querySelector('[name="priority"]')?.value || 50));
+    const rule = (form.querySelector('[name="rule"]')?.value || 'winner');
+
+    if (newPat){
+      try { new RegExp(newPat); rows.push({ pattern: newPat, analyses: newAnalyses, priority: newPriority }); }
+      catch(e){ /* ignore invalid */ }
+    }
+
+    const lines = namesRaw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const blocks = [];
+
+    for (const nm of lines){
+      const matches = [];
+      for (const r of rows){
+        try{
+          const re = new RegExp(r.pattern);
+          if (re.test(nm)) matches.push({ name: nm, pattern: r.pattern, analyses: r.analyses, priority: r.priority });
+        }catch(e){}
+      }
+      if (!matches.length){
+        blocks.push(`<div class="mb-2"><strong>${nm}</strong><br><span class="text-danger">Таарсан pattern алга</span></div>`);
+        continue;
+      }
+      if (rule === 'winner'){
+        const w = decideWinner(matches);
+        blocks.push(
+          `<div class="mb-2">
+            <strong>${nm}</strong>
+            <div class="text-muted small">Ялагч: <code>${w.pattern}</code> (priority ${w.priority})</div>
+            <div>Оноох: ${w.analyses.map(a=>`<span class="badge bg-secondary me-1">${a}</span>`).join('')}</div>
+          </div>`
+        );
+      }else{
+        const win = decideWinner(matches);
+        const merged = new Set(win ? win.analyses : []);
+        matches.forEach(m => m.analyses.forEach(a => merged.add(a)));
+        blocks.push(
+          `<div class="mb-2">
+            <strong>${nm}</strong>
+            <div class="text-muted small">Ялагч: <code>${win.pattern}</code> (priority ${win.priority}) + бусад нэгдсэн</div>
+            <div>Оноох (нэгдэх): ${Array.from(merged).map(a=>`<span class="badge bg-secondary me-1">${a}</span>`).join('')}</div>
+          </div>`
+        );
+      }
+    }
+    out.innerHTML = blocks.join('') || '<span class="text-muted">Үр дүн алга.</span>';
+  });
+
+  document.getElementById('clearPreviewBtn')?.addEventListener('click', ()=>{
+    document.getElementById('previewNames').value = '';
+    document.getElementById('previewResult').innerHTML = '';
+  });
+})();
+
+/* ===================== 4) Pattern chips renderer + modal ===================== */
+(function(){
+  function tokenizePattern(raw){
+    const cleaned = raw
+      .replace(/^\^\(\?:?/, '')
+      .replace(/\)\\b\$?$/,'')
+      .replace(/^\^/,'').replace(/\$$/,'')
+      .replace(/\\b/g,'');
+    const parts = cleaned.includes('|') ? cleaned.split('|') : [cleaned];
+    const groups = {};
+    const known = ['FCU','FC','SC','TH','TBS','SP','DR','FP','BP'];
+    parts.forEach(p=>{
+      const s = p.replace(/^\(\?:/,'').replace(/\)$/,'');
+      let prefix = null, tail = s;
+      for (const k of known){
+        if (s.startsWith(k)){ prefix = k; tail = s.slice(k.length); break; }
+      }
+      if (!prefix){ prefix = 'PAT'; }
+      tail = tail.replace(/^\(\?:/,'').replace(/\)$/,'').replace(/^[_-]/,'');
+      groups[prefix] = groups[prefix] || new Set();
+      if (!tail || /^[^0-9A-Z]+$/.test(tail)) { groups[prefix].add(s); }
+      else {
+        const nums = tail.split('|').map(v=>v.replace(/[^0-9A-Z]+/g,'').trim()).filter(Boolean);
+        nums.forEach(n=>groups[prefix].add(n));
+      }
+    });
+    return groups;
+  }
+  function openRawModal(raw){
+    let modal = document.getElementById('patternRawModal');
+    if (!modal){
+      modal = document.createElement('div');
+      modal.className = 'modal fade';
+      modal.id = 'patternRawModal';
+      modal.tabIndex = -1;
+      modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Pattern preview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="pattern-raw" id="patternRawBox"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="copyPatternBtn">Copy</button>
+              <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+    modal.querySelector('#patternRawBox').textContent = raw;
+    modal.querySelector('#copyPatternBtn').onclick = async()=>{
+      try { await navigator.clipboard.writeText(raw); } catch(e){}
+    };
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+  }
+  function renderCell(td){
+    const raw = td.dataset.pattern || '';
+    if (!raw) return;
+    const groups = tokenizePattern(raw);
+    const wrap = document.createElement('div');
+    wrap.className = 'chips';
+
+    Object.entries(groups).forEach(([prefix, setVals])=>{
+      const values = Array.from(setVals);
+      const head = document.createElement('span');
+      head.className = 'chip grp';
+      head.textContent = prefix;
+      wrap.appendChild(head);
+
+      const MAX = 6;
+      values.slice(0, MAX).forEach(v=>{
+        const c = document.createElement('span');
+        c.className = 'chip';
+        c.textContent = v;
+        wrap.appendChild(c);
+      });
+      if (values.length > MAX){
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'chip more btn btn-link btn-sm';
+        more.textContent = `+${values.length - MAX}`;
+        more.addEventListener('click', ()=> {
+          values.slice(MAX).forEach(v=>{
+            const c = document.createElement('span');
+            c.className = 'chip';
+            c.textContent = v;
+            more.before(c);
+          });
+          more.remove();
+        });
+        wrap.appendChild(more);
+      }
+    });
+
+    const tools = document.createElement('div');
+    tools.className = 'pattern-tools mt-2';
+
+    const tag = document.createElement('span');
+    tag.className = 'chip tag';
+    tag.textContent = 'regex';
+    tools.appendChild(tag);
+
+    const viewBtn = document.createElement('button');
+    viewBtn.type = 'button';
+    viewBtn.className = 'btn btn-outline-secondary btn-sm';
+    viewBtn.textContent = 'View full';
+    viewBtn.addEventListener('click', ()=> openRawModal(raw));
+    tools.appendChild(viewBtn);
+
+    td.innerHTML = '';
+    td.appendChild(wrap);
+    td.appendChild(tools);
+  }
+  document.querySelectorAll('td.pattern-cell[data-pattern]').forEach(renderCell);
+})();
+</script>
+{% endblock %}

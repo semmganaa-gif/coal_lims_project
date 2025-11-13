@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>"{{ sample.sample_code }}" дээжний мэдээлэл засах</h1>
+    <hr>
+    <form action="" method="post" novalidate>
+        {# Дээжний код засах хэсэг #}
+        <div class="mb-3">
+            <label for="sample_code" class="form-label">Дээжний код:</label>
+            <input type="text" id="sample_code" name="sample_code" value="{{ sample.sample_code }}" class="form-control" required>
+        </div>
+
+        {# Шинжилгээний даалгавар засах хэсэг #}
+        <div class="mb-3">
+            <label class="form-label">Шинжилгээний даалгавар:</label>
+            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                <div class="row">
+                    {% for analysis in all_analysis_types %}
+                    <div class="col-md-4 col-sm-6"> {# Бага зэрэг зайтай харагдуулахын тулд col ашиглах #}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="analyses" {# Энэ нэрийг Python кодонд request.form.getlist('analyses') гэж авна #}
+                                   value="{{ analysis.code }}"
+                                   id="analysis-{{ analysis.code }}"
+                                   {% if analysis.code in current_analyses %}checked{% endif %}>
+                            <label class="form-check-label" for="analysis-{{ analysis.code }}">
+                                {{ analysis.name }} ({{ analysis.code }})
+                            </label>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Шинжилгээний төрөл олдсонгүй.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {# Товчнууд #}
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Хадгалах</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Буцах</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

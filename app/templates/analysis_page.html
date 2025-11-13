@@ -1,0 +1,563 @@
+{# templates/analysis_page.html (ШИНЭЧИЛСЭН - v=5 болгосон) #}
+{% extends "base.html" %}
+
+{% block content %}
+{# 🛑 ШИНЭ: Энэ хуудсыг масс (m) эсэхийг тодорхойлъё #}
+{% set is_mass_page = (analysis.code|lower == 'm') %}
+
+<style>
+  .form-control[readonly].bg-light{background-color:#e9ecef!important;cursor:not-allowed}
+  table[id$="-analysis-table"] thead th{ position:sticky; top:0; z-index:2; background:#f8f9fa; outline:1px solid #dee2e6;}
+  .table-scroll-wrap{max-height:calc(100vh - 260px);overflow:auto}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+
+  {# 🛡 Нэмэлт хамгаалалт: М хуудсанд “хадгалах” товчийг CSS-ээр ч бас нуугаад өгнө #}
+  {% if is_mass_page %}
+  #save-analysis-results,
+  .btn-save-results,
+  [data-action="save-results"]{ display:none !important; }
+  {% endif %}
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="mb-0">
+        {{ title }}
+        <span class="text-muted fs-5">({{ analysis.code }})</span>
+      </h2>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Ажлын талбар
+      </a>
+
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+        <i class="bi bi-plus-circle"></i>
+        {% if is_mass_page %}
+          Дээж (M) сонгох
+        {% else %}
+          Дээж сонгох / нэмэх
+        {% endif %}
+      </button>
+
+      {# 🛑 ШИНЭ: Масс биш үед л ерөнхий хадгалалтын ногоон товчийг харуулна #}
+      {% if not is_mass_page %}
+      <button class="btn btn-success" id="save-analysis-results" data-action="save-results">
+        <i class="bi bi-check-lg"></i> Үр дүнг хадгалах
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          {% if config.template %}
+            {% include config.template %}
+          {% else %}
+            <div class="alert alert-warning mb-0">
+              Энэ шинжилгээний формын загвар тодорхойлогдоогүй байна (config.template).
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3">
+      <div class="position-sticky" style="top: 76px;">
+        <div class="card mb-3">
+          <div class="card-body p-3">
+            {% include "analysis/partials/quick_ref.html" %}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body p-3">
+            {% include "analysis/partials/timer_panel.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-labelledby="selectSamplesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="selectSamplesModalLabel">
+          {% if is_mass_page %}
+            Шинжилгээ хийх дээж сонгох (Статус: New, Даалгавар: M)
+          {% else %}
+            Шинжилгээ хийх дээж сонгох (Статус: New, Даалгавар: {{ analysis.code }})
+          {% endif %}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"><p class="text-center">Ачаалж байна...</p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">Сонгосон дээжийг нэмэх</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+  // Server→window
+  window.LIMS_ANALYSIS_CODE_RAW    = "{{ analysis.code }}";
+  window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
+  window.REJECTED_SAMPLES = window.REJECTED_SAMPLES || {{ rejected_samples_info|tojson|safe }};
+  window.EXISTING_RESULTS = window.EXISTING_RESULTS || {{ existing_results_map|tojson|safe }};
+  window.TIMER_CONFIG     = {{ (timer_config|default({}))|tojson|safe }};
+  window.GI_RETEST_MODES  = {{ gi_retest_modes | tojson | safe }};
+  window.S_BY_SAMPLE      = {{ (sulfur_by_sample|default({}))|tojson|safe }};
+</script>
+
+<script>
+  // Legacy shim: window.LIMS_ANALYSIS_CODE + session→local туннел
+  window.LIMS_ANALYSIS_CODE = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
+  (function(){
+    const ls = window.localStorage, ss = window.sessionStorage;
+    const isLimsKey = (k)=> typeof k==='string' && k.startsWith('analysis_');
+    const _set = ss.setItem.bind(ss), _get = ss.getItem.bind(ss), _rem = ss.removeItem.bind(ss);
+    ss.setItem = function(k,v){ try{ if(isLimsKey(k)) ls.setItem(k,v) }catch(e){}; return _set(k,v) };
+    ss.getItem = function(k){ try{ if(isLimsKey(k)){ const v = ls.getItem(k); if(v!==null) return v } }catch(e){}; return _get(k) };
+    ss.removeItem = function(k){ try{ if(isLimsKey(k)) ls.removeItem(k) }catch(e){}; return _rem(k) };
+  })();
+</script>
+
+{# Sulfur calculator — TS/St,ad #}
+{% if analysis.code in ['St,ad','TS'] %}
+<script src="{{ url_for('static', filename='js/calculators/sulfur_calculator.js') }}?v=2"></script>
+{% endif %}
+
+{# Тухайн шинжилгээний калькулятор (файлын нэрийн map) #}
+{% if config.formula and config.formula != 'none' %}
+  {# ⚠️ FM-г капитал файл нэрээр ачаалдаг: static/js/calculators/FM_calculator.js #}
+  {% set _formula_map = {'P,ad':'phosphorus','F,ad':'fluorine','Cl,ad':'chlorine','FM':'FM','Solid':'solid','TRD':'TRD_calculator'} %}
+  {% set formula_js = _formula_map.get(config.formula, config.formula) %}
+  
+  {# (!!! ШИНЭЧЛЭЛ) TRD-г шинэ нэрээр нь дуудаж, v=5 болгов #}
+  {% if analysis.code == 'TRD' %}
+    <script src="{{ url_for('static', filename='js/calculators/TRD_calculator.js') }}?v=5"></script>
+  {% else %}
+    <script src="{{ url_for('static', filename='js/calculators/' + formula_js + '_calculator.js') }}?v=4"></script>
+  {% endif %}
+{% endif %}
+
+<script>
+$(function () {
+  console.log("Analysis Page Main Script START");
+
+  const analysisCodeRaw     = window.LIMS_ANALYSIS_CODE_RAW;
+  const analysisCodeDisplay = window.LIMS_ANALYSIS_CODE_DISPLAY;
+  const rejected   = window.REJECTED_SAMPLES || {};
+  const existing   = window.EXISTING_RESULTS || {};
+
+  const $wraps = $('.table-responsive').has('table[id$="-analysis-table"]');
+  $wraps.addClass('table-scroll-wrap');
+
+  // ------- helpers -------
+  function setIf(val, sel){ if(val!==undefined && sel){ const $el=$(sel); if($el.length) $el.val(val) } }
+  function restoreParallel(rawPar, sampleId, p){
+    if(!rawPar) return;
+    setIf(rawPar.num,         `#sample_${sampleId}_${p}_num`);
+    setIf(rawPar.dish_num,    `#sample_${sampleId}_${p}_dish_num`);
+    setIf(rawPar.bottle_num,  `#sample_${sampleId}_${p}_bottle_num`);
+    // (!!!) TRD-д зориулж 'bottle' alias нэмэв
+    setIf(rawPar.bottle,      `#sample_${sampleId}_${p}_bottle`);
+    setIf(rawPar.m1,          `#sample_${sampleId}_${p}_m1`);
+    setIf(rawPar.m2_sample,   `#sample_${sampleId}_${p}_m2`);
+    setIf(rawPar.m2,          `#sample_${sampleId}_${p}_m2`);
+    setIf(rawPar.m3_ashy,     `#sample_${sampleId}_${p}_m3_ashy`);
+    setIf(rawPar.m3_dish_dry, `#sample_${sampleId}_${p}_m3_dish_dry`);
+    setIf(rawPar.m3_residue,  `#sample_${sampleId}_${p}_m3_residue`);
+  }
+  function setBusy(busy) {
+    const $btn = $('#save-analysis-results');
+    if (busy) $btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat"></i> Хадгалж байна…');
+    else      $btn.prop('disabled', false).html('<i class="bi bi-check-lg"></i> Үр дүнг хадгалах');
+  }
+  function selectableInputs(scope){
+    return $(scope).find('.form-input,[data-lims-input],input[type="number"],input[type="text"]').filter(function(){
+      return !this.readOnly && !this.disabled;
+    });
+  }
+  // 🆕 Нэг мөр (объект) эсвэл олон мөр (массив) аль нь ч ирсэн payload-д нэмэх
+  function pushRowDataFlex(payloadArr, rowData){
+    if (!rowData) return;
+    if (Array.isArray(rowData)) payloadArr.push(...rowData);
+    else payloadArr.push(rowData);
+  }
+
+  function lockRowsAndClearStorage(payload, analysisCode, tableId) {
+    const $tbl = $(tableId);
+    if (!$tbl.length) return;
+    payload.forEach(p => {
+      const sid = String(p.sample_id);
+      const $rows = $tbl.find(`tr[data-sample-id="${sid}"]`);
+      if (!$rows.length) return;
+      selectableInputs($rows).each(function () {
+        this.readOnly = true;
+        this.classList.add('bg-light');
+        const id = this.id;
+        const baseKeyRaw       = `analysis_${analysisCode}_${id}`;
+        const baseKeyDisplay = `analysis_${analysisCodeDisplay}_${id}`;
+        try{
+          localStorage.removeItem(baseKeyRaw);
+          localStorage.setItem(`${baseKeyRaw}_locked`, 'true');
+          localStorage.removeItem(baseKeyDisplay);
+          localStorage.setItem(`${baseKeyDisplay}_locked`, 'true');
+          sessionStorage.removeItem(baseKeyRaw);
+          sessionStorage.setItem(`${baseKeyRaw}_locked`, 'true');
+          sessionStorage.removeItem(baseKeyDisplay);
+          sessionStorage.setItem(`${baseKeyDisplay}_locked`, 'true');
+        }catch(e){}
+      });
+    });
+  }
+
+  function postPayload(payload, callback, analysisCode, tableId) {
+    let timedOut = false;
+    const t = setTimeout(() => {
+      timedOut = true; setBusy(false);
+      alert('Сервер хариу өгсөнгүй. Дахиад оролдоно уу.');
+    }, 12000);
+
+    $.ajax({
+      url: "{{ url_for('api.save_results') }}",
+      method: "POST",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(payload),
+      timeout: 11000
+    })
+    .done(function(resp) {
+      if (timedOut) return;
+      alert(resp?.message || 'Хадгаллаа');
+      const savedPayload = resp.results || payload;
+      lockRowsAndClearStorage(savedPayload, analysisCode, tableId);
+      if (callback) callback(resp);
+    })
+    .fail(function(xhr) {
+      if (timedOut) return;
+      alert(xhr?.responseJSON?.message || 'Хадгалахад алдаа гарлаа.');
+    })
+    .always(function() {
+      if (timedOut) return;
+      clearTimeout(t);
+      setBusy(false);
+    });
+  }
+
+  // Буцаагдсан мөрүүдийг нээх
+  const $allTables = $('table[id$="-analysis-table"]');
+  Object.keys(rejected).forEach(sidStr=>{
+    const sid = parseInt(sidStr,10);
+    const $rows = $allTables.find(`tbody tr[data-sample-id="${sid}"]`);
+    selectableInputs($rows).each(function(){
+      $(this).prop('readonly',false).prop('disabled',false).removeClass('bg-light');
+      try{
+        const id = this.id;
+        localStorage.removeItem(`analysis_${analysisCodeRaw}_${id}_locked`);
+        localStorage.removeItem(`analysis_${analysisCodeDisplay}_${id}_locked`);
+        sessionStorage.removeItem(`analysis_${analysisCodeRaw}_${id}_locked`);
+        sessionStorage.removeItem(`analysis_${analysisCodeDisplay}_${id}_locked`);
+      }catch(e){}
+    });
+
+    const rec = existing[sid];
+    // (!!!) TRD-г restoreParallel-д нэмэв
+    if(analysisCodeRaw !== 'Gi' && analysisCodeRaw !== 'CSN' && rec && rec.raw_data){
+      let raw = rec.raw_data; try{ if(typeof raw==='string') raw = JSON.parse(raw) }catch(e){ raw = {} }
+      restoreParallel(raw.p1, sid, 'p1'); restoreParallel(raw.p2, sid, 'p2');
+    }
+    
+    // (!!!) TRD нь async тул window.calculateAndDisplayForRow-г хүлээх хэрэггүй,
+    // (JS доторх 'DOMContentLoaded' үүнийг аль хэдийн хийсэн)
+    if(typeof window.calculateAndDisplayForRow === 'function' && analysisCodeRaw !== 'TRD'){ 
+        window.calculateAndDisplayForRow(sid, false); 
+    }
+  });
+
+  // ---- FM fallback калькулятор (файл ачаалагдаагүй тохиолдолд) ----
+  if (analysisCodeRaw === 'FM' && typeof window.calculateAndDisplayForRow !== 'function') {
+    (function(){
+      const TABLE_SEL = '#free-moisture-analysis-table';
+      const REJECTED = window.REJECTED_SAMPLES || {};
+      const $table = document.querySelector(TABLE_SEL);
+      function asNum(el){ if(!el) return null; const s=String(el.value??'').trim().replace(',','.'); if(!s) return null; const n=Number(s); return Number.isFinite(n)? n : null; }
+      function refs(id){
+        const row = $table?.querySelector(`tr[data-sample-id="${id}"]`); if(!row) return null;
+        return {
+          row,
+          tray:   row.querySelector(`#sample_${id}_tray`),
+          before: row.querySelector(`#sample_${id}_before`),
+          after:  row.querySelector(`#sample_${id}_after`),
+          lossCell: row.querySelector(`.loss-cell[data-sample-id="${id}"]`),
+          fmCell:   row.querySelector(`.fm-cell[data-sample-id="${id}"]`)
+        };
+      }
+      window.calculateAndDisplayForRow = function(sampleId, lock){
+        const r = refs(sampleId); if(!r) return null;
+        const Wt = asNum(r.tray), Wb = asNum(r.before), Wa = asNum(r.after);
+        let loss=null, fm=null;
+
+        if (r.lossCell){ r.lossCell.textContent='-'; r.lossCell.title=''; }
+        if (r.fmCell){ r.fmCell.textContent='-'; r.fmCell.classList.remove('text-danger','text-success'); r.fmCell.title=''; }
+
+        if (Wb!=null && Wa!=null){
+          loss = +(Wb - Wa);
+          if (r.lossCell){ r.lossCell.textContent = loss.toFixed(3); r.lossCell.title='Алдагдсан жин (g)'; }
+        }
+        if (Wt!=null && Wb!=null && Wa!=null){
+          const dry = Wa - Wt;
+          if (dry>0){
+            fm = ((Wb - Wa)/dry)*100.0;
+            if (r.fmCell){ r.fmCell.textContent = (+fm).toFixed(2); r.fmCell.classList.add('text-success'); r.fmCell.title = `FM=((${Wb}-${Wa})/(${Wa}-${Wt}))*100`; }
+          }else{
+            if (r.fmCell){ r.fmCell.textContent='—'; r.fmCell.classList.add('text-danger'); r.fmCell.title='(after - tray) ≤ 0'; }
+          }
+        }
+
+        if (fm==null) return null;
+
+        return {
+          sample_id: Number(sampleId),
+          analysis_code: 'FM',
+          final_result: +Number(fm.toFixed(4)),
+          raw_data: {
+            tray_g:   Number.isFinite(Wt)? +Number(Wt.toFixed(3)) : null,
+            before_g: Number.isFinite(Wb)? +Number(Wb.toFixed(3)) : null,
+            after_g:  Number.isFinite(Wa)? +Number(Wa.toFixed(3)) : null,
+            loss_g:   Number.isFinite(loss)? +Number(loss.toFixed(3)) : null,
+            formula: "FM% = ((Wb - Wa) / (Wa - Wt)) * 100"
+          }
+        };
+      };
+    })();
+  }
+
+  // ===== Modal (дээж нэмэх) =====
+  let modalSelectedOrder = new Set();
+  $('#selectSamplesModal').on('show.bs.modal', function(){
+    modalSelectedOrder = new Set();
+    const modal = $(this), body = modal.find('.modal-body');
+    body.html('<p class="text-center">Ачаалж байна...</p>');
+    $.getJSON(`/api/eligible_samples/${analysisCodeRaw}`, function(resp){
+      const samples = resp.samples || [];
+      if(!samples.length){ body.html('<p class="text-center text-muted">Энэ шинжилгээнд оноогдсон шинэ дээж олдсонгүй.</p>'); return; }
+      let html = `<div class="table-responsive"><table class="table table-sm table-hover" id="selectable-samples-table">
+        <thead><tr><th><input type="checkbox" id="select-all-modal-samples"></th><th>Дээжний код</th><th>Захиалагч</th><th>Төрөл</th></tr></thead><tbody>`;
+      samples.forEach(s=>{ html += `<tr>
+        <td><input type="checkbox" class="modal-sample-checkbox" value="${s.id}"></td>
+        <td>${s.sample_code}</td><td>${s.client_name||'-'}</td><td>${s.sample_type||'-'}</td>
+      </tr>`; });
+      html += `</tbody></table></div>`;
+      body.html(html);
+      body.find('#select-all-modal-samples').on('change', function(){
+        const checked=this.checked; body.find('.modal-sample-checkbox').each(function(){ $(this).prop('checked',checked).trigger('change'); });
+      });
+    });
+  });
+  $(document).on('change','.modal-sample-checkbox', function(){
+    const id = $(this).val(); if(this.checked) modalSelectedOrder.add(id); else modalSelectedOrder.delete(id);
+  });
+  $('#add-selected-samples-to-worksheet').on('click', function(){
+    if(!modalSelectedOrder.size){ alert("Дээж сонгоно уу."); return; }
+    const url = new URL(window.location.href);
+    const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
+    const reallyNew = [...modalSelectedOrder].filter(x=>!exist.includes(x));
+    const final = [...exist, ...reallyNew];
+    url.searchParams.set('sample_ids', final.join(','));
+    window.location.href = url.toString();
+  });
+
+  // ===== Хадгалах =====
+  const TABLE_BY_CODE = {
+    'Aad':'#ash-analysis-table','Mad':'#moisture-analysis-table','MT':'#total-moisture-analysis-table','Vad':'#volatile-analysis-table',
+    'TS':'#sulfur-analysis-table','St,ad':'#sulfur-analysis-table',
+    'CV':'#cv-analysis-table','Qgr,ad':'#cv-analysis-table',
+    'Gi':'#Gi-analysis-table','CSN':'#csn-analysis-table',
+    'FM':'#free-moisture-analysis-table',
+    'F,ad':'#fluorine-analysis-table','P,ad':'#phosphorus-analysis-table','Cl,ad':'#chlorine-analysis-table',
+    'TRD':'#trd-analysis-table', // (!!! ЗӨВ БАЙНА)
+    'SOLID':'#solid-analysis-table','Solid':'#solid-analysis-table','solid':'#solid-analysis-table',
+    'X':'#xy-analysis-table','Y':'#xy-analysis-table',
+    'CRI':'#cricsr-analysis-table','CSR':'#cricsr-analysis-table',
+  };
+  const SINGLE_VALUE_CODES = new Set(['FM','SOLID','X','Y','CRI','CSR']);
+  
+  // (!!! ШИНЭЧИЛСЭН) Тусгай `collect` функц дууддаг кодууд
+  const COLLECTOR_CODES = new Set(['CSN', 'TRD']);
+
+  // Generic single-value collector (калькуляторгүй үед)
+  function collectSingleRowPayload($row){
+    const sid = parseInt($row.data('sample-id'), 10); if(!sid) return null;
+    let $inp = $row.find(`#sample_${sid}_p1_result`);
+    if(!$inp.length) $inp = $row.find(`#sample_${sid}_result`);
+    if(!$inp.length) $inp = $row.find('input[name*="result"]');
+    if(!$inp.length) return null;
+    const valStr = ($inp.val() ?? '').toString().trim(); if(valStr==='') return null;
+    const valNum = Number(valStr); if(Number.isNaN(valNum)) return null;
+    return { sample_id:sid, analysis_code:analysisCodeRaw, final_result:valNum, raw_data:{ p1:{ result:valNum, _single:true } } };
+  }
+
+  $('#save-analysis-results').off('click.save').on('click.save', function(){
+    // (!!! ШИНЭЧИЛСЭН ХАДГАЛАХ ЛОГИК)
+    
+    setBusy(true);
+    let payload = [];
+    
+    const tableId = TABLE_BY_CODE[analysisCodeRaw] || TABLE_BY_CODE[analysisCodeDisplay];
+    if (!tableId) {
+        setBusy(false);
+        alert('Тохирох хүснэгт олдсонгүй (TABLE_BY_CODE)'); 
+        return;
+    }
+    const $tbl = $(tableId);
+    if (!$tbl.length) {
+        setBusy(false);
+        alert(`"${tableId}" хүснэгт олдсонгүй!`); 
+        return;
+    }
+
+    // --- 1. Тусгай collector ашигладаг эсэхийг шалгах (TRD, CSN) ---
+    if (COLLECTOR_CODES.has(analysisCodeRaw)) {
+        const collector = window.LIMS_CALC?.[analysisCodeRaw]?.collect;
+        if (typeof collector === 'function') {
+            console.log(`Using dedicated collector for ${analysisCodeRaw}`);
+            payload = collector();
+        } else {
+            setBusy(false);
+            alert(`${analysisCodeRaw} шинжилгээний хадгалах функц (collector) олдсонгүй!`);
+            return;
+        }
+    } 
+    // --- 2. Ердийн (CV, Vad, гм) тооцоологч ашиглах ---
+    else if (typeof window.calculateAndDisplayForRow === 'function') {
+        const sampleIds = new Set();
+        $tbl.find('tbody tr[data-sample-id]').each(function(){
+            const p = $(this).data('parallel');
+            if (p === 1 || p === undefined) sampleIds.add($(this).data('sample-id'));
+        });
+
+        sampleIds.forEach((sid) => {
+            try{
+                // (!!! ЗАСВАР) TRD нь async тул энд ажиллахгүй
+                if (analysisCodeRaw !== 'TRD') {
+                    const rowData = window.calculateAndDisplayForRow(sid, true);
+                    pushRowDataFlex(payload, rowData);
+                }
+            }catch(e){ console.warn('calc error for sid=', sid, e); }
+        });
+    }
+    // --- 3. Калькуляторгүй (Single-value) үед ажиллах ---
+    else if (SINGLE_VALUE_CODES.has(analysisCodeRaw)) {
+        $tbl.find('tbody tr[data-sample-id]').each(function(){
+            const p = $(this).data('parallel'); if (p && Number(p)!==1) return;
+            const one = collectSingleRowPayload($(this)); if (one) payload.push(one);
+        });
+    }
+
+    // --- 4. Үр дүнг илгээх ---
+    if (!payload.length) { 
+        setBusy(false); 
+        return alert('Хадгалах шинэ үр дүн олдсонгүй. (Утга оруулсан эсэх, буцаасан/түгжээ тайлсан эсэх, калькулятор ачаалсан эсэхээ шалгана уу.)'); 
+    }
+    
+    console.log(`Saving payload for ${analysisCodeRaw}:`, payload);
+    postPayload(payload, null, analysisCodeRaw, tableId);
+  });
+
+  // Remove from worksheet
+  $(document).on('click','.remove-sample-from-worksheet', function(e){
+    e.preventDefault();
+    if(!confirm("Энэ дээжийг ажлын жагсаалтаас хасах уу?")) return;
+    const sid = $(this).data('sample-id').toString();
+    const url = new URL(window.location.href);
+    let ids = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
+    ids = ids.filter(x=>x!==sid);
+    const storageKey=`worksheet_${analysisCodeRaw}_sample_ids`;
+    const finalStr = ids.join(',');
+    localStorage.setItem(storageKey, finalStr);
+    if(ids.length) url.searchParams.set('sample_ids', finalStr); else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  });
+
+  // Universal Arrow/Enter navigation
+  (function installNavOnce(){
+    if (window.__LIMS_NAV_INSTALLED__) return; window.__LIMS_NAV_INSTALLED__ = true;
+    const ROW_SEL = 'table[id$="-analysis-table"] tbody tr[data-sample-id]';
+    function rowInputs(row){
+      return Array.from(row.querySelectorAll('.form-input,[data-lims-input],input[type="number"],input[type="text"]'))
+        .filter(i => !i.readOnly && !i.disabled);
+    }
+    function nextInRow(inputs, el, dir){
+      const idx = inputs.indexOf(el);
+      if (idx < 0) return inputs[0] || null;
+      const n = inputs[idx + dir];
+      return n || (dir > 0 ? inputs[0] : inputs[inputs.length - 1]) || null;
+    }
+    document.addEventListener('keydown', function(ev){
+      const k = ev.key;
+      if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'].includes(k)) return;
+      const el = ev.target;
+      if (!(el instanceof HTMLInputElement)) return;
+      if (!el.closest('table[id$="-analysis-table"]')) return;
+      const row = el.closest(ROW_SEL);
+      if (!row) return;
+      ev.preventDefault(); ev.stopPropagation();
+      const inputs = rowInputs(row); let target = null;
+      if (k==='ArrowLeft') target = nextInRow(inputs, el, -1);
+      if (k==='ArrowRight' || k==='Enter') target = nextInRow(inputs, el, +1);
+      if (k==='ArrowUp' || k==='ArrowDown'){
+        const allRows = Array.from(document.querySelectorAll(ROW_SEL));
+        const rowIdx  = allRows.indexOf(row);
+        const row2    = allRows[rowIdx + (k==='ArrowDown' ? +1 : -1)];
+        if (row2){
+          const inputs2 = rowInputs(row2);
+          const col     = Math.max(0, inputs.indexOf(el));
+          if (inputs2.length) target = inputs2[Math.min(col, inputs2.length - 1)];
+        }
+      }
+      if (target){ target.focus(); target.select?.(); }
+    }, true);
+  })();
+
+  // URL vs storage sync + restore
+  const urlParams = new URLSearchParams(window.location.search);
+  const storageKey=`worksheet_${analysisCodeRaw}_sample_ids`;
+  const idsFromUrl = urlParams.get('sample_ids');
+  const idsFromStorage = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
+  if(idsFromUrl!==null){ if(idsFromUrl!==idsFromStorage) localStorage.setItem(storageKey, idsFromUrl); }
+  else if(idsFromStorage){ const current=new URL(window.location.href); current.searchParams.set('sample_ids', idsFromStorage); window.location.href=current.toString(); return; }
+
+  document.addEventListener('input', (e)=>{
+    const el=e.target; if(!(el instanceof HTMLInputElement)) return;
+    if(!el.closest('table[id$="-analysis-table"]')) return;
+    localStorage.setItem('lims_last_input', el.id || '');
+    const tr = el.closest('tr[data-sample-id]'); if(tr) localStorage.setItem('lims_last_sample', tr.getAttribute('data-sample-id'));
+    const code = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
+    try{ localStorage.setItem(`analysis_${code}_${el.id}`, el.value ?? ''); }catch(e){}
+  });
+
+  (function restoreFromLocal(){
+    const code = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
+    document.querySelectorAll('table[id$="-analysis-table"] input').forEach(inp=>{
+      try{ if(((inp.value??'')==='')){ const v = localStorage.getItem(`analysis_${code}_${inp.id}`); if(v!==null) inp.value = v; } }catch(e){}
+    });
+    const lastInpId = localStorage.getItem('lims_last_input') || sessionStorage.getItem('lims_last_input');
+    if(lastInpId){ const node = document.getElementById(lastInpId); if(node) node.scrollIntoView({behavior:'smooth', block:'center'}); }
+  })();
+});
+</script>
+{% endblock %}

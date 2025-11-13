@@ -1,0 +1,60 @@
+{# templates/analysis_forms/free_moisture_form.html #}
+<div class="table-responsive">
+  <table class="table table-sm align-middle" id="free-moisture-analysis-table">
+    <thead>
+      <tr>
+        <th style="width:56px;">№</th>
+        <th>Дээжийн нэр</th>
+        <th style="width:140px;">Тавиурын жин (g)</th>
+        <th style="width:180px;">Хатаахаас тавиуртай дээжийн жин (g)</th>
+        <th style="width:200px;">Хатаасны дараах тавиуртай дээжийн жин (g)</th>
+        <th style="width:140px;">Алдагдсан жин Δ (g)</th>
+        <th style="width:120px;">FM, %</th>
+        <th style="width:80px;">Үйлдэл</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in samples %}
+      <tr data-sample-id="{{ s.id }}">
+        <td>{{ loop.index }}</td>
+
+        <td>
+          <div class="fw-semibold">{{ s.sample_code }}</div>
+          {% if s.client_name %}<div class="text-muted small">{{ s.client_name }}</div>{% endif %}
+        </td>
+
+        <td>
+          <input type="number" step="0.001" class="form-control form-control-sm form-input"
+                 id="sample_{{
+                 s.id }}_tray" placeholder="0.000">
+        </td>
+
+        <td>
+          <input type="number" step="0.001" class="form-control form-control-sm form-input"
+                 id="sample_{{
+                 s.id }}_before" placeholder="0.000">
+        </td>
+
+        <td>
+          <input type="number" step="0.001" class="form-control form-control-sm form-input"
+                 id="sample_{{
+                 s.id }}_after" placeholder="0.000">
+        </td>
+
+        <td class="loss-cell" data-sample-id="{{ s.id }}">-</td>
+        <td class="fm-cell"   data-sample-id="{{ s.id }}">-</td>
+
+        <td>
+          <button class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="{{ s.id }}" title="Жагсаалтаас хасах">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not samples %}
+      <tr><td colspan="8" class="text-center text-muted py-4">Дээж нэмнэ үү.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

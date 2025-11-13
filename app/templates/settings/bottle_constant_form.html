@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .k-card{max-width:820px}
+  .muted{color:#64748b}
+  .warn{color:#b45309}
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="k-card card shadow-sm">
+    <div class="card-body">
+      <h4 class="mb-1">Хоосон тодорхойлолт (Бортого тогтмол)</h4>
+      <div class="small muted mb-3">
+        7.4.1&ndash;7.4.8: 20 &plusmn; 0.5 °C, 3 хэмжилт, тохирцын зөрүү ≤ <code>0.0015 g</code>.
+      </div>
+
+      <form method="post" oninput="calcAvg()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Бортого</label>
+            <select class="form-select" name="bottle_id" required>
+              <option value="" selected disabled>Сонго…</option>
+              {% for b in bottles %}
+                <option value="{{ b.id }}">{{ b.serial_no }} {{ '(' ~ (b.label or '') ~ ')' }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Температур (°C)</label>
+            <input type="number" step="0.01" name="temperature_c" class="form-control" value="20.00" required>
+            <div class="form-text">Зорилтот: 20 ± 0.50</div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Хүчинтэй огноо</label>
+            <input type="date" name="effective_from" class="form-control"
+                   value="{{ (now() or none)|default('',true) }}">
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">1-р хэмжилт</label>
+            <input type="number" step="0.00001" name="trial_1" id="t1" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">2-р хэмжилт</label>
+            <input type="number" step="0.00001" name="trial_2" id="t2" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">3-р хэмжилт</label>
+            <input type="number" step="0.00001" name="trial_3" id="t3" class="form-control" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дундаж (K)</label>
+            <input type="text" id="tavg" class="form-control bg-light" readonly>
+          </div>
+        </div>
+
+        <div class="small mt-2" id="hint" ></div>
+
+        <div class="mt-3">
+          <label class="form-label">Тайлбар (шаардлагатай бол)</label>
+          <input type="text" name="remarks" class="form-control">
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">Буцах</a>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Хадгалах</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toNum(x){ const v=parseFloat(x); return isNaN(v)?null:v; }
+function calcAvg(){
+  const t1=toNum(document.getElementById('t1').value),
+        t2=toNum(document.getElementById('t2').value),
+        t3=toNum(document.getElementById('t3').value);
+  let msg = '';
+  if(t1!=null && t2!=null && t3!=null){
+    const avg = (t1+t2+t3)/3.0;
+    document.getElementById('tavg').value = avg.toFixed(5);
+    // Тохирцын шалгалт: max diff ≤ 0.0015 g
+    const maxd = Math.max(Math.abs(t1-avg), Math.abs(t2-avg), Math.abs(t3-avg));
+    if(maxd > 0.0015){
+      msg = '⚠️ Тохирцын зөрүү ' + maxd.toFixed(5) + ' g (> 0.00150 g). Дахин шалгана уу.';
+    }else{
+      msg = '✅ Тохирц OK (' + maxd.toFixed(5) + ' g ≤ 0.00150 g).';
+    }
+  }else{
+    document.getElementById('tavg').value = '';
+  }
+  const h=document.getElementById('hint'); h.textContent = msg;
+  h.className = 'small ' + (msg.startsWith('⚠️') ? 'warn' : 'muted');
+}
+</script>
+{% endblock %}

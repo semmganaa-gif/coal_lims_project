@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ title }}</h1>
+    </div>
+    <p class="text-muted">Системийн хэрэглэгчдийг нэмэх, засах, устгах хэсэг.</p>
+
+    <div class="row">
+        <!-- Хэрэглэгчдийн жагсаалтын хэсэг -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Бүртгэлтэй хэрэглэгчид</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Нэвтрэх нэр</th>
+                                    <th>Эрхийн түвшин</th>
+                                    <th class="text-end">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td><span class="badge bg-secondary">{{ user.role }}</span></td>
+                                    <td class="text-end">
+                                        <!-- ШИНЭЧЛЭЛ: url_for-ыг 'admin.edit_user' болгосон -->
+                                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-warning btn-sm">Засах</a>
+                                        
+                                        <!-- ШИНЭЧЛЭЛ: url_for-ыг 'admin.delete_user' болгосон -->
+                                        <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post" class="d-inline" onsubmit="return confirm('Та {{ user.username }} хэрэглэгчийг устгахад итгэлтэй байна уу?');">
+                                            <button type="submit" class="btn btn-danger btn-sm" {% if current_user.id == user.id %}disabled{% endif %}>Устгах</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Шинэ хэрэглэгч нэмэх хэсэг -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Шинэ хэрэглэгч нэмэх</h4>
+                </div>
+                <div class="card-body">
+                    <!-- ШИНЭЧЛЭЛ: url_for-ыг 'admin.manage_users' болгосон -->
+                    <form action="{{ url_for('admin.manage_users') }}" method="post" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.role.label(class="form-label") }}
+                            {{ form.role(class="form-select") }}
+                        </div>
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
