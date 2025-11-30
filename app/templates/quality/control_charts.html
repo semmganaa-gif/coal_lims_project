@@ -156,11 +156,12 @@ $(document).ready(function() {
 
     // Simple Control Chart (placeholder)
     const ctx = document.getElementById('controlChart').getContext('2d');
+    {% set recent_charts = (charts | reverse | list)[:20] %}
     const chartData = {
-        labels: [{% for chart in charts|reverse|list[:20] %}'{{ chart.measurement_date.strftime("%m/%d") if chart.measurement_date }}',{% endfor %}],
+        labels: [{% for chart in recent_charts %}'{{ chart.measurement_date.strftime("%m/%d") if chart.measurement_date else "" }}'{% if not loop.last %},{% endif %}{% endfor %}],
         datasets: [{
             label: 'Measured Value',
-            data: [{% for chart in charts|reverse|list[:20] %}{{ chart.measured_value if chart.measured_value else 'null' }},{% endfor %}],
+            data: [{% for chart in recent_charts %}{{ chart.measured_value if chart.measured_value is not none else 'null' }}{% if not loop.last %},{% endif %}{% endfor %}],
             borderColor: 'rgb(75, 192, 192)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             tension: 0.1

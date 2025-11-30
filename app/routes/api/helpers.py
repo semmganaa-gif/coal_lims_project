@@ -1,7 +1,7 @@
 # app/routes/api/helpers.py
 # -*- coding: utf-8 -*-
 """
-API Ð¼Ð¾Ð´ÑƒÐ»Ð¸ÑƒÐ´Ñ‹Ð½ Ñ…Ð°Ð¼Ñ‚Ñ‹Ð½ Ñ…ÑÑ€ÑÐ³ÑÑÐ», Ð´Ò¯Ñ€ÑÐ¼, ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚ÑƒÑƒÐ´.
+API модульуудын хамтын хэрэгсэл, дүрэм, шалгалтууд.
 """
 
 from flask_login import current_user
@@ -14,7 +14,7 @@ from app.utils.codes import norm_code, BASE_TO_ALIASES
 
 
 # -----------------------------
-# ðŸ§© Mass gate Ñ…ÑÑ€ÑÐ³Ñ‚ÑÐ¹ ÑÑÑÑ… (XY/CRI/CSR-Ð´ Ð¥Ð­Ð Ð­Ð“Ð“Ò®Ð™)
+# 🧬 Mass gate хэрэгтэй эсэх (XY/CRI/CSR-д ХЭРЭГГҮЙ)
 # -----------------------------
 def _requires_mass_gate(code: str) -> bool:
     base = norm_code(code or "")
@@ -22,24 +22,24 @@ def _requires_mass_gate(code: str) -> bool:
 
 
 def _has_m_task_sql():
-    """analyses_to_perform JSON string Ð´Ð¾Ñ‚Ð¾Ñ€ "m" Ð±Ð°Ð¹Ð³Ð°Ð° ÑÑÑÑ…Ð¸Ð¹Ð³ case-insensitive ÑˆÐ°Ð»Ð³Ð°Ð½Ð°."""
+    """analyses_to_perform JSON string дотор "m" байгаа эсэхийг case-insensitive шалгана."""
     return func.lower(Sample.analyses_to_perform).like('%"m"%')
 
 
 def _can_delete_sample() -> bool:
-    """ÐÐ´Ð¼Ð¸Ð½ ÑÑÐ²ÑÐ» Ð°Ñ…Ð»Ð°Ñ… Ð» Ð±Ò¯Ñ€ÑÐ½ ÑƒÑÑ‚Ð³Ð°Ñ… ÑÑ€Ñ…Ñ‚ÑÐ¹."""
+    """Админ эсвэл ахлах л бүрэн устгах эрхтэй."""
     return getattr(current_user, "role", "") in {"admin", "ahlah"}
 
 
 # -----------------------------
-# ðŸ§© Ð”ÑÑÐ¶Ð¸Ð¹Ð½ Ð½ÑÐ³Ñ‚Ð³ÑÑÑÐ½ Ð¢Ó¨Ð›Ó¨Ð’
+# 🧬 Дээжийн нэгтгэсэн ТӨЛӨВ
 # -----------------------------
 def _aggregate_sample_status(sample_status: str, result_statuses: set[str] | None) -> str:
     """
-    - Ð¥ÑÑ€ÑÐ² Ð´ÑÑÐ¶ archived Ð±Ð¾Ð» Ò¯Ñ€ Ð´Ò¯Ð½Ð³ÑÑÑ Ò¯Ð» Ñ…Ð°Ð¼Ð°Ð°Ñ€Ð°Ð½ 'archived'
-    - Ò®Ð³Ò¯Ð¹ Ð±Ð¾Ð» ÑˆÐ¸Ð½Ð¶Ð¸Ð»Ð³ÑÑÐ½Ð¸Ð¹ ÑÑ‚Ð°Ñ‚ÑƒÑÑƒÑƒÐ´Ð°Ð°Ñ:
+    - Хэрэв дээж archived бол үр дүнгээс үл хамааран 'archived'
+    - Өөргүй бол шинжилгээний статусуудаас:
         pending_review > rejected > approved
-    - Ð¥ÑÑ€ÑÐ² ÑˆÐ¸Ð½Ð¶Ð¸Ð»Ð³ÑÑ Ð±Ð°Ð¹Ñ…Ð³Ò¯Ð¹ Ð±Ð¾Ð» sample_status-Ð³ Ð±ÑƒÑ†Ð°Ð°Ð½Ð°.
+    - Хэрэв шинжилгээ байхгүй бол sample_status-г буцаана.
     """
     if sample_status == "archived":
         return "archived"
@@ -57,7 +57,7 @@ def _aggregate_sample_status(sample_status: str, result_statuses: set[str] | Non
 
 
 # =========================
-# REVIEW/Ð”Ò®Ð Ð­Ðœ â€“ (Ó©Ð³Ó©Ð³Ð´ÑÓ©Ð½)
+# REVIEW/ДҮРЭМ – (өгөгдсөн)
 # =========================
 EPS = 1e-6
 DEFAULT_LIMIT_RULE = {"single": {"limit": 0.30, "mode": "abs"}}
@@ -73,7 +73,7 @@ def _to_float_or_none(x):
 
 
 def _coalesce_diff(raw_norm: dict) -> float | None:
-    """raw_data-Ð°Ð°Ñ Ñ‚Ð¾Ñ…Ð¸Ñ€Ñ†Ñ‹Ð½ Ð·Ó©Ñ€Ò¯Ò¯Ð³ (diff) Ð¾Ð»Ð¶ Ð±ÑƒÑ†Ð°Ð°Ð½Ð°."""
+    """raw_data-гаас тохирцын зөрүүг (diff) олж буцаана."""
     raw = raw_norm or {}
     t_val = _to_float_or_none(raw.get("t"))
     if t_val is not None:
@@ -116,7 +116,7 @@ def _effective_limit(analysis_code: str, avg: float | None):
                 elif upper == inf:
                     band_label = f">{lower:g}"
                 else:
-                    band_label = f"{lower:.2f}â€“{upper:.2f}"
+                    band_label = f"{lower:.2f}–{upper:.2f}"
                 return b["limit"], b["mode"], band_label
             lower = upper
 

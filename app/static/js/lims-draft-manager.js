@@ -1,0 +1,337 @@
+/**
+ * LIMS Draft Manager
+ *
+ * LocalStorage-д шинжилгээний ноорог (draft) өгөгдлийг хадгалах/сэргээх/устгах
+ * Олон analysis form template-д давтагдаж байсан код-ыг нэгтгэсэн.
+ *
+ * Хэрэглээ:
+ *   const draftMgr = new LIMSDraftManager('Aad');
+ *   draftMgr.save({123: {m1: 10.5, m2: 10.6}});
+ *   const drafts = draftMgr.restore();
+ *   draftMgr.purge([123, 456]); // Тодорхой sample-ийн draft устгах
+ *
+ * Author: Energy Resources IT Team
+ * Date: 2025-11-30
+ */
+
+(function(window) {
+  'use strict';
+
+  /**
+   * Draft Manager Class
+   */
+  class LIMSDraftManager {
+    /**
+     * Constructor
+     *
+     * @param {string} analysisCode - Шинжилгээний код (жишээ: 'Aad', 'Mad', 'Vad')
+     * @param {string} prefix - LocalStorage key prefix (default: 'draft_inputs_')
+     */
+    constructor(analysisCode, prefix = 'draft_inputs_') {
+      if (!analysisCode) {
+        throw new Error('LIMSDraftManager: analysisCode is required');
+      }
+
+      this.analysisCode = analysisCode;
+      this.prefix = prefix;
+      this.key = `${prefix}${analysisCode}`;
+
+      // Quota exceeded эвент handler
+      this.quotaExceededHandler = null;
+    }
+
+    /**
+     * Draft өгөгдлийг localStorage-д хадгалах
+     *
+     * @param {Object} data - Хадгалах өгөгдөл (жишээ: {123: {m1: 10.5}, 456: {m1: 11.2}})
+     * @param {boolean} merge - Өмнөх өгөгдөлтэй merge хийх үү (default: true)
+     * @returns {boolean} Амжилттай эсэх
+     */
+    save(data, merge = true) {
+      try {
+        let toSave = data;
+
+        // Merge хийх бол өмнөх өгөгдлийг авах
+        if (merge) {
+          const existing = this.restore();
+          toSave = { ...existing, ...data };
+        }
+
+        const jsonData = JSON.stringify(toSave);
+
+        // Size шалгалт (5MB max - localStorage limit ойролцоо)
+        const sizeInBytes = new Blob([jsonData]).size;
+        const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+
+        if (sizeInBytes > 4.5 * 1024 * 1024) { // 4.5MB warning
+          console.warn(
+            `LIMSDraftManager: Draft size is large (${sizeInMB}MB). ` +
+            `Consider cleaning old drafts.`
+          );
+        }
+
+        localStorage.setItem(this.key, jsonData);
+
+        console.log(
+          `✅ Draft saved: ${this.analysisCode} (${sizeInMB}MB, ${Object.keys(toSave).length} samples)`
+        );
+
+        return true;
+
+      } catch (error) {
+        if (error.name === 'QuotaExceededError') {
+          console.error('❌ LocalStorage quota exceeded! Cannot save draft.');
+
+          // Callback дуудах
+          if (this.quotaExceededHandler) {
+            this.quotaExceededHandler(error);
+          } else {
+            // Default: Анхааруулга харуулах
+            alert(
+              'Хадгалах сан дүүрсэн байна! Хуучин ноорог өгөгдлүүдийг арилгана уу.'
+            );
+          }
+        } else {
+          console.error('❌ Failed to save draft:', error);
+        }
+
+        return false;
+      }
+    }
+
+    /**
+     * Draft өгөгдлийг localStorage-с сэргээх
+     *
+     * @returns {Object} Сэргээсэн өгөгдөл ({} хоосон бол)
+     */
+    restore() {
+      try {
+        const jsonData = localStorage.getItem(this.key);
+
+        if (!jsonData) {
+          console.log(`ℹ️ No draft found for ${this.analysisCode}`);
+          return {};
+        }
+
+        const data = JSON.parse(jsonData);
+
+        console.log(
+          `✅ Draft restored: ${this.analysisCode} (${Object.keys(data).length} samples)`
+        );
+
+        return data;
+
+      } catch (error) {
+        console.error('❌ Failed to restore draft:', error);
+
+        // Corrupt data байвал устгах
+        this.purge();
+
+        return {};
+      }
+    }
+
+    /**
+     * Draft өгөгдлийг бүхэлд нь эсвэл тодорхой sample-уудын хувьд устгах
+     *
+     * @param {Array<number>} sampleIds - Устгах sample IDs (optional)
+     *        - Хоосон бол бүх draft устгана
+     *        - Өгсөн бол зөвхөн тэдгээр sample-ийн draft устгана
+     * @returns {boolean} Амжилттай эсэх
+     */
+    purge(sampleIds = []) {
+      try {
+        if (!sampleIds || sampleIds.length === 0) {
+          // Бүх draft устгах
+          localStorage.removeItem(this.key);
+          console.log(`🗑️ All drafts purged: ${this.analysisCode}`);
+          return true;
+        }
+
+        // Тодорхой sample-уудын draft устгах
+        const existing = this.restore();
+        let purgedCount = 0;
+
+        sampleIds.forEach(id => {
+          const key = String(id);
+          if (existing[key]) {
+            delete existing[key];
+            purgedCount++;
+          }
+        });
+
+        if (purgedCount > 0) {
+          // Үлдсэн өгөгдлийг хадгалах
+          if (Object.keys(existing).length === 0) {
+            localStorage.removeItem(this.key);
+          } else {
+            localStorage.setItem(this.key, JSON.stringify(existing));
+          }
+
+          console.log(
+            `🗑️ Drafts purged: ${this.analysisCode} (${purgedCount} samples)`
+          );
+        } else {
+          console.log(`ℹ️ No matching drafts to purge: ${this.analysisCode}`);
+        }
+
+        return true;
+
+      } catch (error) {
+        console.error('❌ Failed to purge drafts:', error);
+        return false;
+      }
+    }
+
+    /**
+     * Тодорхой sample-ийн draft өгөгдөл байгаа эсэхийг шалгах
+     *
+     * @param {number} sampleId - Sample ID
+     * @returns {boolean} Draft байгаа эсэх
+     */
+    hasDraft(sampleId) {
+      const drafts = this.restore();
+      return !!drafts[String(sampleId)];
+    }
+
+    /**
+     * Тодорхой sample-ийн draft өгөгдлийг авах
+     *
+     * @param {number} sampleId - Sample ID
+     * @returns {Object|null} Draft data эсвэл null
+     */
+    getDraft(sampleId) {
+      const drafts = this.restore();
+      return drafts[String(sampleId)] || null;
+    }
+
+    /**
+     * Тодорхой sample-ийн draft өгөгдлийг шинэчлэх
+     *
+     * @param {number} sampleId - Sample ID
+     * @param {Object} data - Шинэчлэх өгөгдөл
+     * @returns {boolean} Амжилттай эсэх
+     */
+    updateDraft(sampleId, data) {
+      const drafts = this.restore();
+      drafts[String(sampleId)] = data;
+      return this.save(drafts, false);
+    }
+
+    /**
+     * Draft өгөгдлийн хэмжээг авах (sample тоо)
+     *
+     * @returns {number} Draft-тай sample-ийн тоо
+     */
+    getCount() {
+      const drafts = this.restore();
+      return Object.keys(drafts).length;
+    }
+
+    /**
+     * Бүх draft sample ID-уудыг авах
+     *
+     * @returns {Array<string>} Sample IDs
+     */
+    getSampleIds() {
+      const drafts = this.restore();
+      return Object.keys(drafts);
+    }
+
+    /**
+     * Quota exceeded error handler тохируулах
+     *
+     * @param {Function} handler - Error handler function
+     */
+    setQuotaExceededHandler(handler) {
+      this.quotaExceededHandler = handler;
+    }
+
+    /**
+     * Draft өгөгдлийг debug хэвлэх
+     */
+    debug() {
+      const drafts = this.restore();
+      console.group(`📋 Draft Debug: ${this.analysisCode}`);
+      console.log('Key:', this.key);
+      console.log('Sample count:', Object.keys(drafts).length);
+      console.log('Data:', drafts);
+
+      try {
+        const jsonData = JSON.stringify(drafts);
+        const sizeInBytes = new Blob([jsonData]).size;
+        const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+        console.log('Size:', sizeInKB, 'KB');
+      } catch (error) {
+        console.error('Failed to calculate size:', error);
+      }
+
+      console.groupEnd();
+    }
+  }
+
+  // Export to global scope
+  window.LIMSDraftManager = LIMSDraftManager;
+
+  // Хуучин draft-уудыг цэвэрлэх utility function
+  /**
+   * Бүх analysis-ийн draft-уудыг цэвэрлэх
+   *
+   * @param {number} maxAgeDays - Хамгийн их нас (өдрөөр)
+   * @param {boolean} dryRun - Жинхэнээр устгахгүйгээр харах (default: false)
+   * @returns {Array<string>} Устгагдсан key-ууд
+   */
+  window.LIMS_DRAFT_CLEANUP = function(maxAgeDays = 30, dryRun = false) {
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const maxAgeMs = maxAgeDays * MS_PER_DAY;
+    const now = Date.now();
+    const removed = [];
+
+    console.group('🧹 LIMS Draft Cleanup');
+    console.log('Max age:', maxAgeDays, 'days');
+    console.log('Dry run:', dryRun);
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+
+      // draft_inputs_ prefix байгаа key-үүдийг шалгах
+      if (key && key.startsWith('draft_inputs_')) {
+        try {
+          const data = localStorage.getItem(key);
+
+          if (!data) continue;
+
+          // Timestamp байгаа эсэхийг шалгах (шинэ format)
+          // Одоогоор timestamp байхгүй тул size-аар шалгая
+          const sizeInBytes = new Blob([data]).size;
+          const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+
+          // 100KB-аас ихийг анхааруулах
+          if (sizeInBytes > 100 * 1024) {
+            console.warn(`Large draft found: ${key} (${sizeInKB}KB)`);
+          }
+
+          // TODO: Timestamp-тай болгох (draft format upgrade хэрэгтэй)
+          // Одоогоор бүх draft-уудыг харуулах
+
+        } catch (error) {
+          console.error(`Corrupt draft: ${key}`, error);
+
+          if (!dryRun) {
+            localStorage.removeItem(key);
+            removed.push(key);
+            console.log(`✅ Removed corrupt draft: ${key}`);
+          }
+        }
+      }
+    }
+
+    console.log('Total removed:', removed.length);
+    console.groupEnd();
+
+    return removed;
+  };
+
+  console.log('✅ LIMS Draft Manager loaded');
+
+})(window);

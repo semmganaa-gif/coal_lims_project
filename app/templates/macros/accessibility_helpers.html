@@ -1,0 +1,438 @@
+{#
+  Accessibility Helpers Macros
+
+  WCAG 2.1 стандартад нийцсэн accessible form элементүүд үүсгэх macro-ууд.
+
+  Author: Energy Resources IT Team
+  Date: 2025-11-30
+#}
+
+{#
+  Accessible input field with label and optional help text
+
+  Usage:
+    {{ render_accessible_input(
+        field_id='username',
+        label='Хэрэглэгчийн нэр',
+        field_type='text',
+        required=true,
+        help_text='3-30 тэмдэгт оруулна уу',
+        value=user.username
+    ) }}
+#}
+{% macro render_accessible_input(
+    field_id,
+    label,
+    field_type='text',
+    name=none,
+    value='',
+    required=false,
+    disabled=false,
+    readonly=false,
+    placeholder='',
+    help_text='',
+    error_text='',
+    autocomplete='',
+    pattern='',
+    min='',
+    max='',
+    step='',
+    classes='form-control'
+) %}
+{% set field_name = name if name else field_id %}
+{% set describedby_ids = [] %}
+{% if help_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-help') %}
+{% endif %}
+{% if error_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-error') %}
+{% endif %}
+
+<div class="mb-3">
+  <label for="{{ field_id }}" class="form-label">
+    {{ label }}
+    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+  </label>
+
+  <input
+    type="{{ field_type }}"
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    class="{{ classes }}{% if error_text %} is-invalid{% endif %}"
+    value="{{ value }}"
+    {% if required %}required aria-required="true"{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if readonly %}readonly{% endif %}
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+    {% if error_text %}aria-invalid="true"{% endif %}
+    {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+    {% if pattern %}pattern="{{ pattern }}"{% endif %}
+    {% if min %}min="{{ min }}"{% endif %}
+    {% if max %}max="{{ max }}"{% endif %}
+    {% if step %}step="{{ step }}"{% endif %}
+  >
+
+  {% if help_text %}
+  <small id="{{ field_id }}-help" class="form-text text-muted">
+    {{ help_text }}
+  </small>
+  {% endif %}
+
+  {% if error_text %}
+  <div id="{{ field_id }}-error" class="invalid-feedback" role="alert">
+    {{ error_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Accessible select dropdown
+#}
+{% macro render_accessible_select(
+    field_id,
+    label,
+    options,
+    name=none,
+    selected_value='',
+    required=false,
+    disabled=false,
+    help_text='',
+    error_text='',
+    classes='form-select',
+    include_blank=true,
+    blank_text='-- Сонгоно уу --'
+) %}
+{% set field_name = name if name else field_id %}
+{% set describedby_ids = [] %}
+{% if help_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-help') %}
+{% endif %}
+{% if error_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-error') %}
+{% endif %}
+
+<div class="mb-3">
+  <label for="{{ field_id }}" class="form-label">
+    {{ label }}
+    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+  </label>
+
+  <select
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    class="{{ classes }}{% if error_text %} is-invalid{% endif %}"
+    {% if required %}required aria-required="true"{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+    {% if error_text %}aria-invalid="true"{% endif %}
+  >
+    {% if include_blank %}
+    <option value="">{{ blank_text }}</option>
+    {% endif %}
+
+    {% for option in options %}
+      {% if option is mapping %}
+        <option value="{{ option.value }}" {% if option.value == selected_value %}selected{% endif %}>
+          {{ option.text }}
+        </option>
+      {% else %}
+        <option value="{{ option }}" {% if option == selected_value %}selected{% endif %}>
+          {{ option }}
+        </option>
+      {% endif %}
+    {% endfor %}
+  </select>
+
+  {% if help_text %}
+  <small id="{{ field_id }}-help" class="form-text text-muted">
+    {{ help_text }}
+  </small>
+  {% endif %}
+
+  {% if error_text %}
+  <div id="{{ field_id }}-error" class="invalid-feedback" role="alert">
+    {{ error_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Accessible checkbox
+#}
+{% macro render_accessible_checkbox(
+    field_id,
+    label,
+    name=none,
+    checked=false,
+    disabled=false,
+    help_text='',
+    error_text='',
+    classes='form-check-input'
+) %}
+{% set field_name = name if name else field_id %}
+{% set describedby_ids = [] %}
+{% if help_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-help') %}
+{% endif %}
+{% if error_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-error') %}
+{% endif %}
+
+<div class="mb-3 form-check">
+  <input
+    type="checkbox"
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    class="{{ classes }}{% if error_text %} is-invalid{% endif %}"
+    {% if checked %}checked{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+    {% if error_text %}aria-invalid="true"{% endif %}
+  >
+
+  <label for="{{ field_id }}" class="form-check-label">
+    {{ label }}
+  </label>
+
+  {% if help_text %}
+  <small id="{{ field_id }}-help" class="form-text text-muted d-block">
+    {{ help_text }}
+  </small>
+  {% endif %}
+
+  {% if error_text %}
+  <div id="{{ field_id }}-error" class="invalid-feedback" role="alert">
+    {{ error_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Accessible textarea
+#}
+{% macro render_accessible_textarea(
+    field_id,
+    label,
+    name=none,
+    value='',
+    required=false,
+    disabled=false,
+    readonly=false,
+    placeholder='',
+    help_text='',
+    error_text='',
+    rows=3,
+    maxlength='',
+    classes='form-control'
+) %}
+{% set field_name = name if name else field_id %}
+{% set describedby_ids = [] %}
+{% if help_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-help') %}
+{% endif %}
+{% if error_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-error') %}
+{% endif %}
+
+<div class="mb-3">
+  <label for="{{ field_id }}" class="form-label">
+    {{ label }}
+    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+  </label>
+
+  <textarea
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    class="{{ classes }}{% if error_text %} is-invalid{% endif %}"
+    rows="{{ rows }}"
+    {% if required %}required aria-required="true"{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if readonly %}readonly{% endif %}
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+    {% if error_text %}aria-invalid="true"{% endif %}
+    {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+  >{{ value }}</textarea>
+
+  {% if help_text %}
+  <small id="{{ field_id }}-help" class="form-text text-muted">
+    {{ help_text }}
+  </small>
+  {% endif %}
+
+  {% if error_text %}
+  <div id="{{ field_id }}-error" class="invalid-feedback" role="alert">
+    {{ error_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Accessible file input
+#}
+{% macro render_accessible_file(
+    field_id,
+    label,
+    name=none,
+    required=false,
+    disabled=false,
+    accept='',
+    help_text='',
+    error_text='',
+    classes='form-control'
+) %}
+{% set field_name = name if name else field_id %}
+{% set describedby_ids = [] %}
+{% if help_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-help') %}
+{% endif %}
+{% if error_text %}
+  {% set _ = describedby_ids.append(field_id ~ '-error') %}
+{% endif %}
+
+<div class="mb-3">
+  <label for="{{ field_id }}" class="form-label">
+    {{ label }}
+    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+  </label>
+
+  <input
+    type="file"
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    class="{{ classes }}{% if error_text %} is-invalid{% endif %}"
+    {% if required %}required aria-required="true"{% endif %}
+    {% if disabled %}disabled{% endif %}
+    {% if accept %}accept="{{ accept }}"{% endif %}
+    {% if describedby_ids %}aria-describedby="{{ describedby_ids | join(' ') }}"{% endif %}
+    {% if error_text %}aria-invalid="true"{% endif %}
+  >
+
+  {% if help_text %}
+  <small id="{{ field_id }}-help" class="form-text text-muted">
+    {{ help_text }}
+  </small>
+  {% endif %}
+
+  {% if error_text %}
+  <div id="{{ field_id }}-error" class="invalid-feedback" role="alert">
+    {{ error_text }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Accessible button
+#}
+{% macro render_accessible_button(
+    text,
+    button_type='button',
+    button_id='',
+    classes='btn btn-primary',
+    disabled=false,
+    aria_label='',
+    icon=''
+) %}
+<button
+  type="{{ button_type }}"
+  {% if button_id %}id="{{ button_id }}"{% endif %}
+  class="{{ classes }}"
+  {% if disabled %}disabled{% endif %}
+  {% if aria_label %}aria-label="{{ aria_label }}"{% endif %}
+>
+  {% if icon %}<i class="bi bi-{{ icon }}"></i> {% endif %}
+  {{ text }}
+</button>
+{% endmacro %}
+
+{#
+  Accessible submit button with loading state support
+#}
+{% macro render_accessible_submit(
+    text='Хадгалах',
+    button_id='submit-button',
+    classes='btn btn-primary',
+    icon='check-circle',
+    loading_text='Хадгалж байна...'
+) %}
+<button
+  type="submit"
+  id="{{ button_id }}"
+  class="{{ classes }}"
+  data-loading-text="{{ loading_text }}"
+>
+  <i class="bi bi-{{ icon }}"></i> {{ text }}
+</button>
+{% endmacro %}
+
+{#
+  Accessible alert/message box
+#}
+{% macro render_accessible_alert(
+    message,
+    alert_type='info',
+    dismissible=true,
+    role='alert',
+    aria_live='polite',
+    icon=''
+) %}
+{% if not icon %}
+  {% if alert_type == 'success' %}
+    {% set icon = 'check-circle-fill' %}
+  {% elif alert_type == 'danger' or alert_type == 'error' %}
+    {% set icon = 'exclamation-triangle-fill' %}
+  {% elif alert_type == 'warning' %}
+    {% set icon = 'exclamation-circle-fill' %}
+  {% else %}
+    {% set icon = 'info-circle-fill' %}
+  {% endif %}
+{% endif %}
+
+<div
+  class="alert alert-{{ alert_type }}{% if dismissible %} alert-dismissible fade show{% endif %}"
+  role="{{ role }}"
+  aria-live="{{ aria_live }}"
+  aria-atomic="true"
+>
+  <i class="bi bi-{{ icon }}"></i>
+  {{ message }}
+
+  {% if dismissible %}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Хаах"></button>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{#
+  Skip link for keyboard navigation
+#}
+{% macro render_skip_link(target_id='main-content', text='Үндсэн агуулга руу үсрэх') %}
+<a href="#{{ target_id }}" class="skip-link visually-hidden-focusable">
+  {{ text }}
+</a>
+{% endmacro %}
+
+{#
+  Accessible table wrapper
+#}
+{% macro render_accessible_table_wrapper(
+    table_id,
+    caption,
+    description=''
+) %}
+<div class="table-responsive" role="region" aria-labelledby="{{ table_id }}-caption">
+  <table id="{{ table_id }}" class="table table-bordered table-hover" role="table">
+    <caption id="{{ table_id }}-caption" class="visually-hidden">
+      {{ caption }}
+      {% if description %}. {{ description }}{% endif %}
+    </caption>
+    {{ caller() }}
+  </table>
+</div>
+{% endmacro %}

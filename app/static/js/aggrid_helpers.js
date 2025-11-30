@@ -81,6 +81,89 @@
     enterNavigatesVertically: true,
   };
 
+  /**
+   * AG Grid үүсгэх factory function - Код давхардлыг багасгах зорилготой
+   *
+   * @param {string|HTMLElement} container - Grid-ийг байрлуулах element (selector эсвэл element)
+   * @param {Array} columnDefs - Column definitions
+   * @param {Array} rowData - Row data
+   * @param {Object} customOptions - Custom grid options (optional)
+   * @returns {Object} Grid API
+   *
+   * Жишээ:
+   *   const gridApi = LIMS_AGGRID.createGrid('#myGrid', columnDefs, rowData, {
+   *     onCellValueChanged: (params) => { ... },
+   *     editableColIds: ['m1', 'm2', 'm3']
+   *   });
+   */
+  function createGrid(container, columnDefs, rowData, customOptions = {}) {
+    // Container element олох
+    const element = typeof container === 'string'
+      ? document.querySelector(container)
+      : container;
+
+    if (!element) {
+      console.error('LIMS_AGGRID.createGrid: Container element not found:', container);
+      return null;
+    }
+
+    // Editable column IDs-ийг авах (keyboard navigation-д хэрэгтэй)
+    const editableColIds = customOptions.editableColIds ||
+      columnDefs.filter(col => col.editable).map(col => col.field);
+
+    // suppressKeyboardEvent setup
+    const suppressKeyboardEvent = editableColIds.length > 0
+      ? navHandlerFactory(editableColIds)
+      : undefined;
+
+    // Grid options нэгтгэх
+    const gridOptions = {
+      ...baseGridOptions,
+      columnDefs: columnDefs,
+      rowData: rowData,
+      suppressKeyboardEvent: suppressKeyboardEvent,
+      enterNavigatesVerticallyAfterEdit: true,
+      ...customOptions
+    };
+
+    // editableColIds-ийг customOptions-оос устгах (AG Grid-д хэрэггүй)
+    delete gridOptions.editableColIds;
+
+    // Grid үүсгэх
+    const gridApi = agGrid.createGrid(element, gridOptions);
+
+    return gridApi;
+  }
+
+  /**
+   * Analysis form-уудын хувьд нийтлэг column span logic
+   * Read-only талбаруудыг тодруулж харуулах
+   */
+  function createSpanningCellClassRules() {
+    return {
+      'ag-cell-span': params => {
+        // Sample_code болон бусад read-only column-ууд span хийх
+        const col = params.colDef;
+        return col && !col.editable;
+      }
+    };
+  }
+
+  /**
+   * Нийтлэг status bar config (analysis form-уудад ашиглагдана)
+   */
+  function getStandardStatusBar() {
+    return {
+      statusPanels: [
+        { statusPanel: 'agTotalRowCountComponent', align: 'left' },
+        { statusPanel: 'agFilteredRowCountComponent', align: 'left' },
+        { statusPanel: 'agSelectedRowCountComponent', align: 'center' },
+        { statusPanel: 'agAggregationComponent', align: 'right' }
+      ]
+    };
+  }
+
+  // Export to global
   w.LIMS_AGGRID = w.LIMS_AGGRID || {};
   w.LIMS_AGGRID.navHandlerFactory = navHandlerFactory;
   w.LIMS_AGGRID.pickWeight = pickWeight;
@@ -90,4 +173,7 @@
   w.LIMS_AGGRID.numFmt0 = numFmt0;
   w.LIMS_AGGRID.baseDefaultColDef = baseDefaultColDef;
   w.LIMS_AGGRID.baseGridOptions = baseGridOptions;
+  w.LIMS_AGGRID.createGrid = createGrid;
+  w.LIMS_AGGRID.createSpanningCellClassRules = createSpanningCellClassRules;
+  w.LIMS_AGGRID.getStandardStatusBar = getStandardStatusBar;
 })(window);

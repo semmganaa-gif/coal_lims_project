@@ -1,0 +1,289 @@
+/*
+ * AG Grid Custom Styles for LIMS System
+ *
+ * Нийтлэг AG Grid стилүүд - inline CSS давхардлыг багасгах зорилготой
+ * Author: Energy Resources IT Team
+ * Date: 2025-11-30
+ */
+
+/* ========================================================================
+   1. BASE THEME VARIABLES
+   ======================================================================== */
+.ag-theme-alpine {
+  --ag-font-size: 14px;
+  --ag-font-family: "Noto Sans", sans-serif;
+  --ag-border-color: #dee2e6;
+  --ag-header-background-color: #f8f9fa;
+  --ag-row-hover-color: transparent;
+}
+
+/* ========================================================================
+   2. GRID CONTAINER LAYOUT
+   ======================================================================== */
+.ag-grid-container {
+  margin-top: 20px;
+  height: 75vh;
+  min-height: 360px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================================================
+   3. GLASSMORPHISM STYLE - Root Wrapper
+   ======================================================================== */
+.ag-theme-alpine .ag-root-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(248,249,250,0.9));
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+}
+
+/* ========================================================================
+   4. HEADER STYLING
+   ======================================================================== */
+.ag-theme-alpine .ag-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.ag-theme-alpine .ag-header-cell {
+  border-right: 1px solid #d0d0d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+/* Header group separation for parallel measurements */
+.ag-header-group-cell-with-group {
+  border-right: 2px solid #adb5bd !important;
+  text-align: center !important;
+}
+
+/* Color-coded parallel groups (P1, P2, P3) */
+.ag-theme-alpine .ag-header-group-cell:nth-child(3) {
+  background-color: #e3f2fd !important; /* Light Blue - P1 */
+}
+
+.ag-theme-alpine .ag-header-group-cell:nth-child(4) {
+  background-color: #fff3e0 !important; /* Light Orange - P2 */
+}
+
+.ag-theme-alpine .ag-header-group-cell:nth-child(5) {
+  background-color: #f3e5f5 !important; /* Light Purple - P3 */
+}
+
+/* ========================================================================
+   5. CELL STYLING
+   ======================================================================== */
+.ag-theme-alpine .ag-cell {
+  border-right: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* ========================================================================
+   6. ROW SPAN CELLS - Glassmorphism Effect
+   ======================================================================== */
+.ag-theme-alpine .ag-cell-span {
+  background-color: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  z-index: 5 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Fix border for rows below span cells */
+.ag-theme-alpine .ag-row:has(.ag-cell-span) + .ag-row .ag-cell {
+  border-top: none !important;
+}
+
+/* ========================================================================
+   7. HOVER STATES
+   ======================================================================== */
+.ag-theme-alpine .ag-row-hover .ag-cell:not(.ag-cell-span) {
+  background-color: rgba(255, 255, 255, 0.75);
+}
+
+/* ========================================================================
+   8. EDITING STATE
+   ======================================================================== */
+.ag-theme-alpine .ag-cell-inline-editing {
+  background-color: #fff !important;
+  box-shadow: 0 0 0 2px #2196F3 !important;
+  z-index: 100 !important;
+}
+
+.ag-theme-alpine .ag-cell-focus {
+  border: 1px solid #2196F3 !important;
+}
+
+/* ========================================================================
+   9. CUSTOM BADGES AND TEXT STYLES
+   ======================================================================== */
+
+/* Rejection badge */
+.reject-badge {
+  font-size: 0.7em;
+  padding: 3px 6px;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* Sample name highlighting */
+.sample-name {
+  font-weight: 600;
+  color: #0d6efd;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* Status indicators */
+.status-approved {
+  color: #198754;
+  font-weight: 600;
+}
+
+.status-pending {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.status-rejected {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* ========================================================================
+   10. LOADING OVERLAY
+   ======================================================================== */
+.ag-overlay-loading-wrapper {
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+}
+
+/* ========================================================================
+   11. RESPONSIVE DESIGN - Mobile Optimization
+   ======================================================================== */
+@media (max-width: 768px) {
+  .ag-theme-alpine {
+    --ag-font-size: 12px;
+  }
+
+  .ag-grid-container {
+    height: 60vh;
+    min-height: 300px;
+  }
+
+  .ag-theme-alpine .ag-header-cell {
+    padding: 4px;
+  }
+
+  .ag-theme-alpine .ag-cell {
+    padding: 4px;
+  }
+}
+
+@media (max-width: 576px) {
+  .ag-theme-alpine {
+    --ag-font-size: 11px;
+  }
+
+  .ag-grid-container {
+    height: 50vh;
+    min-height: 250px;
+  }
+}
+
+/* ========================================================================
+   12. PRINT STYLES
+   ======================================================================== */
+@media print {
+  .ag-theme-alpine .ag-root-wrapper {
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+
+  .ag-theme-alpine .ag-cell-span {
+    backdrop-filter: none;
+    background-color: #f8f9fa !important;
+  }
+}
+
+/* ========================================================================
+   13. ACCESSIBILITY ENHANCEMENTS
+   ======================================================================== */
+
+/* Focus indicators for keyboard navigation */
+.ag-theme-alpine .ag-cell:focus-within {
+  outline: 2px solid #2196F3;
+  outline-offset: -2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .ag-theme-alpine {
+    --ag-border-color: #000;
+  }
+
+  .ag-theme-alpine .ag-header-cell {
+    border-right: 2px solid #000;
+  }
+
+  .ag-theme-alpine .ag-cell {
+    border: 1px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ag-theme-alpine * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ========================================================================
+   14. CUSTOM CELL RENDERERS
+   ======================================================================== */
+
+/* Number cell alignment */
+.ag-cell-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Date cell formatting */
+.ag-cell-date {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Boolean/checkbox cell centering */
+.ag-cell-boolean {
+  text-align: center;
+}
+
+/* ========================================================================
+   15. ERROR AND WARNING STATES
+   ======================================================================== */
+
+/* Error cell highlighting */
+.ag-cell-error {
+  background-color: #f8d7da !important;
+  border-color: #dc3545 !important;
+}
+
+/* Warning cell highlighting */
+.ag-cell-warning {
+  background-color: #fff3cd !important;
+  border-color: #ffc107 !important;
+}
+
+/* Success cell highlighting */
+.ag-cell-success {
+  background-color: #d1e7dd !important;
+  border-color: #198754 !important;
+}
