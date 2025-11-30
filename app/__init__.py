@@ -154,6 +154,13 @@ def create_app(config_class=Config):
         return db.session.get(models.User, int(id))
 
     # ======================================================
+    # API Documentation (Swagger)
+    # ======================================================
+    # Uncomment to enable Swagger API docs at /api/docs/
+    # from app.api_docs import setup_api_docs
+    # setup_api_docs(app)
+
+    # ======================================================
     # Error Handlers
     # ======================================================
 

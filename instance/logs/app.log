@@ -1,0 +1,53 @@
+[2025-11-30 10:40:36] INFO in logging_config: Logging system initialized
+[2025-11-30 10:40:36] INFO in monitoring: Performance monitoring initialized
+[2025-11-30 10:40:38] INFO in monitoring: GET /login 200 0.0556s
+[2025-11-30 10:40:38] INFO in monitoring: POST /login 302 0.0953s
+[2025-11-30 10:40:38] ERROR in monitoring: Request error: GET / - 'app.forms.AddSampleForm object' has no attribute 'csrf_token'
+Traceback (most recent call last):
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_login\utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\coal_lims_project\app\routes\main\index.py", line 361, in index
+    return render_template(
+        "index.html",
+    ...<8 lines>...
+        unit_abbreviations=get_unit_abbreviations(),
+    )
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "D:\coal_lims_project\app\templates\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "D:\coal_lims_project\app\templates\base.html", line 256, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\coal_lims_project\app\templates\index.html", line 102, in block 'content'
+    {% include 'add_sample.html' %}
+    ^^^^^^^^^
+  File "D:\coal_lims_project\app\templates\add_sample.html", line 291, in top-level template code
+    csrfToken: "{{ form.csrf_token._value() }}",
+    ^^^^^^^^^^^^^^^^^
+  File "C:\Users\gantulga.u\AppData\Local\Programs\Python\Python313\Lib\site-packages\jinja2\environment.py", line 490, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'app.forms.AddSampleForm object' has no attribute 'csrf_token'
+[2025-11-30 10:40:39] INFO in monitoring: GET /logout 302 0.0001s
+[2025-11-30 10:40:39] INFO in monitoring: POST /login 302 0.0937s
+[2025-11-30 10:40:39] INFO in monitoring: GET / 200 0.0054s
+[2025-11-30 10:40:39] INFO in monitoring: GET /logout 302 0.0001s
