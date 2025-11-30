@@ -54,3 +54,43 @@ def escape_like_pattern(text: Optional[str]) -> Optional[str]:
     # Backslash-ийг эхлээд escape хийх (давхар escape үүсэхээс сэргийлнэ)
     # Дараа нь % болон _ тэмдэгтүүдийг escape хийх
     return text.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+
+def is_safe_url(target):
+    """
+    Аюулгүй redirect URL эсэхийг шалгах (Open Redirect халдлагаас хамгаалах).
+
+    Open Redirect халдлага нь хортой URL руу redirect хийлгэх халдлагын төрөл.
+    Жишээ: http://mysite.com/login?next=http://evil.com
+
+    Энэ функц зөвхөн өөрийн domain дотор redirect хийхийг зөвшөөрнө.
+
+    Args:
+        target: Redirect хийх URL (жишээ: "/dashboard", "http://mysite.com/profile")
+
+    Returns:
+        bool: Аюулгүй бол True, эсрэг тохиолдолд False
+
+    Examples:
+        >>> # Flask request context дотор:
+        >>> is_safe_url("/dashboard")  # Харьцангуй URL - OK
+        True
+        >>> is_safe_url("http://mysite.com/profile")  # Өөрийн domain - OK
+        True
+        >>> is_safe_url("http://evil.com")  # Өөр domain - Аюултай!
+        False
+
+    Notes:
+        - Flask request context шаардлагатай (request.host_url ашиглана)
+        - Харьцангуй URL-үүд ("/path") автоматаар аюулгүй гэж үзнэ
+        - Өмнө нь app/routes/main/helpers.py-д байсан
+    """
+    from flask import request
+    from urllib.parse import urlparse, urljoin
+
+    host_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+
+    return (
+        test_url.scheme in ("http", "https") or test_url.scheme == ""
+    ) and test_url.netloc == host_url.netloc

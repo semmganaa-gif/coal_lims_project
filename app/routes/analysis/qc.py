@@ -16,14 +16,16 @@ from app.models import Sample, AnalysisResult
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
 from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS
-from .helpers import (
+from app.config.qc_config import (
     QC_PARAM_CODES,
     QC_TOLERANCE,
     QC_SPEC_DEFAULT,
-    _qc_to_date,
-    _qc_split_family,
-    _qc_is_composite,
-    _qc_check_spec,
+)
+from app.utils.qc import (
+    qc_to_date,
+    qc_split_family,
+    qc_is_composite,
+    qc_check_spec,
 )
 
 
@@ -50,20 +52,20 @@ def _get_qc_stream_data(ids: list):
         sample = samples_by_id.get(sid)
         if not sample:
             continue
-        family, slot = _qc_split_family(sample.sample_code or "")
+        family, slot = qc_split_family(sample.sample_code or "")
         key = family
         if key not in grouped:
             grouped[key] = {
                 "family": family,
                 "unit": sample.client_name or "",
-                "date": _qc_to_date(sample.sample_date or sample.received_date),
+                "date": qc_to_date(sample.sample_date or sample.received_date),
                 "hourly_rows": [],
                 "comp_row": None
             }
 
         row_values = {code: values_by_sample.get(sid, {}).get(code) for code in QC_PARAM_CODES}
         row_info = {"slot": slot or "", "sample": sample, "values": row_values}
-        if _qc_is_composite(sample, slot):
+        if qc_is_composite(sample, slot):
             grouped[key]["comp_row"] = row_info
         else:
             grouped[key]["hourly_rows"].append(row_info)
@@ -104,8 +106,8 @@ def _get_qc_stream_data(ids: list):
                 tol_flags[code] = False
 
             spec = QC_SPEC_DEFAULT.get(code)
-            avg_spec_flags[code] = _qc_check_spec(v_avg, spec)
-            comp_spec_flags[code] = _qc_check_spec(v_comp, spec)
+            avg_spec_flags[code] = qc_check_spec(v_avg, spec)
+            comp_spec_flags[code] = qc_check_spec(v_comp, spec)
 
         streams.append({
             "family": data["family"],

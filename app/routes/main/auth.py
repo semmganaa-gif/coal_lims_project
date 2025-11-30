@@ -10,7 +10,7 @@ from app import db, limiter
 from app.forms import LoginForm
 import sqlalchemy as sa
 
-from .helpers import is_safe_url
+from app.utils.security import is_safe_url
 from app.utils.audit import log_audit
 
 

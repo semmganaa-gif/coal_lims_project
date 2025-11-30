@@ -127,3 +127,45 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Callable[[Any], boo
 
         return decorated_function
     return decorator
+
+
+def analysis_role_required(allowed_roles=None):
+    """
+    Шинжилгээний модульд хандах эрх шалгах декоратор.
+
+    Analysis модулийн routes-уудад ашиглана. Default эрхүүд: himich, ahlah, admin, beltgegch
+
+    Args:
+        allowed_roles: Зөвшөөрөгдсөн эрхүүдын жагсаалт (опциональ)
+
+    Returns:
+        Decorated function
+
+    Example:
+        >>> @bp.route('/analysis/workspace')
+        >>> @analysis_role_required()
+        >>> def analysis_workspace():
+        >>>     ...
+        >>>
+        >>> @bp.route('/analysis/admin')
+        >>> @analysis_role_required(['admin', 'ahlah'])
+        >>> def analysis_admin():
+        >>>     ...
+
+    Notes:
+        - app/routes/analysis/helpers.py-аас зөөгдсөн
+        - Flask-Login нэвтрэх шалгалт бас хийнэ
+    """
+    if allowed_roles is None:
+        allowed_roles = ["himich", "ahlah", "admin", "beltgegch"]
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for("main.login", next=url_for(f.__name__)))
+            if current_user.role not in allowed_roles:
+                abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

@@ -21,7 +21,7 @@ from app.utils.settings import get_error_reason_labels  # ✅ DB-ээс унши
 from app.utils.normalize import normalize_raw_data
 from app.config.analysis_schema import get_analysis_schema
 from app.utils.audit import log_audit
-from .helpers import analysis_role_required
+from app.utils.decorators import analysis_role_required
 
 
 def register_routes(bp):

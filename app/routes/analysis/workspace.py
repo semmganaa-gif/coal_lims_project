@@ -18,7 +18,9 @@ from app.utils.codes import norm_code
 from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS
 from app.config.analysis_schema import get_analysis_schema
-from .helpers import analysis_role_required, TIMER_PRESETS, _sulfur_map_for
+from app.utils.decorators import analysis_role_required
+from app.config.qc_config import TIMER_PRESETS
+from app.utils.qc import sulfur_map_for
 
 
 def register_routes(bp):
@@ -154,7 +156,7 @@ def register_routes(bp):
         sulfur_by_sample = {}
         if samples_to_analyze and base_code == "CV":
             sample_ids = [s.id for s in samples_to_analyze]
-            sulfur_by_sample = _sulfur_map_for(sample_ids)
+            sulfur_by_sample = sulfur_map_for(sample_ids)
 
         rejected_samples_info = {}
         if samples_to_analyze:

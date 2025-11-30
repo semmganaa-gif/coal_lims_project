@@ -11,7 +11,9 @@
       "Bash(cd:*)",
       "Bash(flask db:*)",
       "Bash(timeout 5 python:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-﻿# app/routes/api/helpers.py
+# app/routes/api/helpers.py
 # -*- coding: utf-8 -*-
 """
 API Ð¼Ð¾Ð´ÑƒÐ»Ð¸ÑƒÐ´Ñ‹Ð½ Ñ…Ð°Ð¼Ñ‚Ñ‹Ð½ Ñ…ÑÑ€ÑÐ³ÑÑÐ», Ð´Ò¯Ñ€ÑÐ¼, ÑˆÐ°Ð»Ð³Ð°Ð»Ñ‚ÑƒÑƒÐ´.

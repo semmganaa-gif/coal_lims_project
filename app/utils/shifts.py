@@ -163,3 +163,95 @@ def get_shift_info(dt: datetime) -> ShiftInfo:
         shift_start=shift_start,
         shift_end=shift_end,
     )
+
+
+# =====================================================================
+# LEGACY ФУНКЦҮҮД (Backward Compatibility)
+# Өмнө app/routes/main/helpers.py болон app/utils/shift_helper.py-д байсан
+# =====================================================================
+
+def get_12h_shift_code(dt):
+    """
+    12 цагийн ээлжийн код буцаах (_D эсвэл _N).
+
+    Args:
+        dt: datetime объект
+
+    Returns:
+        str: "_D" (өдрийн ээлж 7:00-19:00) эсвэл "_N" (шөнийн ээлж)
+
+    Examples:
+        >>> from datetime import datetime
+        >>> get_12h_shift_code(datetime(2025, 1, 1, 8, 0))
+        '_D'
+        >>> get_12h_shift_code(datetime(2025, 1, 1, 20, 0))
+        '_N'
+    """
+    hour = dt.hour
+    return "_D" if 7 <= hour < 19 else "_N"
+
+
+def get_quarter_code(dt):
+    """
+    Улирлын код буцаах (_Q1, _Q2, _Q3, _Q4).
+
+    Args:
+        dt: datetime объект
+
+    Returns:
+        str: "_Q1" (1-3 сар), "_Q2" (4-6), "_Q3" (7-9), "_Q4" (10-12)
+
+    Examples:
+        >>> from datetime import datetime
+        >>> get_quarter_code(datetime(2025, 1, 15))
+        '_Q1'
+        >>> get_quarter_code(datetime(2025, 7, 1))
+        '_Q3'
+    """
+    month = dt.month
+    if month <= 3:
+        return "_Q1"
+    elif month <= 6:
+        return "_Q2"
+    elif month <= 9:
+        return "_Q3"
+    else:
+        return "_Q4"
+
+
+def get_current_shift_start(current_dt: datetime) -> datetime:
+    """
+    Одоогийн цагт харгалзах ээлжийн ЭХЛЭХ цагийг буцаана.
+
+    Дүрэм:
+    - Ээлж өглөө 08:00 цагт эхэлнэ.
+    - Хэрэв одоо 08:00-аас хойш бол (ж: 14:00) -> Өнөөдрийн 08:00
+    - Хэрэв одоо 08:00-аас өмнө бол (ж: 02:00) -> Өчигдрийн 08:00
+
+    Args:
+        current_dt: Одоогийн datetime
+
+    Returns:
+        datetime: Ээлжийн эхлэх цаг
+
+    Examples:
+        >>> from datetime import datetime
+        >>> # 14:00 цагт - өнөөдрийн 08:00 буцаана
+        >>> get_current_shift_start(datetime(2025, 1, 15, 14, 0))
+        datetime.datetime(2025, 1, 15, 8, 0)
+        >>> # 02:00 цагт - өчигдрийн 08:00 буцаана
+        >>> get_current_shift_start(datetime(2025, 1, 15, 2, 0))
+        datetime.datetime(2025, 1, 14, 8, 0)
+    """
+    SHIFT_START_HOUR = 8
+
+    # Хэрэв одоогийн цаг 08:00-аас бага бол (шөнийн 00:00 - 07:59)
+    # Ээлж нь "Өчигдөр" эхэлсэн гэж үзнэ.
+    if current_dt.hour < SHIFT_START_HOUR:
+        shift_date = current_dt.date() - timedelta(days=1)
+    else:
+        # 08:00-аас хойш бол "Өнөөдөр" эхэлсэн гэж үзнэ.
+        shift_date = current_dt.date()
+
+    # Тухайн өдрийн өглөөний 08:00:00 цагийг үүсгэнэ
+    return datetime.combine(shift_date, time(SHIFT_START_HOUR, 0, 0))
