@@ -1,0 +1,387 @@
+{# app/templates/analysis_forms/mass_workspace_form.html #}
+<div class="container-fluid p-0">
+
+  <!-- 🧰 Толгой ба үйлдлүүд -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h4 class="mb-1">M — Масс оруулах ажлын талбар</h4>
+      <div class="text-muted small">
+        Статус нь <code>new</code> бөгөөд <code>analyses_to_perform</code> дотор <code>"m"</code> байгаа дээжүүд энд харагдана.
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <div class="form-check form-switch me-2">
+        <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
+        <label class="form-check-label" for="toggleIncludeReady">Ready болсон дээжийг хамтад нь харах</label>
+      </div>
+
+      <input id="searchCode" class="form-control" placeholder="Дээжийн кодоор хайх" style="min-width:240px">
+
+      <div class="form-check form-switch ms-1">
+        <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
+        <label class="form-check-label" for="markReadyToggle">Хадгалахдаа сонгосон дээжийг <strong>Mass Ready</strong> болгох</label>
+      </div>
+
+      <button id="btnRefresh" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+      </button>
+      <button id="btnSave" class="btn btn-primary">
+        <i class="bi bi-save"></i> Хадгалах
+      </button>
+    </div>
+  </div>
+
+  <!-- 🧾 Жижиг тайлбар -->
+  <div class="alert alert-info py-2 mb-3">
+    <div class="small mb-1"><strong>Заавар:</strong></div>
+    <ul class="small mb-0 ps-3">
+      <li>Жин (g) оруулаад <em>Хадгалах</em> дарвал сонгосон мөрүүд <code>mass_ready=True</code> болно (унтраалга асаалттай үед).</li>
+      <li>Буруу жин оруулсан бол:
+        <em>↻ Зөвхөн жинг шинэчлэх</em> товчоор Ready төлөв хэвээр засна,
+        эсвэл <em>Unready</em> дарж ажлын жагсаалт руу буцаагаад дахин хадгал.</li>
+      <li><em>🗑 Delete</em> нь тухайн дээжийг бүртгэлээс бүр мөсөн устгана (сервер талд зөвхөн admin/ahlah зөвшөөрнө).</li>
+    </ul>
+  </div>
+
+  <!-- 📋 AG Grid -->
+  <div id="massGrid" class="ag-theme-alpine"></div>
+
+</div>
+
+<style>
+  #massGrid{
+    margin-top: 12px;
+    height: 70vh;
+    min-height: 420px;
+    width: 100%;
+  }
+  .mw-row-ready{background-color:#f7f7fb;}
+  .mw-row-ready .ag-cell{background-color:#f7f7fb !important;}
+  .mw-badge{font-size:.75rem}
+</style>
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(() => {
+  const gridEl     = document.getElementById('massGrid');
+  const $btnRefresh= document.getElementById('btnRefresh');
+  const $btnSave   = document.getElementById('btnSave');
+  const $markReady = document.getElementById('markReadyToggle');
+  const $toggleInc = document.getElementById('toggleIncludeReady');
+  const $search    = document.getElementById('searchCode');
+  let gridApi = null;
+
+  const readyBadge = (isReady) => isReady
+    ? '<span class="badge text-bg-success mw-badge">Ready</span>'
+    : '<span class="badge text-bg-secondary mw-badge">New</span>';
+
+  const columnDefs = [
+    {
+      headerName:'',
+      width:55,
+      checkboxSelection:true,
+      headerCheckboxSelection:true,
+      headerCheckboxSelectionFilteredOnly:true,
+      pinned:'left',
+      sortable:false,
+      resizable:false
+    },
+    { headerName:'ID', field:'id', width:80, pinned:'left', cellClass:'text-muted' },
+    { headerName:'Дээжийн код', field:'sample_code', minWidth:300,
+      cellRenderer:p=>`<div class="d-flex flex-column gap-1">
+          <span class="fw-semibold text-primary">${p.value || '-'}</span>
+          <span class="text-muted small">${readyBadge(!!p.data.mass_ready)}</span>
+        </div>` },
+    { headerName:'Захиалагч', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'Төрөл', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'Ирсэн огноо', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
+    { headerName:'Масс (g)', field:'weight', minWidth:160,
+      editable:true,
+      cellEditor:'agTextCellEditor',
+      cellEditorParams:{ useFormatter:true },
+      valueFormatter:p => p.value != null ? Number(p.value).toFixed(2) : '',
+      valueParser: params => {
+        const raw = params.newValue;
+        if(raw === '' || raw === null || raw === undefined) return null;
+        const num = Number(raw);
+        return Number.isFinite(num) ? num : params.oldValue ?? null;
+      },
+      cellStyle:p => p.data.mass_ready ? { backgroundColor:'#f6f6f6' } : {}
+    },
+    { headerName:'Үйлдэл', field:'actions', width:220, pinned:'right',
+      cellRenderer:p=>`
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="Жинг хадгалах">
+            <i class="bi bi-arrow-repeat"></i>
+          </button>
+          <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="Unready">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+          <button class="btn btn-outline-danger mass-action" data-action="delete" data-id="${p.data.id}" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>`,
+      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' }
+    }
+  ];
+
+  const gridOptions = {
+    columnDefs,
+    rowData: [],
+    defaultColDef:{ resizable:true, sortable:true, suppressMovable:true },
+    suppressRowTransform:true,
+    rowSelection:{ mode:'multiRow', enableClickSelection:true },
+    rowClassRules:{ 'mw-row-ready': params => !!params.data.mass_ready },
+    getRowId: params => String(params.data.id)
+  };
+
+  function setRowData(rows){
+    if(gridApi){
+      gridApi.setGridOption('rowData', rows);
+    }
+  }
+
+  async function fetchEligible(){
+    const inc = $toggleInc.checked ? '1' : '0';
+    const q   = encodeURIComponent($search.value || '');
+    if(gridApi) gridApi.showLoadingOverlay();
+    try{
+      const res = await fetch(`/api/mass/eligible?include_ready=${inc}&q=${q}`, { credentials:'same-origin' });
+      const data = await res.json();
+      setRowData(data.samples || []);
+    }catch(err){
+      console.error(err);
+      toast('Өгөгдөл татахад алдаа гарлаа.', 'danger');
+      setRowData([]);
+    }finally{
+      if(gridApi) gridApi.hideOverlay();
+    }
+  }
+
+  $btnSave.addEventListener('click', async () => {
+    if(!gridApi) return;
+    gridApi.stopEditing();
+    const selected = gridApi.getSelectedRows();
+    if(!selected.length){
+      toast('Дээж сонгоод, дээр жингээ оруулсны дараа хадгална уу.', 'warning');
+      return;
+    }
+    const items = selected.map(row => {
+      const payload = { sample_id: row.id };
+      if(row.weight !== null && row.weight !== undefined && !Number.isNaN(row.weight)) {
+        payload.weight = row.weight;
+      }
+      return payload;
+    });
+    try{
+      const res = await fetch('/api/mass/save', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        credentials:'same-origin',
+        body: JSON.stringify({ items, mark_ready: !!$markReady.checked })
+      });
+      const data = await res.json();
+      if(!res.ok || data.ok === false){
+        toast(data.message || 'Хадгалах үед алдаа гарлаа.', 'danger');
+        return;
+      }
+      toast(data.message || 'Амжилттай хадгаллаа.', 'success');
+      fetchEligible();
+    }catch(err){
+      console.error(err); toast('????????? ?????.', 'danger');
+    }
+  });
+
+  gridEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.mass-action');
+    if(!btn || !gridApi) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    if(!id || !action) return;
+    const rowNode = gridApi.getRowNode(String(id));
+    if(!rowNode) return;
+    const row = rowNode.data || {};
+
+    if(action === 'update-weight'){
+      const w = Number(row.weight);
+      if(!isFinite(w)){ toast('Массын утга буруу байна.', 'warning'); return; }
+      try{
+        const res = await fetch('/api/mass/update_weight', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_id:Number(id), weight:w })
+        });
+        const js = await res.json();
+        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'Жин шинэчлэгдлээ.', 'success');
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+
+    if(action === 'unready'){
+      if(!confirm('Unready горим руу буцаах уу?')) return;
+      try{
+        const res = await fetch('/api/mass/unready', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_ids:[Number(id)] })
+        });
+        const js = await res.json();
+        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'OK', 'success');
+        fetchEligible();
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+
+    if(action === 'delete'){
+      if(!confirm('Дээжийг бүр мөсөн устгах уу?')) return;
+      try{
+        const res = await fetch('/api/mass/delete', {
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+          body: JSON.stringify({ sample_id:Number(id) })
+        });
+        const js = await res.json();
+        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        toast(js.message || 'Дээж устлаа.', 'success');
+        fetchEligible();
+      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      return;
+    }
+  });
+
+  $btnRefresh.addEventListener('click', fetchEligible);
+  $toggleInc.addEventListener('change', fetchEligible);
+  $search.addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchEligible(); });
+
+  function toast(msg, type='info'){
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
+    el.style.zIndex = 1080;
+    el.innerHTML = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    gridApi = agGrid.createGrid(gridEl, gridOptions);
+    fetchEligible();
+  });
+})();
+</script>
+
+
+{# --- Доорх “Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал” блокийг өөрчлөөгүй, зөвхөн бүрэн харагдуулж байя --- #}
+<div class="card mt-4 shadow-sm border-0">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <div class="fw-bold text-uppercase text-muted small">
+      <i class="bi bi-clipboard-check"></i> Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал
+    </div>
+    <div class="text-muted small">{{ now_local().strftime('%Y-%m-%d') }}</div>
+  </div>
+  
+  <div class="card-body">
+    {% if related_equipments %}
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle" id="dailyCheckTable">
+        <thead class="table-secondary text-center small">
+          <tr>
+            <th style="width: 35%;">Лаб дугаар</th>
+            <th style="width: 10%;">Бүрэн бүтэн<br>(Чек)</th>
+            <th style="width: 15%;">Ашиглалт<br>(Минут)</th>
+            <th style="width: 40%;">Тайлбар / Тэмдэглэл</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for eq in related_equipments %}
+          <tr data-eq-id="{{ eq.id }}">
+            <td>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">
+                {{ eq.lab_code or '-' }}
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem;">
+                {{ eq.name }}
+                {% if eq.serial_number %}
+                  · {{ eq.serial_number }}
+                {% endif %}
+              </div>
+            </td>
+            <td class="text-center bg-light">
+              <input class="form-check-input daily-check" type="checkbox"
+                     style="width: 22px; height: 22px; cursor: pointer;" checked>
+            </td>
+            <td class="text-center">
+              <input type="number"
+                     class="form-control form-control-sm text-center daily-minutes"
+                     placeholder="0">
+            </td>
+            <td>
+              <input type="text"
+                     class="form-control form-control-sm daily-note"
+                     placeholder="Ж: Хэвийн, эсвэл тень солив...">
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-3 text-end">
+      <button type="button" class="btn btn-success" onclick="submitDailyCheck()">
+        <i class="bi bi-save"></i> Бүртгэлийг Хадгалах
+      </button>
+    </div>
+
+    {% else %}
+      <div class="alert alert-warning text-center m-0">
+        Энэ шинжилгээнд холбогдсон төхөөрөмж байхгүй байна.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function submitDailyCheck() {
+  const rows = document.querySelectorAll('#dailyCheckTable tbody tr');
+  const items = [];
+
+  rows.forEach(row => {
+    const eqId = row.dataset.eqId;
+    const isChecked = row.querySelector('.daily-check').checked;
+    const minutesVal = row.querySelector('.daily-minutes').value;
+    const note = row.querySelector('.daily-note').value;
+
+    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
+
+    if (isChecked || minutes > 0 || note.trim() !== "") {
+      items.push({
+        eq_id: eqId,
+        is_checked: isChecked,
+        minutes: minutes,
+        note: note
+      });
+    }
+  });
+
+  if (items.length === 0) {
+    alert("Бүртгэх мэдээлэл алга байна.");
+    return;
+  }
+
+  fetch('/api/log_usage_bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: items })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert('Амжилттай хадгалагдлаа!');
+      document.querySelectorAll('.daily-minutes').forEach(i => i.value = '');
+      document.querySelectorAll('.daily-note').forEach(i => i.value = '');
+    } else {
+      alert('Алдаа гарлаа.');
+    }
+  })
+  .catch(err => console.error(err));
+}
+</script>

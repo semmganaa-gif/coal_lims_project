@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Нэвтрэх эрхгүй{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger shadow">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-lock text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold text-danger">403</h1>
+                    <h2 class="h4 mb-4">Нэвтрэх эрхгүй</h2>
+                    <p class="text-muted mb-4">
+                        Уучлаарай, та энэ хуудас руу нэвтрэх эрхгүй байна.
+                        Энэ функцид нэвтрэхийн тулд тусгай эрх шаардлагатай.
+                    </p>
+
+                    <div class="alert alert-light border">
+                        <p class="mb-0 small">
+                            <strong>Шалтгаанууд:</strong>
+                        </p>
+                        <ul class="text-start mb-0 mt-2 small">
+                            <li>Таны эрх энэ үйлдэлд хүрэхгүй байна</li>
+                            <li>Та нэвтрээгүй эсвэл session-ий хугацаа дууссан</li>
+                            <li>Энэ хэсэг тодорхой албан тушаалд л зориулагдсан</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-house-door me-2"></i>Нүүр хуудас руу буцах
+                            </a>
+                            <button onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Буцах
+                            </button>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Нэвтрэх
+                            </a>
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-house-door me-2"></i>Нүүр хуудас
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Хэрэв танд энэ эрх байх ёстой гэж бодож байвал
+                    <a href="mailto:admin@energyresources.mn">администратор</a>-т хандаарай.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

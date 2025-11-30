@@ -1,0 +1,133 @@
+﻿{# --- app/templates/analysis/partials/quick_ref.html --- #}
+{# ---- SAFE GETTERS ---- #}
+{% set _atype = analysis_type if analysis_type is defined else None %}
+{% set _cfg   = config if config is defined else None %}
+
+{# кодыг олж тогтоох (fallback: config.analysis_code → analysis_code → GEN) #}
+{% set _code_raw =
+      (_atype.code if _atype else
+       (_cfg.analysis_code if _cfg and _cfg.analysis_code is defined else
+        (analysis_code if analysis_code is defined else 'GEN'))) %}
+{% set code = (_code_raw or 'GEN')|lower %}
+
+{# нэрийг олж тогтоох (fallback) #}
+{% set _name_raw =
+      (_atype.name if _atype else
+       (_cfg.analysis_name if _cfg and _cfg.analysis_name is defined else
+        (analysis_name if analysis_name is defined else _code_raw))) %}
+{% set name = _name_raw or code %}
+
+<div class="card mb-3">
+  <div class="card-body p-3 small">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-journal-text"></i>
+        <strong>Стандартын лавлах</strong>
+        <span class="text-muted">({{ code|upper }} – {{ name }})</span>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#quickRefBox"
+              aria-expanded="true">
+        Харах / нуух
+      </button>
+    </div>
+
+    <div id="quickRefBox" class="collapse show mt-2">
+
+      {# ===================== Үнс (Aad) ===================== #}
+      {% if code in ['aad','ash','lab.07.05'] %}
+        <div class="mb-2"><strong>Томъёо</strong>:
+          <code>Aad(%) = ((m3 − m1) / m2) × 100</code>
+        </div>
+        <ul class="mb-2">
+          <li><em>m1</em>: хоосон тигелийн жин</li>
+          <li><em>m2</em>: дээжийн жин</li>
+          <li><em>m3</em>: үнстэй тигелийн жин</li>
+        </ul>
+        <div class="text-muted mb-2">MNS GB/T 212:2015 • 815 ± 10 °C • десиккатор ≥ 15′</div>
+        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="row row-cols-3 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">&lt;15<br><strong>0.20</strong></div></div>
+          <div class="col"><div class="border rounded p-2">15–30<br><strong>0.30</strong></div></div>
+          <div class="col"><div class="border rounded p-2">&gt;30<br><strong>0.50</strong></div></div>
+        </div>
+
+      {# ===================== Дэгдэмхий (Vad) ===================== #}
+      {% elif code in ['vad','lab.07.04'] %}
+        <div class="mb-2"><strong>Томьёо</strong>:
+          <code>Vad(%) = [((m1 + m2) − m3) / m2] × 100 − Mad</code>
+        </div>
+        <ul class="mb-2">
+          <li><em>m1</em>: хоосон тигелийн жин</li>
+          <li><em>m2</em>: дээжийн жин</li>
+          <li><em>m3</em>: тигел + үлдэгдлийн жин</li>
+          <li><em>Mad</em>: дотоод чийг (%)</li>
+        </ul>
+        <div class="text-muted mb-2">MNS GB/T 212:2015</div>
+        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="row row-cols-3 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">&lt;20<br><strong>0.30</strong></div></div>
+          <div class="col"><div class="border rounded p-2">20–40<br><strong>0.50</strong></div></div>
+          <div class="col"><div class="border rounded p-2">&gt;40<br><strong>0.80</strong></div></div>
+        </div>
+
+      {# ============ Нийт/дотоод чийг (MT, Mad) ============ #}
+      {% elif code in ['Mt','mad','lab.07.02','lab.07.03'] %}
+        <div class="mb-2"><strong>Тайлбар (чийг)</strong></div>
+        <ul class="mb-2">
+          <li><em>MT</em> (нийт чийг): журамд заасан нөхцөлөөр шаталт/хатаалт.</li>
+          <li><em>Mad</em> (дотоод чийг): GB/T 212 процесс.</li>
+        </ul>
+        <div class="text-muted mb-2">Стандарт: MNS ISO 589:2003 (нийт), MNS GB/T 212:2015 (дотоод)</div>
+        <div><strong>Тохирцын зааг (жишиг)</strong></div>
+        <div class="row row-cols-2 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">10%-иас бага<br><strong>0.50%</strong></div></div>
+          <div class="col"><div class="border rounded p-2">≥10%<br><strong>үр дүнгийн 1/2</strong></div></div>
+        </div>
+
+      {# ===================== Хүхэр (St,ad / TS) ===================== #}
+      {% elif code in ['St,ad','ts','lab.07.08'] %}
+        <div class="mb-2"><strong>Тайлбар</strong>: Нийт хүхэр (ажлын суурь, ad).</div>
+        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="row row-cols-3 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">&lt;2.0<br><strong>0.05</strong></div></div>
+          <div class="col"><div class="border rounded p-2">2.0–5.0<br><strong>0.10</strong></div></div>
+          <div class="col"><div class="border rounded p-2">&gt;5.0<br><strong>0.15</strong></div></div>
+        </div>
+
+      {# ===================== Илчлэг (Qgr,ad / CV) ===================== #}
+      {% elif code in ['Qgr,ad','cv','lab.07.12'] %}
+        <div class="mb-2"><strong>Тайлбар</strong>: Нийт илчлэг (gross), ad суурь.</div>
+        <div class="text-muted mb-2">CV (Qgr,ad) багажны стандарт журам.</div>
+        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="row row-cols-1 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">Нэг тогтмол<br><strong>120</strong></div></div>
+        </div>
+
+      {# =====================Хөөлтийн зэрэг CSN ===================== #}
+      {% elif code in ['csn'] %}
+        <div class="mb-2"><strong>Тайлбар</strong>: Хөөлтийн зэрэг (Crucible swelling number).</div>
+        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="row row-cols-1 g-2 text-center mt-1">
+          <div class="col"><div class="border rounded p-2">Нэг тогтмол<br><strong>0.50</strong></div></div>
+        </div>
+
+      {# =====================Барьцалдах чанар Gi ===================== #}
+      {% elif code in ['gi'] %}
+        <div class="mb-2"><strong>Тайлбар</strong>: Барьцалдах чадварын индекс (15:00 + 00:30 хоёр шат).</div>
+        <div class="text-muted">Дундаж &lt; 18 бол 3:3 дахин шинжилгээ (retest) горим хэрэгжинэ.</div>
+
+      {# ===================== Бусад / default ===================== #}
+      {% else %}
+        <div class="text-muted">Энэ анализын товч заавар, томьёог энд нэмнэ.</div>
+      {% endif %}
+
+      <hr class="my-2">
+      <div class="text-muted">
+        * Энэ хэсэг нь зөвхөн мэдээллийн шинжтэй (химичийн дэлгэц). T-ийн бодит шалгалт нь хадгалсны дараа сервер талд хийгдэнэ.
+      </div>
+    </div>
+  </div>
+</div>

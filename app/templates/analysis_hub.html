@@ -1,0 +1,75 @@
+{# app/templates/analysis_hub.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Шинжилгээний хуудас</h2>
+    <div class="w-25">
+      <input id="analysis-search" type="text" class="form-control form-control-sm"
+             placeholder="Шинжилгээ хайх... (жишээ: Aad, TS, CV, Чийг)">
+    </div>
+  </div>
+
+  {% if analysis_types %}
+  <div class="row g-3" id="analysis-list">
+    {% for a in analysis_types %}
+    {# ---- Харагдацын нэр/бадж (backend-ээс ирвэл тэрийг, үгүй бол filter-ээр) ---- #}
+    {% set disp_name  = a.display_name  if a.display_name  is defined and a.display_name  else a.name %}
+    {% set disp_badge = a.display_badge if a.display_badge is defined and a.display_badge else (a.code|fmt_code) %}
+
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 analysis-item"
+         data-name="{{ (disp_name or '')|lower }}"
+         data-code="{{ (a.code or '')|lower }}"
+         data-badge="{{ (disp_badge or '')|lower }}">
+      <a href="{{ url_for('analysis.analysis_page', analysis_code=a.code) }}" class="text-decoration-none">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-primary">{{ a.code|fmt_code }}</span>
+              {% if a.required_role %}
+                <span class="badge bg-light text-dark">{{ a.required_role }}</span>
+              {% endif %}
+            </div>
+
+            <h5 class="card-title mb-1">{{ disp_name }}</h5>
+            <p class="text-muted small mb-0">
+              <span class="me-2">Код: <strong>{{ a.code }}</strong></span>
+              {% if a.description %}
+                {{ a.description }}
+              {% else %}
+                Шинжилгээний ажил
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-warning">Энэ хэрэглэгчид тохирох шинжилгээ олдсонгүй.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('analysis-search');
+  const items = document.querySelectorAll('#analysis-list .analysis-item');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', function () {
+    const q = this.value.trim().toLowerCase();
+    items.forEach(function (el) {
+      const name  = el.dataset.name  || '';
+      const code  = el.dataset.code  || '';
+      const badge = el.dataset.badge || '';
+      el.style.display = (!q || name.includes(q) || code.includes(q) || badge.includes(q)) ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}

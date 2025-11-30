@@ -1,0 +1,296 @@
+<style>
+    /* Текст бичих талбарын тусгай өнгө (Цайвар шар) */
+    .highlight-input {
+        background-color: #fffde7 !important; /* Cream color */
+        border: 1px solid #ced4da;
+    }
+    /* Фокус хийх үед (дарж бичихэд) цагаан болгох */
+    .highlight-input:focus {
+        background-color: #ffffff !important;
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+<form action="{{ url_for('main.index') }}?active_tab=add-pane" method="post">
+    {{ form.hidden_tag() }}
+
+    {# Form validation errors #}
+    {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Алдаа:</strong> Форм бөглөхдөө алдаа гарлаа. Шаардлагатай талбаруудыг бөглөнө үү.
+            <ul class="mb-0 mt-2">
+                {% for field_name, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <li>{{ form[field_name].label.text }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <h5 class="mb-3">Дээжний жагсаалт</h5>
+            <div id="sample-entry-container"
+                 style="max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; background: #f8f9fa;">
+                <p class="text-muted small"><i>(Баруун талын тохиргоог хийгээд “Дээж үүсгэх” товчийг дарна уу)</i></p>
+            </div>
+
+            <div class="mt-3 d-grid">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h5 class="mb-3">Тохиргоо</h5>
+
+            <div id="common-fields" class="p-3 mb-3 border rounded bg-white">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">{{ form.client_name.label }}:</label>
+                    <div>
+                        {% for subfield in form.client_name %}
+                          <div class="form-check form-check-inline">
+                              {{ subfield(class="form-check-input") }}
+                              {{ subfield.label(class="form-check-label") }}
+                          </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.client_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.client_name.errors %}<div>{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small">{{ form.sample_type.label }}:</label>
+                            <div id="sample-type-container" class="ms-1">
+                                <small class="text-muted"><i>(Эхлээд нэгжээ сонгоно уу)</i></small>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small">{{ form.sample_condition.label }}:</label>
+                            <div>
+                                {% for subfield in form.sample_condition %}
+                                  <div class="form-check form-check-inline small">
+                                      {{ subfield(class="form-check-input") }}
+                                      {{ subfield.label(class="form-check-label") }}
+                                  </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.sample_condition.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.sample_condition.errors %}<div>{{ error }}</div>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-2">
+                            <div class="form-check">
+                                {{ form.return_sample(class="form-check-input") }}
+                                <label class="form-check-label fw-bold small" for="return_sample">
+                                    {{ form.return_sample.label.text }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">{{ form.sample_date.label }}:</label>
+                                {{ form.sample_date(id="sample_date", class="form-control form-control-sm") }}
+                                {% if form.sample_date.errors %}
+                                    <div class="invalid-feedback d-block small">
+                                        {% for error in form.sample_date.errors %}<div>{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">{{ form.delivered_by.label }}:</label>
+                                {{ form.delivered_by(class="form-control form-control-sm highlight-input") }}
+                                {% if form.delivered_by.errors %}
+                                    <div class="invalid-feedback d-block small">
+                                        {% for error in form.delivered_by.errors %}<div>{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">{{ form.prepared_date.label }}:</label>
+                                {{ form.prepared_date(id="prepared_date", class="form-control form-control-sm") }}
+                                {% if form.prepared_date.errors %}
+                                    <div class="invalid-feedback d-block small">
+                                        {% for error in form.prepared_date.errors %}<div>{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">{{ form.prepared_by.label }}:</label>
+                                {{ form.prepared_by(id="prepared_by", class="form-control form-control-sm highlight-input") }}
+                                {% if form.prepared_by.errors %}
+                                    <div class="invalid-feedback d-block small">
+                                        {% for error in form.prepared_by.errors %}<div>{{ error }}</div>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <label class="form-label fw-bold small">{{ form.notes.label }}:</label>
+                    {{ form.notes(rows=2, class="form-control form-control-sm highlight-input") }}
+                </div>
+            </div>
+
+            <div id="chpp-options" class="unit-specific-options mb-3 p-3 border rounded"
+                 style="display: none; background-color: #f0f8ff;">
+                <h6 class="border-bottom pb-2">"CHPP"-ийн тусгай тохиргоо</h6>
+
+                <div id="chpp-2-hourly-options" class="chpp-subtype" style="display: none;">
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label for="twoh_primary_product" class="form-label small fw-bold">Primary product (CC):</label>
+                            <select id="twoh_primary_product" class="form-select form-select-sm"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="twoh_secondary_product" class="form-label small fw-bold">Secondary product (TC):</label>
+                            <select id="twoh_secondary_product" class="form-select form-select-sm"></select>
+                        </div>
+                    </div>
+                    <div class="small">
+                        <b>Модулиуд:</b>
+                        {{ form.chpp_2h_mod1() }} {{ form.chpp_2h_mod1.label(class="me-2") }}
+                        {{ form.chpp_2h_mod2() }} {{ form.chpp_2h_mod2.label(class="me-2") }}
+                        {{ form.chpp_2h_mod3() }} {{ form.chpp_2h_mod3.label(class="me-2") }}
+                    </div>
+                </div>
+
+                <div id="chpp-4-hourly-options" class="chpp-subtype" style="display: none;">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">{{ form.chpp_4h_timeslot.label }}:</label>
+                        {{ form.chpp_4h_timeslot(class="form-select form-select-sm", id="chpp_4h_timeslot") }}
+                    </div>
+                    <div class="small">
+                        <b>Модулиуд:</b>
+                        {{ form.chpp_4h_mod1(id="chpp_4h_mod1") }} {{ form.chpp_4h_mod1.label(class="me-2") }}
+                        {{ form.chpp_4h_mod2(id="chpp_4h_mod2") }} {{ form.chpp_4h_mod2.label(class="me-2") }}
+                        {{ form.chpp_4h_mod3(id="chpp_4h_mod3") }} {{ form.chpp_4h_mod3.label(class="me-2") }}
+                    </div>
+                </div>
+
+                <div id="chpp-12-hourly-options" class="chpp-subtype" style="display: none;">
+                    <div class="small">
+                        <b>Модулиуд:</b>
+                        {{ form.chpp_12h_mod1(id="chpp_12h_mod1") }} {{ form.chpp_12h_mod1.label(class="me-2") }}
+                        {{ form.chpp_12h_mod2(id="chpp_12h_mod2") }} {{ form.chpp_12h_mod2.label(class="me-2") }}
+                        {{ form.chpp_12h_mod3(id="chpp_12h_mod3") }} {{ form.chpp_12h_mod3.label(class="me-2") }}
+                    </div>
+                </div>
+
+                <div id="chpp-com-options" class="chpp-subtype" style="display: none;">
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Shift:</label>
+                            <select id="com_shift" class="form-select form-select-sm">
+                                <option value="day">Day (Dcom)</option>
+                                <option value="night">Night (Ncom)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Index:</label>
+                            <select id="com_index" class="form-select form-select-sm">
+                                <option value="">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Primary (CC):</label>
+                            <select id="com_primary_product" class="form-select form-select-sm"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Secondary (TC):</label>
+                            <select id="com_secondary_product" class="form-select form-select-sm" multiple></select>
+                        </div>
+                    </div>
+                    <div class="small">
+                        <b>PF Modules:</b>
+                        <input type="checkbox" id="com_pf211" checked> <label for="com_pf211" class="me-2">PF211</label>
+                        <input type="checkbox" id="com_pf221" checked> <label for="com_pf221" class="me-2">PF221</label>
+                        <input type="checkbox" id="com_pf231" checked> <label for="com_pf231" class="me-2">PF231</label>
+                    </div>
+                </div>
+
+                <button type="button" class="generate-btn btn btn-info btn-sm mt-3 text-white fw-bold">Дээж үүсгэх</button>
+            </div>
+
+            <div id="multi-gen-options" class="unit-specific-options mb-3 p-3 border rounded"
+                 style="display: none; background-color: #fff0f5;">
+                 <h6 class="border-bottom pb-2">Дээж үүсгэх тохиргоо (UHG/BN/QC/Proc)</h6>
+                 <div class="row g-2">
+                     <div class="col-md-6">
+                         <label class="form-label small fw-bold">{{ form.location.label }}:</label>
+                         {{ form.location(class="form-control form-control-sm", id="location") }}
+                     </div>
+                     <div class="col-md-6" id="product-field" style="display: none;">
+                         <label class="form-label small fw-bold">{{ form.product.label }}:</label>
+                         {{ form.product(class="form-control form-control-sm", id="product") }}
+                     </div>
+                     <div class="col-md-6">
+                         <label class="form-label small fw-bold">{{ form.sample_count.label }}:</label>
+                         {{ form.sample_count(class="form-control form-control-sm", type="number", min="1", id="sample_count") }}
+                     </div>
+                 </div>
+                 <button type="button" class="generate-btn btn btn-info btn-sm mt-3 text-white fw-bold">Дээж үүсгэх</button>
+            </div>
+
+            <div id="wtl-options" class="unit-specific-options mb-3 p-3 border rounded"
+                 style="display: none; background-color: #f0fff0;">
+                <h6 class="border-bottom pb-2">"WTL"-ийн тохиргоо</h6>
+                <div id="wtl-lab-number-field" class="wtl-subtype" style="display: none;">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">{{ form.lab_number.label }}:</label>
+                        {{ form.lab_number(class="form-control form-control-sm", id="lab_number") }}
+                    </div>
+                </div>
+                <div id="wtl-other-field" class="wtl-subtype" style="display: none;">
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold">Sample name:</label>
+                        {{ form.sample_code(class="form-control form-control-sm") }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="lab-options" class="unit-specific-options mb-3 p-3 border rounded" style="display: none;">
+                 <h6 class="border-bottom pb-2">"LAB" нэгжийн тохиргоо</h6>
+                 <p class="text-muted small"><i>Энэ нэгжийн дээжний нэр (“CM”, “GBW”, “Test”) доорх “Бүртгэх” товчийг дархад автоматаар үүснэ.</i></p>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    const GLOBAL_DATA = {
+        sampleTypeOptions: {{ sample_type_map | tojson }},
+        all12hSamples: {{ all_12h_samples | tojson }},
+        constant12hSamples: {{ constant_12h_samples | tojson }},
+        comPrimaryProducts: {{ com_primary_products | tojson }},
+        comSecondaryMap: {{ com_secondary_map | tojson }},
+        unitAbbreviations: {{ unit_abbreviations | tojson }},
+        currentUser: "{{ current_user.username }}",
+        csrfToken: "{{ form.csrf_token._value() }}",
+        previewUrl: "{{ url_for('main.preview_sample_analyses') }}"
+    };
+</script>
+
+<script src="{{ url_for('static', filename='js/add_sample.js') }}"></script>

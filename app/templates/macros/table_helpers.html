@@ -1,0 +1,200 @@
+{#
+  Table Helper Macros - Хүснэгтийн давтагддаг pattern-уудыг багасгах
+
+  Usage:
+    {% from 'macros/table_helpers.html' import render_table_header, render_pagination %}
+#}
+
+{#
+  Table header row
+
+  Args:
+    columns: Column нэрсийн жагсаалт
+    sortable: Эрэмбэлэх боломжтой эсэх (default: false)
+    actions: Action column байгаа эсэх (default: false)
+#}
+{% macro render_table_header(columns, sortable=false, actions=false) %}
+  <thead class="table-light">
+    <tr>
+      {% for col in columns %}
+        <th>
+          {% if sortable %}
+            <a href="#" class="text-decoration-none text-dark">
+              {{ col }}
+              <i class="bi bi-chevron-expand small"></i>
+            </a>
+          {% else %}
+            {{ col }}
+          {% endif %}
+        </th>
+      {% endfor %}
+
+      {% if actions %}
+        <th class="text-end">Үйлдэл</th>
+      {% endif %}
+    </tr>
+  </thead>
+{% endmacro %}
+
+
+{#
+  Empty table message (хүснэгт хоосон үед)
+
+  Args:
+    colspan: Column тоо
+    message: Харуулах мессеж (default: 'Өгөгдөл байхгүй байна.')
+#}
+{% macro render_empty_row(colspan, message='Өгөгдөл байхгүй байна.') %}
+  <tr>
+    <td colspan="{{ colspan }}" class="text-center text-muted py-4">
+      <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+      {{ message }}
+    </td>
+  </tr>
+{% endmacro %}
+
+
+{#
+  Loading row (хүснэгт ачаалж байгаа үед)
+
+  Args:
+    colspan: Column тоо
+#}
+{% macro render_loading_row(colspan) %}
+  <tr>
+    <td colspan="{{ colspan }}" class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Ачаалж байна...</span>
+      </div>
+      <div class="mt-2 text-muted">Ачаалж байна...</div>
+    </td>
+  </tr>
+{% endmacro %}
+
+
+{#
+  Pagination controls (хуудаслалт)
+
+  Args:
+    pagination: Flask-SQLAlchemy pagination object
+    endpoint: Route endpoint name
+    prev_text: Previous button текст (default: 'Өмнөх')
+    next_text: Next button текст (default: 'Дараах')
+#}
+{% macro render_pagination(pagination, endpoint, prev_text='Өмнөх', next_text='Дараах') %}
+  {% if pagination and pagination.pages > 1 %}
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        {# Previous button #}
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          {% if pagination.has_prev %}
+            <a class="page-link" href="{{ url_for(endpoint, page=pagination.prev_num) }}">
+              <i class="bi bi-chevron-left"></i> {{ prev_text }}
+            </a>
+          {% else %}
+            <span class="page-link">
+              <i class="bi bi-chevron-left"></i> {{ prev_text }}
+            </span>
+          {% endif %}
+        </li>
+
+        {# Page numbers #}
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for(endpoint, page=page_num) }}">{{ page_num }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {# Next button #}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          {% if pagination.has_next %}
+            <a class="page-link" href="{{ url_for(endpoint, page=pagination.next_num) }}">
+              {{ next_text }} <i class="bi bi-chevron-right"></i>
+            </a>
+          {% else %}
+            <span class="page-link">
+              {{ next_text }} <i class="bi bi-chevron-right"></i>
+            </span>
+          {% endif %}
+        </li>
+      </ul>
+
+      {# Page info #}
+      <div class="text-center text-muted small mt-2">
+        Хуудас {{ pagination.page }} / {{ pagination.pages }}
+        (Нийт {{ pagination.total }} бичлэг)
+      </div>
+    </nav>
+  {% endif %}
+{% endmacro %}
+
+
+{#
+  Status badge (Төлөв/статус харуулах)
+
+  Args:
+    status: Status утга
+    label: Харуулах текст (optional, default: status)
+    variant_map: Status → Bootstrap variant mapping (optional)
+#}
+{% macro render_status_badge(status, label='', variant_map={}) %}
+  {% set default_variants = {
+    'new': 'secondary',
+    'prepared': 'info',
+    'analysis': 'warning',
+    'completed': 'success',
+    'rejected': 'danger',
+    'approved': 'success',
+    'pending': 'warning',
+    'active': 'success',
+    'inactive': 'secondary'
+  } %}
+
+{# Jinja-т combine filter байхгүй тул dictupdate ашиглая #}
+{# merge default_variants + variant_map without relying on dictupdate/combine #}
+{% set all_variants = default_variants.copy() %}
+{% for k, v in variant_map.items() %}
+  {% set _ = all_variants.update({k: v}) %}
+{% endfor %}
+  {% set variant = all_variants.get(status|lower, 'secondary') %}
+  {% set display_label = label if label else status %}
+
+  <span class="badge bg-{{ variant }}">{{ display_label }}</span>
+{% endmacro %}
+
+
+{#
+  Data table wrapper (Bootstrap table классуудтай)
+
+  Args:
+    id: Table ID (optional)
+    striped: Striped rows эсэх (default: true)
+    hover: Hover effect эсэх (default: true)
+    bordered: Border-тэй эсэх (default: false)
+    sm: Small table эсэх (default: false)
+    responsive: Responsive wrapper эсэх (default: true)
+#}
+{% macro data_table(id='', striped=true, hover=true, bordered=false, sm=false, responsive=true) %}
+  {% if responsive %}
+    <div class="table-responsive">
+  {% endif %}
+
+  <table {% if id %}id="{{ id }}"{% endif %}
+         class="table
+                {% if striped %}table-striped{% endif %}
+                {% if hover %}table-hover{% endif %}
+                {% if bordered %}table-bordered{% endif %}
+                {% if sm %}table-sm{% endif %}">
+    {{ caller() }}
+  </table>
+
+  {% if responsive %}
+    </div>
+  {% endif %}
+{% endmacro %}

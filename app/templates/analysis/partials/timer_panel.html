@@ -1,0 +1,315 @@
+﻿{# app/templates/analysis/partials/timer_panel.html #}
+{% set cfg = timer_config or {} %}
+{% set timers = cfg.timers or [] %}
+{% set editable = cfg.editable %}
+{% set digit_size = cfg.digit_size or 'lg' %}
+
+{# 1. Энд тухайн хуудасны кодыг (ASH, MAD, CV гэх мэт) барьж авна #}
+{% set current_code = analysis_code or 'GEN' %}
+
+{% if timers|length > 0 or editable %}
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0"><i class="bi bi-alarm"></i> Шинжилгээний цаг</h5>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="timer-sound-toggle" checked>
+        <label class="form-check-label" for="timer-sound-toggle">Дуу</label>
+      </div>
+    </div>
+
+    <div id="timer-list" class="vstack gap-2">
+      {% for t in timers %}
+      {# data-initial атрибутыг reset хийхэд ашиглана #}
+      <div class="timer-row border rounded p-2" data-index="{{ loop.index0 }}" data-initial="{{ t.seconds }}">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-secondary">{{ t.label }}</span>
+            {% if t.note %}<span class="text-muted small">{{ t.note }}</span>{% endif %}
+            
+            <strong class="timer-digits timer-size-{{ digit_size }} ms-2" id="timer-digits-{{ loop.index0 }}">00:00</strong>
+            
+            {% if editable %}
+            <div class="d-flex gap-1 align-items-center mt-1 mt-md-0">
+                <div class="input-group input-group-sm" style="width: 180px;">
+                  <input type="number" min="0" step="1" class="form-control timer-hh" placeholder="H">
+                  <span class="input-group-text px-1">:</span>
+                  <input type="number" min="0" max="59" step="1" class="form-control timer-mm" placeholder="M">
+                  <span class="input-group-text px-1">:</span>
+                  <input type="number" min="0" max="59" step="1" class="form-control timer-ss" placeholder="S">
+                </div>
+                <button class="btn btn-sm btn-outline-primary btn-apply" title="Шинэ цаг тохируулах"><i class="bi bi-check-lg"></i></button>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="hstack gap-2 mt-2 mt-sm-0 ms-auto ms-sm-0">
+            <button class="btn btn-sm btn-success btn-start"><i class="bi bi-play-fill"></i></button>
+            <button class="btn btn-sm btn-warning btn-pause"><i class="bi bi-pause-fill"></i></button>
+            <button class="btn btn-sm btn-outline-danger btn-reset" title="Дахин эхлүүлэх"><i class="bi bi-arrow-counterclockwise"></i></button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# Нэмэлт сануулга #}
+    {% if editable %}
+    <div class="border-top pt-2 mt-2">
+      <details>
+        <summary class="mb-2 text-primary cursor-pointer" style="cursor: pointer;">+ Нэмэлт сануулга нэмэх</summary>
+        <div class="row g-2 align-items-end">
+          <div class="col-12 col-md-4">
+            <label class="form-label small text-muted">Тайлбар</label>
+            <input type="text" class="form-control form-control-sm" id="custom-label" placeholder="Ж: Дээж сэгсрэх">
+          </div>
+          <div class="col-8 col-md-4">
+            <label class="form-label small text-muted">Хугацаа (ЦЦ:ММ:СС)</label>
+            <div class="input-group input-group-sm">
+              <input type="number" min="0" step="1" class="form-control" id="custom-hh" placeholder="0">
+              <span class="input-group-text">:</span>
+              <input type="number" min="0" max="59" step="1" class="form-control" id="custom-mm" placeholder="00">
+              <span class="input-group-text">:</span>
+              <input type="number" min="0" max="59" step="1" class="form-control" id="custom-ss" placeholder="00">
+            </div>
+          </div>
+          <div class="col-4 col-md-2">
+            <button class="btn btn-sm btn-primary w-100" id="custom-add">Нэмэх</button>
+          </div>
+        </div>
+      </details>
+    </div>
+    {% endif %}
+
+    <audio id="timer-sound">
+      <source src="{{ url_for('static', filename='sounds/alarm_clock.ogg') }}" type="audio/ogg">
+      <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+    </audio>
+  </div>
+</div>
+
+<style>
+.timer-digits { font-variant-numeric: tabular-nums; letter-spacing: .04em; white-space: nowrap; }
+.timer-size-lg { font-size: 1.35rem; }
+.timer-size-xl { font-size: 1.85rem; }
+@media (max-width: 576px) {
+    .btn-sm { padding: 0.4rem 0.6rem; font-size: 0.9rem; }
+    .timer-digits { font-size: 1.2rem; }
+}
+</style>
+
+<script>
+// ✅ ЧУХАЛ ХЭСЭГ: Python-оос ирсэн кодыг JS руу дамжуулах
+// Энэ мөр байхгүй бол бүх хуудас "GEN" гэдэг нэг кодтой болчихоод байгаа юм.
+window.LIMS_ANALYSIS_CODE = "{{ current_code }}"; 
+
+(function(){
+  // Одоо энд "GEN" биш, жишээ нь "ASH" эсвэл "MAD" гэж орж ирнэ
+  const analysisCode = window.LIMS_ANALYSIS_CODE; 
+  const CONFIG = window.TIMER_CONFIG || {};
+  const SOUND_ENABLED = () => document.getElementById('timer-sound-toggle')?.checked;
+  const bell = document.getElementById('timer-sound');
+
+  // Түлхүүр үг үүсгэхдээ Analysis Code-ийг ашиглана
+  // Жишээ нь: timer_ASH_0_seconds, timer_MAD_0_seconds гэж ялгарна
+  function key(idx, kind){ return `timer_${analysisCode}_${idx}_${kind}`; }
+  
+  function fmt(s){
+    s = Math.max(0, Math.floor(s));
+    const hh = Math.floor(s/3600).toString().padStart(2,'0');
+    const mm = Math.floor((s%3600)/60).toString().padStart(2,'0');
+    const ss = (s%60).toString().padStart(2,'0');
+    if (hh === '00') return `${mm}:${ss}`;
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  function parseHMS(hh,mm,ss){
+    const H = Math.max(0, parseInt(hh||0,10)||0);
+    const M = Math.max(0, Math.min(59, parseInt(mm||0,10)||0));
+    const S = Math.max(0, Math.min(59, parseInt(ss||0,10)||0));
+    return H*3600 + M*60 + S;
+  }
+
+  // Render Loop
+  document.querySelectorAll('.timer-row').forEach((row)=>{
+    const idx = row.dataset.index;
+    const digits = row.querySelector('.timer-digits');
+    
+    let def = 0;
+    if (row.dataset.initial) {
+        def = parseInt(row.dataset.initial, 10);
+    } else {
+        def = (CONFIG.timers?.[idx]?.seconds) || 0;
+    }
+
+    const saved = parseInt(sessionStorage.getItem(key(idx,'seconds')) || def, 10);
+    digits.textContent = fmt(saved);
+
+    const endsAt = parseInt(sessionStorage.getItem(key(idx,'ends_at'))||0,10);
+    if (endsAt > 0){
+      const remain = Math.max(0, Math.floor(endsAt - Date.now()/1000));
+      if (remain > 0){
+        start(idx, remain);
+      } else {
+        sessionStorage.removeItem(key(idx,'ends_at'));
+        sessionStorage.setItem(key(idx,'seconds'), 0);
+        digits.textContent = fmt(0);
+      }
+    }
+  });
+
+  function tick(idx){
+    const digits = document.getElementById(`timer-digits-${idx}`);
+    if (!digits) return;
+    let s = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
+    
+    if (s <= 0){
+      clear(idx, true);
+      return;
+    }
+    
+    s -= 1;
+    sessionStorage.setItem(key(idx,'seconds'), s);
+    digits.textContent = fmt(s);
+  }
+
+  function start(idx, fromSeconds){
+    const saved = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
+    const init = (typeof fromSeconds === 'number') ? fromSeconds : saved;
+    
+    if (init <= 0) return;
+    
+    pause(idx);
+    sessionStorage.setItem(key(idx,'seconds'), init);
+    const itv = setInterval(()=> tick(idx), 1000);
+    sessionStorage.setItem(key(idx,'interval'), itv);
+    sessionStorage.setItem(key(idx,'ends_at'), Math.floor(Date.now()/1000) + init);
+  }
+
+  function pause(idx){
+    const itv = sessionStorage.getItem(key(idx,'interval'));
+    if (itv) { clearInterval(itv); }
+    sessionStorage.removeItem(key(idx,'interval'));
+    sessionStorage.removeItem(key(idx,'ends_at'));
+  }
+
+  function reset(idx){
+    pause(idx);
+    const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
+    let def = 0;
+
+    if (row && row.dataset.initial) {
+        def = parseInt(row.dataset.initial, 10);
+    } else if (CONFIG.timers?.[idx]) {
+        def = CONFIG.timers[idx].seconds || 0;
+    }
+
+    sessionStorage.setItem(key(idx,'seconds'), def);
+    const digits = document.getElementById(`timer-digits-${idx}`);
+    if (digits) digits.textContent = fmt(def);
+  }
+
+  function apply(idx, hh,mm,ss){
+    const total = parseHMS(hh,mm,ss);
+    if (total <= 0){ alert("Цаг буруу байна."); return; }
+    
+    const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
+    if(row) row.dataset.initial = total;
+
+    pause(idx);
+    sessionStorage.setItem(key(idx,'seconds'), total);
+    const digits = document.getElementById(`timer-digits-${idx}`);
+    if (digits) digits.textContent = fmt(total);
+  }
+
+  function clear(idx, finished=false){
+    pause(idx);
+    sessionStorage.setItem(key(idx,'seconds'), 0);
+    const digits = document.getElementById(`timer-digits-${idx}`);
+    if (digits) digits.textContent = fmt(0);
+    
+    if (finished && SOUND_ENABLED()){
+      try { 
+        bell.currentTime = 0; 
+        bell.play().catch(err => console.log("Audio play failed:", err)); 
+      } catch(e){}
+      
+      if (("Notification" in window)) {
+        if (Notification.permission === "granted"){
+            const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
+            const label = row ? row.querySelector('.badge')?.innerText : `#${parseInt(idx)+1}`;
+            new Notification("LIMS Цаг дууслаа!", { body: `${label} хугацаа дууссан.`, silent: !SOUND_ENABLED() });
+        } else if (Notification.permission !== "denied"){
+            Notification.requestPermission();
+        }
+      }
+    }
+  }
+
+  // Event Delegation
+  document.getElementById('timer-list').addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const row = btn.closest('.timer-row'); 
+    if (!row) return;
+    const idx = row.dataset.index;
+
+    if (btn.classList.contains('btn-start')) {
+      const s = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
+      if (s<=0){ alert("Эхлэх хугацаа 0 байна."); return; }
+      start(idx, s);
+    }
+    else if (btn.classList.contains('btn-pause')) { pause(idx); }
+    else if (btn.classList.contains('btn-reset')) { reset(idx); }
+    else if (btn.classList.contains('btn-apply')) {
+      const hh = row.querySelector('.timer-hh')?.value;
+      const mm = row.querySelector('.timer-mm')?.value;
+      const ss = row.querySelector('.timer-ss')?.value;
+      apply(idx, hh, mm, ss);
+    }
+  });
+
+  // Custom timer Add
+  const addBtn = document.getElementById('custom-add');
+  if (addBtn){
+    addBtn.addEventListener('click', function(){
+      const label = (document.getElementById('custom-label')?.value || 'Сануулга').trim();
+      const hh = document.getElementById('custom-hh')?.value;
+      const mm = document.getElementById('custom-mm')?.value;
+      const ss = document.getElementById('custom-ss')?.value;
+      
+      const total = parseHMS(hh,mm,ss);
+      if (total<=0){ alert("HH:MM:SS-ээ зөв оруулна уу."); return; }
+
+      const list = document.getElementById('timer-list');
+      const idx = document.querySelectorAll('.timer-row').length; 
+      
+      const div = document.createElement('div');
+      div.className = 'timer-row border rounded p-2';
+      div.dataset.index = idx;
+      div.dataset.initial = total;
+
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-info text-dark">${label}</span>
+            <strong class="timer-digits timer-size-${CONFIG.digit_size || 'lg'} ms-2" id="timer-digits-${idx}">${fmt(total)}</strong>
+          </div>
+          <div class="hstack gap-2 mt-2 mt-sm-0 ms-auto ms-sm-0">
+            <button class="btn btn-sm btn-success btn-start"><i class="bi bi-play-fill"></i></button>
+            <button class="btn btn-sm btn-warning btn-pause"><i class="bi bi-pause-fill"></i></button>
+            <button class="btn btn-sm btn-outline-danger btn-reset"><i class="bi bi-arrow-counterclockwise"></i></button>
+          </div>
+        </div>`;
+      
+      list.appendChild(div);
+      sessionStorage.setItem(key(idx,'seconds'), total);
+      
+      document.getElementById('custom-hh').value = '';
+      document.getElementById('custom-mm').value = '';
+      document.getElementById('custom-ss').value = '';
+    });
+  }
+})();
+</script>
+{% endif %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-0">Сайн уу, {{ current_user.username }}!</h2>
+            <p class="text-muted small mb-0">Таны эрх: <strong>{{ current_user.role }}</strong></p>
+        </div>
+        <input type="hidden" id="dateFilterStart">
+        <input type="hidden" id="dateFilterEnd">
+    </div>
+
+    <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'list-pane' %}active{% endif %}" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">Бүртгэлтэй дээжүүд</button>
+        </li>
+        {# ✅ ЗАСВАР: 'ahlah' эрхийг энд нэмсэн #}
+        {% if current_user.role in ['beltgegch', 'admin', 'ahlah'] %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == 'add-pane' %}active{% endif %}" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-pane" type="button" role="tab">Шинэ дээж бүртгэх</button>
+        </li>
+        {% endif %}
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        
+        <div class="tab-pane fade {% if active_tab == 'list-pane' %}show active{% endif %}" id="list-pane" role="tabpanel">
+            <div class="card card-body border-top-0 shadow-sm p-0">
+                
+                <div class="p-3 border-bottom bg-light">
+                    <div class="d-flex flex-wrap gap-3 align-items-start justify-content-between">
+                        
+                        <div class="d-flex gap-3">
+                            <div class="calendar-card" data-type="start">
+                                <div class="calendar-header">
+                                    <div>
+                                        <div class="calendar-title">Эхлэх огноо</div>
+                                        <div class="calendar-sub" id="startCalLabel">---</div>
+                                    </div>
+                                    <div class="calendar-nav">
+                                        <button type="button" data-dir="-1" data-cal="start">&#8249;</button>
+                                        <button type="button" data-dir="1" data-cal="start">&#8250;</button>
+                                    </div>
+                                </div>
+                                <table class="calendar-table" id="startCalendar"></table>
+                            </div>
+
+                            <div class="calendar-card" data-type="end">
+                                <div class="calendar-header">
+                                    <div>
+                                        <div class="calendar-title">Дуусах огноо</div>
+                                        <div class="calendar-sub" id="endCalLabel">---</div>
+                                    </div>
+                                    <div class="calendar-nav">
+                                        <button type="button" data-dir="-1" data-cal="end">&#8249;</button>
+                                        <button type="button" data-dir="1" data-cal="end">&#8250;</button>
+                                    </div>
+                                </div>
+                                <table class="calendar-table" id="endCalendar"></table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 align-items-end">
+                            <div class="btn-group">
+                                <button id="btnLoadData" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-arrow-clockwise"></i> Ачаалах
+                                </button>
+                                <button id="btnExportCsv" class="btn btn-success btn-sm">
+                                    <i class="bi bi-file-earmark-excel"></i> Excel
+                                </button>
+                            </div>
+                            
+                            <form id="deleteSelectedForm" action="{{ url_for('main.delete_selected_samples') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <input type="hidden" name="sample_ids" id="hidden_delete_ids">
+                                <button type="button" id="btnDeleteSelected" class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="bi bi-trash"></i> Устгах
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="myGrid" class="ag-theme-alpine grid-wrapper"></div>
+
+            </div>
+        </div>
+
+        {# ✅ ЗАСВАР: 'ahlah' эрхийг энд нэмсэн #}
+        {% if current_user.role in ['beltgegch', 'admin', 'ahlah'] %}
+        <div class="tab-pane fade {% if active_tab == 'add-pane' %}show active{% endif %}" id="add-pane" role="tabpanel">
+            <div class="card card-body border-top-0 shadow-sm mt-3">
+                {% include 'add_sample.html' %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
+
+<script>
+window.LIMS_ACTIVE_TAB = '{{ active_tab | default("list-pane") }}';
+</script>
+
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}

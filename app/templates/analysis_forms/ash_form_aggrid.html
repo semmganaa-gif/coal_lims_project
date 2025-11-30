@@ -1,0 +1,716 @@
+{# AG Grid хувилбар - Glassmorphism Style & Fixed Layout #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{{ aggrid_macros.common_grid_css('ashGrid') | safe }}
+{{ aggrid_macros.common_js_helpers(['num','m1','m2','m3']) | safe }}
+
+<style>
+  .ag-theme-alpine .ag-root-wrapper {
+    border-radius: 16px;
+    overflow: hidden;
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(248,249,250,0.9));
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+  }
+
+  .ag-theme-alpine .ag-header {
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .ag-theme-alpine .ag-header-cell {
+    border-right: 1px solid #d0d0d0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  .ag-theme-alpine .ag-cell {
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  /* Parallel group header separation */
+  .ag-header-group-cell-with-group {
+    border-right: 2px solid #adb5bd !important;
+    text-align: center !important;
+  }
+  .ag-theme-alpine .ag-header-group-cell:nth-child(3) { background-color: #e3f2fd !important; } /* P1 */
+  .ag-theme-alpine .ag-header-group-cell:nth-child(4) { background-color: #fff3e0 !important; } /* P2 */
+
+  /* --- 💎 GLASSMORPHISM (RowSpan cell) --- */
+  .ag-theme-alpine .ag-cell-span {
+    background-color: rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 5 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  /* RowSpan border fix */
+  .ag-theme-alpine .ag-row:has(.ag-cell-span) + .ag-row .ag-cell {
+    border-top: none !important;
+  }
+
+  /* Hover – unsaved мөрийг бага зэрэг гаргаж харагдуулах */
+  .ag-theme-alpine .ag-row-hover .ag-cell:not(.ag-cell-span) {
+    background-color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* --- EDITING STATE --- */
+  .ag-theme-alpine .ag-cell-inline-editing {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px #2196F3 !important;
+    z-index: 100 !important;
+  }
+
+  /* --- BADGES & TEXT --- */
+  .reject-badge {
+    font-size: 0.7em;
+    padding: 3px 6px;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .sample-name {
+    font-weight: 600;
+    color: #0d6efd;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+</style>
+
+{{ aggrid_macros.grid_container('ashGrid') | safe }}
+
+<script>
+(function() {
+  'use strict';
+
+  // --- 1. CONFIG ---
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'Aad';
+  const DRAFT_KEY = `ash_draft_inputs_${ANALY_CODE}`;
+
+  // Backend Data
+  {{ aggrid_macros.dataset_block() | safe }}
+
+
+  // --- 2. HELPERS ---
+
+  // Нэг мөрийн 3 массын үр дүн
+  function computeResult(m1, m2, m3) {
+    if (m1 == null || m2 == null || m3 == null) return null;
+    const _m1 = Number(m1);
+    const _m2 = Number(m2);
+    const _m3 = Number(m3);
+    if (!isFinite(_m1) || !isFinite(_m2) || !isFinite(_m3) || _m2 === 0) return null;
+    return ((_m3 - _m1) / _m2) * 100;
+  }
+
+  // Parallel background өнгө
+  function parallelBg(p) {
+    return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
+  }
+
+  // Excel Navigation
+  function suppressEnterAndArrows(params) {
+    const k = params.event.key;
+    if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight') {
+      params.api.stopEditing();
+      const focused = params.api.getFocusedCell();
+      if (focused) {
+        let nextRow = focused.rowIndex;
+        let nextCol = focused.column;
+
+        const allCols = params.api.getColumns();
+        const idx = allCols.findIndex(c => c === focused.column);
+
+        if (k === 'ArrowUp') nextRow = focused.rowIndex - 1;
+        else if (k === 'ArrowDown') nextRow = focused.rowIndex + 1;
+        else if (k === 'ArrowLeft' && idx > 0) nextCol = allCols[idx - 1];
+        else if (k === 'ArrowRight' && idx < allCols.length - 1) nextCol = allCols[idx + 1];
+
+        params.api.setFocusedCell(nextRow, nextCol);
+        setTimeout(() => {
+          params.api.startEditingCell({ rowIndex: nextRow, colKey: nextCol });
+        }, 10);
+      }
+      return true;
+    }
+    // Enter → доош шилжихийг AG Grid өөрөө зохицуулна
+    return k === 'Enter';
+  }
+
+  const numParser = p => {
+    const v = parseFloat(p.newValue);
+    return isNaN(v) ? null : v;
+  };
+  const numFmt = p => (p.value != null ? parseFloat(p.value).toFixed(4) : '');
+
+  // Баганын тохиргоо (editable numeric columns)
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    valueFormatter: numFmt,
+    suppressKeyboardEvent: suppressEnterAndArrows,
+    cellStyle: p =>
+      p.data.is_saved
+        ? { backgroundColor: '#e9ecef' }
+        : {}
+  };
+
+  // --- 3. COLUMN DEFINITIONS ---
+  const columnDefs = [
+    {
+      headerName: '№',
+      field: 'index',
+      width: 50,
+      pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: {
+        textAlign: 'center',
+        color: '#6c757d',
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      valueFormatter: p => p.data.parallel === 1 ? p.value : ''
+    },
+    {
+      headerName: 'Дээжийн нэр',
+      field: 'sample_code',
+      width: 300,
+      pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        lineHeight: '1.2'
+      },
+      cellRenderer: p => {
+        if (p.data.parallel !== 1) return '';
+        let h = `<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) {
+          h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
+            errorLabels[rej.reason_code] || rej.reason
+          }</div>`;
+        }
+        return h;
+      }
+    },
+    {
+      headerName: 'Тигель №',
+      field: 'crucible_num',
+      width: 90,
+      headerClass: 'ag-header-cell-centered',
+      cellStyle: p => {
+        const base = {
+          textAlign: 'center',
+          backgroundColor: parallelBg(p)
+        };
+        return p.data.is_saved ? { ...base, backgroundColor: '#e9ecef' } : base;
+      },
+      ...editCol,
+      valueParser: null,
+      valueFormatter: null
+    },
+    {
+      headerName: 'm1',
+      field: 'm1',
+      width: 110,
+      cellStyle: p => {
+        const base = { backgroundColor: parallelBg(p) };
+        return p.data.is_saved ? { ...base, backgroundColor: '#e9ecef' } : base;
+      },
+      ...editCol
+    },
+    {
+      headerName: 'm2',
+      field: 'm2',
+      width: 110,
+      cellStyle: p => {
+        const base = { backgroundColor: parallelBg(p) };
+        return p.data.is_saved ? { ...base, backgroundColor: '#e9ecef' } : base;
+      },
+      ...editCol
+    },
+    {
+      headerName: 'm3',
+      field: 'm3',
+      width: 110,
+      cellStyle: p => {
+        const base = { backgroundColor: parallelBg(p) };
+        return p.data.is_saved ? { ...base, backgroundColor: '#e9ecef' } : base;
+      },
+      ...editCol
+    },
+    {
+      headerName: 'Үр дүн %',
+      field: 'result',
+      width: 100,
+      valueFormatter: p =>
+        p.data.is_saved && p.value != null ? parseFloat(p.value).toFixed(2) : '-',
+      cellStyle: p => {
+        const base = { backgroundColor: parallelBg(p) };
+        return p.data.is_saved
+          ? { ...base, fontWeight: 'bold', backgroundColor: '#e7f5ff' }
+          : { ...base, color: '#ccc' };
+      }
+    },
+    {
+      headerName: 'Тохирц',
+      field: 'tolerance',
+      width: 90,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p =>
+        p.data.parallel === 1 && p.data.is_saved && p.value != null
+          ? parseFloat(p.value).toFixed(2)
+          : '',
+      cellStyle: p => {
+        if (!p.data.is_saved) {
+          return {
+            color: '#ccc',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          };
+        }
+        return {
+          color: p.value > 0.5 ? '#dc3545' : '#6c757d',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        };
+      }
+    },
+    {
+      headerName: 'Дундаж',
+      field: 'average',
+      width: 90,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p =>
+        p.data.parallel === 1 && p.data.is_saved && p.value != null
+          ? parseFloat(p.value).toFixed(2)
+          : '',
+      cellStyle: p => {
+        if (!p.data.is_saved) {
+          return {
+            color: '#ccc',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          };
+        }
+        return {
+          fontWeight: 'bold',
+          color: '#198754',
+          backgroundColor: '#d1e7dd',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        };
+      }
+    },
+    {
+      headerName: '',
+      field: 'actions',
+      width: 60,
+      pinned: 'right',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      cellRenderer: p =>
+        p.data.parallel === 1
+          ? `<button class="btn btn-outline-danger btn-sm border-0 py-0"
+                      onclick="removeSample(${p.data.sample_id})"
+                      title="Хасах"><i class="bi bi-x-lg"></i></button>`
+          : ''
+    }
+  ];
+
+  // --- 4. DATA MAPPING ---
+  const rowData = [];
+  samples.forEach((s, idx) => {
+    const ex = existingResults[s.id] || {};
+    const rd = ex.raw_data || {};
+    const isSaved = ex.status === 'pending_review' || ex.status === 'approved';
+
+    const p1 = rd.p1 || {};
+    const p2 = rd.p2 || {};
+
+    const r1 = computeResult(p1.m1, p1.m2_sample ?? p1.m2, p1.m3_ashy ?? p1.m3);
+    const r2 = computeResult(p2.m1, p2.m2_sample ?? p2.m2, p2.m3_ashy ?? p2.m3);
+
+    const tol = r1 != null && r2 != null ? Math.abs(r1 - r2) : rd.diff ?? null;
+    const avg = r1 != null && r2 != null ? (r1 + r2) / 2 : rd.avg ?? null;
+
+    const base = {
+      index: idx + 1,
+      sample_id: s.id,
+      sample_code: s.code,
+      is_saved: isSaved,
+      _p1: r1,
+      _p2: r2,
+      _tol: tol,
+      _avg: avg
+    };
+
+    rowData.push({
+      ...base,
+      parallel: 1,
+      crucible_num: p1.num ?? p1.crucible_num,
+      m1: p1.m1,
+      m2: p1.m2_sample ?? p1.m2,
+      m3: p1.m3_ashy ?? p1.m3,
+      result: r1,
+      tolerance: tol,
+      average: avg
+    });
+
+    rowData.push({
+      ...base,
+      parallel: 2,
+      crucible_num: p2.num ?? p2.crucible_num,
+      m1: p2.m1,
+      m2: p2.m2_sample ?? p2.m2,
+      m3: p2.m3_ashy ?? p2.m3,
+      result: r2,
+      tolerance: null,
+      average: null
+    });
+  });
+
+  // --- 5. DRAFT SAVE/RESTORE ---
+
+  function saveDrafts() {
+    if (!window.ashGridApi) return;
+    const drafts = {};
+    window.ashGridApi.forEachNode(n => {
+      if (!n.data.is_saved) {
+        const d = n.data;
+        if (
+          d.crucible_num != null ||
+          d.m1 != null ||
+          d.m2 != null ||
+          d.m3 != null
+        ) {
+          drafts[`${d.sample_id}_${d.parallel}`] = {
+            n: d.crucible_num,
+            m1: d.m1,
+            m2: d.m2,
+            m3: d.m3
+          };
+        }
+      }
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  }
+
+  function restoreDrafts() {
+    try {
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      window.ashGridApi.forEachNode(n => {
+        if (!n.data.is_saved) {
+          const k = `${n.data.sample_id}_${n.data.parallel}`;
+          if (drafts[k]) {
+            n.data.crucible_num = drafts[k].n;
+            n.data.m1 = drafts[k].m1;
+            n.data.m2 = drafts[k].m2;
+            n.data.m3 = drafts[k].m3;
+
+            const r = computeResult(n.data.m1, n.data.m2, n.data.m3);
+            if (n.data.parallel === 1) n.data._p1 = r;
+            else n.data._p2 = r;
+            n.data.result = r;
+          }
+        }
+      });
+      window.ashGridApi.refreshCells({ force: true });
+    } catch (e) {
+      console.warn('Failed to restore drafts', e);
+    }
+  }
+
+  function onCellValueChanged(params) {
+    if (['m1', 'm2', 'm3'].includes(params.colDef.field)) {
+      const d = params.data;
+      const res = computeResult(d.m1, d.m2, d.m3);
+      d.result = res;
+      if (d.parallel === 1) d._p1 = res;
+      else d._p2 = res;
+
+      window.ashGridApi.refreshCells({
+        rowNodes: [params.node],
+        columns: ['result']
+      });
+    }
+    saveDrafts();
+  }
+
+  // --- 6. INIT GRID ---
+  const gridOptions = {
+    theme: 'legacy',
+    columnDefs: columnDefs,
+    rowData: rowData,
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform: true,
+    singleClickEdit: true,
+    stopEditingWhenCellsLoseFocus: true,
+    enterNavigatesVertically: true,
+    enterNavigatesVerticallyAfterEdit: true,
+    onCellValueChanged: onCellValueChanged
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('#ashGrid');
+    if (el) {
+      window.ashGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts, 100);
+    }
+  });
+
+  // --- 7. ACTIONS ---
+
+  window.removeSample = function(id) {
+    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
+
+  window.collectAshGridData = function() {
+    if (!window.ashGridApi) return [];
+    const map = {};
+    window.ashGridApi.forEachNode(n => {
+      if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
+      map[n.data.sample_id][n.data.parallel] = n.data;
+    });
+
+    const payload = [];
+    Object.keys(map).forEach(sid => {
+      const p1 = map[sid][1];
+      const p2 = map[sid][2];
+      if (
+        p1 &&
+        p2 &&
+        p1.m1 != null &&
+        p1.m2 != null &&
+        p1.m3 != null &&
+        p2.m1 != null &&
+        p2.m2 != null &&
+        p2.m3 != null
+      ) {
+        const res1 = computeResult(p1.m1, p1.m2, p1.m3);
+        const res2 = computeResult(p2.m1, p2.m2, p2.m3);
+        if (res1 == null || res2 == null) return;
+
+        const avg = (res1 + res2) / 2;
+        const diff = Math.abs(res1 - res2);
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: ANALY_CODE,
+          final_result: avg,
+          raw_data: {
+            p1: {
+              num: p1.crucible_num,
+              m1: p1.m1,
+              m2: p1.m2,
+              m2_sample: p1.m2,
+              m3: p1.m3,
+              m3_ashy: p1.m3,
+              result: res1
+            },
+            p2: {
+              num: p2.crucible_num,
+              m1: p2.m1,
+              m2: p2.m2,
+              m2_sample: p2.m2,
+              m3: p2.m3,
+              m3_ashy: p2.m3,
+              result: res2
+            },
+            avg: avg,
+            diff: diff
+          }
+        });
+      }
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults) {
+    if (!savedResults || !savedResults.length) return;
+    try {
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      savedResults.forEach(r => {
+        delete drafts[`${r.sample_id}_1`];
+        delete drafts[`${r.sample_id}_2`];
+      });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    } catch (e) {
+      console.warn('Failed to purge drafts', e);
+    }
+  }
+
+  window.updateAshGridAfterSave = function(savedResults) {
+    if (!window.ashGridApi || !savedResults) return;
+    const savedMap = {};
+    savedResults.forEach(r => {
+      savedMap[r.sample_id] = r;
+    });
+    window.ashGridApi.forEachNode(n => {
+      const s = savedMap[n.data.sample_id];
+      if (s) {
+        n.data.is_saved = true;
+        if (n.data.parallel === 1) {
+          n.data.result = s.raw_data.p1.result;
+          n.data.tolerance = s.raw_data.diff;
+          n.data.average = s.raw_data.avg;
+        } else {
+          n.data.result = s.raw_data.p2.result;
+        }
+      }
+    });
+    window.ashGridApi.refreshCells({ force: true });
+    purgeDrafts(savedResults);
+    saveDrafts();
+    alert('Амжилттай хадгаллаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  window.LIMS_CALC.Aad = {
+    collect: window.collectAshGridData,
+    afterSave: window.updateAshGridAfterSave
+  };
+})();
+</script>
+
+{# Equipment Section #}
+<div class="card mt-4 shadow-sm border-0">
+  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <div class="fw-bold text-uppercase text-muted small">
+      <i class="bi bi-clipboard-check"></i> Тоног Төхөөрөмжийн Ашиглалт
+    </div>
+    <div class="text-muted small">{{ now_local().strftime('%Y-%m-%d') }}</div>
+  </div>
+  <div class="card-body">
+    {% if related_equipments %}
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle" id="dailyCheckTable">
+        <thead class="table-secondary text-center small">
+          <tr>
+            <th width="35%">Лаб дугаар</th>
+            <th width="10%">Чек</th>
+            <th width="15%">Минут</th>
+            <th width="40%">Тайлбар</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for eq in related_equipments %}
+          <tr data-eq-id="{{ eq.id }}">
+            <td>
+              <div class="fw-bold">{{ eq.lab_code or '-' }}</div>
+              <div class="text-muted small">{{ eq.name }}</div>
+            </td>
+            <td class="text-center bg-light">
+              <input class="form-check-input daily-check" type="checkbox" style="cursor: pointer;" checked>
+            </td>
+            <td class="text-center">
+              <input type="number" class="form-control form-control-sm text-center daily-minutes" placeholder="0">
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm daily-note" placeholder="...">
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="mt-3 text-end">
+      <button id="dailyCheckSaveBtn" class="btn btn-success" onclick="submitDailyCheck()">
+        <i class="bi bi-save"></i> Хадгалах
+      </button>
+    </div>
+    {% else %}
+      <div class="alert alert-warning text-center">Төхөөрөмж байхгүй.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function submitDailyCheck() {
+  const items = [];
+  document.querySelectorAll('#dailyCheckTable tbody tr').forEach(row => {
+    const chk = row.querySelector('.daily-check').checked;
+    const min = parseFloat(row.querySelector('.daily-minutes').value) || 0;
+    const note = row.querySelector('.daily-note').value.trim();
+
+    if (chk || min > 0 || note) {
+      items.push({
+        eq_id: row.dataset.eqId,
+        is_checked: chk,
+        minutes: min,
+        note: note
+      });
+    }
+  });
+
+  if (!items.length) {
+    return alert("Бүртгэх мэдээлэл алга.");
+  }
+
+  const btn = document.getElementById('dailyCheckSaveBtn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Хадгалж байна...';
+
+  const csrf = document
+    .querySelector('meta[name="csrf-token"]')
+    ?.getAttribute('content');
+
+  fetch('/api/log_usage_bulk', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrf || ''
+    },
+    body: JSON.stringify({ items: items })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'success') {
+        alert('Төхөөрөмж хадгалагдлаа!');
+        document.querySelectorAll('.daily-minutes').forEach(i => (i.value = ''));
+        document.querySelectorAll('.daily-note').forEach(i => (i.value = ''));
+      } else {
+        alert(d.message || 'Алдаа гарлаа.');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Сервертэй холбогдох үед алдаа гарлаа.');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    });
+}
+</script>

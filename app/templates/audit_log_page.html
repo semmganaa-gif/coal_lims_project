@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .diff-cell-flagged { color:#dc3545!important; font-weight:700; background:#fff2f2; }
+  .row-rejected { background:#fff8e1!important; border-left:4px solid #ffc107; }
+  .audit-table-wrapper thead th { position:sticky; top:0; background:#9ebfe0; z-index:5; }
+  .raw-json-box{ max-width:420px; white-space:pre-wrap; word-break:break-word; font-size:.7rem; background:#eef6ff; border:1px dashed #e2e8f0; border-radius:6px; padding:4px 6px; }
+</style>
+
+{# ---------- helper: JSON-г dict болгох, утга сонгох ---------- #}
+{% macro pick(d, keys, default='-') -%}
+  {%- set ns = namespace(val=None) -%}
+  {%- for k in keys -%}
+    {%- if ns.val is none and d.get(k) not in [None, ''] -%}
+      {%- set ns.val = d.get(k) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ ns.val if ns.val is not none else default }}
+{%- endmacro %}
+
+{% macro f2(x, dash='-') -%}
+  {%- if x not in [None, ''] -%}{{ "%.2f"|format(x|float) }}{%- else -%}{{ dash }}{%- endif -%}
+{%- endmacro %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h4 mb-1"><i class="bi bi-archive-fill me-2"></i>{{ title }}</h1>
+      <p class="text-muted mb-0">Шинжилгээ: <strong>{{ analysis_type.name }}</strong> (код: {{ analysis_type.code }})</p>
+    </div>
+    <a href="{{ url_for('api.audit_hub') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Аудитын төв рүү буцах
+    </a>
+  </div>
+
+  <!-- ШҮҮЛТҮҮР -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" action="{{ url_for('api.audit_log_page', analysis_code=analysis_type.code) }}">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Эхлэх огноо</label>
+            <input type="date" class="form-control" name="start_date" value="{{ request.args.get('start_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дуусах огноо</label>
+            <input type="date" class="form-control" name="end_date" value="{{ request.args.get('end_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Дээжний нэр</label>
+            <input type="text" class="form-control" name="sample_name" value="{{ request.args.get('sample_name','') }}">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Химич</label>
+            <input type="text" class="form-control" name="user_name" value="{{ request.args.get('user_name','') }}">
+          </div>
+          <div class="col-md-1 d-grid">
+            <button class="btn btn-primary" type="submit">Шүүх</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% set schema = analysis_schema or {} %}
+  {% set parallel_schema = schema.get('parallels', {}) %}
+  {% set parallel_columns = parallel_schema.get('columns', []) %}
+
+  <!-- ХҮСНЭГТ -->
+  <div class="table-responsive audit-table-wrapper mb-5">
+    <table class="table table-bordered table-hover table-sm align-middle">
+      <thead class="table-light text-center">
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>Дээж</th>
+          <th style="min-width:420px;">{{ parallel_schema.get('title', 'Туршилтын жин / үр дүн snapshot') }}</th>
+          <th style="width:90px;">Тохирц</th>
+          <th style="width:90px;">Дундаж</th>
+          <th>Химич</th>
+          <th>Огноо</th>
+          <th>Шалтгаан / түүх өгөгдөл</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if logs %}
+        {% for log in logs %}
+          {% set _rd = get_log_raw_data(log) %}
+          {% set raw_data = {} %}
+          {% if _rd %}
+            {% if _rd is mapping %}
+              {% set raw_data = _rd %}
+            {% elif _rd is string %}
+              {% set _tmp = _rd.strip() %}
+              {% if _tmp and _tmp.startswith('{') and _tmp.endswith('}') %}
+                {% set raw_data = _tmp|loads %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+
+          {% set parallels = raw_data.get('parallels') or [] %}
+          {% set _diff = (raw_data.get('diff') if raw_data.get('diff') not in [None, ''] else None) %}
+          {% set is_flagged = (_diff is not none) and (log.action in ['REJECTED','PENDING_REVIEW']) %}
+          {% set is_rejected = (log.action == 'REJECTED') %}
+          {% set col_defs = parallel_columns if parallel_columns else [
+            {'key':'num','label':'?'},
+            {'key':'m1','label':'m1'},
+            {'key':'m2','label':'m2'},
+            {'key':'m3','label':'m3'},
+            {'key':'result','label':'?? ???','format':'float'}
+          ] %}
+
+          <tr {% if is_rejected %}class="row-rejected"{% endif %}>
+            <td class="text-center fw-semibold">{{ loop.index }}</td>
+            <td class="fw-semibold">
+              {{ log.sample.sample_code if log.sample else '-' }}
+            </td>
+            <td>
+              {% if parallels %}
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered mb-0 align-middle text-center">
+                    <thead class="table-light">
+                      <tr>
+                        {% for col in col_defs %}
+                          <th {% if col.width %}style="width:{{ col.width }}"{% endif %}>{{ col.label }}</th>
+                        {% endfor %}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for par in parallels %}
+                        <tr>
+                          {% for col in col_defs %}
+                            {% set val = par.get(col.key) %}
+                            <td>
+                              {% if col.format == 'float' %}
+                                {{ f2(val) }}
+                              {% else %}
+                                {{ val if val not in [None, ''] else '-' }}
+                              {% endif %}
+                            </td>
+                          {% endfor %}
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                {% set scalar_defs = [
+                  ('avg', 'Дундаж'),
+                  ('diff', 'Тохирц (T)'),
+                  ('result', 'Үр дүн'),
+                  ('final_result', 'Final Result'),
+                  ('A', 'A (хувин + дээж)'),
+                  ('B', 'B (хувин)'),
+                  ('C', 'C (хатуу үлдэгдэл)'),
+                  ('weight', 'Жин'),
+                  ('limit_used', 'Т лимит утга'),
+                  ('limit_mode', 'Т лимит горим'),
+                  ('t_exceeded', 'Т лимит давсан эсэх'),
+                  ('retest_mode', 'Давталт горим'),
+                  ('is_low_avg', 'Давтан шинжилгээ шаардах?')
+                ] %}
+                {% set scalar_ns = namespace(items=[]) %}
+                {% for key, label in scalar_defs %}
+                  {% if raw_data.get(key) not in [None, ''] %}
+                    {% set scalar_ns.items = scalar_ns.items + [(label, raw_data.get(key))] %}
+                  {% endif %}
+                {% endfor %}
+                {% if scalar_ns.items %}
+                  <div class="bg-light border rounded p-2 small">
+                    {% for label, value in scalar_ns.items %}
+                      <div class="d-flex justify-content-between py-1 border-bottom border-light">
+                        <span class="text-muted">{{ label }}</span>
+                        <span class="fw-semibold">
+                          {% if value is number %}
+                            {{ "%.3f"|format(value) }}
+                          {% elif value in [True, False] %}
+                            {{ 'Тийм' if value else 'Үгүй' }}
+                          {% else %}
+                            {{ value }}
+                          {% endif %}
+                        </span>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% elif log.final_result_snapshot not in [None, ''] %}
+                  <div class="bg-light border rounded p-2 small">
+                    <div class="d-flex justify-content-between">
+                      <span class="text-muted">Үр дүн</span>
+                      <span class="fw-semibold">
+                        {{ log.final_result_snapshot }}
+                      </span>
+                    </div>
+                  </div>
+                {% elif raw_data %}
+                  <div class="raw-json-box">{{ raw_data|tojson }}</div>
+                {% else %}
+                  -
+                {% endif %}
+              {% endif %}
+            </td>
+            <td class="text-center {% if is_flagged %}diff-cell-flagged{% endif %}">
+              {{ f2(_diff) }}
+            </td>
+            <td class="text-center fw-bold">
+              {{ f2(raw_data.get('avg')) }}
+            </td>
+            <td>{{ log.user.username if log.user else '-' }}</td>
+            <td>
+              {{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}<br>
+              <span class="badge {% if log.action in ['APPROVED','CREATED_AUTO_APPROVED','UPDATED_AUTO_APPROVED'] %}bg-success{% elif log.action=='REJECTED' %}bg-danger{% elif log.action=='CREATED' %}bg-primary{% else %}bg-secondary{% endif %}">
+                {{ log.action }}
+              </span>
+            </td>
+            <td>
+              {% if log.reason %}<span class="{% if is_rejected %}text-danger fw-semibold{% endif %}">{{ log.reason }}</span>{% else %}-{% endif %}
+              {% if log.rejection_category %}
+                <div class="small text-muted mt-1">
+                  ????????: {{ log.rejection_category }}{% if log.rejection_subcategory %} / {{ log.rejection_subcategory }}{% endif %}
+                </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+
+{% else %}
+        <tr>
+          <td colspan="12" class="text-center text-muted py-5">Илэрц олдсонгүй.</td>
+        </tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

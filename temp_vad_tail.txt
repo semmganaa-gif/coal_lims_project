@@ -1,0 +1,80 @@
+﻿
+  window.collectVadGridData = function(){
+    if(!window.vadGridApi) return [];
+    const map = {};
+    window.vadGridApi.forEachNode(n => {
+      if(!map[n.data.sample_id]) map[n.data.sample_id] = {};
+      map[n.data.sample_id][n.data.parallel] = n.data;
+    });
+    const payload = [];
+    Object.keys(map).forEach(sid => {
+      const p1 = map[sid][1];
+      const p2 = map[sid][2];
+      if(p1 && p2 && p1.avg != null && p1.diff != null){
+        const lim = effectiveLimit(p1.avg);
+        const thr = lim.mode === 'percent' && p1.avg!=null ? Math.abs(p1.avg * lim.limit) : lim.limit;
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: ANALY_CODE,
+          final_result: p1.avg,
+          raw_data: {
+            p1: { num: p1.num, m1: p1.m1, m2: p1.m2, m3: p1.m3, result: calcRes(p1.m1,p1.m2,p1.m3, p1.mad_used) },
+            p2: { num: p2.num, m1: p2.m1, m2: p2.m2, m3: p2.m3, result: calcRes(p2.m1,p2.m2,p2.m3, p1.mad_used) },
+            avg: p1.avg,
+            diff: p1.diff,
+            t_exceeded: p1.t_exceeded,
+            mad_used: p1.mad_used ?? null,
+            limit_used: thr,
+            limit_mode: lim.mode
+          }
+        });
+      }
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    try{
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      savedResults.forEach(r => { delete drafts[r.sample_id]; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    }catch(e){}
+  }
+
+  window.updateVadGridAfterSave = function(savedResults){
+    if(!window.vadGridApi || !savedResults) return;
+    const savedMap = {}; savedResults.forEach(r => savedMap[r.sample_id] = r);
+    window.vadGridApi.forEachNode(n => {
+      const s = savedMap[n.data.sample_id];
+      if(s){
+        n.data.is_saved = true;
+        const raw = s.raw_data || {};
+        const p1 = raw.p1 || {}, p2 = raw.p2 || {};
+        n.data.num = n.data.parallel===1 ? (p1.num ?? p1.crucible_num ?? p1.tigel_num) : (p2.num ?? p2.crucible_num ?? p2.tigel_num);
+        n.data.m1 = n.data.parallel===1 ? p1.m1 : p2.m1;
+        n.data.m2 = n.data.parallel===1 ? p1.m2 : p2.m2;
+        n.data.m3 = n.data.parallel===1 ? p1.m3 : p2.m3;
+        n.data.result = n.data.parallel===1 ? p1.result : p2.result;
+        n.data.diff = raw.diff;
+        n.data.avg = raw.avg;
+        n.data.t_exceeded = raw.t_exceeded;
+        n.data.mad_used = raw.mad_used ?? n.data.mad_used;
+      }
+    });
+    window.vadGridApi.refreshCells({ force:true });
+    purgeDrafts(savedResults);
+    alert('Үр дүн амжилттай хадгаллаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const BASE_CODE = (ANALY_CODE || '');
+  const REGISTERED = { collect: window.collectVadGridData, afterSave: window.updateVadGridAfterSave };
+  ['Vad', BASE_CODE].forEach(c=>{
+    if(!c) return;
+    window.LIMS_CALC[c] = REGISTERED;
+    window.LIMS_CALC[c.toUpperCase()] = REGISTERED;
+    window.LIMS_CALC[c.toLowerCase()] = REGISTERED;
+  });
+})();
+</script>

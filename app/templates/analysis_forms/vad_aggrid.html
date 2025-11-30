@@ -1,0 +1,355 @@
+{# AG Grid – Vad (дэгдэмхий), p1/p2 хоёр мөр, m1/m2/m3 + үр дүн #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{{ aggrid_macros.common_grid_css('vadGrid', '75vh', '320px') | safe }}
+{{ aggrid_macros.common_js_helpers(['num','m1','m2','m3','result']) | safe }}
+
+<style>
+  #vadGrid { margin-top: 20px; height: 75vh; width: 100%; position: relative; z-index: 1; }
+  .ag-theme-alpine .ag-cell-inline-editing { background-color: #fff !important; box-shadow: 0 0 0 2px #2196F3 !important; z-index: 100 !important; }
+  .ag-theme-alpine .ag-cell-span { background-color: rgba(255,255,255,0.95) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; z-index: 5 !important; border-bottom: 1px solid #dee2e6 !important; }
+  .reject-badge { font-size: 0.7em; padding: 3px 6px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px; display: inline-block; margin-top: 4px; }
+  .sample-name { font-weight: 600; color: #0d6efd; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
+</style>
+
+{{ aggrid_macros.grid_container('vadGrid') | safe }}
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'Vad';
+  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}`;
+  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['Vad'])) || { bands:[{ upper:20, limit:0.3, mode:'abs' }, { upper:40, limit:0.5, mode:'abs' }, { upper: Infinity, limit:0.8, mode:'abs' }] };
+
+  {{ aggrid_macros.dataset_block() | safe }}
+  const analysis_schema = {{ analysis_schema | tojson | safe }};
+
+  const madResults = {{ mad_results_map | tojson | safe }};
+
+  const ag = window.LIMS_AGGRID || {};
+  const navHandler = ag.navHandlerFactory ? ag.navHandlerFactory(['num','m1','m2','m3']) : undefined;
+  const baseDefaultColDef = ag.baseDefaultColDef || { resizable:true, sortable:false, filter:false };
+  const pickW = ag.pickWeight || (p => p?.weight ?? p?.m1 ?? p?.mass ?? null);
+  const numParser = ag.numParser || (p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; });
+  const fmt4 = ag.numFmt4 || (p => p.value!=null ? parseFloat(p.value).toFixed(4) : '');
+  const fmt2 = ag.numFmt2 || (p => p.value!=null ? parseFloat(p.value).toFixed(2) : '');
+
+  function effectiveLimit(avg){
+    const rule = LIMIT_RULE;
+    if(rule.single){ return { limit: rule.single.limit, mode: rule.single.mode }; }
+    const bands = rule.bands || [];
+    if(avg == null){
+      const first = bands[0];
+      return { limit:first?first.limit:0, mode:first?first.mode:'abs' };
+    }
+    for(const b of bands){
+      if(avg <= b.upper){
+        return { limit:b.limit, mode:b.mode };
+      }
+    }
+    const last = bands[bands.length-1];
+    return { limit:last?last.limit:0, mode:last?last.mode:'abs' };
+  }
+
+  // Vad = ((m1+m2 - m3)/m2)*100 - Mad
+  function calcRes(m1,m2,m3, madVal){
+    if(m1==null || m2==null || m3==null) return null;
+    if(!isFinite(m1) || !isFinite(m2) || !isFinite(m3) || m2 === 0) return null;
+    if(madVal == null || !isFinite(madVal)) return null;
+    const weightLoss = (m1 + m2) - m3;
+    if(weightLoss < 0) return null;
+    const res = (weightLoss / m2) * 100 - madVal;
+    return res < 0 ? 0 : res;
+  }
+
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    valueFormatter: fmt4,
+    suppressKeyboardEvent: navHandler,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+  };
+
+  const schemaCols = (analysis_schema?.parallels?.columns) || [];
+
+  const columnDefs = [];
+  columnDefs.push({
+    headerName: '№', field: 'sample_idx', width: 60, pinned: 'left',
+    rowSpan: p => p.data.parallel===1 ? 2 : 1,
+    cellClassRules: { 'ag-cell-span': p => p.data.parallel===1 },
+    cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' },
+    valueFormatter: p => p.value
+  });
+  columnDefs.push({
+    headerName: 'Дээжийн нэр', field: 'sample_code', width: 230, pinned: 'left',
+    rowSpan: p => p.data.parallel===1 ? 2 : 1,
+    cellClassRules: { 'ag-cell-span': p => p.data.parallel===1 },
+    cellStyle: { display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
+    cellRenderer: p => {
+      let h = `<div class="sample-name">${p.value}</div>`;
+      const rej = rejectedInfo[p.data.sample_id];
+      if(rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code]||rej.reason}</div>`;
+      return h;
+    }
+  });
+
+  schemaCols.forEach(col => {
+    if(['diff','avg','actions'].includes(col.key)) return;
+    if(col.key === 'result'){
+      columnDefs.push({
+        headerName: col.label || 'Үр дүн %',
+        field: 'result',
+        width: 110,
+        valueFormatter:p=>p.data.is_saved ? fmt2(p) : "-",
+        cellStyle:p=>{
+          if(!p.data.is_saved) return { color:"#ccc", display:"flex", alignItems:"center", justifyContent:"center" };
+          return { fontWeight:"bold", backgroundColor:"#e7f5ff", display:"flex", alignItems:"center", justifyContent:"center" };
+        }
+      });
+    } else {
+      columnDefs.push({
+        headerName: col.label || col.key,
+        field: col.key,
+        width: 110,
+        ...editCol,
+        cellStyle:p=>p.data.is_saved
+          ? { backgroundColor:"#e9ecef" }
+          : (p.data.parallel===1 ? { backgroundColor:"#e3f2fd" } : { backgroundColor:"#fff3e0" })
+      });
+    }
+  });
+
+  columnDefs.push({
+    headerName:'Тохирц (T)', field:'diff', width:110, valueFormatter:p=>p.data.is_saved ? fmt2(p) : '-',
+    rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+    cellStyle:p=>{
+      if(!p.data.is_saved) return {color:"#ccc", display:"flex", alignItems:"center", justifyContent:"center"};
+      if(p.data.t_exceeded) return {color:"#dc3545", fontWeight:"bold", display:"flex", alignItems:"center", justifyContent:"center"};
+      return {color:"#6c757d", display:"flex", alignItems:"center", justifyContent:"center"};
+    }
+  });
+  columnDefs.push({
+    headerName:'Дундаж', field:'avg', width:110, valueFormatter:p=>p.data.is_saved ? fmt2(p) : '-',
+    rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+    cellStyle:p=>{
+      if(!p.data.is_saved) return {color:"#ccc", display:"flex", alignItems:"center", justifyContent:"center"};
+      return {fontWeight:"bold", color:"#198754", backgroundColor:"#d1e7dd", display:"flex", alignItems:"center", justifyContent:"center"};
+    }
+  });
+  columnDefs.push({
+    headerName:'', field:'actions', width:60, pinned:'right',
+    rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+    cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Дээжийг жагсаалтаас хасах"><i class="bi bi-x-lg"></i></button>`,
+    cellStyle:{display:'flex', alignItems:'center', justifyContent:'center'}
+  });
+
+  const sampleIndexMap = {}; samples.forEach((s,i)=> sampleIndexMap[s.id]=i+1);
+
+  const rowData = [];
+  samples.forEach((s) => {
+    const ex = existingResults[s.id] || {};
+    const rd = ex.raw_data || {};
+    const isSaved = (ex.status === 'pending_review' || ex.status === 'approved');
+    const p1 = rd.p1 || {}, p2 = rd.p2 || {};
+    const num1 = p1.num ?? p1.crucible_num ?? p1.tigel_num ?? null;
+    const num2 = p2.num ?? p2.crucible_num ?? p2.tigel_num ?? null;
+    const m1 = pickW(p1), m2 = p1.m2, m3 = p1.m3;
+    const m1b = pickW(p2), m2b = p2.m2, m3b = p2.m3;
+    const madVal = madResults[String(s.id)] ?? madResults[s.id] ?? null;
+    const r1 = p1.result!=null ? parseFloat(p1.result) : calcRes(m1,m2,m3, madVal);
+    const r2 = p2.result!=null ? parseFloat(p2.result) : calcRes(m1b,m2b,m3b, madVal);
+    const diff = (r1!=null && r2!=null) ? Math.abs(r1-r2) : (rd.diff ?? null);
+    const avg  = (r1!=null && r2!=null) ? (r1+r2)/2 : (rd.avg ?? null);
+    const lim = effectiveLimit(avg);
+    const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
+    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
+
+    rowData.push({ sample_idx: sampleIndexMap[s.id], sample_id:s.id, sample_code:s.code, parallel:1, is_saved:isSaved,
+      num:num1, m1, m2, m3, result:r1, diff, avg, t_exceeded:tExceeded, mad_used: madVal });
+    rowData.push({ sample_idx: sampleIndexMap[s.id], sample_id:s.id, sample_code:s.code, parallel:2, is_saved:isSaved,
+      num:num2, m1:m1b, m2:m2b, m3:m3b, result:r2, diff, avg, t_exceeded:tExceeded, mad_used: madVal });
+  });
+
+  function recalcPair(sampleId){
+    const rows = {};
+    window.vadGridApi.forEachNode(n => { if(n.data.sample_id === sampleId) rows[n.data.parallel] = n; });
+    const p1 = rows[1]?.data, p2 = rows[2]?.data;
+    if(!p1 || !p2) return;
+    const madVal = madResults[String(sampleId)] ?? p1.mad_used ?? p2.mad_used ?? null;
+    const r1 = calcRes(p1.m1, p1.m2, p1.m3, madVal);
+    const r2 = calcRes(p2.m1, p2.m2, p2.m3, madVal);
+    const diff = (r1!=null && r2!=null) ? Math.abs(r1-r2) : null;
+    const avg  = (r1!=null && r2!=null) ? (r1+r2)/2 : null;
+    const lim = effectiveLimit(avg);
+    const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
+    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
+    p1.result = r1; p2.result = r2;
+    p1.diff = diff; p2.diff = diff;
+    p1.avg = avg;  p2.avg = avg;
+    p1.t_exceeded = tExceeded; p2.t_exceeded = tExceeded;
+    p1.mad_used = madVal; p2.mad_used = madVal;
+    window.vadGridApi.refreshCells({ force:true });
+  }
+
+  function saveDrafts(){
+    if(!window.vadGridApi) return;
+    const drafts = {};
+    window.vadGridApi.forEachNode(n => {
+      if(!n.data.is_saved){
+        const sid = n.data.sample_id;
+        if(!drafts[sid]) drafts[sid] = { p1:{}, p2:{} };
+        const target = n.data.parallel === 1 ? drafts[sid].p1 : drafts[sid].p2;
+        target.num = n.data.num;
+        target.m1 = n.data.m1; target.m2 = n.data.m2; target.m3 = n.data.m3;
+      }
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  }
+
+  function restoreDrafts(){
+    try{
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      window.vadGridApi.forEachNode(n => {
+        if(!n.data.is_saved){
+          const d = drafts[n.data.sample_id];
+          if(d){
+            const src = n.data.parallel === 1 ? d.p1 : d.p2;
+            if(src){
+              if(src.num!==undefined) n.data.num = src.num;
+              if(src.m1!==undefined) n.data.m1 = src.m1;
+              if(src.m2!==undefined) n.data.m2 = src.m2;
+              if(src.m3!==undefined) n.data.m3 = src.m3;
+            }
+          }
+        }
+      });
+      window.vadGridApi.refreshCells({ force:true });
+    }catch(e){}
+  }
+
+  function onCellValueChanged(params){
+    if(['num','m1','m2','m3'].includes(params.colDef.field)){
+      recalcPair(params.data.sample_id);
+    }
+    saveDrafts();
+  }
+
+  const gridOptions = {
+    theme: 'legacy',
+    columnDefs,
+    rowData,
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform: true,
+    singleClickEdit: true,
+    stopEditingWhenCellsLoseFocus: true,
+    enterNavigatesVertically: true,
+    enterNavigatesVerticallyAfterEdit: true,
+    onCellValueChanged
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('#vadGrid');
+    if(el){
+      window.vadGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts, 100);
+    }
+  });
+
+  window.removeSample = function(id){
+    if(!confirm('Дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if(ids.length>0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
+
+  window.collectVadGridData = function(){
+    if(!window.vadGridApi) return [];
+    const map = {};
+    window.vadGridApi.forEachNode(n => {
+      if(!map[n.data.sample_id]) map[n.data.sample_id] = {};
+      map[n.data.sample_id][n.data.parallel] = n.data;
+    });
+    const payload = [];
+    Object.keys(map).forEach(sid => {
+      const p1 = map[sid][1];
+      const p2 = map[sid][2];
+      if(p1 && p2 && p1.avg != null && p1.diff != null){
+        const lim = effectiveLimit(p1.avg);
+        const thr = lim.mode === 'percent' && p1.avg!=null ? Math.abs(p1.avg * lim.limit) : lim.limit;
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: ANALY_CODE,
+          final_result: p1.avg,
+          raw_data: {
+            p1: { num: p1.num, m1: p1.m1, m2: p1.m2, m3: p1.m3, result: calcRes(p1.m1,p1.m2,p1.m3, p1.mad_used) },
+            p2: { num: p2.num, m1: p2.m1, m2: p2.m2, m3: p2.m3, result: calcRes(p2.m1,p2.m2,p2.m3, p1.mad_used) },
+            avg: p1.avg,
+            diff: p1.diff,
+            t_exceeded: p1.t_exceeded,
+            mad_used: p1.mad_used ?? null,
+            limit_used: thr,
+            limit_mode: lim.mode
+          }
+        });
+      }
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    try{
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      savedResults.forEach(r => { delete drafts[r.sample_id]; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    }catch(e){}
+  }
+
+  window.updateVadGridAfterSave = function(savedResults){
+    if(!window.vadGridApi || !savedResults) return;
+    const savedMap = {}; savedResults.forEach(r => savedMap[r.sample_id] = r);
+    window.vadGridApi.forEachNode(n => {
+      const s = savedMap[n.data.sample_id];
+      if(s){
+        n.data.is_saved = true;
+        const raw = s.raw_data || {};
+        const p1 = raw.p1 || {}, p2 = raw.p2 || {};
+        n.data.num = n.data.parallel===1 ? (p1.num ?? p1.crucible_num ?? p1.tigel_num) : (p2.num ?? p2.crucible_num ?? p2.tigel_num);
+        n.data.m1 = n.data.parallel===1 ? p1.m1 : p2.m1;
+        n.data.m2 = n.data.parallel===1 ? p1.m2 : p2.m2;
+        n.data.m3 = n.data.parallel===1 ? p1.m3 : p2.m3;
+        n.data.result = n.data.parallel===1 ? p1.result : p2.result;
+        n.data.diff = raw.diff;
+        n.data.avg = raw.avg;
+        n.data.t_exceeded = raw.t_exceeded;
+        n.data.mad_used = raw.mad_used ?? n.data.mad_used;
+      }
+    });
+    window.vadGridApi.refreshCells({ force:true });
+    purgeDrafts(savedResults);
+    try {
+      const storageKey = `worksheet_${ANALY_CODE}_sample_ids`;
+      localStorage.removeItem(storageKey);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('sample_ids');
+      window.history.replaceState({}, '', url.toString());
+    } catch(e) {}
+    alert('Үр дүн амжилттай хадгаллаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const BASE_CODE = (ANALY_CODE || '');
+  const REGISTERED = { collect: window.collectVadGridData, afterSave: window.updateVadGridAfterSave };
+  ['Vad', BASE_CODE].forEach(c=>{
+    if(!c) return;
+    window.LIMS_CALC[c] = REGISTERED;
+    window.LIMS_CALC[c.toUpperCase()] = REGISTERED;
+    window.LIMS_CALC[c.toLowerCase()] = REGISTERED;
+  });
+})();
+</script>

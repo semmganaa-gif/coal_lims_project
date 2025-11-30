@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from 'macros/form_helpers.html' import render_field, render_submit_button, render_cancel_button, render_card %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ title }}</h1>
+    {{ render_cancel_button(url_for('admin.manage_users'), text='Хэрэглэгчдийн жагсаалт руу буцах', variant='outline-secondary') }}
+  </div>
+
+  <p class="text-muted">"{{ user.username }}" хэрэглэгчийн мэдээллийг засах хэсэг.</p>
+
+  <div class="row">
+    <div class="col-lg-6">
+      {% call render_card(title='Хэрэглэгчийн мэдээлэл засах') %}
+        <form action="{{ url_for('admin.edit_user', user_id=user.id) }}" method="post" novalidate>
+          {{ form.hidden_tag() }}
+
+          {{ render_field(form.username, placeholder='Хэрэглэгчийн нэр') }}
+
+          <div class="mb-3">
+            {{ form.password.label(class="form-label fw-bold") }}
+            {{ form.password(class="form-control", placeholder='Шинэ нууц үг') }}
+            <div class="form-text">
+              Хэрэв нууц үгийг солихгүй бол хоосон орхи.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.role.label(class="form-label fw-bold") }}
+            {{ form.role(class="form-select") }}
+          </div>
+
+          <div class="d-flex justify-content-between">
+            {{ render_cancel_button(url_for('admin.manage_users')) }}
+            {{ render_submit_button(form.submit, text='Хадгалах', icon='bi-check-lg') }}
+          </div>
+        </form>
+      {% endcall %}
+    </div>
+
+    <!-- Хажуугийн мэдээллийн панель -->
+    <div class="col-lg-6 mt-3 mt-lg-0">
+      {% call render_card(title='Хэрэглэгчийн ерөнхий мэдээлэл') %}
+        <p><strong>ID:</strong> {{ user.id }}</p>
+        <p><strong>Нэвтрэх нэр:</strong> {{ user.username }}</p>
+        <p><strong>Одоогийн эрхийн түвшин:</strong> {{ user.role }}</p>
+        <p class="text-muted mb-0">
+          Энэ хэсгийг роль-ын тайлбар, лог, хандах эрхийн товч мэдээллээр өргөтгөж болно.
+        </p>
+      {% endcall %}
+    </div>
+  </div>
+</div>
+{% endblock %}

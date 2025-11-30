@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .metric-card {
+    background: linear-gradient(135deg, #f8fafc, #edf2f7);
+    border-radius: .9rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid #e2e8f0;
+    min-height: 120px;
+  }
+  .metric-card h6 {
+    font-size: .82rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: .35rem;
+  }
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #0d6efd;
+  }
+  .metric-card.warning .metric-value { color: #fd7e14; }
+  .metric-card.danger .metric-value { color: #dc3545; }
+  #metrics-refresh { font-size: .8rem; color: #6c757d; }
+</style>
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ title }}</h1>
+  </div>
+  <p class="text-muted">Химичдийн хадгалсан, ахлахын хяналт шаардлагатай шинжилгээний үр дүн.</p>
+
+<div class="row g-3 mb-2">
+    <div class="col-md-4">
+      <div class="metric-card shadow-sm">
+        <h6><i class="bi bi-stack me-2 text-primary"></i>Нийт дээж</h6>
+        <div class="metric-value" id="metric-total">0</div>
+        <div class="text-muted small">Өнөөдөр бүртгэгдсэн нийт дээжийн тоо.</div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="metric-card warning shadow-sm">
+        <h6><i class="bi bi-hourglass-split me-2 text-warning"></i>Хяналт хүлээж буй</h6>
+        <div class="metric-value" id="metric-pending">0</div>
+        <div class="text-muted small">pending_review төлөвтэй байгаа дээжүүд.</div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="metric-card danger shadow-sm">
+        <h6><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Буцаагдсан / 3:3</h6>
+        <div class="metric-value" id="metric-rejected">0</div>
+        <div class="text-muted small">Rejected болон 3:3 давтан шинжилгээ.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end mb-3">
+    <span id="metrics-refresh">Сүүлд шинэчлэгдсэн: -</span>
+  </div>
+  {# --- Шүүлтүүр карт --- #}
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body py-3">
+      <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="start_date" class="form-label fw-bold small">Эхлэх огноо</label>
+            <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
+                   value="{{ request.args.get('start_date','') }}">
+          </div>
+          <div class="col-md-3">
+            <label for="end_date" class="form-label fw-bold small">Дуусах огноо</label>
+            <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
+                   value="{{ request.args.get('end_date','') }}">
+          </div>
+          <div class="col-md-4">
+            <label for="sample_name" class="form-label fw-bold small">Дээжний нэр</label>
+            <input type="text" class="form-control form-control-sm" id="sample_name" name="sample_name"
+                   placeholder="Хайх..." value="{{ request.args.get('sample_name','') }}">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm w-100">
+               <i class="bi bi-search"></i> Шүүх
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# --- AG Grid --- #}
+  <div id="myGrid" class="ag-theme-quartz shadow-sm" style="height: 650px; width: 100%;"></div>
+
+  {# --- Буцаах modal --- #}
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="reject-form" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="rejectModalLabel"><i class="bi bi-x-circle"></i> Үр дүн буцаах</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Хаах"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-secondary py-2 mb-3">
+               <i class="bi bi-info-circle"></i> <span id="reject-sample-info" class="fw-bold"></span>
+            </div>
+            
+            <input type="hidden" id="reject-result-id" name="result_id" value="">
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">Буцаах шалтгаан (KPI код) <span class="text-danger">*</span></label>
+              <select name="rejection_category" id="rejection_category" class="form-select" required>
+                <option value="">-- Сонгох --</option>
+                <option value="sample_prep">1. Дээж бэлтгэлийн алдаа</option>
+                <option value="measurement">2. Шинжилгээний гүйцэтгэлийн алдаа</option>
+                <option value="qc_fail">3. QC / Стандарт дээжийн зөрүү</option>
+                <option value="equipment">4. Тоног төхөөрөмж / Орчны нөхцөл</option>
+                <option value="data_entry">5. Өгөгдөл шивэлт / Тооцооллын алдаа</option>
+                <option value="method">6. Арга аргачлал зөрчсөн (SOP)</option>
+                <option value="sample_mixup">7. Дээж солигдсон / Буруу дээж</option>
+                
+                {# ✅ ШИНЭЧЛЭЛ: 'other' биш 'chemist_error' болсон #}
+                <option value="chemist_error">8. Химичийн алдаа /Асгасан</option>
+                <option value="qc_fail">9. Дотоод хяналтын алдаа</option>
+              </select>
+              <div class="form-text text-muted small mt-2">
+                <i class="bi bi-info-circle-fill"></i> Сонгосон шалтгаан нь автоматаар тайлбар болж хадгалагдана.
+              </div>
+            </div>
+
+            {# 🛑 ХАСАВ: Коммент бичих хэсгийг авч хаясан #}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Цуцлах</button>
+            <button type="submit" class="btn btn-danger">Буцаах</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{# Алдааны тайлбаруудыг JS руу дамжуулах (Шинэ кодтой тааруулав) #}
+<script>
+  window.ERROR_LABELS = {{ error_labels | tojson | default({
+    "sample_prep": "Дээж бэлтгэл",
+    "measurement": "Гүйцэтгэл",
+    "qc_fail": "QC Fail",
+    "equipment": "Төхөөрөмж",
+    "data_entry": "Шивэлт",
+    "method": "SOP",
+    "sample_mixup": "Дээж солигдсон",
+    "chemist_error": "Химичийн алдаа"
+  }) }};
+  window.ANALYSIS_SCHEMAS = {{ analysis_schemas | tojson | default({}) }};
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/ahlah_dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">Repeatability (T) лимитүүд</h3>
+  <p class="text-muted">Админ зөвшөөрлөөр хүснэгт дээрээс лимитүүдийг засварлаад хадгална. Save дармагц front/back шинэ утга ашиглана.</p>
+
+  <form method="post" id="limitsForm">
+    {{ csrf_token() }}
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Код</th>
+            <th>Стандарт</th>
+            <th>Таарц</th>
+            <th>Single limit</th>
+            <th>Single mode</th>
+            <th>Агуулгын хэмжээ (band)</th>
+            <th>T лимит (band)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for code, rule in rules.items() %}
+          {% set single = rule.single or {} %}
+          {% set bands = rule.bands or rule.bands_detailed or [] %}
+          {% set b1 = bands[0] if bands|length > 0 else {} %}
+          {% set b2 = bands[1] if bands|length > 1 else {} %}
+          {% set b3 = bands[2] if bands|length > 2 else {} %}
+          <tr data-code="{{ code }}">
+            <td class="fw-semibold">{{ code }}</td>
+            <td><input class="form-control form-control-sm" name="standard" value="{{ rule.standard or '' }}"></td>
+            <td><input class="form-control form-control-sm" name="taarts" value="{{ rule.taarts_note or '' }}"></td>
+            <td><input class="form-control form-control-sm" name="single_limit" value="{{ single.limit or '' }}"></td>
+            <td>
+              <select class="form-select form-select-sm" name="single_mode">
+                <option value="" {% if not single.mode %}selected{% endif %}></option>
+                <option value="abs" {% if single.mode=='abs' %}selected{% endif %}>abs</option>
+                <option value="percent" {% if single.mode=='percent' %}selected{% endif %}>percent</option>
+              </select>
+            </td>
+            <td>
+              <div class="d-grid gap-1">
+                <input class="form-control form-control-sm" name="band_upper_1" placeholder="<20.0" value="{{ b1.upper if b1.upper is not none else '' }}">
+                <input class="form-control form-control-sm" name="band_upper_2" placeholder="20.0-40.0" value="{{ b2.upper if b2.upper is not none else '' }}">
+                <input class="form-control form-control-sm" name="band_upper_3" placeholder=">40.0" value="{{ b3.upper if b3.upper is not none else '' }}">
+              </div>
+            </td>
+            <td>
+              <div class="d-grid gap-1">
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" name="band_limit_1" placeholder="0.30" value="{{ b1.limit if b1.limit is not none else '' }}">
+                  <select class="form-select form-select-sm" name="band_mode_1">
+                    <option value="abs" {% if b1.mode=='abs' or not b1.mode %}selected{% endif %}>abs</option>
+                    <option value="percent" {% if b1.mode=='percent' %}selected{% endif %}>percent</option>
+                  </select>
+                </div>
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" name="band_limit_2" placeholder="0.50" value="{{ b2.limit if b2.limit is not none else '' }}">
+                  <select class="form-select form-select-sm" name="band_mode_2">
+                    <option value="abs" {% if b2.mode=='abs' or not b2.mode %}selected{% endif %}>abs</option>
+                    <option value="percent" {% if b2.mode=='percent' %}selected{% endif %}>percent</option>
+                  </select>
+                </div>
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" name="band_limit_3" placeholder="0.80" value="{{ b3.limit if b3.limit is not none else '' }}">
+                  <select class="form-select form-select-sm" name="band_mode_3">
+                    <option value="abs" {% if b3.mode=='abs' or not b3.mode %}selected{% endif %}>abs</option>
+                    <option value="percent" {% if b3.mode=='percent' %}selected{% endif %}>percent</option>
+                  </select>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <input type="hidden" name="limits_json" id="limits_json">
+    <div class="d-flex">
+      <button type="submit" class="btn btn-primary">Хадгалах</button>
+      <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">Буцах</a>
+    </div>
+  </form>
+</div>
+
+<script>
+(() => {
+  const form = document.getElementById('limitsForm');
+  form.addEventListener('submit', (e) => {
+    const rows = form.querySelectorAll('tbody tr[data-code]');
+    const result = {};
+    rows.forEach(tr => {
+      const code = tr.dataset.code;
+      const standard = tr.querySelector('input[name="standard"]').value.trim();
+      const taarts = tr.querySelector('input[name="taarts"]').value.trim();
+      const singleLimit = tr.querySelector('input[name="single_limit"]').value.trim();
+      const singleMode = tr.querySelector('select[name="single_mode"]').value.trim();
+
+      const rule = {};
+      if (standard) rule.standard = standard;
+      if (taarts) rule.taarts_note = taarts;
+      if (singleLimit) {
+        rule.single = { limit: parseFloat(singleLimit), mode: singleMode || 'abs' };
+      }
+
+      const bands = [];
+      for (let i = 1; i <= 3; i++) {
+        const upperTxt = tr.querySelector(`input[name="band_upper_${i}"]`).value.trim();
+        const limitTxt = tr.querySelector(`input[name="band_limit_${i}"]`).value.trim();
+        const modeTxt = tr.querySelector(`select[name="band_mode_${i}"]`).value.trim() || 'abs';
+        if (limitTxt) {
+          let upper = null;
+          if (upperTxt) {
+            if (upperTxt.startsWith('>')) {
+              upper = Infinity;
+            } else {
+              const cleaned = upperTxt.replace('<','').replace('>','');
+              const parsed = parseFloat(cleaned);
+              if (!isNaN(parsed)) upper = parsed;
+            }
+          }
+          const limVal = parseFloat(limitTxt);
+          if (!isNaN(limVal)) {
+            const band = { limit: limVal, mode: modeTxt };
+            if (upper !== null) band.upper = upper;
+            bands.push(band);
+          }
+        }
+      }
+      if (bands.length) rule.bands = bands;
+
+      result[code] = rule;
+    });
+    document.getElementById('limits_json').value = JSON.stringify(result, null, 2);
+  });
+})();
+</script>
+{% endblock %}

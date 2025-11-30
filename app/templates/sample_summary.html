@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set current_qs = request.query_string.decode() %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sample_summary.css') }}">
+
+<div class="page-wrap">
+  <div class="lims-head">
+    <div>
+      <h1>{{ title }}</h1>
+      <div class="text-muted">Сүүлийн сонгосон хугацааны LIMS шинжилгээний нэгтгэл.</div>
+    </div>
+    <div class="d-flex gap-2">
+      {# QC болон Correlation товчлуурууд #}
+      <div class="btn-group">
+        <button type="button" id="qcCompositeBtn" class="btn btn-sm btn-outline-warning d-flex align-items-center gap-1" title="Композит ба Дундаж зөрүүг шалгах">
+          <i class="bi bi-exclamation-triangle"></i> QC: Tol
+        </button>
+        <button type="button" id="qcSpecBtn" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" title="Стандарт specification шалгах">
+          <i class="bi bi-rulers"></i> QC: Spec
+        </button>
+        <button type="button" id="correlationBtn" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" title="Хамаарлын шинжилгээ">
+          <i class="bi bi-graph-up"></i> Correlation
+        </button>
+      </div>
+
+      <button id="exportCsvBtn" class="btn btn-sm btn-success"><i class="bi bi-file-earmark-spreadsheet"></i> CSV</button>
+      <a href="{{ url_for('api.sample_summary') }}{% if current_qs %}?{{ current_qs }}{% endif %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-clockwise"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-body">
+      <form method="GET" action="{{ url_for('api.sample_summary') }}" id="mainFilterForm">
+        <input type="hidden" name="start_date" id="start_date_hidden" value="{{ request.args.get('start_date', '') }}">
+        <input type="hidden" name="end_date" id="end_date_hidden" value="{{ request.args.get('end_date', '') }}">
+
+        <div class="filters-grid">
+          <div class="filter-left">
+            <div class="mb-3">
+              <label for="filter-name" class="form-label">Дээжний нэр / Нэгж / Төрөл</label>
+              <input id="filter-name" name="filter_name" class="form-control form-control-sm" type="text"
+                     placeholder="ж.нь N2" value="{{ request.args.get('filter_name', '') }}">
+            </div>
+            <div class="filter-actions">
+              <button type="submit" class="btn btn-primary btn-sm" style="flex:auto;">
+                <i class="bi bi-search"></i> Огноог Харах
+              </button>
+              <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm" style="flex:auto;">
+                Цэвэрлэх
+              </a>
+            </div>
+          </div>
+
+          <div class="filter-right">
+            <div class="calendar-card" data-type="start">
+              <div class="calendar-header">
+                <div>
+                  <div class="calendar-title">Эхлэх огноо</div>
+                  <div class="calendar-sub" id="startCalLabel">---</div>
+                </div>
+                <div class="calendar-nav">
+                  <button type="button" data-dir="-1" data-cal="start">&#8249;</button>
+                  <button type="button" data-dir="1" data-cal="start">&#8250;</button>
+                </div>
+              </div>
+              <table class="calendar-table" id="startCalendar"></table>
+            </div>
+
+            <div class="calendar-card" data-type="end">
+              <div class="calendar-header">
+                <div>
+                  <div class="calendar-title">Дуусах огноо</div>
+                  <div class="calendar-sub" id="endCalLabel">---</div>
+                </div>
+                <div class="calendar-nav">
+                  <button type="button" data-dir="-1" data-cal="end">&#8249;</button>
+                  <button type="button" data-dir="1" data-cal="end">&#8250;</button>
+                </div>
+              </div>
+              <table class="calendar-table" id="endCalendar"></table>
+            </div>
+
+            <div class="ms-auto d-flex flex-column align-items-end justify-content-center gap-2" style="min-width: 260px;">
+              <div class="d-flex gap-2 w-100">
+                <input type="checkbox" class="btn-check" id="show_archived" name="show_archived" autocomplete="off"
+                       {% if show_archived %}checked{% endif %}
+                       onchange="document.getElementById('mainFilterForm').submit()">
+                <label class="btn btn-sm d-flex align-items-center justify-content-center gap-1 {{ 'btn-outline-warning text-dark' if show_archived else 'btn-outline-secondary' }}" 
+                       for="show_archived" style="border-radius: 8px; flex:1; transition: all 0.2s;" title="Архив харах">
+                  {% if show_archived %}
+                    <i class="bi bi-archive-fill"></i> (On)
+                  {% else %}
+                    <i class="bi bi-archive"></i>
+                  {% endif %}
+                </label>
+
+                <button type="button" id="copySelectedBtn" class="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center gap-1" 
+                        style="border-radius: 8px; flex:1;" title="Сонгосоныг хуулах (Copy)">
+                  <i class="bi bi-clipboard-check"></i> Хуулах
+                </button>
+
+                <a href="{{ url_for('api.audit_hub') }}" 
+                   class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center gap-1"
+                   style="border-radius: 8px; flex:1;" title="Аудит">
+                  <i class="bi bi-clock-history"></i> Аудит
+                </a>
+              </div>
+
+              <div class="w-100">
+                {% if show_archived %}
+                <button type="button" name="action" value="unarchive" class="btn btn-warning btn-sm w-100 d-flex align-items-center justify-content-center gap-2" 
+                        id="archiveBtn" style="border-radius: 8px; font-weight: 600;">
+                  <i class="bi bi-box-arrow-up"></i> Сонгосоныг сэргээх
+                </button>
+                {% else %}
+                <button type="button" name="action" value="archive" class="btn btn-info btn-sm text-white w-100 d-flex align-items-center justify-content-center gap-2" 
+                        id="archiveBtn" style="border-radius: 8px; font-weight: 600;">
+                  <i class="bi bi-archive-fill"></i> Сонгосоныг архивлах
+                </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="card table-card">
+      <form method="POST" action="{{ url_for('api.sample_summary') }}" id="limsForm"
+            style="display:flex;flex-direction:column;height:100%;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div id="myGrid" class="ag-theme-alpine" style="width:100%;height:100%;"></div>
+        <input type="hidden" name="sample_ids" id="selected_sample_ids">
+        <input type="hidden" name="action" id="action_hidden">
+        <div class="table-footerbar"></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
+
+<script>
+  // Энэ объект руу Flask-аас өгөгдлөө хийнэ
+  const LIMS_CONFIG = {
+    urls: {
+      auditHub: "{{ url_for('api.audit_hub') }}",
+      qcComposite: "{{ url_for('analysis.qc_composite_check') }}",
+      qcSpec: "{{ url_for('analysis.qc_spec_check') }}",
+      qcCorr: "{{ url_for('analysis.correlation_check') }}",
+      // Статик URL-уудыг гараар бичиж болно эсвэл url_for ашиглаж болно
+      updateStatus: "/api/update_result_status" 
+    },
+    // Динамик баганууд (Шинжилгээний төрлүүд)
+    analysisTypes: [
+      {% for at in analysis_types %}
+      { code: "{{ at.code }}", header: "{{ at.code|fmt_code }}" },
+      {% endfor %}
+    ],
+    // Үндсэн Дата
+    samplesData: [
+      {%- for sample in samples -%}
+      {
+        "id": "{{ sample.id }}",
+        "name": {{ (sample.sample_code or sample.name or sample.sample_name or None) | tojson }},
+        "sample_code": {{ (sample.sample_code or None) | tojson }},
+        "report_url": "{{ url_for('api.sample_report', sample_id=sample.id) }}",
+        "client_name": {{ (sample.client_name or None) | tojson }},
+        "sample_type": {{ (sample.sample_type or None) | tojson }},
+        "received_date": {{ (sample.received_date.strftime('%Y-%m-%d %H:%M') if sample.received_date else None) | tojson }},
+        "analysis_date": {{ (analysis_dates_map.get(sample.id) if analysis_dates_map.get(sample.id) else None) | tojson }}
+        {%- for at in analysis_types %},
+        "{{ at.code }}": {{ (results_map.get(sample.id, {}).get(at.code, None)) | tojson }}
+        {%- endfor %}
+      }{% if not loop.last %},{% endif %}
+      {%- endfor %}
+    ]
+  };
+</script>
+
+<script src="{{ url_for('static', filename='js/sample_summary.js') }}"></script>
+{% endblock %}

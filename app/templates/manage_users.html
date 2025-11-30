@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from 'macros/table_helpers.html' import data_table, render_table_header, render_status_badge %}
+{% from 'macros/form_helpers.html' import render_field, render_submit_button, render_action_buttons, render_card %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{{ title }}</h1>
+    </div>
+    <p class="text-muted">Системийн хэрэглэгчдийг нэмэх, засах, устгах хэсэг.</p>
+
+    <div class="row">
+        <!-- Хэрэглэгчдийн жагсаалтын хэсэг -->
+        <div class="col-lg-8">
+            {% call render_card(title='Бүртгэлтэй хэрэглэгчид') %}
+                {% call data_table(id='users-table', striped=true, hover=true) %}
+                    {{ render_table_header(['ID', 'Нэвтрэх нэр', 'Эрхийн түвшин'], actions=true) }}
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>
+                                {{ render_status_badge(user.role, label=user.role, variant_map={'admin': 'danger', 'analyst': 'info', 'viewer': 'secondary'}) }}
+                            </td>
+                            <td class="text-end">
+                                {% if current_user.id != user.id %}
+                                    {{ render_action_buttons(
+                                        edit_url=url_for('admin.edit_user', user_id=user.id),
+                                        delete_url=url_for('admin.delete_user', user_id=user.id),
+                                        delete_confirm='Та ' + user.username + ' хэрэглэгчийг устгахад итгэлтэй байна уу?'
+                                    ) }}
+                                {% else %}
+                                    {{ render_action_buttons(edit_url=url_for('admin.edit_user', user_id=user.id)) }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                {% endcall %}
+            {% endcall %}
+        </div>
+
+        <!-- Шинэ хэрэглэгч нэмэх хэсэг -->
+        <div class="col-lg-4">
+            {% call render_card(title='Шинэ хэрэглэгч нэмэх') %}
+                <form action="{{ url_for('admin.manage_users') }}" method="post" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    {{ render_field(form.username, placeholder='Хэрэглэгчийн нэр') }}
+                    {{ render_field(form.password, placeholder='Нууц үг') }}
+
+                    <div class="mb-3">
+                        {{ form.role.label(class="form-label fw-bold") }}
+                        {{ form.role(class="form-select") }}
+                    </div>
+
+                    {{ render_submit_button(form.submit, text='Хэрэглэгч нэмэх', icon='bi-person-plus') }}
+                </form>
+            {% endcall %}
+        </div>
+    </div>
+</div>
+{% endblock %}

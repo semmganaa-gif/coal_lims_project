@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3><i class="bi bi-clipboard-data text-primary"></i> Дотоод хяналтын стандарт (CM)</h3>
+            <p class="text-muted small mb-0">Лабораторийн дотоод хяналтын дээж (Internal Control Sample)-ийн утгуудыг удирдах</p>
+        </div>
+        <button class="btn btn-primary" id="openAddBtn" 
+                data-create-url="{{ url_for('admin.create_standard') }}">
+            <i class="bi bi-plus-lg"></i> Шинэ стандарт үүсгэх
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Нэр (Batch Name)</th>
+                            <th>Үүсгэсэн</th>
+                            <th>Төлөв</th>
+                            <th>Агуулга</th>
+                            <th class="text-end pe-3">Үйлдэл</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for std in standards %}
+                        <tr class="{{ 'table-success bg-opacity-10' if std.is_active else '' }}">
+                            <td class="ps-3">
+                                <strong>{{ std.name }}</strong>
+                                {% if std.is_active %}
+                                    <i class="bi bi-check-circle-fill text-success ms-1" title="Идэвхтэй"></i>
+                                {% endif %}
+                            </td>
+                            <td>{{ std.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if std.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ std.targets | length }} үзүүлэлт</small>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group">
+                                    {% if not std.is_active %}
+                                    <button class="btn btn-sm btn-outline-success activate-btn" 
+                                            data-url="{{ url_for('admin.activate_standard', id=std.id) }}" 
+                                            title="Идэвхжүүлэх">
+                                        <i class="bi bi-play-fill"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <button class="btn btn-sm btn-outline-info view-btn" 
+                                            data-name="{{ std.name }}" 
+                                            data-targets='{{ std.targets | tojson }}' title="Харах">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-warning edit-btn" 
+                                            data-id="{{ std.id }}" 
+                                            data-name="{{ std.name }}"
+                                            data-targets='{{ std.targets | tojson }}'
+                                            data-update-url="{{ url_for('admin.update_standard', id=std.id) }}"
+                                            title="Засах">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    {% if not std.is_active %}
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                            data-url="{{ url_for('admin.delete_standard', id=std.id) }}" 
+                                            title="Устгах">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Бүртгэлтэй стандарт алга байна.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="standardModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="modalTitle">Шинэ стандарт бүртгэх</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="formSubmitUrl">
+
+                <div class="alert alert-info py-2 small">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Санамж:</strong> Adb, Vdb, CVdb зэрэг хуурай суурийн утгуудыг оруулахыг зөвлөж байна.
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Стандартын нэр</label>
+                    <input type="text" id="stdName" class="form-control" placeholder="Жишээ: CM-2025-Q4">
+                </div>
+
+                <h6 class="border-bottom pb-2 mb-3">Параметрүүдийн утга (Mean & SD)</h6>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm align-middle" id="paramsTable">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width: 20%">Код</th>
+                                <th style="width: 40%">Mean</th>
+                                <th style="width: 40%">SD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set params = [
+                                ('Mad', 'Чийг'), ('Aad', 'Үнс'), ('Vad', 'Дэгдэмхий'),
+                                ('CV', 'Илчлэг'), ('TS', 'Хүхэр'), ('CSN', 'CSN'),
+                                ('Gi', 'Gray-King'), ('P', 'Фосфор'), ('Cl', 'Хлор'),
+                                ('F', 'Фтор'), ('TRD', 'Харьцангуй нягт')
+                            ] %}
+                            {% for code, label in params %}
+                            <tr data-code="{{ code }}">
+                                <td class="fw-bold bg-light text-center">
+                                    {{ code }}<div class="small text-muted fw-normal" style="font-size: 0.7rem;">{{ label }}</div>
+                                </td>
+                                <td><input type="number" step="any" class="form-control form-control-sm mean-input text-center" placeholder="-"></td>
+                                <td><input type="number" step="any" class="form-control form-control-sm sd-input text-center" placeholder="±"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+                <button type="button" class="btn btn-primary" id="saveStdBtn"><i class="bi bi-save"></i> Хадгалах</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewStandardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewModalTitle">Дэлгэрэнгүй</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped table-sm" id="viewTable">
+                    <thead><tr><th>Параметр</th><th>Mean</th><th>SD</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Bootstrap Modals Initialization
+    const stdModalEl = document.getElementById('standardModal');
+    const viewModalEl = document.getElementById('viewStandardModal');
+    
+    // Safety check for Bootstrap
+    if (!window.bootstrap) {
+        console.error("Bootstrap JS not loaded");
+        return;
+    }
+    const standardModal = new bootstrap.Modal(stdModalEl);
+    const viewModal = new bootstrap.Modal(viewModalEl);
+
+    // --- 1. ШИНЭЭР НЭМЭХ ---
+    const openAddBtn = document.getElementById('openAddBtn');
+    if (openAddBtn) {
+        openAddBtn.addEventListener('click', function() {
+            // URL-ийг button-аас авах
+            const createUrl = this.getAttribute('data-create-url');
+            
+            document.getElementById('formSubmitUrl').value = createUrl;
+            document.getElementById('stdName').value = '';
+            document.getElementById('modalTitle').textContent = 'Шинэ стандарт бүртгэх';
+            
+            // Clear Inputs
+            document.querySelectorAll('#paramsTable input').forEach(inp => inp.value = '');
+            
+            standardModal.show();
+        });
+    }
+
+    // --- 2. ЗАСАХ (EDIT) ---
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const name = this.getAttribute('data-name');
+            const targets = JSON.parse(this.getAttribute('data-targets'));
+            const updateUrl = this.getAttribute('data-update-url'); // ✅ URL-ийг товчноос шууд авах
+
+            document.getElementById('formSubmitUrl').value = updateUrl;
+            document.getElementById('stdName').value = name;
+            document.getElementById('modalTitle').textContent = 'Стандарт засах';
+            
+            document.querySelectorAll('#paramsTable input').forEach(inp => inp.value = '');
+
+            for (const [code, val] of Object.entries(targets)) {
+                const row = document.querySelector(`#paramsTable tr[data-code="${code}"]`);
+                if (row) {
+                    row.querySelector('.mean-input').value = val.mean;
+                    row.querySelector('.sd-input').value = val.sd;
+                }
+            }
+            standardModal.show();
+        });
+    });
+
+    // --- 3. ХАДГАЛАХ (SAVE) ---
+    const saveBtn = document.getElementById('saveStdBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const url = document.getElementById('formSubmitUrl').value;
+            const name = document.getElementById('stdName').value.trim();
+            
+            if(!name) { alert("Нэр оруулна уу!"); return; }
+
+            let targets = {};
+            let count = 0;
+            
+            document.querySelectorAll('#paramsTable tbody tr').forEach(row => {
+                const code = row.getAttribute('data-code');
+                const meanVal = row.querySelector('.mean-input').value;
+                const sdVal = row.querySelector('.sd-input').value;
+
+                if(meanVal !== "" && sdVal !== "") {
+                    targets[code] = { "mean": parseFloat(meanVal), "sd": parseFloat(sdVal) };
+                    count++;
+                }
+            });
+
+            if (count === 0) { alert("Ядаж нэг утга оруулна уу."); return; }
+
+            // CSRF Token
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            const token = meta ? meta.getAttribute('content') : '';
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = 'Хадгалж байна...';
+
+            // ✅ URL-ийг шууд ашиглана (Jinja template-ээс аль хэдийн зөв ирсэн)
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
+                body: JSON.stringify({ name: name, targets: targets })
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(e => { throw new Error(e.message || 'Server Error'); });
+                return res.json();
+            })
+            .then(() => { 
+                alert("Амжилттай!"); 
+                location.reload(); 
+            })
+            .catch(err => {
+                alert("Алдаа: " + err.message);
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="bi bi-save"></i> Хадгалах';
+            });
+        });
+    }
+
+    // --- 4. УСТГАХ (DELETE) ---
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if(!confirm("Устгахдаа итгэлтэй байна уу?")) return;
+            
+            const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            const token = meta ? meta.getAttribute('content') : '';
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': token }
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(e => { throw new Error(e.message || 'Server Error'); });
+                return res.json();
+            })
+            .then(() => { 
+                alert("Устгагдлаа."); 
+                location.reload(); 
+            })
+            .catch(err => { alert("Алдаа: " + err.message); });
+        });
+    });
+
+    // --- 5. ИДЭВХЖҮҮЛЭХ (ACTIVATE) ---
+    document.querySelectorAll('.activate-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if(!confirm("Идэвхжүүлэх үү?")) return;
+            
+            const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            const token = meta ? meta.getAttribute('content') : '';
+            
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': token }
+            })
+            .then(res => {
+                if(res.ok) location.reload();
+                else alert("Алдаа гарлаа.");
+            });
+        });
+    });
+
+    // --- 6. ХАРАХ ---
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const data = JSON.parse(this.getAttribute('data-targets'));
+            document.getElementById('viewModalTitle').textContent = this.getAttribute('data-name');
+            const tbody = document.querySelector('#viewTable tbody');
+            tbody.innerHTML = '';
+
+            for (const [key, val] of Object.entries(data)) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><strong>${key}</strong></td><td>${val.mean}</td><td>± ${val.sd}</td>`;
+                tbody.appendChild(tr);
+            }
+            viewModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

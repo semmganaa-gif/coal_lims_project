@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(python scripts/manage_precision.py:*)",
+      "Bash(pip install:*)",
+      "Bash(python scripts/manage_repeatability.py:*)",
+      "Bash(python:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

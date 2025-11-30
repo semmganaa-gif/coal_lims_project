@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Тайлангийн үндсэн хэв маяг */
+    .test-report-container {
+        max-width: 1600px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        background: #fff;
+        font-family: Arial, sans-serif;
+        color: #000;
+    }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    .report-header .logo-left {
+        /* Та static-ааc өөрийн логог тавина уу */
+        /* жишээ нь: <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}" alt="Logo" style="height: 60px;"> */
+        font-weight: bold;
+        font-size: 1.2rem;
+        padding-left: 20px;
+    }
+    .report-header .lab-title {
+        text-align: center;
+    }
+    .report-header .lab-title h2 {
+        margin: 0;
+        font-weight: bold;
+    }
+    .report-header .lab-title p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    .report-header .logo-right {
+        /* Та static-ааc өөрийн MNAS лого тавина уу */
+        /* жишээ нь: <img src="{{ url_for('static', filename='images/mnas_logo.png') }}" alt="MNAS Logo" style="height: 70px;"> */
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: center;
+        font-size: 0.8rem;
+        margin-right: 20px;
+    }
+    .report-title-bar {
+        background-color: #3b5998; /* Зурагтай ойролцоо цэнхэр */
+        color: white;
+        text-align: center;
+        padding: 8px 0;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin: 15px 0;
+    }
+    .description-section {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+    .description-table {
+        border-collapse: collapse;
+        width: 48%;
+    }
+    .description-table td {
+        border: 1px solid #000;
+        padding: 5px 8px;
+    }
+    .description-table td:first-child {
+        background-color: #3b5998;
+        color: white;
+        font-weight: bold;
+        width: 150px;
+    }
+    .results-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+    .results-table th, .results-table td {
+        border: 1px solid #000;
+        padding: 4px;
+        min-width: 40px;
+    }
+    .results-table thead th {
+        background-color: #f2f2f2; /* Саарал дэвсгэр */
+        vertical-align: middle;
+    }
+    .results-table .group-header {
+        background-color: #ffffcc; /* Шар дэвсгэр */
+        font-weight: bold;
+    }
+    .results-table .data-row td {
+        background-color: #ffffcc;
+    }
+    .results-table .data-row td:first-child,
+    .results-table .data-row td:nth-child(2) {
+        background-color: #fff; /* Эхний 2 багана цагаан */
+        text-align: left;
+        padding-left: 10px;
+    }
+</style>
+
+<div class="test-report-container">
+    
+    <div class="report-header">
+        <div class="logo-left">
+            <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}" alt="Energy Resources Logo" style="height: 60px;">
+        </div>
+        <div class="lab-title">
+            <h2>COAL CHEMISTRY LABORATORY</h2>
+            <p>Address: UHG, Tsogttsetsii, Umnugobi</p>
+            <p>Email: laboratory@mmc.mn</p>
+        </div>
+        <div class="logo-right">
+            <img src="{{ url_for('static', filename='images/mnas_logo.png') }}" alt="MNAS Logo" style="height: 70px;">
+        </div>
+    </div>
+
+    <div class="report-title-bar">
+        ACCREDITED LABORATORY TEST REPORT
+    </div>
+
+    <div class="description-section">
+        <table class="description-table">
+            <tbody>
+                <tr>
+                    <td>Laboratory №</td>
+                    <td>{{ sample.sample_code }}</td>
+                </tr>
+                <tr>
+                    <td>Date samples received</td>
+                    <td>{{ sample.received_date.strftime('%d-%b-%Y') if sample.received_date else '-' }}</td>
+                </tr>
+                <tr>
+                    <td>Date samples analysed</td>
+                    <td>{{ sample.received_date.strftime('%d-%b-%Y') if sample.received_date else '-' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="description-table">
+            <tbody>
+                <tr>
+                    <td>Report title</td>
+                    <td>{{ sample.sample_type | capitalize }} report</td>
+                </tr>
+                <tr>
+                    <td>Consignor</td>
+                    <td>{{ sample.client_name }}</td>
+                </tr>
+                <tr>
+                    <td>Data reported</td>
+                    <td>{{ report_date.strftime('%d-%b-%Y') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p class="results-title">RESULT OF ANALYSIS</p>
+    
+    <table class="results-table">
+        <thead>
+            <tr>
+                <th rowspan="4">Sample ID</th>
+                <th rowspan="4">Sample time</th>
+                <th colspan="21" class="group-header">COAL QUALITY PROPERTIES</th>
+            </tr>
+            <tr>
+                <th colspan="2">Moisture %</th>
+                <th colspan="2">Ash %</th>
+                <th colspan="2">Volatile Matter %</th>
+                <th colspan="2">Total sulfur %</th>
+                <th colspan="3">Calorific value, kcal/kg</th>
+                <th>Crucible swelling number</th>
+                <th>Caking index</th>
+                <th colspan="2">True relative density, (20°C) g/cm³</th>
+                <th colspan="2">Phosphorus</th>
+                <th colspan="2">Plastometric index</th>
+            </tr>
+            <tr>
+                <th colspan="2">MNS ISO 589:2003</th>
+                <th colspan="2">MNS GOBT 212:2015</th>
+                <th></th> <th></th> <th colspan="2">MNS ISO 351:2001</th>
+                <th colspan="3">MNS ISO 1928:2009</th>
+                <th>MNS ISO 501:2003</th>
+                <th>MNS ISO 5585:2014</th>
+                <th colspan="2">MNS GOBT 217:2015</th>
+                <th colspan="2">ASTM D4326-13</th>
+                <th colspan="2">MNS GOBT 479:2015</th>
+            </tr>
+            <tr>
+                <th>{{ 'MT'|fmt_code }}</th>
+                <th>{{ 'Mad'|fmt_code }}</th>
+                <th>{{ 'Aad'|fmt_code }}</th>
+                <th>{{ 'A,d'|fmt_code }}</th>
+                <th>{{ 'Vad'|fmt_code }}</th>
+                <th>{{ 'V,daf'|fmt_code }}</th>
+                <th>{{ 'TS'|fmt_code }}</th>
+                <th>{{ 'St,d'|fmt_code }}</th>
+                <th>{{ 'CV'|fmt_code }}</th>
+                <th>{{ 'Qgr,ar'|fmt_code }}</th>
+                <th>{{ 'Qnet,ar'|fmt_code }}</th>
+                <th>{{ 'CSN'|fmt_code }}</th>
+                <th>{{ 'Gi'|fmt_code }}</th>
+                <th>{{ 'TRD'|fmt_code }}</th>
+                <th>{{ 'TRD,ad'|fmt_code }}</th>
+                <th>{{ 'P,ad'|fmt_code }}</th>
+                <th>{{ 'P,d'|fmt_code }}</th>
+                <th>{{ 'X'|fmt_code }}</th>
+                <th>{{ 'Y'|fmt_code }}</th>
+            </tr>
+        </thead>
+        <tbody>
+         {# templates/report.html доторх хэсэг - АЛДААГ ЗАССАН #}
+<tr class="data-row">
+    <td>{{ sample.sample_code }}</td>
+    <td>{{ sample.sample_date.strftime('%H:%M') if sample.sample_date else '-' }}</td>
+    
+    {# --- Эдгээр нь Мэдээллийн сангаас ирсэн "RAW" объектууд --- #}
+    {# (!!! ЗАСВАР: calcs.KEY and calcs.KEY.value гэж шалгах) #}
+    <td>{{ calcs.total_moisture.value | round(2) if calcs.total_moisture and calcs.total_moisture.value is not none else '-' }}</td>
+    <td>{{ calcs.inherent_moisture.value | round(2) if calcs.inherent_moisture and calcs.inherent_moisture.value is not none else '-' }}</td>
+    <td>{{ calcs.ash.value | round(2) if calcs.ash and calcs.ash.value is not none else '-' }}</td>
+    <td>{{ calcs.volatile_matter.value | round(2) if calcs.volatile_matter and calcs.volatile_matter.value is not none else '-' }}</td>
+    <td>{{ calcs.total_sulfur.value | round(3) if calcs.total_sulfur and calcs.total_sulfur.value is not none else '-' }}</td>
+    <td>{{ calcs.calorific_value.value | round(0) if calcs.calorific_value and calcs.calorific_value.value is not none else '-' }}</td>
+    <td>{{ calcs.free_swelling_index.value if calcs.free_swelling_index and calcs.free_swelling_index.value is not none else '-' }}</td>
+    <td>{{ calcs.caking_power.value if calcs.caking_power and calcs.caking_power.value is not none else '-' }}</td>
+    <td>{{ calcs.phosphorus.value | round(4) if calcs.phosphorus and calcs.phosphorus.value is not none else '-' }}</td>
+    <td>{{ calcs.plastometer_x.value if calcs.plastometer_x and calcs.plastometer_x.value is not none else '-' }}</td>
+    <td>{{ calcs.plastometer_y.value if calcs.plastometer_y and calcs.plastometer_y.value is not none else '-' }}</td>
+
+    {# --- Эдгээр нь conversions.py-д тооцоологдсон "CALCULATED" тоонууд ( .value байхгүй ) --- #}
+    {# (!!! ЗАСВАР: calcs.KEY is defined and calcs.KEY is not none гэж шалгах) #}
+    <td>{{ calcs.ash_d | round(2) if calcs.ash_d is defined and calcs.ash_d is not none else '-' }}</td>
+    <td>{{ calcs.volatile_matter_daf | round(2) if calcs.volatile_matter_daf is defined and calcs.volatile_matter_daf is not none else '-' }}</td>
+    <td>{{ calcs.total_sulfur_d | round(3) if calcs.total_sulfur_d is defined and calcs.total_sulfur_d is not none else '-' }}</td>
+    <td>{{ calcs.calorific_value_ar | round(0) if calcs.calorific_value_ar is defined and calcs.calorific_value_ar is not none else '-' }}</td>
+    <td>{{ calcs.qnet_ar | round(0) if calcs.qnet_ar is defined and calcs.qnet_ar is not none else '-' }}</td>
+    <td>{{ calcs.relative_density | round(3) if calcs.relative_density is defined and calcs.relative_density is not none else '-' }}</td>
+    <td>{{ calcs.relative_density_d | round(3) if calcs.relative_density_d is defined and calcs.relative_density_d is not none else '-' }}</td>
+    <td>{{ calcs.phosphorus_d | round(4) if calcs.phosphorus_d is defined and calcs.phosphorus_d is not none else '-' }}</td>
+</tr>
+                <td colspan="23" style="text-align: left; padding-left: 10px; background: #f2f2f2;">
+                    <strong>{{ sample.product }}</strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

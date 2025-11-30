@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-primary">
+      <i class="bi bi-tools"></i> Тоног Төхөөрөмжийн Бүртгэл
+    </h4>
+
+    <div class="d-flex gap-2">
+      {# Сонгосон зүйлсийг устгах товч (JS-ээр идэвхжүүлнэ) #}
+      <button class="btn btn-danger btn-sm d-none" id="btn-delete-selected">
+        <i class="bi bi-trash"></i> Сонгосныг устгах
+      </button>
+
+      {% if current_user.role in ['ahlah', 'admin'] %}
+      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEqModal">
+        <i class="bi bi-plus-lg"></i> Шинэ Төхөөрөмж
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <style>
+    #equipment-table .table-filters input {
+      font-size: 0.75rem; padding: 0.15rem 0.35rem; height: 1.7rem;
+    }
+    #equipment-table th, #equipment-table td { vertical-align: middle; }
+    /* Checkbox баганын өргөн */
+    .col-checkbox { width: 40px; text-align: center; }
+  </style>
+
+  {# ... View filters (View items хэсэг хэвээрээ) ... #}
+  {% set view_items = [
+    ('all', '1. Тоног төхөөрөмжийн нэгдсэн бүртгэл'),
+    ('coal', '2. Нүүрсний шинжилгээний тоног төхөөрөмж'),
+    ('water', '3. Усны шинжилгээний тоног төхөөрөмж'),
+    ('micro', '4. Микробиологийн шинжилгээний тоног төхөөрөмж'),
+    ('new', '8. Шинээр ашиглалтанд орсон'),
+    ('retired', '9. Ашиглалтаас гарсан'),
+    ('spares', '10. Сэлбэг хэрэгслийн бүртгэл'),
+    ('balances', '11. Жингийн бүртгэл')
+  ] %}
+
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    {% for key, label in view_items %}
+      {% set is_active = (view == key) %}
+      <a href="{{ url_for('equipment.equipment_list', view=key) }}"
+         class="btn btn-sm {{ 'btn-secondary text-white' if is_active else 'btn-outline-secondary' }}">
+        {{ label }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        {# Бүх мөрийг хамарсан FORM - Сонгосныг устгахад хэрэгтэй #}
+        <form id="bulk-action-form" method="POST" action="{{ url_for('equipment.bulk_delete') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <table class="table table-hover align-middle mb-0" id="equipment-table">
+              <thead class="table-light small text-uppercase">
+                <tr>
+                  {# ✅ 1. CHECKBOX HEADER #}
+                  <th class="col-checkbox">
+                    <input type="checkbox" class="form-check-input" id="select-all-header">
+                  </th>
+                  <th style="width: 50px;">Д/д</th>
+                  <th>Багаж, тоног төхөөрөмжийн нэр<br><span class="fw-normal text-muted">Үйлдвэрлэгч</span></th>
+                  <th>Марк / дугаар</th>
+                  <th>Сериал №</th>
+                  <th>Лаб дугаар</th>
+                  <th>Тоо</th>
+                  <th>Байршил</th>
+                  <th>Сүүлд баталгаажсан</th>
+                  <th>Дараагийн хугацаа</th>
+                  <th>Байдал</th>
+                  <th>Шалгалт тохируулга</th>
+                  <th>Тайлбар</th>
+                  <th>Үйлдэл</th>
+                </tr>
+                <tr class="table-filters">
+                  <th></th> {# Checkbox filter placeholder #}
+                  <th></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="2" placeholder="Хайх..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="3" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="4" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="5" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="6" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="7" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="8" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="9" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="10" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="11" placeholder="..."></th>
+                  <th><input type="text" class="form-control form-control-sm column-filter" data-col="12" placeholder="..."></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for eq in equipments %}
+                <tr>
+                  {# ✅ 2. ROW CHECKBOX #}
+                  <td class="text-center">
+                    <input type="checkbox" name="equipment_ids" value="{{ eq.id }}" class="form-check-input row-checkbox">
+                  </td>
+                  
+                  <td class="text-muted small">{{ loop.index }}</td>
+
+                  <td>
+                    <div class="fw-bold text-dark">{{ eq.name }}</div>
+                    {% if eq.manufacturer %} <div class="small text-muted">{{ eq.manufacturer }}</div> {% endif %}
+                  </td>
+                  <td>{{ eq.model or '-' }}</td>
+                  <td><span class="font-monospace small">{{ eq.serial_number or '-' }}</span></td>
+                  <td><span class="font-monospace small text-primary">{{ eq.lab_code or '-' }}</span></td>
+                  <td class="text-center">{{ eq.quantity or '' }}</td>
+                  <td>
+                    <div class="small text-muted">{{ eq.location or '-' }}</div>
+                  </td>
+                  <td>{{ eq.calibration_date or '-' }}</td>
+                  <td>
+                    {% if eq.next_calibration_date %}
+                        {% if eq.next_calibration_date < today %}
+                            <span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> {{ eq.next_calibration_date }}</span>
+                        {% else %}
+                            <span class="text-success">{{ eq.next_calibration_date }}</span>
+                        {% endif %}
+                    {% else %} - {% endif %}
+                  </td>
+                  <td>
+                    {% if eq.status == 'broken' %} <span class="badge bg-danger">Эвдэрсэн</span>
+                    {% elif eq.status == 'retired' %} <span class="badge bg-secondary">Ашиглалтаас</span>
+                    {% else %} <span class="badge bg-success">Хэвийн</span> {% endif %}
+                  </td>
+                  <td>{{ eq.calibration_note or '-' }}</td>
+                  <td class="small text-muted">{{ eq.remark or '' }}</td>
+
+                  {# ✅ 3. ҮЙЛДЭЛ (Засах + Устгах) #}
+                  <td>
+                    <div class="d-flex gap-1">
+                        {# Засах #}
+                        <a href="{{ url_for('equipment.equipment_detail', id=eq.id) }}" 
+                           class="btn btn-sm btn-outline-primary" title="Засах">
+                          <i class="bi bi-pencil-square"></i>
+                        </a>
+
+                        {# Устгах (Form submit) #}
+                        {% if current_user.role in ['ahlah', 'admin'] %}
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDelete('{{ eq.id }}', '{{ eq.name }}')">
+                           <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="14" class="text-center text-muted py-4">Багажийн бүртгэл олдсонгүй.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# --- DELETE хийх нууц Form (JavaScript ашиглаж submit хийнэ) --- #}
+<form id="delete-form-single" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+</form>
+
+{# --- Add Modal хэвээрээ ... --- #}
+{# (Таны өмнөх кодтой ижил тул энд дахин хуулсангүй, addEqModal хэсгийг хэвээр үлдээнэ үү) #}
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // 1. FILTER LOGIC (Таны хуучин код)
+      const table = document.getElementById('equipment-table');
+      if (table) {
+          const filterInputs = table.querySelectorAll('.column-filter');
+          filterInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    let visible = true;
+                    filterInputs.forEach(inp => {
+                        // Checkbox нэмэгдсэн тул index-ийг тохируулах хэрэгтэй байж магадгүй
+                        // Гэхдээ data-col ашиглаж байгаа бол зүгээр.
+                        // Анхаар: Checkbox багана index 0, Д/д index 1 болсон. 
+                        // Таны хуучин data-col="1" нь одоо checkbox-оос хойших баганыг заана.
+                        const colIndex = parseInt(inp.dataset.col, 10); 
+                        // HTML дээр data-col утгуудыг +1 болгож шинэчлээрэй эсвэл доорх JS дээр зохицуулаарай
+                        const cell = cells[colIndex]; 
+                        if (cell && inp.value) {
+                            if (!cell.textContent.toLowerCase().includes(inp.value.toLowerCase())) visible = false;
+                        }
+                    });
+                    row.style.display = visible ? '' : 'none';
+                });
+            });
+          });
+      }
+
+      // 2. CHECKBOX "Select All" LOGIC
+      const selectAll = document.getElementById('select-all-header');
+      const rowChecks = document.querySelectorAll('.row-checkbox');
+      const bulkBtn = document.getElementById('btn-delete-selected');
+
+      function toggleBulkBtn() {
+          const anyChecked = Array.from(rowChecks).some(c => c.checked);
+          if(bulkBtn) bulkBtn.classList.toggle('d-none', !anyChecked);
+      }
+
+      if(selectAll) {
+          selectAll.addEventListener('change', function() {
+              rowChecks.forEach(c => {
+                  // Зөвхөн харагдаж байгаа мөрүүдийг сонгох (Filter хийсэн үед хэрэгтэй)
+                  if(c.closest('tr').style.display !== 'none') {
+                      c.checked = this.checked;
+                  }
+              });
+              toggleBulkBtn();
+          });
+      }
+
+      rowChecks.forEach(c => c.addEventListener('change', toggleBulkBtn));
+
+      // 3. BULK DELETE CLICK
+      if(bulkBtn) {
+          bulkBtn.addEventListener('click', function() {
+              if(confirm("Сонгосон төхөөрөмжүүдийг устгахдаа итгэлтэй байна уу?")) {
+                  document.getElementById('bulk-action-form').submit();
+              }
+          });
+      }
+    });
+
+    // 4. SINGLE DELETE FUNCTION
+    function confirmDelete(id, name) {
+        if(confirm(`"${name}" төхөөрөмжийг устгах уу?`)) {
+            const form = document.getElementById('delete-form-single');
+            // Backend URL: /equipment/delete/<id> гэж байх ёстой
+            form.action = `/equipment/delete/${id}`; 
+            form.submit();
+        }
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  
+  {# --- HEADER --- #}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-dark">
+      <a href="{{ url_for('equipment.equipment_list') }}" class="text-decoration-none text-muted me-2">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      {{ eq.name }}
+    </h4>
+    <div>
+      {% if eq.lab_code %}
+        <span class="badge bg-secondary me-2">Лаб дугаар: {{ eq.lab_code }}</span>
+      {% endif %}
+      
+      {# Категорийг энд харуулвал зүгээр #}
+      <span class="badge bg-info text-dark me-2">{{ eq.category }}</span>
+
+      {% if current_user.role in ['ahlah', 'admin'] %}
+      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editEqModal">
+        <i class="bi bi-pencil"></i> Засах
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    
+    {# --- LEFT COLUMN: INFO & ACTION FORM --- #}
+    <div class="col-md-4">
+      
+      {# 1. Үндсэн мэдээлэл #}
+      <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+          <h6 class="text-uppercase text-muted fw-bold small">Үндсэн мэдээлэл</h6>
+          <hr class="my-2">
+          
+          <div class="mb-2">
+             <small class="text-muted">Үйлдвэрлэгч:</small><br>
+             <strong>{{ eq.manufacturer or '-' }}</strong>
+          </div>
+
+          <div class="mb-2">
+             <small class="text-muted">Марк / Модель:</small><br>
+             <strong>{{ eq.model or '-' }}</strong>
+          </div>
+          
+          <div class="mb-2">
+             <small class="text-muted">Сериал №:</small><br>
+             <strong>{{ eq.serial_number or '-' }}</strong>
+          </div>
+
+          <div class="mb-2">
+             <small class="text-muted">Лабораторийн дугаар:</small><br>
+             <strong>{{ eq.lab_code or '-' }}</strong>
+          </div>
+
+          <div class="mb-2">
+             <small class="text-muted">Тоо хэмжээ:</small><br>
+             <strong>{{ eq.quantity or 1 }}</strong>
+          </div>
+          
+          <div class="mb-2">
+             <small class="text-muted">Байршил / Өрөө:</small><br>
+             <strong>{{ eq.location or '-' }}</strong>
+             {% if eq.room_number %}
+                / <span class="badge bg-light text-dark border">{{ eq.room_number }}</span>
+             {% endif %}
+          </div>
+
+          <div class="mb-2">
+             <small class="text-muted">Хамааралтай шинжилгээ:</small><br>
+             {% if eq.related_analysis %}
+                <span class="badge bg-primary bg-opacity-10 text-primary">{{ eq.related_analysis }}</span>
+             {% else %}
+                <span class="text-muted">-</span>
+             {% endif %}
+          </div>
+
+          <div class="mb-2">
+             <small class="text-muted">Ашиглалтын байдал:</small><br>
+             {% if eq.status == 'broken' %}
+                <span class="badge bg-danger">Эвдэрсэн</span>
+             {% elif eq.status == 'needs_spare' %}
+                <span class="badge bg-warning text-dark">Сэлбэг хэрэгтэй</span>
+             {% elif eq.status == 'maintenance' %}
+                <span class="badge bg-dark">Засварт</span>
+             {% elif eq.status == 'retired' %}
+                <span class="badge bg-secondary">Ашиглалтаас гарсан</span>
+             {% else %}
+                <span class="badge bg-success">Хэвийн</span>
+             {% endif %}
+          </div>
+          
+          <div class="mt-3 p-2 bg-light rounded border">
+             <small class="text-muted">Шалгалт тохируулга:</small><br>
+             <div class="small">{{ eq.calibration_note or '-' }}</div>
+             <div class="small text-muted">
+               Сүүлд: <strong>{{ eq.calibration_date or '-' }}</strong>
+             </div>
+             <div class="small text-muted mt-1">
+               Дараагийн: 
+               {% if eq.next_calibration_date %}
+                  {% if eq.next_calibration_date < now_local().date() %}
+                     <span class="text-danger fw-bold">
+                        <i class="bi bi-exclamation-circle-fill"></i> {{ eq.next_calibration_date }} (Хугацаа дууссан!)
+                     </span>
+                  {% else %}
+                     <strong>{{ eq.next_calibration_date }}</strong>
+                  {% endif %}
+               {% else %}
+                  -
+               {% endif %}
+             </div>
+          </div>
+
+          <div class="mt-3 p-2 bg-light rounded border">
+             <small class="text-muted">Үйлдвэрлэсэн / Ашиглалтад орсон:</small><br>
+             <div class="small">
+               Үйлдвэрлэсэн: <strong>{{ eq.manufactured_info or '-' }}</strong>
+             </div>
+             <div class="small">
+               Ашиглалтад: <strong>{{ eq.commissioned_info or '-' }}</strong>
+             </div>
+          </div>
+
+          {% if eq.initial_price or eq.residual_price %}
+          <div class="mt-3 p-2 bg-light rounded border">
+             <small class="text-muted">Үнийн мэдээлэл (₮):</small><br>
+             <div class="small">Анхны үнэ: <strong>{{ eq.initial_price or '-' }}</strong></div>
+             <div class="small">Үлдэгдэл үнэ: <strong>{{ eq.residual_price or '-' }}</strong></div>
+          </div>
+          {% endif %}
+
+          {% if eq.remark %}
+          <div class="mt-3 p-2 bg-light rounded border">
+             <small class="text-muted">Бусад тайлбар:</small><br>
+             <div class="small">{{ eq.remark }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {# 2. Тэмдэглэл нэмэх форм #}
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-bold">
+            <i class="bi bi-pencil-square"></i> Тэмдэглэл / Засвар нэмэх
+        </div>
+        <div class="card-body">
+          <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-2">
+              <label class="small fw-bold text-muted">Үйлдлийн төрөл</label>
+              <select name="action_type" class="form-select">
+                <option value="Daily Check">✅ Дотоод хяналт (Check)</option>
+                <option value="Maintenance">🔧 Урсгал үйлчилгээ (Maintenance)</option>
+                {% if current_user.role in ['ahlah', 'admin'] %}
+                  <option value="Repair">🛠️ Их засвар (Repair)</option>
+                  <option value="Calibration" class="fw-bold text-success">📏 Баталгаажуулалт (Calibration)</option>
+                {% endif %}
+              </select>
+              {% if current_user.role in ['ahlah', 'admin'] %}
+                <div class="form-text small">"Calibration" сонговол хугацаа автоматаар сунгагдана.</div>
+              {% endif %}
+            </div>
+            <div class="mb-2">
+              <label class="small fw-bold text-muted">Огноо</label>
+              <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="mb-2">
+              <label class="small fw-bold text-muted">Гүйцэтгэсэн</label>
+              <input type="text" name="performed_by" class="form-control"
+                     placeholder="Ажилтан эсвэл Байгууллага" value="{{ current_user.username }}">
+            </div>
+            <div class="mb-2">
+              <label class="small fw-bold text-muted">Гэрчилгээ №</label>
+              <input type="text" name="certificate_no" class="form-control">
+            </div>
+            <div class="mb-2">
+              <label class="small fw-bold text-muted">Гэрчилгээ / Файл</label>
+              <input type="file" name="certificate_file" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3">
+              <label class="small fw-bold text-muted">Тайлбар / Үр дүн</label>
+              <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Хадгалах</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {# --- RIGHT COLUMN: HISTORY --- #}
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white fw-bold border-bottom">
+            <i class="bi bi-clock-history"></i> Түүх (Log History)
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-striped mb-0 align-middle">
+                <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                    <th>Огноо</th>
+                    <th>Төрөл</th>
+                    <th>Гүйцэтгэсэн</th>
+                    <th>Гэрчилгээ / Файл</th>
+                    <th>Тайлбар</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for log in eq.logs %}
+                <tr>
+                    <td class="font-monospace">{{ log.action_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                    {% if log.action_type == 'Calibration' %}
+                        <span class="badge bg-success">Calibration</span>
+                    {% elif log.action_type == 'Repair' %}
+                        <span class="badge bg-danger">Repair</span>
+                    {% elif log.action_type == 'Daily Check' %}
+                        <span class="badge bg-info text-dark">Daily Check</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ log.action_type }}</span>
+                    {% endif %}
+                    </td>
+                    <td>{{ log.performed_by }}</td>
+                    <td>
+                        {% if log.file_path %}
+                            <a href="{{ url_for('equipment.download_certificate', log_id=log.id) }}" 
+                               class="btn btn-sm btn-outline-primary border-0" 
+                               target="_blank"
+                               title="Файл татах">
+                               <i class="bi bi-paperclip"></i> {{ log.certificate_no or 'Татах' }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">{{ log.certificate_no or '' }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ log.description }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Түүх олдсонгүй.</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{# ------------------------- ЗАСАХ МОДАЛ ------------------------- #}
+<div class="modal fade" id="editEqModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form action="{{ url_for('equipment.edit_equipment', id=eq.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Төхөөрөмж засах</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="fw-bold small">Нэр</label>
+          <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
+        </div>
+
+        {# ✅ ШИНЭ: Категори сонгох хэсэг #}
+        <div class="mb-3">
+           <label class="fw-bold small">Категори (Журнал)</label>
+           <select name="category" class="form-select">
+             <option value="other" {% if eq.category=='other' %}selected{% endif %}>8. Бусад (Default)</option>
+             <option value="furnace" {% if eq.category=='furnace' %}selected{% endif %}>1. Шатаах зуух</option>
+             <option value="prep" {% if eq.category=='prep' %}selected{% endif %}>2. Дээж бэлтгэл</option>
+             <option value="analysis" {% if eq.category=='analysis' %}selected{% endif %}>3. Шинжилгээний багаж</option>
+             <option value="water" {% if eq.category=='water' %}selected{% endif %}>4. Усны лаб</option>
+             <option value="micro" {% if eq.category=='micro' %}selected{% endif %}>5. Микробиологи лаб</option>
+             <option value="wtl" {% if eq.category=='wtl' %}selected{% endif %}>6. БС лаб</option>
+             <option value="balance" {% if eq.category=='balance' %}selected{% endif %}>7. Жин</option>
+           </select>
+        </div>
+
+        <div class="row">
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Үйлдвэрлэгч</label>
+            <input type="text" name="manufacturer" class="form-control" value="{{ eq.manufacturer or '' }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Марк / Модель</label>
+            <input type="text" name="model" class="form-control" value="{{ eq.model or '' }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Сериал №</label>
+            <input type="text" name="serial" class="form-control" value="{{ eq.serial_number or '' }}">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Лабораторийн дугаар</label>
+            <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Лаб (байршил)</label>
+            <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Өрөөний №</label>
+            <input type="text" name="room" class="form-control" value="{{ eq.room_number or '' }}">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Тоо хэмжээ</label>
+            <input type="number" name="quantity" class="form-control" value="{{ eq.quantity or 1 }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Давтамж (хоног)</label>
+            <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
+          </div>
+          <div class="col-4 mb-3">
+            <label class="fw-bold small">Ашиглалтын байдал</label>
+            <select name="status" class="form-select">
+              <option value="normal" {% if eq.status == 'normal' %}selected{% endif %}>Хэвийн</option>
+              <option value="broken" {% if eq.status == 'broken' %}selected{% endif %}>Эвдэрсэн</option>
+              <option value="needs_spare" {% if eq.status == 'needs_spare' %}selected{% endif %}>Сэлбэг хэрэгтэй</option>
+              <option value="maintenance" {% if eq.status == 'maintenance' %}selected{% endif %}>Засварт</option>
+              <option value="retired" {% if eq.status == 'retired' %}selected{% endif %}>Ашиглалтаас гарсан</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="fw-bold small text-primary">Хамааралтай шинжилгээ</label>
+          <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="Ж: Aad,Mad">
+        </div>
+
+        <div class="mb-3">
+          <label class="fw-bold small">Шалгалт тохируулгын товч тэмдэглэл</label>
+          <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
+        </div>
+
+        <hr class="my-2">
+
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label class="fw-bold small">Үйлдвэрлэсэн огноо (Мэдээлэл)</label>
+            <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}" placeholder="Ж: 2023 он">
+          </div>
+          <div class="col-6 mb-3">
+            <label class="fw-bold small">Ашиглалтад орсон огноо (Мэдээлэл)</label>
+            <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}" placeholder="Ж: 2023-05-01">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label class="fw-bold small">Анхны үнэ (₮)</label>
+            <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
+          </div>
+          <div class="col-6 mb-3">
+            <label class="fw-bold small">Үлдэгдэл үнэ (₮)</label>
+            <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="fw-bold small">Бусад тайлбар</label>
+          <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="submit" class="btn btn-primary">Хадгалах</button>
+      </div>
+    </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

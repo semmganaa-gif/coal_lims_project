@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}429 - Хэт олон хүсэлт{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-warning shadow">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 5rem;"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold text-warning">429</h1>
+                    <h2 class="h4 mb-4">Хэт олон хүсэлт илгээсэн байна</h2>
+                    <p class="text-muted mb-4">
+                        Та хэт олон хүсэлт илгээсэн тул түр хязгаарлагдлаа.
+                        Хэдэн минутын дараа дахин оролдоно уу.
+                    </p>
+
+                    <div class="alert alert-light border">
+                        <p class="mb-0 small">
+                            <strong>Rate Limiting:</strong>
+                        </p>
+                        <ul class="text-start mb-0 mt-2 small">
+                            <li>Login: 5 оролдлого/минут</li>
+                            <li>API: 30 хүсэлт/минут</li>
+                            <li>Ерөнхий: 1000 хүсэлт/өдөр</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-house-door me-2"></i>Нүүр хуудас руу буцах
+                        </a>
+                        <button onclick="location.reload()" class="btn btn-outline-secondary btn-lg px-4">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Дахин оролдох
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Энэ хязгаарлалт нь системийг хамгаалах зорилготой.
+                    Хэрэв та ердийн хэрэглээ хийж байгаа бол хэдэн минут хүлээгээд дахин оролдоно уу.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

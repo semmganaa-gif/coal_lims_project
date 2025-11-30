@@ -1,0 +1,229 @@
+{#
+  Form Helper Macros - Давтагддаг form pattern-уудыг багасгах
+
+  Usage:
+    {% from 'macros/form_helpers.html' import render_field, render_submit_button %}
+#}
+
+{#
+  Энгийн текст талбар (label + input)
+
+  Args:
+    field: WTForms field object
+    placeholder: Placeholder текст (optional)
+    class_: Нэмэлт CSS классууд (optional)
+    required: Шаардлагатай эсэх (optional, default from field)
+#}
+{% macro render_field(field, placeholder='', class_='', required=None) %}
+  <div class="mb-3">
+    {{ field.label(class="form-label fw-bold") }}
+    {% if required is none %}
+      {{ field(class="form-control " + class_, placeholder=placeholder) }}
+    {% else %}
+      {{ field(class="form-control " + class_, placeholder=placeholder, required=required) }}
+    {% endif %}
+
+    {# Validation errors #}
+    {% if field.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in field.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Small текст талбар (багасгасан хэмжээтэй)
+
+  Args:
+    field: WTForms field object
+    placeholder: Placeholder текст (optional)
+    class_: Нэмэлт CSS классууд (optional)
+#}
+{% macro render_small_field(field, placeholder='', class_='') %}
+  <div class="mb-2">
+    {{ field.label(class="form-label fw-bold small") }}
+    {{ field(class="form-control form-control-sm " + class_, placeholder=placeholder) }}
+
+    {% if field.errors %}
+      <div class="invalid-feedback d-block small">
+        {% for error in field.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Radio button эсвэл checkbox group (inline)
+
+  Args:
+    field: WTForms RadioField or CheckboxField
+    inline: Inline байрлал эсэх (default: true)
+    small: Жижиг фонт ашиглах эсэх (default: false)
+#}
+{% macro render_radio_group(field, inline=true, small=false) %}
+  <div class="mb-3">
+    <label class="form-label fw-bold {% if small %}small{% endif %}">{{ field.label.text }}:</label>
+    <div>
+      {% for subfield in field %}
+        <div class="form-check {% if inline %}form-check-inline{% endif %} {% if small %}small{% endif %}">
+          {{ subfield(class="form-check-input") }}
+          {{ subfield.label(class="form-check-label") }}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if field.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in field.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Single checkbox (эсвэл toggle)
+
+  Args:
+    field: WTForms BooleanField
+    description: Тайлбар текст (optional)
+#}
+{% macro render_checkbox(field, description='') %}
+  <div class="mb-3">
+    <div class="form-check">
+      {{ field(class="form-check-input") }}
+      <label class="form-check-label fw-bold" for="{{ field.id }}">
+        {{ field.label.text }}
+      </label>
+      {% if description %}
+        <small class="form-text text-muted d-block">{{ description }}</small>
+      {% endif %}
+    </div>
+
+    {% if field.errors %}
+      <div class="invalid-feedback d-block">
+        {% for error in field.errors %}
+          <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Submit button (стандарт загвартай)
+
+  Args:
+    field: WTForms SubmitField
+    text: Button текст (optional, default from field)
+    icon: Bootstrap icon class (optional, ж: 'bi-check-lg')
+    variant: Button төрөл (default: 'primary')
+    size: Button хэмжээ (optional, ж: 'sm', 'lg')
+#}
+{% macro render_submit_button(field, text='', icon='bi-check-lg', variant='primary', size='') %}
+  <div class="d-grid">
+    <button type="submit" class="btn btn-{{ variant }} {% if size %}btn-{{ size }}{% endif %}">
+      {% if icon %}<i class="bi {{ icon }}"></i> {% endif %}
+      {{ text if text else field.label.text }}
+    </button>
+  </div>
+{% endmacro %}
+
+
+{#
+  Cancel/Back button (дараагийн хуудас руу буцах)
+
+  Args:
+    url: Буцах URL
+    text: Button текст (default: 'Буцах')
+    variant: Button төрөл (default: 'secondary')
+#}
+{% macro render_cancel_button(url, text='Буцах', variant='secondary') %}
+  <a href="{{ url }}" class="btn btn-{{ variant }}">
+    <i class="bi bi-arrow-left"></i> {{ text }}
+  </a>
+{% endmacro %}
+
+
+{#
+  Action button group (Edit/Delete/etc.)
+
+  Args:
+    edit_url: Edit URL (optional)
+    delete_url: Delete URL (optional)
+    delete_confirm: Delete confirmation текст (optional)
+    custom_buttons: Нэмэлт button-ууд (optional, HTML string)
+#}
+{% macro render_action_buttons(edit_url='', delete_url='', delete_confirm='Устгах уу?', custom_buttons='') %}
+  <div class="btn-group btn-group-sm" role="group">
+    {% if edit_url %}
+      <a href="{{ edit_url }}" class="btn btn-outline-primary" title="Засах">
+        <i class="bi bi-pencil"></i>
+      </a>
+    {% endif %}
+
+    {% if delete_url %}
+      <form method="post" action="{{ delete_url }}" style="display: inline;" onsubmit="return confirm('{{ delete_confirm }}');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit" class="btn btn-outline-danger" title="Устгах">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    {% endif %}
+
+    {% if custom_buttons %}
+      {{ custom_buttons|safe }}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Alert/Flash message (автомат категори өнгөөр)
+
+  Args:
+    message: Мессежийн текст
+    category: Message категори ('success', 'danger', 'warning', 'info')
+    dismissible: Хаах боломжтой эсэх (default: true)
+#}
+{% macro render_alert(message, category='info', dismissible=true) %}
+  <div class="alert alert-{{ category }} {% if dismissible %}alert-dismissible fade show{% endif %}" role="alert">
+    {{ message }}
+    {% if dismissible %}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{#
+  Card/Panel wrapper
+
+  Args:
+    title: Card title
+    body: Card body content
+    footer: Card footer content (optional)
+    class_: Нэмэлт CSS классууд (optional)
+#}
+{% macro render_card(title='', class_='') %}
+  <div class="card {{ class_ }}">
+    {% if title %}
+      <div class="card-header">
+        <h5 class="card-title mb-0">{{ title }}</h5>
+      </div>
+    {% endif %}
+    <div class="card-body">
+      {{ caller() }}
+    </div>
+  </div>
+{% endmacro %}

@@ -1,0 +1,253 @@
+{# templates/reports/shift_kpi.html #}
+{% extends "base.html" %}
+
+{% block title %}Чанар & Ачааллын KPI (Жилээр){% endblock %}
+
+{% block content %}
+
+{# ----------------- HEADER ----------------- #}
+<div class="row mb-3">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-0">Чанар & Ачааллын KPI (Жилээр)</h4>
+      <small class="text-muted">
+        Жил, нэгж, шинжилгээний төрөл, shift-ээр consumption болон KPI-г харах.
+      </small>
+    </div>
+
+    <form class="d-flex gap-2 align-items-center" method="get" action="{{ url_for('reports.shift_kpi') }}">
+      <label class="me-2">Он:</label>
+      <select name="year" class="form-select form-select-sm w-auto">
+        {% for y in years %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-sm btn-outline-primary">Дахин ачаалах</button>
+    </form>
+  </div>
+</div>
+
+{# ----------------- ШҮҮЛТҮҮР ----------------- #}
+<div class="card mb-3 shadow-sm">
+  <div class="card-header py-2">
+    <strong>Шүүлтүүр</strong>
+  </div>
+  <div class="card-body py-3">
+    <form class="row g-2 align-items-end" method="get" action="{{ url_for('reports.shift_kpi') }}">
+      <input type="hidden" name="year" value="{{ year }}">
+
+      <div class="col-md-3 col-lg-2">
+        <label class="form-label form-label-sm mb-1">Нэгж (client_name)</label>
+        <select name="unit" class="form-select form-select-sm">
+          <option value="">Бүх нэгж</option>
+          {% for u in unit_choices %}
+            <option value="{{ u }}" {% if u == selected_unit %}selected{% endif %}>{{ u }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3 col-lg-2">
+        <label class="form-label form-label-sm mb-1">Шинжилгээний төрөл</label>
+        <select name="analysis_code" class="form-select form-select-sm">
+          <option value="">Бүгд</option>
+          {% for a in analysis_choices %}
+            <option value="{{ a }}" {% if a == selected_analysis %}selected{% endif %}>{{ a }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3 col-lg-2">
+        <label class="form-label form-label-sm mb-1">Shift</label>
+        <select name="shift" class="form-select form-select-sm">
+          <option value="">Бүх shift</option>
+          <option value="DAY" {% if selected_shift == "DAY" %}selected{% endif %}>Day (07:01–19:00)</option>
+          <option value="NIGHT" {% if selected_shift == "NIGHT" %}selected{% endif %}>Night (19:01–07:00)</option>
+        </select>
+        <div class="form-text" style="font-size: 0.7rem;">
+          * Шөнө 00:00-07:00 цаг нь урд өдрийн ээлжинд тооцогдоно.
+        </div>
+      </div>
+
+      <div class="col-md-4 col-lg-3">
+        <label class="form-label form-label-sm mb-1">Огнооны интервал (optional)</label>
+        <div class="d-flex gap-1">
+          <input type="date" name="date_from" class="form-control form-control-sm"
+                 value="{{ date_from.strftime('%Y-%m-%d') if date_from }}">
+          <input type="date" name="date_to" class="form-control form-control-sm"
+                 value="{{ date_to.strftime('%Y-%m-%d') if date_to }}">
+        </div>
+        <div class="form-text" style="font-size: 0.7rem;">
+          Хэрэв огноо сонговол тухайн жилийн шүүлтийг дарж үйлчилнэ.
+        </div>
+      </div>
+
+      <div class="col-md-2 col-lg-2 d-grid">
+        <button type="submit" class="btn btn-primary btn-sm">Шүүлтүүр хэрэглэх</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ----------------- KPI cards ----------------- #}
+{% set kpi = kpi_stats or {} %}
+<div class="row mb-4 g-3">
+  <div class="col-md-3">
+    <div class="card lims-kpi-card h-100">
+      <div class="card-body py-2">
+        <div class="text-muted small mb-1">Нийт шинжилгээний тоо</div>
+        <div class="fs-4 fw-semibold">
+          {{ kpi.total_results if kpi.total_results is defined else 0 }}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card lims-kpi-card h-100">
+      <div class="card-body py-2">
+        <div class="text-muted small mb-1">Давхардалгүй дээжийн тоо</div>
+        <div class="fs-4 fw-semibold">
+          {{ kpi.distinct_samples if kpi.distinct_samples is defined else 0 }}
+        </div>
+      </div>
+    </div>
+  </div>
+  {# Хэрэгцээ гарвал өөр KPI-г энд нэмж болно #}
+</div>
+
+{# ----------------- Клиент тус бүрийн consumption хүснэгт ----------------- #}
+{% for block in client_blocks %}
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header py-2">
+      <strong>{{ block.client_name }}</strong>
+    </div>
+    <div class="card-body p-2">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0 align-middle">
+          <thead class="table-light text-center">
+            <tr>
+              <th rowspan="2" style="min-width:120px;">Шинжилгээ</th>
+              <th colspan="12">Сар</th>
+              <th rowspan="2">Total</th>
+            </tr>
+            <tr>
+              <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+              <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if block.rows %}
+              {% for row in block.rows %}
+                <tr>
+                  <td class="text-nowrap">{{ row.code }}</td>
+                  {% for m in row.months %}
+                    <td class="text-end">{{ m }}</td>
+                  {% endfor %}
+                  <td class="text-end fw-semibold">{{ row.total }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="14" class="text-center text-muted">
+                  Мэдээлэл алга.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+{# ----------------- Grand total хүснэгт ----------------- #}
+<div class="card mb-5 shadow-sm">
+  <div class="card-header py-2">
+    <strong>Grand total (бүх нэгж/төрөл)</strong>
+  </div>
+  <div class="card-body p-2">
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered mb-0 align-middle">
+        <thead class="table-light text-center">
+          <tr>
+            <th rowspan="2" style="min-width:120px;">Шинжилгээ</th>
+            <th colspan="12">Сар</th>
+            <th rowspan="2">Total</th>
+          </tr>
+          <tr>
+            <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th>
+            <th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if grand_rows %}
+            {% for row in grand_rows %}
+              <tr>
+                <td class="text-nowrap">{{ row.code }}</td>
+                {% for m in row.months %}
+                  <td class="text-end">{{ m }}</td>
+                {% endfor %}
+                <td class="text-end fw-semibold">{{ row.total }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="14" class="text-center text-muted">
+                Энэ жилд consumption-ийг мэдээлэл олдсонгүй.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{# ----------------- Алдааны ангиллын Статистик ----------------- #}
+<div class="card mb-4 shadow-sm">
+  <div class="card-header py-2">
+    <strong>Алдааны ангиллаар (root cause) тоололт — {{ year }}</strong>
+  </div>
+  <div class="card-body p-2">
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="min-width:260px;">Ангилал</th>
+            <th class="text-end">Тоо</th>
+            <th class="text-end">Хувь (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if error_reason_items %}
+            {% for r in error_reason_items %}
+              <tr>
+                <td>{{ r.label }}</td>
+                <td class="text-end">{{ r.count }}</td>
+                <td class="text-end">
+                  {% if error_reason_total and r.count %}
+                    {{ ('%.1f' % (r.count * 100.0 / error_reason_total)) }}%
+                  {% else %}
+                    –
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            <tr class="table-secondary fw-semibold">
+              <td>Нийт</td>
+              <td class="text-end">{{ error_reason_total }}</td>
+              <td></td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="3" class="text-center text-muted">
+                Энэ жил алдааны бүртгэл олдсонгүй.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

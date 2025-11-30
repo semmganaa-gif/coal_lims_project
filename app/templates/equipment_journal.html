@@ -1,0 +1,300 @@
+{# app/templates/equipment_journal.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      {# Гарчиг нь Route-ээс динамикаар ирнэ (Жнь: 1. Шатаах зуух...) #}
+      <h4 class="fw-bold text-dark mb-0">
+        <i class="bi bi-journal-text text-primary"></i>
+        {{ title }}
+      </h4>
+      <div class="text-muted small">
+        Нэгдсэн тойм · ашиглалт, арчилгааны товчоон
+      </div>
+    </div>
+
+    <form id="dateFilterForm" class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted">Хугацаа:</label>
+        <input type="date" id="startDate" name="start_date" class="form-control form-control-sm" value="{{ start_date.strftime('%Y-%m-%d') }}">
+        <span class="small text-muted">–</span>
+        <input type="date" id="endDate" name="end_date" class="form-control form-control-sm" value="{{ end_date.strftime('%Y-%m-%d') }}">
+      </div>
+
+      <div class="btn-group btn-group-sm ms-2" role="group">
+        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm ms-2">
+        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+      </button>
+      
+      {# Буцах товч (Hub руу) #}
+      <a href="{{ url_for('equipment.equipment_journal') }}" class="btn btn-outline-secondary btn-sm ms-2">
+        <i class="bi bi-grid"></i> Буцах
+      </a>
+    </form>
+  </div>
+
+  {# --- Tabs --- #}
+  <ul class="nav nav-tabs mb-3" id="equipTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-summary" data-bs-toggle="tab" data-bs-target="#pane-summary" type="button" role="tab">
+        <i class="bi bi-grid-3x3-gap"></i> Нэгдсэн тойм
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-monthly" data-bs-toggle="tab" data-bs-target="#pane-monthly" type="button" role="tab">
+        <i class="bi bi-calendar3"></i> Сарын нэгтгэл
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-detailed" data-bs-toggle="tab" data-bs-target="#pane-detailed" type="button" role="tab">
+        <i class="bi bi-journal-richtext"></i> Дэлгэрэнгүй журнал
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="equipTabContent">
+    
+    {# === 1. НЭГДСЭН ТОЙМ TAB === #}
+    <div class="tab-pane fade show active" id="pane-summary" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <span class="fw-semibold small text-muted text-uppercase">
+            <i class="bi bi-collection"></i> Нэгдсэн статистик
+          </span>
+          {# 🛑 "Бүлэг нээх/хаах" товчийг эндээс ХАССАН #}
+        </div>
+        <div class="card-body p-2">
+          <div id="equipSummaryGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        </div>
+      </div>
+    </div>
+
+    {# === 2. САРЫН НЭГТГЭЛ TAB === #}
+    <div class="tab-pane fade" id="pane-monthly" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <span class="fw-semibold small text-muted text-uppercase">
+            <i class="bi bi-calendar-range"></i> Сарын ачаалал & Арчилгаа ({{ start_date.year }})
+          </span>
+          <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
+             <i class="bi bi-download"></i> CSV татах
+          </button>
+        </div>
+        <div class="card-body p-2">
+          <div id="monthlyGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        </div>
+      </div>
+    </div>
+
+    {# === 3. ДЭЛГЭРЭНГҮЙ ЖУРНАЛ TAB === #}
+    <div class="tab-pane fade" id="pane-detailed" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <span class="fw-semibold small text-muted text-uppercase">
+            <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт (Timeline)
+          </span>
+          <input type="text" id="detailSearch" class="form-control form-control-sm w-auto" placeholder="Хайх...">
+        </div>
+        <div class="card-body p-2">
+          <div id="detailedGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Global API references
+    var summaryApi = null;
+    var monthlyApi = null;
+    var detailedApi = null;
+
+    function formatDate(date) {
+      var y = date.getFullYear();
+      var m = String(date.getMonth() + 1).padStart(2, '0');
+      var d = String(date.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + d;
+    }
+
+    // ============================================================
+    // 1. SUMMARY GRID (Нэгдсэн тойм)
+    // ============================================================
+    const summaryColumnDefs = [
+      { field: 'lab_code', headerName: 'Лаб.№', pinned: 'left', width: 100, filter: 'agTextColumnFilter' },
+      { field: 'name', headerName: 'Төхөөрөмж', width: 180, filter: 'agTextColumnFilter' },
+      // location-оор бүлэглэхийг больсон тул rowGroup: false буюу энгийн багана болгов (хүсвэл hide:false болгож харуулж болно)
+      { field: 'location', headerName: 'Байршил', hide: true }, 
+      { field: 'room', headerName: 'Өрөө', width: 80 },
+      { field: 'status', headerName: 'Статус', width: 120,
+        cellRenderer: p => {
+            const s = p.value || 'normal';
+            let color = 'success';
+            if(s==='broken') color='danger'; else if(s==='maintenance') color='warning'; else if(s==='retired') color='secondary';
+            return `<span class="badge bg-${color}">${s}</span>`;
+        }
+      },
+      { field: 'total_usage_hours', headerName: 'Нийт цаг', width: 110 },
+      { field: 'maintenance_count', headerName: 'Арчилгаа', width: 110 },
+      { field: 'last_usage_end', headerName: 'Сүүлд ашигласан', width: 160 },
+      { field: 'next_calibration_date', headerName: 'Дараагийн баталгаажуулалт', width: 160, 
+        cellStyle: p => (p.data && p.data.is_calibration_expired) ? {color:'red', fontWeight:'bold'} : null 
+      }
+    ];
+
+    const summaryGridOptions = {
+      columnDefs: summaryColumnDefs,
+      defaultColDef: { sortable: true, filter: true, resizable: true },
+      animateRows: true,
+    };
+
+    // ============================================================
+    // 2. MONTHLY GRID (Сарын нэгтгэл)
+    // ============================================================
+    const monthlyColumnDefs = [
+      { field: 'lab_code', headerName: 'Лаб.№', pinned: 'left', width: 100 },
+      { field: 'name', headerName: 'Төхөөрөмж', pinned: 'left', width: 180 },
+    ];
+    // 1-12 сарын багануудыг динамикаар үүсгэх
+    for (let i = 1; i <= 12; i++) {
+        monthlyColumnDefs.push({
+            headerName: i + '-р сар',
+            children: [
+                { field: `usage_${i}`, headerName: 'Цаг', width: 80, 
+                  valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-' },
+                { field: `maint_${i}`, headerName: 'Арчилгаа', width: 90, 
+                  valueFormatter: p => p.value ? p.value : '-' }
+            ]
+        });
+    }
+
+    const monthlyGridOptions = {
+      columnDefs: monthlyColumnDefs,
+      defaultColDef: { sortable: true, resizable: true },
+      rowData: [] 
+    };
+
+    // ============================================================
+    // 3. DETAILED GRID (Дэлгэрэнгүй журнал)
+    // ============================================================
+    const detailedColumnDefs = [
+      { field: 'date', headerName: 'Огноо/Цаг', sort: 'desc', width: 150, filter: 'agTextColumnFilter' },
+      { field: 'lab_code', headerName: 'Лаб.№', width: 100, filter: 'agTextColumnFilter' },
+      { field: 'equipment', headerName: 'Төхөөрөмж', width: 180, filter: 'agTextColumnFilter' },
+      { field: 'category', headerName: 'Ангилал', width: 120, 
+        cellRenderer: p => p.value==='Usage' ? '<span class="badge bg-primary">Ашиглалт</span>' : '<span class="badge bg-warning text-dark">Арчилгаа</span>' 
+      },
+      { field: 'type', headerName: 'Төрөл', width: 120 },
+      { field: 'user', headerName: 'Гүйцэтгэсэн', width: 120 },
+      { field: 'description', headerName: 'Тайлбар', flex: 1 },
+      { field: 'result', headerName: 'Үр дүн', width: 100 }
+    ];
+
+    const detailedGridOptions = {
+      columnDefs: detailedColumnDefs,
+      defaultColDef: { sortable: true, filter: true, resizable: true },
+      pagination: true,
+      paginationPageSize: 20,
+    };
+
+    // ============================================================
+    // INITIALIZATION & DATA LOADING
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function () {
+      
+      // 1. Init Summary Grid
+      const eSummary = document.querySelector('#equipSummaryGrid');
+      if(agGrid.createGrid) summaryApi = agGrid.createGrid(eSummary, summaryGridOptions);
+      else { new agGrid.Grid(eSummary, summaryGridOptions); summaryApi = summaryGridOptions.api; }
+
+      // 2. Init Monthly Grid
+      const eMonthly = document.querySelector('#monthlyGrid');
+      if(agGrid.createGrid) monthlyApi = agGrid.createGrid(eMonthly, monthlyGridOptions);
+      else { new agGrid.Grid(eMonthly, monthlyGridOptions); monthlyApi = monthlyGridOptions.api; }
+
+      // 3. Init Detailed Grid
+      const eDetailed = document.querySelector('#detailedGrid');
+      if(agGrid.createGrid) detailedApi = agGrid.createGrid(eDetailed, detailedGridOptions);
+      else { new agGrid.Grid(eDetailed, detailedGridOptions); detailedApi = detailedGridOptions.api; }
+
+      // Function to load all data
+      function loadAllData() {
+        const start = document.getElementById('startDate').value;
+        const end   = document.getElementById('endDate').value;
+        
+        // ✅ URL-аас category параметрийг авах (Hub-аас дамжиж ирсэн)
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category') || 'all';
+
+        // ✅ API дуудлага бүрт category-г нэмэх
+        const params = `?start_date=${start}&end_date=${end}&category=${category}`;
+
+        // A. Load Summary
+        fetch('/api/equipment/usage_summary' + params)
+          .then(r => r.json())
+          .then(data => {
+             if(summaryApi.setRowData) summaryApi.setRowData(data.rows);
+             else summaryApi.setGridOption('rowData', data.rows);
+          });
+
+        // B. Load Detailed
+        fetch('/api/equipment/journal_detailed' + params)
+          .then(r => r.json())
+          .then(data => {
+             if(detailedApi.setRowData) detailedApi.setRowData(data.rows);
+             else detailedApi.setGridOption('rowData', data.rows);
+          });
+          
+        // C. Load Monthly (category шүүлттэй)
+        const year = start.split('-')[0];
+        fetch(`/api/equipment/monthly_stats?year=${year}&category=${category}`)
+          .then(r => r.json())
+          .then(data => {
+             if(monthlyApi.setRowData) monthlyApi.setRowData(data.rows);
+             else monthlyApi.setGridOption('rowData', data.rows);
+          });
+      }
+
+      // Event Listeners
+      document.getElementById('dateFilterForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        loadAllData();
+      });
+
+      // Quick Date Buttons
+      document.querySelectorAll('[data-range]').forEach(btn => {
+        btn.addEventListener('click', function(){
+           const days = parseInt(this.getAttribute('data-range'));
+           const e = new Date();
+           const s = new Date(); s.setDate(e.getDate() - days);
+           document.getElementById('startDate').value = formatDate(s);
+           document.getElementById('endDate').value = formatDate(e);
+           loadAllData();
+        });
+      });
+
+      // Detailed Search
+      document.getElementById('detailSearch').addEventListener('input', function(e){
+         detailedApi.setQuickFilter(e.target.value);
+      });
+
+      // Initial Load
+      loadAllData();
+    });
+
+    function exportMonthlyCSV() {
+        monthlyApi.exportDataAsCsv({fileName: 'monthly_equipment_summary.csv'});
+    }
+  </script>
+{% endblock %}

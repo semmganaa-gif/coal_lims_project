@@ -1,0 +1,377 @@
+# app/forms.py
+# -*- coding: utf-8 -*-
+
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField,
+    SubmitField,
+    BooleanField,
+    PasswordField,
+    SelectField,
+    DateField,
+    TextAreaField,
+    RadioField,
+    IntegerField,
+    SelectMultipleField,
+    HiddenField, # ✅ Нэмэгдсэн
+    widgets,
+)
+from wtforms.validators import DataRequired, Optional, Regexp, NumberRange
+
+
+# --- Checkbox-той олон сонголт хийхэд зориулсан туслах класс ---
+# (Analysis Config дээр олон шинжилгээ сонгоход ашиглана)
+class MultiCheckboxField(SelectMultipleField):
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
+
+
+# ==============================================================================
+# 1. ЛОГИН, ХЭРЭГЛЭГЧИЙН УДИРДЛАГЫН ФОРМУУД
+# ==============================================================================
+class LoginForm(FlaskForm):
+    username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
+    password = PasswordField("Нууц үг", validators=[DataRequired()])
+    remember_me = BooleanField("Намайг сана")
+    submit = SubmitField("Нэвтрэх")
+
+
+class UserManagementForm(FlaskForm):
+    username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
+    password = PasswordField(
+        "Нууц үг (Шинээр оруулах эсвэл солих бол бичнэ үү)",
+        validators=[Optional()],
+    )
+    role = SelectField(
+        "Эрхийн түвшин",
+        choices=[
+            ("beltgegch", "Дээж бэлтгэгч"),
+            ("himich", "Химич"),
+            ("ahlah", "Ахлах химич"),
+            ("admin", "Админ"),
+        ],
+        validators=[DataRequired()],
+    )
+    submit = SubmitField("Хадгалах")
+
+
+# ==============================================================================
+# 2. ДЭЭЖ БҮРТГЭХ ФОРМ (AddSampleForm)
+# ==============================================================================
+class AddSampleForm(FlaskForm):
+    client_name = RadioField(
+        "Хүлээлгэн өгсөн нэгж",
+        choices=[
+            ("CHPP", "CHPP"),
+            ("UHG-Geo", "UHG-Geo"),
+            ("BN-Geo", "BN-Geo"),
+            ("QC", "QC"),
+            ("Proc", "Proc"), 
+            ("WTL", "WTL"),
+            ("LAB", "LAB"),
+        ],
+        validators=[DataRequired(message="Нэгжийг сонгоно уу.")],
+    )
+
+    sample_type = RadioField(
+        "Дээжний төрөл",
+        choices=[],  # JS + route дээрээс динамикаар тохируулна
+        validators=[DataRequired(message="Дээжний төрлийг сонгоно уу.")],
+    )
+
+    sample_condition = RadioField(
+        "Дээжийн төлөв байдал",
+        choices=[
+            ("Хуурай", "Хуурай"),
+            ("Чийгтэй", "Чийгтэй"),
+            ("Шингэн", "Шингэн"),
+        ],
+        validators=[DataRequired(message="Төлөв байдал сонгоно уу.")],
+    )
+
+    sample_date = DateField(
+        "Дээж авсан огноо",
+        validators=[DataRequired(message="Огноо сонгоно уу.")],
+    )
+
+    return_sample = BooleanField("Дээжийг буцаах эсэх")
+
+    delivered_by = StringField(
+        "Хүлээлгэн өгсөн ажилтны нэр",
+        validators=[
+            DataRequired(message="Нэр оруулна уу."),
+            Regexp(
+                "^[A-Za-z0-9_.]*$",
+                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+            ),
+        ],
+    )
+
+    prepared_date = DateField(
+        "Бэлдсэн он сар өдөр",
+        validators=[DataRequired(message="Огноо сонгоно уу.")],
+    )
+
+    prepared_by = StringField(
+        "Бэлтгэсэн ажилтан",
+        validators=[
+            DataRequired(message="Нэр оруулна уу."),
+            Regexp(
+                "^[A-Za-z0-9_.]*$",
+                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+            ),
+        ],
+    )
+
+    notes = TextAreaField(
+        "Тайлбар",
+        validators=[
+            Optional(),
+            Regexp(
+                r"^[A-Za-z0-9_.\s-]*$",
+                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+            ),
+        ],
+    )
+
+    # --- CHPP 2 цаг тутмын ---
+    chpp_2h_mod1 = BooleanField("PF211 (MOD I)")
+    chpp_2h_mod2 = BooleanField("PF221 (MOD II)")
+    chpp_2h_mod3 = BooleanField("PF231 (MOD III)")
+    chpp_2h_tc_missing = BooleanField("TC дээж ирээгүй")
+
+    # --- CHPP 4 цаг тутмын ---
+    chpp_4h_timeslot = SelectField(
+        "Цагийн бүс",
+        choices=[
+            ("", ""),
+            ("10:00", "10:00"),
+            ("14:00", "14:00"),
+            ("18:00", "18:00"),
+            ("22:00", "22:00"),
+            ("02:00", "02:00"),
+            ("06:00", "06:00"),
+        ],
+        validators=[Optional()],
+    )
+    chpp_4h_mod1 = BooleanField("MOD I")
+    chpp_4h_mod2 = BooleanField("MOD II")
+    chpp_4h_mod3 = BooleanField("MOD III")
+
+    # --- CHPP 12 цаг тутмын ---
+    chpp_12h_mod1 = BooleanField("MOD I")
+    chpp_12h_mod2 = BooleanField("MOD II")
+    chpp_12h_mod3 = BooleanField("MOD III")
+
+    # --- UHG/BN/QC/Proc олон үүсгэгч ---
+    location = StringField(
+        "Location",
+        validators=[
+            Optional(),
+            Regexp(
+                "^[A-Za-z0-9_-]*$",
+                message="Зөвхөн латин үсэг, тоо, -, _ ашиглана уу.",
+            ),
+        ],
+    )
+
+    sample_count = IntegerField(
+        "Дээжний тоо",
+        validators=[
+            Optional(),
+            NumberRange(min=1, message="Ядаж 1 байх ёстой."),
+        ],
+    )
+
+    product = StringField(
+        "Бүтээгдэхүүн",
+        validators=[
+            Optional(),
+            Regexp(
+                "^[A-Za-z0-9_-]*$",
+                message="Зөвхөн латин үсэг, тоо, -, _ ашиглана уу.",
+            ),
+        ],
+    )
+
+    # --- WTL ---
+    lab_number = StringField(
+        "Лаб дугаар",
+        validators=[
+            Optional(),
+            Regexp(
+                r"^[A-Za-z0-9_#/-]*$",
+                message="Зөвхөн латин үсэг, тоо, #, _, /, - ашиглана уу.",
+            ),
+        ],
+    )
+
+    # WTL (MG/Test) болон бусад үед гараар өгөх нэр
+    sample_code = StringField("Sample name", validators=[Optional()])
+
+    submit = SubmitField("Бүртгэх")
+
+
+# ==============================================================================
+# 3. ШИНЖИЛГЭЭНИЙ ТОХИРГООНЫ ФОРМУУД (ANALYSIS CONFIG) - ✅ ШИНЭЧЛЭГДСЭН
+# ==============================================================================
+
+# 🧩 Энгийн профайл (Simple Matrix)
+class SimpleProfileForm(FlaskForm):
+    # Matrix хүснэгт нь HTML талаас loop хийж өгөгдлөө илгээдэг тул
+    # энд зөвхөн Submit товчлуур байхад хангалттай.
+    submit_simple = SubmitField("Энгийн тохиргоог хадгалах")
+
+
+# 🧩 Pattern профайл (Regex Rules)
+class PatternProfileForm(FlaskForm):
+    pattern = StringField(
+        "Нэрний бүтэц (Pattern)",
+        validators=[DataRequired(message="Бүтэц оруулна уу.")],
+    )
+
+    analyses = MultiCheckboxField(
+        "Шинжилгээнүүд",
+        choices=[],  # __init__ дотор DB-ээс дүүргэнэ
+        coerce=str,
+        validators=[DataRequired(message="Ядаж нэг шинжилгээ сонгоно уу.")],
+    )
+
+    # ✅ ШИНЭЧЛЭЛ: admin_routes.py дээрх логиктой уялдуулан эдгээрийг нэмэв
+    priority = HiddenField('Priority', default=50)
+    rule = HiddenField('Rule', default='merge')
+
+    submit_pattern = SubmitField("Шинэ бүтэц нэмэх")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            # Аппликейшн ажиллаж байх үед л DB-ээс татна
+            from app.models import AnalysisType
+            items = AnalysisType.query.order_by(AnalysisType.order_num).all()
+            self.analyses.choices = [
+                (a.code, f"{a.order_num:02d} — {a.name} ({a.code})") for a in items
+            ]
+        except Exception:
+            # DB холболт байхгүй үед (миграци г.м) алдаа өгөхгүй байх
+            self.analyses.choices = []
+
+
+# ==============================================================================
+# 4. KPI / SHIFT ТАЙЛАН ФОРМ
+# ==============================================================================
+class KPIReportFilterForm(FlaskForm):
+    # Огнооны интервал
+    start_date = DateField(
+        "Эхлэх огноо",
+        format="%Y-%m-%d",
+        validators=[Optional()],
+    )
+    end_date = DateField(
+        "Дуусах огноо",
+        format="%Y-%m-%d",
+        validators=[Optional()],
+    )
+
+    # Аль timestamp дээр тулж KPI тооцох вэ?
+    time_base = SelectField(
+        "Огнооны суурь",
+        choices=[
+            ("received", "Хүлээн авсан (received_date)"),
+            ("prepared", "Бэлтгэсэн (prepared_date)"),
+            ("mass", "Масс бэлэн (mass_ready_at)"),
+        ],
+        default="received",
+        validators=[Optional()],
+    )
+
+    # Ямар KPI тоолох вэ?
+    kpi_target = SelectField(
+        "KPI төрөл",
+        choices=[
+            ("samples_received", "Хүлээн авсан дээжийн тоо"),
+            ("samples_prepared", "Бэлтгэсэн дээжийн тоо"),
+            ("mass_ready", "Масс бэлэн болсон дээжийн тоо"),
+        ],
+        default="samples_received",
+        validators=[Optional()],
+    )
+
+    # Ээлжийн сонголтууд
+    shift_team = SelectField(
+        "Ээлж (A/B/C)",
+        choices=[
+            ("all", "Бүх ээлж"),
+            ("A", "A ээлж"),
+            ("B", "B ээлж"),
+            ("C", "C ээлж"),
+        ],
+        default="all",
+        validators=[Optional()],
+    )
+
+    shift_type = SelectField(
+        "Shift (өдөр/шөнө)",
+        choices=[
+            ("all", "Өдөр + Шөнө"),
+            ("day", "Зөвхөн өдөр"),
+            ("night", "Зөвхөн шөнө"),
+        ],
+        default="all",
+        validators=[Optional()],
+    )
+
+    # Нэмэлт фильтрүүд
+    unit = SelectField(
+        "Нэгж (client_name)",
+        choices=[("all", "Бүх нэгж")],  # View-ээс динамикаар бөглөх боломжтой
+        default="all",
+        validators=[Optional()],
+    )
+
+    sample_code = StringField(
+        "Дээжийн код",
+        validators=[Optional()],
+    )
+
+    storage_location = StringField(
+        "Хадгалалт / байршил",
+        validators=[Optional()],
+    )
+
+    analysis_code = StringField(
+        "Шинжилгээний код",
+        validators=[Optional()],
+    )
+
+    user_name = StringField(
+        "Хэрэглэгч",
+        validators=[Optional()],
+    )
+
+    role = SelectField(
+        "Албан тушаал / роль",
+        choices=[
+            ("all", "Бүгд"),
+            ("beltgegch", "Бэлтгэгч"),
+            ("himich", "Химич"),
+            ("ahlah", "Ахлах"),
+            ("admin", "Админ"),
+        ],
+        default="all",
+        validators=[Optional()],
+    )
+
+    # GROUP BY сонголт – KPI хүснэгтийн баруун талын багана
+    group_by = SelectField(
+        "Бүлэглэлт",
+        choices=[
+            ("shift", "Зөвхөн ээлж (A/B/C + өдөр/шөнө)"),
+            ("unit", "Нэгжээр (client_name)"),
+            ("sample_state", "Дээжийн байдлаар"),
+            ("storage", "Хадгалалтаар"),
+            ("person", "Хүнээр (ирээдүйд өргөтгөнө)"),
+        ],
+        default="shift",
+        validators=[Optional()],
+    )

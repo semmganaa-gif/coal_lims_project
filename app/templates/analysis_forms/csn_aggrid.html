@@ -1,0 +1,289 @@
+{# AG Grid – CSN (1-row, v1..v5) #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{{ aggrid_macros.common_grid_css('csnGrid') | safe }}
+{{ aggrid_macros.common_js_helpers(['num','m1','m2']) | safe }}
+
+<style>
+  #csnGrid {
+    margin-top: 20px;
+    height: 65vh;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+    --ag-border-color: #dee2e6;
+    --ag-header-background-color: #f8f9fa;
+  }
+  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+  .ag-theme-alpine .ag-cell-inline-editing {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px #2196F3 !important;
+    z-index: 100 !important;
+  }
+  .reject-badge {
+    font-size: 0.7em; padding: 3px 6px;
+    background: #f8d7da; color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px; display: inline-block; margin-top: 4px;
+  }
+  .sample-name {
+    font-weight: 600; color: #0d6efd;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+</style>
+
+{{ aggrid_macros.grid_container('csnGrid') | safe }}
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CSN';
+  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}`;
+  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['CSN'])) || { single:{ limit:0.5, mode:'abs' } };
+
+  {{ aggrid_macros.dataset_block() | safe }}
+
+
+  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['v1','v2','v3','v4','v5'])) || (() => false);
+  const numParser = p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; };
+  const numFmt1 = p => (p.value!=null) ? parseFloat(p.value).toFixed(1) : '';
+  const numFmt2 = p => (p.value!=null) ? parseFloat(p.value).toFixed(2) : '';
+
+  function effectiveLimit(){
+    const rule = LIMIT_RULE;
+    if(rule.single) return { limit: rule.single.limit, mode: rule.single.mode };
+    const bands = rule.bands || [];
+    const first = bands[0];
+    return { limit:first?first.limit:0, mode:first?first.mode:'abs' };
+  }
+
+  function calcAvg(values){
+    const nums = values.filter(v => v!=null && isFinite(v));
+    if(nums.length === 0) return null;
+    const sum = nums.reduce((a,b)=>a+b,0);
+    return sum / nums.length;
+  }
+
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    valueFormatter: numFmt1,
+    suppressKeyboardEvent: navHandler,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+  };
+
+  const columnDefs = [
+    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
+      cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' },
+      valueFormatter:p=>p.value },
+    { headerName:'Дээжийн нэр', field:'sample_code', width:300, pinned:'left',
+      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
+      cellRenderer:p=>{
+        let h=`<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if(rej) h+=`<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code]||rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName:'v1', field:'v1', width:90, ...editCol },
+    { headerName:'v2', field:'v2', width:90, ...editCol },
+    { headerName:'v3', field:'v3', width:90, ...editCol },
+    { headerName:'v4', field:'v4', width:90, ...editCol },
+    { headerName:'v5', field:'v5', width:90, ...editCol },
+    { headerName:'Тохирц (T)', field:'diff', width:110, valueFormatter:p=>p.data.is_saved ? numFmt2(p) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
+        if(p.data.t_exceeded) return {color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center'};
+        return {color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center'};
+      }
+    },
+    { headerName:'Дундаж', field:'avg', width:110, valueFormatter:p=>p.data.is_saved ? numFmt2(p) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
+        return {fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center'};
+      }
+    },
+    { headerName:'', field:'actions', width:60, pinned:'right',
+      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Устгах"><i class="bi bi-x-lg"></i></button>`,
+      cellStyle:{display:'flex', alignItems:'center', justifyContent:'center'}
+    }
+  ];
+
+  const sampleIndexMap = {}; samples.forEach((s,i)=> sampleIndexMap[s.id]=i+1);
+  const limSingle = effectiveLimit();
+  const rowData = samples.map((s)=>{
+    const ex = existingResults[s.id] || {};
+    const rd = ex.raw_data || {};
+    const isSaved = (ex.status === 'pending_review' || ex.status === 'approved');
+    const v1 = rd.v1 ?? null;
+    const v2 = rd.v2 ?? null;
+    const v3 = rd.v3 ?? null;
+    const v4 = rd.v4 ?? null;
+    const v5 = rd.v5 ?? null;
+    const values = [v1,v2,v3,v4,v5].map(x=>x!=null?parseFloat(x):null);
+    const avg = calcAvg(values);
+    const diff = null; // CSN single value, diff not applicable; use t_exceeded via limit_used
+    const tExceeded = avg!=null ? Math.abs(limSingle.limit) < Math.abs(limSingle.limit) && false : false; // placeholder
+    return {
+      sample_idx: sampleIndexMap[s.id],
+      sample_id: s.id,
+      sample_code: s.code,
+      is_saved: isSaved,
+      v1: values[0], v2: values[1], v3: values[2], v4: values[3], v5: values[4],
+      diff: diff,
+      avg: avg,
+      t_exceeded: false
+    };
+  });
+
+  function recalcRow(sampleId){
+    let rowNode=null;
+    window.csnGridApi.forEachNode(n=>{ if(n.data.sample_id===sampleId) rowNode=n; });
+    if(!rowNode) return;
+    const d=rowNode.data;
+    const values = [d.v1,d.v2,d.v3,d.v4,d.v5].map(x=>x!=null?parseFloat(x):null);
+    const avg = calcAvg(values);
+    d.avg = avg;
+    // CSN: diff not used, but keep t_exceeded false if no limit checks
+    d.diff = null;
+    d.t_exceeded = false;
+    window.csnGridApi.refreshCells({ force:true });
+  }
+
+  function saveDrafts(){
+    if(!window.csnGridApi) return;
+    const drafts={};
+    window.csnGridApi.forEachNode(n=>{
+      if(!n.data.is_saved){
+        drafts[n.data.sample_id] = { v1:n.data.v1, v2:n.data.v2, v3:n.data.v3, v4:n.data.v4, v5:n.data.v5 };
+      }
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  }
+
+  function restoreDrafts(){
+    try{
+      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
+      window.csnGridApi.forEachNode(n=>{
+        if(!n.data.is_saved){
+          const d=drafts[n.data.sample_id];
+          if(d){
+            if(d.v1!==undefined) n.data.v1=d.v1;
+            if(d.v2!==undefined) n.data.v2=d.v2;
+            if(d.v3!==undefined) n.data.v3=d.v3;
+            if(d.v4!==undefined) n.data.v4=d.v4;
+            if(d.v5!==undefined) n.data.v5=d.v5;
+          }
+        }
+      });
+      window.csnGridApi.refreshCells({ force:true });
+    }catch(e){}
+  }
+
+  function onCellValueChanged(params){
+    if(['v1','v2','v3','v4','v5'].includes(params.colDef.field)){
+      recalcRow(params.data.sample_id);
+    }
+    saveDrafts();
+  }
+
+  const gridOptions = {
+    theme:'legacy',
+    columnDefs,
+    rowData,
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform:true,
+    singleClickEdit:true,
+    stopEditingWhenCellsLoseFocus:true,
+    enterNavigatesVertically:true,
+    enterNavigatesVerticallyAfterEdit:true,
+    onCellValueChanged
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const el=document.querySelector('#csnGrid');
+    if(el){
+      window.csnGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts,100);
+    }
+  });
+
+  window.removeSample = function(id){
+    if(!confirm('Энэ дээжийг устгах уу?')) return;
+    const url=new URL(window.location.href);
+    let ids=(url.searchParams.get('sample_ids')||'').split(',');
+    ids=ids.filter(x=>x.trim() && parseInt(x)!==id);
+    if(ids.length>0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href=url.toString();
+  };
+
+  window.collectCsnGridData = function(){
+    if(!window.csnGridApi) return [];
+    const payload=[];
+    window.csnGridApi.forEachNode(n=>{
+      const d=n.data;
+      const values=[d.v1,d.v2,d.v3,d.v4,d.v5].map(x=>x!=null?parseFloat(x):null);
+      if(values.some(v=>isFinite(v))){
+        const avg = calcAvg(values);
+        const lim = effectiveLimit(avg);
+        const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
+          payload.push({
+            sample_id: parseInt(d.sample_id),
+            analysis_code: ANALY_CODE,
+            final_result: avg,
+            raw_data: {
+              v1: d.v1, v2: d.v2, v3: d.v3, v4: d.v4, v5: d.v5,
+              avg: avg,
+              diff: null,
+              t_exceeded: false,
+              limit_used: thr,
+              limit_mode: lim.mode
+            },
+            status: 'approved'
+          });
+        }
+      });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    try{
+      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
+      savedResults.forEach(r=>{ delete drafts[r.sample_id]; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    }catch(e){}
+  }
+
+  window.updateCsnGridAfterSave = function(savedResults){
+    if(!window.csnGridApi || !savedResults) return;
+    const savedMap={}; savedResults.forEach(r=>savedMap[r.sample_id]=r);
+    window.csnGridApi.forEachNode(n=>{
+      const s=savedMap[n.data.sample_id];
+      if(s){
+        n.data.is_saved=true;
+        const raw=s.raw_data||{};
+        n.data.v1=raw.v1; n.data.v2=raw.v2; n.data.v3=raw.v3; n.data.v4=raw.v4; n.data.v5=raw.v5;
+        n.data.avg = raw.avg;
+        n.data.diff = raw.diff;
+        n.data.t_exceeded = raw.t_exceeded;
+      }
+    });
+    window.csnGridApi.refreshCells({ force:true });
+    purgeDrafts(savedResults);
+    alert('Өгөгдөл амжилттай хадгалагдлаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const REGISTERED = { collect: window.collectCsnGridData, afterSave: window.updateCsnGridAfterSave };
+  [ANALY_CODE, (ANALY_CODE||'').toUpperCase(), (ANALY_CODE||'').toLowerCase()].forEach(c=>{ if(c) window.LIMS_CALC[c]=REGISTERED; });
+})();
+</script>

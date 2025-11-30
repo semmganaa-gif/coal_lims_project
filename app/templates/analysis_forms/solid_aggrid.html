@@ -1,0 +1,289 @@
+{# AG Grid form for Solid (Residue) analysis #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{{ aggrid_macros.common_grid_css('solidGrid') | safe }}
+{{ aggrid_macros.common_js_helpers(['A','B','C']) | safe }}
+
+<style>
+  #solidGrid {
+    margin-top: 20px;
+    height: 65vh;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+    --ag-border-color: #dee2e6;
+    --ag-header-background-color: #f8f9fa;
+  }
+  .ag-theme-alpine .ag-header-cell {
+    border-right: 1px solid #d0d0d0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+  }
+  .ag-theme-alpine .ag-cell {
+    border-right: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+  }
+  .ag-theme-alpine .ag-cell-inline-editing {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px #0d6efd !important;
+    z-index: 100 !important;
+  }
+  .reject-badge {
+    font-size: 0.7em;
+    padding: 3px 6px;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+</style>
+
+{{ aggrid_macros.grid_container('solidGrid') | safe }}
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'Solid';
+  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}_grid`;
+  {{ aggrid_macros.dataset_block(include_client=True) | safe }}
+
+
+  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['A','B','C'])) || (() => false);
+  const sampleIndexMap = {};
+  samples.forEach((s, idx) => { sampleIndexMap[s.id] = idx + 1; });
+
+  function parseRaw(entry){
+    if(!entry) return {};
+    let raw = entry.raw_data || {};
+    if(typeof raw === 'string'){
+      try { raw = JSON.parse(raw); } catch(e){ raw = {}; }
+    }
+    return raw || {};
+  }
+
+  function toNumber(val){
+    if(val === null || val === undefined || val === '') return null;
+    const num = Number(val);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function formatWetAndResult(src){
+    const A = toNumber(src.A);
+    const B = toNumber(src.B);
+    const C = toNumber(src.C);
+    if(A == null || B == null || C == null) return null;
+    const wet = A - B;
+    if(!Number.isFinite(wet) || wet <= 0) return null;
+    return {
+      wet: Number(wet.toFixed(3)),
+      result: Number(((C * 100) / wet).toFixed(2))
+    };
+  }
+
+  function deriveRow(sample){
+    const ex = existingResults[sample.id] || {};
+    const raw = parseRaw(ex);
+    const isSaved = ex.status === 'pending_review' || ex.status === 'approved';
+    const row = {
+      sample_idx: sampleIndexMap[sample.id],
+      sample_id: sample.id,
+      sample_code: sample.code,
+      client_name: sample.client || '-',
+      A: toNumber(raw.A),
+      B: toNumber(raw.B),
+      C: toNumber(raw.C),
+      savedWet: null,
+      savedResult: null,
+      is_saved: !!isSaved
+    };
+    if(isSaved){
+      const computed = formatWetAndResult({ A: row.A, B: row.B, C: row.C });
+      row.savedWet = raw.wet_mass != null ? toNumber(raw.wet_mass) : (computed ? computed.wet : null);
+      row.savedResult = raw.solid_pct != null ? toNumber(raw.solid_pct) : (computed ? computed.result : toNumber(ex.final_result));
+    }
+    return row;
+  }
+
+  const rowData = samples.map(deriveRow);
+
+  const numParser = params => {
+    const raw = params.newValue;
+    if(raw === null || raw === undefined || raw === '') return null;
+    const num = Number(String(raw).replace(',','.'));
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const columnDefs = [
+    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
+      cellStyle:{ textAlign:'center', fontWeight:'600', color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' } },
+    { headerName:'Sample Name', field:'sample_code', width:280, pinned:'left',
+      cellRenderer:p=>{
+        let html = `<div class="fw-semibold text-primary">${p.value}</div>`;
+        html += `<div class="text-muted small">${p.data.client_name || '-'}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if(rej){
+          const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+        }
+        return html;
+      },
+      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' } },
+    { headerName:'A (bucket + sample)', field:'A', width:150,
+      editable:p => !p.data.is_saved,
+      valueParser:numParser,
+      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
+      suppressKeyboardEvent:navHandler,
+      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
+    { headerName:'B (bucket tare)', field:'B', width:130,
+      editable:p => !p.data.is_saved,
+      valueParser:numParser,
+      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
+      suppressKeyboardEvent:navHandler,
+      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
+    { headerName:'A - B', field:'savedWet', width:120,
+      valueFormatter:p => (p.data.is_saved && p.value != null) ? Number(p.value).toFixed(3) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
+        return { textAlign:'center', fontWeight:'600', color:'#0d6efd', backgroundColor:'#eff6ff' };
+      } },
+    { headerName:'C (dry residue)', field:'C', width:140,
+      editable:p => !p.data.is_saved,
+      valueParser:numParser,
+      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
+      suppressKeyboardEvent:navHandler,
+      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
+    { headerName:'Solid %', field:'savedResult', width:150,
+      valueFormatter:p => (p.data.is_saved && p.value != null) ? Number(p.value).toFixed(2) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved || p.value == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
+        return { fontWeight:'bold', color:'#198754', display:'flex', alignItems:'center', justifyContent:'center' };
+      } },
+    { headerName:'', field:'actions', width:60, pinned:'right',
+      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Remove sample"><i class="bi bi-x-lg"></i></button>`,
+      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' } }
+  ];
+
+  function saveDrafts(){
+    if(!window.solidGridApi) return;
+    const drafts = {};
+    window.solidGridApi.forEachNode(n => {
+      if(!n.data.is_saved){
+        drafts[n.data.sample_id] = { A:n.data.A, B:n.data.B, C:n.data.C };
+      }
+    });
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
+  }
+
+  function restoreDrafts(){
+    let drafts = {};
+    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
+    window.solidGridApi?.forEachNode(n => {
+      if(!n.data.is_saved){
+        const d = drafts[n.data.sample_id];
+        if(d){
+          if(d.A !== undefined) n.data.A = d.A;
+          if(d.B !== undefined) n.data.B = d.B;
+          if(d.C !== undefined) n.data.C = d.C;
+        }
+      }
+    });
+    window.solidGridApi?.refreshCells({ force:true });
+  }
+
+  const gridOptions = {
+    theme:'legacy',
+    columnDefs,
+    rowData,
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform:true,
+    singleClickEdit:true,
+    stopEditingWhenCellsLoseFocus:true,
+    enterNavigatesVertically:true,
+    enterNavigatesVerticallyAfterEdit:true,
+    onCellValueChanged: saveDrafts
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const el = document.querySelector('#solidGrid');
+    if(el){
+      window.solidGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts, 100);
+    }
+  });
+
+  window.removeSample = function(id){
+    if(!confirm('Remove this sample from worksheet?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',').filter(Boolean);
+    ids = ids.filter(x => parseInt(x,10) !== id);
+    if(ids.length) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
+
+  window.collectSolidGridData = function(){
+    if(!window.solidGridApi) return [];
+    const payload = [];
+    window.solidGridApi.forEachNode(n => {
+      if(n.data.is_saved) return;
+      const calc = formatWetAndResult(n.data);
+      if(!calc) return;
+      payload.push({
+        sample_id: parseInt(n.data.sample_id),
+        analysis_code: ANALY_CODE,
+        final_result: calc.result,
+        raw_data: {
+          A: toNumber(n.data.A),
+          B: toNumber(n.data.B),
+          wet_mass: calc.wet,
+          C: toNumber(n.data.C),
+          solid_pct: calc.result
+        }
+      });
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    let drafts = {};
+    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
+    savedResults.forEach(r => { delete drafts[r.sample_id]; });
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
+  }
+
+  window.updateSolidGridAfterSave = function(savedResults){
+    if(!window.solidGridApi || !savedResults) return;
+    const savedMap = {};
+    savedResults.forEach(r => savedMap[r.sample_id] = r);
+    window.solidGridApi.forEachNode(n => {
+      const res = savedMap[n.data.sample_id];
+      if(res){
+        const raw = parseRaw(res);
+        const computed = formatWetAndResult(raw);
+        n.data.is_saved = true;
+        n.data.A = raw.A != null ? raw.A : n.data.A;
+        n.data.B = raw.B != null ? raw.B : n.data.B;
+        n.data.C = raw.C != null ? raw.C : n.data.C;
+        n.data.savedWet = raw.wet_mass != null ? toNumber(raw.wet_mass) : (computed ? computed.wet : n.data.savedWet);
+        n.data.savedResult = raw.solid_pct != null ? toNumber(raw.solid_pct) : (computed ? computed.result : toNumber(res.final_result));
+      }
+    });
+    window.solidGridApi.refreshCells({ force:true });
+    purgeDrafts(savedResults);
+    alert('Solid results saved.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const REGISTERED = { collect: window.collectSolidGridData, afterSave: window.updateSolidGridAfterSave };
+  ['Solid','SOLID','solid'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
+})();
+</script>

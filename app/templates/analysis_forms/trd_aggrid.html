@@ -1,0 +1,407 @@
+{# AG Grid – TRD (харьяцангуй нягт), p1/p2, бортогоны жин API-аас татна, Mad auto #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{{ aggrid_macros.common_grid_css('trdGrid') | safe }}
+{{ aggrid_macros.common_js_helpers(['num','m1','m2','m']) | safe }}
+
+<style>
+  #trdGrid {
+    margin-top: 20px;
+    height: 75vh;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+    --ag-border-color: #dee2e6;
+    --ag-header-background-color: #f8f9fa;
+  }
+  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+  .ag-theme-alpine .ag-header-group-cell:nth-child(3) { background-color: #e3f2fd !important; }
+  .ag-theme-alpine .ag-header-group-cell:nth-child(4) { background-color: #fff3e0 !important; }
+  .ag-theme-alpine .ag-cell-inline-editing {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px #2196F3 !important;
+    z-index: 100 !important;
+  }
+  .ag-theme-alpine .ag-cell-span {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 5 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+  }
+  .reject-badge {
+    font-size: 0.7em; padding: 3px 6px;
+    background: #f8d7da; color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px; display: inline-block; margin-top: 4px;
+  }
+  .sample-name {
+    font-weight: 600; color: #0d6efd;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+</style>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <label class="form-label">Температур (°C)</label>
+    <input type="number" step="0.1" class="form-control" id="trd-temp-c" value="20.0">
+    <div class="form-text">Kt: 6–35°C интерполяц хийнэ.</div>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Тохирцын зөрүү (T)</label>
+    <input type="number" step="0.001" class="form-control" id="trd-tol" value="0.02">
+    <div class="form-text">TRD-ийн лимит, default 0.02.</div>
+  </div>
+</div>
+
+{{ aggrid_macros.grid_container('trdGrid') | safe }}
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'TRD';
+  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}`;
+  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['TRD'])) || { single:{ limit:0.02, mode:'abs' } };
+  const MAD_MAP = {{ mad_results_map | tojson | safe }};
+  {{ aggrid_macros.dataset_block() | safe }}
+
+
+  const BOTTLE_CACHE = {};
+  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['num','m','m2'])) || (() => false);
+  const numParser = p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; };
+  const numFmt4 = p => (p.value!=null) ? parseFloat(p.value).toFixed(4) : '';
+  const numFmt3 = p => (p.value!=null) ? parseFloat(p.value).toFixed(3) : '';
+
+  function ktFromTemp(t){
+    const table = {6:1.00174,7:1.00170,8:1.00165,9:1.00158,10:1.00150,11:1.00140,12:1.00129,13:1.00117,14:1.00100,15:1.00090,16:1.00074,17:1.00057,18:1.00039,19:1.00020,20:1.00000,21:0.99979,22:0.99956,23:0.99953,24:0.99909,25:0.99883,26:0.99857,27:0.99831,28:0.99804,29:0.99773,30:0.99743,31:0.99712,32:0.99682,33:0.99649,34:0.99616,35:0.99582};
+    if(t==null || isNaN(t)) return 1.0;
+    if(t<=6) return table[6];
+    if(t>=35) return table[35];
+    const t0=Math.floor(t), t1=Math.ceil(t);
+    if(t0===t1) return table[t0]||1.0;
+    const k0=table[t0], k1=table[t1]; if(k0==null||k1==null) return 1.0;
+    const w=t-t0; return k0 + (k1-k0)*w;
+  }
+
+  async function fetchBottle(serial){
+    const key=(serial||'').trim(); if(!key) return null;
+    if(BOTTLE_CACHE[key]) return BOTTLE_CACHE[key];
+    try{
+      const resp = await fetch(`/settings/api/bottle/${encodeURIComponent(key)}/active`);
+      if(!resp.ok) return null;
+      const js = await resp.json();
+      if(js && js.ok && typeof js.avg_value === 'number'){
+        BOTTLE_CACHE[key]={ avg_value: js.avg_value, temperature_c: js.temperature_c };
+        return BOTTLE_CACHE[key];
+      }
+    }catch(e){ console.warn('Bottle fetch failed', e); }
+    return null;
+  }
+
+  // Excel/old LIMS томьёо: md = (m/10000 + 2) * (100 - Mad)/100; TRD = md / (m1 + md - m2) * Kt
+  function calcTrd(m, m1, m2, mad, kt){
+    const mVal = Number(m), m1Val=Number(m1), m2Val=Number(m2);
+    const madVal = mad==null || isNaN(Number(mad)) ? 0 : Number(mad);
+    if([mVal,m1Val,m2Val].some(x=>x==null || isNaN(x))) return null;
+    if(mVal === 0 || m1Val === 0 || m2Val === 0) return null;
+    const md = (mVal / 10000 + 2) * ((100 - madVal) / 100); // хуурай төлвийн жин (md)
+    const denom = m1Val + md - m2Val;
+    if(denom <= 0) return null;
+    return (md / denom) * kt;
+  }
+
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    valueFormatter: numFmt4,
+    suppressKeyboardEvent: navHandler,
+    cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {}
+  };
+
+  const editColText = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    suppressKeyboardEvent: navHandler,
+    cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {}
+  };
+
+  const columnDefs = [
+    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
+      rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+      cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' },
+      valueFormatter:p=>p.value },
+    { headerName:'Дээжийн нэр', field:'sample_code', width:230, pinned:'left',
+      rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
+      cellRenderer:p=>{
+        let h=`<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if(rej) h+=`<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code]||rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName:'Бортог №', field:'num', width:120, ...editColText,
+      cellStyle:p=>{
+        const base={ textAlign:'center' };
+        return p.data.is_saved?{...base,backgroundColor:'#e9ecef'}:(p.data.parallel===1?{...base,backgroundColor:'#e3f2fd'}:{...base,backgroundColor:'#fff3e0'});
+      }
+    },
+    { headerName:'m (g)', field:'m', width:110, ...editCol,
+      cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:(p.data.parallel===1?{backgroundColor:'#e3f2fd'}:{backgroundColor:'#fff3e0'}) },
+    { headerName:'m1 (бортого) g', field:'m1', width:140,
+      valueFormatter:numFmt4,
+      cellStyle:p=>({backgroundColor:'#f8f9fa', color:'#6c757d', textAlign:'center'}),
+      editable:false },
+    { headerName:'m2 (бортого+хуурай) g', field:'m2', width:150, ...editCol,
+      cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:(p.data.parallel===1?{backgroundColor:'#e3f2fd'}:{backgroundColor:'#fff3e0'}) },
+    { headerName:'Үр дүн (TRD)', field:'result', width:130,
+      valueFormatter:p=>p.data.is_saved ? numFmt3(p) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
+        return {fontWeight:'bold', backgroundColor:'#e7f5ff', display:'flex', alignItems:'center', justifyContent:'center'};
+      }
+    },
+    { headerName:'Тохирц (T)', field:'diff', width:110, valueFormatter:p=>p.data.is_saved ? numFmt3(p) : '-',
+      rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+      cellStyle:p=>{
+        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
+        if(p.data.t_exceeded) return {color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center'};
+        return {color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center'};
+      }
+    },
+    { headerName:'Дундаж', field:'avg', width:110, valueFormatter:p=>p.data.is_saved ? numFmt3(p) : '-',
+      rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+      cellStyle:p=>{
+        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
+        return {fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center'};
+      }
+    },
+    { headerName:'', field:'actions', width:60, pinned:'right',
+      rowSpan:p=>p.data.parallel===1?2:1, cellClassRules:{'ag-cell-span':p=>p.data.parallel===1},
+      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Устгах"><i class="bi bi-x-lg"></i></button>`,
+      cellStyle:{display:'flex', alignItems:'center', justifyContent:'center'}
+    }
+  ];
+
+  const sampleIndexMap = {}; samples.forEach((s,i)=> sampleIndexMap[s.id]=i+1);
+
+  const rowData = [];
+  samples.forEach((s)=>{
+    const ex = existingResults[s.id] || {};
+    const rd = ex.raw_data || {};
+    const isSaved = (ex.status === 'pending_review' || ex.status === 'approved');
+    const p1 = rd.p1 || {}, p2 = rd.p2 || {};
+    const mad = rd.mad_used ?? MAD_MAP[String(s.id)] ?? MAD_MAP[s.id] ?? 0;
+    const kt = ktFromTemp(document.getElementById('trd-temp-c')?.value || 20);
+    const num1 = p1.bottle ?? p1.bottle_num ?? p1.num ?? null;
+    const num2 = p2.bottle ?? p2.bottle_num ?? p2.num ?? null;
+    const bottle1 = p1.m1 ?? null;
+    const bottle2 = p2.m1 ?? null;
+    const res1 = calcTrd(p1.m, bottle1, p1.m2, mad, kt);
+    const res2 = calcTrd(p2.m, bottle2, p2.m2, mad, kt);
+    const bothOk = isFinite(res1) && isFinite(res2);
+    const diff = bothOk ? Math.abs(res1-res2) : null;
+    const avg  = bothOk ? (res1+res2)/2 : null;
+    const tol = parseFloat(document.getElementById('trd-tol')?.value || '');
+    const lim = LIMIT_RULE.single || { limit:0.02, mode:'abs' };
+    const thr = isFinite(tol) ? tol : (lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit);
+    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
+
+    rowData.push({ sample_idx: sampleIndexMap[s.id], sample_id:s.id, sample_code:s.code, parallel:1, is_saved:isSaved,
+      num: num1, m: p1.m, m1: bottle1, m2: p1.m2, result: bothOk?res1:null, diff, avg, t_exceeded:tExceeded, mad_used: mad });
+    rowData.push({ sample_idx: sampleIndexMap[s.id], sample_id:s.id, sample_code:s.code, parallel:2, is_saved:isSaved,
+      num: num2, m: p2.m, m1: bottle2, m2: p2.m2, result: bothOk?res2:null, diff, avg, t_exceeded:tExceeded, mad_used: mad });
+  });
+
+  async function handleBottleFetch(data){
+    if(!data.num || data.m1) return;
+    const info = await fetchBottle(data.num);
+    if(info && typeof info.avg_value === 'number'){
+      data.m1 = info.avg_value;
+      data.kt_temp = info.temperature_c;
+      recalcPair(data.sample_id);
+    }
+  }
+
+  function recalcPair(sampleId){
+    const rows={};
+    window.trdGridApi.forEachNode(n=>{ if(n.data.sample_id===sampleId) rows[n.data.parallel]=n; });
+    const p1=rows[1]?.data, p2=rows[2]?.data;
+    if(!p1||!p2) return;
+    const mad = p1.mad_used ?? p2.mad_used ?? MAD_MAP[String(sampleId)] ?? MAD_MAP[sampleId] ?? 0;
+    const kt = ktFromTemp(document.getElementById('trd-temp-c')?.value || 20);
+    const tol = parseFloat(document.getElementById('trd-tol')?.value || '');
+    const r1 = calcTrd(p1.m, p1.m1, p1.m2, mad, kt);
+    const r2 = calcTrd(p2.m, p2.m1, p2.m2, mad, kt);
+    const bothOk = isFinite(r1) && isFinite(r2);
+    const diff = bothOk ? Math.abs(r1-r2) : null;
+    const avg  = bothOk ? (r1+r2)/2 : null;
+    const lim = LIMIT_RULE.single || { limit:0.02, mode:'abs' };
+    const thr = isFinite(tol) ? tol : (lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit);
+    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
+    p1.result=bothOk?r1:null; p2.result=bothOk?r2:null;
+    p1.diff=diff; p2.diff=diff;
+    p1.avg=avg; p2.avg=avg;
+    p1.t_exceeded=tExceeded; p2.t_exceeded=tExceeded;
+    p1.mad_used=mad; p2.mad_used=mad;
+    window.trdGridApi.refreshCells({ force:true });
+  }
+
+  function saveDrafts(){
+    if(!window.trdGridApi) return;
+    const drafts={};
+    window.trdGridApi.forEachNode(n=>{
+      if(!n.data.is_saved){
+        const sid=n.data.sample_id;
+        if(!drafts[sid]) drafts[sid]={ p1:{}, p2:{} };
+        const tgt = n.data.parallel===1?drafts[sid].p1:drafts[sid].p2;
+        tgt.num=n.data.num; tgt.m=n.data.m; tgt.m2=n.data.m2;
+      }
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  }
+
+  function restoreDrafts(){
+    try{
+      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
+      window.trdGridApi.forEachNode(n=>{
+        if(!n.data.is_saved){
+          const d=drafts[n.data.sample_id];
+          if(d){
+            const src=n.data.parallel===1?d.p1:d.p2;
+            if(src){
+              if(src.num!==undefined) n.data.num=src.num;
+              if(src.m!==undefined) n.data.m=src.m;
+              if(src.m2!==undefined) n.data.m2=src.m2;
+            }
+          }
+        }
+      });
+      window.trdGridApi.refreshCells({ force:true });
+    }catch(e){}
+  }
+
+  async function onCellValueChanged(params){
+    if(['num'].includes(params.colDef.field)){
+      await handleBottleFetch(params.data);
+    }
+    if(['num','m','m2'].includes(params.colDef.field)){
+      recalcPair(params.data.sample_id);
+    }
+    saveDrafts();
+  }
+
+  const gridOptions = {
+    theme:'legacy',
+    columnDefs,
+    rowData,
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform:true,
+    singleClickEdit:true,
+    stopEditingWhenCellsLoseFocus:true,
+    enterNavigatesVertically:true,
+    enterNavigatesVerticallyAfterEdit:true,
+    onCellValueChanged
+  };
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const el=document.querySelector('#trdGrid');
+    if(el){
+      window.trdGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts,100);
+    }
+  });
+
+  window.removeSample = function(id){
+    if(!confirm('Энэ дээжийг устгах уу?')) return;
+    const url=new URL(window.location.href);
+    let ids=(url.searchParams.get('sample_ids')||'').split(',');
+    ids=ids.filter(x=>x.trim() && parseInt(x)!==id);
+    if(ids.length>0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href=url.toString();
+  };
+
+  window.collectTrdGridData = function(){
+    if(!window.trdGridApi) return [];
+    const payload=[];
+    window.trdGridApi.forEachNode(n=>{
+      if(n.data.parallel!==1) return;
+      const p1=n.data;
+      const p2Row = {};
+      window.trdGridApi.forEachNode(m=>{ if(m.data.sample_id===p1.sample_id && m.data.parallel===2) Object.assign(p2Row, m.data); });
+      const mad = p1.mad_used ?? p2Row.mad_used ?? MAD_MAP[String(p1.sample_id)] ?? MAD_MAP[p1.sample_id] ?? 0;
+      const kt = ktFromTemp(document.getElementById('trd-temp-c')?.value || 20);
+      const tol = parseFloat(document.getElementById('trd-tol')?.value || '');
+      const r1 = calcTrd(p1.m, p1.m1, p1.m2, mad, kt);
+      const r2 = calcTrd(p2Row.m, p2Row.m1, p2Row.m2, mad, kt);
+      if(!isFinite(r1) || !isFinite(r2)) return;
+      const diff = Math.abs(r1-r2);
+      const avg  = (r1+r2)/2;
+      const lim = LIMIT_RULE.single || { limit:0.02, mode:'abs' };
+      const thr = isFinite(tol) ? tol : (lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit);
+      const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
+      payload.push({
+        sample_id: parseInt(p1.sample_id),
+        analysis_code: ANALY_CODE,
+        final_result: avg,
+        raw_data: {
+          p1: { num:p1.num, m:p1.m, m1:p1.m1, m2:p1.m2, result:r1 },
+          p2: { num:p2Row.num, m:p2Row.m, m1:p2Row.m1, m2:p2Row.m2, result:r2 },
+          avg: avg,
+          diff: diff,
+          t_exceeded: tExceeded,
+          mad_used: mad,
+          kt_used: kt,
+          limit_used: thr,
+          limit_mode: lim.mode
+        }
+      });
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    try{
+      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
+      savedResults.forEach(r=>{ delete drafts[r.sample_id]; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    }catch(e){}
+  }
+
+  window.updateTrdGridAfterSave = function(savedResults){
+    if(!window.trdGridApi || !savedResults) return;
+    const savedMap={}; savedResults.forEach(r=>savedMap[r.sample_id]=r);
+    window.trdGridApi.forEachNode(n=>{
+      const s=savedMap[n.data.sample_id];
+      if(s){
+        n.data.is_saved=true;
+        const raw=s.raw_data||{};
+        const p1=raw.p1||{}, p2=raw.p2||{};
+        if(n.data.parallel===1){
+          n.data.num=p1.num; n.data.m=p1.m; n.data.m1=p1.m1; n.data.m2=p1.m2; n.data.result=p1.result;
+        }else{
+          n.data.num=p2.num; n.data.m=p2.m; n.data.m1=p2.m1; n.data.m2=p2.m2; n.data.result=p2.result;
+        }
+        n.data.diff=raw.diff; n.data.avg=raw.avg; n.data.t_exceeded=raw.t_exceeded;
+        n.data.mad_used=raw.mad_used ?? n.data.mad_used;
+      }
+    });
+    window.trdGridApi.refreshCells({ force:true });
+    purgeDrafts(savedResults);
+    alert('Өгөгдөл амжилттай хадгалагдлаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const REGISTERED = { collect: window.collectTrdGridData, afterSave: window.updateTrdGridAfterSave };
+  [ANALY_CODE, (ANALY_CODE||'').toUpperCase(), (ANALY_CODE||'').toLowerCase()].forEach(c=>{ if(c) window.LIMS_CALC[c]=REGISTERED; });
+})();
+</script>

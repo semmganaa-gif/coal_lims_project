@@ -1,0 +1,281 @@
+{# AG Grid хувилбар – Phosphorus (P,ad) нэг мөрөнд p1/p2 #}
+
+<style>
+  #phosphorus-analysis-table {
+    margin-top: 20px;
+    height: 70vh;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+    --ag-border-color: #dee2e6;
+    --ag-header-background-color: #f8f9fa;
+  }
+  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+  .ag-header-group-cell-with-group { border-right: 2px solid #adb5bd !important; text-align: center !important; }
+  .ag-theme-alpine .ag-header-group-cell:nth-child(3) { background-color: #e3f2fd !important; }
+  .ag-theme-alpine .ag-header-group-cell:nth-child(4) { background-color: #fff3e0 !important; }
+  .ag-theme-alpine .ag-cell-inline-editing {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 2px #2196F3 !important;
+    z-index: 100 !important;
+  }
+  .reject-badge {
+    font-size: 0.7em; padding: 3px 6px;
+    background: #f8d7da; color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px; display: inline-block; margin-top: 4px;
+  }
+  .sample-name {
+    font-weight: 600; color: #0d6efd;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+</style>
+
+<div id="phosphorus-analysis-table" class="ag-theme-alpine"></div>
+
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'P';
+  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}`;
+  const REPEATABILITY_LIMIT = getRepeatabilityLimit('P') ?? 0.05;
+
+  const samples = [
+    {% for sample in samples %}
+    { id: {{ sample.id }}, code: {{ sample.sample_code | tojson | safe }} }
+    {% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  const existingResults = {{ existing_results_map | tojson | safe }};
+  const rejectedInfo = {{ rejected_samples_info | tojson | safe }};
+  const errorLabels = {{ error_labels | tojson | safe }};
+
+  const numParser = p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; };
+  const numFmt4 = p => (p.value!=null) ? parseFloat(p.value).toFixed(4) : '';
+  const numFmt2 = p => (p.value!=null) ? parseFloat(p.value).toFixed(2) : '';
+
+  // Excel navigation – helper
+  const EDIT_COL_IDS = ['p1_w','p1_r','p2_w','p2_r'];
+  const navHandler = window.LIMS_AGGRID?.navHandlerFactory(EDIT_COL_IDS) || (() => false);
+
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    valueFormatter: numFmt4,
+    suppressKeyboardEvent: navHandler,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+  };
+
+  const columnDefs = [
+    { headerName: '№', field: 'index', width: 60, pinned: 'left',
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+    { headerName: 'Дээжийн нэр', field: 'sample_code', width: 230, pinned: 'left',
+      cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
+      cellRenderer: p => {
+        let h = `<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if(rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code]||rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName: 'p1', children: [
+      { headerName: 'Масс (g)', field: 'p1_w', width: 110, headerClass:'ag-header-cell-centered',
+        cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : { backgroundColor:'#e3f2fd' }, ...editCol },
+      { headerName: 'P,ad (%)', field: 'p1_r', width: 120,
+        cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : { backgroundColor:'#e3f2fd' }, ...editCol }
+    ]},
+    { headerName: 'p2', children: [
+      { headerName: 'Масс (g)', field: 'p2_w', width: 110,
+        cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : { backgroundColor:'#fff3e0' }, ...editCol },
+      { headerName: 'P,ad (%)', field: 'p2_r', width: 120,
+        cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : { backgroundColor:'#fff3e0' }, ...editCol }
+    ]},
+    { headerName: 'Тохирц (T)', field: 'diff', width: 110, valueFormatter: p => p.data.is_saved ? numFmt2(p) : '-',
+      cellStyle: p => {
+        if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
+        if(p.data.t_exceeded) return { color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' };
+        return { color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' };
+      }
+    },
+    { headerName: 'Дундаж', field: 'avg', width: 110, valueFormatter: p => p.data.is_saved ? numFmt2(p) : '-',
+      cellStyle: p => {
+        if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
+        return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };
+      }
+    },
+    { headerName: '', field: 'actions', width: 60, pinned: 'right',
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      cellRenderer: p => `<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Хасах"><i class="bi bi-x-lg"></i></button>`
+    }
+  ];
+
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id] || {};
+    const rd = ex.raw_data || {};
+    const isSaved = (ex.status === 'pending_review' || ex.status === 'approved');
+    const p1 = rd.p1 || {}, p2 = rd.p2 || {};
+    const p1w = p1.weight ?? p1.m1 ?? p1.mass;
+    const p2w = p2.weight ?? p2.m1 ?? p2.mass;
+    const r1 = (p1.result!=null) ? parseFloat(p1.result) : null;
+    const r2 = (p2.result!=null) ? parseFloat(p2.result) : null;
+    const diff = (r1!=null && r2!=null) ? Math.abs(r1-r2) : (rd.diff ?? null);
+    const avg  = (r1!=null && r2!=null) ? (r1+r2)/2 : (rd.avg ?? null);
+    const tExceeded = (diff!=null) ? Math.abs(diff) > REPEATABILITY_LIMIT : false;
+    return {
+      index: idx+1,
+      sample_id: s.id,
+      sample_code: s.code,
+      is_saved: isSaved,
+      p1_w: p1w,
+      p1_r: r1,
+      p2_w: p2w,
+      p2_r: r2,
+      diff,
+      avg,
+      t_exceeded: tExceeded
+    };
+  });
+
+  function recalcRow(d){
+    const r1 = (d.p1_r!=null) ? parseFloat(d.p1_r) : null;
+    const r2 = (d.p2_r!=null) ? parseFloat(d.p2_r) : null;
+    const diff = (r1!=null && r2!=null) ? Math.abs(r1-r2) : null;
+    const avg = (r1!=null && r2!=null) ? (r1+r2)/2 : null;
+    const tExceeded = (diff!=null) ? Math.abs(diff) > REPEATABILITY_LIMIT : false;
+    d.diff = diff; d.avg = avg; d.t_exceeded = tExceeded;
+  }
+
+  function saveDrafts() {
+    if(!window.pGridApi) return;
+    const drafts = {};
+    window.pGridApi.forEachNode(n => {
+      if(!n.data.is_saved) {
+        const d = n.data;
+        drafts[d.sample_id] = { p1_w: d.p1_w, p1_r: d.p1_r, p2_w: d.p2_w, p2_r: d.p2_r };
+      }
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  }
+
+  function restoreDrafts() {
+    try {
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      window.pGridApi.forEachNode(n => {
+        if(!n.data.is_saved) {
+          const d = drafts[n.data.sample_id];
+          if(d){ Object.assign(n.data, d); recalcRow(n.data); }
+        }
+      });
+      window.pGridApi.refreshCells({ force: true });
+    } catch(e){}
+  }
+
+  function onCellValueChanged(params) {
+    if(['p1_w','p1_r','p2_w','p2_r'].includes(params.colDef.field)) {
+      recalcRow(params.data);
+      window.pGridApi.refreshCells({ force: true });
+    }
+    saveDrafts();
+  }
+
+  const gridOptions = {
+    theme: 'legacy',
+    columnDefs,
+    rowData,
+    defaultColDef: { sortable: false, resizable: true, suppressMovable: true },
+    suppressRowTransform: true,
+    singleClickEdit: true,
+    stopEditingWhenCellsLoseFocus: true,
+    enterNavigatesVertically: true,
+    enterNavigatesVerticallyAfterEdit: true,
+    onCellValueChanged
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('#phosphorus-analysis-table');
+    if(el){
+      window.pGridApi = agGrid.createGrid(el, gridOptions);
+      setTimeout(restoreDrafts, 100);
+    }
+  });
+
+  window.removeSample = function(id) {
+    if(!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
+
+  window.collectPGridData = function() {
+    if(!window.pGridApi) return [];
+    const payload = [];
+    window.pGridApi.forEachNode(n => {
+      const d = n.data;
+      if(d.p1_r != null && d.p2_r != null){
+        const res1 = parseFloat(d.p1_r);
+        const res2 = parseFloat(d.p2_r);
+        const avg = (res1 + res2) / 2;
+        const diff = Math.abs(res1 - res2);
+        payload.push({
+          sample_id: parseInt(d.sample_id),
+          analysis_code: ANALY_CODE,
+          final_result: avg,
+          raw_data: {
+            p1: { weight: d.p1_w, result: res1 },
+            p2: { weight: d.p2_w, result: res2 },
+            avg: avg,
+            diff: diff,
+            t_exceeded: diff > REPEATABILITY_LIMIT,
+            limit_used: REPEATABILITY_LIMIT,
+            limit_mode: "abs"
+          }
+        });
+      }
+    });
+    return payload;
+  };
+
+  function purgeDrafts(savedResults){
+    if(!savedResults || !savedResults.length) return;
+    try {
+      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      savedResults.forEach(r => { delete drafts[r.sample_id]; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    } catch(e){}
+  }
+
+  window.updatePGridAfterSave = function(savedResults) {
+    if(!window.pGridApi || !savedResults) return;
+    const savedMap = {}; savedResults.forEach(r => savedMap[r.sample_id] = r);
+    window.pGridApi.forEachNode(n => {
+      const s = savedMap[n.data.sample_id];
+      if(s){
+        n.data.is_saved = true;
+        const raw = s.raw_data || {};
+        const p1 = raw.p1 || {}, p2 = raw.p2 || {};
+        n.data.p1_w = p1.weight ?? p1.m1 ?? p1.mass; n.data.p1_r = p1.result;
+        n.data.p2_w = p2.weight ?? p2.m1 ?? p2.mass; n.data.p2_r = p2.result;
+        n.data.diff = raw.diff; n.data.avg = raw.avg; n.data.t_exceeded = raw.t_exceeded;
+      }
+    });
+    window.pGridApi.refreshCells({ force: true });
+    purgeDrafts(savedResults);
+    alert('Амжилттай хадгаллаа.');
+  };
+
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  window.LIMS_CALC[ANALY_CODE] = { collect: window.collectPGridData, afterSave: window.updatePGridAfterSave };
+})();
+</script>

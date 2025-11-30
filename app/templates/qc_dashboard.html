@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{{ title }}</h1>
+    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
+      ← Дээжний нэгтгэл рүү буцах
+    </a>
+  </div>
+
+  <div class="alert alert-info small">
+    <strong>Тайлбар:</strong>
+    <ul class="mb-0">
+      <li>Цагийн дээжүүд (D1–D6, N1–N6) байгаа хэмжээгээрээ дундаж (Hourly Avg) бодогддог – заавал 6 ширхэг байх шаардлагагүй.</li>
+      <li>Composite (Dcom / Ncom) үр дүнг Hourly Avg-тай харьцуулж, tolerance-аас хэтэрвэл композитын нүд улаанаар тэмдэглэгдэнэ.</li>
+      <li>Name/Class QC (Vdaf, Aad, CSN, Gi) specification-оос зөрвөл Average болон Composite-ийн нүд доогуур улаан зураас гарна.</li>
+    </ul>
+  </div>
+
+  <style>
+    .qc-card {
+      border-radius: .6rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .qc-row-avg {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+    .qc-row-comp {
+      background-color: #fff8f8;
+      font-weight: 600;
+    }
+    .qc-cell-tol {
+      background-color: #f8d7da !important;
+    }
+    .qc-cell-spec {
+      border-bottom: 2px solid #dc3545 !important;
+    }
+    .qc-small {
+      font-size: .8rem;
+      color: #6c757d;
+    }
+    .qc-table th,
+    .qc-table td {
+      white-space: nowrap;
+      padding: .3rem .5rem;
+      vertical-align: middle;
+    }
+    .qc-spec-title {
+      font-size: .9rem;
+      font-weight: 600;
+    }
+  </style>
+
+  {# --- 🆕 Name/Class мастер spec хүснэгт (толгой хэсэгт) --- #}
+  {% if name_class_master_specs %}
+    <div class="card qc-card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <div class="qc-spec-title">Name/Class QC – мастер specification</div>
+            <div class="qc-small">
+              2009 оноос хойших датаас гаргасан тогтмол утгууд. Доорх мөрнөөс нэгийг
+              сонговол QC хүснэгтийн Hourly Avg / Composite нь түүнтэй харьцуулж өнгө авна.
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 40px;" class="text-center">Use</th>
+                <th>Name / Class</th>
+                <th class="text-end">Mad</th>
+                <th class="text-end">Aad</th>
+                <th class="text-end">Vad</th>
+                <th class="text-end">Gi</th>
+                <th class="text-end">Qgr,net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for key, row in name_class_master_specs.items() %}
+                <tr>
+                  <td class="text-center">
+                    <input type="radio"
+                           name="spec_selector"
+                           value="{{ key }}"
+                           {% if key == active_spec_key %}checked{% endif %}
+                           onchange="qcSelectSpec('{{ key|e }}')">
+                  </td>
+                  <td>{{ key }}</td>
+                  <td class="text-end">{{ row.Mad }}</td>
+                  <td class="text-end">{{ row.Aad }}</td>
+                  <td class="text-end">{{ row.Vad }}</td>
+                  <td class="text-end">{{ row.Gi }}</td>
+                  <td class="text-end">
+                    {% if row['Qgr,net'] is not none %}
+                      {{ row['Qgr,net'] }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if streams|length == 0 %}
+    <div class="alert alert-warning">
+      QC-д харуулах stream олдсонгүй.
+    </div>
+  {% endif %}
+
+  {% for stream in streams %}
+    <div class="card qc-card mb-4">
+      <div class="card-header py-2 d-flex justify-content-between align-items-center">
+        <div>
+          <div><strong>Stream / Family:</strong> {{ stream.family }}</div>
+          <div class="qc-small">
+            <span class="me-3"><strong>Нэгж:</strong> {{ stream.unit or "—" }}</span>
+            <span class="me-3"><strong>Огноо:</strong> {{ stream.date or "—" }}</span>
+            <span><strong>Цагийн дээж (n):</strong> {{ stream.n_hourly }}</span>
+          </div>
+        </div>
+        {% if stream.comp_row.sample %}
+          <div class="qc-small text-end">
+            <div><strong>Composite дээж:</strong>
+              <a href="{{ url_for('api.sample_report', sample_id=stream.comp_row.sample.id) }}">
+                {{ stream.comp_row.sample.sample_code }}
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm qc-table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th rowspan="2" style="min-width: 40px;">#</th>
+              <th rowspan="2" style="min-width: 70px;">Мөр</th>
+              <th rowspan="2" style="min-width: 220px;">Дээжний код</th>
+              {% for code in param_codes %}
+                <th colspan="2" class="text-center">{{ code }}</th>
+              {% endfor %}
+            </tr>
+            <tr>
+              {% for code in param_codes %}
+                <th class="text-end">Value</th>
+                <th class="text-end">Δ</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {# --- 1. Цагийн дээжүүд --- #}
+            {% for row in stream.hourly_rows %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ row.slot or "Hourly" }}</td>
+                <td>
+                  <a href="{{ url_for('api.sample_report', sample_id=row.sample.id) }}">
+                    {{ row.sample.sample_code }}
+                  </a>
+                </td>
+                {% for code in param_codes %}
+                  {% set v = row["values"].get(code) %}
+                  <td class="text-end">
+                    {% if v is not none %}
+                      {{ "%.2f"|format(v) }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td class="text-end">—</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+
+            {# --- 2. Hourly Average --- #}
+            <tr class="qc-row-avg">
+              <td colspan="3"><strong>Hourly Avg</strong></td>
+              {% for code in param_codes %}
+                {% set v_avg = stream.avg_row["values"].get(code) %}
+                {% set spec_bad = stream.avg_row["spec_flags"].get(code) %}
+                <td class="text-end {% if spec_bad %}qc-cell-spec{% endif %}">
+                  {% if v_avg is not none %}
+                    {{ "%.2f"|format(v_avg) }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="text-end">—</td>
+              {% endfor %}
+            </tr>
+
+            {# --- 3. Composite --- #}
+            <tr class="qc-row-comp">
+              <td colspan="3"><strong>Composite</strong></td>
+              {% for code in param_codes %}
+                {% set v_comp = stream.comp_row["values"].get(code) %}
+                {% set d = stream.comp_row["delta"].get(code) %}
+                {% set over_tol = stream.comp_row["tol_flags"].get(code) %}
+                {% set spec_bad = stream.comp_row["spec_flags"].get(code) %}
+
+                {% set cell_classes = [] %}
+                {% if over_tol %}{% set _ = cell_classes.append("qc-cell-tol") %}{% endif %}
+                {% if spec_bad %}{% set _ = cell_classes.append("qc-cell-spec") %}{% endif %}
+
+                <td class="text-end {% if cell_classes %}{{ ' '.join(cell_classes) }}{% endif %}">
+                  {% if v_comp is not none %}
+                    {{ "%.2f"|format(v_comp) }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+                <td class="text-end {% if over_tol %}qc-cell-tol{% endif %}">
+                  {% if d is not none %}
+                    {{ "%.2f"|format(d) }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Name/Class мастер spec сонгох үед spec_key query param-ыг шинэчилнэ.
+  function qcSelectSpec(key) {
+    const url = new URL(window.location.href);
+    if (key) {
+      url.searchParams.set('spec_key', key);
+    } else {
+      url.searchParams.delete('spec_key');
+    }
+    window.location.href = url.toString();
+  }
+</script>
+{% endblock %}

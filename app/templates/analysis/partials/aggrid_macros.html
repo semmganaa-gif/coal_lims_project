@@ -1,0 +1,100 @@
+{# Shared macros for AG Grid analysis templates #}
+{% macro dataset_block(
+  include_client=False,
+  include_existing=True,
+  existing_var='existingResults',
+  include_rejected=True,
+  rejected_var='rejectedInfo',
+  include_errors=True,
+  error_var='errorLabels',
+  samples_var='samples'
+) %}
+{% set source = aggrid_samples if aggrid_samples is defined else samples %}
+const {{ samples_var }} = [
+  {% for sample in source %}
+  {% set primary_name = sample.code | default(sample.sample_code, true) %}
+  {% if primary_name in [None, ''] %}
+    {% set primary_name = sample.name | default(sample.sample_name, true) %}
+  {% endif %}
+  {% if primary_name in [None, ''] %}
+    {% set primary_name = 'ID ' ~ sample.id %}
+  {% endif %}
+  { id: {{ sample.id }}, code: {{ primary_name | tojson | safe }}{% if include_client %}, client: {{ (sample.client_name or '-') | tojson | safe }}{% endif %} }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+const {{ samples_var }}_ids = {{ source | map(attribute='id') | list | tojson | safe }};
+const _dbg_aggrid_defined = {{ (aggrid_samples is defined) | lower }};
+const _dbg_samples_defined = {{ (samples is defined) | lower }};
+const _dbg_aggrid_len = {{ aggrid_samples|length if aggrid_samples is defined else -1 }};
+const _dbg_samples_len = {{ samples|length if samples is defined else -1 }};
+const _dbg_combined_ids = {{ (aggrid_samples or samples or []) | map(attribute='id') | list | tojson | safe }};
+console.log('AGGrid dataset {{ samples_var }} len=', {{ source|length }}, 'ids=', {{ samples_var }}_ids, 'aggrid_defined=', _dbg_aggrid_defined, 'samples_defined=', _dbg_samples_defined, 'aggrid_len=', _dbg_aggrid_len, 'samples_len=', _dbg_samples_len, 'combined_ids=', _dbg_combined_ids);
+{% if include_existing %}
+const {{ existing_var }} = {{ existing_results_map | default({}) | tojson | safe }};
+{% endif %}
+{% if include_rejected %}
+const {{ rejected_var }} = {{ rejected_samples_info | default({}) | tojson | safe }};
+{% endif %}
+{% if include_errors %}
+const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
+{% endif %}
+{% endmacro %}
+
+{# Common container + base Alpine theme CSS #}
+{% macro common_grid_css(grid_id, height='75vh', min_height='360px') %}
+<style>
+  #{{ grid_id }} {
+    margin-top: 20px;
+    height: {{ height }};
+    min-height: {{ min_height }};
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+    --ag-border-color: #dee2e6;
+    --ag-header-background-color: #f8f9fa;
+    --ag-row-hover-color: transparent;
+  }
+  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+</style>
+{% endmacro %}
+
+{# Simple container renderer to keep markup consistent #}
+{% macro grid_container(grid_id, theme='ag-theme-alpine') %}
+<div id="{{ grid_id }}" class="{{ theme }}"></div>
+{% endmacro %}
+
+{# Common JS helpers injected into each AG Grid form #}
+{% macro common_js_helpers(nav_fields=None) %}
+<script>
+  var navHandler = window.LIMS_AGGRID?.navHandlerFactory({{ nav_fields|default("[]")|tojson|safe }}) || (() => false);
+  var numParser = window.LIMS_AGGRID?.numParser || (p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; });
+  var numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value!=null) ? parseFloat(p.value).toFixed(4) : '');
+  var numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value!=null) ? parseFloat(p.value).toFixed(2) : '');
+  var numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value!=null) ? parseFloat(p.value).toFixed(0) : '');
+  var pickWeight = window.LIMS_AGGRID?.pickWeight || (p => p?.weight ?? p?.m1 ?? p?.mass ?? null);
+  var baseDefaultColDef = window.LIMS_AGGRID?.baseDefaultColDef || {
+    sortable: false,
+    resizable: true,
+    editable: false,
+    suppressMovable: true,
+    wrapHeaderText: true,
+    autoHeaderHeight: true,
+  };
+  var baseGridOptions = window.LIMS_AGGRID?.baseGridOptions || {
+    theme: 'legacy',
+    defaultColDef: baseDefaultColDef,
+    suppressRowTransform: true,
+    tooltipShowDelay: 0,
+    suppressFieldDotNotation: true,
+    suppressDragLeaveHidesColumns: true,
+    singleClickEdit: true,
+    stopEditingWhenCellsLoseFocus: true,
+    enterNavigatesVertically: true,
+  };
+</script>
+{% endmacro %}

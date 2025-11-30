@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  :root {
+    --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb; 
+    --success: #16a34a; --danger: #dc2626; --text-main: #1e293b; 
+    --border: #e2e8f0; --radius: 12px;
+  }
+  body { background: var(--bg); min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; }
+  .container-fluid { padding: 20px 30px; max-width: 100%; }
+
+  .analysis-grid {
+    display: grid; grid-template-columns: 340px 1fr; gap: 24px;
+    height: calc(100vh - 110px);
+  }
+
+  .sidebar-panel {
+    background: var(--surface); border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; gap: 18px; height: 100%; overflow-y: auto;
+    border: 1px solid var(--border);
+  }
+  
+  .control-group label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #64748b; font-weight: 700; margin-bottom: 5px; display: block;
+  }
+  .form-select, .form-control {
+    border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 0.9rem;
+  }
+  
+  /* History Edit Box */
+  .history-edit-box {
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 15px;
+    border-left: 4px solid var(--success);
+  }
+  .hb-title {
+    font-size: 0.8rem; color: #15803d; font-weight: 800; text-transform: uppercase; 
+    margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .hb-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .hb-row label { margin-bottom: 0; width: 30px; font-weight: bold; color: #14532d; }
+  .hb-input { 
+    width: 100%; border: 1px solid #86efac; border-radius: 6px; padding: 4px 8px; 
+    font-family: monospace; font-weight: bold; color: #14532d; text-align: right;
+  }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;
+  }
+  .modal-box {
+    background: white; padding: 25px; border-radius: 12px; width: 600px; max-width: 90%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto;
+  }
+  .std-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+  .std-table th { text-align: left; padding: 8px; border-bottom: 2px solid #e2e8f0; color: #64748b; }
+  .std-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+  .std-input { width: 70px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: right; }
+
+  .content-panel { display: flex; flex-direction: column; gap: 20px; height: 100%; }
+  .chart-container {
+    background: var(--surface); border-radius: var(--radius); padding: 15px;
+    flex: 1; min-height: 400px; position: relative; border: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .chart-wrapper { position: relative; width: 100%; height: 100%; flex-grow: 1; }
+
+  .table-container {
+    background: var(--surface); border-radius: var(--radius); flex: 1;
+    overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border);
+  }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .data-table th {
+    background: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase;
+    padding: 10px 15px; text-align: right; border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .data-table th:first-child { text-align: left; }
+  .data-table td { padding: 8px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; text-align: right; }
+  .data-table td:first-child { text-align: left; font-weight: 600; color: #1e293b; }
+  .row-check { background-color: #fef2f2 !important; }
+  .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+  .badge-ok { background: #dcfce7; color: #15803d; }
+  .badge-check { background: #fee2e2; color: #b91c1c; }
+</style>
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-primary"></i> Хамаарлын Шинжилгээ</h4>
+    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm px-3">Буцах</a>
+  </div>
+
+  <div class="analysis-grid">
+    <div class="sidebar-panel">
+      <div class="control-group">
+        <label>1. X Тэнхлэг</label>
+        <select id="xAxis" class="form-select" onchange="updateAnalysis()">
+          <optgroup label="Үндсэн"><option value="Aad">Ash (Aad)</option><option value="Mad">Moisture (Mad)</option><option value="Mtar">Total Moisture</option></optgroup>
+          <optgroup label="Коксжих"><option value="CSN">CSN</option><option value="Vdaf">Volatile</option><option value="CRC">CRC</option></optgroup>
+          <optgroup label="Бусад"><option value="TRD">Rel. Density</option><option value="St_ad">Sulfur</option></optgroup>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>2. Y Тэнхлэг</label>
+        <select id="yAxis" class="form-select" onchange="updateAnalysis()">
+          <optgroup label="Эрчим хүч"><option value="Qgr_ad">Gross CV</option><option value="Qnet_ar">Net CV</option></optgroup>
+          <optgroup label="Физик"><option value="TRD">Rel. Density</option><option value="Gi">G-Index</option><option value="CSN">CSN</option></optgroup>
+          <optgroup label="Бусад"><option value="Aad">Ash (Aad)</option><option value="Vdaf">Volatile</option></optgroup>
+        </select>
+      </div>
+
+      <button class="btn btn-primary btn-sm w-100 mb-2" onclick="openStandardsModal()">
+         <i class="bi bi-bookmarks"></i> 📚 Түүхэн Стандарт Сонгох
+      </button>
+
+      <div class="history-edit-box" id="histBox">
+        <div class="hb-title">
+            <span id="selectedStdName">Түүхэн Стандарт</span>
+        </div>
+        <div class="hb-row">
+            <label>m</label>
+            <input type="number" id="inputM" class="hb-input" step="0.0001" oninput="manualUpdate()">
+        </div>
+        <div class="hb-row">
+            <label>c</label>
+            <input type="number" id="inputC" class="hb-input" step="0.01" oninput="manualUpdate()">
+        </div>
+        <div style="font-size: 0.7rem; text-align:center; color:#166534; margin-top:5px;">y = mx + c</div>
+      </div>
+
+      <div class="control-group">
+        <label>3. Tolerance</label>
+        <input type="number" id="tolerance" class="form-control" value="150" step="0.1" oninput="manualUpdate()">
+      </div>
+
+      <div class="mt-auto p-2 bg-light rounded border small">
+        <div>Current Eq: <span class="font-monospace text-primary" id="currEq">-</span></div>
+        <div>R² Score: <span class="font-monospace text-success" id="currR2">-</span></div>
+      </div>
+    </div>
+
+    <div class="content-panel">
+      <div class="chart-container">
+        <div class="chart-wrapper">
+            <canvas id="scatterChart"></canvas>
+        </div>
+        <div id="msgOverlay" class="position-absolute top-50 start-50 translate-middle text-center text-muted" style="display:none;">
+           <p class="fw-bold">Өгөгдөл хангалтгүй</p>
+        </div>
+      </div>
+      <div class="table-container">
+        <div style="overflow-y: auto; height: 100%;">
+          <table class="data-table" id="resTable">
+            <thead>
+              <tr><th>Sample</th><th>X</th><th>Y (Act)</th><th class="text-primary">Y (Pred)</th><th class="text-success">Y (Hist)</th><th>Diff</th><th>Status</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stdModal">
+  <div class="modal-box">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold m-0">Түүхэн Стандартын Сан</h5>
+      <button class="btn-close" onclick="closeStandardsModal()"></button>
+    </div>
+    <p class="small text-muted">Доорх жагсаалтаас сонгоно уу эсвэл шинээр утга оруулаад хадгална уу.</p>
+    
+    <table class="std-table">
+      <thead>
+        <tr>
+          <th>Нэр (Төрөл)</th>
+          <th>m (Slope)</th>
+          <th>c (Intercept)</th>
+          <th>Үйлдэл</th>
+        </tr>
+      </thead>
+      <tbody id="stdTableBody">
+        </tbody>
+    </table>
+    
+    <div class="mt-3 text-end">
+        <button class="btn btn-sm btn-success" onclick="saveAllStandards()">
+            <i class="bi bi-save"></i> Өөрчлөлтийг Хадгалах
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="closeStandardsModal()">Хаах</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+  const rawData = {{ data_list | tojson }};
+  let chartInstance = null;
+
+  // 🛑 PRESET STANDARDS (Анхны утгууд)
+  const DEFAULT_STANDARDS = [
+    { name: "Stock", m: -85.0, c: 8200 },
+    { name: "TR", m: -90.5, c: 8150 },
+    { name: "GRD", m: -88.0, c: 8100 },
+    { name: "MV", m: -86.0, c: 8300 },
+    { name: "HV", m: -84.0, c: 8000 },
+    { name: "MASHCC", m: -92.0, c: 8400 }
+  ];
+
+  let currentConfig = { m: 0, c: 0, tol: 0, hasConfig: false };
+  let standardsList = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStandards();
+    updateAnalysis(); 
+  });
+
+  // --- MODAL & STANDARDS LOGIC ---
+  function loadStandards() {
+    const saved = localStorage.getItem('lims_standards_list');
+    if (saved) {
+        standardsList = JSON.parse(saved);
+    } else {
+        standardsList = JSON.parse(JSON.stringify(DEFAULT_STANDARDS)); // Deep copy
+    }
+    renderStandardsTable();
+  }
+
+  function renderStandardsTable() {
+    const tbody = document.getElementById('stdTableBody');
+    tbody.innerHTML = "";
+    
+    standardsList.forEach((std, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+           <td><input type="text" class="form-control form-control-sm fw-bold" value="${std.name}" onchange="updateStd(${index}, 'name', this.value)"></td>
+           <td><input type="number" class="std-input" value="${std.m}" step="0.0001" onchange="updateStd(${index}, 'm', this.value)"></td>
+           <td><input type="number" class="std-input" value="${std.c}" step="0.01" onchange="updateStd(${index}, 'c', this.value)"></td>
+           <td>
+             <button class="btn btn-sm btn-outline-primary" onclick="applyStandard(${index})">Ашиглах</button>
+           </td>
+        `;
+        tbody.appendChild(tr);
+    });
+  }
+
+  function updateStd(index, key, value) {
+      if (key === 'm' || key === 'c') value = parseFloat(value);
+      standardsList[index][key] = value;
+  }
+
+  function saveAllStandards() {
+      localStorage.setItem('lims_standards_list', JSON.stringify(standardsList));
+      alert("Жагсаалт хадгалагдлаа.");
+  }
+
+  function applyStandard(index) {
+      const std = standardsList[index];
+      document.getElementById('inputM').value = std.m;
+      document.getElementById('inputC').value = std.c;
+      document.getElementById('selectedStdName').innerText = std.name + " Стандарт";
+      
+      // Auto-set active
+      currentConfig.m = std.m;
+      currentConfig.c = std.c;
+      currentConfig.hasConfig = true;
+      
+      closeStandardsModal();
+      updateAnalysis();
+  }
+
+  function openStandardsModal() { document.getElementById('stdModal').style.display = 'flex'; }
+  function closeStandardsModal() { document.getElementById('stdModal').style.display = 'none'; }
+
+  // --- MAIN ANALYSIS ---
+  function manualUpdate() {
+    const mVal = parseFloat(document.getElementById('inputM').value);
+    const cVal = parseFloat(document.getElementById('inputC').value);
+    const tolVal = parseFloat(document.getElementById('tolerance').value);
+
+    if (!isNaN(mVal) && !isNaN(cVal)) {
+        currentConfig.m = mVal;
+        currentConfig.c = cVal;
+        currentConfig.hasConfig = true;
+        document.getElementById('selectedStdName').innerText = "Гараар тохируулсан";
+    } else {
+        currentConfig.hasConfig = false; 
+    }
+    currentConfig.tol = !isNaN(tolVal) ? tolVal : 0;
+    updateAnalysis();
+  }
+
+  function updateAnalysis() {
+    try {
+      const xKey = document.getElementById('xAxis').value;
+      const yKey = document.getElementById('yAxis').value;
+      const limit = parseFloat(document.getElementById('tolerance').value) || 0;
+
+      // Filter Data
+      const cleanData = rawData.filter(d => 
+        d[xKey] !== null && d[xKey] !== undefined && d[xKey] !== "" &&
+        d[yKey] !== null && d[yKey] !== undefined && d[yKey] !== ""
+      );
+
+      if (cleanData.length < 1) { handleNoData(); return; }
+      document.getElementById('msgOverlay').style.display = 'none';
+
+      // Current Regression
+      let currM = 0, currC = 0, r2 = 0;
+      let minX = Infinity, maxX = -Infinity;
+
+      if (cleanData.length >= 2) {
+        const n = cleanData.length;
+        let sumX=0, sumY=0, sumXY=0, sumXX=0;
+        cleanData.forEach(d => {
+           const x = d[xKey]; const y = d[yKey];
+           sumX += x; sumY += y; sumXY += x*y; sumXX += x*x;
+           if(x < minX) minX = x; if(x > maxX) maxX = x;
+        });
+        const denom = (n * sumXX - sumX * sumX);
+        if (denom !== 0) {
+          currM = (n * sumXY - sumX * sumY) / denom;
+          currC = (sumY - currM * sumX) / n;
+          
+          const yMean = sumY / n;
+          let ssTot=0, ssRes=0;
+          cleanData.forEach(d => {
+             const yPred = currM*d[xKey] + currC;
+             ssTot += Math.pow(d[yKey] - yMean, 2);
+             ssRes += Math.pow(d[yKey] - yPred, 2);
+          });
+          r2 = ssTot !== 0 ? (1 - (ssRes / ssTot)) : 1;
+        }
+      } else {
+        minX = cleanData[0][xKey]; maxX = minX;
+        currM = 0; currC = cleanData[0][yKey]; r2 = 1;
+      }
+
+      document.getElementById('currEq').innerText = `y=${currM.toFixed(3)}x+${currC.toFixed(2)}`;
+      document.getElementById('currR2').innerText = r2.toFixed(4);
+
+      const refM = currentConfig.hasConfig ? currentConfig.m : currM;
+      const refC = currentConfig.hasConfig ? currentConfig.c : currC;
+
+      // Build Table & Chart
+      const tableBody = document.querySelector('#resTable tbody');
+      tableBody.innerHTML = "";
+      const chartPoints = [];
+
+      cleanData.forEach(d => {
+        const x = d[xKey]; const y = d[yKey];
+        const yRef = refM * x + refC;
+        const diff = y - yRef;
+        const isOutlier = Math.abs(diff) > limit;
+
+        chartPoints.push({ x: x, y: y, sample: d.sample_code, outlier: isOutlier });
+
+        const tr = document.createElement('tr');
+        if (isOutlier) tr.classList.add('row-check');
+        tr.innerHTML = `
+          <td class="fw-bold text-dark">${d.sample_code}</td>
+          <td>${x.toFixed(2)}</td>
+          <td class="fw-bold">${y.toFixed(2)}</td>
+          <td class="text-primary small">${(currM*x+currC).toFixed(2)}</td>
+          <td class="text-success font-monospace">${yRef.toFixed(2)}</td>
+          <td class="fw-bold ${isOutlier ? 'text-danger' : 'text-success'}">${(diff>0?'+':'')+diff.toFixed(2)}</td>
+          <td class="text-center">${isOutlier ? '<span class="badge badge-check">CHECK</span>' : '<span class="badge badge-ok">OK</span>'}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      renderChart(chartPoints, currM, currC, refM, refC, minX, maxX, xKey, yKey, limit);
+
+    } catch (e) { console.error(e); handleNoData(); }
+  }
+
+  function renderChart(points, currM, currC, refM, refC, minX, maxX, xLbl, yLbl, tol) {
+    const ctx = document.getElementById('scatterChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    const range = (maxX - minX) || 1;
+    const pad = range * 0.2; 
+    const x1 = minX - pad; const x2 = maxX + pad;
+
+    const datasets = [
+      { label: 'Хэвийн', data: points.filter(p => !p.outlier), backgroundColor: '#2563eb', pointRadius: 6, order:2 },
+      { label: 'Зөрүүтэй', data: points.filter(p => p.outlier), backgroundColor: '#ef4444', pointStyle: 'triangle', pointRadius: 9, order:1 },
+      { label: currentConfig.hasConfig ? 'Түүхэн Стандарт' : 'Trend', data: [{x:x1, y:refM*x1+refC}, {x:x2, y:refM*x2+refC}], borderColor: currentConfig.hasConfig?'#16a34a':'#2563eb', borderWidth:3, type:'line', pointRadius:0, order:3 }
+    ];
+
+    if (tol > 0) {
+       datasets.push({ label:'Upper', data:[{x:x1, y:(refM*x1+refC)+tol}, {x:x2, y:(refM*x2+refC)+tol}], borderColor:'rgba(220,38,38,0.3)', borderDash:[5,5], borderWidth:1, type:'line', pointRadius:0, fill:false, order:4 });
+       datasets.push({ label:'Band', data:[{x:x1, y:(refM*x1+refC)-tol}, {x:x2, y:(refM*x2+refC)-tol}], borderColor:'rgba(220,38,38,0.3)', borderDash:[5,5], borderWidth:1, type:'line', pointRadius:0, fill: {target:'-1', above:'rgba(22,163,74,0.05)'}, order:5 });
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'scatter', data: { datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { filter: l => !['Upper','Band'].includes(l.text) } } },
+        scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: xLbl, font:{weight:'bold'} } }, y: { title: { display: true, text: yLbl, font:{weight:'bold'} } } }
+      }
+    });
+  }
+
+  function handleNoData() {
+    if (chartInstance) chartInstance.destroy();
+    document.getElementById('msgOverlay').style.display = 'block';
+    document.querySelector('#resTable tbody').innerHTML = '';
+  }
+</script>
+{% endblock %}

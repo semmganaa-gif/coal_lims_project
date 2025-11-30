@@ -1,0 +1,168 @@
+{# templates/analysis_page.html (v10 - Clean Parent) #}
+{% extends "base.html" %}
+
+{% block content %}
+{% set is_mass_page = (analysis.code|lower == 'm') %}
+<script>
+    // Энэ мөрийг нэмснээр JavaScript токен авах боломжтой болно
+    window.csrfToken = "{{ csrf_token() }}"; 
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analysis_page.css') }}">
+
+{% if is_mass_page %}
+<style>
+  #save-analysis-results, .btn-save-results, [data-action="save-results"]{ display:none !important; }
+</style>
+{% endif %}
+
+<div class="container-fluid">
+  {# --- STICKY CONTROLS --- #}
+  <div class="sticky-controls">
+    <div class="d-flex justify-content-between align-items-center h-100">
+      <div>
+        <h2 class="mb-0 fs-4">
+          {{ title }} <span class="text-muted fs-6">({{ analysis.code }})</span>
+        </h2>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
+          <i class="bi bi-arrow-left me-1"></i> Шинжилгээний хуудас
+        </a>
+        <button class="btn btn-outline-primary btn-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+          <i class="bi bi-plus-circle me-1"></i>
+          {% if is_mass_page %} Дээж (M) {% else %} Дээж сонгох {% endif %}
+        </button>
+        {% if not is_mass_page %}
+        <button class="btn btn-success btn-sm d-flex align-items-center" id="save-analysis-results" data-action="save-results">
+          <i class="bi bi-check-lg me-1"></i> Үр дүнг хадгалах
+        </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# --- MAIN CONTENT --- #}
+  <div class="row g-3">
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm mb-3 border-0">
+        <div class="card-body p-0">
+          {% if config.template %}
+            <div class="table-scroll-wrap">
+                {% include config.template %}
+            </div>
+          {% else %}
+            <div class="alert alert-warning m-3">Template not found.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3">
+      <div class="analysis-sidebar-sticky">
+        <div class="card mb-3">
+          <div class="card-body p-3">{% include "analysis/partials/quick_ref.html" %}</div>
+        </div>
+        <div class="card">
+          <div class="card-body p-3">{% include "analysis/partials/timer_panel.html" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Дээж сонгох</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body"><p class="text-center">Ачаалж байна...</p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">Нэмэх</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script src="{{ url_for('static', filename='js/repeatability.js') }}"></script>
+<script>
+  window.LIMS_ANALYSIS_CODE_RAW     = "{{ analysis.code }}";
+  window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
+  window.REJECTED_SAMPLES = window.REJECTED_SAMPLES || {{ rejected_samples_info|tojson|safe }};
+  window.EXISTING_RESULTS = window.EXISTING_RESULTS || {{ existing_results_map|tojson|safe }};
+  window.TIMER_CONFIG     = {{ (timer_config|default({}))|tojson|safe }};
+  window.GI_RETEST_MODES  = {{ gi_retest_modes | tojson | safe }};
+  window.S_BY_SAMPLE      = {{ (sulfur_by_sample|default({}))|tojson|safe }};
+  window.ERROR_LABELS     = {{ error_labels | tojson | safe | default("{}") }};
+</script>
+
+<script>
+  window.LIMS_ANALYSIS_CODE = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
+  (function(){
+    const ls = window.localStorage, ss = window.sessionStorage;
+    const isLimsKey = (k)=> typeof k==='string' && k.startsWith('analysis_');
+    const _set = ss.setItem.bind(ss), _get = ss.getItem.bind(ss), _rem = ss.removeItem.bind(ss);
+    ss.setItem = function(k,v){ try{ if(isLimsKey(k)) ls.setItem(k,v) }catch(e){}; return _set(k,v) };
+    ss.getItem = function(k){ try{ if(isLimsKey(k)){ const v = ls.getItem(k); if(v!==null) return v } }catch(e){}; return _get(k) };
+    ss.removeItem = function(k){ try{ if(isLimsKey(k)) ls.removeItem(k) }catch(e){}; return _rem(k) };
+  })();
+</script>
+
+<script>
+  // ===== STICKY CONTROLS SCROLL EFFECT =====
+  (function() {
+    const stickyControls = document.querySelector('.sticky-controls');
+    if (!stickyControls) return;
+
+    let lastScroll = 0;
+    let ticking = false;
+
+    function updateStickyState() {
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      // 50px-с их scroll хийсэн бол "scrolled" класс нэмэх
+      if (scrollY > 50) {
+        stickyControls.classList.add('scrolled');
+      } else {
+        stickyControls.classList.remove('scrolled');
+      }
+
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        window.requestAnimationFrame(updateStickyState);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Initial check
+    updateStickyState();
+  })();
+</script>
+
+{# Calculators #}
+{% if analysis.code in ['St,ad','TS'] %}
+<script src="{{ url_for('static', filename='js/calculators/sulfur_calculator.js') }}?v=2"></script>
+{% endif %}
+
+{# AG Grid формын үед тусдаа calculator js ачаалахгүй #}
+{% if config.formula and config.formula != 'none' and ('aggrid' not in config.formula) %}
+  {% set _formula_map = {'P,ad':'phosphorus','F,ad':'fluorine','Cl,ad':'chlorine','FM':'FM','Solid':'solid','TRD':'TRD_calculator'} %}
+  {% set formula_js = _formula_map.get(config.formula, config.formula) %}
+  {% if analysis.code == 'TRD' %}
+    <script src="{{ url_for('static', filename='js/calculators/TRD_calculator.js') }}?v=5"></script>
+  {% else %}
+    <script src="{{ url_for('static', filename='js/calculators/' + formula_js + '_calculator.js') }}?v=4"></script>
+  {% endif %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/analysis_page.js') }}"></script>
+{% endblock %}

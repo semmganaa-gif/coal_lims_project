@@ -1,0 +1,879 @@
+/* static/css/custom.css - САЙЖРУУЛСАН ДИЗАЙН v2.0 */
+
+/* ================================================================
+   1. ҮНДСЭН ӨНГӨ & ТОХИРГОО (Color System & Base Settings)
+   ================================================================ */
+:root {
+  /* ER Lab-ийн үндсэн өнгөнүүд */
+  --er-blue: #3a8bc7;
+  --er-yellow: #f7d002;
+  --er-tan: #b99c75;
+  --er-black: #333132;
+  --er-orange: #f0892f;
+
+  /* Bootstrap өнгөний дарж бичилт */
+  --bs-primary: var(--er-blue);
+  --bs-primary-rgb: 58, 139, 199;
+  --bs-dark: var(--er-black);
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-success-rgb: 25, 135, 84;
+  --bs-info: #17a2b8;
+  --bs-warning: #ffc107;
+  --bs-warning-rgb: 255, 193, 7;
+  --bs-danger: #dc3545;
+  --bs-danger-rgb: 220, 53, 69;
+  --bs-light: #f8f9fa;
+
+  /* LIMS дизайн системийн өнгө */
+  --lims-bg: #f5f7fa;
+  --lims-surface: #ffffff;
+  --lims-border: rgba(0, 0, 0, 0.1);
+  --lims-border-light: rgba(0, 0, 0, 0.06);
+  --lims-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --lims-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --lims-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+  /* Status өнгөнүүд */
+  --status-pending: #ffc107;
+  --status-approved: #198754;
+  --status-rejected: #dc3545;
+  --status-new: #17a2b8;
+
+  /* Font sizes - ТОМРУУЛСАН */
+  --font-size-base: 14px;  /* 12px-с 14px болгосон */
+  --font-size-sm: 13px;
+  --font-size-xs: 12px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+
+  /* Радиус */
+  --border-radius: 0.5rem;
+  --border-radius-sm: 0.375rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-xl: 1rem;
+}
+
+/* ================================================================
+   2. ҮНДСЭН ЗАГВАР (Base Styles)
+   ================================================================ */
+body {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--font-size-base);  /* 14px */
+  line-height: 1.6;
+  background-color: var(--lims-bg);
+  color: var(--bs-dark);
+  position: relative;
+}
+
+/* Текстийн хэмжээний утилити классууд */
+.text-xs { font-size: var(--font-size-xs) !important; }
+.text-sm { font-size: var(--font-size-sm) !important; }
+.text-base { font-size: var(--font-size-base) !important; }
+.text-lg { font-size: var(--font-size-lg) !important; }
+.text-xl { font-size: var(--font-size-xl) !important; }
+
+/* ================================================================
+   3. NAVBAR (Цэс)
+   ================================================================ */
+.navbar {
+  background-color: var(--lims-surface) !important;
+  border-bottom: 2px solid var(--lims-border);
+  box-shadow: var(--lims-shadow);
+  padding: 0.875rem 1.5rem;
+  font-size: var(--font-size-base);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.navbar-brand:hover {
+  opacity: 0.85;
+}
+
+.navbar-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.nav-link {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  padding: 0.5rem 0.875rem !important;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.08);
+  color: var(--bs-primary) !important;
+}
+
+.nav-link.active {
+  background-color: rgba(var(--bs-primary-rgb), 0.12);
+  color: var(--bs-primary) !important;
+  font-weight: 600;
+}
+
+.dropdown-item {
+  font-size: var(--font-size-base);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.08);
+}
+
+.dropdown-item i {
+  width: 20px;
+  text-align: center;
+}
+
+/* ================================================================
+   4. CARD (Карт)
+   ================================================================ */
+.card {
+  border: 1px solid var(--lims-border-light);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--lims-shadow-sm);
+  background-color: var(--lims-surface);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  box-shadow: var(--lims-shadow);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--lims-border-light);
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-header i {
+  font-size: 1.25rem;
+  color: var(--bs-primary);
+}
+
+.card-body {
+  padding: 1.25rem;
+  font-size: var(--font-size-base);
+}
+
+.card-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid var(--lims-border-light);
+  padding: 0.875rem 1.25rem;
+  font-size: var(--font-size-sm);
+}
+
+/* ================================================================
+   5. BUTTON (Товчлуур) - САЙЖРУУЛСАН
+   ================================================================ */
+.btn {
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  padding: 0.5rem 1.125rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn i {
+  font-size: 1.1rem;
+}
+
+.btn-sm {
+  font-size: var(--font-size-sm);
+  padding: 0.375rem 0.875rem;
+}
+
+.btn-lg {
+  font-size: var(--font-size-lg);
+  padding: 0.625rem 1.5rem;
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  box-shadow: 0 2px 4px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.btn-primary:hover {
+  background-color: #327ab8;
+  box-shadow: 0 4px 8px rgba(var(--bs-primary-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background-color: var(--bs-success);
+  box-shadow: 0 2px 4px rgba(var(--bs-success-rgb), 0.3);
+}
+
+.btn-success:hover {
+  background-color: #157347;
+  box-shadow: 0 4px 8px rgba(var(--bs-success-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-warning {
+  background-color: var(--bs-warning);
+  color: #000;
+  box-shadow: 0 2px 4px rgba(var(--bs-warning-rgb), 0.3);
+}
+
+.btn-warning:hover {
+  background-color: #ffca2c;
+  box-shadow: 0 4px 8px rgba(var(--bs-warning-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background-color: var(--bs-danger);
+  box-shadow: 0 2px 4px rgba(var(--bs-danger-rgb), 0.3);
+}
+
+.btn-danger:hover {
+  background-color: #bb2d3b;
+  box-shadow: 0 4px 8px rgba(var(--bs-danger-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* ================================================================
+   6. TABLE (Хүснэгт) - САЙЖРУУЛСАН + AUTO-SIZING
+   ================================================================ */
+.table {
+  font-size: var(--font-size-base);
+  margin-bottom: 0;
+  table-layout: auto;  /* Auto-sizing идэвхжүүлэх */
+  width: 100%;
+}
+
+.table thead th {
+  background-color: #f1f3f5;
+  color: var(--bs-dark);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.875rem 0.75rem;
+  border-bottom: 2px solid var(--lims-border);
+  white-space: nowrap;
+}
+
+.table tbody td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  font-size: var(--font-size-base);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(var(--bs-primary-rgb), 0.04);
+  cursor: pointer;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-bordered {
+  border: 1px solid var(--lims-border);
+}
+
+.table-bordered td,
+.table-bordered th {
+  border: 1px solid var(--lims-border-light);
+}
+
+/* Хүснэгтийн тусгай өнгө */
+.table-light {
+  --bs-table-bg: #f8f9fa;
+}
+
+/* ================================================================
+   6.1 AUTO-SIZING SYSTEM (Багана тус бүрийн ухаалаг хэмжээ)
+   ================================================================ */
+
+/* ЭХНИЙ БАГАНА (№, ID, Checkbox) - Үргэлж нарийн */
+.table th:first-child,
+.table td:first-child {
+  width: 60px;
+  min-width: 50px;
+  max-width: 80px;
+  text-align: center;
+}
+
+/* ХОЁРДАХЬ БАГАНА (Нэр, Код) - Уян хатан, гэхдээ хязгаартай */
+.table th:nth-child(2),
+.table td:nth-child(2) {
+  min-width: 180px;
+  max-width: 400px;
+}
+
+/* ГУРАВДАХЬ БАГАНА (Төрөл, Клиент) - Дунд хэмжээ */
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  min-width: 120px;
+  max-width: 250px;
+}
+
+/* ДӨРӨВДЭХ БАГАНА */
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  min-width: 100px;
+  max-width: 200px;
+}
+
+/* СҮҮЛИЙН БАГАНА (Үйлдэл, Статус) - Тогтмол */
+.table th:last-child,
+.table td:last-child {
+  width: 120px;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* ================================================================
+   6.2 UTILITY CLASSES (Тусгай багануудад)
+   ================================================================ */
+
+/* Дугаар багана */
+.table .col-number,
+.table .col-index {
+  width: 60px;
+  min-width: 50px;
+  max-width: 70px;
+  text-align: center;
+}
+
+/* Checkbox багана */
+.table .col-checkbox {
+  width: 50px;
+  min-width: 40px;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* Код багана (Дээжний код, Шинжилгээний код) */
+.table .col-code {
+  min-width: 100px;
+  max-width: 180px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* Нэр багана (Дээжний нэр, Захиалагчийн нэр) */
+.table .col-name {
+  min-width: 150px;
+  max-width: 350px;
+}
+
+/* Урт текст багана */
+.table .col-text {
+  min-width: 200px;
+  max-width: 500px;
+}
+
+/* Огноо багана */
+.table .col-date,
+.table .col-datetime {
+  width: 140px;
+  min-width: 120px;
+  max-width: 160px;
+  white-space: nowrap;
+}
+
+/* Тоон үр дүн багана */
+.table .col-result,
+.table .col-number-result {
+  width: 100px;
+  min-width: 80px;
+  max-width: 120px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+/* Статус багана */
+.table .col-status {
+  width: 120px;
+  min-width: 100px;
+  max-width: 150px;
+  text-align: center;
+}
+
+/* Үйлдэл багана (Товчлуур) */
+.table .col-action,
+.table .col-actions {
+  width: 140px;
+  min-width: 120px;
+  max-width: 180px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Жижиг үйлдэл багана */
+.table .col-action-sm {
+  width: 80px;
+  min-width: 60px;
+  max-width: 100px;
+  text-align: center;
+}
+
+/* Email багана */
+.table .col-email {
+  min-width: 180px;
+  max-width: 300px;
+}
+
+/* Эрх багана */
+.table .col-role {
+  width: 100px;
+  min-width: 80px;
+  max-width: 120px;
+  text-align: center;
+}
+
+/* ================================================================
+   6.3 АЖЛЫН ТАЛБАРЫН ХҮСНЭГТ (Analysis workspace tables)
+   ================================================================ */
+
+/* Шинжилгээний хүснэгт */
+table[id$="-analysis-table"] {
+  table-layout: auto;
+}
+
+/* Шинжилгээний хүснэгтийн эхний багана (№) */
+table[id$="-analysis-table"] th:first-child,
+table[id$="-analysis-table"] td:first-child {
+  width: 50px;
+  min-width: 40px;
+  max-width: 60px;
+  text-align: center;
+}
+
+/* Дээжний нэр багана */
+table[id$="-analysis-table"] th:nth-child(2),
+table[id$="-analysis-table"] td:nth-child(2) {
+  min-width: 200px;
+  max-width: 350px;
+}
+
+/* Үр дүн оруулах input багана */
+table[id$="-analysis-table"] input[type="number"],
+table[id$="-analysis-table"] input[type="text"] {
+  width: 100%;
+  min-width: 70px;
+}
+
+/* Үр дүн харуулах багана */
+table[id$="-analysis-table"] .result-cell {
+  min-width: 80px;
+  max-width: 120px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ================================================================
+   6.4 ТУСГАЙ ТОХИОЛДЛУУД
+   ================================================================ */
+
+/* Fixed layout хэрэгтэй хүснэгт */
+.table-fixed {
+  table-layout: fixed !important;
+}
+
+/* Бүх багана автоматаар тохируулах */
+.table-full-auto th,
+.table-full-auto td {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Compact хүснэгт (жижиг padding) */
+.table-compact th,
+.table-compact td {
+  padding: 0.5rem 0.5rem;
+  font-size: var(--font-size-sm);
+}
+
+/* Урт текст wrap хийх (default нь nowrap) */
+.table .text-wrap {
+  white-space: normal !important;
+  word-wrap: break-word;
+}
+
+/* Урт текст ellipsis (...) болгох */
+.table .text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ================================================================
+   7. FORM (Форм) - САЙЖРУУЛСАН
+   ================================================================ */
+.form-label {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  margin-bottom: 0.5rem;
+  color: var(--bs-dark);
+}
+
+.form-control,
+.form-select {
+  font-size: var(--font-size-base);
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--lims-border);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
+}
+
+.form-control-sm {
+  font-size: var(--font-size-sm);
+  padding: 0.375rem 0.75rem;
+}
+
+.form-control-lg {
+  font-size: var(--font-size-lg);
+  padding: 0.625rem 1rem;
+}
+
+/* Input group сайжруулалт */
+.input-group-text {
+  font-size: var(--font-size-base);
+  background-color: #f8f9fa;
+  border: 1px solid var(--lims-border);
+  font-weight: 500;
+}
+
+/* ================================================================
+   8. BADGE (Badge) - САЙЖРУУЛСАН
+   ================================================================ */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--border-radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge i {
+  font-size: 0.85rem;
+}
+
+/* Status badge-үүд */
+.badge.bg-success {
+  background-color: var(--status-approved) !important;
+}
+
+.badge.bg-warning {
+  background-color: var(--status-pending) !important;
+  color: #000 !important;
+}
+
+.badge.bg-danger {
+  background-color: var(--status-rejected) !important;
+}
+
+.badge.bg-info {
+  background-color: var(--status-new) !important;
+}
+
+/* ================================================================
+   9. ALERT (Мэдэгдэл)
+   ================================================================ */
+.alert {
+  border-radius: var(--border-radius);
+  border-left: 4px solid;
+  padding: 0.875rem 1.125rem;
+  font-size: var(--font-size-base);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.alert i {
+  font-size: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.alert-success {
+  border-left-color: var(--bs-success);
+  background-color: rgba(var(--bs-success-rgb), 0.08);
+}
+
+.alert-danger {
+  border-left-color: var(--bs-danger);
+  background-color: rgba(var(--bs-danger-rgb), 0.08);
+}
+
+.alert-warning {
+  border-left-color: var(--bs-warning);
+  background-color: rgba(var(--bs-warning-rgb), 0.08);
+}
+
+.alert-info {
+  border-left-color: var(--bs-info);
+  background-color: rgba(17, 162, 184, 0.08);
+}
+
+/* ================================================================
+   10. QC SPECIFIC STYLES
+   ================================================================ */
+.qc-cell-out {
+  background-color: #ffe0e0;
+  font-weight: 600;
+}
+
+.qc-cell-ok {
+  background-color: #e5f5e0;
+}
+
+.qc-table-wrapper {
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: var(--border-radius);
+}
+
+.qc-row-avg td.qc-spec-hourly-out {
+  background-color: #fff3cd;
+}
+
+.qc-row-comp td.qc-spec-comp-out {
+  background-color: #f8d7da;
+  border: 2px solid #dc3545 !important;
+}
+
+.qc-row-avg td.qc-spec-ok,
+.qc-row-comp td.qc-spec-ok {
+  background-color: #e2f0d9;
+}
+
+/* ================================================================
+   11. FOOTER
+   ================================================================ */
+.lims-footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: var(--font-size-sm);
+  color: var(--bs-secondary);
+  background-color: var(--lims-surface);
+  border-top: 1px solid var(--lims-border-light);
+}
+
+/* ================================================================
+   12. WATERMARK (Арын фон)
+   ================================================================ */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background-image: url('../images/corelink.logo.png');
+  background-repeat: repeat;
+  background-position: center center;
+  background-size: 300px;
+  opacity: 0.025;
+  pointer-events: none;
+}
+
+/* ================================================================
+   13. TOAST (Мэдэгдэл)
+   ================================================================ */
+.toast {
+  border-radius: var(--border-radius);
+  box-shadow: var(--lims-shadow);
+  font-size: var(--font-size-base);
+}
+
+.toast-header {
+  font-weight: 600;
+  border-bottom: 1px solid var(--lims-border-light);
+}
+
+/* ================================================================
+   14. MODAL (Modal)
+   ================================================================ */
+.modal-content {
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: var(--lims-shadow-lg);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--lims-border);
+  padding: 1rem 1.25rem;
+}
+
+.modal-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  font-size: var(--font-size-base);
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid var(--lims-border);
+  padding: 0.875rem 1.25rem;
+}
+
+/* ================================================================
+   15. LOADING & SPINNER
+   ================================================================ */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 0.2em;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}
+
+/* ================================================================
+   16. MOBILE RESPONSIVENESS
+   ================================================================ */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 13px;
+  }
+
+  .table-responsive-mobile {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+  }
+
+  .table-responsive-mobile .table td,
+  .table-responsive-mobile .table th {
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    padding: 0.5rem;
+  }
+
+  input.form-control,
+  select.form-select,
+  textarea.form-control,
+  button.btn {
+    min-height: 44px;
+  }
+
+  .btn {
+    padding: 0.5rem 1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  main.lims-main {
+    margin-top: 10px !important;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .toast-container {
+    width: 100%;
+    padding: 10px !important;
+  }
+
+  .navbar-brand span.fw-bold {
+    font-size: 1rem;
+  }
+
+  .navbar-logo {
+    height: 32px;
+  }
+}
+
+/* ================================================================
+   17. UTILITY CLASSES
+   ================================================================ */
+.shadow-sm { box-shadow: var(--lims-shadow-sm) !important; }
+.shadow { box-shadow: var(--lims-shadow) !important; }
+.shadow-lg { box-shadow: var(--lims-shadow-lg) !important; }
+
+.rounded { border-radius: var(--border-radius) !important; }
+.rounded-sm { border-radius: var(--border-radius-sm) !important; }
+.rounded-lg { border-radius: var(--border-radius-lg) !important; }
+
+.border-light { border-color: var(--lims-border-light) !important; }
+
+/* Icon sizes */
+.icon-sm { font-size: 1rem; }
+.icon-md { font-size: 1.25rem; }
+.icon-lg { font-size: 1.5rem; }
+.icon-xl { font-size: 2rem; }
+
+/* ================================================================
+   18. STICKY CONTROLS ENHANCEMENT
+   ================================================================ */
+/* Sticky элементүүдийн ерөнхий стиль */
+.sticky-controls {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Sticky button бага дэлгэц дээр */
+@media (max-width: 768px) {
+  .sticky-controls {
+    padding: 0.5rem 1rem !important;
+  }
+
+  .sticky-controls h2 {
+    font-size: 1rem !important;
+  }
+
+  .sticky-controls .btn {
+    font-size: 0.875rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+}
