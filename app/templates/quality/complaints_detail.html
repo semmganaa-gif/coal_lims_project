@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2>{{ complaint.complaint_no }}</h2>
+            <p class="text-muted">{{ complaint.complaint_date.strftime('%Y-%m-%d') }}</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Буцах
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Client Info -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5>Үйлчлүүлэгчийн мэдээлэл</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="200">Компани:</th>
+                            <td><strong>{{ complaint.client_name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Холбоо барих хүн:</th>
+                            <td>{{ complaint.contact_person or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Имэйл:</th>
+                            <td>{{ complaint.contact_email or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Утас:</th>
+                            <td>{{ complaint.contact_phone or '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Complaint Details -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning">
+                    <h5>Гомдлын мэдээлэл</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Төрөл:</strong> <span class="badge badge-info">{{ complaint.complaint_type }}</span></p>
+                    {% if complaint.related_sample %}
+                    <p><strong>Холбогдох дээж:</strong>
+                        <a href="{{ url_for('main.edit_sample', sample_id=complaint.related_sample.id) }}">
+                            {{ complaint.related_sample.sample_code }}
+                        </a>
+                    </p>
+                    {% endif %}
+                    <p><strong>Тайлбар:</strong></p>
+                    <p class="border p-3 bg-light">{{ complaint.description }}</p>
+                </div>
+            </div>
+
+            <!-- Investigation & Resolution -->
+            {% if complaint.status in ['resolved', 'closed'] %}
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5>Шалгалт ба шийдвэрлэлт</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Шалгасан:</strong> {{ complaint.investigated_by.username if complaint.investigated_by else '-' }}</p>
+                    <p><strong>Шалгалтын дүн:</strong></p>
+                    <p class="border p-3 bg-light">{{ complaint.investigation_findings or '-' }}</p>
+
+                    <p><strong>Шийдвэрлэлт:</strong></p>
+                    <p class="border p-3 bg-light">{{ complaint.resolution or '-' }}</p>
+
+                    <p><strong>Огноо:</strong> {{ complaint.resolution_date.strftime('%Y-%m-%d') if complaint.resolution_date else '-' }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5>Шалгалт хийх</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('quality.complaints_resolve', id=complaint.id) }}">
+                        <div class="form-group">
+                            <label>Шалгалтын дүгнэлт:</label>
+                            <textarea name="investigation_findings" class="form-control" rows="4" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Шийдвэрлэлт:</label>
+                            <textarea name="resolution" class="form-control" rows="4" required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Шийдвэрлэх
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <!-- Status Card -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Төлөв</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>
+                        {% if complaint.status == 'received' %}
+                            <span class="badge badge-secondary badge-lg">Хүлээгдэж байна</span>
+                        {% elif complaint.status == 'investigating' %}
+                            <span class="badge badge-warning badge-lg">Шалгаж байна</span>
+                        {% elif complaint.status == 'resolved' %}
+                            <span class="badge badge-primary badge-lg">Шийдэгдсэн</span>
+                        {% else %}
+                            <span class="badge badge-success badge-lg">Хаагдсан</span>
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+
+            <!-- CAPA Link -->
+            {% if complaint.capa_created %}
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                    <h5>CAPA</h5>
+                </div>
+                <div class="card-body">
+                    <p>Энэ гомдлоор CAPA үүссэн:</p>
+                    {% if complaint.related_capa %}
+                    <a href="{{ url_for('quality.capa_detail', id=complaint.related_capa.id) }}"
+                       class="btn btn-danger btn-block">
+                        {{ complaint.related_capa.ca_number }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Customer Feedback -->
+            {% if complaint.customer_notified %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Үйлчлүүлэгч</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Мэдэгдсэн:</strong>
+                        <span class="badge badge-success">✓</span>
+                    </p>
+                    {% if complaint.customer_satisfied is not none %}
+                    <p><strong>Сэтгэл ханамжтай:</strong>
+                        {% if complaint.customer_satisfied %}
+                            <span class="badge badge-success">✓ Тийм</span>
+                        {% else %}
+                            <span class="badge badge-danger">✗ Үгүй</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

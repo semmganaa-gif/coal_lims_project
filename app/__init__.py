@@ -69,6 +69,9 @@ def create_app(config_class=Config):
     # Тоног төхөөрөмжийн модуль (ISO 17025)
     from app.routes.equipment_routes import equipment_bp
 
+    # Чанарын удирдлага (ISO 17025 - Quality Management Systems)
+    from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
+
     app.register_blueprint(main_bp)
     app.register_blueprint(analysis_bp)
     app.register_blueprint(admin_bp)
@@ -77,6 +80,10 @@ def create_app(config_class=Config):
     app.register_blueprint(reports_bp)
     app.register_blueprint(import_bp)
     app.register_blueprint(equipment_bp)
+
+    # Чанарын удирдлагын route-уудыг бүртгэх
+    register_quality_routes()
+    app.register_blueprint(quality_bp)
 
     # CLI commands
     try:

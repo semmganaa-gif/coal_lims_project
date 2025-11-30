@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2><i class="fas fa-chart-line"></i> QC Control Charts</h2>
+            <p class="text-muted">ISO 17025 - Clause 7.7.1: Чанарын хяналтын график</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#addQCModal">
+                <i class="fas fa-plus"></i> QC Хэмжилт нэмэх
+            </button>
+        </div>
+    </div>
+
+    <!-- QC Data Table -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-sm" id="qcTable">
+                <thead>
+                    <tr>
+                        <th>Огноо</th>
+                        <th>Analysis</th>
+                        <th>QC Sample</th>
+                        <th>Measured</th>
+                        <th>Target</th>
+                        <th>UCL</th>
+                        <th>LCL</th>
+                        <th>In Control</th>
+                        <th>Operator</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chart in charts %}
+                    <tr class="{{ 'table-danger' if not chart.in_control else '' }}">
+                        <td>{{ chart.measurement_date.strftime('%Y-%m-%d') if chart.measurement_date else '-' }}</td>
+                        <td><span class="badge badge-info">{{ chart.analysis_code }}</span></td>
+                        <td>{{ chart.qc_sample_name }}</td>
+                        <td><strong>{{ "%.3f"|format(chart.measured_value) if chart.measured_value else '-' }}</strong></td>
+                        <td>{{ "%.3f"|format(chart.target_value) if chart.target_value else '-' }}</td>
+                        <td><small>{{ "%.3f"|format(chart.ucl) if chart.ucl else '-' }}</small></td>
+                        <td><small>{{ "%.3f"|format(chart.lcl) if chart.lcl else '-' }}</small></td>
+                        <td>
+                            {% if chart.in_control %}
+                                <span class="badge badge-success">✓</span>
+                            {% else %}
+                                <span class="badge badge-danger">✗</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ chart.operator.username if chart.operator else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Control Chart Visualization (placeholder for Chart.js) -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5>Control Chart График</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="controlChart" height="80"></canvas>
+            <p class="text-muted mt-2">
+                <small>
+                    <strong>Тайлбар:</strong>
+                    UCL (Upper Control Limit) = Target + 2σ,
+                    LCL (Lower Control Limit) = Target - 2σ
+                </small>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Add QC Modal -->
+<div class="modal fade" id="addQCModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('quality.control_charts_add') }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">QC Хэмжилт нэмэх</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Analysis Code *</label>
+                        <select name="analysis_code" class="form-control" required>
+                            <option value="">-- Сонгох --</option>
+                            <option value="Aad">Aad</option>
+                            <option value="Mad">Mad</option>
+                            <option value="CV">CV</option>
+                            <option value="TS">TS</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>QC Sample Name *</label>
+                        <input type="text" name="qc_sample_name" class="form-control"
+                               placeholder="QC Coal Standard A" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Measurement Date *</label>
+                        <input type="date" name="measurement_date" class="form-control" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Target Value *</label>
+                                <input type="number" step="0.001" name="target_value" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Measured Value *</label>
+                                <input type="number" step="0.001" name="measured_value" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>UCL (Upper) *</label>
+                                <input type="number" step="0.001" name="ucl" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>LCL (Lower) *</label>
+                                <input type="number" step="0.001" name="lcl" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Хаах</button>
+                    <button type="submit" class="btn btn-primary">Хадгалах</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#qcTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 25,
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json' }
+    });
+
+    // Simple Control Chart (placeholder)
+    const ctx = document.getElementById('controlChart').getContext('2d');
+    const chartData = {
+        labels: [{% for chart in charts|reverse|list[:20] %}'{{ chart.measurement_date.strftime("%m/%d") if chart.measurement_date }}',{% endfor %}],
+        datasets: [{
+            label: 'Measured Value',
+            data: [{% for chart in charts|reverse|list[:20] %}{{ chart.measured_value if chart.measured_value else 'null' }},{% endfor %}],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }]
+    };
+
+    new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                title: { display: true, text: 'QC Control Chart (сүүлийн 20 хэмжилт)' },
+                legend: { display: true }
+            },
+            scales: {
+                y: { beginAtZero: false }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

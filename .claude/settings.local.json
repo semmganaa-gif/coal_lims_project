@@ -7,7 +7,11 @@
       "Bash(python scripts/manage_repeatability.py:*)",
       "Bash(python:*)",
       "Bash(findstr:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(cd:*)",
+      "Bash(flask db:*)",
+      "Bash(timeout 5 python:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

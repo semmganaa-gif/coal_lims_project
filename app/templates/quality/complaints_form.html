@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-comment-dots"></i> Шинэ гомдол бүртгэх</h2>
+
+    <form method="POST" class="mt-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>Үйлчлүүлэгчийн мэдээлэл</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Үйлчлүүлэгч *</label>
+                    <input type="text" name="client_name" class="form-control"
+                           placeholder="Компанийн нэр" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Холбоо барих хүн</label>
+                            <input type="text" name="contact_person" class="form-control"
+                                   placeholder="Овог нэр">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Имэйл</label>
+                            <input type="email" name="contact_email" class="form-control"
+                                   placeholder="email@example.com">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Утас</label>
+                            <input type="tel" name="contact_phone" class="form-control"
+                                   placeholder="99999999">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-warning">
+                <h5>Гомдлын мэдээлэл</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Гомдлын төрөл *</label>
+                            <select name="complaint_type" class="form-control" required>
+                                <option value="">-- Сонгох --</option>
+                                <option value="Turnaround time">Хугацаа хоцорсон</option>
+                                <option value="Result accuracy">Үр дүнгийн нарийвчлал</option>
+                                <option value="Service quality">Үйлчилгээний чанар</option>
+                                <option value="Sample handling">Дээж зохицуулалт</option>
+                                <option value="Communication">Харилцаа холбоо</option>
+                                <option value="Other">Бусад</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Холбогдох дээж</label>
+                            <input type="text" name="related_sample_code" class="form-control"
+                                   placeholder="Sample code (optional)">
+                            <small class="form-text text-muted">Ж: TT-2025-0001</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Гомдлын дэлгэрэнгүй *</label>
+                    <textarea name="description" class="form-control" rows="6"
+                              placeholder="Гомдлын дэлгэрэнгүй тайлбар..." required></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i> Бүртгэх
+            </button>
+            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times"></i> Болих
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

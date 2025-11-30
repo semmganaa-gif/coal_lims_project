@@ -324,21 +324,58 @@ def calc_fluorine_f(raw_data: Dict) -> Optional[float]:
     """
     Фтор (F) тооцоолол
 
-    Similar to phosphorus calculation
+    Uses manually entered results from parallel measurements
+
+    Args:
+        raw_data: {"p1": {"result": ...}, "p2": {"result": ...}}
+
+    Returns:
+        Average F% or None
     """
-    # TODO: Implement based on your specific formula
-    # For now, return None (client value will be used)
-    return None
+    result_p1 = _get_from_dict(raw_data, "p1", "result")
+    result_p2 = _get_from_dict(raw_data, "p2", "result")
+
+    results = []
+
+    if result_p1 is not None and result_p1 >= 0:
+        results.append(result_p1)
+
+    if result_p2 is not None and result_p2 >= 0:
+        results.append(result_p2)
+
+    if not results:
+        return None
+
+    return sum(results) / len(results)
 
 
 def calc_chlorine_cl(raw_data: Dict) -> Optional[float]:
     """
     Хлор (Cl) тооцоолол
 
-    Similar to phosphorus calculation
+    Uses manually entered results from parallel measurements
+
+    Args:
+        raw_data: {"p1": {"result": ...}, "p2": {"result": ...}}
+
+    Returns:
+        Average Cl% or None
     """
-    # TODO: Implement based on your specific formula
-    return None
+    result_p1 = _get_from_dict(raw_data, "p1", "result")
+    result_p2 = _get_from_dict(raw_data, "p2", "result")
+
+    results = []
+
+    if result_p1 is not None and result_p1 >= 0:
+        results.append(result_p1)
+
+    if result_p2 is not None and result_p2 >= 0:
+        results.append(result_p2)
+
+    if not results:
+        return None
+
+    return sum(results) / len(results)
 
 
 def calc_calorific_value_cv(raw_data: Dict) -> Optional[float]:

@@ -8,6 +8,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 import json
+from app.utils.audit import log_audit
 
 
 def register_routes(bp):
@@ -100,6 +101,13 @@ def register_routes(bp):
                     if current_user.role == "ahlah" and sample_to_delete.status != "new":
                         failed_samples.append(f"{sample_to_delete.sample_code} (Боловсруулалтад орсон)")
                         continue
+                    # Audit log before deletion
+                    log_audit(
+                        action='sample_deleted',
+                        resource_type='Sample',
+                        resource_id=sample_to_delete.id,
+                        details={'sample_code': sample_to_delete.sample_code, 'client_name': sample_to_delete.client_name}
+                    )
                     db.session.delete(sample_to_delete)
                     deleted_count += 1
                 else:

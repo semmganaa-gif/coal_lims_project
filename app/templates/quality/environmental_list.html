@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2><i class="fas fa-thermometer-half"></i> Орчны нөхцлийн хяналт</h2>
+            <p class="text-muted">ISO 17025 - Clause 6.3.3: Температур, Чийгийн бүртгэл</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#addEnvModal">
+                <i class="fas fa-plus"></i> Хэмжилт нэмэх
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Measurements -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped" id="envTable">
+                <thead>
+                    <tr>
+                        <th>Огноо/Цаг</th>
+                        <th>Байршил</th>
+                        <th>Температур (°C)</th>
+                        <th>Чийг (%)</th>
+                        <th>Хязгаар (T)</th>
+                        <th>Хязгаар (RH)</th>
+                        <th>Статус</th>
+                        <th>Бүртгэсэн</th>
+                        <th>Тэмдэглэл</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{{ 'table-danger' if not log.within_limits else '' }}">
+                        <td>{{ log.log_date.strftime('%Y-%m-%d %H:%M') if log.log_date else '-' }}</td>
+                        <td><strong>{{ log.location }}</strong></td>
+                        <td>
+                            <span style="font-size: 1.2em; font-weight: bold">
+                                {{ "%.1f"|format(log.temperature) if log.temperature else '-' }}°C
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 1.2em; font-weight: bold">
+                                {{ "%.1f"|format(log.humidity) if log.humidity else '-' }}%
+                            </span>
+                        </td>
+                        <td>
+                            <small>{{ "%.1f"|format(log.temp_min) if log.temp_min else '-' }} -
+                                   {{ "%.1f"|format(log.temp_max) if log.temp_max else '-' }}</small>
+                        </td>
+                        <td>
+                            <small>{{ "%.1f"|format(log.humidity_min) if log.humidity_min else '-' }} -
+                                   {{ "%.1f"|format(log.humidity_max) if log.humidity_max else '-' }}</small>
+                        </td>
+                        <td>
+                            {% if log.within_limits %}
+                                <span class="badge badge-success">✓ Хэвийн</span>
+                            {% else %}
+                                <span class="badge badge-danger">⚠ Хэмжээнээс гарсан</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.recorded_by.username if log.recorded_by else '-' }}</td>
+                        <td>{{ log.notes[:50] if log.notes else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Environmental Log Modal -->
+<div class="modal fade" id="addEnvModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('quality.environmental_add') }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Орчны хэмжилт нэмэх</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Байршил *</label>
+                        <select name="location" class="form-control" required>
+                            <option value="Sample Storage">Дээж хадгалах өрөө</option>
+                            <option value="Analysis Room">Шинжилгээний өрөө</option>
+                            <option value="Furnace Room">Зуухны өрөө</option>
+                            <option value="Balance Room">Жингийн өрөө</option>
+                            <option value="Preparation Room">Бэлтгэх өрөө</option>
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Температур (°C) *</label>
+                                <input type="number" step="0.1" name="temperature" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Чийг (%) *</label>
+                                <input type="number" step="0.1" name="humidity" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6>Хэвийн хязгаарууд:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>T Min (°C)</label>
+                                <input type="number" step="0.1" name="temp_min" class="form-control" value="15">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>T Max (°C)</label>
+                                <input type="number" step="0.1" name="temp_max" class="form-control" value="30">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>RH Min (%)</label>
+                                <input type="number" step="0.1" name="humidity_min" class="form-control" value="20">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>RH Max (%)</label>
+                                <input type="number" step="0.1" name="humidity_max" class="form-control" value="70">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Тэмдэглэл</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Хаах</button>
+                    <button type="submit" class="btn btn-primary">Хадгалах</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#envTable').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 50,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json'
+        }
+    });
+});
+</script>
+{% endblock %}

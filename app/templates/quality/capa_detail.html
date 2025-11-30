@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h2>{{ capa.ca_number }}</h2>
+            <p class="text-muted">{{ capa.issue_source }} | {{ capa.issue_date.strftime('%Y-%m-%d') }}</p>
+        </div>
+        <div class="col-md-4 text-right">
+            <a href="{{ url_for('quality.capa_edit', id=capa.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Засах
+            </a>
+            <a href="{{ url_for('quality.capa_list') }}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Буцах
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Асуудал -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5>Асуудлын мэдээлэл</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th width="200">Эх үүсвэр:</th>
+                            <td><span class="badge badge-info">{{ capa.issue_source }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Ноцтой байдал:</th>
+                            <td>
+                                {% if capa.severity == 'Critical' %}
+                                    <span class="badge badge-danger">Эрс</span>
+                                {% elif capa.severity == 'Major' %}
+                                    <span class="badge badge-warning">Томоохон</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Бага</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Тайлбар:</th>
+                            <td>{{ capa.issue_description }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Шалтгаан -->
+            {% if capa.root_cause %}
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5>Шалтгааны шинжилгээ</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Аргачлал:</strong> {{ capa.root_cause_method or '-' }}</p>
+                    <p><strong>Үндсэн шалтгаан:</strong></p>
+                    <p>{{ capa.root_cause }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Арга хэмжээ -->
+            <div class="card mb-3">
+                <div class="card-header bg-warning">
+                    <h5>Арга хэмжээ</h5>
+                </div>
+                <div class="card-body">
+                    {% if capa.corrective_action %}
+                    <p><strong>Засах үйлдэл:</strong></p>
+                    <p>{{ capa.corrective_action }}</p>
+                    {% endif %}
+
+                    {% if capa.preventive_action %}
+                    <p><strong>Урьдчилан сэргийлэх:</strong></p>
+                    <p>{{ capa.preventive_action }}</p>
+                    {% endif %}
+
+                    <table class="table table-sm mt-3">
+                        <tr>
+                            <th>Хариуцагч:</th>
+                            <td>{{ capa.responsible_person.username if capa.responsible_person else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Зорилтот огноо:</th>
+                            <td>{{ capa.target_date.strftime('%Y-%m-%d') if capa.target_date else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Гүйцэтгэсэн огноо:</th>
+                            <td>{{ capa.completion_date.strftime('%Y-%m-%d') if capa.completion_date else '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Баталгаажуулалт -->
+            {% if capa.verification_date or current_user.role in ['ahlah', 'admin'] %}
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5>Баталгаажуулалт</h5>
+                </div>
+                <div class="card-body">
+                    {% if capa.verification_date %}
+                        <p><strong>Баталгаажуулсан:</strong> {{ capa.verified_by.username }} ({{ capa.verification_date.strftime('%Y-%m-%d') }})</p>
+                        <p><strong>Арга:</strong> {{ capa.verification_method }}</p>
+                        <p><strong>Үр дүнтэй байдал:</strong>
+                            {% if capa.effectiveness == 'Effective' %}
+                                <span class="badge badge-success">Үр дүнтэй</span>
+                            {% elif capa.effectiveness == 'Not effective' %}
+                                <span class="badge badge-danger">Үр дүнгүй</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Хүлээгдэж байна</span>
+                            {% endif %}
+                        </p>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('quality.capa_verify', id=capa.id) }}">
+                            <div class="form-group">
+                                <label>Баталгаажуулах арга:</label>
+                                <textarea name="verification_method" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Үр дүнтэй байдал:</label>
+                                <select name="effectiveness" class="form-control">
+                                    <option value="Pending">Хүлээгдэж байна</option>
+                                    <option value="Effective">Үр дүнтэй</option>
+                                    <option value="Not effective">Үр дүнгүй</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success">Баталгаажуулах</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <!-- Status card -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Төлөв</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>
+                        {% if capa.status == 'open' %}
+                            <span class="badge badge-danger badge-lg">Нээлттэй</span>
+                        {% elif capa.status == 'in_progress' %}
+                            <span class="badge badge-warning badge-lg">Гүйцэтгэлд</span>
+                        {% else %}
+                            <span class="badge badge-success badge-lg">Хаагдсан</span>
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if capa.notes %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Тэмдэглэл</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ capa.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

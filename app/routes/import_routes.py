@@ -566,7 +566,6 @@ def import_historical_csv():
         if "Дутуу багана байна" in msg:
             # Wide CHPP CSV гэж үзээд позициор уншина
             current_app.logger.warning("IMPORT: CHPP wide positional mapping ашиглалаа.")
-            print("⚠️ IMPORT: CHPP wide positional mapping ашиглалаа.")
             string_io.seek(0)
             reader = csv.reader(string_io, delimiter=delim)
             raw_header = next(reader)

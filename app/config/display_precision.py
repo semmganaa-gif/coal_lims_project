@@ -12,6 +12,9 @@
 """
 
 from typing import Dict
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -309,5 +312,4 @@ def validate_precision_config():
 try:
     validate_precision_config()
 except ValueError as e:
-    import sys
-    print(f"WARNING: {e}", file=sys.stderr)
+    logger.warning(f"Precision configuration validation: {e}")

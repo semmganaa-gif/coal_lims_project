@@ -218,6 +218,16 @@ class Sample(db.Model):
     mass_ready_at = db.Column(db.DateTime, nullable=True)
     mass_ready_by_id = db.Column(db.Integer, nullable=True)
 
+    # 🆕 ISO 17025: Chain of Custody & Sample Retention
+    sampled_by = db.Column(db.String(100))  # Хэн авсан
+    sampling_date = db.Column(db.DateTime)  # Хэзээ авсан
+    sampling_location = db.Column(db.String(200))  # Хаанаас авсан
+    sampling_method = db.Column(db.String(100))  # Аргачлал (SOP reference)
+    custody_log = db.Column(db.Text)  # JSON: Хариуцлага шилжүүлсэн түүх
+    retention_date = db.Column(Date)  # Хадгалах дуусах хугацаа
+    disposal_date = db.Column(Date)  # Устгах огноо
+    disposal_method = db.Column(db.String(100))  # Яаж устгасан
+
     # ✅ CHECK CONSTRAINT
     __table_args__ = (
         CheckConstraint(
@@ -1307,3 +1317,234 @@ class AuditLog(db.Model):
 
     def __repr__(self) -> str:
         return f"<AuditLog {self.action} by user_id={self.user_id} at {self.timestamp}>"
+
+
+# -------------------------
+# ЗАСВАР АРГА ХЭМЖЭЭ (CAPA)
+# -------------------------
+class CorrectiveAction(db.Model):
+    """
+    Засвар арга хэмжээ (Corrective and Preventive Actions).
+
+    ISO 17025 - Clause 8.7: Бүх зөрчил, гомдол, дотоод хяналтын үр дүнд
+    засвар арга хэмжээ авах шаардлагатай.
+    """
+    __tablename__ = "corrective_action"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ca_number = db.Column(db.String(50), unique=True, nullable=False, index=True)  # CA-2025-001
+
+    # Асуудлын мэдээлэл
+    issue_date = db.Column(db.Date, nullable=False, default=now_mn)
+    issue_source = db.Column(db.String(100))  # Internal audit, Customer complaint, PT, Equipment
+    issue_description = db.Column(db.Text, nullable=False)
+    severity = db.Column(db.String(20), default='Minor')  # Critical, Major, Minor
+
+    # Шалтгааны шинжилгээ
+    root_cause = db.Column(db.Text)  # 5 Why, Fishbone analysis
+    root_cause_method = db.Column(db.String(100))  # 5 Whys, Fishbone, Pareto
+
+    # Арга хэмжээ
+    corrective_action = db.Column(db.Text)  # Засах үйлдэл
+    preventive_action = db.Column(db.Text)  # Урьдчилан сэргийлэх
+    responsible_person_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    target_date = db.Column(db.Date)
+    completion_date = db.Column(db.Date)
+
+    # Баталгаажуулалт
+    verification_method = db.Column(db.Text)
+    verification_date = db.Column(db.Date)
+    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    effectiveness = db.Column(db.String(20))  # Effective, Not effective, Pending
+
+    # Төлөв
+    status = db.Column(db.String(20), default='open', index=True)  # open, in_progress, closed
+    notes = db.Column(db.Text)
+
+    # Relationships
+    responsible_person = db.relationship('User', foreign_keys=[responsible_person_id], backref='assigned_capas')
+    verified_by = db.relationship('User', foreign_keys=[verified_by_id], backref='verified_capas')
+
+    def __repr__(self):
+        return f"<CorrectiveAction {self.ca_number} - {self.status}>"
+
+
+# -------------------------
+# ЧАДАМЖИЙН ШАЛГАЛТ (Proficiency Testing)
+# -------------------------
+class ProficiencyTest(db.Model):
+    """
+    Чадамжийн шалгалт (Proficiency Testing).
+
+    ISO 17025 - Clause 7.7.2: Лаборатори PT программд оролцож,
+    үр дүнгээ гадны байгууллагатай харьцуулж чадвараа батлах.
+    """
+    __tablename__ = "proficiency_test"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # PT мэдээлэл
+    pt_provider = db.Column(db.String(150))  # ASTM, ISO LEAP, NIST
+    pt_program = db.Column(db.String(100))  # Coal PT-2025
+    round_number = db.Column(db.String(50))
+    sample_code = db.Column(db.String(100))  # PT дээжний код
+
+    # Үр дүн
+    analysis_code = db.Column(db.String(50), index=True)
+    our_result = db.Column(db.Float)
+    assigned_value = db.Column(db.Float)  # Зөвт утга
+    uncertainty = db.Column(db.Float)
+    z_score = db.Column(db.Float)  # Performance indicator
+
+    # Үнэлгээ
+    performance = db.Column(db.String(30))  # satisfactory, questionable, unsatisfactory
+
+    # Огноо
+    received_date = db.Column(db.Date)
+    test_date = db.Column(db.Date, index=True)
+    report_date = db.Column(db.Date)
+
+    # Хавсралт
+    certificate_file = db.Column(db.String(255))
+    notes = db.Column(db.Text)
+
+    # Хэн шинжилсэн
+    tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    tested_by = db.relationship('User', backref='pt_tests')
+
+    def __repr__(self):
+        return f"<PT {self.pt_program} - {self.analysis_code} Z={self.z_score}>"
+
+
+# -------------------------
+# ОРЧНЫ НӨХЦЛИЙН ХЯНАЛТ
+# -------------------------
+class EnvironmentalLog(db.Model):
+    """
+    Орчны нөхцлийн бүртгэл (Environmental Monitoring).
+
+    ISO 17025 - Clause 6.3.3: Лабораторийн орчны нөхцөл
+    (температур, чийг) үр дүнд нөлөөлж болох тул хянах.
+    """
+    __tablename__ = "environmental_log"
+
+    id = db.Column(db.Integer, primary_key=True)
+    log_date = db.Column(db.DateTime, default=now_mn, index=True)
+
+    # Байршил
+    location = db.Column(db.String(100))  # Sample storage, Analysis room, Furnace room
+
+    # Хэмжилт
+    temperature = db.Column(db.Float)  # °C
+    humidity = db.Column(db.Float)  # %
+    pressure = db.Column(db.Float)  # kPa (optional)
+
+    # Хэвийн хязгаар
+    temp_min = db.Column(db.Float)  # Доод хязгаар
+    temp_max = db.Column(db.Float)  # Дээд хязгаар
+    humidity_min = db.Column(db.Float)
+    humidity_max = db.Column(db.Float)
+
+    # Хэвийн эсэх
+    within_limits = db.Column(db.Boolean, default=True)
+
+    # Бүртгэсэн хүн
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    recorded_by = db.relationship('User', backref='env_logs')
+
+    notes = db.Column(db.Text)
+
+    def __repr__(self):
+        return f"<EnvLog {self.location} T={self.temperature}°C RH={self.humidity}%>"
+
+
+# -------------------------
+# ЧАНАРЫН ХЯНАЛТЫН ГРАФИК (Control Chart)
+# -------------------------
+class QCControlChart(db.Model):
+    """
+    Чанарын хяналтын график өгөгдөл.
+
+    ISO 17025 - Clause 7.7.1: QC дээж тогтмол шинжлэж,
+    control chart-аар системийн чанарыг хянах.
+    """
+    __tablename__ = "qc_control_chart"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # QC дээж
+    analysis_code = db.Column(db.String(50), index=True)
+    qc_sample_name = db.Column(db.String(100))  # QC Coal Standard A
+
+    # Хяналтын хязгаар
+    target_value = db.Column(db.Float)  # Зорилтот утга
+    ucl = db.Column(db.Float)  # Upper control limit (target + 2*sd)
+    lcl = db.Column(db.Float)  # Lower control limit (target - 2*sd)
+    usl = db.Column(db.Float)  # Upper spec limit (optional)
+    lsl = db.Column(db.Float)  # Lower spec limit
+
+    # Хэмжилт
+    measurement_date = db.Column(db.Date, index=True)
+    measured_value = db.Column(db.Float)
+    in_control = db.Column(db.Boolean, default=True)  # UCL/LCL дотор уу?
+
+    # Operator
+    operator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    operator = db.relationship('User', backref='qc_measurements')
+
+    # Тэмдэглэл
+    notes = db.Column(db.Text)
+
+    def __repr__(self):
+        return f"<QC {self.analysis_code} - {self.qc_sample_name} = {self.measured_value}>"
+
+
+# -------------------------
+# ҮЙЛЧЛҮҮЛЭГЧИЙН ГОМДОЛ
+# -------------------------
+class CustomerComplaint(db.Model):
+    """
+    Үйлчлүүлэгчийн гомдол (Customer Complaints).
+
+    ISO 17025 - Clause 8.9: Бүх гомдлыг бүртгэж, шалтгааныг
+    олж, шийдвэрлэх ёстой.
+    """
+    __tablename__ = "customer_complaint"
+
+    id = db.Column(db.Integer, primary_key=True)
+    complaint_no = db.Column(db.String(50), unique=True, index=True)  # COMP-2025-001
+
+    # Үйлчлүүлэгч
+    client_name = db.Column(db.String(200))
+    contact_person = db.Column(db.String(100))
+    contact_email = db.Column(db.String(100))
+    contact_phone = db.Column(db.String(50))
+
+    # Гомдол
+    complaint_date = db.Column(db.Date, nullable=False, default=now_mn)
+    complaint_type = db.Column(db.String(100))  # Turnaround time, Result accuracy, Service quality
+    description = db.Column(db.Text, nullable=False)
+    related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'))
+
+    # Шийдвэрлэлт
+    investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    investigation_findings = db.Column(db.Text)
+    resolution = db.Column(db.Text)
+    resolution_date = db.Column(db.Date)
+
+    # Үйлчлүүлэгчийн хариу
+    customer_notified = db.Column(db.Boolean, default=False)
+    customer_satisfied = db.Column(db.Boolean)
+    capa_created = db.Column(db.Boolean, default=False)  # CAPA үүссэн үү
+    capa_id = db.Column(db.Integer, db.ForeignKey('corrective_action.id'))
+
+    # Төлөв
+    status = db.Column(db.String(20), default='received', index=True)  # received, investigating, resolved, closed
+
+    # Relationships
+    related_sample = db.relationship('Sample', backref='complaints')
+    investigated_by = db.relationship('User', backref='investigated_complaints')
+    related_capa = db.relationship('CorrectiveAction', backref='source_complaints')
+
+    def __repr__(self):
+        return f"<Complaint {self.complaint_no} - {self.status}>"

@@ -11,6 +11,7 @@ from app.forms import LoginForm
 import sqlalchemy as sa
 
 from .helpers import is_safe_url
+from app.utils.audit import log_audit
 
 
 def register_routes(bp):
@@ -32,8 +33,10 @@ def register_routes(bp):
             user = db.session.scalar(sa.select(User).where(User.username == form.username.data))
             if user is None or not user.check_password(form.password.data):
                 flash("Нэр эсвэл нууц үг буруу байна", "danger")
+                log_audit(action='login_failed', details={'username': form.username.data})
                 return redirect(url_for("main.login"))
             login_user(user, remember=form.remember_me.data)
+            log_audit(action='login_success', details={'username': user.username, 'role': user.role})
             next_page = request.args.get("next")
             if not next_page or not is_safe_url(next_page):
                 next_page = url_for("main.index")
@@ -46,5 +49,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/logout")
     def logout():
+        if current_user.is_authenticated:
+            log_audit(action='logout', details={'username': current_user.username})
         logout_user()
         return redirect(url_for("main.login"))

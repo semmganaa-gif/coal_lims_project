@@ -117,6 +117,40 @@
               </ul>
             </li>
 
+            {# 🆕 Чанарын удирдлага (ISO 17025) #}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="qualityMenu" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-clipboard-check"></i> Чанарын удирдлага
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="qualityMenu">
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('quality.capa_list') }}">
+                    <i class="bi bi-exclamation-triangle"></i> CAPA (Засах арга хэмжээ)
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('quality.proficiency_list') }}">
+                    <i class="bi bi-award"></i> Proficiency Testing (PT)
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('quality.environmental_list') }}">
+                    <i class="bi bi-thermometer-half"></i> Орчны нөхцөл
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('quality.control_charts') }}">
+                    <i class="bi bi-graph-up"></i> Хяналтын график
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('quality.complaints_list') }}">
+                    <i class="bi bi-chat-left-dots"></i> Үйлчлүүлэгчийн гомдол
+                  </a>
+                </li>
+              </ul>
+            </li>
+
 {# ... Дээд талд Тоног төхөөрөмжийн цэс байгаа ... #}
 
             {% if current_user.role in ['ahlah', 'admin'] %}

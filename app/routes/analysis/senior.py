@@ -20,6 +20,7 @@ from app.utils.security import escape_like_pattern
 from app.utils.settings import get_error_reason_labels  # ✅ DB-ээс унших
 from app.utils.normalize import normalize_raw_data
 from app.config.analysis_schema import get_analysis_schema
+from app.utils.audit import log_audit
 from .helpers import analysis_role_required
 
 
@@ -189,5 +190,18 @@ def register_routes(bp):
         )
         db.session.add(audit)
         db.session.commit()
+
+        # ISO 17025 compliance audit log
+        log_audit(
+            action=f'result_{new_status}',
+            resource_type='AnalysisResult',
+            resource_id=res.id,
+            details={
+                'sample_id': res.sample_id,
+                'analysis_code': res.analysis_code,
+                'final_result': res.final_result,
+                'rejection_comment': rejection_comment
+            }
+        )
 
         return jsonify({"message": "OK", "status": new_status})

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if capa %}CAPA засах{% else %}Шинэ CAPA үүсгэх{% endif %}</h2>
+
+    <form method="POST" class="mt-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>Асуудлын мэдээлэл</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Огноо *</label>
+                            <input type="date" name="issue_date" class="form-control"
+                                   value="{{ capa.issue_date.strftime('%Y-%m-%d') if capa and capa.issue_date else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Эх үүсвэр *</label>
+                            <select name="issue_source" class="form-control" required>
+                                <option value="">-- Сонгох --</option>
+                                <option value="Internal audit" {% if capa and capa.issue_source == 'Internal audit' %}selected{% endif %}>Дотоод хяналт</option>
+                                <option value="Customer complaint" {% if capa and capa.issue_source == 'Customer complaint' %}selected{% endif %}>Үйлчлүүлэгчийн гомдол</option>
+                                <option value="Proficiency testing" {% if capa and capa.issue_source == 'Proficiency testing' %}selected{% endif %}>Чадамжийн шалгалт</option>
+                                <option value="Equipment failure" {% if capa and capa.issue_source == 'Equipment failure' %}selected{% endif %}>Багаж гэмтсэн</option>
+                                <option value="Data error" {% if capa and capa.issue_source == 'Data error' %}selected{% endif %}>Өгөгдлийн алдаа</option>
+                                <option value="Other" {% if capa and capa.issue_source == 'Other' %}selected{% endif %}>Бусад</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Ноцтой байдал</label>
+                            <select name="severity" class="form-control">
+                                <option value="Minor" {% if capa and capa.severity == 'Minor' %}selected{% endif %}>Бага</option>
+                                <option value="Major" {% if capa and capa.severity == 'Major' %}selected{% endif %}>Томоохон</option>
+                                <option value="Critical" {% if capa and capa.severity == 'Critical' %}selected{% endif %}>Эрс</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Статус</label>
+                            <select name="status" class="form-control">
+                                <option value="open" {% if capa and capa.status == 'open' %}selected{% endif %}>Нээлттэй</option>
+                                <option value="in_progress" {% if capa and capa.status == 'in_progress' %}selected{% endif %}>Гүйцэтгэлд</option>
+                                <option value="closed" {% if capa and capa.status == 'closed' %}selected{% endif %}>Хаагдсан</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Асуудлын тайлбар *</label>
+                    <textarea name="issue_description" class="form-control" rows="4" required>{{ capa.issue_description if capa else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <h5>Шалтгааны шинжилгээ</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Аргачлал</label>
+                    <select name="root_cause_method" class="form-control">
+                        <option value="">-- Сонгох --</option>
+                        <option value="5 Whys" {% if capa and capa.root_cause_method == '5 Whys' %}selected{% endif %}>5 Whys</option>
+                        <option value="Fishbone" {% if capa and capa.root_cause_method == 'Fishbone' %}selected{% endif %}>Fishbone (Ishikawa)</option>
+                        <option value="Pareto" {% if capa and capa.root_cause_method == 'Pareto' %}selected{% endif %}>Pareto Analysis</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Үндсэн шалтгаан</label>
+                    <textarea name="root_cause" class="form-control" rows="3">{{ capa.root_cause if capa else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-warning">
+                <h5>Арга хэмжээ</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Засах арга хэмжээ (Corrective)</label>
+                    <textarea name="corrective_action" class="form-control" rows="3">{{ capa.corrective_action if capa else '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Урьдчилан сэргийлэх арга хэмжээ (Preventive)</label>
+                    <textarea name="preventive_action" class="form-control" rows="3">{{ capa.preventive_action if capa else '' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Хариуцагч</label>
+                            <select name="responsible_person_id" class="form-control">
+                                <option value="">-- Сонгох --</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}" {% if capa and capa.responsible_person_id == user.id %}selected{% endif %}>
+                                    {{ user.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Зорилтот огноо</label>
+                            <input type="date" name="target_date" class="form-control"
+                                   value="{{ capa.target_date.strftime('%Y-%m-%d') if capa and capa.target_date else '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Гүйцэтгэсэн огноо</label>
+                            <input type="date" name="completion_date" class="form-control"
+                                   value="{{ capa.completion_date.strftime('%Y-%m-%d') if capa and capa.completion_date else '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Тэмдэглэл</label>
+                    <textarea name="notes" class="form-control" rows="2">{{ capa.notes if capa else '' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save"></i> Хадгалах
+            </button>
+            <a href="{{ url_for('quality.capa_list') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times"></i> Болих
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
