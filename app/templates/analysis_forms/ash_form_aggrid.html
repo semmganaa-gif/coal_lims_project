@@ -1,86 +1,9 @@
-{# AG Grid хувилбар - Glassmorphism Style & Fixed Layout #}
+{# AG Grid хувилбар - REFACTORED with Factory Pattern #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
-{{ aggrid_macros.common_grid_css('ashGrid') | safe }}
-{{ aggrid_macros.common_js_helpers(['num','m1','m2','m3']) | safe }}
 
-<style>
-  .ag-theme-alpine .ag-root-wrapper {
-    border-radius: 16px;
-    overflow: hidden;
-    background: radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(248,249,250,0.9));
-    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
-  }
-
-  .ag-theme-alpine .ag-header {
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  .ag-theme-alpine .ag-header-cell {
-    border-right: 1px solid #d0d0d0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-  }
-
-  .ag-theme-alpine .ag-cell {
-    border-right: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  /* Parallel group header separation */
-  .ag-header-group-cell-with-group {
-    border-right: 2px solid #adb5bd !important;
-    text-align: center !important;
-  }
-  .ag-theme-alpine .ag-header-group-cell:nth-child(3) { background-color: #e3f2fd !important; } /* P1 */
-  .ag-theme-alpine .ag-header-group-cell:nth-child(4) { background-color: #fff3e0 !important; } /* P2 */
-
-  /* --- 💎 GLASSMORPHISM (RowSpan cell) --- */
-  .ag-theme-alpine .ag-cell-span {
-    background-color: rgba(255, 255, 255, 0.90) !important;
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    z-index: 5 !important;
-    border-bottom: 1px solid #dee2e6 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-  }
-
-  /* RowSpan border fix */
-  .ag-theme-alpine .ag-row:has(.ag-cell-span) + .ag-row .ag-cell {
-    border-top: none !important;
-  }
-
-  /* Hover – unsaved мөрийг бага зэрэг гаргаж харагдуулах */
-  .ag-theme-alpine .ag-row-hover .ag-cell:not(.ag-cell-span) {
-    background-color: rgba(255, 255, 255, 0.75);
-  }
-
-  /* --- EDITING STATE --- */
-  .ag-theme-alpine .ag-cell-inline-editing {
-    background-color: #fff !important;
-    box-shadow: 0 0 0 2px #2196F3 !important;
-    z-index: 100 !important;
-  }
-
-  /* --- BADGES & TEXT --- */
-  .reject-badge {
-    font-size: 0.7em;
-    padding: 3px 6px;
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px;
-    display: inline-block;
-    margin-top: 4px;
-  }
-
-  .sample-name {
-    font-weight: 600;
-    color: #0d6efd;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-  }
-</style>
+{# ⚡ Note: base.html conditional loading хэрэглэнэ (use_aggrid=True) #}
+{# CSS нь app/static/css/ag-grid-custom.css-аас ирнэ #}
 
 {{ aggrid_macros.grid_container('ashGrid') | safe }}
 
@@ -90,11 +13,12 @@
 
   // --- 1. CONFIG ---
   const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'Aad';
-  const DRAFT_KEY = `ash_draft_inputs_${ANALY_CODE}`;
 
   // Backend Data
   {{ aggrid_macros.dataset_block() | safe }}
 
+  // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
+  let draftMgr;
 
   // --- 2. HELPERS ---
 
@@ -113,40 +37,19 @@
     return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
   }
 
-  // Excel Navigation
-  function suppressEnterAndArrows(params) {
-    const k = params.event.key;
-    if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight') {
-      params.api.stopEditing();
-      const focused = params.api.getFocusedCell();
-      if (focused) {
-        let nextRow = focused.rowIndex;
-        let nextCol = focused.column;
-
-        const allCols = params.api.getColumns();
-        const idx = allCols.findIndex(c => c === focused.column);
-
-        if (k === 'ArrowUp') nextRow = focused.rowIndex - 1;
-        else if (k === 'ArrowDown') nextRow = focused.rowIndex + 1;
-        else if (k === 'ArrowLeft' && idx > 0) nextCol = allCols[idx - 1];
-        else if (k === 'ArrowRight' && idx < allCols.length - 1) nextCol = allCols[idx + 1];
-
-        params.api.setFocusedCell(nextRow, nextCol);
-        setTimeout(() => {
-          params.api.startEditingCell({ rowIndex: nextRow, colKey: nextCol });
-        }, 10);
-      }
-      return true;
-    }
-    // Enter → доош шилжихийг AG Grid өөрөө зохицуулна
-    return k === 'Enter';
-  }
-
+  // ✨ Utility functions (will use LIMS_AGGRID when available)
   const numParser = p => {
+    if (window.LIMS_AGGRID?.numParser) {
+      return window.LIMS_AGGRID.numParser(p);
+    }
     const v = parseFloat(p.newValue);
     return isNaN(v) ? null : v;
   };
-  const numFmt = p => (p.value != null ? parseFloat(p.value).toFixed(4) : '');
+
+  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';  // m1, m2, m3
+  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';  // тохирц
+  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';  // дундаж, үр дүн
+  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';  // тигель дугаар
 
   // Баганын тохиргоо (editable numeric columns)
   const editCol = {
@@ -154,8 +57,7 @@
     cellEditor: 'agTextCellEditor',
     cellEditorParams: { useFormatter: true },
     valueParser: numParser,
-    valueFormatter: numFmt,
-    suppressKeyboardEvent: suppressEnterAndArrows,
+    valueFormatter: numFmt4,
     cellStyle: p =>
       p.data.is_saved
         ? { backgroundColor: '#e9ecef' }
@@ -219,8 +121,8 @@
         return p.data.is_saved ? { ...base, backgroundColor: '#e9ecef' } : base;
       },
       ...editCol,
-      valueParser: null,
-      valueFormatter: null
+      valueParser: numParser,
+      valueFormatter: numFmt0
     },
     {
       headerName: 'm1',
@@ -271,10 +173,13 @@
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      valueFormatter: p =>
-        p.data.parallel === 1 && p.data.is_saved && p.value != null
-          ? parseFloat(p.value).toFixed(2)
-          : '',
+      valueFormatter: p => {
+        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+          return parseFloat(p.value).toFixed(3);  // тохирц 3 орон
+        }
+        return '';
+      },
       cellStyle: p => {
         if (!p.data.is_saved) {
           return {
@@ -284,6 +189,7 @@
             justifyContent: 'center'
           };
         }
+        // Хадгалагдсан: улаан (>0.5) эсвэл саарал (<=0.5)
         return {
           color: p.value > 0.5 ? '#dc3545' : '#6c757d',
           fontWeight: 'bold',
@@ -299,106 +205,115 @@
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      valueFormatter: p =>
-        p.data.parallel === 1 && p.data.is_saved && p.value != null
-          ? parseFloat(p.value).toFixed(2)
-          : '',
-      cellStyle: p => {
-        if (!p.data.is_saved) {
-          return {
-            color: '#ccc',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          };
+      valueFormatter: p => {
+        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+          return parseFloat(p.value).toFixed(2);  // дундаж 2 орон
         }
-        return {
-          fontWeight: 'bold',
-          color: '#198754',
-          backgroundColor: '#d1e7dd',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        };
-      }
+        return '';
+      },
+      cellStyle: p => ({
+        color: p.data.is_saved ? '#198754' : '#ccc',
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      })
     },
     {
-      headerName: '',
-      field: 'actions',
-      width: 60,
+      headerName: 'Үйлдэл',
+      width: 80,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellRenderer: p => {
+        // Only show button in first parallel row
+        if (p.data.parallel !== 1) return '';
+
+        // Hide button if sample is already saved (locked)
+        if (p.data.is_saved) {
+          return '<span class="text-muted small">Хадгалагдсан</span>';
+        }
+
+        return `
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="${p.data.sample_id}"
+                  title="Дээж хасах">
+            <i class="bi bi-x"></i>
+          </button>
+        `;
+      },
       cellStyle: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
-      },
-      cellRenderer: p =>
-        p.data.parallel === 1
-          ? `<button class="btn btn-outline-danger btn-sm border-0 py-0"
-                      onclick="removeSample(${p.data.sample_id})"
-                      title="Хасах"><i class="bi bi-x-lg"></i></button>`
-          : ''
+      }
     }
   ];
 
-  // --- 4. DATA MAPPING ---
-  const rowData = [];
-  samples.forEach((s, idx) => {
-    const ex = existingResults[s.id] || {};
-    const rd = ex.raw_data || {};
-    const isSaved = ex.status === 'pending_review' || ex.status === 'approved';
+  // --- 4. ROW DATA ---
+  const rowData = samples.flatMap((sample, idx) => {
+    const existing = existingResults[sample.id];
+    const rejected = rejectedInfo[sample.id];
 
-    const p1 = rd.p1 || {};
-    const p2 = rd.p2 || {};
-
-    const r1 = computeResult(p1.m1, p1.m2_sample ?? p1.m2, p1.m3_ashy ?? p1.m3);
-    const r2 = computeResult(p2.m1, p2.m2_sample ?? p2.m2, p2.m3_ashy ?? p2.m3);
-
-    const tol = r1 != null && r2 != null ? Math.abs(r1 - r2) : rd.diff ?? null;
-    const avg = r1 != null && r2 != null ? (r1 + r2) / 2 : rd.avg ?? null;
+    // ✅ Буцаах логик:
+    // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
+    // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
+    // - pending_review → locked (хадгалагдсан гэсэн үг)
+    const isRejected = existing?.status === 'rejected';
 
     const base = {
       index: idx + 1,
-      sample_id: s.id,
-      sample_code: s.code,
-      is_saved: isSaved,
-      _p1: r1,
-      _p2: r2,
-      _tol: tol,
-      _avg: avg
+      sample_id: sample.id,
+      sample_code: sample.code,
+      is_saved: existing && !isRejected,  // ✅ Rejected дээж editable
+      is_rejected: isRejected,
+      rejection_reason: rejected?.reason || ''
     };
 
-    rowData.push({
-      ...base,
-      parallel: 1,
-      crucible_num: p1.num ?? p1.crucible_num,
-      m1: p1.m1,
-      m2: p1.m2_sample ?? p1.m2,
-      m3: p1.m3_ashy ?? p1.m3,
-      result: r1,
-      tolerance: tol,
-      average: avg
-    });
-
-    rowData.push({
-      ...base,
-      parallel: 2,
-      crucible_num: p2.num ?? p2.crucible_num,
-      m1: p2.m1,
-      m2: p2.m2_sample ?? p2.m2,
-      m3: p2.m3_ashy ?? p2.m3,
-      result: r2,
-      tolerance: null,
-      average: null
-    });
+    if (existing) {
+      // Хадгалагдсан үр дүн байна
+      const p1 = existing.raw_data?.p1 || {};
+      const p2 = existing.raw_data?.p2 || {};
+      return [
+        {
+          ...base,
+          parallel: 1,
+          crucible_num: p1.num,
+          m1: p1.m1,
+          m2: p1.m2,
+          m3: p1.m3,
+          result: p1.result,
+          _p1: p1.result,
+          _p2: p2.result,
+          tolerance: existing.raw_data?.repeatability?.difference,
+          average: existing.final_result
+        },
+        {
+          ...base,
+          parallel: 2,
+          crucible_num: p2.num,
+          m1: p2.m1,
+          m2: p2.m2,
+          m3: p2.m3,
+          result: p2.result
+        }
+      ];
+    } else {
+      // Шинэ дээж
+      return [
+        { ...base, parallel: 1, crucible_num: null, m1: null, m2: null, m3: null, result: null },
+        { ...base, parallel: 2, crucible_num: null, m1: null, m2: null, m3: null, result: null }
+      ];
+    }
   });
 
-  // --- 5. DRAFT SAVE/RESTORE ---
+  // --- 5. DRAFT MANAGEMENT (✨ REFACTORED) ---
 
   function saveDrafts() {
     if (!window.ashGridApi) return;
+
     const drafts = {};
     window.ashGridApi.forEachNode(n => {
       if (!n.data.is_saved) {
@@ -418,12 +333,16 @@
         }
       }
     });
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+
+    // ✨ NEW: LIMSDraftManager ашиглах
+    draftMgr.save(drafts, false);
   }
 
   function restoreDrafts() {
     try {
-      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
+      // ✨ NEW: LIMSDraftManager-аас авах
+      const drafts = draftMgr.restore();
+
       window.ashGridApi.forEachNode(n => {
         if (!n.data.is_saved) {
           const k = `${n.data.sample_id}_${n.data.parallel}`;
@@ -440,6 +359,7 @@
           }
         }
       });
+
       window.ashGridApi.refreshCells({ force: true });
     } catch (e) {
       console.warn('Failed to restore drafts', e);
@@ -454,6 +374,8 @@
       if (d.parallel === 1) d._p1 = res;
       else d._p2 = res;
 
+      // ❌ NO REAL-TIME TOLERANCE/AVERAGE - ISO 17025 зөрчил!
+      // Зөвхөн тухайн мөрийн үр дүнг л refresh хийнэ
       window.ashGridApi.refreshCells({
         rowNodes: [params.node],
         columns: ['result']
@@ -462,26 +384,109 @@
     saveDrafts();
   }
 
-  // --- 6. INIT GRID ---
-  const gridOptions = {
-    theme: 'legacy',
-    columnDefs: columnDefs,
-    rowData: rowData,
-    defaultColDef: baseDefaultColDef,
-    suppressRowTransform: true,
-    singleClickEdit: true,
-    stopEditingWhenCellsLoseFocus: true,
-    enterNavigatesVertically: true,
-    enterNavigatesVerticallyAfterEdit: true,
-    onCellValueChanged: onCellValueChanged
-  };
+  // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
 
   document.addEventListener('DOMContentLoaded', () => {
-    const el = document.querySelector('#ashGrid');
-    if (el) {
-      window.ashGridApi = agGrid.createGrid(el, gridOptions);
-      setTimeout(restoreDrafts, 100);
+    // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+
+    if (urlIds) {
+      // URL дээр байвал localStorage-д хадгалах
+      try {
+        localStorage.setItem(STORAGE_KEY, urlIds);
+        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+      } catch(e) {
+        console.warn('localStorage save failed:', e);
+      }
+    } else {
+      // URL дээр байхгүй бол localStorage-аас сэргээх
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY);
+        if (savedIds) {
+          console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+
+          // ❌ БУУ: window.location.href = url.toString(); // Full reload!
+          // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
+          window.history.replaceState({}, '', url.toString());
+          console.log('✅ URL updated with sample_ids from localStorage (no reload)');
+
+          // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
+          // Энэ тохиолдолд reload хийх хэрэгтэй
+          console.warn('⚠️ Reloading page to fetch samples from backend...');
+          window.location.reload();
+          return;
+        }
+      } catch(e) {
+        console.warn('localStorage restore failed:', e);
+      }
     }
+
+    const el = document.querySelector('#ashGrid');
+    if (!el) {
+      console.error('ashGrid element not found');
+      return;
+    }
+
+    // ✨ Initialize Draft Manager (after scripts loaded)
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager(ANALY_CODE);
+      console.log('✅ Draft Manager initialized');
+    } else {
+      console.error('❌ LIMSDraftManager not loaded!');
+      // Fallback to localStorage directly
+      draftMgr = {
+        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+        purge: (ids) => {
+          if (!ids || ids.length === 0) {
+            localStorage.removeItem(`draft_${ANALY_CODE}`);
+          }
+        }
+      };
+    }
+
+    // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      // Factory pattern ашиглах
+      window.ashGridApi = LIMS_AGGRID.createGrid('#ashGrid', columnDefs, rowData, {
+        onCellValueChanged: onCellValueChanged,
+        enterNavigatesVerticallyAfterEdit: true,
+        editableColIds: ['crucible_num', 'm1', 'm2', 'm3']
+      });
+      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+    } else {
+      // Fallback: Manual grid creation
+      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      const gridOptions = {
+        theme: 'legacy',
+        columnDefs: columnDefs,
+        rowData: rowData,
+        defaultColDef: {
+          sortable: false,
+          resizable: true,
+          editable: false,
+          suppressMovable: true,
+          wrapHeaderText: true,
+          autoHeaderHeight: true
+        },
+        suppressRowTransform: true,
+        singleClickEdit: true,
+        stopEditingWhenCellsLoseFocus: true,
+        enterNavigatesVertically: true,
+        enterNavigatesVerticallyAfterEdit: true,
+        onCellValueChanged: onCellValueChanged
+      };
+      window.ashGridApi = agGrid.createGrid(el, gridOptions);
+    }
+
+    // Draft сэргээх
+    setTimeout(restoreDrafts, 100);
+
+    console.log('✅ Ash Grid initialized with factory pattern');
   });
 
   // --- 7. ACTIONS ---
@@ -500,35 +505,47 @@
     if (!window.ashGridApi) return [];
     const map = {};
     window.ashGridApi.forEachNode(n => {
+      // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
+      if (n.data.is_saved) return;
+
       if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
       map[n.data.sample_id][n.data.parallel] = n.data;
     });
 
     const payload = [];
+    const incomplete = [];  // ✅ Дутуу дээжүүдийг хадгалах
+
     Object.keys(map).forEach(sid => {
       const p1 = map[sid][1];
       const p2 = map[sid][2];
-      if (
-        p1 &&
-        p2 &&
-        p1.m1 != null &&
-        p1.m2 != null &&
-        p1.m3 != null &&
-        p2.m1 != null &&
-        p2.m2 != null &&
-        p2.m3 != null
-      ) {
+
+      // ✅ Validation шалгалт
+      const hasP1 = p1 && p1.m1 != null && p1.m2 != null && p1.m3 != null;
+      const hasP2 = p2 && p2.m1 != null && p2.m2 != null && p2.m3 != null;
+
+      if (hasP1 && hasP2) {
         const res1 = computeResult(p1.m1, p1.m2, p1.m3);
         const res2 = computeResult(p2.m1, p2.m2, p2.m3);
-        if (res1 == null || res2 == null) return;
+        if (res1 == null || res2 == null) {
+          console.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
+          incomplete.push(p1.sample_code || sid);
+          return;
+        }
 
         const avg = (res1 + res2) / 2;
         const diff = Math.abs(res1 - res2);
+
+        // ✅ Backend expectation: top-level diff/avg болон repeatability object
         payload.push({
           sample_id: parseInt(sid),
           analysis_code: ANALY_CODE,
           final_result: avg,
           raw_data: {
+            // ✅ Top-level summary fields (ахлахын хяналт + аудит логт харагдана)
+            diff: diff,
+            avg: avg,
+
+            // Parallel data
             p1: {
               num: p1.crucible_num,
               m1: p1.m1,
@@ -547,170 +564,374 @@
               m3_ashy: p2.m3,
               result: res2
             },
-            avg: avg,
-            diff: diff
+
+            // ✅ Repeatability (backend тооцоолол хийж, limit шалгаж, t_exceeded тогтооно)
+            repeatability: {
+              difference: diff
+              // Backend repeatability.py-ээс limit авч, t_exceeded тогтооно
+            }
           }
         });
+      } else {
+        // ✅ Дутуу дээж - мэдээлэл хадгалах
+        const sampleCode = p1?.sample_code || p2?.sample_code || sid;
+        const missing = [];
+        if (!hasP1) missing.push('Parallel 1');
+        if (!hasP2) missing.push('Parallel 2');
+        console.warn(`⚠️ Дээж "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        incomplete.push(sampleCode);
       }
     });
+
+    // ✅ Summary logging
+    if (incomplete.length > 0) {
+      console.log(`📊 Нийт: ${Object.keys(map).length} дээж`);
+      console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
+      console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
+    } else {
+      console.log(`✅ ${payload.length} дээж бэлэн`);
+    }
+
     return payload;
   };
 
-  function purgeDrafts(savedResults) {
-    if (!savedResults || !savedResults.length) return;
-    try {
-      const drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}');
-      savedResults.forEach(r => {
-        delete drafts[`${r.sample_id}_1`];
-        delete drafts[`${r.sample_id}_2`];
-      });
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
-    } catch (e) {
-      console.warn('Failed to purge drafts', e);
-    }
-  }
+  // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
+  window.updateAshGridAfterSave = function(savedPayload) {
+    console.log('✅ afterSave called, updating grid without reload');
 
-  window.updateAshGridAfterSave = function(savedResults) {
-    if (!window.ashGridApi || !savedResults) return;
-    const savedMap = {};
-    savedResults.forEach(r => {
-      savedMap[r.sample_id] = r;
+    const savedSampleIds = savedPayload.map(r => r.sample_id);
+
+    // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+
+    // savedPayload-ээс status шалгах
+    const approvedIds = [];  // Батлагдсан (тохирц OK) → арилах
+    const pendingIds = [];   // Хүлээгдэж буй (тохирц зөрүү) → үлдэх
+
+    savedPayload.forEach(saved => {
+      if (saved.status === 'approved') {
+        approvedIds.push(saved.sample_id);
+      } else if (saved.status === 'pending_review') {
+        pendingIds.push(saved.sample_id);
+      }
     });
+
+    // Grid-ээс бүх sample IDs-ийг цуглуулах
+    const allSampleIds = [];
+    if (window.ashGridApi) {
+      window.ashGridApi.forEachNode(n => {
+        if (!allSampleIds.includes(n.data.sample_id)) {
+          allSampleIds.push(n.data.sample_id);
+        }
+      });
+    }
+
+    // Хадгалагдаагүй + pending_review дээжүүдийг үлдээх
+    const remainingIds = allSampleIds.filter(id =>
+      !approvedIds.includes(id) || pendingIds.includes(id)
+    );
+
+    console.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
+    console.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
+    console.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
+
+    if (remainingIds.length > 0) {
+      const idsString = remainingIds.join(',');
+
+      // ✅ localStorage сэргээх
+      try {
+        localStorage.setItem(STORAGE_KEY, idsString);
+        console.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
+      } catch(e) {
+        console.warn('localStorage update failed:', e);
+      }
+
+      // ✅ URL сэргээх
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', idsString);
+        window.history.replaceState({}, '', url.toString());
+        console.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
+      } catch(e) {
+        console.warn('URL update failed:', e);
+      }
+    } else {
+      // Бүх дээж approved болсон - worksheet цэвэрлэх
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+        console.log(`✅ All approved - cleared worksheet`);
+      } catch(e) {}
+    }
+
+    // Draft устгах (зөвхөн хадгалагдсан)
+    draftMgr.purge(
+      savedSampleIds.flatMap(id => [`${id}_1`, `${id}_2`])
+    );
+
+    // Grid update - хадгалагдсан дээжүүдийг locked болгох
     window.ashGridApi.forEachNode(n => {
-      const s = savedMap[n.data.sample_id];
-      if (s) {
+      if (savedSampleIds.includes(n.data.sample_id)) {
         n.data.is_saved = true;
-        if (n.data.parallel === 1) {
-          n.data.result = s.raw_data.p1.result;
-          n.data.tolerance = s.raw_data.diff;
-          n.data.average = s.raw_data.avg;
-        } else {
-          n.data.result = s.raw_data.p2.result;
+
+        // Backend-ээс ирсэн үр дүнг тохируулах
+        const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
+
+        if (saved && saved.raw_data) {
+          const raw = saved.raw_data;
+
+          // ✅ Parallel 1 дээр тохирц/дундаж тохируулах
+          if (n.data.parallel === 1) {
+            // ✅ Backend response-оос top-level fields авах (бид одоо илгээж байна!)
+            let tolerance = raw.diff ?? raw.repeatability?.difference;
+            let average = raw.avg ?? saved.final_result;
+
+            // ✅ Хэрэв backend буцаагаагүй бол ӨӨРӨӨ тооцоолох (fallback)
+            if ((tolerance == null || average == null) && raw.p1?.result != null && raw.p2?.result != null) {
+              const p1Result = raw.p1.result;
+              const p2Result = raw.p2.result;
+
+              average = average ?? (p1Result + p2Result) / 2;
+              tolerance = tolerance ?? Math.abs(p1Result - p2Result);
+            }
+
+            const t_exceeded = raw.t_exceeded ?? raw.repeatability?.t_exceeded ?? false;
+
+            n.data.tolerance = tolerance;
+            n.data.average = average;
+            n.data.t_exceeded = t_exceeded;
+          }
+
+          // Үр дүнгийн утгуудыг тохируулах
+          const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
+          if (pData) {
+            n.data.crucible_num = pData.num ?? pData.crucible_num ?? pData.tigel_num;
+            n.data.m1 = pData.m1;
+            n.data.m2 = pData.m2;
+            n.data.m3 = pData.m3;
+            n.data.result = pData.result;
+            if (n.data.parallel === 1) n.data._p1 = pData.result;
+            else n.data._p2 = pData.result;
+          }
         }
       }
     });
+
+    // ✅ Approved дээжүүдийг grid-ээс устгах
+    if (approvedIds.length > 0) {
+      const rowsToRemove = [];
+      window.ashGridApi.forEachNode(n => {
+        if (approvedIds.includes(n.data.sample_id)) {
+          rowsToRemove.push(n);
+        }
+      });
+
+      if (rowsToRemove.length > 0) {
+        window.ashGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+      }
+    }
+
+    // Grid refresh
     window.ashGridApi.refreshCells({ force: true });
-    purgeDrafts(savedResults);
-    saveDrafts();
-    alert('Амжилттай хадгаллаа.');
+
+    console.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
+    if (approvedIds.length > 0) {
+      console.log(`   → ${approvedIds.length} approved - worksheet-ээс арилсан`);
+    }
+    if (pendingIds.length > 0) {
+      console.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
+    }
   };
 
+  // ✅ Register collector AND afterSave in LIMS_CALC namespace
   window.LIMS_CALC = window.LIMS_CALC || {};
-  window.LIMS_CALC.Aad = {
+  window.LIMS_CALC[ANALY_CODE] = {
     collect: window.collectAshGridData,
     afterSave: window.updateAshGridAfterSave
   };
+  window.LIMS_CALC['Aad'] = {
+    collect: window.collectAshGridData,
+    afterSave: window.updateAshGridAfterSave
+  };
+  console.log('✅ Ash collector & afterSave registered in LIMS_CALC namespace');
+
+  window.submitAshData = function() {
+    const payload = window.collectAshGridData();
+    if (payload.length === 0) {
+      alert('Хоосон өгөгдөл!');
+      return;
+    }
+
+    const savedSampleIds = payload.map(p => p.sample_id);
+
+    fetch('/api/submit_analysis_results', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ results: payload })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Амжилттай хадгалагдлаа!');
+
+        // Draft устгах (зөвхөн хадгалагдсан sample-уудын)
+        draftMgr.purge(
+          savedSampleIds.flatMap(id => [`${id}_1`, `${id}_2`])
+        );
+
+        // ✅ Grid-ийг reload хийхгүйгээр update хийх
+        // Хадгалагдсан дээжүүдийг "is_saved" болгох
+        window.ashGridApi.forEachNode(n => {
+          if (savedSampleIds.includes(n.data.sample_id)) {
+            n.data.is_saved = true;
+
+            // Хадгалагдсан үр дүнг payload-аас авах
+            const savedPayload = payload.find(p => p.sample_id === n.data.sample_id);
+            if (savedPayload && n.data.parallel === 1) {
+              n.data.tolerance = savedPayload.raw_data.repeatability.difference;
+              n.data.average = savedPayload.final_result;
+            }
+          }
+        });
+
+        // Grid refresh - тохирц/дундаж харагдана, cells locked болно
+        window.ashGridApi.refreshCells({ force: true });
+
+        console.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа, бусад ${samples.length - savedSampleIds.length} дээж grid-д үлдлээ`);
+
+        // ⚠️ RELOAD ХИЙХГҮЙ! Бусад дээжүүд алга болохгүй!
+      } else {
+        alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      }
+    })
+    .catch(error => {
+      console.error('Submit error:', error);
+      alert('Серверийн алдаа!');
+    });
+  };
+
 })();
 </script>
 
-{# Equipment Section #}
+
+{# --- Доорх “Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал” блокийг өөрчлөөгүй, зөвхөн бүрэн харагдуулж байя --- #}
 <div class="card mt-4 shadow-sm border-0">
   <div class="card-header bg-light d-flex justify-content-between align-items-center">
     <div class="fw-bold text-uppercase text-muted small">
-      <i class="bi bi-clipboard-check"></i> Тоног Төхөөрөмжийн Ашиглалт
+      <i class="bi bi-clipboard-check"></i> Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал
     </div>
     <div class="text-muted small">{{ now_local().strftime('%Y-%m-%d') }}</div>
   </div>
+  
   <div class="card-body">
     {% if related_equipments %}
     <div class="table-responsive">
       <table class="table table-bordered align-middle" id="dailyCheckTable">
         <thead class="table-secondary text-center small">
           <tr>
-            <th width="35%">Лаб дугаар</th>
-            <th width="10%">Чек</th>
-            <th width="15%">Минут</th>
-            <th width="40%">Тайлбар</th>
+            <th style="width: 35%;">Лаб дугаар</th>
+            <th style="width: 10%;">Бүрэн бүтэн<br>(Чек)</th>
+            <th style="width: 15%;">Ашиглалт<br>(Минут)</th>
+            <th style="width: 40%;">Тайлбар / Тэмдэглэл</th>
           </tr>
         </thead>
         <tbody>
           {% for eq in related_equipments %}
           <tr data-eq-id="{{ eq.id }}">
             <td>
-              <div class="fw-bold">{{ eq.lab_code or '-' }}</div>
-              <div class="text-muted small">{{ eq.name }}</div>
+              <div class="fw-bold text-dark" style="font-size: 0.9rem;">
+                {{ eq.lab_code or '-' }}
+              </div>
+              <div class="text-muted" style="font-size: 0.75rem;">
+                {{ eq.name }}
+                {% if eq.serial_number %}
+                  · {{ eq.serial_number }}
+                {% endif %}
+              </div>
             </td>
             <td class="text-center bg-light">
-              <input class="form-check-input daily-check" type="checkbox" style="cursor: pointer;" checked>
+              <input class="form-check-input daily-check" type="checkbox"
+                     style="width: 22px; height: 22px; cursor: pointer;" checked>
             </td>
             <td class="text-center">
-              <input type="number" class="form-control form-control-sm text-center daily-minutes" placeholder="0">
+              <input type="number"
+                     class="form-control form-control-sm text-center daily-minutes"
+                     placeholder="0">
             </td>
             <td>
-              <input type="text" class="form-control form-control-sm daily-note" placeholder="...">
+              <input type="text"
+                     class="form-control form-control-sm daily-note"
+                     placeholder="Ж: Хэвийн, эсвэл тень солив...">
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
     <div class="mt-3 text-end">
-      <button id="dailyCheckSaveBtn" class="btn btn-success" onclick="submitDailyCheck()">
-        <i class="bi bi-save"></i> Хадгалах
+      <button type="button" class="btn btn-success" onclick="submitDailyCheck()">
+        <i class="bi bi-save"></i> Бүртгэлийг Хадгалах
       </button>
     </div>
+
     {% else %}
-      <div class="alert alert-warning text-center">Төхөөрөмж байхгүй.</div>
+      <div class="alert alert-warning text-center m-0">
+        Энэ шинжилгээнд холбогдсон төхөөрөмж байхгүй байна.
+      </div>
     {% endif %}
   </div>
 </div>
 
 <script>
 function submitDailyCheck() {
+  const rows = document.querySelectorAll('#dailyCheckTable tbody tr');
   const items = [];
-  document.querySelectorAll('#dailyCheckTable tbody tr').forEach(row => {
-    const chk = row.querySelector('.daily-check').checked;
-    const min = parseFloat(row.querySelector('.daily-minutes').value) || 0;
-    const note = row.querySelector('.daily-note').value.trim();
 
-    if (chk || min > 0 || note) {
+  rows.forEach(row => {
+    const eqId = row.dataset.eqId;
+    const isChecked = row.querySelector('.daily-check').checked;
+    const minutesVal = row.querySelector('.daily-minutes').value;
+    const note = row.querySelector('.daily-note').value;
+
+    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
+
+    if (isChecked || minutes > 0 || note.trim() !== "") {
       items.push({
-        eq_id: row.dataset.eqId,
-        is_checked: chk,
-        minutes: min,
+        eq_id: eqId,
+        is_checked: isChecked,
+        minutes: minutes,
         note: note
       });
     }
   });
 
-  if (!items.length) {
-    return alert("Бүртгэх мэдээлэл алга.");
+  if (items.length === 0) {
+    alert("Бүртгэх мэдээлэл алга байна.");
+    return;
   }
-
-  const btn = document.getElementById('dailyCheckSaveBtn');
-  const originalHtml = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Хадгалж байна...';
-
-  const csrf = document
-    .querySelector('meta[name="csrf-token"]')
-    ?.getAttribute('content');
 
   fetch('/api/log_usage_bulk', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrf || ''
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ items: items })
   })
-    .then(r => r.json())
-    .then(d => {
-      if (d.status === 'success') {
-        alert('Төхөөрөмж хадгалагдлаа!');
-        document.querySelectorAll('.daily-minutes').forEach(i => (i.value = ''));
-        document.querySelectorAll('.daily-note').forEach(i => (i.value = ''));
-      } else {
-        alert(d.message || 'Алдаа гарлаа.');
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Сервертэй холбогдох үед алдаа гарлаа.');
-    })
-    .finally(() => {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-    });
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert('Амжилттай хадгалагдлаа!');
+      document.querySelectorAll('.daily-minutes').forEach(i => i.value = '');
+      document.querySelectorAll('.daily-note').forEach(i => i.value = '');
+    } else {
+      alert('Алдаа гарлаа.');
+    }
+  })
+  .catch(err => console.error(err));
 }
 </script>

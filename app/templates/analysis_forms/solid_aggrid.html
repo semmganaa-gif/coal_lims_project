@@ -1,241 +1,267 @@
-{# AG Grid form for Solid (Residue) analysis #}
+{# AG Grid хувилбар - REFACTORED with Factory Pattern #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
-{{ aggrid_macros.common_grid_css('solidGrid') | safe }}
-{{ aggrid_macros.common_js_helpers(['A','B','C']) | safe }}
-
-<style>
-  #solidGrid {
-    margin-top: 20px;
-    height: 65vh;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-  }
-  .ag-theme-alpine {
-    --ag-font-size: 14px;
-    --ag-font-family: "Noto Sans", sans-serif;
-    --ag-border-color: #dee2e6;
-    --ag-header-background-color: #f8f9fa;
-  }
-  .ag-theme-alpine .ag-header-cell {
-    border-right: 1px solid #d0d0d0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
-  }
-  .ag-theme-alpine .ag-cell {
-    border-right: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-  }
-  .ag-theme-alpine .ag-cell-inline-editing {
-    background-color: #fff !important;
-    box-shadow: 0 0 0 2px #0d6efd !important;
-    z-index: 100 !important;
-  }
-  .reject-badge {
-    font-size: 0.7em;
-    padding: 3px 6px;
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px;
-    display: inline-block;
-    margin-top: 4px;
-  }
-</style>
 
 {{ aggrid_macros.grid_container('solidGrid') | safe }}
 
-<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script>
-(function(){
+(function() {
   'use strict';
+
   const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'Solid';
-  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}_grid`;
   {{ aggrid_macros.dataset_block(include_client=True) | safe }}
 
+  let draftMgr;
 
-  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['A','B','C'])) || (() => false);
-  const sampleIndexMap = {};
-  samples.forEach((s, idx) => { sampleIndexMap[s.id] = idx + 1; });
-
-  function parseRaw(entry){
-    if(!entry) return {};
+  function parseRaw(entry) {
+    if (!entry) return {};
     let raw = entry.raw_data || {};
-    if(typeof raw === 'string'){
-      try { raw = JSON.parse(raw); } catch(e){ raw = {}; }
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch(e) { raw = {}; }
     }
     return raw || {};
   }
 
-  function toNumber(val){
-    if(val === null || val === undefined || val === '') return null;
+  function toNumber(val) {
+    if (val === null || val === undefined || val === '') return null;
     const num = Number(val);
     return Number.isFinite(num) ? num : null;
   }
 
-  function formatWetAndResult(src){
+  function formatWetAndResult(src) {
     const A = toNumber(src.A);
     const B = toNumber(src.B);
     const C = toNumber(src.C);
-    if(A == null || B == null || C == null) return null;
+    if (A == null || B == null || C == null) return null;
+
     const wet = A - B;
-    if(!Number.isFinite(wet) || wet <= 0) return null;
+    if (!Number.isFinite(wet) || wet <= 0) return null;
+
     return {
       wet: Number(wet.toFixed(3)),
       result: Number(((C * 100) / wet).toFixed(2))
     };
   }
 
-  function deriveRow(sample){
-    const ex = existingResults[sample.id] || {};
-    const raw = parseRaw(ex);
-    const isSaved = ex.status === 'pending_review' || ex.status === 'approved';
-    const row = {
-      sample_idx: sampleIndexMap[sample.id],
-      sample_id: sample.id,
-      sample_code: sample.code,
-      client_name: sample.client || '-',
-      A: toNumber(raw.A),
-      B: toNumber(raw.B),
-      C: toNumber(raw.C),
-      savedWet: null,
-      savedResult: null,
-      is_saved: !!isSaved
-    };
-    if(isSaved){
-      const computed = formatWetAndResult({ A: row.A, B: row.B, C: row.C });
-      row.savedWet = raw.wet_mass != null ? toNumber(raw.wet_mass) : (computed ? computed.wet : null);
-      row.savedResult = raw.solid_pct != null ? toNumber(raw.solid_pct) : (computed ? computed.result : toNumber(ex.final_result));
-    }
-    return row;
-  }
-
-  const rowData = samples.map(deriveRow);
-
-  const numParser = params => {
-    const raw = params.newValue;
-    if(raw === null || raw === undefined || raw === '') return null;
+  const numParser = p => {
+    if (window.LIMS_AGGRID?.numParser) return window.LIMS_AGGRID.numParser(p);
+    const raw = p.newValue;
+    if (raw === null || raw === undefined || raw === '') return null;
     const num = Number(String(raw).replace(',','.'));
     return Number.isFinite(num) ? num : null;
   };
 
-  const columnDefs = [
-    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
-      cellStyle:{ textAlign:'center', fontWeight:'600', color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' } },
-    { headerName:'Sample Name', field:'sample_code', width:280, pinned:'left',
-      cellRenderer:p=>{
-        let html = `<div class="fw-semibold text-primary">${p.value}</div>`;
-        html += `<div class="text-muted small">${p.data.client_name || '-'}</div>`;
-        const rej = rejectedInfo[p.data.sample_id];
-        if(rej){
-          const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
-          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
-        }
-        return html;
-      },
-      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' } },
-    { headerName:'A (bucket + sample)', field:'A', width:150,
-      editable:p => !p.data.is_saved,
-      valueParser:numParser,
-      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
-      suppressKeyboardEvent:navHandler,
-      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
-    { headerName:'B (bucket tare)', field:'B', width:130,
-      editable:p => !p.data.is_saved,
-      valueParser:numParser,
-      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
-      suppressKeyboardEvent:navHandler,
-      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
-    { headerName:'A - B', field:'savedWet', width:120,
-      valueFormatter:p => (p.data.is_saved && p.value != null) ? Number(p.value).toFixed(3) : '-',
-      cellStyle:p=>{
-        if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { textAlign:'center', fontWeight:'600', color:'#0d6efd', backgroundColor:'#eff6ff' };
-      } },
-    { headerName:'C (dry residue)', field:'C', width:140,
-      editable:p => !p.data.is_saved,
-      valueParser:numParser,
-      valueFormatter:p => p.value != null ? Number(p.value).toFixed(3) : '',
-      suppressKeyboardEvent:navHandler,
-      cellStyle:p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {} },
-    { headerName:'Solid %', field:'savedResult', width:150,
-      valueFormatter:p => (p.data.is_saved && p.value != null) ? Number(p.value).toFixed(2) : '-',
-      cellStyle:p=>{
-        if(!p.data.is_saved || p.value == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { fontWeight:'bold', color:'#198754', display:'flex', alignItems:'center', justifyContent:'center' };
-      } },
-    { headerName:'', field:'actions', width:60, pinned:'right',
-      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Remove sample"><i class="bi bi-x-lg"></i></button>`,
-      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' } }
-  ];
+  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
+  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
+  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';
+  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
 
-  function saveDrafts(){
-    if(!window.solidGridApi) return;
-    const drafts = {};
-    window.solidGridApi.forEachNode(n => {
-      if(!n.data.is_saved){
-        drafts[n.data.sample_id] = { A:n.data.A, B:n.data.B, C:n.data.C };
-      }
-    });
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
-  }
-
-  function restoreDrafts(){
-    let drafts = {};
-    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
-    window.solidGridApi?.forEachNode(n => {
-      if(!n.data.is_saved){
-        const d = drafts[n.data.sample_id];
-        if(d){
-          if(d.A !== undefined) n.data.A = d.A;
-          if(d.B !== undefined) n.data.B = d.B;
-          if(d.C !== undefined) n.data.C = d.C;
-        }
-      }
-    });
-    window.solidGridApi?.refreshCells({ force:true });
-  }
-
-  const gridOptions = {
-    theme:'legacy',
-    columnDefs,
-    rowData,
-    defaultColDef: baseDefaultColDef,
-    suppressRowTransform:true,
-    singleClickEdit:true,
-    stopEditingWhenCellsLoseFocus:true,
-    enterNavigatesVertically:true,
-    enterNavigatesVerticallyAfterEdit:true,
-    onCellValueChanged: saveDrafts
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
   };
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const el = document.querySelector('#solidGrid');
-    if(el){
-      window.solidGridApi = agGrid.createGrid(el, gridOptions);
-      setTimeout(restoreDrafts, 100);
+  const columnDefs = [
+    {
+      headerName: '№',
+      field: 'index',
+      width: 50,
+      pinned: 'left',
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    },
+    {
+      headerName: 'Sample Name',
+      field: 'sample_code',
+      width: 280,
+      pinned: 'left',
+      cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
+      cellRenderer: p => {
+        let html = `<div class="sample-name">${p.value}</div>`;
+        if (p.data.client_name) html += `<div class="text-muted small">${p.data.client_name}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) {
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason || ''}</div>`;
+        }
+        return html;
+      }
+    },
+    {
+      headerName: 'A (bucket + sample)',
+      field: 'A',
+      width: 150,
+      ...editCol,
+      valueFormatter: numFmt4
+    },
+    {
+      headerName: 'B (bucket tare)',
+      field: 'B',
+      width: 130,
+      ...editCol,
+      valueFormatter: numFmt4
+    },
+    {
+      headerName: 'C (dry residue)',
+      field: 'C',
+      width: 140,
+      ...editCol,
+      valueFormatter: numFmt4
+    },
+    {
+      headerName: 'Solid %',
+      field: 'savedResult',
+      width: 150,
+      valueFormatter: p => (p.data.is_saved && p.value != null) ? numFmt2(p) : '-',
+      cellStyle: p => {
+        if (!p.data.is_saved || p.value == null) return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        return { fontWeight: 'bold', color: '#198754', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+      }
+    },
+    {
+      headerName: 'Үйлдэл',
+      width: 80,
+      pinned: 'right',
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      cellRenderer: p => {
+        if (p.data.is_saved) return '<span class="text-muted small">Хадгалагдсан</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Дээж хасах"><i class="bi bi-x"></i></button>`;
+      }
     }
+  ];
+
+  const rowData = samples.map((sample, idx) => {
+    const existing = existingResults[sample.id];
+    const rejected = rejectedInfo[sample.id];
+    const isRejected = existing?.status === 'rejected';
+    const raw = parseRaw(existing);
+
+    const row = {
+      index: idx + 1,
+      sample_id: sample.id,
+      sample_code: sample.code,
+      client_name: sample.client || '',
+      is_saved: existing && !isRejected,
+      is_rejected: isRejected,
+      rejection_reason: rejected?.reason || '',
+      A: toNumber(raw.A),
+      B: toNumber(raw.B),
+      C: toNumber(raw.C),
+      savedResult: null
+    };
+
+    if (row.is_saved) {
+      const calc = formatWetAndResult(row);
+      if (calc) {
+        row.savedResult = calc.result;
+      } else if (existing.final_result != null) {
+        row.savedResult = toNumber(existing.final_result);
+      }
+    }
+    return row;
   });
 
-  window.removeSample = function(id){
-    if(!confirm('Remove this sample from worksheet?')) return;
+  function saveDrafts() {
+    if (!window.solidGridApi || !draftMgr) return;
+    const drafts = {};
+    window.solidGridApi.forEachNode(n => {
+      if (!n.data.is_saved) {
+        drafts[n.data.sample_id] = { A: n.data.A, B: n.data.B, C: n.data.C };
+      }
+    });
+    draftMgr.save(drafts);
+  }
+
+  function restoreDrafts() {
+    if (!window.solidGridApi || !draftMgr) return;
+    try {
+      const drafts = draftMgr.restore();
+      window.solidGridApi.forEachNode(n => {
+        if (!n.data.is_saved && drafts[n.data.sample_id]) {
+          const d = drafts[n.data.sample_id];
+          n.data.A = d.A;
+          n.data.B = d.B;
+          n.data.C = d.C;
+        }
+      });
+      window.solidGridApi.refreshCells({ force: true });
+    } catch (e) {}
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+
+    if (urlIds) {
+      try { localStorage.setItem(STORAGE_KEY, urlIds); } catch(e) {}
+    } else {
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY);
+        if (savedIds) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+          window.history.replaceState({}, '', url.toString());
+          window.location.reload();
+          return;
+        }
+      } catch(e) {}
+    }
+
+    const el = document.querySelector('#solidGrid');
+    if (!el) return;
+
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager(ANALY_CODE);
+    } else {
+      draftMgr = {
+        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+        purge: (ids) => { if (!ids || ids.length === 0) localStorage.removeItem(`draft_${ANALY_CODE}`); }
+      };
+    }
+
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      window.solidGridApi = LIMS_AGGRID.createGrid('#solidGrid', columnDefs, rowData, {
+        onCellValueChanged: () => saveDrafts(),
+        enterNavigatesVerticallyAfterEdit: true,
+        editableColIds: ['A', 'B', 'C']
+      });
+    } else {
+      window.solidGridApi = agGrid.createGrid(el, {
+        theme: 'legacy',
+        columnDefs, rowData,
+        defaultColDef: { sortable: false, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        suppressRowTransform: true,
+        singleClickEdit: true,
+        stopEditingWhenCellsLoseFocus: true,
+        enterNavigatesVertically: true,
+        enterNavigatesVerticallyAfterEdit: true,
+        onCellValueChanged: () => saveDrafts()
+      });
+    }
+
+    setTimeout(restoreDrafts, 100);
+  });
+
+  window.removeSample = function(id) {
+    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
     const url = new URL(window.location.href);
-    let ids = (url.searchParams.get('sample_ids') || '').split(',').filter(Boolean);
-    ids = ids.filter(x => parseInt(x,10) !== id);
-    if(ids.length) url.searchParams.set('sample_ids', ids.join(','));
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
     else url.searchParams.delete('sample_ids');
     window.location.href = url.toString();
   };
 
-  window.collectSolidGridData = function(){
-    if(!window.solidGridApi) return [];
+  window.collectSolidGridData = function() {
+    if (!window.solidGridApi) return [];
     const payload = [];
     window.solidGridApi.forEachNode(n => {
-      if(n.data.is_saved) return;
+      if (n.data.is_saved) return;
       const calc = formatWetAndResult(n.data);
-      if(!calc) return;
+      if (!calc) return;
       payload.push({
         sample_id: parseInt(n.data.sample_id),
         analysis_code: ANALY_CODE,
@@ -243,47 +269,86 @@
         raw_data: {
           A: toNumber(n.data.A),
           B: toNumber(n.data.B),
-          wet_mass: calc.wet,
           C: toNumber(n.data.C),
-          solid_pct: calc.result
+          wet_mass: calc.wet,
+          solid_pct: calc.result,
+          formula: 'Solid% = (C * 100) / (A - B)'
         }
       });
     });
     return payload;
   };
 
-  function purgeDrafts(savedResults){
-    if(!savedResults || !savedResults.length) return;
-    let drafts = {};
-    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
-    savedResults.forEach(r => { delete drafts[r.sample_id]; });
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
-  }
+  window.updateSolidGridAfterSave = function(savedPayload) {
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const approvedIds = [], pendingIds = [];
+    savedPayload.forEach(s => {
+      if (s.status === 'approved') approvedIds.push(s.sample_id);
+      else if (s.status === 'pending_review') pendingIds.push(s.sample_id);
+    });
 
-  window.updateSolidGridAfterSave = function(savedResults){
-    if(!window.solidGridApi || !savedResults) return;
+    const allSampleIds = [];
+    window.solidGridApi.forEachNode(n => { if (!allSampleIds.includes(n.data.sample_id)) allSampleIds.push(n.data.sample_id); });
+    const remainingIds = allSampleIds.filter(id => !approvedIds.includes(id) || pendingIds.includes(id));
+
+    if (remainingIds.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, remainingIds.join(','));
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', remainingIds.join(','));
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    } else {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    }
+
+    draftMgr.purge(savedPayload.map(r => r.sample_id));
+
     const savedMap = {};
-    savedResults.forEach(r => savedMap[r.sample_id] = r);
+    savedPayload.forEach(r => savedMap[r.sample_id] = r);
+
     window.solidGridApi.forEachNode(n => {
-      const res = savedMap[n.data.sample_id];
-      if(res){
-        const raw = parseRaw(res);
-        const computed = formatWetAndResult(raw);
+      const saved = savedMap[n.data.sample_id];
+      if (!saved) return;
+      const raw = parseRaw(saved);
+
+      if (saved.status === 'rejected') {
+        n.data.is_saved = false;
+        n.data.is_rejected = true;
+      } else {
         n.data.is_saved = true;
-        n.data.A = raw.A != null ? raw.A : n.data.A;
-        n.data.B = raw.B != null ? raw.B : n.data.B;
-        n.data.C = raw.C != null ? raw.C : n.data.C;
-        n.data.savedWet = raw.wet_mass != null ? toNumber(raw.wet_mass) : (computed ? computed.wet : n.data.savedWet);
-        n.data.savedResult = raw.solid_pct != null ? toNumber(raw.solid_pct) : (computed ? computed.result : toNumber(res.final_result));
+        n.data.is_rejected = false;
+        n.data.A = toNumber(raw.A);
+        n.data.B = toNumber(raw.B);
+        n.data.C = toNumber(raw.C);
+        const calc = formatWetAndResult(n.data);
+        if (calc) {
+          n.data.savedResult = calc.result;
+        } else {
+          n.data.savedResult = toNumber(saved.final_result);
+        }
       }
     });
-    window.solidGridApi.refreshCells({ force:true });
-    purgeDrafts(savedResults);
-    alert('Solid results saved.');
+
+    if (approvedIds.length > 0) {
+      const rowsToRemove = [];
+      window.solidGridApi.forEachNode(n => { if (approvedIds.includes(n.data.sample_id)) rowsToRemove.push(n); });
+      if (rowsToRemove.length > 0) {
+        window.solidGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+      }
+    }
+
+    window.solidGridApi.refreshCells({ force: true });
   };
 
   window.LIMS_CALC = window.LIMS_CALC || {};
   const REGISTERED = { collect: window.collectSolidGridData, afterSave: window.updateSolidGridAfterSave };
-  ['Solid','SOLID','solid'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
+  ['Solid', 'solid', 'SOLID'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
+
 })();
 </script>

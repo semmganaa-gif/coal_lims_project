@@ -47,6 +47,7 @@ def register_routes(bp):
             title="Ахлахын хяналт",
             error_labels=get_error_reason_labels(),  # ✅ DB-ээс унших
             analysis_schemas=schema_map,
+            use_aggrid=True,  # ✅ Enable AG Grid loading
         )
 
     # =====================================================================

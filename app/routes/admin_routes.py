@@ -13,6 +13,7 @@ import json
 from app.forms import UserManagementForm, SimpleProfileForm, PatternProfileForm
 from app.constants import SAMPLE_TYPE_CHOICES_MAP
 from app.models import db, ControlStandard
+from app.models import GbwStandard 
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -354,3 +355,83 @@ def activate_standard(id):
     std.is_active = True
     db.session.commit()
     return jsonify({"message": "Идэвхжлээ"})
+
+# ==============================================================================
+# Б. GBW Хуудас харуулах
+@admin_bp.route('/gbw_standards', methods=['GET'])
+@login_required
+def manage_gbw():
+    # HTML дээр бид {% for gbw in gbw_list %} гэж бичсэн тул хувьсагчийн нэр 'gbw_list' байна
+    gbw_list = GbwStandard.query.order_by(GbwStandard.created_at.desc()).all()
+    return render_template('admin/gbw_list.html', gbw_list=gbw_list)
+
+# 1. ШИНЭЭР ҮҮСГЭХ (GBW)
+@admin_bp.route('/gbw_standards/create', methods=['POST'])
+@login_required
+def create_gbw():
+    data = request.get_json()
+    name = data.get('name')
+    targets = data.get('targets')
+
+    if not name or not targets:
+        return jsonify({"message": "GBW дугаар болон утгууд шаардлагатай"}), 400
+
+    # Шинэ GBW үүсгэх
+    new_gbw = GbwStandard(name=name, targets=targets, is_active=False)
+    db.session.add(new_gbw)
+    db.session.commit()
+
+    return jsonify({"message": "GBW амжилттай бүртгэгдлээ"})
+
+# 2. ЗАСАХ (GBW UPDATE)
+@admin_bp.route('/gbw_standards/<int:id>/update', methods=['POST'])
+@login_required
+def update_gbw(id):
+    gbw = GbwStandard.query.get_or_404(id)
+    data = request.get_json()
+    
+    if not data.get('name') or not data.get('targets'):
+        return jsonify({"message": "Мэдээлэл дутуу байна"}), 400
+
+    gbw.name = data.get('name')
+    gbw.targets = data.get('targets')
+    db.session.commit()
+
+    return jsonify({"message": "GBW мэдээлэл шинэчлэгдлээ"})
+
+# 3. УСТГАХ (GBW DELETE)
+@admin_bp.route('/gbw_standards/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_gbw(id):
+    gbw = GbwStandard.query.get_or_404(id)
+    
+    if gbw.is_active:
+        return jsonify({"message": "Ашиглагдаж буй GBW-ийг устгах боломжгүй!"}), 400
+
+    db.session.delete(gbw)
+    db.session.commit()
+    
+    return jsonify({"message": "GBW устгагдлаа"})
+
+# 4. ИДЭВХЖҮҮЛЭХ (GBW ACTIVATE)
+@admin_bp.route('/gbw_standards/<int:id>/activate', methods=['POST'])
+@login_required
+def activate_gbw(id):
+    # 1. Бүх GBW-ийг идэвхгүй болгоно (Зөвхөн нэг GBW идэвхтэй байх зарчмаар)
+    GbwStandard.query.update({GbwStandard.is_active: False})
+    
+    # 2. Сонгосон GBW-ийг идэвхжүүлнэ
+    gbw = GbwStandard.query.get_or_404(id)
+    gbw.is_active = True
+    
+    db.session.commit()
+    return jsonify({"message": "GBW идэвхжлээ"})
+
+
+@admin_bp.route('/gbw_standards/<int:id>/deactivate', methods=['POST'])
+@login_required
+def deactivate_gbw(id):
+    gbw = GbwStandard.query.get_or_404(id)
+    gbw.is_active = False
+    db.session.commit()
+    return jsonify({"message": "Амжилттай идэвхгүй болголоо"})

@@ -20,7 +20,7 @@ import traceback
 import json
 
 from app import db, limiter
-from app.models import Sample, AnalysisResult, AnalysisResultLog, ControlStandard
+from app.models import Sample, AnalysisResult, AnalysisResultLog, ControlStandard, GbwStandard
 from app.utils.datetime import now_local
 from app.utils.normalize import normalize_raw_data
 from app.utils.codes import norm_code, BASE_TO_ALIASES
@@ -187,22 +187,30 @@ def register_routes(bp):
                         "limit_mode": mode,
                         "t_exceeded": bool(t_exceeded),
                     })
-
+                    
                     # ============================================================
-                    # 🛠 CONTROL SAMPLE LOGIC (Dry Basis Conversion)
+                    # 🛠 CONTROL & GBW LOGIC (Dry Basis Conversion)
                     # ============================================================
                     control_targets = None
                     val_to_check = final_result
                     
                     try:
-                        # 1. Дээжийг таних
+                        # 1. Дээжийг таних (CM эсвэл GBW эсэхийг шалгах)
                         stype = (sample.sample_type or "").lower()
-                        scode = (sample.sample_code or "")
-                        is_control = (stype == "control") or ("CM-" in scode) or ("CM_" in scode)
+                        scode = (sample.sample_code or "").upper() # Upper болгож шалгах нь найдвартай
+                        
+                        is_cm = (stype == "control") or ("CM-" in scode) or ("CM_" in scode)
+                        is_gbw = (stype == "gbw") or ("GBW" in scode) # ✅ GBW таних нөхцөл
 
-                        if is_control and final_result is not None:
-                            # 2. Идэвхтэй стандарт хайх
-                            active_std = ControlStandard.query.filter_by(is_active=True).first()
+                        if (is_cm or is_gbw) and final_result is not None:
+                            active_std = None
+
+                            # 2. Идэвхтэй стандарт хайх (Төрлөөс хамаарч)
+                            if is_cm:
+                                active_std = ControlStandard.query.filter_by(is_active=True).first()
+                            elif is_gbw:
+                                # ✅ GBW стандарт хайх (Models дотор GbwStandard байгаа гэж үзэв)
+                                active_std = GbwStandard.query.filter_by(is_active=True).first()
                             
                             if active_std:
                                 # JSON targets-ийг dict болгох
@@ -211,14 +219,17 @@ def register_routes(bp):
                                     try: targets_map = json.loads(targets_map)
                                     except: targets_map = {}
 
-                                # 3. Стандарт дотор энэ код байгаа эсэх?
+                                # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
                                 if isinstance(targets_map, dict) and analysis_code in targets_map:
                                     control_targets = targets_map[analysis_code]
                                     
                                     # --- 4. MAD (Чийг) ОЛОХ ЛОГИК ---
+                                    # CM болон GBW нь ихэвчлэн Хуурай суурь (Dry Basis) дээр сертификаттай байдаг тул
+                                    # Лабораторийн үр дүнг (Air Dry) -> Dry Basis руу хөрвүүлж байж шалгана.
+                                    
                                     current_mad = None
                                     
-                                    # А. Одоо ирж буй өгөгдлөөс хайх
+                                    # А. Одоо ирж буй (save хийж буй) өгөгдлөөс Mad хайх
                                     for d in data:
                                         ac = (d.get("analysis_code") or "").lower()
                                         if ac == "mad": 
@@ -227,23 +238,34 @@ def register_routes(bp):
                                             except: pass
                                             break
                                     
-                                    # Б. Баазаас хайх (Өмнө нь хадгалсан бол)
+                                    # Б. Баазаас хайх (Өмнө нь Mad хадгалсан бол)
                                     if current_mad is None:
                                         calc = sample.get_calculations()
                                         if calc and calc.mad is not None:
                                             current_mad = calc.mad
 
-                                    # 5. Хөрвүүлэлт (Mad олдсон бол)
+                                        # 5. Хөрвүүлэлт (Mad олдсон бол)
                                     if current_mad is not None and 0 < current_mad < 100:
                                         # Эдгээр үзүүлэлтүүд л Dry руу хөрвөнө
                                         if analysis_code in ["Aad", "Vad", "CV", "TS", "St,ad", "S", "Qgr,ad"]:
+                                            
+                                            # АЛХАМ 1: Эхлээд Хуурай суурь руу хөрвүүлэх (Air Dry -> Dry Basis)
                                             factor = 100.0 / (100.0 - current_mad)
-                                            val_to_check = final_result * factor
-                                            # Debug
-                                            # print(f"Conversion: {final_result} -> {val_to_check}")
-
+                                            val_dry = final_result * factor  # Энд ккал хэвээрээ (Хуурай)
+                                            
+                                            # АЛХАМ 2: Дараа нь зөвхөн Илчлэг дээр Нэгж шилжүүлэх (kcal -> MJ)
+                                            if analysis_code in ["CV", "Qgr,ad"]:
+                                                # Хэрэв утга нь > 100 байвал ккал гэж үзээд MJ руу хөрвүүлнэ
+                                                # (Жишээ: 6500 kcal_dry * 4.1868 / 1000 = 27.21 MJ)
+                                                if val_dry > 100:
+                                                    val_to_check = (val_dry * 4.1868) / 1000.0
+                                                else:
+                                                    val_to_check = val_dry # Аль хэдийн MJ байж болзошгүй
+                                            else:
+                                                # Бусад (Ash, Sulfur г.м) үзүүлэлтүүд шууд Dry утгаараа шалгагдана
+                                                val_to_check = val_dry
                     except Exception as e:
-                        current_app.logger.error(f"CM Logic Error: {e}")
+                        current_app.logger.error(f"Control/GBW Logic Error: {e}")
                         control_targets = None
                         val_to_check = final_result
 
@@ -257,6 +279,17 @@ def register_routes(bp):
                         raw_norm,
                         control_targets=control_targets,
                     )
+
+                    # ------------------------------------------------------------
+                    # ✅ FIX: GBW vs CM Тайлбарыг ялгах (Text adjustment)
+                    # ------------------------------------------------------------
+                    # determine_result_status функц нь ихэвчлэн "Control Failure" гэж буцаадаг тул
+                    # хэрэв энэ нь GBW дээж байвал үгийг нь сольж "GBW Failure" болгоё.
+                    # (is_gbw хувьсагч өмнөх блокоос ирж байгаа гэж тооцов)
+                    is_gbw_sample = locals().get('is_gbw', False) # Аюулгүй байдлын үүднээс шалгах
+
+                    if new_status == "rejected" and is_gbw_sample and status_reason:
+                        status_reason = status_reason.replace("Control Failure", "GBW Failure")
 
                     # ============================================================
 
@@ -272,8 +305,13 @@ def register_routes(bp):
 
                     # Автомат KPI алдаа оноох (QC Failure)
                     auto_error_reason = None
-                    if new_status == "rejected" and "Control Failure" in (status_reason or ""):
-                        auto_error_reason = "qc_fail"
+                    
+                    # ✅ ЭНД ӨӨРЧЛӨЛТ: CM болон GBW хоёулаа 'qc_fail' гэсэн нэг ангилалд орно.
+                    if new_status == "rejected":
+                        # "Control Failure" эсвэл "GBW Failure" гэсэн үг байвал QC алдаа гэж тооцно
+                        # (determine_result_status функцээс "Failure" гэсэн үгтэй ирдэг)
+                        if status_reason and ("Failure" in status_reason):
+                            auto_error_reason = "qc_fail"
 
                     if not existing:
                         new_res = AnalysisResult(

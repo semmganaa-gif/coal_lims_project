@@ -292,6 +292,9 @@ def register_routes(bp):
         except Exception:
             related_equipments = []
 
+        # ✨ Check if this analysis uses AG Grid
+        uses_aggrid = template_name.endswith('_aggrid') or template_name == 'ash_form_aggrid'
+
         return render_template(
             "analysis_page.html",
             title=analysis_type.name,
@@ -312,4 +315,5 @@ def register_routes(bp):
             paired_results_map=paired_results_map,
             aggrid_samples=samples_to_analyze,
             analysis_schema=get_analysis_schema(base_code),
+            use_aggrid=uses_aggrid,  # ✨ NEW: Conditional AG Grid loading
         )

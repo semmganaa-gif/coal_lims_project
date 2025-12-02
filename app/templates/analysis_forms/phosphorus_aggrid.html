@@ -1,0 +1,448 @@
+{# AG Grid хувилбар - REFACTORED with Factory Pattern #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
+{# 🧪 Phosphorus (P,ad) - Parallel p1/p2 in single row #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+
+{{ aggrid_macros.grid_container('phosphorusGrid') | safe }}
+
+<script>
+(function(){
+  'use strict';
+
+  // ========== CONFIG ==========
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'P';
+  {{ aggrid_macros.dataset_block(include_client=True) | safe }}
+
+  const LIMIT_RULE = (window.LIMS_LIMITS && window.LIMS_LIMITS[ANALY_CODE]) || { single: { limit: 0.05, mode: 'abs' } };
+  let draftMgr;
+
+  // ========== HELPERS ==========
+  const sampleIndexMap = {};
+  samples.forEach((s, idx) => { sampleIndexMap[s.id] = idx + 1; });
+
+  function parseRaw(entry){
+    if(!entry) return {};
+    let raw = entry.raw_data || {};
+    if(typeof raw === 'string'){
+      try { raw = JSON.parse(raw); } catch(e){ raw = {}; }
+    }
+    return raw || {};
+  }
+
+  function toNumber(val){
+    if(val === null || val === undefined || val === '') return null;
+    const num = Number(String(val).replace(',','.'));
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function limitFor(avg){
+    if(LIMIT_RULE.single){
+      return { limit: LIMIT_RULE.single.limit, mode: LIMIT_RULE.single.mode };
+    }
+    const bands = LIMIT_RULE.bands || [];
+    if(!bands.length){
+      return { limit: 0.05, mode: 'abs' };
+    }
+    if(avg == null){
+      const first = bands[0];
+      return { limit: first.limit, mode: first.mode };
+    }
+    for(const band of bands){
+      if(avg <= band.upper){
+        return { limit: band.limit, mode: band.mode };
+      }
+    }
+    const last = bands[bands.length - 1];
+    return { limit: last.limit, mode: last.mode };
+  }
+
+  function applyPairMeta(row){
+    const r1 = toNumber(row.p1_r);
+    const r2 = toNumber(row.p2_r);
+    const both = r1 != null && r2 != null;
+    const avg = both ? Number(((r1 + r2) / 2).toFixed(4)) : null;
+    const diff = both ? Number(Math.abs(r1 - r2).toFixed(4)) : null;
+    const limInfo = limitFor(avg);
+    const effective = limInfo.mode === 'percent' && avg != null ? Math.abs(avg * limInfo.limit) : limInfo.limit;
+    const exceeded = diff != null && effective != null ? diff > effective : false;
+    row.avg = avg;
+    row.diff = diff;
+    row.limit_used = effective;
+    row.limit_mode = limInfo.mode;
+    row.t_exceeded = exceeded;
+  }
+
+  const numParser = p => {
+    if (window.LIMS_AGGRID?.numParser) return window.LIMS_AGGRID.numParser(p);
+    const raw = p.newValue;
+    if (raw === null || raw === undefined || raw === '') return null;
+    const num = Number(String(raw).replace(',', '.'));
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const numFmt4 = p => (p.value != null ? Number(p.value).toFixed(4) : '');
+  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
+  const numFmt2 = p => (p.value != null ? Number(p.value).toFixed(2) : '');
+  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
+
+  // ========== ROW DATA ==========
+  function buildRow(sample, raw, isSaved){
+    const p1 = raw.p1 || {};
+    const p2 = raw.p2 || {};
+    const row = {
+      sample_idx: sampleIndexMap[sample.id],
+      sample_id: sample.id,
+      sample_code: sample.code,
+      client_name: sample.client || '',
+      is_saved: !!isSaved,
+      p1_w: toNumber(p1.weight ?? p1.m1 ?? p1.mass),
+      p1_r: toNumber(p1.result ?? p1.value),
+      p2_w: toNumber(p2.weight ?? p2.m1 ?? p2.mass),
+      p2_r: toNumber(p2.result ?? p2.value),
+      diff: raw.diff != null ? toNumber(raw.diff) : null,
+      avg: raw.avg != null ? toNumber(raw.avg) : null,
+      limit_used: raw.limit_used != null ? toNumber(raw.limit_used) : null,
+      limit_mode: raw.limit_mode || null,
+      t_exceeded: !!raw.t_exceeded
+    };
+    if(row.avg == null || row.diff == null){
+      applyPairMeta(row);
+    }
+    return row;
+  }
+
+  const rowData = samples.map(sample => {
+    const ex = existingResults[sample.id];
+    const raw = parseRaw(ex);
+    // ✅ Зөвхөн үр дүн байгаа бөгөөд rejected биш үед л is_saved=true
+    const isSaved = ex && ex.id && ex.status !== 'rejected';
+    return buildRow(sample, raw, isSaved);
+  });
+
+  // ========== COLUMN DEFS ==========
+  const editNumericCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    cellEditorParams: { useFormatter: true },
+    valueParser: numParser,
+    cellStyle: p => p.data.is_saved ? { backgroundColor:'#e9ecef' } : {}
+  };
+
+  const columnDefs = [
+    {
+      headerName:'№', field:'sample_idx', width:60, pinned:'left',
+      cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' }
+    },
+    {
+      headerName:'Дээжийн нэр', field:'sample_code', width:280, pinned:'left',
+      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
+      cellRenderer:p=>{
+        let html = `<div class="sample-name">${p.value}</div>`;
+        if (p.data.client_name) html += `<div class="text-muted small">${p.data.client_name}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if(rej){
+          const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+        }
+        return html;
+      }
+    },
+    {
+      headerName:'p1',
+      children:[
+        { headerName:'Масс (g)', field:'p1_w', width:130, ...editNumericCol, valueFormatter:numFmt4,
+          cellStyle:p=>{
+            const base = editNumericCol.cellStyle(p);
+            return p.data.is_saved ? base : { backgroundColor:'#e3f2fd' };
+          }
+        },
+        { headerName:'P,ad (%)', field:'p1_r', width:130, ...editNumericCol, valueFormatter:numFmt4,
+          cellStyle:p=>{
+            const base = editNumericCol.cellStyle(p);
+            return p.data.is_saved ? base : { backgroundColor:'#e3f2fd' };
+          }
+        }
+      ]
+    },
+    {
+      headerName:'p2',
+      children:[
+        { headerName:'Масс (g)', field:'p2_w', width:130, ...editNumericCol, valueFormatter:numFmt4,
+          cellStyle:p=>{
+            const base = editNumericCol.cellStyle(p);
+            return p.data.is_saved ? base : { backgroundColor:'#fff3e0' };
+          }
+        },
+        { headerName:'P,ad (%)', field:'p2_r', width:130, ...editNumericCol, valueFormatter:numFmt4,
+          cellStyle:p=>{
+            const base = editNumericCol.cellStyle(p);
+            return p.data.is_saved ? base : { backgroundColor:'#fff3e0' };
+          }
+        }
+      ]
+    },
+    {
+      headerName:'Тохирц (T)', field:'diff', width:120,
+      valueFormatter:p=> p.data.is_saved && p.value!=null ? numFmt2(p) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved){
+          return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
+        }
+        if(p.data.t_exceeded){
+          return { color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' };
+        }
+        return { color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' };
+      }
+    },
+    {
+      headerName:'Дундаж', field:'avg', width:120,
+      valueFormatter:p=> p.data.is_saved && p.value!=null ? numFmt2(p) : '-',
+      cellStyle:p=>{
+        if(!p.data.is_saved){
+          return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
+        }
+        return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };
+      }
+    },
+    {
+      headerName:'Үйлдэл', width:80, pinned:'right',
+      cellRenderer:p=> {
+        if (p.data.is_saved) return '<span class="text-muted small">Хадгалагдсан</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Дээж хасах"><i class="bi bi-x"></i></button>`;
+      },
+      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' }
+    }
+  ];
+
+  // ========== DRAFT MANAGEMENT ==========
+  function saveDrafts(){
+    if(!window.phosphorusGridApi || !draftMgr) return;
+    const drafts = {};
+    window.phosphorusGridApi.forEachNode(n => {
+      if(!n.data.is_saved){
+        drafts[n.data.sample_id] = {
+          p1_w: n.data.p1_w,
+          p1_r: n.data.p1_r,
+          p2_w: n.data.p2_w,
+          p2_r: n.data.p2_r
+        };
+      }
+    });
+    draftMgr.save(drafts);
+  }
+
+  function restoreDrafts(){
+    if(!window.phosphorusGridApi || !draftMgr) return;
+    try{
+      const drafts = draftMgr.restore();
+      window.phosphorusGridApi.forEachNode(n => {
+        if(!n.data.is_saved){
+          const draft = drafts[n.data.sample_id];
+          if(draft){
+            Object.assign(n.data, draft);
+            applyPairMeta(n.data);
+          }
+        }
+      });
+      window.phosphorusGridApi.refreshCells({ force:true });
+    } catch(e){}
+  }
+
+  function recalcPair(sampleId){
+    window.phosphorusGridApi.forEachNode(n => {
+      if(n.data.sample_id === sampleId){
+        applyPairMeta(n.data);
+      }
+    });
+    window.phosphorusGridApi.refreshCells({ force:true });
+  }
+
+  // ========== INIT GRID ==========
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+
+    if (urlIds) {
+      try { localStorage.setItem(STORAGE_KEY, urlIds); } catch(e) {}
+    } else {
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY);
+        if (savedIds) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+          window.history.replaceState({}, '', url.toString());
+          window.location.reload();
+          return;
+        }
+      } catch(e) {}
+    }
+
+    const el = document.querySelector('#phosphorusGrid');
+    if(!el) return;
+
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager(ANALY_CODE);
+    } else {
+      draftMgr = {
+        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+        purge: (ids) => { if (!ids || ids.length === 0) localStorage.removeItem(`draft_${ANALY_CODE}`); }
+      };
+    }
+
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      window.phosphorusGridApi = LIMS_AGGRID.createGrid('#phosphorusGrid', columnDefs, rowData, {
+        onCellValueChanged: (params) => {
+          if(['p1_w','p1_r','p2_w','p2_r'].includes(params.colDef.field)){
+            recalcPair(params.data.sample_id);
+          }
+          saveDrafts();
+        },
+        enterNavigatesVerticallyAfterEdit: true,
+        editableColIds: ['p1_w','p1_r','p2_w','p2_r']
+      });
+    } else {
+      window.phosphorusGridApi = agGrid.createGrid(el, {
+        theme:'legacy',
+        columnDefs,
+        rowData,
+        defaultColDef:{ sortable:false, resizable:true, editable:false, suppressMovable:true, wrapHeaderText: true, autoHeaderHeight: true },
+        suppressRowTransform:true,
+        singleClickEdit:true,
+        stopEditingWhenCellsLoseFocus:true,
+        enterNavigatesVertically:true,
+        enterNavigatesVerticallyAfterEdit:true,
+        onCellValueChanged: (params) => {
+          if(['p1_w','p1_r','p2_w','p2_r'].includes(params.colDef.field)){
+            recalcPair(params.data.sample_id);
+          }
+          saveDrafts();
+        }
+      });
+    }
+
+    setTimeout(restoreDrafts, 100);
+  });
+
+  // ========== ACTIONS ==========
+  window.removeSample = function(id){
+    if(!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if(ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
+
+  window.collectPGridData = function(){
+    if(!window.phosphorusGridApi) return [];
+    const payload = [];
+    window.phosphorusGridApi.forEachNode(n => {
+      if(n.data.is_saved) return;
+      const sid = n.data.sample_id;
+      const r1 = toNumber(n.data.p1_r);
+      const r2 = toNumber(n.data.p2_r);
+      if(r1 == null || r2 == null) return;
+      const weight1 = toNumber(n.data.p1_w);
+      const weight2 = toNumber(n.data.p2_w);
+      const avg = Number(((r1 + r2) / 2).toFixed(4));
+      const diff = Number(Math.abs(r1 - r2).toFixed(4));
+      const limInfo = limitFor(avg);
+      const effective = limInfo.mode === 'percent' && avg != null ? Math.abs(avg * limInfo.limit) : limInfo.limit;
+      payload.push({
+        sample_id: parseInt(sid, 10),
+        analysis_code: ANALY_CODE,
+        final_result: avg,
+        raw_data: {
+          p1: { weight: weight1, result: r1 },
+          p2: { weight: weight2, result: r2 },
+          avg: avg,
+          diff: diff,
+          limit_used: effective,
+          limit_mode: limInfo.mode,
+          t_exceeded: diff != null && effective != null ? diff > effective : false
+        }
+      });
+    });
+    return payload;
+  };
+
+  window.updatePGridAfterSave = function(savedResults){
+    if(!window.phosphorusGridApi || !savedResults) return;
+
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const approvedIds = [], pendingIds = [];
+    savedResults.forEach(s => {
+      if (s.status === 'approved') approvedIds.push(s.sample_id);
+      else if (s.status === 'pending_review') pendingIds.push(s.sample_id);
+    });
+
+    const allSampleIds = [];
+    window.phosphorusGridApi.forEachNode(n => { if (!allSampleIds.includes(n.data.sample_id)) allSampleIds.push(n.data.sample_id); });
+    const remainingIds = allSampleIds.filter(id => !approvedIds.includes(id) || pendingIds.includes(id));
+
+    if (remainingIds.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, remainingIds.join(','));
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', remainingIds.join(','));
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    } else {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    }
+
+    draftMgr.purge(savedResults.map(r => r.sample_id));
+
+    const savedMap = {};
+    savedResults.forEach(r => { savedMap[r.sample_id] = r; });
+    window.phosphorusGridApi.forEachNode(n => {
+      const saved = savedMap[n.data.sample_id];
+      if(!saved) return;
+
+      if (saved.status === 'rejected') {
+        n.data.is_saved = false;
+      } else {
+        n.data.is_saved = true;
+        const raw = parseRaw(saved);
+        const p1 = raw.p1 || {};
+        const p2 = raw.p2 || {};
+        n.data.p1_w = toNumber(p1.weight ?? p1.m1 ?? p1.mass) ?? n.data.p1_w;
+        n.data.p1_r = toNumber(p1.result ?? p1.value) ?? n.data.p1_r;
+        n.data.p2_w = toNumber(p2.weight ?? p2.m1 ?? p2.mass) ?? n.data.p2_w;
+        n.data.p2_r = toNumber(p2.result ?? p2.value) ?? n.data.p2_r;
+        n.data.avg = raw.avg != null ? toNumber(raw.avg) : n.data.avg;
+        n.data.diff = raw.diff != null ? toNumber(raw.diff) : n.data.diff;
+        n.data.limit_used = raw.limit_used != null ? toNumber(raw.limit_used) : n.data.limit_used;
+        n.data.limit_mode = raw.limit_mode || n.data.limit_mode;
+        n.data.t_exceeded = raw.t_exceeded ?? n.data.t_exceeded;
+        applyPairMeta(n.data);
+      }
+    });
+
+    if (approvedIds.length > 0) {
+      const rowsToRemove = [];
+      window.phosphorusGridApi.forEachNode(n => { if (approvedIds.includes(n.data.sample_id)) rowsToRemove.push(n); });
+      if (rowsToRemove.length > 0) {
+        window.phosphorusGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+      }
+    }
+
+    window.phosphorusGridApi.refreshCells({ force:true });
+  };
+
+  // ========== REGISTER LIMS_CALC ==========
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  const REG = { collect: window.collectPGridData, afterSave: window.updatePGridAfterSave };
+  [ANALY_CODE, (ANALY_CODE || '').toUpperCase(), (ANALY_CODE || '').toLowerCase(), 'P', 'p'].forEach(code => {
+    if(code) window.LIMS_CALC[code] = REG;
+  });
+})();
+</script>

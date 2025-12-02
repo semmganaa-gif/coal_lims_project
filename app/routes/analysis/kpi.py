@@ -202,3 +202,50 @@ def register_routes(bp):
             error_reason_labels=get_error_reason_labels(),  # ✅ DB-ээс унших
             group_by=group_by
         )
+# =====================================================================
+    # 🔹 АХЛАХЫН ХЯНАЛТАД ХАРАХ KPI ТОЙМ (ЭЭЛЖ + 14 ХОНОГ)
+    # =====================================================================
+    @bp.route("/api/kpi_summary_for_ahlah", methods=["GET"])
+    @login_required
+    def kpi_summary_for_ahlah():
+        """
+        Ахлахын хяналтын хуудасны дээр харагдах "COUNT" маягийн KPI:
+
+          - shift.total_errors  -> одоогийн ээлжид бүртгэгдсэн буцаалтын (error_reason бүхий) тоо
+          - days14.total_errors -> сүүлийн 14 хоногт бүртгэгдсэн буцаалтын тоо
+
+        Real-time статус биш, AnalysisResultLog.timestamp дээр тулгуурласан "count" KPI.
+        """
+        now = now_local()
+
+        # 1) Одоогийн ээлж
+        shift_info = get_shift_info(now)
+        shift_stats = _aggregate_error_reason_stats(
+            date_from=shift_info.shift_start,
+            date_to=shift_info.shift_end,
+        )
+
+        # 2) Сүүлийн 14 хоног (өнөөдөр орсон 14 бүтэн өдөр)
+        tomorrow = now.date() + timedelta(days=1)
+        end_dt = datetime.combine(tomorrow, time(0, 0, 0))
+        start_dt = end_dt - timedelta(days=14)
+
+        days14_stats = _aggregate_error_reason_stats(
+            date_from=start_dt,
+            date_to=end_dt,
+        )
+
+        payload = {
+            "shift": {
+                "label": shift_info.label,  # Ж: "A-Өдөр"
+                "start": shift_info.shift_start.strftime("%Y-%m-%d %H:%M"),
+                "end": shift_info.shift_end.strftime("%Y-%m-%d %H:%M"),
+                "total_errors": int(shift_stats.get("total", 0)),
+            },
+            "days14": {
+                "from": start_dt.strftime("%Y-%m-%d"),
+                "to": (end_dt - timedelta(seconds=1)).strftime("%Y-%m-%d"),
+                "total_errors": int(days14_stats.get("total", 0)),
+            },
+        }
+        return jsonify(payload)

@@ -1,78 +1,23 @@
-{# AG Grid form for Plastometer X/Y with two parallels #}
+{# AG Grid хувилбар - REFACTORED with Factory Pattern #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
+{# 🎯 Paired analysis (X/Y) with rowSpan structure #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
-{{ aggrid_macros.common_grid_css('xyGrid') | safe }}
-{{ aggrid_macros.common_js_helpers(['result']) | safe }}
-
-<style>
-  #xyGrid {
-    margin-top: 20px;
-    height: 70vh;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-  }
-  .ag-theme-alpine {
-    --ag-font-size: 14px;
-    --ag-font-family: "Noto Sans", sans-serif;
-    --ag-border-color: #dee2e6;
-    --ag-header-background-color: #f8f9fa;
-  }
-  .ag-theme-alpine .ag-header-cell {
-    border-right: 1px solid #d0d0d0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
-  }
-  .ag-theme-alpine .ag-cell {
-    border-right: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-  }
-  .ag-theme-alpine .ag-cell-inline-editing {
-    background-color: #fff !important;
-    box-shadow: 0 0 0 2px #0d6efd !important;
-    z-index: 100 !important;
-  }
-  .ag-theme-alpine .ag-cell-span {
-    background-color: rgba(255,255,255,0.95) !important;
-    border-bottom: 1px solid #dee2e6 !important;
-  }
-  .reject-badge {
-    font-size: 0.7em;
-    padding: 3px 6px;
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px;
-    display: inline-block;
-    margin-top: 4px;
-  }
-  .status-pill {
-    font-size: 0.65rem;
-    border-radius: 999px;
-    padding: 2px 8px;
-    margin-top: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .status-pill.pending { background:#fff3cd; color:#856404; border:1px solid #ffeeba; }
-  .status-pill.rejected { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
-  .status-pill.saved { background:#d1e7dd; color:#0f5132; border:1px solid #badbcc; }
-</style>
 
 {{ aggrid_macros.grid_container('xyGrid') | safe }}
 
-<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script>
 (function(){
   'use strict';
-  const DRAFT_KEY = 'draft_inputs_XY_parallel';
+
+  // ========== CONFIG ==========
+  const ANALY_CODE_X = 'X';
+  const ANALY_CODE_Y = 'Y';
   {{ aggrid_macros.dataset_block(include_client=True, include_existing=False) | safe }}
 
   const pairedResults = {{ paired_results_map | tojson | safe }};
+  let draftMgr;
 
-  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['x','y'])) || (() => false);
+  // ========== HELPERS ==========
   const sampleIndexMap = {};
   samples.forEach((s, idx) => { sampleIndexMap[s.id] = idx + 1; });
 
@@ -92,7 +37,7 @@
   }
 
   function extractParallels(entry){
-    if(!entry) return { p1:null, p2:null };
+    if(!entry) return { p1: null, p2: null };
     const raw = parseRaw(entry);
     const pick = (part) => {
       if(!part) return null;
@@ -111,6 +56,36 @@
     return entry.status !== 'rejected';
   }
 
+  function limitFor(code, avg){
+    const cfg = (window.LIMS_LIMITS && window.LIMS_LIMITS[code]) || null;
+    if(!cfg) return { limit: 0, mode: 'abs' };
+    if(cfg.single) return { limit: cfg.single.limit, mode: cfg.single.mode };
+    const bands = cfg.bands || [];
+    if(!bands.length) return { limit: 0, mode: 'abs' };
+    if(avg == null) return { limit: bands[0].limit, mode: bands[0].mode };
+    for(const b of bands){
+      if(avg <= b.upper){
+        return { limit: b.limit, mode: b.mode };
+      }
+    }
+    const last = bands[bands.length - 1];
+    return { limit: last.limit, mode: last.mode };
+  }
+
+  const numParser = p => {
+    if (window.LIMS_AGGRID?.numParser) return window.LIMS_AGGRID.numParser(p);
+    const raw = p.newValue;
+    if(raw === null || raw === undefined || raw === '') return null;
+    const num = Number(String(raw).replace(',', '.'));
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
+  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
+  const numFmt2 = p => (p.value != null && p.value !== '') ? parseFloat(p.value).toFixed(2) : '';
+  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
+
+  // ========== ROW DATA ==========
   const rowData = [];
   samples.forEach((s) => {
     const pair = pairedResults[s.id] || {};
@@ -120,6 +95,11 @@
     const yVals = extractParallels(entryY);
     const lockX = isLocked(entryX);
     const lockY = isLocked(entryY);
+    const statusX = entryX ? entryX.status : null;
+    const statusY = entryY ? entryY.status : null;
+    const rejInfo = rejectedInfo[s.id];
+
+    // Row 1: Parallel 1
     rowData.push({
       sample_idx: sampleIndexMap[s.id],
       sample_id: s.id,
@@ -130,9 +110,13 @@
       y: yVals.p1,
       lockX,
       lockY,
-      statusX: entryX ? entryX.status : null,
-      statusY: entryY ? entryY.status : null,
+      statusX,
+      statusY,
+      rejection_reason: rejInfo?.reason || null,
+      rejection_code: rejInfo?.reason_code || null
     });
+
+    // Row 2: Parallel 2
     rowData.push({
       sample_idx: sampleIndexMap[s.id],
       sample_id: s.id,
@@ -143,11 +127,14 @@
       y: yVals.p2,
       lockX,
       lockY,
-      statusX: entryX ? entryX.status : null,
-      statusY: entryY ? entryY.status : null,
+      statusX,
+      statusY,
+      rejection_reason: rejInfo?.reason || null,
+      rejection_code: rejInfo?.reason_code || null
     });
   });
 
+  // ========== CALCULATION FUNCTIONS ==========
   function rowsForSample(sampleId){
     const rows = {};
     window.xyGridApi?.forEachNode(n => {
@@ -158,22 +145,6 @@
     return rows;
   }
 
-  function limitFor(code, avg){
-    const cfg = (window.LIMS_LIMITS && window.LIMS_LIMITS[code]) || null;
-    if(!cfg) return { limit:0, mode:'abs' };
-    if(cfg.single) return { limit:cfg.single.limit, mode:cfg.single.mode };
-    const bands = cfg.bands || [];
-    if(!bands.length) return { limit:0, mode:'abs' };
-    if(avg == null) return { limit:bands[0].limit, mode:bands[0].mode };
-    for(const b of bands){
-      if(avg <= b.upper){
-        return { limit:b.limit, mode:b.mode };
-      }
-    }
-    const last = bands[bands.length - 1];
-    return { limit:last.limit, mode:last.mode };
-  }
-
   function applyAgg(rows, field, code){
     const r1 = rows[1], r2 = rows[2];
     if(!r1 || !r2) return;
@@ -182,7 +153,7 @@
     const diff = (v1 != null && v2 != null) ? Math.abs(v1 - v2) : null;
     const avg = (v1 != null && v2 != null) ? (v1 + v2) / 2 : null;
     const lim = limitFor(code, avg);
-    const thr = lim.mode === 'percent' && avg != null ? Math.abs(avg * lim.limit) : lim.limit;
+    const thr = lim.mode === 'percent' && avg != null ? Math.abs(avg * lim.limit / 100) : lim.limit;
     const exceeded = (diff != null && thr != null) ? Math.abs(diff) > (thr ?? 0) : false;
     [r1, r2].forEach(r => {
       if(!r) return;
@@ -200,33 +171,32 @@
     if(!rows[1] || !rows[2]) return;
     applyAgg(rows, 'x', 'X');
     applyAgg(rows, 'y', 'Y');
-    window.xyGridApi.refreshCells({ force:true });
+    window.xyGridApi.refreshCells({ force: true });
   }
 
-  const numParser = params => {
-    const raw = params.newValue;
-    if(raw === null || raw === undefined || raw === '') return null;
-    const num = Number(String(raw).replace(',','.'));
-    return Number.isFinite(num) ? num : null;
-  };
-  const numFmt = p => (p.value != null && p.value !== '') ? Number(p.value).toFixed(2) : '';
-
+  // ========== COLUMN DEFS ==========
   const columnDefs = [
-    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      cellStyle:{ textAlign:'center', fontWeight:'600', color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' } },
-    { headerName:'Дээжийн нэр', field:'sample_code', width:240, pinned:'left',
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      cellRenderer:p=>{
+    {
+      headerName: '№', field: 'sample_idx', width: 60, pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: { textAlign: 'center', fontWeight: '600', color: '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    },
+    {
+      headerName: 'Дээжийн нэр', field: 'sample_code', width: 240, pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellRenderer: p => {
         let html = `<div class="fw-semibold text-primary">${p.value}</div>`;
         html += `<div class="text-muted small">${p.data.client_name || '-'}</div>`;
-        const rej = rejectedInfo[p.data.sample_id];
-        if(rej){
-          const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
+
+        // Rejection badge
+        if(p.data.rejection_reason){
+          const label = (errorLabels && (errorLabels[p.data.rejection_code] || p.data.rejection_reason)) || p.data.rejection_reason || '';
           html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
         }
+
+        // Status pills for X and Y
         const badges = [];
         if(p.data.statusX){
           const klass = p.data.statusX === 'pending_review' ? 'pending' : (p.data.statusX === 'rejected' ? 'rejected' : 'saved');
@@ -241,136 +211,211 @@
         }
         return html;
       },
-      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' } },
-    { headerName:'Параллель', field:'parallel', width:100,
-      cellStyle:p => ({
-        textAlign:'center', fontWeight:'600',
+      cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' }
+    },
+    {
+      headerName: 'Параллель', field: 'parallel', width: 100,
+      cellStyle: p => ({
+        textAlign: 'center', fontWeight: '600',
         backgroundColor: p.data.parallel === 1 ? '#e3f2fd' : '#fff3cd'
       }),
-      valueFormatter:p => `p${p.value}` },
-    { headerName:'X (мм)', field:'x', width:140,
-      editable:p => !p.data.lockX,
-      valueParser:numParser,
-      valueFormatter:numFmt,
-      suppressKeyboardEvent:navHandler,
-      cellStyle:p => p.data.lockX ? { backgroundColor:'#e9ecef', color:'#6c757d' } : {} },
-    { headerName:'Y (мм)', field:'y', width:140,
-      editable:p => !p.data.lockY,
-      valueParser:numParser,
-      valueFormatter:numFmt,
-      suppressKeyboardEvent:navHandler,
-      cellStyle:p => p.data.lockY ? { backgroundColor:'#e9ecef', color:'#6c757d' } : {} },
-    { headerName:'X тохирц (T)', field:'x_diff', width:130,
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      valueFormatter:p => (p.data.parallel===1 && p.data.x_diff != null) ? Number(p.data.x_diff).toFixed(2) : (p.data.parallel===1 ? '-' : ''),
-      cellStyle:p=>{
-        if(p.data.parallel!==1) return {display:'none'};
-        if(p.data.x_diff == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        if(p.data.x_tExceeded) return { color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' };
+      valueFormatter: p => `p${p.value}`
+    },
+    {
+      headerName: 'X (мм)', field: 'x', width: 140,
+      editable: p => !p.data.lockX,
+      cellEditor: 'agTextCellEditor',
+      cellEditorParams: { useFormatter: true },
+      valueParser: numParser,
+      valueFormatter: numFmt2,
+      cellStyle: p => p.data.lockX ? { backgroundColor: '#e9ecef', color: '#6c757d' } : {}
+    },
+    {
+      headerName: 'Y (мм)', field: 'y', width: 140,
+      editable: p => !p.data.lockY,
+      cellEditor: 'agTextCellEditor',
+      cellEditorParams: { useFormatter: true },
+      valueParser: numParser,
+      valueFormatter: numFmt2,
+      cellStyle: p => p.data.lockY ? { backgroundColor: '#e9ecef', color: '#6c757d' } : {}
+    },
+    {
+      headerName: 'X тохирц (T)', field: 'x_diff', width: 130,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.x_diff != null) ? Number(p.data.x_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
+      cellStyle: p => {
+        if(p.data.parallel !== 1) return { display: 'none' };
+        if(p.data.x_diff == null) return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        if(p.data.x_tExceeded) return { color: '#dc3545', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        return { color: '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center' };
       }
     },
-    { headerName:'X дундаж', field:'x_avg', width:130,
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      valueFormatter:p => (p.data.parallel===1 && p.data.x_avg != null) ? Number(p.data.x_avg).toFixed(2) : (p.data.parallel===1 ? '-' : ''),
-      cellStyle:p=>{
-        if(p.data.parallel!==1) return {display:'none'};
-        if(p.data.x_avg == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };
+    {
+      headerName: 'X дундаж', field: 'x_avg', width: 130,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.x_avg != null) ? Number(p.data.x_avg).toFixed(2) : (p.data.parallel === 1 ? '-' : ''),
+      cellStyle: p => {
+        if(p.data.parallel !== 1) return { display: 'none' };
+        if(p.data.x_avg == null) return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        return { fontWeight: 'bold', color: '#198754', backgroundColor: '#d1e7dd', display: 'flex', alignItems: 'center', justifyContent: 'center' };
       }
     },
-    { headerName:'Y тохирц (T)', field:'y_diff', width:130,
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      valueFormatter:p => (p.data.parallel===1 && p.data.y_diff != null) ? Number(p.data.y_diff).toFixed(2) : (p.data.parallel===1 ? '-' : ''),
-      cellStyle:p=>{
-        if(p.data.parallel!==1) return {display:'none'};
-        if(p.data.y_diff == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        if(p.data.y_tExceeded) return { color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center' };
+    {
+      headerName: 'Y тохирц (T)', field: 'y_diff', width: 130,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.y_diff != null) ? Number(p.data.y_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
+      cellStyle: p => {
+        if(p.data.parallel !== 1) return { display: 'none' };
+        if(p.data.y_diff == null) return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        if(p.data.y_tExceeded) return { color: '#dc3545', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        return { color: '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center' };
       }
     },
-    { headerName:'Y дундаж', field:'y_avg', width:130,
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      valueFormatter:p => (p.data.parallel===1 && p.data.y_avg != null) ? Number(p.data.y_avg).toFixed(2) : (p.data.parallel===1 ? '-' : ''),
-      cellStyle:p=>{
-        if(p.data.parallel!==1) return {display:'none'};
-        if(p.data.y_avg == null) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-        return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };
+    {
+      headerName: 'Y дундаж', field: 'y_avg', width: 130,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.y_avg != null) ? Number(p.data.y_avg).toFixed(2) : (p.data.parallel === 1 ? '-' : ''),
+      cellStyle: p => {
+        if(p.data.parallel !== 1) return { display: 'none' };
+        if(p.data.y_avg == null) return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+        return { fontWeight: 'bold', color: '#198754', backgroundColor: '#d1e7dd', display: 'flex', alignItems: 'center', justifyContent: 'center' };
       }
     },
-    { headerName:'', field:'actions', width:60, pinned:'right',
-      rowSpan:p => p.data.parallel===1 ? 2 : 1,
-      cellClassRules:{ 'ag-cell-span': p => p.data.parallel===1 },
-      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Дээж устгах"><i class="bi bi-x-lg"></i></button>`,
-      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' } },
+    {
+      headerName: 'Үйлдэл', width: 80, pinned: 'right',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellRenderer: p => {
+        if (p.data.lockX || p.data.lockY) return '<span class="text-muted small">Хадгалагдсан</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Дээж хасах"><i class="bi bi-x"></i></button>`;
+      },
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    }
   ];
 
-  const gridOptions = {
-    theme:'legacy',
-    columnDefs,
-    rowData,
-    defaultColDef: baseDefaultColDef,
-    suppressRowTransform:true,
-    singleClickEdit:true,
-    stopEditingWhenCellsLoseFocus:true,
-    enterNavigatesVertically:true,
-    enterNavigatesVerticallyAfterEdit:true,
-    onCellValueChanged: params => {
-      if(['x','y'].includes(params.colDef.field)){
-        recalcPair(params.data.sample_id);
-      }
-      saveDrafts();
-    }
-  };
-
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const el = document.querySelector('#xyGrid');
-    if(el){
-      window.xyGridApi = agGrid.createGrid(el, gridOptions);
-      samples.forEach(s => recalcPair(s.id));
-      setTimeout(restoreDrafts, 100);
-    }
-  });
-
-  window.removeSample = function(id){
-    if(!confirm('Дээжийг ажлын хуудаснаас устгах уу?')) return;
-    const url = new URL(window.location.href);
-    let ids = (url.searchParams.get('sample_ids') || '').split(',').filter(Boolean);
-    ids = ids.filter(x => parseInt(x,10) !== id);
-    if(ids.length) url.searchParams.set('sample_ids', ids.join(','));
-    else url.searchParams.delete('sample_ids');
-    window.location.href = url.toString();
-  };
-
-  function saveDrafts(){
-    if(!window.xyGridApi) return;
+  // ========== DRAFT MANAGEMENT ==========
+  function saveDrafts() {
+    if (!window.xyGridApi || !draftMgr) return;
     const drafts = {};
     window.xyGridApi.forEachNode(n => {
-      if(!drafts[n.data.sample_id]) drafts[n.data.sample_id] = { p1:{}, p2:{} };
+      if(!drafts[n.data.sample_id]) drafts[n.data.sample_id] = { p1: {}, p2: {} };
       const target = n.data.parallel === 1 ? drafts[n.data.sample_id].p1 : drafts[n.data.sample_id].p2;
       target.x = n.data.x;
       target.y = n.data.y;
     });
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
+    draftMgr.save(drafts);
   }
 
-  function restoreDrafts(){
-    let drafts = {};
-    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
-    window.xyGridApi?.forEachNode(n => {
-      const draft = drafts[n.data.sample_id];
-      if(!draft) return;
-      const src = n.data.parallel === 1 ? draft.p1 : draft.p2;
-      if(!src) return;
-      if(src.x !== undefined && !n.data.lockX) n.data.x = src.x;
-      if(src.y !== undefined && !n.data.lockY) n.data.y = src.y;
-    });
-    samples.forEach(s => recalcPair(s.id));
+  function restoreDrafts() {
+    if (!window.xyGridApi || !draftMgr) return;
+    try {
+      const drafts = draftMgr.restore();
+      window.xyGridApi.forEachNode(n => {
+        const draft = drafts[n.data.sample_id];
+        if(!draft) return;
+        const src = n.data.parallel === 1 ? draft.p1 : draft.p2;
+        if(!src) return;
+        if(src.x !== undefined && !n.data.lockX) n.data.x = src.x;
+        if(src.y !== undefined && !n.data.lockY) n.data.y = src.y;
+      });
+      samples.forEach(s => recalcPair(s.id));
+      window.xyGridApi.refreshCells({ force: true });
+    } catch (e) {}
   }
+
+  // ========== INIT GRID ==========
+  document.addEventListener('DOMContentLoaded', () => {
+    const STORAGE_KEY_X = 'worksheet_X_sample_ids';
+    const STORAGE_KEY_Y = 'worksheet_Y_sample_ids';
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+
+    // localStorage sync for sample_ids
+    if (urlIds) {
+      try {
+        localStorage.setItem(STORAGE_KEY_X, urlIds);
+        localStorage.setItem(STORAGE_KEY_Y, urlIds);
+      } catch(e) {}
+    } else {
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY_X) || localStorage.getItem(STORAGE_KEY_Y);
+        if (savedIds) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+          window.history.replaceState({}, '', url.toString());
+          window.location.reload();
+          return;
+        }
+      } catch(e) {}
+    }
+
+    const el = document.querySelector('#xyGrid');
+    if(!el) return;
+
+    // Initialize Draft Manager
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager('XY');
+    } else {
+      draftMgr = {
+        save: (data) => localStorage.setItem('draft_XY', JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem('draft_XY') || '{}'),
+        purge: (ids) => { if (!ids || ids.length === 0) localStorage.removeItem('draft_XY'); }
+      };
+    }
+
+    // Create Grid
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      window.xyGridApi = LIMS_AGGRID.createGrid('#xyGrid', columnDefs, rowData, {
+        onCellValueChanged: (params) => {
+          if(['x', 'y'].includes(params.colDef.field)){
+            recalcPair(params.data.sample_id);
+          }
+          saveDrafts();
+        },
+        enterNavigatesVerticallyAfterEdit: true,
+        editableColIds: ['x', 'y']
+      });
+    } else {
+      window.xyGridApi = agGrid.createGrid(el, {
+        theme: 'legacy',
+        columnDefs,
+        rowData,
+        defaultColDef: { sortable: false, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        suppressRowTransform: true,
+        singleClickEdit: true,
+        stopEditingWhenCellsLoseFocus: true,
+        enterNavigatesVertically: true,
+        enterNavigatesVerticallyAfterEdit: true,
+        onCellValueChanged: (params) => {
+          if(['x', 'y'].includes(params.colDef.field)){
+            recalcPair(params.data.sample_id);
+          }
+          saveDrafts();
+        }
+      });
+    }
+
+    // Initialize calculations
+    samples.forEach(s => recalcPair(s.id));
+
+    // Restore drafts
+    setTimeout(restoreDrafts, 100);
+  });
+
+  // ========== ACTIONS ==========
+  window.removeSample = function(id){
+    if(!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if(ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
+    else url.searchParams.delete('sample_ids');
+    window.location.href = url.toString();
+  };
 
   function collectAggPayload(rows, field, code){
     const r1 = rows[1], r2 = rows[2];
@@ -406,7 +451,7 @@
     });
     const payload = [];
     Object.keys(map).forEach(sid => {
-      const sampleId = parseInt(sid,10);
+      const sampleId = parseInt(sid, 10);
       recalcPair(sampleId);
       const rows = map[sid];
       const xPayload = collectAggPayload(rows, 'x', 'X');
@@ -417,16 +462,13 @@
     return payload;
   };
 
-  function purgeDrafts(savedResults){
-    if(!savedResults || !savedResults.length) return;
-    let drafts = {};
-    try { drafts = JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ drafts = {}; }
-    savedResults.forEach(r => { delete drafts[r.sample_id]; });
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch(e){}
-  }
-
   window.updateXyGridAfterSave = function(savedResults){
     if(!window.xyGridApi || !savedResults) return;
+
+    const STORAGE_KEY_X = 'worksheet_X_sample_ids';
+    const STORAGE_KEY_Y = 'worksheet_Y_sample_ids';
+
+    // ОНЦГОЙ: X болон Y ХОЁУЛАА approved байх ёстой дээж арилах нөхцөл
     const bySample = {};
     savedResults.forEach(r => {
       const code = (r.analysis_code || '').toUpperCase();
@@ -434,33 +476,119 @@
       bySample[r.sample_id] = bySample[r.sample_id] || {};
       bySample[r.sample_id][code] = r;
     });
+
+    const approvedIds = [];
+    Object.keys(bySample).forEach(sid => {
+      const rec = bySample[sid];
+      const xStatus = rec.X?.status;
+      const yStatus = rec.Y?.status;
+      if(xStatus === 'approved' && yStatus === 'approved'){
+        approvedIds.push(parseInt(sid));
+      }
+    });
+
+    // Update grid nodes
+    const toUpdate = [];
     window.xyGridApi.forEachNode(n => {
       const rec = bySample[n.data.sample_id];
       if(!rec) return;
+      if(approvedIds.includes(n.data.sample_id)) return;
+
+      let updated = false;
+      const newData = { ...n.data };
+
       if(rec.X){
         const rawX = parseRaw(rec.X);
         const lockX = rec.X.status && rec.X.status !== 'rejected';
-        if(n.data.parallel === 1 && rawX.p1) n.data.x = toNumber(rawX.p1.result ?? rawX.p1.value ?? rawX.p1.value_mm);
-        if(n.data.parallel === 2 && rawX.p2) n.data.x = toNumber(rawX.p2.result ?? rawX.p2.value ?? rawX.p2.value_mm);
-        n.data.lockX = lockX;
-        n.data.statusX = rec.X.status || n.data.statusX;
+        if(n.data.parallel === 1 && rawX.p1){
+          newData.x = toNumber(rawX.p1.result ?? rawX.p1.value ?? rawX.p1.value_mm);
+          updated = true;
+        }
+        if(n.data.parallel === 2 && rawX.p2){
+          newData.x = toNumber(rawX.p2.result ?? rawX.p2.value ?? rawX.p2.value_mm);
+          updated = true;
+        }
+        newData.lockX = lockX;
+        newData.statusX = rec.X.status || n.data.statusX;
+        updated = true;
       }
+
       if(rec.Y){
         const rawY = parseRaw(rec.Y);
         const lockY = rec.Y.status && rec.Y.status !== 'rejected';
-        if(n.data.parallel === 1 && rawY.p1) n.data.y = toNumber(rawY.p1.result ?? rawY.p1.value ?? rawY.p1.value_mm);
-        if(n.data.parallel === 2 && rawY.p2) n.data.y = toNumber(rawY.p2.result ?? rawY.p2.value ?? rawY.p2.value_mm);
-        n.data.lockY = lockY;
-        n.data.statusY = rec.Y.status || n.data.statusY;
+        if(n.data.parallel === 1 && rawY.p1){
+          newData.y = toNumber(rawY.p1.result ?? rawY.p1.value ?? rawY.p1.value_mm);
+          updated = true;
+        }
+        if(n.data.parallel === 2 && rawY.p2){
+          newData.y = toNumber(rawY.p2.result ?? rawY.p2.value ?? rawY.p2.value_mm);
+          updated = true;
+        }
+        newData.lockY = lockY;
+        newData.statusY = rec.Y.status || n.data.statusY;
+        updated = true;
+      }
+
+      if(updated) toUpdate.push(newData);
+    });
+
+    // Remove approved samples (both rows)
+    const toRemove = [];
+    if(approvedIds.length > 0){
+      window.xyGridApi.forEachNode(n => {
+        if(approvedIds.includes(n.data.sample_id)){
+          toRemove.push(n.data);
+        }
+      });
+    }
+
+    // Apply transaction
+    if(toRemove.length > 0 || toUpdate.length > 0){
+      window.xyGridApi.applyTransaction({ remove: toRemove, update: toUpdate });
+    }
+
+    // Recalculate aggregates
+    Object.keys(bySample).forEach(id => {
+      if(!approvedIds.includes(parseInt(id))){
+        recalcPair(parseInt(id, 10));
       }
     });
-    Object.keys(bySample).forEach(id => recalcPair(parseInt(id,10)));
-    purgeDrafts(savedResults);
-    alert('X/Y үр дүн хадгаллаа.');
+
+    // Update URL and localStorage
+    const allSampleIds = [];
+    window.xyGridApi.forEachNode(n => { if (!allSampleIds.includes(n.data.sample_id)) allSampleIds.push(n.data.sample_id); });
+    const remainingIds = allSampleIds.filter(id => !approvedIds.includes(id));
+
+    if (remainingIds.length > 0) {
+      try {
+        const idsStr = remainingIds.join(',');
+        localStorage.setItem(STORAGE_KEY_X, idsStr);
+        localStorage.setItem(STORAGE_KEY_Y, idsStr);
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', idsStr);
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    } else {
+      try {
+        localStorage.removeItem(STORAGE_KEY_X);
+        localStorage.removeItem(STORAGE_KEY_Y);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+      } catch(e) {}
+    }
+
+    // Purge drafts
+    draftMgr.purge(savedResults.map(r => r.sample_id));
   };
 
+  // ========== REGISTER LIMS_CALC ==========
   window.LIMS_CALC = window.LIMS_CALC || {};
-  const REGISTERED = { collect: window.collectXyGridData, afterSave: window.updateXyGridAfterSave };
-  ['X','Y','x','y'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
+  const REGISTERED = {
+    collect: window.collectXyGridData,
+    afterSave: window.updateXyGridAfterSave
+  };
+  ['X', 'Y', 'x', 'y'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
+
 })();
 </script>

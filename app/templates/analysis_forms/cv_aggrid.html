@@ -1,43 +1,11 @@
-{# AG Grid – Calorific Value (CV), single row per sample with p1/p2 columns #}
+{# AG Grid хувилбар - REFACTORED with Factory Pattern #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
-{{ aggrid_macros.common_grid_css('cvGrid') | safe }}
-{{ aggrid_macros.common_js_helpers(['m','dt','s']) | safe }}
 
-<style>
-  #cvGrid {
-    margin-top: 20px;
-    height: 75vh;
-    width: 100%;
-    position: relative;
-    z-index: 1;
-  }
-  .ag-theme-alpine {
-    --ag-font-size: 14px;
-    --ag-font-family: "Noto Sans", sans-serif;
-    --ag-border-color: #dee2e6;
-    --ag-header-background-color: #f8f9fa;
-  }
-  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
-  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
-  .ag-theme-alpine .ag-header-group-cell:nth-child(3) { background-color: #e3f2fd !important; }
-  .ag-theme-alpine .ag-header-group-cell:nth-child(4) { background-color: #fff3e0 !important; }
-  .ag-theme-alpine .ag-cell-inline-editing {
-    background-color: #fff !important;
-    box-shadow: 0 0 0 2px #2196F3 !important;
-    z-index: 100 !important;
-  }
-  .reject-badge {
-    font-size: 0.7em; padding: 3px 6px;
-    background: #f8d7da; color: #721c24;
-    border: 1px solid #f5c6cb;
-    border-radius: 4px; display: inline-block; margin-top: 4px;
-  }
-  .sample-name {
-    font-weight: 600; color: #0d6efd;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
-  }
-</style>
+{# ⚡ Note: base.html conditional loading хэрэглэнэ (use_aggrid=True) #}
+{# CSS нь app/static/css/ag-grid-custom.css-аас ирнэ #}
 
+{# CV batch constants input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-4">
     <label class="form-label">Системийн дулаан багтаамж (E) <span class="text-danger">*</span></label>
@@ -58,365 +26,916 @@
 
 {{ aggrid_macros.grid_container('cvGrid') | safe }}
 
-<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script>
-(function(){
+(function() {
   'use strict';
-  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CV';
-  const DRAFT_KEY = `draft_inputs_${ANALY_CODE}`;
-  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['CV'])) || { single:{ limit:120, mode:'abs' } };
-  const J_PER_CAL = 4.1868;
-  const S_CORR_FACTOR = 94.1;
 
+  // --- 1. CONFIG ---
+  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CV';
+
+  // Backend Data
   {{ aggrid_macros.dataset_block() | safe }}
 
   const sulfurMap = {{ sulfur_by_sample | tojson | safe }};
 
-  const navHandler = (window.LIMS_AGGRID && window.LIMS_AGGRID.navHandlerFactory(['m1','t1','m2','t2'])) || (() => false);
-  const numParser = p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; };
-  const numFmt1 = p => (p.value!=null) ? parseFloat(p.value).toFixed(1) : '';
-  const numFmt2 = p => (p.value!=null) ? parseFloat(p.value).toFixed(2) : '';
-  const numFmt3 = p => (p.value!=null) ? parseFloat(p.value).toFixed(3) : '';
+  // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
+  let draftMgr;
 
-  function getAlpha(Qb_Jg){
+  // --- 2. HELPERS ---
+
+  // ✨ CV calculation constants
+  const J_PER_CAL = 4.1868;      // Joule -> Cal conversion
+  const S_CORR_FACTOR = 94.1;    // Sulfur correction coefficient
+
+  /**
+   * ✨ CV Calculation #1: Alpha correction based on Qb range
+   * Qb_MJkg <= 16.70 → 0.0010
+   * 16.70 < Qb_MJkg <= 25.10 → 0.0012
+   * Qb_MJkg > 25.10 → 0.0016
+   */
+  function getAlpha(Qb_Jg) {
     const Qb_MJkg = Qb_Jg / 1000.0;
     if (Qb_MJkg <= 16.70) return 0.0010;
     if (Qb_MJkg <= 25.10) return 0.0012;
     return 0.0016;
   }
 
-  function effectiveLimit(avg){
-    const rule = LIMIT_RULE;
-    if(rule.single) return { limit: rule.single.limit, mode: rule.single.mode };
-    const bands = rule.bands || [];
-    if(avg == null){
-      const first = bands[0];
-      return { limit:first?first.limit:0, mode:first?first.mode:'abs' };
-    }
-    for(const b of bands){
-      if(avg <= b.upper) return { limit:b.limit, mode:b.mode };
-    }
-    const last = bands[bands.length-1];
-    return { limit:last?last.limit:0, mode:last?last.mode:'abs' };
-  }
+  /**
+   * ✨ CV Calculation #2: Main calculation with 3 corrections
+   * 1. Qb_Jg = ((E * dT) - q1 - q2) / m
+   * 2. alpha = getAlpha(Qb_Jg)
+   * 3. acid_corr = alpha * Qb_Jg
+   * 4. S_corr = S_CORR_FACTOR * S
+   * 5. Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr)
+   * 6. Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL
+   */
+  function computeResult(m, dT, E, q1, q2, S) {
+    if (m == null || dT == null || E == null || q1 == null) return null;
+    if (!isFinite(m) || !isFinite(dT) || !isFinite(E) || !isFinite(q1)) return null;
 
-  function calcCv(m, dT, E, q1, q2, S){
-    if(m==null || dT==null || E==null || q1==null) return null;
-    if(!isFinite(m) || !isFinite(dT) || !isFinite(E) || !isFinite(q1)) return null;
-    const Sval = (S==null || !isFinite(S)) ? 0 : S;
-    if(m === 0) return null;
-    const q2v = (!isFinite(q2) || q2==null) ? 0 : q2;
+    const Sval = (S == null || !isFinite(S)) ? 0 : S;
+    if (m === 0) return null;
+    const q2v = (!isFinite(q2) || q2 == null) ? 0 : q2;
+
+    // Step 1: Gross calorific value
     const Qb_Jg = ((E * dT) - q1 - q2v) / m;
+
+    // Step 2: Alpha correction (depends on Qb range)
     const alpha = getAlpha(Qb_Jg);
     const acid_corr = alpha * Qb_Jg;
+
+    // Step 3: Sulfur correction
     const S_corr = S_CORR_FACTOR * Sval;
+
+    // Step 4: Net calorific value (ad basis)
     const Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr);
+
+    // Step 5: Convert to cal/g
     const Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL;
+
     return isFinite(Qgr_cal_g) ? Qgr_cal_g : null;
   }
 
+  /**
+   * ✨ Get current batch constants from UI inputs
+   */
+  function currentBatch() {
+    const toNumber = v => { const n = parseFloat(v); return (isNaN(n) || !isFinite(n)) ? null : n; };
+    const E = toNumber(document.getElementById('batch_calorific_system')?.value ?? '');
+    const q1 = toNumber(document.getElementById('batch_fuse_correction')?.value ?? '');
+    const q2 = toNumber(document.getElementById('batch_acid_correction')?.value ?? '');
+    return { E, q1, q2 };
+  }
+
+  // Parallel background color
+  function parallelBg(p) {
+    return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
+  }
+
+  // ✨ Utility functions (will use LIMS_AGGRID when available)
+  const numParser = p => {
+    if (window.LIMS_AGGRID?.numParser) {
+      return window.LIMS_AGGRID.numParser(p);
+    }
+    const v = parseFloat(p.newValue);
+    return isNaN(v) ? null : v;
+  };
+  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
+  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
+  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';
+  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
+
+  // Баганын тохиргоо (editable numeric columns)
   const editCol = {
     editable: p => !p.data.is_saved,
     cellEditor: 'agTextCellEditor',
     cellEditorParams: { useFormatter: true },
     valueParser: numParser,
-    suppressKeyboardEvent: navHandler,
-    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+    valueFormatter: numFmt3,
+    cellStyle: p =>
+      p.data.is_saved
+        ? { backgroundColor: '#e9ecef' }
+        : { backgroundColor: parallelBg(p) }
   };
 
+  // --- 3. COLUMN DEFINITIONS ---
   const columnDefs = [
-    { headerName:'№', field:'sample_idx', width:60, pinned:'left',
-      cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' },
-      valueFormatter:p=>p.value },
-    { headerName:'Дээжийн нэр', field:'sample_code', width:230, pinned:'left',
-      cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
-      cellRenderer:p=>{
-        let h=`<div class="sample-name">${p.value}</div>`;
+    {
+      headerName: '№',
+      field: 'index',
+      width: 50,
+      pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: {
+        textAlign: 'center',
+        color: '#6c757d',
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      valueFormatter: p => p.data.parallel === 1 ? p.value : ''
+    },
+    {
+      headerName: 'Дээжийн нэр',
+      field: 'sample_code',
+      width: 250,
+      pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        lineHeight: '1.2'
+      },
+      cellRenderer: p => {
+        if (p.data.parallel !== 1) return '';
+        let h = `<div style="font-weight:600;color:#0d6efd;text-shadow:0 1px 0 rgba(255,255,255,0.8)">${p.value}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
-        if(rej) h+=`<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code]||rej.reason}</div>`;
+        if (rej) {
+          h += `<div style="font-size:0.7em;padding:3px 6px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:4px;display:inline-block;margin-top:4px"><i class="bi bi-exclamation-triangle"></i> ${
+            errorLabels[rej.reason_code] || rej.reason
+          }</div>`;
+        }
         return h;
       }
     },
-    { headerName:'p1', children:[
-      { headerName:'m (g)', field:'m1', width:110, valueFormatter:numFmt3, ...editCol,
-        cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:{backgroundColor:'#e3f2fd'} },
-      { headerName:'dT', field:'t1', width:110, valueFormatter:numFmt3, ...editCol,
-        cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:{backgroundColor:'#e3f2fd'} },
-      { headerName:'S', field:'s1', width:80, valueFormatter:numFmt3,
-        cellStyle:{textAlign:'center', color:'#6c757d', backgroundColor:'#f8f9fa'} },
-      { headerName:'Үр дүн', field:'res1', width:120, valueFormatter:p=>p.data.is_saved?numFmt2(p):'-',
-        cellStyle:p=>{
-          if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-          return { fontWeight:'bold', backgroundColor:'#e7f5ff', display:'flex', alignItems:'center', justifyContent:'center' };
-        }}
-    ]},
-    { headerName:'p2', children:[
-      { headerName:'m (g)', field:'m2', width:110, valueFormatter:numFmt3, ...editCol,
-        cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:{backgroundColor:'#fff3e0'} },
-      { headerName:'dT', field:'t2', width:110, valueFormatter:numFmt3, ...editCol,
-        cellStyle:p=>p.data.is_saved?{backgroundColor:'#e9ecef'}:{backgroundColor:'#fff3e0'} },
-      { headerName:'S', field:'s2', width:80, valueFormatter:numFmt3,
-        cellStyle:{textAlign:'center', color:'#6c757d', backgroundColor:'#f8f9fa'} },
-      { headerName:'Үр дүн', field:'res2', width:120, valueFormatter:p=>p.data.is_saved?numFmt2(p):'-',
-        cellStyle:p=>{
-          if(!p.data.is_saved) return { color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center' };
-          return { fontWeight:'bold', backgroundColor:'#e7f5ff', display:'flex', alignItems:'center', justifyContent:'center' };
-        }}
-    ]},
-    { headerName:'Тохирц (T)', field:'diff', width:110, valueFormatter:p=>p.data.is_saved?numFmt2(p):'-',
-      cellStyle:p=>{
-        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
-        if(p.data.t_exceeded) return {color:'#dc3545', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center'};
-        return {color:'#6c757d', display:'flex', alignItems:'center', justifyContent:'center'};
+    {
+      headerName: 'm (g)',
+      field: 'm',
+      width: 110,
+      ...editCol
+    },
+    {
+      headerName: 'dT',
+      field: 'dT',
+      width: 110,
+      ...editCol
+    },
+    {
+      headerName: 'S',
+      field: 'S',
+      width: 80,
+      valueFormatter: p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '-',
+      cellStyle: {
+        textAlign: 'center',
+        color: '#6c757d',
+        backgroundColor: '#f8f9fa'
       }
     },
-    { headerName:'Дундаж', field:'avg', width:120, valueFormatter:p=>p.data.is_saved?numFmt2(p):'-',
-      cellStyle:p=>{
-        if(!p.data.is_saved) return {color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center'};
-        return {fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center'};
+    {
+      headerName: 'Үр дүн',
+      field: 'result',
+      width: 120,
+      valueFormatter: p =>
+        p.data.is_saved && p.value != null ? parseFloat(p.value).toFixed(2) : '-',
+      cellStyle: p => {
+        const base = { backgroundColor: parallelBg(p) };
+        return p.data.is_saved
+          ? { ...base, fontWeight: 'bold', backgroundColor: '#e7f5ff' }
+          : { ...base, color: '#ccc' };
       }
     },
-    { headerName:'', field:'actions', width:60, pinned:'right',
-      cellRenderer:p=>`<button class="btn btn-outline-danger btn-sm border-0 py-0" onclick="removeSample(${p.data.sample_id})" title="Устгах"><i class="bi bi-x-lg"></i></button>`,
-      cellStyle:{display:'flex', alignItems:'center', justifyContent:'center'}
+    {
+      headerName: 'Тохирц',
+      field: 'tolerance',
+      width: 90,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => {
+        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+          return parseFloat(p.value).toFixed(2);
+        }
+        return '';
+      },
+      cellStyle: p => {
+        if (!p.data.is_saved) {
+          return {
+            color: '#ccc',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          };
+        }
+        // Хадгалагдсан: улаан (t_exceeded) эсвэл саарал
+        return {
+          color: p.data.t_exceeded ? '#dc3545' : '#6c757d',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        };
+      }
+    },
+    {
+      headerName: 'Дундаж',
+      field: 'average',
+      width: 90,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => {
+        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+          return parseFloat(p.value).toFixed(2);
+        }
+        return '';
+      },
+      cellStyle: p => ({
+        color: p.data.is_saved ? '#198754' : '#ccc',
+        fontWeight: 'bold',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      })
+    },
+    {
+      headerName: 'Үйлдэл',
+      width: 80,
+      pinned: 'right',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellRenderer: p => {
+        // Only show button in first parallel row
+        if (p.data.parallel !== 1) return '';
+
+        // Hide button if sample is already saved (locked)
+        if (p.data.is_saved) {
+          return '<span class="text-muted small">Хадгалагдсан</span>';
+        }
+
+        return `
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="${p.data.sample_id}"
+                  title="Дээж хасах">
+            <i class="bi bi-x"></i>
+          </button>
+        `;
+      },
+      cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }
     }
   ];
 
-  const sampleIndexMap = {}; samples.forEach((s,i)=> sampleIndexMap[s.id]=i+1);
+  // --- 4. ROW DATA ---
+  const rowData = samples.flatMap((sample, idx) => {
+    const existing = existingResults[sample.id];
+    const rejected = rejectedInfo[sample.id];
 
-  function currentBatch(){
-    const E = parseFloat(document.getElementById('batch_calorific_system')?.value ?? '');
-    const q1= parseFloat(document.getElementById('batch_fuse_correction')?.value ?? '');
-    const q2= parseFloat(document.getElementById('batch_acid_correction')?.value ?? '');
-    return {E: isFinite(E)?E:null, q1:isFinite(q1)?q1:null, q2:isFinite(q2)?q2:null};
-  }
+    // ✅ Буцаах логик:
+    // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
+    // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
+    // - pending_review → locked (хадгалагдсан гэсэн үг)
+    const isRejected = existing?.status === 'rejected';
 
-  const rowData = samples.map((s)=>{
-    const ex = existingResults[s.id] || {};
-    const rd = ex.raw_data || {};
-    const isSaved = (ex.status === 'pending_review' || ex.status === 'approved');
-    const p1 = rd.p1 || {}, p2 = rd.p2 || {};
-    const batch = rd.batch || {};
-    const batchE = batch.E ?? null;
-    const batchQ1 = batch.q1 ?? null;
-    const batchQ2 = batch.q2 ?? null;
-    const S_used = rd.s_used ?? sulfurMap[String(s.id)] ?? sulfurMap[s.id] ?? 0;
-
-    const m1 = p1.m ?? p1.m1 ?? null;
-    const t1 = p1.delta_t ?? p1.dT ?? p1.temp ?? null;
-    const m2 = p2.m ?? p2.m1 ?? null;
-    const t2 = p2.delta_t ?? p2.dT ?? p2.temp ?? null;
-
-    const batchNow = currentBatch();
-    const E = batchE ?? (isSaved ? null : batchNow.E);
-    const q1 = batchQ1 ?? (isSaved ? null : batchNow.q1);
-    const q2 = batchQ2 ?? (isSaved ? null : batchNow.q2);
-
-    const r1 = calcCv(m1,t1,E,q1,q2,S_used);
-    const r2 = calcCv(m2,t2,E,q1,q2,S_used);
-    const bothOk = isFinite(r1) && isFinite(r2);
-    const diff = bothOk ? Math.abs(r1-r2) : null;
-    const avg  = bothOk ? (r1+r2)/2 : null;
-    const lim = effectiveLimit(avg);
-    const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
-    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
-
-    return {
-      sample_idx: sampleIndexMap[s.id],
-      sample_id: s.id,
-      sample_code: s.code,
-      is_saved: isSaved,
-      m1, t1, m2, t2,
-      s1: S_used, s2: S_used, s_used: S_used,
-      res1: bothOk ? r1 : null,
-      res2: bothOk ? r2 : null,
-      diff, avg, t_exceeded: tExceeded,
-      batchE: E, batchQ1: q1, batchQ2: q2
+    const base = {
+      index: idx + 1,
+      sample_id: sample.id,
+      sample_code: sample.code,
+      is_saved: existing && !isRejected,  // ✅ Rejected дээж editable
+      is_rejected: isRejected,
+      rejection_reason: rejected?.reason || ''
     };
+
+    // Get sulfur value for this sample
+    const S_used = existing?.raw_data?.s_used ?? sulfurMap[String(sample.id)] ?? sulfurMap[sample.id] ?? 0;
+
+    if (existing) {
+      // Хадгалагдсан үр дүн байна
+      const p1 = existing.raw_data?.p1 || {};
+      const p2 = existing.raw_data?.p2 || {};
+      const batch = existing.raw_data?.batch || {};
+
+      // Batch constants from saved data or current UI
+      const batchNow = currentBatch();
+      const batchE = batch.E ?? batchNow.E;
+      const batchQ1 = batch.q1 ?? batchNow.q1;
+      const batchQ2 = batch.q2 ?? batchNow.q2;
+
+      return [
+        {
+          ...base,
+          parallel: 1,
+          m: p1.m,
+          dT: p1.delta_t,
+          S: S_used,
+          result: p1.result,
+          _p1: p1.result,
+          _p2: p2.result,
+          tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
+          average: existing.raw_data?.avg ?? existing.final_result,
+          t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
+          batchE: batchE,
+          batchQ1: batchQ1,
+          batchQ2: batchQ2
+        },
+        {
+          ...base,
+          parallel: 2,
+          m: p2.m,
+          dT: p2.delta_t,
+          S: S_used,
+          result: p2.result,
+          _p1: p1.result,
+          _p2: p2.result,
+          tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
+          average: existing.raw_data?.avg ?? existing.final_result,
+          t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
+          batchE: batchE,
+          batchQ1: batchQ1,
+          batchQ2: batchQ2
+        }
+      ];
+    } else {
+      // Шинэ дээж
+      const batchNow = currentBatch();
+      return [
+        {
+          ...base,
+          parallel: 1,
+          m: null,
+          dT: null,
+          S: S_used,
+          result: null,
+          _p1: null,
+          _p2: null,
+          tolerance: null,
+          average: null,
+          t_exceeded: false,
+          batchE: batchNow.E,
+          batchQ1: batchNow.q1,
+          batchQ2: batchNow.q2
+        },
+        {
+          ...base,
+          parallel: 2,
+          m: null,
+          dT: null,
+          S: S_used,
+          result: null,
+          _p1: null,
+          _p2: null,
+          tolerance: null,
+          average: null,
+          t_exceeded: false,
+          batchE: batchNow.E,
+          batchQ1: batchNow.q1,
+          batchQ2: batchNow.q2
+        }
+      ];
+    }
   });
 
-  function recalcRow(sampleId){
-    let rowNode=null;
-    window.cvGridApi.forEachNode(n=>{ if(n.data.sample_id===sampleId) rowNode=n; });
-    if(!rowNode) return;
-    const d=rowNode.data;
-    const batchNow = currentBatch();
-    const E = d.batchE ?? batchNow.E;
-    const q1 = d.batchQ1 ?? batchNow.q1;
-    const q2 = d.batchQ2 ?? batchNow.q2;
-    const S = d.s_used ?? d.s1 ?? d.s2 ?? sulfurMap[String(sampleId)] ?? 0;
-    const r1 = calcCv(d.m1, d.t1, E, q1, q2, S);
-    const r2 = calcCv(d.m2, d.t2, E, q1, q2, S);
-    const bothOk = isFinite(r1) && isFinite(r2);
-    const diff = bothOk ? Math.abs(r1-r2) : null;
-    const avg  = bothOk ? (r1+r2)/2 : null;
-    const lim = effectiveLimit(avg);
-    const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
-    const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
-    Object.assign(d, {
-      res1: bothOk ? r1 : null,
-      res2: bothOk ? r2 : null,
-      diff, avg, t_exceeded:tExceeded,
-      batchE:E, batchQ1:q1, batchQ2:q2,
-      s_used:S, s1:S, s2:S
-    });
-    window.cvGridApi.refreshCells({ force:true });
-  }
+  // --- 5. DRAFT MANAGEMENT ---
 
-  function saveDrafts(){
-    if(!window.cvGridApi) return;
-    const drafts={};
-    window.cvGridApi.forEachNode(n=>{
-      if(!n.data.is_saved){
-        drafts[n.data.sample_id] = { m1:n.data.m1, t1:n.data.t1, m2:n.data.m2, t2:n.data.t2 };
+  function saveDrafts() {
+    if (!window.cvGridApi || !draftMgr) return;
+
+    const drafts = {};
+    const batchNow = currentBatch();
+
+    window.cvGridApi.forEachNode(n => {
+      if (!n.data.is_saved) {
+        const k = `${n.data.sample_id}_${n.data.parallel}`;
+        drafts[k] = {
+          m: n.data.m,
+          dT: n.data.dT,
+          batchE: n.data.batchE ?? batchNow.E,
+          batchQ1: n.data.batchQ1 ?? batchNow.q1,
+          batchQ2: n.data.batchQ2 ?? batchNow.q2
+        };
       }
     });
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+
+    draftMgr.save(drafts);
   }
 
-  function restoreDrafts(){
-    try{
-      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
-      window.cvGridApi.forEachNode(n=>{
-        if(!n.data.is_saved){
-          const d=drafts[n.data.sample_id];
-          if(d){
-            if(d.m1!==undefined) n.data.m1=d.m1;
-            if(d.t1!==undefined) n.data.t1=d.t1;
-            if(d.m2!==undefined) n.data.m2=d.m2;
-            if(d.t2!==undefined) n.data.t2=d.t2;
+  function restoreDrafts() {
+    if (!window.cvGridApi || !draftMgr) return;
+
+    try {
+      const drafts = draftMgr.restore();
+      window.cvGridApi.forEachNode(n => {
+        if (!n.data.is_saved) {
+          const k = `${n.data.sample_id}_${n.data.parallel}`;
+          if (drafts[k]) {
+            n.data.m = drafts[k].m;
+            n.data.dT = drafts[k].dT;
+            n.data.batchE = drafts[k].batchE;
+            n.data.batchQ1 = drafts[k].batchQ1;
+            n.data.batchQ2 = drafts[k].batchQ2;
+
+            const E = n.data.batchE;
+            const q1 = n.data.batchQ1;
+            const q2 = n.data.batchQ2;
+            const S = n.data.S;
+
+            const r = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
+            if (n.data.parallel === 1) n.data._p1 = r;
+            else n.data._p2 = r;
+            n.data.result = r;
           }
         }
       });
-      window.cvGridApi.refreshCells({ force:true });
-    }catch(e){}
+
+      window.cvGridApi.refreshCells({ force: true });
+    } catch (e) {
+      console.warn('Failed to restore drafts', e);
+    }
   }
 
-  function onCellValueChanged(params){
-    if(['m1','t1','m2','t2'].includes(params.colDef.field)){
-      recalcRow(params.data.sample_id);
+  function onCellValueChanged(params) {
+    if (['m', 'dT'].includes(params.colDef.field)) {
+      const d = params.data;
+      const E = d.batchE ?? currentBatch().E;
+      const q1 = d.batchQ1 ?? currentBatch().q1;
+      const q2 = d.batchQ2 ?? currentBatch().q2;
+      const S = d.S;
+
+      const res = computeResult(d.m, d.dT, E, q1, q2, S);
+      d.result = res;
+      if (d.parallel === 1) d._p1 = res;
+      else d._p2 = res;
+
+      // ❌ NO REAL-TIME TOLERANCE/AVERAGE - ISO 17025 зөрчил!
+      // Зөвхөн тухайн мөрийн үр дүнг л refresh хийнэ
+      window.cvGridApi.refreshCells({
+        rowNodes: [params.node],
+        columns: ['result']
+      });
     }
     saveDrafts();
   }
 
-  const gridOptions = {
-    theme:'legacy',
-    columnDefs,
-    rowData,
-    defaultColDef: baseDefaultColDef,
-    suppressRowTransform:true,
-    singleClickEdit:true,
-    stopEditingWhenCellsLoseFocus:true,
-    enterNavigatesVertically:true,
-    enterNavigatesVerticallyAfterEdit:true,
-    onCellValueChanged
-  };
+  // Listen to batch constant changes
+  document.addEventListener('DOMContentLoaded', () => {
+    ['batch_calorific_system', 'batch_fuse_correction', 'batch_acid_correction'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', () => {
+          const batch = currentBatch();
+          if (window.cvGridApi) {
+            window.cvGridApi.forEachNode(n => {
+              if (!n.data.is_saved) {
+                n.data.batchE = batch.E;
+                n.data.batchQ1 = batch.q1;
+                n.data.batchQ2 = batch.q2;
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const el=document.querySelector('#cvGrid');
-    if(el){
-      window.cvGridApi = agGrid.createGrid(el, gridOptions);
-      setTimeout(restoreDrafts,100);
-    }
-    ['batch_calorific_system','batch_fuse_correction','batch_acid_correction'].forEach(id=>{
-      const input=document.getElementById(id);
-      if(input){
-        input.addEventListener('change', ()=>{
-          samples.forEach(s=>recalcRow(s.id));
+                const E = batch.E;
+                const q1 = batch.q1;
+                const q2 = batch.q2;
+                const S = n.data.S;
+
+                const res = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
+                n.data.result = res;
+                if (n.data.parallel === 1) n.data._p1 = res;
+                else n.data._p2 = res;
+              }
+            });
+            window.cvGridApi.refreshCells({ columns: ['result'], force: true });
+            saveDrafts();
+          }
         });
       }
     });
   });
 
-  window.removeSample = function(id){
-    if(!confirm('Энэ дээжийг устгах уу?')) return;
-    const url=new URL(window.location.href);
-    let ids=(url.searchParams.get('sample_ids')||'').split(',');
-    ids=ids.filter(x=>x.trim() && parseInt(x)!==id);
-    if(ids.length>0) url.searchParams.set('sample_ids', ids.join(','));
+  // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+
+    if (urlIds) {
+      // URL дээр байвал localStorage-д хадгалах
+      try {
+        localStorage.setItem(STORAGE_KEY, urlIds);
+        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+      } catch(e) {
+        console.warn('localStorage save failed:', e);
+      }
+    } else {
+      // URL дээр байхгүй бол localStorage-аас сэргээх
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY);
+        if (savedIds) {
+          console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+
+          // ❌ БУУ: window.location.href = url.toString(); // Full reload!
+          // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
+          window.history.replaceState({}, '', url.toString());
+          console.log('✅ URL updated with sample_ids from localStorage (no reload)');
+
+          // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
+          // Энэ тохиолдолд reload хийх хэрэгтэй
+          console.warn('⚠️ Reloading page to fetch samples from backend...');
+          window.location.reload();
+          return;
+        }
+      } catch(e) {
+        console.warn('localStorage restore failed:', e);
+      }
+    }
+
+    const el = document.querySelector('#cvGrid');
+    if (!el) {
+      console.error('cvGrid element not found');
+      return;
+    }
+
+    // ✨ Initialize Draft Manager (after scripts loaded)
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager(ANALY_CODE);
+      console.log('✅ Draft Manager initialized');
+    } else {
+      console.error('❌ LIMSDraftManager not loaded!');
+      // Fallback to localStorage directly
+      draftMgr = {
+        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+        purge: (ids) => {
+          if (!ids || ids.length === 0) {
+            localStorage.removeItem(`draft_${ANALY_CODE}`);
+          }
+        }
+      };
+    }
+
+    // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      // Factory pattern ашиглах
+      window.cvGridApi = LIMS_AGGRID.createGrid('#cvGrid', columnDefs, rowData, {
+        onCellValueChanged: onCellValueChanged,
+        enterNavigatesVerticallyAfterEdit: true,
+        editableColIds: ['m', 'dT']
+      });
+      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+    } else {
+      // Fallback: Manual grid creation
+      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      const gridOptions = {
+        theme: 'legacy',
+        columnDefs: columnDefs,
+        rowData: rowData,
+        defaultColDef: {
+          sortable: false,
+          resizable: true,
+          editable: false,
+          suppressMovable: true,
+          wrapHeaderText: true,
+          autoHeaderHeight: true
+        },
+        suppressRowTransform: true,
+        singleClickEdit: true,
+        stopEditingWhenCellsLoseFocus: true,
+        enterNavigatesVertically: true,
+        enterNavigatesVerticallyAfterEdit: true,
+        onCellValueChanged: onCellValueChanged
+      };
+      window.cvGridApi = agGrid.createGrid(el, gridOptions);
+    }
+
+    // Draft сэргээх
+    setTimeout(restoreDrafts, 100);
+
+    // Remove sample button handler
+    el.addEventListener('click', (e) => {
+      const btn = e.target.closest('.remove-sample-from-worksheet');
+      if (!btn) return;
+
+      const sampleId = parseInt(btn.dataset.sampleId);
+      if (!confirm('Дээжийг жагсаалтаас хасах уу?')) return;
+
+      const url = new URL(window.location.href);
+      let ids = (url.searchParams.get('sample_ids') || '').split(',');
+      ids = ids.filter(x => x.trim() && parseInt(x) !== sampleId);
+
+      if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
+      else url.searchParams.delete('sample_ids');
+
+      window.location.href = url.toString();
+    });
+
+    console.log('✅ CV Grid initialized with factory pattern');
+  });
+
+  // --- 7. ACTIONS ---
+
+  window.removeSample = function(id) {
+    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    const url = new URL(window.location.href);
+    let ids = (url.searchParams.get('sample_ids') || '').split(',');
+    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
     else url.searchParams.delete('sample_ids');
-    window.location.href=url.toString();
+    window.location.href = url.toString();
   };
 
-  window.collectCvGridData = function(){
-    if(!window.cvGridApi) return [];
-    const batchNow = currentBatch();
-    const payload=[];
-    window.cvGridApi.forEachNode(n=>{
-      const d=n.data;
-      const m1 = Number(d.m1), t1 = Number(d.t1), m2 = Number(d.m2), t2 = Number(d.t2);
-      if(!isFinite(m1) || !isFinite(t1) || !isFinite(m2) || !isFinite(t2)) return;
-      const E = d.batchE ?? batchNow.E;
-      const q1 = d.batchQ1 ?? batchNow.q1;
-      const q2 = d.batchQ2 ?? batchNow.q2;
-      const S = d.s_used ?? d.s1 ?? d.s2 ?? sulfurMap[String(d.sample_id)] ?? 0;
-      const r1 = calcCv(m1, t1, E, q1, q2, S);
-      const r2 = calcCv(m2, t2, E, q1, q2, S);
-      if(!isFinite(r1) || !isFinite(r2)) return;
-      const diff = Math.abs(r1-r2);
-      const avg  = (r1+r2)/2;
-      const lim = effectiveLimit(avg);
-      const thr = lim.mode === 'percent' && avg!=null ? Math.abs(avg * lim.limit) : lim.limit;
-      const tExceeded = (diff!=null && thr!=null) ? Math.abs(diff) > thr : false;
-      payload.push({
-        sample_id: parseInt(d.sample_id),
-        analysis_code: ANALY_CODE,
-        final_result: avg,
-        raw_data: {
-          p1: { m: m1, delta_t: t1, result: r1 },
-          p2: { m: m2, delta_t: t2, result: r2 },
-          avg: avg,
-          diff: diff,
-          t_exceeded: tExceeded,
-          s_used: S,
-          batch: { E: E, q1: q1, q2: q2 },
-          limit_used: thr,
-          limit_mode: lim.mode
-        }
-      });
+  window.collectCvGridData = function() {
+    if (!window.cvGridApi) return [];
+    const map = {};
+    window.cvGridApi.forEachNode(n => {
+      // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
+      if (n.data.is_saved) return;
+
+      if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
+      map[n.data.sample_id][n.data.parallel] = n.data;
     });
+
+    const payload = [];
+    const incomplete = [];  // ✅ Дутуу дээжүүдийг хадгалах
+
+    Object.keys(map).forEach(sid => {
+      const p1 = map[sid][1];
+      const p2 = map[sid][2];
+
+      // ✅ Validation шалгалт
+      const hasP1 = p1 && p1.m != null && p1.dT != null;
+      const hasP2 = p2 && p2.m != null && p2.dT != null;
+
+      if (hasP1 && hasP2) {
+        const batchNow = currentBatch();
+        const E = p1.batchE ?? batchNow.E;
+        const q1 = p1.batchQ1 ?? batchNow.q1;
+        const q2 = p1.batchQ2 ?? batchNow.q2;
+        const S = p1.S ?? sulfurMap[String(sid)] ?? 0;
+
+        const res1 = computeResult(p1.m, p1.dT, E, q1, q2, S);
+        const res2 = computeResult(p2.m, p2.dT, E, q1, q2, S);
+
+        if (res1 == null || res2 == null) {
+          console.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
+          incomplete.push(p1.sample_code || sid);
+          return;
+        }
+
+        const avg = (res1 + res2) / 2;
+        const diff = Math.abs(res1 - res2);
+
+        // ✅ Backend expectation: top-level diff/avg болон repeatability object
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: ANALY_CODE,
+          final_result: avg,
+          raw_data: {
+            // ✅ Top-level summary fields (ахлахын хяналт + аудит логт харагдана)
+            diff: diff,
+            avg: avg,
+
+            // Parallel data
+            p1: {
+              m: p1.m,
+              delta_t: p1.dT,
+              result: res1
+            },
+            p2: {
+              m: p2.m,
+              delta_t: p2.dT,
+              result: res2
+            },
+
+            // Sulfur and batch constants
+            s_used: S,
+            batch: {
+              E: E,
+              q1: q1,
+              q2: q2
+            },
+
+            // ✅ Repeatability (backend тооцоолол хийж, limit шалгаж, t_exceeded тогтооно)
+            repeatability: {
+              difference: diff
+              // Backend repeatability.py-ээс limit авч, t_exceeded тогтооно
+            },
+
+            formula: 'Qgr_ad = ((E*dT - q1 - q2)/m - S_corr - acid_corr) / 4.1868'
+          }
+        });
+      } else {
+        // ✅ Дутуу дээж - мэдээлэл хадгалах
+        const sampleCode = p1?.sample_code || p2?.sample_code || sid;
+        const missing = [];
+        if (!hasP1) missing.push('Parallel 1');
+        if (!hasP2) missing.push('Parallel 2');
+        console.warn(`⚠️ Дээж "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        incomplete.push(sampleCode);
+      }
+    });
+
+    // ✅ Summary logging
+    if (incomplete.length > 0) {
+      console.log(`📊 Нийт: ${Object.keys(map).length} дээж`);
+      console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
+      console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
+    } else {
+      console.log(`✅ ${payload.length} дээж бэлэн`);
+    }
+
     return payload;
   };
 
+  // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
+  window.updateCvGridAfterSave = function(savedPayload) {
+    console.log('✅ afterSave called, updating grid without reload');
 
-  function purgeDrafts(savedResults){
-    if(!savedResults || !savedResults.length) return;
-    try{
-      const drafts=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
-      savedResults.forEach(r=>{ delete drafts[r.sample_id]; });
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
-    }catch(e){}
-  }
+    const savedSampleIds = savedPayload.map(r => r.sample_id);
 
-  window.updateCvGridAfterSave = function(savedResults){
-    if(!window.cvGridApi || !savedResults) return;
-    const savedMap={}; savedResults.forEach(r=>savedMap[r.sample_id]=r);
-    window.cvGridApi.forEachNode(n=>{
-      const s=savedMap[n.data.sample_id];
-      if(s){
-        n.data.is_saved=true;
-        const raw=s.raw_data||{};
-        const p1=raw.p1||{}, p2=raw.p2||{};
-        const batch=raw.batch||{};
-        n.data.m1 = p1.m; n.data.t1 = p1.delta_t;
-        n.data.m2 = p2.m; n.data.t2 = p2.delta_t;
-        n.data.res1 = p1.result; n.data.res2 = p2.result;
-        n.data.diff = raw.diff; n.data.avg = raw.avg;
-        n.data.t_exceeded = raw.t_exceeded;
-        n.data.s_used = raw.s_used ?? n.data.s_used;
-        n.data.s1 = n.data.s_used; n.data.s2 = n.data.s_used;
-        n.data.batchE = batch.E ?? n.data.batchE;
-        n.data.batchQ1 = batch.q1 ?? n.data.batchQ1;
-        n.data.batchQ2 = batch.q2 ?? n.data.batchQ2;
+    // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
+    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+
+    // savedPayload-ээс status шалгах
+    const approvedIds = [];  // Батлагдсан (тохирц OK) → арилах
+    const pendingIds = [];   // Хүлээгдэж буй (тохирц зөрүү) → үлдэх
+
+    savedPayload.forEach(saved => {
+      if (saved.status === 'approved') {
+        approvedIds.push(saved.sample_id);
+      } else if (saved.status === 'pending_review') {
+        pendingIds.push(saved.sample_id);
       }
     });
-    window.cvGridApi.refreshCells({ force:true });
-    purgeDrafts(savedResults);
-    alert('Өгөгдөл амжилттай хадгалагдлаа.');
+
+    // Grid-ээс бүх sample IDs-ийг цуглуулах
+    const allSampleIds = [];
+    if (window.cvGridApi) {
+      window.cvGridApi.forEachNode(n => {
+        if (!allSampleIds.includes(n.data.sample_id)) {
+          allSampleIds.push(n.data.sample_id);
+        }
+      });
+    }
+
+    // Хадгалагдаагүй + pending_review дээжүүдийг үлдээх
+    const remainingIds = allSampleIds.filter(id =>
+      !approvedIds.includes(id) || pendingIds.includes(id)
+    );
+
+    console.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
+    console.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
+    console.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
+
+    if (remainingIds.length > 0) {
+      const idsString = remainingIds.join(',');
+
+      // ✅ localStorage сэргээх
+      try {
+        localStorage.setItem(STORAGE_KEY, idsString);
+        console.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
+      } catch(e) {
+        console.warn('localStorage update failed:', e);
+      }
+
+      // ✅ URL сэргээх
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', idsString);
+        window.history.replaceState({}, '', url.toString());
+        console.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
+      } catch(e) {
+        console.warn('URL update failed:', e);
+      }
+    } else {
+      // Бүх дээж approved болсон - worksheet цэвэрлэх
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+        console.log(`✅ All approved - cleared worksheet`);
+      } catch(e) {}
+    }
+
+    // Draft устгах (зөвхөн хадгалагдсан)
+    draftMgr.purge(
+      savedSampleIds.flatMap(id => [`${id}_1`, `${id}_2`])
+    );
+
+    // Grid update - хадгалагдсан дээжүүдийг locked болгох
+    window.cvGridApi.forEachNode(n => {
+      if (savedSampleIds.includes(n.data.sample_id)) {
+        n.data.is_saved = true;
+
+        // Backend-ээс ирсэн үр дүнг тохируулах
+        const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
+
+        if (saved && saved.raw_data) {
+          const raw = saved.raw_data;
+
+          // ✅ Parallel 1 дээр тохирц/дундаж тохируулах
+          if (n.data.parallel === 1) {
+            // ✅ Backend response-оос top-level fields авах (бид одоо илгээж байна!)
+            let tolerance = raw.diff ?? raw.repeatability?.difference;
+            let average = raw.avg ?? saved.final_result;
+
+            // ✅ Хэрэв backend буцаагаагүй бол ӨӨРӨӨ тооцоолох (fallback)
+            if ((tolerance == null || average == null) && raw.p1?.result != null && raw.p2?.result != null) {
+              const p1Result = raw.p1.result;
+              const p2Result = raw.p2.result;
+
+              average = average ?? (p1Result + p2Result) / 2;
+              tolerance = tolerance ?? Math.abs(p1Result - p2Result);
+            }
+
+            const t_exceeded = raw.t_exceeded ?? raw.repeatability?.t_exceeded ?? false;
+
+            n.data.tolerance = tolerance;
+            n.data.average = average;
+            n.data.t_exceeded = t_exceeded;
+          }
+
+          // Үр дүнгийн утгуудыг тохируулах
+          const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
+          if (pData) {
+            n.data.m = pData.m;
+            n.data.dT = pData.delta_t;
+            n.data.result = pData.result;
+            if (n.data.parallel === 1) n.data._p1 = pData.result;
+            else n.data._p2 = pData.result;
+          }
+
+          // Batch constants
+          if (raw.batch) {
+            n.data.batchE = raw.batch.E;
+            n.data.batchQ1 = raw.batch.q1;
+            n.data.batchQ2 = raw.batch.q2;
+          }
+
+          // Sulfur
+          if (raw.s_used != null) {
+            n.data.S = raw.s_used;
+          }
+        }
+      }
+    });
+
+    // ✅ Approved дээжүүдийг grid-ээс устгах
+    if (approvedIds.length > 0) {
+      const rowsToRemove = [];
+      window.cvGridApi.forEachNode(n => {
+        if (approvedIds.includes(n.data.sample_id)) {
+          rowsToRemove.push(n);
+        }
+      });
+
+      if (rowsToRemove.length > 0) {
+        window.cvGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+      }
+    }
+
+    // Grid refresh
+    window.cvGridApi.refreshCells({ force: true });
+
+    console.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
+    if (approvedIds.length > 0) {
+      console.log(`   → ${approvedIds.length} approved - worksheet-ээс арилсан`);
+    }
+    if (pendingIds.length > 0) {
+      console.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
+    }
   };
 
+  // ✅ Register collector AND afterSave in LIMS_CALC namespace
   window.LIMS_CALC = window.LIMS_CALC || {};
-  const REGISTERED = { collect: window.collectCvGridData, afterSave: window.updateCvGridAfterSave };
-  [ANALY_CODE, (ANALY_CODE||'').toUpperCase(), (ANALY_CODE||'').toLowerCase()].forEach(c=>{ if(c) window.LIMS_CALC[c]=REGISTERED; });
+  window.LIMS_CALC[ANALY_CODE] = {
+    collect: window.collectCvGridData,
+    afterSave: window.updateCvGridAfterSave
+  };
+  window.LIMS_CALC['CV'] = {
+    collect: window.collectCvGridData,
+    afterSave: window.updateCvGridAfterSave
+  };
+  console.log('✅ CV collector & afterSave registered in LIMS_CALC namespace');
+
 })();
 </script>

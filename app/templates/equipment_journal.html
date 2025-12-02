@@ -2,12 +2,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 equipment-journal-page">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  {# --- HEADER + DATE FILTER RIBBON --- #}
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 ej-header">
     <div>
-      {# Гарчиг нь Route-ээс динамикаар ирнэ (Жнь: 1. Шатаах зуух...) #}
-      <h4 class="fw-bold text-dark mb-0">
+      <h4 class="fw-bold mb-1">
         <i class="bi bi-journal-text text-primary"></i>
         {{ title }}
       </h4>
@@ -16,45 +16,58 @@
       </div>
     </div>
 
-    <form id="dateFilterForm" class="d-flex align-items-center gap-2">
-      <div class="d-flex align-items-center gap-2">
-        <label class="small text-muted">Хугацаа:</label>
-        <input type="date" id="startDate" name="start_date" class="form-control form-control-sm" value="{{ start_date.strftime('%Y-%m-%d') }}">
+    <form id="dateFilterForm" class="d-flex flex-wrap align-items-center gap-2 ej-date-form">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <label class="small text-muted mb-0">Хугацаа:</label>
+        <div class="input-group input-group-sm ej-date-input">
+          <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+          <input type="date" id="startDate" name="start_date"
+                 class="form-control"
+                 value="{{ start_date.strftime('%Y-%m-%d') }}">
+        </div>
         <span class="small text-muted">–</span>
-        <input type="date" id="endDate" name="end_date" class="form-control form-control-sm" value="{{ end_date.strftime('%Y-%m-%d') }}">
+        <div class="input-group input-group-sm ej-date-input">
+          <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
+          <input type="date" id="endDate" name="end_date"
+                 class="form-control"
+                 value="{{ end_date.strftime('%Y-%m-%d') }}">
+        </div>
       </div>
 
-      <div class="btn-group btn-group-sm ms-2" role="group">
+      <div class="btn-group btn-group-sm ms-0 ms-md-2 ej-range-group" role="group">
         <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
         <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
         <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-sm ms-2">
+      <button type="submit" class="btn btn-primary btn-sm ms-0 ms-md-2">
         <i class="bi bi-arrow-repeat"></i> Шинэчлэх
       </button>
       
-      {# Буцах товч (Hub руу) #}
-      <a href="{{ url_for('equipment.equipment_journal') }}" class="btn btn-outline-secondary btn-sm ms-2">
+      <a href="{{ url_for('equipment.equipment_journal') }}"
+         class="btn btn-outline-secondary btn-sm ms-0 ms-md-2">
         <i class="bi bi-grid"></i> Буцах
       </a>
     </form>
   </div>
 
-  {# --- Tabs --- #}
-  <ul class="nav nav-tabs mb-3" id="equipTabs" role="tablist">
+  {# --- TABS --- #}
+  <ul class="nav nav-tabs mb-3 ej-tabs" id="equipTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="tab-summary" data-bs-toggle="tab" data-bs-target="#pane-summary" type="button" role="tab">
+      <button class="nav-link active" id="tab-summary" data-bs-toggle="tab"
+              data-bs-target="#pane-summary" type="button" role="tab">
         <i class="bi bi-grid-3x3-gap"></i> Нэгдсэн тойм
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="tab-monthly" data-bs-toggle="tab" data-bs-target="#pane-monthly" type="button" role="tab">
+      <button class="nav-link" id="tab-monthly" data-bs-toggle="tab"
+              data-bs-target="#pane-monthly" type="button" role="tab">
         <i class="bi bi-calendar3"></i> Сарын нэгтгэл
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="tab-detailed" data-bs-toggle="tab" data-bs-target="#pane-detailed" type="button" role="tab">
+      <button class="nav-link" id="tab-detailed" data-bs-toggle="tab"
+              data-bs-target="#pane-detailed" type="button" role="tab">
         <i class="bi bi-journal-richtext"></i> Дэлгэрэнгүй журнал
       </button>
     </li>
@@ -64,47 +77,90 @@
     
     {# === 1. НЭГДСЭН ТОЙМ TAB === #}
     <div class="tab-pane fade show active" id="pane-summary" role="tabpanel">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <span class="fw-semibold small text-muted text-uppercase">
-            <i class="bi bi-collection"></i> Нэгдсэн статистик
-          </span>
-          {# 🛑 "Бүлэг нээх/хаах" товчийг эндээс ХАССАН #}
+      <div class="card shadow-sm border-0 ej-card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold small text-muted text-uppercase">
+              <i class="bi bi-collection"></i> Нэгдсэн статистик
+            </span>
+            <div class="d-flex flex-wrap gap-1 ej-status-legend">
+              <span class="badge bg-success-subtle text-success-emphasis small">Хэвийн</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis small">Засварт / Арчилгаа</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis small">Эвдэрсэн</span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Ашиглалтаас</span>
+            </div>
+          </div>
+          <div class="input-group input-group-sm ej-quick-search">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="summaryQuickFilter"
+                   class="form-control border-start-0"
+                   placeholder="Нэр, лаб дугаар, байршил...">
+          </div>
         </div>
-        <div class="card-body p-2">
-          <div id="equipSummaryGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        <div class="card-body p-0">
+          <div id="equipSummaryGrid"
+               class="ag-theme-quartz ej-grid ej-grid-summary"></div>
         </div>
       </div>
     </div>
 
     {# === 2. САРЫН НЭГТГЭЛ TAB === #}
     <div class="tab-pane fade" id="pane-monthly" role="tabpanel">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <span class="fw-semibold small text-muted text-uppercase">
-            <i class="bi bi-calendar-range"></i> Сарын ачаалал & Арчилгаа ({{ start_date.year }})
-          </span>
-          <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
-             <i class="bi bi-download"></i> CSV татах
-          </button>
+      <div class="card shadow-sm border-0 ej-card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
+          <div>
+            <span class="fw-semibold small text-muted text-uppercase">
+              <i class="bi bi-calendar-range"></i> Сарын ачаалал & Арчилгаа ({{ start_date.year }})
+            </span>
+            <div class="small text-muted">
+              Цаг → ашиглалт, Арчилгаа → үйлчилгээний тоо
+            </div>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <label class="small text-muted d-none d-md-inline mb-0">Мөрийн тоо:</label>
+            <select id="monthlyPageSize" class="form-select form-select-sm">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+            <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
+              <i class="bi bi-download"></i> CSV татах
+            </button>
+          </div>
         </div>
-        <div class="card-body p-2">
-          <div id="monthlyGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        <div class="card-body p-0">
+          <div id="monthlyGrid"
+               class="ag-theme-quartz ej-grid ej-grid-monthly"></div>
         </div>
       </div>
     </div>
 
     {# === 3. ДЭЛГЭРЭНГҮЙ ЖУРНАЛ TAB === #}
     <div class="tab-pane fade" id="pane-detailed" role="tabpanel">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-          <span class="fw-semibold small text-muted text-uppercase">
-            <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт (Timeline)
-          </span>
-          <input type="text" id="detailSearch" class="form-control form-control-sm w-auto" placeholder="Хайх...">
+      <div class="card shadow-sm border-0 ej-card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
+          <div>
+            <span class="fw-semibold small text-muted text-uppercase">
+              <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт (Timeline)
+            </span>
+            <div class="small text-muted">
+              Ашиглалт, арчилгааны үйлдлүүдийг цаг хугацааны дарааллаар
+            </div>
+          </div>
+          <div class="input-group input-group-sm ej-quick-search">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="detailSearch"
+                   class="form-control border-start-0"
+                   placeholder="Төхөөрөмж, лаб.№, гүйцэтгэсэн...">
+          </div>
         </div>
-        <div class="card-body p-2">
-          <div id="detailedGrid" class="ag-theme-alpine" style="width: 100%; height: 600px;"></div>
+        <div class="card-body p-0">
+          <div id="detailedGrid"
+               class="ag-theme-quartz ej-grid ej-grid-detailed"></div>
         </div>
       </div>
     </div>
@@ -115,6 +171,140 @@
 
 {% block scripts %}
   {{ super() }}
+
+  {# AG Grid (Quartz theme) – нэгээс олон удаа ачаалсан ч асуудалгүй #}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+  <style>
+    .equipment-journal-page {
+      --ej-radius: 1rem;
+    }
+
+    .equipment-journal-page .ej-header h4 {
+      line-height: 1.2;
+    }
+
+    .equipment-journal-page .ej-date-form {
+      background: #f9fafb;
+      border-radius: 999px;
+      padding: .35rem .75rem;
+    }
+
+    .equipment-journal-page .ej-date-input .input-group-text {
+      background-color: #fff;
+    }
+
+    .equipment-journal-page .ej-range-group .btn {
+      border-radius: 999px;
+    }
+
+    .equipment-journal-page .ej-tabs .nav-link {
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      font-size: 0.9rem;
+      padding: .4rem .9rem;
+    }
+    .equipment-journal-page .ej-tabs .nav-link.active {
+      border-bottom-color: var(--bs-primary);
+      font-weight: 600;
+    }
+
+    .equipment-journal-page .ej-card {
+      border-radius: var(--ej-radius);
+      overflow: hidden;
+    }
+
+    .equipment-journal-page .ej-card-header {
+      background: linear-gradient(90deg, #f9fafb 0%, #eff6ff 50%, #f9fafb 100%);
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .equipment-journal-page .ej-quick-search {
+      min-width: 220px;
+      max-width: 280px;
+    }
+
+    .equipment-journal-page .ej-status-legend .badge {
+      border-radius: 999px;
+    }
+
+    .equipment-journal-page .ej-grid {
+      width: 100%;
+      height: 62vh;
+      min-height: 420px;
+    }
+
+    /* AG theme customization */
+    .equipment-journal-page .ag-theme-quartz {
+      --ag-border-radius: 10px;
+      --ag-header-background-color: #f3f4f6;
+      --ag-header-foreground-color: #6b7280;
+      --ag-row-hover-color: #f9fafb;
+      --ag-selected-row-background-color: #eff6ff;
+      --ag-font-size: 12px;
+      --ag-data-color: #111827;
+    }
+
+    .equipment-journal-page .ag-root-wrapper {
+      border-radius: 0;
+      border: none;
+    }
+
+    .equipment-journal-page .ag-header-cell-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: 0.72rem;
+    }
+
+    .equipment-journal-page .ej-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .12rem .5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .equipment-journal-page .ej-status-normal   { background:#dcfce7; color:#166534; }
+    .equipment-journal-page .ej-status-maint    { background:#fef9c3; color:#854d0e; }
+    .equipment-journal-page .ej-status-broken   { background:#fee2e2; color:#991b1b; }
+    .equipment-journal-page .ej-status-retired  { background:#e5e7eb; color:#4b5563; text-decoration: line-through; }
+    .equipment-journal-page .ej-date-overdue    { color:#b91c1c; font-weight:600; }
+    .equipment-journal-page .ej-date-ok         { color:#15803d; }
+
+    .equipment-journal-page .ej-lab-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+    }
+
+    .equipment-journal-page .ej-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .equipment-journal-page .ej-chip-usage   { background:#dbeafe; color:#1d4ed8; }
+    .equipment-journal-page .ej-chip-maint   { background:#fef3c7; color:#b45309; }
+
+    .equipment-journal-page .ej-type-pill {
+      display:inline-block;
+      padding:.12rem .45rem;
+      background:#f3f4f6;
+      border-radius:999px;
+      font-size:.7rem;
+      color:#4b5563;
+    }
+  </style>
+
   <script>
     // Global API references
     var summaryApi = null;
@@ -132,141 +322,302 @@
     // 1. SUMMARY GRID (Нэгдсэн тойм)
     // ============================================================
     const summaryColumnDefs = [
-      { field: 'lab_code', headerName: 'Лаб.№', pinned: 'left', width: 100, filter: 'agTextColumnFilter' },
-      { field: 'name', headerName: 'Төхөөрөмж', width: 180, filter: 'agTextColumnFilter' },
-      // location-оор бүлэглэхийг больсон тул rowGroup: false буюу энгийн багана болгов (хүсвэл hide:false болгож харуулж болно)
-      { field: 'location', headerName: 'Байршил', hide: true }, 
-      { field: 'room', headerName: 'Өрөө', width: 80 },
-      { field: 'status', headerName: 'Статус', width: 120,
+      {
+        field: 'lab_code',
+        headerName: 'Лаб.№',
+        pinned: 'left',
+        width: 110,
         cellRenderer: p => {
-            const s = p.value || 'normal';
-            let color = 'success';
-            if(s==='broken') color='danger'; else if(s==='maintenance') color='warning'; else if(s==='retired') color='secondary';
-            return `<span class="badge bg-${color}">${s}</span>`;
+          const v = p.value || '-';
+          return `<span class="ej-lab-code">${v}</span>`;
+        },
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'name',
+        headerName: 'Төхөөрөмж',
+        minWidth: 200,
+        flex: 1.6,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'location',
+        headerName: 'Байршил',
+        minWidth: 140,
+        flex: 1.2
+      },
+      {
+        field: 'room',
+        headerName: 'Өрөө',
+        width: 80
+      },
+      {
+        field: 'status',
+        headerName: 'Статус',
+        width: 130,
+        cellRenderer: p => {
+          const s = p.value || 'normal';
+          let cls = 'ej-status-normal';
+          let text = 'Хэвийн';
+          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Эвдэрсэн'; }
+          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Засварт'; }
+          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Ашиглалтаас'; }
+          return `<span class="ej-status-badge ${cls}">${text}</span>`;
         }
       },
-      { field: 'total_usage_hours', headerName: 'Нийт цаг', width: 110 },
-      { field: 'maintenance_count', headerName: 'Арчилгаа', width: 110 },
-      { field: 'last_usage_end', headerName: 'Сүүлд ашигласан', width: 160 },
-      { field: 'next_calibration_date', headerName: 'Дараагийн баталгаажуулалт', width: 160, 
-        cellStyle: p => (p.data && p.data.is_calibration_expired) ? {color:'red', fontWeight:'bold'} : null 
+      {
+        field: 'total_usage_hours',
+        headerName: 'Нийт цаг',
+        width: 110,
+        type: 'numericColumn',
+        valueFormatter: p => p.value ? p.value.toFixed(1) : '-'
+      },
+      {
+        field: 'maintenance_count',
+        headerName: 'Арчилгаа',
+        width: 110,
+        type: 'numericColumn',
+        valueFormatter: p => p.value ? p.value : '-'
+      },
+      {
+        field: 'last_usage_end',
+        headerName: 'Сүүлд ашигласан',
+        minWidth: 160
+      },
+      {
+        field: 'next_calibration_date',
+        headerName: 'Дараагийн баталгаажуулалт',
+        minWidth: 180,
+        cellRenderer: p => {
+          const v = p.value;
+          if (!v) return '-';
+          const span = document.createElement('span');
+          span.textContent = v;
+          if (p.data && p.data.is_calibration_expired) {
+            span.classList.add('ej-date-overdue');
+          } else {
+            span.classList.add('ej-date-ok');
+          }
+          return span;
+        }
       }
     ];
 
     const summaryGridOptions = {
       columnDefs: summaryColumnDefs,
-      defaultColDef: { sortable: true, filter: true, resizable: true },
+      defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        flex: 1,
+        minWidth: 80
+      },
       animateRows: true,
+      rowHeight: 38
     };
 
     // ============================================================
     // 2. MONTHLY GRID (Сарын нэгтгэл)
     // ============================================================
     const monthlyColumnDefs = [
-      { field: 'lab_code', headerName: 'Лаб.№', pinned: 'left', width: 100 },
-      { field: 'name', headerName: 'Төхөөрөмж', pinned: 'left', width: 180 },
+      {
+        field: 'lab_code',
+        headerName: 'Лаб.№',
+        pinned: 'left',
+        width: 110,
+        cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`
+      },
+      {
+        field: 'name',
+        headerName: 'Төхөөрөмж',
+        pinned: 'left',
+        minWidth: 200,
+        flex: 1.6
+      },
     ];
-    // 1-12 сарын багануудыг динамикаар үүсгэх
+
     for (let i = 1; i <= 12; i++) {
-        monthlyColumnDefs.push({
-            headerName: i + '-р сар',
-            children: [
-                { field: `usage_${i}`, headerName: 'Цаг', width: 80, 
-                  valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-' },
-                { field: `maint_${i}`, headerName: 'Арчилгаа', width: 90, 
-                  valueFormatter: p => p.value ? p.value : '-' }
-            ]
-        });
+      monthlyColumnDefs.push({
+        headerName: i + '-р сар',
+        marryChildren: true,
+        children: [
+          {
+            field: `usage_${i}`,
+            headerName: 'Цаг',
+            width: 90,
+            type: 'numericColumn',
+            valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-'
+          },
+          {
+            field: `maint_${i}`,
+            headerName: 'Арчилгаа',
+            width: 95,
+            type: 'numericColumn',
+            valueFormatter: p => p.value ? p.value : '-'
+          }
+        ]
+      });
     }
 
     const monthlyGridOptions = {
       columnDefs: monthlyColumnDefs,
-      defaultColDef: { sortable: true, resizable: true },
-      rowData: [] 
+      defaultColDef: {
+        sortable: true,
+        resizable: true,
+        minWidth: 80
+      },
+      suppressRowClickSelection: true,
+      rowSelection: 'single',
+      pagination: true,
+      paginationPageSize: 50,
+      rowHeight: 36
     };
 
     // ============================================================
     // 3. DETAILED GRID (Дэлгэрэнгүй журнал)
     // ============================================================
     const detailedColumnDefs = [
-      { field: 'date', headerName: 'Огноо/Цаг', sort: 'desc', width: 150, filter: 'agTextColumnFilter' },
-      { field: 'lab_code', headerName: 'Лаб.№', width: 100, filter: 'agTextColumnFilter' },
-      { field: 'equipment', headerName: 'Төхөөрөмж', width: 180, filter: 'agTextColumnFilter' },
-      { field: 'category', headerName: 'Ангилал', width: 120, 
-        cellRenderer: p => p.value==='Usage' ? '<span class="badge bg-primary">Ашиглалт</span>' : '<span class="badge bg-warning text-dark">Арчилгаа</span>' 
+      {
+        field: 'date',
+        headerName: 'Огноо/Цаг',
+        sort: 'desc',
+        width: 160,
+        filter: 'agTextColumnFilter'
       },
-      { field: 'type', headerName: 'Төрөл', width: 120 },
-      { field: 'user', headerName: 'Гүйцэтгэсэн', width: 120 },
-      { field: 'description', headerName: 'Тайлбар', flex: 1 },
-      { field: 'result', headerName: 'Үр дүн', width: 100 }
+      {
+        field: 'lab_code',
+        headerName: 'Лаб.№',
+        width: 100,
+        cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'equipment',
+        headerName: 'Төхөөрөмж',
+        minWidth: 190,
+        flex: 1.4,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'category',
+        headerName: 'Ангилал',
+        width: 120,
+        cellRenderer: p => {
+          const v = p.value || 'Usage';
+          if (v === 'Usage') {
+            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Ашиглалт</span>';
+          }
+          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Арчилгаа</span>';
+        }
+      },
+      {
+        field: 'type',
+        headerName: 'Төрөл',
+        width: 130,
+        cellRenderer: p => p.value ? `<span class="ej-type-pill">${p.value}</span>` : ''
+      },
+      {
+        field: 'user',
+        headerName: 'Гүйцэтгэсэн',
+        width: 130
+      },
+      {
+        field: 'description',
+        headerName: 'Тайлбар',
+        flex: 1.6,
+        minWidth: 220
+      },
+      {
+        field: 'result',
+        headerName: 'Үр дүн',
+        width: 110
+      }
     ];
 
     const detailedGridOptions = {
       columnDefs: detailedColumnDefs,
-      defaultColDef: { sortable: true, filter: true, resizable: true },
+      defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        minWidth: 80
+      },
       pagination: true,
       paginationPageSize: 20,
+      rowHeight: 38,
+      animateRows: true
     };
 
     // ============================================================
     // INITIALIZATION & DATA LOADING
     // ============================================================
     document.addEventListener('DOMContentLoaded', function () {
-      
       // 1. Init Summary Grid
       const eSummary = document.querySelector('#equipSummaryGrid');
-      if(agGrid.createGrid) summaryApi = agGrid.createGrid(eSummary, summaryGridOptions);
+      if (agGrid.createGrid) summaryApi = agGrid.createGrid(eSummary, summaryGridOptions);
       else { new agGrid.Grid(eSummary, summaryGridOptions); summaryApi = summaryGridOptions.api; }
 
       // 2. Init Monthly Grid
       const eMonthly = document.querySelector('#monthlyGrid');
-      if(agGrid.createGrid) monthlyApi = agGrid.createGrid(eMonthly, monthlyGridOptions);
+      if (agGrid.createGrid) monthlyApi = agGrid.createGrid(eMonthly, monthlyGridOptions);
       else { new agGrid.Grid(eMonthly, monthlyGridOptions); monthlyApi = monthlyGridOptions.api; }
 
       // 3. Init Detailed Grid
       const eDetailed = document.querySelector('#detailedGrid');
-      if(agGrid.createGrid) detailedApi = agGrid.createGrid(eDetailed, detailedGridOptions);
+      if (agGrid.createGrid) detailedApi = agGrid.createGrid(eDetailed, detailedGridOptions);
       else { new agGrid.Grid(eDetailed, detailedGridOptions); detailedApi = detailedGridOptions.api; }
+
+      // --- Quick filter (summary) ---
+      const summaryQuick = document.getElementById('summaryQuickFilter');
+      if (summaryQuick) {
+        summaryQuick.addEventListener('input', function () {
+          if (!summaryApi) return;
+          if (summaryApi.setQuickFilter) summaryApi.setQuickFilter(this.value);
+          else summaryApi.setGridOption('quickFilterText', this.value);
+        });
+      }
 
       // Function to load all data
       function loadAllData() {
         const start = document.getElementById('startDate').value;
         const end   = document.getElementById('endDate').value;
         
-        // ✅ URL-аас category параметрийг авах (Hub-аас дамжиж ирсэн)
+        // URL-аас category параметр
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('category') || 'all';
 
-        // ✅ API дуудлага бүрт category-г нэмэх
         const params = `?start_date=${start}&end_date=${end}&category=${category}`;
 
         // A. Load Summary
         fetch('/api/equipment/usage_summary' + params)
           .then(r => r.json())
           .then(data => {
-             if(summaryApi.setRowData) summaryApi.setRowData(data.rows);
-             else summaryApi.setGridOption('rowData', data.rows);
+            const rows = data.rows || [];
+            if (summaryApi.setRowData) summaryApi.setRowData(rows);
+            else summaryApi.setGridOption('rowData', rows);
           });
 
         // B. Load Detailed
         fetch('/api/equipment/journal_detailed' + params)
           .then(r => r.json())
           .then(data => {
-             if(detailedApi.setRowData) detailedApi.setRowData(data.rows);
-             else detailedApi.setGridOption('rowData', data.rows);
+            const rows = data.rows || [];
+            if (detailedApi.setRowData) detailedApi.setRowData(rows);
+            else detailedApi.setGridOption('rowData', rows);
           });
           
-        // C. Load Monthly (category шүүлттэй)
+        // C. Load Monthly
         const year = start.split('-')[0];
         fetch(`/api/equipment/monthly_stats?year=${year}&category=${category}`)
           .then(r => r.json())
           .then(data => {
-             if(monthlyApi.setRowData) monthlyApi.setRowData(data.rows);
-             else monthlyApi.setGridOption('rowData', data.rows);
+            const rows = data.rows || [];
+            if (monthlyApi.setRowData) monthlyApi.setRowData(rows);
+            else monthlyApi.setGridOption('rowData', rows);
           });
       }
 
-      // Event Listeners
+      // Date form submit
       document.getElementById('dateFilterForm').addEventListener('submit', function(e){
         e.preventDefault();
         loadAllData();
@@ -284,17 +635,37 @@
         });
       });
 
-      // Detailed Search
+      // Detailed Search (input дээрээ дээр нь байгаа)
       document.getElementById('detailSearch').addEventListener('input', function(e){
-         detailedApi.setQuickFilter(e.target.value);
+         if (!detailedApi) return;
+         if (detailedApi.setQuickFilter) detailedApi.setQuickFilter(e.target.value);
+         else detailedApi.setGridOption('quickFilterText', e.target.value);
       });
+
+      // Monthly page size
+      const monthlyPageSizeSel = document.getElementById('monthlyPageSize');
+      if (monthlyPageSizeSel) {
+        monthlyPageSizeSel.addEventListener('change', function () {
+          const size = parseInt(this.value, 10) || 50;
+          if (monthlyApi && monthlyApi.paginationSetPageSize) {
+            monthlyApi.paginationSetPageSize(size);
+          } else if (monthlyApi) {
+            monthlyApi.setGridOption('paginationPageSize', size);
+          }
+        });
+      }
 
       // Initial Load
       loadAllData();
     });
 
     function exportMonthlyCSV() {
+      if (!monthlyApi) return;
+      if (monthlyApi.exportDataAsCsv) {
         monthlyApi.exportDataAsCsv({fileName: 'monthly_equipment_summary.csv'});
+      } else {
+        // createGrid API → setGridOption замаар дуудах боломжгүй тул орхино
+      }
     }
   </script>
 {% endblock %}

@@ -154,7 +154,26 @@
               </ul>
             </li>
 
-{# ... Дээд талд Тоног төхөөрөмжийн цэс байгаа ... #}
+            {# ✅ ШИНЭ: СТАНДАРТ ЗАГВАР ЦЭС (Main Menu) #}
+            {% if current_user.role in ['ahlah', 'admin'] %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-dark fw-bold" href="#" id="standardsMenu" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-award text-primary"></i> Стандарт загвар
+              </a>
+              <ul class="dropdown-menu border-0 shadow" aria-labelledby="standardsMenu">
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('admin.manage_standards') }}">
+                    <i class="bi bi-clipboard-data text-primary me-2"></i> Дотоод хяналт (CM)
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2" href="{{ url_for('admin.manage_gbw') }}">
+                    <i class="bi bi-patch-check-fill text-success me-2"></i> GBW Стандарт (CRM)
+                  </a>
+                </li>
+              </ul>
+            </li>
+            {% endif %}
 
             {% if current_user.role in ['ahlah', 'admin'] %}
               <li class="nav-item">
@@ -168,7 +187,7 @@
                 </a>
               </li>
 
-              {# ✅ ШИНЭ: Цагийн тайлан илгээх товч (Зөвхөн Ахлах/Админ) #}
+              {# ✅ Цагийн тайлан илгээх товч (Зөвхөн Ахлах/Админ) #}
               <li class="nav-item ms-2">
                 <a class="nav-link text-success fw-bold border border-success rounded px-2" 
                    href="{{ url_for('main.send_hourly_report') }}"
@@ -178,8 +197,6 @@
                 </a>
               </li>
             {% endif %}
-
-            {# ... Доод талд Удирдлага цэс байгаа ... #}
 
             {# 🛑 Удирдлага Цэс #}
             {% if current_user.role in ['ahlah', 'admin'] %}
@@ -199,12 +216,6 @@
                     <i class="bi bi-sliders"></i> Шинжилгээний тохиргоо
                   </a></li>
 
-                  {# ✅ ЭНД ШИНЭЭР НЭМЭВ #}
-                  <li><a class="dropdown-item" href="{{ url_for('admin.manage_standards') }}">
-                    <i class="bi bi-clipboard-data"></i> Дотоод хяналтын стандарт (CM)
-                  </a></li>
-                  {# ---------------- #}
-
                   <li><a class="dropdown-item" href="{{ url_for('settings.repeatability_limits') }}">
                     <i class="bi bi-rulers"></i> Тохирцын лимит (repeatability)
                   </a></li>
@@ -223,15 +234,15 @@
                   
                   <li><hr class="dropdown-divider"></li>
                   <li><h6 class="dropdown-header">Тайлангууд</h6></li>
-                  {# 1. Хуучин consumption: Дээжний төрлөөр задалдаг, дарж үздэг #}
+                  {# 1. Хуучин consumption #}
                   <li>
                     <a class="dropdown-item" href="{{ url_for('reports.monthly_registers_strict') }}">
                       <i class="bi bi-table"></i> Дээжийн дэлгэрэнгүй бүртгэл</a></li>
-                      {# 2. Хуучин KPI: Өдөр тутмын ээлжийн мэдээ #}
+                      {# 2. Хуучин KPI #}
                       <li>
                         <a class="dropdown-item" href="{{ url_for('analysis.kpi_report') }}">
                           <i class="bi bi-list-check"></i> Ээлжийн гүйцэтгэл (Daily)</a></li>
-                          {# 3. Шинэ KPI: Жилийн график, алдааны статистик #}
+                          {# 3. Шинэ KPI #}
                           <li>
                             <a class="dropdown-item" href="{{ url_for('reports.shift_kpi') }}">
                               <i class="bi bi-bar-chart-line"></i> Чанар & Ачааллын KPI</a></li>
@@ -303,7 +314,7 @@
   {# ✅ AG Grid Scripts - Conditional Loading #}
   {% if use_aggrid|default(false) %}
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=3"></script>
   <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}?v=1"></script>
   {% endif %}
 

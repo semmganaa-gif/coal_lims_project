@@ -25,13 +25,14 @@
   .metric-card.danger .metric-value { color: #dc3545; }
   #metrics-refresh { font-size: .8rem; color: #6c757d; }
 </style>
+
 <div class="container-fluid mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>{{ title }}</h1>
   </div>
   <p class="text-muted">Химичдийн хадгалсан, ахлахын хяналт шаардлагатай шинжилгээний үр дүн.</p>
 
-<div class="row g-3 mb-2">
+  <div class="row g-3 mb-2">
     <div class="col-md-4">
       <div class="metric-card shadow-sm">
         <h6><i class="bi bi-stack me-2 text-primary"></i>Нийт дээж</h6>
@@ -53,6 +54,16 @@
         <h6><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Буцаагдсан / 3:3</h6>
         <div class="metric-value" id="metric-rejected">0</div>
         <div class="text-muted small">Rejected болон 3:3 давтан шинжилгээ.</div>
+
+        {# ✅ ЗӨВХӨН ЭНЭ 2 МӨР НЭМЭГДСЭН: KPI COUNT-ууд #}
+        <div class="text-muted small mt-1">
+          Ээлжийн буцаалт (KPI): 
+          <span class="fw-bold text-danger" id="kpi-shift-total">0</span>
+        </div>
+        <div class="text-muted small">
+          Сүүлийн 14 хоногийн буцаалт (KPI): 
+          <span class="fw-bold text-danger" id="kpi-14d-total">0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -60,6 +71,7 @@
   <div class="d-flex justify-content-end mb-3">
     <span id="metrics-refresh">Сүүлд шинэчлэгдсэн: -</span>
   </div>
+
   {# --- Шүүлтүүр карт --- #}
   <div class="card mb-4 shadow-sm">
     <div class="card-body py-3">
@@ -97,7 +109,7 @@
   <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <form id="reject-form" method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
             <h5 class="modal-title" id="rejectModalLabel"><i class="bi bi-x-circle"></i> Үр дүн буцаах</h5>
@@ -131,7 +143,7 @@
               </div>
             </div>
 
-            {# 🛑 ХАСАВ: Коммент бичих хэсгийг авч хаясан #}
+            {# 🛑 Коммент хэсгийг авч хаясан хэвээр #}
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Цуцлах</button>
@@ -144,7 +156,12 @@
 
 </div>
 
-{# Алдааны тайлбаруудыг JS руу дамжуулах (Шинэ кодтой тааруулав) #}
+{# KPI API-гийн URL-ийг JS-д дамжуулах #}
+<script>
+  window.AHLAH_KPI_SUMMARY_URL = "{{ url_for('analysis.kpi_summary_for_ahlah') }}";
+</script>
+
+{# Алдааны тайлбаруудыг JS руу дамжуулах (ЧИНИЙ ХУУЧИН MAP-аа яг хэвээр нь) #}
 <script>
   window.ERROR_LABELS = {{ error_labels | tojson | default({
     "sample_prep": "Дээж бэлтгэл",
@@ -162,6 +179,6 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script src="{{ url_for('static', filename='js/ahlah_dashboard.js') }}"></script>
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/ahlah_dashboard.js') }}"></script>
 {% endblock %}

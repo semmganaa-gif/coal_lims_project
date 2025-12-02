@@ -447,3 +447,38 @@ $('#reject-form').on('submit', function (e) {
     }
   });
 });
+// app/static/js/ahlah_dashboard.js
+
+// ... чиний AG Grid / бусад код байна ... 
+
+function loadAhlahKpiSummary() {
+  if (!window.AHLAH_KPI_SUMMARY_URL) return;
+
+  fetch(window.AHLAH_KPI_SUMMARY_URL, {
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (!data) return;
+
+      // Ээлжийн буцаалт (KPI)
+      var shiftSpan = document.getElementById('kpi-shift-total');
+      if (shiftSpan && data.shift) {
+        shiftSpan.textContent = data.shift.total_errors ?? 0;
+      }
+
+      // Сүүлийн 14 хоногийн буцаалт (KPI)
+      var d14Span = document.getElementById('kpi-14d-total');
+      if (d14Span && data.days14) {
+        d14Span.textContent = data.days14.total_errors ?? 0;
+      }
+    })
+    .catch(function (err) {
+      console.error('❌ KPI summary load failed:', err);
+    });
+}
+
+// Аль хэдийн өөр DOMContentLoaded listener байж болно – давхар байхад асуудалгүй.
+document.addEventListener('DOMContentLoaded', function () {
+  loadAhlahKpiSummary();
+});

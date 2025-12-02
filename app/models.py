@@ -1266,6 +1266,10 @@ class SystemSetting(db.Model):
     def __repr__(self) -> str:
         return f"<SystemSetting [{self.category}] {self.key}={self.value[:50]}>"
     
+# -------------------------
+# : ХЯНАЛТЫН СТАНДАРТ
+# -------------------------
+    
 class ControlStandard(db.Model):
     __tablename__ = 'control_standards'
 
@@ -1280,6 +1284,22 @@ class ControlStandard(db.Model):
 
     def __repr__(self):
         return f"<ControlStandard {self.name}>"
+    
+# -------------------------
+# : GBW СТАНДАРТ
+# -------------------------
+    
+class GbwStandard(db.Model):
+    __tablename__ = 'gbw_standards'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False) # GBW Дугаар (Batch No)
+    targets = db.Column(db.JSON, nullable=False)    # { 'Mad': {'mean': 1.2, 'sd': 0.1}, ... }
+    is_active = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<GBW {self.name}>'
 
 
 # -------------------------

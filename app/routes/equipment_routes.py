@@ -295,15 +295,65 @@ def download_certificate(log_id):
         flash("Файл алга.", "warning"); return redirect(request.referrer)
     return send_from_directory(os.path.abspath(current_app.config.get('UPLOAD_FOLDER')), log.file_path, as_attachment=True)
 
+# -------------------------------------------------
+# API: BULK USAGE LOG (Updated Logic)
+# -------------------------------------------------
 @equipment_bp.route("/api/log_usage_bulk", methods=["POST"])
 @login_required
 def log_usage_bulk():
-    data = request.get_json() or {}
-    items = data.get("items", [])
-    # ... Log logic ...
-    # Энд өмнөх API логик байх ёстой
-    # Товчлов (Таны хуучин код дээр энэ хэсэг бүтнээрээ байсан, түүнийг хэвээр үлдээгээрэй)
-    return jsonify({"status": "success"})
+    """
+    Frontend-ээс ирсэн олон төхөөрөмжийн бүртгэлийг хүлээж авч хадгална.
+    JSON бүтэц: { "items": [ { "eq_id": 1, "minutes": 60, "note": "...", "is_checked": true }, ... ] }
+    """
+    try:
+        data = request.get_json() or {}
+        items = data.get("items", [])
+
+        if not items:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        count = 0
+        today_date = datetime.now()
+        
+        for item in items:
+            eq_id = item.get("eq_id")
+            
+            # Минут болон бусад утгуудыг шалгах
+            minutes_val = item.get("minutes")
+            minutes = float(minutes_val) if minutes_val else 0
+            
+            note = item.get("note", "")
+            is_checked = item.get("is_checked", False)
+
+            # Хэрэв ашигласан минут байвал, эсвэл зүгээр л тэмдэглэл/чек хийсэн бол бүртгэнэ
+            if minutes > 0 or note or is_checked:
+                # Duration calculation
+                end_time = today_date + timedelta(minutes=minutes)
+                
+                # Тайлбар хэсэгт "Daily Check" гэдгийг тодруулж болно
+                purpose_text = note
+                if not purpose_text and is_checked:
+                    purpose_text = "Daily Check / Routine"
+
+                new_usage = UsageLog(
+                    equipment_id=eq_id,
+                    start_time=today_date,
+                    end_time=end_time,
+                    duration_minutes=minutes,
+                    used_by=current_user.username, # Login хийсэн хэрэглэгчийн нэр
+                    purpose=purpose_text
+                )
+                db.session.add(new_usage)
+                count += 1
+
+        db.session.commit()
+        return jsonify({"status": "success", "count": count})
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Bulk Usage Log Error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # -------------------------------------------------
 # 4. API: SUMMARY & STATS (Category Filter-тэй)
@@ -462,3 +512,38 @@ def equipment_journal_grid():
     
     today = datetime.now().date()
     return render_template("equipment_journal.html", title=title, start_date=today-timedelta(days=29), end_date=today, category=category)
+
+# app/routes/equipment_routes.py дотор хаа нэгтээ нэмнэ
+
+@equipment_bp.route("/api/equipment_list_json")
+@login_required
+def api_equipment_list_json():
+    # Бүх төхөөрөмжийг дуудна (Server-side pagination хэрэггүй, AG Grid өөрөө зохицуулна)
+    equipments = Equipment.query.order_by(Equipment.name.asc()).all()
+    
+    data = []
+    today = datetime.now().date()
+    
+    for eq in equipments:
+        # Хугацаа дууссан эсэхийг тооцоолох
+        is_expired = False
+        if eq.next_calibration_date and eq.next_calibration_date < today:
+            is_expired = True
+
+        data.append({
+            "id": eq.id,
+            "name": eq.name,
+            "manufacturer": eq.manufacturer or "",
+            "model": eq.model or "",
+            "serial_number": eq.serial_number or "",
+            "lab_code": eq.lab_code or "",
+            "quantity": eq.quantity,
+            "location": eq.location or "",
+            "calibration_date": eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else "",
+            "next_calibration_date": eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else "",
+            "status": eq.status,
+            "category": eq.category,
+            "is_expired": is_expired  # Frontend дээр улаанаар харуулахад хэрэгтэй
+        })
+        
+    return jsonify(data)
