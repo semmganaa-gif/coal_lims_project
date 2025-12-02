@@ -1,235 +1,820 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
+
 <style>
-  .diff-cell-flagged { color:#dc3545!important; font-weight:700; background:#fff2f2; }
-  .row-rejected { background:#fff8e1!important; border-left:4px solid #ffc107; }
-  .audit-table-wrapper thead th { position:sticky; top:0; background:#9ebfe0; z-index:5; }
-  .raw-json-box{ max-width:420px; white-space:pre-wrap; word-break:break-word; font-size:.7rem; background:#eef6ff; border:1px dashed #e2e8f0; border-radius:6px; padding:4px 6px; }
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --muted: #64748b;
+    --text: #0f172a;
+    --primary: #3b82f6;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  .audit-page {
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .audit-header {
+    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .audit-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+  /* Stats row */
+  .stats-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .stat-item {
+    padding: 0.3rem 0.65rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.75rem;
+  }
+  .stat-item .num { font-weight: 700; }
+  .stat-item.warning { background: #fef3c7; border-color: #fcd34d; }
+
+  /* Filter card */
+  .filter-card {
+    background: rgba(248,250,252,0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 14px;
+    padding: 12px 14px;
+    flex-shrink: 0;
+  }
+  .filter-body { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+
+  /* Calendar */
+  .calendar-card {
+    background: #fff;
+    border: 1px solid rgba(148,163,184,0.25);
+    border-radius: 12px;
+    min-width: 220px;
+    max-width: 240px;
+  }
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px 4px;
+  }
+  .calendar-title { font-size: 0.7rem; font-weight: 700; color: var(--text); }
+  .calendar-sub { font-size: 0.6rem; color: var(--muted); }
+  .calendar-nav button {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.75rem;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .calendar-nav button:hover { background: #f1f5f9; }
+  .calendar-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    padding: 0 6px 6px;
+  }
+  .calendar-table thead th {
+    text-align: center;
+    font-size: 0.55rem;
+    font-weight: 500;
+    color: var(--muted);
+    padding-bottom: 3px;
+  }
+  .calendar-day {
+    text-align: center;
+    font-size: 0.7rem;
+    padding: 5px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .calendar-day:hover { background: #f1f5f9; }
+  .calendar-day.selected {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+  }
+  .calendar-day.today { border: 1px solid var(--primary); }
+
+  /* Grid wrapper */
+  .grid-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid rgba(15,23,42,0.06);
+    border-radius: 14px;
+  }
+
+  /* AG Grid overrides */
+  .ag-theme-alpine {
+    --ag-font-size: 11px;
+    --ag-row-height: 26px;
+    --ag-header-height: 28px;
+    --ag-borders: solid 1px;
+    --ag-border-color: #94a3b8;
+  }
+  .ag-theme-alpine .ag-cell { padding: 0 6px !important; }
+  .ag-theme-alpine .ag-header-cell { padding: 0 6px !important; font-weight: 600; }
+  .ag-theme-alpine .ag-row { border-color: #cbd5e1 !important; }
+  .ag-theme-alpine .ag-cell, .ag-theme-alpine .ag-header-cell {
+    border-right: 1px solid #94a3b8 !important;
+  }
+  .ag-theme-alpine .ag-header-cell, .ag-theme-alpine .ag-header-group-cell {
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  /* Highlight p1, p2, diff, avg columns - full column background */
+  .col-p1 {
+    background-color: #ecfdf5 !important;
+    border-left: 2px solid #22c55e !important;
+  }
+  .col-p2 {
+    background-color: #faf5ff !important;
+    border-left: 2px solid #a855f7 !important;
+  }
+  .col-diff {
+    background-color: #fffbeb !important;
+    border-left: 2px solid #f59e0b !important;
+    border-right: 2px solid #f59e0b !important;
+  }
+  .col-avg {
+    background-color: #eff6ff !important;
+    border-left: 2px solid #3b82f6 !important;
+    border-right: 2px solid #3b82f6 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Header colors matching columns */
+  .header-p1 {
+    background-color: #dcfce7 !important;
+  }
+  .header-p2 {
+    background-color: #f3e8ff !important;
+  }
+  .header-extra {
+    background-color: #e0e7ff !important;
+  }
+  .header-diff {
+    background-color: #fef3c7 !important;
+  }
+  .header-avg {
+    background-color: #dbeafe !important;
+  }
+
+  /* Extra columns (constants) */
+  .col-extra {
+    background-color: #eef2ff !important;
+  }
+
+  /* Status badges */
+  .st {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .st-ok { background: #dcfce7; color: #166534; }
+  .st-pend { background: #fef3c7; color: #92400e; }
+  .st-rej { background: #fee2e2; color: #991b1b; }
+
+  /* Row colors */
+  .row-approved { background-color: rgba(34, 197, 94, 0.05) !important; }
+  .row-rejected { background-color: rgba(239, 68, 68, 0.08) !important; }
+  .row-pending { background-color: rgba(245, 158, 11, 0.05) !important; }
+
+  /* Group start row */
+  .group-start { border-top: 2px solid #94a3b8 !important; }
+
+  /* Exceeded tolerance */
+  .t-exceeded { color: #dc2626; font-weight: 700; }
+
+  /* Mono font for numbers */
+  .mono { font-family: 'Consolas', 'Monaco', monospace; }
 </style>
 
-{# ---------- helper: JSON-г dict болгох, утга сонгох ---------- #}
-{% macro pick(d, keys, default='-') -%}
-  {%- set ns = namespace(val=None) -%}
-  {%- for k in keys -%}
-    {%- if ns.val is none and d.get(k) not in [None, ''] -%}
-      {%- set ns.val = d.get(k) -%}
-    {%- endif -%}
-  {%- endfor -%}
-  {{ ns.val if ns.val is not none else default }}
-{%- endmacro %}
-
-{% macro f2(x, dash='-') -%}
-  {%- if x not in [None, ''] -%}{{ "%.2f"|format(x|float) }}{%- else -%}{{ dash }}{%- endif -%}
-{%- endmacro %}
-
-<div class="container-fluid mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h1 class="h4 mb-1"><i class="bi bi-archive-fill me-2"></i>{{ title }}</h1>
-      <p class="text-muted mb-0">Шинжилгээ: <strong>{{ analysis_type.name }}</strong> (код: {{ analysis_type.code }})</p>
+<div class="container-fluid audit-page mt-2">
+  <!-- Header -->
+  <div class="audit-header">
+    <div class="d-flex align-items-center gap-3">
+      <div>
+        <h5><i class="bi bi-table me-1"></i>{{ title }} <small class="text-muted">({{ analysis_type.code }})</small></h5>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">Нийт: <span class="num">{{ stats.total_samples }}</span></div>
+        <div class="stat-item warning">Давтсан: <span class="num text-warning">{{ stats.with_retries }}</span></div>
+        <div class="stat-item">Баталсан: <span class="num text-success">{{ stats.approved }}</span></div>
+        <div class="stat-item">Хүлээгдэж: <span class="num text-primary">{{ stats.pending }}</span></div>
+        <div class="stat-item">Буцаагдсан: <span class="num text-danger">{{ stats.rejected }}</span></div>
+      </div>
     </div>
-    <a href="{{ url_for('api.audit_hub') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Аудитын төв рүү буцах
+    <a href="{{ url_for('api.audit_hub') }}" class="btn btn-sm btn-outline-secondary py-1">
+      <i class="bi bi-arrow-left"></i> Буцах
     </a>
   </div>
 
-  <!-- ШҮҮЛТҮҮР -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <form method="GET" action="{{ url_for('api.audit_log_page', analysis_code=analysis_type.code) }}">
-        <div class="row g-3 align-items-end">
-          <div class="col-md-3">
-            <label class="form-label">Эхлэх огноо</label>
-            <input type="date" class="form-control" name="start_date" value="{{ request.args.get('start_date','') }}">
+  <!-- Filter with Calendar -->
+  <div class="filter-card">
+    <form method="GET" id="filterForm" class="filter-body">
+      <!-- Start Date Calendar -->
+      <div class="calendar-card" data-type="start">
+        <div class="calendar-header">
+          <div>
+            <div class="calendar-title">Эхлэх огноо</div>
+            <div class="calendar-sub" id="startCalLabel">---</div>
           </div>
-          <div class="col-md-3">
-            <label class="form-label">Дуусах огноо</label>
-            <input type="date" class="form-control" name="end_date" value="{{ request.args.get('end_date','') }}">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Дээжний нэр</label>
-            <input type="text" class="form-control" name="sample_name" value="{{ request.args.get('sample_name','') }}">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Химич</label>
-            <input type="text" class="form-control" name="user_name" value="{{ request.args.get('user_name','') }}">
-          </div>
-          <div class="col-md-1 d-grid">
-            <button class="btn btn-primary" type="submit">Шүүх</button>
+          <div class="calendar-nav">
+            <button type="button" data-dir="-1" data-cal="start">&#8249;</button>
+            <button type="button" data-dir="1" data-cal="start">&#8250;</button>
           </div>
         </div>
-      </form>
-    </div>
+        <table class="calendar-table" id="startCalendar"></table>
+      </div>
+
+      <!-- End Date Calendar -->
+      <div class="calendar-card" data-type="end">
+        <div class="calendar-header">
+          <div>
+            <div class="calendar-title">Дуусах огноо</div>
+            <div class="calendar-sub" id="endCalLabel">---</div>
+          </div>
+          <div class="calendar-nav">
+            <button type="button" data-dir="-1" data-cal="end">&#8249;</button>
+            <button type="button" data-dir="1" data-cal="end">&#8250;</button>
+          </div>
+        </div>
+        <table class="calendar-table" id="endCalendar"></table>
+      </div>
+
+      <input type="hidden" name="start_date" id="start_date_hidden" value="{{ request.args.get('start_date', '') }}">
+      <input type="hidden" name="end_date" id="end_date_hidden" value="{{ request.args.get('end_date', '') }}">
+
+      <div class="d-flex flex-column gap-2 ms-auto">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-search"></i> Шүүх
+        </button>
+        <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn">
+          <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+        </button>
+      </div>
+    </form>
   </div>
 
-  {% set schema = analysis_schema or {} %}
-  {% set parallel_schema = schema.get('parallels', {}) %}
-  {% set parallel_columns = parallel_schema.get('columns', []) %}
-
-  <!-- ХҮСНЭГТ -->
-  <div class="table-responsive audit-table-wrapper mb-5">
-    <table class="table table-bordered table-hover table-sm align-middle">
-      <thead class="table-light text-center">
-        <tr>
-          <th style="width:40px;">#</th>
-          <th>Дээж</th>
-          <th style="min-width:420px;">{{ parallel_schema.get('title', 'Туршилтын жин / үр дүн snapshot') }}</th>
-          <th style="width:90px;">Тохирц</th>
-          <th style="width:90px;">Дундаж</th>
-          <th>Химич</th>
-          <th>Огноо</th>
-          <th>Шалтгаан / түүх өгөгдөл</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% if logs %}
-        {% for log in logs %}
-          {% set _rd = get_log_raw_data(log) %}
-          {% set raw_data = {} %}
-          {% if _rd %}
-            {% if _rd is mapping %}
-              {% set raw_data = _rd %}
-            {% elif _rd is string %}
-              {% set _tmp = _rd.strip() %}
-              {% if _tmp and _tmp.startswith('{') and _tmp.endswith('}') %}
-                {% set raw_data = _tmp|loads %}
-              {% endif %}
-            {% endif %}
-          {% endif %}
-
-          {% set parallels = raw_data.get('parallels') or [] %}
-          {% set _diff = (raw_data.get('diff') if raw_data.get('diff') not in [None, ''] else None) %}
-          {% set is_flagged = (_diff is not none) and (log.action in ['REJECTED','PENDING_REVIEW']) %}
-          {% set is_rejected = (log.action == 'REJECTED') %}
-          {% set col_defs = parallel_columns if parallel_columns else [
-            {'key':'num','label':'?'},
-            {'key':'m1','label':'m1'},
-            {'key':'m2','label':'m2'},
-            {'key':'m3','label':'m3'},
-            {'key':'result','label':'?? ???','format':'float'}
-          ] %}
-
-          <tr {% if is_rejected %}class="row-rejected"{% endif %}>
-            <td class="text-center fw-semibold">{{ loop.index }}</td>
-            <td class="fw-semibold">
-              {{ log.sample.sample_code if log.sample else '-' }}
-            </td>
-            <td>
-              {% if parallels %}
-                <div class="table-responsive">
-                  <table class="table table-sm table-bordered mb-0 align-middle text-center">
-                    <thead class="table-light">
-                      <tr>
-                        {% for col in col_defs %}
-                          <th {% if col.width %}style="width:{{ col.width }}"{% endif %}>{{ col.label }}</th>
-                        {% endfor %}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for par in parallels %}
-                        <tr>
-                          {% for col in col_defs %}
-                            {% set val = par.get(col.key) %}
-                            <td>
-                              {% if col.format == 'float' %}
-                                {{ f2(val) }}
-                              {% else %}
-                                {{ val if val not in [None, ''] else '-' }}
-                              {% endif %}
-                            </td>
-                          {% endfor %}
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              {% else %}
-                {% set scalar_defs = [
-                  ('avg', 'Дундаж'),
-                  ('diff', 'Тохирц (T)'),
-                  ('result', 'Үр дүн'),
-                  ('final_result', 'Final Result'),
-                  ('A', 'A (хувин + дээж)'),
-                  ('B', 'B (хувин)'),
-                  ('C', 'C (хатуу үлдэгдэл)'),
-                  ('weight', 'Жин'),
-                  ('limit_used', 'Т лимит утга'),
-                  ('limit_mode', 'Т лимит горим'),
-                  ('t_exceeded', 'Т лимит давсан эсэх'),
-                  ('retest_mode', 'Давталт горим'),
-                  ('is_low_avg', 'Давтан шинжилгээ шаардах?')
-                ] %}
-                {% set scalar_ns = namespace(items=[]) %}
-                {% for key, label in scalar_defs %}
-                  {% if raw_data.get(key) not in [None, ''] %}
-                    {% set scalar_ns.items = scalar_ns.items + [(label, raw_data.get(key))] %}
-                  {% endif %}
-                {% endfor %}
-                {% if scalar_ns.items %}
-                  <div class="bg-light border rounded p-2 small">
-                    {% for label, value in scalar_ns.items %}
-                      <div class="d-flex justify-content-between py-1 border-bottom border-light">
-                        <span class="text-muted">{{ label }}</span>
-                        <span class="fw-semibold">
-                          {% if value is number %}
-                            {{ "%.3f"|format(value) }}
-                          {% elif value in [True, False] %}
-                            {{ 'Тийм' if value else 'Үгүй' }}
-                          {% else %}
-                            {{ value }}
-                          {% endif %}
-                        </span>
-                      </div>
-                    {% endfor %}
-                  </div>
-                {% elif log.final_result_snapshot not in [None, ''] %}
-                  <div class="bg-light border rounded p-2 small">
-                    <div class="d-flex justify-content-between">
-                      <span class="text-muted">Үр дүн</span>
-                      <span class="fw-semibold">
-                        {{ log.final_result_snapshot }}
-                      </span>
-                    </div>
-                  </div>
-                {% elif raw_data %}
-                  <div class="raw-json-box">{{ raw_data|tojson }}</div>
-                {% else %}
-                  -
-                {% endif %}
-              {% endif %}
-            </td>
-            <td class="text-center {% if is_flagged %}diff-cell-flagged{% endif %}">
-              {{ f2(_diff) }}
-            </td>
-            <td class="text-center fw-bold">
-              {{ f2(raw_data.get('avg')) }}
-            </td>
-            <td>{{ log.user.username if log.user else '-' }}</td>
-            <td>
-              {{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}<br>
-              <span class="badge {% if log.action in ['APPROVED','CREATED_AUTO_APPROVED','UPDATED_AUTO_APPROVED'] %}bg-success{% elif log.action=='REJECTED' %}bg-danger{% elif log.action=='CREATED' %}bg-primary{% else %}bg-secondary{% endif %}">
-                {{ log.action }}
-              </span>
-            </td>
-            <td>
-              {% if log.reason %}<span class="{% if is_rejected %}text-danger fw-semibold{% endif %}">{{ log.reason }}</span>{% else %}-{% endif %}
-              {% if log.rejection_category %}
-                <div class="small text-muted mt-1">
-                  ????????: {{ log.rejection_category }}{% if log.rejection_subcategory %} / {{ log.rejection_subcategory }}{% endif %}
-                </div>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-
-{% else %}
-        <tr>
-          <td colspan="12" class="text-center text-muted py-5">Илэрц олдсонгүй.</td>
-        </tr>
-      {% endif %}
-      </tbody>
-    </table>
+  <!-- AG Grid -->
+  <div class="grid-wrap">
+    <div id="auditGrid" class="ag-theme-alpine" style="width: 100%; height: 100%;"></div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
+<script>
+// Schema-based audit columns config
+const AUDIT_COLUMNS = {{ analysis_schema.get('audit_columns', [])|tojson }};
+const AUDIT_EXTRA_COLUMNS = {{ analysis_schema.get('audit_extra_columns', [])|tojson }};
+const AUDIT_RESULT_COLUMNS = {{ analysis_schema.get('audit_result_columns', [])|tojson }};  // FM-д Wet%, Dry%
+const AUDIT_NO_PARALLEL = {{ analysis_schema.get('audit_no_parallel', False)|tojson }};  // CSN гэх мэт
+
+// Data from Flask - dynamic based on schema
+const AUDIT_DATA = {
+  rows: [
+    {% set row_num = namespace(val=0) %}
+    {% set total_groups = grouped_samples|length %}
+    {% for group in grouped_samples %}
+      {% set sample = group.sample %}
+      {% set sample_code_display = group.get('sample_code_snapshot') or (sample.sample_code if sample else 'Устгагдсан') %}
+      {% set is_last_group = loop.last %}
+      {% for attempt in group.attempts %}
+        {% set row_num.val = row_num.val + 1 %}
+        {% set rd = attempt.raw_data %}
+        {% set p1 = rd.get('p1', {}) %}
+        {% set p2 = rd.get('p2', {}) %}
+        {
+          rowNum: {{ row_num.val }},
+          sampleId: {{ sample.id if sample else 'null' }},
+          sampleCode: {{ sample_code_display|tojson }},
+          isGroupStart: {{ 'true' if loop.first else 'false' }},
+          attemptNum: {{ loop.index }},
+          totalAttempts: {{ group.attempts|length }},
+          timestamp: {{ attempt.timestamp.strftime('%Y-%m-%d %H:%M')|tojson }},
+          date: {{ attempt.timestamp.strftime('%m-%d')|tojson }},
+          time: {{ attempt.timestamp.strftime('%H:%M')|tojson }},
+          user: {{ attempt.user.username|tojson }},
+          shift: {{ attempt.shift_team|tojson }},
+          shiftType: {{ attempt.shift_type|tojson }},
+          // ✅ Hash баталгаажуулалт (бичлэг өөрчлөгдсөн эсэх)
+          hashValid: {{ 'true' if attempt.hash_valid == True else ('false' if attempt.hash_valid == False else 'null') }},
+          // Dynamic p1/p2 data from raw_data
+          p1: {{ p1|tojson }},
+          p2: {{ p2|tojson }},
+          // Full raw_data for extra columns (batch constants, etc.)
+          rawData: {{ rd|tojson }},
+          diff: {{ (rd.get('diff'))|tojson }},
+          diffExceeded: {{ 'true' if rd.get('t_exceeded') else 'false' }},
+          avg: {{ (rd.get('avg'))|tojson }},
+          action: {{ attempt.action|tojson }},
+          reason: {{ (attempt.reason or '')|tojson }}
+        }{% if not (is_last_group and loop.last) %},{% endif %}
+      {% endfor %}
+    {% endfor %}
+  ],
+  allUsers: [
+    {% for u in all_users %}
+    {{ u.username|tojson }}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+};
+
+// Format functions
+function numFmt(val, decimals) {
+  if (val === null || val === undefined || val === '') return '-';
+  const n = parseFloat(val);
+  if (isNaN(n)) return '-';
+  return n.toFixed(decimals);
+}
+
+// Status renderer
+function statusRenderer(params) {
+  const action = params.value || '';
+  if (action.includes('APPROVED')) {
+    return '<span class="st st-ok">OK</span>';
+  } else if (action.includes('REJECTED')) {
+    return '<span class="st st-rej">REJ</span>';
+  } else if (action.includes('PENDING')) {
+    return '<span class="st st-pend">PEND</span>';
+  }
+  return `<span class="st">${action.substring(0, 4)}</span>`;
+}
+
+// Sample name renderer - only show on group start
+function sampleRenderer(params) {
+  if (params.data.isGroupStart) {
+    return `<strong>${params.value}</strong>`;
+  }
+  return '';
+}
+
+// Diff renderer with exceeded highlight
+function diffRenderer(params) {
+  const val = numFmt(params.value, 3);
+  if (params.data.diffExceeded) {
+    return `<span class="t-exceeded">${val}</span>`;
+  }
+  return val;
+}
+
+// Row class based on status
+function getRowClass(params) {
+  const action = params.data.action || '';
+  let classes = [];
+  if (action.includes('APPROVED')) classes.push('row-approved');
+  else if (action.includes('REJECTED')) classes.push('row-rejected');
+  else if (action.includes('PENDING')) classes.push('row-pending');
+  if (params.data.isGroupStart) classes.push('group-start');
+  return classes.join(' ');
+}
+
+// Dynamic column builder from schema
+function buildDynamicColumns() {
+  // Base columns (always present)
+  const baseCols = [
+    {
+      field: 'rowNum',
+      headerName: '#',
+      width: 45,
+      pinned: 'left',
+      filter: false,
+      suppressSizeToFit: true
+    },
+    {
+      field: 'sampleCode',
+      headerName: 'Дээж',
+      width: 150,
+      pinned: 'left',
+      cellRenderer: sampleRenderer,
+      filter: 'agTextColumnFilter',
+      floatingFilter: true
+    },
+    {
+      field: 'attemptNum',
+      headerName: 'Орол',
+      width: 60,
+      valueGetter: p => `${p.data.attemptNum}/${p.data.totalAttempts}`,
+      filter: false
+    },
+    {
+      field: 'date',
+      headerName: 'Огноо',
+      width: 70,
+      cellClass: 'mono',
+      filter: 'agTextColumnFilter',
+      floatingFilter: true
+    },
+    {
+      field: 'time',
+      headerName: 'Цаг',
+      width: 55,
+      cellClass: 'mono',
+      filter: 'agTextColumnFilter',
+      floatingFilter: true
+    },
+    {
+      field: 'user',
+      headerName: 'Химич',
+      width: 80,
+      filter: 'agTextColumnFilter',
+      floatingFilter: true
+    },
+    {
+      field: 'shift',
+      headerName: 'Ээлж',
+      width: 55,
+      filter: 'agTextColumnFilter',
+      floatingFilter: true,
+      filterParams: {
+        values: ['A', 'B', 'C']
+      }
+    },
+    // ✅ Hash баталгаа (бичлэг өөрчлөгдсөн эсэх шалгах)
+    {
+      field: 'hashValid',
+      headerName: '🔒',
+      width: 45,
+      cellRenderer: p => {
+        if (p.value === true) return '<span style="color: #16a34a" title="Баталгаажсан - өөрчлөгдөөгүй">✓</span>';
+        if (p.value === false) return '<span style="color: #dc2626" title="АНХААРУУЛГА: Бичлэг өөрчлөгдсөн!">⚠</span>';
+        return '<span style="color: #9ca3af" title="Хуучин бичлэг (hash байхгүй)">-</span>';
+      },
+      filter: false
+    }
+  ];
+
+  // Build data columns from schema
+  // If AUDIT_NO_PARALLEL (like CSN), get values from rawData directly
+  // Otherwise, get from p1/p2
+
+  let dataColumns = [];
+
+  if (AUDIT_NO_PARALLEL) {
+    // CSN гэх мэт - p1/p2 биш, шууд rawData-аас авах
+    const singleCols = AUDIT_COLUMNS.map(col => ({
+      field: `data_${col.key}`,
+      headerName: col.label,
+      width: 65,
+      cellClass: 'mono col-p1',
+      headerClass: 'header-p1',
+      valueGetter: p => {
+        const raw = p.data.rawData || {};
+        return raw[col.key];
+      },
+      valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+    }));
+
+    dataColumns.push({
+      headerName: 'Хэмжилт',
+      headerClass: 'header-p1',
+      children: singleCols
+    });
+  } else {
+    // Стандарт p1/p2 parallel бүтэц
+    // Helper: key-ийн утгыг олох (fallback дэмжсэн)
+    const getVal = (obj, key) => {
+      if (!obj) return null;
+      // Шууд key байвал буцаах
+      if (obj[key] !== undefined) return obj[key];
+      // Fallback: num -> bottle_num, crucible_num
+      if (key === 'num') {
+        return obj.bottle_num ?? obj.crucible_num ?? obj.tigel_num;
+      }
+      return null;
+    };
+
+    const p1Children = AUDIT_COLUMNS.map(col => ({
+      field: `p1_${col.key}`,
+      headerName: col.label,
+      width: col.key === 'result' ? 70 : 75,
+      cellClass: 'mono col-p1',
+      headerClass: 'header-p1',
+      valueGetter: p => {
+        const p1 = p.data.p1 || {};
+        return getVal(p1, col.key);
+      },
+      valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+    }));
+
+    const p2Children = AUDIT_COLUMNS.map(col => ({
+      field: `p2_${col.key}`,
+      headerName: col.label,
+      width: col.key === 'result' ? 70 : 75,
+      cellClass: 'mono col-p2',
+      headerClass: 'header-p2',
+      valueGetter: p => {
+        const p2 = p.data.p2 || {};
+        return getVal(p2, col.key);
+      },
+      valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+    }));
+
+    dataColumns.push(
+      { headerName: 'p1', headerClass: 'header-p1', children: p1Children },
+      { headerName: 'p2', headerClass: 'header-p2', children: p2Children }
+    );
+  }
+
+  // Summary columns - AUDIT_NO_PARALLEL байхад тохирц/дундаж нуух
+  const summaryCols = [];
+
+  // Тохирц/дундаж зөвхөн parallel шинжилгээнд харуулах
+  if (!AUDIT_NO_PARALLEL) {
+    summaryCols.push(
+      {
+        field: 'diff',
+        headerName: 'Тохирц',
+        width: 70,
+        cellRenderer: diffRenderer,
+        cellClass: 'mono col-diff',
+        headerClass: 'header-diff'
+      },
+      {
+        field: 'avg',
+        headerName: 'Дундаж',
+        width: 70,
+        cellClass: 'mono col-avg',
+        headerClass: 'header-avg',
+        valueFormatter: p => numFmt(p.value, 2)
+      }
+    );
+  }
+
+  // Тооцоолсон үр дүн баганууд (FM-д Wet%, Dry%; CSN-д avg, range гэх мэт)
+  if (AUDIT_RESULT_COLUMNS && AUDIT_RESULT_COLUMNS.length > 0) {
+    AUDIT_RESULT_COLUMNS.forEach(col => {
+      // Parse path like "repeatability.range" or direct key like "avg"
+      const pathParts = col.path ? col.path.split('.') : [col.key];
+      summaryCols.push({
+        field: `result_${col.key}`,
+        headerName: col.label,
+        width: 75,
+        cellClass: 'mono col-avg',
+        headerClass: 'header-avg',
+        valueGetter: p => {
+          const raw = p.data.rawData || {};
+          // Path дагуу утга хайх (жнь: "repeatability.range" -> raw.repeatability.range)
+          let val = raw;
+          for (const part of pathParts) {
+            val = val ? val[part] : null;
+          }
+          // Fallback: шууд key-ээр хайх
+          if (val === null || val === undefined) {
+            val = raw[col.key];
+          }
+          return val;
+        },
+        valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+      });
+    });
+  }
+
+  // Статус, шалтгаан - бүх шинжилгээнд харуулах
+  summaryCols.push(
+    {
+      field: 'action',
+      headerName: 'Статус',
+      width: 65,
+      cellRenderer: statusRenderer,
+      filter: 'agTextColumnFilter',
+      floatingFilter: true,
+      filterParams: {
+        values: ['APPROVED', 'PENDING', 'REJECTED', 'CREATED', 'UPDATED'],
+        valueFormatter: p => {
+          if (p.value && p.value.includes('APPROVED')) return 'OK';
+          if (p.value && p.value.includes('REJECTED')) return 'REJ';
+          if (p.value && p.value.includes('PENDING')) return 'PEND';
+          return p.value;
+        }
+      }
+    },
+    {
+      field: 'reason',
+      headerName: 'Шалтгаан',
+      flex: 1,
+      minWidth: 200,
+      filter: 'agTextColumnFilter',
+      floatingFilter: true,
+      wrapText: true,
+      autoHeight: true
+    }
+  );
+
+  // Build extra columns (constants like E, q1, q2 for CV)
+  const extraCols = AUDIT_EXTRA_COLUMNS.map(col => {
+    // Parse path like "batch.E" or "s_used"
+    const pathParts = col.path.split('.');
+    return {
+      field: `extra_${col.key}`,
+      headerName: col.label,
+      width: 65,
+      cellClass: 'mono col-extra',
+      headerClass: 'header-extra',
+      valueGetter: p => {
+        const raw = p.data.rawData || {};
+        // Path дагуу утга хайх (жнь: "batch.E" -> raw.batch.E)
+        let val = raw;
+        for (const part of pathParts) {
+          val = val ? val[part] : null;
+        }
+        // Fallback: rawData дотор шууд key-ээр хайх
+        if (val === null || val === undefined) {
+          val = raw[col.key];
+        }
+        return val;
+      },
+      valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+    };
+  });
+
+  // Combine all columns
+  const cols = [
+    ...baseCols,
+    ...dataColumns
+  ];
+
+  // Add extra columns group if exists
+  if (extraCols.length > 0) {
+    cols.push({
+      headerName: 'Тогтмол',
+      headerClass: 'header-extra',
+      children: extraCols
+    });
+  }
+
+  // Add summary columns
+  cols.push(...summaryCols);
+
+  return cols;
+}
+
+// Column definitions (dynamic from schema)
+const columnDefs = buildDynamicColumns();
+
+// Grid options
+const gridOptions = {
+  columnDefs: columnDefs,
+  rowData: AUDIT_DATA.rows,
+  defaultColDef: {
+    sortable: true,
+    resizable: true,
+    filter: true
+  },
+  getRowClass: getRowClass,
+  animateRows: true,
+  suppressRowHoverHighlight: false,
+  rowSelection: 'multiple',
+  enableCellTextSelection: true,
+  ensureDomOrder: true
+};
+
+// Initialize grid
+document.addEventListener('DOMContentLoaded', function() {
+  const gridDiv = document.getElementById('auditGrid');
+  new agGrid.Grid(gridDiv, gridOptions);
+
+  // CSV Export
+  document.getElementById('exportCsvBtn').addEventListener('click', function() {
+    gridOptions.api.exportDataAsCsv({
+      fileName: 'audit_{{ analysis_type.code }}_' + new Date().toISOString().slice(0,10) + '.csv'
+    });
+  });
+});
+
+// ==================== CALENDAR LOGIC ====================
+function formatDateLabel(date) {
+  const months = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар",
+                  "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
+  return months[date.getMonth()] + " " + date.getFullYear();
+}
+
+function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) {
+  const cont = document.getElementById(containerId);
+  const label = document.getElementById(labelId);
+  cont.innerHTML = "";
+  label.textContent = formatDateLabel(centerDate);
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  let startDate = new Date(centerDate);
+  startDate.setDate(centerDate.getDate() - 3);
+
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+  const trHead = document.createElement('tr');
+  const trBody = document.createElement('tr');
+
+  const weekDays = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
+
+  for (let i = 0; i < 7; i++) {
+    let currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+
+    const dayNum = currentDate.getDate();
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(dayNum).padStart(2, '0');
+    const isoDate = `${y}-${m}-${d}`;
+
+    const th = document.createElement('th');
+    th.textContent = weekDays[currentDate.getDay()];
+    trHead.appendChild(th);
+
+    const td = document.createElement('td');
+    td.textContent = dayNum;
+    td.className = "calendar-day";
+
+    if (selectedStr === isoDate) td.classList.add('selected');
+    if (todayStr === isoDate) td.classList.add('today');
+
+    td.addEventListener('click', () => {
+      onSelect(isoDate);
+      buildCalendar(containerId, labelId, currentDate, isoDate, onSelect);
+    });
+    trBody.appendChild(td);
+  }
+
+  thead.appendChild(trHead);
+  tbody.appendChild(trBody);
+  cont.appendChild(thead);
+  cont.appendChild(tbody);
+}
+
+(function() {
+  const startHidden = document.getElementById('start_date_hidden');
+  const endHidden = document.getElementById('end_date_hidden');
+  if (!startHidden || !endHidden) return;
+
+  // Default to today if empty
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  if (!startHidden.value) startHidden.value = todayStr;
+  if (!endHidden.value) endHidden.value = todayStr;
+
+  let sCenter = new Date(startHidden.value.replace(/-/g, '/'));
+  let eCenter = new Date(endHidden.value.replace(/-/g, '/'));
+
+  function nav(cal, dir) {
+    const shiftDays = 7 * dir;
+    if (cal === 'start') {
+      sCenter.setDate(sCenter.getDate() + shiftDays);
+      renderS();
+    } else {
+      eCenter.setDate(eCenter.getDate() + shiftDays);
+      renderE();
+    }
+  }
+
+  const renderS = () => buildCalendar('startCalendar', 'startCalLabel', sCenter, startHidden.value, (iso) => {
+    startHidden.value = iso;
+    sCenter = new Date(iso.replace(/-/g, '/'));
+  });
+
+  const renderE = () => buildCalendar('endCalendar', 'endCalLabel', eCenter, endHidden.value, (iso) => {
+    endHidden.value = iso;
+    eCenter = new Date(iso.replace(/-/g, '/'));
+  });
+
+  renderS();
+  renderE();
+
+  document.querySelectorAll('.calendar-nav button').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      nav(b.dataset.cal, Number(b.dataset.dir));
+    });
+  });
+})();
+</script>
 {% endblock %}
