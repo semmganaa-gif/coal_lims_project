@@ -1,6 +1,7 @@
 # app/routes/audit_log_service.py
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, is_dataclass
 from typing import Any, Mapping, Optional
 
@@ -8,6 +9,8 @@ from app import db
 from app.models import AnalysisResultLog
 from flask_login import current_user
 import json
+
+logger = logging.getLogger(__name__)
 
 
 def _to_jsonable(data: Any) -> Any:

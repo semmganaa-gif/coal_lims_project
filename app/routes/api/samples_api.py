@@ -27,6 +27,7 @@ from app.utils.codes import to_base_list
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
 from app.utils.security import escape_like_pattern
+from app.utils.sorting import sort_samples
 from app.constants import SUMMARY_VIEW_COLUMNS
 from .helpers import _aggregate_sample_status
 
@@ -44,7 +45,7 @@ def register_routes(bp):
     def data():
         draw = int(request.args.get("draw", 1))
         start = int(request.args.get("start", 0))
-        length = int(request.args.get("length", 25))
+        length = min(int(request.args.get("length", 25)), 1000)  # Max 1000 хязгаарлалт
 
         # DataTables-н багана тус бүрийн шүүлтүүр
         column_search = {}
@@ -66,14 +67,14 @@ def register_routes(bp):
             try:
                 ds = datetime.fromisoformat(date_start)
                 q = q.filter(Sample.received_date >= ds)
-            except Exception:
-                pass
+            except ValueError:
+                pass  # Буруу огноо формат
         if date_end:
             try:
                 de = datetime.fromisoformat(date_end)
                 q = q.filter(Sample.received_date <= de)
-            except Exception:
-                pass
+            except ValueError:
+                pass  # Буруу огноо формат
 
         # Баганын шүүлтүүрүүд
         for idx, val in column_search.items():
@@ -83,8 +84,8 @@ def register_routes(bp):
                 # ID
                 try:
                     q = q.filter(Sample.id == int(val))
-                except Exception:
-                    pass
+                except ValueError:
+                    pass  # Тоо биш
             elif idx == 2:
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.sample_code.ilike(f"%{safe_val}%"))
@@ -118,8 +119,8 @@ def register_routes(bp):
                 try:
                     w = float(val)
                     q = q.filter(Sample.weight == w)
-                except Exception:
-                    pass
+                except ValueError:
+                    pass  # Тоо биш
             elif idx == 13:
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.analyses_to_perform.ilike(f"%{safe_val}%"))
@@ -154,7 +155,7 @@ def register_routes(bp):
             # ✅ analyses_to_perform → base кодын жагсаалт
             try:
                 raw_codes = json.loads(s.analyses_to_perform or "[]")
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
                 raw_codes = []
             analyses_base = to_base_list(raw_codes)
             analyses_txt = json.dumps(analyses_base, ensure_ascii=False)
@@ -175,6 +176,25 @@ def register_routes(bp):
                 f'class="btn btn-sm btn-outline-primary">Засах</a>'
             )
 
+            # Хадгалах хугацааны тооцоо
+            retention_html = ""
+            if s.return_sample:
+                retention_html = '<span class="badge bg-primary">Буцаах</span>'
+            elif s.retention_date:
+                from datetime import date
+                today = date.today()
+                days_left = (s.retention_date - today).days
+                if days_left < 0:
+                    retention_html = f'<span class="badge bg-danger">{abs(days_left)} хоног хэтэрсэн</span>'
+                elif days_left <= 7:
+                    retention_html = f'<span class="badge bg-warning text-dark">{days_left} хоног</span>'
+                elif days_left <= 30:
+                    retention_html = f'<span class="badge bg-info">{days_left} хоног</span>'
+                else:
+                    retention_html = f'<span class="badge bg-success">{days_left} хоног</span>'
+            else:
+                retention_html = '<span class="badge bg-secondary">-</span>'
+
             data_rows.append(
                 [
                     f'<input type="checkbox" class="sample-checkbox" value="{s.id}">',  # 0
@@ -191,7 +211,8 @@ def register_routes(bp):
                     s.weight or "",  # 11
                     workflow_status,  # 12 ✅ НЭГТСЭН ТӨЛӨВ
                     analyses_txt,  # 13
-                    action_html,  # 14
+                    retention_html,  # 14 ✅ ХАДГАЛАХ ХУГАЦАА
+                    action_html,  # 15
                 ]
             )
 
@@ -245,21 +266,10 @@ def register_routes(bp):
                     flash(f"Архивлах үед алдаа гарлаа: {e}", "danger")
 
         # -----------------------------------------------------------------
-        # --- GET (Хуудас ачааллах) ---
+        # --- GET: Архивлагдаагүй бүх дээжийг харуулна ---
         # -----------------------------------------------------------------
-        page = request.args.get("page", 1, type=int)
-        start_date_str = request.args.get("start_date")
-        end_date_str = request.args.get("end_date")
-        show_archived = request.args.get("show_archived") == "on"
-        filter_name = request.args.get("filter_name")
 
-        # 1. Дээжүүдийг шүүж авах
-        query = db.session.query(Sample)
-        if show_archived:
-            query = query.filter(Sample.status == "archived")
-        else:
-            query = query.filter(Sample.status != "archived")
-
+        # Үр дүнтэй дээжүүдийг шүүх
         exists_q = (
             db.session.query(AnalysisResult.id)
             .filter(
@@ -268,27 +278,14 @@ def register_routes(bp):
             )
             .exists()
         )
-        query = query.filter(exists_q)
-
-        if start_date_str:
-            try:
-                start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-                query = query.filter(Sample.received_date >= start_date)
-            except ValueError:
-                flash(f"'{start_date_str}' буруу огнооны формат байна.", "warning")
-        if end_date_str:
-            try:
-                end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(days=1)
-                query = query.filter(Sample.received_date < end_date)
-            except ValueError:
-                flash(f"'{end_date_str}' буруу огнооны формат байна.", "warning")
-        if filter_name:
-            safe_filter_name = escape_like_pattern(filter_name)
-            query = query.filter(Sample.sample_code.ilike(f"%{safe_filter_name}%"))
-
-        query = query.order_by(Sample.received_date.desc())
-        pagination = query.paginate(page=page, per_page=50, error_out=False)
-        samples = pagination.items
+        samples_query = (
+            db.session.query(Sample)
+            .filter(Sample.status != "archived")
+            .filter(exists_q)
+            .all()
+        )
+        # Custom sorting хэрэглэх (client + type + code)
+        samples = sort_samples(samples_query, by="full")
 
         # -----------------------------------------------------------------
         # 🧮 ШИНЭЧИЛСЭН ТООЦООЛЛЫН ЛОГИК
@@ -454,8 +451,6 @@ def register_routes(bp):
             analysis_types=final_analysis_types,
             results_map=results_map,
             analysis_dates_map=analysis_dates_map,
-            pagination=pagination,
-            show_archived=show_archived,
         )
 
     # -----------------------------------------------------------
@@ -527,3 +522,327 @@ def register_routes(bp):
             results=results,
             logs=logs,
         )
+
+    # -----------------------------------------------------------
+    # 5) АРХИВ ТӨВ (Archive Hub)
+    #    Нэгж → Он → Сар бүтэцтэй архивын удирдлага
+    # -----------------------------------------------------------
+    @bp.route("/archive_hub", methods=["GET", "POST"])
+    @login_required
+    @limiter.limit("20 per minute")
+    def archive_hub():
+        from sqlalchemy import func, extract
+        from collections import defaultdict
+
+        # --- POST: Сэргээх ---
+        if request.method == "POST":
+            action = request.form.get("action")
+            sample_ids_str = request.form.get("sample_ids")
+            if sample_ids_str and action == "unarchive":
+                try:
+                    sample_ids = [
+                        int(sid) for sid in sample_ids_str.split(",") if sid.isdigit()
+                    ]
+                    if sample_ids:
+                        updated_count = (
+                            db.session.query(Sample)
+                            .filter(Sample.id.in_(sample_ids))
+                            .update(
+                                {Sample.status: "new"},
+                                synchronize_session=False,
+                            )
+                        )
+                        db.session.commit()
+                        flash(f"{updated_count} дээжийг архиваас сэргээлээ.", "success")
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f"Сэргээхэд алдаа: {e}", "danger")
+            return redirect(url_for("api.archive_hub", **request.args))
+
+        # --- GET: Архив харах ---
+        # Шүүлтүүрийн параметрүүд
+        selected_client = request.args.get("client")
+        selected_type = request.args.get("type")
+        selected_year = request.args.get("year", type=int)
+        selected_month = request.args.get("month", type=int)
+
+        # 1. Бүх архивлагдсан дээжүүдийн статистик (Нэгж → Төрөл → Он → Сар)
+        archive_stats = (
+            db.session.query(
+                Sample.client_name,
+                Sample.sample_type,
+                extract("year", Sample.received_date).label("year"),
+                extract("month", Sample.received_date).label("month"),
+                func.count(Sample.id).label("count"),
+            )
+            .filter(Sample.status == "archived")
+            .group_by(
+                Sample.client_name,
+                Sample.sample_type,
+                extract("year", Sample.received_date),
+                extract("month", Sample.received_date),
+            )
+            .order_by(
+                Sample.client_name,
+                Sample.sample_type,
+                extract("year", Sample.received_date).desc(),
+                extract("month", Sample.received_date).desc(),
+            )
+            .all()
+        )
+
+        # 2. Tree бүтэц: client -> sample_type -> year -> month
+        tree_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int))))
+        client_totals = defaultdict(int)
+        total_archived = 0
+
+        for row in archive_stats:
+            client = row.client_name or "Тодорхойгүй"
+            stype = row.sample_type or "Бусад"
+            year = int(row.year) if row.year else 0
+            month = int(row.month) if row.month else 0
+            count = row.count
+
+            tree_data[client][stype][year][month] = count
+            client_totals[client] += count
+            total_archived += count
+
+        # 3. Сонгосон бүлгийн дээжүүд (хэрэв шүүлтүүр байвал)
+        samples = []
+        results_map = {}
+
+        if selected_client and selected_type:
+            query = db.session.query(Sample).filter(
+                Sample.status == "archived",
+                Sample.client_name == selected_client,
+                Sample.sample_type == selected_type,
+            )
+            if selected_year:
+                query = query.filter(
+                    extract("year", Sample.received_date) == selected_year
+                )
+            if selected_month:
+                query = query.filter(
+                    extract("month", Sample.received_date) == selected_month
+                )
+
+            query = query.order_by(Sample.received_date.desc())
+            samples = query.limit(500).all()  # Max 500
+
+            # Хялбар хэлбэр: Түүхий үр дүнг шууд авах
+            if samples:
+                sample_ids = [s.id for s in samples]
+                all_results = (
+                    AnalysisResult.query.filter(
+                        AnalysisResult.sample_id.in_(sample_ids),
+                        AnalysisResult.status.in_(["approved", "pending_review"]),
+                    ).all()
+                )
+                for r in all_results:
+                    if r.sample_id not in results_map:
+                        results_map[r.sample_id] = {}
+                    results_map[r.sample_id][r.analysis_code] = {
+                        "id": r.id,
+                        "value": r.final_result,
+                        "status": r.status,
+                    }
+
+        # 4. Шинжилгээний төрлүүд (AnalysisType-аас)
+        from app.models import AnalysisType
+        analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
+
+        # Сарын нэрс
+        MONTH_NAMES = {
+            1: "1-р сар", 2: "2-р сар", 3: "3-р сар", 4: "4-р сар",
+            5: "5-р сар", 6: "6-р сар", 7: "7-р сар", 8: "8-р сар",
+            9: "9-р сар", 10: "10-р сар", 11: "11-р сар", 12: "12-р сар",
+        }
+
+        return render_template(
+            "archive_hub.html",
+            title="Архив Төв",
+            tree_data=dict(tree_data),
+            client_totals=dict(client_totals),
+            total_archived=total_archived,
+            samples=samples,
+            results_map=results_map,
+            analysis_types=analysis_types,
+            selected_client=selected_client,
+            selected_type=selected_type,
+            selected_year=selected_year,
+            selected_month=selected_month,
+            month_names=MONTH_NAMES,
+        )
+
+    # -----------------------------------------------------------
+    # 6) DASHBOARD STATISTICS API
+    #    Chart.js-д зориулсан статистик
+    # -----------------------------------------------------------
+    @bp.route("/dashboard_stats")
+    @login_required
+    def api_dashboard_stats():
+        """
+        Dashboard Chart.js-д зориулсан статистик
+
+        Returns:
+            - samples_by_day: Сүүлийн 7 хоногийн дээж тоо
+            - samples_by_client: Client тус бүрийн дээж тоо
+            - analysis_by_status: Шинжилгээний статусаар тоо
+            - daily_trend: Өдрийн trend
+        """
+        from sqlalchemy import func, extract, case
+        from collections import defaultdict
+
+        today = now_local().date()
+
+        # 1. Сүүлийн 7 хоногийн дээж тоо
+        samples_by_day = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            count = Sample.query.filter(
+                func.date(Sample.received_date) == day
+            ).count()
+            samples_by_day.append({
+                "date": day.strftime("%m/%d"),
+                "day_name": ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"][day.weekday()],
+                "count": count
+            })
+
+        # 2. Client тус бүрийн дээж тоо (энэ сар)
+        first_of_month = today.replace(day=1)
+        samples_by_client = db.session.query(
+            Sample.client_name,
+            func.count(Sample.id).label("count")
+        ).filter(
+            Sample.received_date >= first_of_month
+        ).group_by(Sample.client_name).all()
+
+        # 3. Шинжилгээний статусаар тоо (өнөөдөр)
+        analysis_by_status = db.session.query(
+            AnalysisResult.status,
+            func.count(AnalysisResult.id).label("count")
+        ).filter(
+            func.date(AnalysisResult.updated_at) == today
+        ).group_by(AnalysisResult.status).all()
+
+        # 4. Энэ сарын approve/reject харьцаа
+        approval_stats = db.session.query(
+            func.sum(case((AnalysisResult.status == 'approved', 1), else_=0)).label('approved'),
+            func.sum(case((AnalysisResult.status == 'rejected', 1), else_=0)).label('rejected'),
+            func.sum(case((AnalysisResult.status == 'pending_review', 1), else_=0)).label('pending')
+        ).filter(
+            AnalysisResult.updated_at >= first_of_month
+        ).first()
+
+        # 5. Өнөөдрийн нийт статистик
+        today_samples = Sample.query.filter(
+            func.date(Sample.received_date) == today
+        ).count()
+
+        today_analyses = AnalysisResult.query.filter(
+            func.date(AnalysisResult.created_at) == today
+        ).count()
+
+        pending_review = AnalysisResult.query.filter(
+            AnalysisResult.status == 'pending_review'
+        ).count()
+
+        return jsonify({
+            "samples_by_day": samples_by_day,
+            "samples_by_client": [
+                {"client": c, "count": cnt} for c, cnt in samples_by_client
+            ],
+            "analysis_by_status": [
+                {"status": s, "count": cnt} for s, cnt in analysis_by_status
+            ],
+            "approval_stats": {
+                "approved": approval_stats.approved or 0,
+                "rejected": approval_stats.rejected or 0,
+                "pending": approval_stats.pending or 0
+            },
+            "today": {
+                "samples": today_samples,
+                "analyses": today_analyses,
+                "pending_review": pending_review
+            }
+        })
+
+    # -----------------------------------------------------------
+    # 7) EXPORT TO EXCEL
+    # -----------------------------------------------------------
+    @bp.route("/export/samples")
+    @login_required
+    def export_samples():
+        """Дээжний өгөгдлийг Excel экспорт"""
+        from app.utils.exports import create_sample_export, send_excel_response
+
+        # Query parameters
+        client = request.args.get('client')
+        sample_type = request.args.get('type')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        limit = min(int(request.args.get('limit', 1000)), 5000)
+
+        query = Sample.query
+
+        if client:
+            query = query.filter(Sample.client_name == client)
+        if sample_type:
+            query = query.filter(Sample.sample_type == sample_type)
+        if start_date:
+            try:
+                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                query = query.filter(Sample.received_date >= sd)
+            except ValueError:
+                pass
+        if end_date:
+            try:
+                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.combine(ed, datetime.max.time())
+                query = query.filter(Sample.received_date <= ed)
+            except ValueError:
+                pass
+
+        samples = query.order_by(Sample.received_date.desc()).limit(limit).all()
+
+        excel_data = create_sample_export(samples)
+        filename = f"samples_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+        return send_excel_response(excel_data, filename)
+
+    @bp.route("/export/analysis")
+    @login_required
+    def export_analysis():
+        """Шинжилгээний үр дүнг Excel экспорт"""
+        from app.utils.exports import create_analysis_export, send_excel_response
+
+        # Query parameters
+        status = request.args.get('status')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        limit = min(int(request.args.get('limit', 1000)), 5000)
+
+        query = AnalysisResult.query
+
+        if status:
+            query = query.filter(AnalysisResult.status == status)
+        if start_date:
+            try:
+                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                query = query.filter(AnalysisResult.created_at >= sd)
+            except ValueError:
+                pass
+        if end_date:
+            try:
+                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.combine(ed, datetime.max.time())
+                query = query.filter(AnalysisResult.created_at <= ed)
+            except ValueError:
+                pass
+
+        results = query.order_by(AnalysisResult.created_at.desc()).limit(limit).all()
+
+        excel_data = create_analysis_export(results)
+        filename = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+        return send_excel_response(excel_data, filename)

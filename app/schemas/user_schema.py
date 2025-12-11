@@ -40,10 +40,10 @@ class UserSchema(Schema):
 
     role = fields.Str(
         required=True,
-        validate=validate.OneOf(['beltgegch', 'himich', 'ahlah', 'senior', 'admin']),
+        validate=validate.OneOf(['prep', 'chemist', 'senior', 'manager', 'admin']),
         error_messages={
             'required': 'Эрх шаардлагатай',
-            'validator_failed': 'Эрх буруу (beltgegch/himich/ahlah/senior/admin)'
+            'validator_failed': 'Эрх буруу (prep/chemist/senior/manager/admin)'
         }
     )
 

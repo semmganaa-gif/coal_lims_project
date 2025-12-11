@@ -24,7 +24,12 @@ def upgrade():
     new_expr = "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','Proc','LAB')"
 
     if dialect == 'postgresql':
-        op.drop_constraint(check_name, 'sample', type_='check')
+        # Check if constraint exists before dropping
+        result = bind.execute(sa.text(
+            "SELECT 1 FROM pg_constraint WHERE conname = :name"
+        ), {"name": check_name}).fetchone()
+        if result:
+            op.drop_constraint(check_name, 'sample', type_='check')
         op.create_check_constraint(check_name, 'sample', new_expr)
     else:
         with op.batch_alter_table('sample', recreate='always') as batch:
@@ -46,7 +51,12 @@ def downgrade():
     old_expr = "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','LAB')"
 
     if dialect == 'postgresql':
-        op.drop_constraint(check_name, 'sample', type_='check')
+        # Check if constraint exists before dropping
+        result = bind.execute(sa.text(
+            "SELECT 1 FROM pg_constraint WHERE conname = :name"
+        ), {"name": check_name}).fetchone()
+        if result:
+            op.drop_constraint(check_name, 'sample', type_='check')
         op.create_check_constraint(check_name, 'sample', old_expr)
     else:
         with op.batch_alter_table('sample', recreate='always') as batch:

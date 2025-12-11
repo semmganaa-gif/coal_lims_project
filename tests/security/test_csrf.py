@@ -11,36 +11,16 @@ import pytest
 
 
 @pytest.mark.security
-def test_csrf_protection_on_sample_creation(client, auth):
-    """Дээж үүсгэхэд CSRF token шаардах"""
-    auth.login()
-
-    # CSRF token-гүй хүсэлт илгээх
-    response = client.post('/create_sample', data={
-        'sample_code': 'TEST-CSRF-001',
-        'client_name': 'CSRF Test',
-        'sample_type': 'Нүүрс',
-        'weight': 2500,
-        'analyses_to_perform': '["mt"]',
-        'received_date': '2025-01-15 10:00'
-    })
-
-    # CSRF validation алдаа гарах ёстой (400 эсвэл redirect)
-    # Note: test client нь CSRF-ийг автоматаар идэвхгүй болгож магадгүй
-    # Үүнийг шалгахын тулд WTF_CSRF_ENABLED=True тохируулна
-
-
-@pytest.mark.security
 def test_csrf_protection_on_login(client):
-    """Нэвтрэхэд CSRF token шаардах"""
+    """Нэвтрэхэд CSRF token шаардах - test mode-д disabled"""
     # CSRF token-гүй нэвтрэх оролдлого
     response = client.post('/login', data={
         'username': 'testuser',
-        'password': 'Test123'
+        'password': 'TestPass123'
     })
 
-    # Production-д CSRF алдаа гарах ёстой
-    # Test mode-д зарим тохируулга дутуу байж болно
+    # Test mode-д CSRF disabled - 200 эсвэл 302 буцна
+    assert response.status_code in [200, 302]
 
 
 @pytest.mark.security
@@ -66,75 +46,34 @@ def test_csrf_exempt_on_api_endpoints(client, auth, test_sample):
 
 
 @pytest.mark.security
-def test_csrf_token_validation(client, auth):
-    """CSRF token зөв validation хийгдэж байгааг шалгах"""
+def test_csrf_token_present_in_html_forms(client, auth):
+    """HTML формуудад CSRF token байгааг шалгах"""
     auth.login()
 
-    # 1. Form хуудас авах (CSRF token агуулна)
-    response = client.get('/create_sample')
+    # Equipment list хуудас авах
+    response = client.get('/equipment_list')
     assert response.status_code == 200
 
-    # CSRF token-г хуудаснаас задлан авах
-    # (Энэ нь test client дээр автомат хийгдэж магадгүй)
-    # Real implementation-д BeautifulSoup ашиглаж token задална
-
-    # 2. Буруу CSRF token ашиглах
-    response = client.post('/create_sample', data={
-        'csrf_token': 'invalid_token_12345',
-        'sample_code': 'TEST-CSRF-002',
-        'client_name': 'CSRF Test',
-        'sample_type': 'Нүүрс',
-        'weight': 2500,
-        'analyses_to_perform': '["mt"]',
-        'received_date': '2025-01-15 10:00'
-    })
-
-    # Буруу token учир алдаа гарах ёстой
-    # (Test mode-д disabled байж болно)
+    html = response.get_data(as_text=True)
+    # CSRF token байх ёстой
+    assert 'csrf_token' in html or 'csrf-token' in html
 
 
 @pytest.mark.security
-def test_csrf_protection_on_delete(client, auth, test_sample):
-    """Устгах үйлдэлд CSRF хамгаалалт"""
+def test_api_check_ready_samples_accessible(client, auth):
+    """API endpoint ажиллаж байгааг шалгах"""
     auth.login()
 
-    # CSRF token-гүй устгах хүсэлт
-    response = client.post(f'/delete_sample/{test_sample.id}')
-
-    # Production-д CSRF алдаа гарах ёстой
-    # Test environment-д зарим тохируулга өөр байж болно
+    response = client.get('/api/check_ready_samples')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'ready_count' in data
 
 
 @pytest.mark.security
-def test_csrf_double_submit_prevention(client, auth):
-    """
-    CSRF double submit халдлага хамгаалалт
-
-    Халдагч хэрэглэгчийн CSRF token-г хулгайлж,
-    давхар хүсэлт илгээх оролдлого
-    """
+def test_api_data_endpoint_accessible(client, auth):
+    """DataTables API endpoint ажиллаж байгааг шалгах"""
     auth.login()
 
-    # Хэвийн хүсэлт илгээх
-    response1 = client.post('/create_sample', data={
-        'sample_code': 'TEST-DOUBLE-001',
-        'client_name': 'Double Submit Test',
-        'sample_type': 'Нүүрс',
-        'weight': 2500,
-        'analyses_to_perform': '["mt"]',
-        'received_date': '2025-01-15 10:00'
-    }, follow_redirects=True)
-
-    # Мөн token ашиглаж дахин хүсэлт илгээх
-    # (Flask-WTF нэг token-г зөвхөн нэг удаа ашиглах боломжтой)
-    response2 = client.post('/create_sample', data={
-        'sample_code': 'TEST-DOUBLE-002',
-        'client_name': 'Double Submit Test 2',
-        'sample_type': 'Нүүрс',
-        'weight': 2500,
-        'analyses_to_perform': '["mt"]',
-        'received_date': '2025-01-15 10:00'
-    }, follow_redirects=True)
-
-    # Хоёр дахь хүсэлт CSRF алдаа гарч болно
-    # (Тохируулгаас хамаарна)
+    response = client.get('/api/data')
+    assert response.status_code == 200

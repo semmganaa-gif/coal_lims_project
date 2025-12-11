@@ -24,9 +24,11 @@ from . import samples_api
 from . import analysis_api
 from . import audit_api
 from . import mass_api
+from . import chat_api
 
 # Route-уудыг бүртгэх
 samples_api.register_routes(api_bp)
 analysis_api.register_routes(api_bp)
 audit_api.register_routes(api_bp)
 mass_api.register_routes(api_bp)
+chat_api.register_routes(api_bp)

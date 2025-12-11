@@ -21,9 +21,10 @@ def upgrade():
 
     with op.batch_alter_table("sample") as batch:
         if "mass_ready" not in existing_cols:
-            # SQLite дээр DROP DEFAULT боломжгүй тул default=0-оо үлдээнэ
+            # SQLite: "0", PostgreSQL: "FALSE"
+            default_val = "0" if is_sqlite else "FALSE"
             batch.add_column(
-                sa.Column("mass_ready", sa.Boolean(), nullable=False, server_default=sa.text("0"))
+                sa.Column("mass_ready", sa.Boolean(), nullable=False, server_default=sa.text(default_val))
             )
         if "mass_ready_at" not in existing_cols:
             batch.add_column(sa.Column("mass_ready_at", sa.DateTime(), nullable=True))

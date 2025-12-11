@@ -105,27 +105,16 @@
     return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
   }
 
-  // ✨ Utility functions (will use LIMS_AGGRID when available)
-  const numParser = p => {
-    if (window.LIMS_AGGRID?.numParser) {
-      return window.LIMS_AGGRID.numParser(p);
-    }
+  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
     const v = parseFloat(p.newValue);
     return isNaN(v) ? null : v;
-  };
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
 
-  const numFmt4 = p => {
-    if (window.LIMS_AGGRID?.numFmt4) {
-      return window.LIMS_AGGRID.numFmt4(p);
-    }
-    return (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
-  };
-
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
-  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
-
-  // Баганын тохиргоо (editable numeric columns)
+  // Editable column тохиргоо
   const editCol = {
     editable: p => !p.data.is_saved,
     cellEditor: 'agTextCellEditor',
@@ -179,6 +168,25 @@
         justifyContent: 'center',
         lineHeight: '1.2'
       },
+      // ✅ Угтвар (SC, TBS гэх мэт) + ээлжийн кодоор эрэмбэлэх
+      comparator: (a, b) => {
+        if (!a || !b) return (a || '').localeCompare(b || '');
+        const prefixPattern = /^([A-Za-z]+)/;
+        const prefixA = (a.match(prefixPattern) || ['', ''])[1].toUpperCase();
+        const prefixB = (b.match(prefixPattern) || ['', ''])[1].toUpperCase();
+        if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
+        const shiftPattern = /_([DN])(\d*)$/i;
+        const matchA = a.match(shiftPattern);
+        const matchB = b.match(shiftPattern);
+        if (matchA && matchB) {
+          const typeA = matchA[1].toUpperCase();
+          const typeB = matchB[1].toUpperCase();
+          if (typeA !== typeB) return typeA === 'D' ? -1 : 1;
+          const numA = parseInt(matchA[2]) || 0, numB = parseInt(matchB[2]) || 0;
+          if (numA !== numB) return numA - numB;
+        }
+        return a.localeCompare(b);
+      },
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
         let h = `<div class="sample-name">${p.value}</div>`;
@@ -187,6 +195,10 @@
           h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
             errorLabels[rej.reason_code] || rej.reason
           }</div>`;
+        }
+        // ✅ Mad байхгүй үед анхааруулга
+        if (p.data.mad_used == null && !p.data.is_saved) {
+          h += `<div class="text-danger small"><i class="bi bi-exclamation-circle"></i> Mad утга алга!</div>`;
         }
         return h;
       }
@@ -357,8 +369,8 @@
       rejection_reason: rejected?.reason || ''
     };
 
-    // TRD-specific: Get Mad result for this sample
-    const mad = existing?.raw_data?.mad_used ?? MAD_MAP[String(sample.id)] ?? MAD_MAP[sample.id] ?? 0;
+    // TRD-specific: Get Mad result for this sample (null if missing - NOT 0!)
+    const mad = existing?.raw_data?.mad_used ?? MAD_MAP[String(sample.id)] ?? MAD_MAP[sample.id] ?? null;
 
     if (existing) {
       // Хадгалагдсан үр дүн байна
@@ -598,7 +610,7 @@
         columnDefs: columnDefs,
         rowData: rowData,
         defaultColDef: {
-          sortable: false,
+          sortable: true,
           resizable: true,
           editable: false,
           suppressMovable: true,
@@ -656,7 +668,14 @@
       const hasP2 = p2 && p2.m != null && p2.m1 != null && p2.m2 != null;
 
       if (hasP1 && hasP2) {
-        const mad = p1.mad_used ?? p2.mad_used ?? MAD_MAP[String(sid)] ?? MAD_MAP[sid] ?? 0;
+        // ✅ Mad заавал байх ёстой - Vad-д Mad шаарддагтай адил
+        const mad = p1.mad_used ?? p2.mad_used ?? MAD_MAP[String(sid)] ?? MAD_MAP[sid] ?? null;
+
+        if (mad == null || mad === 0) {
+          console.warn(`⚠️ Дээж "${p1.sample_code || sid}": Mad үр дүн байхгүй - TRD тооцоолох боломжгүй`);
+          incomplete.push(`${p1.sample_code || sid} (Mad байхгүй)`);
+          return;
+        }
         const kt = ktFromTemp(parseFloat(document.getElementById('trd-temp-c')?.value || 20));
         const tol = parseFloat(document.getElementById('trd-tol')?.value || '');
 
@@ -740,10 +759,19 @@
   };
 
   // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
-  window.updateTRDGridAfterSave = function(savedPayload) {
+  window.updateTRDGridAfterSave = function(savedPayload, failedItems = []) {
     console.log('✅ afterSave called, updating grid without reload');
 
     const savedSampleIds = savedPayload.map(r => r.sample_id);
+    const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
+
+    // ✅ Алдаатай дээжийн мэдээлэл
+    if (failedItems.length > 0) {
+      console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
+      failedItems.forEach(err => {
+        console.warn(`   - Sample ${err.sample_id}: ${err.error}`);
+      });
+    }
 
     // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
     const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
@@ -888,6 +916,9 @@
     }
     if (pendingIds.length > 0) {
       console.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
+    }
+    if (failedSampleIds.length > 0) {
+      console.log(`   → ${failedSampleIds.length} failed - worksheet-д үлдсэн (алдаатай)`);
     }
   };
 

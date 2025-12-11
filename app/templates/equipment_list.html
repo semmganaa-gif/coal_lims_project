@@ -1,246 +1,639 @@
 {% extends "base.html" %}
 
-{# AG Grid-ийг идэвхжүүлэх #}
-{% set use_aggrid = True %}
-
 {% block content %}
-<div class="container-fluid mt-4">
-  
-  {# --- HEADER & BUTTONS --- #}
+<div class="container-fluid mt-4 equipment-page">
+
+  {# --- HEADER --- #}
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h4 class="fw-bold text-primary mb-0">
-        <i class="bi bi-grid-3x3-gap-fill"></i> Тоног Төхөөрөмжийн Бүртгэл
-      </h4>
-      <small class="text-muted">Нийт бүртгэлтэй төхөөрөмжүүд</small>
-    </div>
+    <h4 class="fw-bold text-primary mb-0">
+      <i class="bi bi-tools"></i> Тоног Төхөөрөмжийн Бүртгэл
+    </h4>
 
-    <div class="d-flex gap-2">
-      {# Хайлт #}
-      <div class="input-group input-group-sm" style="width: 250px;">
-        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-        <input type="text" id="quickFilter" class="form-control" placeholder="Хурдан хайлт..." oninput="onQuickFilterChanged()">
-      </div>
-
-      {# Устгах товч (JS-ээр гарч ирнэ) #}
-      <button class="btn btn-danger btn-sm d-none" id="btn-delete-selected" onclick="deleteSelectedRows()">
-        <i class="bi bi-trash"></i> Устгах
+    <div class="d-flex gap-2 align-items-center">
+      {# Сонгосныг устгах (AG Grid selection-оос хамаарч идэвхжинэ) #}
+      <button class="btn btn-danger btn-sm d-none" id="btn-delete-selected">
+        <i class="bi bi-trash"></i>
+        Сонгосныг устгах
+        <span class="badge bg-light text-danger ms-1 d-none" id="selected-count-badge">0</span>
       </button>
 
-      {% if current_user.role in ['ahlah', 'admin'] %}
-      <button class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addEqModal">
+      {% if current_user.role in ['senior', 'manager', 'admin'] %}
+      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEqModal">
         <i class="bi bi-plus-lg"></i> Шинэ Төхөөрөмж
       </button>
       {% endif %}
     </div>
   </div>
 
-  {# --- AG GRID CONTAINER --- #}
-  <div class="card shadow-sm border-0">
+  {# --- VIEW FILTER CHIPS (route-оор фильтрлэнэ) --- #}
+  {% set view_items = [
+    ('all', '1. Тоног төхөөрөмжийн нэгдсэн бүртгэл'),
+    ('coal', '2. Нүүрсний шинжилгээний тоног төхөөрөмж'),
+    ('water', '3. Усны шинжилгээний тоног төхөөрөмж'),
+    ('micro', '4. Микробиологийн шинжилгээний тоног төхөөрөмж'),
+    ('new', '8. Шинээр ашиглалтанд орсон'),
+    ('retired', '9. Ашиглалтаас гарсан'),
+    ('spares', '10. Сэлбэг хэрэгслийн бүртгэл'),
+    ('balances', '11. Жингийн бүртгэл')
+  ] %}
+
+  <div class="d-flex flex-wrap gap-2 mb-3 view-chip-row">
+    {% for key, label in view_items %}
+      {% set is_active = (view == key) %}
+      <a href="{{ url_for('equipment.equipment_list', view=key) }}"
+         class="btn btn-sm view-chip {{ 'btn-secondary text-white' if is_active else 'btn-outline-secondary' }}">
+        {{ label }}
+      </a>
+    {% endfor %}
+  </div>
+
+  {# --- AG GRID CARD --- #}
+  <div class="card shadow-sm border-0 lims-ag-card">
     <div class="card-body p-0">
-      {# Grid-ийн өндрийг дэлгэцэнд тааруулах (calc) #}
-      <div id="myGrid" class="ag-theme-alpine" style="height: calc(100vh - 180px); width: 100%;"></div>
-    </div>
-  </div>
 
-</div>
+      {# Toolbar: quick search, статус фильтр, page size #}
+      <div class="eq-toolbar border-bottom px-3 py-2 bg-light-subtle">
+        <div class="eq-toolbar-left">
+          <div class="input-group input-group-sm quick-search">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text"
+                   id="eqQuickFilter"
+                   class="form-control border-start-0"
+                   placeholder="Хүснэгтээс хайх (нэр, лаб дугаар, байршил...)">
+          </div>
 
-{# --- ADD MODAL (Өмнөхтэй ижил, товчлов) --- #}
-<div class="modal fade" id="addEqModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form action="{{ url_for('equipment.add_equipment') }}" method="POST">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Шинэ тоног төхөөрөмж бүртгэх</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        {# ... Add form inputs here (Өмнөх кодоосоо хуулж тавиарай) ... #}
-        {# Энд таны Add Form inputs байх ёстой #}
-        <div class="alert alert-info py-2"><i class="bi bi-info-circle"></i> Энд өмнөх Modal доторх input-үүдээ хуулаад тавьчихаарай.</div>
-        
-        <div class="mb-3">
-             <label>Нэр</label>
-             <input type="text" name="name" class="form-control" required>
+          <select id="statusFilter" class="form-select form-select-sm ms-2">
+            <option value="">Бүх байдал</option>
+            <option value="normal">Хэвийн</option>
+            <option value="maintenance">Засварт</option>
+            <option value="needs_spare">Сэлбэг хэрэгтэй</option>
+            <option value="broken">Эвдэрсэн</option>
+            <option value="retired">Ашиглалтаас гарсан</option>
+          </select>
         </div>
-        {# ... Бусад input-үүд ... #}
-        
+
+        <div class="eq-toolbar-right">
+          <label class="text-muted small me-1 d-none d-md-inline">Мөрийн тоо:</label>
+          <select id="pageSizeSelect" class="form-select form-select-sm">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
-        <button type="submit" class="btn btn-primary">Бүртгэх</button>
+
+      <div id="equipmentGrid"
+           class="ag-theme-quartz eq-grid-wrapper">
       </div>
     </div>
-    </form>
   </div>
-</div>
 
-{# --- DELETE FORM (Нууц) --- #}
-<form id="bulk-delete-form" method="POST" action="{{ url_for('equipment.bulk_delete') }}">
+  {# --- BULK ACTION FORM (JS-ээр input-уудыг нь populate хийнэ) --- #}
+  <form id="bulk-action-form"
+        method="POST"
+        action="{{ url_for('equipment.bulk_delete') }}"
+        style="display:none;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div id="delete-inputs-container"></div>
-</form>
+  </form>
 
+  {# --- SINGLE DELETE FORM --- #}
+  <form id="delete-form-single" method="POST" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+
+  {# --- ADD MODAL (Шинэ төхөөрөмж бүртгэх) --- #}
+  <div class="modal fade" id="addEqModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <form action="{{ url_for('equipment.add_equipment') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-plus-circle"></i> Шинэ тоног төхөөрөмж бүртгэх
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+
+            <div class="mb-3">
+              <label class="fw-bold small">Нэр <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control" required placeholder="Ж: Analytic Balance">
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold small">Категори (Журнал)</label>
+              <select name="category" class="form-select">
+                <option value="other">8. Бусад (Default)</option>
+                <option value="furnace">1. Шатаах зуух</option>
+                <option value="prep">2. Дээж бэлтгэл</option>
+                <option value="analysis">3. Шинжилгээний багаж</option>
+                <option value="water">4. Усны лаб</option>
+                <option value="micro">5. Микробиологи лаб</option>
+                <option value="wtl">6. БС лаб</option>
+                <option value="balance">7. Жин</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold small">Үйлдвэрлэгч</label>
+                <input type="text" name="manufacturer" class="form-control">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold small">Марк / Модель</label>
+                <input type="text" name="model" class="form-control">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="fw-bold small">Сериал №</label>
+                <input type="text" name="serial" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="fw-bold small">Лаб код</label>
+                <input type="text" name="lab_code" class="form-control">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="fw-bold small">Байршил</label>
+                <input type="text" name="location" class="form-control">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold small">Тоо ширхэг</label>
+                <input type="number" name="quantity" class="form-control" value="1" min="1">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold small">Баталгаажуулах давтамж (хоног)</label>
+                <input type="number" name="cycle" class="form-control" value="365">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold small">Хамааралтай шинжилгээ</label>
+              <input type="text" name="related" class="form-control" placeholder="Ж: Ash, Moist, CV...">
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+            <button type="submit" class="btn btn-primary">Бүртгэх</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div> {# /.container-fluid #}
 {% endblock %}
 
+{# --- AG GRID CSS + JS + CUSTOM STYLES --- #}
 {% block scripts %}
-{{ super() }}
-<script>
-    var gridApi;
+  {{ super() }}
 
-    // 1. Column Definitions: Баганын тохиргоо, загвар
-    const columnDefs = [
-        { 
-            headerName: "", 
-            field: "id", 
-            width: 50, 
-            checkboxSelection: true, 
-            headerCheckboxSelection: true,
-            pinned: 'left',
-            lockPosition: true
-        },
-        { 
-            headerName: "Төхөөрөмжийн нэр", 
-            field: "name", 
-            minWidth: 250,
-            flex: 2,
-            cellRenderer: function(params) {
-                // Нэр болон Үйлдвэрлэгчийг давхарлаж харуулах
-                const manufacturer = params.data.manufacturer ? `<br><span class="text-muted small" style="font-size: 0.75rem;">${params.data.manufacturer}</span>` : '';
-                return `<div style="line-height: 1.2; padding-top: 5px;"><span class="fw-bold text-dark">${params.value}</span>${manufacturer}</div>`;
-            }
-        },
-        { headerName: "Марк / Модель", field: "model", width: 120 },
-        { headerName: "Сериал №", field: "serial_number", width: 120 },
-        { 
-            headerName: "Лаб Код", 
-            field: "lab_code", 
-            width: 100,
-            cellClass: "font-monospace text-primary fw-bold"
-        },
-        { headerName: "Тоо", field: "quantity", width: 70, type: 'numericColumn' },
-        { headerName: "Байршил", field: "location", width: 120 },
-        { 
-            headerName: "Статус", 
-            field: "status", 
-            width: 130,
-            cellRenderer: function(params) {
-                const statusMap = {
-                    'normal': {class: 'bg-success', text: 'Хэвийн'},
-                    'broken': {class: 'bg-danger', text: 'Эвдэрсэн'},
-                    'needs_spare': {class: 'bg-warning text-dark', text: 'Сэлбэг хэрэгтэй'},
-                    'maintenance': {class: 'bg-dark', text: 'Засварт'},
-                    'retired': {class: 'bg-secondary', text: 'Ашиглалтаас гарсан'}
-                };
-                const s = statusMap[params.value] || {class: 'bg-secondary', text: params.value};
-                return `<span class="badge ${s.class}">${s.text}</span>`;
-            }
-        },
-        { 
-            headerName: "Дараагийн хугацаа", 
-            field: "next_calibration_date", 
-            width: 140,
-            cellRenderer: function(params) {
-                if (!params.value) return '-';
-                if (params.data.is_expired) {
-                    return `<span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> ${params.value}</span>`;
-                }
-                return `<span class="text-success">${params.value}</span>`;
-            }
+  {# AG Grid CDN (хэрвээ base.html дээрээ аль хэдийнэ оруулсан бол давхардахгүйгээр устгаж болно) #}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+  <style>
+    .equipment-page .lims-ag-card {
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .equipment-page .view-chip-row {
+      gap: 0.35rem;
+    }
+
+    .equipment-page .view-chip {
+      border-radius: 999px;
+    }
+
+    .eq-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    .eq-toolbar-left,
+    .eq-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-search {
+      max-width: 280px;
+      min-width: 220px;
+    }
+
+    .eq-grid-wrapper {
+      width: 100%;
+      height: calc(100vh - 260px); /* дэлгэцэнд тааруулж өндөр өглөө */
+      min-height: 480px;
+    }
+
+    .ag-theme-quartz {
+      --ag-border-radius: 8px;
+      --ag-header-background-color: #f3f4f6;
+      --ag-row-hover-color: #f9fafb;
+      --ag-selected-row-background-color: #eff6ff;
+      --ag-font-size: 12px;
+      --ag-header-foreground-color: #6b7280;
+    }
+
+    .eq-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      padding: .1rem .45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+
+    .eq-status-normal  { background:#dcfce7; color:#166534; }
+    .eq-status-maint   { background:#e5e7eb; color:#374151; }
+    .eq-status-spare   { background:#fef9c3; color:#854d0e; }
+    .eq-status-broken  { background:#fee2e2; color:#991b1b; }
+    .eq-status-retired { background:#e5e7eb; color:#4b5563; text-decoration: line-through; }
+
+    .eq-date-overdue   { color:#b91c1c; font-weight:600; }
+    .eq-date-ok        { color:#15803d; }
+    .eq-lab-code       { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.75rem; }
+    .eq-serial         { font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.75rem; color:#6b7280; }
+    .eq-name-main      { font-weight:600; }
+    .eq-name-sub       { font-size:0.75rem; color:#6b7280; }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const gridDiv = document.querySelector('#equipmentGrid');
+      if (!gridDiv || !window.agGrid) return;
+
+      // --- ROW DATA (Flask → JS) ---
+      const rowData = [
+        {% for eq in equipments %}
+        {
+          id: {{ eq.id }},
+          name: {{ (eq.name or '')|tojson }},
+          manufacturer: {{ (eq.manufacturer or '')|tojson }},
+          model: {{ (eq.model or '')|tojson }},
+          serial_number: {{ (eq.serial_number or '')|tojson }},
+          lab_code: {{ (eq.lab_code or '')|tojson }},
+          quantity: {{ (eq.quantity or 0) }},
+          location: {{ (eq.location or '')|tojson }},
+          calibration_date: {{ (eq.calibration_date|string if eq.calibration_date else '')|tojson }},
+          next_calibration_date: {{ (eq.next_calibration_date|string if eq.next_calibration_date else '')|tojson }},
+          status: {{ (eq.status or 'normal')|tojson }},
+          calibration_note: {{ (eq.calibration_note or '')|tojson }},
+          remark: {{ (eq.remark or '')|tojson }},
+          detail_url: {{ url_for('equipment.equipment_detail', id=eq.id)|tojson }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ];
+
+      // --- DATE helper (yyyy-mm-dd string гэж үзье) ---
+      function parseDate(str) {
+        if (!str) return null;
+        // "YYYY-MM-DD" эсвэл "YYYY-MM-DD HH:MM:SS" байж болно
+        const parts = str.trim().split(' ')[0].split('-');
+        if (parts.length !== 3) return null;
+        const y = Number(parts[0]),
+              m = Number(parts[1]),
+              d = Number(parts[2]);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+      }
+
+      const today = parseDate('{{ today|string }}');
+
+      function dateCellRenderer(params) {
+        const v = params.value;
+        if (!v) return '-';
+        const d = parseDate(v);
+        if (!d || !today) return v;
+
+        const span = document.createElement('span');
+        span.textContent = v;
+
+        if (params.colDef.field === 'next_calibration_date') {
+          if (d < today) {
+            span.classList.add('eq-date-overdue');
+          } else {
+            span.classList.add('eq-date-ok');
+          }
+        }
+        return span;
+      }
+
+      function statusCellRenderer(params) {
+        const status = params.value || 'normal';
+        const span = document.createElement('span');
+        span.classList.add('eq-status-badge');
+
+        switch (status) {
+          case 'broken':
+            span.classList.add('eq-status-broken');
+            span.innerHTML = 'Эвдэрсэн';
+            break;
+          case 'needs_spare':
+            span.classList.add('eq-status-spare');
+            span.innerHTML = 'Сэлбэг хэрэгтэй';
+            break;
+          case 'maintenance':
+            span.classList.add('eq-status-maint');
+            span.innerHTML = 'Засварт';
+            break;
+          case 'retired':
+            span.classList.add('eq-status-retired');
+            span.innerHTML = 'Ашиглалтаас гарсан';
+            break;
+          default:
+            span.classList.add('eq-status-normal');
+            span.innerHTML = 'Хэвийн';
+        }
+        return span;
+      }
+
+      function nameCellRenderer(params) {
+        const wrapper = document.createElement('div');
+        const main = document.createElement('div');
+        main.classList.add('eq-name-main');
+        main.textContent = params.data.name || '';
+
+        const sub = document.createElement('div');
+        sub.classList.add('eq-name-sub');
+        sub.textContent = params.data.manufacturer || '';
+
+        wrapper.appendChild(main);
+        if (params.data.manufacturer) {
+          wrapper.appendChild(sub);
+        }
+        return wrapper;
+      }
+
+      function labCodeCellRenderer(params) {
+        const span = document.createElement('span');
+        span.classList.add('eq-lab-code');
+        span.textContent = params.value || '-';
+        return span;
+      }
+
+      function serialCellRenderer(params) {
+        const span = document.createElement('span');
+        span.classList.add('eq-serial');
+        span.textContent = params.value || '-';
+        return span;
+      }
+
+      function actionsCellRenderer(params) {
+        const wrap = document.createElement('div');
+        wrap.classList.add('d-flex', 'gap-1');
+
+        const editBtn = document.createElement('a');
+        editBtn.className = 'btn btn-sm btn-outline-primary';
+        editBtn.href = params.data.detail_url;
+        editBtn.title = 'Засах / Түүх';
+        editBtn.innerHTML = '<i class="bi bi-pencil-square"></i>';
+
+        wrap.appendChild(editBtn);
+
+        {% if current_user.role in ['senior', 'manager', 'admin'] %}
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn btn-sm btn-outline-danger';
+        delBtn.innerHTML = '<i class="bi bi-trash"></i>';
+        delBtn.addEventListener('click', function () {
+          confirmDelete(params.data.id, params.data.name);
+        });
+        wrap.appendChild(delBtn);
+        {% endif %}
+
+        return wrap;
+      }
+
+      // --- COLUMN DEFS ---
+      const columnDefs = [
+        {
+          headerName: '',
+          field: 'id',
+          width: 40,
+          pinned: 'left',
+          checkboxSelection: true,
+          headerCheckboxSelection: true,
+          headerCheckboxSelectionFilteredOnly: true,
+          sortable: false,
+          filter: false,
+          resizable: false
         },
         {
-            headerName: "Үйлдэл",
-            width: 100,
-            pinned: 'right',
-            cellRenderer: function(params) {
-                // Засах товч
-                return `<a href="/equipment/${params.data.id}" class="btn btn-sm btn-outline-primary border-0" title="Дэлгэрэнгүй / Засах"><i class="bi bi-pencil-square"></i></a>`;
-            }
-        }
-    ];
-
-    // 2. Grid Options
-    const gridOptions = {
-        columnDefs: columnDefs,
-        defaultColDef: {
-            sortable: true,
-            filter: true,
-            resizable: true,
+          headerName: 'Д/д',
+          valueGetter: params => params.node.rowIndex + 1,
+          width: 70,
+          pinned: 'left',
+          sortable: false,
+          filter: false
         },
-        rowSelection: 'multiple', // Олноор сонгох
-        pagination: true,         // Хуудаслалт
+        {
+          headerName: 'Нэр / Үйлдвэрлэгч',
+          field: 'name',
+          flex: 2,
+          minWidth: 260,
+          cellRenderer: nameCellRenderer,
+          tooltipField: 'name'
+        },
+        {
+          headerName: 'Марк / дугаар',
+          field: 'model',
+          minWidth: 150,
+          flex: 1,
+          tooltipField: 'model'
+        },
+        {
+          headerName: 'Сериал №',
+          field: 'serial_number',
+          minWidth: 130,
+          cellRenderer: serialCellRenderer
+        },
+        {
+          headerName: 'Лаб дугаар',
+          field: 'lab_code',
+          minWidth: 130,
+          cellRenderer: labCodeCellRenderer
+        },
+        {
+          headerName: 'Тоо',
+          field: 'quantity',
+          width: 80,
+          type: 'numericColumn'
+        },
+        {
+          headerName: 'Байршил',
+          field: 'location',
+          minWidth: 160,
+          flex: 1.2,
+          tooltipField: 'location'
+        },
+        {
+          headerName: 'Сүүлд баталгаажсан',
+          field: 'calibration_date',
+          minWidth: 140,
+          cellRenderer: dateCellRenderer
+        },
+        {
+          headerName: 'Дараагийн хугацаа',
+          field: 'next_calibration_date',
+          minWidth: 140,
+          cellRenderer: dateCellRenderer
+        },
+        {
+          headerName: 'Байдал',
+          field: 'status',
+          width: 130,
+          cellRenderer: statusCellRenderer
+        },
+        {
+          headerName: 'Шалгалт тохируулга',
+          field: 'calibration_note',
+          minWidth: 180,
+          flex: 1.2,
+          tooltipField: 'calibration_note'
+        },
+        {
+          headerName: 'Тайлбар',
+          field: 'remark',
+          minWidth: 180,
+          flex: 1.2,
+          tooltipField: 'remark'
+        },
+        {
+          headerName: 'Үйлдэл',
+          field: 'actions',
+          width: 120,
+          pinned: 'right',
+          sortable: false,
+          filter: false,
+          cellRenderer: actionsCellRenderer
+        }
+      ];
+
+      // --- GRID OPTIONS ---
+      const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: rowData,
+        defaultColDef: {
+          sortable: true,
+          filter: true,
+          resizable: true,
+          flex: 1,
+          minWidth: 80
+        },
+        rowSelection: 'multiple',
+        rowHeight: 38,
+        animateRows: true,
+        pagination: true,
         paginationPageSize: 50,
-        animateRows: true,        // Хөдөлгөөнтэй эрэмбэлэх
-        getRowId: (params) => params.data.id, // Row ID
-        
-        // Сонголт өөрчлөгдөхөд Button харуулах
-        onSelectionChanged: onSelectionChanged,
-        
-        // Монгол хэл дээрх текстүүд (Optional)
-        localeText: {
-            page: 'Хуудас',
-            to: '-',
-            of: 'Нийт',
-            next: 'Дараах',
-            last: 'Сүүлийн',
-            first: 'Эхний',
-            previous: 'Өмнөх',
-            loadingOoo: 'Ачаалж байна...',
-            noRowsToShow: 'Мэдээлэл олдсонгүй'
+        suppressRowClickSelection: true,
+        getRowId: params => String(params.data.id)
+      };
+
+      // --- INIT GRID ---
+      new agGrid.Grid(gridDiv, gridOptions);
+      const gridApi = gridOptions.api;
+
+      // --- QUICK FILTER ---
+      const quickFilterInput = document.getElementById('eqQuickFilter');
+      if (quickFilterInput) {
+        quickFilterInput.addEventListener('input', function () {
+          gridApi.setQuickFilter(this.value || '');
+        });
+      }
+
+      // --- PAGE SIZE SELECT ---
+      const pageSizeSelect = document.getElementById('pageSizeSelect');
+      if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function () {
+          const size = parseInt(this.value, 10) || 50;
+          gridApi.paginationSetPageSize(size);
+        });
+      }
+
+      // --- STATUS FILTER (AG Grid filter model ашиглана) ---
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          const v = this.value;
+          if (!v) {
+            gridApi.setFilterModel(null);
+          } else {
+            const fm = gridApi.getFilterModel() || {};
+            fm['status'] = { filterType: 'text', type: 'equals', filter: v };
+            gridApi.setFilterModel(fm);
+          }
+        });
+      }
+
+      // --- BULK DELETE BUTTON + COUNT BADGE ---
+      const bulkBtn = document.getElementById('btn-delete-selected');
+      const badge = document.getElementById('selected-count-badge');
+
+      function updateBulkDeleteUI() {
+        if (!bulkBtn) return;
+        const selected = gridApi.getSelectedRows() || [];
+        const hasSelected = selected.length > 0;
+        bulkBtn.classList.toggle('d-none', !hasSelected);
+        if (badge) {
+          badge.textContent = selected.length;
+          badge.classList.toggle('d-none', !hasSelected);
         }
-    };
+      }
 
-    // 3. Grid Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        const gridDiv = document.querySelector('#myGrid');
-        gridApi = agGrid.createGrid(gridDiv, gridOptions);
+      gridApi.addEventListener('selectionChanged', updateBulkDeleteUI);
 
-        // API-аас дата авах
-        fetch('/api/equipment_list_json')
-            .then(response => response.json())
-            .then(data => {
-                gridApi.setGridOption('rowData', data);
-            });
+      if (bulkBtn) {
+        bulkBtn.addEventListener('click', function () {
+          const selected = gridApi.getSelectedRows() || [];
+          if (!selected.length) return;
+          if (!confirm(`Сонгосон ${selected.length} төхөөрөмжийг устгахдаа итгэлтэй байна уу?`)) {
+            return;
+          }
+
+          const form = document.getElementById('bulk-action-form');
+          if (!form) return;
+
+          // өмнөх equipment_ids input-уудыг цэвэрлэх
+          form.querySelectorAll('input[name="equipment_ids"]').forEach(el => el.remove());
+
+          selected.forEach(row => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'equipment_ids';
+            input.value = row.id;
+            form.appendChild(input);
+          });
+
+          form.submit();
+        });
+      }
+
+      // --- SINGLE DELETE (actionsCellRenderer дээрээс дуудаж байна) ---
+      window.confirmDelete = function (id, name) {
+        if (!confirm(`"${name}" төхөөрөмжийг устгах уу?`)) return;
+        const form = document.getElementById('delete-form-single');
+        if (!form) return;
+        form.action = `/equipment/delete/${id}`;
+        form.submit();
+      };
     });
-
-    // 4. Quick Filter Logic
-    function onQuickFilterChanged() {
-        gridApi.setGridOption('quickFilterText', document.getElementById('quickFilter').value);
-    }
-
-    // 5. Selection Logic
-    function onSelectionChanged() {
-        const selectedRows = gridApi.getSelectedRows();
-        const btn = document.getElementById('btn-delete-selected');
-        if (selectedRows.length > 0) {
-            btn.classList.remove('d-none');
-            btn.innerHTML = `<i class="bi bi-trash"></i> Сонгосон (${selectedRows.length}) устгах`;
-        } else {
-            btn.classList.add('d-none');
-        }
-    }
-
-    // 6. Delete Logic
-    function deleteSelectedRows() {
-        const selectedRows = gridApi.getSelectedRows();
-        if (selectedRows.length === 0) return;
-
-        if (confirm(`Та сонгосон ${selectedRows.length} төхөөрөмжийг устгахдаа итгэлтэй байна уу?`)) {
-            const container = document.getElementById('delete-inputs-container');
-            container.innerHTML = ''; // Clear old
-
-            // ID-нуудыг hidden input болгож form руу хийх
-            selectedRows.forEach(row => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'equipment_ids';
-                input.value = row.id;
-                container.appendChild(input);
-            });
-
-            document.getElementById('bulk-delete-form').submit();
-        }
-    }
-</script>
+  </script>
 {% endblock %}

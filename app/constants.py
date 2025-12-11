@@ -239,8 +239,8 @@ PARAMETER_DEFINITIONS = {
 # 1. КЛИЕНТ БОЛОН ДЭЭЖИЙН ТӨРЛҮҮД
 SAMPLE_TYPE_CHOICES_MAP = {
     'CHPP':    ['2 hourly', '4 hourly', '12 hourly', 'com'],
-    'UHG-Geo': ['S', 'TR', 'GRD', 'TE', 'PE', 'CQ'],
-    'BN-Geo':  ['S', 'TR', 'GRD', 'TE', 'PE', 'CQ'],
+    'UHG-Geo': ['Stock', 'TR', 'GRD', 'TE', 'PE', 'CQ'],
+    'BN-Geo':  ['Stock', 'TR', 'GRD', 'TE', 'PE', 'CQ'],
     'QC':      ['HCC', 'SSCC', 'MASHCC', 'TC', 'Fine', 'Test'],
     'Proc':    ['CHP', 'HCC', 'SSCC', 'MASHCC', 'Test'],
     'WTL':     ['WTL', 'Size', 'FL', 'MG', 'Test'],
@@ -330,13 +330,159 @@ ALL_12H_SAMPLES = [
 ]
 
 CONSTANT_12H_SAMPLES = [
-    {'name': 'FP_A', 'condition': 'Чийгтэй'},
-    {'name': 'FP_B', 'condition': 'Чийгтэй'},
-    {'name': 'FP_C', 'condition': 'Чийгтэй'},
-    {'name': 'FP_D', 'condition': 'Чийгтэй'},
-    {'name': 'BP_dry', 'condition': 'Чийгтэй'},
-    {'name': 'BP_solid', 'condition': 'Шингэн'}
+    {'name': 'FiltP_A', 'condition': 'Чийгтэй'},
+    {'name': 'FiltP_B', 'condition': 'Чийгтэй'},
+    {'name': 'FiltP_C', 'condition': 'Чийгтэй'},
+    {'name': 'FiltP_D', 'condition': 'Чийгтэй'},
+    {'name': 'BeltP_dry', 'condition': 'Чийгтэй'},
+    {'name': 'BeltP_solid', 'condition': 'Шингэн'}
 ]
+
+# 2b. CHPP ШИНЖИЛГЭЭНИЙ ТОХИРГООНЫ БҮЛГҮҮД
+# Энэ нь шинжилгээний тохиргоо хуудсанд CHPP дээжүүдийг бүлэглэхэд хэрэглэгдэнэ
+CHPP_CONFIG_GROUPS = {
+    '2 hourly': {
+        'display': 'CHPP - 2 цаг',
+        'samples': [
+            # PF (Primary Feed)
+            {'name': 'PF211', 'group': 'PF'},
+            {'name': 'PF221', 'group': 'PF'},
+            {'name': 'PF231', 'group': 'PF'},
+            # CC (Clean Coal)
+            {'name': 'UHG MV_HCC', 'group': 'CC'},
+            {'name': 'UHG HV_HCC', 'group': 'CC'},
+            {'name': 'UHG MASHCC', 'group': 'CC'},
+            {'name': 'BN HV HCC', 'group': 'CC'},
+            {'name': 'BN SSCC', 'group': 'CC'},
+            # TC (Thermal Coal / Middlings)
+            {'name': 'UHG MASHCC_2', 'group': 'TC'},
+            {'name': 'UHG Midd', 'group': 'TC'},
+            {'name': 'BN MASHCC_2', 'group': 'TC'},
+            {'name': 'BN Midd', 'group': 'TC'},
+        ]
+    },
+    '4 hourly': {
+        'display': 'CHPP - 4 цаг',
+        'samples': [
+            {'name': 'CF501', 'group': 'MOD I'},
+            {'name': 'CF502', 'group': 'MOD I'},
+            {'name': 'CF601', 'group': 'MOD I'},
+            {'name': 'CF602', 'group': 'MOD I'},
+            {'name': 'CF521', 'group': 'MOD II'},
+            {'name': 'CF522', 'group': 'MOD II'},
+            {'name': 'CF621', 'group': 'MOD II'},
+            {'name': 'CF622', 'group': 'MOD II'},
+            {'name': 'CF541', 'group': 'MOD III'},
+            {'name': 'CF542', 'group': 'MOD III'},
+            {'name': 'CF641', 'group': 'MOD III'},
+            {'name': 'CF642', 'group': 'MOD III'},
+        ]
+    },
+    '12 hourly': {
+        'display': 'CHPP - 12 цаг',
+        'samples': [
+            # SC (Screen) - Чийгтэй
+            {'name': 'SC401', 'group': 'SC'},
+            {'name': 'SC402', 'group': 'SC'},
+            {'name': 'SC403', 'group': 'SC'},
+            {'name': 'SC405', 'group': 'SC'},
+            {'name': 'SC406', 'group': 'SC'},
+            {'name': 'SC421', 'group': 'SC'},
+            {'name': 'SC422', 'group': 'SC'},
+            {'name': 'SC423', 'group': 'SC'},
+            {'name': 'SC425', 'group': 'SC'},
+            {'name': 'SC426', 'group': 'SC'},
+            {'name': 'SC441', 'group': 'SC'},
+            {'name': 'SC442', 'group': 'SC'},
+            {'name': 'SC443', 'group': 'SC'},
+            {'name': 'SC445', 'group': 'SC'},
+            {'name': 'SC446', 'group': 'SC'},
+            {'name': 'SC501', 'group': 'SC'},
+            {'name': 'SC521', 'group': 'SC'},
+            {'name': 'SC541', 'group': 'SC'},
+            # SP (Spiral)
+            {'name': 'SP502_F', 'group': 'SP'},
+            {'name': 'SP502_Pro', 'group': 'SP'},
+            {'name': 'SP502_Rej', 'group': 'SP'},
+            # DR (Drain)
+            {'name': 'DR601', 'group': 'DR'},
+            {'name': 'DR621', 'group': 'DR'},
+            {'name': 'DR641', 'group': 'DR'},
+            # FC (Flotation Cell)
+            {'name': 'FC601', 'group': 'FC'},
+            {'name': 'FC602', 'group': 'FC'},
+            {'name': 'FC621', 'group': 'FC'},
+            {'name': 'FC622', 'group': 'FC'},
+            {'name': 'FC641', 'group': 'FC'},
+            {'name': 'FC642', 'group': 'FC'},
+            # FCU (Flotation Cell Unit)
+            {'name': 'FCU601', 'group': 'FCU'},
+            {'name': 'FCU602', 'group': 'FCU'},
+            {'name': 'FCU621', 'group': 'FCU'},
+            {'name': 'FCU622', 'group': 'FCU'},
+            {'name': 'FCU641', 'group': 'FCU'},
+            {'name': 'FCU642', 'group': 'FCU'},
+            # TBS
+            {'name': 'TBS520_F', 'group': 'TBS'},
+            {'name': 'TBS521_Pro', 'group': 'TBS'},
+            {'name': 'TBS521_Rej', 'group': 'TBS'},
+            {'name': 'TBS522_Pro', 'group': 'TBS'},
+            {'name': 'TBS522_Rej', 'group': 'TBS'},
+            {'name': 'TBS540_F', 'group': 'TBS'},
+            {'name': 'TBS541_Pro', 'group': 'TBS'},
+            {'name': 'TBS541_Rej', 'group': 'TBS'},
+            {'name': 'TBS542_Pro', 'group': 'TBS'},
+            {'name': 'TBS542_Rej', 'group': 'TBS'},
+            {'name': 'TBS543_Pro', 'group': 'TBS'},
+            {'name': 'TBS543_Rej', 'group': 'TBS'},
+            # TH (Thickener)
+            {'name': 'TH701', 'group': 'TH'},
+            {'name': 'TH721', 'group': 'TH'},
+            {'name': 'TH741', 'group': 'TH'},
+            # FiltP (Filter Press)
+            {'name': 'FiltP_A', 'group': 'FiltP'},
+            {'name': 'FiltP_B', 'group': 'FiltP'},
+            {'name': 'FiltP_C', 'group': 'FiltP'},
+            {'name': 'FiltP_D', 'group': 'FiltP'},
+            # BeltP (Belt Press)
+            {'name': 'BeltP_dry', 'group': 'BeltP'},
+            {'name': 'BeltP_solid', 'group': 'BeltP'},
+        ]
+    },
+    'com': {
+        'display': 'CHPP - COM (Нэгтгэл)',
+        'samples': [
+            # PF (Primary Feed) - composite
+            {'name': 'PF211', 'group': 'PF'},
+            {'name': 'PF221', 'group': 'PF'},
+            {'name': 'PF231', 'group': 'PF'},
+            # CC (Clean Coal) - composite
+            {'name': 'UHG MV_HCC', 'group': 'CC'},
+            {'name': 'UHG HV_HCC', 'group': 'CC'},
+            {'name': 'UHG MASHCC', 'group': 'CC'},
+            {'name': 'BN HV HCC', 'group': 'CC'},
+            {'name': 'BN SSCC', 'group': 'CC'},
+            # TC (Thermal Coal) - composite
+            {'name': 'UHG MASHCC_2', 'group': 'TC'},
+            {'name': 'UHG Midd', 'group': 'TC'},
+            {'name': 'BN MASHCC_2', 'group': 'TC'},
+            {'name': 'BN Midd', 'group': 'TC'},
+        ]
+    },
+}
+
+# Gi шинжилгээний ээлжийн тохиргоо
+# PF211, PF231 → Сондгой ээлж (D1,D3,D5,N1,N3,N5)
+# PF221 → Тэгш ээлж (D2,D4,D6,N2,N4,N6)
+GI_SHIFT_CONFIG = {
+    'odd_shifts': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],  # Сондгой
+    'even_shifts': ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'],  # Тэгш
+    'sample_mapping': {
+        'PF211': 'odd_shifts',
+        'PF231': 'odd_shifts',
+        'PF221': 'even_shifts',
+    }
+}
 
 # 3. COM (Composite) бүтээгдэхүүний Map
 COM_PRIMARY_PRODUCTS = [
@@ -352,7 +498,7 @@ COM_SECONDARY_MAP = {
     'UHG HV_HCC': ['none'],
     'UHG MASHCC': ['none'],
     'BN HV HCC':  ['BN MASHCC_2', 'BN Midd'],
-    'BN SSCC':    ['none']
+    'BN SSCC':    ['BN MASHCC_2', 'BN Midd']
 }
 
 # 4. WTL ЖАГСААЛТУУД
@@ -395,25 +541,25 @@ WTL_FL_NAMES = ['C1', 'C2', 'C3', 'C4', 'T1', 'T2', 'Initial']
 # 5. СИСТЕМИЙН ҮНДСЭН ШИНЖИЛГЭЭНҮҮД (Admin Seed)
 # =====================================================================
 MASTER_ANALYSIS_TYPES_LIST = [
-    {'code': 'MT',    'name': 'Нийт чийг (MT)',                   'order': 1,  'role': 'himich'},
-    {'code': 'Mad',   'name': 'Дотоод чийг (Mad)',                  'order': 2,  'role': 'himich'},
-    {'code': 'Aad',   'name': 'Үнс (Aad)',                         'order': 3,  'role': 'himich'},
-    {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',              'order': 4,  'role': 'himich'},
-    {'code': 'TS',    'name': 'Нийт хүхэр (TS)',                   'order': 5,  'role': 'himich'},
-    {'code': 'CV',    'name': 'Илчлэг (CV)',                       'order': 6,  'role': 'himich'},    
-    {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',              'order': 7,  'role': 'himich'},
-    {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',            'order': 8,  'role': 'himich'},
-    {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',              'order': 9, 'role': 'himich'},
-    {'code': 'P',     'name': 'Фосфор (P)',                        'order': 10, 'role': 'himich'},
-    {'code': 'F',     'name': 'Фтор (F)',                          'order': 11, 'role': 'himich'},
-    {'code': 'Cl',    'name': 'Хлор (Cl)',                         'order': 12, 'role': 'himich'},
-    {'code': 'X',     'name': 'Пластометр (X)',                  'order': 13, 'role': 'himich'},
-    {'code': 'Y',     'name': 'Пластометр (Y)',                  'order': 14, 'role': 'himich'},
-    {'code': 'CRI',   'name': 'Коксын урвалын идэвх (CRI)',        'order': 15, 'role': 'himich'},
-    {'code': 'CSR',   'name': 'Урвалын дараах бат бэх (CSR)',      'order': 16, 'role': 'himich'},
-    {'code': 'Solid', 'name': 'Хатуу бодисын үлдэгдэл (Solid)',                  'order': 17, 'role': 'beltgegch'},
-    {'code': 'FM',    'name': 'Чөлөөт чийг (FM)',                  'order': 18,  'role': 'beltgegch'},
-    {'code': 'm',     'name': 'Масс (m)',                          'order': 19, 'role': 'himich'},
+    {'code': 'MT',    'name': 'Нийт чийг (MT)',                   'order': 1,  'role': 'chemist'},
+    {'code': 'Mad',   'name': 'Дотоод чийг (Mad)',                  'order': 2,  'role': 'chemist'},
+    {'code': 'Aad',   'name': 'Үнс (Aad)',                         'order': 3,  'role': 'chemist'},
+    {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',              'order': 4,  'role': 'chemist'},
+    {'code': 'TS',    'name': 'Нийт хүхэр (TS)',                   'order': 5,  'role': 'chemist'},
+    {'code': 'CV',    'name': 'Илчлэг (CV)',                       'order': 6,  'role': 'chemist'},    
+    {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',              'order': 7,  'role': 'chemist'},
+    {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',            'order': 8,  'role': 'chemist'},
+    {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',              'order': 9, 'role': 'chemist'},
+    {'code': 'P',     'name': 'Фосфор (P)',                        'order': 10, 'role': 'chemist'},
+    {'code': 'Solid', 'name': 'Хатуу бодисын үлдэгдэл (Solid)',                  'order': 11, 'role': 'prep'},
+    {'code': 'FM',    'name': 'Чөлөөт чийг (FM)',                  'order': 12,  'role': 'prep'},
+    {'code': 'F',     'name': 'Фтор (F)',                          'order': 13, 'role': 'chemist'},
+    {'code': 'Cl',    'name': 'Хлор (Cl)',                         'order': 14, 'role': 'chemist'},
+    {'code': 'X',     'name': 'Пластометр (X)',                  'order': 15, 'role': 'chemist'},
+    {'code': 'Y',     'name': 'Пластометр (Y)',                  'order': 16, 'role': 'chemist'},
+    {'code': 'CRI',   'name': 'Коксын урвалын идэвх (CRI)',        'order': 17, 'role': 'chemist'},
+    {'code': 'CSR',   'name': 'Урвалын дараах бат бэх (CSR)',      'order': 18, 'role': 'chemist'},
+    {'code': 'm',     'name': 'Масс (m)',                          'order': 19, 'role': 'chemist'},
 ]
 
 
@@ -429,7 +575,6 @@ ERROR_REASON_KEYS = [
     "method",
     "sample_mixup",
     "chemist_error",  # ✅ ШИНЭЧЛЭЛ: 'other'-ийн оронд
-    "qc_fail"
 ]
 
 ERROR_REASON_LABELS = {
@@ -440,8 +585,7 @@ ERROR_REASON_LABELS = {
     "data_entry":     "5. Өгөгдөл шивэлт / Тооцооллын алдаа",
     "method":         "6. Арга аргачлал зөрчсөн (SOP)",
     "sample_mixup":   "7. Дээж солигдсон / Буруу дээж",
-    "chemist_error":  "8. Химичийн алдаа (Асгасан / Гээсэн)", # ✅ ШИНЭЧЛЭЛ
-    "qc_fail":        "9. QC-ийн алдаа (Дахин шинжилгээ шаардлагатай)"
+    "chemist_error":  "8. Химичийн алдаа (Асгасан )", # ✅ ШИНЭЧЛЭЛ
 }
 
 
@@ -544,76 +688,87 @@ NAME_CLASS_MASTER_SPECS = {
     "UHG MV_HCC": {
         "Mad": 0.80,
         "Aad": 10.70,
-        "Vad": 27.00,
+        "Vdaf": 27.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 80.0,
-        "Qgr,net": None,  # одоохондоо хоосон гэж үзье
     },
     "UHG HV_HCC": {
         "Mad": 1.00,
         "Aad": 11.00,
-        "Vad": 30.00,
+        "Vdaf": 30.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 87.0,
-        "Qgr,net": None,
     },
     "UHG MASHCC": {
         "Mad": 0.50,
         "Aad": 25.00,
-        "Vad": 15.00,
+        "Vdaf": 15.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 22.0,
-        "Qgr,net": None,
     },
     "BN HV HCC": {
         "Mad": 1.20,
         "Aad": 12.00,
-        "Vad": 32.00,
+        "Vdaf": 32.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 90.0,
-        "Qgr,net": None,
     },
     "BN SSCC": {
         "Mad": 1.50,
         "Aad": 9.00,
-        "Vad": 27.00,
+        "Vdaf": 27.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 88.0,
-        "Qgr,net": None,
     },
     "UHG MASHCC_2": {
         "Mad": 0.60,
         "Aad": 25.00,
-        "Vad": 35.00,
+        "Vdaf": 35.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 18.0,
-        "Qgr,net": None,
     },
     "UHG Midd": {
         "Mad": 0.50,
         "Aad": 30.00,
-        "Vad": 22.00,
+        "Vdaf": 22.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 10.0,
-        "Qgr,net": None,
     },
     "BN MASHCC_2": {
         "Mad": 0.70,
         "Aad": 25.00,
-        "Vad": 30.00,
+        "Vdaf": 30.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 25.0,
-        "Qgr,net": None,
     },
     "BN Midd": {
         "Mad": 0.50,
         "Aad": 30.00,
-        "Vad": 22.00,
+        "Vdaf": 22.00,
+        "Qnet,ar": None,
+        "CSN": None,
         "Gi": 10.0,
-        "Qgr,net": None,
     },
 }
 
 # 🛑 ШИНЭ: эдгээр "зорилтот" утган дээр хэдэн хангалтын зурвас (± band) авах вэ.
 # Жишээ болгож тавьлаа – лабораторийн бодит шаардлагаараа өөрчилж болно.
+# QC_PARAM_CODES = ["Mad", "Aad", "Vdaf", "Qnet,ar", "CSN", "Gi"] -тай тохирсон
 NAME_CLASS_SPEC_BANDS = {
-    "Mad": 0.2,       # ±0.2
-    "Aad": 2.0,       # ±2.0
-    "Vad": 3.0,       # ±3.0
-    "Gi": 5.0,        # ±5
-    "Qgr,net": 200.0  # ±200 кЖ/кг гэх мэт (хэрэв хэрэглэвэл)
+    "Mad": 0.2,        # ±0.2
+    "Aad": 2.0,        # ±2.0
+    "Vdaf": 3.0,       # ±3.0
+    "Qnet,ar": 200.0,  # ±200 кЖ/кг
+    "CSN": 1.0,        # ±1.0
+    "Gi": 5.0,         # ±5
 }
 
 # =====================================================================
@@ -639,6 +794,8 @@ SUMMARY_VIEW_COLUMNS = [
     {"code": "TRD,d", "canonical_base": "relative_density"},
     {"code": "P,ad", "canonical_base": "phosphorus"},
     {"code": "P,d", "canonical_base": "phosphorus"},
+    {"code": "Solid", "canonical_base": "solid"},
+    {"code": "FM", "canonical_base": "free_moisture"},
     {"code": "F,ad", "canonical_base": "total_fluorine"},
     {"code": "F,d", "canonical_base": "total_fluorine"},
     {"code": "Cl,ad", "canonical_base": "total_chlorine"},
@@ -647,8 +804,6 @@ SUMMARY_VIEW_COLUMNS = [
     {"code": "Y", "canonical_base": "plastometer_y"},
     {"code": "CRI", "canonical_base": "coke_reactivity_index"},
     {"code": "CSR", "canonical_base": "coke_strength_after_reaction"},
-    {"code": "Solid", "canonical_base": "solid"},
-    {"code": "FM", "canonical_base": "free_moisture"},
     {"code": "m", "canonical_base": "mass"},
 ]
 

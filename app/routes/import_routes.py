@@ -18,10 +18,13 @@
 
 import csv
 import io
+import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, Tuple, List
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
+
+logger = logging.getLogger(__name__)
 from flask_login import login_required
 from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
@@ -35,8 +38,9 @@ from app import models as M
 try:
     from app.utils.analysis_aliases import ALIAS_TO_BASE as _ALIAS_TO_BASE  # noqa: F401
     ALIAS_TO_BASE: Dict[str, str] = {k.lower(): v for k, v in _ALIAS_TO_BASE.items()}
-except Exception:
+except Exception as e:
     # Резерв – хамгийн нийтлэг alias-ууд
+    logger.warning(f"analysis_aliases модуль ачаалагдсангүй, fallback ашиглаж байна: {e}")
     ALIAS_TO_BASE = {
         "ts": "TS",
         "st,ad": "TS",

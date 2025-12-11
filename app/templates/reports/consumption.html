@@ -1,0 +1,740 @@
+{# templates/reports/consumption.html #}
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+
+<style>
+  /* Hub-style Unit Cards */
+  .units-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .unit-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .unit-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .unit-card-header {
+    background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .unit-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .unit-card-title {
+    flex: 1;
+  }
+
+  .unit-card-title h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0369a1;
+  }
+
+  .unit-card-title small {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .unit-card-body {
+    padding: 1rem 1.25rem;
+  }
+
+  .unit-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .unit-stat {
+    text-align: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .unit-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .unit-stat-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .unit-card-footer {
+    background: #f8fafc;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .unit-card-footer .types-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .type-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .unit-card-footer .arrow {
+    color: #94a3b8;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+  }
+
+  .unit-card:hover .arrow {
+    transform: translateX(4px);
+    color: #3b82f6;
+  }
+
+  /* Detail Section (shown when unit is clicked) */
+  .unit-detail-section {
+    display: none;
+    margin-bottom: 2rem;
+    animation: slideDown 0.3s ease;
+  }
+
+  .unit-detail-section.active {
+    display: block;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+    border-radius: 12px;
+  }
+
+  .detail-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: #0369a1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .detail-header .btn-close-detail {
+    background: rgba(255,255,255,0.8);
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .detail-header .btn-close-detail:hover {
+    background: #fff;
+    color: #ef4444;
+  }
+
+  /* Tables grid */
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .tables-grid { grid-template-columns: 1fr; }
+  }
+
+  .mini-table-wrap {
+    overflow: auto;
+    max-height: 400px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+  }
+
+  /* Register table */
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .reg-table th,
+  .reg-table td {
+    border: 1px solid #cbd5e1;
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .reg-table thead th {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+    z-index: 5;
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #475569;
+  }
+
+  .reg-table .left {
+    text-align: left;
+    background: linear-gradient(90deg, #eef2ff, #e0e7ff);
+    font-weight: 700;
+    color: #3730a3;
+  }
+
+  .reg-table .cap {
+    background: linear-gradient(90deg, #f0fdf4, #dcfce7);
+    text-align: left;
+    font-weight: 600;
+    color: #166534;
+  }
+
+  .reg-table .sum {
+    font-weight: 700;
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .reg-table tbody tr:nth-child(even) { background: #fafbfc; }
+  .reg-table tbody tr:hover { background: #e0f2fe !important; }
+
+  .cell-click {
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .cell-click:hover {
+    background: #dbeafe !important;
+    box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Grand total */
+  .grand-wrap {
+    overflow: auto;
+    max-height: 400px;
+    border-radius: 10px;
+    border: 2px solid #fbbf24;
+    background: #fffbeb;
+  }
+
+  .grand-wrap .reg-table thead th {
+    background: linear-gradient(180deg, #fef3c7, #fde68a);
+    color: #92400e;
+  }
+
+  /* View mode toggle */
+  .view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.8);
+    padding: 0.25rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .view-toggle button {
+    padding: 0.4rem 0.75rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .view-toggle button.active {
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .view-toggle button:hover:not(.active) {
+    background: #f1f5f9;
+  }
+</style>
+
+<div class="report-page">
+  <!-- Header -->
+  <div class="report-header">
+    <div class="report-header-content">
+      <h4><i class="bi bi-journal-bookmark"></i> {{ title }}</h4>
+      <p class="subtitle">Дээжийн дэлгэрэнгүй бүртгэл - нэгжээр бүлэглэсэн</p>
+    </div>
+    <div class="report-header-actions">
+      <div class="view-toggle">
+        <button class="active" id="viewCards" title="Карт харагдац">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button id="viewList" title="Жагсаалт харагдац">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </div>
+
+      <form method="get" class="d-inline">
+        <select name="year" class="form-select form-select-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
+          {% for y in range(year-3, year+2) %}
+            <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </form>
+
+      <button class="btn btn-sm btn-success" id="exportAll">
+        <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="report-kpi-row">
+    <div class="report-kpi-card total">
+      <div class="kpi-label">Нийт нэгж</div>
+      <div class="kpi-value">{{ data|length }}</div>
+    </div>
+    <div class="report-kpi-card success">
+      <div class="kpi-label">Нийт дээж (жил)</div>
+      <div class="kpi-value">{{ grand_samples.values()|sum }}</div>
+    </div>
+  </div>
+
+  <!-- Cards View -->
+  <div id="cardsView">
+    <div class="units-grid">
+      {% for unit, subs in data %}
+        {% set ns = namespace(total_samples=0, total_analyses=0) %}
+        {% for s in subs %}
+          {% set ns.total_samples = ns.total_samples + s.sample_total %}
+          {% for code, monthly, row_total in s.prop_rows %}
+            {% set ns.total_analyses = ns.total_analyses + row_total %}
+          {% endfor %}
+        {% endfor %}
+
+        <div class="unit-card" data-unit="{{ unit }}">
+          <div class="unit-card-header">
+            <div class="unit-card-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <div class="unit-card-title">
+              <h5>{{ unit }}</h5>
+              <small>{{ subs|length }} төрөл</small>
+            </div>
+          </div>
+          <div class="unit-card-body">
+            <div class="unit-stats">
+              <div class="unit-stat">
+                <div class="unit-stat-value">{{ ns.total_samples }}</div>
+                <div class="unit-stat-label">Дээж</div>
+              </div>
+              <div class="unit-stat">
+                <div class="unit-stat-value">{{ ns.total_analyses }}</div>
+                <div class="unit-stat-label">Шинжилгээ</div>
+              </div>
+            </div>
+          </div>
+          <div class="unit-card-footer">
+            <div class="types-list">
+              {% for s in subs[:4] %}
+                <span class="type-badge">{{ s.stype }}</span>
+              {% endfor %}
+              {% if subs|length > 4 %}
+                <span class="type-badge">+{{ subs|length - 4 }}</span>
+              {% endif %}
+            </div>
+            <i class="bi bi-chevron-right arrow"></i>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Detail Sections (hidden by default) -->
+    {% for unit, subs in data %}
+      <div class="unit-detail-section" id="detail-{{ loop.index }}">
+        <div class="detail-header">
+          <h5><i class="bi bi-building me-2"></i>{{ unit }}</h5>
+          <button class="btn-close-detail">
+            <i class="bi bi-x-lg me-1"></i> Хаах
+          </button>
+        </div>
+        <div class="tables-grid">
+          {% for s in subs %}
+            <div class="mini-table-wrap">
+              <table class="reg-table">
+                <thead>
+                  <tr>
+                    <th class="left">{{ s.stype }}</th>
+                    {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                      <th>{{ m }}</th>
+                    {% endfor %}
+                    <th class="sum">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="cap">Дээжний тоо</td>
+                    {% for m in range(1,13) %}
+                      <td class="cell-click cell-samples"
+                          data-kind="samples" data-unit="{{ unit }}"
+                          data-stype="{{ s.stype }}" data-month="{{ m }}">
+                        {{ s.sample_cnt[m] }}
+                      </td>
+                    {% endfor %}
+                    <td class="sum">{{ s.sample_total }}</td>
+                  </tr>
+                  {% for code, monthly, row_total in s.prop_rows %}
+                    <tr>
+                      <td class="left">{{ code }}</td>
+                      {% for m in range(1,13) %}
+                        <td class="cell-click cell-code"
+                            data-kind="code" data-code="{{ code }}"
+                            data-unit="{{ unit }}" data-stype="{{ s.stype }}" data-month="{{ m }}">
+                          {{ monthly[m] }}
+                        </td>
+                      {% endfor %}
+                      <td class="sum">{{ row_total }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- List View (hidden by default) -->
+  <div id="listView" style="display: none;">
+    {% for unit, subs in data %}
+      <div class="report-card mb-3">
+        <div class="card-header">
+          <strong><i class="bi bi-building me-2"></i>{{ unit }}</strong>
+          <span class="badge bg-primary">{{ subs|length }} төрөл</span>
+        </div>
+        <div class="card-body p-2">
+          <div class="tables-grid">
+            {% for s in subs %}
+              <div class="mini-table-wrap">
+                <table class="reg-table">
+                  <thead>
+                    <tr>
+                      <th class="left">{{ s.stype }}</th>
+                      {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                        <th>{{ m }}</th>
+                      {% endfor %}
+                      <th class="sum">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="cap">Дээжний тоо</td>
+                      {% for m in range(1,13) %}
+                        <td class="cell-click cell-samples"
+                            data-kind="samples" data-unit="{{ unit }}"
+                            data-stype="{{ s.stype }}" data-month="{{ m }}">
+                          {{ s.sample_cnt[m] }}
+                        </td>
+                      {% endfor %}
+                      <td class="sum">{{ s.sample_total }}</td>
+                    </tr>
+                    {% for code, monthly, row_total in s.prop_rows %}
+                      <tr>
+                        <td class="left">{{ code }}</td>
+                        {% for m in range(1,13) %}
+                          <td class="cell-click cell-code"
+                              data-kind="code" data-code="{{ code }}"
+                              data-unit="{{ unit }}" data-stype="{{ s.stype }}" data-month="{{ m }}">
+                            {{ monthly[m] }}
+                          </td>
+                        {% endfor %}
+                        <td class="sum">{{ row_total }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <hr class="my-4">
+
+  <!-- Grand Total -->
+  <div class="report-card">
+    <div class="card-header">
+      <strong><i class="bi bi-calculator"></i> Grand Total (бүх нэгж)</strong>
+    </div>
+    <div class="card-body p-0">
+      <div class="grand-wrap">
+        <table class="reg-table">
+          <thead>
+            <tr>
+              <th class="left">Нэр</th>
+              {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                <th>{{ m }}</th>
+              {% endfor %}
+              <th class="sum">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cap">Дээжний тоо</td>
+              {% for m in range(1,13) %}
+                <td>{{ grand_samples[m] }}</td>
+              {% endfor %}
+              <td class="sum">{{ grand_samples.values()|sum }}</td>
+            </tr>
+            {% for code, monthly, total in grand_rows %}
+              <tr>
+                <td class="left">{{ code }}</td>
+                {% for m in range(1,13) %}
+                  <td>{{ monthly[m] }}</td>
+                {% endfor %}
+                <td class="sum">{{ total }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Drill-down Modal -->
+<div class="modal fade" id="cellModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f0f9ff, #ecfeff); border-bottom: 2px solid #e0f2fe;">
+        <h5 class="modal-title" style="color: #0369a1; font-weight: 700;">
+          <i class="bi bi-list-ul me-2"></i>Дэлгэрэнгүй
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="cellInfo" class="mb-2 text-muted" style="font-size: 0.85rem;"></div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered" style="font-size: 0.85rem;">
+            <thead class="table-light">
+              <tr>
+                <th>Sample ID</th>
+                <th>Код</th>
+                <th>Дээжний нэр</th>
+                <th>Дотоод код</th>
+                <th>Огноо</th>
+                <th>Тайлан</th>
+              </tr>
+            </thead>
+            <tbody id="cellRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer" style="background: #f8fafc;">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Хаах</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // View Toggle
+  const viewCardsBtn = document.getElementById('viewCards');
+  const viewListBtn = document.getElementById('viewList');
+  const cardsView = document.getElementById('cardsView');
+  const listView = document.getElementById('listView');
+
+  viewCardsBtn.addEventListener('click', () => {
+    viewCardsBtn.classList.add('active');
+    viewListBtn.classList.remove('active');
+    cardsView.style.display = 'block';
+    listView.style.display = 'none';
+  });
+
+  viewListBtn.addEventListener('click', () => {
+    viewListBtn.classList.add('active');
+    viewCardsBtn.classList.remove('active');
+    listView.style.display = 'block';
+    cardsView.style.display = 'none';
+  });
+
+  // Unit Card Click -> Show Detail
+  const unitCards = document.querySelectorAll('.unit-card');
+  const detailSections = document.querySelectorAll('.unit-detail-section');
+
+  unitCards.forEach((card, index) => {
+    card.addEventListener('click', () => {
+      // Hide all details first
+      detailSections.forEach(d => d.classList.remove('active'));
+      // Show this unit's detail
+      const detail = document.getElementById('detail-' + (index + 1));
+      if (detail) {
+        detail.classList.add('active');
+        detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Close detail buttons
+  document.querySelectorAll('.btn-close-detail').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const detail = btn.closest('.unit-detail-section');
+      if (detail) detail.classList.remove('active');
+    });
+  });
+
+  // Export CSV with UTF-8 BOM (Excel-д зөв харагдана)
+  document.getElementById('exportAll').addEventListener('click', () => {
+    const tables = document.querySelectorAll('.reg-table');
+    const out = [];
+    tables.forEach(t => {
+      t.querySelectorAll('tr').forEach(tr => {
+        const cells = [...tr.querySelectorAll('th,td')].map(td => {
+          return '"' + td.innerText.trim().replace(/"/g,'""') + '"';
+        });
+        out.push(cells.join(','));
+      });
+      out.push('');
+    });
+    // UTF-8 BOM нэмэх - Excel Монгол үсгийг зөв уншина
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + out.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'consumption_{{ year }}.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // Drill-down Modal
+  const modalEl = document.getElementById('cellModal');
+  const modal = new bootstrap.Modal(modalEl);
+  const info = document.getElementById('cellInfo');
+  const body = document.getElementById('cellRows');
+
+  async function openDetails(params) {
+    const qs = new URLSearchParams(params).toString();
+    const url = `/reports/consumption_cell?${qs}`;
+
+    body.innerHTML = '<tr><td colspan="6" class="text-center py-3">Түр хүлээнэ үү...</td></tr>';
+    info.textContent = `Нэгж: ${params.unit} · Төрөл: ${params.stype} · Сар: ${params.month} · ` +
+      (params.kind === 'samples' ? 'Дээжний тоо' : ('Код: ' + params.code));
+
+    modal.show();
+
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      if (!j.ok) {
+        body.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Алдаа: ${j.message || 'unknown'}</td></tr>`;
+        return;
+      }
+      if (j.items.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Хоосон</td></tr>';
+        return;
+      }
+
+      body.innerHTML = j.items.map(it => {
+        const dt = it.analysis_date ? it.analysis_date.replace('T', ' ') : '';
+        const displayName = it.sample_code || it.name || '';
+        const internalCode = it.name && it.sample_code && it.name !== it.sample_code ? it.name : '';
+        return `<tr>
+          <td>${it.sample_id}</td>
+          <td>${it.code || ''}</td>
+          <td>${displayName}</td>
+          <td>${internalCode}</td>
+          <td>${dt}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="${it.report_url}" target="_blank">Report</a></td>
+        </tr>`;
+      }).join('');
+    } catch(e) {
+      body.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Сүлжээний алдаа</td></tr>';
+    }
+  }
+
+  document.querySelectorAll('.cell-samples').forEach(td => {
+    td.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDetails({
+        year: {{ year }},
+        unit: td.dataset.unit,
+        stype: td.dataset.stype,
+        month: td.dataset.month,
+        kind: 'samples'
+      });
+    });
+  });
+
+  document.querySelectorAll('.cell-code').forEach(td => {
+    td.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDetails({
+        year: {{ year }},
+        unit: td.dataset.unit,
+        stype: td.dataset.stype,
+        month: td.dataset.month,
+        kind: 'code',
+        code: td.dataset.code
+      });
+    });
+  });
+})();
+</script>
+{% endblock %}

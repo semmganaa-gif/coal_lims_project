@@ -17,7 +17,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_constraints_001'
-down_revision = None  # Өмнөх migration-ий ID-г оруулах
+down_revision = '96e8bcf13076'  # add_control_standards_table-аас салбарлана
 branch_labels = None
 depends_on = None
 
@@ -171,7 +171,7 @@ def upgrade():
         op.create_check_constraint(
             'ck_user_role',
             'user',
-            "role IN ('beltgegch', 'himich', 'ahlah', 'senior', 'admin')"
+            "role IN ('prep', 'chemist', 'senior', 'manager', 'admin')"
         )
     except Exception:
         pass

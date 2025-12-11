@@ -17,7 +17,7 @@ def role_required(*allowed_roles: str) -> Callable:
     хэрэглэгч нэвтрэх боломжтой.
 
     Args:
-        *allowed_roles: Зөвшөөрөгдсөн эрхүүд (ж: 'admin', 'ahlah', 'himich')
+        *allowed_roles: Зөвшөөрөгдсөн эрхүүд (ж: 'admin', 'senior', 'chemist')
 
     Returns:
         Decorated function
@@ -25,7 +25,7 @@ def role_required(*allowed_roles: str) -> Callable:
     Example:
         >>> @bp.route('/equipment/edit/<int:eq_id>')
         >>> @login_required
-        >>> @role_required('admin', 'ahlah')
+        >>> @role_required('admin', 'senior')
         >>> def edit_equipment(eq_id):
         >>>     ...
 
@@ -98,7 +98,7 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Callable[[Any], boo
     Example:
         >>> @bp.route('/sample/edit/<int:sample_id>')
         >>> @login_required
-        >>> @role_or_owner_required('admin', 'ahlah',
+        >>> @role_or_owner_required('admin', 'senior',
         ...     owner_check=lambda sample_id: Sample.query.get(sample_id).user_id == current_user.id)
         >>> def edit_sample(sample_id):
         >>>     ...
@@ -133,7 +133,7 @@ def analysis_role_required(allowed_roles=None):
     """
     Шинжилгээний модульд хандах эрх шалгах декоратор.
 
-    Analysis модулийн routes-уудад ашиглана. Default эрхүүд: himich, ahlah, admin, beltgegch
+    Analysis модулийн routes-уудад ашиглана. Default эрхүүд: chemist, senior, admin, prep
 
     Args:
         allowed_roles: Зөвшөөрөгдсөн эрхүүдын жагсаалт (опциональ)
@@ -148,7 +148,7 @@ def analysis_role_required(allowed_roles=None):
         >>>     ...
         >>>
         >>> @bp.route('/analysis/admin')
-        >>> @analysis_role_required(['admin', 'ahlah'])
+        >>> @analysis_role_required(['admin', 'senior'])
         >>> def analysis_admin():
         >>>     ...
 
@@ -157,7 +157,7 @@ def analysis_role_required(allowed_roles=None):
         - Flask-Login нэвтрэх шалгалт бас хийнэ
     """
     if allowed_roles is None:
-        allowed_roles = ["himich", "ahlah", "admin", "beltgegch"]
+        allowed_roles = ["chemist", "senior", "manager", "admin", "prep"]
 
     def decorator(f):
         @wraps(f)

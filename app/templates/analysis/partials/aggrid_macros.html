@@ -65,7 +65,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 
 {# Simple container renderer to keep markup consistent #}
 {% macro grid_container(grid_id, theme='ag-theme-alpine') %}
-<div id="{{ grid_id }}" class="{{ theme }}"></div>
+<div id="{{ grid_id }}" class="ag-grid-container {{ theme }}"></div>
 {% endmacro %}
 
 {# Common JS helpers injected into each AG Grid form #}

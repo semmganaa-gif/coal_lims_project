@@ -2,53 +2,459 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Шинжилгээний хуудас</h2>
-    <div class="w-25">
-      <input id="analysis-search" type="text" class="form-control form-control-sm"
-             placeholder="Шинжилгээ хайх... (жишээ: Aad, TS, CV, Чийг)">
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #22c55e;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f59e0b;
+  }
+
+  .analysis-hub {
+    min-height: calc(100vh - 120px);
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 30%, #faf5ff 60%, #fff7ed 100%);
+    background-attachment: fixed;
+  }
+
+  /* Header */
+  .hub-header {
+    background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(59,130,246,0.08), rgba(139,92,246,0.06));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(34,197,94,0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .hub-header-content h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #059669 0%, #0284c7 50%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.25rem;
+  }
+  .hub-header-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  .hub-search {
+    position: relative;
+    min-width: 280px;
+  }
+  .hub-search input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 2px solid rgba(148,163,184,0.2);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.8);
+    transition: all 0.3s ease;
+  }
+  .hub-search input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+    background: #fff;
+  }
+  .hub-search i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  /* Category Tabs */
+  .category-tabs {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .cat-tab {
+    padding: 0.6rem 1.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cat-tab:hover {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #059669;
+    transform: translateY(-2px);
+  }
+  .cat-tab.active {
+    background: linear-gradient(135deg, #22c55e, #0ea5e9);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+  }
+  .cat-tab .tab-count {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .cat-tab.active .tab-count {
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Analysis Card */
+  .analysis-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+    animation: cardFadeIn 0.5s ease backwards;
+  }
+  .analysis-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #22c55e, #3b82f6, #8b5cf6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .analysis-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  .analysis-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Card Icon */
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+  .analysis-card:hover .card-icon {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .icon-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+  .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .icon-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+  .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+  .icon-cyan { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
+  .icon-pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
+  .icon-indigo { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4338ca; }
+  .icon-emerald { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+  .icon-amber { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+
+  /* Card Content */
+  .card-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+  }
+  .card-code {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #22c55e, #0ea5e9);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .card-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .card-role {
+    margin-top: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: rgba(100,116,139,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .card-role i { font-size: 0.65rem; }
+
+  /* Card Arrow */
+  .card-arrow {
+    color: var(--text-muted);
+    font-size: 1.4rem;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+  .analysis-card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: #22c55e;
+  }
+
+  /* Category Section */
+  .category-section {
+    display: none;
+  }
+  .category-section.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+  }
+  .empty-state i {
+    font-size: 4rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+  }
+  .empty-state h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* No Results */
+  .no-results {
+    display: none;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+  }
+  .no-results.show {
+    display: block;
+  }
+  .no-results i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .analysis-hub { padding: 1rem; }
+    .hub-header {
+      flex-direction: column;
+      text-align: center;
+      padding: 1.25rem;
+    }
+    .hub-header-content h1 { font-size: 1.4rem; }
+    .hub-search { min-width: 100%; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .analysis-card { padding: 1.25rem; }
+    .card-icon { width: 50px; height: 50px; font-size: 1.3rem; }
+    .category-tabs { gap: 0.5rem; }
+    .cat-tab { padding: 0.5rem 1rem; font-size: 0.8rem; }
+  }
+
+</style>
+
+<div class="analysis-hub">
+  <!-- Header -->
+  <div class="hub-header">
+    <div class="hub-header-content">
+      <h1><i class="bi bi-flask me-2"></i>Шинжилгээний төв</h1>
+      <p>Нүүрсний чанарын шинжилгээнүүдийг хийх</p>
+    </div>
+    <div class="hub-search">
+      <i class="bi bi-search"></i>
+      <input type="text" id="analysis-search" placeholder="Шинжилгээ хайх... (Aad, CV, чийг)">
     </div>
   </div>
 
   {% if analysis_types %}
-  <div class="row g-3" id="analysis-list">
+  <!-- Category Tabs - 4 ангилал -->
+  <div class="category-tabs">
+    <div class="cat-tab active" data-cat="tech">
+      <i class="bi bi-speedometer2"></i> Техникийн анализ
+      <span class="tab-count">0</span>
+    </div>
+    <div class="cat-tab" data-cat="element">
+      <i class="bi bi-diagram-3"></i> Элементийн анализ
+      <span class="tab-count">0</span>
+    </div>
+    <div class="cat-tab" data-cat="coking">
+      <i class="bi bi-fire"></i> Коксжих чанар
+      <span class="tab-count">0</span>
+    </div>
+    <div class="cat-tab" data-cat="other">
+      <i class="bi bi-three-dots"></i> Бусад
+      <span class="tab-count">0</span>
+    </div>
+  </div>
+
+  <!-- No Results Message -->
+  <div class="no-results" id="no-results">
+    <i class="bi bi-search"></i>
+    <h4>Илэрц олдсонгүй</h4>
+    <p>Өөр түлхүүр үгээр хайна уу</p>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" id="analysis-list">
     {% for a in analysis_types %}
-    {# ---- Харагдацын нэр/бадж (backend-ээс ирвэл тэрийг, үгүй бол filter-ээр) ---- #}
-    {% set disp_name  = a.display_name  if a.display_name  is defined and a.display_name  else a.name %}
+    {% set disp_name = a.display_name if a.display_name is defined and a.display_name else a.name %}
     {% set disp_badge = a.display_badge if a.display_badge is defined and a.display_badge else (a.code|fmt_code) %}
 
-    <div class="col-12 col-sm-6 col-md-4 col-lg-3 analysis-item"
-         data-name="{{ (disp_name or '')|lower }}"
-         data-code="{{ (a.code or '')|lower }}"
-         data-badge="{{ (disp_badge or '')|lower }}">
-      <a href="{{ url_for('analysis.analysis_page', analysis_code=a.code) }}" class="text-decoration-none">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="badge bg-primary">{{ a.code|fmt_code }}</span>
-              {% if a.required_role %}
-                <span class="badge bg-light text-dark">{{ a.required_role }}</span>
-              {% endif %}
-            </div>
+    {# Categorize by code - 4 ангилал #}
+    {% set cat = 'other' %}
+    {% if a.code in ['MT', 'Mad', 'Aad', 'Vad', 'CV'] %}
+      {% set cat = 'tech' %}
+    {% elif a.code in ['TS', 'C', 'H', 'N', 'O', 'P', 'F', 'Cl'] %}
+      {% set cat = 'element' %}
+    {% elif a.code in ['CSN', 'Gi', 'X', 'Y', 'XY', 'CRI', 'CSR', 'CRICSR'] %}
+      {% set cat = 'coking' %}
+    {% endif %}
 
-            <h5 class="card-title mb-1">{{ disp_name }}</h5>
-            <p class="text-muted small mb-0">
-              <span class="me-2">Код: <strong>{{ a.code }}</strong></span>
-              {% if a.description %}
-                {{ a.description }}
-              {% else %}
-                Шинжилгээний ажил
-              {% endif %}
-            </p>
-          </div>
+    {# Icon color by category #}
+    {% set icon_class = 'icon-blue' %}
+    {% set icon_name = 'bi-flask' %}
+    {% if a.code == 'MT' %}{% set icon_class = 'icon-blue' %}{% set icon_name = 'bi-droplet-half' %}
+    {% elif a.code == 'Mad' %}{% set icon_class = 'icon-cyan' %}{% set icon_name = 'bi-moisture' %}
+    {% elif a.code == 'Aad' %}{% set icon_class = 'icon-orange' %}{% set icon_name = 'bi-fire' %}
+    {% elif a.code == 'Vad' %}{% set icon_class = 'icon-purple' %}{% set icon_name = 'bi-wind' %}
+    {% elif a.code == 'TS' %}{% set icon_class = 'icon-red' %}{% set icon_name = 'bi-radioactive' %}
+    {% elif a.code == 'CV' %}{% set icon_class = 'icon-pink' %}{% set icon_name = 'bi-thermometer-high' %}
+    {% elif a.code == 'FM' %}{% set icon_class = 'icon-blue' %}{% set icon_name = 'bi-droplet' %}
+    {% elif a.code == 'CSN' %}{% set icon_class = 'icon-purple' %}{% set icon_name = 'bi-bar-chart-fill' %}
+    {% elif a.code == 'Gi' %}{% set icon_class = 'icon-green' %}{% set icon_name = 'bi-layers' %}
+    {% elif a.code == 'TRD' %}{% set icon_class = 'icon-indigo' %}{% set icon_name = 'bi-box' %}
+    {% elif a.code in ['X', 'Y', 'XY'] %}{% set icon_class = 'icon-amber' %}{% set icon_name = 'bi-arrows-expand' %}
+    {% elif a.code == 'CRI' %}{% set icon_class = 'icon-red' %}{% set icon_name = 'bi-arrow-down-circle' %}
+    {% elif a.code == 'CSR' %}{% set icon_class = 'icon-green' %}{% set icon_name = 'bi-shield-check' %}
+    {% elif a.code == 'CRICSR' %}{% set icon_class = 'icon-emerald' %}{% set icon_name = 'bi-diagram-3' %}
+    {% elif a.code == 'Solid' %}{% set icon_class = 'icon-purple' %}{% set icon_name = 'bi-gem' %}
+    {% elif a.code == 'P' %}{% set icon_class = 'icon-orange' %}{% set icon_name = 'bi-lightbulb' %}
+    {% elif a.code == 'F' %}{% set icon_class = 'icon-cyan' %}{% set icon_name = 'bi-brightness-high' %}
+    {% elif a.code == 'Cl' %}{% set icon_class = 'icon-green' %}{% set icon_name = 'bi-virus' %}
+    {% elif a.code == 'C' %}{% set icon_class = 'icon-indigo' %}{% set icon_name = 'bi-circle-fill' %}
+    {% elif a.code == 'H' %}{% set icon_class = 'icon-blue' %}{% set icon_name = 'bi-droplet-fill' %}
+    {% elif a.code == 'N' %}{% set icon_class = 'icon-purple' %}{% set icon_name = 'bi-cloud-fill' %}
+    {% elif a.code == 'O' %}{% set icon_class = 'icon-red' %}{% set icon_name = 'bi-bullseye' %}
+    {% endif %}
+
+    <a href="{{ url_for('analysis.analysis_page', analysis_code=a.code) }}"
+       class="analysis-card"
+       data-name="{{ (disp_name or '')|lower }}"
+       data-code="{{ (a.code or '')|lower }}"
+       data-badge="{{ (disp_badge or '')|lower }}"
+       data-cat="{{ cat }}"
+       style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+      <div class="card-icon {{ icon_class }}">
+        <i class="bi {{ icon_name }}"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">{{ a.code|fmt_code }}</div>
+        <div class="card-title">{{ disp_name }}</div>
+        <div class="card-desc">
+          {% if a.description %}
+            {{ a.description }}
+          {% else %}
+            Шинжилгээний ажил гүйцэтгэх
+          {% endif %}
         </div>
-      </a>
-    </div>
+        {% if a.required_role %}
+        <div class="card-role">
+          <i class="bi bi-person-badge"></i> {{ a.required_role }}
+        </div>
+        {% endif %}
+      </div>
+      <i class="bi bi-arrow-right card-arrow"></i>
+    </a>
     {% endfor %}
   </div>
   {% else %}
-  <div class="alert alert-warning">Энэ хэрэглэгчид тохирох шинжилгээ олдсонгүй.</div>
+  <div class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <h3>Шинжилгээ олдсонгүй</h3>
+    <p>Энэ хэрэглэгчид тохирох шинжилгээ алга байна.</p>
+  </div>
   {% endif %}
 </div>
 {% endblock %}
@@ -56,20 +462,99 @@
 {% block scripts %}
 {{ super() }}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('analysis-search');
-  const items = document.querySelectorAll('#analysis-list .analysis-item');
-  if (!searchInput) return;
+  const cards = document.querySelectorAll('#analysis-list .analysis-card');
+  const tabs = document.querySelectorAll('.cat-tab');
+  const noResults = document.getElementById('no-results');
 
-  searchInput.addEventListener('input', function () {
-    const q = this.value.trim().toLowerCase();
-    items.forEach(function (el) {
-      const name  = el.dataset.name  || '';
-      const code  = el.dataset.code  || '';
-      const badge = el.dataset.badge || '';
-      el.style.display = (!q || name.includes(q) || code.includes(q) || badge.includes(q)) ? '' : 'none';
+  let currentCat = 'tech';  // Анхны tab
+
+  // Tab switching
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      currentCat = this.dataset.cat;
+      filterCards();
     });
   });
+
+  // Анх ачааллахад эхний tab-д байгаа картуудыг харуулах
+  filterCards();
+
+  // Search filtering
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      filterCards();
+    });
+  }
+
+  function filterCards() {
+    const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+    let visibleCount = 0;
+
+    cards.forEach(function(card, idx) {
+      const name = card.dataset.name || '';
+      const code = card.dataset.code || '';
+      const badge = card.dataset.badge || '';
+      const cat = card.dataset.cat || '';
+
+      const matchesSearch = !q || name.includes(q) || code.includes(q) || badge.includes(q);
+      const matchesCat = cat === currentCat;  // Сонгосон tab-тай тохирох
+
+      if (matchesSearch && matchesCat) {
+        card.style.display = '';
+        card.style.animationDelay = (visibleCount * 0.05) + 's';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Show/hide no results message
+    if (noResults) {
+      if (visibleCount === 0) {
+        noResults.classList.add('show');
+      } else {
+        noResults.classList.remove('show');
+      }
+    }
+
+    // Update tab counts
+    updateTabCounts();
+  }
+
+  function updateTabCounts() {
+    const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+
+    // 4 ангилал
+    const counts = { tech: 0, element: 0, coking: 0, other: 0 };
+
+    cards.forEach(function(card) {
+      const name = card.dataset.name || '';
+      const code = card.dataset.code || '';
+      const badge = card.dataset.badge || '';
+      const cat = card.dataset.cat || 'other';
+
+      const matchesSearch = !q || name.includes(q) || code.includes(q) || badge.includes(q);
+
+      if (matchesSearch) {
+        if (counts[cat] !== undefined) counts[cat]++;
+      }
+    });
+
+    tabs.forEach(tab => {
+      const cat = tab.dataset.cat;
+      const countEl = tab.querySelector('.tab-count');
+      if (countEl && counts[cat] !== undefined) {
+        countEl.textContent = counts[cat];
+      }
+    });
+  }
+
+  // Initial count update
+  updateTabCounts();
 });
 </script>
 {% endblock %}

@@ -100,16 +100,18 @@ class TestCalculateAllConversions:
         assert 'ash_d' in result
 
     def test_none_values_ignored(self):
-        """None values should be skipped"""
+        """None values should be skipped - FC requires all 3 values"""
         raw = {
             'inherent_moisture': 5.0,
-            'ash': None,
+            'ash': None,  # Missing required value
             'volatile_matter': 30.0,
         }
         result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
 
-        # FC calculation should skip None values
-        assert 'fixed_carbon_ad' in result
+        # FC calculation requires ash, so it won't be calculated when ash=None
+        # This tests that the function doesn't crash on None values
+        assert result is not None
+        assert 'fixed_carbon_ad' not in result  # Can't calculate without ash
 
     def test_string_to_float_conversion(self):
         """String numbers should be converted"""

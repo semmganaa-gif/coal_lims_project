@@ -154,6 +154,51 @@ def normalize_raw_data(raw_data: Any, analysis_code: str | None = None) -> Dict[
         val = _pick_numeric(obj, aliases)
         if val not in (None, ""):
             out[target] = val
+
+    # FM гэх мэт p1/p2 бүтэцгүй шинжилгээнүүдийн талбаруудыг хадгалах
+    # Шууд top-level талбаруудыг хуулах (p1, p2, parallels, _schema-аас бусад)
+    preserve_keys = [
+        # FM талбарууд
+        "tray_g", "before_g", "after_g", "loss_g", "loss",
+        "wet_mass_g", "dry_mass_g", "fm_wet", "fm_dry",
+        "fm_wet_pct", "fm_dry_pct", "fm_pct", "fm_pct_wet",
+        "formula_wet", "formula_dry", "final_basis",
+        # CV талбарууд
+        "batch", "s_used", "E", "q1", "q2",
+        # Repeatability талбарууд
+        "repeatability", "t_exceeded", "t_band", "limit_used", "limit_mode",
+        # SOLID талбарууд
+        "solid_pct", "wet_mass", "formula",
+        # Бусад
+        "retest_mode", "is_low_avg",
+    ]
+    for key in preserve_keys:
+        if key in obj and obj[key] not in (None, ""):
+            out[key] = obj[key]
+
+    # CV, TRD-ийн p1/p2 дотор m, delta_t хадгалах (normalize хийхгүй)
+    # Original p1/p2 утгуудыг шууд хуулах
+    orig_p1 = obj.get("p1", {}) or {}
+    orig_p2 = obj.get("p2", {}) or {}
+
+    # CV-ийн m, delta_t талбаруудыг хадгалах
+    if "m" in orig_p1:
+        out["p1"]["m"] = orig_p1["m"]
+    if "delta_t" in orig_p1:
+        out["p1"]["delta_t"] = orig_p1["delta_t"]
+    if "m" in orig_p2:
+        out["p2"]["m"] = orig_p2["m"]
+    if "delta_t" in orig_p2:
+        out["p2"]["delta_t"] = orig_p2["delta_t"]
+
+    # TRD-ийн mad_used, temp_c, kt_used хадгалах
+    if "mad_used" in obj:
+        out["mad_used"] = obj["mad_used"]
+    if "temp_c" in obj:
+        out["temp_c"] = obj["temp_c"]
+    if "kt_used" in obj:
+        out["kt_used"] = obj["kt_used"]
+
     out["_schema"] = {
         "version": 1,
         "parallels_count": len(parallels),

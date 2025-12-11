@@ -47,31 +47,24 @@
     return 0.50;
   }
 
-  // ✨ Utility functions (will use LIMS_AGGRID when available)
-  const numParser = p => {
-    if (window.LIMS_AGGRID?.numParser) {
-      return window.LIMS_AGGRID.numParser(p);
-    }
+  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
     const v = parseFloat(p.newValue);
     return isNaN(v) ? null : v;
-  };
-  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
-  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
-  const numFmt1 = p => (p.value != null) ? parseFloat(p.value).toFixed(1) : '';
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+  const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
+  const numFmt1 = p => (p.value != null) ? parseFloat(p.value).toFixed(1) : '';  // CSN-д хэрэгтэй
 
-  // Баганын тохиргоо (editable numeric columns)
+  // Editable column тохиргоо (CSN uses numFmt1)
   const editCol = {
     editable: p => !p.data.is_saved,
     cellEditor: 'agTextCellEditor',
     cellEditorParams: { useFormatter: true },
     valueParser: numParser,
     valueFormatter: numFmt1,
-    cellStyle: p =>
-      p.data.is_saved
-        ? { backgroundColor: '#e9ecef' }
-        : {}
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
   };
 
   // --- 3. COLUMN DEFINITIONS ---
@@ -398,7 +391,7 @@
         columnDefs: columnDefs,
         rowData: rowData,
         defaultColDef: {
-          sortable: false,
+          sortable: true,
           resizable: true,
           editable: false,
           suppressMovable: true,

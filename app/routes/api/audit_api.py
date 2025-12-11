@@ -13,6 +13,7 @@ from flask import (
 )
 from flask_login import login_required
 from datetime import datetime, timedelta
+from app.utils.shifts import get_shift_date
 from collections import defaultdict
 import json
 
@@ -59,8 +60,8 @@ def register_routes(bp):
         error_type_str = request.args.get("error_type")
         shift_str = request.args.get("shift")  # Ээлж: day, night, all
 
-        # Default: Өнөөдрийн өдөр
-        today = datetime.now().date()
+        # Default: Ээлжийн огноо
+        today = get_shift_date()
         if not start_date_str:
             start_date_str = today.strftime("%Y-%m-%d")
         if not end_date_str:
@@ -195,7 +196,7 @@ def register_routes(bp):
         }
 
         # Химичийн жагсаалт (шүүлтүүрт ашиглах)
-        all_users = User.query.filter(User.role.in_(["himich", "ahlah", "admin"])).all()
+        all_users = User.query.filter(User.role.in_(["chemist", "senior", "manager", "admin"])).all()
 
         return render_template(
             "audit_log_page.html",
@@ -207,3 +208,132 @@ def register_routes(bp):
             all_users=all_users,
             analysis_schema=get_analysis_schema(base_code),  # ✅ base_code ашиглах
         )
+
+    # -----------------------------------------------------------
+    # 3) АУДИТ ХАЙЛТ API
+    # -----------------------------------------------------------
+    @bp.route("/audit_search")
+    @login_required
+    def api_audit_search():
+        """
+        Бүх шинжилгээнээс аудит хайх API
+
+        Parameters:
+            - q: Хайлтын үг (дээжний код, химичийн нэр)
+            - start_date, end_date: Огнооны хязгаар
+            - analysis_code: Шинжилгээний код
+            - action: Үйлдлийн төрөл (APPROVED, REJECTED, etc)
+            - limit: Хязгаар (default 100, max 500)
+        """
+        from flask import jsonify
+
+        q = request.args.get('q', '').strip()
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        analysis_code = request.args.get('analysis_code')
+        action = request.args.get('action')
+        limit = min(int(request.args.get('limit', 100)), 500)
+
+        query = db.session.query(
+            AnalysisResultLog, Sample, User
+        ).join(
+            Sample, AnalysisResultLog.sample_id == Sample.id
+        ).join(
+            User, AnalysisResultLog.user_id == User.id
+        )
+
+        # Хайлтын үг
+        if q:
+            from sqlalchemy import or_
+            safe_q = escape_like_pattern(q)
+            query = query.filter(or_(
+                Sample.sample_code.ilike(f"%{safe_q}%"),
+                User.username.ilike(f"%{safe_q}%"),
+                AnalysisResultLog.analysis_code.ilike(f"%{safe_q}%")
+            ))
+
+        # Огноо шүүлтүүр
+        if start_date:
+            try:
+                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                query = query.filter(AnalysisResultLog.timestamp >= sd)
+            except ValueError:
+                pass
+        if end_date:
+            try:
+                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.combine(ed, datetime.max.time())
+                query = query.filter(AnalysisResultLog.timestamp <= ed)
+            except ValueError:
+                pass
+
+        # Шинжилгээний код
+        if analysis_code:
+            query = query.filter(AnalysisResultLog.analysis_code == norm_code(analysis_code))
+
+        # Үйлдэл
+        if action:
+            query = query.filter(AnalysisResultLog.action.ilike(f"%{action}%"))
+
+        results = query.order_by(AnalysisResultLog.timestamp.desc()).limit(limit).all()
+
+        return jsonify({
+            "count": len(results),
+            "results": [
+                {
+                    "id": log.id,
+                    "timestamp": log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else None,
+                    "sample_code": sample.sample_code,
+                    "analysis_code": log.analysis_code,
+                    "action": log.action,
+                    "user": user.username,
+                    "final_result": log.final_result_snapshot,
+                    "reason": log.reason,
+                    "error_reason": log.error_reason,
+                }
+                for log, sample, user in results
+            ]
+        })
+
+    # -----------------------------------------------------------
+    # 4) АУДИТ EXPORT
+    # -----------------------------------------------------------
+    @bp.route("/export/audit")
+    @login_required
+    def export_audit():
+        """Аудит логийг Excel экспорт"""
+        from app.utils.exports import send_excel_response
+        from app.models import AuditLog
+
+        # Query parameters
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        action = request.args.get('action')
+        limit = min(int(request.args.get('limit', 1000)), 5000)
+
+        query = AuditLog.query
+
+        if start_date:
+            try:
+                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                query = query.filter(AuditLog.timestamp >= sd)
+            except ValueError:
+                pass
+        if end_date:
+            try:
+                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.combine(ed, datetime.max.time())
+                query = query.filter(AuditLog.timestamp <= ed)
+            except ValueError:
+                pass
+        if action:
+            query = query.filter(AuditLog.action.ilike(f"%{action}%"))
+
+        logs = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+
+        # Excel export
+        from app.utils.exports import create_audit_export
+        excel_data = create_audit_export(logs)
+        filename = f"audit_log_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+        return send_excel_response(excel_data, filename)

@@ -1,71 +1,19 @@
 /* ----------------------------- CALENDAR LOGIC (7-Day Rolling) ----------------------------- */
+/* ✅ REFACTORED: CalendarModule ашиглаж байна (calendar-module.js) */
+
+// CalendarModule-ийн alias (хуучин кодтой нийцтэй байх)
 function toLocalISOString(date) {
-    var y = date.getFullYear();
-    var m = (date.getMonth() + 1).toString().padStart(2, '0');
-    var d = date.getDate().toString().padStart(2, '0');
-    var h = date.getHours().toString().padStart(2, '0');
-    var min = date.getMinutes().toString().padStart(2, '0');
-    return `${y}-${m}-${d}T${h}:${min}`;
+    return CalendarModule.formatLocalDateTime(date);
 }
 
 function formatDateLabel(date) {
-    const y = date.getFullYear();
-    const m = date.getMonth();
-    const months = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар", "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
-    return months[m] + " " + y;
+    return CalendarModule.formatDateLabel(date);
 }
 
 function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) {
-    const cont = document.getElementById(containerId);
-    const label = document.getElementById(labelId);
-    cont.innerHTML = "";
-    label.textContent = formatDateLabel(centerDate);
-
-    let startDate = new Date(centerDate);
-    startDate.setDate(centerDate.getDate() - 3);
-
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    const trHead = document.createElement('tr');
-    const trBody = document.createElement('tr');
-    const weekDays = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
-
-    for (let i = 0; i < 7; i++) {
-        let currentDrawDate = new Date(startDate);
-        currentDrawDate.setDate(startDate.getDate() + i);
-
-        const dayNum = currentDrawDate.getDate();
-        const dayName = weekDays[currentDrawDate.getDay()];
-
-        const y = currentDrawDate.getFullYear();
-        const m = String(currentDrawDate.getMonth() + 1).padStart(2, '0');
-        const d = String(dayNum).padStart(2, '0');
-        const isoDate = `${y}-${m}-${d}`;
-
-        const th = document.createElement('th');
-        th.textContent = dayName;
-        trHead.appendChild(th);
-
-        const td = document.createElement('td');
-        td.textContent = dayNum;
-        td.className = "calendar-day";
-
-        if (selectedStr && selectedStr.startsWith(isoDate)) {
-            td.classList.add('selected');
-        }
-
-        td.addEventListener('click', () => {
-            let timePart = 'T00:00';
-            if (containerId === 'endCalendar') timePart = 'T23:59';
-            onSelect(isoDate + timePart);
-            buildCalendar(containerId, labelId, currentDrawDate, isoDate + timePart, onSelect);
-        });
-        trBody.appendChild(td);
-    }
-    thead.appendChild(trHead);
-    tbody.appendChild(trBody);
-    cont.appendChild(thead);
-    cont.appendChild(tbody);
+    // appendTime тохиргоог containerId-ээс тодорхойлох
+    const appendTime = containerId === 'endCalendar' ? 'T23:59' : 'T00:00';
+    CalendarModule.buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect, { appendTime });
 }
 
 // --- MAIN SCRIPT ---
@@ -156,30 +104,32 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             field: '1', headerName: 'ID', width: 70, pinned: 'left',
             sortable: true,
-            // ✅ ЗАСВАР: ID баганаар автоматаар өсөхөөр (asc) эрэмбэлнэ
             sort: 'asc',
             filter: 'agNumberColumnFilter'
         },
         {
-            field: '2', headerName: 'Дээжний код', width: 180, pinned: 'left',
+            field: '2', headerName: 'Дээжний код', width: 350, pinned: 'left',
             sortable: true,
             filter: 'agTextColumnFilter'
         },
         { field: '3', headerName: 'Захиалагч', width: 120, sortable: true, filter: 'agTextColumnFilter' },
         { field: '4', headerName: 'Төрөл', width: 100, sortable: true, filter: 'agTextColumnFilter' },
         { field: '5', headerName: 'Төлөв', width: 100, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '11', headerName: 'Жин (кг)', width: 100, filter: 'agNumberColumnFilter' },
         { field: '6', headerName: 'Хүлээлгэн өгсөн', width: 150, filter: 'agTextColumnFilter' },
         { field: '7', headerName: 'Бэлтгэсэн', width: 150, filter: 'agTextColumnFilter' },
         { field: '8', headerName: 'Бэлдсэн огноо', width: 120, filter: 'agDateColumnFilter' },
-        { field: '9', headerName: 'Тайлбар', width: 150, filter: 'agTextColumnFilter' },
         {
             field: '10', headerName: 'Бүртгэсэн', width: 140,
             sortable: true,
-            // ✅ ЗАСВАР: Бүртгэсэн огноо нь дээр нь ID эрэмбээ дагаад зөв харагдана.
-            // Хэрэв огноогоор нь ялгамаар байвал энд sort: 'asc' хийж болно.
             filter: 'agDateColumnFilter'
         },
-        { field: '11', headerName: 'Жин (кг)', width: 100, filter: 'agNumberColumnFilter' },
+        { field: '9', headerName: 'Тайлбар', width: 150, filter: 'agTextColumnFilter' },
+        {
+            field: '14', headerName: 'Хадгалалт', width: 120,
+            filter: false,
+            cellRenderer: params => params.value || ''
+        },
         {
             field: '12', headerName: 'Статус', width: 120,
             filter: 'agTextColumnFilter',
@@ -193,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return data;
             }
         },
+        { field: '15', headerName: 'Үйлдэл', width: 100, filter: false, cellRenderer: p => p.value },
         {
             field: '13', headerName: 'Даалгавар', flex: 1, minWidth: 200,
             filter: 'agTextColumnFilter',
@@ -215,8 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (e) { return data; }
                 return '';
             }
-        },
-        { field: '14', headerName: 'Үйлдэл', width: 100, filter: false, cellRenderer: p => p.value }
+        }
     ];
 
     const gridOptions = {

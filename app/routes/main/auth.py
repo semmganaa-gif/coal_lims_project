@@ -5,7 +5,7 @@
 """
 
 from flask import render_template, flash, redirect, url_for, request
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from app import db, limiter
 from app.forms import LoginForm
 import sqlalchemy as sa
@@ -48,6 +48,7 @@ def register_routes(bp):
     # 2. ГАРАХ
     # =====================================================================
     @bp.route("/logout")
+    @login_required
     def logout():
         if current_user.is_authenticated:
             log_audit(action='logout', details={'username': current_user.username})

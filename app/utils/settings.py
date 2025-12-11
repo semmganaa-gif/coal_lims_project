@@ -95,12 +95,26 @@ def update_setting(category, key, value, updated_by_id=None):
 
 
 def get_sample_type_choices_map():
-    """SAMPLE_TYPE_CHOICES_MAP-ийг DB-ээс унших"""
+    """
+    SAMPLE_TYPE_CHOICES_MAP-ийг DB-ээс унших.
+    DB хоосон бол constants.py-ээс fallback авна.
+    """
     settings = SystemSetting.query.filter_by(category='sample_type', is_active=True).all()
-    return {s.key: json.loads(s.value) for s in settings}
+    if settings:
+        return {s.key: json.loads(s.value) for s in settings}
+    # Fallback: constants.py
+    from app.constants import SAMPLE_TYPE_CHOICES_MAP
+    return SAMPLE_TYPE_CHOICES_MAP
 
 
 def get_unit_abbreviations():
-    """UNIT_ABBREVIATIONS-ийг DB-ээс унших"""
+    """
+    UNIT_ABBREVIATIONS-ийг DB-ээс унших.
+    DB хоосон бол constants.py-ээс fallback авна.
+    """
     settings = SystemSetting.query.filter_by(category='unit_abbr', is_active=True).all()
-    return {s.key: s.value for s in settings}
+    if settings:
+        return {s.key: s.value for s in settings}
+    # Fallback: constants.py
+    from app.constants import UNIT_ABBREVIATIONS
+    return UNIT_ABBREVIATIONS

@@ -37,31 +37,24 @@
     return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
   }
 
-  // ✨ Utility functions (will use LIMS_AGGRID when available)
-  const numParser = p => {
-    if (window.LIMS_AGGRID?.numParser) {
-      return window.LIMS_AGGRID.numParser(p);
-    }
+  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
     const v = parseFloat(p.newValue);
     return isNaN(v) ? null : v;
-  };
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+  const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
 
-  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';  // m1, m2, m3
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';  // тохирц
-  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';  // дундаж, үр дүн
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';  // тигель дугаар
-
-  // Баганын тохиргоо (editable numeric columns)
+  // Editable column тохиргоо
   const editCol = {
     editable: p => !p.data.is_saved,
     cellEditor: 'agTextCellEditor',
     cellEditorParams: { useFormatter: true },
     valueParser: numParser,
     valueFormatter: numFmt4,
-    cellStyle: p =>
-      p.data.is_saved
-        ? { backgroundColor: '#e9ecef' }
-        : {}
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
   };
 
   // --- 3. COLUMN DEFINITIONS ---
@@ -95,6 +88,25 @@
         flexDirection: 'column',
         justifyContent: 'center',
         lineHeight: '1.2'
+      },
+      // ✅ Угтвар (SC, TBS гэх мэт) + ээлжийн кодоор эрэмбэлэх
+      comparator: (a, b) => {
+        if (!a || !b) return (a || '').localeCompare(b || '');
+        const prefixPattern = /^([A-Za-z]+)/;
+        const prefixA = (a.match(prefixPattern) || ['', ''])[1].toUpperCase();
+        const prefixB = (b.match(prefixPattern) || ['', ''])[1].toUpperCase();
+        if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
+        const shiftPattern = /_([DN])(\d*)$/i;
+        const matchA = a.match(shiftPattern);
+        const matchB = b.match(shiftPattern);
+        if (matchA && matchB) {
+          const typeA = matchA[1].toUpperCase();
+          const typeB = matchB[1].toUpperCase();
+          if (typeA !== typeB) return typeA === 'D' ? -1 : 1;
+          const numA = parseInt(matchA[2]) || 0, numB = parseInt(matchB[2]) || 0;
+          if (numA !== numB) return numA - numB;
+        }
+        return a.localeCompare(b);
       },
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
@@ -466,7 +478,7 @@
         columnDefs: columnDefs,
         rowData: rowData,
         defaultColDef: {
-          sortable: false,
+          sortable: true,
           resizable: true,
           editable: false,
           suppressMovable: true,
@@ -596,10 +608,19 @@
   };
 
   // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
-  window.updateAshGridAfterSave = function(savedPayload) {
+  window.updateAshGridAfterSave = function(savedPayload, failedItems = []) {
     console.log('✅ afterSave called, updating grid without reload');
 
     const savedSampleIds = savedPayload.map(r => r.sample_id);
+    const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
+
+    // ✅ Алдаатай дээжийн мэдээлэл
+    if (failedItems.length > 0) {
+      console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
+      failedItems.forEach(err => {
+        console.warn(`   - Sample ${err.sample_id}: ${err.error}`);
+      });
+    }
 
     // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
     const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
@@ -744,6 +765,9 @@
     if (pendingIds.length > 0) {
       console.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
     }
+    if (failedSampleIds.length > 0) {
+      console.log(`   → ${failedSampleIds.length} failed - worksheet-д үлдсэн (алдаатай)`);
+    }
   };
 
   // ✅ Register collector AND afterSave in LIMS_CALC namespace
@@ -820,118 +844,4 @@
 </script>
 
 
-{# --- Доорх “Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал” блокийг өөрчлөөгүй, зөвхөн бүрэн харагдуулж байя --- #}
-<div class="card mt-4 shadow-sm border-0">
-  <div class="card-header bg-light d-flex justify-content-between align-items-center">
-    <div class="fw-bold text-uppercase text-muted small">
-      <i class="bi bi-clipboard-check"></i> Тоног Төхөөрөмжийн Ашиглалт & Бүрэн бүтэн байдал
-    </div>
-    <div class="text-muted small">{{ now_local().strftime('%Y-%m-%d') }}</div>
-  </div>
-  
-  <div class="card-body">
-    {% if related_equipments %}
-    <div class="table-responsive">
-      <table class="table table-bordered align-middle" id="dailyCheckTable">
-        <thead class="table-secondary text-center small">
-          <tr>
-            <th style="width: 35%;">Лаб дугаар</th>
-            <th style="width: 10%;">Бүрэн бүтэн<br>(Чек)</th>
-            <th style="width: 15%;">Ашиглалт<br>(Минут)</th>
-            <th style="width: 40%;">Тайлбар / Тэмдэглэл</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for eq in related_equipments %}
-          <tr data-eq-id="{{ eq.id }}">
-            <td>
-              <div class="fw-bold text-dark" style="font-size: 0.9rem;">
-                {{ eq.lab_code or '-' }}
-              </div>
-              <div class="text-muted" style="font-size: 0.75rem;">
-                {{ eq.name }}
-                {% if eq.serial_number %}
-                  · {{ eq.serial_number }}
-                {% endif %}
-              </div>
-            </td>
-            <td class="text-center bg-light">
-              <input class="form-check-input daily-check" type="checkbox"
-                     style="width: 22px; height: 22px; cursor: pointer;" checked>
-            </td>
-            <td class="text-center">
-              <input type="number"
-                     class="form-control form-control-sm text-center daily-minutes"
-                     placeholder="0">
-            </td>
-            <td>
-              <input type="text"
-                     class="form-control form-control-sm daily-note"
-                     placeholder="Ж: Хэвийн, эсвэл тень солив...">
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-3 text-end">
-      <button type="button" class="btn btn-success" onclick="submitDailyCheck()">
-        <i class="bi bi-save"></i> Бүртгэлийг Хадгалах
-      </button>
-    </div>
-
-    {% else %}
-      <div class="alert alert-warning text-center m-0">
-        Энэ шинжилгээнд холбогдсон төхөөрөмж байхгүй байна.
-      </div>
-    {% endif %}
-  </div>
-</div>
-
-<script>
-function submitDailyCheck() {
-  const rows = document.querySelectorAll('#dailyCheckTable tbody tr');
-  const items = [];
-
-  rows.forEach(row => {
-    const eqId = row.dataset.eqId;
-    const isChecked = row.querySelector('.daily-check').checked;
-    const minutesVal = row.querySelector('.daily-minutes').value;
-    const note = row.querySelector('.daily-note').value;
-
-    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
-
-    if (isChecked || minutes > 0 || note.trim() !== "") {
-      items.push({
-        eq_id: eqId,
-        is_checked: isChecked,
-        minutes: minutes,
-        note: note
-      });
-    }
-  });
-
-  if (items.length === 0) {
-    alert("Бүртгэх мэдээлэл алга байна.");
-    return;
-  }
-
-  fetch('/api/log_usage_bulk', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: items })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.status === 'success') {
-      alert('Амжилттай хадгалагдлаа!');
-      document.querySelectorAll('.daily-minutes').forEach(i => i.value = '');
-      document.querySelectorAll('.daily-note').forEach(i => i.value = '');
-    } else {
-      alert('Алдаа гарлаа.');
-    }
-  })
-  .catch(err => console.error(err));
-}
-</script>
+{# Тоног төхөөрөмжийн хэсэг analysis_page.html дээр modal болгож шилжсэн #}

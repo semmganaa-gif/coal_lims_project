@@ -124,9 +124,171 @@
         <div class="text-muted">Энэ анализын товч заавар, томьёог энд нэмнэ.</div>
       {% endif %}
 
+      {# ===================== SOP / MNS Файлуудын холбоос ===================== #}
       <hr class="my-2">
-      <div class="text-muted">
-        * Энэ хэсэг нь зөвхөн мэдээллийн шинжтэй (химичийн дэлгэц). T-ийн бодит шалгалт нь хадгалсны дараа сервер талд хийгдэнэ.
+      <div class="mb-2"><i class="bi bi-file-earmark-pdf me-1"></i><strong>Холбогдох баримт бичиг</strong></div>
+
+      {# Үнс (Aad) #}
+      {% if code in ['aad','ash','lab.07.05'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 212:2015 (Техникийн шинжилгээ)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.05 Үнслэгийн гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.05 Үнслэгийн гарц тодорхойлох
+          </a>
+        </div>
+
+      {# Дэгдэмхий (Vad) #}
+      {% elif code in ['vad','lab.07.04'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 212:2015 (Техникийн шинжилгээ)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.04 Дэгдэмхий бодисын гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.04 Дэгдэмхий бодисын гарц тодорхойлох
+          </a>
+        </div>
+
+      {# Нийт чийг (MT) #}
+      {% elif code in ['mt'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='2. MNS ISO 589-2003 Нийт чийгийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 589:2003 (Нийт чийг)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.02 Нийт чийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.02 Нийт чийг тодорхойлох
+          </a>
+        </div>
+
+      {# Дотоод чийг (Mad) #}
+      {% elif code in ['mad','lab.07.03'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 212:2015 (Техникийн шинжилгээ)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.03 Дотоод чийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.03 Дотоод чийг тодорхойлох
+          </a>
+        </div>
+
+      {# Хүхэр (TS) #}
+      {% elif code in ['st,ad','ts','lab.07.08'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='8. MNS ISO 19579-2014 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 19579:2014 (Хүхэр)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.08 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.08 Хүхэр тодорхойлох
+          </a>
+        </div>
+
+      {# Илчлэг (CV) #}
+      {% elif code in ['qgr,ad','cv','lab.07.13'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='13. MNS GB-T 213-2024 Нүүрсний илчлэгийг тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 213:2024 (Илчлэг)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.13 Нүүрсний илчлэг тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.13 Илчлэг тодорхойлох
+          </a>
+        </div>
+
+      {# Хөөлтийн зэрэг (CSN) #}
+      {% elif code in ['csn'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='6. MNS ISO 501-2003 Тигелийн аргаар хөөлтийн зэргийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 501:2003 (Хөөлтийн зэрэг)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.06 Хөөлтийн зэрэг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.06 Хөөлтийн зэрэг тодорхойлох
+          </a>
+        </div>
+
+      {# Барьцалдах чанар (Gi) #}
+      {% elif code in ['gi'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='7. MNS ISO 15585-2014 Хатуу нүүрс. Барьцалдах (бөсөх) чанар тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 15585:2014 (Барьцалдах)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.07 Барьцалдах чанар тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.07 Барьцалдах чанар тодорхойлох
+          </a>
+        </div>
+
+      {# Пластометр (X, Y) #}
+      {% elif code in ['x','y','xy'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='14. Битумжсан нүүрсний пластометрийн үзүүлэлтийг тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>Пластометрийн үзүүлэлт (Стандарт)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.14 Нүүрсний Пластометрийн үзүүлэлт тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.14 Пластометр тодорхойлох
+          </a>
+        </div>
+
+      {# Фосфор (P) #}
+      {% elif code in ['p','p,ad'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS 7057:2024 (XRF)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Фосфор, хлор тодорхойлох
+          </a>
+        </div>
+
+      {# Хлор (Cl) #}
+      {% elif code in ['cl','cl,ad'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS 7057:2024 (XRF)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Фосфор, хлор тодорхойлох
+          </a>
+        </div>
+
+      {# Фтор (F) #}
+      {% elif code in ['f','f,ad'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='10. MNS GB-T 4633-2024 Нүүрсэнд фторын агуулга тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 4633:2024 (Фтор)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.10 Нүүрсэнд фторын агуулга тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.10 Фтор тодорхойлох
+          </a>
+        </div>
+
+      {# Харьцангуй нягт (TRD) #}
+      {% elif code in ['trd'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='12. MNS GBT 217-2015 Нүүрсний харьцангуй нягт тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 217:2015 (Нягт)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.12 Нүүрсний харьцангуй нягт тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.12 Нягт тодорхойлох
+          </a>
+        </div>
+
+      {# Чөлөөт чийг / Дээж бэлтгэл (FM, Solid) #}
+      {% elif code in ['fm','solid','m'] %}
+        <div class="d-flex flex-column gap-1">
+          <a href="{{ url_for('settings.view_standard_file', filename='1. MNS GB-T 474-2015 Нүүрсний дээж бэлтгэх арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 474:2015 (Дээж бэлтгэх)
+          </a>
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.01 Нүүрсний дээж бэлтгэх арга.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.01 Дээж бэлтгэх арга
+          </a>
+        </div>
+
+      {% else %}
+        <div class="text-muted small">Энэ анализын холбогдох баримт бичиг бүртгэгдээгүй.</div>
+      {% endif %}
+
+      <hr class="my-2">
+      <div class="text-muted" style="font-size: 0.75rem;">
+        * T-ийн бодит шалгалт хадгалсны дараа серверт хийгдэнэ.
       </div>
     </div>
   </div>

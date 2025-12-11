@@ -18,6 +18,7 @@ from app.utils.codes import norm_code
 from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS
 from app.config.analysis_schema import get_analysis_schema
+from app.utils.sorting import custom_sample_sort_key
 from app.utils.decorators import analysis_role_required
 from app.config.qc_config import TIMER_PRESETS
 from app.utils.qc import sulfur_map_for
@@ -31,10 +32,10 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/analysis_hub")
     @login_required
-    @analysis_role_required(["beltgegch", "himich", "ahlah", "admin"])
+    @analysis_role_required(["prep", "chemist", "senior", "manager", "admin"])
     def analysis_hub():
         user_role = current_user.role
-        if user_role in ["admin", "ahlah"]:
+        if user_role in ["admin", "senior", "manager"]:
             allowed_analyses = AnalysisType.query.order_by(AnalysisType.order_num).all()
         else:
             allowed_analyses = (
@@ -42,6 +43,7 @@ def register_routes(bp):
                 .order_by(AnalysisType.order_num)
                 .all()
             )
+
         return render_template(
             "analysis_hub.html",
             title="Ажлын талбар",
@@ -90,19 +92,17 @@ def register_routes(bp):
             ~AnalysisResult.sample_id.in_(approved_ids)
         ).all()
 
-        display_list = []
         seen_ids = set()
 
-        # A. Хадгалагдсан дээжүүд
+        # A. Хадгалагдсан дээжүүд (Багц A)
+        batch_a = []
         for res in existing_results:
-            display_list.append({
-                'sample': res.sample,
-                'sort_order': id_order_map.get(res.sample_id, -1),
-                'is_saved': True
-            })
-            seen_ids.add(res.sample_id)
+            if res.sample:
+                batch_a.append(res.sample)
+                seen_ids.add(res.sample_id)
 
-        # B. Хадгалагдаагүй (Шинэ) дээжүүд
+        # B. Шинэ нэмсэн дээжүүд (Багц B)
+        batch_b = []
         if new_ids_list:
             new_samples_db = Sample.query.filter(Sample.id.in_(new_ids_list)).all()
             new_samples_map = {s.id: s for s in new_samples_db}
@@ -110,31 +110,36 @@ def register_routes(bp):
             for sid in new_ids_list:
                 if sid not in seen_ids and sid not in approved_ids:
                     if sid in new_samples_map:
-                        display_list.append({
-                            'sample': new_samples_map[sid],
-                            'sort_order': id_order_map.get(sid, 9999),
-                            'is_saved': False
-                        })
+                        batch_b.append(new_samples_map[sid])
                         seen_ids.add(sid)
 
-        # 3. ЭРЭМБЭЛЭХ
-        display_list.sort(key=lambda x: x['sort_order'])
-        samples_to_analyze = [x['sample'] for x in display_list]
+        # 3. БАГЦ БҮРИЙН ДОТОР ЭРЭМБЭЛЭХ
+        # Багц A - дотроо кодоор эрэмбэлнэ (хуучин хадгалагдсан дээжүүд)
+        batch_a.sort(key=lambda s: custom_sample_sort_key(s.sample_code or ""))
+        # Багц B - URL дарааллаар үлдээх (хэрэглэгчийн нэмсэн дараалал)
+        # batch_b эрэмбэлэхгүй - нэмсэн дарааллаар харуулна
+
+        # Багцын дараалал хадгалж нэгтгэх: A эхэнд, B дараа нь
+        samples_to_analyze = batch_a + batch_b
 
         if new_ids_list:
             loaded_ids = {s.id for s in samples_to_analyze}
-            missing_ids = [sid for sid in new_ids_list if sid not in loaded_ids]
+            # ✅ approved_ids шалгах - батлагдсан дээжийг нэмэхгүй
+            missing_ids = [sid for sid in new_ids_list if sid not in loaded_ids and sid not in approved_ids]
             if missing_ids:
                 fallback_samples = Sample.query.filter(Sample.id.in_(missing_ids)).all()
                 fallback_map = {s.id: s for s in fallback_samples}
-                ordered_extra = [fallback_map[sid] for sid in new_ids_list if sid in fallback_map]
+                ordered_extra = [fallback_map[sid] for sid in missing_ids if sid in fallback_map]
                 samples_to_analyze.extend(ordered_extra)
 
         # Absolute fallback: if still empty but sample_ids were provided, load by ids as-is
+        # ✅ approved_ids шалгах - батлагдсан дээжийг нэмэхгүй
         if not samples_to_analyze and new_ids_list:
-            fallback_samples = Sample.query.filter(Sample.id.in_(new_ids_list)).all()
-            fallback_map = {s.id: s for s in fallback_samples}
-            samples_to_analyze = [fallback_map[sid] for sid in new_ids_list if sid in fallback_map]
+            valid_ids = [sid for sid in new_ids_list if sid not in approved_ids]
+            if valid_ids:
+                fallback_samples = Sample.query.filter(Sample.id.in_(valid_ids)).all()
+                fallback_map = {s.id: s for s in fallback_samples}
+                samples_to_analyze = [fallback_map[sid] for sid in valid_ids if sid in fallback_map]
 
         try:
             msg = f"analysis_page code={analysis_type.code} samples_to_analyze={len(samples_to_analyze)} ids={[s.id for s in samples_to_analyze]}"
@@ -247,16 +252,16 @@ def register_routes(bp):
 
         # Template Config
         form_map = {
-            "Aad": "ash_form_aggrid",  # AG Grid
-              "Mad": "mad_aggrid", "Vad": "vad_aggrid", "MT": "mt_aggrid",  # AG Grid
-            "TS": "sulfur_form", "St,ad": "sulfur_form",
-              "CV": "cv_aggrid", "FM": "free_moisture", "CSN": "csn_aggrid", "Gi": "Gi_aggrid", "TRD": "trd_aggrid",
-            "P": "phosphorus_form", "F": "fluorine_form", "Cl": "chlorine_form",
+            "Aad": "ash_form_aggrid",
+            "Mad": "mad_aggrid", "Vad": "vad_aggrid", "MT": "mt_aggrid",
+            "TS": "sulfur_aggrid", "St,ad": "sulfur_aggrid",
+            "CV": "cv_aggrid", "CSN": "csn_aggrid", "Gi": "Gi_aggrid", "TRD": "trd_aggrid",
+            "P": "phosphorus_aggrid", "F": "fluorine_aggrid", "Cl": "chlorine_aggrid",
             "X": "xy_aggrid", "Y": "xy_aggrid",
             "CRI": "cricsr_aggrid", "CSR": "cricsr_aggrid",
             "Solid": "solid_aggrid", "SOLID": "solid_aggrid", "solid": "solid_aggrid",
             "FM": "free_moisture_aggrid",
-            "m": "mass_workspace_form"
+            "m": "mass_aggrid"
         }
         template_name = form_map.get(base_code, "default")
 
@@ -315,5 +320,5 @@ def register_routes(bp):
             paired_results_map=paired_results_map,
             aggrid_samples=samples_to_analyze,
             analysis_schema=get_analysis_schema(base_code),
-            use_aggrid=uses_aggrid,  # ✨ NEW: Conditional AG Grid loading
+            use_aggrid=uses_aggrid,
         )

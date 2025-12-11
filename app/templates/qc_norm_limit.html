@@ -1,0 +1,590 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .qc-page {
+    min-height: calc(100vh - 80px);
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 1rem;
+  }
+
+  .qc-wrapper {
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .qc-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .qc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .qc-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  .qc-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .qc-subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .qc-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* Main Layout - 2 columns */
+  .qc-main {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (max-width: 1200px) {
+    .qc-main {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Left Panel - Config Panel */
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Spec Selector Card */
+  .spec-selector-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .spec-selector-title {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #475569;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .spec-selector-title i { color: #3b82f6; }
+
+  .spec-dropdown {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .spec-dropdown:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  }
+
+  /* Spec Editor Card */
+  .spec-editor-card {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 1rem;
+  }
+
+  .spec-editor-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1e40af;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .spec-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .input-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .input-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+
+  .spec-input {
+    width: 100%;
+    border: 1px solid #93c5fd;
+    border-radius: 6px;
+    padding: 0.5rem 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1e293b;
+    text-align: center;
+    background: white;
+  }
+
+  .spec-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+  }
+
+  /* Tolerance Config Card */
+  .tolerance-card {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid #fde047;
+  }
+
+  .tolerance-title {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #854d0e;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tolerance-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .tolerance-input {
+    width: 100%;
+    border: 1px solid #fde047;
+    border-radius: 6px;
+    padding: 0.5rem 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #854d0e;
+    text-align: center;
+    background: white;
+  }
+
+  .tolerance-input:focus {
+    outline: none;
+    border-color: #eab308;
+    box-shadow: 0 0 0 2px rgba(234,179,8,0.2);
+  }
+
+  /* Right Panel - Results Table */
+  .results-panel {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 160px);
+  }
+
+  .results-header {
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .results-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .results-title i { color: #64748b; }
+
+  .legend {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+
+  .legend-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .legend-box.fail {
+    background: #fee2e2;
+    border: 1px solid #dc2626;
+  }
+
+  .table-wrap {
+    overflow: auto;
+    flex: 1;
+  }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+
+  .result-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    padding: 0.6rem 0.4rem;
+    text-align: center;
+    border-bottom: 2px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .result-table tbody td {
+    padding: 0.5rem 0.4rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+  }
+
+  .result-table tbody tr:hover { background: #fafbfc; }
+
+  .cell-code {
+    text-align: left;
+    padding-left: 0.75rem !important;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .cell-code a {
+    color: #1e293b;
+    text-decoration: none;
+  }
+
+  .cell-code a:hover { color: #3b82f6; }
+
+  .cell-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-align: right;
+    padding-right: 0.5rem !important;
+  }
+
+  /* Spec Fail */
+  .spec-fail {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    font-weight: 700;
+    border-bottom: 2px solid #dc2626 !important;
+  }
+</style>
+
+<div class="qc-page">
+  <div class="qc-wrapper">
+
+    <!-- Header -->
+    <div class="qc-header">
+      <div class="qc-header-left">
+        <div class="qc-icon">
+          <i class="bi bi-rulers"></i>
+        </div>
+        <div>
+          <h1 class="qc-title">Norm Limit</h1>
+          <div class="qc-subtitle">Дээж vs Норм (target ± band) • {{ sample_rows|length }} дээж</div>
+        </div>
+      </div>
+      <div class="qc-actions">
+        <button onclick="resetToDefaults()" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </button>
+        <a href="{{ url_for('analysis.qc_composite_check', ids=raw_ids) }}" class="btn btn-warning btn-sm">
+          <i class="bi bi-clipboard2-check"></i> Composite
+        </a>
+        <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left"></i> Нэгтгэл
+        </a>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Layout -->
+    <div class="qc-main">
+
+      <!-- Left: Config Panel -->
+      <div class="config-panel">
+        <!-- Spec Type Selector -->
+        <div class="spec-selector-card">
+          <div class="spec-selector-title">
+            <i class="bi bi-collection"></i> Бүтээгдэхүүн сонгох
+          </div>
+          <select id="specSelector" class="spec-dropdown" onchange="onSpecChange()">
+            {% if name_class_master_specs %}
+              {% for key in name_class_master_specs.keys() %}
+              <option value="{{ key }}">{{ key }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+
+        <!-- Spec Value Editor -->
+        <div class="spec-editor-card">
+          <div class="spec-editor-title">
+            <i class="bi bi-pencil-square"></i>
+            <span id="editorTitle">Spec утгууд</span>
+          </div>
+          <div class="spec-inputs-grid" id="specInputsContainer">
+            {% for code in param_codes %}
+            <div class="input-cell">
+              <label class="input-label">{{ code }}</label>
+              <input type="number" step="0.01" class="spec-input"
+                     data-param="{{ code }}"
+                     oninput="handleSpecInput(this)">
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Tolerance Bands Config -->
+        <div class="tolerance-card">
+          <div class="tolerance-title">
+            <i class="bi bi-sliders"></i> Tolerance Bands (±)
+          </div>
+          <div class="tolerance-inputs-grid">
+            {% for code in param_codes %}
+            <div class="input-cell">
+              <label class="input-label">{{ code }}</label>
+              <input type="number" step="0.01" class="tolerance-input"
+                     data-param="{{ code }}"
+                     value="{{ tolerance_bands.get(code) or '' }}"
+                     oninput="handleToleranceInput(this)">
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Results Table -->
+      <div class="results-panel">
+        <div class="results-header">
+          <div class="results-title">
+            <i class="bi bi-table"></i>
+            Дээжүүдийн үр дүн
+          </div>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box fail"></div>
+              <span>Spec-ээс гадуур</span>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="result-table" id="samplesTable">
+            <thead>
+              <tr>
+                <th style="width:35px">#</th>
+                <th style="text-align:left; padding-left:0.75rem; min-width:120px;">Sample</th>
+                {% for code in param_codes %}
+                <th>{{ code }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in sample_rows %}
+              <tr>
+                <td class="text-muted">{{ loop.index }}</td>
+                <td class="cell-code">
+                  <a href="{{ url_for('api.sample_report', sample_id=row.sample.id) }}">
+                    {{ row.sample.sample_code }}
+                  </a>
+                </td>
+                {% for code in param_codes %}
+                  {% set val = row["values"].get(code) %}
+                  <td class="cell-num result-cell"
+                      data-col="{{ code }}"
+                      data-val="{{ val if val is not none else '' }}">
+                    {{ "%.2f"|format(val) if val is not none else "—" }}
+                  </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Server-ийн анхны утгууд
+const SERVER_BANDS = {{ tolerance_bands | default({}) | tojson | safe }};
+const DEFAULT_BANDS = {"Mad": 0.2, "Aad": 2.0, "Vdaf": 3.0, "Qnet,ar": 200, "CSN": 1.0, "Gi": 5.0};
+const MASTER_SPECS = {{ name_class_master_specs | default({}) | tojson | safe }};
+const PARAM_CODES = {{ param_codes | tojson | safe }};
+
+document.addEventListener('DOMContentLoaded', () => {
+  restoreTolerances();
+  loadSpecValues();
+  runCheck();
+});
+
+// Dropdown өөрчлөгдөхөд
+function onSpecChange() {
+  loadSpecValues();
+  runCheck();
+}
+
+// Сонгосон spec-ийн утгуудыг editor-т ачаалах
+function loadSpecValues() {
+  const specKey = document.getElementById('specSelector').value;
+  document.getElementById('editorTitle').textContent = specKey;
+
+  const defaultRow = MASTER_SPECS[specKey] || {};
+
+  PARAM_CODES.forEach(code => {
+    const input = document.querySelector(`.spec-input[data-param="${code}"]`);
+    if (!input) return;
+
+    const saved = localStorage.getItem(`lims_qc_${specKey}_${code}`);
+    if (saved !== null) {
+      input.value = saved;
+    } else {
+      input.value = defaultRow[code] !== null && defaultRow[code] !== undefined ? defaultRow[code] : '';
+    }
+  });
+}
+
+// Spec утга өөрчлөгдөхөд хадгалах
+function handleSpecInput(input) {
+  const specKey = document.getElementById('specSelector').value;
+  const param = input.dataset.param;
+  localStorage.setItem(`lims_qc_${specKey}_${param}`, input.value);
+  runCheck();
+}
+
+// Tolerance band утгууд хадгалах
+function handleToleranceInput(input) {
+  const param = input.dataset.param;
+  localStorage.setItem(`lims_qc_band_${param}`, input.value);
+  runCheck();
+}
+
+// Tolerance band утгуудыг сэргээх
+function restoreTolerances() {
+  document.querySelectorAll('.tolerance-input').forEach(input => {
+    const param = input.dataset.param;
+    const saved = localStorage.getItem(`lims_qc_band_${param}`);
+    if (saved !== null) input.value = saved;
+  });
+}
+
+// UI-аас tolerance band авах
+function getToleranceBand(param) {
+  const input = document.querySelector(`.tolerance-input[data-param="${param}"]`);
+  if (input && input.value.trim()) {
+    return parseFloat(input.value);
+  }
+  return SERVER_BANDS[param] || DEFAULT_BANDS[param] || 0;
+}
+
+function resetToDefaults() {
+  if (confirm("Бүх өөрчлөлтийг устгаж анхны утга руу буцах уу?")) {
+    Object.keys(localStorage).filter(k => k.startsWith('lims_qc_')).forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+}
+
+function runCheck() {
+  const limits = {};
+
+  // Editor дээрх утгуудаас авах
+  document.querySelectorAll('.spec-input').forEach(input => {
+    const param = input.dataset.param;
+    if (input.value.trim()) {
+      limits[param] = parseFloat(input.value);
+    }
+  });
+
+  document.querySelectorAll('.result-cell').forEach(cell => {
+    const col = cell.dataset.col;
+    const valStr = cell.dataset.val;
+
+    cell.classList.remove('spec-fail');
+    cell.title = "";
+
+    if (limits[col] !== undefined && valStr) {
+      const val = parseFloat(valStr);
+      const target = limits[col];
+      const band = getToleranceBand(col);
+      const min = target - band;
+      const max = target + band;
+
+      if (val < min || val > max) {
+        cell.classList.add('spec-fail');
+        cell.title = `Range: ${min.toFixed(2)} - ${max.toFixed(2)}`;
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

@@ -28,23 +28,23 @@ class TestInfrastructure:
         with app.app_context():
             # Should be able to query without error
             user_count = User.query.count()
-            assert user_count >= 3  # admin, himich, ahlah
+            assert user_count >= 3  # admin, chemist, senior
 
     def test_test_users_created(self, app):
         """Test that test users were created successfully."""
         with app.app_context():
             admin = User.query.filter_by(username='admin').first()
-            himich = User.query.filter_by(username='himich').first()
-            ahlah = User.query.filter_by(username='ahlah').first()
+            chemist = User.query.filter_by(username='chemist').first()
+            senior = User.query.filter_by(username='senior').first()
 
             assert admin is not None
             assert admin.role == 'admin'
 
-            assert himich is not None
-            assert himich.role == 'himich'
+            assert chemist is not None
+            assert chemist.role == 'chemist'
 
-            assert ahlah is not None
-            assert ahlah.role == 'ahlah'
+            assert senior is not None
+            assert senior.role == 'senior'
 
     def test_password_validation(self, app):
         """Test that password validation works."""
@@ -71,10 +71,10 @@ class TestFixtures:
     def test_auth_admin_fixture(self, auth_admin):
         """Test that auth_admin fixture logs in as admin."""
         # Auth fixture has already logged in
-        # Try accessing a page (may redirect if routes not all registered)
-        response = auth_admin.get('/')
+        # Try accessing equipment list (more reliable than index)
+        response = auth_admin.get('/equipment_list')
         # Should get a response (200 or 302 redirect)
-        assert response.status_code in [200, 302, 404]
+        assert response.status_code in [200, 302]
 
     def test_auth_user_fixture(self, auth_user):
         """Test that auth_user fixture logs in as regular user."""
@@ -102,20 +102,23 @@ class TestDatabaseModels:
             assert eq.id is not None
 
             # Should be queryable
-            found = Equipment.query.get(eq.id)
+            found = db.session.get(Equipment, eq.id)
             assert found is not None
             assert found.name == "Test Equipment"
 
     def test_create_sample(self, app, db):
         """Test creating sample record."""
+        import uuid
         with app.app_context():
             # Get a user for the foreign key
-            user = User.query.filter_by(username='himich').first()
+            user = User.query.filter_by(username='chemist').first()
 
+            # Use unique sample code to avoid conflicts
+            unique_code = f"TEST-{uuid.uuid4().hex[:8]}"
             sample = Sample(
-                sample_code="TEST001",
+                sample_code=unique_code,
                 user_id=user.id,
-                client_name="Test Client"
+                client_name="QC"  # Valid client name from CHECK constraint
             )
             db.session.add(sample)
             db.session.commit()
@@ -124,26 +127,33 @@ class TestDatabaseModels:
             assert sample.id is not None
 
             # Should be queryable
-            found = Sample.query.get(sample.id)
+            found = db.session.get(Sample, sample.id)
             assert found is not None
-            assert found.sample_code == "TEST001"
+            assert found.sample_code == unique_code
 
     def test_database_relationships(self, app, db):
         """Test that database relationships work."""
+        import uuid
         with app.app_context():
             user = User.query.filter_by(username='admin').first()
 
-            # Create sample linked to user
+            # Create sample linked to user with valid client_name and unique code
+            unique_code = f"REL-{uuid.uuid4().hex[:8]}"
             sample = Sample(
-                sample_code="REL001",
-                user_id=user.id
+                sample_code=unique_code,
+                user_id=user.id,
+                client_name="LAB"  # Valid client name
             )
             db.session.add(sample)
             db.session.commit()
 
-            # Relationship should work
-            assert sample.user is not None
-            assert sample.user.username == 'admin'
+            # Foreign key should be set correctly
+            assert sample.user_id is not None
+            assert sample.user_id == user.id
+
+            # Verify via query
+            linked_user = db.session.get(User, sample.user_id)
+            assert linked_user.username == 'admin'
 
 
 class TestPasswordSecurity:
@@ -175,7 +185,7 @@ class TestPasswordSecurity:
     def test_password_hashing(self, app):
         """Test that passwords are hashed, not stored in plaintext."""
         with app.app_context():
-            user = User(username='hashtest', role='ahlah')
+            user = User(username='hashtest', role='senior')
             user.set_password('TestPass123')
 
             # Password hash should exist

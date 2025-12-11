@@ -1,187 +1,460 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2><i class="fas fa-chart-line"></i> QC Control Charts</h2>
-            <p class="text-muted">ISO 17025 - Clause 7.7.1: Чанарын хяналтын график</p>
-        </div>
-        <div class="col-md-4 text-right">
-            <button class="btn btn-primary" data-toggle="modal" data-target="#addQCModal">
-                <i class="fas fa-plus"></i> QC Хэмжилт нэмэх
-            </button>
-        </div>
-    </div>
+<style>
+  .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
+  .qc-header {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+  .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
 
-    <!-- QC Data Table -->
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-sm" id="qcTable">
-                <thead>
-                    <tr>
-                        <th>Огноо</th>
-                        <th>Analysis</th>
-                        <th>QC Sample</th>
-                        <th>Measured</th>
-                        <th>Target</th>
-                        <th>UCL</th>
-                        <th>LCL</th>
-                        <th>In Control</th>
-                        <th>Operator</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for chart in charts %}
-                    <tr class="{{ 'table-danger' if not chart.in_control else '' }}">
-                        <td>{{ chart.measurement_date.strftime('%Y-%m-%d') if chart.measurement_date else '-' }}</td>
-                        <td><span class="badge badge-info">{{ chart.analysis_code }}</span></td>
-                        <td>{{ chart.qc_sample_name }}</td>
-                        <td><strong>{{ "%.3f"|format(chart.measured_value) if chart.measured_value else '-' }}</strong></td>
-                        <td>{{ "%.3f"|format(chart.target_value) if chart.target_value else '-' }}</td>
-                        <td><small>{{ "%.3f"|format(chart.ucl) if chart.ucl else '-' }}</small></td>
-                        <td><small>{{ "%.3f"|format(chart.lcl) if chart.lcl else '-' }}</small></td>
-                        <td>
-                            {% if chart.in_control %}
-                                <span class="badge badge-success">✓</span>
-                            {% else %}
-                                <span class="badge badge-danger">✗</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ chart.operator.username if chart.operator else '-' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+  /* Westgard Panel */
+  .westgard-panel {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: white;
+  }
+  .westgard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .westgard-title { font-weight: 700; font-size: 1rem; }
+  .westgard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+  .westgard-card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 0.75rem;
+    backdrop-filter: blur(10px);
+  }
+  .westgard-card.pass { border-left: 4px solid #22c55e; }
+  .westgard-card.warning { border-left: 4px solid #f59e0b; }
+  .westgard-card.reject { border-left: 4px solid #ef4444; }
+  .westgard-card.na { border-left: 4px solid #94a3b8; }
+  .wc-top { display: flex; justify-content: space-between; align-items: center; }
+  .wc-type {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .wc-type.gbw { background: #06b6d4; }
+  .wc-type.cm { background: #8b5cf6; }
+  .wc-analysis { font-weight: 700; font-size: 1rem; }
+  .wc-status { font-size: 0.7rem; font-weight: 600; }
+  .wc-status.pass { color: #86efac; }
+  .wc-status.warning { color: #fde047; }
+  .wc-status.reject { color: #fca5a5; }
+  .wc-details { font-size: 0.7rem; opacity: 0.8; margin-top: 0.5rem; }
+  .wc-rules { font-size: 0.65rem; color: #fca5a5; font-weight: 600; margin-top: 4px; }
+
+  /* QC Section Cards */
+  .qc-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .qc-section-header {
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .qc-section-header.gbw { background: linear-gradient(90deg, #0891b2 0%, #06b6d4 100%); color: white; }
+  .qc-section-header.cm { background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
+  .qc-section-title { font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  .qc-section-badge { font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; }
+
+  /* Analysis Groups */
+  .analysis-group { border-bottom: 1px solid #f1f5f9; }
+  .analysis-group:last-child { border-bottom: none; }
+  .analysis-header {
+    padding: 0.6rem 1rem;
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .analysis-header:hover { background: #f1f5f9; }
+  .analysis-code {
+    font-weight: 700;
+    color: #1e40af;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .analysis-stats { display: flex; gap: 1rem; font-size: 0.75rem; color: #64748b; }
+  .stat-item { display: flex; align-items: center; gap: 0.25rem; }
+  .stat-item i { font-size: 0.7rem; }
+
+  /* Measurements Table */
+  .measurements-table {
+    width: 100%;
+    font-size: 0.8rem;
+    border-collapse: collapse;
+  }
+  .measurements-table th {
+    background: #f1f5f9;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+  .measurements-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .measurements-table tr:hover { background: #fafbfc; }
+  .val-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .val-ok { color: #16a34a; }
+  .val-out { color: #dc2626; background: #fef2f2; }
+  .target-cell { color: #64748b; font-size: 0.75rem; }
+  .date-cell { color: #94a3b8; font-size: 0.75rem; }
+
+  /* Chart Section */
+  .chart-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .chart-title { font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 1rem; }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
+  }
+  .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+</style>
+
+<div class="qc-page">
+  <!-- Header -->
+  <div class="qc-header">
+    <div>
+      <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>QC Control Charts</h1>
+      <div class="qc-subtitle">ISO 17025 Clause 7.7.1 • CM/GBW Westgard хяналт</div>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+      <i class="bi bi-arrow-clockwise"></i> Шинэчлэх
+    </button>
+  </div>
+
+  <!-- Westgard Summary Panel -->
+  <div class="westgard-panel">
+    <div class="westgard-header">
+      <div class="westgard-title"><i class="bi bi-shield-check me-2"></i>Westgard QC Статус</div>
+      <small style="opacity:0.7">1:2s ⚠️ | 1:3s 2:2s R:4s 4:1s 10x ❌</small>
+    </div>
+    <div id="westgardSummary" class="westgard-grid">
+      <div class="text-center py-3">
+        <div class="spinner-border spinner-border-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  {% if qc_results %}
+    {% set grouped = {} %}
+    {% for item in qc_results %}
+      {% set qc_type = 'GBW' if 'GBW' in (item.sample.sample_type or '')|upper or 'GBW' in (item.sample.sample_code or '')|upper else 'CM' %}
+      {% set key = qc_type + '|' + item.result.analysis_code %}
+      {% if key not in grouped %}
+        {% set _ = grouped.update({key: []}) %}
+      {% endif %}
+      {% set _ = grouped[key].append(item) %}
+    {% endfor %}
+
+    <!-- GBW Section -->
+    {% set gbw_items = [] %}
+    {% for key, items in grouped.items() if key.startswith('GBW') %}
+      {% set _ = gbw_items.append((key, items)) %}
+    {% endfor %}
+
+    {% if gbw_items %}
+    <div class="qc-section">
+      <div class="qc-section-header gbw">
+        <div class="qc-section-title">
+          <i class="bi bi-award"></i> GBW (Certified Reference Material)
+        </div>
+        <span class="qc-section-badge">{{ gbw_items|length }} шинжилгээ</span>
+      </div>
+
+      {% for key, items in gbw_items|sort %}
+        {% set analysis_code = key.split('|')[1] %}
+        {% set ok_count = items|selectattr('in_control')|list|length %}
+        {% set out_count = items|length - ok_count %}
+        <div class="analysis-group">
+          <div class="analysis-header" onclick="toggleGroup(this)">
+            <div class="analysis-code">
+              <i class="bi bi-chevron-right"></i>
+              {{ analysis_code }}
+            </div>
+            <div class="analysis-stats">
+              <span class="stat-item"><i class="bi bi-check-circle text-success"></i> {{ ok_count }} OK</span>
+              {% if out_count > 0 %}
+              <span class="stat-item text-danger"><i class="bi bi-x-circle"></i> {{ out_count }} OUT</span>
+              {% endif %}
+              <span class="stat-item"><i class="bi bi-list-ol"></i> {{ items|length }} нийт</span>
+            </div>
+          </div>
+          <div class="analysis-content" style="display:none;">
+            <table class="measurements-table">
+              <thead>
+                <tr>
+                  <th>Огноо</th>
+                  <th>Дээж</th>
+                  <th>Хэмжсэн</th>
+                  <th>Target ± Tol</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in items[:10] %}
+                <tr>
+                  <td class="date-cell">{{ item.result.updated_at.strftime('%m/%d %H:%M') if item.result.updated_at else '-' }}</td>
+                  <td>
+                    <a href="{{ url_for('api.sample_report', sample_id=item.sample.id) }}" class="text-decoration-none">
+                      {{ item.sample.sample_code }}
+                    </a>
+                  </td>
+                  <td class="val-cell {{ 'val-ok' if item.in_control else 'val-out' }}">
+                    {{ "%.3f"|format(item.result.final_result|float) if item.result.final_result else '-' }}
+                  </td>
+                  <td class="target-cell">
+                    {% if item.target %}
+                      {{ "%.3f"|format(item.target) }} ± {{ "%.3f"|format((item.ucl - item.target) if item.ucl else 0) }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.in_control %}
+                      <span class="badge bg-success">✓</span>
+                    {% else %}
+                      <span class="badge bg-danger">✗</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
             </table>
+          </div>
         </div>
+      {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Control Chart Visualization (placeholder for Chart.js) -->
-    <div class="card mt-3">
-        <div class="card-header">
-            <h5>Control Chart График</h5>
+    <!-- CM Section -->
+    {% set cm_items = [] %}
+    {% for key, items in grouped.items() if key.startswith('CM') %}
+      {% set _ = cm_items.append((key, items)) %}
+    {% endfor %}
+
+    {% if cm_items %}
+    <div class="qc-section">
+      <div class="qc-section-header cm">
+        <div class="qc-section-title">
+          <i class="bi bi-box-seam"></i> CM (Control Material)
         </div>
-        <div class="card-body">
-            <canvas id="controlChart" height="80"></canvas>
-            <p class="text-muted mt-2">
-                <small>
-                    <strong>Тайлбар:</strong>
-                    UCL (Upper Control Limit) = Target + 2σ,
-                    LCL (Lower Control Limit) = Target - 2σ
-                </small>
-            </p>
+        <span class="qc-section-badge">{{ cm_items|length }} шинжилгээ</span>
+      </div>
+
+      {% for key, items in cm_items|sort %}
+        {% set analysis_code = key.split('|')[1] %}
+        {% set ok_count = items|selectattr('in_control')|list|length %}
+        {% set out_count = items|length - ok_count %}
+        <div class="analysis-group">
+          <div class="analysis-header" onclick="toggleGroup(this)">
+            <div class="analysis-code">
+              <i class="bi bi-chevron-right"></i>
+              {{ analysis_code }}
+            </div>
+            <div class="analysis-stats">
+              <span class="stat-item"><i class="bi bi-check-circle text-success"></i> {{ ok_count }} OK</span>
+              {% if out_count > 0 %}
+              <span class="stat-item text-danger"><i class="bi bi-x-circle"></i> {{ out_count }} OUT</span>
+              {% endif %}
+              <span class="stat-item"><i class="bi bi-list-ol"></i> {{ items|length }} нийт</span>
+            </div>
+          </div>
+          <div class="analysis-content" style="display:none;">
+            <table class="measurements-table">
+              <thead>
+                <tr>
+                  <th>Огноо</th>
+                  <th>Дээж</th>
+                  <th>Хэмжсэн</th>
+                  <th>Target ± Tol</th>
+                  <th>Статус</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in items[:10] %}
+                <tr>
+                  <td class="date-cell">{{ item.result.updated_at.strftime('%m/%d %H:%M') if item.result.updated_at else '-' }}</td>
+                  <td>
+                    <a href="{{ url_for('api.sample_report', sample_id=item.sample.id) }}" class="text-decoration-none">
+                      {{ item.sample.sample_code }}
+                    </a>
+                  </td>
+                  <td class="val-cell {{ 'val-ok' if item.in_control else 'val-out' }}">
+                    {{ "%.3f"|format(item.result.final_result|float) if item.result.final_result else '-' }}
+                  </td>
+                  <td class="target-cell">
+                    {% if item.target %}
+                      {{ "%.3f"|format(item.target) }} ± {{ "%.3f"|format((item.ucl - item.target) if item.ucl else 0) }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if item.in_control %}
+                      <span class="badge bg-success">✓</span>
+                    {% else %}
+                      <span class="badge bg-danger">✗</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
+      {% endfor %}
     </div>
-</div>
+    {% endif %}
 
-<!-- Add QC Modal -->
-<div class="modal fade" id="addQCModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('quality.control_charts_add') }}">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">QC Хэмжилт нэмэх</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Analysis Code *</label>
-                        <select name="analysis_code" class="form-control" required>
-                            <option value="">-- Сонгох --</option>
-                            <option value="Aad">Aad</option>
-                            <option value="Mad">Mad</option>
-                            <option value="CV">CV</option>
-                            <option value="TS">TS</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>QC Sample Name *</label>
-                        <input type="text" name="qc_sample_name" class="form-control"
-                               placeholder="QC Coal Standard A" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Measurement Date *</label>
-                        <input type="date" name="measurement_date" class="form-control" required>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Target Value *</label>
-                                <input type="number" step="0.001" name="target_value" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>Measured Value *</label>
-                                <input type="number" step="0.001" name="measured_value" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>UCL (Upper) *</label>
-                                <input type="number" step="0.001" name="ucl" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>LCL (Lower) *</label>
-                                <input type="number" step="0.001" name="lcl" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Хаах</button>
-                    <button type="submit" class="btn btn-primary">Хадгалах</button>
-                </div>
-            </form>
-        </div>
+  {% else %}
+    <div class="qc-section">
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h5>CM/GBW дээжний үр дүн олдсонгүй</h5>
+        <p class="text-muted">CM эсвэл GBW төрлийн дээж нэмж шинжилгээ хийнэ үү.</p>
+      </div>
     </div>
+  {% endif %}
+
+  <!-- Chart -->
+  <div class="chart-section">
+    <div class="chart-title"><i class="bi bi-bar-chart-line me-2"></i>Control Chart (сүүлийн хэмжилтүүд)</div>
+    <canvas id="controlChart" height="60"></canvas>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-$(document).ready(function() {
-    $('#qcTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json' }
-    });
+function toggleGroup(header) {
+  const content = header.nextElementSibling;
+  const icon = header.querySelector('i');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    icon.classList.replace('bi-chevron-right', 'bi-chevron-down');
+  } else {
+    content.style.display = 'none';
+    icon.classList.replace('bi-chevron-down', 'bi-chevron-right');
+  }
+}
 
-    // Simple Control Chart (placeholder)
-    const ctx = document.getElementById('controlChart').getContext('2d');
-    {% set recent_charts = (charts | reverse | list)[:20] %}
-    const chartData = {
-        labels: [{% for chart in recent_charts %}'{{ chart.measurement_date.strftime("%m/%d") if chart.measurement_date else "" }}'{% if not loop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Measured Value',
-            data: [{% for chart in recent_charts %}{{ chart.measured_value if chart.measured_value is not none else 'null' }}{% if not loop.last %},{% endif %}{% endfor %}],
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            tension: 0.1
-        }]
-    };
-
-    new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
-            responsive: true,
-            plugins: {
-                title: { display: true, text: 'QC Control Chart (сүүлийн 20 хэмжилт)' },
-                legend: { display: true }
-            },
-            scales: {
-                y: { beginAtZero: false }
-            }
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+  loadWestgardSummary();
+  initChart();
 });
+
+function loadWestgardSummary() {
+  fetch("{{ url_for('quality.api_westgard_summary') }}")
+    .then(r => r.json())
+    .then(data => {
+      const container = document.getElementById('westgardSummary');
+      if (!data.qc_samples || data.qc_samples.length === 0) {
+        container.innerHTML = '<div class="text-center" style="opacity:0.7">QC өгөгдөл олдсонгүй</div>';
+        return;
+      }
+
+      let html = '';
+      data.qc_samples.forEach(s => {
+        const cls = s.status === 'pass' ? 'pass' : s.status === 'warning' ? 'warning' : s.status === 'reject' ? 'reject' : 'na';
+        const statusText = s.status === 'pass' ? '✓ Pass' : s.status === 'warning' ? '⚠ Warning' : s.status === 'reject' ? '✗ Reject' : '? N/A';
+        html += `
+          <div class="westgard-card ${cls}">
+            <div class="wc-top">
+              <div>
+                <span class="wc-type ${s.qc_type.toLowerCase()}">${s.qc_type}</span>
+                <span class="wc-analysis">${s.analysis_code}</span>
+              </div>
+              <span class="wc-status ${cls}">${statusText}</span>
+            </div>
+            <div class="wc-details">${s.count} хэмжилт${s.target ? ' • Target: ' + s.target : ''}</div>
+            ${s.rules_violated?.length ? '<div class="wc-rules">' + s.rules_violated.join(', ') + '</div>' : ''}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    })
+    .catch(err => {
+      document.getElementById('westgardSummary').innerHTML = '<div class="text-warning">Алдаа: ' + err.message + '</div>';
+    });
+}
+
+function initChart() {
+  const ctx = document.getElementById('controlChart');
+  if (!ctx) return;
+
+  const rawData = [
+    {% for item in qc_results[:20] %}
+    {
+      label: "{{ item.sample.sample_code[:15] }}",
+      value: {{ item.result.final_result|float if item.result.final_result else 'null' }},
+      target: {{ item.target if item.target else 'null' }},
+      ucl: {{ item.ucl if item.ucl else 'null' }},
+      lcl: {{ item.lcl if item.lcl else 'null' }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ].reverse();
+
+  if (rawData.length === 0) {
+    ctx.parentElement.innerHTML = '<div class="text-center text-muted py-4">График өгөгдөл олдсонгүй</div>';
+    return;
+  }
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rawData.map(d => d.label),
+      datasets: [
+        { label: 'Хэмжсэн', data: rawData.map(d => d.value), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.2, pointRadius: 4 },
+        rawData[0].target ? { label: 'Target', data: rawData.map(d => d.target), borderColor: '#22c55e', borderDash: [5,5], pointRadius: 0 } : null,
+        rawData[0].ucl ? { label: 'UCL', data: rawData.map(d => d.ucl), borderColor: '#ef4444', borderDash: [8,4], pointRadius: 0 } : null,
+        rawData[0].lcl ? { label: 'LCL', data: rawData.map(d => d.lcl), borderColor: '#f59e0b', borderDash: [8,4], pointRadius: 0 } : null
+      ].filter(Boolean)
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { beginAtZero: false } }
+    }
+  });
+}
 </script>
 {% endblock %}

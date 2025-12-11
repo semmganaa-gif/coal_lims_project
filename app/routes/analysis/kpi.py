@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 KPI болон ээлжийн гүйцэтгэлийн тайлантай холбоотой routes:
-  - /kpi_report - Ээлжийн гүйцэтгэлийн тайлан
+  - /shift_daily - Ээлжийн гүйцэтгэл (Daily)
 """
 
-from flask import request, render_template
+from flask import request, render_template, jsonify
 from flask_login import login_required
 from sqlalchemy import func
 from datetime import datetime, time, timedelta
 from collections import defaultdict
 
 from app import db
-from app.models import Sample, AnalysisResultLog
+from app.models import Sample, AnalysisResultLog, User
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
 from app.forms import KPIReportFilterForm
@@ -21,7 +21,7 @@ from app.utils.shifts import get_shift_info
 from app.utils.settings import get_error_reason_labels  # ✅ DB-ээс унших
 
 
-def _aggregate_error_reason_stats(date_from=None, date_to=None):
+def _aggregate_error_reason_stats(date_from=None, date_to=None, user_name=None):
     """Timestamp ашиглан алдааны статистик гаргах"""
     q = db.session.query(
         AnalysisResultLog.error_reason,
@@ -35,6 +35,14 @@ def _aggregate_error_reason_stats(date_from=None, date_to=None):
         q = q.filter(AnalysisResultLog.timestamp >= date_from)
     if date_to is not None:
         q = q.filter(AnalysisResultLog.timestamp < date_to)
+
+    # Химичийн нэрээр шүүх
+    if user_name:
+        from app.utils.security import escape_like_pattern
+        safe_user = escape_like_pattern(user_name)
+        q = q.join(User, AnalysisResultLog.user_id == User.id).filter(
+            User.username.ilike(f"%{safe_user}%")
+        )
 
     rows = q.group_by(AnalysisResultLog.error_reason).all()
 
@@ -60,15 +68,31 @@ def register_routes(bp):
     # =====================================================================
     # KPI / ЭЭЛЖИЙН ГҮЙЦЭТГЭЛИЙН ТАЙЛАН
     # =====================================================================
-    @bp.route("/kpi_report", methods=["GET"])
+    @bp.route("/shift_daily", methods=["GET"])
     @login_required
-    def kpi_report():
+    def shift_daily():
+        from app.constants import SAMPLE_TYPE_CHOICES_MAP
+
         # 1. Form үүсгэх
         form = KPIReportFilterForm(request.args, meta={'csrf': False})
-        # --- НЭМЭЛТ: Unit dropdown-ийг DB-ээс дүүргэх ---
+
+        # --- Unit dropdown-ийг DB-ээс дүүргэх ---
         distinct_units = db.session.query(Sample.client_name).distinct().order_by(Sample.client_name).all()
         unit_choices = [("all", "Бүх нэгж")] + [(u[0], u[0]) for u in distinct_units if u[0]]
         form.unit.choices = unit_choices
+
+        # --- Sample type dropdown-ийг SAMPLE_TYPE_CHOICES_MAP-аас дүүргэх ---
+        selected_unit = request.args.get("unit", "all")
+        if selected_unit and selected_unit != "all" and selected_unit in SAMPLE_TYPE_CHOICES_MAP:
+            type_list = SAMPLE_TYPE_CHOICES_MAP[selected_unit]
+        else:
+            # Бүх төрлүүдийг нэгтгэх
+            all_types = set()
+            for types in SAMPLE_TYPE_CHOICES_MAP.values():
+                all_types.update(types)
+            type_list = sorted(all_types)
+        type_choices = [("all", "Бүх төрөл")] + [(t, t) for t in type_list]
+        form.sample_type.choices = type_choices
 
         # 2. Анх ороход огноо хоосон бол Өнөөдрийг оноох
         if not form.start_date.data:
@@ -99,8 +123,8 @@ def register_routes(bp):
         filter_shift_team = form.shift_team.data
         filter_shift_type = form.shift_type.data
         filter_unit = form.unit.data
-        sample_code_q = (form.sample_code.data or "").strip()
-        storage_q = (form.storage_location.data or "").strip()
+        filter_sample_type = form.sample_type.data
+        user_name_q = (form.user_name.data or "").strip()
 
         # Багана сонгох
         if time_base == "received":
@@ -119,12 +143,19 @@ def register_routes(bp):
             q = q.filter(date_column < end_dt)
         if filter_unit and filter_unit != "all":
             q = q.filter(Sample.client_name == filter_unit)
-        if sample_code_q:
-            safe_code = escape_like_pattern(sample_code_q)
-            q = q.filter(Sample.sample_code.ilike(f"%{safe_code}%"))
-        if storage_q:
-            safe_storage = escape_like_pattern(storage_q)
-            q = q.filter(Sample.storage_location.ilike(f"%{safe_storage}%"))
+        if filter_sample_type and filter_sample_type != "all":
+            q = q.filter(Sample.sample_type == filter_sample_type)
+
+        # Химичийн нэрээр шүүх (AnalysisResultLog → User)
+        if user_name_q:
+            safe_user = escape_like_pattern(user_name_q)
+            # Тухайн хэрэглэгчийн шинжилгээ хийсэн sample_id-уудыг олох
+            user_sample_ids = db.session.query(AnalysisResultLog.sample_id).join(
+                User, AnalysisResultLog.user_id == User.id
+            ).filter(
+                User.username.ilike(f"%{safe_user}%")
+            ).distinct().subquery()
+            q = q.filter(Sample.id.in_(db.session.query(user_sample_ids)))
 
         samples = q.order_by(Sample.received_date.desc()).limit(5000).all()
 
@@ -190,17 +221,64 @@ def register_routes(bp):
         result_rows.sort(key=_sort_key)
         total_count = sum(r["count"] for r in result_rows)
 
-        error_stats = _aggregate_error_reason_stats(date_from=start_dt, date_to=end_dt)
+        error_stats = _aggregate_error_reason_stats(date_from=start_dt, date_to=end_dt, user_name=user_name_q)
+
+        # =====================================================================
+        # Хүлээн авсан / Бэлтгэсэн тоог ээлжээр гаргах
+        # =====================================================================
+        shift_kpi = {'received': {}, 'prepared': {}}
+
+        # Хүлээн авсан (received_date дээр суурилсан)
+        for s in samples:
+            if s.received_date:
+                info = get_shift_info(s.received_date)
+                key = (info.team, info.shift_type)
+                if key not in shift_kpi['received']:
+                    shift_kpi['received'][key] = 0
+                shift_kpi['received'][key] += 1
+
+        # Бэлтгэсэн (prepared_date дээр суурилсан)
+        for s in samples:
+            if s.prepared_date:
+                # prepared_date нь date эсвэл datetime байж болно
+                prep_dt = s.prepared_date
+                if not isinstance(prep_dt, datetime):
+                    prep_dt = datetime.combine(prep_dt, time(12, 0, 0))  # Өдрийн дунд гэж үзэх
+                info = get_shift_info(prep_dt)
+                key = (info.team, info.shift_type)
+                if key not in shift_kpi['prepared']:
+                    shift_kpi['prepared'][key] = 0
+                shift_kpi['prepared'][key] += 1
+
+        # Ээлж бүрээр нэгтгэх
+        shift_summary = []
+        for team in ['A', 'B', 'C']:
+            received_day = shift_kpi['received'].get((team, 'day'), 0)
+            received_night = shift_kpi['received'].get((team, 'night'), 0)
+            prepared_day = shift_kpi['prepared'].get((team, 'day'), 0)
+            prepared_night = shift_kpi['prepared'].get((team, 'night'), 0)
+
+            if received_day + received_night + prepared_day + prepared_night > 0:
+                shift_summary.append({
+                    'team': team,
+                    'received_day': received_day,
+                    'received_night': received_night,
+                    'received_total': received_day + received_night,
+                    'prepared_day': prepared_day,
+                    'prepared_night': prepared_night,
+                    'prepared_total': prepared_day + prepared_night,
+                })
 
         return render_template(
-            "kpi_report.html",
-            title="Ээлжийн гүйцэтгэл (Daily)",  # Нэршил шинэчилсэн
+            "reports/shift_daily.html",
+            title="Ээлжийн гүйцэтгэл (Daily)",
             form=form,
             rows=result_rows,
             total_count=total_count,
             error_stats=error_stats,
             error_reason_labels=get_error_reason_labels(),  # ✅ DB-ээс унших
-            group_by=group_by
+            group_by=group_by,
+            shift_summary=shift_summary
         )
 # =====================================================================
     # 🔹 АХЛАХЫН ХЯНАЛТАД ХАРАХ KPI ТОЙМ (ЭЭЛЖ + 14 ХОНОГ)

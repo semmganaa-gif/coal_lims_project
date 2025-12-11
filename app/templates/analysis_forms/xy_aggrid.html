@@ -72,18 +72,15 @@
     return { limit: last.limit, mode: last.mode };
   }
 
-  const numParser = p => {
-    if (window.LIMS_AGGRID?.numParser) return window.LIMS_AGGRID.numParser(p);
-    const raw = p.newValue;
-    if(raw === null || raw === undefined || raw === '') return null;
-    const num = Number(String(raw).replace(',', '.'));
-    return Number.isFinite(num) ? num : null;
-  };
-
-  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
-  const numFmt2 = p => (p.value != null && p.value !== '') ? parseFloat(p.value).toFixed(2) : '';
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
+  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
+    const v = parseFloat(p.newValue);
+    return isNaN(v) ? null : v;
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+  const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
 
   // ========== ROW DATA ==========
   const rowData = [];
@@ -384,7 +381,7 @@
         theme: 'legacy',
         columnDefs,
         rowData,
-        defaultColDef: { sortable: false, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        defaultColDef: { sortable: true, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
         suppressRowTransform: true,
         singleClickEdit: true,
         stopEditingWhenCellsLoseFocus: true,

@@ -97,3 +97,280 @@ input[type=number]{ -moz-appearance:textfield }
   background-color: #f8f9fa !important;
   box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1);
 }
+
+/* ========================================
+   ДЭЭЖ СОНГОХ MODAL - САЙЖРУУЛСАН ЗАГВАР
+======================================== */
+
+/* Modal Header - Цэвэрхэн ногоон */
+#selectSamplesModal .modal-header {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+  border-bottom: 2px solid #d1fae5;
+  padding: 1rem 1.25rem;
+}
+
+#selectSamplesModal .modal-title {
+  font-weight: 700;
+  color: #047857;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#selectSamplesModal .modal-title::before {
+  content: "\F5D3"; /* bi-collection */
+  font-family: "bootstrap-icons";
+  font-size: 1.1rem;
+}
+
+/* Modal Body */
+#selectSamplesModal .modal-body {
+  padding: 1rem;
+  background: #fafbfc;
+}
+
+/* Tab Styling - Энгийн таб */
+#selectSamplesModal .nav-tabs {
+  border-bottom: 2px solid #e5e7eb;
+  gap: 0.25rem;
+}
+
+#selectSamplesModal .nav-tabs .nav-link {
+  border: none;
+  border-radius: 8px 8px 0 0;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: transparent;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+}
+
+#selectSamplesModal .nav-tabs .nav-link:hover {
+  color: #059669;
+  background: #f0fdf4;
+}
+
+#selectSamplesModal .nav-tabs .nav-link.active {
+  color: #047857;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-bottom-color: #fff;
+}
+
+#selectSamplesModal .nav-tabs .nav-link .badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  font-weight: 700;
+}
+
+/* Tab Content */
+#selectSamplesModal .tab-content {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem;
+}
+
+#selectSamplesModal .tab-pane {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Filter Inputs */
+#selectSamplesModal .form-control,
+#selectSamplesModal .form-select {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+#selectSamplesModal .form-control:focus,
+#selectSamplesModal .form-select:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+#selectSamplesModal .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Clear filters button */
+#selectSamplesModal #clear-filters {
+  color: #6b7280;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+#selectSamplesModal #clear-filters:hover {
+  color: #dc2626;
+}
+
+/* Alert styling */
+#selectSamplesModal .alert-warning {
+  background: linear-gradient(135deg, #fef3c7, #fef9c3);
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+/* Table Styling */
+#selectSamplesModal .table {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+#selectSamplesModal .table thead th {
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  border-bottom: 2px solid #e2e8f0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.75rem 0.5rem;
+  white-space: nowrap;
+}
+
+#selectSamplesModal .table tbody tr {
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+#selectSamplesModal .table tbody tr:hover {
+  background-color: #f0fdf4 !important;
+}
+
+#selectSamplesModal .table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+#selectSamplesModal .table tbody td {
+  padding: 0.6rem 0.5rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Selected row highlighting */
+#selectSamplesModal .table tbody tr:has(input:checked) {
+  background-color: #dcfce7 !important;
+}
+
+#selectSamplesModal .table tbody tr:has(input:checked) td {
+  color: #166534;
+  font-weight: 500;
+}
+
+/* Checkbox styling */
+#selectSamplesModal .table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #10b981;
+  border-radius: 4px;
+}
+
+/* Rejected samples table - улаан онцлох */
+#selectSamplesModal #rejected-samples-table tbody tr:hover {
+  background-color: #fef2f2 !important;
+}
+
+#selectSamplesModal #rejected-samples-table tbody tr:has(input:checked) {
+  background-color: #fee2e2 !important;
+}
+
+#selectSamplesModal #rejected-samples-table .badge {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+}
+
+/* Scrollable table container */
+#selectSamplesModal .table-responsive {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+#selectSamplesModal .table-responsive::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#selectSamplesModal .table-responsive::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#selectSamplesModal .table-responsive::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#selectSamplesModal .table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modal Footer */
+#selectSamplesModal .modal-footer {
+  background: #f8fafc;
+  border-top: 2px solid #e5e7eb;
+  padding: 0.875rem 1.25rem;
+  gap: 0.5rem;
+}
+
+#selectSamplesModal .modal-footer .btn {
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+#selectSamplesModal .modal-footer .btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+#selectSamplesModal .modal-footer .btn-primary:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+#selectSamplesModal .modal-footer .btn-secondary {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+}
+
+#selectSamplesModal .modal-footer .btn-secondary:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Empty state */
+#selectSamplesModal .text-muted {
+  color: #9ca3af !important;
+}
+
+/* Filter count display */
+#selectSamplesModal #filtered-count {
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Modal content border radius */
+#selectSamplesModal .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}

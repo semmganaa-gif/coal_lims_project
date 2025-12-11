@@ -7,10 +7,12 @@
             <h3><i class="bi bi-clipboard-data text-primary"></i> Дотоод хяналтын стандарт (CM)</h3>
             <p class="text-muted small mb-0">Лабораторийн дотоод хяналтын дээж (Internal Control Sample)-ийн утгуудыг удирдах</p>
         </div>
-        <button class="btn btn-primary" id="openAddBtn" 
+        {% if current_user.role in ['senior', 'admin'] %}
+        <button class="btn btn-primary" id="openAddBtn"
                 data-create-url="{{ url_for('admin.create_standard') }}">
             <i class="bi bi-plus-lg"></i> Шинэ стандарт үүсгэх
         </button>
+        {% endif %}
     </div>
 
     <div class="card shadow-sm border-0">
@@ -48,32 +50,34 @@
                             </td>
                             <td class="text-end pe-3">
                                 <div class="btn-group">
-                                    {% if not std.is_active %}
-                                    <button class="btn btn-sm btn-outline-success activate-btn" 
-                                            data-url="{{ url_for('admin.activate_standard', id=std.id) }}" 
+                                    {% if current_user.role in ['senior', 'admin'] and not std.is_active %}
+                                    <button class="btn btn-sm btn-outline-success activate-btn"
+                                            data-url="{{ url_for('admin.activate_standard', id=std.id) }}"
                                             title="Идэвхжүүлэх">
                                         <i class="bi bi-play-fill"></i>
                                     </button>
                                     {% endif %}
-                                    
-                                    <button class="btn btn-sm btn-outline-info view-btn" 
-                                            data-name="{{ std.name }}" 
+
+                                    <button class="btn btn-sm btn-outline-info view-btn"
+                                            data-name="{{ std.name }}"
                                             data-targets='{{ std.targets | tojson }}' title="Харах">
                                         <i class="bi bi-eye"></i>
                                     </button>
 
-                                    <button class="btn btn-sm btn-outline-warning edit-btn" 
-                                            data-id="{{ std.id }}" 
+                                    {% if current_user.role in ['senior', 'admin'] %}
+                                    <button class="btn btn-sm btn-outline-warning edit-btn"
+                                            data-id="{{ std.id }}"
                                             data-name="{{ std.name }}"
                                             data-targets='{{ std.targets | tojson }}'
                                             data-update-url="{{ url_for('admin.update_standard', id=std.id) }}"
                                             title="Засах">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    {% endif %}
 
-                                    {% if not std.is_active %}
-                                    <button class="btn btn-sm btn-outline-danger delete-btn" 
-                                            data-url="{{ url_for('admin.delete_standard', id=std.id) }}" 
+                                    {% if current_user.role in ['senior', 'admin'] and not std.is_active %}
+                                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                                            data-url="{{ url_for('admin.delete_standard', id=std.id) }}"
                                             title="Устгах">
                                         <i class="bi bi-trash"></i>
                                     </button>

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Чанарын хяналтын (QC) хэрэгслүүдтэй холбоотой routes:
-  - /qc/composite_check - Composite tolerance check
-  - /qc/spec_check - Specification check
+  - /qc/composite_check - Composite Check (COM vs Hourly дундаж)
+  - /qc/norm_limit - Norm Limit (дээж vs spec target ± band)
   - /correlation_check - Correlation check
 """
 
@@ -29,16 +29,64 @@ from app.utils.qc import (
 )
 
 
+def _auto_find_hourly_samples(com_sample_ids: list) -> list:
+    """
+    COM дээжүүдийн family-тай тохирох hourly дээжүүдийг автоматаар олох.
+
+    Args:
+        com_sample_ids: COM дээжийн ID-ууд
+
+    Returns:
+        Бүх холбогдох sample ID-ууд (COM + hourly)
+    """
+    if not com_sample_ids:
+        return []
+
+    # COM дээжүүдийг татах
+    com_samples = Sample.query.filter(Sample.id.in_(com_sample_ids)).all()
+    if not com_samples:
+        return list(com_sample_ids)
+
+    # Family-уудыг цуглуулах (жишээ: "SC20251205_D")
+    families = set()
+    for s in com_samples:
+        family, slot = qc_split_family(s.sample_code or "")
+        if family and slot and "com" in str(slot).lower():
+            families.add(family)
+
+    if not families:
+        return list(com_sample_ids)
+
+    # Ижил family-тай бүх дээжийг хайх
+    all_ids = set(com_sample_ids)
+
+    for family in families:
+        # Family pattern: "SC20251205_D" → хайх: "SC20251205_D%"
+        pattern = f"{family}%"
+        matching_samples = Sample.query.filter(
+            Sample.sample_code.like(pattern)
+        ).all()
+
+        for s in matching_samples:
+            all_ids.add(s.id)
+
+    return list(all_ids)
+
+
 def _get_qc_stream_data(ids: list):
     """QC талбаруудын хамтын өгөгдөл боловсруулалт"""
     samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).all()
     if not samples:
         return []
     samples_by_id = {s.id: s for s in samples}
+
+    # ✅ Vdaf тооцоолоход Vad хэрэгтэй тул нэмж query хийх
+    query_codes = list(QC_PARAM_CODES) + ["Vad"]  # Vad нэмэх
+
     results = db.session.query(AnalysisResult).filter(
         AnalysisResult.sample_id.in_(ids),
         AnalysisResult.status.in_(["approved", "pending_review"]),
-        AnalysisResult.analysis_code.in_(QC_PARAM_CODES),
+        AnalysisResult.analysis_code.in_(query_codes),
     ).all()
     values_by_sample = {sid: {} for sid in ids}
     for r in results:
@@ -46,6 +94,17 @@ def _get_qc_stream_data(ids: list):
             values_by_sample[r.sample_id][r.analysis_code] = float(r.final_result)
         except Exception:
             continue
+
+    # ✅ Vdaf тооцоолол: Vdaf = Vad × 100 / (100 - Mad - Aad)
+    for sid in ids:
+        vals = values_by_sample.get(sid, {})
+        vad = vals.get("Vad")
+        mad = vals.get("Mad")
+        aad = vals.get("Aad")
+        if vad is not None and mad is not None and aad is not None:
+            divisor = 100 - mad - aad
+            if divisor > 0:
+                vals["Vdaf"] = round(vad * 100 / divisor, 2)
 
     grouped = {}
     for sid in ids:
@@ -132,7 +191,7 @@ def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
 
     # =====================================================================
-    # 1. QC COMPOSITE TOLERANCE CHECK
+    # 1. COMPOSITE CHECK (COM vs Hourly дундаж)
     # =====================================================================
     @bp.route("/qc/composite_check")
     @login_required
@@ -142,30 +201,75 @@ def register_routes(bp):
         if not ids:
             flash("QC Dashboard-д дээж олдсонгүй.", "warning")
             return redirect(url_for("analysis.sample_summary"))
+
+        # ✅ COM дээж сонгосон бол автоматаар hourly дээжүүдийг олох
+        ids = _auto_find_hourly_samples(ids)
+
         streams = _get_qc_stream_data(ids)
         return render_template(
             "qc_composite_check.html",
-            title="QC: Composite Tolerance Check",
+            title="Composite Check",
             streams=streams,
             param_codes=QC_PARAM_CODES,
-            raw_ids=ids_str
+            raw_ids=",".join(str(i) for i in ids)  # Шинэчлэгдсэн IDs
         )
 
     # =====================================================================
-    # 2. QC SPECIFICATION CHECK
+    # 2. NORM LIMIT (дээж vs spec target ± band)
     # =====================================================================
-    @bp.route("/qc/spec_check")
+    @bp.route("/qc/norm_limit")
     @login_required
-    def qc_spec_check():
+    def qc_norm_limit():
+        """
+        Дээж тус бүрийн утгыг сонгосон Spec (Name Class)-тэй харьцуулах.
+        Stream бүлэглэлгүй - зөвхөн дээж vs spec target ± band.
+        """
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
         if not ids:
-            flash("QC Dashboard-д дээж олдсонгүй.", "warning")
+            flash("Spec шалгах дээж олдсонгүй.", "warning")
             return redirect(url_for("analysis.sample_summary"))
-        streams = _get_qc_stream_data(ids)
+
+        # Дээжүүдийг татах
+        samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).all()
+        if not samples:
+            flash("Дээж олдсонгүй.", "warning")
+            return redirect(url_for("analysis.sample_summary"))
+
+        # ✅ Vdaf тооцоолоход Vad хэрэгтэй
+        query_codes = list(QC_PARAM_CODES) + ["Vad"]
+
+        # Үр дүнгүүдийг татах
+        results = db.session.query(AnalysisResult).filter(
+            AnalysisResult.sample_id.in_(ids),
+            AnalysisResult.status.in_(["approved", "pending_review"]),
+            AnalysisResult.analysis_code.in_(query_codes),
+        ).all()
+
+        # Дээж тус бүрийн утгуудыг бэлдэх
+        values_by_sample = {s.id: {} for s in samples}
+        for r in results:
+            try:
+                values_by_sample[r.sample_id][r.analysis_code] = float(r.final_result)
+            except Exception:
+                continue
+
+        # ✅ Vdaf тооцоолол: Vdaf = Vad × 100 / (100 - Mad - Aad)
+        for sid in ids:
+            vals = values_by_sample.get(sid, {})
+            vad = vals.get("Vad")
+            mad = vals.get("Mad")
+            aad = vals.get("Aad")
+            if vad is not None and mad is not None and aad is not None:
+                divisor = 100 - mad - aad
+                if divisor > 0:
+                    vals["Vdaf"] = round(vad * 100 / divisor, 2)
+
+        # Spec сонголт
         spec_key = request.args.get("spec_key", "").strip()
         active_spec_row = NAME_CLASS_MASTER_SPECS.get(spec_key) if spec_key else None
 
+        # Range spec бэлдэх
         def build_range_spec(row):
             if not row:
                 return {}
@@ -179,23 +283,38 @@ def register_routes(bp):
             return spec
 
         active_range_spec = build_range_spec(active_spec_row)
-        if active_range_spec:
-            def _range_out(val, rule):
-                return False if val is None or not rule else val < rule["min"] or val > rule["max"]
-            for stream in streams:
-                for code in QC_PARAM_CODES:
-                    rule = active_range_spec.get(code)
-                    if rule:
-                        stream["avg_row"]["spec_flags"][code] = _range_out(stream["avg_row"]["values"].get(code), rule)
-                        stream["comp_row"]["spec_flags"][code] = _range_out(stream["comp_row"]["values"].get(code), rule)
+
+        # Дээж тус бүрийн өгөгдөл бэлдэх
+        def _range_out(val, rule):
+            if val is None or not rule:
+                return False
+            return val < rule["min"] or val > rule["max"]
+
+        sample_rows = []
+        for s in samples:
+            vals = values_by_sample.get(s.id, {})
+            row_values = {code: vals.get(code) for code in QC_PARAM_CODES}
+
+            # Spec flag тус бүр
+            spec_flags = {}
+            for code in QC_PARAM_CODES:
+                rule = active_range_spec.get(code)
+                spec_flags[code] = _range_out(row_values.get(code), rule)
+
+            sample_rows.append({
+                "sample": s,
+                "values": row_values,
+                "spec_flags": spec_flags
+            })
 
         return render_template(
-            "qc_spec_check.html",
-            title="QC: Specification Check",
-            streams=streams,
+            "qc_norm_limit.html",
+            title="Norm Limit",
+            sample_rows=sample_rows,
             param_codes=QC_PARAM_CODES,
             raw_ids=ids_str,
             name_class_master_specs=NAME_CLASS_MASTER_SPECS,
+            tolerance_bands=NAME_CLASS_SPEC_BANDS,
             active_spec_key=spec_key,
             active_range_spec=active_range_spec
         )

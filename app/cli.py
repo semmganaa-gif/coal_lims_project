@@ -81,9 +81,9 @@ def register_commands(app):
             click.echo(f"'{username}' нэртэй хэрэглэгч аль хэдийн байна.")
             return
 
-        if role not in ["beltgegch", "himich", "ahlah", "admin"]:
+        if role not in ["prep", "chemist", "senior", "manager", "admin"]:
             click.echo(
-                "Алдаа: Эрх буруу байна. 'beltgegch', 'himich', 'ahlah', 'admin' гэсэн утгуудын аль нэгийг сонгоно уу."
+                "Алдаа: Эрх буруу байна. 'prep', 'chemist', 'senior', 'manager', 'admin' гэсэн утгуудын аль нэгийг сонгоно уу."
             )
             return
 
@@ -342,8 +342,8 @@ def register_commands(app):
     @click.argument("csv_path")
     def import_limits_from_csv(csv_path):
         """
-        ??????/????? (repeatability) ??????????? CSV-??? ????? SystemSetting-? ????????.
-        CSV header: ???? ????????, ?????????? ??? ????????, ????????? ??????, %, ???????? ????? , ??????? ?????
+        Давтамж/нарийвч (repeatability) хязгааруудыг CSV-ээс уншиж SystemSetting-д хадгална.
+        CSV header: Арга хэмжилт, Стандартын нэр хэмжигдэх, Хэмжигдэх мужийн, %, Давтамжийн хязгаа, Тайрцын тэмдэг
         """
         def code_from_method(name, explicit):
             if explicit:
@@ -351,32 +351,32 @@ def register_commands(app):
             name = (name or "").lower()
             mapping = {
                 "lab.07.02": "MT",
-                "???? ????": "MT",
+                "нийт чийг": "MT",
                 "lab.07.03": "Mad",
-                "?????? ????": "Mad",
+                "анализ чийг": "Mad",
                 "lab.07.04": "Vad",
-                "?????????": "Vad",
+                "дэгдэмхий": "Vad",
                 "lab.07.05": "Aad",
-                "???": "Aad",
+                "үнс": "Aad",
                 "lab.07.06": "Gi",
-                "?????": "Gi",
+                "индекс": "Gi",
                 "lab.07.07": "CRI",
-                "??????????": "CRI",
-                "?????": "CRI",
+                "идэвхжилт": "CRI",
+                "реакц": "CRI",
                 "lab.07.08": "TS",
-                "?????": "TS",
+                "хүхэр": "TS",
                 "lab.07.09": "P",
-                "??????": "P",
+                "фосфор": "P",
                 "lab.07.10": "Cl",
-                "????": "Cl",
-                "lab.07.10 ": "F",  # ???? ???? LAB.07.10 = ????
-                "????": "F",
+                "хлор": "Cl",
+                "lab.07.10 ": "F",  # Хоёр удаа LAB.07.10 = Фтор
+                "фтор": "F",
                 "lab.07.11": "TRD",
-                "????": "TRD",
+                "нягт": "TRD",
                 "lab.07.12": "CV",
-                "??????": "CV",
+                "илчлэг": "CV",
                 "lab.07.13": "X",
-                "??????????": "X",
+                "хатуулаг": "X",
                 "csn": "CSN",
             }
             for k,v in mapping.items():
@@ -388,7 +388,7 @@ def register_commands(app):
             if val is None: return (None, None)
             s = str(val).strip()
             if not s or s == "-": return (None, None)
-            if "?? ??????? 1/2" in s:
+            if "үр дүнгийн 1/2" in s:
                 return (0.5, "percent")
             mode = "abs"
             if "%" in s:
@@ -422,18 +422,18 @@ def register_commands(app):
 
         csv_path = Path(csv_path)
         if not csv_path.exists():
-            click.echo(f"???? ?????????: {csv_path}")
+            click.echo(f"Файл олдсонгүй: {csv_path}")
             return
 
         try:
             df = pd.read_csv(csv_path, encoding="utf-8-sig")
         except Exception as e:
-            click.echo(f"CSV ??????? ?????: {e}")
+            click.echo(f"CSV уншихад алдаа: {e}")
             return
 
         cols = list(df.columns)
         if len(cols) < 5:
-            click.echo(f"?????? ?????? ?????: {cols}")
+            click.echo(f"Баганы тоо хүрэлцэхгүй: {cols}")
             return
         col_method, col_std, col_band, col_limit, col_taarts = cols[:5]
 
@@ -484,4 +484,4 @@ def register_commands(app):
         setting.value = payload
         db.session.commit()
         clear_cache()
-        click.echo(f"?????? ?????????: {len(rules)} ??????? ????? DB-? ?????????.")
+        click.echo(f"Амжилттай хадгаллаа: {len(rules)} дүрмийг шинэ DB-д хадгалсан.")

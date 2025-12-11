@@ -1,119 +1,471 @@
-﻿{# app/templates/analysis/partials/timer_panel.html #}
+{# app/templates/analysis/partials/timer_panel.html - Elegant Timer Design #}
 {% set cfg = timer_config or {} %}
 {% set timers = cfg.timers or [] %}
 {% set editable = cfg.editable %}
-{% set digit_size = cfg.digit_size or 'lg' %}
-
-{# 1. Энд тухайн хуудасны кодыг (ASH, MAD, CV гэх мэт) барьж авна #}
 {% set current_code = analysis_code or 'GEN' %}
 
 {% if timers|length > 0 or editable %}
-<div class="card mt-3">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h5 class="mb-0"><i class="bi bi-alarm"></i> Шинжилгээний цаг</h5>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="timer-sound-toggle" checked>
-        <label class="form-check-label" for="timer-sound-toggle">Дуу</label>
-      </div>
-    </div>
-
-    <div id="timer-list" class="vstack gap-2">
-      {% for t in timers %}
-      {# data-initial атрибутыг reset хийхэд ашиглана #}
-      <div class="timer-row border rounded p-2" data-index="{{ loop.index0 }}" data-initial="{{ t.seconds }}">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-secondary">{{ t.label }}</span>
-            {% if t.note %}<span class="text-muted small">{{ t.note }}</span>{% endif %}
-            
-            <strong class="timer-digits timer-size-{{ digit_size }} ms-2" id="timer-digits-{{ loop.index0 }}">00:00</strong>
-            
-            {% if editable %}
-            <div class="d-flex gap-1 align-items-center mt-1 mt-md-0">
-                <div class="input-group input-group-sm" style="width: 180px;">
-                  <input type="number" min="0" step="1" class="form-control timer-hh" placeholder="H">
-                  <span class="input-group-text px-1">:</span>
-                  <input type="number" min="0" max="59" step="1" class="form-control timer-mm" placeholder="M">
-                  <span class="input-group-text px-1">:</span>
-                  <input type="number" min="0" max="59" step="1" class="form-control timer-ss" placeholder="S">
-                </div>
-                <button class="btn btn-sm btn-outline-primary btn-apply" title="Шинэ цаг тохируулах"><i class="bi bi-check-lg"></i></button>
-            </div>
-            {% endif %}
-          </div>
-
-          <div class="hstack gap-2 mt-2 mt-sm-0 ms-auto ms-sm-0">
-            <button class="btn btn-sm btn-success btn-start"><i class="bi bi-play-fill"></i></button>
-            <button class="btn btn-sm btn-warning btn-pause"><i class="bi bi-pause-fill"></i></button>
-            <button class="btn btn-sm btn-outline-danger btn-reset" title="Дахин эхлүүлэх"><i class="bi bi-arrow-counterclockwise"></i></button>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-
-    {# Нэмэлт сануулга #}
-    {% if editable %}
-    <div class="border-top pt-2 mt-2">
-      <details>
-        <summary class="mb-2 text-primary cursor-pointer" style="cursor: pointer;">+ Нэмэлт сануулга нэмэх</summary>
-        <div class="row g-2 align-items-end">
-          <div class="col-12 col-md-4">
-            <label class="form-label small text-muted">Тайлбар</label>
-            <input type="text" class="form-control form-control-sm" id="custom-label" placeholder="Ж: Дээж сэгсрэх">
-          </div>
-          <div class="col-8 col-md-4">
-            <label class="form-label small text-muted">Хугацаа (ЦЦ:ММ:СС)</label>
-            <div class="input-group input-group-sm">
-              <input type="number" min="0" step="1" class="form-control" id="custom-hh" placeholder="0">
-              <span class="input-group-text">:</span>
-              <input type="number" min="0" max="59" step="1" class="form-control" id="custom-mm" placeholder="00">
-              <span class="input-group-text">:</span>
-              <input type="number" min="0" max="59" step="1" class="form-control" id="custom-ss" placeholder="00">
-            </div>
-          </div>
-          <div class="col-4 col-md-2">
-            <button class="btn btn-sm btn-primary w-100" id="custom-add">Нэмэх</button>
-          </div>
-        </div>
-      </details>
-    </div>
-    {% endif %}
-
-    <audio id="timer-sound">
-      <source src="{{ url_for('static', filename='sounds/alarm_clock.ogg') }}" type="audio/ogg">
-      <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
-    </audio>
-  </div>
-</div>
-
 <style>
-.timer-digits { font-variant-numeric: tabular-nums; letter-spacing: .04em; white-space: nowrap; }
-.timer-size-lg { font-size: 1.35rem; }
-.timer-size-xl { font-size: 1.85rem; }
+/* ===== ELEGANT TIMER STYLES ===== */
+.timer-panel {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.timer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.timer-header h6 {
+  font-weight: 700;
+  color: #4f46e5;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timer-sound-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.timer-sound-toggle input {
+  width: 2.5rem;
+  height: 1.25rem;
+}
+
+/* Timer Card */
+.timer-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  transition: all 0.3s ease;
+}
+
+.timer-card:hover {
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+.timer-card.running {
+  background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.timer-card.finished {
+  background: linear-gradient(145deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: pulse-warning 1s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 4px 25px rgba(239, 68, 68, 0.4); }
+}
+
+/* Timer Display */
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Circular Progress */
+.timer-circle {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+}
+
+.timer-circle svg {
+  transform: rotate(-90deg);
+  width: 70px;
+  height: 70px;
+}
+
+.timer-circle-bg {
+  fill: none;
+  stroke: #e5e7eb;
+  stroke-width: 6;
+}
+
+.timer-circle-progress {
+  fill: none;
+  stroke: url(#timerGradient);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 188.5;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.timer-card.running .timer-circle-progress {
+  stroke: url(#timerGradientActive);
+}
+
+.timer-card.finished .timer-circle-progress {
+  stroke: #ef4444;
+}
+
+/* Timer Info */
+.timer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.timer-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6366f1;
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+
+.timer-digits {
+  font-size: 1.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.timer-card.running .timer-digits {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.timer-card.finished .timer-digits {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: blink 0.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.timer-note {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+}
+
+/* Timer Controls */
+.timer-controls {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.timer-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.timer-btn-start {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.timer-btn-start:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.timer-btn-pause {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.timer-btn-pause:hover {
+  transform: scale(1.05);
+}
+
+.timer-btn-reset {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.timer-btn-reset:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+/* Edit Mode */
+.timer-edit {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.timer-edit input {
+  width: 38px;
+  padding: 0.3rem;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.timer-edit input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.timer-edit-sep {
+  color: #9ca3af;
+  font-weight: bold;
+}
+
+.timer-btn-apply {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-btn-apply:hover {
+  transform: scale(1.05);
+}
+
+/* Add Custom Timer */
+.timer-add-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(99, 102, 241, 0.2);
+}
+
+.timer-add-toggle {
+  font-size: 0.8rem;
+  color: #6366f1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.timer-add-toggle:hover {
+  color: #4f46e5;
+}
+
+.timer-add-form {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.timer-add-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.timer-add-input {
+  flex: 1;
+}
+
+.timer-add-input label {
+  font-size: 0.65rem;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.timer-add-input input {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* Responsive */
 @media (max-width: 576px) {
-    .btn-sm { padding: 0.4rem 0.6rem; font-size: 0.9rem; }
-    .timer-digits { font-size: 1.2rem; }
+  .timer-circle {
+    width: 56px;
+    height: 56px;
+  }
+  .timer-circle svg {
+    width: 56px;
+    height: 56px;
+  }
+  .timer-digits {
+    font-size: 1.4rem;
+  }
+  .timer-btn {
+    width: 32px;
+    height: 32px;
+  }
 }
 </style>
 
+<!-- SVG Gradient Definitions -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <linearGradient id="timerGradientActive" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#16a34a"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="timer-panel">
+  <!-- Header -->
+  <div class="timer-header">
+    <h6><i class="bi bi-stopwatch"></i> Цаг хэмжигч</h6>
+    <div class="timer-sound-toggle">
+      <input class="form-check-input" type="checkbox" id="timer-sound-toggle" checked>
+      <label for="timer-sound-toggle"><i class="bi bi-bell"></i></label>
+    </div>
+  </div>
+
+  <!-- Timer List -->
+  <div id="timer-list">
+    {% for t in timers %}
+    <div class="timer-card" data-index="{{ loop.index0 }}" data-initial="{{ t.seconds }}">
+      <div class="timer-display">
+        <!-- Circular Progress -->
+        <div class="timer-circle">
+          <svg viewBox="0 0 64 64">
+            <circle class="timer-circle-bg" cx="32" cy="32" r="30"/>
+            <circle class="timer-circle-progress" cx="32" cy="32" r="30" id="progress-{{ loop.index0 }}"/>
+          </svg>
+        </div>
+
+        <!-- Timer Info -->
+        <div class="timer-info">
+          <span class="timer-label">{{ t.label }}</span>
+          <div class="timer-digits" id="timer-digits-{{ loop.index0 }}">00:00</div>
+          {% if t.note %}<div class="timer-note">{{ t.note }}</div>{% endif %}
+        </div>
+
+        {% if editable %}
+        <!-- Edit Time -->
+        <div class="timer-edit">
+          <input type="number" min="0" class="timer-hh" placeholder="H" title="Цаг">
+          <span class="timer-edit-sep">:</span>
+          <input type="number" min="0" max="59" class="timer-mm" placeholder="M" title="Минут">
+          <span class="timer-edit-sep">:</span>
+          <input type="number" min="0" max="59" class="timer-ss" placeholder="S" title="Секунд">
+          <button class="timer-btn-apply btn-apply" title="Тохируулах"><i class="bi bi-check-lg"></i></button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Controls -->
+      <div class="timer-controls">
+        <button class="timer-btn timer-btn-start btn-start" title="Эхлүүлэх"><i class="bi bi-play-fill"></i></button>
+        <button class="timer-btn timer-btn-pause btn-pause" title="Түр зогсоох"><i class="bi bi-pause-fill"></i></button>
+        <button class="timer-btn timer-btn-reset btn-reset" title="Дахин эхлүүлэх"><i class="bi bi-arrow-counterclockwise"></i></button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if editable %}
+  <!-- Add Custom Timer -->
+  <div class="timer-add-section">
+    <details>
+      <summary class="timer-add-toggle"><i class="bi bi-plus-circle"></i> Шинэ цаг нэмэх</summary>
+      <div class="timer-add-form">
+        <div class="timer-add-row">
+          <div class="timer-add-input" style="flex: 2;">
+            <label>Нэр</label>
+            <input type="text" id="custom-label" placeholder="Жишээ: Халаах">
+          </div>
+          <div class="timer-add-input">
+            <label>Цаг</label>
+            <input type="number" id="custom-hh" placeholder="0" min="0">
+          </div>
+          <div class="timer-add-input">
+            <label>Мин</label>
+            <input type="number" id="custom-mm" placeholder="0" min="0" max="59">
+          </div>
+          <div class="timer-add-input">
+            <label>Сек</label>
+            <input type="number" id="custom-ss" placeholder="0" min="0" max="59">
+          </div>
+        </div>
+        <button class="btn btn-sm btn-primary w-100" id="custom-add">
+          <i class="bi bi-plus-lg me-1"></i> Нэмэх
+        </button>
+      </div>
+    </details>
+  </div>
+  {% endif %}
+
+  <audio id="timer-sound" preload="auto">
+    <source src="{{ url_for('static', filename='sounds/notification.mp3') }}" type="audio/mpeg">
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3" type="audio/mpeg">
+  </audio>
+</div>
+
 <script>
-// ✅ ЧУХАЛ ХЭСЭГ: Python-оос ирсэн кодыг JS руу дамжуулах
-// Энэ мөр байхгүй бол бүх хуудас "GEN" гэдэг нэг кодтой болчихоод байгаа юм.
-window.LIMS_ANALYSIS_CODE = "{{ current_code }}"; 
+window.LIMS_ANALYSIS_CODE = "{{ current_code }}";
 
 (function(){
-  // Одоо энд "GEN" биш, жишээ нь "ASH" эсвэл "MAD" гэж орж ирнэ
-  const analysisCode = window.LIMS_ANALYSIS_CODE; 
+  const analysisCode = window.LIMS_ANALYSIS_CODE;
   const CONFIG = window.TIMER_CONFIG || {};
   const SOUND_ENABLED = () => document.getElementById('timer-sound-toggle')?.checked;
   const bell = document.getElementById('timer-sound');
+  const CIRCUMFERENCE = 2 * Math.PI * 30; // 188.5
 
-  // Түлхүүр үг үүсгэхдээ Analysis Code-ийг ашиглана
-  // Жишээ нь: timer_ASH_0_seconds, timer_MAD_0_seconds гэж ялгарна
   function key(idx, kind){ return `timer_${analysisCode}_${idx}_${kind}`; }
-  
+
   function fmt(s){
     s = Math.max(0, Math.floor(s));
     const hh = Math.floor(s/3600).toString().padStart(2,'0');
@@ -130,186 +482,217 @@ window.LIMS_ANALYSIS_CODE = "{{ current_code }}";
     return H*3600 + M*60 + S;
   }
 
-  // Render Loop
-  document.querySelectorAll('.timer-row').forEach((row)=>{
-    const idx = row.dataset.index;
-    const digits = row.querySelector('.timer-digits');
-    
-    let def = 0;
-    if (row.dataset.initial) {
-        def = parseInt(row.dataset.initial, 10);
-    } else {
-        def = (CONFIG.timers?.[idx]?.seconds) || 0;
-    }
+  function updateProgress(idx, current, total) {
+    const progress = document.getElementById(`progress-${idx}`);
+    if (!progress || total <= 0) return;
+    const percent = current / total;
+    const offset = CIRCUMFERENCE * (1 - percent);
+    progress.style.strokeDashoffset = offset;
+  }
+
+  function setCardState(card, state) {
+    card.classList.remove('running', 'finished');
+    if (state) card.classList.add(state);
+  }
+
+  // Initialize timers
+  document.querySelectorAll('.timer-card').forEach((card) => {
+    const idx = card.dataset.index;
+    const digits = card.querySelector('.timer-digits');
+    const def = parseInt(card.dataset.initial, 10) || 0;
 
     const saved = parseInt(sessionStorage.getItem(key(idx,'seconds')) || def, 10);
+    const total = parseInt(sessionStorage.getItem(key(idx,'total')) || def, 10);
     digits.textContent = fmt(saved);
+    updateProgress(idx, saved, total || def);
 
     const endsAt = parseInt(sessionStorage.getItem(key(idx,'ends_at'))||0,10);
     if (endsAt > 0){
       const remain = Math.max(0, Math.floor(endsAt - Date.now()/1000));
       if (remain > 0){
-        start(idx, remain);
+        setCardState(card, 'running');
+        start(idx, remain, total);
       } else {
         sessionStorage.removeItem(key(idx,'ends_at'));
         sessionStorage.setItem(key(idx,'seconds'), 0);
         digits.textContent = fmt(0);
+        updateProgress(idx, 0, total);
       }
     }
   });
 
   function tick(idx){
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
     const digits = document.getElementById(`timer-digits-${idx}`);
     if (!digits) return;
+
     let s = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
-    
+    const total = parseInt(sessionStorage.getItem(key(idx,'total'))||0,10);
+
     if (s <= 0){
       clear(idx, true);
       return;
     }
-    
+
     s -= 1;
     sessionStorage.setItem(key(idx,'seconds'), s);
     digits.textContent = fmt(s);
+    updateProgress(idx, s, total);
   }
 
-  function start(idx, fromSeconds){
+  function start(idx, fromSeconds, total){
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
     const saved = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
     const init = (typeof fromSeconds === 'number') ? fromSeconds : saved;
-    
+    const totalSec = total || parseInt(sessionStorage.getItem(key(idx,'total'))||0,10) || init;
+
     if (init <= 0) return;
-    
+
     pause(idx);
     sessionStorage.setItem(key(idx,'seconds'), init);
+    sessionStorage.setItem(key(idx,'total'), totalSec);
     const itv = setInterval(()=> tick(idx), 1000);
     sessionStorage.setItem(key(idx,'interval'), itv);
     sessionStorage.setItem(key(idx,'ends_at'), Math.floor(Date.now()/1000) + init);
+    setCardState(card, 'running');
   }
 
   function pause(idx){
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
     const itv = sessionStorage.getItem(key(idx,'interval'));
     if (itv) { clearInterval(itv); }
     sessionStorage.removeItem(key(idx,'interval'));
     sessionStorage.removeItem(key(idx,'ends_at'));
+    if (card) setCardState(card, null);
   }
 
   function reset(idx){
     pause(idx);
-    const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
-    let def = 0;
-
-    if (row && row.dataset.initial) {
-        def = parseInt(row.dataset.initial, 10);
-    } else if (CONFIG.timers?.[idx]) {
-        def = CONFIG.timers[idx].seconds || 0;
-    }
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
+    const def = parseInt(card?.dataset.initial, 10) || 0;
 
     sessionStorage.setItem(key(idx,'seconds'), def);
+    sessionStorage.setItem(key(idx,'total'), def);
     const digits = document.getElementById(`timer-digits-${idx}`);
     if (digits) digits.textContent = fmt(def);
+    updateProgress(idx, def, def);
+    setCardState(card, null);
   }
 
-  function apply(idx, hh,mm,ss){
-    const total = parseHMS(hh,mm,ss);
+  function apply(idx, hh, mm, ss){
+    const total = parseHMS(hh, mm, ss);
     if (total <= 0){ alert("Цаг буруу байна."); return; }
-    
-    const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
-    if(row) row.dataset.initial = total;
+
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
+    if(card) card.dataset.initial = total;
 
     pause(idx);
     sessionStorage.setItem(key(idx,'seconds'), total);
+    sessionStorage.setItem(key(idx,'total'), total);
     const digits = document.getElementById(`timer-digits-${idx}`);
     if (digits) digits.textContent = fmt(total);
+    updateProgress(idx, total, total);
   }
 
   function clear(idx, finished=false){
+    const card = document.querySelector(`.timer-card[data-index="${idx}"]`);
     pause(idx);
     sessionStorage.setItem(key(idx,'seconds'), 0);
     const digits = document.getElementById(`timer-digits-${idx}`);
     if (digits) digits.textContent = fmt(0);
-    
-    if (finished && SOUND_ENABLED()){
-      try { 
-        bell.currentTime = 0; 
-        bell.play().catch(err => console.log("Audio play failed:", err)); 
-      } catch(e){}
-      
-      if (("Notification" in window)) {
-        if (Notification.permission === "granted"){
-            const row = document.querySelector(`.timer-row[data-index="${idx}"]`);
-            const label = row ? row.querySelector('.badge')?.innerText : `#${parseInt(idx)+1}`;
-            new Notification("LIMS Цаг дууслаа!", { body: `${label} хугацаа дууссан.`, silent: !SOUND_ENABLED() });
-        } else if (Notification.permission !== "denied"){
-            Notification.requestPermission();
-        }
+    updateProgress(idx, 0, 1);
+
+    if (finished) {
+      setCardState(card, 'finished');
+
+      if (SOUND_ENABLED()){
+        try {
+          bell.currentTime = 0;
+          bell.play().catch(err => console.log("Audio play failed:", err));
+        } catch(e){}
+      }
+
+      if ("Notification" in window && Notification.permission === "granted"){
+        const label = card?.querySelector('.timer-label')?.innerText || `#${parseInt(idx)+1}`;
+        new Notification("Цаг дууслаа!", { body: `${label} хугацаа дууссан.`, icon: '/static/favicon.ico' });
+      } else if ("Notification" in window && Notification.permission !== "denied"){
+        Notification.requestPermission();
       }
     }
   }
 
   // Event Delegation
-  document.getElementById('timer-list').addEventListener('click', function(e){
+  document.getElementById('timer-list')?.addEventListener('click', function(e){
     const btn = e.target.closest('button');
     if (!btn) return;
-    const row = btn.closest('.timer-row'); 
-    if (!row) return;
-    const idx = row.dataset.index;
+    const card = btn.closest('.timer-card');
+    if (!card) return;
+    const idx = card.dataset.index;
 
     if (btn.classList.contains('btn-start')) {
       const s = parseInt(sessionStorage.getItem(key(idx,'seconds'))||0,10);
-      if (s<=0){ alert("Эхлэх хугацаа 0 байна."); return; }
-      start(idx, s);
+      const total = parseInt(sessionStorage.getItem(key(idx,'total'))||card.dataset.initial||0,10);
+      if (s <= 0){ alert("Эхлэх хугацаа 0 байна."); return; }
+      start(idx, s, total);
     }
     else if (btn.classList.contains('btn-pause')) { pause(idx); }
     else if (btn.classList.contains('btn-reset')) { reset(idx); }
     else if (btn.classList.contains('btn-apply')) {
-      const hh = row.querySelector('.timer-hh')?.value;
-      const mm = row.querySelector('.timer-mm')?.value;
-      const ss = row.querySelector('.timer-ss')?.value;
+      const hh = card.querySelector('.timer-hh')?.value;
+      const mm = card.querySelector('.timer-mm')?.value;
+      const ss = card.querySelector('.timer-ss')?.value;
       apply(idx, hh, mm, ss);
     }
   });
 
-  // Custom timer Add
-  const addBtn = document.getElementById('custom-add');
-  if (addBtn){
-    addBtn.addEventListener('click', function(){
-      const label = (document.getElementById('custom-label')?.value || 'Сануулга').trim();
-      const hh = document.getElementById('custom-hh')?.value;
-      const mm = document.getElementById('custom-mm')?.value;
-      const ss = document.getElementById('custom-ss')?.value;
-      
-      const total = parseHMS(hh,mm,ss);
-      if (total<=0){ alert("HH:MM:SS-ээ зөв оруулна уу."); return; }
+  // Custom timer
+  document.getElementById('custom-add')?.addEventListener('click', function(){
+    const label = (document.getElementById('custom-label')?.value || 'Сануулга').trim();
+    const hh = document.getElementById('custom-hh')?.value;
+    const mm = document.getElementById('custom-mm')?.value;
+    const ss = document.getElementById('custom-ss')?.value;
 
-      const list = document.getElementById('timer-list');
-      const idx = document.querySelectorAll('.timer-row').length; 
-      
-      const div = document.createElement('div');
-      div.className = 'timer-row border rounded p-2';
-      div.dataset.index = idx;
-      div.dataset.initial = total;
+    const total = parseHMS(hh, mm, ss);
+    if (total <= 0){ alert("Хугацаа оруулна уу."); return; }
 
-      div.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-info text-dark">${label}</span>
-            <strong class="timer-digits timer-size-${CONFIG.digit_size || 'lg'} ms-2" id="timer-digits-${idx}">${fmt(total)}</strong>
-          </div>
-          <div class="hstack gap-2 mt-2 mt-sm-0 ms-auto ms-sm-0">
-            <button class="btn btn-sm btn-success btn-start"><i class="bi bi-play-fill"></i></button>
-            <button class="btn btn-sm btn-warning btn-pause"><i class="bi bi-pause-fill"></i></button>
-            <button class="btn btn-sm btn-outline-danger btn-reset"><i class="bi bi-arrow-counterclockwise"></i></button>
-          </div>
-        </div>`;
-      
-      list.appendChild(div);
-      sessionStorage.setItem(key(idx,'seconds'), total);
-      
-      document.getElementById('custom-hh').value = '';
-      document.getElementById('custom-mm').value = '';
-      document.getElementById('custom-ss').value = '';
-    });
-  }
+    const list = document.getElementById('timer-list');
+    const idx = document.querySelectorAll('.timer-card').length;
+
+    const div = document.createElement('div');
+    div.className = 'timer-card';
+    div.dataset.index = idx;
+    div.dataset.initial = total;
+
+    div.innerHTML = `
+      <div class="timer-display">
+        <div class="timer-circle">
+          <svg viewBox="0 0 64 64">
+            <circle class="timer-circle-bg" cx="32" cy="32" r="30"/>
+            <circle class="timer-circle-progress" cx="32" cy="32" r="30" id="progress-${idx}"/>
+          </svg>
+        </div>
+        <div class="timer-info">
+          <span class="timer-label">${label}</span>
+          <div class="timer-digits" id="timer-digits-${idx}">${fmt(total)}</div>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-btn timer-btn-start btn-start" title="Эхлүүлэх"><i class="bi bi-play-fill"></i></button>
+        <button class="timer-btn timer-btn-pause btn-pause" title="Түр зогсоох"><i class="bi bi-pause-fill"></i></button>
+        <button class="timer-btn timer-btn-reset btn-reset" title="Дахин эхлүүлэх"><i class="bi bi-arrow-counterclockwise"></i></button>
+      </div>`;
+
+    list.appendChild(div);
+    sessionStorage.setItem(key(idx,'seconds'), total);
+    sessionStorage.setItem(key(idx,'total'), total);
+    updateProgress(idx, total, total);
+
+    // Clear inputs
+    document.getElementById('custom-label').value = '';
+    document.getElementById('custom-hh').value = '';
+    document.getElementById('custom-mm').value = '';
+    document.getElementById('custom-ss').value = '';
+  });
 })();
 </script>
 {% endif %}

@@ -1,0 +1,253 @@
+{# Dashboard Charts Component - Chart.js #}
+
+<style>
+.chart-container {
+    position: relative;
+    height: 250px;
+}
+.stat-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+</style>
+
+<div class="row mb-4">
+    <!-- Today Stats Cards -->
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title mb-1">Өнөөдрийн дээж</h6>
+                <div class="stat-number" id="statTodaySamples">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title mb-1">Өнөөдрийн шинжилгээ</h6>
+                <div class="stat-number" id="statTodayAnalyses">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-warning text-dark h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title mb-1">Хянах шаардлагатай</h6>
+                <div class="stat-number" id="statPendingReview">-</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <h6 class="card-title mb-1">Энэ сарын батлагдсан</h6>
+                <div class="stat-number" id="statApproved">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Weekly Sample Trend -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>Сүүлийн 7 хоногийн дээж
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartWeeklySamples"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Samples by Client -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-2"></i>Энэ сарын дээж (Нэгжээр)
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartByClient"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Approval Stats -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>Энэ сарын шинжилгээний статус
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartApprovalStats"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Analysis Status -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="fas fa-chart-doughnut me-2"></i>Өнөөдрийн шинжилгээ (Статусаар)
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartTodayStatus"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+let chartWeeklySamples, chartByClient, chartApprovalStats, chartTodayStatus;
+
+function loadDashboardCharts() {
+    fetch('/api/dashboard_stats')
+        .then(res => res.json())
+        .then(data => {
+            // Update stat cards
+            document.getElementById('statTodaySamples').textContent = data.today.samples;
+            document.getElementById('statTodayAnalyses').textContent = data.today.analyses;
+            document.getElementById('statPendingReview').textContent = data.today.pending_review;
+            document.getElementById('statApproved').textContent = data.approval_stats.approved;
+
+            // 1. Weekly Samples Chart
+            const weeklyCtx = document.getElementById('chartWeeklySamples').getContext('2d');
+            if (chartWeeklySamples) chartWeeklySamples.destroy();
+            chartWeeklySamples = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.samples_by_day.map(d => d.day_name + '\n' + d.date),
+                    datasets: [{
+                        label: 'Дээж тоо',
+                        data: data.samples_by_day.map(d => d.count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            // 2. Samples by Client Chart
+            const clientCtx = document.getElementById('chartByClient').getContext('2d');
+            if (chartByClient) chartByClient.destroy();
+            const clientColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40', '#C9CBCF'
+            ];
+            chartByClient = new Chart(clientCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.samples_by_client.map(d => d.client),
+                    datasets: [{
+                        data: data.samples_by_client.map(d => d.count),
+                        backgroundColor: clientColors.slice(0, data.samples_by_client.length)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+
+            // 3. Approval Stats Chart
+            const approvalCtx = document.getElementById('chartApprovalStats').getContext('2d');
+            if (chartApprovalStats) chartApprovalStats.destroy();
+            chartApprovalStats = new Chart(approvalCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Батлагдсан', 'Буцаагдсан', 'Хүлээгдэж буй'],
+                    datasets: [{
+                        label: 'Тоо',
+                        data: [
+                            data.approval_stats.approved,
+                            data.approval_stats.rejected,
+                            data.approval_stats.pending
+                        ],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.7)',
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(255, 193, 7, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(220, 53, 69, 1)',
+                            'rgba(255, 193, 7, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // 4. Today Status Chart
+            const todayCtx = document.getElementById('chartTodayStatus').getContext('2d');
+            if (chartTodayStatus) chartTodayStatus.destroy();
+            const statusColors = {
+                'approved': '#28a745',
+                'rejected': '#dc3545',
+                'pending_review': '#ffc107',
+                'new': '#17a2b8'
+            };
+            const statusLabels = {
+                'approved': 'Батлагдсан',
+                'rejected': 'Буцаагдсан',
+                'pending_review': 'Хүлээгдэж буй',
+                'new': 'Шинэ'
+            };
+            chartTodayStatus = new Chart(todayCtx, {
+                type: 'pie',
+                data: {
+                    labels: data.analysis_by_status.map(d => statusLabels[d.status] || d.status),
+                    datasets: [{
+                        data: data.analysis_by_status.map(d => d.count),
+                        backgroundColor: data.analysis_by_status.map(d => statusColors[d.status] || '#6c757d')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        })
+        .catch(err => {
+            console.error('Dashboard stats error:', err);
+        });
+}
+
+// Load on page ready
+document.addEventListener('DOMContentLoaded', loadDashboardCharts);
+</script>

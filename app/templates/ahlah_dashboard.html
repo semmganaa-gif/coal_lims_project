@@ -2,129 +2,1015 @@
 
 {% block content %}
 <style>
-  .metric-card {
-    background: linear-gradient(135deg, #f8fafc, #edf2f7);
-    border-radius: .9rem;
-    padding: 1rem 1.2rem;
-    border: 1px solid #e2e8f0;
-    min-height: 120px;
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #22c55e;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-cyan: #06b6d4;
   }
-  .metric-card h6 {
-    font-size: .82rem;
-    letter-spacing: .04em;
+
+  /* ==================== MAIN LAYOUT ==================== */
+  .ahlah-page {
+    min-height: calc(100vh - 80px);
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 30%, #fff7ed 60%, #f0fdf4 100%);
+    background-attachment: fixed;
+  }
+
+  /* Wide Layout - Sidebar + Main */
+  .ahlah-layout {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+  }
+  .ahlah-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  .ahlah-sidebar::-webkit-scrollbar { width: 4px; }
+  .ahlah-sidebar::-webkit-scrollbar-track { background: transparent; }
+  .ahlah-sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  .ahlah-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ==================== HEADER - PREMIUM ==================== */
+  .page-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.1), rgba(236,72,153,0.08));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px;
+    padding: 1.25rem 2rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 24px rgba(59,130,246,0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .page-header h4 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #db2777 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .page-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .live-dot {
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(34,197,94,0.6);
+    animation: livePulse 2s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+  }
+
+  /* ==================== METRIC CARDS - VERTICAL SIDEBAR ==================== */
+  .metrics-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .metric-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .metric-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    border-radius: 16px 0 0 16px;
+  }
+  .metric-card.total::before { background: linear-gradient(180deg, #3b82f6, #06b6d4); }
+  .metric-card.pending::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+  .metric-card.rejected::before { background: linear-gradient(180deg, #ef4444, #f87171); }
+  .metric-card.approved::before { background: linear-gradient(180deg, #22c55e, #4ade80); }
+
+  .metric-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .metric-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .metric-card.total .metric-icon-wrap { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .metric-card.pending .metric-icon-wrap { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .metric-card.rejected .metric-icon-wrap { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+  .metric-card.approved .metric-icon-wrap { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #16a34a; }
+
+  .metric-content { flex: 1; min-width: 0; }
+  .metric-label {
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
-    color: #6c757d;
-    margin-bottom: .35rem;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .metric-value {
-    font-size: 2rem;
-    font-weight: 600;
-    color: #0d6efd;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
   }
-  .metric-card.warning .metric-value { color: #fd7e14; }
-  .metric-card.danger .metric-value { color: #dc3545; }
-  #metrics-refresh { font-size: .8rem; color: #6c757d; }
+  .metric-card.total .metric-value { background: linear-gradient(135deg, #1d4ed8, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .metric-card.pending .metric-value { background: linear-gradient(135deg, #b45309, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .metric-card.rejected .metric-value { background: linear-gradient(135deg, #b91c1c, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .metric-card.approved .metric-value { background: linear-gradient(135deg, #15803d, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* Sample cards styles */
+  .metric-card.samples-unit::before { background: linear-gradient(180deg, #06b6d4, #0891b2); }
+  .metric-card.samples-unit .metric-icon-wrap { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0e7490; }
+  .metric-card.samples-unit .metric-value { background: linear-gradient(135deg, #0e7490, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .metric-card.samples-type::before { background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+  .metric-card.samples-type .metric-icon-wrap { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #6d28d9; }
+  .metric-card.samples-type .metric-value { background: linear-gradient(135deg, #6d28d9, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* Expandable list inside metric card */
+  .metric-expand {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(148,163,184,0.15);
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .metric-expand::-webkit-scrollbar { width: 3px; }
+  .metric-expand::-webkit-scrollbar-track { background: transparent; }
+  .metric-expand::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  .metric-expand-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    margin-bottom: 3px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    background: rgba(248,250,252,0.6);
+    transition: all 0.2s ease;
+  }
+  .metric-expand-item:hover {
+    background: rgba(59,130,246,0.1);
+    transform: translateX(3px);
+  }
+  .metric-expand-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+  .metric-expand-count {
+    background: rgba(59,130,246,0.15);
+    color: #1d4ed8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .metric-expand-empty {
+    text-align: center;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+
+  .metric-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .kpi-badge.red { background: #fee2e2; color: #991b1b; }
+  .kpi-badge.yellow { background: #fef3c7; color: #92400e; }
+
+  /* ==================== STATS PANELS ==================== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .stats-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .stats-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(148,163,184,0.2);
+  }
+  .stats-panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stats-panel-title i {
+    font-size: 1.1rem;
+    color: var(--accent-blue);
+  }
+  .stats-panel-badge {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1d4ed8;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .stats-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .stats-list::-webkit-scrollbar { width: 6px; }
+  .stats-list::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+  .stats-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .stats-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 6px;
+    background: rgba(248,250,252,0.8);
+    transition: all 0.2s ease;
+  }
+  .stats-item:hover {
+    background: rgba(59,130,246,0.08);
+    transform: translateX(4px);
+  }
+  .stats-item-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
+  .stats-item-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+  }
+  .stats-item:nth-child(1) .stats-item-avatar { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .stats-item:nth-child(2) .stats-item-avatar { background: linear-gradient(135deg, #94a3b8, #64748b); }
+  .stats-item:nth-child(3) .stats-item-avatar { background: linear-gradient(135deg, #c2410c, #9a3412); }
+  .stats-item-counts {
+    display: flex;
+    gap: 6px;
+  }
+  .stats-count {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .stats-count.total { background: #e0e7ff; color: #4338ca; }
+  .stats-count.approved { background: #dcfce7; color: #166534; }
+  .stats-count.pending { background: #fef3c7; color: #92400e; }
+  .stats-count.rejected { background: #fee2e2; color: #991b1b; }
+  .stats-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .stats-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5; }
+
+  /* ==================== FILTER CARD ==================== */
+  .filter-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .filter-row {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-group label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .filter-group input, .filter-group select {
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.9);
+    min-width: 160px;
+    transition: all 0.3s ease;
+  }
+  .filter-group input:focus, .filter-group select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+  }
+  .filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+  }
+  .btn-filter {
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-filter.primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+  }
+  .btn-filter.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+  }
+  .btn-filter.secondary {
+    background: #f1f5f9;
+    color: var(--text-primary);
+    border: 2px solid #e2e8f0;
+  }
+  .btn-filter.secondary:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+  }
+
+  /* ==================== RESULT CARDS ==================== */
+  .results-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .result-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.5s ease backwards;
+  }
+  .result-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  }
+  .result-card.pending { border-left: 4px solid #f59e0b; }
+  .result-card.rejected { border-left: 4px solid #ef4444; }
+
+  .result-card-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(148,163,184,0.15);
+    background: linear-gradient(180deg, rgba(248,250,252,0.8), transparent);
+  }
+  .result-sample-info {
+    flex: 1;
+  }
+  .result-sample-code {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-blue);
+    margin-bottom: 4px;
+  }
+  .result-analysis-name {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .result-status-badge {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .result-status-badge.pending {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+  }
+  .result-status-badge.rejected {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #991b1b;
+  }
+
+  .result-card-body {
+    padding: 1.25rem;
+  }
+
+  /* Raw Data Display */
+  .raw-data-section {
+    margin-bottom: 1rem;
+  }
+  .raw-data-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .raw-data-title i { color: var(--accent-purple); }
+
+  .parallel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 0.75rem;
+  }
+  .parallel-table th {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  .parallel-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+  .parallel-table tr:nth-child(even) {
+    background: rgba(248,250,252,0.6);
+  }
+  .parallel-table tr:hover {
+    background: rgba(59,130,246,0.05);
+  }
+  .parallel-table .row-label {
+    font-weight: 700;
+    color: var(--accent-purple);
+    font-family: inherit;
+  }
+
+  .summary-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+  .summary-item {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 10px 16px;
+    border-radius: 12px;
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+  }
+  .summary-item-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .summary-item-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+  .summary-item-value.avg { color: var(--accent-green); }
+  .summary-item-value.diff { color: var(--accent-orange); }
+  .summary-item-value.final { color: var(--accent-blue); }
+
+  .result-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(148,163,184,0.15);
+    margin-top: 1rem;
+  }
+  .result-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+  .result-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+  .result-user-info { line-height: 1.3; }
+  .result-user-name { font-weight: 700; color: var(--text-primary); }
+  .result-user-date { font-size: 0.72rem; color: var(--text-muted); }
+
+  .result-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-action {
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+  }
+  .btn-action.approve {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
+  }
+  .btn-action.approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(34,197,94,0.4);
+  }
+  .btn-action.reject {
+    background: #fff;
+    color: #dc2626;
+    border: 2px solid #fee2e2;
+  }
+  .btn-action.reject:hover {
+    background: #fee2e2;
+    transform: translateY(-2px);
+  }
+
+  /* Bulk Toolbar */
+  .bulk-toolbar {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    border-radius: 16px;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+  }
+  .bulk-info { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+  .bulk-actions { display: flex; gap: 0.5rem; }
+  .result-checkbox { position: absolute; top: 0.75rem; right: 0.75rem; z-index: 10; }
+  .result-checkbox input { width: 18px; height: 18px; cursor: pointer; }
+  .result-card.selected { border: 2px solid #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+  }
+  .empty-state i {
+    font-size: 4rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+  }
+  .empty-state h5 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+  .empty-state p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Loading */
+  .loading-spinner {
+    text-align: center;
+    padding: 3rem;
+  }
+  .loading-spinner i {
+    font-size: 2.5rem;
+    color: var(--accent-blue);
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Modal */
+  .modal-content.premium {
+    border-radius: 24px;
+    border: none;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.2);
+  }
+  .modal-header.premium {
+    background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    border: none;
+    border-radius: 24px 24px 0 0;
+  }
+  .modal-body.premium { padding: 1.5rem; }
+  .modal-footer.premium { border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
+
+  /* ==================== RESPONSIVE ==================== */
+  @media (max-width: 1400px) {
+    .stats-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 1200px) {
+    /* Sidebar becomes horizontal row on smaller wide screens */
+    .ahlah-layout {
+      flex-direction: column;
+    }
+    .ahlah-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .metrics-sidebar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      flex: 1;
+      min-width: 300px;
+    }
+    .metric-card {
+      flex: 1;
+      min-width: 140px;
+    }
+    .metric-card::before {
+      top: 0; left: 0; right: 0; bottom: auto;
+      height: 4px;
+      width: auto;
+      border-radius: 16px 16px 0 0;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+    }
+    .metric-card.samples-unit,
+    .metric-card.samples-type {
+      min-width: 220px;
+    }
+  }
+  @media (max-width: 992px) {
+    .results-container { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .ahlah-page { padding: 0.75rem; }
+    .ahlah-sidebar { flex-direction: column; }
+    .metrics-sidebar { flex-direction: column; }
+    .metric-card { min-width: 100%; }
+    .metric-card.samples-unit,
+    .metric-card.samples-type { min-width: 100%; }
+    .page-header { flex-direction: column; gap: 1rem; text-align: center; }
+    .filter-row { flex-direction: column; align-items: stretch; }
+    .filter-actions { margin-left: 0; }
+    .metric-value { font-size: 1.75rem; }
+  }
+
+  /* ==================== ANIMATIONS ==================== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .metric-card { animation: fadeInUp 0.5s ease backwards; }
+  .metric-card:nth-child(1) { animation-delay: 0.1s; }
+  .metric-card:nth-child(2) { animation-delay: 0.2s; }
+  .metric-card:nth-child(3) { animation-delay: 0.3s; }
+  .metric-card:nth-child(4) { animation-delay: 0.4s; }
+  .metric-card:nth-child(5) { animation-delay: 0.5s; }
+  .metric-card:nth-child(6) { animation-delay: 0.6s; }
+  .filter-card { animation: fadeInUp 0.5s ease 0.5s backwards; }
 </style>
 
-<div class="container-fluid mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>{{ title }}</h1>
+<div class="ahlah-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h4><i class="bi bi-shield-lock-fill me-2"></i>{{ title }}</h4>
+      <div class="subtitle">Химичдийн хадгалсан үр дүнг хянах, баталгаажуулах</div>
+    </div>
+    <div class="live-indicator">
+      <span class="live-dot"></span>
+      <span id="metrics-refresh">Шинэчлэгдсэн: -</span>
+    </div>
   </div>
-  <p class="text-muted">Химичдийн хадгалсан, ахлахын хяналт шаардлагатай шинжилгээний үр дүн.</p>
 
-  <div class="row g-3 mb-2">
-    <div class="col-md-4">
-      <div class="metric-card shadow-sm">
-        <h6><i class="bi bi-stack me-2 text-primary"></i>Нийт дээж</h6>
-        <div class="metric-value" id="metric-total">0</div>
-        <div class="text-muted small">Өнөөдөр бүртгэгдсэн нийт дээжийн тоо.</div>
+  <!-- Wide Layout: Sidebar + Main -->
+  <div class="ahlah-layout">
+    <!-- Left Sidebar - Metric Cards -->
+    <div class="ahlah-sidebar">
+      <div class="metrics-sidebar">
+        <div class="metric-card total">
+          <div class="metric-card-inner">
+            <div class="metric-icon-wrap"><i class="bi bi-stack"></i></div>
+            <div class="metric-content">
+              <div class="metric-label">Нийт</div>
+              <div class="metric-value" id="metric-total">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card pending">
+          <div class="metric-card-inner">
+            <div class="metric-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
+            <div class="metric-content">
+              <div class="metric-label">Хүлээгдэж буй</div>
+              <div class="metric-value" id="metric-pending">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card rejected">
+          <div class="metric-card-inner">
+            <div class="metric-icon-wrap"><i class="bi bi-exclamation-octagon"></i></div>
+            <div class="metric-content">
+              <div class="metric-label">Буцаагдсан</div>
+              <div class="metric-value" id="metric-rejected">0</div>
+            </div>
+          </div>
+          <div class="metric-sub">
+            <span class="kpi-badge red" id="kpi-shift-total">0</span> ээлж
+            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> 14 хоног
+          </div>
+        </div>
+
+        <div class="metric-card approved">
+          <div class="metric-card-inner">
+            <div class="metric-icon-wrap"><i class="bi bi-patch-check-fill"></i></div>
+            <div class="metric-content">
+              <div class="metric-label">Баталгаажсан</div>
+              <div class="metric-value" id="metric-approved">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Дээж бүртгэл - Нэгжээр -->
+      <div class="metric-card samples-unit">
+        <div class="metric-card-inner">
+          <div class="metric-icon-wrap"><i class="bi bi-building"></i></div>
+          <div class="metric-content">
+            <div class="metric-label">Дээж (Нэгж)</div>
+            <div class="metric-value" id="samples-total-badge">0</div>
+          </div>
+        </div>
+        <div class="metric-expand" id="sidebar-samples-unit">
+          <div class="metric-expand-item">Ачааллаж байна...</div>
+        </div>
+      </div>
+
+      <!-- Дээж бүртгэл - Төрлөөр -->
+      <div class="metric-card samples-type">
+        <div class="metric-card-inner">
+          <div class="metric-icon-wrap"><i class="bi bi-box-seam"></i></div>
+          <div class="metric-content">
+            <div class="metric-label">Дээж (Төрөл)</div>
+            <div class="metric-value" id="samples-type-badge">0</div>
+          </div>
+        </div>
+        <div class="metric-expand" id="sidebar-samples-type">
+          <div class="metric-expand-item">Ачааллаж байна...</div>
+        </div>
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="metric-card warning shadow-sm">
-        <h6><i class="bi bi-hourglass-split me-2 text-warning"></i>Хяналт хүлээж буй</h6>
-        <div class="metric-value" id="metric-pending">0</div>
-        <div class="text-muted small">pending_review төлөвтэй байгаа дээжүүд.</div>
+    <!-- Main Content Area -->
+    <div class="ahlah-main">
+  <!-- Stats Panels: Химич & Шинжилгээ -->
+  <div class="stats-row">
+    <!-- Химичийн статистик -->
+    <div class="stats-panel">
+      <div class="stats-panel-header">
+        <div class="stats-panel-title">
+          <i class="bi bi-people-fill"></i> Химичийн шинжилгээ
+        </div>
+        <div class="stats-panel-badge" id="chemist-total-badge">0 химич</div>
+      </div>
+      <div class="stats-list" id="chemist-stats-list">
+        <div class="stats-empty">
+          <i class="bi bi-hourglass"></i>
+          Ачааллаж байна...
+        </div>
       </div>
     </div>
 
-    <div class="col-md-4">
-      <div class="metric-card danger shadow-sm">
-        <h6><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Буцаагдсан / 3:3</h6>
-        <div class="metric-value" id="metric-rejected">0</div>
-        <div class="text-muted small">Rejected болон 3:3 давтан шинжилгээ.</div>
-
-        {# ✅ ЗӨВХӨН ЭНЭ 2 МӨР НЭМЭГДСЭН: KPI COUNT-ууд #}
-        <div class="text-muted small mt-1">
-          Ээлжийн буцаалт (KPI): 
-          <span class="fw-bold text-danger" id="kpi-shift-total">0</span>
+    <!-- Шинжилгээний төрөл статистик -->
+    <div class="stats-panel">
+      <div class="stats-panel-header">
+        <div class="stats-panel-title">
+          <i class="bi bi-clipboard-data-fill"></i> Шинжилгээний төрөл
         </div>
-        <div class="text-muted small">
-          Сүүлийн 14 хоногийн буцаалт (KPI): 
-          <span class="fw-bold text-danger" id="kpi-14d-total">0</span>
+        <div class="stats-panel-badge" id="analysis-total-badge">0 төрөл</div>
+      </div>
+      <div class="stats-list" id="analysis-stats-list">
+        <div class="stats-empty">
+          <i class="bi bi-hourglass"></i>
+          Ачааллаж байна...
         </div>
       </div>
     </div>
   </div>
 
-  <div class="d-flex justify-content-end mb-3">
-    <span id="metrics-refresh">Сүүлд шинэчлэгдсэн: -</span>
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}" class="filter-row">
+      <div class="filter-group">
+        <label><i class="bi bi-calendar-event me-1"></i>Эхлэх огноо</label>
+        <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
+      </div>
+      <div class="filter-group">
+        <label><i class="bi bi-calendar-check me-1"></i>Дуусах огноо</label>
+        <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
+      </div>
+      <div class="filter-group">
+        <label><i class="bi bi-search me-1"></i>Дээжний нэр</label>
+        <input type="text" name="sample_name" placeholder="Хайх..." value="{{ request.args.get('sample_name','') }}">
+      </div>
+      <div class="filter-group">
+        <label><i class="bi bi-funnel me-1"></i>Статус</label>
+        <select name="status">
+          <option value="">Бүгд</option>
+          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>Хүлээгдэж буй</option>
+          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>Буцаагдсан</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button type="submit" class="btn-filter primary">
+          <i class="bi bi-search"></i> Шүүх
+        </button>
+        <a href="{{ url_for('analysis.ahlah_dashboard') }}" class="btn-filter secondary">
+          <i class="bi bi-arrow-counterclockwise"></i> Цэвэрлэх
+        </a>
+      </div>
+    </form>
   </div>
 
-  {# --- Шүүлтүүр карт --- #}
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body py-3">
-      <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}">
-        <div class="row g-3 align-items-end">
-          <div class="col-md-3">
-            <label for="start_date" class="form-label fw-bold small">Эхлэх огноо</label>
-            <input type="date" class="form-control form-control-sm" id="start_date" name="start_date"
-                   value="{{ request.args.get('start_date','') }}">
-          </div>
-          <div class="col-md-3">
-            <label for="end_date" class="form-label fw-bold small">Дуусах огноо</label>
-            <input type="date" class="form-control form-control-sm" id="end_date" name="end_date"
-                   value="{{ request.args.get('end_date','') }}">
-          </div>
-          <div class="col-md-4">
-            <label for="sample_name" class="form-label fw-bold small">Дээжний нэр</label>
-            <input type="text" class="form-control form-control-sm" id="sample_name" name="sample_name"
-                   placeholder="Хайх..." value="{{ request.args.get('sample_name','') }}">
-          </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-primary btn-sm w-100">
-               <i class="bi bi-search"></i> Шүүх
-            </button>
-          </div>
-        </div>
-      </form>
+  <!-- Bulk Actions Toolbar -->
+  <div id="bulk-toolbar" class="bulk-toolbar" style="display: none;">
+    <div class="bulk-info">
+      <input type="checkbox" id="select-all-results" class="form-check-input me-2">
+      <span id="selected-count">0</span> сонгогдсон
+    </div>
+    <div class="bulk-actions">
+      <button type="button" class="btn btn-success btn-sm" id="bulk-approve-btn">
+        <i class="bi bi-check-all"></i> Бүгдийг батлах
+      </button>
+      <button type="button" class="btn btn-danger btn-sm" id="bulk-reject-btn" data-bs-toggle="modal" data-bs-target="#bulkRejectModal">
+        <i class="bi bi-x-lg"></i> Бүгдийг буцаах
+      </button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection-btn">
+        <i class="bi bi-x-circle"></i> Цуцлах
+      </button>
     </div>
   </div>
 
-  {# --- AG Grid --- #}
-  <div id="myGrid" class="ag-theme-quartz shadow-sm" style="height: 650px; width: 100%;"></div>
+  <!-- Results Container -->
+  <div id="results-container" class="results-container">
+    <div class="loading-spinner">
+      <i class="bi bi-arrow-repeat"></i>
+      <p class="mt-3 text-muted">Ачааллаж байна...</p>
+    </div>
+  </div>
 
-  {# --- Буцаах modal --- #}
+  <!-- Буцаах modal -->
   <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <form id="reject-form" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <div class="modal-content">
-          <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="rejectModalLabel"><i class="bi bi-x-circle"></i> Үр дүн буцаах</h5>
+        <div class="modal-content premium">
+          <div class="modal-header premium">
+            <h5 class="modal-title" id="rejectModalLabel">
+              <i class="bi bi-x-octagon-fill me-2"></i>Үр дүн буцаах
+            </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Хаах"></button>
           </div>
-          <div class="modal-body">
-            <div class="alert alert-secondary py-2 mb-3">
-               <i class="bi bi-info-circle"></i> <span id="reject-sample-info" class="fw-bold"></span>
+          <div class="modal-body premium">
+            <div class="alert" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: none; border-radius: 12px; padding: 1rem;">
+              <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+              <span id="reject-sample-info" class="fw-bold"></span>
             </div>
-            
             <input type="hidden" id="reject-result-id" name="result_id" value="">
-
             <div class="mb-3">
-              <label class="form-label fw-bold">Буцаах шалтгаан (KPI код) <span class="text-danger">*</span></label>
-              <select name="rejection_category" id="rejection_category" class="form-select" required>
+              <label class="form-label fw-bold">
+                <i class="bi bi-tag me-1"></i>Буцаах шалтгаан (KPI код) <span class="text-danger">*</span>
+              </label>
+              <select name="rejection_category" id="rejection_category" class="form-select" required style="border-radius: 12px; padding: 12px;">
                 <option value="">-- Сонгох --</option>
                 <option value="sample_prep">1. Дээж бэлтгэлийн алдаа</option>
                 <option value="measurement">2. Шинжилгээний гүйцэтгэлийн алдаа</option>
@@ -133,52 +1019,714 @@
                 <option value="data_entry">5. Өгөгдөл шивэлт / Тооцооллын алдаа</option>
                 <option value="method">6. Арга аргачлал зөрчсөн (SOP)</option>
                 <option value="sample_mixup">7. Дээж солигдсон / Буруу дээж</option>
-                
-                {# ✅ ШИНЭЧЛЭЛ: 'other' биш 'chemist_error' болсон #}
-                <option value="chemist_error">8. Химичийн алдаа /Асгасан</option>
-                <option value="qc_fail">9. Дотоод хяналтын алдаа</option>
+                <option value="chemist_error">8. Химичийн алдаа / Асгасан</option>
               </select>
-              <div class="form-text text-muted small mt-2">
-                <i class="bi bi-info-circle-fill"></i> Сонгосон шалтгаан нь автоматаар тайлбар болж хадгалагдана.
-              </div>
             </div>
-
-            {# 🛑 Коммент хэсгийг авч хаясан хэвээр #}
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Цуцлах</button>
-            <button type="submit" class="btn btn-danger">Буцаах</button>
+          <div class="modal-footer premium">
+            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Цуцлах</button>
+            <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626);">
+              <i class="bi bi-x-circle me-1"></i> Буцаах
+            </button>
           </div>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Bulk Reject Modal -->
+  <div class="modal fade" id="bulkRejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content premium">
+        <div class="modal-header premium">
+          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>Олон үр дүн буцаах</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body premium">
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span id="bulk-reject-count">0</span> үр дүн буцаагдах гэж байна.
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Буцаах шалтгаан</label>
+            <select id="bulk-rejection-category" class="form-select" required>
+              <option value="">-- Сонгоно уу --</option>
+              {% for key, label in error_labels.items() %}
+              <option value="{{ key }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Нэмэлт тайлбар</label>
+            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="Нэмэлт тайлбар..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer premium">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Цуцлах</button>
+          <button type="button" class="btn btn-danger" id="confirm-bulk-reject-btn">
+            <i class="bi bi-x-circle me-1"></i> Буцаах
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    </div><!-- /.ahlah-main -->
+  </div><!-- /.ahlah-layout -->
 </div>
 
-{# KPI API-гийн URL-ийг JS-д дамжуулах #}
+<!-- API URLs -->
 <script>
   window.AHLAH_KPI_SUMMARY_URL = "{{ url_for('analysis.kpi_summary_for_ahlah') }}";
+  window.AHLAH_STATS_URL = "{{ url_for('analysis.api_ahlah_stats') }}";
+  window.AHLAH_DATA_URL = "/api/ahlah_data";
 </script>
 
-{# Алдааны тайлбаруудыг JS руу дамжуулах (ЧИНИЙ ХУУЧИН MAP-аа яг хэвээр нь) #}
+<!-- Config -->
 <script>
-  window.ERROR_LABELS = {{ error_labels | tojson | default({
-    "sample_prep": "Дээж бэлтгэл",
-    "measurement": "Гүйцэтгэл",
-    "qc_fail": "QC Fail",
-    "equipment": "Төхөөрөмж",
-    "data_entry": "Шивэлт",
-    "method": "SOP",
-    "sample_mixup": "Дээж солигдсон",
-    "chemist_error": "Химичийн алдаа"
-  }) }};
-  window.ANALYSIS_SCHEMAS = {{ analysis_schemas | tojson | default({}) }};
+  window.ERROR_LABELS = {{ error_labels | tojson | safe }};
 </script>
 
-{% endblock %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadResults();
+  loadKpiSummary();
+  loadAhlahStats();
+});
 
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='js/ahlah_dashboard.js') }}"></script>
+function loadResults() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const apiUrl = window.AHLAH_DATA_URL + '?' + urlParams.toString();
+
+  fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+      renderResults(data);
+      updateMetrics(data);
+    })
+    .catch(err => {
+      console.error('Error loading results:', err);
+      document.getElementById('results-container').innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-exclamation-triangle"></i>
+          <h5>Алдаа гарлаа</h5>
+          <p>Өгөгдөл ачаалахад алдаа гарлаа. Дахин оролдоно уу.</p>
+        </div>
+      `;
+    });
+}
+
+function renderResults(data) {
+  const container = document.getElementById('results-container');
+
+  if (!data || data.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h5>Хяналт хүлээж буй үр дүн байхгүй</h5>
+        <p>Одоогоор шалгах шаардлагатай үр дүн алга байна.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  data.forEach((item, idx) => {
+    html += renderResultCard(item, idx);
+  });
+  container.innerHTML = html;
+
+  // Event listeners
+  container.querySelectorAll('.btn-approve').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = this.dataset.id;
+      if (confirm('Энэ үр дүнг баталгаажуулах уу?')) {
+        approveResult(id);
+      }
+    });
+  });
+
+  container.querySelectorAll('.btn-reject').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.getElementById('reject-result-id').value = this.dataset.id;
+      document.getElementById('reject-sample-info').textContent =
+        this.dataset.sampleCode + ' / ' + this.dataset.analysisName;
+    });
+  });
+}
+
+function renderResultCard(item, idx) {
+  const statusClass = item.status === 'rejected' ? 'rejected' : 'pending';
+  const statusText = item.status === 'rejected' ? 'Буцаагдсан' : 'Хүлээгдэж буй';
+  const raw = item.raw_data || {};
+
+  // Parallel data
+  let parallelHtml = '';
+  const parallels = raw.parallels || [];
+  if (parallels.length === 0) {
+    // p1, p2 бүтцээс шууд авах
+    ['p1', 'p2', 'p3'].forEach(key => {
+      if (raw[key] && typeof raw[key] === 'object') {
+        parallels.push({ label: key.toUpperCase(), ...raw[key] });
+      }
+    });
+  }
+
+  if (parallels.length > 0) {
+    parallelHtml = `
+      <table class="parallel-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>m1</th>
+            <th>m2</th>
+            <th>m3</th>
+            <th>Үр дүн</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${parallels.map(p => `
+            <tr>
+              <td class="row-label">${p.label || p.num || '-'}</td>
+              <td>${formatNum(p.m1)}</td>
+              <td>${formatNum(p.m2)}</td>
+              <td>${formatNum(p.m3)}</td>
+              <td><strong>${formatNum(p.result, 3)}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // Summary values
+  const avg = raw.avg;
+  const diff = raw.diff;
+  const finalVal = item.final_value;
+
+  // User initials
+  const initials = (item.user_name || 'XX').substring(0, 2).toUpperCase();
+
+  // Error badge
+  let errorBadge = '';
+  if (item.status === 'rejected' && item.error_reason) {
+    const errorText = window.ERROR_LABELS[item.error_reason] || item.error_reason;
+    errorBadge = `<div class="mt-2"><span class="badge bg-danger">${errorText}</span></div>`;
+  }
+
+  return `
+    <div class="result-card ${statusClass}" style="animation-delay: ${idx * 0.1}s; position: relative;" data-result-id="${item.result_id}">
+      <div class="result-checkbox">
+        <input type="checkbox" class="result-select-cb" data-id="${item.result_id}">
+      </div>
+      <div class="result-card-header">
+        <div class="result-sample-info">
+          <div class="result-sample-code">${escapeHtml(item.sample_code)}</div>
+          <div class="result-analysis-name">${escapeHtml(item.analysis_name)}</div>
+          ${errorBadge}
+        </div>
+        <span class="result-status-badge ${statusClass}">${statusText}</span>
+      </div>
+
+      <div class="result-card-body">
+        ${parallelHtml ? `
+          <div class="raw-data-section">
+            <div class="raw-data-title">
+              <i class="bi bi-table"></i> Параллел хэмжилт
+            </div>
+            ${parallelHtml}
+          </div>
+        ` : ''}
+
+        <div class="summary-row">
+          ${avg !== undefined && avg !== null ? `
+            <div class="summary-item">
+              <div class="summary-item-label">Дундаж</div>
+              <div class="summary-item-value avg">${formatNum(avg, 3)}</div>
+            </div>
+          ` : ''}
+          ${diff !== undefined && diff !== null ? `
+            <div class="summary-item">
+              <div class="summary-item-label">Тохирц (T)</div>
+              <div class="summary-item-value diff">${formatNum(diff, 4)}</div>
+            </div>
+          ` : ''}
+          ${finalVal !== undefined && finalVal !== null ? `
+            <div class="summary-item">
+              <div class="summary-item-label">Эцсийн үр дүн</div>
+              <div class="summary-item-value final">${formatNum(finalVal, 3)}</div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="result-meta">
+          <div class="result-user">
+            <div class="result-user-avatar">${initials}</div>
+            <div class="result-user-info">
+              <div class="result-user-name">${escapeHtml(item.user_name)}</div>
+              <div class="result-user-date">${item.updated_at || '-'}</div>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button type="button" class="btn-action approve btn-approve" data-id="${item.result_id}">
+              <i class="bi bi-check-lg"></i> Батлах
+            </button>
+            <button type="button" class="btn-action reject btn-reject"
+              data-id="${item.result_id}"
+              data-sample-code="${escapeHtml(item.sample_code)}"
+              data-analysis-name="${escapeHtml(item.analysis_name)}"
+              data-bs-toggle="modal" data-bs-target="#rejectModal">
+              <i class="bi bi-x-lg"></i> Буцаах
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function formatNum(val, precision = 4) {
+  if (val === undefined || val === null || val === '') return '-';
+  const num = Number(val);
+  if (isNaN(num)) return val;
+  return num.toFixed(precision);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function updateMetrics(data) {
+  const total = data.length;
+  const pending = data.filter(d => d.status === 'pending_review').length;
+  const rejected = data.filter(d => d.status === 'rejected').length;
+
+  document.getElementById('metric-total').textContent = total;
+  document.getElementById('metric-pending').textContent = pending;
+  document.getElementById('metric-rejected').textContent = rejected;
+
+  const now = new Date();
+  document.getElementById('metrics-refresh').textContent =
+    'Шинэчлэгдсэн: ' + now.toLocaleString('mn-MN', { hour12: false });
+}
+
+function loadKpiSummary() {
+  if (!window.AHLAH_KPI_SUMMARY_URL) return;
+
+  fetch(window.AHLAH_KPI_SUMMARY_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (data.shift) {
+        document.getElementById('kpi-shift-total').textContent = data.shift.total_errors || 0;
+      }
+      if (data.days14) {
+        document.getElementById('kpi-14d-total').textContent = data.days14.total_errors || 0;
+      }
+    })
+    .catch(err => console.error('KPI load error:', err));
+}
+
+function loadAhlahStats() {
+  if (!window.AHLAH_STATS_URL) return;
+
+  fetch(window.AHLAH_STATS_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (!data) return;
+
+      // Metric cards шинэчлэх (summary)
+      if (data.summary) {
+        const approved = document.getElementById('metric-approved');
+        if (approved) approved.textContent = data.summary.approved || 0;
+      }
+
+      // Дээж бүртгэл - нийт тоо
+      const samplesBadge = document.getElementById('samples-total-badge');
+      if (samplesBadge) samplesBadge.textContent = (data.samples_today || 0) + ' дээж';
+
+      // Дээж бүртгэл - Нэгжээр
+      renderSamplesByUnit(data.samples_by_unit || []);
+
+      // Дээж бүртгэл - Төрлөөр
+      renderSamplesByType(data.samples_by_type || []);
+
+      // Химичийн статистик
+      renderChemistStats(data.chemists || []);
+
+      // Шинжилгээний төрөл статистик
+      renderAnalysisStats(data.analysis_types || []);
+    })
+    .catch(err => console.error('Stats load error:', err));
+}
+
+function renderSamplesByUnit(units) {
+  const container = document.getElementById('sidebar-samples-unit');
+  const badge = document.getElementById('samples-total-badge');
+
+  if (badge) {
+    const total = units.reduce((sum, u) => sum + u.count, 0);
+    badge.textContent = total;
+  }
+
+  if (container) {
+    if (units.length === 0) {
+      container.innerHTML = '<div class="metric-expand-empty">Өнөөдөр дээж бүртгэгдээгүй</div>';
+    } else {
+      let html = '';
+      units.forEach(function(u) {
+        html += `
+          <div class="metric-expand-item">
+            <span class="metric-expand-name">${escapeHtml(u.name)}</span>
+            <span class="metric-expand-count">${u.count}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+  }
+}
+
+function renderSamplesByType(types) {
+  const container = document.getElementById('sidebar-samples-type');
+  const badge = document.getElementById('samples-type-badge');
+
+  if (badge) {
+    badge.textContent = types.length;
+  }
+
+  if (container) {
+    if (types.length === 0) {
+      container.innerHTML = '<div class="metric-expand-empty">Өнөөдөр дээж бүртгэгдээгүй</div>';
+    } else {
+      let html = '';
+      types.forEach(function(t) {
+        html += `
+          <div class="metric-expand-item">
+            <span class="metric-expand-name">${escapeHtml(t.name)}</span>
+            <span class="metric-expand-count">${t.count}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+  }
+}
+
+function renderChemistStats(chemists) {
+  const container = document.getElementById('chemist-stats-list');
+  const badge = document.getElementById('chemist-total-badge');
+
+  if (!container) return;
+
+  if (badge) {
+    badge.textContent = chemists.length + ' химич';
+  }
+
+  if (chemists.length === 0) {
+    container.innerHTML = `
+      <div class="stats-empty">
+        <i class="bi bi-inbox"></i>
+        Өнөөдөр шинжилгээ хийгээгүй
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  chemists.forEach(function(c) {
+    const initials = (c.username || 'XX').substring(0, 2).toUpperCase();
+    html += `
+      <div class="stats-item">
+        <div class="stats-item-name">
+          <div class="stats-item-avatar">${initials}</div>
+          <span>${escapeHtml(c.username)}</span>
+        </div>
+        <div class="stats-item-counts">
+          <span class="stats-count total" title="Нийт">${c.total}</span>
+          <span class="stats-count approved" title="Баталсан">${c.approved}</span>
+          <span class="stats-count pending" title="Хүлээгдэж буй">${c.pending}</span>
+          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${c.rejected}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderAnalysisStats(analysisTypes) {
+  const container = document.getElementById('analysis-stats-list');
+  const badge = document.getElementById('analysis-total-badge');
+
+  if (!container) return;
+
+  if (badge) {
+    badge.textContent = analysisTypes.length + ' төрөл';
+  }
+
+  if (analysisTypes.length === 0) {
+    container.innerHTML = `
+      <div class="stats-empty">
+        <i class="bi bi-inbox"></i>
+        Өнөөдөр шинжилгээ алга
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  analysisTypes.forEach(function(a) {
+    html += `
+      <div class="stats-item">
+        <div class="stats-item-name">
+          <div class="stats-item-avatar">${escapeHtml(a.code.substring(0, 2))}</div>
+          <span>${escapeHtml(a.name)} <small class="text-muted">(${escapeHtml(a.code)})</small></span>
+        </div>
+        <div class="stats-item-counts">
+          <span class="stats-count total" title="Нийт">${a.total}</span>
+          <span class="stats-count approved" title="Баталсан">${a.approved}</span>
+          <span class="stats-count pending" title="Хүлээгдэж буй">${a.pending}</span>
+          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${a.rejected}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function approveResult(id) {
+  fetch('/api/update_result_status/' + id + '/approved', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message === 'OK') {
+      location.reload();
+    } else {
+      alert(data.message || 'Алдаа гарлаа');
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Алдаа гарлаа');
+  });
+}
+
+// Reject form submit
+document.getElementById('reject-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('reject-result-id').value;
+  const cat = document.getElementById('rejection_category').value;
+  const catText = document.querySelector('#rejection_category option:checked').textContent;
+
+  if (!cat) {
+    alert('Буцаах шалтгаан сонгоно уу');
+    return;
+  }
+
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Уншиж байна...';
+
+  fetch('/api/update_result_status/' + id + '/rejected', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      rejection_category: cat,
+      rejection_comment: catText,
+      error_reason: cat
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message === 'OK') {
+      bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+      location.reload();
+    } else {
+      alert(data.message || 'Алдаа гарлаа');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Алдаа гарлаа');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+  });
+});
+
+// Ээлжийн огноог default-ээр тохируулах
+(function() {
+  const startDate = document.querySelector('input[name="start_date"]');
+  const endDate = document.querySelector('input[name="end_date"]');
+  const shiftDate = window.getShiftDate ? window.getShiftDate() : null;
+  if (shiftDate) {
+    if (startDate && !startDate.value) startDate.value = shiftDate;
+    if (endDate && !endDate.value) endDate.value = shiftDate;
+  }
+})();
+
+// ============================================
+// BULK OPERATIONS
+// ============================================
+let selectedResultIds = new Set();
+
+function updateBulkToolbar() {
+  const toolbar = document.getElementById('bulk-toolbar');
+  const countSpan = document.getElementById('selected-count');
+  const selectAllCb = document.getElementById('select-all-results');
+
+  if (selectedResultIds.size > 0) {
+    toolbar.style.display = 'flex';
+    countSpan.textContent = selectedResultIds.size;
+  } else {
+    toolbar.style.display = 'none';
+  }
+
+  // Update select all checkbox state
+  const allCheckboxes = document.querySelectorAll('.result-select-cb');
+  if (allCheckboxes.length > 0 && selectedResultIds.size === allCheckboxes.length) {
+    selectAllCb.checked = true;
+    selectAllCb.indeterminate = false;
+  } else if (selectedResultIds.size > 0) {
+    selectAllCb.checked = false;
+    selectAllCb.indeterminate = true;
+  } else {
+    selectAllCb.checked = false;
+    selectAllCb.indeterminate = false;
+  }
+}
+
+// Event delegation for checkboxes
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('result-select-cb')) {
+    const id = e.target.dataset.id;
+    const card = e.target.closest('.result-card');
+    if (e.target.checked) {
+      selectedResultIds.add(id);
+      card.classList.add('selected');
+    } else {
+      selectedResultIds.delete(id);
+      card.classList.remove('selected');
+    }
+    updateBulkToolbar();
+  }
+});
+
+// Select All
+document.getElementById('select-all-results').addEventListener('change', function() {
+  const checkboxes = document.querySelectorAll('.result-select-cb');
+  checkboxes.forEach(cb => {
+    cb.checked = this.checked;
+    const card = cb.closest('.result-card');
+    if (this.checked) {
+      selectedResultIds.add(cb.dataset.id);
+      card.classList.add('selected');
+    } else {
+      selectedResultIds.delete(cb.dataset.id);
+      card.classList.remove('selected');
+    }
+  });
+  updateBulkToolbar();
+});
+
+// Clear Selection
+document.getElementById('clear-selection-btn').addEventListener('click', function() {
+  selectedResultIds.clear();
+  document.querySelectorAll('.result-select-cb').forEach(cb => {
+    cb.checked = false;
+    cb.closest('.result-card').classList.remove('selected');
+  });
+  updateBulkToolbar();
+});
+
+// Bulk Approve
+document.getElementById('bulk-approve-btn').addEventListener('click', function() {
+  if (selectedResultIds.size === 0) return;
+  if (!confirm(`${selectedResultIds.size} үр дүнг баталгаажуулах уу?`)) return;
+
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+
+  fetch('/bulk_update_status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      result_ids: Array.from(selectedResultIds),
+      status: 'approved'
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    alert(data.message);
+    if (data.success_count > 0) location.reload();
+    else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-all"></i> Бүгдийг батлах';
+    }
+  })
+  .catch(err => {
+    alert('Алдаа: ' + err);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-all"></i> Бүгдийг батлах';
+  });
+});
+
+// Bulk Reject - Open Modal
+document.getElementById('bulk-reject-btn').addEventListener('click', function() {
+  document.getElementById('bulk-reject-count').textContent = selectedResultIds.size;
+});
+
+// Confirm Bulk Reject
+document.getElementById('confirm-bulk-reject-btn').addEventListener('click', function() {
+  const category = document.getElementById('bulk-rejection-category').value;
+  const comment = document.getElementById('bulk-rejection-comment').value;
+
+  if (!category) {
+    alert('Буцаах шалтгаан сонгоно уу');
+    return;
+  }
+
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+
+  fetch('/bulk_update_status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      result_ids: Array.from(selectedResultIds),
+      status: 'rejected',
+      rejection_category: category,
+      rejection_comment: comment
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    alert(data.message);
+    if (data.success_count > 0) location.reload();
+    else {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    }
+  })
+  .catch(err => {
+    alert('Алдаа: ' + err);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+  });
+});
+</script>
+
 {% endblock %}

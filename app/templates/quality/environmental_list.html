@@ -8,8 +8,8 @@
             <p class="text-muted">ISO 17025 - Clause 6.3.3: Температур, Чийгийн бүртгэл</p>
         </div>
         <div class="col-md-4 text-right">
-            <button class="btn btn-primary" data-toggle="modal" data-target="#addEnvModal">
-                <i class="fas fa-plus"></i> Хэмжилт нэмэх
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEnvModal">
+                <i class="bi bi-plus-lg"></i> Хэмжилт нэмэх
             </button>
         </div>
     </div>
@@ -76,9 +76,10 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('quality.environmental_add') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">Орчны хэмжилт нэмэх</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -145,7 +146,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Хаах</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
                     <button type="submit" class="btn btn-primary">Хадгалах</button>
                 </div>
             </form>

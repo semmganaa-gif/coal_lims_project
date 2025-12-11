@@ -219,6 +219,32 @@ def get_quarter_code(dt):
         return "_Q4"
 
 
+def get_shift_date(dt: datetime = None) -> date:
+    """
+    Ээлжийн огноо авах.
+
+    Шөнийн ээлж (00:00-07:00) бол өмнөх өдрийн огноо буцаана.
+    Өдрийн ээлж (07:01-24:00) бол тухайн өдрийн огноо буцаана.
+
+    Args:
+        dt: datetime объект (default: now)
+
+    Returns:
+        date: Ээлжийн огноо
+
+    Examples:
+        >>> from datetime import datetime
+        >>> get_shift_date(datetime(2025, 12, 3, 2, 0))  # 02:00
+        date(2025, 12, 2)  # Өчигдөр
+        >>> get_shift_date(datetime(2025, 12, 3, 8, 0))  # 08:00
+        date(2025, 12, 3)  # Өнөөдөр
+    """
+    if dt is None:
+        dt = datetime.now()
+    _, anchor_date = _get_shift_type_and_anchor_date(dt)
+    return anchor_date
+
+
 def get_current_shift_start(current_dt: datetime) -> datetime:
     """
     Одоогийн цагт харгалзах ээлжийн ЭХЛЭХ цагийг буцаана.

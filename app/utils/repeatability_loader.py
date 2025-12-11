@@ -6,7 +6,6 @@ from app.models import SystemSetting
 from app.config.repeatability import LIMIT_RULES as FILE_LIMIT_RULES
 
 
-@lru_cache(maxsize=1)
 def load_limit_rules() -> dict:
     """
     Repeatability (T) дүрмийг DB-с уншина; олдохгүй бол файл дахь LIMIT_RULES-г буцаана.

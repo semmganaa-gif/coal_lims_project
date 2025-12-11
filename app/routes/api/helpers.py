@@ -4,6 +4,7 @@
 API модульуудын хамтын хэрэгсэл, дүрэм, шалгалтууд.
 """
 
+from flask import jsonify
 from flask_login import current_user
 from sqlalchemy import func
 from math import inf
@@ -11,6 +12,116 @@ from app.config.repeatability import LIMIT_RULES
 
 from app.models import Sample
 from app.utils.codes import norm_code, BASE_TO_ALIASES
+
+
+# =============================================================================
+# СТАНДАРТ API RESPONSE FORMAT
+# =============================================================================
+
+def api_success(data=None, message=None):
+    """
+    Амжилттай API хариу буцаах
+
+    Args:
+        data: Буцаах өгөгдөл
+        message: Нэмэлт мессеж
+
+    Returns:
+        Flask Response (JSON)
+
+    Example:
+        return api_success({"sample_id": 123}, "Дээж үүсгэгдлээ")
+    """
+    response = {"success": True}
+    if data is not None:
+        response["data"] = data
+    if message:
+        response["message"] = message
+    return jsonify(response)
+
+
+def api_error(message, code=None, status_code=400, details=None):
+    """
+    Алдааны API хариу буцаах
+
+    Args:
+        message: Алдааны мессеж
+        code: Алдааны код (optional, e.g., "VALIDATION_ERROR")
+        status_code: HTTP status code (default: 400)
+        details: Нэмэлт дэлгэрэнгүй мэдээлэл
+
+    Returns:
+        Flask Response (JSON) with status code
+
+    Example:
+        return api_error("Буруу утга", "INVALID_VALUE", 400)
+    """
+    response = {
+        "success": False,
+        "error": message
+    }
+    if code:
+        response["code"] = code
+    if details:
+        response["details"] = details
+    return jsonify(response), status_code
+
+
+# =============================================================================
+# LEGACY API RESPONSE FORMAT (ok: True/False)
+# =============================================================================
+
+def api_ok(message=None, **kwargs):
+    """
+    Legacy амжилттай API хариу (ok формат)
+
+    Args:
+        message: Мессеж
+        **kwargs: Нэмэлт утгууд (sample_id, count, гэх мэт)
+
+    Returns:
+        Flask Response (JSON)
+
+    Example:
+        return api_ok("Амжилттай", sample_id=123)
+    """
+    response = {"ok": True}
+    if message:
+        response["message"] = message
+    response.update(kwargs)
+    return jsonify(response)
+
+
+def api_fail(message, status_code=400, **kwargs):
+    """
+    Legacy алдааны API хариу (ok формат)
+
+    Args:
+        message: Алдааны мессеж
+        status_code: HTTP status code (default: 400)
+        **kwargs: Нэмэлт утгууд
+
+    Returns:
+        Flask Response (JSON) with status code
+
+    Example:
+        return api_fail("Олдсонгүй", 404)
+    """
+    response = {"ok": False, "message": message}
+    response.update(kwargs)
+    return jsonify(response), status_code
+
+
+# Түгээмэл алдааны кодууд
+class ApiErrorCodes:
+    """API алдааны кодууд"""
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    NOT_FOUND = "NOT_FOUND"
+    UNAUTHORIZED = "UNAUTHORIZED"
+    FORBIDDEN = "FORBIDDEN"
+    DUPLICATE = "DUPLICATE"
+    DATABASE_ERROR = "DATABASE_ERROR"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
 # -----------------------------
@@ -28,7 +139,7 @@ def _has_m_task_sql():
 
 def _can_delete_sample() -> bool:
     """Админ эсвэл ахлах л бүрэн устгах эрхтэй."""
-    return getattr(current_user, "role", "") in {"admin", "ahlah"}
+    return getattr(current_user, "role", "") in {"admin", "senior"}
 
 
 # -----------------------------
@@ -156,4 +267,4 @@ def should_require_review(analysis_code: str, raw_norm: dict) -> bool:
 
     limit, mode, _band = _effective_limit(analysis_code, avg)
     effective_limit = (avg * limit) if (mode == "percent" and avg is not None) else limit
-    return (abs(diff) - (effective_limit or 0)) > 1e-9
+    return (abs(diff) - (effective_limit or 0)) > EPS  # EPS = 1e-6

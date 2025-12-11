@@ -825,7 +825,7 @@ CALCULATION_FUNCTIONS = {
     "P": calc_phosphorus_p,
     "P,ad": calc_phosphorus_p,
 
-    # ---- Fluorine, Chlorine (TODO) ----
+    # ---- Fluorine, Chlorine ----
     "F": calc_fluorine_f,
     "F,ad": calc_fluorine_f,
 

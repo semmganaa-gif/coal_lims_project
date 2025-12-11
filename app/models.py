@@ -1,4 +1,4 @@
-﻿# app/models.py
+# app/models.py
 # -*- coding: utf-8 -*-
 
 from app import db
@@ -31,18 +31,19 @@ class User(UserMixin, db.Model):
         id (int): Primary key
         username (str): Нэвтрэх нэр (өвөрмөц)
         password_hash (str): Hash-ласан нууц үг (Werkzeug)
-        role (str): Эрх ('beltgegch', 'himich', 'ahlah', 'admin')
+        role (str): Эрх ('prep', 'chemist', 'senior', 'manager', 'admin')
 
     Roles:
-        - beltgegch: Дээж бэлтгэх
-        - himich: Шинжилгээ хийх
-        - ahlah: Үр дүн шалгах, баталгаажуулах
+        - prep: Дээж бэлтгэх (Sample Preparation)
+        - chemist: Шинжилгээ хийх (Chemist)
+        - senior: Үр дүн шалгах, баталгаажуулах (Senior Chemist)
+        - manager: Лабораторийн менежер (Manager)
         - admin: Системийн админ (бүх эрх)
     """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(64), index=True, default="beltgegch")
+    password_hash = db.Column(db.String(256))
+    role = db.Column(db.String(64), index=True, default="prep")
 
     def set_password(self, password: str) -> None:
         """
@@ -358,6 +359,9 @@ class AnalysisResult(db.Model):
         order_by="desc(AnalysisResultLog.timestamp)",
     )
 
+    # User relationship (шинжилгээ хийсэн хүн)
+    user = db.relationship("User", foreign_keys=[user_id], backref="analysis_results")
+
     def set_raw_data(self, data_dict: Dict[str, Any]) -> None:
         """
         Анхны өгөгдлийг JSON болгож хадгална.
@@ -407,14 +411,14 @@ class AnalysisType(db.Model):
         code (str): Шинжилгээний өвөрмөц код (ж: "Mad", "Aad", "CV")
         name (str): Шинжилгээний нэр (ж: "Чийг (агаарын)")
         order_num (int): Жагсаалт дахь дараалал (default: 100)
-        required_role (str): Шаардлагатай эрх (default: "himich")
+        required_role (str): Шаардлагатай эрх (default: "chemist")
 
     Example:
         >>> analysis = AnalysisType(
         ...     code='Mad',
         ...     name='Чийг (агаарын)',
         ...     order_num=10,
-        ...     required_role='himich'
+        ...     required_role='chemist'
         ... )
     """
     id = db.Column(db.Integer, primary_key=True)
@@ -422,7 +426,7 @@ class AnalysisType(db.Model):
     name = db.Column(db.String(100), nullable=False)
     order_num = db.Column(db.Integer, default=100)
     required_role = db.Column(
-        db.String(64), default="himich", index=True, nullable=False
+        db.String(64), default="chemist", index=True, nullable=False
     )
 
     def __repr__(self) -> str:
@@ -991,7 +995,8 @@ class AnalysisResultLog(db.Model):
 
     Security:
         - Бүртгэл устгах, засах боломжгүй (audit trail)
-        - Cascade delete: Sample эсвэл Result устахад л устана
+        - SET NULL: Sample эсвэл Result устахад log үлдэнэ (sample_id, analysis_result_id = NULL)
+        - Hash checksum: Өөрчлөгдсөн эсэхийг шалгах боломжтой
     """
     __tablename__ = "analysis_result_log"
 
@@ -1001,21 +1006,36 @@ class AnalysisResultLog(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=now_mn, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
-    user = db.relationship("User", backref=db.backref("logs", lazy="dynamic"))
+    user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="dynamic"))
 
+    # ✅ SET NULL: Sample устахад log үлдэнэ
     sample_id = db.Column(
         db.Integer,
-        db.ForeignKey("sample.id", ondelete="CASCADE"),
+        db.ForeignKey("sample.id", ondelete="SET NULL"),
         index=True,
-        nullable=False,
+        nullable=True,  # NULL болох боломжтой
     )
+    # ✅ SET NULL: Result устахад log үлдэнэ
     analysis_result_id = db.Column(
         db.Integer,
-        db.ForeignKey("analysis_result.id", ondelete="CASCADE"),
+        db.ForeignKey("analysis_result.id", ondelete="SET NULL"),
         index=True,
-        nullable=False,
+        nullable=True,  # NULL болох боломжтой
     )
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
+
+    # ✅ ШИНЭ: Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй)
+    original_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    original_user = db.relationship("User", foreign_keys=[original_user_id])
+
+    # ✅ ШИНЭ: Анхны хадгалсан цаг (хэзээ ч өөрчлөгдөхгүй)
+    original_timestamp = db.Column(db.DateTime, nullable=True)
+
+    # ✅ ШИНЭ: Дээжний код хадгалах (sample устсан ч харагдах)
+    sample_code_snapshot = db.Column(db.String(100), nullable=True)
+
+    # ✅ ШИНЭ: Hash checksum (өөрчлөгдсөн эсэхийг шалгах)
+    data_hash = db.Column(db.String(64), nullable=True)  # SHA-256
 
     result = db.relationship(
         "AnalysisResult",
@@ -1033,6 +1053,22 @@ class AnalysisResultLog(db.Model):
 
     # 🛑 ШИНЭ: Алдаа гарч байсан хэсэг
     error_reason = db.Column(db.String(50), nullable=True)
+
+    def compute_hash(self) -> str:
+        """
+        Бүртгэлийн hash-ийг тооцоолох (өөрчлөгдсөн эсэхийг шалгахад ашиглана).
+        """
+        import hashlib
+        data = f"{self.sample_id}|{self.analysis_code}|{self.action}|{self.raw_data_snapshot}|{self.final_result_snapshot}|{self.timestamp}"
+        return hashlib.sha256(data.encode('utf-8')).hexdigest()
+
+    def verify_hash(self) -> bool:
+        """
+        Hash зөв эсэхийг шалгах (өөрчлөгдсөн эсэх).
+        """
+        if not self.data_hash:
+            return True  # Hash байхгүй бол шалгахгүй
+        return self.data_hash == self.compute_hash()
 
     def __repr__(self) -> str:
         return f"<AnalysisResultLog {self.id}: {self.action}>"
@@ -1071,7 +1107,7 @@ class Bottle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     serial_no = db.Column(db.String(64), unique=True, index=True, nullable=False)
     label = db.Column(db.String(64))
-    is_active = db.Column(db.Boolean, nullable=False, server_default=db.text("1"))
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     created_by_id = db.Column(
         db.Integer, db.ForeignKey("user.id", name="fk_bottle_created_by_id"), index=True
@@ -1568,3 +1604,180 @@ class CustomerComplaint(db.Model):
 
     def __repr__(self):
         return f"<Complaint {self.complaint_no} - {self.status}>"
+
+
+# -------------------------
+# САРЫН ТӨЛӨВЛӨГӨӨ (Monthly Plan)
+# -------------------------
+class MonthlyPlan(db.Model):
+    """
+    Лабораторийн сарын төлөвлөгөө.
+
+    Ахлах химич долоо хоног бүрийн төлөвлөгөөг оруулж,
+    гүйцэтгэлтэй харьцуулах боломжтой.
+
+    Attributes:
+        year (int): Он
+        month (int): Сар (1-12)
+        week (int): Долоо хоног (1-5)
+        client_name (str): Нэгж (CONSIGNOR)
+        sample_type (str): Дээжийн төрөл
+        planned_count (int): Төлөвлөсөн тоо
+        created_by_id (int): Үүсгэсэн хэрэглэгч
+        created_at (datetime): Үүсгэсэн огноо
+        updated_at (datetime): Шинэчилсэн огноо
+    """
+    __tablename__ = "monthly_plan"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Хугацаа
+    year = db.Column(db.Integer, nullable=False, index=True)
+    month = db.Column(db.Integer, nullable=False, index=True)  # 1-12
+    week = db.Column(db.Integer, nullable=False)  # 1-5
+
+    # Нэгж ба төрөл
+    client_name = db.Column(db.String(50), nullable=False, index=True)  # CONSIGNOR
+    sample_type = db.Column(db.String(100), nullable=False)  # SAMPLE TYPE
+
+    # Төлөвлөгөө
+    planned_count = db.Column(db.Integer, default=0)
+
+    # Audit
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=now_mn)
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+
+    # Relationship
+    created_by = db.relationship('User', backref='monthly_plans')
+
+    # Unique constraint: нэг долоо хоногт нэг нэгж+төрлийн төлөвлөгөө
+    __table_args__ = (
+        db.UniqueConstraint('year', 'month', 'week', 'client_name', 'sample_type',
+                           name='uq_monthly_plan_entry'),
+    )
+
+    def __repr__(self):
+        return f"<MonthlyPlan {self.year}-{self.month} W{self.week} {self.client_name}/{self.sample_type}: {self.planned_count}>"
+
+
+class StaffSettings(db.Model):
+    """
+    Ажилтны тооны тохиргоо (сараар).
+    Дээж бэлтгэгч, химичийн тоог хадгална.
+    """
+    __tablename__ = "staff_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    preparers = db.Column(db.Integer, default=6)  # Дээж бэлтгэгчийн тоо
+    chemists = db.Column(db.Integer, default=10)  # Химичийн тоо
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+
+    __table_args__ = (
+        db.UniqueConstraint('year', 'month', name='uq_staff_settings_month'),
+    )
+
+
+# -------------------------
+# ЧАТ СИСТЕМ
+# -------------------------
+class ChatMessage(db.Model):
+    """
+    Химич ↔ Ахлах чат мессеж.
+    Real-time харилцааны түүхийг хадгална.
+    """
+    __tablename__ = "chat_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # null = broadcast
+    message = db.Column(db.Text, nullable=False)
+    sent_at = db.Column(db.DateTime, default=now_mn, index=True)
+    read_at = db.Column(db.DateTime, nullable=True)
+    message_type = db.Column(db.String(20), default='text')  # text, image, file, sample, urgent
+
+    # Файл хавсралт
+    file_url = db.Column(db.String(500), nullable=True)
+    file_name = db.Column(db.String(255), nullable=True)
+    file_size = db.Column(db.Integer, nullable=True)  # bytes
+
+    # Яаралтай мессеж
+    is_urgent = db.Column(db.Boolean, default=False)
+
+    # Дээж/Шинжилгээ холбох
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'), nullable=True)
+
+    # Устгах (soft delete)
+    is_deleted = db.Column(db.Boolean, default=False)
+    deleted_at = db.Column(db.DateTime, nullable=True)
+
+    # Broadcast мессеж
+    is_broadcast = db.Column(db.Boolean, default=False)
+
+    # Relationships
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+    sample = db.relationship('Sample', backref='chat_messages')
+
+    def __repr__(self):
+        return f"<ChatMessage {self.id}: {self.sender_id} → {self.receiver_id}>"
+
+    def to_dict(self):
+        """JSON serialization"""
+        result = {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'sender_name': self.sender.username if self.sender else None,
+            'receiver_id': self.receiver_id,
+            'receiver_name': self.receiver.username if self.receiver else None,
+            'message': self.message,
+            'sent_at': self.sent_at.isoformat() if self.sent_at else None,
+            'read_at': self.read_at.isoformat() if self.read_at else None,
+            'is_read': self.read_at is not None,
+            'message_type': self.message_type,
+            'is_urgent': self.is_urgent,
+            'is_broadcast': self.is_broadcast,
+            'is_deleted': self.is_deleted,
+            # Файл талбарууд (top-level for JS)
+            'file_url': self.file_url,
+            'file_name': self.file_name,
+            'file_size': self.file_size,
+            'sample_id': self.sample_id
+        }
+        # Файл мэдээлэл (nested object)
+        if self.file_url:
+            result['file'] = {
+                'url': self.file_url,
+                'name': self.file_name,
+                'size': self.file_size
+            }
+        # Дээж мэдээлэл
+        if self.sample_id and self.sample:
+            result['sample'] = {
+                'id': self.sample.id,
+                'code': self.sample.sample_code,
+                'type': self.sample.sample_type
+            }
+        return result
+
+
+class UserOnlineStatus(db.Model):
+    """
+    Хэрэглэгчийн онлайн статус.
+    WebSocket холболттой үед шинэчлэгдэнэ.
+    """
+    __tablename__ = "user_online_status"
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    is_online = db.Column(db.Boolean, default=False)
+    last_seen = db.Column(db.DateTime, default=now_mn)
+    socket_id = db.Column(db.String(100), nullable=True)  # Current socket session ID
+
+    # Relationship
+    user = db.relationship('User', backref=db.backref('online_status', uselist=False))
+
+    def __repr__(self):
+        status = "online" if self.is_online else "offline"
+        return f"<UserOnlineStatus {self.user_id}: {status}>"

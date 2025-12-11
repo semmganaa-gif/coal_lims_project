@@ -190,7 +190,7 @@ def _split_stream_key(sample: Sample):
 def analysis_role_required(allowed_roles=None):
     """Шинжилгээний модульд хандах эрх шалгах декоратор"""
     if allowed_roles is None:
-        allowed_roles = ["himich", "ahlah", "admin", "beltgegch"]
+        allowed_roles = ["chemist", "senior", "manager", "admin", "prep"]
 
     def decorator(f):
         @wraps(f)
@@ -228,6 +228,6 @@ def _sulfur_map_for(sample_ids):
         if r.sample_id not in out:
             try:
                 out[r.sample_id] = float(r.final_result)
-            except Exception:
-                pass
+            except (TypeError, ValueError):
+                pass  # Буруу утга байвал алгасна
     return out

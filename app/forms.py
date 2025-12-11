@@ -45,9 +45,10 @@ class UserManagementForm(FlaskForm):
     role = SelectField(
         "Эрхийн түвшин",
         choices=[
-            ("beltgegch", "Дээж бэлтгэгч"),
-            ("himich", "Химич"),
-            ("ahlah", "Ахлах химич"),
+            ("prep", "Дээж бэлтгэгч (Sample Preparation)"),
+            ("chemist", "Химич (Chemist)"),
+            ("senior", "Ахлах химич (Senior Chemist)"),
+            ("manager", "Менежер (Manager)"),
             ("admin", "Админ"),
         ],
         validators=[DataRequired()],
@@ -95,6 +96,18 @@ class AddSampleForm(FlaskForm):
     )
 
     return_sample = BooleanField("Дээжийг буцаах эсэх")
+
+    retention_period = SelectField(
+        "Хадгалах хугацаа",
+        choices=[
+            ("7", "7 хоног"),
+            ("14", "14 хоног"),
+            ("30", "1 сар"),
+            ("730", "2 жил"),
+            ("1825", "5 жил"),
+        ],
+        default="30",
+    )
 
     delivered_by = StringField(
         "Хүлээлгэн өгсөн ажилтны нэр",
@@ -329,13 +342,10 @@ class KPIReportFilterForm(FlaskForm):
         validators=[Optional()],
     )
 
-    sample_code = StringField(
-        "Дээжийн код",
-        validators=[Optional()],
-    )
-
-    storage_location = StringField(
-        "Хадгалалт / байршил",
+    sample_type = SelectField(
+        "Төрөл",
+        choices=[("all", "Бүх төрөл")],  # View-ээс динамикаар бөглөнө
+        default="all",
         validators=[Optional()],
     )
 
@@ -346,19 +356,6 @@ class KPIReportFilterForm(FlaskForm):
 
     user_name = StringField(
         "Хэрэглэгч",
-        validators=[Optional()],
-    )
-
-    role = SelectField(
-        "Албан тушаал / роль",
-        choices=[
-            ("all", "Бүгд"),
-            ("beltgegch", "Бэлтгэгч"),
-            ("himich", "Химич"),
-            ("ahlah", "Ахлах"),
-            ("admin", "Админ"),
-        ],
-        default="all",
         validators=[Optional()],
     )
 

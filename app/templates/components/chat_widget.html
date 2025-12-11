@@ -1,0 +1,705 @@
+{# Chat Widget - Real-time messaging with all features #}
+{% if current_user.is_authenticated %}
+<style>
+/* ===== Chat Widget Core ===== */
+.chat-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.chat-toggle-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.chat-toggle-btn:hover { transform: scale(1.1); }
+
+.chat-toggle-btn .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  min-width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+.chat-container {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 400px;
+  height: 550px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-container.open { display: flex; animation: slideUp 0.3s ease; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Header ===== */
+.chat-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h5 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+
+.chat-header-btns { display: flex; gap: 0.25rem; }
+
+.chat-header-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.chat-header-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ===== Tabs ===== */
+.chat-tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.chat-tab {
+  flex: 1;
+  padding: 0.6rem;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.chat-tab.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; background: white; }
+
+/* ===== Contact List ===== */
+.chat-contacts {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+}
+
+.contact-item:hover { background: #f1f5f9; }
+
+.contact-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #475569;
+  margin-right: 0.6rem;
+  position: relative;
+  font-size: 0.9rem;
+}
+
+.contact-avatar .online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid white;
+}
+
+.contact-avatar .online-dot.offline { background: #94a3b8; }
+
+.contact-info { flex: 1; min-width: 0; }
+
+.contact-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.contact-role {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.contact-role.senior { background: #fef3c7; color: #92400e; }
+.contact-role.admin { background: #fee2e2; color: #b91c1c; }
+
+.contact-preview {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contact-unread {
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* ===== Chat View ===== */
+.chat-view {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-view.active { display: flex; }
+
+.chat-view-header {
+  background: #f8fafc;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.2rem;
+  font-size: 1rem;
+}
+
+.chat-partner-name { font-weight: 600; font-size: 0.9rem; }
+.chat-partner-status { font-size: 0.7rem; color: #22c55e; }
+.chat-partner-status.offline { color: #94a3b8; }
+
+/* ===== Messages ===== */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: #f8fafc;
+}
+
+.message {
+  max-width: 85%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  position: relative;
+}
+
+.message.sent {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message.received {
+  align-self: flex-start;
+  background: white;
+  color: #1e293b;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.message.urgent {
+  border: 2px solid #ef4444;
+  animation: urgentPulse 1s ease-in-out 3;
+}
+
+@keyframes urgentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.message.deleted {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.message-time {
+  font-size: 0.6rem;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.message-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  margin-top: 0.3rem;
+}
+
+.message-file a { color: inherit; text-decoration: none; font-size: 0.8rem; }
+.message-file a:hover { text-decoration: underline; }
+
+.message-image {
+  max-width: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.message-sample {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.message-sample a { color: #2563eb; text-decoration: none; }
+
+.message-actions {
+  position: absolute;
+  top: -8px;
+  right: 4px;
+  display: none;
+}
+
+.message:hover .message-actions { display: flex; }
+
+.message-delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.typing-indicator {
+  align-self: flex-start;
+  background: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  color: #64748b;
+  display: none;
+}
+
+.typing-indicator.show { display: block; }
+
+/* ===== Input Area ===== */
+.chat-input-area {
+  padding: 0.5rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-end;
+}
+
+.chat-input-tools {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.4rem;
+}
+
+.chat-tool-btn {
+  background: #f1f5f9;
+  border: none;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.chat-tool-btn:hover { background: #e2e8f0; color: #3b82f6; }
+.chat-tool-btn.active { background: #3b82f6; color: white; }
+.chat-tool-btn.urgent-active { background: #ef4444; color: white; }
+
+.chat-input {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  outline: none;
+  resize: none;
+  max-height: 80px;
+  min-height: 36px;
+}
+
+.chat-input:focus { border-color: #3b82f6; }
+
+.chat-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-send-btn:disabled { opacity: 0.5; }
+
+/* ===== Popups ===== */
+.chat-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+  margin-bottom: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  z-index: 100;
+}
+
+.chat-popup.open { display: block; animation: popupFadeIn 0.2s ease; }
+
+@keyframes popupFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-popup-header {
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-popup-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.template-item, .sample-item, .emoji-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.template-item:hover, .sample-item:hover { background: #f1f5f9; }
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.emoji-item {
+  padding: 0.4rem;
+  text-align: center;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 6px;
+}
+
+.emoji-item:hover { background: #f1f5f9; }
+
+/* ===== Broadcast ===== */
+.broadcast-message {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  padding: 0.6rem;
+  border-radius: 10px;
+  margin: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.broadcast-message .sender { font-weight: 600; }
+
+/* ===== Search ===== */
+.chat-search {
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.chat-search input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* ===== Empty States ===== */
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.chat-empty i { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+/* ===== Scrollbar ===== */
+.chat-contacts::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.chat-popup::-webkit-scrollbar { width: 5px; }
+
+.chat-contacts::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb,
+.chat-popup::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+</style>
+
+<!-- Chat Widget HTML -->
+<div class="chat-widget" id="chatWidget">
+  <button class="chat-toggle-btn" id="chatToggleBtn" title="Чат">
+    <i class="bi bi-chat-dots-fill"></i>
+    <span class="badge" id="chatUnreadBadge" style="display: none;">0</span>
+  </button>
+
+  <div class="chat-container" id="chatContainer">
+    <!-- List View -->
+    <div class="chat-list-view" id="chatListView">
+      <div class="chat-header">
+        <h5><i class="bi bi-chat-dots me-1"></i>Мессеж</h5>
+        <div class="chat-header-btns">
+          {% if current_user.role in ['senior', 'admin'] %}
+          <button class="chat-header-btn" id="chatBroadcastBtn" title="Зарлал илгээх">
+            <i class="bi bi-megaphone"></i>
+          </button>
+          {% endif %}
+          <button class="chat-header-btn" id="chatSearchBtn" title="Хайх">
+            <i class="bi bi-search"></i>
+          </button>
+          <button class="chat-header-btn" id="chatRefreshBtn" title="Шинэчлэх">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <button class="chat-header-btn" id="chatCloseBtn" title="Хаах">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-search" id="chatSearchBox" style="display:none;">
+        <input type="text" id="chatSearchInput" placeholder="Мессеж хайх...">
+      </div>
+
+      <div class="chat-tabs">
+        <button class="chat-tab active" data-tab="contacts">
+          <i class="bi bi-people"></i> Харилцах
+        </button>
+        <button class="chat-tab" data-tab="broadcasts">
+          <i class="bi bi-megaphone"></i> Зарлал
+        </button>
+      </div>
+
+      <div class="chat-contacts" id="chatContacts">
+        <div class="chat-empty" id="chatContactsEmpty">
+          <i class="bi bi-hourglass-split"></i>
+          <p>Ачаалж байна...</p>
+        </div>
+      </div>
+
+      <div class="chat-contacts" id="chatBroadcasts" style="display:none;">
+        <div class="chat-empty">
+          <i class="bi bi-megaphone"></i>
+          <p>Зарлал байхгүй</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat View -->
+    <div class="chat-view" id="chatView">
+      <div class="chat-view-header">
+        <button class="chat-back-btn" id="chatBackBtn"><i class="bi bi-arrow-left"></i></button>
+        <div class="contact-avatar" id="chatPartnerAvatar">?</div>
+        <div style="flex:1">
+          <div class="chat-partner-name" id="chatPartnerName">-</div>
+          <div class="chat-partner-status" id="chatPartnerStatus">Онлайн</div>
+        </div>
+        <button class="chat-header-btn" id="chatMsgSearchBtn" title="Мессеж хайх">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="typing-indicator" id="typingIndicator">
+        <span id="typingUser">-</span> бичиж байна...
+      </div>
+
+      <div class="chat-input-area">
+        <!-- Popups -->
+        <div class="chat-popup" id="templatePopup">
+          <div class="chat-popup-header">
+            Template мессеж
+            <button class="chat-popup-close" onclick="closePopup('templatePopup')"><i class="bi bi-x"></i></button>
+          </div>
+          <div id="templateList"></div>
+        </div>
+
+        <div class="chat-popup" id="emojiPopup">
+          <div class="chat-popup-header">
+            Emoji
+            <button class="chat-popup-close" onclick="closePopup('emojiPopup')"><i class="bi bi-x"></i></button>
+          </div>
+          <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+
+        <div class="chat-popup" id="samplePopup">
+          <div class="chat-popup-header">
+            Дээж холбох
+            <button class="chat-popup-close" onclick="closePopup('samplePopup')"><i class="bi bi-x"></i></button>
+          </div>
+          <div style="padding:0.5rem">
+            <input type="text" id="sampleSearchInput" placeholder="Дээж хайх..." style="width:100%;padding:0.4rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.8rem;">
+          </div>
+          <div id="sampleList"></div>
+        </div>
+        <div class="chat-input-tools">
+          <button class="chat-tool-btn" id="btnTemplate" title="Template"><i class="bi bi-lightning"></i></button>
+          <button class="chat-tool-btn" id="btnEmoji" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
+          <button class="chat-tool-btn" id="btnFile" title="Файл"><i class="bi bi-paperclip"></i></button>
+          <button class="chat-tool-btn" id="btnSample" title="Дээж холбох"><i class="bi bi-box"></i></button>
+          <button class="chat-tool-btn" id="btnUrgent" title="Яаралтай"><i class="bi bi-exclamation-triangle"></i></button>
+          <input type="file" id="fileInput" style="display:none" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx">
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Мессеж бичих..." rows="1"></textarea>
+          <button class="chat-send-btn" id="chatSendBtn"><i class="bi bi-send-fill"></i></button>
+        </div>
+        <div id="selectedSample" style="display:none;padding:0.4rem;background:#eff6ff;border-radius:8px;margin-top:0.4rem;font-size:0.8rem;">
+          <span id="selectedSampleText"></span>
+          <button onclick="clearSelectedSample()" style="float:right;background:none;border:none;cursor:pointer;"><i class="bi bi-x"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div class="chat-view" id="broadcastView">
+      <div class="chat-view-header">
+        <button class="chat-back-btn" id="broadcastBackBtn"><i class="bi bi-arrow-left"></i></button>
+        <div style="flex:1">
+          <div class="chat-partner-name"><i class="bi bi-megaphone me-1"></i>Зарлал илгээх</div>
+          <div class="chat-partner-status">Бүх хэрэглэгчид</div>
+        </div>
+      </div>
+      <div style="flex:1;padding:1rem;">
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">Энэ зарлал бүх нэвтэрсэн хэрэглэгчид харагдана.</p>
+        <textarea id="broadcastInput" style="width:100%;height:120px;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;font-size:0.9rem;" placeholder="Зарлалын текст..."></textarea>
+        <button id="sendBroadcastBtn" style="margin-top:0.75rem;width:100%;padding:0.6rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">
+          <i class="bi bi-send me-1"></i>Илгээх
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+<script>
+window.CHAT_USER_ID = {{ current_user.id }};
+window.CHAT_USERNAME = "{{ current_user.username }}";
+window.CHAT_USER_ROLE = "{{ current_user.role }}";
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}?v=9"></script>
+{% endif %}

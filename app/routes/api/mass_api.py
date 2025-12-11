@@ -26,7 +26,7 @@ from app.utils.security import escape_like_pattern
 from app import db, limiter
 from app.models import Sample
 from app.utils.datetime import now_local
-from .helpers import _has_m_task_sql, _can_delete_sample
+from .helpers import _has_m_task_sql, _can_delete_sample, api_ok, api_fail
 
 
 def register_routes(bp):
@@ -141,7 +141,7 @@ def register_routes(bp):
         mark_ready = bool(data.get("mark_ready", True))
 
         if not items:
-            return jsonify({"ok": False, "message": "Хадгалах мөр олдсонгүй."}), 400
+            return api_fail("Хадгалах мөр олдсонгүй.")
 
         user_id = getattr(current_user, "id", None)
         now_ts = now_local()
@@ -149,7 +149,7 @@ def register_routes(bp):
         # ✅ N+1 query асуудал засварлах: Бүх sample-г нэг query-гээр авах
         sample_ids = [it.get("sample_id") for it in items if it.get("sample_id")]
         if not sample_ids:
-            return jsonify({"ok": False, "message": "Хүчинтэй ID олдсонгүй."}), 400
+            return api_fail("Хүчинтэй ID олдсонгүй.")
 
         # Bulk load: Нэг query-гээр бүх sample-г татна
         samples_map = {s.id: s for s in Sample.query.filter(Sample.id.in_(sample_ids)).all()}
@@ -163,9 +163,10 @@ def register_routes(bp):
             if not s:
                 continue
 
-            # weight шинэчлэх
+            # weight шинэчлэх (гр → кг хөрвүүлэлт)
             if sid in weight_map and isinstance(weight_map[sid], (int, float)):
-                s.weight = float(weight_map[sid])
+                weight_g = float(weight_map[sid])
+                s.weight = round(weight_g / 1000, 3)  # гр → кг
 
             # mass_ready тэмдэглэх эсэх
             if mark_ready:
@@ -177,25 +178,19 @@ def register_routes(bp):
             updated.append(sid)
 
         if not updated:
-            return jsonify({"ok": False, "message": "Мөрүүд хүчинтэй биш байна."}), 400
+            return api_fail("Мөрүүд хүчинтэй биш байна.")
 
         try:
             db.session.commit()
-            return jsonify(
-                {
-                    "ok": True,
-                    "message": f"{len(updated)} дээж шинэчлэгдлээ.",
-                    "updated_ids": updated,
-                }
-            )
+            return api_ok(f"{len(updated)} дээж шинэчлэгдлээ.", updated_ids=updated)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_save: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдлийн конфликт гарлаа"}), 409
+            return api_fail("Өгөгдлийн конфликт гарлаа", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_save: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдөл хадгалахад алдаа гарлаа"}), 500
+            return api_fail("Өгөгдөл хадгалахад алдаа гарлаа", 500)
 
     @bp.route("/mass/update_weight", methods=["POST"])
     @login_required
@@ -209,29 +204,29 @@ def register_routes(bp):
         sid = data.get("sample_id")
         w = data.get("weight")
         if not sid or not isinstance(w, (int, float)):
-            return jsonify({"ok": False, "message": "Параметр дутуу."}), 400
+            return api_fail("Параметр дутуу.")
 
-        s = Sample.query.get(sid)
+        s = db.session.get(Sample, sid)
         if not s:
-            return jsonify({"ok": False, "message": "Дээж олдсонгүй."}), 404
+            return api_fail("Дээж олдсонгүй.", 404)
 
-        s.weight = float(w)
+        # гр → кг хөрвүүлэлт
+        weight_g = float(w)
+        s.weight = round(weight_g / 1000, 3)  # гр → кг
         s.received_date = s.received_date or now_local()  # хоосон байсан тохиолдолд
         db.session.add(s)
 
         try:
             db.session.commit()
-            return jsonify(
-                {"ok": True, "message": "Жин шинэчлэгдлээ.", "sample_id": s.id}
-            )
+            return api_ok("Жин шинэчлэгдлээ.", sample_id=s.id)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_update_weight: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдлийн конфликт гарлаа"}), 409
+            return api_fail("Өгөгдлийн конфликт гарлаа", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_update_weight: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдөл хадгалахад алдаа гарлаа"}), 500
+            return api_fail("Өгөгдөл хадгалахад алдаа гарлаа", 500)
 
     @bp.route("/mass/unready", methods=["POST"])
     @login_required
@@ -244,7 +239,7 @@ def register_routes(bp):
         data = request.get_json(silent=True) or {}
         ids = data.get("sample_ids") or []
         if not ids:
-            return jsonify({"ok": False, "message": "ID ирсэнгүй."}), 400
+            return api_fail("ID ирсэнгүй.")
 
         rows = Sample.query.filter(Sample.id.in_(ids)).all()
         for s in rows:
@@ -255,17 +250,15 @@ def register_routes(bp):
 
         try:
             db.session.commit()
-            return jsonify(
-                {"ok": True, "message": f"{len(rows)} дээжийг Unready болголоо."}
-            )
+            return api_ok(f"{len(rows)} дээжийг Unready болголоо.")
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_unready: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдлийн конфликт гарлаа"}), 409
+            return api_fail("Өгөгдлийн конфликт гарлаа", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_unready: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдөл хадгалахад алдаа гарлаа"}), 500
+            return api_fail("Өгөгдөл хадгалахад алдаа гарлаа", 500)
 
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
@@ -277,29 +270,27 @@ def register_routes(bp):
         Зөвхөн admin/ahlah.
         """
         if not _can_delete_sample():
-            return jsonify({"ok": False, "message": "Энэ үйлдэлд эрх хүрэхгүй."}), 403
+            return api_fail("Энэ үйлдэлд эрх хүрэхгүй.", 403)
 
         data = request.get_json(silent=True) or {}
         sid = data.get("sample_id")
         if not sid:
-            return jsonify({"ok": False, "message": "ID дутуу."}), 400
+            return api_fail("ID дутуу.")
 
-        s = Sample.query.get(sid)
+        s = db.session.get(Sample, sid)
         if not s:
-            return jsonify({"ok": False, "message": "Дээж олдсонгүй."}), 404
+            return api_fail("Дээж олдсонгүй.", 404)
 
         db.session.delete(s)
 
         try:
             db.session.commit()
-            return jsonify(
-                {"ok": True, "message": "Дээж устгагдлаа.", "deleted_id": sid}
-            )
+            return api_ok("Дээж устгагдлаа.", deleted_id=sid)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_delete: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдөл устгах боломжгүй (холбоотой бичлэгүүд байна)"}), 409
+            return api_fail("Өгөгдөл устгах боломжгүй (холбоотой бичлэгүүд байна)", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_delete: {e}")
-            return jsonify({"ok": False, "message": "Өгөгдөл устгахад алдаа гарлаа"}), 500
+            return api_fail("Өгөгдөл устгахад алдаа гарлаа", 500)

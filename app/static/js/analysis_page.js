@@ -120,6 +120,16 @@ $(function () {
       if (timedOut) return;
 
       const savedPayload = resp.results || payload;
+      const failedItems = resp.errors || [];
+
+      // ✅ Алдаатай дээжүүдийг консолд харуулах
+      if (failedItems.length > 0) {
+        console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй:`);
+        failedItems.forEach(err => {
+          console.warn(`   - Sample ${err.sample_id}: ${err.error}`);
+        });
+      }
+
       lockRowsAndClearStorage(savedPayload, analysisCode, tableId);
       clearSampleIdsStorage(analysisCodeRaw);
 
@@ -139,7 +149,7 @@ $(function () {
           if (callback) callback(resp);
           // AG Grid: afterSave дуудах, эсвэл reload
           if (useAfterSave) {
-            afterSaveCallback(savedPayload);
+            afterSaveCallback(savedPayload, failedItems);
           } else {
             setTimeout(function() { window.location.reload(); }, 500);
           }
@@ -150,7 +160,7 @@ $(function () {
           if (callback) callback(resp);
           // AG Grid: afterSave дуудах, эсвэл reload
           if (useAfterSave) {
-            afterSaveCallback(savedPayload);
+            afterSaveCallback(savedPayload, failedItems);
           } else {
             setTimeout(function() { window.location.reload(); }, 500);
           }
@@ -162,7 +172,7 @@ $(function () {
       alert(resp?.message || 'Хадгаллаа');
       if (callback) callback(resp);
       if (useAfterSave) {
-        afterSaveCallback(savedPayload);
+        afterSaveCallback(savedPayload, failedItems);
       } else {
         setTimeout(function() { window.location.reload(); }, 500);
       }
@@ -247,39 +257,205 @@ $(function () {
 
     $.getJSON(`/api/eligible_samples/${analysisCodeRaw}`, function(resp){
       const samples = resp.samples || [];
-      if(!samples.length){
-        body.html('<p class="text-center text-muted">Энэ шинжилгээнд оноогдсон шинэ дээж олдсонгүй.</p>');
-        return;
-      }
+      const rejected = resp.rejected || [];
+      const rejectedCount = resp.rejected_count || 0;
+      const canUnassign = window.userRole === 'senior' || window.userRole === 'admin';
+
+      // Tab-тай modal бүтэц
       let html = `
-        <div class="mb-3 sticky-top" style="top:0; z-index: 1055; background: white; padding-bottom: 10px;">
-          <input type="text" id="modal-sample-filter" class="form-control" placeholder="🔍 Хайх (Дээж, Захиалагч...)">
-        </div>
-        <div class="table-responsive">
-          <table class="table table-sm table-hover" id="selectable-samples-table">
-            <thead>
-              <tr>
-                <th><input type="checkbox" id="select-all-modal-samples"></th>
-                <th>Дээжний код</th>
-                <th>Захиалагч</th>
-                <th>Төрөл</th>
-              </tr>
-            </thead>
-            <tbody>`;
-      samples.forEach(s=>{
-        html += `<tr><td><input type="checkbox" class="modal-sample-checkbox" value="${s.id}"></td>
-                 <td>${s.sample_code}</td><td>${s.client_name||'-'}</td><td>${s.sample_type||'-'}</td></tr>`;
-      });
-      html += `</tbody></table></div>`;
+        <ul class="nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#newSamplesTab" type="button">
+              <i class="bi bi-plus-circle me-1"></i>Шинэ дээж
+              <span class="badge bg-primary ms-1">${samples.length}</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link ${rejectedCount > 0 ? 'text-danger' : ''}" data-bs-toggle="tab" data-bs-target="#rejectedSamplesTab" type="button">
+              <i class="bi bi-exclamation-triangle me-1"></i>Давтах
+              ${rejectedCount > 0 ? '<span class="badge bg-danger ms-1">' + rejectedCount + '</span>' : '<span class="badge bg-secondary ms-1">0</span>'}
+            </button>
+          </li>
+        </ul>
+        <div class="tab-content">`;
+
+      // --- Шинэ дээж tab ---
+      html += `<div class="tab-pane fade show active" id="newSamplesTab">`;
+      if(!samples.length){
+        html += `<p class="text-center text-muted py-4">Энэ шинжилгээнд оноогдсон шинэ дээж олдсонгүй.</p>`;
+      } else {
+        // Unique values for dropdowns
+        const uniqueClients = [...new Set(samples.map(s => s.client_name).filter(Boolean))].sort();
+        const uniqueTypes = [...new Set(samples.map(s => s.sample_type).filter(Boolean))].sort();
+
+        html += `
+          <div class="row g-2 mb-2">
+            <div class="col-5">
+              <input type="text" id="filter-sample-code" class="form-control form-control-sm" placeholder="🔍 Дээжний код...">
+            </div>
+            <div class="col-4">
+              <select id="filter-client" class="form-select form-select-sm">
+                <option value="">Бүх захиалагч</option>
+                ${uniqueClients.map(c => `<option value="${c}">${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="col-3">
+              <select id="filter-type" class="form-select form-select-sm">
+                <option value="">Бүх төрөл</option>
+                ${uniqueTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted"><span id="filtered-count">${samples.length}</span> / ${samples.length} дээж</small>
+            <button type="button" class="btn btn-link btn-sm p-0" id="clear-filters">Цэвэрлэх</button>
+          </div>
+          <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0" id="selectable-samples-table">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:40px"><input type="checkbox" id="select-all-modal-samples"></th>
+                  <th>Дээжний код</th>
+                  <th>Захиалагч</th>
+                  <th>Төрөл</th>
+                  ${canUnassign ? '<th style="width:50px">Хасах</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>`;
+        samples.forEach(s=>{
+          html += `<tr data-code="${(s.sample_code||'').toLowerCase()}" data-client="${(s.client_name||'').toLowerCase()}" data-type="${(s.sample_type||'').toLowerCase()}" data-sample-id="${s.id}">
+            <td><input type="checkbox" class="modal-sample-checkbox" value="${s.id}"></td>
+            <td>${s.sample_code}</td>
+            <td>${s.client_name||'-'}</td>
+            <td>${s.sample_type||'-'}</td>
+            ${canUnassign ? `<td><button type="button" class="btn btn-outline-danger btn-sm btn-unassign-sample" data-id="${s.id}" data-code="${s.sample_code}" title="Шинжилгээнээс хасах"><i class="bi bi-x-lg"></i></button></td>` : ''}
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+      html += `</div>`;
+
+      // --- Давтах дээж tab ---
+      html += `<div class="tab-pane fade" id="rejectedSamplesTab">`;
+      if(!rejected.length){
+        html += `<p class="text-center text-muted py-4">Давтах шаардлагатай дээж байхгүй.</p>`;
+      } else {
+        html += `
+          <div class="alert alert-warning py-2 mb-2">
+            <i class="bi bi-info-circle me-1"></i>
+            Эдгээр дээж ахлахын хяналтаас буцаагдсан. Дахин шинжилгээ хийх шаардлагатай.
+          </div>
+          <div class="mb-2">
+            <input type="text" id="filter-rejected-code" class="form-control form-control-sm" placeholder="🔍 Дээжний код хайх...">
+          </div>
+          <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0" id="rejected-samples-table">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:40px"><input type="checkbox" id="select-all-rejected-samples"></th>
+                  <th>Дээжний код</th>
+                  <th>Захиалагч</th>
+                  <th>Шалтгаан</th>
+                </tr>
+              </thead>
+              <tbody>`;
+        rejected.forEach(s=>{
+          const errLabel = errLabels[s.error_reason] || s.error_reason || '-';
+          html += `<tr data-code="${(s.sample_code||'').toLowerCase()}">
+            <td><input type="checkbox" class="modal-sample-checkbox rejected-sample" value="${s.id}"></td>
+            <td>${s.sample_code}</td>
+            <td>${s.client_name||'-'}</td>
+            <td><span class="badge bg-danger">${errLabel}</span></td>
+          </tr>`;
+        });
+        html += `</tbody></table></div>`;
+      }
+      html += `</div>`;
+
+      html += `</div>`; // tab-content end
       body.html(html);
 
+      // Select all - шинэ дээж
       body.find('#select-all-modal-samples').on('change', function(){
-        const checked=this.checked;
-        body.find('.modal-sample-checkbox:visible').each(function(){ $(this).prop('checked',checked).trigger('change'); });
+        const checked = this.checked;
+        body.find('#selectable-samples-table .modal-sample-checkbox:visible').each(function(){
+          $(this).prop('checked', checked).trigger('change');
+        });
+      });
+
+      // Select all - rejected дээж
+      body.find('#select-all-rejected-samples').on('change', function(){
+        const checked = this.checked;
+        body.find('#rejected-samples-table .modal-sample-checkbox:visible').each(function(){
+          $(this).prop('checked', checked).trigger('change');
+        });
       });
     });
   });
 
+  // Advanced filter function
+  function applyFilters() {
+    const codeFilter = ($('#filter-sample-code').val() || '').toLowerCase().trim();
+    const clientFilter = ($('#filter-client').val() || '').toLowerCase();
+    const typeFilter = ($('#filter-type').val() || '').toLowerCase();
+
+    let visibleCount = 0;
+    $('#selectable-samples-table tbody tr').each(function() {
+      const $row = $(this);
+      const code = $row.data('code') || '';
+      const client = $row.data('client') || '';
+      const type = $row.data('type') || '';
+
+      const matchCode = !codeFilter || code.includes(codeFilter);
+      const matchClient = !clientFilter || client === clientFilter;
+      const matchType = !typeFilter || type === typeFilter;
+
+      if (matchCode && matchClient && matchType) {
+        $row.show();
+        visibleCount++;
+      } else {
+        $row.hide();
+      }
+    });
+
+    $('#filtered-count').text(visibleCount);
+  }
+
+  // Filter events
+  $(document).on('input', '#filter-sample-code', applyFilters);
+  $(document).on('change', '#filter-client', applyFilters);
+  $(document).on('change', '#filter-type', applyFilters);
+
+  // Clear filters
+  $(document).on('click', '#clear-filters', function() {
+    $('#filter-sample-code').val('');
+    $('#filter-client').val('');
+    $('#filter-type').val('');
+    applyFilters();
+  });
+
+  // Rejected tab filter function
+  function applyRejectedFilters() {
+    const codeFilter = ($('#filter-rejected-code').val() || '').toLowerCase().trim();
+
+    let visibleCount = 0;
+    $('#rejected-samples-table tbody tr').each(function() {
+      const $row = $(this);
+      const code = $row.data('code') || '';
+
+      if (!codeFilter || code.includes(codeFilter)) {
+        $row.show();
+        visibleCount++;
+      } else {
+        $row.hide();
+      }
+    });
+  }
+
+  // Rejected tab filter event
+  $(document).on('input', '#filter-rejected-code', applyRejectedFilters);
+
+  // Legacy filter (for backwards compatibility)
   $(document).on('keyup', '#modal-sample-filter', function() {
     const value = $(this).val().toLowerCase();
     $("#selectable-samples-table tbody tr").filter(function() {
@@ -290,6 +466,59 @@ $(function () {
   $(document).on('change','.modal-sample-checkbox', function(){
     const id = $(this).val();
     if(this.checked) modalSelectedOrder.add(id); else modalSelectedOrder.delete(id);
+  });
+
+  // Row click to toggle checkbox
+  $(document).on('click', '#selectSamplesModal tbody tr', function(e) {
+    if ($(e.target).is('input[type="checkbox"]') || $(e.target).closest('.btn-unassign-sample').length) return;
+    const $checkbox = $(this).find('.modal-sample-checkbox');
+    if ($checkbox.length) {
+      $checkbox.prop('checked', !$checkbox.prop('checked')).trigger('change');
+    }
+  });
+
+  // Дээжийг шинжилгээнээс хасах (senior/admin only)
+  $(document).on('click', '.btn-unassign-sample', function(e) {
+    e.stopPropagation();
+    const $btn = $(this);
+    const sampleId = $btn.data('id');
+    const sampleCode = $btn.data('code');
+
+    if (!confirm(`"${sampleCode}" дээжийг ${analysisCodeRaw} шинжилгээнээс хасах уу?`)) {
+      return;
+    }
+
+    $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i>');
+
+    $.ajax({
+      url: '/api/unassign_sample',
+      method: 'POST',
+      contentType: 'application/json',
+      headers: { 'X-CSRFToken': window.csrfToken },
+      data: JSON.stringify({
+        sample_id: sampleId,
+        analysis_code: analysisCodeRaw
+      }),
+      success: function(resp) {
+        if (resp.success) {
+          $btn.closest('tr').fadeOut(300, function() { $(this).remove(); });
+          // Update count
+          const $count = $('#filtered-count');
+          if ($count.length) {
+            const newCount = parseInt($count.text()) - 1;
+            $count.text(newCount);
+          }
+        } else {
+          alert(resp.message || 'Алдаа гарлаа');
+          $btn.prop('disabled', false).html('<i class="bi bi-x-lg"></i>');
+        }
+      },
+      error: function(xhr) {
+        const msg = xhr.responseJSON?.message || 'Сервертэй холбогдох алдаа';
+        alert(msg);
+        $btn.prop('disabled', false).html('<i class="bi bi-x-lg"></i>');
+      }
+    });
   });
 
   $('#add-selected-samples-to-worksheet').on('click', function(){

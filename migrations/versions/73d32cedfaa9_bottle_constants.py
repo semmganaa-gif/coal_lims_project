@@ -17,13 +17,17 @@ depends_on = None
 
 
 def upgrade():
+    # SQLite: "1", PostgreSQL: "TRUE"
+    bind = op.get_bind()
+    bool_true = "1" if bind.dialect.name == "sqlite" else "TRUE"
+
     # --- bottle ---
     op.create_table(
         "bottle",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("serial_no", sa.String(length=64), nullable=False),
         sa.Column("label", sa.String(length=64)),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.text(bool_true)),
         sa.Column("created_by_id", sa.Integer()),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.UniqueConstraint("serial_no", name="uq_bottle_serial_no"),

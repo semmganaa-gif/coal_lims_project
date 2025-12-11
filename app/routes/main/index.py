@@ -28,11 +28,14 @@ from .helpers import get_12h_shift_code, get_quarter_code
 
 # Utils
 from app.utils.datetime import now_local
-from app.utils.shift_helper import get_current_shift_start
+from app.utils.shifts import get_current_shift_start
 from app.utils.analysis_assignment import assign_analyses_to_sample
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.database import safe_commit
 from app.utils.settings import get_sample_type_choices_map, get_unit_abbreviations
+
+# Monitoring
+from app.monitoring import track_sample
 
 # Constants
 from app.constants import (
@@ -95,7 +98,7 @@ def register_routes(bp):
 
         # ---------- Үндсэн submit ----------
         if form.validate_on_submit():
-            if current_user.role not in ["beltgegch", "admin"]:
+            if current_user.role not in ["prep", "admin"]:
                 flash("Дээж бүртгэх эрх танд байхгүй.", "danger")
                 return redirect(url_for("main.index"))
 
@@ -167,6 +170,7 @@ def register_routes(bp):
                             sample_condition=form.sample_condition.data,
                             sample_date=sample_date_obj,
                             return_sample=form.return_sample.data,
+                            retention_date=(now_local() + timedelta(days=int(form.retention_period.data or 7))).date(),
                             delivered_by=form.delivered_by.data,
                             prepared_date=form.prepared_date.data,
                             prepared_by=form.prepared_by.data,
@@ -216,6 +220,10 @@ def register_routes(bp):
                 if failed_samples:
                     flash(f'Анхаар: Дараах дээжнүүд бүртгэгдсэнгүй: {", ".join(failed_samples)}', "warning")
 
+                # ✅ Prometheus metrics: Дээж бүртгэлийг track хийх
+                for _ in range(count):
+                    track_sample(client=client_name, sample_type=sample_type)
+
                 return redirect(url_for("main.index", active_tab="add-pane"))
 
             # --- 2) WTL (WTL/Size/FL) – автоматаар олон нэр үүсгэх ---
@@ -245,6 +253,7 @@ def register_routes(bp):
                             sample_condition=form.sample_condition.data,
                             sample_date=sample_date_obj,
                             return_sample=form.return_sample.data,
+                            retention_date=(now_local() + timedelta(days=int(form.retention_period.data or 7))).date(),
                             delivered_by=form.delivered_by.data,
                             prepared_date=form.prepared_date.data,
                             prepared_by=form.prepared_by.data,
@@ -406,7 +415,7 @@ def register_routes(bp):
 @main_bp.route("/send-hourly-report")
 def send_hourly_report():
     try:
-        logger.debug("HOURLY REPORT STARTED (FIXED POSITIONING)")
+        current_app.logger.debug("HOURLY REPORT STARTED (FIXED POSITIONING)")
 
         # =========================================================================
         # 1. ТОХИРГОО
@@ -727,7 +736,7 @@ def send_hourly_report():
 
     except Exception as e:
         import traceback
-        logger.exception("Error in send_hourly_report")
+        current_app.logger.exception("Error in send_hourly_report")
         flash(f"Алдаа: {str(e)}", "danger")
 
     return redirect(url_for('main.index'))

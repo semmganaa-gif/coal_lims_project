@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
 from datetime import datetime, timedelta
+from app.utils.shifts import get_shift_date
 from sqlalchemy import func, or_, and_
 from sqlalchemy.exc import IntegrityError
 
@@ -75,7 +76,7 @@ def equipment_detail(id):
 @equipment_bp.route("/add_equipment", methods=["POST"])
 @login_required
 def add_equipment():
-    if current_user.role not in ["ahlah", "admin"]:
+    if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger"); return redirect(url_for("equipment.equipment_list"))
 
     # Form data with validation
@@ -111,14 +112,19 @@ def add_equipment():
         category = request.form.get("category") or "other"
     )
     db.session.add(new_eq)
-    db.session.commit()
-    flash("Амжилттай бүртгэгдлээ", "success")
+    try:
+        db.session.commit()
+        flash("Амжилттай бүртгэгдлээ", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error in add_equipment: {e}")
+        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_list"))
 
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
 @login_required
 def edit_equipment(id):
-    if current_user.role not in ["ahlah", "admin"]:
+    if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger"); return redirect(url_for("equipment.equipment_detail", id=id))
 
     eq = Equipment.query.get_or_404(id)
@@ -164,7 +170,7 @@ def edit_equipment(id):
 @equipment_bp.route("/equipment/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_equipment(id):
-    if current_user.role not in ["ahlah", "admin"]:
+    if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
@@ -180,15 +186,20 @@ def delete_equipment(id):
     else:
         db.session.delete(eq)
         flash(f"'{eq.name}' устгагдлаа.", "success")
-    
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error in delete_equipment: {e}")
+        flash(f"Устгалт амжилтгүй: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_list"))
 
 # --- BULK DELETE (Олноор устгах) ---
 @equipment_bp.route("/bulk_delete", methods=["POST"])
 @login_required
 def bulk_delete():
-    if current_user.role not in ["ahlah", "admin"]:
+    if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
@@ -216,8 +227,14 @@ def bulk_delete():
                 db.session.delete(eq)
                 deleted_count += 1
 
-    db.session.commit()
-    
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error in bulk_delete: {e}")
+        flash(f"Олноор устгалт амжилтгүй: {str(e)[:100]}", "danger")
+        return redirect(url_for("equipment.equipment_list"))
+
     msg = []
     if deleted_count > 0: msg.append(f"{deleted_count} төхөөрөмж устгагдлаа.")
     if retired_count > 0: msg.append(f"{retired_count} төхөөрөмж түүхтэй тул 'Retired' боллоо.")
@@ -284,7 +301,13 @@ def add_maintenance_log(id):
         eq.status = "maintenance"
 
     db.session.add(log)
-    db.session.commit()
+    try:
+        db.session.commit()
+        flash("Тэмдэглэл амжилттай хадгалагдлаа.", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error in add_maintenance_log: {e}")
+        flash(f"Тэмдэглэл хадгалах үед алдаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_detail", id=id))
 
 @equipment_bp.route("/download_cert/<int:log_id>")
@@ -292,8 +315,29 @@ def add_maintenance_log(id):
 def download_certificate(log_id):
     log = MaintenanceLog.query.get_or_404(log_id)
     if not log.file_path:
-        flash("Файл алга.", "warning"); return redirect(request.referrer)
-    return send_from_directory(os.path.abspath(current_app.config.get('UPLOAD_FOLDER')), log.file_path, as_attachment=True)
+        flash("Файл алга.", "warning")
+        return redirect(request.referrer or url_for('equipment.equipment_list'))
+
+    # ✅ ЗАСВАРЛАСАН: Path traversal хамгаалалт
+    upload_folder = os.path.abspath(current_app.config.get('UPLOAD_FOLDER', ''))
+    # Secure filename to prevent directory traversal
+    safe_filename = os.path.basename(log.file_path)
+
+    # Verify file exists in the expected directory
+    full_path = os.path.join(upload_folder, safe_filename)
+    if not os.path.exists(full_path):
+        flash("Файл олдсонгүй.", "warning")
+        return redirect(request.referrer or url_for('equipment.equipment_list'))
+
+    # Verify the resolved path is within upload folder (prevent symlink attacks)
+    real_path = os.path.realpath(full_path)
+    real_upload = os.path.realpath(upload_folder)
+    if not real_path.startswith(real_upload):
+        current_app.logger.warning(f"Path traversal attempt: {log.file_path}")
+        flash("Файлд хандах эрхгүй.", "danger")
+        return redirect(request.referrer or url_for('equipment.equipment_list'))
+
+    return send_from_directory(upload_folder, safe_filename, as_attachment=True)
 
 # -------------------------------------------------
 # API: BULK USAGE LOG (Updated Logic)
@@ -369,13 +413,13 @@ def _filter_equipment_by_category(query, category):
 @equipment_bp.route("/api/equipment/usage_summary")
 @login_required
 def api_equipment_usage_summary():
-    today = datetime.now().date()
+    today = get_shift_date()
     start_str = request.args.get("start_date")
     end_str = request.args.get("end_date")
-    category = request.args.get("category", "all") 
+    category = request.args.get("category", "all")
 
-    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else datetime.now() - timedelta(days=30)
-    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else datetime.now()
+    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else datetime.combine(today - timedelta(days=30), datetime.min.time())
+    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else datetime.combine(today, datetime.min.time())
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
     eq_query = _filter_equipment_by_category(Equipment.query, category)
@@ -509,8 +553,9 @@ def equipment_journal_grid():
         "other": "8. Бусад"
     }
     title = titles.get(category, "Тоног Төхөөрөмжийн Журнал")
-    
-    today = datetime.now().date()
+
+    # Ээлжийн огноо ашиглах
+    today = get_shift_date()
     return render_template("equipment_journal.html", title=title, start_date=today-timedelta(days=29), end_date=today, category=category)
 
 # app/routes/equipment_routes.py дотор хаа нэгтээ нэмнэ

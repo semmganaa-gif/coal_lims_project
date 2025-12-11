@@ -1,0 +1,1109 @@
+{# templates/reports/monthly_plan.html - Monthly Plan #}
+{% extends "base.html" %}
+
+{% block title %}Monthly Plan{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #22c55e;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f59e0b;
+  }
+
+  .plan-page {
+    min-height: calc(100vh - 80px);
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0f9ff 30%, #faf5ff 60%, #fff7ed 100%);
+    background-attachment: fixed;
+  }
+
+  /* ===== HEADER ===== */
+  .plan-header {
+    background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(59,130,246,0.08), rgba(139,92,246,0.06));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px;
+    padding: 1.25rem 2rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: 0 4px 24px rgba(34,197,94,0.1);
+  }
+  .plan-header h4 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #059669 0%, #0284c7 50%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .plan-header .subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* Filter */
+  .filter-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .filter-inline select {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.9);
+    min-width: 80px;
+  }
+  .filter-inline select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+  }
+  .btn-filter {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-filter:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+  .btn-save-plan {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-save-plan:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+
+  /* ===== WORKLOAD CARDS (TOP) ===== */
+  .workload-section {
+    margin-bottom: 1.25rem;
+  }
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-title i { color: var(--accent-blue); }
+
+  .workload-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .wl-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .wl-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  }
+  .wl-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    border-radius: 16px 0 0 16px;
+  }
+  .wl-card.blue::before { background: linear-gradient(180deg, #3b82f6, #06b6d4); }
+  .wl-card.green::before { background: linear-gradient(180deg, #22c55e, #16a34a); }
+  .wl-card.purple::before { background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+
+  .wl-card-inner { display: flex; align-items: center; gap: 1rem; }
+  .wl-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+  .wl-card.blue .wl-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .wl-card.green .wl-icon { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+  .wl-card.purple .wl-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+
+  .wl-info { flex: 1; }
+  .wl-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+  .wl-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+  .wl-card.blue .wl-value { background: linear-gradient(135deg, #1d4ed8, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .wl-card.green .wl-value { background: linear-gradient(135deg, #15803d, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .wl-card.purple .wl-value { background: linear-gradient(135deg, #6d28d9, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .wl-unit { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+  .wl-staff-input {
+    width: 45px;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+  .wl-staff-input:focus { outline: none; border-color: #3b82f6; }
+
+  /* ===== WEEK SUMMARY ===== */
+  .week-summary {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .week-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(148,163,184,0.2);
+  }
+  .week-summary-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .week-summary-title i { color: var(--accent-blue); }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+  .week-item {
+    background: rgba(248,250,252,0.8);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .week-item:hover { background: rgba(59,130,246,0.08); transform: translateY(-2px); }
+  .week-item.total-col { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .week-item .week-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+  .week-item .week-dates { font-size: 0.65rem; color: #94a3b8; margin-top: 2px; }
+  .week-item .week-plan { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-top: 6px; }
+  .week-item .week-perf { font-size: 0.8rem; color: var(--accent-green); font-weight: 600; }
+  .week-item .week-daily { font-size: 0.7rem; color: var(--accent-purple); margin-top: 4px; font-weight: 600; }
+
+  /* ===== CONSIGNOR CARDS ===== */
+  .consignor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1rem;
+  }
+  .consignor-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .consignor-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .consignor-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(148,163,184,0.15);
+    cursor: pointer;
+  }
+  .consignor-header:hover { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
+  .consignor-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .consignor-name i { color: var(--accent-orange); }
+  .consignor-badge {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1d4ed8;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  .consignor-body { padding: 0.75rem; }
+  .sample-type-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: rgba(248,250,252,0.8);
+    transition: all 0.2s;
+  }
+  .sample-type-row:hover { background: rgba(59,130,246,0.06); }
+  .sample-type-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+  }
+  .sample-type-weeks {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .week-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 50px;
+  }
+  .week-cell input {
+    width: 42px;
+    padding: 3px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .week-cell input:focus { outline: none; border-color: #3b82f6; }
+  .week-cell .perf { font-size: 0.65rem; color: var(--accent-green); margin-top: 2px; }
+  .row-total {
+    min-width: 55px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+  .row-total .pct { font-size: 0.7rem; }
+  .row-total .pct.good { color: #16a34a; }
+  .row-total .pct.bad { color: #dc2626; }
+
+  .consignor-footer {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    padding: 8px 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #166534;
+  }
+
+  /* ===== TAB NAVIGATION ===== */
+  .plan-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .plan-tab {
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    background: var(--glass-bg);
+    color: var(--text-muted);
+  }
+  .plan-tab:hover { background: rgba(59,130,246,0.1); color: var(--accent-blue); }
+  .plan-tab.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border-color: #2563eb;
+  }
+
+  /* ===== STATS TAB ===== */
+  .stats-content { display: none; }
+  .stats-content.active { display: block; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.25rem;
+  }
+  .stats-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .stats-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(148,163,184,0.2);
+  }
+  .stats-card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stats-card-title i { color: var(--accent-purple); }
+  .chart-container { position: relative; height: 280px; }
+
+  /* Summary stats */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .summary-stat {
+    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.08));
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .summary-stat .stat-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+  .summary-stat .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
+  .summary-stat .stat-sub { font-size: 0.75rem; color: var(--accent-green); margin-top: 2px; }
+  .summary-stat.highlight { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .summary-stat.highlight .stat-label, .summary-stat.highlight .stat-value, .summary-stat.highlight .stat-sub { color: white; }
+
+  /* ===== STATS FILTER ===== */
+  .stats-filter {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .filter-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .filter-select {
+    padding: 6px 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: white;
+    min-width: 70px;
+  }
+  .filter-select:focus { outline: none; border-color: var(--accent-blue); }
+  .filter-separator { color: var(--text-muted); font-weight: 600; }
+  .btn-stats-filter {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-stats-filter:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
+  .quick-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+  .quick-btn {
+    background: rgba(59,130,246,0.1);
+    color: var(--accent-blue);
+    border: 1px solid rgba(59,130,246,0.3);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-btn:hover { background: var(--accent-blue); color: white; }
+  .quick-btn.active { background: var(--accent-blue); color: white; }
+</style>
+
+<div class="plan-page">
+  <!-- Header -->
+  <div class="plan-header">
+    <div>
+      <h4><i class="bi bi-calendar3-week"></i> Monthly Plan</h4>
+      <p class="subtitle">{{ month_name }} {{ year }} - Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+    </div>
+    <form method="get" class="filter-inline">
+      <select name="year" id="selectYear">
+        {% for y in years %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+      <select name="month" id="selectMonth">
+        {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if m == month %}selected{% endif %}>
+            {{ ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m] }}
+          </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-filter"><i class="bi bi-funnel-fill"></i> Шүүх</button>
+      {% if current_user.role in ['senior', 'admin'] %}
+      <button type="button" class="btn-save-plan" id="btnSavePlan"><i class="bi bi-save"></i> Хадгалах</button>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="plan-tabs">
+    <div class="plan-tab active" data-tab="plan"><i class="bi bi-calendar3-week"></i> Төлөвлөгөө</div>
+    <div class="plan-tab" data-tab="stats"><i class="bi bi-graph-up"></i> Статистик</div>
+  </div>
+
+  <!-- ===== PLAN TAB CONTENT ===== -->
+  <div id="planContent" class="tab-content active">
+  <!-- Workload Cards -->
+  <div class="workload-section">
+    <div class="section-title"><i class="bi bi-speedometer2"></i> Өдрийн ачаалал / Норм</div>
+    <div class="workload-cards">
+      <div class="wl-card blue">
+        <div class="wl-card-inner">
+          <div class="wl-icon"><i class="bi bi-clipboard-check"></i></div>
+          <div class="wl-info">
+            <div class="wl-label">Бүртгэл</div>
+            <div class="wl-value" id="cardRegistration">{{ grand_total.daily_plan }}</div>
+            <div class="wl-unit">дээж/өдөр</div>
+          </div>
+        </div>
+      </div>
+      <div class="wl-card green">
+        <div class="wl-card-inner">
+          <div class="wl-icon"><i class="bi bi-hammer"></i></div>
+          <div class="wl-info">
+            <div class="wl-label">Дээж бэлтгэгч {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffPreparers" value="{{ staff_preparers }}" min="1" max="50">{% else %}<span class="badge bg-success">{{ staff_preparers }}</span>{% endif %}</div>
+            <div class="wl-value" id="cardPreparers">{{ (grand_total.daily_plan / staff_preparers)|round(1) }}</div>
+            <div class="wl-unit">дээж/хүн/өдөр</div>
+          </div>
+        </div>
+      </div>
+      <div class="wl-card purple">
+        <div class="wl-card-inner">
+          <div class="wl-icon"><i class="bi bi-eyedropper"></i></div>
+          <div class="wl-info">
+            <div class="wl-label">Химич {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffChemists" value="{{ staff_chemists }}" min="1" max="50">{% else %}<span class="badge bg-purple">{{ staff_chemists }}</span>{% endif %}</div>
+            <div class="wl-value" id="cardChemists">{{ ((grand_total.daily_plan * 5) / staff_chemists)|round(1) }}</div>
+            <div class="wl-unit">шинжилгээ/хүн/өдөр</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Week Summary -->
+  <div class="week-summary">
+    <div class="week-summary-header">
+      <div class="week-summary-title"><i class="bi bi-calendar-week"></i> Долоо хоногийн нэгтгэл</div>
+      {% if current_user.role in ['senior', 'admin'] %}
+      <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Тохиргоо хадгалах</button>
+      {% endif %}
+    </div>
+    <div class="week-grid">
+      {% for w in weeks %}
+      <div class="week-item">
+        <div class="week-label">{{ ['', 'I', 'II', 'III', 'IV', 'V'][w.week] }} week</div>
+        <div class="week-dates">/{{ w.start.day }}-{{ w.end.day }}/</div>
+        <div class="week-plan">{{ week_totals[w.week].plan }}</div>
+        <div class="week-perf">{{ week_totals[w.week].perf }} perf</div>
+        <div class="week-daily">{{ week_totals[w.week].daily_plan }}/өдөр</div>
+      </div>
+      {% endfor %}
+      <div class="week-item total-col">
+        <div class="week-label">TOTAL</div>
+        <div class="week-dates">{{ month_name }}</div>
+        <div class="week-plan">{{ grand_total.plan }}</div>
+        <div class="week-perf">{{ grand_total.perf }} perf</div>
+        <div class="week-daily">{{ grand_total.daily_plan }}/өдөр</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consignor Cards -->
+  <div class="section-title"><i class="bi bi-building"></i> Нэгжийн төлөвлөгөө</div>
+  <div class="consignor-grid">
+    {% for client_name, client_info in data.items() %}
+    <div class="consignor-card">
+      <div class="consignor-header" onclick="this.parentElement.querySelector('.consignor-body').classList.toggle('d-none')">
+        <div class="consignor-name"><i class="bi bi-box-seam"></i> {{ client_name }}</div>
+        <div class="consignor-badge">{{ client_info.total.plan }} plan / {{ client_info.total.perf }} perf</div>
+      </div>
+      <div class="consignor-body">
+        {% for sample_type, row_data in client_info.types.items() %}
+        <div class="sample-type-row">
+          <div class="sample-type-name">{{ sample_type }}</div>
+          <div class="sample-type-weeks">
+            {% for w in weeks %}
+            {% set week_data = row_data.weeks[w.week] %}
+            {% set key = client_name ~ '|' ~ sample_type ~ '|' ~ w.week %}
+            <div class="week-cell">
+              {% if current_user.role in ['senior', 'admin'] %}
+              <input type="number" class="planned-input" data-key="{{ key }}" value="{{ week_data.plan }}" min="0">
+              {% else %}
+              <span>{{ week_data.plan }}</span>
+              {% endif %}
+              <span class="perf">{{ week_data.perf }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="row-total">
+            {{ row_data.total_plan }}/{{ row_data.total_perf }}
+            <div class="pct {% if row_data.total_plan > 0 %}{% if row_data.pct >= 100 %}good{% else %}bad{% endif %}{% endif %}">
+              {% if row_data.total_plan > 0 %}{{ "%.0f"|format(row_data.pct) }}%{% else %}-{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="consignor-footer">
+        <span>{{ client_name }} Total</span>
+        <span>{{ client_info.total.plan }} / {{ client_info.total.perf }} ({% if client_info.total.plan > 0 %}{{ "%.0f"|format(client_info.pct) }}%{% else %}-{% endif %})</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  </div><!-- END planContent -->
+
+  <!-- ===== STATISTICS TAB CONTENT ===== -->
+  <div id="statsContent" class="tab-content" style="display: none;">
+    <!-- Date Range Filter -->
+    <div class="stats-filter">
+      <div class="filter-group">
+        <label>Эхлэх:</label>
+        <select id="statsFromYear" class="filter-select">
+          {% for y in range(year - 5, year + 1) %}
+          <option value="{{ y }}" {% if y == year - 1 %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <select id="statsFromMonth" class="filter-select">
+          {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if m == 1 %}selected{% endif %}>{{ ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-separator">—</div>
+      <div class="filter-group">
+        <label>Дуусах:</label>
+        <select id="statsToYear" class="filter-select">
+          {% for y in range(year - 5, year + 1) %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+        <select id="statsToMonth" class="filter-select">
+          {% for m in range(1, 13) %}
+          <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="button" class="btn-stats-filter" id="btnApplyStats">
+        <i class="bi bi-funnel-fill"></i> Шүүх
+      </button>
+      <div class="quick-filters">
+        <button type="button" class="quick-btn" data-range="1y">1 жил</button>
+        <button type="button" class="quick-btn" data-range="2y">2 жил</button>
+        <button type="button" class="quick-btn" data-range="ytd">YTD</button>
+      </div>
+    </div>
+
+    <!-- Summary Row -->
+    <div class="summary-row" id="summaryStats">
+      <div class="summary-stat">
+        <div class="stat-label">Нийт төлөвлөгөө</div>
+        <div class="stat-value" id="totalPlanned">-</div>
+        <div class="stat-sub">{{ year }} он</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-label">Нийт гүйцэтгэл</div>
+        <div class="stat-value" id="totalActual">-</div>
+        <div class="stat-sub">бүртгэгдсэн</div>
+      </div>
+      <div class="summary-stat highlight">
+        <div class="stat-label">Биелэлт</div>
+        <div class="stat-value" id="totalPct">-</div>
+        <div class="stat-sub">%</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-label">Өдрийн дундаж</div>
+        <div class="stat-value" id="dailyAvg">-</div>
+        <div class="stat-sub">дээж/өдөр</div>
+      </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="stats-grid">
+      <!-- Yearly Chart -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div class="stats-card-title"><i class="bi bi-calendar"></i> Жилээр харьцуулалт</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="yearlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Monthly Chart -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div class="stats-card-title"><i class="bi bi-calendar-month"></i> Сараар харьцуулалт</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Weekly Chart -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div class="stats-card-title"><i class="bi bi-calendar-week"></i> Долоо хоногоор ({{ year }})</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Consignor Chart -->
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div class="stats-card-title"><i class="bi bi-building"></i> Нэгжээр харьцуулалт</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="consignorChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Percentage Gauge -->
+    <div class="stats-grid" style="margin-top: 1.25rem;">
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <div class="stats-card-title"><i class="bi bi-percent"></i> Гүйцэтгэлийн хувь (сараар)</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="pctChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div><!-- END statsContent -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  const year = document.getElementById('selectYear').value;
+  const month = document.getElementById('selectMonth').value;
+  const dailyPlan = {{ grand_total.daily_plan }};
+
+  // ===== TAB SWITCHING =====
+  const tabs = document.querySelectorAll('.plan-tab');
+  const planContent = document.getElementById('planContent');
+  const statsContent = document.getElementById('statsContent');
+  let chartsInitialized = false;
+  let chartInstances = {};
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+
+      const tabName = this.dataset.tab;
+      if (tabName === 'plan') {
+        planContent.style.display = 'block';
+        statsContent.style.display = 'none';
+      } else {
+        planContent.style.display = 'none';
+        statsContent.style.display = 'block';
+        if (!chartsInitialized) {
+          loadStatistics();
+          chartsInitialized = true;
+        }
+      }
+    });
+  });
+
+  // ===== FILTER ELEMENTS =====
+  const fromYear = document.getElementById('statsFromYear');
+  const fromMonth = document.getElementById('statsFromMonth');
+  const toYear = document.getElementById('statsToYear');
+  const toMonth = document.getElementById('statsToMonth');
+  const btnApplyStats = document.getElementById('btnApplyStats');
+  const quickBtns = document.querySelectorAll('.quick-btn');
+
+  // Apply filter button
+  if (btnApplyStats) {
+    btnApplyStats.addEventListener('click', function() {
+      loadStatistics();
+    });
+  }
+
+  // Quick filter buttons
+  quickBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      quickBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+
+      const range = this.dataset.range;
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+
+      if (range === '1y') {
+        // Last 12 months
+        let startMonth = currentMonth;
+        let startYear = currentYear - 1;
+        fromYear.value = startYear;
+        fromMonth.value = startMonth;
+        toYear.value = currentYear;
+        toMonth.value = currentMonth;
+      } else if (range === '2y') {
+        // Last 24 months
+        let startMonth = currentMonth;
+        let startYear = currentYear - 2;
+        fromYear.value = startYear;
+        fromMonth.value = startMonth;
+        toYear.value = currentYear;
+        toMonth.value = currentMonth;
+      } else if (range === 'ytd') {
+        // Year to date
+        fromYear.value = currentYear;
+        fromMonth.value = 1;
+        toYear.value = currentYear;
+        toMonth.value = currentMonth;
+      }
+      loadStatistics();
+    });
+  });
+
+  // ===== LOAD STATISTICS =====
+  async function loadStatistics() {
+    const params = new URLSearchParams({
+      from_year: fromYear.value,
+      from_month: fromMonth.value,
+      to_year: toYear.value,
+      to_month: toMonth.value
+    });
+
+    try {
+      const response = await fetch('{{ url_for("reports.api_plan_statistics") }}?' + params);
+      const data = await response.json();
+      renderSummary(data);
+      renderCharts(data);
+    } catch (err) {
+      console.error('Statistics load error:', err);
+    }
+  }
+
+  function renderSummary(data) {
+    // Use pre-calculated totals from API
+    document.getElementById('totalPlanned').textContent = data.total_planned.toLocaleString();
+    document.getElementById('totalActual').textContent = data.total_actual.toLocaleString();
+    document.getElementById('totalPct').textContent = data.total_pct + '%';
+    document.getElementById('dailyAvg').textContent = data.daily_avg;
+
+    // Update subtitle
+    const subEl = document.querySelector('#summaryStats .stat-sub');
+    if (subEl) subEl.textContent = data.range_label;
+  }
+
+  function renderCharts(data) {
+    // Destroy existing charts
+    Object.values(chartInstances).forEach(chart => chart.destroy());
+    chartInstances = {};
+
+    // Common chart options
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } }
+      }
+    };
+
+    // 1. YEARLY CHART
+    if (data.yearly.length > 0) {
+      chartInstances.yearly = new Chart(document.getElementById('yearlyChart'), {
+        type: 'bar',
+        data: {
+          labels: data.yearly.map(y => y.year + ' он'),
+          datasets: [
+            {
+              label: 'Төлөвлөгөө',
+              data: data.yearly.map(y => y.planned),
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Гүйцэтгэл',
+              data: data.yearly.map(y => y.actual),
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              borderColor: 'rgba(34, 197, 94, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // 2. MONTHLY CHART
+    if (data.monthly.length > 0) {
+      chartInstances.monthly = new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+          labels: data.monthly.map(m => m.year + '/' + m.month_name),
+          datasets: [
+            {
+              label: 'Төлөвлөгөө',
+              data: data.monthly.map(m => m.planned),
+              borderColor: 'rgba(59, 130, 246, 1)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Гүйцэтгэл',
+              data: data.monthly.map(m => m.actual),
+              borderColor: 'rgba(34, 197, 94, 1)',
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // 3. WEEKLY CHART
+    if (data.weekly.length > 0) {
+      chartInstances.weekly = new Chart(document.getElementById('weeklyChart'), {
+        type: 'bar',
+        data: {
+          labels: data.weekly.map(w => w.label),
+          datasets: [
+            {
+              label: 'Төлөвлөгөө',
+              data: data.weekly.map(w => w.planned),
+              backgroundColor: 'rgba(139, 92, 246, 0.6)',
+              borderColor: 'rgba(139, 92, 246, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Гүйцэтгэл',
+              data: data.weekly.map(w => w.actual),
+              backgroundColor: 'rgba(245, 158, 11, 0.6)',
+              borderColor: 'rgba(245, 158, 11, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // 4. CONSIGNOR CHART (Horizontal bar)
+    if (data.consignor.length > 0) {
+      chartInstances.consignor = new Chart(document.getElementById('consignorChart'), {
+        type: 'bar',
+        data: {
+          labels: data.consignor.map(c => c.client),
+          datasets: [
+            {
+              label: 'Төлөвлөгөө',
+              data: data.consignor.map(c => c.planned),
+              backgroundColor: 'rgba(59, 130, 246, 0.7)'
+            },
+            {
+              label: 'Гүйцэтгэл',
+              data: data.consignor.map(c => c.actual),
+              backgroundColor: 'rgba(34, 197, 94, 0.7)'
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          indexAxis: 'y',
+          scales: { x: { beginAtZero: true } }
+        }
+      });
+    }
+
+    // 5. PERCENTAGE LINE CHART
+    if (data.monthly.length > 0) {
+      chartInstances.pct = new Chart(document.getElementById('pctChart'), {
+        type: 'line',
+        data: {
+          labels: data.monthly.map(m => m.year + '/' + m.month_name),
+          datasets: [{
+            label: 'Гүйцэтгэлийн %',
+            data: data.monthly.map(m => m.pct),
+            borderColor: 'rgba(139, 92, 246, 1)',
+            backgroundColor: 'rgba(139, 92, 246, 0.2)',
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: data.monthly.map(m => m.pct >= 100 ? '#22c55e' : '#ef4444'),
+            pointRadius: 5
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: 150,
+              ticks: { callback: v => v + '%' }
+            }
+          },
+          plugins: {
+            ...commonOptions.plugins,
+            annotation: {
+              annotations: {
+                line100: {
+                  type: 'line',
+                  yMin: 100,
+                  yMax: 100,
+                  borderColor: '#22c55e',
+                  borderWidth: 2,
+                  borderDash: [5, 5]
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Save Plan
+  const btnSave = document.getElementById('btnSavePlan');
+  if (btnSave) {
+    btnSave.addEventListener('click', async function() {
+      const inputs = document.querySelectorAll('.planned-input');
+      const plans = {};
+      inputs.forEach(input => {
+        plans[input.dataset.key] = parseInt(input.value) || 0;
+      });
+
+      try {
+        const response = await fetch('{{ url_for("reports.api_save_monthly_plan") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify({ year: parseInt(year), month: parseInt(month), plans })
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert('Төлөвлөгөө хадгалагдлаа!');
+          location.reload();
+        } else {
+          alert('Алдаа: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Сервертэй холбогдож чадсангүй: ' + err.message);
+      }
+    });
+  }
+
+  // Staff Settings
+  const staffPrep = document.getElementById('staffPreparers');
+  const staffChem = document.getElementById('staffChemists');
+  const btnSaveStaff = document.getElementById('btnSaveStaff');
+
+  function recalcWorkload() {
+    const prep = parseInt(staffPrep?.value) || 6;
+    const chem = parseInt(staffChem?.value) || 10;
+    document.getElementById('cardPreparers').textContent = (dailyPlan / prep).toFixed(1);
+    document.getElementById('cardChemists').textContent = ((dailyPlan * 5) / chem).toFixed(1);
+  }
+
+  if (staffPrep) staffPrep.addEventListener('input', recalcWorkload);
+  if (staffChem) staffChem.addEventListener('input', recalcWorkload);
+
+  if (btnSaveStaff) {
+    btnSaveStaff.addEventListener('click', async function() {
+      const prep = parseInt(staffPrep?.value) || 6;
+      const chem = parseInt(staffChem?.value) || 10;
+
+      try {
+        const response = await fetch('{{ url_for("reports.api_save_staff_settings") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify({ year: parseInt(year), month: parseInt(month), staff_preparers: prep, staff_chemists: chem })
+        });
+        const result = await response.json();
+        if (result.success) {
+          btnSaveStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> Хадгалсан';
+          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Тохиргоо хадгалах'; }, 1500);
+        }
+      } catch (err) {
+        alert('Алдаа: ' + err.message);
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

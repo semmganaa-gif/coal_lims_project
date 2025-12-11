@@ -26,10 +26,10 @@ class TestValidateAnalysisResult:
         assert error is None
 
     def test_moisture_value_too_high(self):
-        """Moisture > 20% should fail"""
-        value, error = validate_analysis_result(25.0, "Mad")
+        """Moisture > 30% should fail (Mad range is 0.2-30.0)"""
+        value, error = validate_analysis_result(35.0, "Mad")
         assert value is None
-        assert "0.0-20.0" in error
+        assert "0.2-30.0" in error
 
     def test_ash_valid_range(self):
         """Ash within 0-50% should pass"""
@@ -38,8 +38,8 @@ class TestValidateAnalysisResult:
         assert error is None
 
     def test_ash_out_of_range(self):
-        """Ash > 50% should fail"""
-        value, error = validate_analysis_result(60.0, "Aad")
+        """Ash > 99% should fail (Aad range is 0.1-99.0)"""
+        value, error = validate_analysis_result(100.0, "Aad")
         assert value is None
         assert error is not None
 
@@ -80,8 +80,8 @@ class TestValidateAnalysisResult:
         assert error is None
 
     def test_calorific_value_too_low(self):
-        """CV < 1000 should fail"""
-        value, error = validate_analysis_result(500, "CV")
+        """CV < 500 should fail (CV range is 500-40000)"""
+        value, error = validate_analysis_result(400, "CV")
         assert value is None
         assert error is not None
 
@@ -163,7 +163,7 @@ class TestValidateAnalysisCode:
         """Empty string should fail"""
         code, error = validate_analysis_code("")
         assert code is None
-        assert "хоосон" in error
+        assert "шаардлагатай" in error
 
     def test_none_value(self):
         """None should fail"""
@@ -275,13 +275,13 @@ class TestSanitizeString:
         long_string = "A" * 1001
         result, error = sanitize_string(long_string, max_length=1000)
         assert result is None
-        assert "хэт урт" in error
+        assert "Хэт урт" in error
 
     def test_xss_script_tag(self):
         """Script tag should be rejected"""
         result, error = sanitize_string("<script>alert('xss')</script>")
         assert result is None
-        assert "хориотой" in error
+        assert "Хориотой" in error
 
     def test_xss_javascript_protocol(self):
         """javascript: protocol should be rejected"""

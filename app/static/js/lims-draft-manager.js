@@ -57,6 +57,12 @@
           toSave = { ...existing, ...data };
         }
 
+        // Timestamp нэмэх (cleanup-д ашиглах)
+        toSave._meta = {
+          savedAt: Date.now(),
+          analysisCode: this.analysisCode
+        };
+
         const jsonData = JSON.stringify(toSave);
 
         // Size шалгалт (5MB max - localStorage limit ойролцоо)
@@ -102,9 +108,10 @@
     /**
      * Draft өгөгдлийг localStorage-с сэргээх
      *
+     * @param {boolean} includeMeta - _meta өгөгдлийг буцаах эсэх (default: false)
      * @returns {Object} Сэргээсэн өгөгдөл ({} хоосон бол)
      */
-    restore() {
+    restore(includeMeta = false) {
       try {
         const jsonData = localStorage.getItem(this.key);
 
@@ -115,9 +122,18 @@
 
         const data = JSON.parse(jsonData);
 
+        // _meta-г тусад нь авах (sample тоо тооцохдоо оруулахгүй)
+        const meta = data._meta || null;
+        const sampleCount = Object.keys(data).filter(k => k !== '_meta').length;
+
         console.log(
-          `✅ Draft restored: ${this.analysisCode} (${Object.keys(data).length} samples)`
+          `✅ Draft restored: ${this.analysisCode} (${sampleCount} samples)`
         );
+
+        // includeMeta=false бол _meta-г хасаж буцаана
+        if (!includeMeta && data._meta) {
+          delete data._meta;
+        }
 
         return data;
 
@@ -128,6 +144,23 @@
         this.purge();
 
         return {};
+      }
+    }
+
+    /**
+     * Draft-ийн metadata (savedAt timestamp) авах
+     *
+     * @returns {Object|null} Meta өгөгдөл эсвэл null
+     */
+    getMeta() {
+      try {
+        const jsonData = localStorage.getItem(this.key);
+        if (!jsonData) return null;
+
+        const data = JSON.parse(jsonData);
+        return data._meta || null;
+      } catch (error) {
+        return null;
       }
     }
 
@@ -279,57 +312,89 @@
    *
    * @param {number} maxAgeDays - Хамгийн их нас (өдрөөр)
    * @param {boolean} dryRun - Жинхэнээр устгахгүйгээр харах (default: false)
-   * @returns {Array<string>} Устгагдсан key-ууд
+   * @returns {Object} Устгагдсан болон хадгалсан key-ууд
    */
   window.LIMS_DRAFT_CLEANUP = function(maxAgeDays = 30, dryRun = false) {
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const maxAgeMs = maxAgeDays * MS_PER_DAY;
     const now = Date.now();
     const removed = [];
+    const kept = [];
 
     console.group('🧹 LIMS Draft Cleanup');
     console.log('Max age:', maxAgeDays, 'days');
     console.log('Dry run:', dryRun);
 
+    // localStorage.length нь loop дотор өөрчлөгдөж болно тул key-үүдийг эхлээд авах
+    const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-
-      // draft_inputs_ prefix байгаа key-үүдийг шалгах
       if (key && key.startsWith('draft_inputs_')) {
-        try {
-          const data = localStorage.getItem(key);
-
-          if (!data) continue;
-
-          // Timestamp байгаа эсэхийг шалгах (шинэ format)
-          // Одоогоор timestamp байхгүй тул size-аар шалгая
-          const sizeInBytes = new Blob([data]).size;
-          const sizeInKB = (sizeInBytes / 1024).toFixed(2);
-
-          // 100KB-аас ихийг анхааруулах
-          if (sizeInBytes > 100 * 1024) {
-            console.warn(`Large draft found: ${key} (${sizeInKB}KB)`);
-          }
-
-          // TODO: Timestamp-тай болгох (draft format upgrade хэрэгтэй)
-          // Одоогоор бүх draft-уудыг харуулах
-
-        } catch (error) {
-          console.error(`Corrupt draft: ${key}`, error);
-
-          if (!dryRun) {
-            localStorage.removeItem(key);
-            removed.push(key);
-            console.log(`✅ Removed corrupt draft: ${key}`);
-          }
-        }
+        keys.push(key);
       }
     }
 
-    console.log('Total removed:', removed.length);
+    keys.forEach(key => {
+      try {
+        const rawData = localStorage.getItem(key);
+        if (!rawData) return;
+
+        const data = JSON.parse(rawData);
+        const sizeInBytes = new Blob([rawData]).size;
+        const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+
+        // Timestamp шалгах (_meta.savedAt)
+        const savedAt = data._meta?.savedAt;
+        let ageInDays = null;
+        let shouldRemove = false;
+
+        if (savedAt) {
+          const ageMs = now - savedAt;
+          ageInDays = Math.floor(ageMs / MS_PER_DAY);
+
+          if (ageMs > maxAgeMs) {
+            shouldRemove = true;
+            console.log(`🗓️ Old draft: ${key} (${ageInDays} days old, ${sizeInKB}KB)`);
+          }
+        } else {
+          // Хуучин format (timestamp байхгүй) - анхааруулах
+          console.warn(`⚠️ Draft without timestamp: ${key} (${sizeInKB}KB) - will be updated on next save`);
+        }
+
+        // 100KB-аас ихийг анхааруулах
+        if (sizeInBytes > 100 * 1024) {
+          console.warn(`📦 Large draft: ${key} (${sizeInKB}KB)`);
+        }
+
+        if (shouldRemove) {
+          if (!dryRun) {
+            localStorage.removeItem(key);
+            removed.push({ key, ageInDays, sizeInKB });
+            console.log(`✅ Removed: ${key}`);
+          } else {
+            console.log(`[DRY RUN] Would remove: ${key}`);
+          }
+        } else {
+          kept.push({ key, ageInDays, sizeInKB });
+        }
+
+      } catch (error) {
+        console.error(`❌ Corrupt draft: ${key}`, error);
+
+        if (!dryRun) {
+          localStorage.removeItem(key);
+          removed.push({ key, error: 'corrupt' });
+          console.log(`✅ Removed corrupt draft: ${key}`);
+        }
+      }
+    });
+
+    console.log('---');
+    console.log('Removed:', removed.length);
+    console.log('Kept:', kept.length);
     console.groupEnd();
 
-    return removed;
+    return { removed, kept };
   };
 
   console.log('✅ LIMS Draft Manager loaded');

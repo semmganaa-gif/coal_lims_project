@@ -48,16 +48,16 @@ ANALYSIS_VALUE_RANGES: Dict[str, Tuple[float, float]] = {
     'N': (0.0, 5.0),            # Nitrogen 0-5%
     'O': (0.0, 50.0),           # Oxygen 0-50%
 
-    # Фосфор, Флюор, Хлор (trace elements)
+    # Фосфор, Флюор, Хлор (trace elements) - ppm/µg/g нэгжтэй
     'P': (0.0, 1.0),            # Phosphorus 0-1%
-    'F': (0.0, 0.5),            # Fluorine 0-0.5%
-    'Cl': (0.0, 1.0),           # Chlorine 0-1%
+    'F': (0.0, 500.0),          # Fluorine 100-500 ppm
+    'Cl': (0.0, 600.0),         # Chlorine 120-600 ppm
     'P,ad': (0.0, 1.0),
     'P,d': (0.0, 1.0),
-    'F,ad': (0.0, 0.5),
-    'F,d': (0.0, 0.5),
-    'Cl,ad': (0.0, 1.0),
-    'Cl,d': (0.0, 1.0),
+    'F,ad': (0.0, 500.0),       # Fluorine 100-500 ppm
+    'F,d': (0.0, 500.0),
+    'Cl,ad': (0.0, 600.0),      # Chlorine 120-600 ppm
+    'Cl,d': (0.0, 600.0),
 
     # Caking indices
     'CSN': (0.0, 9.6),          # Crucible swelling number 0-9.6
@@ -355,6 +355,115 @@ def validate_save_results_batch(
 
     is_valid = len(errors) == 0
     return is_valid, validated_items, errors
+
+
+# ============================================================================
+# CSN VALIDATION
+# ============================================================================
+
+def get_csn_repeatability_limit() -> float:
+    """
+    CSN тохирцын хязгаарыг config-оос авах
+    """
+    try:
+        from app.config.repeatability import LIMIT_RULES
+        csn_rule = LIMIT_RULES.get('CSN', {})
+        if 'single' in csn_rule:
+            return csn_rule['single'].get('limit', 0.50)
+    except ImportError:
+        pass
+    # Fallback
+    return 0.50
+
+
+def round_to_half(value: float) -> float:
+    """
+    CSN дундажийг 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
+
+    Args:
+        value: Дугуйлах утга
+
+    Returns:
+        float: 0.5 алхамаар дугуйлсан утга
+
+    Example:
+        >>> round_to_half(2.3)
+        2.5
+        >>> round_to_half(2.7)
+        2.5
+        >>> round_to_half(2.8)
+        3.0
+    """
+    return round(value * 2) / 2
+
+
+def validate_csn_values(
+    values: list
+) -> Tuple[bool, Optional[dict], list]:
+    """
+    CSN утгуудыг баталгаажуулах
+
+    Args:
+        values: v1-v5 утгуудын жагсаалт [v1, v2, v3, v4, v5]
+
+    Returns:
+        Tuple[bool, Optional[dict], list]:
+            - is_valid: Validation амжилттай эсэх
+            - result: Тооцоолсон үр дүн (avg, range, exceeded)
+            - errors: Алдаануудын жагсаалт
+
+    Example:
+        >>> validate_csn_values([2, 4, 4, None, None])
+        (False, {...}, ["Тохирцын зөрүү давсан: 2.0 > 1.0"])
+    """
+    errors = []
+
+    # None болон хоосон утгуудыг хасах
+    valid_values = []
+    for i, v in enumerate(values):
+        if v is not None and v != '':
+            try:
+                num = float(v)
+                valid_values.append(num)
+            except (ValueError, TypeError):
+                errors.append(f"v{i+1} буруу утга: {v}")
+
+    # Хамгийн багадаа 2 утга шаардлага
+    if len(valid_values) < 2:
+        errors.append(f"Хамгийн багадаа 2 утга оруулах шаардлагатай (одоо: {len(valid_values)})")
+        return False, None, errors
+
+    # Тохирц тооцоолох (max - min)
+    range_val = max(valid_values) - min(valid_values)
+
+    # Дундаж тооцоолох
+    raw_avg = sum(valid_values) / len(valid_values)
+
+    # 0.5 алхамаар дугуйлах
+    avg = round_to_half(raw_avg)
+
+    # Тохирцын хязгаарыг config-оос авна
+    repeatability_limit = get_csn_repeatability_limit()
+
+    # Тохирцын шалгалт
+    exceeded = range_val > repeatability_limit
+    if exceeded:
+        errors.append(f"Тохирцын зөрүү давсан: {range_val:.2f} > {repeatability_limit}")
+
+    result = {
+        'avg': avg,
+        'raw_avg': raw_avg,
+        'range': range_val,
+        'limit': repeatability_limit,
+        'exceeded': exceeded,
+        'values_count': len(valid_values)
+    }
+
+    # exceeded байсан ч is_valid = True (анхааруулга харуулах боловч хадгалах боломжтой)
+    # Гэхдээ < 2 утга байвал is_valid = False
+    is_valid = len(valid_values) >= 2
+
+    return is_valid, result, errors
 
 
 # ============================================================================

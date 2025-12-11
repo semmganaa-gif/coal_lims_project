@@ -44,6 +44,9 @@ from .helpers import (
     _effective_limit,
 )
 
+# Monitoring
+from app.monitoring import track_analysis, track_qc_check
+
 
 def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
@@ -96,7 +99,104 @@ def register_routes(bp):
                 "received_date": s.received_date.strftime("%Y-%m-%d %H:%M") if s.received_date else "",
             })
 
-        return jsonify({"samples": samples})
+        # ✅ Rejected дээжүүд - давтах шаардлагатай
+        # Химич: зөвхөн өөрийнхөө rejected дээж
+        # Ахлах/Админ: бүх rejected дээж
+        rejected_query = (
+            db.session.query(AnalysisResult, Sample)
+            .join(Sample, AnalysisResult.sample_id == Sample.id)
+            .filter(
+                AnalysisResult.analysis_code == base_code,
+                AnalysisResult.status == "rejected"
+            )
+        )
+
+        if current_user.role == "chemist":
+            rejected_query = rejected_query.filter(AnalysisResult.user_id == current_user.id)
+
+        rejected_rows = rejected_query.order_by(AnalysisResult.updated_at.desc()).all()
+
+        rejected_samples = []
+        for result, sample in rejected_rows:
+            rejected_samples.append({
+                "id": sample.id,
+                "result_id": result.id,
+                "sample_code": sample.sample_code or "",
+                "client_name": sample.client_name or "",
+                "sample_type": sample.sample_type or "",
+                "error_reason": result.error_reason or "",
+                "updated_at": result.updated_at.strftime("%Y-%m-%d %H:%M") if result.updated_at else "",
+            })
+
+        return jsonify({
+            "samples": samples,
+            "rejected": rejected_samples,
+            "rejected_count": len(rejected_samples)
+        })
+
+    # -----------------------------------------------------------
+    # 1.5) Дээжийг шинжилгээнээс хасах (senior/admin only)
+    # -----------------------------------------------------------
+    @bp.route("/unassign_sample", methods=["POST"])
+    @login_required
+    @limiter.limit("30 per minute")
+    def unassign_sample():
+        """
+        Дээжийг тухайн шинжилгээнээс хасах.
+        Зөвхөн senior, admin эрхтэй хэрэглэгч.
+        """
+        if current_user.role not in ("senior", "admin"):
+            return jsonify({"success": False, "message": "Зөвхөн ахлах болон админ хийх эрхтэй"}), 403
+
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({"success": False, "message": "JSON өгөгдөл ирсэнгүй"}), 400
+
+        sample_id = data.get("sample_id")
+        analysis_code = data.get("analysis_code")
+
+        if not sample_id or not analysis_code:
+            return jsonify({"success": False, "message": "sample_id болон analysis_code шаардлагатай"}), 400
+
+        sample = Sample.query.get(sample_id)
+        if not sample:
+            return jsonify({"success": False, "message": "Дээж олдсонгүй"}), 404
+
+        # analyses_to_perform-оос хасах
+        import json
+        try:
+            analyses = json.loads(sample.analyses_to_perform or "[]")
+        except (json.JSONDecodeError, TypeError, ValueError):
+            analyses = []
+
+        base_code = norm_code(analysis_code).strip()
+        # Код болон alias-уудыг хасах
+        codes_to_remove = [base_code.lower()] + [a.lower() for a in (BASE_TO_ALIASES.get(base_code, []) or [])]
+
+        original_count = len(analyses)
+        analyses = [a for a in analyses if a.lower() not in codes_to_remove]
+
+        if len(analyses) == original_count:
+            return jsonify({"success": False, "message": f"{analysis_code} шинжилгээ оноогдоогүй байна"}), 400
+
+        sample.analyses_to_perform = json.dumps(analyses)
+
+        # Audit log
+        from app.routes.audit_log_service import log_action
+        log_action(
+            action="unassign_analysis",
+            entity_type="sample",
+            entity_id=sample.id,
+            details=f"Дээж {sample.sample_code}-аас {analysis_code} шинжилгээг хассан"
+        )
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"{sample.sample_code} дээжээс {analysis_code} шинжилгээг хаслаа",
+            "remaining_analyses": analyses
+        })
 
     # -----------------------------------------------------------
     # 2) Химич хадгалсан үр дүн → /api/save_results
@@ -154,7 +254,7 @@ def register_routes(bp):
                     equipment_id_raw = item.get("equipment_id")
                     equipment_id, _ = validate_equipment_id(equipment_id_raw, allow_none=True)
 
-                    sample = Sample.query.get(sample_id)
+                    sample = db.session.get(Sample, sample_id)
                     if not sample:
                         raise ValueError(f"Sample {sample_id} not found")
 
@@ -177,10 +277,12 @@ def register_routes(bp):
                     diff = _coalesce_diff(raw_norm)
                     limit, mode, band = _effective_limit(analysis_code, avg)
                     effective_limit = (avg * limit) if (mode == "percent" and avg is not None) else limit
-                    
+
                     if analysis_code == "CSN" and diff is None: diff = 0.0
-                    t_exceeded = (diff is not None) and ((abs(diff) - (effective_limit or 0)) > 1e-9)
-                    
+                    # Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
+                    EPSILON = 1e-6
+                    t_exceeded = (diff is not None) and ((abs(diff) - (effective_limit or 0)) > EPSILON)
+
                     raw_norm.update({
                         "t_band": band,
                         "limit_used": effective_limit,
@@ -232,10 +334,11 @@ def register_routes(bp):
                                     # А. Одоо ирж буй (save хийж буй) өгөгдлөөс Mad хайх
                                     for d in data:
                                         ac = (d.get("analysis_code") or "").lower()
-                                        if ac == "mad": 
+                                        if ac == "mad":
                                             try:
                                                 current_mad = float(d.get("final_result"))
-                                            except: pass
+                                            except (ValueError, TypeError):
+                                                pass  # final_result хоосон эсвэл тоо биш бол алгасна
                                             break
                                     
                                     # Б. Баазаас хайх (Өмнө нь Mad хадгалсан бол)
@@ -359,9 +462,51 @@ def register_routes(bp):
                         raw_snapshot = existing.raw_data
                         final_snapshot = existing.final_result
 
+                    # ============================================================
+                    # ✅ SOLID: Дээжний жинг автоматаар шинэчлэх
+                    # A = хувинтай дээжний жин, B = хувины жин
+                    # Дээжний жин = A - B
+                    # ============================================================
+                    if analysis_code.upper() == "SOLID":
+                        try:
+                            A = raw_norm.get("A")  # bucket_with_sample
+                            B = raw_norm.get("B")  # bucket_only
+                            if A is not None and B is not None:
+                                A_val = float(A)
+                                B_val = float(B)
+                                sample_weight = round(A_val - B_val, 2)
+                                if sample_weight > 0:
+                                    sample.weight = sample_weight
+                                    current_app.logger.info(
+                                        f"Sample {sample_id} weight updated to {sample_weight} kg from Solid analysis"
+                                    )
+                        except (ValueError, TypeError) as e:
+                            current_app.logger.warning(f"Could not calculate sample weight from Solid: {e}")
+
+                    # ============================================================
+                    # ✅ АНХНЫ ХАДГАЛСАН МЭДЭЭЛЭЛ ОЛОХ (Аудит хамгаалалт)
+                    # ============================================================
+                    # Энэ дээж + analysis_code-ийн хамгийн анхны бүртгэлийг хайх
+                    first_log = (
+                        AnalysisResultLog.query
+                        .filter_by(sample_id=sample_id, analysis_code=analysis_code)
+                        .order_by(AnalysisResultLog.id.asc())
+                        .first()
+                    )
+
+                    # Анхны химич, анхны цаг
+                    if first_log:
+                        original_user_id = first_log.original_user_id or first_log.user_id
+                        original_timestamp = first_log.original_timestamp or first_log.timestamp
+                    else:
+                        # Энэ бол хамгийн анхны бүртгэл
+                        original_user_id = current_user.id
+                        original_timestamp = now_local()
+
                     # Audit Log
+                    current_ts = now_local()
                     audit = AnalysisResultLog(
-                        timestamp=now_local(),
+                        timestamp=current_ts,
                         user_id=current_user.id,
                         sample_id=sample_id,
                         analysis_result_id=target_res_id,
@@ -371,12 +516,20 @@ def register_routes(bp):
                         final_result_snapshot=final_snapshot,
                         reason=reason,
                         error_reason=auto_error_reason,
+                        # ✅ ШИНЭ: Анхны мэдээлэл (хэзээ ч өөрчлөгдөхгүй)
+                        original_user_id=original_user_id,
+                        original_timestamp=original_timestamp,
+                        # ✅ ШИНЭ: Дээжний код snapshot (sample устсан ч харагдана)
+                        sample_code_snapshot=sample.sample_code,
                     )
+                    # ✅ ШИНЭ: Hash тооцоолох (өөрчлөгдсөн эсэхийг шалгах)
+                    audit.data_hash = audit.compute_hash()
                     db.session.add(audit)
 
                     saved_count += 1
                     results_for_response.append({
                         "sample_id": sample_id,
+                        "analysis_code": analysis_code,  # ✅ X, Y worksheet removal-д хэрэгтэй
                         "status": new_status,
                         "raw_data": raw_norm,
                         "success": True,
@@ -391,6 +544,15 @@ def register_routes(bp):
         # Commit All
         try:
             db.session.commit()
+
+            # ✅ Prometheus metrics: Шинжилгээ хадгалсныг track хийх
+            for res in results_for_response:
+                if res.get("success"):
+                    track_analysis(
+                        analysis_type=res.get("analysis_code", "unknown"),
+                        status=res.get("status", "completed")
+                    )
+
         except Exception as e:
             db.session.rollback()
             return jsonify({"message": "Database Commit Error", "error": str(e)}), 500
@@ -483,7 +645,79 @@ def register_routes(bp):
         return redirect(url_for("main.index"))
 
     # -----------------------------------------------------------
-    # 4) Notification Check
+    # 4) Шинжилгээ захиалах (Нэгтгэлээс)
+    # -----------------------------------------------------------
+    @bp.route("/request_analysis", methods=["POST"])
+    @login_required
+    def request_analysis():
+        """
+        Нэгтгэлээс хоосон нүдэн дээр дарж шинжилгээ захиалах.
+        Дээжний analyses_to_perform талбарт шинэ код нэмнэ.
+        """
+        if getattr(current_user, "role", None) not in ("ahlah", "admin"):
+            return jsonify({"message": "Зөвхөн ахлах болон админ захиалж болно"}), 403
+
+        data = request.get_json(silent=True) or {}
+        sample_id = data.get("sample_id")
+        analysis_code = data.get("analysis_code")
+
+        if not sample_id or not analysis_code:
+            return jsonify({"message": "sample_id болон analysis_code шаардлагатай"}), 400
+
+        try:
+            sample = Sample.query.get(sample_id)
+            if not sample:
+                return jsonify({"message": f"Дээж #{sample_id} олдсонгүй"}), 404
+
+            # Одоо байгаа analyses_to_perform-г авах
+            current_analyses = sample.analyses_to_perform or []
+            if isinstance(current_analyses, str):
+                try:
+                    current_analyses = json.loads(current_analyses)
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    current_analyses = []
+
+            # Normalize code
+            base_code = norm_code(analysis_code)
+            if not base_code:
+                base_code = analysis_code
+
+            # Аль хэдийн байгаа эсэхийг шалгах
+            existing_codes = [norm_code(c) for c in current_analyses]
+            if base_code in existing_codes:
+                return jsonify({"message": f"'{base_code}' шинжилгээ аль хэдийн захиалагдсан байна"}), 400
+
+            # Шинэ код нэмэх
+            current_analyses.append(base_code)
+            sample.analyses_to_perform = json.dumps(current_analyses)
+            sample.updated_at = now_local()
+
+            # Audit log
+            audit = AnalysisResultLog(
+                timestamp=now_local(),
+                user_id=current_user.id,
+                sample_id=sample_id,
+                analysis_code=base_code,
+                action="ANALYSIS_REQUESTED",
+                reason=f"Нэгтгэлээс '{base_code}' шинжилгээ захиалсан",
+                sample_code_snapshot=sample.sample_code,
+            )
+            db.session.add(audit)
+            db.session.commit()
+
+            return jsonify({
+                "message": f"'{base_code}' шинжилгээ амжилттай захиалагдлаа",
+                "sample_id": sample_id,
+                "analysis_code": base_code
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Request analysis error: {e}")
+            return jsonify({"message": f"Алдаа: {str(e)}"}), 500
+
+    # -----------------------------------------------------------
+    # 5) Notification Check
     # -----------------------------------------------------------
     @bp.route("/check_ready_samples", methods=["GET"])
     @login_required

@@ -2,9 +2,13 @@
 import os, secrets
 from datetime import timezone, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from dotenv import load_dotenv
 
 # Төслийн үндсэн зам (root folder)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# .env файлаас environment variables ачаалах
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
 os.makedirs(INSTANCE_DIR, exist_ok=True)
 
@@ -31,7 +35,8 @@ def _secret_key():
     # 2) instance/secret_key файлд хадгалж тогтмол болгоно
     key_path = os.path.join(INSTANCE_DIR, "secret_key")
     if os.path.exists(key_path):
-        return open(key_path, "r", encoding="utf-8").read().strip()
+        with open(key_path, "r", encoding="utf-8") as f:
+            return f.read().strip()
     key = secrets.token_urlsafe(48)
     with open(key_path, "w", encoding="utf-8") as f:
         f.write(key)
@@ -52,14 +57,19 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # ✅ САЙЖРУУЛСАН: Cookie аюулгүй байдал (Production-д автоматаар идэвхжинэ)
+    # ✅ САЙЖРУУЛСАН: Cookie аюулгүй байдал
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = ENV == "production"  # Production-д HTTPS шаардлагатай
+    # Production-д HTTPS ашиглах тул True, development-д False
+    SESSION_COOKIE_SECURE = ENV != "development"
     SESSION_COOKIE_HTTPONLY = True  # JavaScript-ээс хандахгүй байх
 
-    # CSRF хамгаалалт
-    WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = None  # Токен хугацаа хязгааргүй
+    # ✅ CSRF хамгаалалт - ИДЭВХЖҮҮЛСЭН
+    WTF_CSRF_ENABLED = True  # Production-д заавал идэвхтэй байх
+    WTF_CSRF_TIME_LIMIT = 3600  # Токен 1 цагийн дараа дуусна (секундээр)
+    WTF_CSRF_SSL_STRICT = ENV != "development"  # Production-д HTTPS шаардах
+
+    # Session тохиргоо
+    SECRET_KEY = _secret_key()  # Давхар тодорхойлох
 
     # ✅ ШИНЭ: Файл хадгалах зам (Гэрчилгээ хавсаргахад)
     # BASE_DIR ашиглан замыг бүтэн зааж өгнө.
@@ -74,14 +84,19 @@ class Config:
     MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.office365.com')
     MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
     MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
-    
-    # Таны ажлын имэйл
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'gantulga.u@mmc.mn')
-    
-    # Энд нууц үгээ бичнэ (Эсвэл IT-аас авсан App Password)
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', 'mfrdlxfzvsfskvgb') 
-    
-    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'gantulga.u@mmc.mn')
+
+    # ✅ ЗАСВАРЛАСАН: Имэйл тохиргоо - зөвхөн .env файлаас авна
+    # .env файлд: MAIL_USERNAME=your@email.com, MAIL_PASSWORD=your_password
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')  # ⚠️ Hardcoded нууц үг УСТГАСАН
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', '')
+
+    # ========================================================
+    # 🔒 WEBSOCKET CORS CONFIGURATION
+    # ========================================================
+    # Production-д зөвхөн өөрийн домэйнээс холболт зөвшөөрнө
+    # Development-д бүх origin-ээс зөвшөөрнө (ngrok, localhost гэх мэт)
+    SOCKETIO_CORS_ORIGINS = os.getenv('SOCKETIO_CORS_ORIGINS', '*' if ENV == 'development' else None)
 
     # ========================================================
     # 🔒 SECURITY LOGGING CONFIGURATION

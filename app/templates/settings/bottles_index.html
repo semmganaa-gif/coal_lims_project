@@ -6,9 +6,14 @@
     <h3 class="mb-0">Бортого тогтмол — жагсаалт</h3>
 
     {% if can_create %}
-      <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
-        <i class="bi bi-plus-circle"></i> Шинэ тогтмол оруулах
-      </a>
+      <div class="btn-group">
+        <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
+          <i class="bi bi-plus-circle"></i> Шинэ тогтмол
+        </a>
+        <a class="btn btn-outline-primary" href="{{ url_for('settings.bottles_constants_bulk') }}">
+          <i class="bi bi-grid-3x3"></i> Bulk оруулалт
+        </a>
+      </div>
     {% endif %}
   </div>
 

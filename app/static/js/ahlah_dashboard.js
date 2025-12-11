@@ -2,30 +2,30 @@
  * 1) DoD,D?D,-?.O_??D???D3?, renderer (raw_data) - D`OrD?D-D? D?D?D'D~D>D`D?D?
  * =============================== */
 const DEFAULT_PARALLEL_SCHEMA = {
-  title: "Parallels snapshot",
+  title: "Параллел хэмжилт",
   columns: [
-    { key: "num", label: "?" },
+    { key: "label", label: "#" },
     { key: "m1", label: "m1", format: "float", precision: 4 },
     { key: "m2", label: "m2", format: "float", precision: 4 },
     { key: "m3", label: "m3", format: "float", precision: 4 },
-    { key: "result", label: "Result", format: "float", precision: 3 }
+    { key: "result", label: "Үр дүн", format: "float", precision: 3 }
   ]
 };
 
 const SUMMARY_FIELDS = [
-  { key: "avg", label: "Average", format: "float", precision: 3 },
-  { key: "diff", label: "Diff / T", format: "float", precision: 3 },
-  { key: "result", label: "Result", format: "float", precision: 3 },
-  { key: "final_result", label: "Final Result", format: "float", precision: 3 },
-  { key: "A", label: "A (pan + sample)", format: "float", precision: 3 },
-  { key: "B", label: "B (pan only)", format: "float", precision: 3 },
-  { key: "C", label: "C (residue)", format: "float", precision: 3 },
-  { key: "weight", label: "Weight", format: "float", precision: 3 },
-  { key: "limit_used", label: "Limit used", format: "float", precision: 3 },
-  { key: "limit_mode", label: "Limit mode" },
-  { key: "t_exceeded", label: "T exceeded", format: "boolean" },
-  { key: "retest_mode", label: "Retest mode" },
-  { key: "is_low_avg", label: "Low Result?", format: "boolean" }
+  { key: "avg", label: "Дундаж", format: "float", precision: 3 },
+  { key: "diff", label: "Тохирц (T)", format: "float", precision: 3 },
+  { key: "result", label: "Үр дүн", format: "float", precision: 3 },
+  { key: "final_result", label: "Эцсийн үр дүн", format: "float", precision: 3 },
+  { key: "A", label: "A (тавиур+дээж)", format: "float", precision: 3 },
+  { key: "B", label: "B (тавиур)", format: "float", precision: 3 },
+  { key: "C", label: "C (үлдэгдэл)", format: "float", precision: 3 },
+  { key: "weight", label: "Жин", format: "float", precision: 3 },
+  { key: "limit_used", label: "Хязгаар", format: "float", precision: 3 },
+  { key: "limit_mode", label: "Хязгаарын горим" },
+  { key: "t_exceeded", label: "T хэтэрсэн", format: "boolean" },
+  { key: "retest_mode", label: "Дахин шинжлэх горим" },
+  { key: "is_low_avg", label: "Бага үр дүн?", format: "boolean" }
 ];
 
 function escapeHtml(value) {
@@ -72,16 +72,53 @@ function formatValue(value, cfg) {
 }
 
 function deriveParallels(raw) {
-  if (raw && Array.isArray(raw.parallels) && raw.parallels.length) {
+  if (!raw || typeof raw !== 'object') return [];
+
+  // 1. Хэрэв parallels массив байвал түүнийг ашиглах
+  if (Array.isArray(raw.parallels) && raw.parallels.length) {
     return raw.parallels;
   }
+
   const rows = [];
+
+  // 2. p1, p2, p3 бүтэц (хамгийн түгээмэл)
   ["p1", "p2", "p3"].forEach((key) => {
-    const val = raw && raw[key];
+    const val = raw[key];
     if (val && typeof val === "object" && Object.keys(val).length) {
-      rows.push({ label: key, ...val });
+      // num талбарыг label болгож хувиргах
+      const row = { label: key.toUpperCase(), ...val };
+      if (val.num) {
+        row.label = val.num;
+      }
+      rows.push(row);
     }
   });
+
+  // 3. Хэрэв p1/p2 байхгүй бол шууд raw дотроос хайх
+  if (rows.length === 0) {
+    // m1, m2, m3, result талбар байвал нэг мөр болгоно
+    if (raw.m1 !== undefined || raw.m2 !== undefined || raw.result !== undefined) {
+      rows.push({ label: '1', ...raw });
+    }
+  }
+
+  // 4. FM (Free Moisture) шинжилгээний талбарууд
+  if (rows.length === 0 && (raw.before_g !== undefined || raw.after_g !== undefined || raw.loss_g !== undefined)) {
+    rows.push({
+      label: 'FM',
+      m1: raw.tray_g,
+      m2: raw.before_g,
+      m3: raw.after_g,
+      result: raw.loss_g || raw.fm_pct
+    });
+  }
+
+  // 5. CV шинжилгээ - q1, q2 талбарууд
+  if (rows.length === 0 && (raw.q1 !== undefined || raw.q2 !== undefined)) {
+    if (raw.q1 !== undefined) rows.push({ label: 'Q1', result: raw.q1 });
+    if (raw.q2 !== undefined) rows.push({ label: 'Q2', result: raw.q2 });
+  }
+
   return rows;
 }
 
@@ -94,21 +131,29 @@ function renderParallelTable(parallels, schema) {
       const unit = col.unit
         ? `<small class="text-muted ms-1">${escapeHtml(col.unit)}</small>`
         : "";
-      return `<th>${label}${unit}</th>`;
+      return `<th style="padding:6px 10px; font-size:0.75rem; background:#f1f5f9; white-space:nowrap;">${label}${unit}</th>`;
     })
     .join("");
   const body = parallels
-    .map((row) => {
+    .map((row, idx) => {
+      const rowBg = idx % 2 === 0 ? '#fff' : '#f8fafc';
       const cells = columns
-        .map((col) => `<td>${formatValue(row && row[col.key], col)}</td>`)
+        .map((col) => {
+          const val = formatValue(row && row[col.key], col);
+          const isNum = col.key === 'label' || col.key === 'num';
+          const style = isNum
+            ? 'font-weight:600; color:#6366f1;'
+            : 'font-family:Consolas,monospace;';
+          return `<td style="padding:5px 8px; ${style}">${val}</td>`;
+        })
         .join("");
-      return `<tr>${cells}</tr>`;
+      return `<tr style="background:${rowBg};">${cells}</tr>`;
     })
     .join("");
   return `
-    <div class="table-responsive mb-1">
-      <table class="table table-sm table-bordered align-middle text-center mb-0">
-        <thead class="table-light"><tr>${header}</tr></thead>
+    <div class="table-responsive mb-2" style="border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;">
+      <table class="table table-sm align-middle text-center mb-0" style="margin:0;">
+        <thead><tr>${header}</tr></thead>
         <tbody>${body}</tbody>
       </table>
     </div>`;
@@ -119,27 +164,35 @@ function buildSummarySection(raw, rowCtx) {
   const segments = [];
   const seen = new Set();
 
-  function append(label, value, cfg) {
+  function append(label, value, cfg, highlight) {
     if (value === undefined || value === null || value === "") return;
     const key = `${label}-${cfg?.key || label}`;
     if (seen.has(key)) return;
     seen.add(key);
+    const valueClass = highlight ? 'fw-bold text-success' : 'fw-semibold';
     segments.push(
-      `<div class="d-flex justify-content-between">
+      `<div class="d-flex justify-content-between py-1">
         <span class="text-muted">${escapeHtml(label)}</span>
-        <span class="fw-semibold">${formatValue(value, cfg)}</span>
+        <span class="${valueClass}">${formatValue(value, cfg)}</span>
       </div>`
     );
   }
 
+  // Дундаж ба тохирц (хамгийн чухал)
+  append("Дундаж", raw.avg, { format: "float", precision: 3 }, true);
+  append("Тохирц (T)", raw.diff, { format: "float", precision: 3 });
+
+  // Бусад SUMMARY_FIELDS (avg, diff-ээс бусад)
   SUMMARY_FIELDS.forEach((cfg) => {
-    append(cfg.label, raw[cfg.key], cfg);
+    if (cfg.key !== 'avg' && cfg.key !== 'diff') {
+      append(cfg.label, raw[cfg.key], cfg);
+    }
   });
 
+  // Row context-оос авах fallback утгууд
   const fallbackFields = [
-    { key: "final_value", label: "Final Value", format: "float", precision: 3 },
-    { key: "t_value", label: "Diff / T", format: "float", precision: 3 },
-    { key: "status", label: "Status" },
+    { key: "final_value", label: "Эцсийн үр дүн", format: "float", precision: 3 },
+    { key: "t_value", label: "Тохирц (T)", format: "float", precision: 3 },
   ];
 
   fallbackFields.forEach((cfg) => {
@@ -177,29 +230,68 @@ function ReviewDataRenderer(params) {
   const summaryBlock = buildSummarySection(raw, rowCtx);
   const hasSummary = Boolean(summaryBlock);
 
-  let html = '<div class="review-data-cell" style="font-size:0.85em;">';
+  // Debug - console дээр харуулах
+  console.log('ReviewDataRenderer:', code, 'raw_data:', JSON.stringify(raw), 'parallels:', parallels.length);
 
-  const hasRaw = raw && Object.keys(raw).length;
-  const showRawFallback = !parallels.length && hasRaw && !hasSummary;
+  // raw object-ын бодит утгууд (p1, p2, parallels гэх мэт - _schema-аас бусад)
+  const meaningfulKeys = Object.keys(raw).filter(k => k !== '_schema' && raw[k] !== null && raw[k] !== undefined && raw[k] !== '');
+  const hasRaw = meaningfulKeys.length > 0;
 
+  // DOM element үүсгэх (AG Grid шаардлага)
+  const container = document.createElement('div');
+  container.className = 'review-data-cell';
+  container.style.cssText = 'font-size:0.85em; padding:8px 0;';
+
+  // Parallel хүснэгт харуулах
   if (parallels.length) {
-    html += `<div class="text-muted small fw-semibold mb-1">${escapeHtml(schema.title)}</div>`;
-    html += renderParallelTable(parallels, schema);
-  } else if (showRawFallback) {
-    html += `<pre class="raw-json-box small mb-0" style="white-space:pre-wrap;">${escapeHtml(JSON.stringify(raw, null, 2))}</pre>`;
-  } else {
-    html += '<span class="text-muted small">Raw data not available</span>';
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'text-muted small fw-semibold mb-1';
+    titleDiv.textContent = schema.title;
+    container.appendChild(titleDiv);
+
+    const tableHtml = renderParallelTable(parallels, schema);
+    const tableWrapper = document.createElement('div');
+    tableWrapper.innerHTML = tableHtml;
+    container.appendChild(tableWrapper);
   }
 
-  if (hasSummary && !parallels.length) {
-    html += summaryBlock;
+  // Summary section - avg, diff, result гэх мэт
+  if (hasSummary) {
+    const summaryWrapper = document.createElement('div');
+    summaryWrapper.innerHTML = summaryBlock;
+    container.appendChild(summaryWrapper);
   }
 
-  if (!showRawFallback) {
-    html += buildRawJsonSection(raw);
+  // Хэрэв parallel ч, summary ч байхгүй бол raw JSON харуулах
+  if (!parallels.length && !hasSummary && hasRaw) {
+    const displayRaw = {};
+    meaningfulKeys.forEach(k => { displayRaw[k] = raw[k]; });
+    const pre = document.createElement('pre');
+    pre.className = 'raw-json-box small mb-0';
+    pre.style.cssText = 'white-space:pre-wrap; background:#f8fafc; padding:8px; border-radius:6px; max-height:120px; overflow:auto;';
+    pre.textContent = JSON.stringify(displayRaw, null, 2);
+    container.appendChild(pre);
   }
-  html += "</div>";
-  return html;
+
+  // Raw data байвал "Raw snapshot" details нэмэх
+  if ((parallels.length || hasSummary) && hasRaw) {
+    const detailsHtml = buildRawJsonSection(raw);
+    if (detailsHtml) {
+      const detailsWrapper = document.createElement('div');
+      detailsWrapper.innerHTML = detailsHtml;
+      container.appendChild(detailsWrapper);
+    }
+  }
+
+  // Хоосон байвал
+  if (!parallels.length && !hasSummary && !hasRaw) {
+    const emptySpan = document.createElement('span');
+    emptySpan.className = 'text-muted small';
+    emptySpan.textContent = 'Raw data байхгүй';
+    container.appendChild(emptySpan);
+  }
+
+  return container;
 }
 
 function updateDashboardMetrics(rows) {
@@ -266,6 +358,7 @@ function ActionsRenderer(params) {
  * 3) AG Grid options
  * =============================== */
 const gridOptions = {
+  theme: "legacy",  // AG Grid v34+ - use legacy CSS theme
   columnDefs: [
     {
       headerName: "Дээж / Шинжилгээ",
@@ -307,14 +400,18 @@ const gridOptions = {
       filter: true,
       floatingFilter: true,
       minWidth: 260,
-      autoHeight: true
+      autoHeight: true,
+      wrapText: true,
+      cellStyle: { 'white-space': 'normal' }
     },
     {
       headerName: "Тооцооны өгөгдөл (Raw Data)",
       cellRenderer: ReviewDataRenderer,
       autoHeight: true,
+      wrapText: true,
       minWidth: 450,
-      flex: 2
+      flex: 2,
+      cellStyle: { 'white-space': 'normal', 'line-height': '1.4' }
     },
     {
       headerName: "T",
@@ -351,11 +448,24 @@ const gridOptions = {
   rowData: [],
   rowHeight: null,
   suppressRowTransform: true,
+  getRowHeight: function(params) {
+    // AutoHeight - let grid calculate based on content
+    return null;
+  },
   defaultColDef: {
     resizable: true,
     sortable: true,
     filter: true,
-    suppressHeaderMenuButton: true
+    suppressHeaderMenuButton: true,
+    wrapText: true,
+    autoHeight: true
+  },
+  // Ensure grid resizes properly
+  onGridReady: function(params) {
+    params.api.sizeColumnsToFit();
+  },
+  onFirstDataRendered: function(params) {
+    params.api.sizeColumnsToFit();
   }
 };
 
@@ -481,4 +591,134 @@ function loadAhlahKpiSummary() {
 // Аль хэдийн өөр DOMContentLoaded listener байж болно – давхар байхад асуудалгүй.
 document.addEventListener('DOMContentLoaded', function () {
   loadAhlahKpiSummary();
+  loadAhlahStats();
 });
+
+/* ===============================
+ * Химич болон Шинжилгээний статистик ачаалах
+ * =============================== */
+function loadAhlahStats() {
+  if (!window.AHLAH_STATS_URL) return;
+
+  fetch(window.AHLAH_STATS_URL, {
+    headers: { 'Accept': 'application/json' }
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data) return;
+
+      // Metric cards шинэчлэх (summary)
+      if (data.summary) {
+        const total = document.getElementById('metric-total');
+        const approved = document.getElementById('metric-approved');
+        const pending = document.getElementById('metric-pending');
+        const rejected = document.getElementById('metric-rejected');
+
+        if (total) total.textContent = data.summary.total || 0;
+        if (approved) approved.textContent = data.summary.approved || 0;
+        if (pending) pending.textContent = data.summary.pending || 0;
+        if (rejected) rejected.textContent = data.summary.rejected || 0;
+      }
+
+      // Химичийн статистик
+      renderChemistStats(data.chemists || []);
+
+      // Шинжилгээний төрөл статистик
+      renderAnalysisStats(data.analysis_types || []);
+
+      // Шинэчлэгдсэн цаг
+      const refreshEl = document.getElementById('metrics-refresh');
+      if (refreshEl) {
+        const now = new Date();
+        refreshEl.textContent = 'Шинэчлэгдсэн: ' + now.toLocaleString('mn-MN', { hour12: false });
+      }
+    })
+    .catch(function(err) {
+      console.error('❌ Ahlah stats load failed:', err);
+    });
+}
+
+function renderChemistStats(chemists) {
+  const container = document.getElementById('chemist-stats-list');
+  const badge = document.getElementById('chemist-total-badge');
+
+  if (!container) return;
+
+  if (badge) {
+    badge.textContent = chemists.length + ' химич';
+  }
+
+  if (chemists.length === 0) {
+    container.innerHTML = `
+      <div class="stats-empty">
+        <i class="bi bi-inbox"></i>
+        Өнөөдөр шинжилгээ хийгээгүй
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  chemists.forEach(function(c, idx) {
+    // Нэрний эхний 2 үсгийг avatar болгох
+    const initials = (c.username || 'XX').substring(0, 2).toUpperCase();
+
+    html += `
+      <div class="stats-item">
+        <div class="stats-item-name">
+          <div class="stats-item-avatar">${initials}</div>
+          <span>${escapeHtml(c.username)}</span>
+        </div>
+        <div class="stats-item-counts">
+          <span class="stats-count total" title="Нийт">${c.total}</span>
+          <span class="stats-count approved" title="Баталсан">${c.approved}</span>
+          <span class="stats-count pending" title="Хүлээгдэж буй">${c.pending}</span>
+          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${c.rejected}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderAnalysisStats(analysisTypes) {
+  const container = document.getElementById('analysis-stats-list');
+  const badge = document.getElementById('analysis-total-badge');
+
+  if (!container) return;
+
+  if (badge) {
+    badge.textContent = analysisTypes.length + ' төрөл';
+  }
+
+  if (analysisTypes.length === 0) {
+    container.innerHTML = `
+      <div class="stats-empty">
+        <i class="bi bi-inbox"></i>
+        Өнөөдөр шинжилгээ алга
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  analysisTypes.forEach(function(a, idx) {
+    html += `
+      <div class="stats-item">
+        <div class="stats-item-name">
+          <div class="stats-item-avatar">${escapeHtml(a.code.substring(0, 2))}</div>
+          <span>${escapeHtml(a.name)} <small class="text-muted">(${escapeHtml(a.code)})</small></span>
+        </div>
+        <div class="stats-item-counts">
+          <span class="stats-count total" title="Нийт">${a.total}</span>
+          <span class="stats-count approved" title="Баталсан">${a.approved}</span>
+          <span class="stats-count pending" title="Хүлээгдэж буй">${a.pending}</span>
+          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${a.rejected}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}

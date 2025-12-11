@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-bar me-2"></i>{{ title }}</h2>
+        <div>
+            {% if current_user.role in ['senior', 'manager', 'admin'] %}
+            <div class="dropdown d-inline-block me-2">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-1"></i> Excel Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('api.export_samples') }}?limit=1000">
+                        <i class="fas fa-vial me-2"></i>Дээж (Сүүлийн 1000)
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('api.export_analysis') }}?limit=1000">
+                        <i class="fas fa-flask me-2"></i>Шинжилгээ (Сүүлийн 1000)
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="showExportModal()">
+                        <i class="fas fa-filter me-2"></i>Шүүлтүүртэй экспорт...
+                    </a></li>
+                </ul>
+            </div>
+            {% endif %}
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Буцах
+            </a>
+        </div>
+    </div>
+
+    {% include "components/dashboard_charts.html" %}
+</div>
+
+{% if current_user.role in ['senior', 'manager', 'admin'] %}
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-download me-2"></i>Excel Export</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Төрөл</label>
+                    <select id="exportType" class="form-select">
+                        <option value="samples">Дээж</option>
+                        <option value="analysis">Шинжилгээ</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Эхлэх огноо</label>
+                        <input type="date" id="exportStartDate" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Дуусах огноо</label>
+                        <input type="date" id="exportEndDate" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Хязгаар</label>
+                    <select id="exportLimit" class="form-select">
+                        <option value="500">500</option>
+                        <option value="1000" selected>1,000</option>
+                        <option value="2000">2,000</option>
+                        <option value="5000">5,000</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+                <button type="button" class="btn btn-success" onclick="doExport()">
+                    <i class="fas fa-download me-1"></i> Татах
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showExportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
+}
+
+function doExport() {
+    const type = document.getElementById('exportType').value;
+    const startDate = document.getElementById('exportStartDate').value;
+    const endDate = document.getElementById('exportEndDate').value;
+    const limit = document.getElementById('exportLimit').value;
+
+    let url = `/api/export/${type}?limit=${limit}`;
+    if (startDate) url += `&start_date=${startDate}`;
+    if (endDate) url += `&end_date=${endDate}`;
+
+    window.location.href = url;
+    bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+}
+</script>
+{% endif %}
+{% endblock %}

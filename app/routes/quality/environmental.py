@@ -1,10 +1,11 @@
 # app/routes/quality/environmental.py
 """Environmental Monitoring - ISO 17025 Clause 6.3.3"""
-from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import EnvironmentalLog
-from datetime import datetime
+from app.utils.quality_helpers import require_quality_edit
+
 
 def register_routes(bp):
     @bp.route("/environmental")
@@ -15,6 +16,7 @@ def register_routes(bp):
 
     @bp.route("/environmental/add", methods=["POST"])
     @login_required
+    @require_quality_edit('quality.environmental_list')
     def environmental_add():
         temp = float(request.form['temperature'])
         humidity = float(request.form['humidity'])

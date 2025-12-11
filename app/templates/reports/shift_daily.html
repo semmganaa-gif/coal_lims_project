@@ -1,0 +1,387 @@
+{# templates/reports/shift_daily.html #}
+{% extends "base.html" %}
+{% block title %}Ээлжийн гүйцэтгэл (Daily){% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+
+<div class="report-page">
+  <!-- Header -->
+  <div class="report-header">
+    <div class="report-header-content">
+      <h4><i class="bi bi-calendar-check"></i> Ээлжийн гүйцэтгэл (Daily)</h4>
+      <p class="subtitle">Өдөр тутмын шинжилгээний урсгал, гүйцэтгэл болон алдааны статистикийг ээлжээр шүүж харах</p>
+    </div>
+    <div class="report-header-actions">
+      <a href="{{ url_for('reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-bar-chart-line"></i> Monthly Plan
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="report-filter-card">
+    <div class="card-header">
+      <strong>Шүүлтүүр</strong>
+    </div>
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-2">
+        {{ form.start_date.label(class="form-label") }}
+        {{ form.start_date(class="form-control form-control-sm") }}
+      </div>
+      <div class="col-md-2">
+        {{ form.end_date.label(class="form-label") }}
+        {{ form.end_date(class="form-control form-control-sm") }}
+      </div>
+      <div class="col-md-2">
+        {{ form.time_base.label(class="form-label") }}
+        {{ form.time_base(class="form-select form-select-sm") }}
+      </div>
+      <div class="col-md-2">
+        {{ form.kpi_target.label(class="form-label") }}
+        {{ form.kpi_target(class="form-select form-select-sm") }}
+      </div>
+      <div class="col-md-2">
+        {{ form.shift_team.label(class="form-label") }}
+        {{ form.shift_team(class="form-select form-select-sm") }}
+      </div>
+      <div class="col-md-2">
+        {{ form.shift_type.label(class="form-label") }}
+        {{ form.shift_type(class="form-select form-select-sm") }}
+      </div>
+
+      <div class="col-md-2 mt-2">
+        {{ form.unit.label(class="form-label") }}
+        {{ form.unit(class="form-select form-select-sm") }}
+      </div>
+      <div class="col-md-2 mt-2">
+        {{ form.sample_type.label(class="form-label") }}
+        {{ form.sample_type(class="form-select form-select-sm") }}
+      </div>
+      <div class="col-md-2 mt-2">
+        {{ form.analysis_code.label(class="form-label") }}
+        {{ form.analysis_code(class="form-control form-control-sm", placeholder="Код") }}
+      </div>
+      <div class="col-md-2 mt-2">
+        {{ form.user_name.label(class="form-label") }}
+        {{ form.user_name(class="form-control form-control-sm", placeholder="Нэр") }}
+      </div>
+      <div class="col-md-2 mt-2 d-grid align-self-end">
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-funnel-fill"></i> Шүүх
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="report-kpi-row">
+    <div class="report-kpi-card total">
+      <div class="kpi-label">Нийт тоо ({{ form.kpi_target.data }})</div>
+      <div class="kpi-value">{{ total_count }}</div>
+    </div>
+    {% if error_stats %}
+    <div class="report-kpi-card error">
+      <div class="kpi-label">Нийт алдааны тохиолдол</div>
+      <div class="kpi-value">{{ error_stats.total or 0 }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="row g-3">
+    <!-- Left: Shift Table -->
+    <div class="col-md-6">
+      <div class="report-card h-100">
+        <div class="card-header">
+          <strong><i class="bi bi-clipboard-data"></i> Шинжилгээний гүйцэтгэл</strong>
+        </div>
+        <div class="card-body p-0">
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Ээлж</th>
+                  <th>Нийт</th>
+                  <th>Хувь</th>
+                  <th><i class="bi bi-sun-fill text-warning"></i> Өдөр</th>
+                  <th><i class="bi bi-moon-stars-fill text-primary"></i> Шөнө</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if rows %}
+                  {% set grand_total = total_count or 1 %}
+                  {% set teams = {} %}
+                  {% for row in rows %}
+                    {% if row.team not in teams %}
+                      {% set _ = teams.update({row.team: {'day': 0, 'night': 0}}) %}
+                    {% endif %}
+                    {% set _ = teams[row.team].update({row.shift_type: row.count}) %}
+                  {% endfor %}
+                  {% for team in ['A', 'B', 'C', 'D'] %}
+                    {% if team in teams %}
+                      {% set day_cnt = teams[team].get('day', 0) %}
+                      {% set night_cnt = teams[team].get('night', 0) %}
+                      {% set team_total = day_cnt + night_cnt %}
+                      {% set team_pct = (team_total / grand_total * 100) if grand_total else 0 %}
+                      {% set day_pct = (day_cnt / team_total * 100) if team_total else 0 %}
+                      {% set night_pct = (night_cnt / team_total * 100) if team_total else 0 %}
+                      <tr>
+                        <td class="text-center fw-bold fs-5">{{ team }}</td>
+                        <td class="fw-bold">{{ team_total }}</td>
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px; min-width: 50px;">
+                              <div class="progress-bar bg-success" style="width: {{ team_pct }}%"></div>
+                            </div>
+                            <span class="small">{{ "%.0f"|format(team_pct) }}%</span>
+                          </div>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold">{{ day_cnt }}</span>
+                          <small class="text-warning">({{ "%.0f"|format(day_pct) }}%)</small>
+                        </td>
+                        <td class="text-center">
+                          <span class="fw-bold">{{ night_cnt }}</span>
+                          <small class="text-primary">({{ "%.0f"|format(night_pct) }}%)</small>
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                      <i class="bi bi-inbox"></i> Мэдээлэл алга
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+              <tfoot>
+                <tr class="sum-row">
+                  <td class="text-left fw-bold">Нийт</td>
+                  <td class="fw-bold">{{ total_count }}</td>
+                  <td class="fw-bold">100%</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Дээжний гүйцэтгэл -->
+          {% if shift_summary %}
+          <div class="card-body border-top pt-3">
+            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Дээжний гүйцэтгэл</h6>
+            <table class="report-table table-sm">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="align-middle">Ээлж</th>
+                  <th colspan="3" class="text-center border-start"><i class="bi bi-inbox-fill text-success"></i> Хүлээн авсан</th>
+                  <th colspan="3" class="text-center border-start"><i class="bi bi-check2-circle text-info"></i> Бэлтгэсэн</th>
+                </tr>
+                <tr class="small">
+                  <th class="text-center border-start">Нийт</th>
+                  <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
+                  <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
+                  <th class="text-center border-start">Нийт</th>
+                  <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
+                  <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set recv_total = shift_summary|sum(attribute='received_total') or 1 %}
+                {% set prep_total = shift_summary|sum(attribute='prepared_total') or 1 %}
+                {% for s in shift_summary %}
+                  {% set recv_pct = (s.received_total / recv_total * 100) if recv_total else 0 %}
+                  {% set prep_pct = (s.prepared_total / prep_total * 100) if prep_total else 0 %}
+                  <tr>
+                    <td class="text-center fw-bold fs-5">{{ s.team }}</td>
+                    <td class="text-center border-start">
+                      <span class="fw-bold">{{ s.received_total }}</span>
+                      <small class="text-success">({{ "%.0f"|format(recv_pct) }}%)</small>
+                    </td>
+                    <td class="text-center">{{ s.received_day }}</td>
+                    <td class="text-center">{{ s.received_night }}</td>
+                    <td class="text-center border-start">
+                      <span class="fw-bold">{{ s.prepared_total }}</span>
+                      <small class="text-info">({{ "%.0f"|format(prep_pct) }}%)</small>
+                    </td>
+                    <td class="text-center">{{ s.prepared_day }}</td>
+                    <td class="text-center">{{ s.prepared_night }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="sum-row">
+                  <td class="fw-bold">Нийт</td>
+                  <td class="text-center border-start fw-bold">{{ recv_total }}</td>
+                  <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_day') }}</td>
+                  <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_night') }}</td>
+                  <td class="text-center border-start fw-bold">{{ prep_total }}</td>
+                  <td class="text-center fw-bold">{{ shift_summary|sum(attribute='prepared_day') }}</td>
+                  <td class="text-center fw-bold">{{ shift_summary|sum(attribute='prepared_night') }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Error Stats -->
+    <div class="col-md-6">
+      <div class="report-card h-100">
+        <div class="card-header">
+          <strong><i class="bi bi-exclamation-triangle"></i> Алдааны шалтгаан</strong>
+          <span class="badge bg-danger">{{ error_stats.total if error_stats else 0 }}</span>
+        </div>
+        <div class="card-body">
+          <!-- Chart -->
+          <div class="report-chart-wrap" style="height: 220px;">
+            {% if error_stats and error_stats.total > 0 %}
+              <canvas id="errorReasonChart"></canvas>
+            {% else %}
+              <div class="report-empty" style="padding: 2rem;">
+                <i class="bi bi-check-circle"></i>
+                <p class="mb-0">Алдааны бүртгэл байхгүй</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Table -->
+          <div class="report-table-wrap" style="max-height: 240px;">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th class="text-left">Шалтгаан</th>
+                  <th>Тоо</th>
+                  <th>Хувь</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if error_stats and error_reason_labels %}
+                  {% set total = error_stats.total or 1 %}
+                  {% for code, label in error_reason_labels.items() %}
+                    {% set cnt = error_stats.get(code, 0) %}
+                    {% if cnt > 0 %}
+                    <tr>
+                      <td class="text-left">{{ label }}</td>
+                      <td>{{ cnt }}</td>
+                      <td>{{ "%.1f"|format(cnt / total * 100) }}%</td>
+                    </tr>
+                    {% endif %}
+                  {% endfor %}
+                  {% if error_stats.get("other") %}
+                    {% set other_cnt = error_stats.get("other", 0) %}
+                    <tr>
+                      <td class="text-left text-muted">Тодорхойгүй / Хуучин код</td>
+                      <td>{{ other_cnt }}</td>
+                      <td>{{ "%.1f"|format(other_cnt / total * 100) }}%</td>
+                    </tr>
+                  {% endif %}
+                {% else %}
+                  <tr>
+                    <td colspan="3" class="text-center text-muted py-3">
+                      Алдааны шалтгааны лог олдсонгүй
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+              <tfoot>
+                <tr class="sum-row">
+                  <td class="text-left fw-bold">Нийт</td>
+                  <td class="fw-bold">{{ error_stats.total if error_stats else 0 }}</td>
+                  <td class="fw-bold">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% if error_stats and error_stats.total > 0 %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    (function () {
+      const canvas = document.getElementById('errorReasonChart');
+      if (!canvas) return;
+
+      const labelsMap = {{ error_reason_labels | tojson }};
+      const stats = {{ error_stats | tojson }};
+
+      const orderedCodes = Object.keys(labelsMap);
+      if (stats['other'] > 0) {
+        orderedCodes.push('other');
+        labelsMap['other'] = 'Тодорхойгүй';
+      }
+
+      // Тоогоор эрэмбэлэх (их → бага)
+      const sorted = orderedCodes
+        .filter(code => stats[code] > 0)
+        .sort((a, b) => stats[b] - stats[a]);
+
+      const labels = sorted.map(code => labelsMap[code]);
+      const data = sorted.map(code => stats[code]);
+
+      const ctx = canvas.getContext('2d');
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Тоо',
+            data: data,
+            borderWidth: 0,
+            borderRadius: 6,
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(139, 92, 246, 0.8)',
+              'rgba(6, 182, 212, 0.8)',
+              'rgba(249, 115, 22, 0.8)',
+              'rgba(107, 114, 128, 0.8)',
+            ],
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)',
+              padding: 12,
+              cornerRadius: 8,
+              callbacks: {
+                label: function(ctx) {
+                  return ' Тоо: ' + ctx.parsed.x;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 },
+              grid: { display: false }
+            },
+            y: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    })();
+  </script>
+{% endif %}
+{% endblock %}

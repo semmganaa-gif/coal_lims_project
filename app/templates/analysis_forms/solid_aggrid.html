@@ -43,18 +43,15 @@
     };
   }
 
-  const numParser = p => {
-    if (window.LIMS_AGGRID?.numParser) return window.LIMS_AGGRID.numParser(p);
+  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
     const raw = p.newValue;
     if (raw === null || raw === undefined || raw === '') return null;
     const num = Number(String(raw).replace(',','.'));
     return Number.isFinite(num) ? num : null;
-  };
-
-  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';
-  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
 
   const editCol = {
     editable: p => !p.data.is_saved,
@@ -232,7 +229,7 @@
       window.solidGridApi = agGrid.createGrid(el, {
         theme: 'legacy',
         columnDefs, rowData,
-        defaultColDef: { sortable: false, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
+        defaultColDef: { sortable: true, resizable: true, editable: false, suppressMovable: true, wrapHeaderText: true, autoHeaderHeight: true },
         suppressRowTransform: true,
         singleClickEdit: true,
         stopEditingWhenCellsLoseFocus: true,

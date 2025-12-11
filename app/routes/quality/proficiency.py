@@ -4,12 +4,20 @@
 Proficiency Testing Management
 ISO 17025 - Clause 7.7.2
 """
-#Сорилтын үр дүнгийн гадаад хяналтын бүртгэл
+# Сорилтын үр дүнгийн гадаад хяналтын бүртгэл
+
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import ProficiencyTest, User
-from datetime import datetime
+from app.models import ProficiencyTest
+from app.utils.quality_helpers import (
+    require_quality_edit,
+    calculate_status_stats,
+    parse_date
+)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def register_routes(bp):
@@ -20,25 +28,29 @@ def register_routes(bp):
     def proficiency_list():
         """PT жагсаалт"""
         pts = ProficiencyTest.query.order_by(ProficiencyTest.test_date.desc()).all()
-
-        stats = {
-            'total': len(pts),
-            'satisfactory': len([p for p in pts if p.performance == 'satisfactory']),
-            'questionable': len([p for p in pts if p.performance == 'questionable']),
-            'unsatisfactory': len([p for p in pts if p.performance == 'unsatisfactory'])
-        }
-
+        stats = calculate_status_stats(
+            pts,
+            status_field='performance',
+            status_values=['satisfactory', 'questionable', 'unsatisfactory']
+        )
         return render_template('quality/proficiency_list.html', pts=pts, stats=stats, title="Proficiency Testing")
 
     @bp.route("/proficiency/new", methods=["GET", "POST"])
     @login_required
+    @require_quality_edit('quality.proficiency_list')
     def proficiency_new():
         """Шинэ PT бүртгэх"""
         if request.method == "POST":
-            # Z-score тооцох
-            our_result = float(request.form['our_result'])
-            assigned_value = float(request.form['assigned_value'])
-            uncertainty = float(request.form['uncertainty'])
+            try:
+                # Z-score тооцох
+                our_result = float(request.form.get('our_result', 0))
+                assigned_value = float(request.form.get('assigned_value', 0))
+                uncertainty = float(request.form.get('uncertainty', 0))
+            except (ValueError, TypeError) as e:
+                logger.warning(f"PT form validation error: {e}, user: {current_user.username}")
+                flash("Тоон утга буруу байна. Зөв утга оруулна уу.", "danger")
+                return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
+
             z_score = (our_result - assigned_value) / uncertainty if uncertainty > 0 else 0
 
             # Performance үнэлэх
@@ -48,6 +60,9 @@ def register_routes(bp):
                 performance = 'questionable'
             else:
                 performance = 'unsatisfactory'
+
+            # Parse test_date safely using helper
+            test_date = parse_date(request.form.get('test_date'))
 
             pt = ProficiencyTest(
                 pt_provider=request.form.get('pt_provider'),
@@ -60,7 +75,7 @@ def register_routes(bp):
                 uncertainty=uncertainty,
                 z_score=z_score,
                 performance=performance,
-                test_date=datetime.strptime(request.form['test_date'], '%Y-%m-%d').date() if request.form.get('test_date') else None,
+                test_date=test_date,
                 tested_by_id=current_user.id,
                 notes=request.form.get('notes')
             )
@@ -68,6 +83,7 @@ def register_routes(bp):
             db.session.add(pt)
             db.session.commit()
 
+            logger.info(f"PT created: {pt.pt_program}, Z-score: {z_score:.2f}, user: {current_user.username}")
             flash(f"PT {pt.pt_program} амжилттай бүртгэгдлээ (Z-score: {z_score:.2f})", "success")
             return redirect(url_for('quality.proficiency_list'))
 
