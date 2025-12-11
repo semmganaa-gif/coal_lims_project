@@ -19,9 +19,10 @@ depends_on = None
 def upgrade():
     """Rename 'ahlah' role to 'senior' for all users."""
     # Update user roles from 'ahlah' to 'senior'
-    op.execute("UPDATE user SET role = 'senior' WHERE role = 'ahlah'")
+    # PostgreSQL-д "user" reserved word тул хашилттай бичнэ
+    op.execute('UPDATE "user" SET role = \'senior\' WHERE role = \'ahlah\'')
 
 
 def downgrade():
     """Revert 'senior' role back to 'ahlah'."""
-    op.execute("UPDATE user SET role = 'ahlah' WHERE role = 'senior'")
+    op.execute('UPDATE "user" SET role = \'ahlah\' WHERE role = \'senior\'')

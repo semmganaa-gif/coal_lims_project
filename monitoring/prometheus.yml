@@ -1,0 +1,34 @@
+# Prometheus Configuration for Coal LIMS
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus өөрөө
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Coal LIMS Application
+  - job_name: 'coal_lims'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:5000']
+        labels:
+          app: 'coal_lims'
+          env: 'development'
+    # Windows дээр host.docker.internal ашиглана
+    # Linux дээр: 172.17.0.1:5000 эсвэл container network ашиглах
+
+  # Flask app health check
+  - job_name: 'coal_lims_health'
+    metrics_path: '/health'
+    static_configs:
+      - targets: ['host.docker.internal:5000']

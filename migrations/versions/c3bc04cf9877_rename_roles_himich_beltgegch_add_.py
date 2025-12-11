@@ -22,10 +22,11 @@ def upgrade():
     - himich -> chemist
     - beltgegch -> prep
     Also update AnalysisType.required_role
+    PostgreSQL-д "user" reserved word тул хашилттай бичнэ
     """
     # Update user roles
-    op.execute("UPDATE user SET role = 'chemist' WHERE role = 'himich'")
-    op.execute("UPDATE user SET role = 'prep' WHERE role = 'beltgegch'")
+    op.execute('UPDATE "user" SET role = \'chemist\' WHERE role = \'himich\'')
+    op.execute('UPDATE "user" SET role = \'prep\' WHERE role = \'beltgegch\'')
 
     # Update analysis_type required_role
     op.execute("UPDATE analysis_type SET required_role = 'chemist' WHERE required_role = 'himich'")
@@ -35,8 +36,8 @@ def upgrade():
 def downgrade():
     """Revert role renames."""
     # Revert user roles
-    op.execute("UPDATE user SET role = 'himich' WHERE role = 'chemist'")
-    op.execute("UPDATE user SET role = 'beltgegch' WHERE role = 'prep'")
+    op.execute('UPDATE "user" SET role = \'himich\' WHERE role = \'chemist\'')
+    op.execute('UPDATE "user" SET role = \'beltgegch\' WHERE role = \'prep\'')
 
     # Revert analysis_type required_role
     op.execute("UPDATE analysis_type SET required_role = 'himich' WHERE required_role = 'chemist'")
