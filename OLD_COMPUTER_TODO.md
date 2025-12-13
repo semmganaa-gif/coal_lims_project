@@ -1,5 +1,15 @@
 # Хуучин компьютер дээр хийх ажлууд
 
+## Нийт илэрсэн асуудлууд
+
+| Төрөл | Тоо | Ач холбогдол |
+|-------|-----|--------------|
+| Unused imports/variables (F401, F841) | 40 | Дунд |
+| Style issues (E, W) | 598 | Бага |
+| Complex functions (C901 > 10) | 39 | Өндөр |
+
+---
+
 ## 1. Git pull хийх
 ```bash
 cd D:/coal_lims_project
@@ -15,7 +25,7 @@ net start postgresql-x64-18
 
 ---
 
-## 3. Код засварууд (40 асуудал)
+## 3. Код засварууд - Unused (40 асуудал)
 
 ### A. Хэрэглэгдээгүй импортууд устгах (12)
 
@@ -284,14 +294,60 @@ dir backups/
 
 ---
 
+## 10. Complex functions (39 функц) - ӨНДӨР АЧ ХОЛБОГДОЛТОЙ
+
+Дараах функцууд хэт нарийн төвөгтэй (complexity > 10):
+
+| Файл | Функц | Complexity |
+|------|-------|------------|
+| routes/api/samples_api.py | register_routes | 132 |
+| routes/api/analysis_api.py | register_routes | 109 |
+| cli.py | register_commands | 61 |
+| routes/analysis/senior.py | register_routes | 56 |
+| routes/analysis/workspace.py | register_routes | 45 |
+| routes/api/audit_api.py | register_routes | 43 |
+| routes/api/mass_api.py | register_routes | 43 |
+| routes/analysis/kpi.py | register_routes | 43 |
+| routes/analysis/qc.py | register_routes | 39 |
+| __init__.py | create_app | 31 |
+
+**Засах арга:** Том функцуудыг жижиг helper функц болгон задлах.
+
+---
+
+## 11. Style issues (598 асуудал) - БАГА АЧ ХОЛБОГДОЛТОЙ
+
+Үндсэн асуудлууд:
+- Trailing whitespace (W291, W293)
+- Missing newline at end of file (W292)
+- Indentation issues (E111, E117)
+- Multiple spaces before operator (E221)
+- Lambda assignment (E731)
+
+**Автомат засах:**
+```bash
+# autopep8 суулгах
+pip install autopep8
+
+# Автомат засах
+autopep8 --in-place --aggressive --recursive app/
+```
+
+---
+
 ## Хурдан засах команд
 
 ```bash
-# flake8 шалгах
+# Бүх алдаа шалгах
 python -m flake8 app --select=F401,F841 --count
+python -m flake8 app --select=C901 --max-complexity=10
+python -m flake8 app --select=E,W --ignore=E501,W503 --count
 
 # vulture шалгах
 vulture app --min-confidence 80
+
+# autopep8 засах (style)
+autopep8 --in-place --aggressive --recursive app/
 
 # Бүх тест
 python -m pytest tests/ -v --tb=short
@@ -304,6 +360,10 @@ python -m pytest tests/ -v --tb=short
 ```bash
 # Өөрчлөлтүүдийг commit хийх
 git add -A
-git commit -m "refactor: Unused imports and variables removed"
+git commit -m "refactor: Code quality improvements
+
+- Removed unused imports and variables
+- Fixed style issues with autopep8
+- Simplified complex functions"
 git push origin main
 ```
