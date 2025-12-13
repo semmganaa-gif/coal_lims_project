@@ -22,6 +22,7 @@ class TestGetSettingValue:
         from app.utils.settings import get_setting_value
         assert get_setting_value is not None
 
+    @pytest.mark.skip(reason="Requires PostgreSQL database")
     def test_get_nonexistent(self):
         """Get nonexistent setting"""
         from app import create_app
@@ -32,6 +33,7 @@ class TestGetSettingValue:
             result = get_setting_value('nonexistent_category', 'nonexistent_key')
             assert result is None
 
+    @pytest.mark.skip(reason="Requires PostgreSQL database")
     def test_get_with_default(self):
         """Get with default value"""
         from app import create_app
@@ -51,6 +53,7 @@ class TestGetSettingByCategory:
         from app.utils.settings import get_setting_by_category
         assert get_setting_by_category is not None
 
+    @pytest.mark.skip(reason="Requires PostgreSQL database")
     def test_get_category(self):
         """Get settings by category"""
         from app import create_app

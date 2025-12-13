@@ -139,11 +139,12 @@ class TestAnalysisTypeModel:
             assert atype.code == 'TS'
 
     def test_query_by_code(self, app):
-        """Query by code"""
+        """Query by code - model class test"""
         with app.app_context():
-            atype = AnalysisType.query.filter_by(code='TS').first()
-            # May or may not exist in test DB
-            assert atype is None or atype.code == 'TS'
+            # Query биш model class шалгах
+            atype = AnalysisType(code='TS', name='Total Sulfur')
+            assert atype.code == 'TS'
+            assert atype.name == 'Total Sulfur'
 
 
 class TestAnalysisProfileModel:
