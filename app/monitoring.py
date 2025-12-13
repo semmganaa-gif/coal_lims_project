@@ -9,55 +9,90 @@ Prometheus/Grafana интеграцтай.
 
 from flask import request, g
 import time
-import logging
 
 # Prometheus metrics
 try:
     from prometheus_flask_exporter import PrometheusMetrics
-    from prometheus_client import Counter, Histogram, Gauge, Info
+    from prometheus_client import Counter, Histogram, Gauge, Info, REGISTRY
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
 
+def _get_or_create_counter(name, description, labelnames):
+    """Counter авах эсвэл шинээр үүсгэх (давхардлыг зайлсхийх)"""
+    try:
+        return Counter(name, description, labelnames)
+    except ValueError:
+        # Metric already registered
+        return REGISTRY._names_to_collectors.get(name)
+
+def _get_or_create_gauge(name, description):
+    """Gauge авах эсвэл шинээр үүсгэх"""
+    try:
+        return Gauge(name, description)
+    except ValueError:
+        return REGISTRY._names_to_collectors.get(name)
+
+def _get_or_create_histogram(name, description, labelnames, buckets):
+    """Histogram авах эсвэл шинээр үүсгэх"""
+    try:
+        return Histogram(name, description, labelnames, buckets=buckets)
+    except ValueError:
+        return REGISTRY._names_to_collectors.get(name)
+
+def _get_or_create_info(name, description):
+    """Info авах эсвэл шинээр үүсгэх"""
+    try:
+        return Info(name, description)
+    except ValueError:
+        return REGISTRY._names_to_collectors.get(name)
+
 # Custom metrics (Prometheus байвал)
+ANALYSIS_COUNTER = None
+SAMPLE_COUNTER = None
+ACTIVE_USERS = None
+DB_QUERY_DURATION = None
+QC_CHECK_COUNTER = None
+APP_INFO = None
+
 if PROMETHEUS_AVAILABLE:
     # Шинжилгээний тоолуур
-    ANALYSIS_COUNTER = Counter(
+    ANALYSIS_COUNTER = _get_or_create_counter(
         'lims_analysis_total',
         'Total number of analyses performed',
         ['analysis_type', 'status']
     )
 
     # Дээжийн тоолуур
-    SAMPLE_COUNTER = Counter(
+    SAMPLE_COUNTER = _get_or_create_counter(
         'lims_samples_total',
         'Total number of samples registered',
         ['client', 'sample_type']
     )
 
     # Хэрэглэгчийн идэвхи
-    ACTIVE_USERS = Gauge(
+    ACTIVE_USERS = _get_or_create_gauge(
         'lims_active_users',
         'Number of currently active users'
     )
 
     # Database query хугацаа
-    DB_QUERY_DURATION = Histogram(
+    DB_QUERY_DURATION = _get_or_create_histogram(
         'lims_db_query_duration_seconds',
         'Database query duration in seconds',
         ['query_type'],
-        buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]
+        [0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]
     )
 
     # QC check үр дүн
-    QC_CHECK_COUNTER = Counter(
+    QC_CHECK_COUNTER = _get_or_create_counter(
         'lims_qc_checks_total',
         'Total QC checks performed',
         ['check_type', 'result']  # result: pass, fail, warning
     )
 
     # App мэдээлэл
-    APP_INFO = Info('lims_app', 'LIMS application information')
+    APP_INFO = _get_or_create_info('lims_app', 'LIMS application information')
 
 
 def setup_monitoring(app):
@@ -72,23 +107,39 @@ def setup_monitoring(app):
 
     # Prometheus metrics тохируулах
     metrics = None
-    if PROMETHEUS_AVAILABLE:
-        metrics = PrometheusMetrics(app, path='/metrics')
 
-        # App мэдээлэл тохируулах
-        APP_INFO.info({
-            'version': app.config.get('VERSION', '1.0.0'),
-            'environment': app.config.get('ENV', 'production'),
-            'name': 'Coal LIMS'
-        })
+    # Testing mode-д Prometheus-ийг алгасах
+    if app.config.get('TESTING'):
+        app.prometheus_metrics = None
+        app.logger.info("Testing mode - Prometheus metrics disabled")
+    elif PROMETHEUS_AVAILABLE:
+        try:
+            metrics = PrometheusMetrics(app, path='/metrics')
 
-        # Default metrics-ийг бүртгэх
-        metrics.info('lims_app_info', 'Application info', version='1.0.0')
+            # App мэдээлэл тохируулах
+            if APP_INFO:
+                try:
+                    APP_INFO.info({
+                        'version': app.config.get('VERSION', '1.0.0'),
+                        'environment': app.config.get('ENV', 'production'),
+                        'name': 'Coal LIMS'
+                    })
+                except ValueError:
+                    pass  # Already set
 
-        app.logger.info("Prometheus metrics enabled at /metrics")
+            # Default metrics-ийг бүртгэх (давхардахыг зайлсхийх)
+            try:
+                metrics.info('lims_app_info', 'Application info', version='1.0.0')
+            except ValueError:
+                pass  # Metric already registered
 
-    # metrics объектыг app-д хадгалах
-    app.prometheus_metrics = metrics
+            app.logger.info("Prometheus metrics enabled at /metrics")
+        except Exception as e:
+            app.logger.warning(f"Prometheus metrics initialization failed: {e}")
+
+    # metrics объектыг app-д хадгалах (testing mode-д None)
+    if not app.config.get('TESTING'):
+        app.prometheus_metrics = metrics
 
     @app.before_request
     def before_request():

@@ -10,11 +10,11 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 # 2. Third-Party Imports (Гараас суулгасан сангууд)
-from flask import render_template, flash, redirect, url_for, request, jsonify, send_file, current_app
+from flask import render_template, flash, redirect, url_for, request, jsonify, current_app
 from flask_login import login_required, current_user
 from flask_mail import Message
 from openpyxl import load_workbook
-from openpyxl.styles import Border, Side, Alignment, Font
+from openpyxl.styles import Alignment, Font
 
 # 3. Local Application Imports (Таны төслийн файлууд)
 from app import db, mail
@@ -481,7 +481,6 @@ def send_hourly_report():
         
         report_time_str = report_dt.strftime('%H:%M')
         report_date_str = report_dt.strftime('%Y.%m.%d')
-        file_date_str = report_dt.strftime('%Y%m%d')
 
         # Data Start Time (08:00 boundary)
         if report_dt.hour < 8:
@@ -590,7 +589,6 @@ def send_hourly_report():
             # 2. ШИЛЖИЛТЭЭ ОЛОХ (D1, D2...)
             # Дээжийн нэрний сүүлийн хэсгийг шалгах (Жнь: ..._D1)
             row_offset = 0
-            found_suffix = False
             
             # SUFFIX_OFFSET_MAP-ээс хайх (D1, N6...)
             # Sample code-ийн төгсгөлд байгаа эсэхийг шалгана, эсвэл "_" дараа байгааг
@@ -599,7 +597,6 @@ def send_hourly_report():
                 # Хамгийн найдвартай нь "_D1" гэж хайх
                 if f"_{suffix}" in code_upper or code_upper.endswith(suffix):
                     row_offset = offset
-                    found_suffix = True
                     break
             
             # Хэрэв D/N дугаар олдоогүй бол яах вэ?

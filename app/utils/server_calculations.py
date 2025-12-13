@@ -24,7 +24,7 @@ JavaScript-ийг өөрчилж хуурамч утга илгээж болох
 
 import logging
 from typing import Tuple, Optional, Dict, Any, List
-from math import isnan, isfinite
+from math import isfinite
 
 # Security logger
 security_logger = logging.getLogger('security')

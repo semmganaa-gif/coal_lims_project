@@ -11,7 +11,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_
 from app.utils.security import escape_like_pattern
 
 

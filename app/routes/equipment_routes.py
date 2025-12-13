@@ -10,7 +10,7 @@ from app.models import Equipment, MaintenanceLog, UsageLog
 from datetime import datetime, timedelta
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 equipment_bp = Blueprint("equipment", __name__)

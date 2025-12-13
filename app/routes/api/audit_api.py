@@ -9,18 +9,16 @@
 from flask import (
     request,
     render_template,
-    flash,
 )
 from flask_login import login_required
-from datetime import datetime, timedelta
+from datetime import datetime
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from collections import defaultdict
 import json
 
 from app import db
-from app.models import AnalysisResult, AnalysisResultLog, AnalysisType, Sample, User
-from app.utils.normalize import normalize_raw_data
+from app.models import AnalysisResultLog, AnalysisType, Sample, User
 from app.config.analysis_schema import get_analysis_schema
 from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS

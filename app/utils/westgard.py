@@ -15,7 +15,7 @@ https://www.westgard.com/mltirule.htm
 - 10x   - 10 дараалсан утга дунджийн нэг талд (REJECT)
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict
 from dataclasses import dataclass
 
 

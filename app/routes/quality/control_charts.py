@@ -6,7 +6,6 @@ AnalysisResult-аас CM/GBW дээжний үр дүнг татаж Westgard ш
 
 from flask import render_template, jsonify
 from flask_login import login_required
-from app import db
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
 from sqlalchemy import or_
 import logging

@@ -6,7 +6,7 @@ ISO 17025 Чанарын удирдлагын систем
 """
 
 from functools import wraps
-from datetime import datetime, date
+from datetime import datetime
 from app.utils.datetime import now_local
 from flask import flash, redirect, url_for
 from flask_login import current_user

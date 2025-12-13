@@ -67,12 +67,10 @@ def register_routes(bp):
         # 1. ШИНЭЭР СОНГОСОН ID-НУУД
         newly_selected_ids_str = request.args.get("sample_ids", "")
         new_ids_list = []
-        id_order_map = {}
 
         if newly_selected_ids_str:
             temp_ids = [int(x) for x in newly_selected_ids_str.split(",") if x.isdigit()]
             new_ids_list = list(dict.fromkeys(temp_ids))
-            id_order_map = {sid: index for index, sid in enumerate(new_ids_list)}
 
         try:
             msg = f"analysis_page code={analysis_type.code} sample_ids_raw={newly_selected_ids_str} parsed_ids={new_ids_list}"

@@ -11,7 +11,7 @@ from math import inf
 from app.config.repeatability import LIMIT_RULES
 
 from app.models import Sample
-from app.utils.codes import norm_code, BASE_TO_ALIASES
+from app.utils.codes import norm_code
 from app.utils.converters import to_float
 
 

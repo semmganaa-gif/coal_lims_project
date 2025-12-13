@@ -8,8 +8,7 @@ ISO 17025 дагуу өгөгдөл экспорт хийх функцүүд.
 
 import logging
 from io import BytesIO
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from flask import send_file
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,6 @@ def export_to_excel(
     Returns:
         BytesIO Excel файл
     """
-    import pandas as pd
     from openpyxl import Workbook
     from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
 
@@ -44,8 +42,6 @@ def export_to_excel(
         for col in columns:
             df_row[col['label']] = row.get(col['key'], '')
         df_data.append(df_row)
-
-    df = pd.DataFrame(df_data)
 
     # Workbook үүсгэх
     wb = Workbook()

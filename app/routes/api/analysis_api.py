@@ -48,7 +48,7 @@ from .helpers import (
 )
 
 # Monitoring
-from app.monitoring import track_analysis, track_qc_check
+from app.monitoring import track_analysis
 
 
 def register_routes(bp):

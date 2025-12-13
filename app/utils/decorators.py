@@ -6,7 +6,7 @@
 Давхардсан эрх шалгах кодыг арилгах зорилготой.
 """
 from functools import wraps
-from typing import List, Callable, Any
+from typing import Callable, Any
 from flask import flash, redirect, url_for, abort
 from flask_login import current_user
 

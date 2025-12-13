@@ -10,7 +10,7 @@
 from flask import request, render_template, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
-from datetime import datetime, date
+from datetime import datetime
 from app.utils.shifts import get_shift_date
 import json
 
@@ -338,7 +338,6 @@ def register_routes(bp):
         - Баталгаажсан/Буцаагдсан тоо
         """
         from sqlalchemy import func, case
-        from datetime import timedelta
 
         today = get_shift_date()
         today_start = datetime.combine(today, datetime.min.time())

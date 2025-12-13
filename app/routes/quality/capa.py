@@ -11,7 +11,6 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import CorrectiveAction, User
 from app.utils.quality_helpers import (
-    can_edit_quality,
     require_quality_edit,
     calculate_status_stats,
     generate_sequential_code,

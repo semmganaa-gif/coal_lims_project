@@ -19,7 +19,7 @@
 import csv
 import io
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, Optional, Tuple, List
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
@@ -469,7 +469,7 @@ def _import_long(
         else:
             db.session.commit()
 
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         db.session.rollback()
         raise
 

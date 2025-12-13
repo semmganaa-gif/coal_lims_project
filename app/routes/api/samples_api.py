@@ -690,8 +690,7 @@ def register_routes(bp):
             - analysis_by_status: Шинжилгээний статусаар тоо
             - daily_trend: Өдрийн trend
         """
-        from sqlalchemy import func, extract, case
-        from collections import defaultdict
+        from sqlalchemy import func, case
 
         today = now_local().date()
 

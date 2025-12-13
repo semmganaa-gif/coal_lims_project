@@ -50,7 +50,7 @@ def calculate_all_conversions(
     M_ad = get_float_from_raw('inherent_moisture')   # Mad (ad)
     A_ad = get_float_from_raw('ash')                 # Aad (ad)
     M_t  = get_float_from_raw('total_moisture')      # Mt,ar
-    H_ad = get_float_from_raw('hydrogen')            # H (ad)
+    _ = get_float_from_raw('hydrogen')               # H (ad) - reserved
     V_ad = get_float_from_raw('volatile_matter')     # Vad (ad)  # noqa: F841
 
     # 2) FC,ad (parameters.py: fixed_carbon_ad)

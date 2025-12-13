@@ -34,11 +34,8 @@ def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Өгөгд�
         if success_msg:
             flash(success_msg, "success")
         return True
-    except IntegrityError as e:
+    except IntegrityError:
         db.session.rollback()
-        # IntegrityError-ын дэлгэрэнгүй мэдээллийг лог руу бичих боломжтой
-        # import logging
-        # logging.error(f"IntegrityError: {e}")
         flash(error_msg, "danger")
         return False
     except Exception as e:
@@ -103,7 +100,7 @@ def safe_add(obj: Union[Any, List[Any]], success_msg: Optional[str] = None, erro
         if success_msg:
             flash(success_msg, "success")
         return True
-    except IntegrityError as e:
+    except IntegrityError:
         db.session.rollback()
         flash(error_msg, "danger")
         return False

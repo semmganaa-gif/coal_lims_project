@@ -8,7 +8,7 @@
 
 import logging
 from typing import List, Optional, Dict, Any
-from flask import current_app, render_template_string
+from flask import render_template_string
 from flask_mail import Message
 from app import mail, db
 from app.models import User, SystemSetting
@@ -296,7 +296,7 @@ def check_and_send_equipment_notifications():
     Scheduler-ээс өдөр бүр дуудагдана.
     """
     from app.models import Equipment
-    from datetime import datetime, timedelta
+    from datetime import timedelta
 
     today = now_local().date()
     threshold = today + timedelta(days=30)  # 30 хоногийн дотор
