@@ -31,9 +31,11 @@ def _get_qc_samples():
 
 def _get_qc_results(sample_ids: list, analysis_code: str = None):
     """QC дээжүүдийн шинжилгээний үр дүнг авах"""
+    # QC chart-д бүх үр дүнг (approved, pending_review, rejected) оруулна
+    # rejected ч гэсэн түүхэнд бүртгэгдэх ёстой
     query = AnalysisResult.query.filter(
         AnalysisResult.sample_id.in_(sample_ids),
-        AnalysisResult.status.in_(['approved', 'pending_review']),
+        AnalysisResult.status.in_(['approved', 'pending_review', 'rejected']),
         AnalysisResult.final_result.isnot(None)
     )
     if analysis_code:
