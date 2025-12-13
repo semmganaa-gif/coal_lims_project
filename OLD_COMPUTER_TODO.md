@@ -5,8 +5,10 @@
 | Төрөл | Тоо | Ач холбогдол |
 |-------|-----|--------------|
 | Unused imports/variables (F401, F841) | 40 | Дунд |
-| Style issues (E, W) | 598 | Бага |
 | Complex functions (C901 > 10) | 39 | Өндөр |
+| Security issues (try-except-pass) | 18 | Дунд |
+| Style issues (E, W) | 598 | Бага |
+| **НИЙТ** | **695** | |
 
 ---
 
@@ -331,6 +333,46 @@ pip install autopep8
 
 # Автомат засах
 autopep8 --in-place --aggressive --recursive app/
+```
+
+---
+
+## 12. Security issues (18 асуудал) - ДУНД АЧ ХОЛБОГДОЛТОЙ
+
+Бүгд `try: except: pass` pattern - алдааг чимээгүй алгасаж байна.
+
+| Файл | Мөр | Асуудал |
+|------|-----|---------|
+| __init__.py | 113 | try-except-pass |
+| routes/analysis/qc.py | 95, 254 | try-except-continue |
+| routes/analysis/senior.py | 44, 313 | try-except-pass |
+| routes/analysis/workspace.py | 80, 147 | try-except-pass |
+| routes/audit_log_service.py | 24, 102 | try-except-pass |
+| routes/import_routes.py | 92, 99 | try-except-pass/continue |
+| services/analysis_audit.py | 41, 145 | try-except-pass |
+| utils/conversions.py | 152 | try-except-pass |
+| utils/normalize.py | 80, 139 | try-except-pass |
+| utils/qc.py | 260 | try-except-pass |
+| utils/repeatability_loader.py | 16 | try-except-pass |
+
+**Засах арга:**
+```python
+# ӨМНӨ (муу):
+try:
+    something()
+except:
+    pass
+
+# ДАРАА (сайн):
+try:
+    something()
+except SpecificException as e:
+    logger.warning(f"Error: {e}")
+```
+
+**Шалгах команд:**
+```bash
+bandit -r app -ll
 ```
 
 ---
