@@ -44,7 +44,7 @@ M3_ALIASES = [
 
 RESULT_ALIASES = ["result", "res", "value"]
 
-# Common single-value aliases (Solid, etc.)
+# Нийтлэг нэг утгатай aliases (Solid гэх мэт)
 COMMON_VALUE_ALIASES = {
     "A": ["A", "a", "mass_a", "total_mass", "gross_mass", "bucket_with_sample"],
     "B": ["B", "b", "mass_b", "tare_mass", "bucket_mass", "bucket_only"],
@@ -78,7 +78,7 @@ def _norm_parallel(raw: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 out[k] = float(v)
             except Exception:
-                # хувиргаж чадахгүй бол орхино
+                # Хувиргаж чадахгүй бол алгасна
                 pass
 
     # UI-д weight нэртэй талбарууд ч ашиглагддаг тул m1-г дутуу байвал weight болгон давхар хадгална

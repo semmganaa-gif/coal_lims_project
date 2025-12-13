@@ -1,6 +1,6 @@
 # app/utils/validators.py
 """
-Input validation utilities
+Оролтын баталгаажуулалт (Input validation)
 
 Энэ модуль нь хэрэглэгчийн оруулж буй өгөгдлийг баталгаажуулдаг.
 Аюулгүй байдлын хувьд маш чухал - SQL injection, XSS, буруу төрлийн
@@ -218,14 +218,14 @@ def validate_analysis_code(value: Any) -> Tuple[Optional[str], Optional[str]]:
 
     code = value.strip()
 
-    # Length check
+    # Урт шалгах
     if len(code) > 20:
         return None, "Analysis code хэт урт байна (max: 20 тэмдэгт)"
 
     if len(code) < 1:
         return None, "Analysis code хоосон байж болохгүй"
 
-    # Valid characters check (letters, numbers, comma, space)
+    # Зөвшөөрөгдсөн тэмдэгтүүд (үсэг, тоо, таслал)
     if not re.match(r'^[A-Za-z0-9,\s]+$', code):
         return None, "Analysis code зөвхөн үсэг, тоо, таслал агуулна"
 
@@ -495,14 +495,14 @@ def sanitize_string(
     if not isinstance(value, str):
         value = str(value)
 
-    # Strip whitespace
+    # Хоосон зайг хасах
     cleaned = value.strip()
 
-    # Length check
+    # Урт шалгах
     if len(cleaned) > max_length:
         return None, f"Хэт урт байна (max: {max_length} тэмдэгт)"
 
-    # Dangerous patterns check (simple XSS prevention)
+    # Аюултай загварууд шалгах (XSS хамгаалалт)
     dangerous_patterns = [
         r'<script',
         r'javascript:',

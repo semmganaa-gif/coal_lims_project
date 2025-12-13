@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 
 equipment_bp = Blueprint("equipment", __name__)
 
-# File upload constraints
+# Файл байршуулахын хязгаарлалт
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'txt'}
 
@@ -80,7 +80,7 @@ def add_equipment():
     if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger"); return redirect(url_for("equipment.equipment_list"))
 
-    # Form data with validation
+    # Формын өгөгдлийг шалгах
     try:
         quantity = int(request.form.get("quantity", "1"))
         if quantity <= 0:
@@ -138,7 +138,7 @@ def edit_equipment(id):
     eq.room_number = request.form.get("room")
     eq.related_analysis = request.form.get("related")
 
-    # Input validation for calibration cycle
+    # Калибрацийн мөчлөгийн шалгалт
     if request.form.get("cycle"):
         try:
             cycle_value = int(request.form.get("cycle"))
@@ -167,7 +167,7 @@ def edit_equipment(id):
         flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_detail", id=id))
 
-# --- SINGLE DELETE (Ганцаарчилж устгах) ---
+# --- ГАНЦААРЧИЛЖ УСТГАХ ---
 @equipment_bp.route("/equipment/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_equipment(id):
@@ -196,7 +196,7 @@ def delete_equipment(id):
         flash(f"Устгалт амжилтгүй: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_list"))
 
-# --- BULK DELETE (Олноор устгах) ---
+# --- ОЛНООР УСТГАХ ---
 @equipment_bp.route("/bulk_delete", methods=["POST"])
 @login_required
 def bulk_delete():
@@ -204,7 +204,7 @@ def bulk_delete():
         flash("Эрх хүрэхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    # HTML checkbox name="equipment_ids"
+    # HTML checkbox: equipment_ids
     ids = request.form.getlist('equipment_ids')
     
     if not ids:
@@ -280,7 +280,7 @@ def add_maintenance_log(id):
                 flash(f"Зөвшөөрөгдөхгүй файлын төрөл (.{ext}). Зөвшөөрөгдсөн: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
                 return redirect(url_for("equipment.equipment_detail", id=id))
 
-            # Save file
+            # Файл хадгалах
             unique_filename = f"{int(now_local().timestamp())}_{filename}"
             upload_folder = current_app.config.get('UPLOAD_FOLDER')
             if not os.path.exists(upload_folder):

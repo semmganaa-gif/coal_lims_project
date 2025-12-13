@@ -4,10 +4,10 @@
 Дээжний кодыг эрэмбэлэх нэгдсэн функцууд.
 
 Сайжруулалтууд:
-- O(1) dict lookup (performance)
-- Edge case handling (None, empty)
+- O(1) dict хайлт (гүйцэтгэл)
+- Тусгай тохиолдол (None, хоосон)
 - Уян хатан төрөл бүрийн эрэмбэ
-- Type hints
+- Төрлийн зааварлал
 """
 import re
 from typing import Any, List, Tuple, Union, Optional
@@ -16,7 +16,7 @@ from app.constants import CHPP_2H_SAMPLES_ORDER, ALL_12H_SAMPLES
 
 
 # =============================================================================
-# O(1) LOOKUP DICTIONARIES
+# O(1) ХАЙЛТЫН ТОЛЬ БИЧГҮҮД
 # =============================================================================
 
 # CHPP 2H - prefix → index
@@ -84,7 +84,7 @@ SORT_PRIORITY: dict[str, dict[str, int]] = {
 
 
 # =============================================================================
-# NATURAL SORT
+# БАЙГАЛИЙН ЭРЭМБЭ
 # =============================================================================
 
 def natural_sort_key(s: Any) -> List[Union[int, str]]:
@@ -115,7 +115,7 @@ def natural_sort_key(s: Any) -> List[Union[int, str]]:
 
 
 # =============================================================================
-# SAMPLE CODE SORTING
+# ДЭЭЖНИЙ КОД ЭРЭМБЭЛЭХ
 # =============================================================================
 
 def custom_sample_sort_key(code: Optional[str]) -> Tuple[int, int, List[Union[int, str]]]:
@@ -213,7 +213,7 @@ def sample_full_sort_key(sample: Any) -> Tuple[int, int, List[Union[int, str]]]:
 
 
 # =============================================================================
-# CONVENIENCE FUNCTIONS
+# ТУСЛАХ ФУНКЦҮҮД
 # =============================================================================
 
 def sort_samples(samples: List[Any], by: str = "code") -> List[Any]:

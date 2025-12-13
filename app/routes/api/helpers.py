@@ -69,7 +69,7 @@ def api_error(message, code=None, status_code=400, details=None):
 
 
 # =============================================================================
-# LEGACY API RESPONSE FORMAT (ok: True/False)
+# ХУУЧИН API ХАРИУНЫ ФОРМАТ (ok: True/False)
 # =============================================================================
 
 def api_ok(message=None, **kwargs):

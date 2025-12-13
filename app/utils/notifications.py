@@ -1,7 +1,7 @@
 # app/utils/notifications.py
 # -*- coding: utf-8 -*-
 """
-Email Notification System
+Имэйл мэдэгдлийн систем
 
 Төвлөрсөн мэдэгдлийн систем - QC, Sample status, Equipment гэх мэт.
 """
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# EMAIL TEMPLATES
+# ИМЭЙЛ ЗАГВАРУУД
 # ============================================================
 
 QC_FAILURE_TEMPLATE = """
@@ -116,7 +116,7 @@ EQUIPMENT_CALIBRATION_TEMPLATE = """
 
 
 # ============================================================
-# NOTIFICATION FUNCTIONS
+# МЭДЭГДЛИЙН ФУНКЦҮҮД
 # ============================================================
 
 def get_notification_recipients(notification_type: str) -> List[str]:
@@ -229,7 +229,7 @@ def notify_sample_status_change(
     if not recipients:
         return False
 
-    # Status-д тохирсон өнгө, icon
+    # Статусын өнгө, icon
     status_config = {
         'approved': {'color': '#28a745', 'icon': '✅'},
         'rejected': {'color': '#dc3545', 'icon': '❌'},
@@ -286,7 +286,7 @@ def notify_equipment_calibration_due(equipment_list: List[Dict]) -> bool:
 
 
 # ============================================================
-# BATCH NOTIFICATION CHECK (Scheduler дуудах)
+# БАГЦ МЭДЭГДЭЛ ШАЛГАХ (Scheduler дуудна)
 # ============================================================
 
 def check_and_send_equipment_notifications():
@@ -320,7 +320,7 @@ def check_and_send_equipment_notifications():
             'days_left': days_left
         })
 
-    # Хугацаа бага байгаагаар эрэмбэлэх
+    # Хугацаагаар эрэмбэлэх
     equipment_list.sort(key=lambda x: x['days_left'])
 
     notify_equipment_calibration_due(equipment_list)
@@ -335,7 +335,7 @@ def check_and_notify_westgard():
     from app.models import QCControlChart
     from app.utils.westgard import check_westgard_rules, get_qc_status
 
-    # Unique analysis_code + qc_sample_name хосуудыг авах
+    # Өвөрмөц analysis_code + qc_sample_name хосуудыг авах
     unique_pairs = db.session.query(
         QCControlChart.analysis_code,
         QCControlChart.qc_sample_name
@@ -371,7 +371,7 @@ def check_and_notify_westgard():
         violations = check_westgard_rules(values, target, sd)
         qc_status = get_qc_status(violations)
 
-        # Зөвхөн reject статустай байвал мэдэгдэл илгээх
+        # Зөвхөн reject үед мэдэгдэл илгээх
         if qc_status['status'] == 'reject':
             notify_qc_failure(
                 analysis_code=analysis_code,

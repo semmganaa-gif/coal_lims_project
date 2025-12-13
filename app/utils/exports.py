@@ -1,7 +1,7 @@
 # app/utils/exports.py
 # -*- coding: utf-8 -*-
 """
-Export Utility - Excel/PDF export functions
+Экспорт хэрэгсэл - Excel/PDF экспорт функцүүд
 
 ISO 17025 дагуу өгөгдөл экспорт хийх функцүүд.
 """
@@ -52,7 +52,7 @@ def export_to_excel(
     ws = wb.active
     ws.title = sheet_name
 
-    # Styles
+    # Загварууд (Styles)
     header_font = Font(bold=True, color='FFFFFF')
     header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
     thin_border = Border(
@@ -63,7 +63,7 @@ def export_to_excel(
     )
     center_align = Alignment(horizontal='center', vertical='center')
 
-    # Header бичих
+    # Толгой бичих
     for col_idx, col in enumerate(columns, 1):
         cell = ws.cell(row=1, column=col_idx, value=col['label'])
         cell.font = header_font
@@ -71,7 +71,7 @@ def export_to_excel(
         cell.border = thin_border
         cell.alignment = center_align
 
-    # Data бичих
+    # Өгөгдөл бичих
     for row_idx, row in enumerate(data, 2):
         for col_idx, col in enumerate(columns, 1):
             value = row.get(col['key'], '')

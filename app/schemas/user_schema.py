@@ -13,45 +13,45 @@ class UserSchema(Schema):
 
     Admin endpoints дээр хэрэглэгч үүсгэх, засахад ашиглана
     """
-    # Read-only
+    # Зөвхөн унших талбарууд (dump_only)
     id = fields.Int(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
 
-    # Required fields
+    # Заавал талбарууд
     username = fields.Str(
         required=True,
         validate=validate.Length(min=3, max=64),
         error_messages={
-            'required': 'Хэрэглэгчийн нэр шаардлагатай',
-            'invalid': 'Хэрэглэгчийн нэр текст байх ёстой',
-            'length': 'Хэрэглэгчийн нэр 3-64 тэмдэгт байх ёстой'
+            "required": "Хэрэглэгчийн нэр шаардлагатай",
+            "invalid": "Хэрэглэгчийн нэр текст байх ёстой",
+            "length": "Хэрэглэгчийн нэр 3-64 тэмдэгт байх ёстой"
         }
     )
 
-    # Load only (нууц үг зөвхөн request-д)
+    # Зөвхөн ачаалах (нууц үг зөвхөн request-д)
     password = fields.Str(
         load_only=True,
         validate=validate.Length(min=8),
         error_messages={
-            'invalid': 'Нууц үг текст байх ёстой',
-            'length': 'Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой'
+            "invalid": "Нууц үг текст байх ёстой",
+            "length": "Нууц үг хамгийн багадаа 8 тэмдэгт байх ёстой"
         }
     )
 
     role = fields.Str(
         required=True,
-        validate=validate.OneOf(['prep', 'chemist', 'senior', 'manager', 'admin']),
+        validate=validate.OneOf(["prep", "chemist", "senior", "manager", "admin"]),
         error_messages={
-            'required': 'Эрх шаардлагатай',
-            'validator_failed': 'Эрх буруу (prep/chemist/senior/manager/admin)'
+            "required": "Эрх шаардлагатай",
+            "validator_failed": "Эрх буруу (prep/chemist/senior/manager/admin)"
         }
     )
 
-    # Optional fields
+    # Заавал биш талбарууд
     email = fields.Email(
         allow_none=True,
         error_messages={
-            'invalid': 'И-мэйл хаяг буруу байна'
+            "invalid": "И-мэйл хаяг буруу байна"
         }
     )
 
@@ -62,34 +62,34 @@ class UserSchema(Schema):
 
     is_active = fields.Boolean(load_default=True)
 
-    @validates('username')
+    @validates("username")
     def validate_username(self, value, **kwargs):
         """
-        Username validation
+        Хэрэглэгчийн нэр validation
 
         - Зөвхөн үсэг, тоо, доогуур зураас
         - SQL injection хамгаалалт
         """
         if not value or not value.strip():
-            raise ValidationError('Хэрэглэгчийн нэр хоосон байж болохгүй')
+            raise ValidationError("Хэрэглэгчийн нэр хоосон байж болохгүй")
 
-        # Only alphanumeric and underscore
+        # Зөвхөн үсэг, тоо, доогуур зураас
         import re
-        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+        if not re.match(r"^[a-zA-Z0-9_]+$", value):
             raise ValidationError(
-                'Хэрэглэгчийн нэр зөвхөн үсэг, тоо, доогуур зураас агуулна'
+                "Хэрэглэгчийн нэр зөвхөн үсэг, тоо, доогуур зураас агуулна"
             )
 
         # SQL injection хамгаалалт
-        dangerous = [';', '--', '/*', '*/', 'DROP', 'DELETE', 'INSERT', 'UPDATE']
+        dangerous = [";", "--", "/*", "*/", "DROP", "DELETE", "INSERT", "UPDATE"]
         value_upper = value.upper()
         for word in dangerous:
             if word in value_upper:
-                raise ValidationError('Хэрэглэгчийн нэр буруу тэмдэгт агуулж байна')
+                raise ValidationError("Хэрэглэгчийн нэр буруу тэмдэгт агуулж байна")
 
         return value
 
-    @validates('password')
+    @validates("password")
     def validate_password(self, value, **kwargs):
         """
         Нууц үгний validation
@@ -101,39 +101,41 @@ class UserSchema(Schema):
         - Тоо
         """
         if not value:
-            # Password optional during update
+            # Шинэчлэхэд нууц үг заавал биш
             return value
 
         errors = []
 
         if len(value) < 8:
-            errors.append('хамгийн багадаа 8 тэмдэгт')
+            errors.append("хамгийн багадаа 8 тэмдэгт")
 
         if not any(c.isupper() for c in value):
-            errors.append('том үсэг агуулах ёстой')
+            errors.append("том үсэг агуулах ёстой")
 
         if not any(c.islower() for c in value):
-            errors.append('жижиг үсэг агуулах ёстой')
+            errors.append("жижиг үсэг агуулах ёстой")
 
         if not any(c.isdigit() for c in value):
-            errors.append('тоо агуулах ёстой')
+            errors.append("тоо агуулах ёстой")
 
         if errors:
-            raise ValidationError(f"Нууц үг: {', '.join(errors)}")
+            raise ValidationError(f"Нууц үг: {", ".join(errors)}")
 
         return value
 
     class Meta:
+        """Schema тохиргоо"""
         ordered = True
-        unknown = 'exclude'
+        unknown = "exclude"
 
 
 class UserListSchema(Schema):
-    """Multiple users schema"""
+    """Олон хэрэглэгчийн schema"""
     users = fields.List(fields.Nested(UserSchema))
     total = fields.Int()
     page = fields.Int()
     per_page = fields.Int()
 
     class Meta:
+        """Schema тохиргоо"""
         ordered = True

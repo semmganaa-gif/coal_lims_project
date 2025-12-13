@@ -7,7 +7,6 @@ API request/response validation болон serialization
 """
 
 from marshmallow import Schema, fields, validate, validates, ValidationError
-from datetime import datetime
 
 
 class SampleSchema(Schema):
@@ -19,18 +18,18 @@ class SampleSchema(Schema):
     - Response serialization (GET)
     - Data transformation
     """
-    # Read-only fields
+    # Зөвхөн унших талбарууд (dump_only)
     id = fields.Int(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
-    # Required fields
+    # Заавал талбарууд
     sample_code = fields.Str(
         required=True,
         validate=validate.Length(min=1, max=50),
         error_messages={
-            'required': 'Дээжний код шаардлагатай',
-            'invalid': 'Дээжний код текст байх ёстой'
+            "required": "Дээжний код шаардлагатай",
+            "invalid": "Дээжний код текст байх ёстой"
         }
     )
 
@@ -38,7 +37,7 @@ class SampleSchema(Schema):
         required=True,
         validate=validate.Length(min=1, max=200),
         error_messages={
-            'required': 'Захиалагчийн нэр шаардлагатай'
+            "required": "Захиалагчийн нэр шаардлагатай"
         }
     )
 
@@ -46,17 +45,17 @@ class SampleSchema(Schema):
         required=True,
         validate=validate.Length(max=100),
         error_messages={
-            'required': 'Дээжний төрөл шаардлагатай'
+            "required": "Дээжний төрөл шаардлагатай"
         }
     )
 
-    # Optional fields
+    # Заавал биш талбарууд
     weight = fields.Float(
         validate=validate.Range(min=0.001, max=10000),
         allow_none=True,
         error_messages={
-            'invalid': 'Жин тоо байх ёстой',
-            'range': 'Жин 0.001-10000 хооронд байх ёстой'
+            "invalid": "Жин тоо байх ёстой",
+            "range": "Жин 0.001-10000 хооронд байх ёстой"
         }
     )
 
@@ -66,10 +65,10 @@ class SampleSchema(Schema):
     )
 
     sample_condition = fields.Str(
-        validate=validate.OneOf(['Хуурай', 'Чийгтэй', 'Шингэн']),
+        validate=validate.OneOf(["Хуурай", "Чийгтэй", "Шингэн"]),
         allow_none=True,
         error_messages={
-            'validator_failed': 'Дээжний төлөв буруу (Хуурай/Чийгтэй/Шингэн)'
+            "validator_failed": "Дээжний төлөв буруу (Хуурай/Чийгтэй/Шингэн)"
         }
     )
 
@@ -90,8 +89,8 @@ class SampleSchema(Schema):
     received_date = fields.DateTime(
         required=True,
         error_messages={
-            'required': 'Хүлээн авсан огноо шаардлагатай',
-            'invalid': 'Огнооны формат буруу'
+            "required": "Хүлээн авсан огноо шаардлагатай",
+            "invalid": "Огнооны формат буруу"
         }
     )
 
@@ -99,21 +98,21 @@ class SampleSchema(Schema):
         fields.Str(),
         allow_none=True,
         error_messages={
-            'invalid': 'Шинжилгээний жагсаалт массив байх ёстой'
+            "invalid": "Шинжилгээний жагсаалт массив байх ёстой"
         }
     )
 
     status = fields.Str(
-        validate=validate.OneOf(['new', 'New', 'in_progress', 'completed', 'archived']),
+        validate=validate.OneOf(["new", "New", "in_progress", "completed", "archived"]),
         allow_none=True,
-        load_default='new'
+        load_default="new"
     )
 
     mass_ready = fields.Boolean(allow_none=True)
     mass_ready_at = fields.DateTime(allow_none=True)
     mass_ready_by_id = fields.Int(allow_none=True)
 
-    @validates('sample_code')
+    @validates("sample_code")
     def validate_sample_code(self, value, **kwargs):
         """
         Дээжний код validation
@@ -122,37 +121,38 @@ class SampleSchema(Schema):
         - SQL injection хамгаалалт
         """
         if not value or not value.strip():
-            raise ValidationError('Дээжний код хоосон байж болохгүй')
+            raise ValidationError("Дээжний код хоосон байж болохгүй")
 
         # Аюултай тэмдэгтүүд шалгах
-        dangerous_chars = [';', '--', '/*', '*/', 'xp_', 'sp_']
+        dangerous_chars = [";", "--", "/*", "*/", "xp_", "sp_"]
         for char in dangerous_chars:
             if char in value.lower():
-                raise ValidationError('Дээжний код буруу тэмдэгт агуулж байна')
+                raise ValidationError("Дээжний код буруу тэмдэгт агуулж байна")
 
         return value
 
-    @validates('weight')
+    @validates("weight")
     def validate_weight(self, value, **kwargs):
         """Жин validation - сөрөг тоо байж болохгүй"""
         if value is not None and value < 0:
-            raise ValidationError('Жин сөрөг тоо байж болохгүй')
+            raise ValidationError("Жин сөрөг тоо байж болохгүй")
         return value
 
     class Meta:
-        """Schema metadata"""
-        # Ordered fields for consistent output
+        """Schema тохиргоо"""
+        # Талбарын дараалал тогтмол байх
         ordered = True
-        # Unknown fields-г ignore хийх (strict биш)
-        unknown = 'exclude'
+        # Тодорхойгүй талбаруудыг алгасах
+        unknown = "exclude"
 
 
 class SampleListSchema(Schema):
-    """DataTables-д зориулсан sample list schema"""
+    """DataTables-д зориулсан дээжний жагсаалт schema"""
     draw = fields.Int(required=True)
     recordsTotal = fields.Int(required=True)
     recordsFiltered = fields.Int(required=True)
     data = fields.List(fields.Dict())
 
     class Meta:
+        """Schema тохиргоо"""
         ordered = True

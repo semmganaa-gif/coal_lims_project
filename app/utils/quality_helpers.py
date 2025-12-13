@@ -1,8 +1,8 @@
 # app/utils/quality_helpers.py
 # -*- coding: utf-8 -*-
 """
-Quality Module Helpers - Давхардсан кодыг нэгтгэх
-ISO 17025 Quality Management Systems
+Чанарын модуль туслагчид - Давхардсан кодыг нэгтгэсэн
+ISO 17025 Чанарын удирдлагын систем
 """
 
 from functools import wraps
@@ -70,7 +70,7 @@ def calculate_status_stats(items, status_field='status', status_values=None):
         for status in status_values:
             stats[status] = len([item for item in items if getattr(item, status_field, None) == status])
     else:
-        # Auto-detect unique statuses
+        # Өвөрмөц статусуудыг автоматаар олох
         unique_statuses = set(getattr(item, status_field, None) for item in items)
         for status in unique_statuses:
             if status:
@@ -99,7 +99,7 @@ def generate_sequential_code(model, code_field, prefix, year=None, padding=4):
     """
     year = year or now_local().year
 
-    # Column object авах
+    # Баганы объект авах
     column = getattr(model, code_field)
 
     # Тухайн оны сүүлийн кодыг олох

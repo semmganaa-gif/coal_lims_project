@@ -1,5 +1,5 @@
 $(function () {
-  // Analysis Page Main Script (v10 - Auto Badge)
+  // Шинжилгээний хуудасны үндсэн скрипт (v10 - Auto Badge)
 
   const analysisCodeRaw     = window.LIMS_ANALYSIS_CODE_RAW;
   const analysisCodeDisplay = window.LIMS_ANALYSIS_CODE_DISPLAY;
@@ -7,7 +7,7 @@ $(function () {
   const existing   = window.EXISTING_RESULTS || {};
   const errLabels  = window.ERROR_LABELS || {};
 
-  // ===== RESTORE & SYNC SAMPLE IDs WITH LOCALSTORAGE =====
+  // ===== SAMPLE IDs СЭРГЭЭХ & СИНКЛЭХ (localStorage) =====
   (function restoreSampleIds() {
     if (!analysisCodeRaw) return;
 
@@ -33,7 +33,7 @@ $(function () {
     }
   })();
 
-  // ------- Helpers -------
+  // ------- Туслах функцүүд -------
   function setIf(val, sel){ if(val!==undefined && sel){ const $el=$(sel); if($el.length) $el.val(val) } }
   function restoreParallel(rawPar, sampleId, p){
     if(!rawPar) return;

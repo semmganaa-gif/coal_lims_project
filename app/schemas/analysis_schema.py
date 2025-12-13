@@ -13,20 +13,20 @@ class AnalysisResultSchema(Schema):
 
     API /save_results endpoint-д ашиглана
     """
-    # Read-only
+    # Зөвхөн унших талбарууд (dump_only)
     id = fields.Int(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
     created_by_id = fields.Int(dump_only=True)
 
-    # Required fields
+    # Заавал талбарууд
     sample_id = fields.Int(
         required=True,
         validate=validate.Range(min=1),
         error_messages={
-            'required': 'Дээжний ID шаардлагатай',
-            'invalid': 'Дээжний ID тоо байх ёстой',
-            'range': 'Дээжний ID эерэг тоо байх ёстой'
+            "required": "Дээжний ID шаардлагатай",
+            "invalid": "Дээжний ID тоо байх ёстой",
+            "range": "Дээжний ID эерэг тоо байх ёстой"
         }
     )
 
@@ -34,17 +34,17 @@ class AnalysisResultSchema(Schema):
         required=True,
         validate=validate.Length(min=1, max=50),
         error_messages={
-            'required': 'Шинжилгээний код шаардлагатай'
+            "required": "Шинжилгээний код шаардлагатай"
         }
     )
 
-    # Optional fields
-    raw_data = fields.Str(allow_none=True)  # JSON string
+    # Заавал биш талбарууд
+    raw_data = fields.Str(allow_none=True)  # JSON текст
 
     final_result = fields.Float(
         allow_none=True,
         error_messages={
-            'invalid': 'Үр дүн тоо байх ёстой'
+            "invalid": "Үр дүн тоо байх ёстой"
         }
     )
 
@@ -55,14 +55,14 @@ class AnalysisResultSchema(Schema):
 
     status = fields.Str(
         validate=validate.OneOf([
-            'pending_review',
-            'approved',
-            'rejected',
-            'draft'
+            "pending_review",
+            "approved",
+            "rejected",
+            "draft"
         ]),
-        load_default='pending_review',
+        load_default="pending_review",
         error_messages={
-            'validator_failed': 'Статус буруу (pending_review/approved/rejected/draft)'
+            "validator_failed": "Статус буруу (pending_review/approved/rejected/draft)"
         }
     )
 
@@ -72,68 +72,70 @@ class AnalysisResultSchema(Schema):
         validate=validate.Range(min=1),
         allow_none=True,
         error_messages={
-            'invalid': 'Хэрэгслийн ID тоо байх ёстой',
-            'range': 'Хэрэгслийн ID эерэг тоо байх ёстой'
+            "invalid": "Хэрэгслийн ID тоо байх ёстой",
+            "range": "Хэрэгслийн ID эерэг тоо байх ёстой"
         }
     )
 
     reviewed_by_id = fields.Int(allow_none=True)
     reviewed_at = fields.DateTime(allow_none=True)
 
-    @validates('analysis_code')
+    @validates("analysis_code")
     def validate_analysis_code(self, value, **kwargs):
-        """Analysis code validation"""
+        """Шинжилгээний код validation"""
         if not value or not value.strip():
-            raise ValidationError('Шинжилгээний код хоосон байж болохгүй')
+            raise ValidationError("Шинжилгээний код хоосон байж болохгүй")
 
         # SQL injection хамгаалалт
-        dangerous_chars = [';', '--', '/*', '*/', 'DROP', 'DELETE']
+        dangerous_chars = [";", "--", "/*", "*/", "DROP", "DELETE"]
         value_lower = value.lower()
         for char in dangerous_chars:
             if char.lower() in value_lower:
-                raise ValidationError('Шинжилгээний код буруу тэмдэгт агуулж байна')
+                raise ValidationError("Шинжилгээний код буруу тэмдэгт агуулж байна")
 
         return value
 
-    @validates('final_result')
+    @validates("final_result")
     def validate_final_result(self, value, **kwargs):
         """
-        Final result validation
+        Эцсийн үр дүн validation
 
         - NaN, Infinity шалгах
         - Range-ийн шалгалт (analysis code-оос хамаарна)
         """
         if value is not None:
-            # Check for NaN or Infinity
+            # NaN эсвэл Infinity шалгах
             import math
             if math.isnan(value) or math.isinf(value):
-                raise ValidationError('Үр дүн NaN эсвэл Infinity байж болохгүй')
+                raise ValidationError("Үр дүн NaN эсвэл Infinity байж болохгүй")
 
         return value
 
     @validates_schema
     def validate_schema(self, data, **kwargs):
         """
-        Schema-level validation
+        Schema түвшний validation
 
         - final_result болон raw_data хоёрын аль нэг байх ёстой
         """
-        final_result = data.get('final_result')
-        raw_data = data.get('raw_data')
+        final_result = data.get("final_result")
+        raw_data = data.get("raw_data")
 
         if final_result is None and not raw_data:
             raise ValidationError({
-                '_schema': 'final_result эсвэл raw_data заавал байх ёстой'
+                "_schema": "final_result эсвэл raw_data заавал байх ёстой"
             })
 
     class Meta:
+        """Schema тохиргоо"""
         ordered = True
-        unknown = 'exclude'
+        unknown = "exclude"
 
 
 class AnalysisResultListSchema(Schema):
-    """Multiple analysis results schema"""
+    """Олон шинжилгээний үр дүнгийн schema"""
     results = fields.List(fields.Nested(AnalysisResultSchema))
 
     class Meta:
+        """Schema тохиргоо"""
         ordered = True
