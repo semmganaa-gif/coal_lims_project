@@ -139,7 +139,7 @@ def register_routes(bp):
         # Хугацаа дууссан дээжүүд (retention_date < today, disposal_date = None)
         expired_samples = Sample.query.filter(
             Sample.retention_date < today,
-            Sample.disposal_date == None
+            Sample.disposal_date is None
         ).order_by(Sample.retention_date.asc()).all()
 
         # Удахгүй дуусах дээжүүд (retention_date <= today + 30 days)
@@ -147,7 +147,7 @@ def register_routes(bp):
         upcoming_samples = Sample.query.filter(
             Sample.retention_date >= today,
             Sample.retention_date <= warning_date,
-            Sample.disposal_date == None
+            Sample.disposal_date is None
         ).order_by(Sample.retention_date.asc()).all()
 
         # Устгагдсан дээжүүд (сүүлийн 90 хоног)
@@ -158,15 +158,15 @@ def register_routes(bp):
 
         # Хадгалах хугацаа тодорхойгүй дээжүүд (бүх статус)
         no_retention_samples = Sample.query.filter(
-            Sample.retention_date == None,
-            Sample.disposal_date == None,
-            Sample.return_sample == False
+            Sample.retention_date is None,
+            Sample.disposal_date is None,
+            not Sample.return_sample
         ).order_by(Sample.received_date.desc()).limit(100).all()
 
         # Буцаах дээжүүд (return_sample=True, шинжилгээ дууссан)
         return_samples = Sample.query.filter(
-            Sample.return_sample == True,
-            Sample.disposal_date == None,
+            Sample.return_sample,
+            Sample.disposal_date is None,
             Sample.status == 'completed'
         ).order_by(Sample.received_date.desc()).all()
 
@@ -298,8 +298,8 @@ def register_routes(bp):
 
         # Хугацаагүй бүх дээжийг олох
         samples = Sample.query.filter(
-            Sample.retention_date == None,
-            Sample.disposal_date == None
+            Sample.retention_date is None,
+            Sample.disposal_date is None
         ).all()
 
         if not samples:

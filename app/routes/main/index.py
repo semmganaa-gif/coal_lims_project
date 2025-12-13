@@ -497,7 +497,7 @@ def send_hourly_report():
         if not os.path.exists(template_path):
             if os.path.exists(template_path + ".xlsx"): template_path += ".xlsx"
             else:
-                flash(f"Загвар файл олдсонгүй!", "danger")
+                flash("Загвар файл олдсонгүй!", "danger")
                 return redirect(url_for('main.index'))
 
         with open(template_path, "rb") as f:

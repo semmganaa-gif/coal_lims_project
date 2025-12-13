@@ -213,13 +213,13 @@ def analysis_config():
     if request.method == 'POST':
         # Profiles авах
         simple_profiles = AnalysisProfile.query.filter(
-            (AnalysisProfile.pattern == None) | (AnalysisProfile.pattern == ''),
+            (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
             AnalysisProfile.client_name != 'CHPP'
         ).all()
 
         chpp_profiles = AnalysisProfile.query.filter(
             AnalysisProfile.client_name == 'CHPP',
-            AnalysisProfile.pattern != None,
+            AnalysisProfile.pattern is not None,
             AnalysisProfile.pattern != ''
         ).all()
 
@@ -268,7 +268,7 @@ def analysis_config():
             continue
         for s_type in types:
             exists = AnalysisProfile.query.filter(
-                (AnalysisProfile.pattern == None) | (AnalysisProfile.pattern == ''),
+                (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
                 AnalysisProfile.client_name == client,
                 AnalysisProfile.sample_type == s_type
             ).first()
@@ -316,13 +316,13 @@ def analysis_config():
     analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
 
     simple_profiles = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern == None) | (AnalysisProfile.pattern == ''),
+        (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
         AnalysisProfile.client_name != 'CHPP'
     ).order_by(AnalysisProfile.client_name, AnalysisProfile.sample_type).all()
 
     chpp_profiles = AnalysisProfile.query.filter(
         AnalysisProfile.client_name == 'CHPP',
-        AnalysisProfile.pattern != None,
+        AnalysisProfile.pattern is not None,
         AnalysisProfile.pattern != ''
     ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
 

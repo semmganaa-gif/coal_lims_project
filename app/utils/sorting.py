@@ -236,14 +236,16 @@ def sort_samples(samples: List[Any], by: str = "code") -> List[Any]:
     if by == "full":
         return sorted(samples, key=sample_full_sort_key)
     elif by == "natural":
-        key_fn = lambda s: natural_sort_key(
-            getattr(s, 'sample_code', None) or getattr(s, 'name', s)
-        )
+        def key_fn(s):
+            return natural_sort_key(
+                    getattr(s, 'sample_code', None) or getattr(s, 'name', s)
+                )
         return sorted(samples, key=key_fn)
     else:  # "code" - default
-        key_fn = lambda s: custom_sample_sort_key(
-            getattr(s, 'sample_code', None) or getattr(s, 'name', s)
-        )
+        def key_fn(s):
+            return custom_sample_sort_key(
+                    getattr(s, 'sample_code', None) or getattr(s, 'name', s)
+                )
         return sorted(samples, key=key_fn)
 
 

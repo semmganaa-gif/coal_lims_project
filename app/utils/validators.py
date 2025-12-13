@@ -259,7 +259,7 @@ def validate_equipment_id(
     try:
         eq_id = int(value)
     except (ValueError, TypeError):
-        return None, f"Equipment ID тоо байх ёстой"
+        return None, "Equipment ID тоо байх ёстой"
 
     if eq_id <= 0:
         return None, "Equipment ID эерэг тоо байх ёстой"

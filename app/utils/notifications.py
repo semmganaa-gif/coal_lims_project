@@ -12,6 +12,7 @@ from flask import render_template_string
 from flask_mail import Message
 from app import mail, db
 from app.models import User, SystemSetting
+from app.utils.datetime import now_local
 
 logger = logging.getLogger(__name__)
 
