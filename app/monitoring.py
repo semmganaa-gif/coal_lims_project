@@ -298,7 +298,7 @@ class QueryTimer:
         self.start_time = time.time()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
         if self.start_time:
             duration = time.time() - self.start_time
             track_db_query(self.query_type, duration)

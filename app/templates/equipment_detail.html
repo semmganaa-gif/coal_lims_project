@@ -55,7 +55,7 @@
           <i class="bi bi-upc-scan"></i> Лаб дугаар: <span class="fw-semibold">{{ eq.lab_code }}</span>
         </span>
       {% endif %}
-      {% if current_user.role in ['ahlah', 'admin'] %}
+      {% if current_user.role in ['senior', 'admin'] %}
       <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editEqModal">
         <i class="bi bi-pencil"></i> Засах
       </button>
@@ -208,12 +208,12 @@
               <select name="action_type" class="form-select form-select-sm">
                 <option value="Daily Check">✅ Дотоод хяналт (Check)</option>
                 <option value="Maintenance">🔧 Урсгал үйлчилгээ (Maintenance)</option>
-                {% if current_user.role in ['ahlah', 'admin'] %}
+                {% if current_user.role in ['senior', 'admin'] %}
                   <option value="Repair">🛠️ Их засвар (Repair)</option>
                   <option value="Calibration">📏 Баталгаажуулалт (Calibration)</option>
                 {% endif %}
               </select>
-              {% if current_user.role in ['ahlah', 'admin'] %}
+              {% if current_user.role in ['senior', 'admin'] %}
                 <div class="form-text small">"Calibration" сонговол хугацаа автоматаар сунгагдана.</div>
               {% endif %}
             </div>

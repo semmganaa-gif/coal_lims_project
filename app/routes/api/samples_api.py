@@ -806,7 +806,7 @@ def register_routes(bp):
         samples = query.order_by(Sample.received_date.desc()).limit(limit).all()
 
         excel_data = create_sample_export(samples)
-        filename = f"samples_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        filename = f"samples_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)
 
@@ -843,6 +843,6 @@ def register_routes(bp):
         results = query.order_by(AnalysisResult.created_at.desc()).limit(limit).all()
 
         excel_data = create_analysis_export(results)
-        filename = f"analysis_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        filename = f"analysis_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)

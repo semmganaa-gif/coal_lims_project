@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
+            <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title">Гүйцэтгэлд</h5>
                     <h2>{{ stats.in_progress }}</h2>
@@ -71,25 +71,25 @@
                     <tr>
                         <td><strong>{{ capa.ca_number }}</strong></td>
                         <td>{{ capa.issue_date.strftime('%Y-%m-%d') if capa.issue_date else '' }}</td>
-                        <td><span class="badge badge-info">{{ capa.issue_source }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ capa.issue_source }}</span></td>
                         <td>{{ capa.issue_description[:80] }}...</td>
                         <td>
                             {% if capa.severity == 'Critical' %}
-                                <span class="badge badge-danger">Эрс</span>
+                                <span class="badge bg-danger">Эрс</span>
                             {% elif capa.severity == 'Major' %}
-                                <span class="badge badge-warning">Томоохон</span>
+                                <span class="badge bg-warning text-dark">Томоохон</span>
                             {% else %}
-                                <span class="badge badge-secondary">Бага</span>
+                                <span class="badge bg-secondary">Бага</span>
                             {% endif %}
                         </td>
                         <td>{{ capa.responsible_person.username if capa.responsible_person else '-' }}</td>
                         <td>
                             {% if capa.status == 'open' %}
-                                <span class="badge badge-danger">Нээлттэй</span>
+                                <span class="badge bg-danger">Нээлттэй</span>
                             {% elif capa.status == 'in_progress' %}
-                                <span class="badge badge-warning">Гүйцэтгэлд</span>
+                                <span class="badge bg-warning text-dark">Гүйцэтгэлд</span>
                             {% else %}
-                                <span class="badge badge-success">Хаагдсан</span>
+                                <span class="badge bg-success">Хаагдсан</span>
                             {% endif %}
                         </td>
                         <td>

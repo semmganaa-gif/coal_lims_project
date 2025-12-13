@@ -13,6 +13,7 @@ from flask import (
 )
 from flask_login import login_required
 from datetime import datetime, timedelta
+from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from collections import defaultdict
 import json
@@ -334,6 +335,6 @@ def register_routes(bp):
         # Excel export
         from app.utils.exports import create_audit_export
         excel_data = create_audit_export(logs)
-        filename = f"audit_log_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        filename = f"audit_log_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)

@@ -45,7 +45,7 @@ reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 def _year_arg() -> int:
     """?year параметрийг аюулгүй parse хийх."""
     try:
-        y = int(request.args.get("year", datetime.now().year))
+        y = int(request.args.get("year", now_local().year))
         if not (2000 <= y <= 2100):
             raise ValueError
         return y

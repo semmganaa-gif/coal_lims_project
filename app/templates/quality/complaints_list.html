@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="col-md-2">
-            <div class="card bg-warning text-white">
+            <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5>Шалгаж байгаа</h5>
                     <h2>{{ stats.investigating }}</h2>
@@ -84,23 +84,23 @@
                             <strong>{{ complaint.client_name }}</strong><br>
                             <small class="text-muted">{{ complaint.contact_person }}</small>
                         </td>
-                        <td><span class="badge badge-info">{{ complaint.complaint_type }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ complaint.complaint_type }}</span></td>
                         <td>{{ complaint.description[:80] }}...</td>
                         <td>{{ complaint.investigated_by.username if complaint.investigated_by else '-' }}</td>
                         <td>
                             {% if complaint.status == 'received' %}
-                                <span class="badge badge-secondary">Хүлээгдэж байна</span>
+                                <span class="badge bg-secondary">Хүлээгдэж байна</span>
                             {% elif complaint.status == 'investigating' %}
-                                <span class="badge badge-warning">Шалгаж байна</span>
+                                <span class="badge bg-warning text-dark">Шалгаж байна</span>
                             {% elif complaint.status == 'resolved' %}
-                                <span class="badge badge-primary">Шийдэгдсэн</span>
+                                <span class="badge bg-primary">Шийдэгдсэн</span>
                             {% else %}
-                                <span class="badge badge-success">Хаагдсан</span>
+                                <span class="badge bg-success">Хаагдсан</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if complaint.capa_created %}
-                                <span class="badge badge-danger">✓ Үүссэн</span>
+                                <span class="badge bg-danger">✓ Үүссэн</span>
                             {% else %}
                                 -
                             {% endif %}

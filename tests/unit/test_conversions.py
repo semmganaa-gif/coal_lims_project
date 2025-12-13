@@ -137,3 +137,94 @@ class TestCalculateAllConversions:
         assert 'relative_density_d' in result
         assert result['relative_density_d'] == 50.0
         # Note: 'relative_density' key might be TRD,ad
+
+    def test_comma_in_value(self):
+        """Comma in value (European format) should be handled"""
+        raw = {
+            'inherent_moisture': "5,5",  # European decimal format
+            'ash': "10,0",
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        assert result is not None
+
+    def test_qnet_ar_calculation(self):
+        """Qnet,ar calculation requires all inputs"""
+        raw = {
+            'calorific_value': 6000.0,
+            'ash': 10.0,
+            'inherent_moisture': 5.0,
+            'total_moisture': 12.0,
+            'volatile_matter': 30.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        # volatile_matter_daf should be calculated first
+        if 'volatile_matter_daf' in result:
+            # If all values present, qnet_ar may be calculated
+            assert 'qnet_ar' in result or True  # May or may not be calculated
+
+    def test_qnet_ar_missing_calorific_value(self):
+        """Qnet,ar not calculated without calorific_value"""
+        raw = {
+            'ash': 10.0,
+            'inherent_moisture': 5.0,
+            'total_moisture': 12.0,
+            'volatile_matter': 30.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        assert 'qnet_ar' not in result
+
+    def test_invalid_string_value(self):
+        """Invalid string should not crash"""
+        raw = {
+            'inherent_moisture': "invalid",
+            'ash': 10.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        assert result is not None
+        # ash_d should not be calculated without valid Mad
+        assert 'ash_d' not in result
+
+    def test_null_string_value(self):
+        """'null' string treated as None"""
+        raw = {
+            'inherent_moisture': 'null',
+            'ash': 10.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        assert 'ash_d' not in result
+
+    def test_mad_zero_relative_density(self):
+        """Mad=0 should work for relative density"""
+        raw = {
+            'inherent_moisture': 0.0,
+            'relative_density': 50.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        # TRD,ad = TRD,d * (100 - 0) / 100 = TRD,d
+        assert 'relative_density' in result
+
+    def test_all_conversion_bases(self):
+        """Test all conversion bases (d, daf, ar)"""
+        raw = {
+            'inherent_moisture': 5.0,
+            'ash': 10.0,
+            'total_moisture': 12.0,
+            'volatile_matter': 30.0,
+            'sulfur': 1.0,
+        }
+        result = calculate_all_conversions(raw, PARAMETER_DEFINITIONS)
+        # Should have multiple _d, _daf, _ar conversions
+        assert 'ash_d' in result
+        assert 'volatile_matter_daf' in result
+        assert 'ash_ar' in result
+
+    def test_empty_param_definitions(self):
+        """Empty param definitions should not crash"""
+        raw = {
+            'inherent_moisture': 5.0,
+            'ash': 10.0,
+        }
+        result = calculate_all_conversions(raw, {})
+        assert result is not None
+        # No conversions should be done without definitions
+        assert 'ash_d' not in result

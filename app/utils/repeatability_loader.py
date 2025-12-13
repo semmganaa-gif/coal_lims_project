@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from functools import lru_cache
 from app.models import SystemSetting
 from app.config.repeatability import LIMIT_RULES as FILE_LIMIT_RULES
 

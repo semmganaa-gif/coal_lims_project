@@ -56,9 +56,9 @@
                         </td>
                         <td>
                             {% if log.within_limits %}
-                                <span class="badge badge-success">✓ Хэвийн</span>
+                                <span class="badge bg-success">✓ Хэвийн</span>
                             {% else %}
-                                <span class="badge badge-danger">⚠ Хэмжээнээс гарсан</span>
+                                <span class="badge bg-danger">⚠ Хэмжээнээс гарсан</span>
                             {% endif %}
                         </td>
                         <td>{{ log.recorded_by.username if log.recorded_by else '-' }}</td>

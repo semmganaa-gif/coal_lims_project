@@ -60,10 +60,10 @@ class UserSchema(Schema):
         allow_none=True
     )
 
-    is_active = fields.Boolean(missing=True)
+    is_active = fields.Boolean(load_default=True)
 
     @validates('username')
-    def validate_username(self, value):
+    def validate_username(self, value, **kwargs):
         """
         Username validation
 
@@ -90,7 +90,7 @@ class UserSchema(Schema):
         return value
 
     @validates('password')
-    def validate_password(self, value):
+    def validate_password(self, value, **kwargs):
         """
         Нууц үгний validation
 

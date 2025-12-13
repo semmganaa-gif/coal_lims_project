@@ -298,7 +298,7 @@ def check_and_send_equipment_notifications():
     from app.models import Equipment
     from datetime import datetime, timedelta
 
-    today = datetime.now().date()
+    today = now_local().date()
     threshold = today + timedelta(days=30)  # 30 хоногийн дотор
 
     equipment_due = Equipment.query.filter(

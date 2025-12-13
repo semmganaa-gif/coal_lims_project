@@ -255,7 +255,11 @@ $(function () {
     const modal = $(this), body = modal.find('.modal-body');
     body.html('<p class="text-center">Ачаалж байна...</p>');
 
-    $.getJSON(`/api/eligible_samples/${analysisCodeRaw}`, function(resp){
+    console.log('[Modal] Loading eligible samples for:', analysisCodeRaw);
+
+    $.getJSON(`/api/eligible_samples/${analysisCodeRaw}`)
+    .done(function(resp){
+      console.log('[Modal] API response:', resp);
       const samples = resp.samples || [];
       const rejected = resp.rejected || [];
       const rejectedCount = resp.rejected_count || 0;

@@ -21,23 +21,23 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3">GBW дугаар (Batch No)</th>
-                            <th>Бүртгэсэн огноо</th>
-                            <th>Төлөв</th>
-                            <th>Агуулга</th>
-                            <th class="text-end pe-3">Үйлдэл</th>
+                            <th class="ps-3" style="min-width: 220px;">GBW дугаар (Batch No)</th>
+                            <th style="min-width: 120px;">Бүртгэсэн огноо</th>
+                            <th style="min-width: 80px;">Төлөв</th>
+                            <th style="min-width: 100px;">Агуулга</th>
+                            <th class="text-end pe-3" style="min-width: 160px;">Үйлдэл</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for gbw in gbw_list %}
                         <tr class="{{ 'table-success bg-opacity-10' if gbw.is_active else '' }}">
-                            <td class="ps-3">
+                            <td class="ps-3" style="white-space: nowrap;">
                                 <strong>{{ gbw.name }}</strong>
                                 {% if gbw.is_active %}
                                     <i class="bi bi-check-circle-fill text-success ms-1" title="Ашиглагдаж буй"></i>
                                 {% endif %}
                             </td>
-                            <td>{{ gbw.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td style="white-space: nowrap;">{{ gbw.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 {% if gbw.is_active %}
                                     <span class="badge bg-success">Active</span>

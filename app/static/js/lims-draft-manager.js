@@ -53,7 +53,7 @@
 
         // Merge хийх бол өмнөх өгөгдлийг авах
         if (merge) {
-          const existing = this.restore();
+          const existing = this.restore(false, true);
           toSave = { ...existing, ...data };
         }
 
@@ -79,13 +79,13 @@
         localStorage.setItem(this.key, jsonData);
 
         console.log(
-          `✅ Draft saved: ${this.analysisCode} (${sizeInMB}MB, ${Object.keys(toSave).length} samples)`
+          `✅ Draft saved: ${this.analysisCode} (${sizeInMB}MB, ${Object.keys(toSave).filter(k => k !== '_meta').length} samples)`
         );
 
         return true;
 
       } catch (error) {
-        if (error.name === 'QuotaExceededError') {
+        if (this._isQuotaError(error)) {
           console.error('❌ LocalStorage quota exceeded! Cannot save draft.');
 
           // Callback дуудах
@@ -111,12 +111,12 @@
      * @param {boolean} includeMeta - _meta өгөгдлийг буцаах эсэх (default: false)
      * @returns {Object} Сэргээсэн өгөгдөл ({} хоосон бол)
      */
-    restore(includeMeta = false) {
+    restore(includeMeta = false, silent = false) {
       try {
         const jsonData = localStorage.getItem(this.key);
 
         if (!jsonData) {
-          console.log(`ℹ️ No draft found for ${this.analysisCode}`);
+          if (!silent) console.log(`ℹ️ No draft found for ${this.analysisCode}`);
           return {};
         }
 
@@ -126,13 +126,14 @@
         const meta = data._meta || null;
         const sampleCount = Object.keys(data).filter(k => k !== '_meta').length;
 
-        console.log(
+        if (!silent) console.log(
           `✅ Draft restored: ${this.analysisCode} (${sampleCount} samples)`
         );
 
-        // includeMeta=false бол _meta-г хасаж буцаана
-        if (!includeMeta && data._meta) {
-          delete data._meta;
+        // includeMeta=false бол _meta-г ХАСАЖ буцаах (ӨГӨГДЛИЙГ ӨӨРЧЛӨХГҮЙ)
+        if (!includeMeta) {
+          const { _meta, ...rest } = data;
+          return rest;
         }
 
         return data;
@@ -182,7 +183,7 @@
         }
 
         // Тодорхой sample-уудын draft устгах
-        const existing = this.restore();
+        const existing = this.restore(false, true);
         let purgedCount = 0;
 
         sampleIds.forEach(id => {
@@ -194,11 +195,11 @@
         });
 
         if (purgedCount > 0) {
-          // Үлдсэн өгөгдлийг хадгалах
+          // Үлдсэн өгөгдлийг хадгалах (save() ашиглан _meta-г хадгална)
           if (Object.keys(existing).length === 0) {
             localStorage.removeItem(this.key);
           } else {
-            localStorage.setItem(this.key, JSON.stringify(existing));
+            this.save(existing, false); // merge=false, шинээр хадгалах
           }
 
           console.log(
@@ -223,7 +224,7 @@
      * @returns {boolean} Draft байгаа эсэх
      */
     hasDraft(sampleId) {
-      const drafts = this.restore();
+      const drafts = this.restore(false, true);
       return !!drafts[String(sampleId)];
     }
 
@@ -234,7 +235,7 @@
      * @returns {Object|null} Draft data эсвэл null
      */
     getDraft(sampleId) {
-      const drafts = this.restore();
+      const drafts = this.restore(false, true);
       return drafts[String(sampleId)] || null;
     }
 
@@ -246,7 +247,7 @@
      * @returns {boolean} Амжилттай эсэх
      */
     updateDraft(sampleId, data) {
-      const drafts = this.restore();
+      const drafts = this.restore(false, true);
       drafts[String(sampleId)] = data;
       return this.save(drafts, false);
     }
@@ -257,7 +258,7 @@
      * @returns {number} Draft-тай sample-ийн тоо
      */
     getCount() {
-      const drafts = this.restore();
+      const drafts = this.restore(false, true);
       return Object.keys(drafts).length;
     }
 
@@ -267,7 +268,7 @@
      * @returns {Array<string>} Sample IDs
      */
     getSampleIds() {
-      const drafts = this.restore();
+      const drafts = this.restore(false, true);
       return Object.keys(drafts);
     }
 
@@ -278,6 +279,17 @@
      */
     setQuotaExceededHandler(handler) {
       this.quotaExceededHandler = handler;
+    }
+
+    /**
+     * QuotaExceededError шалгах (cross-browser compatible)
+     * Safari: code 22, Firefox: code 1014
+     *
+     * @param {Error} error - Шалгах error объект
+     * @returns {boolean} QuotaExceededError эсэх
+     */
+    _isQuotaError(error) {
+      return error?.name === 'QuotaExceededError' || error?.code === 22 || error?.code === 1014;
     }
 
     /**

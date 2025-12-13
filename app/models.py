@@ -752,6 +752,9 @@ class UsageLog(db.Model):
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
     duration_minutes = db.Column(db.Integer)   # Нийт ажилласан минут
+    used_by = db.Column(db.String(100), nullable=True)  # Хэрэглэгчийн нэр
+    purpose = db.Column(db.String(255), nullable=True)  # Ашигласан зорилго
+
 # -------------------------
 # ТООЦООЛОЛ
 # -------------------------

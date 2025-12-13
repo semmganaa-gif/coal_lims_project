@@ -225,16 +225,16 @@ class TestAnalysisHelpersApi:
             assert _requires_mass_gate('CRI') is False
             assert _requires_mass_gate('CSR') is False
 
-    def test_to_float_or_none(self, app):
-        """_to_float_or_none function"""
+    def test_to_float(self, app):
+        """to_float function from converters"""
         with app.app_context():
-            from app.routes.api.helpers import _to_float_or_none
+            from app.utils.converters import to_float
 
-            assert _to_float_or_none('5.25') == 5.25
-            assert _to_float_or_none('10') == 10.0
-            assert _to_float_or_none(None) is None
-            assert _to_float_or_none('') is None
-            assert _to_float_or_none('invalid') is None
+            assert to_float('5.25') == 5.25
+            assert to_float('10') == 10.0
+            assert to_float(None) is None
+            assert to_float('') is None
+            assert to_float('invalid') is None
 
     def test_coalesce_diff(self, app):
         """_coalesce_diff function - extracts diff from raw_data dict"""

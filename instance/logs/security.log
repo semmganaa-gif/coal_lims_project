@@ -1,0 +1,676 @@
+2025-12-11 12:35:40 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 12:40:36 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 12:42:58 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 12:48:40 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 12:51:58 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 12:59:45 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 13:04:32 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 13:08:13 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:05:23 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:38:33 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:43:18 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(3) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 43, 18, 87388, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:43:18 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(4) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 43, 18, 508614, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:43:18 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(5) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 43, 18, 763804, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:44:00 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:47:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(8) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 47, 40, 68693, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:47:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(9) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 47, 40, 490396, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:47:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(10) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 47, 40, 723911, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:48:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:52:02 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(11) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 52, 2, 851055, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:52:03 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(12) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 52, 3, 210055, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:52:03 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(13) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 52, 3, 448256, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:52:37 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:54:08 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(14) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 54, 8, 705125, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:54:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(15) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 54, 9, 71485, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:54:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(16) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 54, 9, 309032, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:54:39 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 14:59:16 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(17) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 59, 16, 466825, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:59:16 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(18) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 59, 16, 884437, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:59:17 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(19) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 14, 59, 17, 117981, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 14:59:48 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:01:47 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(20) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 1, 47, 970195, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:01:48 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(21) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 1, 48, 428017, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:01:48 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(22) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 1, 48, 647494, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:02:18 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:04:53 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(23) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 4, 53, 655459, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:04:54 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(24) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 4, 54, 19891, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:04:54 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(25) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 4, 54, 302274, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:05:30 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:06:54 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(26) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 6, 54, 225554, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:06:54 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(27) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 6, 54, 654127, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:06:54 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(28) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 6, 54, 888583, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:07:32 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:09:19 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(29) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 9, 19, 372157, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:09:19 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(30) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 9, 19, 774145, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:09:20 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(31) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 9, 20, 63261, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:10:01 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:11:28 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(32) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 11, 28, 929487, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:11:29 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(33) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 11, 29, 359334, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:11:29 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(34) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 11, 29, 709609, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:12:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:13:17 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(35) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 13, 17, 385498, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:13:17 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(36) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 13, 17, 843914, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:13:18 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(37) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 13, 18, 105055, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:13:58 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:16:36 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(38) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 16, 36, 239050, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:16:36 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(39) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 16, 36, 683978, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:16:36 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(40) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 16, 36, 984141, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:17:34 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:19:50 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(41) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 19, 50, 874026, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:19:51 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(42) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 19, 51, 510047, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:19:51 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(43) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 19, 51, 792151, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:20:52 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:22:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(44) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 22, 40, 40786, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:22:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(45) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 22, 40, 469830, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:22:40 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(46) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 22, 40, 728223, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:23:36 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:27:24 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(47) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 27, 24, 298338, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:27:24 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(48) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 27, 24, 854699, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:27:25 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(49) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 27, 25, 258676, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:28:44 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:30:16 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(50) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 30, 16, 777941, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:30:17 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(51) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 30, 17, 241445, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:30:17 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(52) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 30, 17, 572757, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:31:09 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:32:46 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(53) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 32, 46, 537535, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:32:47 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(54) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 32, 47, 11235, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:32:47 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(55) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 32, 47, 282530, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:33:39 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:35:07 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(56) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 35, 7, 496950, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:35:07 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(57) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 35, 7, 945345, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:35:08 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(58) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 35, 8, 250969, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:36:00 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:38:35 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(59) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 38, 35, 269262, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:38:35 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(60) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 38, 35, 705903, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:38:36 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(61) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 38, 36, 13466, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:39:27 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:41:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(62) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 41, 9, 412234, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:41:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(63) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 41, 9, 861595, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:41:10 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(64) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 41, 10, 150593, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:42:02 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:43:45 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(65) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 43, 45, 122674, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:43:45 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(66) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 43, 45, 590987, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:43:45 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(67) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 43, 45, 859775, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:44:48 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:46:25 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(68) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 46, 25, 666130, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:46:26 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(69) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 46, 26, 174393, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:46:26 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(70) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 46, 26, 442036, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:47:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 15:55:28 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(71) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 55, 28, 848049, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:55:29 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(72) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 55, 29, 235729, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:55:29 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(73) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 15, 55, 29, 499422, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 15:56:25 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:10:48 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(74) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 10, 48, 891669, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:10:49 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(75) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 10, 49, 363918, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:10:49 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(76) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 10, 49, 684668, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:12:00 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:14:20 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(77) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 14, 20, 975548, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:14:21 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(78) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 14, 21, 494555, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:14:21 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(79) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 14, 21, 804429, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:15:38 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:17:38 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(80) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 17, 38, 292377, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:17:38 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(81) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 17, 38, 921849, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:17:39 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(82) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 17, 39, 394085, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:19:03 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:23:04 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(83) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 23, 4, 872620, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:23:05 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(84) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 23, 5, 479341, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:23:05 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(85) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 23, 5, 905564, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:24:31 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:28:08 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(86) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 28, 8, 316179, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:28:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(87) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 28, 9, 53850, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:28:09 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(88) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 28, 9, 344466, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:29:21 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:32:10 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(89) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 32, 10, 345271, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'login_success', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin", "role": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:32:10 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(90) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 32, 10, 895886, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': None, 'action': 'login_failed', 'resource_type': None, 'resource_id': None, 'details': '{"username": "nonexistent"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:32:11 [SECURITY] ERROR: Failed to write audit log: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "audit_log_pkey"
+DETAIL:  Key (id)=(91) already exists.
+
+[SQL: INSERT INTO audit_log (timestamp, user_id, action, resource_type, resource_id, details, ip_address, user_agent) VALUES (%(timestamp)s, %(user_id)s, %(action)s, %(resource_type)s, %(resource_id)s, %(details)s, %(ip_address)s, %(user_agent)s) RETURNING audit_log.id]
+[parameters: {'timestamp': datetime.datetime(2025, 12, 11, 16, 32, 11, 291131, tzinfo=zoneinfo.ZoneInfo(key='Asia/Ulaanbaatar')), 'user_id': 1, 'action': 'logout', 'resource_type': None, 'resource_id': None, 'details': '{"username": "admin"}', 'ip_address': '127.0.0.1', 'user_agent': 'Werkzeug/3.1.3'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-12-11 16:33:26 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:38:04 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:42:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:47:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:50:50 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:55:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 16:59:01 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:02:02 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:24:58 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:29:20 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:31:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:33:09 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:37:09 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:41:45 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:46:59 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:51:28 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 17:55:29 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:03:56 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:09:14 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:13:41 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:29:26 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:32:06 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:39:13 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:41:06 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 18:44:07 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 21:33:43 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 21:44:50 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 21:46:40 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 21:50:57 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 22:49:56 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 22:55:55 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:03:58 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:19:39 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:27:11 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:33:45 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:41:50 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:47:34 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-11 23:53:09 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:01:30 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:07:42 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:16:35 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:28:49 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:35:40 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:35:41 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 00:42:01 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:42:01 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 00:50:07 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:50:07 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 00:58:14 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 00:58:14 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:05:30 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:05:31 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:12:49 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:12:49 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:25:21 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:25:21 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:35:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:35:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:43:14 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:43:14 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 01:54:37 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 01:54:37 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 02:06:59 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 02:06:59 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 02:25:31 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 02:25:31 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 02:38:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 02:38:08 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 02:48:44 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 02:48:44 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:01:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:01:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:13:11 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:13:11 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:20:37 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:20:37 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:29:46 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:29:46 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:38:26 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:38:26 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 03:56:36 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 03:56:36 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 04:14:49 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 04:14:49 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 04:26:17 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 04:26:17 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 04:40:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 04:40:19 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 04:49:34 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 04:49:34 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-12 05:01:59 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-12 05:01:59 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-13 13:18:01 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:18:18 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:18:34 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:18:57 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:19:10 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:20:53 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:28:11 [SECURITY] ERROR: Failed to write audit log: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-12-13 13:30:53 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:30:53 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-13 13:32:02 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:32:02 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})
+2025-12-13 13:32:22 [SECURITY] ERROR: Failed to write audit log: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-12-13 13:32:42 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=3.0000, diff=7.0000 (233.33%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 1.0, 'm3': 10.97}})
+2025-12-13 13:32:42 [SECURITY] WARNING: POTENTIAL TAMPERING: Mad calculation mismatch - client=10.0000, server=70.3333, diff=60.3333 (85.78%) (user=None, sample=None, raw_data={'p1': {'m1': 10.0, 'm2': 15.0, 'm3': 14.5}, 'p2': {'m1': 10.0, 'm2': 15.0, 'm3': 14.4}})

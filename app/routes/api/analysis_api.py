@@ -16,10 +16,10 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy import or_, not_
-import traceback
 import json
 
 from app import db, limiter
+from app.utils.converters import to_float
 from app.models import Sample, AnalysisResult, AnalysisResultLog, ControlStandard, GbwStandard
 from app.utils.datetime import now_local
 from app.utils.normalize import normalize_raw_data
@@ -27,6 +27,9 @@ from app.utils.codes import norm_code, BASE_TO_ALIASES
 
 # ✅ Дүрмийн логик импортлох (Шинэ файл)
 from app.utils.analysis_rules import determine_result_status
+
+# Server-side verification (Security)
+from app.utils.server_calculations import verify_and_recalculate
 
 from app.utils.validators import (
     validate_save_results_batch,
@@ -39,7 +42,7 @@ from datetime import timedelta
 from .helpers import (
     _requires_mass_gate,
     _has_m_task_sql,
-    _to_float_or_none,
+    
     _coalesce_diff,
     _effective_limit,
 )
@@ -273,7 +276,7 @@ def register_routes(bp):
                             raw_norm[key] = raw_in[key]
 
                     # Tolerance logic
-                    avg = _to_float_or_none(raw_norm.get("avg"))
+                    avg = to_float(raw_norm.get("avg"))
                     diff = _coalesce_diff(raw_norm)
                     limit, mode, band = _effective_limit(analysis_code, avg)
                     effective_limit = (avg * limit) if (mode == "percent" and avg is not None) else limit
@@ -289,6 +292,23 @@ def register_routes(bp):
                         "limit_mode": mode,
                         "t_exceeded": bool(t_exceeded),
                     })
+                    
+                    # ============================================================
+                    # 🔒 SERVER-SIDE CALCULATION VERIFICATION (Security)
+                    # ============================================================
+                    if final_result is not None and raw_norm:
+                        server_result, calc_warnings = verify_and_recalculate(
+                            analysis_code=analysis_code,
+                            client_final_result=final_result,
+                            raw_data=raw_norm,
+                            user_id=current_user.id,
+                            sample_id=sample_id
+                        )
+                        if server_result is not None:
+                            final_result = server_result
+                        if calc_warnings:
+                            for warn in calc_warnings:
+                                current_app.logger.warning(warn)
                     
                     # ============================================================
                     # 🛠 CONTROL & GBW LOGIC (Dry Basis Conversion)
@@ -319,7 +339,7 @@ def register_routes(bp):
                                 targets_map = active_std.targets
                                 if isinstance(targets_map, str):
                                     try: targets_map = json.loads(targets_map)
-                                    except: targets_map = {}
+                                    except (json.JSONDecodeError, ValueError): targets_map = {}
 
                                 # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
                                 if isinstance(targets_map, dict) and analysis_code in targets_map:
@@ -572,7 +592,7 @@ def register_routes(bp):
     @bp.route("/update_result_status/<int:result_id>/<new_status>", methods=["POST"])
     @login_required
     def update_result_status(result_id, new_status):
-        if getattr(current_user, "role", None) not in ("ahlah", "admin"):
+        if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Эрх хүрэхгүй"}), 403
 
         res = AnalysisResult.query.get_or_404(result_id)
@@ -654,7 +674,7 @@ def register_routes(bp):
         Нэгтгэлээс хоосон нүдэн дээр дарж шинжилгээ захиалах.
         Дээжний analyses_to_perform талбарт шинэ код нэмнэ.
         """
-        if getattr(current_user, "role", None) not in ("ahlah", "admin"):
+        if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Зөвхөн ахлах болон админ захиалж болно"}), 403
 
         data = request.get_json(silent=True) or {}

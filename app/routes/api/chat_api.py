@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
 from sqlalchemy import or_, and_, func
+from app.utils.security import escape_like_pattern
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'}
@@ -144,7 +145,8 @@ def register_routes(bp):
 
         # Хайлт
         if search:
-            query = query.filter(ChatMessage.message.ilike(f'%{search}%'))
+            safe_search = escape_like_pattern(search)
+            query = query.filter(ChatMessage.message.ilike(f'%{safe_search}%'))
 
         messages = query.order_by(ChatMessage.sent_at.desc()).paginate(
             page=page, per_page=per_page, error_out=False
@@ -180,8 +182,9 @@ def register_routes(bp):
         if not query_text or len(query_text) < 2:
             return jsonify({'messages': []})
 
+        safe_query_text = escape_like_pattern(query_text)
         q = ChatMessage.query.filter(
-            ChatMessage.message.ilike(f'%{query_text}%'),
+            ChatMessage.message.ilike(f'%{safe_query_text}%'),
             ChatMessage.is_deleted == False,
             or_(
                 ChatMessage.sender_id == current_user.id,
@@ -275,11 +278,12 @@ def register_routes(bp):
         if not query or len(query) < 2:
             return jsonify({'samples': []})
 
+        safe_query = escape_like_pattern(query)
         samples = Sample.query.filter(
             or_(
-                Sample.sample_code.ilike(f'%{query}%'),
-                Sample.client_name.ilike(f'%{query}%'),
-                Sample.sample_type.ilike(f'%{query}%')
+                Sample.sample_code.ilike(f'%{safe_query}%'),
+                Sample.client_name.ilike(f'%{safe_query}%'),
+                Sample.sample_type.ilike(f'%{safe_query}%')
             )
         ).order_by(Sample.id.desc()).limit(20).all()
 

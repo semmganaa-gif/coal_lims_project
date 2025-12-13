@@ -10,12 +10,11 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 # 2. Third-Party Imports (Гараас суулгасан сангууд)
-import pandas as pd
 from flask import render_template, flash, redirect, url_for, request, jsonify, send_file, current_app
 from flask_login import login_required, current_user
 from flask_mail import Message
 from openpyxl import load_workbook
-from openpyxl.styles import Border, Side, Alignment, Font, Color
+from openpyxl.styles import Border, Side, Alignment, Font
 
 # 3. Local Application Imports (Таны төслийн файлууд)
 from app import db, mail
@@ -28,7 +27,6 @@ from .helpers import get_12h_shift_code, get_quarter_code
 
 # Utils
 from app.utils.datetime import now_local
-from app.utils.shifts import get_current_shift_start
 from app.utils.analysis_assignment import assign_analyses_to_sample
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.database import safe_commit
@@ -735,7 +733,6 @@ def send_hourly_report():
         flash("Амжилттай илгээгдлээ!", "success")
 
     except Exception as e:
-        import traceback
         current_app.logger.exception("Error in send_hourly_report")
         flash(f"Алдаа: {str(e)}", "danger")
 

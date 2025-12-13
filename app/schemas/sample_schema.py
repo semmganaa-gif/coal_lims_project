@@ -106,7 +106,7 @@ class SampleSchema(Schema):
     status = fields.Str(
         validate=validate.OneOf(['new', 'New', 'in_progress', 'completed', 'archived']),
         allow_none=True,
-        missing='new'
+        load_default='new'
     )
 
     mass_ready = fields.Boolean(allow_none=True)
@@ -114,7 +114,7 @@ class SampleSchema(Schema):
     mass_ready_by_id = fields.Int(allow_none=True)
 
     @validates('sample_code')
-    def validate_sample_code(self, value):
+    def validate_sample_code(self, value, **kwargs):
         """
         Дээжний код validation
 
@@ -133,7 +133,7 @@ class SampleSchema(Schema):
         return value
 
     @validates('weight')
-    def validate_weight(self, value):
+    def validate_weight(self, value, **kwargs):
         """Жин validation - сөрөг тоо байж болохгүй"""
         if value is not None and value < 0:
             raise ValidationError('Жин сөрөг тоо байж болохгүй')

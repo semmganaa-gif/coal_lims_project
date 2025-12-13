@@ -36,7 +36,6 @@ def export_to_excel(
     import pandas as pd
     from openpyxl import Workbook
     from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
-    from openpyxl.utils.dataframe import dataframe_to_rows
 
     # DataFrame үүсгэх
     df_data = []

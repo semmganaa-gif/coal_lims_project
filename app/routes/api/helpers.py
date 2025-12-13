@@ -12,6 +12,7 @@ from app.config.repeatability import LIMIT_RULES
 
 from app.models import Sample
 from app.utils.codes import norm_code, BASE_TO_ALIASES
+from app.utils.converters import to_float
 
 
 # =============================================================================
@@ -174,28 +175,19 @@ EPS = 1e-6
 DEFAULT_LIMIT_RULE = {"single": {"limit": 0.30, "mode": "abs"}}
 
 
-def _to_float_or_none(x):
-    try:
-        if x is None:
-            return None
-        return float(x)
-    except Exception:
-        return None
-
-
 def _coalesce_diff(raw_norm: dict) -> float | None:
     """raw_data-гаас тохирцын зөрүүг (diff) олж буцаана."""
     raw = raw_norm or {}
-    t_val = _to_float_or_none(raw.get("t"))
+    t_val = to_float(raw.get("t"))
     if t_val is not None:
         return abs(t_val)
-    diff = _to_float_or_none(raw.get("diff"))
+    diff = to_float(raw.get("diff"))
     if diff is not None:
         return abs(diff)
     p1 = raw.get("p1") or {}
     p2 = raw.get("p2") or {}
-    r1 = _to_float_or_none(p1.get("result"))
-    r2 = _to_float_or_none(p2.get("result"))
+    r1 = to_float(p1.get("result"))
+    r2 = to_float(p2.get("result"))
     if r1 is not None and r2 is not None:
         return abs(r1 - r2)
     return None
@@ -247,7 +239,7 @@ def should_require_review(analysis_code: str, raw_norm: dict) -> bool:
 
     # TRD, CV, CSN, Gi: front-end тооцоолсон limit_used/diff-ийг шууд шалгана.
     if analysis_code in ["CSN", "Gi", "CV", "TRD"] and "limit_used" in (raw_norm or {}):
-        limit = _to_float_or_none(raw_norm.get("limit_used"))
+        limit = to_float(raw_norm.get("limit_used"))
         diff = _coalesce_diff(raw_norm)
         if analysis_code == "CSN":
             diff = diff if diff is not None else 0.0
@@ -260,7 +252,7 @@ def should_require_review(analysis_code: str, raw_norm: dict) -> bool:
     if analysis_code in ["CSN", "Gi"] and "t_exceeded" in (raw_norm or {}):
         return bool((raw_norm or {}).get("t_exceeded", True))
 
-    avg = _to_float_or_none((raw_norm or {}).get("avg"))
+    avg = to_float((raw_norm or {}).get("avg"))
     diff = _coalesce_diff(raw_norm)
     if diff is None:
         return True

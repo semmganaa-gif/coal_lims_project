@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
+            <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title">? Questionable</h5>
                     <h2>{{ stats.questionable }}</h2>
@@ -76,7 +76,7 @@
                         </td>
                         <td>{{ pt.round_number }}</td>
                         <td><code>{{ pt.sample_code }}</code></td>
-                        <td><span class="badge badge-info">{{ pt.analysis_code }}</span></td>
+                        <td><span class="badge bg-info text-dark">{{ pt.analysis_code }}</span></td>
                         <td>{{ "%.3f"|format(pt.our_result) if pt.our_result else '-' }}</td>
                         <td>{{ "%.3f"|format(pt.assigned_value) if pt.assigned_value else '-' }}</td>
                         <td>
@@ -90,13 +90,13 @@
                         </td>
                         <td>
                             {% if pt.performance == 'satisfactory' %}
-                                <span class="badge badge-success">✓ Сайн</span>
+                                <span class="badge bg-success">✓ Сайн</span>
                             {% elif pt.performance == 'questionable' %}
-                                <span class="badge badge-warning">? Эргэлзээтэй</span>
+                                <span class="badge bg-warning text-dark">? Эргэлзээтэй</span>
                             {% elif pt.performance == 'unsatisfactory' %}
-                                <span class="badge badge-danger">✗ Хангалтгүй</span>
+                                <span class="badge bg-danger">✗ Хангалтгүй</span>
                             {% else %}
-                                <span class="badge badge-secondary">-</span>
+                                <span class="badge bg-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>{{ pt.test_date.strftime('%Y-%m-%d') if pt.test_date else '-' }}</td>
@@ -116,15 +116,15 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
-                    <span class="badge badge-success">✓ Satisfactory</span>
+                    <span class="badge bg-success">✓ Satisfactory</span>
                     <p><strong>|Z| ≤ 2.0</strong> - Хэвийн үр дүн</p>
                 </div>
                 <div class="col-md-4">
-                    <span class="badge badge-warning">? Questionable</span>
+                    <span class="badge bg-warning text-dark">? Questionable</span>
                     <p><strong>2.0 < |Z| ≤ 3.0</strong> - Анхаарах шаардлагатай</p>
                 </div>
                 <div class="col-md-4">
-                    <span class="badge badge-danger">✗ Unsatisfactory</span>
+                    <span class="badge bg-danger">✗ Unsatisfactory</span>
                     <p><strong>|Z| > 3.0</strong> - Засвар арга хэмжээ шаардлагатай</p>
                 </div>
             </div>

@@ -60,7 +60,7 @@ class AnalysisResultSchema(Schema):
             'rejected',
             'draft'
         ]),
-        missing='pending_review',
+        load_default='pending_review',
         error_messages={
             'validator_failed': 'Статус буруу (pending_review/approved/rejected/draft)'
         }
@@ -81,7 +81,7 @@ class AnalysisResultSchema(Schema):
     reviewed_at = fields.DateTime(allow_none=True)
 
     @validates('analysis_code')
-    def validate_analysis_code(self, value):
+    def validate_analysis_code(self, value, **kwargs):
         """Analysis code validation"""
         if not value or not value.strip():
             raise ValidationError('Шинжилгээний код хоосон байж болохгүй')
@@ -96,7 +96,7 @@ class AnalysisResultSchema(Schema):
         return value
 
     @validates('final_result')
-    def validate_final_result(self, value):
+    def validate_final_result(self, value, **kwargs):
         """
         Final result validation
 

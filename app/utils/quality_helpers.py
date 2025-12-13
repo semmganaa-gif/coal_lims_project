@@ -7,6 +7,7 @@ ISO 17025 Quality Management Systems
 
 from functools import wraps
 from datetime import datetime, date
+from app.utils.datetime import now_local
 from flask import flash, redirect, url_for
 from flask_login import current_user
 import logging
@@ -96,7 +97,7 @@ def generate_sequential_code(model, code_field, prefix, year=None, padding=4):
         ca_number = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA')
         complaint_no = generate_sequential_code(CustomerComplaint, 'complaint_no', 'COMP')
     """
-    year = year or datetime.now().year
+    year = year or now_local().year
 
     # Column object авах
     column = getattr(model, code_field)

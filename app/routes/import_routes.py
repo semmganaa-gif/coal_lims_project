@@ -30,40 +30,14 @@ from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.utils.converters import to_float
 from app import models as M
 
 # -------------------------------------------------
-# Alias mapping – танай үндсэн map байвал түүнээс уншина
+# Alias mapping
 # -------------------------------------------------
-try:
-    from app.utils.analysis_aliases import ALIAS_TO_BASE as _ALIAS_TO_BASE  # noqa: F401
-    ALIAS_TO_BASE: Dict[str, str] = {k.lower(): v for k, v in _ALIAS_TO_BASE.items()}
-except Exception as e:
-    # Резерв – хамгийн нийтлэг alias-ууд
-    logger.warning(f"analysis_aliases модуль ачаалагдсангүй, fallback ашиглаж байна: {e}")
-    ALIAS_TO_BASE = {
-        "ts": "TS",
-        "st,ad": "TS",
-        "s": "TS",
-        "cv": "CV",
-        "qgr,ad": "CV",
-        "qnet,ar": "CV",
-        "mad": "Mad",
-        "mt": "MT",
-        "mt,ar": "MT",
-        "fm": "FM",
-        "aad": "Aad",
-        "vad": "Vad",
-        "trd": "TRD",
-        "csn": "CSN",
-        "gi": "Gi",
-        "p": "P",
-        "f": "F",
-        "cl": "Cl",
-        "cri": "CRI",
-        "csr": "CSR",
-        "solid": "Solid",
-    }
+from app.utils.analysis_aliases import ALIAS_TO_BASE as _ALIAS_TO_BASE
+ALIAS_TO_BASE: Dict[str, str] = {k.lower(): v for k, v in _ALIAS_TO_BASE.items()}
 
 import_bp = Blueprint("importer", __name__, url_prefix="/admin/import")
 
@@ -76,7 +50,7 @@ def _norm(s: Any) -> str:
     return str(s).strip() if s is not None else ""
 
 
-def _to_float(v: Any) -> Optional[float]:
+def to_float(v: Any) -> Optional[float]:
     if v is None:
         return None
     s = str(v).strip().replace(" ", "").replace("\u00A0", "")
@@ -357,7 +331,7 @@ def _import_chpp_wide(
             for col_index, col_header in analysis_cols:
                 if col_index >= len(row):
                     continue
-                value = _to_float(row[col_index])
+                value = to_float(row[col_index])
                 if value is None:
                     continue
 
@@ -454,7 +428,7 @@ def _import_long(
                 analysis_code_raw = _norm(row[cols["analysis_code"]])
                 analysis_code = _base_code(analysis_code_raw)
 
-                value = _to_float(row[cols["value"]])
+                value = to_float(row[cols["value"]])
                 status = _norm(row[cols["status"]]) if "status" in cols else None
 
                 before_new = len(db.session.new)

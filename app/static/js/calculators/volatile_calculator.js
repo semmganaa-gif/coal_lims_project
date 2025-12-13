@@ -23,16 +23,16 @@ window.saveInputValue = function (inputId, value) {
   try {
     sessionStorage.setItem(`analysis_${ANALYSIS_CODE}_${inputId}`, value);
   } catch (e) {
-    console.error(`SessionStorage хадгалах алдаа (${ANАЛYSIS_CODE}, ${inputId}):`, e);
+    console.error(`SessionStorage хадгалах алдаа (${ANALYSIS_CODE}, ${inputId}):`, e);
   }
 };
 
 window.loadInputValue = function (inputId) {
-  if (!ANАЛYSIS_CODE || ANALYSIS_CODE === 'window.LIMS_ANALYSIS_CODE') {
+  if (!ANALYSIS_CODE || ANALYSIS_CODE === 'window.LIMS_ANALYSIS_CODE') {
     console.error('loadInputValue: ANALYSIS_CODE алга эсвэл буруу байна!');
     return null;
   }
-  return sessionStorage.getItem(`analysis_${ANАЛYSIS_CODE}_${inputId}`);
+  return sessionStorage.getItem(`analysis_${ANALYSIS_CODE}_${inputId}`);
 };
 
 // --- Нэг мөр тооцоолох ---
@@ -276,7 +276,7 @@ $(function () {
       // ⬇️ ШИНЭ: ахлахаас "засах" гэж буцаасан → түгжээг тайлна
       $input.prop('readonly', false).removeClass('bg-light');
       try {
-        sessionStorage.removeItem(`analysis_${ANАЛYSIS_CODE}_${inputId}_locked`);
+        sessionStorage.removeItem(`analysis_${ANALYSIS_CODE}_${inputId}_locked`);
       } catch (e) {
         console.warn('Буцаасан Vad дээжийн түгжээг storage-оос арилгах боломжгүй:', e);
       }

@@ -671,13 +671,6 @@ def param_key(name_or_alias: str) -> str | None:
         return None
     return PARAMETER_MAP.get(_norm_param_key(name_or_alias))
 
-def get_canonical_name(name_or_alias: str) -> str | None:
-    """UI-гаас ирсэн параметрийн нэрийг каноник түлхүүр болгон буцаана."""
-    if not name_or_alias:
-        return None
-    return PARAMETER_MAP.get(_norm_param_key(name_or_alias))
-
-
 # =============================================================================
 # Name/Class QC Master Specs
 # =============================================================================

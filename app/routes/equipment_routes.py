@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
 from datetime import datetime, timedelta
+from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from sqlalchemy import func, or_, and_
 from sqlalchemy.exc import IntegrityError
@@ -24,7 +25,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'doc', 'docx', 'jpg', 'jpeg', 'png',
 @equipment_bp.route("/equipment_list")
 @login_required
 def equipment_list():
-    today = datetime.now().date()
+    today = now_local().date()
     warning_date = today + timedelta(days=30)
     view = request.args.get("view", "all")
     page = request.args.get("page", 1, type=int)
@@ -253,7 +254,7 @@ def add_maintenance_log(id):
     action_type = request.form.get("action_type")
     
     action_date_str = request.form.get("action_date")
-    action_date = datetime.strptime(action_date_str, "%Y-%m-%d") if action_date_str else datetime.now()
+    action_date = datetime.strptime(action_date_str, "%Y-%m-%d") if action_date_str else now_local()
 
     file_filename = None
     if 'certificate_file' in request.files:
@@ -280,7 +281,7 @@ def add_maintenance_log(id):
                 return redirect(url_for("equipment.equipment_detail", id=id))
 
             # Save file
-            unique_filename = f"{int(datetime.now().timestamp())}_{filename}"
+            unique_filename = f"{int(now_local().timestamp())}_{filename}"
             upload_folder = current_app.config.get('UPLOAD_FOLDER')
             if not os.path.exists(upload_folder):
                 os.makedirs(upload_folder, mode=0o755)
@@ -357,7 +358,7 @@ def log_usage_bulk():
             return jsonify({"status": "error", "message": "No data provided"}), 400
 
         count = 0
-        today_date = datetime.now()
+        today_date = now_local()
         
         for item in items:
             eq_id = item.get("eq_id")
@@ -462,8 +463,8 @@ def api_equipment_journal_detailed():
     end_str = request.args.get("end_date")
     category = request.args.get("category", "all") 
 
-    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else datetime.now() - timedelta(days=30)
-    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else datetime.now()
+    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else now_local() - timedelta(days=30)
+    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else now_local()
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
     m_logs = db.session.query(MaintenanceLog, Equipment).join(Equipment).filter(
@@ -497,7 +498,7 @@ def api_equipment_journal_detailed():
 @equipment_bp.route("/api/equipment/monthly_stats")
 @login_required
 def api_equipment_monthly_stats():
-    year = int(request.args.get("year", datetime.now().year))
+    year = int(request.args.get("year", now_local().year))
     category = request.args.get("category", "all")
 
     start_dt = datetime(year, 1, 1)
@@ -567,7 +568,7 @@ def api_equipment_list_json():
     equipments = Equipment.query.order_by(Equipment.name.asc()).all()
     
     data = []
-    today = datetime.now().date()
+    today = now_local().date()
     
     for eq in equipments:
         # Хугацаа дууссан эсэхийг тооцоолох
