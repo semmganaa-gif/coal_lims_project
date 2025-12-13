@@ -83,3 +83,8 @@ or
 docs/_build/
 site/
 coal_lims_project
+
+# runtime
+instance/
+*.log
+
