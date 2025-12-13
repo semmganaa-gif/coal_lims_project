@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from app.utils.datetime import now_local
 
 
 # 🧭 Циклийн эхлэх өдөр (калибровк)
@@ -240,7 +241,7 @@ def get_shift_date(dt: datetime = None) -> date:
         date(2025, 12, 3)  # Өнөөдөр
     """
     if dt is None:
-        dt = datetime.now()
+        dt = now_local()
     _, anchor_date = _get_shift_type_and_anchor_date(dt)
     return anchor_date
 

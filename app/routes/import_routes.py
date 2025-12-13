@@ -50,19 +50,6 @@ def _norm(s: Any) -> str:
     return str(s).strip() if s is not None else ""
 
 
-def to_float(v: Any) -> Optional[float]:
-    if v is None:
-        return None
-    s = str(v).strip().replace(" ", "").replace("\u00A0", "")
-    if s == "" or s.lower() in {"null", "none", "na"}:
-        return None
-    s = s.replace(",", ".")
-    try:
-        return float(s)
-    except ValueError:
-        return None
-
-
 def _parse_date(s: Any) -> Optional[datetime]:
     if not s:
         return None

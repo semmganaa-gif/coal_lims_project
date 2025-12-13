@@ -7,7 +7,7 @@
 # 1. Standard Library Imports (Python-ы үндсэн сангууд)
 import os
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 # 2. Third-Party Imports (Гараас суулгасан сангууд)
 from flask import render_template, flash, redirect, url_for, request, jsonify, current_app
@@ -291,7 +291,7 @@ def register_routes(bp):
             # --- 3) LAB — автоматаар нэр үүсгэх ---
             elif not list_type and client_name == "LAB":
                 formatted_date = sample_date_obj.strftime("%Y%m%d")
-                shift_code = get_12h_shift_code(datetime.now())
+                shift_code = get_12h_shift_code(now_local())
 
                 if sample_type == "CM":
                     quarter_code = get_quarter_code(sample_date_obj)
