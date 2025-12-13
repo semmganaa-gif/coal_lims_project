@@ -227,7 +227,50 @@ Routes coverage нэмэхэд анхаарах:
 
 ---
 
-## 6. Production checklist
+## 6. Бэлэн байгаа зүйлс (шалгагдсан)
+
+| Бүрэлдэхүүн | Төлөв | Файл |
+|------------|-------|------|
+| API Docs | ✅ | app/api_docs.py |
+| Migrations | ✅ | migrations/versions/*.py |
+| Security config | ✅ | config.py |
+| Prometheus monitoring | ✅ | app/monitoring.py |
+| .env файл | ✅ | .env, .env.example |
+| Backup script | ✅ | scripts/backup_database.py |
+| Migration script | ✅ | scripts/migrate_sqlite_to_postgres.py |
+| Production server | ✅ | run_production.py, start_server.bat |
+| pip-audit | ✅ | Эмзэг байдал олдсонгүй |
+
+---
+
+## 7. Production server тест
+
+```bash
+# Waitress server ажиллуулах
+python run_production.py
+
+# эсвэл
+start_server.bat
+
+# Браузер дээр шалгах
+# http://localhost:8080
+```
+
+---
+
+## 8. Backup тест
+
+```bash
+# Backup хийх
+python scripts/backup_database.py
+
+# Backup файл шалгах
+dir backups/
+```
+
+---
+
+## 9. Production checklist
 
 - [ ] PostgreSQL ажиллаж байна
 - [ ] Код засварууд хийгдсэн (40 асуудал)
@@ -235,6 +278,9 @@ Routes coverage нэмэхэд анхаарах:
 - [ ] Coverage >= 80%
 - [ ] flake8 алдаагүй
 - [ ] vulture алдаагүй
+- [ ] Production server (Waitress) ажиллаж байна
+- [ ] Backup script ажиллаж байна
+- [ ] Prometheus /metrics endpoint ажиллаж байна
 
 ---
 
