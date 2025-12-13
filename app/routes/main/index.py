@@ -294,10 +294,20 @@ def register_routes(bp):
                 shift_code = get_12h_shift_code(now_local())
 
                 if sample_type == "CM":
+                    # Идэвхтэй CM стандартын нэрийг авах
+                    from app.models import ControlStandard
+                    active_cm = ControlStandard.query.filter_by(is_active=True).first()
+                    cm_name = active_cm.name if active_cm else "CM"
                     quarter_code = get_quarter_code(sample_date_obj)
-                    final_sample_code = f"CM_{formatted_date}{shift_code}{quarter_code}"
-                elif sample_type in ["GBW", "Test"]:
-                    final_sample_code = f"{sample_type}_{formatted_date}{shift_code}"
+                    final_sample_code = f"{cm_name}_{formatted_date}{shift_code}{quarter_code}"
+                elif sample_type == "GBW":
+                    # Идэвхтэй GBW стандартын нэрийг авах
+                    from app.models import GbwStandard
+                    active_gbw = GbwStandard.query.filter_by(is_active=True).first()
+                    gbw_name = active_gbw.name if active_gbw else "GBW"
+                    final_sample_code = f"{gbw_name}_{formatted_date}{shift_code}"
+                elif sample_type == "Test":
+                    final_sample_code = f"Test_{formatted_date}{shift_code}"
                 else:
                     final_sample_code = f"LAB_UNKNOWN_{formatted_date}"
 

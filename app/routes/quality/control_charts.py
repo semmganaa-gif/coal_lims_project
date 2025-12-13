@@ -44,25 +44,53 @@ def _get_qc_results(sample_ids: list, analysis_code: str = None):
     return query.order_by(AnalysisResult.updated_at.desc()).all()
 
 
+def _extract_standard_name(sample_code: str) -> str:
+    """
+    Sample code-оос стандартын нэрийг задлах.
+    
+    Жишээ:
+    - 'GBW11135a_20241213A' -> 'GBW11135a'
+    - 'CM_Batch1_20241213AQ4' -> 'CM_Batch1'
+    - 'Test_20241213A' -> 'Test'
+    """
+    if not sample_code:
+        return ''
+    
+    parts = sample_code.split('_')
+    if len(parts) >= 2:
+        # Сүүлийн хэсэг нь огноо (8 оронтой тоо эхэлдэг)
+        # Өмнөх хэсгүүдийг нэгтгэж стандарт нэр болгоно
+        for i in range(len(parts) - 1, 0, -1):
+            # Огноо хэсгийг олох (8 оронтой тоо эхэлдэг)
+            if len(parts[i]) >= 8 and parts[i][:8].isdigit():
+                return '_'.join(parts[:i])
+        return parts[0]
+    return sample_code
+
+
 def _get_target_and_tolerance(sample, analysis_code: str):
     """
-    Дээжний төрлөөс хамаарч target утга болон tolerance авах.
+    Sample code-оос стандартын нэрийг задалж, тэр стандартын target утга авах.
 
     Returns:
         (target, ucl, lcl, sd) эсвэл (None, None, None, None)
     """
-    sample_type = (sample.sample_type or "").upper()
-    sample_code = (sample.sample_code or "").upper()
+    sample_code = sample.sample_code or ""
+    standard_name = _extract_standard_name(sample_code)
+    
+    if not standard_name:
+        return None, None, None, None
 
     # CM эсвэл GBW эсэхийг тодорхойлох
-    is_cm = "CM" in sample_type or "CM" in sample_code
-    is_gbw = "GBW" in sample_type or "GBW" in sample_code
-
+    sample_code_upper = sample_code.upper()
+    
     active_std = None
-    if is_cm:
-        active_std = ControlStandard.query.filter_by(is_active=True).first()
-    elif is_gbw:
-        active_std = GbwStandard.query.filter_by(is_active=True).first()
+    if "GBW" in sample_code_upper:
+        # Стандарт нэрээр хайх
+        active_std = GbwStandard.query.filter_by(name=standard_name).first()
+    elif "CM" in sample_code_upper:
+        # Стандарт нэрээр хайх
+        active_std = ControlStandard.query.filter_by(name=standard_name).first()
 
     if not active_std or not active_std.targets:
         return None, None, None, None
@@ -170,18 +198,22 @@ def register_routes(bp):
             if not sample:
                 continue
 
-            # Sample type тодорхойлох (CM эсвэл GBW)
-            sample_type = (sample.sample_type or "").upper()
-            sample_code = (sample.sample_code or "").upper()
+            # Sample code-оос стандарт нэрийг задлах
+            standard_name = _extract_standard_name(sample.sample_code or "")
+            if not standard_name:
+                continue
 
-            if "GBW" in sample_type or "GBW" in sample_code:
+            # CM эсвэл GBW эсэхийг тодорхойлох
+            sample_code_upper = (sample.sample_code or "").upper()
+            if "GBW" in sample_code_upper:
                 qc_type = "GBW"
-            elif "CM" in sample_type or "CM" in sample_code:
+            elif "CM" in sample_code_upper:
                 qc_type = "CM"
             else:
                 continue
 
-            key = (qc_type, r.analysis_code)
+            # Стандарт нэр + analysis_code-оор бүлэглэх
+            key = (standard_name, r.analysis_code)
             if key not in grouped:
                 grouped[key] = {
                     'results': [],
@@ -200,12 +232,16 @@ def register_routes(bp):
 
         # Westgard шалгах
         summary = []
-        for (qc_type, analysis_code), data in grouped.items():
+        for (standard_name, analysis_code), data in grouped.items():
             results_list = data['results']
             sample = data['sample']
 
+            # qc_type тодорхойлох (UI-д ашиглахад)
+            qc_type = "GBW" if "GBW" in standard_name.upper() else "CM"
+
             if len(results_list) < 2:
                 summary.append({
+                    "standard_name": standard_name,
                     "qc_type": qc_type,
                     "analysis_code": analysis_code,
                     "status": "insufficient_data",
@@ -240,6 +276,7 @@ def register_routes(bp):
             )
 
             summary.append({
+                "standard_name": standard_name,
                 "qc_type": qc_type,
                 "analysis_code": analysis_code,
                 "status": qc_status["status"],
@@ -250,8 +287,8 @@ def register_routes(bp):
                 "latest_value": round(values[0], 4) if values else None
             })
 
-        # Эрэмбэлэх
-        summary.sort(key=lambda x: (x['qc_type'], x['analysis_code']))
+        # Эрэмбэлэх (стандарт нэр, analysis code)
+        summary.sort(key=lambda x: (x['standard_name'], x['analysis_code']))
 
         return jsonify({"qc_samples": summary})
 
