@@ -7,8 +7,10 @@
 | Unused imports/variables (F401, F841) | 40 | Дунд |
 | Complex functions (C901 > 10) | 39 | Өндөр |
 | Security issues (try-except-pass) | 18 | Дунд |
+| Docstring дутуу файлууд | 15 | Дунд |
+| Англи comment-ууд монгол болгох | ~50 | Дунд |
 | Style issues (E, W) | 598 | Бага |
-| **НИЙТ** | **695** | |
+| **НИЙТ** | **~760** | |
 
 ---
 
@@ -374,6 +376,98 @@ except SpecificException as e:
 ```bash
 bandit -r app -ll
 ```
+
+---
+
+## 13. Docstring/Comment шинэчлэл - КОД ОЙЛГОМЖТОЙ БОЛГОХ
+
+Стандарт: `DOCSTRING_STANDARD.md` файлыг үзнэ үү.
+
+### Docstring дутуу файлууд (< 80%):
+
+| Файл | Docstring | Функц | Хувь |
+|------|-----------|-------|------|
+| forms.py | 0 | 1 | 0% |
+| admin_routes.py | 2 | 21 | 10% |
+| equipment_routes.py | 2 | 16 | 12% |
+| complaints.py | 1 | 5 | 20% |
+| normalize.py | 1 | 4 | 25% |
+| helpers.py | 3 | 10 | 30% |
+| constants.py | 1 | 3 | 33% |
+| environmental.py | 1 | 3 | 33% |
+| import_routes.py | 4 | 10 | 40% |
+| __init__.py | 5 | 12 | 42% |
+| datetime.py | 1 | 2 | 50% |
+| repeatability_loader.py | 1 | 2 | 50% |
+| settings_routes.py | 8 | 15 | 53% |
+| samples_api.py | 5 | 9 | 56% |
+| analysis_api.py | 4 | 7 | 57% |
+
+### Docstring жишээ:
+
+```python
+def calculate_moisture(weight_before: float, weight_after: float) -> float:
+    """
+    Чийгийн хувийг тооцоолох.
+
+    Args:
+        weight_before: Хатаахын өмнөх жин (грамм)
+        weight_after: Хатаасны дараах жин (грамм)
+
+    Returns:
+        Чийгийн хувь (0-100 хооронд)
+
+    Example:
+        >>> calculate_moisture(10.5, 9.8)
+        6.67
+    """
+    pass
+```
+
+### Хэсэг тусгаарлах:
+
+```python
+# ============================================================================
+# ШИНЖИЛГЭЭНИЙ ТООЦООЛОЛ
+# ============================================================================
+```
+
+---
+
+## 14. Англи comment-уудыг монгол болгох
+
+Жишээ:
+
+```python
+# ӨМНӨ (Англи):
+# Optional fields
+raw_data = fields.Str(allow_none=True)
+
+# ДАРАА (Монгол):
+# Заавал биш талбарууд
+raw_data = fields.Str(allow_none=True)
+```
+
+### Түгээмэл орчуулга:
+
+| Англи | Монгол |
+|-------|--------|
+| Optional fields | Заавал биш талбарууд |
+| Required | Заавал |
+| Returns | Буцаах утга |
+| Args/Arguments | Параметрүүд |
+| Example | Жишээ |
+| Note | Тэмдэглэл |
+| Warning | Анхааруулга |
+| TODO | Хийх ажил |
+| FIXME | Засах |
+| Helper function | Туслах функц |
+| Validation | Баталгаажуулалт |
+| Calculate | Тооцоолох |
+| Get/Fetch | Авах |
+| Save/Store | Хадгалах |
+| Delete/Remove | Устгах |
+| Update/Modify | Шинэчлэх |
 
 ---
 
