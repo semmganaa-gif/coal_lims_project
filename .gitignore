@@ -88,3 +88,6 @@ coal_lims_project
 instance/
 *.log
 
+
+# SSL certificates (private keys)
+ssl/
