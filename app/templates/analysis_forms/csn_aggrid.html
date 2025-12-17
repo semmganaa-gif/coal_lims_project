@@ -5,6 +5,9 @@
 {# ⚡ Note: base.html conditional loading хэрэглэнэ (use_aggrid=True) #}
 {# CSS нь app/static/css/ag-grid-custom.css-аас ирнэ #}
 
+{# 🔌 Жинтэй холбогдох UI #}
+{{ aggrid_macros.balance_connection_ui() | safe }}
+
 {{ aggrid_macros.grid_container('csnGrid') | safe }}
 
 <script>

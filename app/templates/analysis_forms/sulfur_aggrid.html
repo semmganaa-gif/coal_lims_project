@@ -3,6 +3,9 @@
 {# 🧪 Sulfur (TS / St,ad) - Parallel p1/p2 in single row #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
 
+{# 🔌 Жинтэй холбогдох UI #}
+{{ aggrid_macros.balance_connection_ui() | safe }}
+
 {{ aggrid_macros.grid_container('sulfurGrid') | safe }}
 
 <script>

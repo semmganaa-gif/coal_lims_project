@@ -235,6 +235,125 @@
 
 <script src="{{ url_for('static', filename='js/analysis_page.js') }}"></script>
 
+{# 🔌 Жингийн холболт (Web Serial API) - Бүх шинжилгээнд ашиглагдана #}
+<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
+<script>
+(function() {
+  'use strict';
+
+  const $btnConnect = document.getElementById('btnConnectBalance');
+  const $balanceStatus = document.getElementById('balanceStatus');
+  const WEIGHT_COLUMNS = ['m1', 'm2', 'm3', 'weight', 'mass'];
+
+  if (!$btnConnect || !$balanceStatus) {
+    console.log('Balance UI not found on this page');
+    return;
+  }
+
+  function updateBalanceStatus(message, type = 'secondary') {
+    $balanceStatus.textContent = message;
+    $balanceStatus.className = `badge bg-${type} small`;
+  }
+
+  $btnConnect.addEventListener('click', async () => {
+    if (!window.labBalance) {
+      alert('Serial Balance модуль ачаалагдаагүй байна.');
+      return;
+    }
+
+    if (!window.labBalance.isSupported()) {
+      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
+      return;
+    }
+
+    if (window.labBalance.isConnected) {
+      await window.labBalance.disconnect();
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      return;
+    }
+
+    updateBalanceStatus('Холбогдож байна...', 'warning');
+    const connected = await window.labBalance.connect();
+
+    if (connected) {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.classList.remove('btn-outline-primary');
+      $btnConnect.classList.add('btn-success');
+      updateBalanceStatus('Холбогдсон', 'success');
+    } else {
+      updateBalanceStatus('Алдаа', 'danger');
+    }
+  });
+
+  if (window.labBalance) {
+    window.labBalance.onDisconnect = () => {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Салсан', 'secondary');
+    };
+  }
+
+  // F2 дарахад жин авах
+  document.addEventListener('keydown', async (e) => {
+    if (e.key !== 'F2') return;
+    if (!window.labBalance || !window.labBalance.isConnected) return;
+
+    // Бүх боломжит grid API-г шалгах
+    const gridApis = [
+      window.madGridApi, window.ashGridApi, window.vadGridApi,
+      window.cvGridApi, window.mtGridApi, window.tsGridApi,
+      window.trdGridApi, window.csnGridApi, window.giGridApi,
+      window.cricSrGridApi, window.phosphorusGridApi,
+      window.chlorineGridApi, window.fluorineGridApi,
+      window.xyGridApi, window.solidGridApi, window.fmGridApi,
+      window.sulfurGridApi
+    ].filter(api => api != null);
+
+    for (const gridApi of gridApis) {
+      const focusedCell = gridApi.getFocusedCell?.();
+      if (!focusedCell) continue;
+
+      const colId = focusedCell.column.getColId();
+      if (!WEIGHT_COLUMNS.includes(colId)) continue;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      updateBalanceStatus('Жин татаж байна...', 'warning');
+      const weight = await window.labBalance.getStableWeight();
+
+      if (weight !== null) {
+        const rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        if (rowNode) {
+          rowNode.setDataValue(colId, weight);
+          gridApi.refreshCells({ rowNodes: [rowNode], columns: [colId] });
+          updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
+
+          // Дараагийн нүд рүү шилжих
+          const currentIdx = WEIGHT_COLUMNS.indexOf(colId);
+          if (currentIdx >= 0 && currentIdx < WEIGHT_COLUMNS.length - 1) {
+            const nextCol = WEIGHT_COLUMNS[currentIdx + 1];
+            setTimeout(() => {
+              gridApi.setFocusedCell(focusedCell.rowIndex, nextCol);
+              gridApi.startEditingCell({ rowIndex: focusedCell.rowIndex, colKey: nextCol });
+            }, 50);
+          }
+        }
+      } else {
+        updateBalanceStatus('Жин авч чадсангүй', 'danger');
+      }
+      break;
+    }
+  });
+
+  console.log('✅ Balance integration loaded. Press F2 on m1/m2/m3 to fetch weight.');
+})();
+</script>
+
 {# --- Тоног төхөөрөмжийн ашиглалт хадгалах --- #}
 <script>
 function submitEquipmentUsage() {

@@ -2,6 +2,9 @@
 {# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
 
+{# 🔌 Жинтэй холбогдох UI #}
+{{ aggrid_macros.balance_connection_ui() | safe }}
+
 {{ aggrid_macros.grid_container('solidGrid') | safe }}
 
 <script>

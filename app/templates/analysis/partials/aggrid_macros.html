@@ -68,6 +68,163 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 <div id="{{ grid_id }}" class="ag-grid-container {{ theme }}"></div>
 {% endmacro %}
 
+{# ============================================ #}
+{# ЖИНГИЙН ХОЛБОЛТ (Web Serial API) #}
+{# ============================================ #}
+{% macro balance_connection_ui() %}
+<div class="d-flex align-items-center gap-2 mb-2">
+  <button id="btnConnectBalance" class="btn btn-sm btn-outline-primary" title="Mettler жинтэй холбогдох (Chrome 89+)">
+    <i class="bi bi-usb-plug"></i> Жин холбох
+  </button>
+  <span id="balanceStatus" class="badge bg-secondary small">Холбогдоогүй</span>
+  <span class="text-muted small ms-2">
+    <i class="bi bi-info-circle"></i> m1/m2/m3 нүдэнд <kbd>F2</kbd> дарж жин авна
+  </span>
+</div>
+{% endmacro %}
+
+{% macro balance_connection_js(weight_columns="['m1', 'm2', 'm3']") %}
+<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
+<script>
+(function() {
+  'use strict';
+
+  const $btnConnect = document.getElementById('btnConnectBalance');
+  const $balanceStatus = document.getElementById('balanceStatus');
+  const WEIGHT_COLUMNS = {{ weight_columns | safe }};
+
+  if (!$btnConnect || !$balanceStatus) {
+    console.log('Balance UI not found, skipping balance integration');
+    return;
+  }
+
+  // Статус шинэчлэх
+  function updateBalanceStatus(message, type = 'secondary') {
+    $balanceStatus.textContent = message;
+    $balanceStatus.className = `badge bg-${type} small`;
+  }
+
+  // Холбогдох товч
+  $btnConnect.addEventListener('click', async () => {
+    if (!window.labBalance) {
+      alert('Serial Balance модуль ачаалагдаагүй байна.');
+      return;
+    }
+
+    if (!window.labBalance.isSupported()) {
+      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
+      return;
+    }
+
+    if (window.labBalance.isConnected) {
+      await window.labBalance.disconnect();
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      return;
+    }
+
+    updateBalanceStatus('Холбогдож байна...', 'warning');
+    const connected = await window.labBalance.connect();
+
+    if (connected) {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.classList.remove('btn-outline-primary');
+      $btnConnect.classList.add('btn-success');
+      updateBalanceStatus('Холбогдсон', 'success');
+    } else {
+      updateBalanceStatus('Алдаа', 'danger');
+    }
+  });
+
+  // Callback-ууд
+  if (window.labBalance) {
+    window.labBalance.onDisconnect = () => {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Салсан', 'secondary');
+    };
+  }
+
+  // F2 дарахад жин авах (AG-Grid integration)
+  window.fetchBalanceWeight = async function(gridApi, colId) {
+    if (!window.labBalance || !window.labBalance.isConnected) {
+      console.log('Balance not connected');
+      return null;
+    }
+
+    if (!WEIGHT_COLUMNS.includes(colId)) {
+      return null;
+    }
+
+    updateBalanceStatus('Жин татаж байна...', 'warning');
+    const weight = await window.labBalance.getStableWeight();
+
+    if (weight !== null) {
+      updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
+      return weight;
+    } else {
+      updateBalanceStatus('Жин авч чадсангүй', 'danger');
+      return null;
+    }
+  };
+
+  // Global keydown handler for F2
+  document.addEventListener('keydown', async (e) => {
+    if (e.key !== 'F2') return;
+    if (!window.labBalance || !window.labBalance.isConnected) return;
+
+    // Find active AG-Grid
+    const gridApis = [
+      window.madGridApi,
+      window.ashGridApi,
+      window.vadGridApi,
+      window.cvGridApi,
+      window.mtGridApi,
+      window.tsGridApi,
+      window.trdGridApi
+    ].filter(api => api != null);
+
+    for (const gridApi of gridApis) {
+      const focusedCell = gridApi.getFocusedCell?.();
+      if (!focusedCell) continue;
+
+      const colId = focusedCell.column.getColId();
+      if (!WEIGHT_COLUMNS.includes(colId)) continue;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const weight = await window.fetchBalanceWeight(gridApi, colId);
+      if (weight !== null) {
+        const rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        if (rowNode) {
+          rowNode.setDataValue(colId, weight);
+          gridApi.refreshCells({ rowNodes: [rowNode], columns: [colId] });
+
+          // Дараагийн нүд рүү шилжих
+          const colIds = WEIGHT_COLUMNS;
+          const currentIdx = colIds.indexOf(colId);
+          if (currentIdx >= 0 && currentIdx < colIds.length - 1) {
+            const nextCol = colIds[currentIdx + 1];
+            setTimeout(() => {
+              gridApi.setFocusedCell(focusedCell.rowIndex, nextCol);
+              gridApi.startEditingCell({ rowIndex: focusedCell.rowIndex, colKey: nextCol });
+            }, 50);
+          }
+        }
+      }
+      break;
+    }
+  });
+
+  console.log('✅ Balance integration loaded. Press F2 on m1/m2/m3 to fetch weight.');
+})();
+</script>
+{% endmacro %}
+
 {# Common JS helpers injected into each AG Grid form #}
 {% macro common_js_helpers(nav_fields=None) %}
 <script>

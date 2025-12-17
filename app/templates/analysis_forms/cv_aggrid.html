@@ -5,6 +5,9 @@
 {# ⚡ Note: base.html conditional loading хэрэглэнэ (use_aggrid=True) #}
 {# CSS нь app/static/css/ag-grid-custom.css-аас ирнэ #}
 
+{# 🔌 Жинтэй холбогдох UI #}
+{{ aggrid_macros.balance_connection_ui() | safe }}
+
 {# CV batch constants input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-4">

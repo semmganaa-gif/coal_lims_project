@@ -11,6 +11,14 @@
     </div>
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
+      <!-- Жинтэй холбогдох -->
+      <button id="btnConnectBalance" class="btn btn-outline-primary">
+        <i class="bi bi-usb-plug"></i> Жинтэй холбогдох
+      </button>
+      <span id="balanceStatus" class="badge bg-secondary">Холбогдоогүй</span>
+
+      <div class="vr mx-2"></div>
+
       <div class="form-check form-switch me-2">
         <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
         <label class="form-check-label" for="toggleIncludeReady">Ready болсон дээжийг хамтад нь харах</label>
@@ -36,6 +44,7 @@
   <div class="alert alert-info py-2 mb-3">
     <div class="small mb-1"><strong>Заавар:</strong></div>
     <ul class="small mb-0 ps-3">
+      <li><strong>Жин холбох:</strong> "Жинтэй холбогдох" товчийг дарж Mettler жингээ сонгоно. Дараа нь Масс баганад очоод <kbd>Enter</kbd> дарахад жин автоматаар орно.</li>
       <li>Жин (g) оруулаад <em>Хадгалах</em> дарвал сонгосон мөрүүд <code>mass_ready=True</code> болно (унтраалга асаалттай үед).</li>
       <li>Буруу жин оруулсан бол:
         <em>↻ Зөвхөн жинг шинэчлэх</em> товчоор Ready төлөв хэвээр засна,
@@ -62,6 +71,7 @@
 </style>
 
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
 <script>
 (() => {
   const gridEl     = document.getElementById('massGrid');
@@ -70,7 +80,10 @@
   const $markReady = document.getElementById('markReadyToggle');
   const $toggleInc = document.getElementById('toggleIncludeReady');
   const $search    = document.getElementById('searchCode');
+  const $btnConnect = document.getElementById('btnConnectBalance');
+  const $balanceStatus = document.getElementById('balanceStatus');
   let gridApi = null;
+  let balanceIntegration = null;
 
   const readyBadge = (isReady) => isReady
     ? '<span class="badge text-bg-success mw-badge">Ready</span>'
@@ -262,9 +275,141 @@
     setTimeout(() => el.remove(), 2500);
   }
 
+  // ============================================
+  // ЖИНТЭЙ ХОЛБОГДОХ (Web Serial API)
+  // ============================================
+
+  // Жингийн статус шинэчлэх
+  function updateBalanceStatus(message, type = 'secondary') {
+    $balanceStatus.textContent = message;
+    $balanceStatus.className = `badge bg-${type}`;
+  }
+
+  // Жинтэй холбогдох товч
+  $btnConnect.addEventListener('click', async () => {
+    if (!window.labBalance) {
+      toast('Serial Balance модуль ачаалагдаагүй байна.', 'danger');
+      return;
+    }
+
+    if (!window.labBalance.isSupported()) {
+      toast('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.', 'warning');
+      return;
+    }
+
+    if (window.labBalance.isConnected) {
+      // Салгах
+      await window.labBalance.disconnect();
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жинтэй холбогдох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      return;
+    }
+
+    // Холбогдох
+    updateBalanceStatus('Холбогдож байна...', 'warning');
+
+    const connected = await window.labBalance.connect();
+
+    if (connected) {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.classList.remove('btn-outline-primary');
+      $btnConnect.classList.add('btn-success');
+      updateBalanceStatus('Холбогдсон', 'success');
+      toast('Жинтэй амжилттай холбогдлоо! Масс баганад Enter дарж жин авна уу.', 'success');
+
+      // Grid integration тохируулах
+      if (gridApi) {
+        balanceIntegration = new BalanceGridIntegration(window.labBalance);
+        balanceIntegration.setGridApi(gridApi);
+        balanceIntegration.weightColumnField = 'weight';
+      }
+    } else {
+      updateBalanceStatus('Холбогдож чадсангүй', 'danger');
+    }
+  });
+
+  // Жингийн callback-ууд
+  if (window.labBalance) {
+    window.labBalance.onStatusChange = (msg) => {
+      console.log('Balance status:', msg);
+    };
+
+    window.labBalance.onError = (msg) => {
+      toast(msg, 'warning');
+    };
+
+    window.labBalance.onDisconnect = () => {
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жинтэй холбогдох';
+      $btnConnect.classList.remove('btn-success');
+      $btnConnect.classList.add('btn-outline-primary');
+      updateBalanceStatus('Холболт салсан', 'secondary');
+    };
+  }
+
+  // AG-Grid дээр Enter дарахад жин авах
+  async function handleWeightCellEnter(params) {
+    if (!window.labBalance || !window.labBalance.isConnected) {
+      // Жин холбогдоогүй бол default үйлдэл
+      return;
+    }
+
+    if (params.column.getColId() !== 'weight') {
+      return;
+    }
+
+    // Жин татах
+    updateBalanceStatus('Жин татаж байна...', 'warning');
+    const weight = await window.labBalance.getStableWeight();
+
+    if (weight !== null) {
+      params.node.setDataValue('weight', weight);
+      updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
+      toast(`Жин: ${weight.toFixed(4)} g`, 'success');
+
+      // Дараагийн мөр рүү шилжих
+      const nextRowIndex = params.rowIndex + 1;
+      const nextRow = gridApi.getDisplayedRowAtIndex(nextRowIndex);
+      if (nextRow) {
+        setTimeout(() => {
+          gridApi.setFocusedCell(nextRowIndex, 'weight');
+          gridApi.startEditingCell({ rowIndex: nextRowIndex, colKey: 'weight' });
+        }, 100);
+      }
+    } else {
+      updateBalanceStatus('Жин авч чадсангүй', 'danger');
+    }
+  }
+
+  // Grid-ийн keydown event
+  gridEl.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && window.labBalance && window.labBalance.isConnected) {
+      const focusedCell = gridApi?.getFocusedCell();
+      if (focusedCell && focusedCell.column.getColId() === 'weight') {
+        e.preventDefault();
+        e.stopPropagation();
+        const rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+        if (rowNode) {
+          await handleWeightCellEnter({
+            column: focusedCell.column,
+            rowIndex: focusedCell.rowIndex,
+            node: rowNode
+          });
+        }
+      }
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
     gridApi = agGrid.createGrid(gridEl, gridOptions);
     fetchEligible();
+
+    // Grid бэлэн болсны дараа balance integration тохируулах
+    if (window.labBalance && window.labBalance.isConnected) {
+      balanceIntegration = new BalanceGridIntegration(window.labBalance);
+      balanceIntegration.setGridApi(gridApi);
+    }
   });
 })();
 </script>
