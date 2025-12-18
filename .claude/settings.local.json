@@ -73,7 +73,12 @@
       "Bash(for func in \"safe_delete\" \"safe_add\" \"notify_equipment_calibration_due\" \"get_notification_recipients\")",
       "Bash(do)",
       "Bash(done)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git -C D:/coal_lims_project commit -m \"$(cat <<''EOF''\ndocs: Production бэлтгэл шалгалт нэмсэн\n\n- Бэлэн байгаа бүрэлдэхүүнүүд (9 зүйл)\n- Production server тест\n- Backup тест\n- Шинэчилсэн checklist\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C D:/coal_lims_project commit -m \"$(cat <<''EOF''\ndocs: Код чанарын бүрэн шалгалт нэмсэн\n\n- Complex functions (39) - ӨНДӨР ач холбогдол\n- Style issues (598) - autopep8 засах\n- Хурдан засах командууд\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(D:/coal_lims_project/venv/Scripts/bandit.exe:*)",
+      "Bash(git -C D:/coal_lims_project log -5 --oneline)",
+      "Bash(git -C D:/coal_lims_project commit -m \"$\\(cat <<''EOF''\nfeat: Шинэ шинжилгээний тохиргоо UI, алдаа засварууд\n\nШинэ:\n- Card-based шинжилгээний тохиргоо UI \\(analysis_config_simple.html\\)\n- Gi ээлжийн тохиргоо Modal dialog\n- /admin/analysis_config_simple route\n\nЗасварууд:\n- Sample устгах 500 алдаа: ForeignKey ondelete=\"SET NULL\" нэмсэн\n  \\(UsageLog, CustomerComplaint, ChatMessage\\)\n- Фильтерд харагдахгүй дээж устгах: node.displayed шүүлт нэмсэн\n- COM PF дээр MT гарах алдаа: Pattern profile-г client_name+sample_type-аар шүүсэн\n- CSRF token алдаа засварласан\n\nMigration:\n- c2718818cc52: Add ondelete SET NULL to sample foreign keys\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []
