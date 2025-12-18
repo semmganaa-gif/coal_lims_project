@@ -97,18 +97,18 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
             # 1. Дээжний НЭРЭЭС хайх (PF211, PF221 гэх мэт)
             if re.search(pattern, sample_code_str, re.IGNORECASE):
                 is_match = True
-            
+
             # 2. ✅ ШИНЭ: Дээжний ТӨЛӨВӨӨС хайх (Шингэн, Чийгтэй)
             elif sample_cond_str and re.search(pattern, sample_cond_str, re.IGNORECASE):
                 is_match = True
-                
+
         except re.error:
             # Fallback: Энгийн текст хайлт
             if pattern.lower() in sample_code_str.lower():
                 is_match = True
             elif pattern.lower() in sample_cond_str.lower():
                 is_match = True
-        
+
         if is_match:
             new_analyses = profile.get_analyses()
             rule = getattr(profile, 'match_rule', 'merge')

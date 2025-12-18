@@ -348,6 +348,20 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- Debug flag for logger.js -->
+  <script>
+    window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
+    // Production-д console.log/debug хаах (console.warn/error хэвээрээ)
+    if (!window.DEBUG) {
+      console.log = function() {};
+      console.debug = function() {};
+    }
+  </script>
+
+  <!-- Utility scripts -->
+  <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/utils/safe-storage.js') }}"></script>
+
   {% if use_aggrid|default(false) %}
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
   <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=3"></script>

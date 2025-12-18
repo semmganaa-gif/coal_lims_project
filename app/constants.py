@@ -226,7 +226,7 @@ PARAMETER_DEFINITIONS = {
 
     'total_fluorine_d':  {'display_name': 'Нийт фтор (d)',  'aliases': ['F,d'],  'type': 'calculated'},
     'total_fluorine_ar': {'display_name': 'Нийт фтор (ar)', 'aliases': ['F,ar'], 'type': 'calculated'},
-    
+
     'relative_density_d': {'display_name': 'Харьцангуй нягт (d)', 'aliases': ['TRD,d'], 'type': 'calculated'},
     'relative_density_ar':{'display_name': 'Харьцангуй нягт (ar)', 'aliases': ['TRD,ar'], 'type': 'calculated'},
 }
@@ -254,10 +254,10 @@ UNIT_ABBREVIATIONS = {
 }
 CHPP_2H_SAMPLES_ORDER = [
     # 1. Үндсэн тэжээлүүд
-    'PF211', 
-    'PF221', 
+    'PF211',
+    'PF221',
     'PF231',
-    
+
     # 2. CC (Clean Coal / Баяжмал) - Эхэлж харагдана
     'UHG MV_HCC',
     'UHG HV_HCC',
@@ -265,11 +265,11 @@ CHPP_2H_SAMPLES_ORDER = [
     'BN HV HCC',
     'BN SSCC',
     'CC', # Fallback
-    
+
     # 3. TC (Thermal Coal / Мидлинг) - Дараа нь харагдана
     'UHG MASHCC_2',
     'UHG Midd',
-    'BN MASHCC_2', 
+    'BN MASHCC_2',
     'BN Midd',
     'TC'  # Fallback
 ]
@@ -546,7 +546,7 @@ MASTER_ANALYSIS_TYPES_LIST = [
     {'code': 'Aad',   'name': 'Үнс (Aad)',                         'order': 3,  'role': 'chemist'},
     {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',              'order': 4,  'role': 'chemist'},
     {'code': 'TS',    'name': 'Нийт хүхэр (TS)',                   'order': 5,  'role': 'chemist'},
-    {'code': 'CV',    'name': 'Илчлэг (CV)',                       'order': 6,  'role': 'chemist'},    
+    {'code': 'CV',    'name': 'Илчлэг (CV)',                       'order': 6,  'role': 'chemist'},
     {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',              'order': 7,  'role': 'chemist'},
     {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',            'order': 8,  'role': 'chemist'},
     {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',              'order': 9, 'role': 'chemist'},

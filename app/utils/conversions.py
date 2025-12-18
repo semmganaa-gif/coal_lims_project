@@ -65,16 +65,16 @@ def calculate_all_conversions(
         final_results['relative_density_d'] = TRD_d_val
         if M_ad is not None:
             denom_ad = 100.0 - M_ad
-            if denom_ad > 0: 
+            if denom_ad > 0:
                 # TRD,ad = TRD,d * (100 - Mad) / 100
                 TRD_ad_val = TRD_d_val * denom_ad / 100.0
-                final_results['relative_density'] = TRD_ad_val 
+                final_results['relative_density'] = TRD_ad_val
             else:
                 final_results['relative_density'] = 0.0
         else:
             if 'relative_density' in final_results:
                  del final_results['relative_density']
-    
+
     # 4) Хувиргалтын коэффициентууд
     factor_d = None   # -> _d
     factor_daf = None # -> _daf
@@ -102,10 +102,10 @@ def calculate_all_conversions(
         bases = details.get('conversion_bases', [])
         if not bases:
             continue
-        
+
         if param_name in ('relative_density', 'relative_density_d'):
             continue
-            
+
         val_ad = get_float_from_any(param_name)
         if val_ad is None:
             continue
@@ -141,7 +141,10 @@ def calculate_all_conversions(
 
     try:
         # (!!! ШИНЭЧЛЭЛ) Зөвхөн 5 утга бүгд байвал тооцоолно
-        if None not in (Qgr_ad, Aad, Mad, Mt_ar, Vdaf):
+        if all(v is not None for v in (Qgr_ad, Aad, Mad, Mt_ar, Vdaf)):
+            # mypy type narrowing - assert all values are float
+            assert Qgr_ad is not None and Aad is not None and Mad is not None
+            assert Mt_ar is not None and Vdaf is not None
             denom = (100.0 - Mad)
             if denom != 0:
                 term1 = Qgr_ad * 4.1868
@@ -154,5 +157,5 @@ def calculate_all_conversions(
         pass
 
     # (!!! ШИНЭЧЛЭЛ) Fallback томьёо болон DEBUG мэдээллийг устгасан.
-    
+
     return final_results

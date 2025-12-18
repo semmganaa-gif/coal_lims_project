@@ -22,7 +22,7 @@ SOFT_LIMITS: Dict[str, float] = {
     'A': 90.0,
 
     # --- Дэгдэмхий (Volatile) ---
-    'Vad': 90.0,        
+    'Vad': 90.0,
     'V': 90.0,
     'Vdaf': 95.0,       # Vdaf 60%-иас их бол сэжигтэй
 
@@ -51,7 +51,7 @@ SOFT_LIMITS: Dict[str, float] = {
 
     # --- Коксын шинж чанар (Caking & Coke) ---
     'CRI': 60.0,
-    
+
     # --- Бусад ---
     'SOLID': 80.0,      # Solid residue (Vad-тай холбоотой)
     'FM': 60.0,
@@ -65,7 +65,7 @@ SOFT_MAX_LIMITS: Dict[str, float] = SOFT_LIMITS.copy()
 # ============================================================================
 SOFT_MIN_LIMITS: Dict[str, float] = {
     # --- Илчлэг (Calorific Value) ---
-    'CV': 1000.0,       
+    'CV': 1000.0,
     'Qgr,ad': 1000.0,
     'Qnet,ar': 1000.0,
 
@@ -98,26 +98,26 @@ def determine_result_status(
     # 1. CONTROL SAMPLE CHECK (ХЯНАЛТЫН ДЭЭЖНИЙ ШАЛГАЛТ)
     # ========================================================================
     # ✅ ТАНЫ ХУУЧИН КОД ДЭЭР ЭНЭ ХЭСЭГ ДУТУУ БАЙСАН!
-    
+
     if control_targets:
         mean = control_targets.get("mean")
         sd = control_targets.get("sd")
-        
+
         # Хэрэв Mean, SD хоёулаа байвал тооцоолол хийнэ
         if mean is not None and sd is not None:
             # Зөрүүг олох (absolute difference)
             diff = abs(value - mean)
-            
+
             # Дүрэм А: Action Limit (2SD) -> REJECTED (Улаан)
             # Танай лабораторийн дүрмээр 2SD-ээс их бол шууд Алдаа
             if diff > (2 * sd):
                 return "rejected", f"Control Failure: > 2SD (Mean: {mean}, SD: {sd}, Diff: {diff:.4f})"
-            
+
             # Дүрэм Б: Warning Limit (1SD) -> PENDING REVIEW (Шар)
             # 1SD-ээс их бол Анхааруулга
             if diff > (1 * sd):
                 return "pending_review", f"Control Warning: > 1SD (Mean: {mean}, SD: {sd}, Diff: {diff:.4f})"
-            
+
             # Дүрэм В: Success (1SD дотор) -> APPROVED (Ногоон)
             return "approved", "Control Pass"
 
@@ -138,7 +138,7 @@ def determine_result_status(
 
     # ДҮРЭМ: CV (Calorific Value)
     if analysis_code in ['CV', 'Qgr,ad', 'Qnet,ar'] and value is not None:
-        if value < 2000: 
+        if value < 2000:
              return "pending_review", f"Илчлэг хэт бага ({value})"
 
     # ДҮРЭМ: Tolerance Check (Стандарт тохирц)
@@ -149,7 +149,7 @@ def determine_result_status(
     # ========================================================================
     # 3. SOFT LIMIT CHECK (Max Value Check - Жирийн дээжинд)
     # ========================================================================
-    
+
     if value is not None:
         # A. MAX Limit Check (Дээд хязгаар)
         max_limit = SOFT_MAX_LIMITS.get(analysis_code)
@@ -164,5 +164,5 @@ def determine_result_status(
     # ========================================================================
     # 4. DEFAULT (Зөвшөөрөх)
     # ========================================================================
-    
+
     return "approved", None

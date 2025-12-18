@@ -70,7 +70,7 @@ def create_app(config_class=Config):
     setup_monitoring(app)
 
     # (!!!) Моделийг энд, init_app-ийн дараа импортлоно
-    from app import models 
+    from app import models
 
     # ---- Blueprints (Route-уудыг бүртгэх)
     from app.routes.main import main_bp
@@ -147,15 +147,15 @@ def create_app(config_class=Config):
     for alias_lc, base in ALIAS_TO_BASE_ANALYSIS.items():
         if not base: continue
         _REV.setdefault(base, set()).add(alias_lc)
-    
+
     _PREF_ORDER = ["st,ad", "qgr,ad", "mt,ar", "trd,d", "p,ad", "f,ad", "cl,ad"]
-    
+
     def _pick_display_alias(base: str) -> str:
         aliases = _REV.get(base, set())
         for pref in _PREF_ORDER:
             if pref in aliases: return pref
         return base
-    
+
     def fmt_code(code: str | None) -> str:
         if not code: return ""
         c = str(code).strip()
@@ -168,7 +168,7 @@ def create_app(config_class=Config):
             else: left_norm = left
             return f"{left_norm},{right.lower()}"
         return alias or c
-    
+
     app.add_template_filter(fmt_code, name="fmt_code")
 
     # (!!!) 'now_local'-г template-д таниулах

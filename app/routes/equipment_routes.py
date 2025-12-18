@@ -176,7 +176,7 @@ def delete_equipment(id):
         return redirect(url_for("equipment.equipment_list"))
 
     eq = Equipment.query.get_or_404(id)
-    
+
     # Түүхтэй эсэхийг шалгах
     has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
                   UsageLog.query.filter_by(equipment_id=eq.id).first()
@@ -206,7 +206,7 @@ def bulk_delete():
 
     # HTML checkbox: equipment_ids
     ids = request.form.getlist('equipment_ids')
-    
+
     if not ids:
         flash("Төхөөрөмж сонгоогүй байна.", "warning")
         return redirect(url_for("equipment.equipment_list"))
@@ -220,7 +220,7 @@ def bulk_delete():
             # Түүхтэй эсэхийг шалгах
             has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
                           UsageLog.query.filter_by(equipment_id=eq.id).first()
-            
+
             if has_history:
                 eq.status = "retired"
                 retired_count += 1
@@ -239,7 +239,7 @@ def bulk_delete():
     msg = []
     if deleted_count > 0: msg.append(f"{deleted_count} төхөөрөмж устгагдлаа.")
     if retired_count > 0: msg.append(f"{retired_count} төхөөрөмж түүхтэй тул 'Retired' боллоо.")
-    
+
     flash(" ".join(msg), "success" if msg else "info")
     return redirect(url_for("equipment.equipment_list"))
 
@@ -252,7 +252,7 @@ def bulk_delete():
 def add_maintenance_log(id):
     eq = Equipment.query.get_or_404(id)
     action_type = request.form.get("action_type")
-    
+
     action_date_str = request.form.get("action_date")
     action_date = datetime.strptime(action_date_str, "%Y-%m-%d") if action_date_str else now_local()
 
@@ -293,7 +293,7 @@ def add_maintenance_log(id):
         performed_by=request.form.get("performed_by"), certificate_no=request.form.get("certificate_no"),
         action_date=action_date, file_path=file_filename
     )
-    
+
     if action_type == "Calibration":
         eq.calibration_date = action_date.date()
         eq.next_calibration_date = eq.calibration_date + timedelta(days=eq.calibration_cycle_days or 365)
@@ -359,14 +359,14 @@ def log_usage_bulk():
 
         count = 0
         today_date = now_local()
-        
+
         for item in items:
             eq_id = item.get("eq_id")
-            
+
             # Минут болон бусад утгуудыг шалгах
             minutes_val = item.get("minutes")
             minutes = float(minutes_val) if minutes_val else 0
-            
+
             note = item.get("note", "")
             is_checked = item.get("is_checked", False)
 
@@ -374,7 +374,7 @@ def log_usage_bulk():
             if minutes > 0 or note or is_checked:
                 # Duration calculation
                 end_time = today_date + timedelta(minutes=minutes)
-                
+
                 # Тайлбар хэсэгт "Daily Check" гэдгийг тодруулж болно
                 purpose_text = note
                 if not purpose_text and is_checked:
@@ -424,8 +424,8 @@ def api_equipment_usage_summary():
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
     eq_query = _filter_equipment_by_category(Equipment.query, category)
-    # Retired төхөөрөмжүүдийг summary дээр харуулах эсэхээ шийднэ. 
-    # Жишээ нь: eq_query = eq_query.filter(Equipment.status != 'retired') 
+    # Retired төхөөрөмжүүдийг summary дээр харуулах эсэхээ шийднэ.
+    # Жишээ нь: eq_query = eq_query.filter(Equipment.status != 'retired')
     equipments = eq_query.order_by(Equipment.name.asc()).all()
     eq_ids = [e.id for e in equipments]
 
@@ -446,7 +446,7 @@ def api_equipment_usage_summary():
         is_expired = (eq.next_calibration_date and eq.next_calibration_date < today)
 
         rows.append({
-            "equipment_id": eq.id, "lab_code": eq.lab_code, "name": eq.name, 
+            "equipment_id": eq.id, "lab_code": eq.lab_code, "name": eq.name,
             "location": eq.location, "room": eq.room_number, "status": eq.status or "normal",
             "total_usage_hours": round(total_mins/60.0, 2), "maintenance_count": m.get("cnt", 0),
             "last_usage_end": u.get("last", None), "last_maintenance": m.get("last", None),
@@ -461,7 +461,7 @@ def api_equipment_usage_summary():
 def api_equipment_journal_detailed():
     start_str = request.args.get("start_date")
     end_str = request.args.get("end_date")
-    category = request.args.get("category", "all") 
+    category = request.args.get("category", "all")
 
     start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else now_local() - timedelta(days=30)
     end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else now_local()
@@ -490,7 +490,7 @@ def api_equipment_journal_detailed():
             "lab_code": eq.lab_code, "equipment": eq.name, "category": "Usage", "type": "Ашиглалт",
             "user": "-", "description": f"{log.duration_minutes} мин", "result": "Normal"
         })
-    
+
     combined.sort(key=lambda x: x["timestamp"], reverse=True)
     return jsonify({"rows": combined})
 
@@ -566,10 +566,10 @@ def equipment_journal_grid():
 def api_equipment_list_json():
     # Бүх төхөөрөмжийг дуудна (Server-side pagination хэрэггүй, AG Grid өөрөө зохицуулна)
     equipments = Equipment.query.order_by(Equipment.name.asc()).all()
-    
+
     data = []
     today = now_local().date()
-    
+
     for eq in equipments:
         # Хугацаа дууссан эсэхийг тооцоолох
         is_expired = False
@@ -591,5 +591,5 @@ def api_equipment_list_json():
             "category": eq.category,
             "is_expired": is_expired  # Frontend дээр улаанаар харуулахад хэрэгтэй
         })
-        
+
     return jsonify(data)

@@ -428,7 +428,7 @@ def send_hourly_report():
         # =========================================================================
         # 1. ТОХИРГОО
         # =========================================================================
-        
+
         # --- 2 HOURLY MAPPING (Суурь мөрүүд) ---
         PF_MAPPING = { 'PF211': 20, 'PF221': 33, 'PF231': 46 }
         HCC_KEYWORDS = ['UHG MV', 'UHG HV', 'BN HV', 'BN SSCC']
@@ -461,7 +461,7 @@ def send_hourly_report():
             (0, 4):   103, # 02:00
             (4, 8):   107  # 06:00
         }
-        
+
         CF_OFFSET_MAP = {
             # MOD I
             "CF501":       { "cols": {"Aad": 3, "FM": 5}, "offset": 0 },
@@ -488,7 +488,7 @@ def send_hourly_report():
         calc_time = current_time - timedelta(hours=2)
         report_hour = (calc_time.hour // 2) * 2
         report_dt = calc_time.replace(hour=report_hour, minute=0, second=0, microsecond=0)
-        
+
         report_time_str = report_dt.strftime('%H:%M')
         report_date_str = report_dt.strftime('%Y.%m.%d')
 
@@ -497,9 +497,9 @@ def send_hourly_report():
             start_time = (report_dt - timedelta(days=1)).replace(hour=8, minute=0, second=0, microsecond=0)
         else:
             start_time = report_dt.replace(hour=8, minute=0, second=0, microsecond=0)
-        
+
         end_time = current_time
-        
+
         # =========================================================================
         # 3. EXCEL НЭЭХ
         # =========================================================================
@@ -512,7 +512,7 @@ def send_hourly_report():
 
         with open(template_path, "rb") as f:
             output = BytesIO(f.read())
-        
+
         wb = load_workbook(output)
         ws = wb.active
 
@@ -525,10 +525,10 @@ def send_hourly_report():
         # -------------------------------------------------------------
         setting_key = f"report_counter_{start_time.year}"
         last_update_key = f"last_update_{start_time.year}"
-        
+
         setting_count = SystemSetting.query.filter_by(category='report_config', key=setting_key).first()
         setting_last = SystemSetting.query.filter_by(category='report_config', key=last_update_key).first()
-        
+
         current_count = int(setting_count.value) if setting_count else 0
         last_updated_date = setting_last.value if setting_last else ""
         today_str = start_time.strftime('%Y-%m-%d')
@@ -544,7 +544,7 @@ def send_hourly_report():
             else:
                 setting_last.value = today_str
             db.session.commit()
-        
+
         display_count = current_count if current_count > 0 else 1
 
         ws['E10'] = f"{start_time.year}_{display_count:03d}"
@@ -558,7 +558,7 @@ def send_hourly_report():
         ws['O3'] = f"№ {start_time.strftime('%y-%m-%d')}"
         ws['O3'].font = Font(name='Times New Roman', size=14, bold=True)
         ws['O3'].alignment = Alignment(horizontal='right', vertical='center')
-        
+
         ws['C4'] = start_time.strftime('%Y.%m.%d')
         ws['C4'].font = font_reg
 
@@ -568,7 +568,7 @@ def send_hourly_report():
         samples_2h = Sample.query.filter(
             Sample.received_date >= start_time,
             Sample.received_date <= end_time,
-            Sample.client_name == 'CHPP', 
+            Sample.client_name == 'CHPP',
             Sample.sample_type.in_(['2 hourly', '2 Hourly'])
         ).all()
 
@@ -578,28 +578,28 @@ def send_hourly_report():
         for s in samples_2h:
             code_upper = (s.sample_code or "").strip().upper()
             calc = s.get_calculations()
-            
+
             # 1. СУУРЬ МӨРӨӨ ОЛОХ (PF211, UHG MV...)
             start_row = None
             for pf_key, r_num in PF_MAPPING.items():
                 if pf_key in code_upper: start_row = r_num; break
-            
+
             if not start_row:
                 for k in HCC_KEYWORDS:
                     if k in code_upper: start_row = 59; break
                 if not start_row and "UHG MASHCC" in code_upper and "MASHCC_2" not in code_upper: start_row = 59
-            
+
             if not start_row:
                 for k in MIDD_KEYWORDS:
                     if k in code_upper: start_row = 72; break
-            
+
             # Олдохгүй бол UHG MV рүү
             if not start_row: start_row = 59
 
             # 2. ШИЛЖИЛТЭЭ ОЛОХ (D1, D2...)
             # Дээжийн нэрний сүүлийн хэсгийг шалгах (Жнь: ..._D1)
             row_offset = 0
-            
+
             # SUFFIX_OFFSET_MAP-ээс хайх (D1, N6...)
             # Sample code-ийн төгсгөлд байгаа эсэхийг шалгана, эсвэл "_" дараа байгааг
             for suffix, offset in SUFFIX_OFFSET_MAP.items():
@@ -608,13 +608,13 @@ def send_hourly_report():
                 if f"_{suffix}" in code_upper or code_upper.endswith(suffix):
                     row_offset = offset
                     break
-            
+
             # Хэрэв D/N дугаар олдоогүй бол яах вэ?
             # Эрсдэлтэй тул эхний мөрөнд бичих үү, эсвэл алгасах уу?
             # Одоохондоо Offset=0 (Эхний мөр) гэж үзье.
-            
+
             final_row = start_row + row_offset
-            
+
             # 3. БИЧИХ (LIMS Нэр, Тооцоо)
             def w_cell(c, v, f=font_reg):
                 cell = ws.cell(row=final_row, column=c, value=v)
@@ -623,7 +623,7 @@ def send_hourly_report():
 
             # A багана: Жинхэнэ нэр
             w_cell(COL_2H_NAME, s.sample_code, font_bold)
-            
+
             # B багана: БИЧИХГҮЙ (Загвар дээрх цагийг эвдэхгүй)
 
             # Үр дүнгүүд
@@ -631,7 +631,7 @@ def send_hourly_report():
             w_cell(COL_2H_AAD, calc.aad if calc.aad is not None else "-")
             w_cell(COL_2H_GI, int(calc.gi) if calc.gi is not None else "-")
 
-            if not row_is_partial[start_row]: 
+            if not row_is_partial[start_row]:
                 w_cell(COL_2H_MAD, calc.mad if calc.mad is not None else "-")
                 w_cell(COL_2H_AD, round(calc.ash_dry, 2) if calc.ash_dry is not None else "-")
                 w_cell(COL_2H_VAD, round(calc.vad, 2) if calc.vad is not None else "-")
@@ -644,7 +644,7 @@ def send_hourly_report():
         samples_4h = Sample.query.filter(
             Sample.received_date >= start_time,
             Sample.received_date <= end_time,
-            Sample.client_name == 'CHPP', 
+            Sample.client_name == 'CHPP',
             Sample.sample_type.in_(['4 hourly', '4 Hourly'])
         ).all()
 
@@ -660,21 +660,21 @@ def send_hourly_report():
                     if h_start <= hour < h_end: base_row = r_num; break
                 else:
                     if hour >= h_start or hour < h_end: base_row = r_num; break
-            
+
             # 2. Багана олох
             target_cols = None
             row_offset = 0
-            
+
             for cf_key, conf in CF_OFFSET_MAP.items():
-                if cf_key in code_upper: 
+                if cf_key in code_upper:
                     target_cols = conf["cols"]
                     row_offset = conf["offset"]
                     break
-            
+
             # 3. Бичих
             if base_row and target_cols:
                 final_row = base_row + row_offset
-                
+
                 # A багана: Жинхэнэ нэр (4H дээр бичих үү? Та "үгүй" гэсэн байх. Хэрэв бичих бол доорхыг нээнэ үү)
                 # cell_name = ws.cell(row=final_row, column=1, value=s.sample_code)
                 # cell_name.font = font_bold
@@ -685,7 +685,7 @@ def send_hourly_report():
                 cell_aad.alignment = center_align
                 cell_aad.font = font_reg
 
-                val_fm = getattr(calc, 'fm', None) 
+                val_fm = getattr(calc, 'fm', None)
                 if val_fm is None: val_fm = calc.mt
                 final_fm = val_fm if val_fm is not None else "-"
 
@@ -699,7 +699,7 @@ def send_hourly_report():
         final_output = BytesIO()
         wb.save(final_output)
         final_output.seek(0)
-        
+
         filename = f"Hourly_Report_{report_date_str}_{report_time_str.replace(':', '')}.xlsx"
         email_subject = f"Hourly Report {report_time_str}"
 
@@ -731,12 +731,12 @@ def send_hourly_report():
 
         msg = Message(
             subject=email_subject,
-            recipients=["gantulga.u@mmc.mn"], 
+            recipients=["gantulga.u@mmc.mn"],
             html=email_html
         )
         msg.attach(filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", final_output.read())
         mail.send(msg)
-        
+
         flash("Амжилттай илгээгдлээ!", "success")
 
     except Exception as e:

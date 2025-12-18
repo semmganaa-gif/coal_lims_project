@@ -120,7 +120,7 @@ def register_routes(bp):
             capa.notes = request.form.get('notes')
 
             db.session.commit()
-            
+
             logger.info(f"CAPA updated: {capa.ca_number}, status: {capa.status}, user: {current_user.username}")
             flash(f"CAPA {capa.ca_number} шинэчлэгдлээ", "success")
             return redirect(url_for('quality.capa_detail', id=capa.id))
@@ -149,7 +149,7 @@ def register_routes(bp):
             capa.status = 'closed'
 
         db.session.commit()
-        
+
         logger.info(f"CAPA verified: {capa.ca_number}, effectiveness: {capa.effectiveness}, user: {current_user.username}")
         flash(f"CAPA {capa.ca_number} баталгаажлаа", "success")
         return redirect(url_for('quality.capa_detail', id=capa.id))

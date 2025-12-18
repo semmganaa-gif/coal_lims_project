@@ -1304,11 +1304,11 @@ class SystemSetting(db.Model):
 
     def __repr__(self) -> str:
         return f"<SystemSetting [{self.category}] {self.key}={self.value[:50]}>"
-    
+
 # -------------------------
 # : ХЯНАЛТЫН СТАНДАРТ
 # -------------------------
-    
+
 class ControlStandard(db.Model):
     __tablename__ = 'control_standards'
 
@@ -1323,11 +1323,11 @@ class ControlStandard(db.Model):
 
     def __repr__(self):
         return f"<ControlStandard {self.name}>"
-    
+
 # -------------------------
 # : GBW СТАНДАРТ
 # -------------------------
-    
+
 class GbwStandard(db.Model):
     __tablename__ = 'gbw_standards'
 

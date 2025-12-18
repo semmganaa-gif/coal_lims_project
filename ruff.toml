@@ -1,0 +1,13 @@
+# Ruff configuration
+# https://docs.astral.sh/ruff/configuration/
+
+[lint]
+# SQLAlchemy query-д == None, == True/False зөв учир ignore хийх
+ignore = [
+    "E711",  # Comparison to None (SQLAlchemy-д зөв)
+    "E712",  # Comparison to True/False (SQLAlchemy-д зөв)
+    "E402",  # Module import not at top (Blueprint pattern)
+]
+
+# E701, E702 style - хэвээр шалгах
+select = ["E", "F", "W"]

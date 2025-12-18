@@ -11,7 +11,7 @@
     CV (Дулаан): 25000 → 0 орон (бүхэл тоо)
 """
 
-from typing import Dict
+from typing import Dict, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ DECIMAL_PLACES: Dict[str, int] = {
     # ========================================================================
     # НИЙТ ЧИЙГ (Total Moisture) - 1 орон
     # ========================================================================
-    'MT': 1,            # Total moisture - 5.2%    
+    'MT': 1,            # Total moisture - 5.2%
 
 
     # ========================================================================
@@ -189,7 +189,7 @@ def get_decimal_places(analysis_code: str) -> int:
     return DEFAULT_DECIMAL_PLACES
 
 
-def format_result(value: float, analysis_code: str = None) -> str:
+def format_result(value: float, analysis_code: Optional[str] = None) -> str:
     """
     Үр дүнг зөв тоон оронгоор харуулах
 

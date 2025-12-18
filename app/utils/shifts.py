@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from typing import Optional
 from app.utils.datetime import now_local
 
 
@@ -220,7 +221,7 @@ def get_quarter_code(dt):
         return "_Q4"
 
 
-def get_shift_date(dt: datetime = None) -> date:
+def get_shift_date(dt: Optional[datetime] = None) -> date:
     """
     Ээлжийн огноо авах.
 

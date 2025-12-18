@@ -383,7 +383,7 @@ def _calculate_consumption(
 
         # ✅ ТӨВЛӨРСӨН ЛОГИК АШИГЛАХ
         shift_info = get_shift_info(res.created_at)
-        
+
         # SHIFT filter (DAY/NIGHT)
         if shift_filter:
             # shift_filter нь "DAY" эсвэл "NIGHT" гэж ирнэ.

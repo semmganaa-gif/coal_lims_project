@@ -55,7 +55,7 @@ def _extract_standard_name(sample_code: str) -> str:
     """
     if not sample_code:
         return ''
-    
+
     parts = sample_code.split('_')
     if len(parts) >= 2:
         # Сүүлийн хэсэг нь огноо (8 оронтой тоо эхэлдэг)
@@ -77,13 +77,13 @@ def _get_target_and_tolerance(sample, analysis_code: str):
     """
     sample_code = sample.sample_code or ""
     standard_name = _extract_standard_name(sample_code)
-    
+
     if not standard_name:
         return None, None, None, None
 
     # CM эсвэл GBW эсэхийг тодорхойлох
     sample_code_upper = sample_code.upper()
-    
+
     active_std = None
     if "GBW" in sample_code_upper:
         # Стандарт нэрээр хайх

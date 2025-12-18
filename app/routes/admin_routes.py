@@ -13,7 +13,7 @@ import json
 from app.forms import UserManagementForm, SimpleProfileForm
 from app.constants import SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS
 from app.models import ControlStandard
-from app.models import GbwStandard 
+from app.models import GbwStandard
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -46,7 +46,7 @@ def _seed_analysis_types():
         {'code': 'Aad',   'name': 'Үнс (Aad)',                    'order': 3,  'role': 'chemist'},
         {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',        'order': 4,  'role': 'chemist'},
         {'code': 'TS',    'name': 'Нийт хүхэр (TS)',              'order': 5,  'role': 'chemist'},
-        {'code': 'CV',    'name': 'Илчлэг (CV)',                  'order': 6,  'role': 'chemist'},        
+        {'code': 'CV',    'name': 'Илчлэг (CV)',                  'order': 6,  'role': 'chemist'},
         {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',         'order': 7,  'role': 'chemist'},
         {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',       'order': 8,  'role': 'chemist'},
         {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',        'order': 9, 'role': 'chemist'},
@@ -576,7 +576,7 @@ def create_standard():
 def update_standard(id):
     std = ControlStandard.query.get_or_404(id)
     data = request.get_json()
-    
+
     # Validation
     if not data.get('name') or not data.get('targets'):
         return jsonify({"message": "Мэдээлэл дутуу байна"}), 400
@@ -596,7 +596,7 @@ def update_standard(id):
 @senior_or_admin_required
 def delete_standard(id):
     std = ControlStandard.query.get_or_404(id)
-    
+
     if std.is_active:
         return jsonify({"message": "Идэвхтэй стандартыг устгах боломжгүй!"}), 400
 
@@ -661,7 +661,7 @@ def create_gbw():
 def update_gbw(id):
     gbw = GbwStandard.query.get_or_404(id)
     data = request.get_json()
-    
+
     if not data.get('name') or not data.get('targets'):
         return jsonify({"message": "Мэдээлэл дутуу байна"}), 400
 

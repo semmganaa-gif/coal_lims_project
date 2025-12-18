@@ -67,7 +67,7 @@ class AddSampleForm(FlaskForm):
             ("UHG-Geo", "UHG-Geo"),
             ("BN-Geo", "BN-Geo"),
             ("QC", "QC"),
-            ("Proc", "Proc"), 
+            ("Proc", "Proc"),
             ("WTL", "WTL"),
             ("LAB", "LAB"),
         ],

@@ -55,7 +55,7 @@ def register_routes(bp):
             )
             db.session.add(complaint)
             db.session.commit()
-            
+
             logger.info(f"Complaint created: {complaint_no}, client: {client_name}, user: {current_user.username}")
             flash(f"Гомдол {complaint_no} бүртгэгдлээ", "success")
             return redirect(url_for('quality.complaints_list'))
@@ -78,7 +78,7 @@ def register_routes(bp):
         complaint.investigated_by_id = current_user.id
         complaint.status = 'resolved'
         db.session.commit()
-        
+
         logger.info(f"Complaint resolved: {complaint.complaint_no}, user: {current_user.username}")
         flash(f"Гомдол {complaint.complaint_no} шийдэгдлээ", "success")
         return redirect(url_for('quality.complaints_detail', id=id))

@@ -42,7 +42,7 @@ from datetime import timedelta
 from .helpers import (
     _requires_mass_gate,
     _has_m_task_sql,
-    
+
     _coalesce_diff,
     _effective_limit,
 )
@@ -209,13 +209,13 @@ def register_routes(bp):
     @limiter.limit("30 per minute")
     def save_results():
         data = request.get_json(silent=True)
-        
+
         if data is None:
             return jsonify({"message": "JSON өгөгдөл ирсэнгүй."}), 400
-        
+
         if isinstance(data, dict):
             data = [data]
-        
+
         if not isinstance(data, list) or len(data) == 0:
             return jsonify({"message": "JSON массив байх ёстой"}), 400
 
@@ -243,7 +243,7 @@ def register_routes(bp):
                     _, c_err = validate_analysis_code(analysis_code_in)
                     if c_err:
                         raise ValueError(f"Code Error: {c_err}")
-                    
+
                     analysis_code = norm_code(analysis_code_in)
 
                     final_result_raw = item.get("final_result")
@@ -263,7 +263,7 @@ def register_routes(bp):
 
                     # --- 2. Normalization & Calculation ---
                     raw_in = item.get("raw_data") or {}
-                    
+
                     if analysis_code == "CSN" and isinstance(raw_in, dict):
                          raw_norm = dict(raw_in)
                          raw_norm.update(normalize_raw_data(raw_in, analysis_code))
@@ -292,7 +292,7 @@ def register_routes(bp):
                         "limit_mode": mode,
                         "t_exceeded": bool(t_exceeded),
                     })
-                    
+
                     # ============================================================
                     # 🔒 SERVER-SIDE CALCULATION VERIFICATION (Security)
                     # ============================================================
@@ -309,18 +309,18 @@ def register_routes(bp):
                         if calc_warnings:
                             for warn in calc_warnings:
                                 current_app.logger.warning(warn)
-                    
+
                     # ============================================================
                     # 🛠 CONTROL & GBW LOGIC (Dry Basis Conversion)
                     # ============================================================
                     control_targets = None
                     val_to_check = final_result
-                    
+
                     try:
                         # 1. Дээжийг таних (CM эсвэл GBW эсэхийг шалгах)
                         stype = (sample.sample_type or "").lower()
                         scode = (sample.sample_code or "").upper() # Upper болгож шалгах нь найдвартай
-                        
+
                         is_cm = (stype == "control") or ("CM-" in scode) or ("CM_" in scode)
                         is_gbw = (stype == "gbw") or ("GBW" in scode) # ✅ GBW таних нөхцөл
 
@@ -333,7 +333,7 @@ def register_routes(bp):
                             elif is_gbw:
                                 # ✅ GBW стандарт хайх (Models дотор GbwStandard байгаа гэж үзэв)
                                 active_std = GbwStandard.query.filter_by(is_active=True).first()
-                            
+
                             if active_std:
                                 # JSON targets-ийг dict болгох
                                 targets_map = active_std.targets
@@ -344,13 +344,13 @@ def register_routes(bp):
                                 # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
                                 if isinstance(targets_map, dict) and analysis_code in targets_map:
                                     control_targets = targets_map[analysis_code]
-                                    
+
                                     # --- 4. MAD (Чийг) ОЛОХ ЛОГИК ---
                                     # CM болон GBW нь ихэвчлэн Хуурай суурь (Dry Basis) дээр сертификаттай байдаг тул
                                     # Лабораторийн үр дүнг (Air Dry) -> Dry Basis руу хөрвүүлж байж шалгана.
-                                    
+
                                     current_mad = None
-                                    
+
                                     # А. Одоо ирж буй (save хийж буй) өгөгдлөөс Mad хайх
                                     for d in data:
                                         ac = (d.get("analysis_code") or "").lower()
@@ -360,7 +360,7 @@ def register_routes(bp):
                                             except (ValueError, TypeError):
                                                 pass  # final_result хоосон эсвэл тоо биш бол алгасна
                                             break
-                                    
+
                                     # Б. Баазаас хайх (Өмнө нь Mad хадгалсан бол)
                                     if current_mad is None:
                                         calc = sample.get_calculations()
@@ -371,11 +371,11 @@ def register_routes(bp):
                                     if current_mad is not None and 0 < current_mad < 100:
                                         # Эдгээр үзүүлэлтүүд л Dry руу хөрвөнө
                                         if analysis_code in ["Aad", "Vad", "CV", "TS", "St,ad", "S", "Qgr,ad"]:
-                                            
+
                                             # АЛХАМ 1: Эхлээд Хуурай суурь руу хөрвүүлэх (Air Dry -> Dry Basis)
                                             factor = 100.0 / (100.0 - current_mad)
                                             val_dry = final_result * factor  # Энд ккал хэвээрээ (Хуурай)
-                                            
+
                                             # АЛХАМ 2: Дараа нь зөвхөн Илчлэг дээр Нэгж шилжүүлэх (kcal -> MJ)
                                             if analysis_code in ["CV", "Qgr,ad"]:
                                                 # Хэрэв утга нь > 100 байвал ккал гэж үзээд MJ руу хөрвүүлнэ
@@ -395,7 +395,7 @@ def register_routes(bp):
                     # ============================================================
                     # ✅ 3. STATUS DETERMINATION
                     # ============================================================
-                    
+
                     new_status, status_reason = determine_result_status(
                         analysis_code,
                         val_to_check,
@@ -428,7 +428,7 @@ def register_routes(bp):
 
                     # Автомат KPI алдаа оноох (QC Failure)
                     auto_error_reason = None
-                    
+
                     # ✅ ЭНД ӨӨРЧЛӨЛТ: CM болон GBW хоёулаа 'qc_fail' гэсэн нэг ангилалд орно.
                     if new_status == "rejected":
                         # "Control Failure" эсвэл "GBW Failure" гэсэн үг байвал QC алдаа гэж тооцно
@@ -456,7 +456,7 @@ def register_routes(bp):
                         elif new_status == "rejected": action = "CREATED_REJECTED"
                         elif new_status == "pending_review": action = "CREATED_PENDING"
                         else: action = "CREATED"
-                        
+
                         target_res_id = new_res.id
                         raw_snapshot = new_res.raw_data
                         final_snapshot = new_res.final_result
@@ -467,7 +467,7 @@ def register_routes(bp):
                         existing.status = new_status
                         existing.updated_at = now_local()
                         existing.rejection_comment = status_reason
-                        
+
                         if auto_error_reason:
                             existing.error_reason = auto_error_reason
 
@@ -597,7 +597,7 @@ def register_routes(bp):
 
         res = AnalysisResult.query.get_or_404(result_id)
         allowed = {"approved", "rejected", "pending_review"}
-        
+
         if new_status not in allowed:
             return jsonify({"message": "Буруу статус"}), 400
 
@@ -620,7 +620,7 @@ def register_routes(bp):
                 res.rejection_comment = rejection_comment if rejection_comment else "Ахлах буцаасан"
             elif new_status == "approved":
                 res.rejection_comment = None
-        
+
         if hasattr(res, "error_reason") and error_reason:
              res.error_reason = error_reason
 
@@ -748,12 +748,12 @@ def register_routes(bp):
                 Sample.received_date >= cutoff_time,
                 Sample.client_name == 'CHPP',
                 Sample.sample_type.in_(['2 hourly', '4 hourly', '2 Hourly', '4 Hourly']),
-                ~Sample.status.in_(['completed', 'reported', 'archived']) 
+                ~Sample.status.in_(['completed', 'reported', 'archived'])
             ).all()
-            
+
             ready_count = 0
             ready_samples_list = []
-            
+
             for s in pending_samples:
                 calc = s.get_calculations()
                 p_name = (s.product or "").upper()
@@ -765,7 +765,7 @@ def register_routes(bp):
                 else:
                     if (calc.mt is not None) and (calc.mad is not None) and (calc.aad is not None) and (calc.vad is not None) and (calc.gi is not None):
                         is_ready = True
-                
+
                 if is_ready:
                     ready_count += 1
                     ready_samples_list.append({
@@ -773,7 +773,7 @@ def register_routes(bp):
                         "time": s.received_date.strftime("%H:%M"),
                         "product": s.product
                     })
-            
+
             return jsonify({
                 "ready_count": ready_count,
                 "samples": ready_samples_list,

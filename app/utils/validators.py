@@ -76,7 +76,7 @@ ANALYSIS_VALUE_RANGES: Dict[str, Tuple[float, float]] = {
     'SOLID': (0, 100),          # Solid residue 0-100%
 
     # Free moisture
-    'FM': (0, 100),          # Free moisture 0-100 
+    'FM': (0, 100),          # Free moisture 0-100
 }
 
 # Default муж (тодорхойгүй анализд)
