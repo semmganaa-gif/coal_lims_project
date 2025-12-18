@@ -55,12 +55,50 @@ COMPOSITE_QC_LIMITS = {
 # TIMER PRESETS
 # =====================================================================
 TIMER_PRESETS = {
-    "Aad": {"layout": "right", "digit_size": "xl", "editable": True, "timers": [{"label": "Зуух #1", "seconds": 3600, "note": "815°C · 60′"}, {"label": "Зуух #2", "seconds": 3600, "note": "815°C · 60′"}, {"label": "Зуух #3", "seconds": 3600, "note": "815°C · 60′"}, {"label": "Десикатор", "seconds": 900, "note": "15′"}]},
-    "Vad": {"layout": "right", "digit_size": "xl", "editable": True, "timers": [{"label": "Зуух", "seconds": 25200, "note": "7:00:00"}, {"label": "Десикатор", "seconds": 900, "note": "00:15:00"}]},
-    "Mad": {"layout": "right", "digit_size": "lg", "editable": True, "timers": [{"label": "Шат", "seconds": 3600, "note": "60′"}, {"label": "Десикатор", "seconds": 900, "note": "15′"}]},
-    "MT": {"layout": "right", "digit_size": "lg", "editable": True, "timers": [{"label": "Шат", "seconds": 3600, "note": "60′"}, {"label": "Десикатор", "seconds": 900, "note": "15′"}]},
-    "Gi": {"layout": "right", "digit_size": "xl", "editable": True, "timers": [{"label": "Шат 1", "seconds": 54000, "note": "15:00:00"}, {"label": "Шат 2", "seconds": 1800, "note": "00:30:00"}]},
-    "TRD": {"layout": "right", "digit_size": "lg", "editable": True, "timers": [{"label": "Шат", "seconds": 3600, "note": "60′"}, {"label": "Десикатор", "seconds": 900, "note": "15′"}]},
+    "Aad": {
+        "layout": "right", "digit_size": "xl", "editable": True,
+        "timers": [
+            {"label": "Зуух #1", "seconds": 3600, "note": "815°C · 60′"},
+            {"label": "Зуух #2", "seconds": 3600, "note": "815°C · 60′"},
+            {"label": "Зуух #3", "seconds": 3600, "note": "815°C · 60′"},
+            {"label": "Десикатор", "seconds": 900, "note": "15′"}
+        ]
+    },
+    "Vad": {
+        "layout": "right", "digit_size": "xl", "editable": True,
+        "timers": [
+            {"label": "Зуух", "seconds": 25200, "note": "7:00:00"},
+            {"label": "Десикатор", "seconds": 900, "note": "00:15:00"}
+        ]
+    },
+    "Mad": {
+        "layout": "right", "digit_size": "lg", "editable": True,
+        "timers": [
+            {"label": "Шат", "seconds": 3600, "note": "60′"},
+            {"label": "Десикатор", "seconds": 900, "note": "15′"}
+        ]
+    },
+    "MT": {
+        "layout": "right", "digit_size": "lg", "editable": True,
+        "timers": [
+            {"label": "Шат", "seconds": 3600, "note": "60′"},
+            {"label": "Десикатор", "seconds": 900, "note": "15′"}
+        ]
+    },
+    "Gi": {
+        "layout": "right", "digit_size": "xl", "editable": True,
+        "timers": [
+            {"label": "Шат 1", "seconds": 54000, "note": "15:00:00"},
+            {"label": "Шат 2", "seconds": 1800, "note": "00:30:00"}
+        ]
+    },
+    "TRD": {
+        "layout": "right", "digit_size": "lg", "editable": True,
+        "timers": [
+            {"label": "Шат", "seconds": 3600, "note": "60′"},
+            {"label": "Десикатор", "seconds": 900, "note": "15′"}
+        ]
+    },
     "P": {"layout": "right", "digit_size": "lg", "editable": False, "timers": []},
     "F": {"layout": "right", "digit_size": "lg", "editable": False, "timers": []},
     "Cl": {"layout": "right", "digit_size": "lg", "editable": False, "timers": []},

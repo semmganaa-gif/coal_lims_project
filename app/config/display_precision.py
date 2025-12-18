@@ -214,7 +214,7 @@ def format_result(value: float, analysis_code: Optional[str] = None) -> str:
         return "-"
 
     try:
-        decimal_places = get_decimal_places(analysis_code)
+        decimal_places = get_decimal_places(analysis_code) if analysis_code else DEFAULT_DECIMAL_PLACES
         return f"{value:.{decimal_places}f}"
     except (ValueError, TypeError):
         return str(value)

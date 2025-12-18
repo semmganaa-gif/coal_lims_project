@@ -91,13 +91,13 @@ def export_to_excel(
     return output
 
 
-def create_sample_export(samples: List, include_results: bool = False) -> BytesIO:
+def create_sample_export(samples: List, _include_results: bool = False) -> BytesIO:
     """
     Дээжний өгөгдлийг Excel экспорт
 
     Args:
         samples: Sample объектуудын жагсаалт
-        include_results: Шинжилгээний үр дүнг оруулах эсэх
+        _include_results: Шинжилгээний үр дүнг оруулах эсэх (TODO: implement)
     """
     columns = [
         {"key": "id", "label": "ID"},

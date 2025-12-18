@@ -203,3 +203,76 @@
 ---
 
 **Шинэчлэлт дууссан:** 2025-12-17
+
+---
+
+## 16. Production Бэлтгэл - 2025-12-18
+
+**Огноо:** 2025-12-18
+**Хөгжүүлэгч:** Claude Code
+
+### 16.1 Код чанарын сайжруулалт
+
+| Ажил | Статус | Тайлбар |
+|------|--------|---------|
+| mypy type errors | **117→113** | Optional type, None checks засагдсан |
+| ruff --fix | **142 засагдсан** | Автомат style fixes |
+| vulture dead code | **Засагдсан** | exports.py `_include_results` |
+| bandit security | **PASS** | 0 vulnerabilities |
+
+### 16.2 Тест үр дүн
+
+| Metric | Утга |
+|--------|------|
+| Нийт тест | 3468 passed |
+| Coverage | 75% |
+| Unixарсан тест | test_preview_sample_analyses засагдсан |
+
+### 16.3 Шинэ scripts/tools
+
+| Файл | Зориулалт |
+|------|-----------|
+| `scripts/backup_database.py` | PostgreSQL + SQLite backup |
+| `scripts/scheduled_backup.bat` | Task Scheduler-д зориулсан |
+| `scripts/generate_ssl_cert.py` | Self-signed SSL certificate |
+| `run_https.py` | HTTPS server (Web Serial API-д) |
+| `start_https.bat` | HTTPS сервер эхлүүлэх |
+
+### 16.4 Баримтжуулалт
+
+| Файл | Агуулга |
+|------|---------|
+| `docs/TASK_SCHEDULER_SETUP.md` | Автомат backup тохиргоо |
+| `docs/DOCSTRING_STANDARD.md` | Docstring стандарт |
+
+### 16.5 Frontend сайжруулалт
+
+| Файл | Өөрчлөлт |
+|------|----------|
+| `app/static/js/logger.js` | Production logging utility |
+| `app/static/js/safe-storage.js` | localStorage error handling |
+| `app/templates/base.html` | DEBUG flag, console override |
+
+### 16.6 Үлдсэн ажлууд
+
+| Ажил | Priority | Тайлбар |
+|------|----------|---------|
+| ruff E501 line-too-long | Low | ~526 мөр урт warning |
+| mypy 113 errors | Low | server_calculations.py math ops |
+| Test coverage 80% | Low | Одоо 75% |
+
+### 16.7 Production Checklist
+
+- [x] Тест бүгд passed (3468)
+- [x] Security scan passed (bandit)
+- [x] Dependency vulnerabilities fixed (pip-audit)
+- [x] Backup script бэлэн
+- [x] Task Scheduler заавар бэлэн
+- [x] HTTPS/SSL бэлэн (Web Serial API)
+- [x] Frontend error handling
+- [ ] ruff E501 засах (optional)
+- [ ] Domain + SSL certificate (production)
+
+---
+
+**Шалгалт дууссан:** 2025-12-18

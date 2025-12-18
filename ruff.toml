@@ -1,6 +1,9 @@
 # Ruff configuration
 # https://docs.astral.sh/ruff/configuration/
 
+# Line length 120 - олон проект ашигладаг стандарт
+line-length = 120
+
 [lint]
 # SQLAlchemy query-д == None, == True/False зөв учир ignore хийх
 ignore = [

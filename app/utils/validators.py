@@ -319,6 +319,7 @@ def validate_save_results_batch(
         if err:
             errors.append(f"Item {idx}: {err}")
             continue
+        assert analysis_code is not None  # mypy type narrowing
 
         # Validate final_result
         final_result, err = validate_analysis_result(

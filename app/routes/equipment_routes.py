@@ -432,10 +432,19 @@ def api_equipment_usage_summary():
     if not eq_ids:
         return jsonify({"rows": []})
 
-    usage_stats = db.session.query(UsageLog.equipment_id, func.sum(UsageLog.duration_minutes), func.max(UsageLog.start_time)).filter(UsageLog.start_time >= start_dt, UsageLog.start_time <= end_dt, UsageLog.equipment_id.in_(eq_ids)).group_by(UsageLog.equipment_id).all()
+    usage_stats = db.session.query(
+        UsageLog.equipment_id, func.sum(UsageLog.duration_minutes), func.max(UsageLog.start_time)
+    ).filter(
+        UsageLog.start_time >= start_dt, UsageLog.start_time <= end_dt, UsageLog.equipment_id.in_(eq_ids)
+    ).group_by(UsageLog.equipment_id).all()
     usage_map = {r[0]: {"total": r[1], "last": r[2]} for r in usage_stats}
 
-    maint_stats = db.session.query(MaintenanceLog.equipment_id, func.count(MaintenanceLog.id), func.max(MaintenanceLog.action_date)).filter(MaintenanceLog.action_date >= start_dt, MaintenanceLog.action_date <= end_dt, MaintenanceLog.equipment_id.in_(eq_ids)).group_by(MaintenanceLog.equipment_id).all()
+    maint_stats = db.session.query(
+        MaintenanceLog.equipment_id, func.count(MaintenanceLog.id), func.max(MaintenanceLog.action_date)
+    ).filter(
+        MaintenanceLog.action_date >= start_dt, MaintenanceLog.action_date <= end_dt,
+        MaintenanceLog.equipment_id.in_(eq_ids)
+    ).group_by(MaintenanceLog.equipment_id).all()
     maint_map = {r[0]: {"cnt": r[1], "last": r[2]} for r in maint_stats}
 
     rows = []
@@ -508,15 +517,28 @@ def api_equipment_monthly_stats():
     equips = eq_query.all()
     eq_ids = [e.id for e in equips]
 
-    if not eq_ids: return jsonify({"rows": [], "year": year})
+    if not eq_ids:
+        return jsonify({"rows": [], "year": year})
 
-    data_map = {e.id: {"lab_code": e.lab_code, "name": e.name, "months": {m: {"usage":0, "maint":0} for m in range(1,13)}} for e in equips}
+    data_map = {
+        e.id: {"lab_code": e.lab_code, "name": e.name, "months": {m: {"usage": 0, "maint": 0} for m in range(1, 13)}}
+        for e in equips
+    }
 
-    usage_rows = db.session.query(UsageLog.equipment_id, func.extract('month', UsageLog.start_time), func.sum(UsageLog.duration_minutes)).filter(UsageLog.start_time.between(start_dt, end_dt), UsageLog.equipment_id.in_(eq_ids)).group_by(UsageLog.equipment_id, func.extract('month', UsageLog.start_time)).all()
+    usage_rows = db.session.query(
+        UsageLog.equipment_id, func.extract('month', UsageLog.start_time), func.sum(UsageLog.duration_minutes)
+    ).filter(
+        UsageLog.start_time.between(start_dt, end_dt), UsageLog.equipment_id.in_(eq_ids)
+    ).group_by(UsageLog.equipment_id, func.extract('month', UsageLog.start_time)).all()
     for eid, mon, val in usage_rows:
-        if eid in data_map: data_map[eid]["months"][int(mon)]["usage"] = int(val or 0)
+        if eid in data_map:
+            data_map[eid]["months"][int(mon)]["usage"] = int(val or 0)
 
-    maint_rows = db.session.query(MaintenanceLog.equipment_id, func.extract('month', MaintenanceLog.action_date), func.count(MaintenanceLog.id)).filter(MaintenanceLog.action_date.between(start_dt, end_dt), MaintenanceLog.equipment_id.in_(eq_ids)).group_by(MaintenanceLog.equipment_id, func.extract('month', MaintenanceLog.action_date)).all()
+    maint_rows = db.session.query(
+        MaintenanceLog.equipment_id, func.extract('month', MaintenanceLog.action_date), func.count(MaintenanceLog.id)
+    ).filter(
+        MaintenanceLog.action_date.between(start_dt, end_dt), MaintenanceLog.equipment_id.in_(eq_ids)
+    ).group_by(MaintenanceLog.equipment_id, func.extract('month', MaintenanceLog.action_date)).all()
     for eid, mon, val in maint_rows:
         if eid in data_map: data_map[eid]["months"][int(mon)]["maint"] = int(val or 0)
 

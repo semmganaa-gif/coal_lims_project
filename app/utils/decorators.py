@@ -6,7 +6,7 @@
 Давхардсан эрх шалгах кодыг арилгах зорилготой.
 """
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from flask import flash, redirect, url_for, abort
 from flask_login import current_user
 
@@ -84,7 +84,7 @@ def admin_required(f: Callable) -> Callable:
     return decorated_function
 
 
-def role_or_owner_required(*allowed_roles: str, owner_check: Callable[[Any], bool] = None) -> Callable:
+def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[Any], bool]] = None) -> Callable:
     """
     Тусгай эрх ЭСВЭЛ өөрийнхөө өгөгдөл засах боломжтой болгох decorator.
 
