@@ -77,9 +77,12 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
     # =========================================================
     # АЛХАМ 2: ТУСГАЙ PATTERN ДҮРМҮҮД (Regex Profile)
     # =========================================================
+    # ✅ ЗАСВАР: Зөвхөн тухайн client_name, sample_type-д хамаарах pattern профайлуудыг авах
     pattern_profiles = AnalysisProfile.query.filter(
         AnalysisProfile.pattern.isnot(None),
-        AnalysisProfile.pattern != ''
+        AnalysisProfile.pattern != '',
+        AnalysisProfile.client_name == client_name,
+        AnalysisProfile.sample_type == sample_type
     ).order_by(AnalysisProfile.priority.asc()).all()
 
     # Дээжний нэр болон төлөвийг бэлдэх

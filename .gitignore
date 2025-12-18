@@ -91,3 +91,5 @@ instance/
 
 # SSL certificates (private keys)
 ssl/
+app/static/uploads/chat/
+Screenshot*.jpg

@@ -356,6 +356,172 @@ def analysis_config():
     )
 
 
+# ==============================================================================
+# 2.1 ШИНЭ ЭНГИЙН ТОХИРГОО (Card-based UI)
+# ==============================================================================
+@admin_bp.route('/analysis_config_simple', methods=['GET'])
+@login_required
+@senior_or_admin_required
+def analysis_config_simple():
+    """Шинэ энгийн Card-based шинжилгээний тохиргоо"""
+    _seed_analysis_types()
+
+    # Auto-populate profiles (same as original)
+    added_new = False
+    for client, types in SAMPLE_TYPE_CHOICES_MAP.items():
+        if client == 'CHPP':
+            continue
+        for s_type in types:
+            exists = AnalysisProfile.query.filter(
+                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
+                AnalysisProfile.client_name == client,
+                AnalysisProfile.sample_type == s_type
+            ).first()
+            if not exists:
+                new_profile = AnalysisProfile(
+                    client_name=client,
+                    sample_type=s_type,
+                    pattern=None,
+                    analyses_json="[]"
+                )
+                db.session.add(new_profile)
+                added_new = True
+
+    # Auto-populate CHPP Pattern Profiles
+    for hourly_type, config in CHPP_CONFIG_GROUPS.items():
+        for sample in config['samples']:
+            sample_name = sample['name']
+            exists = AnalysisProfile.query.filter(
+                AnalysisProfile.pattern == sample_name,
+                AnalysisProfile.client_name == 'CHPP',
+                AnalysisProfile.sample_type == hourly_type
+            ).first()
+            if not exists:
+                new_profile = AnalysisProfile(
+                    client_name='CHPP',
+                    sample_type=hourly_type,
+                    pattern=sample_name,
+                    analyses_json="[]",
+                    priority=10
+                )
+                db.session.add(new_profile)
+                added_new = True
+
+    if added_new:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    # Fetch data
+    analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
+
+    # Simple profiles grouped by client
+    simple_profiles = AnalysisProfile.query.filter(
+        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
+        AnalysisProfile.client_name != 'CHPP'
+    ).order_by(AnalysisProfile.client_name, AnalysisProfile.sample_type).all()
+
+    # Group by client name
+    grouped_profiles = {}
+    for profile in simple_profiles:
+        if profile.client_name not in grouped_profiles:
+            grouped_profiles[profile.client_name] = []
+        grouped_profiles[profile.client_name].append(profile)
+
+    # CHPP profiles
+    chpp_profiles = AnalysisProfile.query.filter(
+        AnalysisProfile.client_name == 'CHPP',
+        AnalysisProfile.pattern.isnot(None),
+        AnalysisProfile.pattern != ''
+    ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
+
+    # Gi shift config
+    gi_shift_config = {}
+    gi_setting = SystemSetting.query.filter_by(category='gi_shift', key='config').first()
+    if gi_setting and gi_setting.value:
+        try:
+            gi_shift_config = json.loads(gi_setting.value)
+        except Exception:
+            pass
+
+    if not gi_shift_config:
+        gi_shift_config = {
+            'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
+            'PF221': ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'],
+            'PF231': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
+        }
+
+    form = SimpleProfileForm()
+    return render_template(
+        'analysis_config_simple.html',
+        form=form,
+        analysis_types=analysis_types,
+        grouped_profiles=grouped_profiles,
+        chpp_profiles=chpp_profiles,
+        chpp_config_groups=CHPP_CONFIG_GROUPS,
+        gi_shift_config=gi_shift_config,
+    )
+
+
+@admin_bp.route('/analysis_config_simple_save', methods=['POST'])
+@login_required
+@senior_or_admin_required
+def analysis_config_simple_save():
+    """Шинэ энгийн тохиргоог хадгалах"""
+    # Simple profiles
+    simple_profiles = AnalysisProfile.query.filter(
+        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
+        AnalysisProfile.client_name != 'CHPP'
+    ).all()
+
+    # CHPP profiles
+    chpp_profiles = AnalysisProfile.query.filter(
+        AnalysisProfile.client_name == 'CHPP',
+        AnalysisProfile.pattern.isnot(None),
+        AnalysisProfile.pattern != ''
+    ).all()
+
+    updated_count = 0
+
+    # Save simple profiles
+    for profile in simple_profiles:
+        input_name = f"simple-{profile.id}-analyses"
+        selected_codes = request.form.getlist(input_name)
+        profile.analyses_json = json.dumps(selected_codes)
+        updated_count += 1
+
+    # Save CHPP profiles
+    for profile in chpp_profiles:
+        input_name = f"chpp-{profile.id}-analyses"
+        selected_codes = request.form.getlist(input_name)
+        profile.analyses_json = json.dumps(selected_codes)
+        updated_count += 1
+
+    # Save Gi shift config
+    gi_config = {}
+    for pf_code in ['PF211', 'PF221', 'PF231']:
+        shifts = request.form.getlist(f'gi_shifts_{pf_code}')
+        if shifts:
+            gi_config[pf_code] = shifts
+
+    if gi_config:
+        setting = SystemSetting.query.filter_by(category='gi_shift', key='config').first()
+        if not setting:
+            setting = SystemSetting(category='gi_shift', key='config')
+            db.session.add(setting)
+        setting.value = json.dumps(gi_config)
+
+    try:
+        db.session.commit()
+        flash(f'{updated_count} тохиргоо амжилттай хадгалагдлаа.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Алдаа гарлаа: {str(e)[:100]}', 'danger')
+
+    return redirect(url_for('admin.analysis_config_simple'))
+
+
 # --- Pattern дүрэм устгах ---
 @admin_bp.route('/delete_pattern_profile/<int:profile_id>', methods=['POST'])
 @login_required

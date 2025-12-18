@@ -218,7 +218,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnExportCsv').addEventListener('click', () => gridOptions.api.exportDataAsCsv({ fileName: 'SampleList.csv' }));
 
     document.getElementById('btnDeleteSelected').addEventListener('click', function() {
-        const selectedNodes = gridOptions.api.getSelectedNodes();
+        // Зөвхөн одоо харагдаж байгаа (filtered) дээжүүдийг авах
+        const allSelectedNodes = gridOptions.api.getSelectedNodes();
+        const selectedNodes = allSelectedNodes.filter(node => node.displayed);
+
         if (selectedNodes.length === 0) { alert('Устгах дээжээ сонгоно уу!'); return; }
         if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгахдаа итгэлтэй байна уу?')) return;
 

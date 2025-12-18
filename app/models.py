@@ -747,7 +747,7 @@ class UsageLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), index=True)
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'), nullable=True, index=True)  # Аль дээжинд ашигласан (optional)
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), nullable=True, index=True)  # Аль дээжинд ашигласан (optional)
 
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
@@ -1583,7 +1583,7 @@ class CustomerComplaint(db.Model):
     complaint_date = db.Column(db.Date, nullable=False, default=now_mn)
     complaint_type = db.Column(db.String(100))  # Turnaround time, Result accuracy, Service quality
     description = db.Column(db.Text, nullable=False)
-    related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'))
+    related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"))
 
     # Шийдвэрлэлт
     investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -1710,7 +1710,7 @@ class ChatMessage(db.Model):
     is_urgent = db.Column(db.Boolean, default=False)
 
     # Дээж/Шинжилгээ холбох
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id'), nullable=True)
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), nullable=True)
 
     # Устгах (soft delete)
     is_deleted = db.Column(db.Boolean, default=False)
