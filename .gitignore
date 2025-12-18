@@ -93,3 +93,5 @@ instance/
 ssl/
 app/static/uploads/chat/
 Screenshot*.jpg
+.claude/settings.local.json
+coverage.xml
