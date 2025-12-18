@@ -9,9 +9,18 @@ from app import create_app, db
 @pytest.fixture
 def app():
     """Test application fixture"""
-    app = create_app()
-    app.config['TESTING'] = True
-    return app
+    from tests.conftest import TestConfig
+    app = create_app(TestConfig)
+    app.config['SERVER_NAME'] = 'localhost'
+
+    with app.app_context():
+        db.create_all()
+
+    yield app
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
 
 
 class TestAnalysisAssignment:

@@ -10,11 +10,24 @@ from app.models import User, CorrectiveAction, CustomerComplaint, EnvironmentalL
 @pytest.fixture
 def app():
     """Test application fixture"""
-    app = create_app()
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
+    from tests.conftest import TestConfig
+    app = create_app(TestConfig)
     app.config['SERVER_NAME'] = 'localhost'
-    return app
+
+    with app.app_context():
+        db.create_all()
+        from app.models import User
+        if not User.query.filter_by(username='admin').first():
+            user = User(username='admin', role='admin')
+            user.set_password('Admin123')
+            db.session.add(user)
+            db.session.commit()
+
+    yield app
+
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
 
 
 @pytest.fixture

@@ -232,3 +232,162 @@ class TestAdminAPI:
 
         response = client.get('/api/admin/users')
         assert response.status_code in [200, 302, 404]
+
+
+class TestManageUsers:
+    """User management actual routes тестүүд"""
+
+    def test_manage_users_page(self, client, app, admin_full_user):
+        """Manage users page access"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.get('/admin/manage_users')
+        assert response.status_code in [200, 302]
+
+    def test_manage_users_create_post(self, client, app, admin_full_user):
+        """Create new user via manage_users POST"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.post('/admin/manage_users', data={
+            'username': f'new_user_{datetime.now().timestamp()}',
+            'password': 'NewUserPass123',
+            'role': 'analyst'
+        }, follow_redirects=True)
+        assert response.status_code in [200, 302]
+
+    def test_edit_user_page(self, client, app, admin_full_user):
+        """Edit user page"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+
+        with app.app_context():
+            user = User(username=f'edit_user_{datetime.now().timestamp()}', role='analyst')
+            user.set_password('EditPass123')
+            db.session.add(user)
+            db.session.commit()
+            user_id = user.id
+
+        response = client.get(f'/admin/edit_user/{user_id}')
+        assert response.status_code in [200, 302, 404]
+
+    def test_edit_user_post(self, client, app, admin_full_user):
+        """Edit user POST"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+
+        with app.app_context():
+            user = User(username=f'edit_post_{datetime.now().timestamp()}', role='analyst')
+            user.set_password('EditPostPass123')
+            db.session.add(user)
+            db.session.commit()
+            user_id = user.id
+
+        response = client.post(f'/admin/edit_user/{user_id}', data={
+            'role': 'senior'
+        }, follow_redirects=True)
+        assert response.status_code in [200, 302, 404]
+
+    def test_delete_user(self, client, app, admin_full_user):
+        """Delete user"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+
+        with app.app_context():
+            user = User(username=f'delete_{datetime.now().timestamp()}', role='analyst')
+            user.set_password('DeletePass123')
+            db.session.add(user)
+            db.session.commit()
+            user_id = user.id
+
+        response = client.post(f'/admin/delete_user/{user_id}', follow_redirects=True)
+        assert response.status_code in [200, 302, 404]
+
+
+class TestControlStandardsRoutes:
+    """Control standards management тестүүд"""
+
+    def test_manage_standards_page(self, client, app, admin_full_user):
+        """Manage control standards page"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.get('/admin/control_standards')
+        assert response.status_code in [200, 302]
+
+    def test_create_standard(self, client, app, admin_full_user):
+        """Create control standard"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.post('/admin/control_standards/create',
+            json={
+                'name': f'Test Standard {datetime.now().timestamp()}',
+                'code': f'TS{int(datetime.now().timestamp()) % 10000}',
+                'standard_type': 'internal'
+            },
+            follow_redirects=True)
+        assert response.status_code in [200, 302, 400, 415]
+
+
+class TestGBWStandardsRoutes:
+    """GBW standards management тестүүд"""
+
+    def test_manage_gbw_page(self, client, app, admin_full_user):
+        """Manage GBW standards page"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.get('/admin/gbw_standards')
+        assert response.status_code in [200, 302]
+
+    def test_create_gbw(self, client, app, admin_full_user):
+        """Create GBW standard"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.post('/admin/gbw_standards/create',
+            json={
+                'name': f'GBW Test {datetime.now().timestamp()}',
+                'code': f'GBW{int(datetime.now().timestamp()) % 10000}'
+            },
+            follow_redirects=True)
+        assert response.status_code in [200, 302, 400, 415]
+
+
+class TestAnalysisConfigRoutes:
+    """Analysis configuration тестүүд"""
+
+    def test_analysis_config_page(self, client, app, admin_full_user):
+        """Analysis config page"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.get('/admin/analysis_config')
+        assert response.status_code in [200, 302]
+
+    def test_analysis_config_post(self, client, app, admin_full_user):
+        """Analysis config POST"""
+        client.post('/login', data={
+            'username': 'admin_full_user',
+            'password': VALID_PASSWORD
+        }, follow_redirects=True)
+        response = client.post('/admin/analysis_config', data={
+            'analysis_code': 'Mad',
+            'precision': '2'
+        }, follow_redirects=True)
+        assert response.status_code in [200, 302]

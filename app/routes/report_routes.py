@@ -241,7 +241,6 @@ def consumption_cell():
         db.session.query(
             Sample.id.label("sample_id"),
             Sample.sample_code,
-            Sample.name,
             Sample.client_name,
             Sample.sample_type,
             date_col.label("dt"),

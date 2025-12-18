@@ -66,7 +66,7 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
     # АЛХАМ 1: ЭНГИЙН МАТРИЦ ДҮРЭМ (Simple Profile)
     # =========================================================
     simple_profile = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
+        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
         AnalysisProfile.client_name == client_name,
         AnalysisProfile.sample_type == sample_type
     ).first()
@@ -78,7 +78,7 @@ def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
     # АЛХАМ 2: ТУСГАЙ PATTERN ДҮРМҮҮД (Regex Profile)
     # =========================================================
     pattern_profiles = AnalysisProfile.query.filter(
-        AnalysisProfile.pattern is not None,
+        AnalysisProfile.pattern.isnot(None),
         AnalysisProfile.pattern != ''
     ).order_by(AnalysisProfile.priority.asc()).all()
 

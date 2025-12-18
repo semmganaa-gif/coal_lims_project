@@ -213,7 +213,7 @@ def analysis_config():
     if request.method == 'POST':
         # Profiles авах
         simple_profiles = AnalysisProfile.query.filter(
-            (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
+            (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
             AnalysisProfile.client_name != 'CHPP'
         ).all()
 
@@ -268,7 +268,7 @@ def analysis_config():
             continue
         for s_type in types:
             exists = AnalysisProfile.query.filter(
-                (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
+                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
                 AnalysisProfile.client_name == client,
                 AnalysisProfile.sample_type == s_type
             ).first()
@@ -316,7 +316,7 @@ def analysis_config():
     analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
 
     simple_profiles = AnalysisProfile.query.filter(
-        (AnalysisProfile.pattern is None) | (AnalysisProfile.pattern == ''),
+        (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
         AnalysisProfile.client_name != 'CHPP'
     ).order_by(AnalysisProfile.client_name, AnalysisProfile.sample_type).all()
 
