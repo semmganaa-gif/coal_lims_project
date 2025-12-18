@@ -317,6 +317,7 @@ class TestPreviewAnalyses:
         login(client, 'prep_reg_test', 'PrepPass123')
         response = client.post('/preview-analyses',
             json={
+                'sample_names': ['TEST_SAMPLE_001'],
                 'client_name': 'CHPP',
                 'sample_type': '2H'
             },
