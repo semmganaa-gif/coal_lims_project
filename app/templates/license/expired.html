@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лицензийн хугацаа дууссан - Coal LIMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 50px 40px;
+        }
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .info-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .info-box p {
+            color: #991b1b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+        .info-box strong {
+            color: #7f1d1d;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .hardware-id {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #374151;
+        }
+        .contact-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .contact-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">⏰</div>
+            <h1>Лицензийн хугацаа дууссан</h1>
+            <p>Coal LIMS системийг үргэлжлүүлэн ашиглахын тулд лиценз сунгуулна уу</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                {% if license %}
+                    <p><strong>Компани:</strong> {{ license.company_name }}</p>
+                    <p><strong>Дууссан огноо:</strong> {{ license.expiry_date.strftime('%Y-%m-%d') }}</p>
+                {% else %}
+                    <p>Лиценз олдсонгүй.</p>
+                {% endif %}
+            </div>
+
+            <a href="{{ url_for('license.activate') }}" class="btn">
+                Шинэ лиценз идэвхжүүлэх
+            </a>
+
+            <div class="hardware-id">
+                <strong>Hardware ID:</strong> {{ hardware_id }}
+            </div>
+
+            <div class="contact-info">
+                <p>Лиценз сунгуулахын тулд холбогдоно уу:</p>
+                <p>📧 <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
+                <p>📞 80872013</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

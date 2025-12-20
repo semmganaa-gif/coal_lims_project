@@ -113,6 +113,11 @@ def manage_users():
             flash(f'"{form.username.data}" нэртэй хэрэглэгч аль хэдийн байна.', 'warning')
         else:
             user = User(username=form.username.data, role=form.role.data)
+            # Профайл мэдээлэл нэмэх
+            user.full_name = form.full_name.data or None
+            user.email = form.email.data or None
+            user.phone = form.phone.data or None
+            user.position = form.position.data or None
             try:
                 user.set_password(form.password.data)
             except ValueError as e:
@@ -156,6 +161,12 @@ def edit_user(user_id):
 
         user_to_edit.username = new_username
         user_to_edit.role = form.role.data
+        # Профайл мэдээлэл шинэчлэх
+        user_to_edit.full_name = form.full_name.data or None
+        user_to_edit.email = form.email.data or None
+        user_to_edit.phone = form.phone.data or None
+        user_to_edit.position = form.position.data or None
+
         if form.password.data:
             try:
                 user_to_edit.set_password(form.password.data)
@@ -176,6 +187,11 @@ def edit_user(user_id):
 
     form.username.data = user_to_edit.username
     form.role.data = user_to_edit.role
+    # Профайл мэдээллийг form-д дүүргэх
+    form.full_name.data = user_to_edit.full_name or ""
+    form.email.data = user_to_edit.email or ""
+    form.phone.data = user_to_edit.phone or ""
+    form.position.data = user_to_edit.position or ""
     return render_template('edit_user.html', title='Хэрэглэгч засах', form=form, user=user_to_edit)
 
 

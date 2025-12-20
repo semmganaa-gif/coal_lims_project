@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лицензийн алдаа - Coal LIMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            color: white;
+            padding: 50px 40px;
+        }
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .error-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .error-box h3 {
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .error-box p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .reasons {
+            text-align: left;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .reasons h4 {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .reasons ul {
+            color: #6b7280;
+            font-size: 13px;
+            padding-left: 20px;
+        }
+        .reasons li {
+            margin-bottom: 8px;
+        }
+        .hardware-id {
+            background: #fee2e2;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #991b1b;
+        }
+        .contact-info {
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .contact-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .contact-info p {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">⚠️</div>
+            <h1>Лицензийн алдаа илэрлээ</h1>
+            <p>Системийг ашиглах боломжгүй байна</p>
+        </div>
+
+        <div class="content">
+            <div class="error-box">
+                <h3>Юу болсон бэ?</h3>
+                <p>
+                    Таны лиценз энэ компьютер дээр хүчингүй болсон байна.
+                    Энэ нь хэд хэдэн шалтгааны улмаас үүсч болно.
+                </p>
+            </div>
+
+            <div class="reasons">
+                <h4>Боломжит шалтгаанууд:</h4>
+                <ul>
+                    <li>Лицензийг өөр компьютерт шилжүүлсэн</li>
+                    <li>Компьютерийн hardware солигдсон</li>
+                    <li>Системийг хууль бусаар хуулсан</li>
+                    <li>Лицензийн файл гэмтсэн</li>
+                </ul>
+            </div>
+
+            <div class="hardware-id">
+                <strong>Одоогийн Hardware ID:</strong><br>
+                {{ hardware_id }}
+            </div>
+
+            <div class="contact-info">
+                <p><strong>Асуудлыг шийдвэрлэхийн тулд:</strong></p>
+                <p>📧 <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a> хаягаар холбогдоно уу</p>
+                <p>📞 80872013</p>
+                <p style="margin-top: 16px; font-size: 12px;">
+                    Hardware ID-г дээрх имэйл хаягаар илгээнэ үү
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

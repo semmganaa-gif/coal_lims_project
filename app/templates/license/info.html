@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Лицензийн мэдээлэл - Coal LIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-key me-2"></i>Лицензийн мэдээлэл
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if license %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-muted mb-3">Үндсэн мэдээлэл</h6>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" width="40%">Компани:</td>
+                                            <td><strong>{{ license.company_name }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Компанийн код:</td>
+                                            <td>{{ license.company_code or '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Төлөв:</td>
+                                            <td>
+                                                {% if license.is_valid %}
+                                                    <span class="badge bg-success">Хүчинтэй</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Хүчингүй</span>
+                                                {% endif %}
+                                                {% if license.is_trial %}
+                                                    <span class="badge bg-warning text-dark">Туршилтын</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-muted mb-3">Хугацаа</h6>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" width="40%">Олгосон:</td>
+                                            <td>{{ license.issued_date.strftime('%Y-%m-%d') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Дуусах:</td>
+                                            <td>
+                                                <strong>{{ license.expiry_date.strftime('%Y-%m-%d') }}</strong>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Үлдсэн:</td>
+                                            <td>
+                                                {% if license.days_remaining > 30 %}
+                                                    <span class="text-success">{{ license.days_remaining }} хоног</span>
+                                                {% elif license.days_remaining > 0 %}
+                                                    <span class="text-warning">{{ license.days_remaining }} хоног</span>
+                                                {% else %}
+                                                    <span class="text-danger">Дууссан</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-muted mb-3">Хязгаарлалт</h6>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" width="50%">Хэрэглэгчийн тоо:</td>
+                                            <td>{{ license.max_users }} хүртэл</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Сарын дээж:</td>
+                                            <td>{{ license.max_samples_per_month }} хүртэл</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100">
+                                    <h6 class="text-muted mb-3">Техникийн мэдээлэл</h6>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td class="text-muted" width="50%">Шалгалтын тоо:</td>
+                                            <td>{{ license.check_count }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Сүүлийн шалгалт:</td>
+                                            <td>
+                                                {% if license.last_check %}
+                                                    {{ license.last_check.strftime('%Y-%m-%d %H:%M') }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if license.is_expiring_soon %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Анхааруулга:</strong> Лицензийн хугацаа {{ license.days_remaining }} хоногийн дараа дуусна. Цаг тухайд нь сунгуулна уу.
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>
+                            Лиценз олдсонгүй.
+                            <a href="{{ url_for('license.activate') }}" class="alert-link">Лиценз идэвхжүүлэх</a>
+                        </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <h6 class="text-muted mb-3">Системийн Hardware мэдээлэл</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tr>
+                                <td class="text-muted" width="30%">Hardware ID:</td>
+                                <td><code>{{ hardware_info.short_id }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Hostname:</td>
+                                <td>{{ hardware_info.hostname }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">OS:</td>
+                                <td>{{ hardware_info.os }} {{ hardware_info.os_version }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
