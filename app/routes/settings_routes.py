@@ -501,7 +501,63 @@ def notification_settings():
 
 
 # ==================================
-# 5) Стандартын лавлах (SOP / Standards Reference)
+# 5) Report Email Settings (admin only)
+# ==================================
+@settings_bp.route("/email-recipients", methods=["GET", "POST"])
+@login_required
+def email_recipients():
+    """Тайлан илгээх имэйл хаягийн тохиргоо (TO, CC)"""
+    if not _is_admin():
+        flash("Зөвхөн админ засварлана.", "danger")
+        return redirect(url_for("settings.bottles_index"))
+
+    # Одоогийн тохиргоог авах
+    to_setting = SystemSetting.query.filter_by(
+        category="email",
+        key="report_recipients_to"
+    ).first()
+    cc_setting = SystemSetting.query.filter_by(
+        category="email",
+        key="report_recipients_cc"
+    ).first()
+
+    current_to = to_setting.value if to_setting else ""
+    current_cc = cc_setting.value if cc_setting else ""
+
+    if request.method == "POST":
+        new_to = request.form.get("recipients_to", "").strip()
+        new_cc = request.form.get("recipients_cc", "").strip()
+
+        # TO хаягуудыг хадгалах
+        if not to_setting:
+            to_setting = SystemSetting(category="email", key="report_recipients_to")
+            db.session.add(to_setting)
+        to_setting.value = new_to
+        to_setting.is_active = True
+
+        # CC хаягуудыг хадгалах
+        if not cc_setting:
+            cc_setting = SystemSetting(category="email", key="report_recipients_cc")
+            db.session.add(cc_setting)
+        cc_setting.value = new_cc
+        cc_setting.is_active = True
+
+        db.session.commit()
+        flash("Имэйл хаягууд хадгалагдлаа.", "success")
+
+        current_to = new_to
+        current_cc = new_cc
+
+    return render_template(
+        "settings/email_recipients.html",
+        title="Тайлан илгээх имэйл хаяг",
+        current_to=current_to,
+        current_cc=current_cc,
+    )
+
+
+# ==================================
+# 6) Стандартын лавлах (SOP / Standards Reference)
 # ==================================
 
 # SOP файлуудын mapping - шинжилгээ тус бүрт холбогдох файлууд

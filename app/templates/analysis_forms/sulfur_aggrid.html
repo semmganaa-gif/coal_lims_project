@@ -160,7 +160,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     {
       headerName:'p1',
       children:[
-        { headerName:'Жин (g)', field:'p1_weight', width:140, ...editNumericCol, valueFormatter:numFmt3,
+        { headerName:'Жин (g)', field:'p1_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
           cellStyle:p=>{
             const base = editNumericCol.cellStyle(p);
             return p.data.is_saved ? base : { backgroundColor:'#e3f2fd' };
@@ -177,7 +177,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     {
       headerName:'p2',
       children:[
-        { headerName:'Жин (g)', field:'p2_weight', width:140, ...editNumericCol, valueFormatter:numFmt3,
+        { headerName:'Жин (g)', field:'p2_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
           cellStyle:p=>{
             const base = editNumericCol.cellStyle(p);
             return p.data.is_saved ? base : { backgroundColor:'#fff3e0' };
@@ -193,9 +193,15 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     },
     {
       headerName:'Тохирц (T)', field:'diff', width:120,
-      valueFormatter:p=> p.value != null ? numFmt2(p) : '-',
+      valueFormatter:p=> {
+        // Зөвхөн хадгалагдсан үр дүнг харуулна
+        if(p.data.is_saved && p.value != null) {
+          return numFmt2(p);
+        }
+        return '-';
+      },
       cellStyle:p=>{
-        if(p.value == null){
+        if(!p.data.is_saved || p.value == null){
           return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
         }
         if(p.data.t_exceeded){
@@ -206,9 +212,15 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     },
     {
       headerName:'Дундаж', field:'avg', width:120,
-      valueFormatter:p=> p.value != null ? numFmt2(p) : '-',
+      valueFormatter:p=> {
+        // Зөвхөн хадгалагдсан үр дүнг харуулна
+        if(p.data.is_saved && p.value != null) {
+          return numFmt2(p);
+        }
+        return '-';
+      },
       cellStyle:p=>{
-        if(p.value == null){
+        if(!p.data.is_saved || p.value == null){
           return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
         }
         return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };

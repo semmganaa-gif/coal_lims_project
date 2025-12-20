@@ -31,7 +31,8 @@ socketio = SocketIO()
 # CSRF хамгаалалт
 csrf = CSRFProtect()
 
-# ✅ Rate limiter - Brute force халдлагаас хамгаалах (ИДЭВХЖҮҮЛСЭН)
+# ✅ Rate limiter - Brute force халдлагаас хамгаалах
+# create_app дотор init_app хийгдэнэ
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],  # Ерөнхий хязгаар
@@ -44,6 +45,10 @@ def create_app(config_class=Config):
 
     # Template auto-reload (dev mode)
     app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+    # ✅ Development mode дээр Secure cookie унтраах (HTTP дээр ажиллуулахад)
+    if app.config.get('ENV') == 'development' or app.debug:
+        app.config['SESSION_COOKIE_SECURE'] = False
 
     # ---- Extensions-г app-тай холбох
     db.init_app(app)
@@ -87,6 +92,9 @@ def create_app(config_class=Config):
     # Тоног төхөөрөмжийн модуль (ISO 17025)
     from app.routes.equipment_routes import equipment_bp
 
+    # Лиценз хамгаалалт
+    from app.routes.license_routes import license_bp
+
     # Чанарын удирдлага (ISO 17025 - Quality Management Systems)
     from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
 
@@ -103,6 +111,7 @@ def create_app(config_class=Config):
     safe_register_blueprint(reports_bp)
     safe_register_blueprint(import_bp)
     safe_register_blueprint(equipment_bp)
+    safe_register_blueprint(license_bp)
 
     # Чанарын удирдлагын route-уудыг бүртгэх
     if quality_bp.name not in app.blueprints:

@@ -108,10 +108,11 @@ def setup_monitoring(app):
     # Prometheus metrics тохируулах
     metrics = None
 
-    # Testing mode-д Prometheus-ийг алгасах
-    if app.config.get('TESTING'):
+    # Testing/Development mode-д Prometheus-ийг алгасах (Secure cookie асуудал)
+    is_dev = app.config.get('ENV') == 'development' or app.debug
+    if app.config.get('TESTING') or is_dev:
         app.prometheus_metrics = None
-        app.logger.info("Testing mode - Prometheus metrics disabled")
+        app.logger.info("Testing/Development mode - Prometheus metrics disabled")
     elif PROMETHEUS_AVAILABLE:
         try:
             metrics = PrometheusMetrics(app, path='/metrics')

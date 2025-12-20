@@ -6,97 +6,749 @@
   .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
   .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
   .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
-  .standard-section { background: white; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .standard-header { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
-  .standard-header.gbw { background: linear-gradient(90deg, #0891b2 0%, #06b6d4 100%); color: white; }
-  .standard-header.cm { background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
-  .standard-title { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; }
-  .chart-container { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
-  .chart-container:last-child { border-bottom: none; }
-  .chart-label { font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
-  .chart-stats { font-size: 0.75rem; color: #64748b; }
-  .chart-stats span { margin-left: 1rem; }
-  .westgard-legend { display: flex; gap: 1.5rem; font-size: 0.7rem; color: #64748b; padding: 0.5rem 1rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-  .legend-item { display: flex; align-items: center; gap: 4px; }
-  .legend-line { width: 20px; height: 2px; }
+
+  /* Standard Section */
+  .standard-section { margin-bottom: 1rem; }
+  .standard-header {
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .standard-header:hover { opacity: 0.95; }
+  .standard-header.expanded { border-radius: 12px 12px 0 0; }
+  .standard-header.gbw { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); }
+  .standard-header.cm { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
+  .standard-title { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; }
+  .collapse-icon { transition: transform 0.3s; }
+  .standard-header.expanded .collapse-icon { transform: rotate(180deg); }
+
+  /* Collapsible content */
+  .charts-grid-wrapper {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+  .charts-grid-wrapper.expanded {
+    max-height: 2000px;
+  }
+
+  /* Cards Grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  /* Chart Card */
+  .chart-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+  .chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: #8b5cf6;
+  }
+  .chart-card.status-pass { border-left: 4px solid #22c55e; }
+  .chart-card.status-warning { border-left: 4px solid #f59e0b; }
+  .chart-card.status-reject { border-left: 4px solid #ef4444; }
+  .chart-card.status-na { border-left: 4px solid #94a3b8; }
+  .chart-card.status-nodata { border-left: 4px solid #cbd5e1; background: #f8fafc; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+  .card-analysis-code {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+  }
+  .card-stats .label { color: #94a3b8; }
+  .card-stats .value { font-weight: 600; color: #1e293b; }
+
+  .card-chart-container {
+    height: 120px;
+    position: relative;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  /* Modal */
+  .chart-modal .modal-dialog { max-width: 900px; }
+  .chart-modal .modal-content { border-radius: 16px; border: none; }
+  .chart-modal .modal-header {
+    border-bottom: none;
+    padding: 1.5rem 1.5rem 0.5rem;
+  }
+  .chart-modal .modal-body { padding: 1rem 1.5rem 1.5rem; }
+
+  .modal-analysis-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .modal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .modal-stat-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .modal-stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem; }
+  .modal-stat-value { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+  .modal-stat-value.target { color: #1e40af; }
+  .modal-stat-value.sd { color: #7c3aed; }
+  .modal-stat-value.count { color: #0891b2; }
+
+  .modal-chart-container {
+    height: 350px;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 0.75rem;
+    background: #f1f5f9;
+    border-radius: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-line { width: 24px; height: 3px; border-radius: 2px; }
   .legend-line.target { background: #000; }
   .legend-line.sd1 { background: #22c55e; }
   .legend-line.sd2 { background: #ef4444; }
   .legend-line.sd3 { background: #9333ea; }
+
+  .violations-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fef2f2;
+    border-radius: 10px;
+    border-left: 4px solid #ef4444;
+  }
+  .violations-title { font-weight: 600; color: #dc2626; margin-bottom: 0.5rem; }
+  .violation-item { font-size: 0.85rem; color: #7f1d1d; padding: 0.25rem 0; }
+
+  /* Loading & Empty States */
+  .loading-state { text-align: center; padding: 3rem; }
   .empty-state { text-align: center; padding: 3rem; color: #64748b; }
-  .loading-state { text-align: center; padding: 2rem; }
+
+  /* Stats Summary */
+  .stats-summary {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .stat-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 3px solid #94a3b8;
+  }
+  .stat-item.stat-total { border-top-color: #3b82f6; }
+  .stat-item.stat-pass { border-top-color: #22c55e; }
+  .stat-item.stat-warning { border-top-color: #f59e0b; }
+  .stat-item.stat-reject { border-top-color: #ef4444; }
+  .stat-item.stat-repeat { border-top-color: #8b5cf6; }
+  .stat-item.stat-declined { border-top-color: #64748b; }
+  .stat-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+  .stat-value { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; }
+  .stat-total .stat-value { color: #3b82f6; }
+  .stat-pass .stat-value { color: #22c55e; }
+  .stat-warning .stat-value { color: #f59e0b; }
+  .stat-reject .stat-value { color: #ef4444; }
+  .stat-repeat .stat-value { color: #8b5cf6; }
+  .stat-declined .stat-value { color: #64748b; }
+
+  /* Period buttons */
+  .period-btn.active {
+    background: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: white !important;
+  }
+
+  @media (max-width: 992px) {
+    .stats-summary { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .stats-summary { grid-template-columns: repeat(2, 1fr); }
+    .qc-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+  }
 </style>
 
 <div class="qc-page">
   <div class="qc-header">
     <div>
       <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>QC Control Charts</h1>
-      <div class="qc-subtitle">ISO 17025 - Levey-Jennings (Бүх үр дүн)</div>
+      <div class="qc-subtitle">ISO 17025 - Levey-Jennings | Карт дээр дарж дэлгэрэнгүй харах</div>
     </div>
-    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Шинэчлэх</button>
+    <div class="d-flex align-items-center gap-2">
+      <!-- Хугацааны шүүлт -->
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn active" data-period="1">Өнөөдөр</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="7">7 өдөр</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="30">1 сар</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="90">Улирал</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="all">Бүгд</button>
+      </div>
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()" title="Бүгдийг хураах">
+          <i class="bi bi-arrows-collapse"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()" title="Бүгдийг задлах">
+          <i class="bi bi-arrows-expand"></i>
+        </button>
+      </div>
+      <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
   </div>
-  <div id="chartsContainer"><div class="loading-state"><div class="spinner-border text-primary"></div><div class="mt-2 text-muted">Ачаалж байна...</div></div></div>
+
+  <!-- Нийт статистик -->
+  <div class="stats-summary" id="statsSummary">
+    <div class="stat-item stat-total">
+      <div class="stat-info">
+        <div class="stat-label">НИЙТ</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+    </div>
+    <div class="stat-item stat-pass">
+      <div class="stat-info">
+        <div class="stat-label">ОК</div>
+        <div class="stat-value" id="statPass">0</div>
+      </div>
+    </div>
+    <div class="stat-item stat-warning">
+      <div class="stat-info">
+        <div class="stat-label">АНХААРУУЛГА</div>
+        <div class="stat-value" id="statWarning">0</div>
+      </div>
+    </div>
+    <div class="stat-item stat-reject">
+      <div class="stat-info">
+        <div class="stat-label">ХЭТЭРСЭН</div>
+        <div class="stat-value" id="statReject">0</div>
+      </div>
+    </div>
+    <div class="stat-item stat-repeat">
+      <div class="stat-info">
+        <div class="stat-label">ДАВТАН</div>
+        <div class="stat-value" id="statRepeat">0</div>
+      </div>
+    </div>
+    <div class="stat-item stat-declined">
+      <div class="stat-info">
+        <div class="stat-label">ТАТГАЛЗСАН</div>
+        <div class="stat-value" id="statDeclined">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chartsContainer">
+    <div class="loading-state">
+      <div class="spinner-border text-primary mb-3"></div>
+      <div class="text-muted">Ачаалж байна...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade chart-modal" id="chartModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-analysis-title">
+          <span id="modalAnalysisCode">-</span>
+          <span id="modalStatusBadge"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-stats-grid">
+          <div class="modal-stat-card">
+            <div class="modal-stat-label">Target</div>
+            <div class="modal-stat-value target" id="modalTarget">-</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="modal-stat-label">SD (±)</div>
+            <div class="modal-stat-value sd" id="modalSD">-</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="modal-stat-label">Сүүлийн утга</div>
+            <div class="modal-stat-value" id="modalLatest">-</div>
+          </div>
+          <div class="modal-stat-card">
+            <div class="modal-stat-label">Хэмжилтийн тоо</div>
+            <div class="modal-stat-value count" id="modalCount">-</div>
+          </div>
+        </div>
+
+        <div class="modal-chart-container">
+          <canvas id="modalChart"></canvas>
+        </div>
+
+        <div class="modal-legend">
+          <div class="legend-item"><div class="legend-line target"></div>Target</div>
+          <div class="legend-item"><div class="legend-line sd1"></div>±1SD</div>
+          <div class="legend-item"><div class="legend-line sd2"></div>±2SD (Warning)</div>
+          <div class="legend-item"><div class="legend-line sd3"></div>±3SD (Reject)</div>
+        </div>
+
+        <div id="modalViolations" class="violations-section" style="display:none;">
+          <div class="violations-title"><i class="bi bi-exclamation-triangle me-1"></i>Westgard Зөрчил</div>
+          <div id="violationsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', loadAllCharts);
+let modalChart = null;
+let chartsData = {};
+let allQcData = null;
+let currentPeriod = 1; // Default: Өнөөдөр
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadAllCharts();
+  setupPeriodButtons();
+});
+
+function toggleSection(sectionId) {
+  const wrapper = document.getElementById(sectionId);
+  const header = document.querySelector(`[data-section="${sectionId}"]`);
+  if (wrapper && header) {
+    wrapper.classList.toggle('expanded');
+    header.classList.toggle('expanded');
+  }
+}
+
+function collapseAll() {
+  document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.remove('expanded'));
+  document.querySelectorAll('.standard-header').forEach(h => h.classList.remove('expanded'));
+}
+
+function expandAll() {
+  document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.add('expanded'));
+  document.querySelectorAll('.standard-header').forEach(h => h.classList.add('expanded'));
+}
+
+function setupPeriodButtons() {
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentPeriod = this.dataset.period === 'all' ? 'all' : parseInt(this.dataset.period);
+      if (allQcData) {
+        renderCharts(allQcData);
+      }
+    });
+  });
+}
+
+function updateStats(qcSamples) {
+  let total = 0, pass = 0, warning = 0, reject = 0, repeat = 0, declined = 0;
+  qcSamples.forEach(item => {
+    total++;
+    if (item.status === 'pass') pass++;
+    else if (item.status === 'warning') warning++;
+    else if (item.status === 'reject' || item.status === 'fail') reject++;
+    // ДАВТАН: count > 1 бол давтан хэмжилт хийгдсэн
+    if (item.count > 1) repeat += (item.count - 1);
+  });
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPass').textContent = pass;
+  document.getElementById('statWarning').textContent = warning;
+  document.getElementById('statReject').textContent = reject;
+  document.getElementById('statRepeat').textContent = repeat;
+  document.getElementById('statDeclined').textContent = declined;
+}
+
+function filterByPeriod(dataPoints, period) {
+  if (period === 'all') return dataPoints;
+  const now = new Date();
+
+  if (period === 1) {
+    // Өнөөдөр: зөвхөн өнөөдрийн огноо
+    const today = now.toISOString().split('T')[0];
+    return dataPoints.filter(p => p.date && p.date.startsWith(today));
+  }
+
+  // Бусад: сүүлийн N өдөр
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - period);
+  return dataPoints.filter(p => p.date && new Date(p.date) >= cutoff);
+}
 
 async function loadAllCharts() {
   const container = document.getElementById('chartsContainer');
   try {
     const resp = await fetch("{{ url_for('quality.api_westgard_summary') }}");
     const data = await resp.json();
-    if (!data.qc_samples || data.qc_samples.length === 0) {
-      container.innerHTML = '<div class="standard-section"><div class="empty-state"><i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i><h5>CM/GBW дээжний үр дүн олдсонгүй</h5></div></div>';
-      return;
-    }
-    const byStandard = {};
-    data.qc_samples.forEach(item => {
-      if (!byStandard[item.standard_name]) byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
-      byStandard[item.standard_name].analyses.push(item);
-    });
-    container.innerHTML = '';
-    for (const standardName of Object.keys(byStandard).sort()) {
-      const stdData = byStandard[standardName];
-      const isGbw = stdData.qc_type === 'GBW';
-      const section = document.createElement('div');
-      section.className = 'standard-section';
-      section.innerHTML = `<div class="standard-header ${isGbw ? 'gbw' : 'cm'}"><div class="standard-title"><i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>${standardName}<small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'CM'}</small></div><span class="standard-badge">${stdData.analyses.length} шинжилгээ</span></div><div class="westgard-legend"><div class="legend-item"><div class="legend-line target"></div>Target</div><div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div><div class="legend-item"><div class="legend-line sd2"></div>+/-2SD</div><div class="legend-item"><div class="legend-line sd3"></div>+/-3SD</div></div>`;
-      stdData.analyses.sort((a, b) => a.analysis_code.localeCompare(b.analysis_code));
-      for (const analysis of stdData.analyses) {
-        const chartDiv = document.createElement('div');
-        chartDiv.className = 'chart-container';
-        const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">Pass</span>' : analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">Warning</span>' : analysis.status === 'reject' ? '<span class="badge bg-danger">Reject</span>' : '<span class="badge bg-secondary">N/A</span>';
-        const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
-        chartDiv.innerHTML = `<div class="chart-label"><span>${analysis.analysis_code} ${statusBadge}</span><span class="chart-stats"><span>Target: ${analysis.target || '-'}</span><span>SD: ${analysis.sd || '-'}</span><span>n=${analysis.count}</span></span></div><canvas id="${canvasId}" height="100"></canvas>`;
-        section.appendChild(chartDiv);
-      }
-      container.appendChild(section);
-      for (const analysis of stdData.analyses) await loadChartData(standardName, stdData.qc_type, analysis);
-    }
-  } catch (err) { container.innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>'; }
+    allQcData = data;
+    renderCharts(data);
+  } catch (err) {
+    container.innerHTML = `<div class="alert alert-danger">Алдаа: ${err.message}</div>`;
+  }
 }
 
-async function loadChartData(standardName, qcType, analysis) {
+async function renderCharts(data) {
+  const container = document.getElementById('chartsContainer');
+  chartsData = {}; // Reset cache
+
+  if (!data.qc_samples || data.qc_samples.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i>
+        <h5 class="mt-3">CM/GBW дээжний үр дүн олдсонгүй</h5>
+        <p class="text-muted">QC дээж бүртгэж үр дүн оруулна уу</p>
+      </div>`;
+    updateStats([]);
+    return;
+  }
+
+  // Update stats
+  updateStats(data.qc_samples);
+
+  // Group by standard
+  const byStandard = {};
+  data.qc_samples.forEach(item => {
+    if (!byStandard[item.standard_name]) {
+      byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
+    }
+    byStandard[item.standard_name].analyses.push(item);
+  });
+
+  container.innerHTML = '';
+
+  for (const standardName of Object.keys(byStandard).sort()) {
+    const stdData = byStandard[standardName];
+    const isGbw = stdData.qc_type === 'GBW';
+
+    const section = document.createElement('div');
+    section.className = 'standard-section';
+
+    // Header (click to toggle)
+    const sectionId = 'section_' + standardName.replace(/[^a-zA-Z0-9]/g, '_');
+    const header = document.createElement('div');
+    header.className = `standard-header ${isGbw ? 'gbw' : 'cm'} expanded`;
+    header.setAttribute('data-section', sectionId);
+    header.onclick = function() { toggleSection(sectionId); };
+    header.innerHTML = `
+      <div class="standard-title">
+        <i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>
+        ${standardName}
+        <small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'Control Material'}</small>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="standard-badge">${stdData.analyses.length} шинжилгээ</span>
+        <i class="bi bi-chevron-up collapse-icon"></i>
+      </div>
+    `;
+    section.appendChild(header);
+
+    // Collapsible wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'charts-grid-wrapper expanded';
+    wrapper.id = sectionId;
+
+    // Cards Grid
+    const grid = document.createElement('div');
+    grid.className = 'charts-grid';
+
+    // Тогтсон дараалал: Mad, Ad, Vd, St,d, CV,d, TRD,d, CSN, Gi, P, F, Cl
+    const ORDER = ['Mad', 'Ad', 'Vd', 'St,d', 'CV,d', 'TRD,d', 'CSN', 'Gi', 'P', 'F', 'Cl'];
+    stdData.analyses.sort((a, b) => {
+      const idxA = ORDER.indexOf(a.analysis_code);
+      const idxB = ORDER.indexOf(b.analysis_code);
+      const orderA = idxA === -1 ? 999 : idxA;
+      const orderB = idxB === -1 ? 999 : idxB;
+      return orderA - orderB;
+    });
+
+    for (const analysis of stdData.analyses) {
+      const card = createChartCard(standardName, stdData.qc_type, analysis);
+      grid.appendChild(card);
+    }
+
+    wrapper.appendChild(grid);
+    section.appendChild(wrapper);
+    container.appendChild(section);
+
+    // Load mini charts for cards
+    for (const analysis of stdData.analyses) {
+      await loadMiniChart(standardName, stdData.qc_type, analysis);
+    }
+  }
+}
+
+function createChartCard(standardName, qcType, analysis) {
+  const statusClass = analysis.status === 'pass' ? 'status-pass' :
+                      analysis.status === 'warning' ? 'status-warning' :
+                      analysis.status === 'reject' || analysis.status === 'fail' ? 'status-reject' :
+                      analysis.status === 'no_data' ? 'status-nodata' : 'status-na';
+
+  const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">PASS</span>' :
+                      analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">WARNING</span>' :
+                      analysis.status === 'reject' || analysis.status === 'fail' ? '<span class="badge bg-danger">REJECT</span>' :
+                      analysis.status === 'no_data' ? '<span class="badge bg-light text-muted">N/A</span>' :
+                      '<span class="badge bg-secondary">N/A</span>';
+
+  const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
+
+  const card = document.createElement('div');
+  card.className = `chart-card ${statusClass}`;
+  card.onclick = () => openChartModal(standardName, qcType, analysis);
+
+  const noData = analysis.status === 'no_data' || analysis.count === 0;
+
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-analysis-code">${analysis.analysis_code}</span>
+      ${statusBadge}
+    </div>
+    <div class="card-stats">
+      <div><span class="label">Target:</span> <span class="value">${analysis.target || '-'}</span></div>
+      <div><span class="label">SD:</span> <span class="value">${analysis.sd || '-'}</span></div>
+      <div><span class="label">Сүүлийн:</span> <span class="value">${analysis.latest_value || '-'}</span></div>
+      <div><span class="label">Тоо:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
+    </div>
+    <div class="card-chart-container">
+      ${noData ? '<div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> Өгөгдөл байхгүй</div>' : `<canvas id="${canvasId}"></canvas>`}
+    </div>
+    <div class="card-footer">
+      <span><i class="bi bi-zoom-in me-1"></i>Дэлгэрэнгүй харах</span>
+      ${analysis.rules_violated?.length ? `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ${analysis.rules_violated.length} зөрчил</span>` : ''}
+    </div>
+  `;
+
+  return card;
+}
+
+async function loadMiniChart(standardName, qcType, analysis) {
   try {
     const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
     const data = await resp.json();
-    const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
+
+    // Store for modal use
+    const key = `${standardName}_${analysis.analysis_code}`;
+    chartsData[key] = { ...data, standardName, qcType };
+
+    const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
     const ctx = document.getElementById(canvasId);
+
     if (!ctx || !data.data_points || data.data_points.length < 2) return;
-    const points = data.data_points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
-    if (points.length < 2) { ctx.parentElement.innerHTML += '<div class="text-muted text-center py-2">Хангалттай өгөгдөл байхгүй</div>'; return; }
-    const labels = points.map(p => p.date ? new Date(p.date).getMonth()+1 + '/' + new Date(p.date).getDate() : '');
+
+    // CM дээжүүдийг шүүх: шинэ формат (CM-2025-Q4_...) болон хуучин формат (CM_...)
+    let points = data.data_points
+      .filter(p => {
+        const code = (p.sample_code || '').toUpperCase();
+        const stdName = standardName.toUpperCase();
+        if (code.startsWith(stdName)) return true;
+        if (stdName.startsWith('CM-') && code.startsWith('CM_')) return true;
+        return false;
+      });
+    // Хугацаагаар шүүх
+    points = filterByPeriod(points, currentPeriod);
+    const filteredCount = points.length;
+    points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-15);
+
+    // Тоог шинэчлэх
+    const countEl = document.getElementById('count_' + canvasId);
+    if (countEl) countEl.textContent = `n=${filteredCount}`;
+
+    if (points.length < 2) return;
+
     const values = points.map(p => p.value);
     const target = data.target, sd = data.sd;
-    const ucl = target + 2*sd, lcl = target - 2*sd, ucl3 = target + 3*sd, lcl3 = target - 3*sd, usl1 = target + sd, lsl1 = target - sd;
-    const pointColors = values.map(v => { if (v > ucl || v < lcl) return '#ef4444'; if (v > usl1 || v < lsl1) return '#f59e0b'; return '#22c55e'; });
+    const ucl = target + 2*sd, lcl = target - 2*sd;
+    const usl1 = target + sd, lsl1 = target - sd;
+
+    const pointColors = values.map(v => {
+      if (v > ucl || v < lcl) return '#ef4444';
+      if (v > usl1 || v < lsl1) return '#f59e0b';
+      return '#22c55e';
+    });
+
     new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [
-        { label: 'Хэмжсэн', data: values, borderColor: '#1e40af', tension: 0.1, pointRadius: 5, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
+      data: {
+        labels: points.map(() => ''),
+        datasets: [
+          { data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 3, pointBackgroundColor: pointColors },
+          { data: Array(values.length).fill(target), borderColor: '#000', borderWidth: 1, pointRadius: 0 },
+          { data: Array(values.length).fill(ucl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 },
+          { data: Array(values.length).fill(lcl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Mini chart error:', err);
+  }
+}
+
+async function openChartModal(standardName, qcType, analysis) {
+  const modal = new bootstrap.Modal(document.getElementById('chartModal'));
+
+  // Set header info
+  document.getElementById('modalAnalysisCode').textContent = analysis.analysis_code;
+
+  const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success fs-6">Pass</span>' :
+                      analysis.status === 'warning' ? '<span class="badge bg-warning text-dark fs-6">Warning</span>' :
+                      analysis.status === 'reject' ? '<span class="badge bg-danger fs-6">Reject</span>' :
+                      '<span class="badge bg-secondary fs-6">N/A</span>';
+  document.getElementById('modalStatusBadge').innerHTML = statusBadge;
+
+  // Set stats
+  document.getElementById('modalTarget').textContent = analysis.target || '-';
+  document.getElementById('modalSD').textContent = analysis.sd ? `±${analysis.sd}` : '-';
+  document.getElementById('modalLatest').textContent = analysis.latest_value || '-';
+  document.getElementById('modalCount').textContent = analysis.count || '-';
+
+  // Show violations if any
+  const violationsDiv = document.getElementById('modalViolations');
+  const violationsList = document.getElementById('violationsList');
+
+  if (analysis.rules_violated && analysis.rules_violated.length > 0) {
+    violationsDiv.style.display = 'block';
+    violationsList.innerHTML = analysis.rules_violated.map(r =>
+      `<div class="violation-item"><i class="bi bi-x-circle me-1"></i>${r}</div>`
+    ).join('');
+  } else {
+    violationsDiv.style.display = 'none';
+  }
+
+  modal.show();
+
+  // Load full chart
+  setTimeout(() => loadModalChart(standardName, qcType, analysis), 100);
+}
+
+async function loadModalChart(standardName, qcType, analysis) {
+  const key = `${standardName}_${analysis.analysis_code}`;
+  let data = chartsData[key];
+
+  if (!data) {
+    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
+    data = await resp.json();
+  }
+
+  const ctx = document.getElementById('modalChart');
+
+  if (modalChart) {
+    modalChart.destroy();
+    modalChart = null;
+  }
+
+  if (!data.data_points || data.data_points.length < 2) {
+    ctx.parentElement.innerHTML = '<div class="text-center text-muted py-5">Хангалттай өгөгдөл байхгүй</div>';
+    return;
+  }
+
+  // CM дээжүүдийг шүүх: шинэ формат (CM-2025-Q4_...) болон хуучин формат (CM_...)
+  let points = data.data_points
+    .filter(p => {
+      const code = (p.sample_code || '').toUpperCase();
+      const stdName = standardName.toUpperCase();
+      if (code.startsWith(stdName)) return true;
+      if (stdName.startsWith('CM-') && code.startsWith('CM_')) return true;
+      return false;
+    });
+  // Хугацаагаар шүүх
+  points = filterByPeriod(points, currentPeriod);
+  const filteredCount = points.length;
+  points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
+
+  // Modal дээр шүүсэн тоог харуулах
+  document.getElementById('modalCount').textContent = filteredCount;
+
+  if (points.length < 2) return;
+
+  const labels = points.map(p => {
+    if (!p.date) return '';
+    const d = new Date(p.date);
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  });
+  const values = points.map(p => p.value);
+  const target = data.target, sd = data.sd;
+  const ucl = target + 2*sd, lcl = target - 2*sd;
+  const ucl3 = target + 3*sd, lcl3 = target - 3*sd;
+  const usl1 = target + sd, lsl1 = target - sd;
+
+  const pointColors = values.map(v => {
+    if (v > ucl || v < lcl) return '#ef4444';
+    if (v > usl1 || v < lsl1) return '#f59e0b';
+    return '#22c55e';
+  });
+
+  modalChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Хэмжсэн', data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 6, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
         { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
         { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
         { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
@@ -104,10 +756,45 @@ async function loadChartData(standardName, qcType, analysis) {
         { label: '-2SD', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
         { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
         { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 }
-      ]},
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, title: { display: true, text: analysis.analysis_code + ' %' } }, x: { title: { display: true, text: 'Огноо' } } } }
-    });
-  } catch (err) { console.error('Error:', err); }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const val = context.parsed.y != null ? context.parsed.y.toFixed(4) : '-';
+              if (context.datasetIndex === 0) {
+                const point = points[context.dataIndex];
+                return `${val} (${point.sample_code || ''})`;
+              }
+              return `${context.dataset.label}: ${val}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: { display: true, text: analysis.analysis_code + ' %', font: { weight: 'bold' } }
+        },
+        x: {
+          title: { display: true, text: 'Огноо' }
+        }
+      }
+    }
+  });
 }
+
+// Cleanup on modal close
+document.getElementById('chartModal').addEventListener('hidden.bs.modal', function() {
+  if (modalChart) {
+    modalChart.destroy();
+    modalChart = null;
+  }
+});
 </script>
 {% endblock %}

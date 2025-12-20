@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Миний профайл{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                    <i class="bi bi-person-circle text-primary fs-1"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1">{{ current_user.username }}</h3>
+                    <span class="badge bg-{{ 'primary' if current_user.role == 'admin' else 'success' if current_user.role == 'senior' else 'secondary' }}">
+                        {{ current_user.role|title }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Профайл мэдээлэл -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Email Signature мэдээлэл</h5>
+                    <small class="text-muted">Тайлан илгээхэд таны мэдээлэл хавсаргагдана</small>
+                    <div class="mt-2">
+                        <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>Латин үсгээр бичнэ үү (Latin characters only)</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.profile') }}" id="profileForm">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Нэвтрэх нэр</label>
+                                <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Эрх</label>
+                                <input type="text" class="form-control" value="{{ current_user.role|title }}" disabled>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label">
+                                    <i class="bi bi-person me-1"></i>Бүтэн нэр (Latin) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.full_name(class="form-control", placeholder="e.g. GANTULGA Ulziibuyan") }}
+                                <small class="text-muted">Имэйл signature-д харагдана</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="position" class="form-label">
+                                    <i class="bi bi-briefcase me-1"></i>Албан тушаал (Latin)
+                                </label>
+                                {{ form.position(class="form-control", placeholder="e.g. Senior Chemist, Laboratory") }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope me-1"></i>Ажлын имэйл <span class="text-danger">*</span>
+                                </label>
+                                {{ form.email(class="form-control", placeholder="e.g. gantulga.u@mmc.mn") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">
+                                    <i class="bi bi-telephone me-1"></i>Утасны дугаар
+                                </label>
+                                {{ form.phone(class="form-control", placeholder="e.g. 80872013") }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i>Хадгалах
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Email Signature Preview -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Signature Preview</h5>
+                </div>
+                <div class="card-body" id="signaturePreview">
+                    <div style="font-family: Arial, sans-serif; font-size: 12px; color: #333;">
+                        <p style="margin: 0 0 10px 0;">Regards,</p>
+
+                        <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;" id="previewName">
+                            {{ current_user.full_name or current_user.username }}
+                        </p>
+                        <p style="margin: 0 0 15px 0; color: #666;" id="previewPosition">
+                            {{ current_user.position or 'Senior Chemist, Laboratory' }}
+                        </p>
+
+                        <div style="font-size: 11px;">
+                            <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;">ENERGY RESOURCES LLC</p>
+                            <p style="margin: 0 0 3px 0; color: #666;">
+                                | Ukhaa Khudag Branch, Tsogttsetsii soum, Umnugobi province 46040, MONGOLIA |
+                            </p>
+                            <p style="margin: 0 0 3px 0; color: #666;" id="previewPhone">
+                                | Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279
+                                {% if current_user.phone %}| Mobile: {{ current_user.phone }}{% endif %} |
+                            </p>
+                            <p style="margin: 0 0 3px 0;" id="previewEmail">
+                                {% if current_user.email %}
+                                | <a href="mailto:{{ current_user.email }}" style="color: #0066cc; text-decoration: none;">{{ current_user.email }}</a> |
+                                {% endif %}
+                                <a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |
+                            </p>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+
+                        <p style="margin: 0 0 8px 0; font-size: 10px; color: #666;">
+                            <em>This email was automatically sent from Coal LIMS (Laboratory Information Management System)</em>
+                        </p>
+
+                        <p style="margin: 0; font-size: 10px; color: #999; font-style: italic;">
+                            This email is CONFIDENTIAL and is intended only for the use of the person to whom it is addressed.
+                            Any distribution, copying or other use by anyone else is strictly prohibited.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Live preview update
+    const nameInput = document.getElementById('full_name');
+    const positionInput = document.getElementById('position');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+
+    const previewName = document.getElementById('previewName');
+    const previewPosition = document.getElementById('previewPosition');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewPhone = document.getElementById('previewPhone');
+
+    function updatePreview() {
+        if (previewName) previewName.textContent = nameInput.value || '{{ current_user.username }}';
+        if (previewPosition) previewPosition.textContent = positionInput.value || 'Senior Chemist, Laboratory';
+
+        // Phone update
+        if (previewPhone) {
+            let phoneHtml = '| Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279';
+            if (phoneInput.value) {
+                phoneHtml += ' | Mobile: ' + phoneInput.value;
+            }
+            phoneHtml += ' |';
+            previewPhone.innerHTML = phoneHtml;
+        }
+
+        // Email update
+        if (previewEmail) {
+            let emailHtml = '';
+            if (emailInput.value) {
+                emailHtml = '| <a href="mailto:' + emailInput.value + '" style="color: #0066cc; text-decoration: none;">' + emailInput.value + '</a> | ';
+            }
+            emailHtml += '<a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |';
+            previewEmail.innerHTML = emailHtml;
+        }
+    }
+
+    [nameInput, positionInput, emailInput, phoneInput].forEach(function(input) {
+        if (input) input.addEventListener('input', updatePreview);
+    });
+});
+</script>
+{% endblock %}

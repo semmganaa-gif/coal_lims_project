@@ -28,6 +28,36 @@ from .helpers import get_12h_shift_code, get_quarter_code
 # Utils
 from app.utils.datetime import now_local
 from app.utils.analysis_assignment import assign_analyses_to_sample
+
+
+def get_report_email_recipients():
+    """
+    Тайлан илгээх имэйл хаягуудыг SystemSetting-ээс авах
+
+    Returns:
+        dict: {'to': [...], 'cc': [...]}
+    """
+    result = {'to': [], 'cc': []}
+
+    # TO хаягууд
+    to_setting = SystemSetting.query.filter_by(
+        category='email',
+        key='report_recipients_to',
+        is_active=True
+    ).first()
+    if to_setting and to_setting.value:
+        result['to'] = [e.strip() for e in to_setting.value.split(',') if e.strip()]
+
+    # CC хаягууд
+    cc_setting = SystemSetting.query.filter_by(
+        category='email',
+        key='report_recipients_cc',
+        is_active=True
+    ).first()
+    if cc_setting and cc_setting.value:
+        result['cc'] = [e.strip() for e in cc_setting.value.split(',') if e.strip()]
+
+    return result
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.database import safe_commit
 from app.utils.settings import get_sample_type_choices_map, get_unit_abbreviations
@@ -704,6 +734,15 @@ def send_hourly_report():
         filename = f"Hourly_Report_{report_date_str}_{report_time_str.replace(':', '')}.xlsx"
         email_subject = f"Hourly Report {report_time_str}"
 
+        # Нэвтэрсэн хэрэглэгчийн мэдээлэл (илгээж буй ахлах химич)
+        sender_name = current_user.full_name or current_user.username
+        sender_position = current_user.position or "Senior Chemist, Laboratory"
+        sender_email = current_user.email or "lab@energyresources.mn"
+        sender_phone = current_user.phone or ""
+
+        # Phone форматлах
+        phone_display = f"|Mobile: (976) {sender_phone}" if sender_phone else ""
+
         email_html = f"""
         <div style="font-family: Arial, sans-serif; font-size: 14px; color: #000000;">
             <p>Dear all,</p>
@@ -711,14 +750,14 @@ def send_hourly_report():
             <br>
             <p>Regards,</p>
             <p>
-                <b>GANTULGA Ulziibuyan</b><br>
-                Senior chemist, Laboratory
+                <b>{sender_name}</b><br>
+                {sender_position}
             </p>
             <p>
                 <b>ENERGY RESOURCES LLC</b><br>
                 | Ukhaa Khudag Branch, Tsogttsetsii soum, Umnugobi province 46040 , MONGOLIA|<br>
-                |Tel.: (976)7012 2279, 7013 2279 |Fax: (976) 11 322279 |Mobile: (976) 80872013<br>
-                |Gantulga.U@mmc.mn | <a href="http://www.mmc.mn/">http://www.mmc.mn/</a> |
+                |Tel.: (976)7012 2279, 7013 2279 |Fax: (976) 11 322279 {phone_display}<br>
+                |{sender_email} | <a href="http://www.mmc.mn/">http://www.mmc.mn/</a> |
             </p>
             <div style="border-top: 1px solid #000; margin-top: 10px; padding-top: 5px;">
                 <span style="font-size: 11px; color: #555;">
@@ -730,15 +769,30 @@ def send_hourly_report():
         </div>
         """
 
+        # Имэйл хүлээн авагчдыг SystemSetting-ээс авах
+        email_recipients = get_report_email_recipients()
+        to_list = email_recipients['to']
+        cc_list = email_recipients['cc']
+
+        # Хэрэв TO хаяг байхгүй бол алдаа
+        if not to_list:
+            flash("Имэйл хүлээн авагч тохируулагдаагүй байна. Тохиргоо хэсгээс оруулна уу.", "warning")
+            return redirect(url_for('main.index'))
+
         msg = Message(
             subject=email_subject,
-            recipients=["gantulga.u@mmc.mn"],
+            recipients=to_list,
+            cc=cc_list if cc_list else None,
             html=email_html
         )
         msg.attach(filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", final_output.read())
         mail.send(msg)
 
-        flash("Амжилттай илгээгдлээ!", "success")
+        # Илгээсэн хаягуудыг харуулах
+        sent_to = ", ".join(to_list)
+        if cc_list:
+            sent_to += f" (CC: {', '.join(cc_list)})"
+        flash(f"Амжилттай илгээгдлээ! → {sent_to}", "success")
 
     except Exception as e:
         current_app.logger.exception("Error in send_hourly_report")

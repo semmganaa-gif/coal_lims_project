@@ -16,7 +16,16 @@ from wtforms import (
     HiddenField, # ✅ Нэмэгдсэн
     widgets,
 )
-from wtforms.validators import DataRequired, Optional, Regexp, NumberRange
+from wtforms.validators import DataRequired, Optional, Regexp, NumberRange, Email, ValidationError
+import re
+
+
+def latin_only(form, field):
+    """Зөвхөн латин үсэг, тоо, зай, цэг тэмдэгт зөвшөөрнө"""
+    if field.data:
+        # Latin letters, numbers, spaces, common punctuation
+        if not re.match(r'^[A-Za-z0-9\s\.\,\-\_\(\)\']+$', field.data):
+            raise ValidationError('Зөвхөн латин үсэг ашиглана уу (Latin characters only)')
 
 
 # --- Checkbox-той олон сонголт хийхэд зориулсан туслах класс ---
@@ -52,6 +61,36 @@ class UserManagementForm(FlaskForm):
             ("admin", "Админ"),
         ],
         validators=[DataRequired()],
+    )
+    # Профайл мэдээлэл (Email signature-д ашиглана)
+    full_name = StringField("Бүтэн нэр (Latin)", validators=[Optional(), latin_only])
+    email = StringField("Ажлын имэйл", validators=[Optional(), Email(message="Зөв имэйл хаяг оруулна уу")])
+    phone = StringField("Утас", validators=[Optional()])
+    position = StringField("Албан тушаал (Latin)", validators=[Optional(), latin_only])
+    submit = SubmitField("Хадгалах")
+
+
+class UserProfileForm(FlaskForm):
+    """Хэрэглэгчийн профайл тохиргооны форм (Email signature)"""
+    full_name = StringField(
+        "Бүтэн нэр",
+        validators=[DataRequired(message="Нэрээ оруулна уу"), latin_only],
+        render_kw={"placeholder": "e.g. GANTULGA Ulziibuyan"}
+    )
+    email = StringField(
+        "Ажлын имэйл",
+        validators=[DataRequired(message="Имэйл оруулна уу"), Email(message="Зөв имэйл хаяг оруулна уу")],
+        render_kw={"placeholder": "e.g. gantulga.u@mmc.mn"}
+    )
+    phone = StringField(
+        "Утасны дугаар",
+        validators=[Optional()],
+        render_kw={"placeholder": "e.g. 80872013"}
+    )
+    position = StringField(
+        "Албан тушаал",
+        validators=[Optional(), latin_only],
+        render_kw={"placeholder": "e.g. Senior Chemist, Laboratory"}
     )
     submit = SubmitField("Хадгалах")
 

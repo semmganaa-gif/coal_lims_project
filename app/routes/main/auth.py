@@ -54,3 +54,43 @@ def register_routes(bp):
             log_audit(action='logout', details={'username': current_user.username})
         logout_user()
         return redirect(url_for("main.login"))
+
+    # =====================================================================
+    # 3. ПРОФАЙЛ ТОХИРГОО (Email Signature)
+    # =====================================================================
+    @bp.route("/profile", methods=["GET", "POST"])
+    @login_required
+    def profile():
+        """Хэрэглэгчийн профайл тохиргоо - Email signature"""
+        from app.forms import UserProfileForm
+        from app.models import User
+
+        form = UserProfileForm()
+
+        if form.validate_on_submit():
+            current_user.full_name = form.full_name.data
+            current_user.email = form.email.data
+            current_user.phone = form.phone.data
+            current_user.position = form.position.data
+            db.session.commit()
+
+            log_audit(
+                action='profile_updated',
+                details={
+                    'full_name': form.full_name.data,
+                    'email': form.email.data,
+                    'position': form.position.data
+                }
+            )
+
+            flash("Профайл амжилттай хадгалагдлаа!", "success")
+            return redirect(url_for("main.profile"))
+
+        # Өмнөх утгуудыг form-д оруулах
+        if request.method == "GET":
+            form.full_name.data = current_user.full_name or ""
+            form.email.data = current_user.email or ""
+            form.phone.data = current_user.phone or ""
+            form.position.data = current_user.position or ""
+
+        return render_template("profile.html", title="Миний профайл", form=form)

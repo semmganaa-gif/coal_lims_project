@@ -261,6 +261,9 @@
                 <li><a class="dropdown-item" href="{{ url_for('settings.bottles_index') }}">
                   <i class="bi bi-flask me-2"></i>Бортого (TRD)
                 </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('settings.email_recipients') }}">
+                  <i class="bi bi-envelope-at me-2"></i>Тайлангийн имэйл
+                </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('importer.import_historical_csv') }}">
                   <i class="bi bi-file-earmark-arrow-up me-2"></i>CSV импорт
@@ -298,6 +301,9 @@
               <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                <i class="bi bi-person-gear me-2"></i>Профайл
+              </a></li>
               <li><a class="dropdown-item" href="#"><i class="bi bi-key me-2"></i>Нууц үг солих</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">

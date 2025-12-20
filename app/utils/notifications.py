@@ -86,6 +86,52 @@ SAMPLE_STATUS_TEMPLATE = """
 </div>
 """
 
+# Email Signature Template - Energy Resources LLC форматаар
+EMAIL_SIGNATURE_TEMPLATE = """
+<div style="margin-top: 30px; font-family: Arial, sans-serif; font-size: 12px; color: #333;">
+    <p style="margin: 0 0 10px 0;">Regards,</p>
+
+    <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;">
+        {{ sender_name }}
+    </p>
+    <p style="margin: 0 0 15px 0; color: #666;">{{ sender_position }}</p>
+
+    <table style="font-family: Arial, sans-serif; font-size: 11px; color: #333; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 0; vertical-align: top;">
+                <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;">ENERGY RESOURCES LLC</p>
+                <p style="margin: 0 0 3px 0; color: #666;">
+                    | Ukhaa Khudag Branch, Tsogttsetsii soum, Umnugobi province 46040, MONGOLIA |
+                </p>
+                <p style="margin: 0 0 3px 0; color: #666;">
+                    | Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279
+                    {% if sender_phone %}| Mobile: {{ sender_phone }}{% endif %} |
+                </p>
+                <p style="margin: 0 0 3px 0;">
+                    {% if sender_email %}
+                    | <a href="mailto:{{ sender_email }}" style="color: #0066cc; text-decoration: none;">{{ sender_email }}</a> |
+                    {% endif %}
+                    <a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |
+                </p>
+            </td>
+        </tr>
+    </table>
+
+    <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+
+    <p style="margin: 0 0 8px 0; font-size: 10px; color: #666;">
+        <em>This email was automatically sent from Coal LIMS (Laboratory Information Management System)</em>
+    </p>
+
+    <p style="margin: 0; font-size: 10px; color: #999; font-style: italic;">
+        This email is CONFIDENTIAL and is intended only for the use of the person to whom it is addressed.
+        Any distribution, copying or other use by anyone else is strictly prohibited.
+        If you have received this email in error, please telephone or email us immediately and destroy this email.
+    </p>
+</div>
+"""
+
+
 EQUIPMENT_CALIBRATION_TEMPLATE = """
 <div style="font-family: Arial, sans-serif; padding: 20px;">
     <h2 style="color: #ffc107;">🔧 Тоног төхөөрөмжийн калибровкийн сануулга</h2>
@@ -120,6 +166,35 @@ EQUIPMENT_CALIBRATION_TEMPLATE = """
 # МЭДЭГДЛИЙН ФУНКЦҮҮД
 # ============================================================
 
+def get_email_signature(user: Optional['User'] = None) -> str:
+    """
+    Имэйлийн signature үүсгэх - Energy Resources LLC форматаар
+
+    Args:
+        user: Илгээж буй хэрэглэгч (ихэвчлэн approve хийсэн ахлах химич)
+
+    Returns:
+        HTML signature string
+    """
+    if not user:
+        # Default signature - системийн автомат мэдэгдэл
+        return render_template_string(
+            EMAIL_SIGNATURE_TEMPLATE,
+            sender_name="Laboratory Team",
+            sender_position="Coal Analysis Laboratory",
+            sender_email="",
+            sender_phone=""
+        )
+
+    return render_template_string(
+        EMAIL_SIGNATURE_TEMPLATE,
+        sender_name=user.full_name or user.username,
+        sender_position=user.position or "Senior Chemist, Laboratory",
+        sender_email=user.email or "",
+        sender_phone=user.phone or ""
+    )
+
+
 def get_notification_recipients(notification_type: str) -> List[str]:
     """
     Мэдэгдлийн хүлээн авагчдыг авах
@@ -148,7 +223,9 @@ def send_notification(
     subject: str,
     recipients: List[str],
     html_body: str,
-    attachments: Optional[List[Dict[str, Any]]] = None
+    attachments: Optional[List[Dict[str, Any]]] = None,
+    sender_user: Optional['User'] = None,
+    include_signature: bool = True
 ) -> bool:
     """
     Email мэдэгдэл илгээх
@@ -158,6 +235,8 @@ def send_notification(
         recipients: Хүлээн авагчид
         html_body: HTML агуулга
         attachments: Хавсралтууд [{"filename": "", "content_type": "", "data": bytes}]
+        sender_user: Илгээж буй хэрэглэгч (signature-д ашиглана)
+        include_signature: Signature нэмэх эсэх
 
     Returns:
         Амжилттай эсэх
@@ -167,11 +246,20 @@ def send_notification(
         return False
 
     try:
+        # Signature нэмэх
+        if include_signature:
+            signature = get_email_signature(sender_user)
+            html_body = f"{html_body}{signature}"
+
         msg = Message(
             subject=f"[Coal LIMS] {subject}",
             recipients=recipients,
             html=html_body
         )
+
+        # Reply-To: Хариу имэйлийг илгээсэн хүн рүү явуулах
+        if sender_user and sender_user.email:
+            msg.reply_to = sender_user.email
 
         if attachments:
             for att in attachments:
