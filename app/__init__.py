@@ -129,6 +129,63 @@ def create_app(config_class=Config):
     csrf.exempt(api_bp)
 
     # ======================================================
+    # Лиценз хамгаалалт - before_request hook
+    # ======================================================
+    from flask import redirect, url_for, flash, request, g
+    from flask_login import current_user
+
+    # Лиценз шалгахгүй endpoint-үүд
+    LICENSE_EXEMPT_ENDPOINTS = {
+        'license.activate', 'license.info', 'license.expired', 'license.error',
+        'license.check', 'license.hardware_id',
+        'main.login', 'main.logout', 'main.register',
+        'static'
+    }
+
+    @app.before_request
+    def check_license():
+        """Бүх хүсэлт дээр лиценз шалгах"""
+        # Static файлууд болон лицензийн хуудсуудыг алгасах
+        if request.endpoint in LICENSE_EXEMPT_ENDPOINTS:
+            return None
+        if request.endpoint and request.endpoint.startswith('static'):
+            return None
+
+        # Нэвтрээгүй хэрэглэгч - login хуудас руу
+        if not current_user.is_authenticated:
+            return None
+
+        # Лиценз шалгах
+        from app.utils.license_protection import license_manager
+        result = license_manager.validate_license()
+
+        # Лицензийн статусыг template-д дамжуулах
+        g.license_valid = result.get('valid', False)
+        g.license_warning = result.get('warning')
+        g.license_info = result.get('license')
+
+        if not result['valid']:
+            error = result.get('error', 'UNKNOWN_ERROR')
+
+            # Admin хэрэглэгч бол лиценз идэвхжүүлэх хуудас руу
+            if current_user.role == 'admin':
+                if error == 'LICENSE_NOT_FOUND':
+                    flash('Лиценз олдсонгүй. Идэвхжүүлнэ үү.', 'warning')
+                    return redirect(url_for('license.activate'))
+                elif error == 'LICENSE_EXPIRED':
+                    flash('Лицензийн хугацаа дууссан.', 'error')
+                    return redirect(url_for('license.expired'))
+                else:
+                    flash(f'Лицензийн алдаа: {error}', 'error')
+                    return redirect(url_for('license.error'))
+            else:
+                # Энгийн хэрэглэгч - алдааны мэдээлэл
+                flash('Системийн лицензийн асуудал байна. Админтай холбогдоно уу.', 'error')
+                return redirect(url_for('license.error'))
+
+        return None
+
+    # ======================================================
     # Jinja2 filters
     # ======================================================
 
