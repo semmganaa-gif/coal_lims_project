@@ -298,8 +298,9 @@ def register_routes(bp):
                     from app.models import ControlStandard
                     active_cm = ControlStandard.query.filter_by(is_active=True).first()
                     cm_name = active_cm.name if active_cm else "CM"
-                    quarter_code = get_quarter_code(sample_date_obj)
-                    final_sample_code = f"{cm_name}_{formatted_date}{shift_code}{quarter_code}"
+                    # CM стандарт нэр аль хэдийн улирал агуулсан (жнь: CM-2025-Q4)
+                    # Тиймээс quarter_code нэмэхгүй - давхардахаас сэргийлж
+                    final_sample_code = f"{cm_name}_{formatted_date}{shift_code}"
                 elif sample_type == "GBW":
                     # Идэвхтэй GBW стандартын нэрийг авах
                     from app.models import GbwStandard

@@ -6,7 +6,7 @@ AnalysisResult-аас CM/GBW дээжний үр дүнг татаж Westgard ш
 
 from flask import render_template, jsonify
 from flask_login import login_required
-from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
+from app.models import Sample, AnalysisResult, AnalysisResultLog, ControlStandard, GbwStandard
 from sqlalchemy import or_
 import logging
 import statistics
@@ -15,6 +15,21 @@ from app.utils.westgard import check_westgard_rules, get_qc_status, check_single
 from app.monitoring import track_qc_check
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================
+# DRY BASIS тооцоолол (2025-12-19 нэмсэн)
+# ============================================================
+DRY_BASIS_MAPPING = {
+    'Ad': ('ash_dry', 'Aad'),
+    'Vd': ('volatiles_dry', 'Vad'),
+    'CV,d': ('cv_dry', 'CV'),
+    'St,d': ('ts_dry', 'TS'),
+}
+
+ALIAS_MAPPING = {
+    'TRD,d': 'TRD',
+}
 
 
 def _get_qc_samples():
@@ -42,6 +57,21 @@ def _get_qc_results(sample_ids: list, analysis_code: str = None):
         query = query.filter(AnalysisResult.analysis_code == analysis_code)
 
     return query.order_by(AnalysisResult.updated_at.desc()).all()
+
+
+def _get_qc_results_from_log(sample_ids: list, analysis_code: str = None):
+    """
+    AnalysisResultLog-оос QC дээжүүдийн бүх түүхэн үр дүнг авах.
+    Энэ нь AnalysisResult-аас өөр - нэг дээж дээр олон удаа хэмжсэн бүх үр дүнг авна.
+    """
+    query = AnalysisResultLog.query.filter(
+        AnalysisResultLog.sample_id.in_(sample_ids),
+        AnalysisResultLog.final_result_snapshot.isnot(None)
+    )
+    if analysis_code:
+        query = query.filter(AnalysisResultLog.analysis_code == analysis_code)
+
+    return query.order_by(AnalysisResultLog.timestamp.desc()).all()
 
 
 def _extract_standard_name(sample_code: str) -> str:
@@ -178,7 +208,7 @@ def register_routes(bp):
     def api_westgard_summary():
         """
         Бүх QC sample + analysis_code хослолд Westgard статус авах.
-        AnalysisResult-аас CM/GBW дээжний үр дүнг ашиглана.
+        AnalysisResultLog-оос түүхэн үр дүнг ашиглана (олон удаа хэмжсэн бүх үр дүн).
         """
         qc_samples = _get_qc_samples()
         if not qc_samples:
@@ -187,8 +217,8 @@ def register_routes(bp):
         sample_ids = [s.id for s in qc_samples]
         samples_map = {s.id: s for s in qc_samples}
 
-        # Бүх QC үр дүнг авах
-        all_results = _get_qc_results(sample_ids)
+        # AnalysisResultLog-оос бүх түүхэн үр дүнг авах
+        all_results = _get_qc_results_from_log(sample_ids)
 
         # Sample type + analysis_code-оор бүлэглэх
         # Key: (sample_type, analysis_code)
@@ -220,11 +250,11 @@ def register_routes(bp):
                     'sample': sample  # Эхний sample-ийг хадгалах (target авахад)
                 }
 
-            if r.final_result is not None:
+            if r.final_result_snapshot is not None:
                 try:
                     grouped[key]['results'].append({
-                        'value': float(r.final_result),
-                        'date': r.updated_at,
+                        'value': float(r.final_result_snapshot),
+                        'date': r.timestamp,  # Log-д timestamp ашиглана
                         'sample_code': sample.sample_code
                     })
                 except (ValueError, TypeError):
@@ -297,6 +327,7 @@ def register_routes(bp):
     def api_westgard_detail(qc_type, analysis_code):
         """
         Тодорхой QC төрөл + шинжилгээний дэлгэрэнгүй Westgard мэдээлэл.
+        AnalysisResultLog-оос түүхэн үр дүнг ашиглана.
         """
         qc_samples = _get_qc_samples()
         if not qc_samples:
@@ -321,18 +352,18 @@ def register_routes(bp):
         sample_ids = [s.id for s in filtered_samples]
         samples_map = {s.id: s for s in filtered_samples}
 
-        # Үр дүнгүүд авах
-        results = _get_qc_results(sample_ids, analysis_code)
+        # AnalysisResultLog-оос түүхэн үр дүнг авах
+        results = _get_qc_results_from_log(sample_ids, analysis_code)
 
         data_points = []
         for r in results:
             sample = samples_map.get(r.sample_id)
-            if not sample or r.final_result is None:
+            if not sample or r.final_result_snapshot is None:
                 continue
             try:
                 data_points.append({
-                    'value': float(r.final_result),
-                    'date': r.updated_at.isoformat() if r.updated_at else None,
+                    'value': float(r.final_result_snapshot),
+                    'date': r.timestamp.isoformat() if r.timestamp else None,
                     'sample_code': sample.sample_code,
                     'operator': r.user.username if r.user else None
                 })

@@ -86,7 +86,7 @@ async function loadChartData(standardName, qcType, analysis) {
     const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
     const ctx = document.getElementById(canvasId);
     if (!ctx || !data.data_points || data.data_points.length < 2) return;
-    const points = data.data_points.filter(p => (p.sample_code || '').toUpperCase().startsWith(standardName.toUpperCase())).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
+    const points = data.data_points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
     if (points.length < 2) { ctx.parentElement.innerHTML += '<div class="text-muted text-center py-2">Хангалттай өгөгдөл байхгүй</div>'; return; }
     const labels = points.map(p => p.date ? new Date(p.date).getMonth()+1 + '/' + new Date(p.date).getDate() : '');
     const values = points.map(p => p.value);

@@ -1,3 +1,4 @@
+<!-- BUILD_ID: 20251221_001 -->
 {# AG Grid хувилбар - REFACTORED with Factory Pattern #}
 {# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 {# 🧪 Sulfur (TS / St,ad) - Parallel p1/p2 in single row #}
@@ -9,6 +10,7 @@
 {{ aggrid_macros.grid_container('sulfurGrid') | safe }}
 
 <script>
+console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
 (function(){
   'use strict';
 
@@ -59,12 +61,19 @@
     return { limit: last.limit, mode: last.mode };
   }
 
+  // ISO 80000-1 дугаарлалт: 5 бол дээш (0.695 → 0.70)
+  function roundHalfUp(num, decimals) {
+    if (num == null || !Number.isFinite(num)) return null;
+    const factor = Math.pow(10, decimals);
+    return Math.round(num * factor + Number.EPSILON) / factor;
+  }
+
   function applyPairMeta(row){
     const r1 = toNumber(row.p1_result);
     const r2 = toNumber(row.p2_result);
     const both = r1 != null && r2 != null;
-    const avg = both ? Number(((r1 + r2) / 2).toFixed(2)) : null;
-    const diff = both ? Number(Math.abs(r1 - r2).toFixed(2)) : null;
+    const avg = both ? roundHalfUp((r1 + r2) / 2, 2) : null;
+    const diff = both ? roundHalfUp(Math.abs(r1 - r2), 2) : null;
     const limInfo = limitFor(avg);
     const effective = limInfo.mode === 'percent' && avg != null ? Math.abs(avg * limInfo.limit) : limInfo.limit;
     const exceeded = diff != null && effective != null ? diff > effective : false;
@@ -184,9 +193,9 @@
     },
     {
       headerName:'Тохирц (T)', field:'diff', width:120,
-      valueFormatter:p=> p.data.is_saved && p.value!=null ? numFmt2(p) : '-',
+      valueFormatter:p=> p.value != null ? numFmt2(p) : '-',
       cellStyle:p=>{
-        if(!p.data.is_saved){
+        if(p.value == null){
           return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
         }
         if(p.data.t_exceeded){
@@ -197,9 +206,9 @@
     },
     {
       headerName:'Дундаж', field:'avg', width:120,
-      valueFormatter:p=> p.data.is_saved && p.value!=null ? numFmt2(p) : '-',
+      valueFormatter:p=> p.value != null ? numFmt2(p) : '-',
       cellStyle:p=>{
-        if(!p.data.is_saved){
+        if(p.value == null){
           return { color:'#adb5bd', display:'flex', alignItems:'center', justifyContent:'center' };
         }
         return { fontWeight:'bold', color:'#198754', backgroundColor:'#d1e7dd', display:'flex', alignItems:'center', justifyContent:'center' };
@@ -250,9 +259,12 @@
   }
 
   function recalcPair(sampleId){
+    console.warn('🔄 recalcPair called for sample:', sampleId);
     window.sulfurGridApi.forEachNode(n => {
       if(n.data.sample_id === sampleId){
+        console.warn('📊 BEFORE applyPairMeta:', { p1: n.data.p1_result, p2: n.data.p2_result, avg: n.data.avg });
         applyPairMeta(n.data);
+        console.warn('📊 AFTER applyPairMeta:', { avg: n.data.avg, diff: n.data.diff });
       }
     });
     window.sulfurGridApi.refreshCells({ force:true });
@@ -292,9 +304,12 @@
       };
     }
 
+    console.warn('🚀 Initializing sulfur grid...', { LIMS_AGGRID: typeof LIMS_AGGRID, rowCount: rowData.length });
     if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      console.warn('✅ Using LIMS_AGGRID.createGrid');
       window.sulfurGridApi = LIMS_AGGRID.createGrid('#sulfurGrid', columnDefs, rowData, {
         onCellValueChanged: (params) => {
+          console.warn('🔔 CELL CHANGED:', params.colDef.field, '=', params.newValue);
           if(['p1_weight','p1_result','p2_weight','p2_result'].includes(params.colDef.field)){
             recalcPair(params.data.sample_id);
           }
@@ -304,6 +319,7 @@
         editableColIds: ['p1_weight','p1_result','p2_weight','p2_result']
       });
     } else {
+      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
       window.sulfurGridApi = agGrid.createGrid(el, {
         theme:'legacy',
         columnDefs,
@@ -315,6 +331,7 @@
         enterNavigatesVertically:true,
         enterNavigatesVerticallyAfterEdit:true,
         onCellValueChanged: (params) => {
+          console.warn('🔔 CELL CHANGED (fallback):', params.colDef.field, '=', params.newValue);
           if(['p1_weight','p1_result','p2_weight','p2_result'].includes(params.colDef.field)){
             recalcPair(params.data.sample_id);
           }
@@ -348,8 +365,8 @@
       if(r1 == null || r2 == null) return;
       const weight1 = toNumber(n.data.p1_weight);
       const weight2 = toNumber(n.data.p2_weight);
-      const avg = Number(((r1 + r2) / 2).toFixed(2));
-      const diff = Number(Math.abs(r1 - r2).toFixed(2));
+      const avg = roundHalfUp((r1 + r2) / 2, 2);
+      const diff = roundHalfUp(Math.abs(r1 - r2), 2);
       const limInfo = limitFor(avg);
       const effective = limInfo.mode === 'percent' && avg != null ? Math.abs(avg * limInfo.limit) : limInfo.limit;
       payload.push({
