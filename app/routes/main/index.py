@@ -452,7 +452,14 @@ def register_routes(bp):
 # app/routes/main/index.py
 
 @main_bp.route("/send-hourly-report")
+@login_required
 def send_hourly_report():
+    """Цагийн тайлан илгээх - зөвхөн senior, admin"""
+    # Role шалгалт
+    if current_user.role not in ['senior', 'admin']:
+        flash('Та энэ үйлдлийг хийх эрхгүй байна.', 'error')
+        return redirect(url_for('main.index'))
+
     try:
         current_app.logger.debug("HOURLY REPORT STARTED (FIXED POSITIONING)")
 
