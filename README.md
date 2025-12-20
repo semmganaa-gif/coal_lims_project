@@ -464,16 +464,16 @@ API баримт бичиг: http://localhost:5000/api/docs (Swagger UI)
 
 ## 📄 Лиценз
 
-Proprietary - Energy Resources LLC
+Proprietary - Coal LIMS by Gantulga
 
-© 2024-2025 Energy Resources LLC. All rights reserved.
+© 2024-2025 Coal LIMS. Developed by Gantulga (semmganaa@gmail.com)
 
 ---
 
 ## 👥 Team
 
 - **Project Lead:** Gantulga U.
-- **Development:** Energy Resources IT Team
+- **Development:** Coal LIMS Development
 - **Testing:** Quality Assurance Team
 
 ---
@@ -496,7 +496,7 @@ Proprietary - Energy Resources LLC
 
 - Flask framework болон бусад open-source libraries
 - MongoDB Mongolian User Group community
-- Energy Resources LLC management
+- Coal LIMS customers
 
 ---
 

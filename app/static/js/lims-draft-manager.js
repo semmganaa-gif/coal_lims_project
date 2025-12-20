@@ -10,7 +10,7 @@
  *   const drafts = draftMgr.restore();
  *   draftMgr.purge([123, 456]); // Тодорхой sample-ийн draft устгах
  *
- * Author: Energy Resources IT Team
+ * Author: Gantulga (semmganaa@gmail.com)
  * Date: 2025-11-30
  */
 

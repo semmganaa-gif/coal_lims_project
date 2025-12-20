@@ -31,6 +31,14 @@
             {{ form.role(class="form-select") }}
           </div>
 
+          <hr class="my-3">
+          <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>Email Signature мэдээлэл</p>
+
+          {{ render_field(form.full_name, placeholder='Ж.Баатар') }}
+          {{ render_field(form.email, placeholder='baatar@energyresources.mn') }}
+          {{ render_field(form.phone, placeholder='99119911') }}
+          {{ render_field(form.position, placeholder='Ахлах химич') }}
+
           <div class="d-flex justify-content-between">
             {{ render_cancel_button(url_for('admin.manage_users')) }}
             {{ render_submit_button(form.submit, text='Хадгалах', icon='bi-check-lg') }}
@@ -45,9 +53,18 @@
         <p><strong>ID:</strong> {{ user.id }}</p>
         <p><strong>Нэвтрэх нэр:</strong> {{ user.username }}</p>
         <p><strong>Одоогийн эрхийн түвшин:</strong> {{ user.role }}</p>
-        <p class="text-muted mb-0">
-          Энэ хэсгийг роль-ын тайлбар, лог, хандах эрхийн товч мэдээллээр өргөтгөж болно.
-        </p>
+        {% if user.full_name %}
+        <p><strong>Бүтэн нэр:</strong> {{ user.full_name }}</p>
+        {% endif %}
+        {% if user.email %}
+        <p><strong>Имэйл:</strong> {{ user.email }}</p>
+        {% endif %}
+        {% if user.phone %}
+        <p><strong>Утас:</strong> {{ user.phone }}</p>
+        {% endif %}
+        {% if user.position %}
+        <p><strong>Албан тушаал:</strong> {{ user.position }}</p>
+        {% endif %}
       {% endcall %}
     </div>
   </div>

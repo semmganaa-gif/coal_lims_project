@@ -1,7 +1,7 @@
 # Copilot Instructions for Coal LIMS
 
 ## Project Overview
-- **Coal LIMS** is a laboratory information management system for coal analysis, built for Energy Resources LLC, designed to comply with **ISO 17025** standards.
+- **Coal LIMS** is a laboratory information management system for coal analysis, developed by Gantulga, designed to comply with **ISO 17025** standards.
 - Main backend: **Flask** (3.1+), ORM: **SQLAlchemy**, migrations: **Alembic**.
 - Frontend: **Jinja2** templates, **Bootstrap 5**, **Vanilla JS**, **Chart.js**.
 - Data: SQLite (dev), PostgreSQL (prod).

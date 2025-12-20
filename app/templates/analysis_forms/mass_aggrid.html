@@ -113,7 +113,7 @@
       editable:true,
       cellEditor:'agTextCellEditor',
       cellEditorParams:{ useFormatter:true },
-      valueFormatter:p => p.value != null ? Number(p.value).toFixed(2) : '',
+      valueFormatter:p => p.value != null ? Number(p.value).toFixed(4) : '',
       valueParser: params => {
         const raw = params.newValue;
         if(raw === '' || raw === null || raw === undefined) return null;

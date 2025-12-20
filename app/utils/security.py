@@ -8,7 +8,7 @@
 - Input sanitization
 - Security validation
 
-Author: Energy Resources IT Team
+Author: Gantulga (semmganaa@gmail.com)
 Date: 2025-11-24
 """
 

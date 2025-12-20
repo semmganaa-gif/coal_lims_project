@@ -1,6 +1,6 @@
 # 🚀 Coal LIMS - Production Deployment Guide
 
-Energy Resources LLC - Laboratory Information Management System
+Coal LIMS - Laboratory Information Management System
 
 ---
 
@@ -11,12 +11,13 @@ Energy Resources LLC - Laboratory Information Management System
 3. [Application суулгах](#application-суулгах)
 4. [Environment Variables](#environment-variables)
 5. [HTTPS тохиргоо](#https-тохиргоо)
-6. [Gunicorn тохиргоо](#gunicorn-тохиргоо)
-7. [Nginx тохиргоо](#nginx-тохиргоо)
-8. [Systemd service](#systemd-service)
-9. [Backup стратеги](#backup-стратеги)
-10. [Monitoring](#monitoring)
-11. [Troubleshooting](#troubleshooting)
+6. [Gunicorn тохиргоо](#gunicorn-тохиргоо) (Linux)
+7. [Nginx тохиргоо](#nginx-тохиргоо) (Linux)
+8. [Systemd service](#systemd-service) (Linux)
+9. [Windows Server тохиргоо](#windows-server-тохиргоо) ⭐
+10. [Backup стратеги](#backup-стратеги)
+11. [Monitoring](#monitoring)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -163,6 +164,24 @@ flask users create admin your-password admin
 | `FLASK_ENV` | Орчин | `production` |
 | `SECRET_KEY` | Session шифрлэх түлхүүр | `secrets.token_urlsafe(48)` |
 | `DATABASE_URL` | DB холболт | `postgresql://user:pass@host/db` |
+
+### Email тохиргоо (Office 365)
+
+| Variable | Тайлбар | Жишээ |
+|----------|---------|-------|
+| `MAIL_SERVER` | SMTP сервер | `smtp.office365.com` |
+| `MAIL_PORT` | Port | `587` |
+| `MAIL_USE_TLS` | TLS ашиглах | `True` |
+| `MAIL_USERNAME` | Имэйл хаяг | `laboratory@mmc.mn` |
+| `MAIL_PASSWORD` | App Password | `xxxx-xxxx-xxxx-xxxx` |
+| `MAIL_DEFAULT_SENDER` | Илгээгч | `laboratory@mmc.mn` |
+
+**⚠️ App Password авах:**
+1. https://mysignins.microsoft.com/security-info
+2. "Add sign-in method" → "App password"
+3. Үүссэн нууц үгийг `MAIL_PASSWORD`-д ашиглах
+
+**IT-д хэлэх:** SMTP AUTH идэвхжүүлсэн эсэхийг шалгах (Exchange Admin → Mailboxes → Authenticated SMTP ✓)
 
 ### Сонголттой
 
@@ -385,6 +404,158 @@ sudo journalctl -u coal_lims -f
 
 ---
 
+## 🪟 Windows Server тохиргоо
+
+### 1. Python суулгах
+
+1. https://python.org/downloads/ - Python 3.11+ татах
+2. "Add Python to PATH" сонгох
+3. Суулгах
+
+### 2. PostgreSQL суулгах
+
+1. https://postgresql.org/download/windows/
+2. Суулгах, `postgres` нууц үг тохируулах
+3. pgAdmin-ээр `coal_lims` database үүсгэх
+
+### 3. Application суулгах
+
+```powershell
+# Folder үүсгэх
+mkdir C:\Apps\coal_lims
+cd C:\Apps\coal_lims
+
+# Code хуулах (git эсвэл zip)
+git clone https://github.com/your-org/coal_lims_project.git .
+
+# Virtual environment
+python -m venv venv
+.\venv\Scripts\activate
+
+# Dependencies
+pip install -r requirements.txt
+pip install waitress  # Windows WSGI server
+```
+
+### 4. .env файл үүсгэх
+
+```powershell
+# C:\Apps\coal_lims\.env
+FLASK_ENV=production
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/coal_lims
+
+# Email (Office 365)
+MAIL_SERVER=smtp.office365.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=laboratory@mmc.mn
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=laboratory@mmc.mn
+```
+
+### 5. Database migration
+
+```powershell
+.\venv\Scripts\activate
+flask db upgrade
+flask users create admin your-password admin
+```
+
+### 6. Waitress ашиглан ажиллуулах
+
+**run_production.py:**
+```python
+from waitress import serve
+from app import create_app
+
+app = create_app()
+
+if __name__ == '__main__':
+    print("Starting Coal LIMS on http://0.0.0.0:8000")
+    serve(app, host='0.0.0.0', port=8000, threads=4)
+```
+
+**Ажиллуулах:**
+```powershell
+.\venv\Scripts\python.exe run_production.py
+```
+
+### 7. Windows Service болгох (NSSM)
+
+1. https://nssm.cc/download - NSSM татах
+2. `nssm.exe` файлыг `C:\Windows\System32` руу хуулах
+
+```powershell
+# Service үүсгэх
+nssm install CoalLIMS "C:\Apps\coal_lims\venv\Scripts\python.exe" "C:\Apps\coal_lims\run_production.py"
+
+# Startup directory тохируулах
+nssm set CoalLIMS AppDirectory "C:\Apps\coal_lims"
+
+# Auto start тохируулах
+nssm set CoalLIMS Start SERVICE_AUTO_START
+
+# Service эхлүүлэх
+nssm start CoalLIMS
+```
+
+### 8. Windows Firewall
+
+```powershell
+# Port 8000 нээх (хэрэв Nginx ашиглахгүй бол)
+netsh advfirewall firewall add rule name="Coal LIMS" dir=in action=allow protocol=TCP localport=8000
+
+# Эсвэл 80, 443 (Nginx ашиглавал)
+netsh advfirewall firewall add rule name="HTTP" dir=in action=allow protocol=TCP localport=80
+netsh advfirewall firewall add rule name="HTTPS" dir=in action=allow protocol=TCP localport=443
+```
+
+### 9. IIS Reverse Proxy (Сонголттой)
+
+IIS-ийг reverse proxy болгон ашиглаж болно:
+1. URL Rewrite Module суулгах
+2. Application Request Routing (ARR) суулгах
+3. `web.config` файл үүсгэх
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.webServer>
+        <rewrite>
+            <rules>
+                <rule name="ReverseProxy" stopProcessing="true">
+                    <match url="(.*)" />
+                    <action type="Rewrite" url="http://localhost:8000/{R:1}" />
+                </rule>
+            </rules>
+        </rewrite>
+    </system.webServer>
+</configuration>
+```
+
+### 10. Windows Task Scheduler (Backup)
+
+1. Task Scheduler нээх
+2. "Create Basic Task" → "Daily" → 02:00
+3. Action: `C:\Apps\coal_lims\scripts\backup.bat`
+
+**backup.bat:**
+```batch
+@echo off
+set BACKUP_DIR=C:\Backups\coal_lims
+set DATE=%date:~0,4%%date:~5,2%%date:~8,2%
+
+mkdir %BACKUP_DIR% 2>nul
+
+"C:\Program Files\PostgreSQL\14\bin\pg_dump.exe" -U postgres -d coal_lims > %BACKUP_DIR%\lims_%DATE%.sql
+
+:: 30 хоногоос хуучин файлууд устгах
+forfiles /p %BACKUP_DIR% /s /m *.sql /d -30 /c "cmd /c del @path"
+```
+
+---
+
 ## 💾 Backup стратеги
 
 ### Database Backup
@@ -571,20 +742,44 @@ pip freeze > requirements.txt
 
 ## ✅ Production Checklist
 
+### Үндсэн тохиргоо
 - [ ] PostgreSQL суулгасан, бүрэн тохируулсан
 - [ ] SECRET_KEY үүсгэсэн, аюулгүй хадгалсан
 - [ ] `FLASK_ENV=production` тохируулсан
+- [ ] `.env` файл үүсгэсэн (git-д оруулаагүй)
+- [ ] `flask db upgrade` амжилттай
+- [ ] Админ хэрэглэгч үүсгэсэн
+
+### Email тохиргоо (Office 365)
+- [ ] MAIL_SERVER, MAIL_PORT тохируулсан
+- [ ] App Password авсан (MFA идэвхтэй бол)
+- [ ] SMTP AUTH идэвхжүүлсэн (IT-тай шалгасан)
+- [ ] Тест имэйл илгээж туршсан
+- [ ] TO/CC хаягууд тохируулсан (Тохиргоо → Тайлангийн имэйл)
+
+### Linux Server
 - [ ] SSL certificate суулгасан
 - [ ] Nginx тохируулсан, идэвхжүүлсэн
 - [ ] Gunicorn тохируулсан
 - [ ] Systemd service үүсгэсэн
 - [ ] Firewall тохируулсан (80, 443 port)
-- [ ] Backup script бичсэн, cron job нэмсэн
+- [ ] Cron backup job нэмсэн
 - [ ] Log rotation тохируулсан
-- [ ] Health check monitoring идэвхжүүлсэн
-- [ ] Админ хэрэглэгч үүсгэсэн
-- [ ] Системийг турших
+
+### Windows Server
+- [ ] Python 3.11+ суулгасан (PATH-д нэмсэн)
+- [ ] PostgreSQL суулгасан
+- [ ] Waitress суулгасан
+- [ ] NSSM service үүсгэсэн (auto-start)
+- [ ] Windows Firewall port нээсэн
+- [ ] Task Scheduler backup тохируулсан
+- [ ] IIS reverse proxy (сонголттой)
+
+### Эцсийн шалгалт
+- [ ] Health check endpoint ажиллаж байна (`/health`)
+- [ ] Системийг бүрэн турших
 - [ ] Documentation бэлтгэсэн
+- [ ] Backup restore турших
 
 ---
 

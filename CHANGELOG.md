@@ -1142,7 +1142,7 @@ python run.py
 
 ### 📄 License
 
-Энэ төсөл Energy Resources LLC-ийн өмч.
+Coal LIMS - Developed by Gantulga (semmganaa@gmail.com, 80872013)
 
 ---
 

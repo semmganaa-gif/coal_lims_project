@@ -43,7 +43,7 @@ def setup_api_docs(app):
             "description": "Нүүрсний лабораторийн мэдээллийн удирдлагын системийн API",
             "version": "1.0.0",
             "contact": {
-                "name": "Energy Resources LLC",
+                "name": "Coal LIMS",
                 "email": "support@energyresources.mn"
             },
             "license": {
