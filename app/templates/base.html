@@ -248,10 +248,12 @@
                 <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">
                   <i class="bi bi-people me-2"></i>Хэрэглэгч
                 </a></li>
+                <li><hr class="dropdown-divider"></li>
+                {% endif %}
+                {% if current_user.role in ['admin', 'manager'] %}
                 <li><a class="dropdown-item" href="{{ url_for('license.info') }}">
                   <i class="bi bi-key me-2"></i>Лиценз
                 </a></li>
-                <li><hr class="dropdown-divider"></li>
                 {% endif %}
                 <li><a class="dropdown-item" href="{{ url_for('admin.analysis_config_simple') }}">
                   <i class="bi bi-sliders me-2"></i>Шинжилгээний тохиргоо
