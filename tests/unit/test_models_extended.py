@@ -43,9 +43,12 @@ class TestUserModelExtended:
     def test_user_full_name(self, app):
         """User full name"""
         with app.app_context():
-            user = User(username='testuser', role='chemist')
+            user = User(username='testuser', role='chemist', full_name='Test User')
             if hasattr(user, 'full_name'):
-                assert user.full_name is not None
+                assert user.full_name == 'Test User'
+            # Also test when full_name is None (default)
+            user2 = User(username='testuser2', role='chemist')
+            assert user2.full_name is None or user2.full_name == ''  # Either is acceptable
 
 
 class TestSampleModelExtended:

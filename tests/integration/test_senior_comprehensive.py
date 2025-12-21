@@ -59,33 +59,21 @@ def client(app):
 @pytest.fixture
 def auth_client(app, client):
     """Authenticated admin client"""
-    with app.app_context():
-        user = User.query.filter_by(username='admin').first()
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(user.id)
-            sess['_fresh'] = True
+    client.post('/login', data={'username': 'admin', 'password': 'Admin123'})
     return client
 
 
 @pytest.fixture
 def senior_client(app, client):
     """Authenticated senior client"""
-    with app.app_context():
-        user = User.query.filter_by(username='senior').first()
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(user.id)
-            sess['_fresh'] = True
+    client.post('/login', data={'username': 'senior', 'password': 'Senior123'})
     return client
 
 
 @pytest.fixture
 def chemist_client(app, client):
     """Authenticated chemist client"""
-    with app.app_context():
-        user = User.query.filter_by(username='chemist').first()
-        with client.session_transaction() as sess:
-            sess['_user_id'] = str(user.id)
-            sess['_fresh'] = True
+    client.post('/login', data={'username': 'chemist', 'password': 'Chemist123'})
     return client
 
 

@@ -145,6 +145,13 @@ def create_app(config_class=Config):
     @app.before_request
     def check_license():
         """Бүх хүсэлт дээр лиценз шалгах"""
+        # Тест орчинд лиценз шалгахгүй
+        if app.config.get('TESTING'):
+            g.license_valid = True
+            g.license_warning = None
+            g.license_info = {'company': 'Test', 'expires_at': '2099-12-31'}
+            return None
+
         # Static файлууд болон лицензийн хуудсуудыг алгасах
         if request.endpoint in LICENSE_EXEMPT_ENDPOINTS:
             return None

@@ -65,12 +65,14 @@ class TestGetNotificationRecipients:
 class TestSendNotification:
     """Send notification tests"""
 
+    @patch('app.utils.notifications.get_email_signature')
     @patch('app.utils.notifications.Message')
     @patch('app.utils.notifications.mail')
-    def test_send_notification_success(self, mock_mail, mock_message):
+    def test_send_notification_success(self, mock_mail, mock_message, mock_signature):
         """Send notification successfully"""
         mock_msg = MagicMock()
         mock_message.return_value = mock_msg
+        mock_signature.return_value = "<p>Signature</p>"
 
         result = send_notification(
             subject="Test Alert",
@@ -91,12 +93,14 @@ class TestSendNotification:
         assert result is False
         mock_mail.send.assert_not_called()
 
+    @patch('app.utils.notifications.get_email_signature')
     @patch('app.utils.notifications.Message')
     @patch('app.utils.notifications.mail')
-    def test_send_notification_with_attachments(self, mock_mail, mock_message):
+    def test_send_notification_with_attachments(self, mock_mail, mock_message, mock_signature):
         """Send notification with attachments"""
         mock_msg = MagicMock()
         mock_message.return_value = mock_msg
+        mock_signature.return_value = "<p>Signature</p>"
 
         attachments = [
             {'filename': 'test.pdf', 'content_type': 'application/pdf', 'data': b'test data'}
@@ -110,12 +114,14 @@ class TestSendNotification:
         assert result is True
         mock_msg.attach.assert_called_once()
 
+    @patch('app.utils.notifications.get_email_signature')
     @patch('app.utils.notifications.Message')
     @patch('app.utils.notifications.mail')
-    def test_send_notification_mail_error(self, mock_mail, mock_message):
+    def test_send_notification_mail_error(self, mock_mail, mock_message, mock_signature):
         """Send notification handles mail error"""
         mock_msg = MagicMock()
         mock_message.return_value = mock_msg
+        mock_signature.return_value = "<p>Signature</p>"
         mock_mail.send.side_effect = Exception("SMTP error")
 
         result = send_notification(
@@ -125,12 +131,14 @@ class TestSendNotification:
         )
         assert result is False
 
+    @patch('app.utils.notifications.get_email_signature')
     @patch('app.utils.notifications.Message')
     @patch('app.utils.notifications.mail')
-    def test_send_notification_multiple_recipients(self, mock_mail, mock_message):
+    def test_send_notification_multiple_recipients(self, mock_mail, mock_message, mock_signature):
         """Send notification to multiple recipients"""
         mock_msg = MagicMock()
         mock_message.return_value = mock_msg
+        mock_signature.return_value = "<p>Signature</p>"
 
         result = send_notification(
             subject="Test Multiple",
