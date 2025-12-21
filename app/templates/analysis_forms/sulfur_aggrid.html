@@ -148,7 +148,6 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
       cellRenderer:p=>{
         let html = `<div class="sample-name">${p.value}</div>`;
-        if (p.data.client_name) html += `<div class="text-muted small">${p.data.client_name}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if(rej){
           const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
@@ -192,7 +191,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       ]
     },
     {
-      headerName:'Тохирц (T)', field:'diff', width:120,
+      headerName:'Тохирц', field:'diff', width:120,
       valueFormatter:p=> {
         // Зөвхөн хадгалагдсан үр дүнг харуулна
         if(p.data.is_saved && p.value != null) {

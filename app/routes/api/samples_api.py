@@ -41,7 +41,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/data", methods=["GET"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def data():
         draw = int(request.args.get("draw", 1))
         start = int(request.args.get("start", 0))
@@ -230,7 +230,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/sample_summary", methods=["GET", "POST"])
     @login_required
-    @limiter.limit("20 per minute")
+    @limiter.limit("100 per minute")
     def sample_summary():
         # --- POST (Архивлах) ---
         if request.method == "POST":
@@ -529,7 +529,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/archive_hub", methods=["GET", "POST"])
     @login_required
-    @limiter.limit("20 per minute")
+    @limiter.limit("100 per minute")
     def archive_hub():
         from sqlalchemy import func, extract
         from collections import defaultdict

@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+#complaintsTable th:first-child,
+#complaintsTable td:first-child {
+    min-width: 200px !important;
+    width: 200px !important;
+}
+</style>
 <div class="container-fluid mt-4">
     <div class="row mb-3">
         <div class="col-md-8">
             <h2><i class="fas fa-comment-dots"></i> Үйлчлүүлэгчийн гомдол</h2>
-            <p class="text-muted">ISO 17025 - Clause 8.9: Customer Complaints Management</p>
+            <p class="text-muted">ISO 17025 - 8.9 заалт: Үйлчлүүлэгчийн гомдлын менежмент</p>
         </div>
         <div class="col-md-4 text-right">
             <a href="{{ url_for('quality.complaints_new') }}" class="btn btn-primary">
@@ -124,6 +131,10 @@ $(document).ready(function() {
     $('#complaintsTable').DataTable({
         order: [[1, 'desc']],
         pageLength: 25,
+        autoWidth: false,
+        columnDefs: [
+            { width: '200px', targets: 0 }
+        ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json'
         }

@@ -188,7 +188,6 @@
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {
         let html = `<div class="fw-semibold text-primary">${p.value}</div>`;
-        html += `<div class="text-muted small">${p.data.client_name || '-'}</div>`;
 
         // Rejection badge
         if(p.data.rejection_reason){
@@ -240,7 +239,7 @@
       cellStyle: p => p.data.lockY ? { backgroundColor: '#e9ecef', color: '#6c757d' } : {}
     },
     {
-      headerName: 'X тохирц (T)', field: 'x_diff', width: 130,
+      headerName: 'X тохирц', field: 'x_diff', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.x_diff != null) ? Number(p.data.x_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
@@ -263,7 +262,7 @@
       }
     },
     {
-      headerName: 'Y тохирц (T)', field: 'y_diff', width: 130,
+      headerName: 'Y тохирц', field: 'y_diff', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.y_diff != null) ? Number(p.data.y_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
@@ -286,7 +285,7 @@
       }
     },
     {
-      headerName: 'Үйлдэл', width: 80, pinned: 'right',
+      headerName: 'Үйлдэл', width: 90, pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {

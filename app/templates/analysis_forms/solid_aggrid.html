@@ -80,7 +80,6 @@
       cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
       cellRenderer: p => {
         let html = `<div class="sample-name">${p.value}</div>`;
-        if (p.data.client_name) html += `<div class="text-muted small">${p.data.client_name}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason || ''}</div>`;
@@ -89,21 +88,21 @@
       }
     },
     {
-      headerName: 'A (bucket + sample)',
+      headerName: 'bucket + sample',
       field: 'A',
       width: 150,
       ...editCol,
       valueFormatter: numFmt4
     },
     {
-      headerName: 'B (bucket tare)',
+      headerName: 'bucket tare',
       field: 'B',
       width: 130,
       ...editCol,
       valueFormatter: numFmt4
     },
     {
-      headerName: 'C (dry residue)',
+      headerName: 'dry residue',
       field: 'C',
       width: 140,
       ...editCol,
@@ -121,7 +120,7 @@
     },
     {
       headerName: 'Үйлдэл',
-      width: 80,
+      width: 90,
       pinned: 'right',
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
       cellRenderer: p => {

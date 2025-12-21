@@ -11,7 +11,7 @@ from flask import request, render_template, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from datetime import datetime
-from app.utils.shifts import get_shift_date
+from app.utils.shifts import get_shift_date, get_shift_info
 import json
 
 from app import db
@@ -339,9 +339,10 @@ def register_routes(bp):
         """
         from sqlalchemy import func, case
 
-        today = get_shift_date()
-        today_start = datetime.combine(today, datetime.min.time())
-        today_end = datetime.combine(today, datetime.max.time())
+        # Ээлжийн эхлэх, дуусах цагийг авах (шөнийн ээлжийг зөв тооцоолно)
+        shift_info = get_shift_info(now_local())
+        today_start = shift_info.shift_start
+        today_end = shift_info.shift_end
 
         # 1. Химич бүрийн өнөөдрийн шинжилгээний тоо
         chemist_stats = (
@@ -354,7 +355,7 @@ def register_routes(bp):
                 func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
             )
             .join(AnalysisResult, AnalysisResult.user_id == User.id)
-            .filter(User.role.in_(["chemist", "senior"]))
+            .filter(User.role.in_(["chemist", "senior", "preparer"]))
             .filter(AnalysisResult.updated_at >= today_start)
             .filter(AnalysisResult.updated_at <= today_end)
             .group_by(User.id, User.username)

@@ -223,7 +223,7 @@
       valueFormatter: null
     },
     {
-      headerName: 'm (г)',
+      headerName: 'm',
       field: 'm',
       width: 110,
       cellStyle: p => {
@@ -233,7 +233,7 @@
       ...editCol
     },
     {
-      headerName: 'm1 (бортого)',
+      headerName: 'm1',
       field: 'm1',
       width: 140,
       editable: false,
@@ -245,7 +245,7 @@
       }
     },
     {
-      headerName: 'm2 (бортого+хуурай)',
+      headerName: 'm2',
       field: 'm2',
       width: 150,
       cellStyle: p => {
@@ -322,7 +322,7 @@
     },
     {
       headerName: 'Үйлдэл',
-      width: 80,
+      width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },

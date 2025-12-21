@@ -1,11 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+#envTable th:first-child,
+#envTable td:first-child {
+    min-width: 200px !important;
+    width: 200px !important;
+}
+</style>
 <div class="container-fluid mt-4">
     <div class="row mb-3">
         <div class="col-md-8">
             <h2><i class="fas fa-thermometer-half"></i> Орчны нөхцлийн хяналт</h2>
-            <p class="text-muted">ISO 17025 - Clause 6.3.3: Температур, Чийгийн бүртгэл</p>
+            <p class="text-muted">ISO 17025 - 6.3.3 заалт: Температур, Чийгийн бүртгэл</p>
         </div>
         <div class="col-md-4 text-right">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEnvModal">
@@ -159,6 +166,10 @@ $(document).ready(function() {
     $('#envTable').DataTable({
         order: [[0, 'desc']],
         pageLength: 50,
+        autoWidth: false,
+        columnDefs: [
+            { width: '200px', targets: 0 }
+        ],
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json'
         }

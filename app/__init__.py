@@ -33,9 +33,10 @@ csrf = CSRFProtect()
 
 # ✅ Rate limiter - Brute force халдлагаас хамгаалах
 # create_app дотор init_app хийгдэнэ
+# 10+ химич, 1200+ шинжилгээ/өдөр тооцсон
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],  # Ерөнхий хязгаар
+    default_limits=["10000 per day", "500 per hour"],  # LIMS production хязгаар
     storage_uri="memory://"
 )
 

@@ -28,6 +28,22 @@ from app.utils.codes import norm_code, BASE_TO_ALIASES
 # ✅ Дүрмийн логик импортлох (Шинэ файл)
 from app.utils.analysis_rules import determine_result_status
 
+# ✅ DB код -> Стандарт код mapping (QC шалгалтад хэрэглэгдэнэ)
+# DB дахь кодууд (Aad, CV, TS) -> CM/GBW стандарт дахь кодууд (Ad, CV,d, St,d)
+DB_TO_STANDARD_CODE = {
+    'Aad': 'Ad',
+    'Vad': 'Vd',
+    'CV': 'CV,d',
+    'TS': 'St,d',
+    'TRD': 'TRD,d',
+    'CSN': 'CSN',
+    'Gi': 'Gi',
+    'P': 'P',
+    'F': 'F',
+    'Cl': 'Cl',
+    'Mad': 'Mad',
+}
+
 # Server-side verification (Security)
 from app.utils.server_calculations import verify_and_recalculate
 
@@ -59,7 +75,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/eligible_samples/<analysis_code>", methods=["GET"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def eligible_samples(analysis_code):
         base_code = norm_code(analysis_code).strip()
         if not base_code:
@@ -142,7 +158,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/unassign_sample", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def unassign_sample():
         """
         Дээжийг тухайн шинжилгээнээс хасах.
@@ -206,7 +222,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/save_results", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def save_results():
         data = request.get_json(silent=True)
 
@@ -322,7 +338,7 @@ def register_routes(bp):
                         scode = (sample.sample_code or "").upper() # Upper болгож шалгах нь найдвартай
 
                         is_cm = (stype == "control") or ("CM-" in scode) or ("CM_" in scode)
-                        is_gbw = (stype == "gbw") or ("GBW" in scode) # ✅ GBW таних нөхцөл
+                        is_gbw = (stype == "gbw") or ("GBW" in scode)
 
                         if (is_cm or is_gbw) and final_result is not None:
                             active_std = None
@@ -342,8 +358,10 @@ def register_routes(bp):
                                     except (json.JSONDecodeError, ValueError): targets_map = {}
 
                                 # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
-                                if isinstance(targets_map, dict) and analysis_code in targets_map:
-                                    control_targets = targets_map[analysis_code]
+                                # DB код -> Стандарт код хөрвүүлэх (CV -> CV,d, Aad -> Ad г.м)
+                                standard_code = DB_TO_STANDARD_CODE.get(analysis_code, analysis_code)
+                                if isinstance(targets_map, dict) and standard_code in targets_map:
+                                    control_targets = targets_map[standard_code]
 
                                     # --- 4. MAD (Чийг) ОЛОХ ЛОГИК ---
                                     # CM болон GBW нь ихэвчлэн Хуурай суурь (Dry Basis) дээр сертификаттай байдаг тул
@@ -376,16 +394,15 @@ def register_routes(bp):
                                             factor = 100.0 / (100.0 - current_mad)
                                             val_dry = final_result * factor  # Энд ккал хэвээрээ (Хуурай)
 
-                                            # АЛХАМ 2: Дараа нь зөвхөн Илчлэг дээр Нэгж шилжүүлэх (kcal -> MJ)
-                                            if analysis_code in ["CV", "Qgr,ad"]:
-                                                # Хэрэв утга нь > 100 байвал ккал гэж үзээд MJ руу хөрвүүлнэ
-                                                # (Жишээ: 6500 kcal_dry * 4.1868 / 1000 = 27.21 MJ)
+                                            # АЛХАМ 2: GBW дээр MJ руу хөрвүүлэх, CM дээр kcal хэвээр
+                                            if is_gbw and analysis_code in ["CV", "Qgr,ad"]:
+                                                # GBW target нь MJ нэгжтэй хадгалагдсан
                                                 if val_dry > 100:
                                                     val_to_check = (val_dry * 4.1868) / 1000.0
                                                 else:
-                                                    val_to_check = val_dry # Аль хэдийн MJ байж болзошгүй
+                                                    val_to_check = val_dry
                                             else:
-                                                # Бусад (Ash, Sulfur г.м) үзүүлэлтүүд шууд Dry утгаараа шалгагдана
+                                                # CM болон бусад үзүүлэлтүүд kcal/шууд утгаараа шалгагдана
                                                 val_to_check = val_dry
                     except Exception as e:
                         current_app.logger.error(f"Control/GBW Logic Error: {e}")

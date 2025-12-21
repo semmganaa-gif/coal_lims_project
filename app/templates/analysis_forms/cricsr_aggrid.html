@@ -121,10 +121,6 @@
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
         let html = `<div class="sample-name">${p.value}</div>`;
-        if (p.data.client_name) {
-          html += `<div class="text-muted small">${p.data.client_name}</div>`;
-        }
-
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           const label = errorLabels[rej.reason_code] || rej.reason || '';
@@ -158,7 +154,7 @@
       ...editCol
     },
     {
-      headerName: 'CRI тохирц (T)',
+      headerName: 'CRI тохирц',
       field: 'cri_diff',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -211,7 +207,7 @@
       }
     },
     {
-      headerName: 'CSR тохирц (T)',
+      headerName: 'CSR тохирц',
       field: 'csr_diff',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -265,7 +261,7 @@
     },
     {
       headerName: 'Үйлдэл',
-      width: 80,
+      width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },

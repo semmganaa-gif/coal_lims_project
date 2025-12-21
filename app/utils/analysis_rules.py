@@ -95,6 +95,13 @@ def determine_result_status(
         raw_data = {}
 
     # ========================================================================
+    # 0. TOLERANCE CHECK (ТОХИРЦЫН ЗӨРҮҮ) - БҮХ ДЭЭЖИНД ШАЛГАНА
+    # ========================================================================
+    # Энэ шалгалт нь control sample болон жирийн дээж аль алинд нь хамаарна
+    if raw_data.get("t_exceeded", False):
+        return "pending_review", "Tolerance Exceeded (Стандарт тохирц зөрүүтэй)"
+
+    # ========================================================================
     # 1. CONTROL SAMPLE CHECK (ХЯНАЛТЫН ДЭЭЖНИЙ ШАЛГАЛТ)
     # ========================================================================
     # ✅ ТАНЫ ХУУЧИН КОД ДЭЭР ЭНЭ ХЭСЭГ ДУТУУ БАЙСАН!
@@ -140,11 +147,6 @@ def determine_result_status(
     if analysis_code in ['CV', 'Qgr,ad', 'Qnet,ar'] and value is not None:
         if value < 2000:
              return "pending_review", f"Илчлэг хэт бага ({value})"
-
-    # ДҮРЭМ: Tolerance Check (Стандарт тохирц)
-    # Параллель хэмжилтийн зөрүү стандартаас хэтэрсэн эсэх
-    if raw_data.get("t_exceeded", False):
-        return "pending_review", "Tolerance Exceeded (Стандарт тохирц зөрүүтэй)"
 
     # ========================================================================
     # 3. SOFT LIMIT CHECK (Max Value Check - Жирийн дээжинд)

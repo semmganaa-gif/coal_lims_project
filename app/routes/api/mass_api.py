@@ -37,7 +37,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/mass/update_sample_status", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def update_sample_status():
         action = request.form.get("action")
         sample_ids = request.form.getlist("sample_ids")
@@ -75,7 +75,7 @@ def register_routes(bp):
 
     @bp.route("/mass/eligible", methods=["GET"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def mass_eligible():
         """
         Массын ажлын талбарт харагдах дээжүүд:
@@ -127,7 +127,7 @@ def register_routes(bp):
 
     @bp.route("/mass/save", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def mass_save():
         """
         Payload:
@@ -194,7 +194,7 @@ def register_routes(bp):
 
     @bp.route("/mass/update_weight", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def mass_update_weight():
         """
         Mass Ready болсон байсан ч зөвхөн жинг нь засаж хадгална.
@@ -230,7 +230,7 @@ def register_routes(bp):
 
     @bp.route("/mass/unready", methods=["POST"])
     @login_required
-    @limiter.limit("30 per minute")
+    @limiter.limit("100 per minute")
     def mass_unready():
         """
         mass_ready-г буцааж false болгоно.
@@ -262,7 +262,7 @@ def register_routes(bp):
 
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
-    @limiter.limit("20 per minute")
+    @limiter.limit("100 per minute")
     def mass_delete():
         """
         Дээжийг бүртгэлээс бүр мөсөн устгана (каскадтай).

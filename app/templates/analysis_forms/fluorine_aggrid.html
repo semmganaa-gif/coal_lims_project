@@ -139,7 +139,6 @@
       cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
       cellRenderer:p=>{
         let html = `<div class="sample-name">${p.value}</div>`;
-        if (p.data.client_name) html += `<div class="text-muted small">${p.data.client_name}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if(rej){
           const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
@@ -183,7 +182,7 @@
       ]
     },
     {
-      headerName:'Тохирц (T)', field:'diff', width:120,
+      headerName:'Тохирц', field:'diff', width:120,
       valueFormatter:p=> p.data.is_saved && p.value!=null ? numFmt2(p) : '-',
       cellStyle:p=>{
         if(!p.data.is_saved){
@@ -206,7 +205,7 @@
       }
     },
     {
-      headerName:'Үйлдэл', width:80, pinned:'right',
+      headerName:'Үйлдэл', width:90, pinned:'right',
       cellRenderer:p=> {
         if (p.data.is_saved) return '<span class="text-muted small">Хадгалагдсан</span>';
         return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Дээж хасах"><i class="bi bi-x"></i></button>`;

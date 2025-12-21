@@ -422,8 +422,11 @@ function filterByPeriod(dataPoints, period) {
   const now = new Date();
 
   if (period === 1) {
-    // Өнөөдөр: зөвхөн өнөөдрийн огноо
-    const today = now.toISOString().split('T')[0];
+    // Өнөөдөр: Local time ашиглана (UTC биш)
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
     return dataPoints.filter(p => p.date && p.date.startsWith(today));
   }
 
@@ -590,7 +593,7 @@ async function loadMiniChart(standardName, qcType, analysis) {
     const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
     const ctx = document.getElementById(canvasId);
 
-    if (!ctx || !data.data_points || data.data_points.length < 2) return;
+    if (!ctx || !data.data_points || data.data_points.length < 1) return;
 
     // CM дээжүүдийг шүүх: шинэ формат (CM-2025-Q4_...) болон хуучин формат (CM_...)
     let points = data.data_points
@@ -610,7 +613,8 @@ async function loadMiniChart(standardName, qcType, analysis) {
     const countEl = document.getElementById('count_' + canvasId);
     if (countEl) countEl.textContent = `n=${filteredCount}`;
 
-    if (points.length < 2) return;
+    // 1 цэг байсан ч график харуулах (scatter point)
+    if (points.length < 1) return;
 
     const values = points.map(p => p.value);
     const target = data.target, sd = data.sd;
@@ -667,18 +671,8 @@ async function openChartModal(standardName, qcType, analysis) {
   document.getElementById('modalLatest').textContent = analysis.latest_value || '-';
   document.getElementById('modalCount').textContent = analysis.count || '-';
 
-  // Show violations if any
-  const violationsDiv = document.getElementById('modalViolations');
-  const violationsList = document.getElementById('violationsList');
-
-  if (analysis.rules_violated && analysis.rules_violated.length > 0) {
-    violationsDiv.style.display = 'block';
-    violationsList.innerHTML = analysis.rules_violated.map(r =>
-      `<div class="violation-item"><i class="bi bi-x-circle me-1"></i>${r}</div>`
-    ).join('');
-  } else {
-    violationsDiv.style.display = 'none';
-  }
+  // Violations хэсгийг эхлээд нуух (detail API ачаалж харуулна)
+  document.getElementById('modalViolations').style.display = 'none';
 
   modal.show();
 
@@ -695,6 +689,24 @@ async function loadModalChart(standardName, qcType, analysis) {
     data = await resp.json();
   }
 
+  // Westgard зөрчлийг дэлгэрэнгүй харуулах
+  const violationsDiv = document.getElementById('modalViolations');
+  const violationsList = document.getElementById('violationsList');
+  if (data.violations && data.violations.length > 0) {
+    violationsDiv.style.display = 'block';
+    violationsList.innerHTML = data.violations.map(v => {
+      const icon = v.severity === 'reject' ? 'x-octagon text-danger' : 'exclamation-triangle text-warning';
+      const badge = v.severity === 'reject' ? 'bg-danger' : 'bg-warning text-dark';
+      return `<div class="violation-item d-flex align-items-center gap-2 mb-2">
+        <span class="badge ${badge}">${v.rule}</span>
+        <i class="bi bi-${icon}"></i>
+        <span>${v.description}</span>
+      </div>`;
+    }).join('');
+  } else {
+    violationsDiv.style.display = 'none';
+  }
+
   const ctx = document.getElementById('modalChart');
 
   if (modalChart) {
@@ -702,7 +714,7 @@ async function loadModalChart(standardName, qcType, analysis) {
     modalChart = null;
   }
 
-  if (!data.data_points || data.data_points.length < 2) {
+  if (!data.data_points || data.data_points.length < 1) {
     ctx.parentElement.innerHTML = '<div class="text-center text-muted py-5">Хангалттай өгөгдөл байхгүй</div>';
     return;
   }
@@ -724,7 +736,8 @@ async function loadModalChart(standardName, qcType, analysis) {
   // Modal дээр шүүсэн тоог харуулах
   document.getElementById('modalCount').textContent = filteredCount;
 
-  if (points.length < 2) return;
+  // 1 цэг байсан ч график харуулах
+  if (points.length < 1) return;
 
   const labels = points.map(p => {
     if (!p.date) return '';

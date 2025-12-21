@@ -380,14 +380,14 @@ def register_routes(bp):
             # qc_type тодорхойлох (UI-д ашиглахад)
             qc_type = "GBW" if "GBW" in standard_name.upper() else "CM"
 
-            if len(results_list) < 2:
+            if len(results_list) < 1:
                 summary.append({
                     "standard_name": standard_name,
                     "qc_type": qc_type,
                     "analysis_code": analysis_code,
                     "status": "insufficient_data",
                     "count": len(results_list),
-                    "message": "Хамгийн багадаа 2 хэмжилт хэрэгтэй"
+                    "message": "Хамгийн багадаа 1 хэмжилт хэрэгтэй"
                 })
                 continue
 
@@ -550,12 +550,13 @@ def register_routes(bp):
             except (ValueError, TypeError, AttributeError):
                 pass
 
-        if len(data_points) < 2:
+        if len(data_points) < 1:
             return jsonify({
                 "qc_type": qc_type,
                 "analysis_code": analysis_code,
                 "status": "insufficient_data",
-                "count": len(data_points)
+                "count": len(data_points),
+                "data_points": []
             })
 
         # Огноогоор эрэмбэлэх
