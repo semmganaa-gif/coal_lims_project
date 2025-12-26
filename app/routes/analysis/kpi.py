@@ -200,7 +200,7 @@ def register_routes(bp):
 
         result_rows = []
         for key, count in counters.items():
-            if group_by == "shift":
+            if group_by in ("shift", "day"):
                 team, shift_type = key
                 extra = ""
             else:

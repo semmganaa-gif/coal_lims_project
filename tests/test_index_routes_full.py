@@ -28,6 +28,13 @@ class TestGetReportEmailRecipients:
             from app.routes.main.index import get_report_email_recipients
             from app.models import SystemSetting
 
+            # Cleanup existing settings first
+            SystemSetting.query.filter_by(
+                category='email',
+                key='report_recipients_to'
+            ).delete()
+            db.session.commit()
+
             # Create TO setting
             setting = SystemSetting(
                 category='email',
@@ -47,6 +54,13 @@ class TestGetReportEmailRecipients:
         with app.app_context():
             from app.routes.main.index import get_report_email_recipients
             from app.models import SystemSetting
+
+            # Cleanup existing settings first
+            SystemSetting.query.filter_by(
+                category='email',
+                key='report_recipients_cc'
+            ).delete()
+            db.session.commit()
 
             # Create CC setting
             setting = SystemSetting(

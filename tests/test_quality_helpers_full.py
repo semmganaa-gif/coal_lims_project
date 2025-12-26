@@ -208,10 +208,14 @@ class TestGenerateSequentialCode:
             from app.utils.quality_helpers import generate_sequential_code
             from app.models import CorrectiveAction
 
-            with patch.object(CorrectiveAction.query, 'filter') as mock_filter:
-                mock_filter.return_value.order_by.return_value.first.return_value = None
-                code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025)
-                assert code == 'CA-2025-0001'
+            # Delete all existing CorrectiveAction records with CA-2025 prefix
+            CorrectiveAction.query.filter(
+                CorrectiveAction.ca_number.like('CA-2025-%')
+            ).delete(synchronize_session=False)
+            db.session.commit()
+
+            code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025)
+            assert code == 'CA-2025-0001'
 
     def test_next_code(self, app, db):
         """Test generating next code after existing ones."""
@@ -243,24 +247,45 @@ class TestGenerateSequentialCode:
             from app.utils.quality_helpers import generate_sequential_code
             from app.models import CorrectiveAction
 
-            with patch.object(CorrectiveAction.query, 'filter') as mock_filter:
-                mock_filter.return_value.order_by.return_value.first.return_value = None
-                code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025, padding=6)
-                assert code == 'CA-2025-000001'
+            # Delete all existing CorrectiveAction records with CA-2025 prefix
+            CorrectiveAction.query.filter(
+                CorrectiveAction.ca_number.like('CA-2025-%')
+            ).delete(synchronize_session=False)
+            db.session.commit()
+
+            code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025, padding=6)
+            assert code == 'CA-2025-000001'
 
     def test_invalid_last_code(self, app, db):
         """Test with invalid last code format."""
         with app.app_context():
             from app.utils.quality_helpers import generate_sequential_code
             from app.models import CorrectiveAction
+            from datetime import date
 
-            mock_record = MagicMock()
-            mock_record.ca_number = 'CA-2025-invalid'
+            # Delete all existing CorrectiveAction records with CA-2025 prefix
+            CorrectiveAction.query.filter(
+                CorrectiveAction.ca_number.like('CA-2025-%')
+            ).delete(synchronize_session=False)
+            db.session.commit()
 
-            with patch.object(CorrectiveAction.query, 'filter') as mock_filter:
-                mock_filter.return_value.order_by.return_value.first.return_value = mock_record
-                code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025)
-                assert code == 'CA-2025-0001'
+            # Create a record with invalid code format
+            ca = CorrectiveAction(
+                ca_number='CA-2025-invalid',
+                issue_date=date.today(),
+                issue_description='Test invalid code',
+                status='open'
+            )
+            db.session.add(ca)
+            db.session.commit()
+
+            code = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA', year=2025)
+            # When last code is invalid, should start from 0001
+            assert code == 'CA-2025-0001'
+
+            # Cleanup
+            db.session.delete(ca)
+            db.session.commit()
 
     def test_default_year(self, app, db):
         """Test with default year (current year)."""
