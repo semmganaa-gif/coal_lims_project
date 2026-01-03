@@ -271,3 +271,415 @@ class TestLicenseManagerGlobal:
         with app.app_context():
             from app.utils.license_protection import license_manager, LicenseManager
             assert isinstance(license_manager, LicenseManager)
+
+
+class TestHardwareIdValidation:
+    """Hardware ID validation тестүүд"""
+
+    def test_validate_license_hardware_mismatch(self, app, db):
+        """Hardware ID таарахгүй үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+            from app import db as app_db
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.is_active = True
+            mock_license.tampering_detected = False
+            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.hardware_id = 'different_hardware_id'
+            mock_license.allowed_hardware_ids = None
+            mock_license.id = 1
+
+            with patch.object(manager, 'get_current_license', return_value=mock_license):
+                with patch.object(manager, '_log_event'):
+                    with patch('app.utils.license_protection.generate_hardware_id', return_value='current_hw_id'):
+                        result = manager.validate_license()
+                        assert result['valid'] is False
+                        assert result['error'] == 'HARDWARE_MISMATCH'
+
+    def test_validate_license_hardware_in_allowed_list(self, app, db):
+        """Hardware ID allowed list-д байх үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.is_active = True
+            mock_license.tampering_detected = False
+            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.hardware_id = 'original_hw_id'
+            mock_license.allowed_hardware_ids = json.dumps(['current_hw_id', 'another_hw_id'])
+            mock_license.days_remaining = 30
+            mock_license.check_count = 0
+            mock_license.id = 1
+
+            with patch.object(manager, 'get_current_license', return_value=mock_license):
+                with patch('app.utils.license_protection.generate_hardware_id', return_value='current_hw_id'):
+                    result = manager.validate_license()
+                    assert result['valid'] is True
+
+    def test_validate_license_invalid_allowed_list_json(self, app, db):
+        """allowed_hardware_ids буруу JSON үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.is_active = True
+            mock_license.tampering_detected = False
+            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.hardware_id = 'original_hw_id'
+            mock_license.allowed_hardware_ids = 'invalid json {'
+            mock_license.id = 1
+
+            with patch.object(manager, 'get_current_license', return_value=mock_license):
+                with patch.object(manager, '_log_event'):
+                    with patch('app.utils.license_protection.generate_hardware_id', return_value='current_hw_id'):
+                        result = manager.validate_license()
+                        # Invalid JSON should be treated as empty list -> mismatch
+                        assert result['valid'] is False
+                        assert result['error'] == 'HARDWARE_MISMATCH'
+
+    def test_validate_license_tampering_detected(self, app, db):
+        """Tampering илэрсэн үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.is_active = True
+            mock_license.tampering_detected = True
+            mock_license.id = 1
+
+            with patch.object(manager, 'get_current_license', return_value=mock_license):
+                with patch.object(manager, '_log_event'):
+                    result = manager.validate_license()
+                    assert result['valid'] is False
+                    assert result['error'] == 'TAMPERING_DETECTED'
+
+    def test_validate_license_warning_expiring_soon(self, app, db):
+        """Хугацаа дуусах дөхсөн үед warning"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.is_active = True
+            mock_license.tampering_detected = False
+            mock_license.expiry_date = datetime.utcnow() + timedelta(days=30)
+            mock_license.hardware_id = None  # No hardware check
+            mock_license.days_remaining = 15  # Less than 30 days
+            mock_license.check_count = 0
+            mock_license.id = 1
+
+            with patch.object(manager, 'get_current_license', return_value=mock_license):
+                result = manager.validate_license()
+                assert result['valid'] is True
+                assert result['warning'] == 'LICENSE_EXPIRING_SOON:15'
+
+
+class TestLogEventException:
+    """_log_event exception handling тест"""
+
+    def test_log_event_exception(self, app, db):
+        """_log_event exception гарсан үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            mock_license = MagicMock()
+            mock_license.id = 1
+
+            with patch('app.models.LicenseLog', side_effect=Exception("DB Error")):
+                with app.test_request_context('/test'):
+                    # Should not raise exception
+                    manager._log_event(mock_license, 'test', 'Test event')
+
+
+class TestActivateLicenseComplete:
+    """activate_license бүрэн тест"""
+
+    def test_activate_license_invalid_format(self, app, db):
+        """Буруу формат үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            result = manager.activate_license('invalid_base64')
+            assert result['success'] is False
+            assert 'Invalid license format' in result['error']
+
+    def test_activate_license_invalid_signature(self, app, db):
+        """Буруу signature үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager
+
+            manager = LicenseManager(app)
+
+            # Create license with wrong signature
+            data = {
+                'company': 'Test',
+                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                'signature': 'wrong_signature'
+            }
+            encoded = base64.b64encode(json.dumps(data).encode()).decode()
+
+            result = manager.activate_license(encoded)
+            assert result['success'] is False
+            assert 'Invalid license signature' in result['error']
+
+    def test_activate_license_hardware_mismatch(self, app, db):
+        """Hardware ID таарахгүй үед"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager, _create_signature
+
+            manager = LicenseManager(app)
+
+            # Create valid license for different hardware
+            data = {
+                'company': 'Test',
+                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                'hardware_id': 'different_hardware'
+            }
+            data['signature'] = _create_signature(data)
+            encoded = base64.b64encode(json.dumps(data).encode()).decode()
+
+            with patch('app.utils.license_protection.generate_hardware_id', return_value='current_hw'):
+                result = manager.activate_license(encoded)
+                assert result['success'] is False
+                assert 'different hardware' in result['error']
+
+    def test_activate_license_success(self, app, db):
+        """Амжилттай идэвхжүүлэлт"""
+        with app.app_context():
+            from app.utils.license_protection import LicenseManager, _create_signature
+            from app.models import SystemLicense
+
+            manager = LicenseManager(app)
+
+            # Create valid license
+            data = {
+                'company': 'Test Company',
+                'company_code': 'TEST',
+                'expiry': (datetime.utcnow() + timedelta(days=30)).isoformat(),
+                'issued': datetime.utcnow().isoformat(),
+                'max_users': 10,
+                'max_samples': 5000,
+                'is_trial': False
+            }
+            data['signature'] = _create_signature(data)
+            encoded = base64.b64encode(json.dumps(data).encode()).decode()
+
+            with patch('app.utils.license_protection.generate_hardware_id', return_value='test_hw'):
+                with patch.object(manager, '_log_event'):
+                    result = manager.activate_license(encoded)
+                    assert result['success'] is True
+                    assert result['license'] is not None
+
+
+class TestRequireLicenseErrors:
+    """require_license decorator error cases"""
+
+    def test_require_license_not_found(self, app, client):
+        """LICENSE_NOT_FOUND үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': False,
+                'error': 'LICENSE_NOT_FOUND'
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    # Should redirect
+                    assert result.status_code == 302
+
+    def test_require_license_expired(self, app):
+        """LICENSE_EXPIRED үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': False,
+                'error': 'LICENSE_EXPIRED'
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    assert result.status_code == 302
+
+    def test_require_license_hardware_mismatch(self, app):
+        """HARDWARE_MISMATCH үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': False,
+                'error': 'HARDWARE_MISMATCH'
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    assert result.status_code == 302
+
+    def test_require_license_tampering(self, app):
+        """TAMPERING_DETECTED үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': False,
+                'error': 'TAMPERING_DETECTED'
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    assert result.status_code == 302
+
+    def test_require_license_unknown_error(self, app):
+        """UNKNOWN_ERROR үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': False,
+                'error': 'SOME_OTHER_ERROR'
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    assert result.status_code == 302
+
+    def test_require_license_with_warning(self, app):
+        """Warning байх үед"""
+        with app.app_context():
+            from app.utils.license_protection import require_license, license_manager
+
+            @require_license
+            def protected_route():
+                return 'success'
+
+            mock_license = MagicMock()
+
+            with patch.object(license_manager, 'validate_license', return_value={
+                'valid': True,
+                'warning': 'LICENSE_EXPIRING_SOON:10',
+                'license': mock_license
+            }):
+                with app.test_request_context('/test'):
+                    result = protected_route()
+                    assert result == 'success'
+
+
+class TestCheckLicenseMiddlewareComplete:
+    """check_license_middleware бүрэн тест"""
+
+    def test_skip_static_path(self, app):
+        """Static path алгасах"""
+        with app.app_context():
+            from app.utils.license_protection import check_license_middleware
+
+            with app.test_request_context('/static/css/style.css', method='GET'):
+                result = check_license_middleware()
+                assert result is None
+
+    def test_middleware_license_not_found(self, app):
+        """License олдоогүй үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import check_license_middleware, license_manager
+
+            with app.test_request_context('/protected', method='GET'):
+                with patch('flask.request') as mock_request:
+                    mock_request.endpoint = 'some.protected.route'
+                    mock_request.path = '/protected'
+
+                    with patch.object(license_manager, 'validate_license', return_value={
+                        'valid': False,
+                        'error': 'LICENSE_NOT_FOUND'
+                    }):
+                        result = check_license_middleware()
+                        assert result is not None
+                        assert result.status_code == 302
+
+    def test_middleware_license_expired(self, app):
+        """License дууссан үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import check_license_middleware, license_manager
+
+            with app.test_request_context('/protected', method='GET'):
+                with patch('flask.request') as mock_request:
+                    mock_request.endpoint = 'some.protected.route'
+                    mock_request.path = '/protected'
+
+                    with patch.object(license_manager, 'validate_license', return_value={
+                        'valid': False,
+                        'error': 'LICENSE_EXPIRED'
+                    }):
+                        result = check_license_middleware()
+                        assert result is not None
+                        assert result.status_code == 302
+
+    def test_middleware_other_error(self, app):
+        """Бусад алдаа үед redirect"""
+        with app.app_context():
+            from app.utils.license_protection import check_license_middleware, license_manager
+
+            with app.test_request_context('/protected', method='GET'):
+                with patch('flask.request') as mock_request:
+                    mock_request.endpoint = 'some.protected.route'
+                    mock_request.path = '/protected'
+
+                    with patch.object(license_manager, 'validate_license', return_value={
+                        'valid': False,
+                        'error': 'HARDWARE_MISMATCH'
+                    }):
+                        result = check_license_middleware()
+                        assert result is not None
+                        assert result.status_code == 302
+
+    def test_middleware_valid_with_warning(self, app):
+        """Valid license with warning"""
+        with app.app_context():
+            from app.utils.license_protection import check_license_middleware, license_manager
+            from flask import g
+
+            mock_license = MagicMock()
+
+            with app.test_request_context('/protected', method='GET'):
+                with patch('flask.request') as mock_request:
+                    mock_request.endpoint = 'some.protected.route'
+                    mock_request.path = '/protected'
+
+                    with patch.object(license_manager, 'validate_license', return_value={
+                        'valid': True,
+                        'warning': 'LICENSE_EXPIRING_SOON:5',
+                        'license': mock_license
+                    }):
+                        result = check_license_middleware()
+                        assert result is None  # Should continue
+                        assert g.license_warning == 'LICENSE_EXPIRING_SOON:5'
+                        assert g.license == mock_license

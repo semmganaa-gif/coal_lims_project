@@ -141,11 +141,11 @@ class TestGenerateSequentialCode:
         from app.utils.quality_helpers import generate_sequential_code
         assert generate_sequential_code is not None
 
-    @patch('app.utils.quality_helpers.datetime')
-    def test_first_code_of_year(self, mock_datetime):
+    @patch('app.utils.quality_helpers.now_local')
+    def test_first_code_of_year(self, mock_now_local):
         """First code of year"""
         from app.utils.quality_helpers import generate_sequential_code
-        mock_datetime.now.return_value.year = 2025
+        mock_now_local.return_value.year = 2025
 
         mock_model = MagicMock()
         mock_model.query.filter.return_value.order_by.return_value.first.return_value = None
@@ -153,11 +153,11 @@ class TestGenerateSequentialCode:
         result = generate_sequential_code(mock_model, 'ca_number', 'CA')
         assert result == 'CA-2025-0001'
 
-    @patch('app.utils.quality_helpers.datetime')
-    def test_increment_existing_code(self, mock_datetime):
+    @patch('app.utils.quality_helpers.now_local')
+    def test_increment_existing_code(self, mock_now_local):
         """Increment existing code"""
         from app.utils.quality_helpers import generate_sequential_code
-        mock_datetime.now.return_value.year = 2025
+        mock_now_local.return_value.year = 2025
 
         mock_last = MagicMock()
         mock_last.ca_number = 'CA-2025-0005'
@@ -168,11 +168,11 @@ class TestGenerateSequentialCode:
         result = generate_sequential_code(mock_model, 'ca_number', 'CA')
         assert result == 'CA-2025-0006'
 
-    @patch('app.utils.quality_helpers.datetime')
-    def test_custom_padding(self, mock_datetime):
+    @patch('app.utils.quality_helpers.now_local')
+    def test_custom_padding(self, mock_now_local):
         """Custom padding"""
         from app.utils.quality_helpers import generate_sequential_code
-        mock_datetime.now.return_value.year = 2025
+        mock_now_local.return_value.year = 2025
 
         mock_model = MagicMock()
         mock_model.query.filter.return_value.order_by.return_value.first.return_value = None
