@@ -11,6 +11,13 @@ Production server - Waitress
     - Threads: 4 (эсвэл WEB_CONCURRENCY environment variable)
 """
 import os
+import sys
+
+# Windows UTF-8 console encoding
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 from waitress import serve
 from app import create_app
 

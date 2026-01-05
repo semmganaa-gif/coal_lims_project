@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 REM Coal LIMS HTTPS Server
 REM Web Serial API (жин холбох) ашиглахад HTTPS шаардлагатай
 

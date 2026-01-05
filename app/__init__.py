@@ -47,6 +47,9 @@ def create_app(config_class=Config):
     # Template auto-reload (dev mode)
     app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+    # ✅ JSON UTF-8 encoding - Монгол текст зөв харагдахын тулд
+    app.config['JSON_AS_ASCII'] = False
+
     # ✅ Development mode дээр Secure cookie унтраах (HTTP дээр ажиллуулахад)
     if app.config.get('ENV') == 'development' or app.debug:
         app.config['SESSION_COOKIE_SECURE'] = False
@@ -99,6 +102,9 @@ def create_app(config_class=Config):
     # Чанарын удирдлага (ISO 17025 - Quality Management Systems)
     from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
 
+    # Theoretical Yield тооцоолол (Washability)
+    from app.routes.yield_routes import yield_bp
+
     # Blueprint давхар бүртгэгдэхээс хамгаалах (тест орчинд чухал)
     def safe_register_blueprint(blueprint):
         if blueprint.name not in app.blueprints:
@@ -113,6 +119,7 @@ def create_app(config_class=Config):
     safe_register_blueprint(import_bp)
     safe_register_blueprint(equipment_bp)
     safe_register_blueprint(license_bp)
+    safe_register_blueprint(yield_bp)
 
     # Чанарын удирдлагын route-уудыг бүртгэх
     if quality_bp.name not in app.blueprints:

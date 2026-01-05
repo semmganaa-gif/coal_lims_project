@@ -338,6 +338,215 @@ CONSTANT_12H_SAMPLES = [
     {'name': 'BeltP_solid', 'condition': 'Шингэн'}
 ]
 
+# ==============================================================================
+# 2a. CHPP ТОНОГ ТӨХӨӨРӨМЖИЙН ДЭЭЖ MAPPING (Screenshot 2026-01-05 дээр суурилсан)
+# ==============================================================================
+# Тоног төхөөрөмж -> Дээжний код mapping
+# MOD I (4xx), MOD II (4xx+20), MOD III (4xx+40)
+CHPP_EQUIPMENT_SAMPLES = {
+    # ===================== DMC (Dense Medium Cyclone) - Хүнд орчны циклон =====================
+    'primary_dmc_feed': {
+        'name_mn': 'Анхдагч хүнд орчны циклоны тэжээл',
+        'name_en': 'Primary DMC Feed',
+        'samples': {
+            'MOD I': ['SC401'],
+            'MOD II': ['SC421'],
+            'MOD III': ['SC441']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'feed'
+    },
+    'primary_dmc_product': {
+        'name_mn': 'Анхдагч хүнд орчны циклоны бүтээгдэхүүн',
+        'name_en': 'Primary DMC Product (Clean Coal)',
+        'samples': {
+            'MOD I': ['SC402'],
+            'MOD II': ['SC422'],
+            'MOD III': ['SC442']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'product'
+    },
+    'primary_dmc_reject': {
+        'name_mn': 'Анхдагч хүнд орчны циклоны хаягдал',
+        'name_en': 'Primary DMC Reject',
+        'samples': {
+            'MOD I': ['SC403'],
+            'MOD II': ['SC423'],
+            'MOD III': ['SC443']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'reject'
+    },
+    'secondary_dmc_product': {
+        'name_mn': 'Хоёрдогч хүнд орчны циклоны бүтээгдэхүүн',
+        'name_en': 'Secondary DMC Product',
+        'samples': {
+            'MOD I': ['SC405'],
+            'MOD II': ['SC425'],
+            'MOD III': ['SC445']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'product'
+    },
+    'secondary_dmc_reject': {
+        'name_mn': 'Хоёрдогч хүнд орчны циклоны хаягдал',
+        'name_en': 'Secondary DMC Reject',
+        'samples': {
+            'MOD I': ['SC406'],
+            'MOD II': ['SC426'],
+            'MOD III': ['SC446']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'reject'
+    },
+
+    # ===================== Spiral Classifier - Мушгиа ангилуур =====================
+    'spiral_reject': {
+        'name_mn': 'Мушгиа ангилуурын хаягдал',
+        'name_en': 'Spiral Classifier Reject',
+        'samples': {
+            'MOD I': ['SC501'],
+            'MOD II': ['SC521'],
+            'MOD III': ['SC541']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'reject'
+    },
+    'spiral_product': {
+        'name_mn': 'Мушгиа ангилуурын бүтээгдэхүүн',
+        'name_en': 'Spiral Classifier Product',
+        'samples': {
+            'MOD I': ['CF501', 'CF502'],
+            'MOD II': ['CF521', 'CF522'],
+            'MOD III': ['CF541', 'CF542']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'product'
+    },
+    'spiral_feed': {
+        'name_mn': 'Мушгиа ангилуурын тэжээл',
+        'name_en': 'Spiral Classifier Feed',
+        'samples': {
+            'MOD I': ['SP501', 'SP502_Feed', 'SP502_product', 'SP504_Feed', 'SP504_product'],
+            'MOD II': ['SP521'],
+            'MOD III': ['SP541']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'feed'
+    },
+
+    # ===================== Flotation - Флотац =====================
+    'flotation_feed': {
+        'name_mn': 'Флотацын тэжээл',
+        'name_en': 'Flotation Feed (Drain)',
+        'samples': {
+            'MOD I': ['DR601'],
+            'MOD II': ['DR621'],
+            'MOD III': ['DR641']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'feed'
+    },
+    'flotation_product': {
+        'name_mn': 'Флотацын бүтээгдэхүүн',
+        'name_en': 'Flotation Concentrate',
+        'samples': {
+            'MOD I': ['FC601', 'FC602'],
+            'MOD II': ['FC621', 'FC622'],
+            'MOD III': ['FC641', 'FC642']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'product'
+    },
+    'flotation_reject': {
+        'name_mn': 'Флотацын хаягдал',
+        'name_en': 'Flotation Tailings',
+        'samples': {
+            'MOD I': ['FCU601', 'FCU602'],
+            'MOD II': ['FCU621', 'FCU622'],
+            'MOD III': ['FCU641', 'FCU642']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'reject'
+    },
+
+    # ===================== Centrifuge - Центрфуг =====================
+    'centrifuge_product': {
+        'name_mn': 'Центрфугийн бүтээгдэхүүн',
+        'name_en': 'Centrifuge Product',
+        'samples': {
+            'MOD I': ['CF601', 'CF602'],
+            'MOD II': ['CF621', 'CF622'],
+            'MOD III': ['CF641', 'CF642']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'product'
+    },
+
+    # ===================== TBS (Teeter Bed Separator) =====================
+    'tbs': {
+        'name_mn': 'TBS',
+        'name_en': 'Teeter Bed Separator',
+        'samples': {
+            'MOD II': ['TBS521', 'TBS522'],
+            'MOD III': ['TBS541', 'TBS542', 'TBS543']
+        },
+        'condition': 'Хуурай',
+        'stream_type': 'separator'
+    },
+
+    # ===================== Thickener - Өтгөрүүлэгч =====================
+    'thickener_underflow': {
+        'name_mn': 'Өтгөрүүлэгчийн хаягдал',
+        'name_en': 'Thickener Underflow',
+        'samples': {
+            'MOD I': ['TH701'],
+            'MOD II': ['TH721'],
+            'MOD III': ['TH741']
+        },
+        'condition': 'Шингэн',
+        'stream_type': 'underflow'
+    },
+
+    # ===================== Dewatering - Усгүйжүүлэх =====================
+    'dewatering': {
+        'name_mn': 'Усгүйжүүлэх үйлдвэрийн дээж',
+        'name_en': 'Dewatering (Belt Press / Filter Press)',
+        'samples': {
+            'ALL': ['Beltpress', 'Filterpress_A', 'Filterpress_B']
+        },
+        'condition': 'Чийгтэй',
+        'stream_type': 'product'
+    }
+}
+
+# Helper function: Get all sample codes for an equipment
+def get_equipment_samples(equipment_key, mod=None):
+    """
+    Тоног төхөөрөмжийн дээжний кодуудыг авах.
+
+    Args:
+        equipment_key: CHPP_EQUIPMENT_SAMPLES-н түлхүүр
+        mod: 'MOD I', 'MOD II', 'MOD III' эсвэл None (бүгд)
+
+    Returns:
+        Дээжний кодуудын жагсаалт
+    """
+    if equipment_key not in CHPP_EQUIPMENT_SAMPLES:
+        return []
+
+    samples = CHPP_EQUIPMENT_SAMPLES[equipment_key]['samples']
+    if mod and mod in samples:
+        return samples[mod]
+    elif mod is None:
+        all_samples = []
+        for mod_samples in samples.values():
+            all_samples.extend(mod_samples)
+        return all_samples
+    return []
+
+
 # 2b. CHPP ШИНЖИЛГЭЭНИЙ ТОХИРГООНЫ БҮЛГҮҮД
 # Энэ нь шинжилгээний тохиргоо хуудсанд CHPP дээжүүдийг бүлэглэхэд хэрэглэгдэнэ
 CHPP_CONFIG_GROUPS = {

@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Yield Comparison{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-bar-chart me-2"></i>Yield Харьцуулалт</h2>
+            <p class="text-muted mb-0">Theoretical vs Actual Plant Yield</p>
+        </div>
+        <div>
+            <a href="{{ url_for('yield.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Буцах
+            </a>
+        </div>
+    </div>
+
+    <!-- Add Plant Yield Form -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Үйлдвэрийн гарц нэмэх</h6>
+                </div>
+                <div class="card-body">
+                    <form id="addYieldForm">
+                        <div class="mb-3">
+                            <label class="form-label">Огноо</label>
+                            <input type="date" class="form-control" name="production_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ээлж</label>
+                            <select class="form-select" name="shift">
+                                <option value="Day">Өдөр</option>
+                                <option value="Night">Шөнө</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Бүтээгдэхүүний төрөл</label>
+                            <select class="form-select" name="product_type">
+                                <option value="HCC">HCC</option>
+                                <option value="SSCC">SSCC</option>
+                                <option value="MASHCC">MASHCC</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Оролт (тонн)</label>
+                                <input type="number" step="0.1" class="form-control" name="feed_tonnes">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Гаралт (тонн)</label>
+                                <input type="number" step="0.1" class="form-control" name="product_tonnes">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Оролтын Ash %</label>
+                                <input type="number" step="0.01" class="form-control" name="feed_ash">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Гаралтын Ash %</label>
+                                <input type="number" step="0.01" class="form-control" name="product_ash">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Washability Test</label>
+                            <select class="form-select" name="washability_test_id">
+                                <option value="">-- Сонгох --</option>
+                                {% for test in tests %}
+                                <option value="{{ test.id }}">{{ test.lab_number }} - {{ test.sample_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-save me-1"></i> Хадгалах
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Yield Trend</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plant Yields Table -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="bi bi-table me-2"></i>Үйлдвэрийн гарцын түүх</h6>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Огноо</th>
+                        <th>Ээлж</th>
+                        <th>Төрөл</th>
+                        <th>Бодит гарц %</th>
+                        <th>Онолын гарц %</th>
+                        <th>Recovery %</th>
+                        <th>Ash %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for py in plant_yields %}
+                    <tr>
+                        <td>{{ py.production_date.strftime('%Y-%m-%d') if py.production_date else '-' }}</td>
+                        <td>{{ py.shift or '-' }}</td>
+                        <td><span class="badge bg-primary">{{ py.product_type }}</span></td>
+                        <td class="fw-bold">{{ '%.2f'|format(py.actual_yield) if py.actual_yield else '-' }}</td>
+                        <td class="text-primary">{{ '%.2f'|format(py.theoretical_yield) if py.theoretical_yield else '-' }}</td>
+                        <td>
+                            {% if py.recovery_efficiency %}
+                                {% if py.recovery_efficiency >= 90 %}
+                                <span class="badge bg-success">{{ '%.1f'|format(py.recovery_efficiency) }}%</span>
+                                {% elif py.recovery_efficiency >= 80 %}
+                                <span class="badge bg-warning text-dark">{{ '%.1f'|format(py.recovery_efficiency) }}%</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ '%.1f'|format(py.recovery_efficiency) }}%</span>
+                                {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ '%.2f'|format(py.product_ash) if py.product_ash else '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Үйлдвэрийн гарцын дата байхгүй байна.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Form submit
+document.getElementById('addYieldForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const response = await fetch('{{ url_for("yield.api_add_plant_yield") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Алдаа гарлаа');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Алдаа гарлаа');
+    }
+});
+
+// Load trend data
+async function loadTrendData() {
+    try {
+        const response = await fetch('{{ url_for("yield.api_comparison_data") }}');
+        const data = await response.json();
+
+        const dates = data.map(d => d.date);
+        const actual = data.map(d => d.actual_yield);
+        const theoretical = data.map(d => d.theoretical_yield);
+        const recovery = data.map(d => d.recovery_efficiency);
+
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Бодит гарц %',
+                        data: actual,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        fill: false
+                    },
+                    {
+                        label: 'Онолын гарц %',
+                        data: theoretical,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        fill: false,
+                        borderDash: [5, 5]
+                    },
+                    {
+                        label: 'Recovery %',
+                        data: recovery,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Yield %'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Recovery %'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    }
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Error loading trend data:', err);
+    }
+}
+
+loadTrendData();
+</script>
+{% endblock %}
