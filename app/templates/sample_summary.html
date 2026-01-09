@@ -46,6 +46,15 @@
       <button type="button" id="archiveBtn" class="btn btn-sm btn-info text-white" value="archive" title="Сонгосоныг архивлах">
         <i class="bi bi-archive-fill"></i> Архивлах
       </button>
+
+      <div class="btn-group">
+        <button type="button" id="icpmsSendBtn" class="btn btn-sm btn-primary" title="ICPMS руу илгээх">
+          <i class="bi bi-send"></i> ICPMS
+        </button>
+        <button type="button" id="icpmsChppBtn" class="btn btn-sm btn-outline-primary" title="CHPP дээжийг ICPMS руу илгээх">
+          <i class="bi bi-building"></i> CHPP
+        </button>
+      </div>
       {% elif current_user.role == 'manager' %}
       {# Manager зөвхөн Архив товч харна #}
       <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="Архив Төв">
@@ -88,7 +97,10 @@
       qcNorm: "{{ url_for('analysis.qc_norm_limit') }}",
       qcCorr: "{{ url_for('analysis.correlation_check') }}",
       updateStatus: "/api/update_result_status",
-      requestAnalysis: "/api/request_analysis"
+      requestAnalysis: "/api/request_analysis",
+      icpmsSend: "/api/icpms/send",
+      icpmsSendChpp: "/api/icpms/send-chpp",
+      icpmsStatus: "/api/icpms/status"
     },
     analysisTypes: [
       {% for at in analysis_types %}

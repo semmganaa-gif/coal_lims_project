@@ -832,4 +832,116 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     openQcWindow(GridModule.URLS.qcCorr);
   });
+
+  // =====================================
+  // ICPMS INTEGRATION BUTTONS
+  // =====================================
+
+  // Helper function for ICPMS API calls
+  function icpmsApiCall(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name="csrf_token"]')?.value || ''
+      },
+      body: JSON.stringify(data)
+    })
+    .then(function(response) {
+      if (!response.ok) {
+        return response.json().then(function(data) {
+          throw new Error(data.error || data.message || 'ICPMS алдаа');
+        });
+      }
+      return response.json();
+    });
+  }
+
+  // ICPMS Send Selected button
+  safeAddListener('icpmsSendBtn', 'click', function(e) {
+    e.preventDefault();
+
+    const ids = GridModule.getSelectedIds();
+    if (ids.length === 0) {
+      alert("ICPMS руу илгээх дээжүүдийг сонгоно уу.");
+      return;
+    }
+
+    if (!confirm('Сонгосон ' + ids.length + ' дээжийг ICPMS руу илгээх үү?')) {
+      return;
+    }
+
+    // Disable button and show loading
+    const btn = this;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Илгээж байна...';
+
+    const sendUrl = GridModule.URLS.icpmsSend || '/api/icpms/send';
+
+    icpmsApiCall(sendUrl, {
+      sample_ids: ids.map(function(id) { return parseInt(id); }),
+      include_washability: true
+    })
+    .then(function(result) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+
+      if (result.success) {
+        let msg = 'ICPMS руу ' + result.sent_count + ' дээж амжилттай илгээгдлээ.';
+        if (result.errors && result.errors.length > 0) {
+          msg += '\n\nАнхааруулга:\n' + result.errors.slice(0, 3).join('\n');
+          if (result.errors.length > 3) {
+            msg += '\n... +' + (result.errors.length - 3) + ' алдаа';
+          }
+        }
+        alert(msg);
+      } else {
+        alert('Алдаа: ' + (result.error || 'Илгээлт амжилтгүй'));
+      }
+    })
+    .catch(function(error) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      alert('ICPMS холболтын алдаа: ' + error.message);
+    });
+  });
+
+  // ICPMS Send CHPP button
+  safeAddListener('icpmsChppBtn', 'click', function(e) {
+    e.preventDefault();
+
+    if (!confirm('CHPP нэгжийн сүүлийн 7 хоногийн батлагдсан үр дүнг ICPMS руу илгээх үү?')) {
+      return;
+    }
+
+    // Disable button and show loading
+    const btn = this;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Илгээж байна...';
+
+    const sendUrl = GridModule.URLS.icpmsSendChpp || '/api/icpms/send-chpp';
+
+    icpmsApiCall(sendUrl, { days_back: 7 })
+    .then(function(result) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+
+      if (result.success || result.sent_count !== undefined) {
+        let msg = result.message || ('ICPMS руу ' + result.sent_count + ' дээж илгээгдлээ.');
+        if (result.errors && result.errors.length > 0) {
+          msg += '\n\nАнхааруулга:\n' + result.errors.slice(0, 3).join('\n');
+        }
+        alert(msg);
+      } else {
+        alert('Алдаа: ' + (result.error || 'Илгээлт амжилтгүй'));
+      }
+    })
+    .catch(function(error) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      alert('ICPMS холболтын алдаа: ' + error.message);
+    });
+  });
 });
