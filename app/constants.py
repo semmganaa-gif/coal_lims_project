@@ -1,5 +1,11 @@
 # app/constants.py
 # -*- coding: utf-8 -*-
+"""
+Системийн тогтмолууд ба тохиргоонууд.
+
+Шинжилгээний параметрүүд, дээжний төрөл, нэрийн алиасууд,
+ээлжийн тохиргоо зэрэг бүх тогтмол утгуудыг энд тодорхойлно.
+"""
 import sys
 
 # Windows console utf-8 fix
@@ -522,6 +528,8 @@ CHPP_EQUIPMENT_SAMPLES = {
 }
 
 # Helper function: Get all sample codes for an equipment
+
+
 def get_equipment_samples(equipment_key, mod=None):
     """
     Тоног төхөөрөмжийн дээжний кодуудыг авах.
@@ -803,6 +811,7 @@ ERROR_REASON_LABELS = {
 # ---------------------------------------------------------------------
 PARAMETER_MAP = {}
 
+
 def _alias_key(s: str) -> str:
     if s is None:
         return ''
@@ -811,8 +820,10 @@ def _alias_key(s: str) -> str:
     s = ' '.join(s.split())
     return s
 
+
 def _norm_param_key(s: str) -> str:
     return _alias_key(s).casefold()
+
 
 # 1. ANALYSIS BASE CODE MAP (Canonical -> Base)
 CANONICAL_TO_BASE_ANALYSIS = {
@@ -874,6 +885,7 @@ for canonical_name, details in PARAMETER_DEFINITIONS.items():
         key = _norm_param_key(alias)
         PARAMETER_MAP[key] = canonical_name
 
+
 def param_key(name_or_alias: str) -> str | None:
     """UI-гаас ирсэн параметрийн нэрийг каноник түлхүүр болгон буцаана."""
     if not name_or_alias:
@@ -883,6 +895,7 @@ def param_key(name_or_alias: str) -> str | None:
 # =============================================================================
 # Name/Class QC Master Specs
 # =============================================================================
+
 
 # 🛑 ШИНЭ: Name/Class QC-ийн "мастер" spec хүснэгт.
 # Мөр бүрийг нэг түлхүүрээр хадгална (чи хүсвэл нэрийг өөрчилж болно).
@@ -1025,3 +1038,23 @@ MAX_IMPORT_BATCH_SIZE = 1000  # Import хийх дээжний хамгийн и
 # Дээжний жингийн хязгаарлалт (грамм)
 MIN_SAMPLE_WEIGHT = 0.001  # Хамгийн бага жин
 MAX_SAMPLE_WEIGHT = 10000  # Хамгийн их жин (10кг)
+
+# Огноо/жил хязгаарлалт
+MIN_VALID_YEAR = 2000  # Хамгийн бага жил
+MAX_VALID_YEAR = 2100  # Хамгийн их жил
+
+# JSON/Audit хязгаарлалт
+MAX_JSON_PAYLOAD_BYTES = 200_000  # JSON payload-н хамгийн их хэмжээ
+DEFAULT_AUDIT_LOG_LIMIT = 100  # Audit log-н default limit
+
+# Тайлбар урт хязгаарлалт
+MAX_DESCRIPTION_LENGTH = 1000  # Тайлбар/comment-н хамгийн их урт
+
+# HTTP Status codes
+HTTP_OK = 200
+HTTP_MULTI_STATUS = 207  # Partial success
+HTTP_BAD_REQUEST = 400
+HTTP_UNAUTHORIZED = 401
+HTTP_FORBIDDEN = 403
+HTTP_NOT_FOUND = 404
+HTTP_SERVER_ERROR = 500

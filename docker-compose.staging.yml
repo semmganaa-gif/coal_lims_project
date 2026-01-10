@@ -1,0 +1,121 @@
+# =============================================================================
+# COAL LIMS - Staging Environment
+# Production-той ижил тохиргоо, гэхдээ тест хийхэд зориулсан
+# =============================================================================
+# Ашиглах: docker-compose -f docker-compose.staging.yml up -d
+# =============================================================================
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Web Application (Staging)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coal_lims_staging_web
+    ports:
+      - "5001:5000"  # Staging port (production = 5000)
+    environment:
+      - FLASK_ENV=staging
+      - DATABASE_URL=postgresql://lims_user:staging_password@db:5432/coal_lims_staging
+      - REDIS_URL=redis://redis:6379/1  # DB 1 for staging
+      - SECRET_KEY=${STAGING_SECRET_KEY:-staging-secret-key-change-me}
+      - TESTING=false
+      - DEBUG=true  # Debug on for staging
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./instance:/app/instance
+      - staging_logs:/app/logs
+      - staging_uploads:/app/app/static/uploads
+    restart: unless-stopped
+    networks:
+      - staging_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database (Staging)
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: coal_lims_staging_db
+    environment:
+      POSTGRES_DB: coal_lims_staging
+      POSTGRES_USER: lims_user
+      POSTGRES_PASSWORD: staging_password
+    volumes:
+      - staging_postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - staging_network
+    ports:
+      - "5433:5432"  # Staging DB port
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lims_user -d coal_lims_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache (Staging)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: coal_lims_staging_redis
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - staging_redis:/data
+    restart: unless-stopped
+    networks:
+      - staging_network
+    ports:
+      - "6380:6379"  # Staging Redis port
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Adminer - Database GUI (Staging only)
+  # ---------------------------------------------------------------------------
+  adminer:
+    image: adminer:latest
+    container_name: coal_lims_staging_adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      - db
+    networks:
+      - staging_network
+
+# =============================================================================
+# Volumes (Staging - separate from production)
+# =============================================================================
+volumes:
+  staging_postgres:
+    driver: local
+  staging_redis:
+    driver: local
+  staging_logs:
+    driver: local
+  staging_uploads:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  staging_network:
+    driver: bridge

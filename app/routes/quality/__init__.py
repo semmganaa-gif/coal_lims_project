@@ -17,6 +17,7 @@ from .environmental import register_routes as register_environmental_routes
 from .control_charts import register_routes as register_control_charts_routes
 from .complaints import register_routes as register_complaints_routes
 
+
 def register_routes_all():
     """Бүх quality routes бүртгэх (зөвхөн нэг удаа)"""
     global _routes_registered

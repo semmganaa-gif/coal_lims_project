@@ -11,7 +11,7 @@ from flask import request, render_template, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from datetime import datetime
-from app.utils.shifts import get_shift_date, get_shift_info
+from app.utils.shifts import get_shift_info
 import json
 
 from app import db

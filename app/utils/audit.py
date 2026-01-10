@@ -9,6 +9,8 @@
 from typing import Optional, Dict, Any
 import json
 
+from app.constants import DEFAULT_AUDIT_LOG_LIMIT
+
 
 def log_audit(
     action: str,
@@ -84,7 +86,7 @@ def log_audit(
         logger.error(f"Failed to write audit log: {e}")
 
 
-def get_recent_audit_logs(limit: int = 100, action: Optional[str] = None) -> list:
+def get_recent_audit_logs(limit: int = DEFAULT_AUDIT_LOG_LIMIT, action: Optional[str] = None) -> list:
     """
     Сүүлийн аудитын логуудыг авах.
 
@@ -109,7 +111,7 @@ def get_recent_audit_logs(limit: int = 100, action: Optional[str] = None) -> lis
     return query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
 
 
-def get_user_audit_logs(user_id: int, limit: int = 100) -> list:
+def get_user_audit_logs(user_id: int, limit: int = DEFAULT_AUDIT_LOG_LIMIT) -> list:
     """
     Тодорхой хэрэглэгчийн аудитын логуудыг авах.
 
@@ -134,7 +136,7 @@ def get_user_audit_logs(user_id: int, limit: int = 100) -> list:
 def get_resource_audit_logs(
     resource_type: str,
     resource_id: int,
-    limit: int = 100
+    limit: int = DEFAULT_AUDIT_LOG_LIMIT
 ) -> list:
     """
     Тодорхой нөөцийн (Sample, User, Equipment гэх мэт) аудитын логуудыг авах.

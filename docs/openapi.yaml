@@ -1,0 +1,389 @@
+openapi: 3.0.3
+info:
+  title: Coal LIMS API
+  description: |
+    Coal Laboratory Information Management System API.
+    ISO 17025 compliant laboratory management.
+  version: 1.0.0
+  contact:
+    name: LIMS Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development
+  - url: https://lims.example.com/api
+    description: Production
+
+tags:
+  - name: Samples
+    description: Sample management
+  - name: Analysis
+    description: Analysis and results
+  - name: QC
+    description: Quality control
+  - name: Reports
+    description: Report generation
+  - name: Admin
+    description: Administration
+
+paths:
+  /samples:
+    get:
+      tags: [Samples]
+      summary: List samples
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: client
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, disposed, archived]
+      responses:
+        '200':
+          description: Sample list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleList'
+    post:
+      tags: [Samples]
+      summary: Create sample
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SampleCreate'
+      responses:
+        '201':
+          description: Sample created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleResponse'
+
+  /samples/{id}:
+    get:
+      tags: [Samples]
+      summary: Get sample details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sample details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+        '404':
+          description: Sample not found
+
+  /analysis/save_results:
+    post:
+      tags: [Analysis]
+      summary: Save analysis results
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveResults'
+      responses:
+        '200':
+          description: Results saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResultsResponse'
+
+  /analysis/eligible_samples:
+    get:
+      tags: [Analysis]
+      summary: Get samples eligible for analysis
+      parameters:
+        - name: analysis_code
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Eligible samples
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  samples:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EligibleSample'
+
+  /qc/control_chart:
+    get:
+      tags: [QC]
+      summary: Get control chart data
+      parameters:
+        - name: analysis_code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: material
+          in: query
+          schema:
+            type: string
+            enum: [CM, GBW]
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Control chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlChart'
+
+  /reports/generate:
+    get:
+      tags: [Reports]
+      summary: Generate report
+      parameters:
+        - name: sample_ids
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [pdf, excel, html]
+            default: pdf
+      responses:
+        '200':
+          description: Report file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List users
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    Sample:
+      type: object
+      properties:
+        id:
+          type: integer
+        sample_code:
+          type: string
+        client_name:
+          type: string
+        sample_type:
+          type: string
+        status:
+          type: string
+        assigned_analyses:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SampleCreate:
+      type: object
+      required:
+        - sample_code
+        - client_name
+      properties:
+        sample_code:
+          type: string
+        client_name:
+          type: string
+        sample_type:
+          type: string
+        description:
+          type: string
+        assigned_analyses:
+          type: array
+          items:
+            type: string
+
+    SampleList:
+      type: object
+      properties:
+        samples:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sample'
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+
+    SampleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sample_id:
+          type: integer
+        message:
+          type: string
+
+    SaveResults:
+      type: object
+      required:
+        - sample_id
+        - data
+      properties:
+        sample_id:
+          type: integer
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              analysis_code:
+                type: string
+              raw_data:
+                type: object
+              final_result:
+                type: number
+
+    SaveResultsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              analysis_code:
+                type: string
+              status:
+                type: string
+              final_result:
+                type: number
+
+    EligibleSample:
+      type: object
+      properties:
+        id:
+          type: integer
+        sample_code:
+          type: string
+        assigned_analyses:
+          type: array
+          items:
+            type: string
+        completed_analyses:
+          type: array
+          items:
+            type: string
+
+    ControlChart:
+      type: object
+      properties:
+        analysis_code:
+          type: string
+        target:
+          type: number
+        std_dev:
+          type: number
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              value:
+                type: number
+              status:
+                type: string
+        limits:
+          type: object
+          properties:
+            ucl:
+              type: number
+            lcl:
+              type: number
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        role:
+          type: string
+        is_active:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+        code:
+          type: string
+        message:
+          type: string
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+security:
+  - sessionAuth: []

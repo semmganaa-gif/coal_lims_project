@@ -1,9 +1,18 @@
 # app/routes/equipment_routes.py
 # -*- coding: utf-8 -*-
+"""
+Тоног төхөөрөмжийн удирдлагын модуль (ISO 17025).
+
+Энэ модуль нь лабораторийн тоног төхөөрөмжийн бүртгэл, засвар үйлчилгээ,
+калибрацийн хяналт болон ашиглалтын журналыг удирдана.
+"""
 
 import os
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, current_app
+from flask import (
+    Blueprint, render_template, request, redirect, url_for,
+    flash, jsonify, send_from_directory, current_app
+)
 from flask_login import login_required, current_user
 from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
@@ -22,9 +31,12 @@ ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'doc', 'docx', 'jpg', 'jpeg', 'png',
 # -------------------------------------------------
 # 1. Төхөөрөмжийн жагсаалт
 # -------------------------------------------------
+
+
 @equipment_bp.route("/equipment_list")
 @login_required
 def equipment_list():
+    """Төхөөрөмжийн жагсаалт хуудас."""
     today = now_local().date()
     warning_date = today + timedelta(days=30)
     view = request.args.get("view", "all")
@@ -68,17 +80,23 @@ def equipment_list():
 # -------------------------------------------------
 # 2. Дэлгэрэнгүй & CRUD
 # -------------------------------------------------
+
+
 @equipment_bp.route("/equipment/<int:id>")
 @login_required
 def equipment_detail(id):
+    """Төхөөрөмжийн дэлгэрэнгүй мэдээлэл."""
     eq = Equipment.query.get_or_404(id)
     return render_template("equipment_detail.html", eq=eq)
+
 
 @equipment_bp.route("/add_equipment", methods=["POST"])
 @login_required
 def add_equipment():
+    """Шинэ төхөөрөмж нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger"); return redirect(url_for("equipment.equipment_list"))
+        flash("Эрх хүрэхгүй.", "danger")
+        return redirect(url_for("equipment.equipment_list"))
 
     # Формын өгөгдлийг шалгах
     try:
@@ -122,17 +140,21 @@ def add_equipment():
         flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_list"))
 
+
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
 @login_required
 def edit_equipment(id):
+    """Төхөөрөмжийн мэдээлэл засах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger"); return redirect(url_for("equipment.equipment_detail", id=id))
+        flash("Эрх хүрэхгүй.", "danger")
+        return redirect(url_for("equipment.equipment_detail", id=id))
 
     eq = Equipment.query.get_or_404(id)
     eq.name = request.form.get("name")
     eq.manufacturer = request.form.get("manufacturer")
     eq.model = request.form.get("model")
-    if request.form.get("serial"): eq.serial_number = request.form.get("serial")
+    if request.form.get("serial"):
+        eq.serial_number = request.form.get("serial")
     eq.lab_code = request.form.get("lab_code")
     eq.location = request.form.get("location")
     eq.room_number = request.form.get("room")
@@ -149,7 +171,8 @@ def edit_equipment(id):
             flash(f"Буруу калибрацийн мөчлөг: {e}", "error")
             return redirect(url_for("equipment.equipment_detail", id=id))
 
-    if request.form.get("status"): eq.status = request.form.get("status")
+    if request.form.get("status"):
+        eq.status = request.form.get("status")
     eq.calibration_note = request.form.get("calibration_note")
     eq.remark = request.form.get("remark")
     eq.category = request.form.get("category") or "other"
@@ -168,9 +191,12 @@ def edit_equipment(id):
     return redirect(url_for("equipment.equipment_detail", id=id))
 
 # --- ГАНЦААРЧИЛЖ УСТГАХ ---
+
+
 @equipment_bp.route("/equipment/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_equipment(id):
+    """Төхөөрөмж устгах (түүхтэй бол retired болгоно)."""
     if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
@@ -197,9 +223,12 @@ def delete_equipment(id):
     return redirect(url_for("equipment.equipment_list"))
 
 # --- ОЛНООР УСТГАХ ---
+
+
 @equipment_bp.route("/bulk_delete", methods=["POST"])
 @login_required
 def bulk_delete():
+    """Олон төхөөрөмж нэг дор устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
         flash("Эрх хүрэхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
@@ -237,8 +266,10 @@ def bulk_delete():
         return redirect(url_for("equipment.equipment_list"))
 
     msg = []
-    if deleted_count > 0: msg.append(f"{deleted_count} төхөөрөмж устгагдлаа.")
-    if retired_count > 0: msg.append(f"{retired_count} төхөөрөмж түүхтэй тул 'Retired' боллоо.")
+    if deleted_count > 0:
+        msg.append(f"{deleted_count} төхөөрөмж устгагдлаа.")
+    if retired_count > 0:
+        msg.append(f"{retired_count} төхөөрөмж түүхтэй тул 'Retired' боллоо.")
 
     flash(" ".join(msg), "success" if msg else "info")
     return redirect(url_for("equipment.equipment_list"))
@@ -250,6 +281,7 @@ def bulk_delete():
 @equipment_bp.route("/add_log/<int:id>", methods=["POST"])
 @login_required
 def add_maintenance_log(id):
+    """Засвар үйлчилгээний бүртгэл нэмэх."""
     eq = Equipment.query.get_or_404(id)
     action_type = request.form.get("action_type")
 
@@ -277,7 +309,11 @@ def add_maintenance_log(id):
 
             ext = filename.rsplit('.', 1)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
-                flash(f"Зөвшөөрөгдөхгүй файлын төрөл (.{ext}). Зөвшөөрөгдсөн: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
+                flash(
+                    f"Зөвшөөрөгдөхгүй файлын төрөл (.{ext}). "
+                    f"Зөвшөөрөгдсөн: {', '.join(ALLOWED_EXTENSIONS)}",
+                    "danger"
+                )
                 return redirect(url_for("equipment.equipment_detail", id=id))
 
             # Файл хадгалах
@@ -297,7 +333,8 @@ def add_maintenance_log(id):
     if action_type == "Calibration":
         eq.calibration_date = action_date.date()
         eq.next_calibration_date = eq.calibration_date + timedelta(days=eq.calibration_cycle_days or 365)
-        if eq.status != "retired": eq.status = "normal"
+        if eq.status != "retired":
+            eq.status = "normal"
     elif action_type == "Repair":
         eq.status = "maintenance"
 
@@ -311,9 +348,11 @@ def add_maintenance_log(id):
         flash(f"Тэмдэглэл хадгалах үед алдаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_detail", id=id))
 
+
 @equipment_bp.route("/download_cert/<int:log_id>")
 @login_required
 def download_certificate(log_id):
+    """Гэрчилгээний файл татах."""
     log = MaintenanceLog.query.get_or_404(log_id)
     if not log.file_path:
         flash("Файл алга.", "warning")
@@ -343,6 +382,8 @@ def download_certificate(log_id):
 # -------------------------------------------------
 # API: BULK USAGE LOG (Updated Logic)
 # -------------------------------------------------
+
+
 @equipment_bp.route("/api/log_usage_bulk", methods=["POST"])
 @login_required
 def log_usage_bulk():
@@ -411,16 +452,25 @@ def _filter_equipment_by_category(query, category):
     return query
 
 # A. Нэгдсэн тойм (Summary Grid)
+
+
 @equipment_bp.route("/api/equipment/usage_summary")
 @login_required
 def api_equipment_usage_summary():
+    """Ашиглалтын нэгдсэн тойм API."""
     today = get_shift_date()
     start_str = request.args.get("start_date")
     end_str = request.args.get("end_date")
     category = request.args.get("category", "all")
 
-    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else datetime.combine(today - timedelta(days=30), datetime.min.time())
-    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else datetime.combine(today, datetime.min.time())
+    if start_str:
+        start_dt = datetime.strptime(start_str, "%Y-%m-%d")
+    else:
+        start_dt = datetime.combine(today - timedelta(days=30), datetime.min.time())
+    if end_str:
+        end_dt = datetime.strptime(end_str, "%Y-%m-%d")
+    else:
+        end_dt = datetime.combine(today, datetime.min.time())
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
     eq_query = _filter_equipment_by_category(Equipment.query, category)
@@ -459,15 +509,21 @@ def api_equipment_usage_summary():
             "location": eq.location, "room": eq.room_number, "status": eq.status or "normal",
             "total_usage_hours": round(total_mins/60.0, 2), "maintenance_count": m.get("cnt", 0),
             "last_usage_end": u.get("last", None), "last_maintenance": m.get("last", None),
-            "next_calibration_date": eq.next_calibration_date.strftime("%Y-%m-%d") if eq.next_calibration_date else None,
+            "next_calibration_date": (
+                eq.next_calibration_date.strftime("%Y-%m-%d")
+                if eq.next_calibration_date else None
+            ),
             "is_calibration_expired": is_expired
         })
     return jsonify({"rows": rows, "start_date": start_dt.strftime("%Y-%m-%d"), "end_date": end_dt.strftime("%Y-%m-%d")})
 
 # B. Дэлгэрэнгүй журнал (Detailed Journal)
+
+
 @equipment_bp.route("/api/equipment/journal_detailed")
 @login_required
 def api_equipment_journal_detailed():
+    """Дэлгэрэнгүй журнал API."""
     start_str = request.args.get("start_date")
     end_str = request.args.get("end_date")
     category = request.args.get("category", "all")
@@ -504,9 +560,12 @@ def api_equipment_journal_detailed():
     return jsonify({"rows": combined})
 
 # C. Сарын нэгтгэл (Monthly Stats)
+
+
 @equipment_bp.route("/api/equipment/monthly_stats")
 @login_required
 def api_equipment_monthly_stats():
+    """Сарын статистик API."""
     year = int(request.args.get("year", now_local().year))
     category = request.args.get("category", "all")
 
@@ -540,7 +599,8 @@ def api_equipment_monthly_stats():
         MaintenanceLog.action_date.between(start_dt, end_dt), MaintenanceLog.equipment_id.in_(eq_ids)
     ).group_by(MaintenanceLog.equipment_id, func.extract('month', MaintenanceLog.action_date)).all()
     for eid, mon, val in maint_rows:
-        if eid in data_map: data_map[eid]["months"][int(mon)]["maint"] = int(val or 0)
+        if eid in data_map:
+            data_map[eid]["months"][int(mon)]["maint"] = int(val or 0)
 
     rows = []
     for eid, info in data_map.items():
@@ -555,14 +615,19 @@ def api_equipment_monthly_stats():
 # -------------------------------------------------
 # 5. NAVIGATION ROUTES
 # -------------------------------------------------
+
+
 @equipment_bp.route("/equipment_journal", endpoint="equipment_journal")
 @login_required
 def equipment_journal_hub():
+    """Төхөөрөмжийн журналын үндсэн хуудас."""
     return render_template("equipment_hub.html")
+
 
 @equipment_bp.route("/equipment_journal/grid", endpoint="equipment_journal_grid")
 @login_required
 def equipment_journal_grid():
+    """Төхөөрөмжийн журналын grid хуудас."""
     category = request.args.get("category", "all")
     titles = {
         "all": "Нэгдсэн тойм (Бүгд)",
@@ -579,13 +644,21 @@ def equipment_journal_grid():
 
     # Ээлжийн огноо ашиглах
     today = get_shift_date()
-    return render_template("equipment_journal.html", title=title, start_date=today-timedelta(days=29), end_date=today, category=category)
+    return render_template(
+        "equipment_journal.html",
+        title=title,
+        start_date=today - timedelta(days=29),
+        end_date=today,
+        category=category
+    )
 
 # app/routes/equipment_routes.py дотор хаа нэгтээ нэмнэ
+
 
 @equipment_bp.route("/api/equipment_list_json")
 @login_required
 def api_equipment_list_json():
+    """Төхөөрөмжийн жагсаалт JSON API (AG Grid-д)."""
     # Бүх төхөөрөмжийг дуудна (Server-side pagination хэрэггүй, AG Grid өөрөө зохицуулна)
     equipments = Equipment.query.order_by(Equipment.name.asc()).all()
 

@@ -7,6 +7,7 @@ from typing import Any, Mapping, Optional
 
 from app import db
 from app.models import AnalysisResultLog
+from app.constants import MAX_JSON_PAYLOAD_BYTES
 from flask_login import current_user
 import json
 
@@ -26,7 +27,7 @@ def _to_jsonable(data: Any) -> Any:
     return data
 
 
-def _safe_json_dumps(payload: Any, *, limit_bytes: int = 200_000) -> str:
+def _safe_json_dumps(payload: Any, *, limit_bytes: int = MAX_JSON_PAYLOAD_BYTES) -> str:
     """
     Монгол тэмдэгтийг алдагдуулахгүйгээр JSON болгож (ensure_ascii=False),
     асар том payload ирвэл хэмжээг хязгаарлаж (байт-аар) тайлбар хавсаргана.

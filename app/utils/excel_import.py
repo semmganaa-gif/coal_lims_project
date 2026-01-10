@@ -11,14 +11,14 @@ Excel бүтэц:
 
 import pandas as pd
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 import re
 import os
 
 from app import db
 from app.models import WashabilityTest, WashabilityFraction, TheoreticalYield
 from app.utils.washability import (
-    FractionData, calculate_theoretical_yield, calculate_cumulative
+    FractionData, calculate_theoretical_yield
 )
 
 
@@ -526,7 +526,7 @@ def bulk_import_from_folder(folder_path: str, user_id: int = None) -> List[Dict]
                 results.append({
                     'filename': filename,
                     'status': 'success',
-                    'message': f'Imported successfully',
+                    'message': 'Imported successfully',
                     'test_id': test.id,
                     'lab_number': test.lab_number,
                     'sample_name': test.sample_name

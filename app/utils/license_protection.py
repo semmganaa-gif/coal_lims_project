@@ -10,10 +10,9 @@ License Protection - LIMS системийн лиценз хамгаалалт
 import hashlib
 import json
 import base64
-import os
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import redirect, url_for, flash, request, current_app, g
+from flask import redirect, url_for, flash, request, g
 import logging
 
 from app.utils.hardware_fingerprint import generate_hardware_id, generate_short_hardware_id
@@ -82,7 +81,6 @@ class LicenseManager:
         Лиценз бүрэн шалгах
         Returns: {'valid': bool, 'error': str, 'license': obj, 'warning': str}
         """
-        from app.models import SystemLicense, LicenseLog
         from app import db
 
         result = {
@@ -127,7 +125,7 @@ class LicenseManager:
                 if license_obj.allowed_hardware_ids:
                     try:
                         allowed_ids = json.loads(license_obj.allowed_hardware_ids)
-                    except Exception:
+                    except (json.JSONDecodeError, TypeError):
                         pass
 
                 if current_hw_id not in allowed_ids:

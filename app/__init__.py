@@ -1,4 +1,10 @@
 # app/__init__.py
+"""
+Coal LIMS Application Factory.
+
+Flask application үүсгэх factory pattern. Extensions, blueprints,
+error handlers болон middleware-үүдийг тохируулна.
+"""
 
 from flask import Flask
 from config import Config
@@ -40,7 +46,9 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
+
 def create_app(config_class=Config):
+    """Flask application үүсгэх factory function."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -80,6 +88,10 @@ def create_app(config_class=Config):
     # ---- Setup Performance Monitoring
     from app.monitoring import setup_monitoring
     setup_monitoring(app)
+
+    # ---- Setup Sentry Error Tracking
+    from app.sentry_integration import init_sentry
+    init_sentry(app)
 
     # (!!!) Моделийг энд, init_app-ийн дараа импортлоно
     from app import models
@@ -147,7 +159,7 @@ def create_app(config_class=Config):
         'license.activate', 'license.info', 'license.expired', 'license.error',
         'license.check', 'license.hardware_id',
         'main.login', 'main.logout', 'main.register',
-        'static'
+        'static', 'health_check'  # Health check for Docker/K8s
     }
 
     @app.before_request
@@ -229,7 +241,8 @@ def create_app(config_class=Config):
     # 3) fmt_code
     _REV: dict[str, set[str]] = {}
     for alias_lc, base in ALIAS_TO_BASE_ANALYSIS.items():
-        if not base: continue
+        if not base:
+            continue
         _REV.setdefault(base, set()).add(alias_lc)
 
     _PREF_ORDER = ["st,ad", "qgr,ad", "mt,ar", "trd,d", "p,ad", "f,ad", "cl,ad"]
@@ -237,19 +250,24 @@ def create_app(config_class=Config):
     def _pick_display_alias(base: str) -> str:
         aliases = _REV.get(base, set())
         for pref in _PREF_ORDER:
-            if pref in aliases: return pref
+            if pref in aliases:
+                return pref
         return base
 
     def fmt_code(code: str | None) -> str:
-        if not code: return ""
+        if not code:
+            return ""
         c = str(code).strip()
-        if "," in c: return c
+        if "," in c:
+            return c
         base = norm_code(c)
         alias = _pick_display_alias(base)
         if alias and "," in alias:
             left, right = alias.split(",", 1)
-            if left: left_norm = left[0].upper() + left[1:].lower()
-            else: left_norm = left
+            if left:
+                left_norm = left[0].upper() + left[1:].lower()
+            else:
+                left_norm = left
             return f"{left_norm},{right.lower()}"
         return alias or c
 

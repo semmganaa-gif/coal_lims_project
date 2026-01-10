@@ -27,8 +27,8 @@ def setup_api_docs(app):
             {
                 "endpoint": 'apispec',
                 "route": '/api/docs/apispec.json',
-                "rule_filter": lambda rule: True,  # Бүх API-г харуулах
-                "model_filter": lambda tag: True,
+                "rule_filter": lambda _rule: True,  # Бүх API-г харуулах
+                "model_filter": lambda _tag: True,
             }
         ],
         "static_url_path": "/flasgger_static",
@@ -61,7 +61,8 @@ def setup_api_docs(app):
                 "type": "apiKey",
                 "name": "Authorization",
                 "in": "header",
-                "description": "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+                "description": "JWT Authorization header using the Bearer scheme. "
+                               "Example: \"Authorization: Bearer {token}\""
             },
             "SessionAuth": {
                 "type": "apiKey",

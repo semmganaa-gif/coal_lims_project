@@ -1,0 +1,92 @@
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_ignores = false
+no_implicit_optional = false
+strict_optional = false
+check_untyped_defs = false
+disallow_untyped_defs = false
+
+# Per-module overrides
+[[tool.mypy.overrides]]
+module = "app.utils.server_calculations"
+disable_error_code = ["operator", "assignment", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "app.models"
+disable_error_code = ["assignment", "return-value", "name-defined"]
+
+[[tool.mypy.overrides]]
+module = "app.config.analysis_schema"
+disable_error_code = ["index"]
+
+[[tool.mypy.overrides]]
+module = "app.config.display_precision"
+disable_error_code = ["index", "operator"]
+
+[[tool.mypy.overrides]]
+module = "app.constants"
+disable_error_code = ["attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.validators"
+disable_error_code = ["index", "operator"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.washability"
+disable_error_code = ["assignment"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.normalize"
+disable_error_code = ["assignment", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.excel_import"
+disable_error_code = ["assignment", "index", "return-value", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = "app.services.icpms_integration"
+disable_error_code = ["assignment", "attr-defined", "operator"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.license_protection"
+disable_error_code = ["assignment", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "app.routes.import_routes"
+disable_error_code = ["valid-type", "attr-defined"]
+
+[[tool.mypy.overrides]]
+module = "app.routes.audit_log_service"
+disable_error_code = ["arg-type"]
+
+[[tool.mypy.overrides]]
+module = "app.routes.analysis.qc"
+disable_error_code = ["var-annotated", "assignment"]
+
+[[tool.mypy.overrides]]
+module = "app.services.analysis_audit"
+disable_error_code = ["arg-type"]
+
+[[tool.mypy.overrides]]
+module = "app.utils.notifications"
+disable_error_code = ["arg-type"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
+ignore = ["E501", "E722"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]

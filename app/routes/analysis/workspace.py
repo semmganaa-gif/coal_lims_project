@@ -11,6 +11,7 @@ import json
 from flask import request, render_template, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 from app import db
 from app.models import AnalysisType, AnalysisResult, Sample, Equipment
@@ -73,7 +74,10 @@ def register_routes(bp):
             new_ids_list = list(dict.fromkeys(temp_ids))
 
         try:
-            msg = f"analysis_page code={analysis_type.code} sample_ids_raw={newly_selected_ids_str} parsed_ids={new_ids_list}"
+            msg = (
+                f"analysis_page code={analysis_type.code} "
+                f"sample_ids_raw={newly_selected_ids_str} parsed_ids={new_ids_list}"
+            )
             current_app.logger.warning(msg)
         except Exception:
             pass
@@ -84,11 +88,17 @@ def register_routes(bp):
             AnalysisResult.status == "approved"
         ).distinct().all()]
 
-        existing_results = AnalysisResult.query.filter(
-            AnalysisResult.user_id == current_user.id,
-            AnalysisResult.analysis_code == analysis_type.code,
-            ~AnalysisResult.sample_id.in_(approved_ids)
-        ).all()
+        # ✅ joinedload ашиглан N+1 query асуудлыг шийдэв
+        existing_results = (
+            AnalysisResult.query
+            .options(joinedload(AnalysisResult.sample))
+            .filter(
+                AnalysisResult.user_id == current_user.id,
+                AnalysisResult.analysis_code == analysis_type.code,
+                ~AnalysisResult.sample_id.in_(approved_ids)
+            )
+            .all()
+        )
 
         seen_ids = set()
 
@@ -140,7 +150,11 @@ def register_routes(bp):
                 samples_to_analyze = [fallback_map[sid] for sid in valid_ids if sid in fallback_map]
 
         try:
-            msg = f"analysis_page code={analysis_type.code} samples_to_analyze={len(samples_to_analyze)} ids={[s.id for s in samples_to_analyze]}"
+            msg = (
+                f"analysis_page code={analysis_type.code} "
+                f"samples_to_analyze={len(samples_to_analyze)} "
+                f"ids={[s.id for s in samples_to_analyze]}"
+            )
             current_app.logger.warning(msg)
         except Exception:
             pass
@@ -190,7 +204,7 @@ def register_routes(bp):
                 if isinstance(raw, str):
                     try:
                         raw = json.loads(raw)
-                    except Exception:
+                    except (json.JSONDecodeError, TypeError):
                         raw = {}
                 elif raw is None:
                     raw = {}
@@ -231,7 +245,7 @@ def register_routes(bp):
                     if isinstance(raw, str):
                         try:
                             raw = json.loads(raw)
-                        except Exception:
+                        except (json.JSONDecodeError, TypeError):
                             raw = {}
                     elif raw is None:
                         raw = {}

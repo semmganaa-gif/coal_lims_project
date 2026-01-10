@@ -1,65 +1,48 @@
-# Coal LIMS Monitoring
+# Coal LIMS - Monitoring Stack
 
-Prometheus + Grafana monitoring stack.
+Prometheus, Grafana, Loki, Alertmanager бүхий бүрэн monitoring stack.
 
-## Эхлүүлэх
-
-```bash
-cd monitoring
-docker-compose up -d
-```
-
-## Хандах
-
-| Service | URL | Нэвтрэх |
-|---------|-----|---------|
-| Grafana | http://localhost:3000 | admin / admin |
-| Prometheus | http://localhost:9090 | - |
-
-## Flask App тохиргоо
-
-Flask app-аа дараах port дээр ажиллуулна:
+## Quick Start
 
 ```bash
-flask run --host=0.0.0.0 --port=5000
+# Main app + Monitoring stack эхлүүлэх
+docker-compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
 ```
 
-## Metrics endpoint
+## Components
 
-App-аас `/metrics` endpoint-ээр Prometheus metrics авна:
+| Service | Port | Description |
+|---------|------|-------------|
+| Prometheus | 9090 | Metrics collection |
+| Grafana | 3000 | Visualization dashboards |
+| Loki | 3100 | Log aggregation |
+| Alertmanager | 9093 | Alert routing |
 
-```
-http://localhost:5000/metrics
-```
+## Access URLs
 
-## Custom Metrics
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Alertmanager**: http://localhost:9093
 
-| Metric | Тайлбар |
-|--------|---------|
-| `lims_samples_total` | Нийт бүртгэгдсэн дээжний тоо |
-| `lims_analysis_total` | Нийт шинжилгээний тоо |
-| `lims_qc_checks_total` | QC шалгалтын тоо |
-| `lims_active_users` | Идэвхтэй хэрэглэгчийн тоо |
-| `lims_db_query_duration_seconds` | DB query хугацаа |
+## Prometheus Metrics
 
-## Dashboard
+### Custom LIMS Metrics
+- `lims_samples_total{client, sample_type}` - Sample registration count
+- `lims_analysis_total{analysis_type, status}` - Analysis count
+- `lims_active_users` - Current active users
+- `lims_db_query_duration_seconds{query_type}` - DB query time
+- `lims_qc_checks_total{check_type, result}` - QC check results
 
-Grafana-д `Coal LIMS Dashboard` автоматаар үүснэ:
+## Alert Rules
 
-- Нийт дээж, шинжилгээ
-- QC алдаа
-- HTTP request rate
-- Response time (p50, p95)
-- Шинжилгээний төрлийн харьцаа
-- Захиалагчийн харьцаа
+- `LIMSDown` - Application is unreachable (critical)
+- `HighErrorRate` - Error rate > 10% (critical)
+- `SlowResponseTime` - P95 > 2s (warning)
+- `QCFailureSpike` - QC failures elevated (warning)
 
-## Зогсоох
+## Sentry Integration
 
 ```bash
-docker-compose down
-```
-
-Data устгах:
-```bash
-docker-compose down -v
+export SENTRY_DSN=https://xxx@sentry.io/xxx
+export SENTRY_ENVIRONMENT=production
 ```

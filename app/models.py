@@ -357,6 +357,14 @@ class AnalysisResult(db.Model):
     created_at = db.Column(db.DateTime, index=True, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
+    # Composite indexes - түгээмэл query-уудыг хурдасгах
+    __table_args__ = (
+        db.Index('ix_analysis_result_sample_code', 'sample_id', 'analysis_code'),
+        db.Index('ix_analysis_result_sample_status', 'sample_id', 'status'),
+        db.Index('ix_analysis_result_code_status', 'analysis_code', 'status'),
+        db.Index('ix_analysis_result_user_code', 'user_id', 'analysis_code'),
+    )
+
     logs = db.relationship(
         "AnalysisResultLog",
         back_populates="result",
@@ -367,6 +375,8 @@ class AnalysisResult(db.Model):
 
     # User relationship (шинжилгээ хийсэн хүн)
     user = db.relationship("User", foreign_keys=[user_id], backref="analysis_results")
+
+    # Note: sample relationship нь Sample.results backref-ээс ирнэ
 
     def set_raw_data(self, data_dict: Dict[str, Any]) -> None:
         """
@@ -531,7 +541,7 @@ class AnalysisProfile(db.Model):
             return []
         try:
             return json.loads(self.analyses_json)
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             return []
 
     def get_tokens_as_dict(self) -> Dict[str, List[str]]:
@@ -555,7 +565,7 @@ class AnalysisProfile(db.Model):
             else:
                 groups["General"] = [raw]
             return groups
-        except Exception:
+        except (AttributeError, TypeError):
             return {}
 
     def __repr__(self) -> str:
@@ -567,6 +577,8 @@ class AnalysisProfile(db.Model):
 # =========================================================
 # 🛑 ТОНОГ ТӨХӨӨРӨМЖИЙН УДИРДЛАГА (ISO 17025 - 6.4)
 # =========================================================
+
+
 class Equipment(db.Model):
     """
     Тоног төхөөрөмжийн бүртгэл (ISO 17025 - Section 6.4).
@@ -682,6 +694,7 @@ class Equipment(db.Model):
         lazy=True
     )
 
+
 class MaintenanceLog(db.Model):
     """
     Засвар үйлчилгээний түүх (ISO 17025 - Equipment maintenance).
@@ -753,7 +766,11 @@ class UsageLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'), index=True)
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), nullable=True, index=True)  # Аль дээжинд ашигласан (optional)
+    # Аль дээжинд ашигласан (optional)
+    sample_id = db.Column(
+        db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"),
+        nullable=True, index=True
+    )
 
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
@@ -764,6 +781,8 @@ class UsageLog(db.Model):
 # -------------------------
 # ТООЦООЛОЛ
 # -------------------------
+
+
 class SampleCalculations:
     """
     Нүүрсний шинжилгээний тооцоолол хийх класс.
@@ -813,6 +832,7 @@ class SampleCalculations:
         - Тооцоолол боломжгүй бол None буцаана
         - Lazy loading: sample.get_calculations() ашиглан дуудна
     """
+
     def __init__(self, sample):
         self.inputs = {res.analysis_code: res.final_result for res in sample.results}
         self.mt = self.inputs.get("MT")
@@ -1063,12 +1083,22 @@ class AnalysisResultLog(db.Model):
     # 🛑 ШИНЭ: Алдаа гарч байсан хэсэг
     error_reason = db.Column(db.String(50), nullable=True)
 
+    # Composite indexes - audit log query-уудыг хурдасгах
+    __table_args__ = (
+        db.Index('ix_result_log_code_timestamp', 'analysis_code', 'timestamp'),
+        db.Index('ix_result_log_sample_timestamp', 'sample_id', 'timestamp'),
+        db.Index('ix_result_log_user_timestamp', 'user_id', 'timestamp'),
+    )
+
     def compute_hash(self) -> str:
         """
         Бүртгэлийн hash-ийг тооцоолох (өөрчлөгдсөн эсэхийг шалгахад ашиглана).
         """
         import hashlib
-        data = f"{self.sample_id}|{self.analysis_code}|{self.action}|{self.raw_data_snapshot}|{self.final_result_snapshot}|{self.timestamp}"
+        data = (
+            f"{self.sample_id}|{self.analysis_code}|{self.action}|"
+            f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{self.timestamp}"
+        )
         return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
     def verify_hash(self) -> bool:
@@ -1315,6 +1345,7 @@ class SystemSetting(db.Model):
 # : ХЯНАЛТЫН СТАНДАРТ
 # -------------------------
 
+
 class ControlStandard(db.Model):
     __tablename__ = 'control_standards'
 
@@ -1333,6 +1364,7 @@ class ControlStandard(db.Model):
 # -------------------------
 # : GBW СТАНДАРТ
 # -------------------------
+
 
 class GbwStandard(db.Model):
     __tablename__ = 'gbw_standards'
@@ -1667,7 +1699,10 @@ class MonthlyPlan(db.Model):
     )
 
     def __repr__(self):
-        return f"<MonthlyPlan {self.year}-{self.month} W{self.week} {self.client_name}/{self.sample_type}: {self.planned_count}>"
+        return (
+            f"<MonthlyPlan {self.year}-{self.month} W{self.week} "
+            f"{self.client_name}/{self.sample_type}: {self.planned_count}>"
+        )
 
 
 class StaffSettings(db.Model):
@@ -1793,6 +1828,8 @@ class UserOnlineStatus(db.Model):
 # -------------------------
 # ЛИЦЕНЗ (License Protection)
 # -------------------------
+
+
 class SystemLicense(db.Model):
     """
     Системийн лиценз.

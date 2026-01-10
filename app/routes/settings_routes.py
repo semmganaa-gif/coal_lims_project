@@ -35,8 +35,11 @@ def _natural_sort_key(serial_no: str):
 # -----------------------
 # Эрхийн шалгалтын helper
 # -----------------------
+
+
 def _is_admin() -> bool:
     return getattr(current_user, "role", "") == "admin"
+
 
 def _is_senior_or_admin() -> bool:
     return getattr(current_user, "role", "") in ("senior", "admin")
@@ -334,6 +337,7 @@ def bottle_delete(bottle_id: int):
 from app.constants import BOTTLE_TOLERANCE
 TOL = BOTTLE_TOLERANCE  # хоосон тодорхойлолтын тохирц (грамм)
 
+
 def _avg_with_tolerance(t1: float, t2: float, t3: float | None):
     """
     Дүрэм:
@@ -369,6 +373,8 @@ def _avg_with_tolerance(t1: float, t2: float, t3: float | None):
         return (t1 + t2) / 2.0, used
 
 # --- Бортого идэвхтэй тогтмол татах API ---
+
+
 @settings_bp.route("/api/bottle/<serial_no>/active", methods=["GET"])
 @login_required
 def api_bottle_active(serial_no):
@@ -390,8 +396,6 @@ def api_bottle_active(serial_no):
         "temperature_c": float(const.temperature_c or 20.0),
         "effective_from": const.effective_from.isoformat() if const.effective_from else None,
     }
-
-
 
 
 # ==================================
@@ -596,8 +600,14 @@ SOP_MAPPING = {
     },
     "P": {
         "name": "Фосфор (P)",
-        "mns": ["11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"],
-        "sop": ["LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.docx"],
+        "mns": [
+            "11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон "
+            "хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"
+        ],
+        "sop": [
+            "LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох "
+            "рентген флюресценцийн спектрометрийн арга.docx"
+        ],
     },
     "F": {
         "name": "Фтор (F)",
@@ -606,8 +616,14 @@ SOP_MAPPING = {
     },
     "Cl": {
         "name": "Хлор (Cl)",
-        "mns": ["11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"],
-        "sop": ["LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.docx"],
+        "mns": [
+            "11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон "
+            "хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"
+        ],
+        "sop": [
+            "LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох "
+            "рентген флюресценцийн спектрометрийн арга.docx"
+        ],
     },
     # Коксжих чанар
     "CSN": {
@@ -743,4 +759,3 @@ def view_standard_file(filename):
         )
     else:
         abort(400)
-

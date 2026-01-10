@@ -91,7 +91,7 @@ def _get_cycle_day_index(anchor_date: date) -> int:
 def _get_team_for_segment(segment_index: int, shift_type: str) -> str:
     """
     segment_index = 0,1,2 (0..6, 7..13, 14..20)
-    
+
     Хуваарилалт (2025-11-22-оос эхлэн A баг өдрөөр эхэлсэн):
 
       Segment 0 (0..6):

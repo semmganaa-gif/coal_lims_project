@@ -150,6 +150,9 @@ def register_routes(bp):
 
         db.session.commit()
 
-        logger.info(f"CAPA verified: {capa.ca_number}, effectiveness: {capa.effectiveness}, user: {current_user.username}")
+        logger.info(
+            f"CAPA verified: {capa.ca_number}, effectiveness: {capa.effectiveness}, "
+            f"user: {current_user.username}"
+        )
         flash(f"CAPA {capa.ca_number} баталгаажлаа", "success")
         return redirect(url_for('quality.capa_detail', id=capa.id))

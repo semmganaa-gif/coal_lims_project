@@ -317,7 +317,6 @@ class ICPMSIntegration:
             Илгээлтийн үр дүн
         """
         from datetime import timedelta
-        from sqlalchemy import func
 
         cutoff_date = datetime.utcnow() - timedelta(days=days_back)
 
@@ -372,6 +371,7 @@ class ICPMSIntegration:
 
 # Singleton instance
 _icpms = None
+
 
 def get_icpms_integration() -> ICPMSIntegration:
     """ICPMS integration singleton авах"""

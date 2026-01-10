@@ -1,4 +1,9 @@
 # app/cli.py
+"""
+Flask CLI командууд.
+
+flask create-user, flask import-equipment зэрэг командуудыг тодорхойлно.
+"""
 
 from app import db
 from app.models import User, Equipment, SystemSetting
@@ -12,9 +17,10 @@ from math import inf
 
 # --------- Жижиг helper функцууд --------- #
 def _safe_str(value):
+    """Утгыг string руу аюулгүй хөрвүүлэх."""
     try:
         import pandas as _pd
-    except Exception:
+    except ImportError:
         _pd = None
     if value is None:
         return ""
@@ -24,9 +30,10 @@ def _safe_str(value):
 
 
 def _safe_int(value, default=None):
+    """Утгыг integer руу аюулгүй хөрвүүлэх."""
     try:
         import pandas as _pd
-    except Exception:
+    except ImportError:
         _pd = None
     try:
         if value is None:
@@ -37,14 +44,15 @@ def _safe_int(value, default=None):
         if s == "":
             return default
         return int(float(s))
-    except Exception:
+    except (ValueError, TypeError):
         return default
 
 
 def _safe_float(value, default=None):
+    """Утгыг float руу аюулгүй хөрвүүлэх."""
     try:
         import pandas as _pd
-    except Exception:
+    except ImportError:
         _pd = None
     try:
         if value is None:
@@ -56,11 +64,12 @@ def _safe_float(value, default=None):
             return default
         s = s.replace(" ", "").replace(",", "")
         return float(s)
-    except Exception:
+    except (ValueError, TypeError):
         return default
 
 
 def register_commands(app):
+    """CLI командуудыг бүртгэх."""
     # =======================
     # 1) Хэрэглэгчийн команд
     # =======================
@@ -81,7 +90,8 @@ def register_commands(app):
 
         if role not in ["prep", "chemist", "senior", "manager", "admin"]:
             click.echo(
-                "Алдаа: Эрх буруу байна. 'prep', 'chemist', 'senior', 'manager', 'admin' гэсэн утгуудын аль нэгийг сонгоно уу."
+                "Алдаа: Эрх буруу байна. 'prep', 'chemist', 'senior', 'manager', "
+                "'admin' гэсэн утгуудын аль нэгийг сонгоно уу."
             )
             return
 
@@ -103,6 +113,7 @@ def register_commands(app):
         """Тоног төхөөрөмжийн Excel импорт/экспорт командууд."""
         pass
     # ---------- IMPORT ----------
+
     @equipment.command("import-excel")
     @click.argument("excel_path")
     @click.option(
@@ -383,9 +394,11 @@ def register_commands(app):
             return None
 
         def parse_limit(val):
-            if val is None: return (None, None)
+            if val is None:
+                return (None, None)
             s = str(val).strip()
-            if not s or s == "-": return (None, None)
+            if not s or s == "-":
+                return (None, None)
             if "үр дүнгийн 1/2" in s:
                 return (0.5, "percent")
             mode = "abs"
@@ -394,28 +407,32 @@ def register_commands(app):
                 s = s.replace("%"," ").strip()
             try:
                 num = float(s)
-            except Exception:
+            except (ValueError, TypeError):
                 return (None, None)
             return (num, mode)
 
         def parse_upper(val):
-            if val is None: return None
+            if val is None:
+                return None
             s = str(val).strip()
-            if not s or s == "-": return None
+            if not s or s == "-":
+                return None
             if s.startswith("<"):
-                try: return float(s[1:].strip())
-                except Exception: return None
+                try:
+                    return float(s[1:].strip())
+                except (ValueError, TypeError):
+                    return None
             if s.startswith(">"):
                 return inf
             if "-" in s:
                 try:
                     parts = s.split("-")
                     return float(parts[-1])
-                except Exception:
+                except (ValueError, TypeError):
                     return None
             try:
                 return float(s)
-            except Exception:
+            except (ValueError, TypeError):
                 return None
 
         csv_path = Path(csv_path)

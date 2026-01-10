@@ -63,7 +63,6 @@ def register_routes(bp):
     def profile():
         """Хэрэглэгчийн профайл тохиргоо - Email signature"""
         from app.forms import UserProfileForm
-        from app.models import User
 
         form = UserProfileForm()
 

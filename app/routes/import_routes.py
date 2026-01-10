@@ -32,6 +32,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.utils.converters import to_float
 from app import models as M
+from app.constants import MIN_VALID_YEAR, MAX_VALID_YEAR
 
 # -------------------------------------------------
 # Alias mapping
@@ -81,9 +82,9 @@ def _parse_date(s: Any) -> Optional[datetime]:
 
     try:
         y = int(t)
-        if 2000 <= y <= 2100:
+        if MIN_VALID_YEAR <= y <= MAX_VALID_YEAR:
             return datetime(y, 1, 1)
-    except Exception:
+    except (ValueError, TypeError):
         pass
     return None
 
@@ -243,7 +244,8 @@ def _import_chpp_wide(
 
     if len(header) < 7:
         errors.append(
-            "CHPP wide формат гэж үзсэн ч хамгийн багадаа 7 багана байх ёстой (_sel, ID, Дээжний нэр, Нэгж, Төрөл, Бүртгэсэн, Шинжилсэн)."
+            "CHPP wide формат гэж үзсэн ч хамгийн багадаа 7 багана байх ёстой "
+            "(_sel, ID, Дээжний нэр, Нэгж, Төрөл, Бүртгэсэн, Шинжилсэн)."
         )
         summary = {
             "Нийт мөр": 0,

@@ -1,0 +1,108 @@
+# Alertmanager Configuration
+# Alert routing and notifications for Coal LIMS
+
+global:
+  # SMTP settings (configure for email alerts)
+  # smtp_smarthost: 'smtp.example.com:587'
+  # smtp_from: 'alertmanager@example.com'
+  # smtp_auth_username: 'alertmanager@example.com'
+  # smtp_auth_password: 'password'
+
+  # Slack webhook (configure for Slack alerts)
+  # slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+  resolve_timeout: 5m
+
+# Route tree
+route:
+  # Default receiver
+  receiver: 'default-receiver'
+
+  # Group alerts by these labels
+  group_by: ['alertname', 'severity']
+
+  # How long to wait before sending a notification about new alerts
+  group_wait: 30s
+
+  # How long to wait before sending notification about new alerts added to a group
+  group_interval: 5m
+
+  # How long to wait before re-sending a notification
+  repeat_interval: 4h
+
+  # Child routes
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-receiver'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning-receiver'
+      group_wait: 1m
+      repeat_interval: 4h
+
+    # Info alerts - batch together
+    - match:
+        severity: info
+      receiver: 'info-receiver'
+      group_wait: 10m
+      repeat_interval: 24h
+
+# Inhibition rules - prevent alert spam
+inhibit_rules:
+  # If critical alert is firing, suppress warning for same alertname
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']
+
+  # If LIMS is down, suppress all other LIMS alerts
+  - source_match:
+      alertname: 'LIMSDown'
+    target_match_re:
+      alertname: 'LIMS.*'
+    equal: ['instance']
+
+# Receivers
+receivers:
+  - name: 'default-receiver'
+    # Configure webhook, email, or Slack here
+    # email_configs:
+    #   - to: 'team@example.com'
+    # slack_configs:
+    #   - channel: '#alerts'
+    #     title: '{{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+  - name: 'critical-receiver'
+    # email_configs:
+    #   - to: 'oncall@example.com'
+    # slack_configs:
+    #   - channel: '#critical-alerts'
+    #     color: 'danger'
+    #     title: 'CRITICAL: {{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+  - name: 'warning-receiver'
+    # slack_configs:
+    #   - channel: '#warnings'
+    #     color: 'warning'
+    #     title: 'Warning: {{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+  - name: 'info-receiver'
+    # slack_configs:
+    #   - channel: '#info'
+    #     color: 'good'
+    #     title: 'Info: {{ .GroupLabels.alertname }}'
+    #     text: '{{ .CommonAnnotations.description }}'
+
+# Templates
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'

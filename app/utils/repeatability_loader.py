@@ -1,3 +1,8 @@
+"""
+Repeatability (T) хязгаарын дүрмийг ачаалах модуль.
+
+DB эсвэл файлаас repeatability дүрмийг уншина.
+"""
 from __future__ import annotations
 
 import json
@@ -20,4 +25,5 @@ def load_limit_rules() -> dict:
 
 
 def clear_cache():
+    """Кэшлэсэн repeatability дүрмийг цэвэрлэх."""
     load_limit_rules.cache_clear()

@@ -1,4 +1,15 @@
 # app/utils/normalize.py
+"""
+Шинжилгээний raw_data нормчлолын модуль.
+
+Янз бүрийн форматаар орж ирсэн raw_data-г стандарт формат руу хөрвүүлнэ:
+{
+    "p1": {"num": "...", "m1": ..., "m2": ..., "m3": ..., "result": ...},
+    "p2": {...},
+    "diff": ...,
+    "avg": ...
+}
+"""
 from __future__ import annotations
 import json
 from typing import Any, Dict, Optional
@@ -53,6 +64,7 @@ COMMON_VALUE_ALIASES = {
 
 
 def _pick(d: Dict[str, Any], keys: list[str]) -> Optional[Any]:
+    """Dict-ээс эхний олдсон утгыг буцаах."""
     for k in keys:
         if k in d and d[k] not in (None, ""):
             return d[k]
@@ -60,6 +72,7 @@ def _pick(d: Dict[str, Any], keys: list[str]) -> Optional[Any]:
 
 
 def _norm_parallel(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Нэг зэрэгцээ (p1 эсвэл p2) өгөгдлийг нормчлох."""
     if not isinstance(raw, dict):
         return {}
 
@@ -103,7 +116,7 @@ def normalize_raw_data(raw_data: Any, analysis_code: str | None = None) -> Dict[
         if s.startswith("{") and s.endswith("}"):
             try:
                 obj = json.loads(s)
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
                 obj = {}
 
     # p1/p2-г нормчлох
@@ -206,11 +219,14 @@ def normalize_raw_data(raw_data: Any, analysis_code: str | None = None) -> Dict[
     }
 
     return out
+
+
 def _pick_numeric(d: Dict[str, Any], keys: list[str]) -> Optional[Any]:
+    """Dict-ээс утга сонгож тоо руу хөрвүүлэх."""
     val = _pick(d, keys)
     if isinstance(val, str):
         try:
             return float(val)
-        except Exception:
+        except (ValueError, TypeError):
             return val
     return val

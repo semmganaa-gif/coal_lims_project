@@ -37,6 +37,7 @@ email-validator==2.1.0.post1
 # API & VALIDATION
 marshmallow==3.23.1
 flasgger==0.9.7.1
+requests>=2.31.0
 
 # DATA PROCESSING
 pandas==2.1.4
@@ -56,6 +57,7 @@ typing_extensions==4.15.0
 # MONITORING
 prometheus-flask-exporter==0.23.1
 prometheus-client==0.21.0
+sentry-sdk[flask]==1.39.1
 
 # PRODUCTION SERVER
 gunicorn==23.0.0

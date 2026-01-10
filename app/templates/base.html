@@ -359,6 +359,12 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- Alpine.js - Lightweight reactive framework -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+
+  <!-- htmx - HTML over the wire -->
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+
   <!-- Debug flag for logger.js -->
   <script>
     window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
@@ -367,6 +373,14 @@
       console.log = function() {};
       console.debug = function() {};
     }
+
+    // htmx CSRF тохиргоо - Flask-WTF csrf token
+    document.addEventListener('htmx:configRequest', function(evt) {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      if (csrfToken) {
+        evt.detail.headers['X-CSRFToken'] = csrfToken;
+      }
+    });
   </script>
 
   <!-- Utility scripts -->

@@ -25,6 +25,7 @@ from app import db
 from app import models as M
 from app.utils.datetime import now_local
 from app.utils.codes import norm_code
+from app.constants import MIN_VALID_YEAR, MAX_VALID_YEAR
 
 # ✅ ШИНЭ: Төвлөрсөн ээлжийн логикийг импортлох
 from app.utils.shifts import get_shift_info
@@ -46,10 +47,10 @@ def _year_arg() -> int:
     """?year параметрийг аюулгүй parse хийх."""
     try:
         y = int(request.args.get("year", now_local().year))
-        if not (2000 <= y <= 2100):
+        if not (MIN_VALID_YEAR <= y <= MAX_VALID_YEAR):
             raise ValueError
         return y
-    except Exception:
+    except (ValueError, TypeError):
         abort(400, "year параметр буруу байна")
 
 
@@ -336,7 +337,7 @@ def _calculate_consumption(
       - Клиент (нэгж)
       - Шинжилгээний төрөл
       - 1–12 сар + нийт дүн
-    
+
     ✅ ШИНЭЧЛЭЛ: 'shifts.py' логикийг ашиглан DAY/NIGHT болон DATE-ийг тооцно.
     """
     # 1) Огнооны интервал бодох

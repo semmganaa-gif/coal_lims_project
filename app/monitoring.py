@@ -18,6 +18,7 @@ try:
 except ImportError:
     PROMETHEUS_AVAILABLE = False
 
+
 def _get_or_create_counter(name, description, labelnames):
     """Counter авах эсвэл шинээр үүсгэх (давхардлыг зайлсхийх)"""
     try:
@@ -26,12 +27,14 @@ def _get_or_create_counter(name, description, labelnames):
         # Metric already registered
         return REGISTRY._names_to_collectors.get(name)
 
+
 def _get_or_create_gauge(name, description):
     """Gauge авах эсвэл шинээр үүсгэх"""
     try:
         return Gauge(name, description)
     except ValueError:
         return REGISTRY._names_to_collectors.get(name)
+
 
 def _get_or_create_histogram(name, description, labelnames, buckets):
     """Histogram авах эсвэл шинээр үүсгэх"""
@@ -40,12 +43,14 @@ def _get_or_create_histogram(name, description, labelnames, buckets):
     except ValueError:
         return REGISTRY._names_to_collectors.get(name)
 
+
 def _get_or_create_info(name, description):
     """Info авах эсвэл шинээр үүсгэх"""
     try:
         return Info(name, description)
     except ValueError:
         return REGISTRY._names_to_collectors.get(name)
+
 
 # Custom metrics (Prometheus байвал)
 ANALYSIS_COUNTER = None

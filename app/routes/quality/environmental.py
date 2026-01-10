@@ -8,6 +8,7 @@ from app.utils.quality_helpers import require_quality_edit
 
 
 def register_routes(bp):
+    """Орчны хяналтын route-уудыг бүртгэх."""
     @bp.route("/environmental")
     @login_required
     def environmental_list():

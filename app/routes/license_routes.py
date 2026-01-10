@@ -3,8 +3,7 @@
 License Routes - Лицензийн хуудсууд
 """
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from flask_login import current_user, login_required
-from datetime import datetime
+from flask_login import login_required
 
 from app.utils.license_protection import license_manager
 from app.utils.hardware_fingerprint import get_hardware_info, generate_short_hardware_id

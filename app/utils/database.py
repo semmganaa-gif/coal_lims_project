@@ -74,7 +74,11 @@ def safe_delete(obj: Any, success_msg: Optional[str] = None, error_msg: str = "�
         return False
 
 
-def safe_add(obj: Union[Any, List[Any]], success_msg: Optional[str] = None, error_msg: str = "Нэмэхэд алдаа гарлаа") -> bool:
+def safe_add(
+    obj: Union[Any, List[Any]],
+    success_msg: Optional[str] = None,
+    error_msg: str = "Нэмэхэд алдаа гарлаа"
+) -> bool:
     """
     Объектыг аюулгүй нэмэх helper функц.
 

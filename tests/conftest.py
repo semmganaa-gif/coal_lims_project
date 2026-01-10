@@ -132,3 +132,120 @@ def test_sample(app, test_user):
             _db.session.commit()
         except Exception:
             _db.session.rollback()
+
+
+# =============================================================================
+# Integration Test Fixtures
+# =============================================================================
+
+class AuthClient:
+    """Extended auth client for integration tests."""
+
+    def __init__(self, client):
+        self._client = client
+
+    def login(self, username='chemist', password='TestPass123'):
+        """Login as regular user."""
+        return self._client.post('/login', data={
+            'username': username,
+            'password': password
+        }, follow_redirects=True)
+
+    def login_as_admin(self, username='admin', password='TestPass123'):
+        """Login as admin user."""
+        return self._client.post('/login', data={
+            'username': username,
+            'password': password
+        }, follow_redirects=True)
+
+    def logout(self):
+        """Logout current user."""
+        return self._client.get('/logout', follow_redirects=True)
+
+
+@pytest.fixture
+def auth_client(client):
+    """Authentication client for integration tests."""
+    return AuthClient(client)
+
+
+@pytest.fixture
+def init_database(app):
+    """Initialize database with test data."""
+    import uuid
+    with app.app_context():
+        # Create some test samples
+        user = User.query.filter_by(username='chemist').first()
+        if user:
+            samples = []
+            for i in range(3):
+                unique_code = f"INIT-{uuid.uuid4().hex[:6]}"
+                sample = Sample(
+                    sample_code=unique_code,
+                    user_id=user.id,
+                    client_name="QC",
+                    sample_type="Нүүрс"
+                )
+                samples.append(sample)
+                _db.session.add(sample)
+
+            _db.session.commit()
+
+            yield samples
+
+            # Cleanup
+            for sample in samples:
+                try:
+                    _db.session.delete(sample)
+                except Exception:
+                    pass
+            _db.session.commit()
+        else:
+            yield []
+
+
+class SampleFactory:
+    """Factory for creating test samples."""
+
+    def __init__(self, app, db):
+        self.app = app
+        self.db = db
+        self.created_samples = []
+
+    def create(self, **kwargs):
+        """Create a sample with given attributes."""
+        import uuid
+        with self.app.app_context():
+            user = User.query.filter_by(username='chemist').first()
+            defaults = {
+                'sample_code': f"FAC-{uuid.uuid4().hex[:6]}",
+                'user_id': user.id if user else 1,
+                'client_name': 'QC',
+                'sample_type': 'Нүүрс'
+            }
+            defaults.update(kwargs)
+            sample = Sample(**defaults)
+            self.db.session.add(sample)
+            self.db.session.commit()
+            self.created_samples.append(sample.id)
+            return sample
+
+    def cleanup(self):
+        """Remove all created samples."""
+        with self.app.app_context():
+            for sample_id in self.created_samples:
+                sample = Sample.query.get(sample_id)
+                if sample:
+                    try:
+                        self.db.session.delete(sample)
+                    except Exception:
+                        pass
+            self.db.session.commit()
+
+
+@pytest.fixture
+def sample_factory(app, db):
+    """Sample factory fixture."""
+    factory = SampleFactory(app, db)
+    yield factory
+    factory.cleanup()

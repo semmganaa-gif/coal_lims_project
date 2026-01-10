@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def register_routes(bp):
+    """Гомдлын route-уудыг бүртгэх."""
     @bp.route("/complaints")
     @login_required
     def complaints_list():
@@ -65,7 +66,11 @@ def register_routes(bp):
     @login_required
     def complaints_detail(id):
         complaint = CustomerComplaint.query.get_or_404(id)
-        return render_template('quality/complaints_detail.html', complaint=complaint, title=f"Гомдол - {complaint.complaint_no}")
+        return render_template(
+            'quality/complaints_detail.html',
+            complaint=complaint,
+            title=f"Гомдол - {complaint.complaint_no}"
+        )
 
     @bp.route("/complaints/<int:id>/resolve", methods=["POST"])
     @login_required

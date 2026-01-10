@@ -92,7 +92,7 @@ def _get_qc_stream_data(ids: list):
     for r in results:
         try:
             values_by_sample[r.sample_id][r.analysis_code] = float(r.final_result)
-        except Exception:
+        except (ValueError, TypeError):
             continue
 
     # ✅ Vdaf тооцоолол: Vdaf = Vad × 100 / (100 - Mad - Aad)
@@ -141,7 +141,11 @@ def _get_qc_stream_data(ids: list):
 
         avg_values = {}
         for code in QC_PARAM_CODES:
-            vals = [float(row["values"].get(code)) for row in hourly_rows if isinstance(row["values"].get(code), (int, float))]
+            vals = [
+                float(row["values"].get(code))
+                for row in hourly_rows
+                if isinstance(row["values"].get(code), (int, float))
+            ]
             if vals:
                 avg_values[code] = round(sum(vals) / len(vals), 2)
 

@@ -1,0 +1,58 @@
+[flake8]
+# Line length - 120 is more realistic for modern development
+max-line-length = 120
+
+# Ignore certain rules
+ignore =
+    # E402: module level import not at top (Flask app pattern requires this)
+    E402,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # W504: line break after binary operator (conflicts with W503)
+    W504,
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # E241: multiple spaces after ':' (dict alignment)
+    E241,
+    # E221: multiple spaces before operator (alignment)
+    E221,
+    # E251: unexpected spaces around keyword / parameter equals
+    E251,
+    # E261: at least two spaces before inline comment (stylistic)
+    E261,
+    # E201: whitespace after '{' (dict alignment)
+    E201,
+    # E202: whitespace before '}' (dict alignment)
+    E202,
+    # E226: missing whitespace around arithmetic operator
+    E226,
+    # E231: missing whitespace after ','
+    E231,
+    # Continuation line indentation (stylistic)
+    E121,
+    E123,
+    E126,
+    E127,
+    E128
+
+# Exclude directories
+exclude =
+    .git,
+    __pycache__,
+    venv,
+    .venv,
+    migrations,
+    *.egg-info,
+    build,
+    dist
+
+# Per-file ignores
+per-file-ignores =
+    # __init__.py files often have unused imports for re-export
+    __init__.py: F401
+    # Test files can have longer lines and unusual patterns
+    tests/*: E501
+
+# Statistics
+statistics = True
+count = True

@@ -102,14 +102,14 @@ def calc_moisture_mad(raw_data: Dict) -> Optional[float]:
     results = []
 
     # Calculate p1
-    if all(x is not None and x > 0 for x in [m1_p1, m2_p1, m3_p1]):
+    if m1_p1 is not None and m2_p1 is not None and m3_p1 is not None and m2_p1 > 0:
         wet_weight_loss = (m1_p1 + m2_p1) - m3_p1
         if wet_weight_loss >= 0:
             res1 = (wet_weight_loss / m2_p1) * 100
             results.append(res1)
 
     # Calculate p2
-    if all(x is not None and x > 0 for x in [m1_p2, m2_p2, m3_p2]):
+    if m1_p2 is not None and m2_p2 is not None and m3_p2 is not None and m2_p2 > 0:
         wet_weight_loss = (m1_p2 + m2_p2) - m3_p2
         if wet_weight_loss >= 0:
             res2 = (wet_weight_loss / m2_p2) * 100

@@ -14,7 +14,6 @@ Theoretical Yield тооцооллын систем.
 
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-import numpy as np
 
 
 @dataclass
@@ -173,7 +172,10 @@ def calculate_ngm(cumulative_data: List[CumulativeData],
             else:
                 prev = cumulative_data[i - 1]
                 # Interpolate
-                ratio = (lower_density - prev.density) / (curr.density - prev.density) if curr.density != prev.density else 0
+                if curr.density != prev.density:
+                    ratio = (lower_density - prev.density) / (curr.density - prev.density)
+                else:
+                    ratio = 0
                 lower_yield = prev.cumulative_yield + ratio * (curr.cumulative_yield - prev.cumulative_yield)
 
         if curr.density >= upper_density:
@@ -181,7 +183,10 @@ def calculate_ngm(cumulative_data: List[CumulativeData],
                 upper_yield = curr.cumulative_yield
             else:
                 prev = cumulative_data[i - 1]
-                ratio = (upper_density - prev.density) / (curr.density - prev.density) if curr.density != prev.density else 0
+                if curr.density != prev.density:
+                    ratio = (upper_density - prev.density) / (curr.density - prev.density)
+                else:
+                    ratio = 0
                 upper_yield = prev.cumulative_yield + ratio * (curr.cumulative_yield - prev.cumulative_yield)
             break
 

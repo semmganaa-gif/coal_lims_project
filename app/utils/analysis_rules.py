@@ -75,6 +75,7 @@ SOFT_MIN_LIMITS: Dict[str, float] = {
     'Mad': 0.40,      # Inherent moisture - доод хязгаар
 }
 
+
 def determine_result_status(
     analysis_code: str,
     value: float,
@@ -146,7 +147,7 @@ def determine_result_status(
     # ДҮРЭМ: CV (Calorific Value)
     if analysis_code in ['CV', 'Qgr,ad', 'Qnet,ar'] and value is not None:
         if value < 2000:
-             return "pending_review", f"Илчлэг хэт бага ({value})"
+            return "pending_review", f"Илчлэг хэт бага ({value})"
 
     # ========================================================================
     # 3. SOFT LIMIT CHECK (Max Value Check - Жирийн дээжинд)

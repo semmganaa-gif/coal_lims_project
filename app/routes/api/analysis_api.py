@@ -281,10 +281,10 @@ def register_routes(bp):
                     raw_in = item.get("raw_data") or {}
 
                     if analysis_code == "CSN" and isinstance(raw_in, dict):
-                         raw_norm = dict(raw_in)
-                         raw_norm.update(normalize_raw_data(raw_in, analysis_code))
+                        raw_norm = dict(raw_in)
+                        raw_norm.update(normalize_raw_data(raw_in, analysis_code))
                     else:
-                         raw_norm = normalize_raw_data(raw_in, analysis_code)
+                        raw_norm = normalize_raw_data(raw_in, analysis_code)
 
                     # UI flags preserve
                     for key in ("is_low_avg", "retest_mode", "limit_used", "limit_mode", "t_exceeded", "t_band"):
@@ -297,7 +297,8 @@ def register_routes(bp):
                     limit, mode, band = _effective_limit(analysis_code, avg)
                     effective_limit = (avg * limit) if (mode == "percent" and avg is not None) else limit
 
-                    if analysis_code == "CSN" and diff is None: diff = 0.0
+                    if analysis_code == "CSN" and diff is None:
+                        diff = 0.0
                     # Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
                     EPSILON = 1e-6
                     t_exceeded = (diff is not None) and ((abs(diff) - (effective_limit or 0)) > EPSILON)
@@ -354,8 +355,10 @@ def register_routes(bp):
                                 # JSON targets-ийг dict болгох
                                 targets_map = active_std.targets
                                 if isinstance(targets_map, str):
-                                    try: targets_map = json.loads(targets_map)
-                                    except (json.JSONDecodeError, ValueError): targets_map = {}
+                                    try:
+                                        targets_map = json.loads(targets_map)
+                                    except (json.JSONDecodeError, ValueError):
+                                        targets_map = {}
 
                                 # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
                                 # DB код -> Стандарт код хөрвүүлэх (CV -> CV,d, Aad -> Ad г.м)
@@ -469,10 +472,14 @@ def register_routes(bp):
                         db.session.add(new_res)
                         db.session.flush()
 
-                        if new_status == "approved": action = "CREATED_AUTO_APPROVED"
-                        elif new_status == "rejected": action = "CREATED_REJECTED"
-                        elif new_status == "pending_review": action = "CREATED_PENDING"
-                        else: action = "CREATED"
+                        if new_status == "approved":
+                            action = "CREATED_AUTO_APPROVED"
+                        elif new_status == "rejected":
+                            action = "CREATED_REJECTED"
+                        elif new_status == "pending_review":
+                            action = "CREATED_PENDING"
+                        else:
+                            action = "CREATED"
 
                         target_res_id = new_res.id
                         raw_snapshot = new_res.raw_data
@@ -490,10 +497,14 @@ def register_routes(bp):
 
                         db.session.flush()
 
-                        if new_status == "approved": action = "UPDATED_AUTO_APPROVED"
-                        elif new_status == "rejected": action = "UPDATED_REJECTED"
-                        elif new_status == "pending_review": action = "UPDATED_PENDING"
-                        else: action = "UPDATED"
+                        if new_status == "approved":
+                            action = "UPDATED_AUTO_APPROVED"
+                        elif new_status == "rejected":
+                            action = "UPDATED_REJECTED"
+                        elif new_status == "pending_review":
+                            action = "UPDATED_PENDING"
+                        else:
+                            action = "UPDATED"
 
                         target_res_id = existing.id
                         raw_snapshot = existing.raw_data
@@ -639,7 +650,7 @@ def register_routes(bp):
                 res.rejection_comment = None
 
         if hasattr(res, "error_reason") and error_reason:
-             res.error_reason = error_reason
+            res.error_reason = error_reason
 
         db.session.flush()
 
@@ -780,7 +791,11 @@ def register_routes(bp):
                     if (calc.mt is not None) and (calc.aad is not None):
                         is_ready = True
                 else:
-                    if (calc.mt is not None) and (calc.mad is not None) and (calc.aad is not None) and (calc.vad is not None) and (calc.gi is not None):
+                    if (
+                        (calc.mt is not None) and (calc.mad is not None) and
+                        (calc.aad is not None) and (calc.vad is not None) and
+                        (calc.gi is not None)
+                    ):
                         is_ready = True
 
                 if is_ready:

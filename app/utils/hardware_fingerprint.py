@@ -7,7 +7,6 @@ import hashlib
 import platform
 import uuid
 import subprocess
-import os
 
 
 def get_mac_address():

@@ -24,12 +24,16 @@ from app import db, limiter
 from app.models import Sample, AnalysisResult, AnalysisResultLog
 from app.utils.datetime import now_local
 from app.utils.codes import to_base_list
-from app.utils.conversions import calculate_all_conversions
-from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
 from app.utils.security import escape_like_pattern
-from app.utils.sorting import sort_samples
-from app.constants import SUMMARY_VIEW_COLUMNS
 from .helpers import _aggregate_sample_status
+
+# Service layer imports
+from app.services import (
+    archive_samples,
+    get_sample_report_data,
+    get_samples_with_results,
+    build_sample_summary_data,
+)
 
 
 def register_routes(bp):
@@ -227,275 +231,65 @@ def register_routes(bp):
 
     # -----------------------------------------------------------
     # 2) sample_summary.html → архив / сэргээх (POST /api/sample_summary)
+    #    ✅ REFACTORED: Service layer ашиглана
     # -----------------------------------------------------------
     @bp.route("/sample_summary", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
     def sample_summary():
-        # --- POST (Архивлах) ---
+        # --- POST (Архивлах) - Service ашиглана ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
             if sample_ids_str and action in ["archive", "unarchive"]:
-                try:
-                    sample_ids = [
-                        int(sid) for sid in sample_ids_str.split(",") if sid.isdigit()
-                    ]
-                    if sample_ids:
-                        new_status = (
-                            "archived" if action == "archive" else "new"
-                        )  # (!!! "received" биш "new" болгов)
-                        updated_count = (
-                            db.session.query(Sample)
-                            .filter(Sample.id.in_(sample_ids))
-                            .update(
-                                {Sample.status: new_status},
-                                synchronize_session=False,
-                            )
-                        )
-                        db.session.commit()
-                        msg = (
-                            f"{updated_count} дээжийг амжилттай архивд шилжүүллээ."
-                            if action == "archive"
-                            else f"{updated_count} дээжийг архивнаас амжилттай сэргээллээ."
-                        )
-                        flash(msg, "success")
-                    return redirect(url_for("api.sample_summary", **request.args))
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f"Архивлах үед алдаа гарлаа: {e}", "danger")
+                sample_ids = [
+                    int(sid) for sid in sample_ids_str.split(",") if sid.isdigit()
+                ]
+                result = archive_samples(sample_ids, archive=(action == "archive"))
+                flash(result.message, "success" if result.success else "danger")
+                return redirect(url_for("api.sample_summary", **request.args))
 
-        # -----------------------------------------------------------------
-        # --- GET: Архивлагдаагүй бүх дээжийг харуулна ---
-        # -----------------------------------------------------------------
-
-        # Үр дүнтэй дээжүүдийг шүүх
-        exists_q = (
-            db.session.query(AnalysisResult.id)
-            .filter(
-                AnalysisResult.sample_id == Sample.id,
-                AnalysisResult.status.in_(["approved", "pending_review"]),
-            )
-            .exists()
-        )
-        samples_query = (
-            db.session.query(Sample)
-            .filter(Sample.status != "archived")
-            .filter(exists_q)
-            .all()
-        )
-        # Custom sorting хэрэглэх (client + type + code)
-        samples = sort_samples(samples_query, by="full")
-
-        # -----------------------------------------------------------------
-        # 🧮 ШИНЭЧИЛСЭН ТООЦООЛЛЫН ЛОГИК
-        # -----------------------------------------------------------------
-        results_map: dict[int, dict] = {}
-        analysis_dates_map: dict[int, str] = {}
-        final_analysis_types: list = []
-
-        if samples:
-            sample_ids = [s.id for s in samples]
-
-            # 2) түүхий үр дүнг нэг дор
-            all_db_results = (
-                AnalysisResult.query.filter(
-                    AnalysisResult.sample_id.in_(sample_ids),
-                    AnalysisResult.status.in_(["approved", "pending_review"]),
-                ).all()
-            )
-
-            # 3) sample + canonical
-            canonical_results_by_sample = {sid: {} for sid in sample_ids}
-            analysis_dates_raw_map = {sid: [] for sid in sample_ids}
-
-            for r in all_db_results:
-                canonical_name = get_canonical_name(r.analysis_code)
-                if canonical_name:
-                    canonical_results_by_sample[r.sample_id][canonical_name] = {
-                        "value": r.final_result,
-                        "id": r.id,
-                        "status": r.status,
-                    }
-                if r.created_at:
-                    analysis_dates_raw_map[r.sample_id].append(r.created_at)
-
-            # 4) тооцооллын хөдөлгүүр
-            for sample_id in sample_ids:
-                raw_canonical_data = canonical_results_by_sample.get(sample_id, {})
-
-                all_calculated_data = calculate_all_conversions(
-                    raw_canonical_data, PARAMETER_DEFINITIONS
-                )
-
-                # 5) Template-д зориулж alias руу буцаах
-                final_data_for_template = {}
-                for col_view in SUMMARY_VIEW_COLUMNS:
-                    template_code = col_view["code"]
-                    canonical_base = col_view["canonical_base"]
-
-                    lookup_key = get_canonical_name(template_code)
-
-                    if template_code == "Ad":
-                        lookup_key = "ash_d"
-                    elif template_code == "Vdaf":
-                        lookup_key = "volatile_matter_daf"
-                    elif template_code == "FC,ad":
-                        lookup_key = "fixed_carbon_ad"
-                    elif template_code == "FC,d":
-                        lookup_key = "fixed_carbon_d"
-                    elif template_code == "FC,daf":
-                        lookup_key = "fixed_carbon_daf"
-                    elif template_code == "St,d":
-                        lookup_key = "total_sulfur_d"
-                    elif template_code == "St,daf":
-                        lookup_key = "total_sulfur_daf"
-                    elif template_code == "Qgr,d":
-                        lookup_key = "calorific_value_d"
-                    elif template_code == "Qgr,daf":
-                        lookup_key = "calorific_value_daf"
-                    elif template_code == "Qnet,ar":
-                        lookup_key = "qnet_ar"
-                    # (!!! ШИНЭЧИЛЛЭЛ)
-                    elif template_code == "TRD,ad":
-                        lookup_key = "relative_density"
-                    elif template_code == "TRD,d":
-                        lookup_key = "relative_density_d"
-                    # (/!!! ШИНЭЧИЛЛЭЛ)
-                    elif template_code == "H,d":
-                        lookup_key = "hydrogen_d"
-                    elif template_code == "P,d":
-                        lookup_key = "phosphorus_d"
-                    elif template_code == "F,d":
-                        lookup_key = "total_fluorine_d"
-                    elif template_code == "Cl,d":
-                        lookup_key = "total_chlorine_d"
-
-                    if lookup_key in all_calculated_data:
-                        calculated_value = all_calculated_data[lookup_key]
-                        if calculated_value is None:
-                            continue
-
-                        if isinstance(calculated_value, (int, float)):
-                            raw_data_base = raw_canonical_data.get(canonical_base, {})
-                            final_data_for_template[template_code] = {
-                                "value": calculated_value,
-                                "id": raw_data_base.get("id"),
-                                "status": "calculated",
-                            }
-                        elif isinstance(calculated_value, dict):
-                            final_data_for_template[template_code] = calculated_value
-
-                results_map[sample_id] = final_data_for_template
-
-            # 6) хамгийн эртний огноо
-            for sample_id, dates in analysis_dates_raw_map.items():
-                if dates:
-                    analysis_dates_map[sample_id] = min(dates).strftime("%Y-%m-%d")
-
-            # 7) grid-д харуулах нэршлүүд
-            for col_map in SUMMARY_VIEW_COLUMNS:
-                final_code = col_map["code"]
-                canonical_name = get_canonical_name(final_code)
-
-                if final_code == "Ad":
-                    canonical_name = "ash_d"
-                elif final_code == "Vdaf":
-                    canonical_name = "volatile_matter_daf"
-                elif final_code == "FC,ad":
-                    canonical_name = "fixed_carbon_ad"
-                elif final_code == "FC,d":
-                    canonical_name = "fixed_carbon_d"
-                elif final_code == "FC,daf":
-                    canonical_name = "fixed_carbon_daf"
-                elif final_code == "St,d":
-                    canonical_name = "total_sulfur_d"
-                elif final_code == "St,daf":
-                    canonical_name = "total_sulfur_daf"
-                elif final_code == "Qgr,d":
-                    canonical_name = "calorific_value_d"
-                elif final_code == "Qgr,daf":
-                    canonical_name = "calorific_value_daf"
-                elif final_code == "Qnet,ar":
-                    canonical_name = "qnet_ar"
-                # (!!! ШИНЭЧИЛЛЭЛ)
-                elif final_code == "TRD,ad":
-                    canonical_name = "relative_density"
-                elif final_code == "TRD,d":
-                    canonical_name = "relative_density_d"
-                # (/!!! ШИНЭЧИЛЛЭЛ)
-                elif final_code == "H,d":
-                    canonical_name = "hydrogen_d"
-                elif final_code == "P,d":
-                    canonical_name = "phosphorus_d"
-                elif final_code == "F,d":
-                    canonical_name = "total_fluorine_d"
-                elif final_code == "Cl,d":
-                    canonical_name = "total_chlorine_d"
-
-                details = PARAMETER_DEFINITIONS.get(canonical_name)
-                display_name = final_code
-                if details and details.get("display_name"):
-                    display_name = details["display_name"]
-
-                # Fake объект – зөвхөн code/name хэрэгтэй
-                fake_analysis_type = type(
-                    "FakeType", (object,), {"code": final_code, "name": display_name}
-                )()
-                final_analysis_types.append(fake_analysis_type)
+        # --- GET: Service-ээс өгөгдөл авах ---
+        samples = get_samples_with_results(exclude_archived=True, sort_by="full")
+        summary_data = build_sample_summary_data(samples)
 
         return render_template(
             "sample_summary.html",
             title="Дээжний нэгтгэл",
             samples=samples,
-            analysis_types=final_analysis_types,
-            results_map=results_map,
-            analysis_dates_map=analysis_dates_map,
+            analysis_types=summary_data["analysis_types"],
+            results_map=summary_data["results_map"],
+            analysis_dates_map=summary_data["analysis_dates_map"],
         )
 
     # -----------------------------------------------------------
     # 3) ДЭЭЖНИЙ ТАЙЛАН
+    #    ✅ REFACTORED: Service layer ашиглана
     # -----------------------------------------------------------
     @bp.route("/sample_report/<int:sample_id>")
     @login_required
     def sample_report(sample_id):
-        sample = Sample.query.get_or_404(sample_id)
-        report_date = now_local()
+        # Service-ээс тайлангийн өгөгдөл авах
+        report_data = get_sample_report_data(sample_id)
 
-        raw_results = (
-            AnalysisResult.query.filter(
-                AnalysisResult.sample_id == sample_id,
-                AnalysisResult.status.in_(["approved", "pending_review"]),
-            ).all()
-        )
+        # Алдаа шалгах
+        if report_data.error == "SAMPLE_NOT_FOUND":
+            flash("Дээж олдсонгүй.", "danger")
+            return redirect(url_for("api.sample_summary"))
 
-        raw_canonical_data = {}
-        for r in raw_results:
-            canonical_name = get_canonical_name(r.analysis_code)
-            if canonical_name:
-                raw_canonical_data[canonical_name] = {
-                    "value": r.final_result,
-                    "id": r.id,
-                    "status": r.status,
-                }
-
-        try:
-            sample_calcs = calculate_all_conversions(
-                raw_canonical_data, PARAMETER_DEFINITIONS
-            )
-        except Exception as e:
+        if report_data.error:
             flash(
-                f"Тооцоолол хийхэд алдаа гарлаа: {e}. Шаардлагатай (MT, Mad) утгууд орсон эсэхийг шалгана уу.",
+                f"{report_data.error}. Шаардлагатай (MT, Mad) утгууд орсон эсэхийг шалгана уу.",
                 "danger",
             )
             return redirect(request.referrer or url_for("api.sample_summary"))
 
         return render_template(
             "report.html",
-            title=f"Тайлан: {sample.sample_code}",
-            sample=sample,
-            calcs=sample_calcs,  # Энэ бол тооцоолсон бүх утгатай dict
-            report_date=report_date,
+            title=f"Тайлан: {report_data.sample.sample_code}",
+            sample=report_data.sample,
+            calcs=report_data.calculations,
+            report_date=report_data.report_date,
         )
 
     # -----------------------------------------------------------
@@ -526,6 +320,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     # 5) АРХИВ ТӨВ (Archive Hub)
     #    Нэгж → Он → Сар бүтэцтэй архивын удирдлага
+    #    ✅ REFACTORED: Service layer ашиглана (unarchive)
     # -----------------------------------------------------------
     @bp.route("/archive_hub", methods=["GET", "POST"])
     @login_required
@@ -534,29 +329,16 @@ def register_routes(bp):
         from sqlalchemy import func, extract
         from collections import defaultdict
 
-        # --- POST: Сэргээх ---
+        # --- POST: Сэргээх - Service ашиглана ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
             if sample_ids_str and action == "unarchive":
-                try:
-                    sample_ids = [
-                        int(sid) for sid in sample_ids_str.split(",") if sid.isdigit()
-                    ]
-                    if sample_ids:
-                        updated_count = (
-                            db.session.query(Sample)
-                            .filter(Sample.id.in_(sample_ids))
-                            .update(
-                                {Sample.status: "new"},
-                                synchronize_session=False,
-                            )
-                        )
-                        db.session.commit()
-                        flash(f"{updated_count} дээжийг архиваас сэргээлээ.", "success")
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f"Сэргээхэд алдаа: {e}", "danger")
+                sample_ids = [
+                    int(sid) for sid in sample_ids_str.split(",") if sid.isdigit()
+                ]
+                result = archive_samples(sample_ids, archive=False)
+                flash(result.message, "success" if result.success else "danger")
             return redirect(url_for("api.archive_hub", **request.args))
 
         # --- GET: Архив харах ---
@@ -845,3 +627,45 @@ def register_routes(bp):
         filename = f"analysis_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)
+
+    # -----------------------------------------------------------
+    # HTMX ENDPOINTS - HTML fragments буцаадаг
+    # -----------------------------------------------------------
+
+    @bp.route("/sample_count", methods=["GET"])
+    @login_required
+    def htmx_sample_count():
+        """htmx: Нийт дээжний тоог HTML-ээр буцаах."""
+        count = Sample.query.count()
+        return f'<strong class="text-primary">{count}</strong> дээж'
+
+    @bp.route("/search_samples", methods=["GET"])
+    @login_required
+    def htmx_search_samples():
+        """htmx: Дээж хайх (partial HTML)."""
+        from app.utils.security import escape_like_pattern
+
+        q = request.args.get("q", "").strip()
+        if len(q) < 2:
+            return '<div class="text-muted small">2+ тэмдэгт оруулна уу</div>'
+
+        safe_q = escape_like_pattern(q)
+        samples = (
+            Sample.query
+            .filter(Sample.sample_code.ilike(f"%{safe_q}%"))
+            .limit(10)
+            .all()
+        )
+
+        if not samples:
+            return '<div class="text-muted small">Олдсонгүй</div>'
+
+        html = '<div class="list-group list-group-flush">'
+        for s in samples:
+            html += f'''
+            <a href="/sample/{s.id}" class="list-group-item list-group-item-action py-2">
+                <strong>{s.sample_code}</strong>
+                <small class="text-muted ms-2">{s.client_name or ""}</small>
+            </a>'''
+        html += '</div>'
+        return html

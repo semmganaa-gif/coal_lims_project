@@ -23,7 +23,7 @@ from app.forms import AddSampleForm
 
 # Current Blueprint & Local Helpers
 from . import main_bp
-from .helpers import get_12h_shift_code, get_quarter_code
+from .helpers import get_12h_shift_code
 
 # Utils
 from app.utils.datetime import now_local
@@ -58,6 +58,8 @@ def get_report_email_recipients():
         result['cc'] = [e.strip() for e in cc_setting.value.split(',') if e.strip()]
 
     return result
+
+
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.database import safe_commit
 from app.utils.settings import get_sample_type_choices_map, get_unit_abbreviations
@@ -78,6 +80,7 @@ from app.constants import (
     WTL_SIZE_NAMES,
     WTL_FL_NAMES,
 )
+
 
 def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
@@ -176,7 +179,10 @@ def register_routes(bp):
                                         failed_samples.append(f'{code} (жин хэт бага байна: {weight}г)')
                                         is_valid = False
                                     elif weight > MAX_SAMPLE_WEIGHT:
-                                        failed_samples.append(f'{code} (жин хэт том байна: {weight}г, max {MAX_SAMPLE_WEIGHT}г)')
+                                        failed_samples.append(
+                                            f'{code} (жин хэт том байна: {weight}г, '
+                                            f'max {MAX_SAMPLE_WEIGHT}г)'
+                                        )
                                         is_valid = False
                                 except ValueError:
                                     failed_samples.append(f'{code} (жин: "{weight_str}" буруу)')
@@ -204,7 +210,11 @@ def register_routes(bp):
                             prepared_by=form.prepared_by.data,
                             notes=form.notes.data,
                             location=form.location.data if list_type == "multi_gen" else None,
-                            product=form.product.data if list_type == "multi_gen" and (client_name == "QC" or client_name == "Proc") else None,
+                            product=(
+                                form.product.data
+                                if list_type == "multi_gen" and client_name in ("QC", "Proc")
+                                else None
+                            ),
                             hourly_system=list_type.replace("chpp_", "") if "chpp" in list_type else None,
                             analyses_to_perform="[]"
                         )
@@ -262,7 +272,10 @@ def register_routes(bp):
                 else:
                     all_wtl_names = []
                     if sample_type == "WTL":
-                        all_wtl_names = (WTL_SAMPLE_NAMES_19 + WTL_SAMPLE_NAMES_70 + WTL_SAMPLE_NAMES_6 + WTL_SAMPLE_NAMES_2)
+                        all_wtl_names = (
+                            WTL_SAMPLE_NAMES_19 + WTL_SAMPLE_NAMES_70 +
+                            WTL_SAMPLE_NAMES_6 + WTL_SAMPLE_NAMES_2
+                        )
                     elif sample_type == "Size":
                         all_wtl_names = WTL_SIZE_NAMES
                     elif sample_type == "FL":
@@ -451,6 +464,7 @@ def register_routes(bp):
 
 # app/routes/main/index.py
 
+
 @main_bp.route("/send-hourly-report")
 @login_required
 def send_hourly_report():
@@ -543,7 +557,8 @@ def send_hourly_report():
         # =========================================================================
         template_path = os.path.join(current_app.root_path, 'static', 'hourly_template.xlsx')
         if not os.path.exists(template_path):
-            if os.path.exists(template_path + ".xlsx"): template_path += ".xlsx"
+            if os.path.exists(template_path + ".xlsx"):
+                template_path += ".xlsx"
             else:
                 flash("Загвар файл олдсонгүй!", "danger")
                 return redirect(url_for('main.index'))
@@ -620,19 +635,27 @@ def send_hourly_report():
             # 1. СУУРЬ МӨРӨӨ ОЛОХ (PF211, UHG MV...)
             start_row = None
             for pf_key, r_num in PF_MAPPING.items():
-                if pf_key in code_upper: start_row = r_num; break
+                if pf_key in code_upper:
+                    start_row = r_num
+                    break
 
             if not start_row:
                 for k in HCC_KEYWORDS:
-                    if k in code_upper: start_row = 59; break
-                if not start_row and "UHG MASHCC" in code_upper and "MASHCC_2" not in code_upper: start_row = 59
+                    if k in code_upper:
+                        start_row = 59
+                        break
+                if not start_row and "UHG MASHCC" in code_upper and "MASHCC_2" not in code_upper:
+                    start_row = 59
 
             if not start_row:
                 for k in MIDD_KEYWORDS:
-                    if k in code_upper: start_row = 72; break
+                    if k in code_upper:
+                        start_row = 72
+                        break
 
             # Олдохгүй бол UHG MV рүү
-            if not start_row: start_row = 59
+            if not start_row:
+                start_row = 59
 
             # 2. ШИЛЖИЛТЭЭ ОЛОХ (D1, D2...)
             # Дээжийн нэрний сүүлийн хэсгийг шалгах (Жнь: ..._D1)
@@ -695,9 +718,13 @@ def send_hourly_report():
             base_row = None
             for (h_start, h_end), r_num in ROW_BUCKETS_4H.items():
                 if h_start < h_end:
-                    if h_start <= hour < h_end: base_row = r_num; break
+                    if h_start <= hour < h_end:
+                        base_row = r_num
+                        break
                 else:
-                    if hour >= h_start or hour < h_end: base_row = r_num; break
+                    if hour >= h_start or hour < h_end:
+                        base_row = r_num
+                        break
 
             # 2. Багана олох
             target_cols = None
@@ -724,7 +751,8 @@ def send_hourly_report():
                 cell_aad.font = font_reg
 
                 val_fm = getattr(calc, 'fm', None)
-                if val_fm is None: val_fm = calc.mt
+                if val_fm is None:
+                    val_fm = calc.mt
                 final_fm = val_fm if val_fm is not None else "-"
 
                 cell_fm = ws.cell(row=final_row, column=target_cols['FM'], value=final_fm)
@@ -768,9 +796,12 @@ def send_hourly_report():
             </p>
             <div style="border-top: 1px solid #000; margin-top: 10px; padding-top: 5px;">
                 <span style="font-size: 11px; color: #555;">
-                    This email is CONFIDENTIAL and is intended only for the use of the person to whom it is addressed.<br>
-                    Any distribution, copying or other use by anyone else is strictly prohibited.<br>
-                    If you have received this email in error, please telephone or email us immediately and destroy this email.
+                    This email is CONFIDENTIAL and is intended only for
+                    the use of the person to whom it is addressed.<br>
+                    Any distribution, copying or other use by anyone else
+                    is strictly prohibited.<br>
+                    If you have received this email in error, please telephone
+                    or email us immediately and destroy this email.
                 </span>
             </div>
         </div>

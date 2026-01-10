@@ -24,6 +24,7 @@ def get_gi_shift_config():
         logging.warning(f"Gi shift config load error: {e}")
     return DEFAULT_GI_SHIFT_CONFIG
 
+
 def assign_analyses_to_sample(sample=None, client_name=None, sample_type=None,
                                sample_code=None, sample_condition=None):
     """

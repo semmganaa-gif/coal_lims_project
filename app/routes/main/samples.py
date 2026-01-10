@@ -107,7 +107,10 @@ def register_routes(bp):
                         action='sample_deleted',
                         resource_type='Sample',
                         resource_id=sample_to_delete.id,
-                        details={'sample_code': sample_to_delete.sample_code, 'client_name': sample_to_delete.client_name}
+                        details={
+                            'sample_code': sample_to_delete.sample_code,
+                            'client_name': sample_to_delete.client_name
+                        }
                     )
                     db.session.delete(sample_to_delete)
                     deleted_count += 1
@@ -139,7 +142,7 @@ def register_routes(bp):
         # Хугацаа дууссан дээжүүд (retention_date < today, disposal_date = None)
         expired_samples = Sample.query.filter(
             Sample.retention_date < today,
-            Sample.disposal_date == None
+            Sample.disposal_date is None
         ).order_by(Sample.retention_date.asc()).all()
 
         # Удахгүй дуусах дээжүүд (retention_date <= today + 30 days)
@@ -147,7 +150,7 @@ def register_routes(bp):
         upcoming_samples = Sample.query.filter(
             Sample.retention_date >= today,
             Sample.retention_date <= warning_date,
-            Sample.disposal_date == None
+            Sample.disposal_date is None
         ).order_by(Sample.retention_date.asc()).all()
 
         # Устгагдсан дээжүүд (сүүлийн 90 хоног)
@@ -158,15 +161,15 @@ def register_routes(bp):
 
         # Хадгалах хугацаа тодорхойгүй дээжүүд (бүх статус)
         no_retention_samples = Sample.query.filter(
-            Sample.retention_date == None,
-            Sample.disposal_date == None,
-            Sample.return_sample == False
+            Sample.retention_date.is_(None),
+            Sample.disposal_date.is_(None),
+            Sample.return_sample.is_(False)
         ).order_by(Sample.received_date.desc()).limit(100).all()
 
         # Буцаах дээжүүд (return_sample=True, шинжилгээ дууссан)
         return_samples = Sample.query.filter(
-            Sample.return_sample == True,
-            Sample.disposal_date == None,
+            Sample.return_sample.is_(True),
+            Sample.disposal_date.is_(None),
             Sample.status == 'completed'
         ).order_by(Sample.received_date.desc()).all()
 
@@ -209,7 +212,7 @@ def register_routes(bp):
         for sid in sample_ids:
             try:
                 sample = Sample.query.get(int(sid))
-                if sample and Sample.disposal_date == None:
+                if sample and Sample.disposal_date is None:
                     sample.disposal_date = today
                     sample.disposal_method = disposal_method
 
@@ -298,8 +301,8 @@ def register_routes(bp):
 
         # Хугацаагүй бүх дээжийг олох
         samples = Sample.query.filter(
-            Sample.retention_date == None,
-            Sample.disposal_date == None
+            Sample.retention_date is None,
+            Sample.disposal_date is None
         ).all()
 
         if not samples:

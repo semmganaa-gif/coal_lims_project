@@ -73,7 +73,7 @@ def calculate_all_conversions(
                 final_results['relative_density'] = 0.0
         else:
             if 'relative_density' in final_results:
-                 del final_results['relative_density']
+                del final_results['relative_density']
 
     # 4) Хувиргалтын коэффициентууд
     factor_d = None   # -> _d

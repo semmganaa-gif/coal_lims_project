@@ -1,5 +1,14 @@
 # app/forms.py
 # -*- coding: utf-8 -*-
+"""
+WTForms формуудын тодорхойлолт.
+
+Flask-WTF ашиглан бүх вэб формуудыг тодорхойлно:
+- Нэвтрэх/хэрэглэгч удирдлага
+- Дээж бүртгэл
+- Шинжилгээний тохиргоо
+- Тайлангийн шүүлтүүр
+"""
 
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -31,6 +40,7 @@ def latin_only(form, field):
 # --- Checkbox-той олон сонголт хийхэд зориулсан туслах класс ---
 # (Analysis Config дээр олон шинжилгээ сонгоход ашиглана)
 class MultiCheckboxField(SelectMultipleField):
+    """Олон сонголттой checkbox field."""
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
@@ -39,6 +49,7 @@ class MultiCheckboxField(SelectMultipleField):
 # 1. ЛОГИН, ХЭРЭГЛЭГЧИЙН УДИРДЛАГЫН ФОРМУУД
 # ==============================================================================
 class LoginForm(FlaskForm):
+    """Хэрэглэгч нэвтрэх форм."""
     username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
     password = PasswordField("Нууц үг", validators=[DataRequired()])
     remember_me = BooleanField("Намайг сана")
@@ -46,6 +57,7 @@ class LoginForm(FlaskForm):
 
 
 class UserManagementForm(FlaskForm):
+    """Хэрэглэгч үүсгэх/засах форм."""
     username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
     password = PasswordField(
         "Нууц үг (Шинээр оруулах эсвэл солих бол бичнэ үү)",
@@ -99,6 +111,7 @@ class UserProfileForm(FlaskForm):
 # 2. ДЭЭЖ БҮРТГЭХ ФОРМ (AddSampleForm)
 # ==============================================================================
 class AddSampleForm(FlaskForm):
+    """Шинэ дээж бүртгэх форм."""
     client_name = RadioField(
         "Хүлээлгэн өгсөн нэгж",
         choices=[
@@ -270,6 +283,7 @@ class AddSampleForm(FlaskForm):
 
 # 🧩 Энгийн профайл (Simple Matrix)
 class SimpleProfileForm(FlaskForm):
+    """Энгийн шинжилгээний профайл форм (Simple Matrix)."""
     # Matrix хүснэгт нь HTML талаас loop хийж өгөгдлөө илгээдэг тул
     # энд зөвхөн Submit товчлуур байхад хангалттай.
     submit_simple = SubmitField("Энгийн тохиргоог хадгалах")
@@ -277,6 +291,7 @@ class SimpleProfileForm(FlaskForm):
 
 # 🧩 Pattern профайл (Regex Rules)
 class PatternProfileForm(FlaskForm):
+    """Pattern-д суурилсан шинжилгээний профайл форм."""
     pattern = StringField(
         "Нэрний бүтэц (Pattern)",
         validators=[DataRequired(message="Бүтэц оруулна уу.")],
@@ -304,7 +319,7 @@ class PatternProfileForm(FlaskForm):
             self.analyses.choices = [
                 (a.code, f"{a.order_num:02d} — {a.name} ({a.code})") for a in items
             ]
-        except Exception:
+        except (RuntimeError, ImportError):
             # DB холболт байхгүй үед (миграци г.м) алдаа өгөхгүй байх
             self.analyses.choices = []
 
@@ -313,6 +328,7 @@ class PatternProfileForm(FlaskForm):
 # 4. KPI / SHIFT ТАЙЛАН ФОРМ
 # ==============================================================================
 class KPIReportFilterForm(FlaskForm):
+    """KPI тайлангийн шүүлтүүр форм."""
     # Огнооны интервал
     start_date = DateField(
         "Эхлэх огноо",

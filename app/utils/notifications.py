@@ -62,7 +62,9 @@ SAMPLE_STATUS_TEMPLATE = """
         </tr>
         <tr>
             <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Шинэ статус:</strong></td>
-            <td style="padding: 10px; border: 1px solid #dee2e6; color: {{ color }};"><strong>{{ new_status }}</strong></td>
+            <td style="padding: 10px; border: 1px solid #dee2e6; color: {{ color }};">
+                <strong>{{ new_status }}</strong>
+            </td>
         </tr>
         {% if reason %}
         <tr style="background: #f8f9fa;">
@@ -109,7 +111,8 @@ EMAIL_SIGNATURE_TEMPLATE = """
                 </p>
                 <p style="margin: 0 0 3px 0;">
                     {% if sender_email %}
-                    | <a href="mailto:{{ sender_email }}" style="color: #0066cc; text-decoration: none;">{{ sender_email }}</a> |
+                    | <a href="mailto:{{ sender_email }}"
+                       style="color: #0066cc; text-decoration: none;">{{ sender_email }}</a> |
                     {% endif %}
                     <a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |
                 </p>
@@ -148,9 +151,9 @@ EQUIPMENT_CALIBRATION_TEMPLATE = """
         <tr style="{{ 'background: #fff3cd;' if eq.days_left <= 7 else '' }}">
             <td style="padding: 10px; border: 1px solid #dee2e6;">{{ eq.name }}</td>
             <td style="padding: 10px; border: 1px solid #dee2e6;">{{ eq.next_calibration }}</td>
-            <td style="padding: 10px; border: 1px solid #dee2e6; color: {{ '#dc3545' if eq.days_left <= 7 else '#28a745' }};">
-                <strong>{{ eq.days_left }} хоног</strong>
-            </td>
+            <td style="padding: 10px; border: 1px solid #dee2e6;
+                color: {{ '#dc3545' if eq.days_left <= 7 else '#28a745' }};">
+                <strong>{{ eq.days_left }} хоног</strong></td>
         </tr>
         {% endfor %}
     </table>

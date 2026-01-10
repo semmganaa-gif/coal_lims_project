@@ -1,0 +1,169 @@
+{#
+  Alpine.js + htmx жишээнүүд
+  Энэ файлыг template-д include хийж ашиглана.
+
+  Жишээ: {% include "components/_alpine_examples.html" %}
+#}
+
+{# ============================================================
+   ALPINE.JS ЖИШЭЭНҮҮД
+   ============================================================ #}
+
+{# 1. Toggle (jQuery-ийн оронд) #}
+{# Өмнө: <button onclick="$('#menu').toggle()">Toggle</button> #}
+<div x-data="{ open: false }" class="mb-3">
+  <button @click="open = !open" class="btn btn-primary btn-sm">
+    <i class="bi" :class="open ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+    Toggle Menu
+  </button>
+  <div x-show="open" x-transition class="mt-2 p-3 bg-light rounded">
+    Энэ хэсэг нээгдэнэ/хаагдана
+  </div>
+</div>
+
+{# 2. Dropdown with search #}
+<div x-data="{
+  open: false,
+  search: '',
+  items: ['Нүүрс', 'Хүрэн нүүрс', 'Антрацит', 'Коксжих нүүрс'],
+  get filtered() {
+    return this.items.filter(i => i.toLowerCase().includes(this.search.toLowerCase()))
+  }
+}" class="mb-3 position-relative" style="width: 250px;">
+  <input
+    type="text"
+    x-model="search"
+    @focus="open = true"
+    @click.outside="open = false"
+    class="form-control"
+    placeholder="Хайх...">
+  <div x-show="open && filtered.length" x-transition class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" style="z-index: 100;">
+    <template x-for="item in filtered" :key="item">
+      <div @click="search = item; open = false"
+           class="px-3 py-2 cursor-pointer hover-bg-light"
+           x-text="item"
+           style="cursor: pointer;"></div>
+    </template>
+  </div>
+</div>
+
+{# 3. Counter #}
+<div x-data="{ count: 0 }" class="mb-3">
+  <button @click="count--" class="btn btn-outline-secondary btn-sm">-</button>
+  <span class="mx-3 fw-bold" x-text="count"></span>
+  <button @click="count++" class="btn btn-outline-secondary btn-sm">+</button>
+</div>
+
+{# 4. Tabs #}
+<div x-data="{ tab: 'info' }" class="mb-3">
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a @click.prevent="tab = 'info'"
+         :class="{ 'active': tab === 'info' }"
+         class="nav-link" href="#">Мэдээлэл</a>
+    </li>
+    <li class="nav-item">
+      <a @click.prevent="tab = 'results'"
+         :class="{ 'active': tab === 'results' }"
+         class="nav-link" href="#">Үр дүн</a>
+    </li>
+  </ul>
+  <div class="tab-content p-3 border border-top-0 rounded-bottom">
+    <div x-show="tab === 'info'">Мэдээллийн хэсэг</div>
+    <div x-show="tab === 'results'">Үр дүнгийн хэсэг</div>
+  </div>
+</div>
+
+
+{# ============================================================
+   HTMX ЖИШЭЭНҮҮД
+   ============================================================ #}
+
+{# 1. Button click → Partial update #}
+<div class="mb-3">
+  <button hx-get="/api/sample_count"
+          hx-target="#sample-count-result"
+          hx-indicator="#loading"
+          class="btn btn-info btn-sm">
+    Дээжний тоо авах
+  </button>
+  <span id="loading" class="htmx-indicator">
+    <span class="spinner-border spinner-border-sm"></span>
+  </span>
+  <span id="sample-count-result" class="ms-2"></span>
+</div>
+
+{# 2. Search with debounce #}
+<div class="mb-3" style="width: 300px;">
+  <input type="text"
+         name="q"
+         hx-get="/api/search_samples"
+         hx-trigger="keyup changed delay:300ms"
+         hx-target="#search-results"
+         class="form-control"
+         placeholder="Дээж хайх...">
+  <div id="search-results" class="mt-2"></div>
+</div>
+
+{# 3. Form submit without page reload #}
+<form hx-post="/api/quick_save"
+      hx-target="#save-result"
+      hx-swap="innerHTML"
+      class="mb-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="input-group" style="width: 300px;">
+    <input type="text" name="note" class="form-control" placeholder="Тэмдэглэл...">
+    <button type="submit" class="btn btn-success">Хадгалах</button>
+  </div>
+  <div id="save-result" class="mt-2 text-success"></div>
+</form>
+
+{# 4. Delete with confirmation #}
+<button hx-delete="/api/sample/123"
+        hx-confirm="Устгахдаа итгэлтэй байна уу?"
+        hx-target="closest .sample-row"
+        hx-swap="outerHTML"
+        class="btn btn-danger btn-sm">
+  <i class="bi bi-trash"></i> Устгах
+</button>
+
+{# 5. Infinite scroll #}
+{#
+<div hx-get="/api/samples?page=2"
+     hx-trigger="revealed"
+     hx-swap="afterend">
+  Loading more...
+</div>
+#}
+
+
+{# ============================================================
+   ALPINE + HTMX ХОСЛУУЛАХ
+   ============================================================ #}
+
+{# Modal with htmx content loading #}
+<div x-data="{ showModal: false }">
+  <button @click="showModal = true" class="btn btn-primary btn-sm">
+    Дэлгэрэнгүй харах
+  </button>
+
+  <div x-show="showModal"
+       x-transition
+       @click.self="showModal = false"
+       class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+       style="background: rgba(0,0,0,0.5); z-index: 1050;">
+    <div class="bg-white rounded-3 p-4 shadow-lg" style="width: 500px; max-width: 90%;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Дэлгэрэнгүй</h5>
+        <button @click="showModal = false" class="btn-close"></button>
+      </div>
+      <div hx-get="/api/sample_detail/1"
+           hx-trigger="intersect once"
+           hx-swap="innerHTML">
+        <div class="text-center py-4">
+          <span class="spinner-border"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

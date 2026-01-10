@@ -95,3 +95,9 @@ app/static/uploads/chat/
 Screenshot*.jpg
 .claude/settings.local.json
 coverage.xml
+
+# Node.js / Vite
+node_modules/
+app/static/dist/
+coverage-js/
+*.tsbuildinfo
