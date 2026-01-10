@@ -14,6 +14,26 @@ import json
 logger = logging.getLogger(__name__)
 
 
+def log_action(
+    action: str,
+    entity_type: str,
+    entity_id: int,
+    details: Optional[str] = None,
+) -> None:
+    """
+    General audit log action for non-analysis entities.
+    Uses logger to record the action.
+    """
+    try:
+        user_id = current_user.id if getattr(current_user, "is_authenticated", False) else -1
+        logger.info(
+            f"[AUDIT] action={action} entity_type={entity_type} entity_id={entity_id} "
+            f"user_id={user_id} details={details}"
+        )
+    except Exception as e:
+        logger.warning(f"log_action failed: {e}")
+
+
 def _to_jsonable(data: Any) -> Any:
     """dataclass → dict, SQLAlchemy model → id гэх мэтээр JSON болох хэлбэрт оймсолж өгнө."""
     try:
