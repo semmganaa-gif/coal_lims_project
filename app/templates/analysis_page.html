@@ -1,4 +1,4 @@
-{# templates/analysis_page.html (v10 - Clean Parent) #}
+{# templates/analysis_page.html (v11 - Mobile Responsive) #}
 {% extends "base.html" %}
 
 {% block content %}
@@ -16,29 +16,50 @@
 </style>
 {% endif %}
 
-<div class="container-fluid">
-  {# --- STICKY CONTROLS --- #}
+{# Alpine.js state for mobile drawer #}
+<div class="container-fluid" x-data="{ drawerOpen: false }">
+
+  {# --- MOBILE DRAWER --- #}
+  {% include "components/mobile_drawer.html" %}
+
+  {# --- STICKY CONTROLS (Mobile Enhanced) --- #}
   <div class="sticky-controls">
-    <div class="d-flex justify-content-between align-items-center h-100">
-      <div>
-        <h2 class="mb-0 fs-4">
-          {{ title }} <span class="text-muted fs-6">({{ analysis.code }})</span>
+    <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-gap-2 md:tw-gap-0">
+      {# Title with mobile menu toggle #}
+      <div class="tw-flex tw-items-center tw-gap-2 tw-w-full md:tw-w-auto">
+        {# Mobile drawer toggle #}
+        <button @click="drawerOpen = true"
+                class="tw-mobile-only tw-p-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition tw-touch-target"
+                aria-label="Цэс нээх">
+          <i class="bi bi-list tw-text-xl"></i>
+        </button>
+        <h2 class="mb-0 tw-text-base md:tw-text-lg tw-font-bold tw-truncate">
+          {{ title }} <span class="tw-text-gray-500 tw-text-sm">({{ analysis.code }})</span>
         </h2>
       </div>
-      <div class="d-flex gap-2">
-        <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
-          <i class="bi bi-arrow-left me-1"></i> Буцах
+
+      {# Action buttons - Mobile optimized #}
+      <div class="tw-mobile-actions tw-w-full md:tw-w-auto">
+        <a href="{{ url_for('analysis.analysis_hub') }}"
+           class="btn btn-outline-secondary btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none">
+          <i class="bi bi-arrow-left"></i>
+          <span class="tw-mobile-hide tw-ml-1">Буцах</span>
         </a>
-        <button class="btn btn-outline-info btn-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Тоног төхөөрөмж">
-          <i class="bi bi-tools me-1"></i> <span class="d-none d-md-inline">Төхөөрөмж</span>
+        <button class="btn btn-outline-info btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
+                data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Тоног төхөөрөмж">
+          <i class="bi bi-tools"></i>
+          <span class="tw-mobile-hide tw-ml-1">Төхөөрөмж</span>
         </button>
-        <button class="btn btn-outline-primary btn-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle me-1"></i>
-          {% if is_mass_page %} Дээж (M) {% else %} Дээж сонгох {% endif %}
+        <button class="btn btn-outline-primary btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
+                data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+          <i class="bi bi-plus-circle"></i>
+          <span class="tw-mobile-hide tw-ml-1">{% if is_mass_page %}Дээж (M){% else %}Дээж{% endif %}</span>
         </button>
         {% if not is_mass_page %}
-        <button class="btn btn-success btn-sm d-flex align-items-center" id="save-analysis-results" data-action="save-results">
-          <i class="bi bi-check-lg me-1"></i> Хадгалах
+        <button class="btn btn-success btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
+                id="save-analysis-results" data-action="save-results">
+          <i class="bi bi-check-lg"></i>
+          <span class="tw-mobile-hide tw-ml-1">Хадгалах</span>
         </button>
         {% endif %}
       </div>
@@ -47,8 +68,8 @@
 
   {# --- MAIN CONTENT --- #}
   <div class="row g-3">
-    {# Sidebar - Зүүн тал #}
-    <div class="col-12 col-lg-3">
+    {# Sidebar - Hidden on mobile, visible in drawer #}
+    <div class="col-12 col-lg-3 tw-mobile-hide">
       <div class="analysis-sidebar-sticky">
         <div class="card mb-3">
           <div class="card-body p-3">{% include "analysis/partials/quick_ref.html" %}</div>
@@ -59,7 +80,7 @@
       </div>
     </div>
 
-    {# Шинжилгээний хүснэгт - Баруун тал #}
+    {# Шинжилгээний хүснэгт - Full width on mobile #}
     <div class="col-12 col-lg-9">
       <div class="card shadow-sm mb-3 border-0">
         <div class="card-body p-0">
@@ -74,7 +95,7 @@
       </div>
     </div>
   </div>
-</div>
+</div>{# end container-fluid with x-data #}
 
 <div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">

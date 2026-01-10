@@ -166,35 +166,137 @@
 }
 
 /* ========================================================================
-   11. RESPONSIVE DESIGN - Mobile Optimization
+   11. RESPONSIVE DESIGN - Mobile Optimization (Enhanced)
    ======================================================================== */
+
+/* --- TABLET (max-width: 768px) --- */
 @media (max-width: 768px) {
   .ag-theme-alpine {
     --ag-font-size: 12px;
+    --ag-header-height: 38px;
+    --ag-row-height: 42px;
   }
 
   .ag-grid-container {
     height: 60vh;
     min-height: 300px;
+    margin-top: 10px;
   }
 
   .ag-theme-alpine .ag-header-cell {
-    padding: 4px;
+    padding: 4px 8px;
   }
 
   .ag-theme-alpine .ag-cell {
-    padding: 4px;
+    padding: 4px 8px;
+  }
+
+  /* Compact header groups */
+  .ag-theme-alpine .ag-header-group-cell {
+    padding: 2px 4px;
+  }
+
+  /* Mobile-friendly column resize */
+  .ag-theme-alpine .ag-header-cell-resize {
+    width: 12px;
+  }
+
+  /* Horizontal scroll indicator */
+  .ag-theme-alpine .ag-body-horizontal-scroll {
+    height: 10px !important;
+  }
+
+  .ag-theme-alpine .ag-body-horizontal-scroll-viewport {
+    height: 10px !important;
   }
 }
 
+/* --- PHONE (max-width: 576px) --- */
 @media (max-width: 576px) {
   .ag-theme-alpine {
     --ag-font-size: 11px;
+    --ag-header-height: 36px;
+    --ag-row-height: 40px;
   }
 
   .ag-grid-container {
     height: 50vh;
     min-height: 250px;
+    margin-top: 5px;
+  }
+
+  .ag-theme-alpine .ag-root-wrapper {
+    border-radius: 8px;
+  }
+
+  /* Touch-friendly cell editing */
+  .ag-theme-alpine .ag-cell input,
+  .ag-theme-alpine .ag-cell select {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    min-height: 36px;
+    padding: 6px;
+  }
+
+  /* Horizontal scroll bar styling */
+  .ag-theme-alpine .ag-body-horizontal-scroll {
+    height: 12px !important;
+  }
+
+  .ag-theme-alpine .ag-body-horizontal-scroll-viewport::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .ag-theme-alpine .ag-body-horizontal-scroll-viewport::-webkit-scrollbar-thumb {
+    background: #adb5bd;
+    border-radius: 4px;
+  }
+
+  /* Hide less important columns on mobile */
+  .ag-theme-alpine .ag-header-cell[col-id="notes"],
+  .ag-theme-alpine .ag-cell[col-id="notes"] {
+    display: none !important;
+  }
+}
+
+/* --- TOUCH DEVICE OPTIMIZATIONS --- */
+@media (hover: none) and (pointer: coarse) {
+  .ag-theme-alpine {
+    --ag-row-height: 44px; /* Touch-friendly row height */
+  }
+
+  /* Touch feedback on rows */
+  .ag-theme-alpine .ag-row:active {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+  }
+
+  /* Touch feedback on cells */
+  .ag-theme-alpine .ag-cell:active {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+  }
+
+  /* Prevent text selection during touch */
+  .ag-theme-alpine .ag-row {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Pinned columns shadow for touch scroll */
+  .ag-theme-alpine .ag-pinned-left-cols-container {
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* --- LANDSCAPE MODE ON MOBILE --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .ag-grid-container {
+    height: calc(100vh - 120px);
+    min-height: 200px;
+  }
+
+  .ag-theme-alpine {
+    --ag-header-height: 32px;
+    --ag-row-height: 36px;
   }
 }
 

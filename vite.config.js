@@ -12,6 +12,11 @@ export default defineConfig({
     },
   },
 
+  // CSS тохиргоо (Tailwind)
+  css: {
+    postcss: './postcss.config.js',
+  },
+
   // Build тохиргоо
   build: {
     // Flask static folder руу гаргах
@@ -25,8 +30,8 @@ export default defineConfig({
       input: {
         // Main entry points
         main: resolve(__dirname, 'src/main.js'),
-        // Тусдаа bundle-ууд (шаардлагатай бол)
-        // analysis: resolve(__dirname, 'src/analysis.js'),
+        // Tailwind CSS entry point
+        styles: resolve(__dirname, 'src/styles.css'),
       },
       output: {
         // Asset naming

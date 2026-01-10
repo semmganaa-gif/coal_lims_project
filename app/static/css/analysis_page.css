@@ -374,3 +374,168 @@ input[type=number]{ -moz-appearance:textfield }
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
+
+/* ========================================
+   MOBILE RESPONSIVE STYLES
+   ======================================== */
+
+/* --- MOBILE: Extra Small (< 576px) --- */
+@media (max-width: 576px) {
+  .sticky-controls {
+    padding: 0.5rem 0.75rem;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    top: var(--nav-h, 56px);
+  }
+
+  .sticky-controls.scrolled {
+    padding: 0.375rem 0.75rem;
+  }
+
+  .sticky-controls h2 {
+    font-size: 0.9rem !important;
+    line-height: 1.2;
+  }
+
+  .sticky-controls .btn {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 36px;
+  }
+
+  .sticky-controls .btn i {
+    font-size: 1rem;
+  }
+
+  /* Table headers on mobile */
+  .analysis-table-2row thead tr:nth-child(1) th,
+  .analysis-table-2row thead tr:nth-child(2) th,
+  .analysis-table-1row thead th {
+    font-size: 0.7rem;
+    padding: 0.375rem 0.25rem;
+  }
+
+  /* Modal full width on mobile */
+  #selectSamplesModal .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  #selectSamplesModal .modal-content {
+    border-radius: 12px;
+  }
+
+  #selectSamplesModal .nav-tabs .nav-link {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  /* Hide sidebar column content on mobile - shown in drawer */
+  .col-lg-3:has(.analysis-sidebar-sticky) {
+    display: none;
+  }
+}
+
+/* --- MOBILE: Small (576px - 768px) --- */
+@media (max-width: 768px) {
+  .sticky-controls {
+    padding: 0.625rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .sticky-controls h2 {
+    font-size: 1rem;
+  }
+
+  /* Stack controls vertically on mobile */
+  .sticky-controls > div {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .sticky-controls .btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  /* Sidebar sticky adjustment */
+  .analysis-sidebar-sticky {
+    top: calc(var(--nav-h, 56px) + 80px);
+  }
+
+  /* 2-row table header adjustment */
+  .analysis-table-2row thead tr:nth-child(1) th {
+    top: calc(var(--nav-h, 56px) + 50px);
+    height: 35px;
+  }
+
+  .analysis-table-2row thead tr:nth-child(2) th {
+    top: calc(var(--nav-h, 56px) + 85px);
+  }
+
+  .analysis-table-1row thead th {
+    top: calc(var(--nav-h, 56px) + 50px);
+  }
+}
+
+/* --- TOUCH DEVICE OPTIMIZATIONS --- */
+@media (hover: none) and (pointer: coarse) {
+  .sticky-controls .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .sticky-controls .btn:active {
+    transform: scale(0.97);
+  }
+
+  #selectSamplesModal .table tbody tr:active {
+    background-color: #e0f2fe !important;
+  }
+}
+
+/* --- LANDSCAPE MODE ON MOBILE --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sticky-controls {
+    padding: 0.375rem 1rem;
+    position: relative;
+    top: 0;
+  }
+
+  .analysis-sidebar-sticky {
+    position: relative;
+    top: 0;
+  }
+}
+
+/* --- REDUCED MOTION PREFERENCE --- */
+@media (prefers-reduced-motion: reduce) {
+  .sticky-controls,
+  .sticky-controls .btn,
+  #selectSamplesModal .tab-pane {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* --- PRINT STYLES --- */
+@media print {
+  .sticky-controls {
+    position: relative;
+    top: 0;
+    box-shadow: none;
+    border-bottom: 1px solid #000;
+  }
+
+  .analysis-sidebar-sticky {
+    position: relative;
+    top: 0;
+  }
+
+  #selectSamplesModal,
+  #equipmentModal {
+    display: none !important;
+  }
+}
