@@ -91,12 +91,12 @@
           <i class="bi bi-house"></i>
           <span>Шинжилгээний төв</span>
         </a>
-        <a href="{{ url_for('main.samples') }}"
+        <a href="{{ url_for('main.index') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-box"></i>
           <span>Дээжүүд</span>
         </a>
-        <a href="{{ url_for('quality.quality_index') }}"
+        <a href="{{ url_for('quality.capa_list') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-check-circle"></i>
           <span>Чанар</span>
@@ -114,7 +114,7 @@
         <i class="bi bi-person-circle tw-mr-1"></i>
         {{ current_user.name if current_user.is_authenticated else 'Guest' }}
       </div>
-      <a href="{{ url_for('auth.logout') }}"
+      <a href="{{ url_for('main.logout') }}"
          class="tw-text-red-500 hover:tw-text-red-600 tw-transition">
         <i class="bi bi-box-arrow-right"></i> Гарах
       </a>
