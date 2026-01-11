@@ -201,7 +201,7 @@ def register_routes(bp):
         sample.analyses_to_perform = json.dumps(analyses)
 
         # Audit log
-        from app.routes.audit_log_service import log_action
+        from app.services.audit_log_service import log_action
         log_action(
             action="unassign_analysis",
             entity_type="sample",
