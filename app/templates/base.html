@@ -29,6 +29,8 @@
   {% endif %}
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=9">
+  <!-- Mobile CSS - Утас/таблетад зориулсан -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=10">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
   <script>
@@ -116,68 +118,7 @@
       z-index: 1100;
     }
 
-    /* ========== MOBILE RESPONSIVE STYLES ========== */
-    @media (max-width: 768px) {
-      :root {
-        --nav-h: 56px;
-      }
-
-      .navbar-main {
-        padding: 0.5rem 0.75rem;
-      }
-
-      .navbar-brand img {
-        height: 28px;
-      }
-
-      /* Mobile menu improvements */
-      .navbar-collapse {
-        position: fixed;
-        top: var(--nav-h);
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(10px);
-        padding: 1rem;
-        overflow-y: auto;
-        z-index: 1025;
-      }
-
-      .navbar-collapse .nav-link {
-        padding: 0.75rem 1rem !important;
-        font-size: 1rem;
-        border-radius: 8px;
-      }
-
-      .navbar-collapse .dropdown-menu {
-        position: static !important;
-        box-shadow: none;
-        border: 1px solid rgba(0,0,0,0.1);
-        margin-top: 0.25rem;
-      }
-
-      footer.lims-footer {
-        padding: 0.5rem;
-        font-size: 0.7rem;
-      }
-    }
-
-    /* Touch-friendly navigation items */
-    @media (hover: none) and (pointer: coarse) {
-      .nav-link, .dropdown-item {
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-      }
-    }
-
-    /* Safe area for notched devices */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      footer.lims-footer {
-        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-      }
-    }
+    /* Mobile стилүүд mobile.css файлд байна */
   </style>
 
   {% block head %}{% endblock %}
@@ -203,14 +144,14 @@
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
-            <li class="nav-item">
+            <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('main.index') }}">
-                <i class="bi bi-house-door me-1"></i>Нүүр
+                <i class="bi bi-box-seam me-1 text-primary"></i>Дээж бүртгэл
               </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('analysis.analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1"></i>Шинжилгээ
+                <i class="bi bi-clipboard-data me-1 text-success"></i>Шинжилгээ
               </a>
             </li>
 
@@ -271,9 +212,9 @@
 
             <!-- Ахлахын хяналт (Senior, Admin) -->
             {% if current_user.role in ['senior', 'admin'] %}
-            <li class="nav-item">
+            <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('analysis.ahlah_dashboard') }}">
-                <i class="bi bi-shield-check me-1"></i>Ахлахын хяналт
+                <i class="bi bi-shield-check me-1 text-warning"></i>Ахлахын хяналт
               </a>
             </li>
             {% endif %}
@@ -293,11 +234,18 @@
                 <i class="bi bi-bar-chart me-1"></i>Тайлан
               </a>
               <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('reports.dashboard') }}">
+                  <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.consumption') }}">
                   <i class="bi bi-table me-2"></i>Consumption
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.monthly_plan') }}">
                   <i class="bi bi-bar-chart-line me-2"></i>Monthly Plan
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('reports.chemist_report') }}">
+                  <i class="bi bi-person-badge me-2"></i>Химичийн тайлан
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">
                   <i class="bi bi-graph-up me-2"></i>Статистик
@@ -461,7 +409,7 @@
 
   {% if use_aggrid|default(false) %}
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=3"></script>
+  <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=4"></script>
   <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}?v=1"></script>
   {% endif %}
 
@@ -477,6 +425,20 @@
       window.addEventListener('resize', setNavHeight);
     })();
   </script>
+
+  <!-- Mobile debug -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var nav = document.getElementById('mainNavbar');
+      if (nav) {
+        nav.addEventListener('show.bs.collapse', function() { console.log('NAVBAR SHOW'); });
+        nav.addEventListener('shown.bs.collapse', function() { console.log('NAVBAR SHOWN'); });
+        nav.addEventListener('hide.bs.collapse', function() { console.log('NAVBAR HIDE'); });
+        nav.addEventListener('hidden.bs.collapse', function() { console.log('NAVBAR HIDDEN'); });
+      }
+    });
+  </script>
+
 
   <!-- User session check - Clear localStorage when different user logs in -->
   {% if current_user.is_authenticated %}

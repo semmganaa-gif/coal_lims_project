@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard — {{ year }}
+        </h4>
+        <div class="text-muted">
+            <i class="bi bi-calendar me-1"></i>{{ month }}-р сар
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 1 -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Дээж (энэ сар)</h6>
+                            <h2 class="mb-0">{{ "{:,}".format(samples_month) }}</h2>
+                            <small class="text-muted">Жилд: {{ "{:,}".format(samples_year) }}</small>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-box-seam fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Шинжилгээ (энэ сар)</h6>
+                            <h2 class="mb-0">{{ "{:,}".format(analyses_month) }}</h2>
+                            <small class="text-muted">Жилд: {{ "{:,}".format(analyses_year) }}</small>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-clipboard-check fs-4 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Алдаа (энэ сар)</h6>
+                            <h2 class="mb-0 {% if errors_month > 0 %}text-danger{% endif %}">{{ errors_month }}</h2>
+                            <small class="text-muted">Жилд: {{ errors_year }}</small>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-exclamation-triangle fs-4 text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-2">Идэвхтэй ажилтан</h6>
+                            <h2 class="mb-0">{{ active_users_month }}</h2>
+                            <small class="text-muted">Энэ сар</small>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="bi bi-people fs-4 text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Сүүлийн 6 сарын шинжилгээ</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Топ 5 ажилтан (энэ сар)</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for user in top_users %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                {% if loop.index == 1 %}<i class="bi bi-trophy-fill text-warning me-2"></i>
+                                {% elif loop.index == 2 %}<i class="bi bi-award-fill text-secondary me-2"></i>
+                                {% elif loop.index == 3 %}<i class="bi bi-award text-danger me-2"></i>
+                                {% else %}<span class="me-3 text-muted">{{ loop.index }}.</span>{% endif %}
+                                {{ user.name }}
+                            </span>
+                            <span class="badge bg-success rounded-pill">{{ user.count }}</span>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item text-center text-muted">Өгөгдөл байхгүй</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Тайлангууд руу шилжих</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-3 col-6">
+                            <a href="{{ url_for('reports.consumption') }}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-pie-chart me-2"></i>Consumption
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{{ url_for('reports.monthly_plan') }}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-calendar-check me-2"></i>Monthly Plan
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{{ url_for('reports.chemist_report') }}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-person-badge me-2"></i>Ажилтны тайлан
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-house me-2"></i>Нүүр хуудас
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = [{% for stat in monthly_stats %}'{{ stat.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    const data = [{% for stat in monthly_stats %}{{ stat.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    new Chart(document.getElementById('monthlyChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Шинжилгээний тоо',
+                data: data,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -35,8 +35,176 @@ Sample = M.Sample
 AnalysisResult = M.AnalysisResult
 AnalysisResultLog = M.AnalysisResultLog
 
+
+def _format_short_name(full_name: str) -> str:
+    """
+    "Нэр Овог" → "Нэр.О" болгох
+    Жишээ: "GANTULGA Ulziibuyan" → "Gantulga.U"
+    DB-д: "Нэр Овог" форматаар хадгалагдсан
+    """
+    if not full_name:
+        return ""
+    parts = full_name.strip().split()
+    if len(parts) >= 2:
+        first_name = parts[0].capitalize()
+        last_name = parts[1]
+        return f"{first_name}.{last_name[0].upper()}"
+    return full_name
+
+
 # Blueprint
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
+
+
+# ======================================================================
+#  0. DASHBOARD - Нэгдсэн тайлан
+# ======================================================================
+
+@reports_bp.route("/dashboard")
+@login_required
+def dashboard():
+    """
+    Dashboard - Бүх тайлангийн товч мэдээлэл нэг дэлгэцэнд
+    """
+    from app.models import Sample, AnalysisResult, AnalysisResultLog, User
+
+    now = now_local()
+    year = now.year
+    month = now.month
+
+    # Энэ сарын эхлэл/төгсгөл
+    month_start = datetime(year, month, 1)
+    if month == 12:
+        month_end = datetime(year + 1, 1, 1)
+    else:
+        month_end = datetime(year, month + 1, 1)
+
+    # Энэ жилийн эхлэл/төгсгөл
+    year_start = datetime(year, 1, 1)
+    year_end = datetime(year + 1, 1, 1)
+
+    # ========== KPI-ууд ==========
+
+    # 1. Дээжний тоо (энэ сар / энэ жил)
+    samples_month = Sample.query.filter(
+        Sample.received_date >= month_start.date(),
+        Sample.received_date < month_end.date()
+    ).count()
+
+    samples_year = Sample.query.filter(
+        Sample.received_date >= year_start.date(),
+        Sample.received_date < year_end.date()
+    ).count()
+
+    # 2. Шинжилгээний тоо (энэ сар / энэ жил)
+    work_actions = [
+        'CREATED_AUTO_APPROVED', 'CREATED_PENDING', 'CREATED_REJECTED', 'CREATED_VOID_RETEST',
+        'UPDATED_AUTO_APPROVED', 'UPDATED_PENDING', 'UPDATED_REJECTED', 'UPDATED_VOID_RETEST',
+    ]
+
+    analyses_month = AnalysisResultLog.query.filter(
+        AnalysisResultLog.action.in_(work_actions),
+        AnalysisResultLog.timestamp >= month_start,
+        AnalysisResultLog.timestamp < month_end
+    ).count()
+
+    analyses_year = AnalysisResultLog.query.filter(
+        AnalysisResultLog.action.in_(work_actions),
+        AnalysisResultLog.timestamp >= year_start,
+        AnalysisResultLog.timestamp < year_end
+    ).count()
+
+    # 3. Алдааны тоо (энэ сар / энэ жил)
+    errors_month = AnalysisResultLog.query.filter(
+        AnalysisResultLog.action == 'REJECTED',
+        AnalysisResultLog.timestamp >= month_start,
+        AnalysisResultLog.timestamp < month_end
+    ).count()
+
+    errors_year = AnalysisResultLog.query.filter(
+        AnalysisResultLog.action == 'REJECTED',
+        AnalysisResultLog.timestamp >= year_start,
+        AnalysisResultLog.timestamp < year_end
+    ).count()
+
+    # 4. Идэвхтэй ажилтнууд (энэ сар)
+    active_users_month = db.session.query(
+        func.count(func.distinct(AnalysisResultLog.user_id))
+    ).filter(
+        AnalysisResultLog.action.in_(work_actions),
+        AnalysisResultLog.timestamp >= month_start,
+        AnalysisResultLog.timestamp < month_end
+    ).scalar() or 0
+
+    # 5. Сарын тоо (сүүлийн 6 сар)
+    monthly_stats = []
+    for i in range(5, -1, -1):
+        m = month - i
+        y = year
+        if m <= 0:
+            m += 12
+            y -= 1
+        m_start = datetime(y, m, 1)
+        if m == 12:
+            m_end = datetime(y + 1, 1, 1)
+        else:
+            m_end = datetime(y, m + 1, 1)
+
+        cnt = AnalysisResultLog.query.filter(
+            AnalysisResultLog.action.in_(work_actions),
+            AnalysisResultLog.timestamp >= m_start,
+            AnalysisResultLog.timestamp < m_end
+        ).count()
+
+        monthly_stats.append({
+            'month': m,
+            'year': y,
+            'label': f"{m}-р сар",
+            'count': cnt
+        })
+
+    # 6. Топ 5 ажилтан (энэ сар)
+    top_users = (
+        db.session.query(
+            AnalysisResultLog.user_id,
+            func.count(AnalysisResultLog.id).label('cnt')
+        )
+        .filter(
+            AnalysisResultLog.action.in_(work_actions),
+            AnalysisResultLog.user_id.isnot(None),
+            AnalysisResultLog.timestamp >= month_start,
+            AnalysisResultLog.timestamp < month_end
+        )
+        .group_by(AnalysisResultLog.user_id)
+        .order_by(func.count(AnalysisResultLog.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    top_users_data = []
+    for uid, cnt in top_users:
+        user = User.query.get(uid)
+        if user:
+            top_users_data.append({
+                'name': _format_short_name(user.full_name) or user.username,
+                'count': cnt
+            })
+
+    return render_template(
+        "reports/dashboard.html",
+        title="Dashboard",
+        year=year,
+        month=month,
+        samples_month=samples_month,
+        samples_year=samples_year,
+        analyses_month=analyses_month,
+        analyses_year=analyses_year,
+        errors_month=errors_month,
+        errors_year=errors_year,
+        active_users_month=active_users_month,
+        monthly_stats=monthly_stats,
+        top_users=top_users_data,
+    )
 
 
 # ======================================================================
@@ -1072,3 +1240,314 @@ def api_weekly_performance():
         "weeks": weeks_info,
         "performance": performance
     })
+
+
+# ======================================================================
+#  III. ХИМИЧИЙН ТАЙЛАН - Chemist Performance Report
+# ======================================================================
+
+
+@reports_bp.route("/chemist_report")
+@login_required
+def chemist_report():
+    """
+    Химич нарын гүйцэтгэлийн тайлан:
+    1. Сараар шинжилгээний тоо
+    2. Шинжилгээний төрөл бүрээр тоо
+    3. Error reason (8 төрөл) - алдааны тоо
+    """
+    from app.models import User, AnalysisResult, AnalysisResultLog
+    from app.constants import ERROR_REASON_KEYS, ERROR_REASON_LABELS
+    from collections import defaultdict
+
+    year = _year_arg()
+
+    # Огнооны хүрээ (date_from, date_to параметрүүд)
+    date_from_str = request.args.get("date_from", "")
+    date_to_str = request.args.get("date_to", "")
+
+    if date_from_str:
+        try:
+            start_dt = datetime.strptime(date_from_str, "%Y-%m-%d")
+        except ValueError:
+            start_dt = datetime(year, 1, 1)
+    else:
+        start_dt = datetime(year, 1, 1)
+        date_from_str = start_dt.strftime("%Y-%m-%d")
+
+    if date_to_str:
+        try:
+            end_dt = datetime.strptime(date_to_str, "%Y-%m-%d") + timedelta(days=1)
+        except ValueError:
+            end_dt = datetime(year + 1, 1, 1)
+    else:
+        end_dt = datetime(year + 1, 1, 1)
+        date_to_str = (end_dt - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # Шинжилгээ хийсэн action-ууд (CREATED болон UPDATED)
+    work_actions = [
+        'CREATED_AUTO_APPROVED',
+        'CREATED_PENDING',
+        'CREATED_REJECTED',
+        'CREATED_VOID_RETEST',
+        'UPDATED_AUTO_APPROVED',
+        'UPDATED_PENDING',
+        'UPDATED_REJECTED',
+        'UPDATED_VOID_RETEST',
+    ]
+
+    # 1) Шинжилгээ хийсэн бүх хэрэглэгчдийг авах (бүх role)
+    # CREATED_* action-д user_id нь шинжилгээ оруулсан хүн
+    user_ids_with_results = (
+        db.session.query(AnalysisResultLog.user_id)
+        .filter(
+            AnalysisResultLog.action.in_(work_actions),
+            AnalysisResultLog.user_id.isnot(None),
+            AnalysisResultLog.timestamp >= start_dt,
+            AnalysisResultLog.timestamp < end_dt,
+        )
+        .distinct()
+        .all()
+    )
+    user_ids = [uid[0] for uid in user_ids_with_results]
+
+    # Тэдгээр хэрэглэгчдийн мэдээллийг авах
+    chemists = User.query.filter(User.id.in_(user_ids)).order_by(User.full_name).all() if user_ids else []
+
+    # 2) Шинжилгээний үр дүнг авах - CREATED_* action-д user_id ашиглах
+    results = (
+        db.session.query(
+            AnalysisResultLog.user_id,
+            AnalysisResultLog.analysis_code,
+            extract("month", AnalysisResultLog.timestamp).label("month"),
+            func.count(AnalysisResultLog.id).label("cnt")
+        )
+        .filter(
+            AnalysisResultLog.action.in_(work_actions),
+            AnalysisResultLog.user_id.isnot(None),
+            AnalysisResultLog.timestamp >= start_dt,
+            AnalysisResultLog.timestamp < end_dt,
+        )
+        .group_by(
+            AnalysisResultLog.user_id,
+            AnalysisResultLog.analysis_code,
+            extract("month", AnalysisResultLog.timestamp)
+        )
+        .all()
+    )
+
+    # 3) Алдааны логуудыг авах (REJECTED)
+    # AnalysisResult.user_id = анхны химич (алдаа гаргасан)
+    error_logs = (
+        db.session.query(
+            AnalysisResult.user_id,
+            AnalysisResultLog.error_reason,
+            func.count(AnalysisResultLog.id).label("cnt")
+        )
+        .join(AnalysisResult, AnalysisResult.id == AnalysisResultLog.analysis_result_id)
+        .filter(
+            AnalysisResultLog.action == "REJECTED",
+            AnalysisResultLog.error_reason.isnot(None),
+            AnalysisResultLog.timestamp >= start_dt,
+            AnalysisResultLog.timestamp < end_dt,
+        )
+        .group_by(
+            AnalysisResult.user_id,
+            AnalysisResultLog.error_reason
+        )
+        .all()
+    )
+
+    # 4) Өгөгдлийг бүтэцлэх
+    # chemist_data[user_id] = {
+    #   'name': ...,
+    #   'monthly': {1: count, 2: count, ...},
+    #   'by_analysis': {'Aad': count, 'Vad': count, ...},
+    #   'errors': {'sample_prep': count, ...},
+    #   'total': count
+    # }
+    chemist_data = {}
+
+    # Химичуудыг map-д нэмэх
+    for user in chemists:
+        chemist_data[user.id] = {
+            'id': user.id,
+            'name': _format_short_name(user.full_name) or user.username,
+            'monthly': {m: 0 for m in range(1, 13)},
+            'by_analysis': defaultdict(int),
+            'errors': {key: 0 for key in ERROR_REASON_KEYS},
+            'total': 0,
+            'error_total': 0,
+            'rank_total': None,
+            'rank_quality': None,
+            'quarterly': [0, 0, 0, 0],
+            'quarterly_growth': [0, 0, 0],
+        }
+
+    # Шинжилгээний үр дүнг нэмэх
+    all_analysis_codes = set()
+    for row in results:
+        user_id = row.user_id
+        if user_id not in chemist_data:
+            # Химич биш хэрэглэгч байж магадгүй
+            user = User.query.get(user_id)
+            if user:
+                chemist_data[user_id] = {
+                    'id': user_id,
+                    'name': _format_short_name(user.full_name) or user.username,
+                    'monthly': {m: 0 for m in range(1, 13)},
+                    'by_analysis': defaultdict(int),
+                    'errors': {key: 0 for key in ERROR_REASON_KEYS},
+                    'total': 0,
+                    'error_total': 0,
+                    'rank_total': None,
+                    'rank_quality': None,
+                    'quarterly': [0, 0, 0, 0],
+                    'quarterly_growth': [0, 0, 0],
+                }
+            else:
+                continue
+
+        month = int(row.month) if row.month else 0
+        code = row.analysis_code or ""
+        cnt = row.cnt
+
+        if month >= 1 and month <= 12:
+            chemist_data[user_id]['monthly'][month] += cnt
+        chemist_data[user_id]['by_analysis'][code] += cnt
+        chemist_data[user_id]['total'] += cnt
+        all_analysis_codes.add(code)
+
+    # Алдааны логуудыг нэмэх
+    for row in error_logs:
+        user_id = row.user_id
+        if user_id not in chemist_data:
+            continue
+        reason = row.error_reason or ""
+        cnt = row.cnt
+        if reason in chemist_data[user_id]['errors']:
+            chemist_data[user_id]['errors'][reason] += cnt
+            chemist_data[user_id]['error_total'] += cnt
+
+    # 5) Нийт дүн тооцох
+    grand_monthly = {m: 0 for m in range(1, 13)}
+    grand_by_analysis = defaultdict(int)
+    grand_errors = {key: 0 for key in ERROR_REASON_KEYS}
+    grand_total = 0
+    grand_error_total = 0
+
+    for uid, data in chemist_data.items():
+        for m in range(1, 13):
+            grand_monthly[m] += data['monthly'][m]
+        for code, cnt in data['by_analysis'].items():
+            grand_by_analysis[code] += cnt
+        for key in ERROR_REASON_KEYS:
+            grand_errors[key] += data['errors'][key]
+        grand_total += data['total']
+        grand_error_total += data['error_total']
+
+    # 6) Өмнөх жилийн өгөгдөл (харьцуулалтанд)
+    prev_year = year - 1
+    prev_start_dt = datetime(prev_year, 1, 1)
+    prev_end_dt = datetime(prev_year + 1, 1, 1)
+
+    prev_year_results = (
+        db.session.query(
+            extract("month", AnalysisResultLog.timestamp).label("month"),
+            func.count(AnalysisResultLog.id).label("cnt")
+        )
+        .filter(
+            AnalysisResultLog.action.in_(work_actions),
+            AnalysisResultLog.user_id.isnot(None),
+            AnalysisResultLog.timestamp >= prev_start_dt,
+            AnalysisResultLog.timestamp < prev_end_dt,
+        )
+        .group_by(extract("month", AnalysisResultLog.timestamp))
+        .all()
+    )
+
+    prev_monthly = {m: 0 for m in range(1, 13)}
+    for row in prev_year_results:
+        month = int(row.month) if row.month else 0
+        if 1 <= month <= 12:
+            prev_monthly[month] = row.cnt
+
+    # 7) Эрэмбэлэх (нийт тоогоор буурах)
+    sorted_chemists = sorted(
+        chemist_data.values(),
+        key=lambda x: x['total'],
+        reverse=True
+    )
+
+    # Байр эзлүүлэх
+    for idx, chemist in enumerate(sorted_chemists):
+        chemist['rank_total'] = idx + 1
+
+    # Чанараар эрэмбэлэх (алдааны хувь бага = сайн)
+    sorted_by_quality = sorted(
+        [c for c in chemist_data.values() if c['total'] >= 10],  # 10+ шинжилгээтэй
+        key=lambda x: (x['error_total'] / x['total'] * 100) if x['total'] > 0 else 100
+    )
+    for idx, chemist in enumerate(sorted_by_quality):
+        chemist['rank_quality'] = idx + 1
+
+    # Сар бүрийн өсөлт/бууралт тооцох
+    for chemist in chemist_data.values():
+        monthly = chemist['monthly']
+        growth = []
+        for m in range(2, 13):
+            prev = monthly.get(m - 1, 0)
+            curr = monthly.get(m, 0)
+            if prev > 0:
+                pct = ((curr - prev) / prev) * 100
+            elif curr > 0:
+                pct = 100  # 0-ээс өссөн
+            else:
+                pct = 0
+            growth.append(round(pct, 1))
+        chemist['monthly_growth'] = growth
+
+        # Улирлын дүн
+        q1 = sum(monthly.get(m, 0) for m in [1, 2, 3])
+        q2 = sum(monthly.get(m, 0) for m in [4, 5, 6])
+        q3 = sum(monthly.get(m, 0) for m in [7, 8, 9])
+        q4 = sum(monthly.get(m, 0) for m in [10, 11, 12])
+        chemist['quarterly'] = [q1, q2, q3, q4]
+
+        # Улирлын өсөлт
+        quarterly_growth = []
+        quarters = [q1, q2, q3, q4]
+        for i in range(1, 4):
+            prev = quarters[i - 1]
+            curr = quarters[i]
+            if prev > 0:
+                pct = ((curr - prev) / prev) * 100
+            elif curr > 0:
+                pct = 100
+            else:
+                pct = 0
+            quarterly_growth.append(round(pct, 1))
+        chemist['quarterly_growth'] = quarterly_growth
+
+    # Шинжилгээний кодуудыг эрэмбэлэх
+    sorted_analysis_codes = sorted(all_analysis_codes)
+
+    return render_template(
+        "reports/chemist_report.html",
+        title=f"Химичийн тайлан — {year}",
+        year=year,
+        date_from=date_from_str,
+        date_to=date_to_str,
+        chemists=sorted_chemists,
+        chemists_by_quality=sorted_by_quality,
+        analysis_codes=sorted_analysis_codes,
+        error_reason_keys=ERROR_REASON_KEYS,
+        error_reason_labels=ERROR_REASON_LABELS,
+        grand_monthly=grand_monthly,
+        grand_by_analysis=dict(grand_by_analysis),
+        grand_errors=grand_errors,
+        grand_total=grand_total,
+        grand_error_total=grand_error_total,
+        prev_year=prev_year,
+        prev_monthly=prev_monthly,
+    )

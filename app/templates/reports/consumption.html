@@ -327,7 +327,7 @@
       </div>
 
       <form method="get" class="d-inline">
-        <select name="year" class="form-select form-select-sm d-inline-block" style="width:auto" onchange="this.form.submit()">
+        <select name="year" class="form-select form-select-sm d-inline-block" style="width: 90px;" onchange="this.form.submit()">
           {% for y in range(year-3, year+2) %}
             <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
           {% endfor %}

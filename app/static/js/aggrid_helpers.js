@@ -180,6 +180,17 @@
     singleClickEdit: true,
     stopEditingWhenCellsLoseFocus: true,
     enterNavigatesVertically: true,
+    // Mobile: Тоон keyboard харуулах
+    onCellEditingStarted: function(params) {
+      if (window.innerWidth < 992) {
+        setTimeout(function() {
+          var input = params.api.getCellEditorInstances()[0]?.getGui()?.querySelector('input');
+          if (input && (input.type === 'text' || input.type === 'number')) {
+            input.setAttribute('inputmode', 'decimal');
+          }
+        }, 10);
+      }
+    },
   };
 
   /**
@@ -293,4 +304,17 @@
   w.LIMS_AGGRID.getStandardStatusBar = getStandardStatusBar;
 
   console.log('✅ LIMS AG Grid Helpers loaded (v2.0 - Modern Navigation)');
+
+  // Mobile: AG Grid дотор input focus хийхэд тоон keyboard харуулах
+  if (w.innerWidth < 992) {
+    document.addEventListener('focusin', function(e) {
+      var input = e.target;
+      if (input.tagName === 'INPUT' && input.closest('.ag-cell-editor')) {
+        if (!input.hasAttribute('inputmode')) {
+          input.setAttribute('inputmode', 'decimal');
+        }
+      }
+    }, true);
+    console.log('📱 Mobile numeric keyboard enabled for AG Grid inputs');
+  }
 })(window);

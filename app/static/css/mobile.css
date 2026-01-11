@@ -1,0 +1,435 @@
+/*
+ * MOBILE CSS - Утас/Таблетад зориулсан загвар
+ * Зөвхөн 768px-ээс бага дэлгэцэнд ажиллана
+ * Desktop загвар өөрчлөгдөхгүй
+ */
+
+/* ============================================
+   GLOBAL MOBILE STYLES
+   ============================================ */
+@media (max-width: 768px) {
+    /* Үндсэн container илүү өргөн */
+    .container-fluid {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    /* Navbar товч болгох */
+    .navbar-brand {
+        font-size: 0.9rem !important;
+    }
+}
+
+
+/* ============================================
+   1. ДЭЭЖ БҮРТГЭХ ХУУДАС (index.html)
+   - Жагсаалтыг нуух, зөвхөн бүртгэх form харуулах
+   ============================================ */
+@media (max-width: 768px) {
+    /* Жагсаалт tab-г нуух */
+    #list-tab {
+        display: none !important;
+    }
+
+    /* "Шинэ дээж" tab идэвхтэй болгох */
+    #add-tab {
+        border-radius: 8px !important;
+    }
+
+    /* Жагсаалт panel-г нуух */
+    #list-pane {
+        display: none !important;
+    }
+
+    /* Add pane-г үргэлж харуулах */
+    #add-pane {
+        display: block !important;
+        opacity: 1 !important;
+    }
+
+    /* Hub grid 2 багана болгох */
+    .hub-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        padding: 0 0.5rem !important;
+    }
+
+    /* Hub cards жижиг болгох */
+    .hub-card {
+        padding: 1rem 0.75rem !important;
+        border-radius: 12px !important;
+    }
+
+    .hub-card .hub-icon {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .hub-card .hub-title {
+        font-size: 0.85rem !important;
+    }
+
+    .hub-card .hub-desc {
+        font-size: 0.7rem !important;
+    }
+
+    /* Header жижиг болгох */
+    .hub-header h1 {
+        font-size: 1.25rem !important;
+    }
+
+    .hub-header p {
+        font-size: 0.8rem !important;
+    }
+
+    /* Sample gateway өндөр */
+    .sample-gateway {
+        height: auto !important;
+        min-height: calc(100vh - 100px);
+        padding: 0.5rem !important;
+    }
+
+    /* Form container */
+    .form-container {
+        flex-direction: column !important;
+    }
+
+    .form-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Tabs нуух - зөвхөн add харуулах */
+    .nav-tabs {
+        display: none !important;
+    }
+}
+
+
+/* ============================================
+   2. ШИНЖИЛГЭЭНИЙ ХУУДАС (/analysis_page, /analysis_hub)
+   - Үр дүн оруулах form-д төвлөрөх
+   ============================================ */
+@media (max-width: 768px) {
+    /* Analysis page sidebar нуух (аль хэдийн tw-mobile-hide класстай) */
+    .tw-mobile-hide {
+        display: none !important;
+    }
+
+    /* Sticky controls compact */
+    .sticky-controls {
+        padding: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Table scroll */
+    .table-scroll-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Input fields - iOS zoom-г зогсоох */
+    .analysis-input,
+    .form-control,
+    input[type="text"],
+    input[type="number"] {
+        font-size: 16px !important;
+    }
+
+    /* Sample rows compact */
+    .sample-row {
+        padding: 0.5rem !important;
+    }
+
+    /* Action buttons том болгох */
+    .btn-save-results,
+    #save-analysis-results,
+    #save-analysis-results-mobile {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+    }
+
+    /* Analysis hub - cards grid */
+    .analysis-hub-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+
+    .analysis-card {
+        padding: 0.75rem !important;
+    }
+
+    .analysis-card .icon {
+        font-size: 1.5rem !important;
+    }
+
+    .analysis-card .title {
+        font-size: 0.9rem !important;
+    }
+
+    /* Modal full width */
+    .modal-dialog {
+        margin: 0.5rem !important;
+        max-width: calc(100% - 1rem) !important;
+    }
+}
+
+
+/* ============================================
+   3. АХЛАХЫН ХЯНАЛТ (/ahlah_dashboard)
+   - Батлах/буцаах товчнуудад төвлөрөх
+   ============================================ */
+@media (max-width: 768px) {
+    /* Main layout - sidebar нуух */
+    .ahlah-layout {
+        flex-direction: column !important;
+    }
+
+    .ahlah-sidebar {
+        display: none !important;
+    }
+
+    .ahlah-main {
+        width: 100% !important;
+    }
+
+    /* Page header compact */
+    .page-header {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        padding: 1rem !important;
+        border-radius: 12px !important;
+    }
+
+    .page-header h4 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Metrics sidebar - үргэлж нуух mobile-д */
+    .metrics-sidebar {
+        display: none !important;
+    }
+
+    /* Filter section compact */
+    .filter-controls {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    .filter-controls .form-select,
+    .filter-controls .form-control {
+        width: 100% !important;
+    }
+
+    /* Result cards compact */
+    .result-card {
+        padding: 0.75rem !important;
+        margin-bottom: 0.75rem !important;
+        border-radius: 12px !important;
+    }
+
+    .result-header {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    .result-info {
+        flex-direction: column !important;
+        gap: 0.25rem !important;
+    }
+
+    /* Action buttons - том, хүрэхэд амар */
+    .result-actions {
+        display: flex !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        margin-top: 0.75rem !important;
+    }
+
+    .btn-action {
+        flex: 1 !important;
+        padding: 0.75rem 0.5rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 8px !important;
+    }
+
+    .btn-action.approve {
+        background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+    }
+
+    .btn-action.reject {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    }
+
+    /* Bulk action buttons */
+    #bulk-approve-btn,
+    #bulk-reject-btn {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Stats cards нуух */
+    .stats-grid,
+    .chemist-stats-card,
+    .analysis-stats-card {
+        display: none !important;
+    }
+
+    /* Table compact */
+    .table-responsive {
+        font-size: 0.8rem !important;
+    }
+}
+
+
+/* ============================================
+   PHONE SPECIFIC (< 576px)
+   ============================================ */
+@media (max-width: 576px) {
+    /* Hub grid нэг багана */
+    .hub-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* KPI нэг багана */
+    .kpi-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Buttons full width */
+    .btn-group {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    .btn-group .btn {
+        width: 100% !important;
+        border-radius: 8px !important;
+        margin-bottom: 0.25rem !important;
+    }
+}
+
+
+/* ============================================
+   MOBILE NAVBAR - БҮХ СТИЛҮҮД
+   Bootstrap lg breakpoint = 992px
+   ============================================ */
+@media (max-width: 991.98px) {
+    /* Root variables */
+    :root {
+        --nav-h: 56px;
+    }
+
+    /* Navbar compact */
+    .navbar-main {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    .navbar-brand img {
+        height: 28px !important;
+    }
+
+    /* Navbar collapse - энгийн */
+    .navbar-collapse {
+        background: #fff !important;
+        padding: 1rem !important;
+    }
+
+    /* Nav links - том touch target */
+    .navbar-collapse .nav-link {
+        padding: 0.75rem 1rem !important;
+        font-size: 1rem !important;
+        border-radius: 8px !important;
+        display: block !important;
+    }
+
+    /* Mobile: Бүх dropdown болон бусад цэсийг нуух */
+    .navbar-collapse .navbar-nav > .nav-item.dropdown,
+    .navbar-collapse .navbar-nav > .nav-item:not(.mobile-nav-item) {
+        display: none !important;
+    }
+
+    /* Mobile-д зөвхөн mobile-nav-item харагдана */
+    .navbar-collapse .navbar-nav > .nav-item.mobile-nav-item {
+        display: block !important;
+    }
+
+    /* Mobile nav items - том, тод */
+    .navbar-collapse .mobile-nav-item .nav-link {
+        display: flex !important;
+        align-items: center !important;
+        gap: 1rem !important;
+        padding: 1rem 1.25rem !important;
+        margin-bottom: 0.5rem !important;
+        background: #f8f9fa !important;
+        border-radius: 12px !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #333 !important;
+        text-decoration: none !important;
+    }
+
+    .navbar-collapse .mobile-nav-item .nav-link:active {
+        background: #e9ecef !important;
+        transform: scale(0.98);
+    }
+
+    .navbar-collapse .mobile-nav-item .nav-link i {
+        font-size: 1.5rem !important;
+        width: 2rem !important;
+        text-align: center !important;
+    }
+
+    /* Icon colors */
+    .navbar-collapse .mobile-nav-item .nav-link .text-primary { color: #0d6efd !important; }
+    .navbar-collapse .mobile-nav-item .nav-link .text-success { color: #198754 !important; }
+    .navbar-collapse .mobile-nav-item .nav-link .text-warning { color: #ffc107 !important; }
+
+    /* Footer compact */
+    footer.lims-footer {
+        padding: 0.5rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* Body scroll lock */
+    body.navbar-open {
+        overflow: hidden !important;
+    }
+}
+
+/* Touch-friendly - 44px минимум */
+@media (hover: none) and (pointer: coarse) {
+    .nav-link, .dropdown-item {
+        min-height: 44px !important;
+    }
+}
+
+/* Safe area for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    footer.lims-footer {
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+@media (max-width: 768px) {
+    /* Desktop-д харуулах, Mobile-д нуух */
+    .hide-mobile {
+        display: none !important;
+    }
+
+    /* Mobile-д л харуулах */
+    .show-mobile {
+        display: block !important;
+    }
+}
+
+@media (min-width: 769px) {
+    /* Mobile-д л харуулах class-г desktop-д нуух */
+    .show-mobile {
+        display: none !important;
+    }
+}

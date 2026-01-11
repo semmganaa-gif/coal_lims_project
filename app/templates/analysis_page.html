@@ -19,47 +19,44 @@
 {# Alpine.js state for mobile drawer #}
 <div class="container-fluid" x-data="{ drawerOpen: false }">
 
-  {# --- MOBILE DRAWER --- #}
+  {# --- MOBILE DRAWER (зөвхөн mobile дээр) --- #}
   {% include "components/mobile_drawer.html" %}
 
-  {# --- STICKY CONTROLS (Mobile Enhanced) --- #}
+  {# --- STICKY CONTROLS --- #}
   <div class="sticky-controls">
-    <div class="tw-flex tw-flex-col md:tw-flex-row tw-justify-between tw-items-start md:tw-items-center tw-gap-2 md:tw-gap-0">
-      {# Title with mobile menu toggle #}
-      <div class="tw-flex tw-items-center tw-gap-2 tw-w-full md:tw-w-auto">
-        {# Mobile drawer toggle #}
-        <button @click="drawerOpen = true"
-                class="tw-mobile-only tw-p-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition tw-touch-target"
-                aria-label="Цэс нээх">
-          <i class="bi bi-list tw-text-xl"></i>
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        {# Mobile drawer toggle (зөвхөн mobile) #}
+        <button @click="drawerOpen = true" class="btn btn-outline-secondary btn-sm d-md-none">
+          <i class="bi bi-list"></i>
         </button>
-        <h2 class="mb-0 tw-text-base md:tw-text-lg tw-font-bold tw-truncate">
-          {{ title }} <span class="tw-text-gray-500 tw-text-sm">({{ analysis.code }})</span>
-        </h2>
+        <h2 class="mb-0 fs-5">{{ title }}</h2>
       </div>
-
-      {# Action buttons - Mobile optimized #}
-      <div class="tw-mobile-actions tw-w-full md:tw-w-auto">
-        <a href="{{ url_for('analysis.analysis_hub') }}"
-           class="btn btn-outline-secondary btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none">
-          <i class="bi bi-arrow-left"></i>
-          <span class="tw-mobile-hide tw-ml-1">Буцах</span>
+      {# Desktop товчнууд (mobile дээр нуух) #}
+      <div class="d-none d-md-flex gap-2">
+        <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left"></i> Буцах
         </a>
-        <button class="btn btn-outline-info btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
-                data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Тоног төхөөрөмж">
-          <i class="bi bi-tools"></i>
-          <span class="tw-mobile-hide tw-ml-1">Төхөөрөмж</span>
+        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Тоног төхөөрөмж">
+          <i class="bi bi-tools"></i> Төхөөрөмж
         </button>
-        <button class="btn btn-outline-primary btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
-                data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i>
-          <span class="tw-mobile-hide tw-ml-1">{% if is_mass_page %}Дээж (M){% else %}Дээж{% endif %}</span>
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}Дээж (M){% else %}Дээж{% endif %}
         </button>
         {% if not is_mass_page %}
-        <button class="btn btn-success btn-sm tw-flex tw-items-center tw-justify-center tw-flex-1 md:tw-flex-none"
-                id="save-analysis-results" data-action="save-results">
-          <i class="bi bi-check-lg"></i>
-          <span class="tw-mobile-hide tw-ml-1">Хадгалах</span>
+        <button class="btn btn-success btn-sm" id="save-analysis-results" data-action="save-results">
+          <i class="bi bi-check-lg"></i> Хадгалах
+        </button>
+        {% endif %}
+      </div>
+      {# Mobile: Дээж + Хадгалах товч #}
+      <div class="d-md-none d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+          <i class="bi bi-plus-circle"></i> Дээж
+        </button>
+        {% if not is_mass_page %}
+        <button class="btn btn-success btn-sm" id="save-analysis-results-mobile" data-action="save-results">
+          <i class="bi bi-check-lg"></i> Хадгалах
         </button>
         {% endif %}
       </div>
