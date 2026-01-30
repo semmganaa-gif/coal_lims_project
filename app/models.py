@@ -8,6 +8,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy.types import Date, Text
 from sqlalchemy import CheckConstraint
+from sqlalchemy.orm import validates
+import re
 import json
 
 # Монгол цаг
@@ -44,6 +46,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     password_hash = db.Column(db.String(256))
     role = db.Column(db.String(64), index=True, default="prep")
+
+    # Мульти-лаборатори эрх
+    allowed_labs = db.Column(db.JSON, default=['coal'])  # ['coal', 'petrography', 'water']
 
     # Хувийн мэдээлэл (Email signature-д ашиглана)
     full_name = db.Column(db.String(100))  # Бүтэн нэр
@@ -203,6 +208,7 @@ class Sample(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_user_id"), index=True)
 
     status = db.Column(db.String(64), default="new", index=True)
+    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water'
     sample_date = db.Column(Date, default=lambda: now_mn().date())
 
     sample_condition = db.Column(db.String(100))
@@ -235,10 +241,12 @@ class Sample(db.Model):
     disposal_date = db.Column(Date)  # Устгах огноо
     disposal_method = db.Column(db.String(100))  # Яаж устгасан
 
-    # ✅ CHECK CONSTRAINT
+    # ✅ CHECK CONSTRAINT (Нүүрс + Усны эх үүсвэр)
     __table_args__ = (
         CheckConstraint(
-            "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','Proc','LAB')",
+            "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','Proc','LAB',"
+            "'naimdain','maiga','tsagaan_khad','sum','uurhaichin','tsetsii',"
+            "'gallerey','negdsen_office','uutsb','sbutsb','busad','dotood_khyanalt')",
             name="ck_sample_client_name",
         ),
     )
@@ -278,6 +286,41 @@ class Sample(db.Model):
         if not hasattr(self, "_calculations_cache"):
             self._calculations_cache = SampleCalculations(self)
         return self._calculations_cache
+
+    @validates('sample_code')
+    def validate_sample_code(self, key, value):
+        """
+        Sample code-г нормализаци хийх.
+        - Нүүрс/Петрограф: Latin үсэг, тоо, тусгай тэмдэгт (uppercase)
+        - Ус/Микробиологи: Кирилл + Latin + тоо + тусгай тэмдэгт (хэвээр)
+        """
+        if value is None:
+            return value
+
+        value = str(value).strip()
+
+        # Усны/микробиологийн дээж → Кирилл зөвшөөрнө
+        # Кирилл үсэг агуулж байвал усны дээж гэж үзнэ (lab_type тохируулагдаагүй байж болно)
+        has_cyrillic = bool(re.search(r'[\u0400-\u04FF]', value))
+        if has_cyrillic or (hasattr(self, 'lab_type') and self.lab_type in ('water', 'microbiology')):
+            # Кирилл, Latin, тоо, тусгай тэмдэгт зөвшөөрнө
+            if not re.match(r'^[\w\u0400-\u04FF\s/.,+\-\"""()³]+$', value):
+                invalid_chars = re.findall(r'[^\w\u0400-\u04FF\s/.,+\-\"""()³]', value)
+                raise ValueError(
+                    f"Дээжний нэрэнд зөвшөөрөгдөөгүй тэмдэгт: {', '.join(set(invalid_chars))}"
+                )
+            return value
+
+        # Нүүрс/Петрограф → Latin only, uppercase
+        value = value.upper()
+        if not re.match(r'^[A-Z0-9_\-/.,+ ]+$', value):
+            invalid_chars = re.findall(r'[^A-Z0-9_\-/.,+ ]', value)
+            raise ValueError(
+                f"Дээжний код зөвхөн Latin үсэг агуулах ёстой. "
+                f"Буруу тэмдэгт: {', '.join(set(invalid_chars))}"
+            )
+
+        return value
 
     def __repr__(self) -> str:
         return f"<Sample {self.sample_code}>"
@@ -444,6 +487,7 @@ class AnalysisType(db.Model):
     required_role = db.Column(
         db.String(64), default="chemist", index=True, nullable=False
     )
+    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water'
 
     def __repr__(self) -> str:
         return f"<AnalysisType {self.name}>"

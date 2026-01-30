@@ -468,16 +468,19 @@ async function renderCharts(data) {
 
   // Group by standard
   const byStandard = {};
+  const standardOrder = []; // API-аас ирсэн дарааллыг хадгалах
   data.qc_samples.forEach(item => {
     if (!byStandard[item.standard_name]) {
       byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
+      standardOrder.push(item.standard_name); // Эхний удаа нэмэх
     }
     byStandard[item.standard_name].analyses.push(item);
   });
 
   container.innerHTML = '';
 
-  for (const standardName of Object.keys(byStandard).sort()) {
+  // API-аас ирсэн дарааллаар гүйх (идэвхтэй стандартууд дээд талд)
+  for (const standardName of standardOrder) {
     const stdData = byStandard[standardName];
     const isGbw = stdData.qc_type === 'GBW';
 
@@ -512,8 +515,8 @@ async function renderCharts(data) {
     const grid = document.createElement('div');
     grid.className = 'charts-grid';
 
-    // Тогтсон дараалал: Mad, Ad, Vd, St,d, CV,d, TRD,d, CSN, Gi, P, F, Cl
-    const ORDER = ['Mad', 'Ad', 'Vd', 'St,d', 'CV,d', 'TRD,d', 'CSN', 'Gi', 'P', 'F', 'Cl'];
+    // Тогтсон дараалал (шинэ формат)
+    const ORDER = ['Mad', 'Adb,%', 'Vdb,%', 'Stdb,%', 'CVdb,kcal/kg', 'CVdb,MJ/kg', 'TRDdb,g/cm3', 'CSN', 'Gi', 'Pdb,%', 'Fdb,mg/g', 'Cldb,%'];
     stdData.analyses.sort((a, b) => {
       const idxA = ORDER.indexOf(a.analysis_code);
       const idxB = ORDER.indexOf(b.analysis_code);

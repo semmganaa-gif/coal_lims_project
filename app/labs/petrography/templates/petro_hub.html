@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Петрограф лаборатори{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-4">
+    <i class="bi bi-gem text-purple fs-3 me-2"></i>
+    <h4 class="mb-0 fw-bold">Петрограф лаборатори</h4>
+    <span class="badge bg-purple-subtle text-purple ms-2">{{ analysis_types|length }} шинжилгээ</span>
+  </div>
+
+  <!-- Шинжилгээний картууд -->
+  <div class="row g-3">
+    {% for at in analysis_types %}
+    <div class="col-md-4 col-lg-3">
+      <a href="{{ url_for('petrography.workspace', code=at.code) }}"
+         class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <span class="badge bg-purple text-white me-2">{{ at.code }}</span>
+            <small class="text-muted">{{ at.role }}</small>
+          </div>
+          <h6 class="card-title mb-1">{{ at.name }}</h6>
+          {% if at.code in params %}
+          <small class="text-muted">{{ params[at.code].get('standard', '') }}</small>
+          {% endif %}
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Сүүлийн дээжүүд -->
+  <div class="card mt-4 border-0 shadow-sm">
+    <div class="card-header bg-white">
+      <h6 class="mb-0"><i class="bi bi-clock-history me-1"></i>Сүүлийн дээжүүд</h6>
+    </div>
+    <div class="card-body">
+      <div id="petroSamplesGrid" class="ag-theme-alpine" style="height: 400px;"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-purple { background-color: #6f42c1 !important; }
+  .bg-purple-subtle { background-color: rgba(111,66,193,0.1); }
+  .text-purple { color: #6f42c1 !important; }
+  .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const gridDiv = document.getElementById('petroSamplesGrid');
+  if (!gridDiv) return;
+
+  const gridOptions = {
+    columnDefs: [
+      { field: 'sample_code', headerName: 'Дээжний код', flex: 1 },
+      { field: 'client_name', headerName: 'Захиалагч', flex: 1 },
+      { field: 'status', headerName: 'Төлөв', flex: 1 },
+      { field: 'sample_date', headerName: 'Огноо', flex: 1 },
+    ],
+    rowData: [],
+    defaultColDef: { sortable: true, filter: true, resizable: true },
+    domLayout: 'normal',
+  };
+
+  const grid = agGrid.createGrid(gridDiv, gridOptions);
+
+  fetch("{{ url_for('petrography.petro_data') }}")
+    .then(r => r.json())
+    .then(data => grid.setGridOption('rowData', data))
+    .catch(() => {});
+});
+</script>
+{% endblock %}

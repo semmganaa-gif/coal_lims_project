@@ -117,6 +117,11 @@ def create_app(config_class=Config):
     # Theoretical Yield тооцоолол (Washability)
     from app.routes.yield_routes import yield_bp
 
+    # Мульти-лаборатори (Петрограф, Усны лаб, Микробиологи)
+    from app.labs.petrography.routes import petro_bp
+    from app.labs.water.routes import water_bp
+    from app.labs.microbiology.routes import micro_bp
+
     # Blueprint давхар бүртгэгдэхээс хамгаалах (тест орчинд чухал)
     def safe_register_blueprint(blueprint):
         if blueprint.name not in app.blueprints:
@@ -132,6 +137,9 @@ def create_app(config_class=Config):
     safe_register_blueprint(equipment_bp)
     safe_register_blueprint(license_bp)
     safe_register_blueprint(yield_bp)
+    safe_register_blueprint(petro_bp)
+    safe_register_blueprint(water_bp)
+    safe_register_blueprint(micro_bp)
 
     # Чанарын удирдлагын route-уудыг бүртгэх
     if quality_bp.name not in app.blueprints:
@@ -147,6 +155,9 @@ def create_app(config_class=Config):
 
     # API blueprint-g CSRF-ees cholooloh
     csrf.exempt(api_bp)
+    csrf.exempt(petro_bp)
+    csrf.exempt(water_bp)
+    csrf.exempt(micro_bp)
 
     # ======================================================
     # Лиценз хамгаалалт - before_request hook
@@ -277,7 +288,12 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_utility_functions():
         from app.utils.repeatability_loader import load_limit_rules
-        return dict(now_local=now_local, LIMS_LIMIT_RULES=load_limit_rules())
+        from app.labs import LAB_TYPES
+        return dict(
+            now_local=now_local,
+            LIMS_LIMIT_RULES=load_limit_rules(),
+            LAB_TYPES=LAB_TYPES,
+        )
 
     @login.user_loader
     def load_user(id):

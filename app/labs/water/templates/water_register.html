@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}Усны дээж бүртгэл{% endblock %}
+
+{% block head %}
+<style>
+  .water-register-page {
+    padding: 1rem 1.5rem;
+    height: calc(100vh - 120px);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .nav-tabs .nav-link {
+    font-weight: 600; font-size: 0.85rem;
+    color: #64748b; border: none; padding: 0.5rem 1.25rem;
+  }
+  .nav-tabs .nav-link.active {
+    color: #0dcaf0; border-bottom: 3px solid #0dcaf0;
+    background: transparent;
+  }
+  .tab-content { flex: 1; overflow: hidden; }
+  .tab-pane { height: 100%; overflow: auto; }
+  .tab-pane#list-pane { overflow: hidden; }
+
+  /* Grid wrapper */
+  .grid-wrapper { width: 100%; height: calc(100% - 50px); }
+
+  /* ---- Add form styles ---- */
+  .water-gateway {
+    height: 100%;
+    padding: 0.5rem 0;
+    display: flex; flex-direction: column;
+    overflow: auto;
+  }
+  .water-hub-section {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    animation: wFadeIn 0.4s ease;
+  }
+  .water-hub-section.hidden { display: none; }
+  @keyframes wFadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  .water-hub-header { text-align: center; margin-bottom: 1.5rem; }
+  .water-hub-header h1 {
+    font-size: 1.6rem; font-weight: 900;
+    background: linear-gradient(135deg, #0dcaf0 0%, #20c997 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .water-hub-header p { color: #64748b; font-size: 0.85rem; }
+
+  .unit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.75rem; max-width: 900px; width: 100%;
+  }
+  .unit-card {
+    border: none; border-radius: 14px; padding: 1rem 0.75rem;
+    text-align: center; cursor: pointer; transition: all 0.3s ease;
+    color: white; box-shadow: 0 4px 12px var(--card-shadow, rgba(0,0,0,0.1));
+  }
+  .unit-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px var(--card-shadow); }
+  .unit-card .icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .unit-card .name { font-weight: 700; font-size: 0.8rem; }
+  .unit-card .count { font-size: 0.68rem; opacity: 0.8; }
+
+  .water-workspace {
+    display: none; flex: 1; flex-direction: column;
+    animation: wFadeIn 0.4s ease; overflow: auto;
+  }
+  .water-workspace.active { display: flex; }
+
+  .ws-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; margin-bottom: 0.5rem;
+  }
+  .btn-back {
+    background: none; border: 2px solid #e2e8f0; border-radius: 10px;
+    padding: 0.3rem 0.5rem; cursor: pointer; color: #64748b; transition: all 0.2s;
+  }
+  .btn-back:hover { border-color: #94a3b8; color: #334155; }
+  .unit-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0.7rem; border-radius: 8px;
+    font-weight: 700; font-size: 0.82rem; color: white;
+  }
+
+  .sample-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+  .sample-chip {
+    padding: 0.35rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    color: #475569; background: white; transition: all 0.2s;
+  }
+  .sample-chip:hover { border-color: #0dcaf0; color: #0891b2; }
+  .sample-chip.selected { border-color: #0dcaf0; background: rgba(13,202,240,0.1); color: #0891b2; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-card {
+    background: white; border-radius: 12px; padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+  }
+  .form-card h6 { font-weight: 700; margin-bottom: 0.5rem; color: #334155; font-size: 0.82rem; }
+
+  .analysis-check-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.35rem;
+  }
+  .analysis-check {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px;
+    font-size: 0.76rem; cursor: pointer; transition: all 0.2s;
+  }
+  .analysis-check:hover { border-color: #0dcaf0; background: rgba(13,202,240,0.04); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="water-register-page">
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="list-tab" data-bs-toggle="tab"
+              data-bs-target="#list-pane" type="button" role="tab">
+        <i class="bi bi-list-ul me-1"></i>Дээжний жагсаалт
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="add-tab" data-bs-toggle="tab"
+              data-bs-target="#add-pane" type="button" role="tab">
+        <i class="bi bi-plus-circle me-1"></i>Шинэ дээж
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- ===== TAB 1: Жагсаалт ===== -->
+    <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 0 12px 12px 12px;">
+        <div class="p-2 d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshSampleGrid()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Шинэчлэх
+          </button>
+          <span class="badge bg-info" id="grid-count">0</span>
+          <span class="text-muted small">дээж</span>
+        </div>
+        <div id="sampleGrid" class="ag-theme-alpine grid-wrapper"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: Шинэ дээж ===== -->
+    <div class="tab-pane fade" id="add-pane" role="tabpanel">
+      <form action="{{ url_for('water.register_sample') }}" method="post" id="water-sample-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="source_type" id="source_type_input" value="">
+        <div id="sample_codes_container"></div>
+
+        <div class="water-gateway">
+
+          <!-- PHASE 1: Нэгж сонгох -->
+          <div class="water-hub-section" id="water-unit-hub">
+            <div class="water-hub-header">
+              <h1><i class="bi bi-droplet-fill"></i> Нэгж сонгох</h1>
+              <p>{{ units|length }} нэгж, {{ total_samples }} дээж</p>
+            </div>
+            <div class="unit-grid">
+              {% for key, unit in units.items() %}
+              <div class="unit-card" onclick="selectUnit('{{ key }}')"
+                   style="background: linear-gradient(135deg, {{ unit.color }}, {{ unit.color }}cc);
+                          --card-shadow: {{ unit.color }}55;">
+                <div class="icon"><i class="bi {{ unit.icon }}"></i></div>
+                <div class="name">{{ unit.name }}</div>
+                <div class="count">{{ unit.samples|length }} дээж</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- PHASE 2: Дээж & форм -->
+          <div class="water-workspace" id="water-workspace">
+            <div class="ws-header">
+              <button type="button" class="btn-back" onclick="goBack()"><i class="bi bi-arrow-left"></i></button>
+              <div class="unit-badge" id="unit-badge"><i class="bi bi-droplet"></i> <span id="unit-name-display"></span></div>
+              <div class="ms-auto">
+                <button type="submit" class="btn btn-info text-white fw-bold px-4">
+                  <i class="bi bi-check-circle me-1"></i>Бүртгэх
+                </button>
+              </div>
+            </div>
+
+            <!-- Дээжний нэр сонгох -->
+            <div class="mb-1 d-flex align-items-center gap-2">
+              <label class="form-label small fw-bold mb-0">Дээжний нэр:</label>
+              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">Бүгд</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">Цуцлах</button>
+              <span class="text-muted small" id="sample-count-label"></span>
+            </div>
+            <div class="sample-list" id="sample-list"></div>
+
+            <div class="form-grid">
+              <!-- Зүүн: Мэдээлэл -->
+              <div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-droplet me-1 text-info"></i>Дээжний мэдээлэл</h6>
+                  <div class="mb-2">
+                    <label class="form-label small">Дээж авсан огноо</label>
+                    <input type="date" name="sample_date" class="form-control form-control-sm" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">Дээж авсан цаг</label>
+                    <input type="time" name="sample_time" class="form-control form-control-sm">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">Байршил / GPS</label>
+                    <input type="text" name="sampling_location" class="form-control form-control-sm">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label small">Дээж авсан хүн</label>
+                    <input type="text" name="sampled_by" class="form-control form-control-sm">
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-thermometer-half me-1"></i>Талбарын хэмжилт</h6>
+                  <div class="row g-2">
+                    <div class="col-4">
+                      <label class="form-label small">Темп (°C)</label>
+                      <input type="number" step="0.1" name="field_temp" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label small">pH</label>
+                      <input type="number" step="0.01" name="field_ph" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-4">
+                      <label class="form-label small">EC (μS/cm)</label>
+                      <input type="number" step="0.1" name="field_ec" class="form-control form-control-sm">
+                    </div>
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-box me-1"></i>Жин / Эзэлхүүн</h6>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <label class="form-label small">Жин (г) / Эзэлхүүн (мл)</label>
+                      <input type="number" step="0.01" name="weight" class="form-control form-control-sm" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small d-flex align-items-center gap-1">
+                        <input type="checkbox" name="return_sample" value="1"> Дээж буцаах
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-card">
+                  <h6><i class="bi bi-calendar-check me-1"></i>Хадгалах хугацаа</h6>
+                  <div class="d-flex flex-wrap gap-1">
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7" checked>
+                    <label class="btn btn-outline-danger btn-sm" for="ret_7">7 хоног</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_14" value="14">
+                    <label class="btn btn-outline-danger btn-sm" for="ret_14">14 хоног</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_30" value="30">
+                    <label class="btn btn-outline-warning btn-sm" for="ret_30">1 сар</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_730" value="730">
+                    <label class="btn btn-outline-success btn-sm" for="ret_730">2 жил</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_1825" value="1825">
+                    <label class="btn btn-outline-success btn-sm" for="ret_1825">5 жил</label>
+                  </div>
+                  <div class="mt-2">
+                    <label class="form-label small">Тэмдэглэл</label>
+                    <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Өнгө, үнэр..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Баруун: Шинжилгээ -->
+              <div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Усны шинжилгээ</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="wc">
+                    {% for at in water_analyses %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-card">
+                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Микробиологи</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="mc">
+                    {% for at in micro_analyses %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const UNITS = {{ units|tojson }};
+let currentUnit = null;
+
+// ============ Tab 2: Шинэ дээж бүртгэл ============
+function selectUnit(key) {
+  currentUnit = key;
+  const unit = UNITS[key];
+  document.getElementById('source_type_input').value = key;
+
+  document.getElementById('water-unit-hub').classList.add('hidden');
+  document.getElementById('water-workspace').classList.add('active');
+
+  const badge = document.getElementById('unit-badge');
+  badge.style.background = unit.color;
+  document.getElementById('unit-name-display').textContent = unit.name;
+
+  const list = document.getElementById('sample-list');
+  list.innerHTML = '';
+  unit.samples.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'sample-chip';
+    chip.textContent = name;
+    chip.onclick = function() {
+      chip.classList.toggle('selected');
+      updateSampleInputs();
+    };
+    list.appendChild(chip);
+  });
+  updateSampleInputs();
+}
+
+function updateSampleInputs() {
+  const container = document.getElementById('sample_codes_container');
+  container.innerHTML = '';
+  const selected = document.querySelectorAll('#sample-list .sample-chip.selected');
+  selected.forEach(chip => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'sample_codes';
+    input.value = chip.textContent;
+    container.appendChild(input);
+  });
+  const label = document.getElementById('sample-count-label');
+  if (label) label.textContent = selected.length > 0 ? `(${selected.length} сонгосон)` : '';
+}
+
+function toggleAllSamples(select) {
+  document.querySelectorAll('#sample-list .sample-chip').forEach(c => {
+    if (select) c.classList.add('selected');
+    else c.classList.remove('selected');
+  });
+  updateSampleInputs();
+}
+
+function goBack() {
+  document.getElementById('water-workspace').classList.remove('active');
+  document.getElementById('water-unit-hub').classList.remove('hidden');
+  currentUnit = null;
+}
+
+function toggleAll(id, checked) {
+  document.querySelectorAll(`#${id} input[type="checkbox"]`).forEach(cb => cb.checked = checked);
+}
+
+// ============ Tab 1: AG Grid жагсаалт ============
+let sampleGridApi = null;
+const statusMap = {
+  'new': '<span class="badge bg-primary">Шинэ</span>',
+  'in_progress': '<span class="badge bg-warning text-dark">Шинжилж байна</span>',
+  'completed': '<span class="badge bg-success">Дууссан</span>',
+  'approved': '<span class="badge bg-info">Баталсан</span>',
+};
+
+const sampleColDefs = [
+  { headerName: '№', field: 'seq', width: 50, sortable: false, pinned: 'left' },
+  { headerName: 'Дээжний нэр', field: 'sample_name', minWidth: 200, flex: 2, filter: true, pinned: 'left' },
+  { headerName: 'Нэгж', field: 'unit_name', minWidth: 120, filter: true },
+  { headerName: 'Дээж авсан', field: 'sample_date', width: 110 },
+  { headerName: 'Бүртгэсэн', field: 'received_date', width: 140 },
+  { headerName: 'Авсан хүн', field: 'sampled_by', width: 110, filter: true },
+  { headerName: 'Байршил', field: 'sampling_location', width: 120 },
+  { headerName: 'Жин (г)', field: 'weight', width: 80,
+    valueFormatter: p => p.value != null ? p.value : '-' },
+  { headerName: 'Буцаах', field: 'return_sample', width: 70,
+    cellRenderer: p => p.value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '' },
+  { headerName: 'Хадгалах', field: 'retention_date', width: 110 },
+{ headerName: 'Төлөв', field: 'status', width: 120,
+    cellRenderer: p => statusMap[p.value] || p.value },
+  { headerName: 'Лаб', field: 'lab_type', width: 75,
+    cellRenderer: p => p.value === 'microbiology' ? 'Микро' : 'Ус' },
+  { headerName: 'Тэмдэглэл', field: 'notes', minWidth: 120, flex: 1 },
+];
+
+function loadSampleGrid() {
+  const gridDiv = document.getElementById('sampleGrid');
+  if (!gridDiv) return;
+
+  const gridOptions = {
+    columnDefs: sampleColDefs,
+    rowData: [],
+    defaultColDef: { resizable: true, sortable: true },
+    animateRows: true,
+    rowSelection: 'single',
+    autoSizeStrategy: { type: 'fitCellContents' },
+    overlayNoRowsTemplate: '<span class="text-muted">Дээж бүртгэгдээгүй байна</span>',
+  };
+  sampleGridApi = agGrid.createGrid(gridDiv, gridOptions);
+  refreshSampleGrid();
+}
+
+function refreshSampleGrid() {
+  fetch("{{ url_for('water.water_data') }}")
+    .then(r => r.json())
+    .then(data => {
+      sampleGridApi.setGridOption('rowData', data);
+      document.getElementById('grid-count').textContent = data.length;
+      setTimeout(() => {
+        sampleGridApi.autoSizeAllColumns();
+      }, 100);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadSampleGrid();
+  // Tab шилжихэд grid resize хийх
+  document.getElementById('list-tab').addEventListener('shown.bs.tab', function() {
+    if (sampleGridApi) sampleGridApi.sizeColumnsToFit();
+  });
+});
+</script>
+{% endblock %}

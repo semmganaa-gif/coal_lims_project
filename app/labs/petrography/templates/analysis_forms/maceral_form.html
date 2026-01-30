@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ param.name_mn }} - Мацерал шинжилгээ{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
+    <h5 class="mb-0">{{ param.name_mn }}</h5>
+    <small class="text-muted ms-2">{{ param.standard }}</small>
+  </div>
+
+  <div class="row g-3">
+    <!-- Дээж сонгох -->
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-body">
+          <select id="sampleSelect" class="form-select mb-2">
+            <option value="">-- Дээж сонгоно уу --</option>
+          </select>
+          <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
+            <i class="bi bi-plus-circle me-1"></i>Нэмэх
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Шинжилгээний хүснэгт -->
+    <div class="col-md-9">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h6 class="mb-0">Мацерал бүрэлдэхүүн (%)</h6>
+          <button class="btn btn-success btn-sm" onclick="saveResults()">
+            <i class="bi bi-save me-1"></i>Хадгалах
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div id="maceralGrid" class="ag-theme-alpine" style="height: 500px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .btn-purple { background-color: #6f42c1; color: white; border: none; }
+  .btn-purple:hover { background-color: #5a32a3; color: white; }
+  .bg-purple { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script>
+const analysisCode = "{{ analysis_code }}";
+let gridApi;
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Дээж ачаалах
+  fetch(`{{ url_for('petrography.eligible_samples', code='MAC') }}`.replace('MAC', analysisCode))
+    .then(r => r.json())
+    .then(data => {
+      const sel = document.getElementById('sampleSelect');
+      data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
+        sel.appendChild(opt);
+      });
+    });
+
+  // AG Grid
+  const gridDiv = document.getElementById('maceralGrid');
+  const gridOptions = {
+    columnDefs: [
+      { field: 'sample_code', headerName: 'Дээжний код', pinned: 'left', width: 160 },
+      { field: 'vitrinite', headerName: 'Vitrinite %', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'inertinite', headerName: 'Inertinite %', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'liptinite', headerName: 'Liptinite %', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'mineral_matter', headerName: 'Mineral Matter %', editable: true, type: 'numericColumn', width: 140 },
+      { field: 'total', headerName: 'Нийт %', width: 100,
+        valueGetter: p => {
+          if (!p.data) return '';
+          const v = (parseFloat(p.data.vitrinite)||0) + (parseFloat(p.data.inertinite)||0) +
+                    (parseFloat(p.data.liptinite)||0) + (parseFloat(p.data.mineral_matter)||0);
+          return v.toFixed(1);
+        },
+        cellStyle: p => {
+          const v = parseFloat(p.value);
+          if (v > 100.5 || v < 99.5) return { color: 'red', fontWeight: 'bold' };
+          return { color: 'green' };
+        }
+      },
+    ],
+    rowData: [],
+    defaultColDef: { sortable: true, resizable: true },
+  };
+  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+});
+
+function loadSample() {
+  const sel = document.getElementById('sampleSelect');
+  const opt = sel.options[sel.selectedIndex];
+  if (!sel.value) return;
+
+  const currentData = [];
+  gridApi.forEachNode(n => currentData.push(n.data));
+  currentData.push({
+    sample_id: parseInt(sel.value),
+    sample_code: opt.textContent.split(' (')[0],
+    vitrinite: '', inertinite: '', liptinite: '', mineral_matter: ''
+  });
+  gridApi.setGridOption('rowData', currentData);
+}
+
+function saveResults() {
+  const rows = [];
+  gridApi.forEachNode(n => rows.push(n.data));
+  if (!rows.length) { alert('Өгөгдөл байхгүй байна'); return; }
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  rows.forEach(row => {
+    fetch("{{ url_for('petrography.save_results') }}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify({
+        sample_id: row.sample_id,
+        analysis_code: analysisCode,
+        results: {
+          vitrinite: row.vitrinite,
+          inertinite: row.inertinite,
+          liptinite: row.liptinite,
+          mineral_matter: row.mineral_matter,
+        }
+      })
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) console.log('Saved:', d.id); })
+    .catch(e => console.error(e));
+  });
+  alert('Хадгалагдлаа!');
+}
+</script>
+{% endblock %}

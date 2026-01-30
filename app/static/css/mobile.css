@@ -433,3 +433,400 @@
         display: none !important;
     }
 }
+
+
+/* ============================================
+   TAILWIND-ЭЭС ХӨРВҮҮЛСЭН PLAIN CSS
+   tw-* классуудыг CSS-ээр тодорхойлсон
+   ============================================ */
+
+/* --- BASE: Touch target & safe area --- */
+.tw-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+.tw-safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tw-safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* --- OFF-CANVAS DRAWER --- */
+.tw-drawer {
+    position: fixed;
+    inset: 0;
+    left: 0;
+    right: auto;
+    z-index: 1040;
+    width: 18rem; /* tw-w-72 */
+    background: #fff;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
+}
+
+.tw-drawer.tw-open {
+    transform: translateX(0);
+}
+
+.tw-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(to right, #3a8bc7, #2563eb);
+}
+
+.tw-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #f5f7fa;
+}
+
+.tw-drawer-footer {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+.tw-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1035;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.tw-drawer-backdrop.tw-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* --- MOBILE ACTION BUTTONS --- */
+.tw-mobile-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+    .tw-mobile-actions {
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
+}
+
+.tw-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    min-height: 44px;
+    min-width: 44px;
+    border: none;
+    cursor: pointer;
+}
+
+.tw-action-btn-primary {
+    background: #3a8bc7;
+    color: #fff;
+}
+.tw-action-btn-primary:hover {
+    background: #2563eb;
+}
+
+.tw-action-btn-success {
+    background: #22c55e;
+    color: #fff;
+}
+.tw-action-btn-success:hover {
+    background: #16a34a;
+}
+
+.tw-action-btn-outline {
+    border: 1px solid #d1d5db;
+    color: #374151;
+    background: transparent;
+}
+.tw-action-btn-outline:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* --- MOBILE STICKY CONTROLS --- */
+.tw-sticky-mobile {
+    position: sticky;
+    background: #fff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 1020;
+    padding: 0.5rem 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .tw-sticky-mobile {
+        padding: 1rem 1.5rem;
+    }
+}
+
+/* --- MOBILE CARD --- */
+.tw-mobile-card {
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .tw-mobile-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+/* --- FAB (Floating Action Button) --- */
+.tw-fab {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 40;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    color: #fff;
+    font-size: 1.25rem;
+    border: none;
+    cursor: pointer;
+}
+
+.tw-fab:active {
+    transform: scale(0.95);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.tw-fab-primary {
+    background: #3a8bc7;
+}
+.tw-fab-primary:hover {
+    background: #2563eb;
+}
+
+.tw-fab-success {
+    background: #22c55e;
+}
+.tw-fab-success:hover {
+    background: #16a34a;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .tw-fab {
+        bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* --- UTILITIES --- */
+.tw-mobile-hide {
+    display: none;
+}
+@media (min-width: 768px) {
+    .tw-mobile-hide {
+        display: block;
+    }
+}
+
+.tw-mobile-only {
+    display: block;
+}
+@media (min-width: 768px) {
+    .tw-mobile-only {
+        display: none;
+    }
+}
+
+.tw-truncate-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+@media (min-width: 768px) {
+    .tw-truncate-mobile {
+        max-width: none;
+    }
+}
+
+.tw-touch-feedback {
+    transition: all 0.1s;
+}
+.tw-touch-feedback:active {
+    background: #f3f4f6;
+    transform: scale(0.98);
+}
+
+.tw-mobile-full-bleed {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+@media (min-width: 768px) {
+    .tw-mobile-full-bleed {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+.tw-glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+}
+
+.tw-scroll-snap-x {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tw-scroll-snap-item {
+    scroll-snap-align: center;
+    flex-shrink: 0;
+}
+
+/* --- RESPONSIVE UTILITIES --- */
+@media (orientation: portrait) {
+    .tw-portrait-only { display: block; }
+    .tw-landscape-only { display: none; }
+}
+@media (orientation: landscape) {
+    .tw-portrait-only { display: none; }
+    .tw-landscape-only { display: block; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .tw-touch-device { display: block; }
+    .tw-mouse-device { display: none; }
+}
+@media (hover: hover) and (pointer: fine) {
+    .tw-touch-device { display: none; }
+    .tw-mouse-device { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tw-drawer,
+    .tw-drawer-backdrop,
+    .tw-fab,
+    .tw-action-btn {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .tw-drawer {
+        border: 2px solid #000;
+    }
+    .tw-action-btn {
+        border: 2px solid currentColor;
+    }
+}
+
+@media print {
+    .tw-drawer,
+    .tw-drawer-backdrop,
+    .tw-fab,
+    .tw-mobile-only {
+        display: none !important;
+    }
+}
+
+/* --- Tailwind utility classes used in templates --- */
+.tw-fixed { position: fixed; }
+.tw-inset-0 { inset: 0; }
+.tw-inset-y-0 { top: 0; bottom: 0; }
+.tw-left-0 { left: 0; }
+.tw-z-drawer { z-index: 1040; }
+.tw-z-drawer-backdrop { z-index: 1035; }
+.tw-w-72 { width: 18rem; }
+.tw-bg-white { background-color: #fff; }
+.tw-bg-black\/50 { background-color: rgba(0, 0, 0, 0.5); }
+.tw-shadow-drawer { box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15); }
+.tw-flex { display: flex; }
+.tw-flex-col { flex-direction: column; }
+.tw-flex-1 { flex: 1; }
+.tw-items-center { align-items: center; }
+.tw-justify-between { justify-content: space-between; }
+.tw-gap-3 { gap: 0.75rem; }
+.tw-gap-1 { gap: 0.25rem; }
+.tw-h-8 { height: 2rem; }
+.tw-w-auto { width: auto; }
+.tw-brightness-0 { filter: brightness(0); }
+.tw-invert { filter: brightness(0) invert(1); }
+.tw-text-white { color: #fff; }
+.tw-text-white\/80 { color: rgba(255, 255, 255, 0.8); }
+.tw-font-bold { font-weight: 700; }
+.tw-font-semibold { font-weight: 600; }
+.tw-text-lg { font-size: 1.125rem; }
+.tw-text-xs { font-size: 0.75rem; }
+.tw-text-sm { font-size: 0.875rem; }
+.tw-text-xl { font-size: 1.25rem; }
+.tw-p-2 { padding: 0.5rem; }
+.tw-p-4 { padding: 1rem; }
+.tw-px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.tw-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.tw-mt-2 { margin-top: 0.5rem; }
+.tw-mt-3 { margin-top: 0.75rem; }
+.tw-mb-3 { margin-bottom: 0.75rem; }
+.tw-mr-1 { margin-right: 0.25rem; }
+.tw-mr-2 { margin-right: 0.5rem; }
+.tw-rounded-lg { border-radius: 0.5rem; }
+.tw-overflow-y-auto { overflow-y: auto; }
+.tw-border-t { border-top: 1px solid #e5e7eb; }
+.tw-border-b { border-bottom: 1px solid #e5e7eb; }
+.tw-border-gray-200 { border-color: #e5e7eb; }
+.tw-text-gray-400 { color: #9ca3af; }
+.tw-text-gray-500 { color: #6b7280; }
+.tw-text-gray-600 { color: #4b5563; }
+.tw-text-gray-700 { color: #374151; }
+.tw-text-red-500 { color: #ef4444; }
+.tw-text-red-600 { color: #dc2626; }
+.tw-text-er-blue { color: #3a8bc7; }
+.tw-text-er-orange { color: #f0892f; }
+.tw-text-center { text-align: center; }
+.tw-text-left { text-align: left; }
+.tw-w-full { width: 100%; }
+.tw-space-y-1 > * + * { margin-top: 0.25rem; }
+.tw-transition { transition: all 0.15s ease; }
+.tw-opacity-0 { opacity: 0; }
+.tw-opacity-100 { opacity: 1; }
+.tw-translate-x-0 { transform: translateX(0); }
+.tw--translate-x-full { transform: translateX(-100%); }
+
+/* hover utilities */
+.hover\:tw-text-white:hover { color: #fff; }
+.hover\:tw-text-red-600:hover { color: #dc2626; }
+.hover\:tw-bg-white\/10:hover { background-color: rgba(255, 255, 255, 0.1); }
+.hover\:tw-bg-gray-100:hover { background-color: #f3f4f6; }
+
+/* bg-gradient */
+.tw-bg-gradient-to-r { background-image: linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-to)); }
+.tw-from-er-blue { --tw-gradient-from: #3a8bc7; --tw-gradient-to: #3a8bc7; }
+.tw-to-blue-600 { --tw-gradient-to: #2563eb; }
+.tw-bg-lims-bg { background-color: #f5f7fa; }

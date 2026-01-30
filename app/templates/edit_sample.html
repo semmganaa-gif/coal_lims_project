@@ -9,7 +9,13 @@
         {# Дээжний код засах хэсэг #}
         <div class="mb-3">
             <label for="sample_code" class="form-label">Дээжний код:</label>
-            <input type="text" id="sample_code" name="sample_code" value="{{ sample.sample_code }}" class="form-control" required>
+            <input type="text" id="sample_code" name="sample_code" value="{{ sample.sample_code }}"
+                   class="form-control" required
+                   style="text-transform: uppercase;"
+                   oninput="this.value = this.value.toUpperCase()"
+                   pattern="[A-Za-z0-9_\-/.,+ ]+"
+                   title="Зөвхөн Latin үсэг, тоо, _ - / . , + зөвшөөрөгдөнө">
+            <small class="text-muted">Зөвхөн Latin үсэг (A-Z), тоо (0-9), тусгай тэмдэгт (_ - / . , +)</small>
         </div>
 
         {# Шинжилгээний даалгавар засах хэсэг #}

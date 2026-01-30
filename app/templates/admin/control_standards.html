@@ -122,17 +122,24 @@
                     <table class="table table-bordered table-sm align-middle" id="paramsTable">
                         <thead class="table-light text-center">
                             <tr>
-                                <th style="width: 20%">Код</th>
-                                <th style="width: 40%">Mean</th>
-                                <th style="width: 40%">SD</th>
+                                <th style="width: 35%; min-width: 140px;">Шинжилгээ</th>
+                                <th style="width: 32%">Mean</th>
+                                <th style="width: 33%">SD</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% set params = [
-                                ('Mad', 'Чийг'), ('Aad', 'Үнс'), ('Vad', 'Дэгдэмхий'),
-                                ('CV', 'Илчлэг'), ('TS', 'Хүхэр'), ('CSN', 'CSN'),
-                                ('Gi', 'Gray-King'), ('P', 'Фосфор'), ('Cl', 'Хлор'),
-                                ('F', 'Фтор'), ('TRD', 'Харьцангуй нягт')
+                                ('Mad', 'Чийг'),
+                                ('Adb,%', 'Үнс (db)'),
+                                ('Vdb,%', 'Дэгдэмхий (db)'),
+                                ('Stdb,%', 'Хүхэр (db)'),
+                                ('CVdb,kcal/kg', 'Илчлэг (db)'),
+                                ('TRDdb,g/cm3', 'Нягт (db)'),
+                                ('CSN', 'CSN'),
+                                ('Gi', 'Gray-King'),
+                                ('Pdb,%', 'Фосфор (db)'),
+                                ('Fdb,mg/g', 'Фтор (db)'),
+                                ('Cldb,%', 'Хлор (db)')
                             ] %}
                             {% for code, label in params %}
                             <tr data-code="{{ code }}">
@@ -164,7 +171,7 @@
             </div>
             <div class="modal-body">
                 <table class="table table-striped table-sm" id="viewTable">
-                    <thead><tr><th>Параметр</th><th>Mean</th><th>SD</th></tr></thead>
+                    <thead><tr><th style="min-width: 130px;">Шинжилгээ</th><th>Mean</th><th>SD</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -331,6 +338,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- 6. ХАРАХ ---
+    // Тогтмол дараалал
+    const PARAM_ORDER = ['Mad', 'Adb,%', 'Vdb,%', 'Stdb,%', 'CVdb,kcal/kg', 'TRDdb,g/cm3', 'CSN', 'Gi', 'Pdb,%', 'Fdb,mg/g', 'Cldb,%'];
+
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const data = JSON.parse(this.getAttribute('data-targets'));
@@ -338,7 +348,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = document.querySelector('#viewTable tbody');
             tbody.innerHTML = '';
 
-            for (const [key, val] of Object.entries(data)) {
+            // Дарааллаар эрэмбэлэх
+            const sortedKeys = Object.keys(data).sort((a, b) => {
+                const idxA = PARAM_ORDER.indexOf(a);
+                const idxB = PARAM_ORDER.indexOf(b);
+                if (idxA === -1 && idxB === -1) return a.localeCompare(b);
+                if (idxA === -1) return 1;
+                if (idxB === -1) return -1;
+                return idxA - idxB;
+            });
+
+            for (const key of sortedKeys) {
+                const val = data[key];
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td><strong>${key}</strong></td><td>${val.mean}</td><td>± ${val.sd}</td>`;
                 tbody.appendChild(tr);

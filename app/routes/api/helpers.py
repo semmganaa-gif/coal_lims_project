@@ -4,6 +4,8 @@
 API модульуудын хамтын хэрэгсэл, дүрэм, шалгалтууд.
 """
 
+import asyncio
+
 from flask import jsonify
 from flask_login import current_user
 from sqlalchemy import func
@@ -13,6 +15,23 @@ from app.config.repeatability import LIMIT_RULES
 from app.models import Sample
 from app.utils.codes import norm_code
 from app.utils.converters import to_float
+
+
+# =============================================================================
+# ASYNC HELPER - DB query-г async view дотор ажиллуулах
+# =============================================================================
+
+async def run_sync(func, *args, **kwargs):
+    """
+    Синхрон функцийг asyncio.to_thread ашиглан async контекстэд ажиллуулах.
+    DB query гэх мэт блоклох үйлдлүүдэд зориулагдсан.
+
+    Жишээ:
+        results = await run_sync(lambda: db.session.query(Sample).all())
+    """
+    if kwargs:
+        return await asyncio.to_thread(lambda: func(*args, **kwargs))
+    return await asyncio.to_thread(func, *args)
 
 
 # =============================================================================

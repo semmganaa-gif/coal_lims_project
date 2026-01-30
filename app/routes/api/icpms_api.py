@@ -5,6 +5,8 @@ ICPMS Integration API Routes
 LIMS-ээс ICPMS систем рүү өгөгдөл илгээх API endpoint-ууд.
 """
 
+import asyncio
+
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 
@@ -21,7 +23,7 @@ def register_routes(bp):
     @bp.route("/icpms/status", methods=["GET"])
     @login_required
     @limiter.limit("30 per minute")
-    def icpms_status():
+    async def icpms_status():
         """
         ICPMS системтэй холболтыг шалгах.
 
@@ -38,7 +40,7 @@ def register_routes(bp):
     @bp.route("/icpms/send", methods=["POST"])
     @login_required
     @limiter.limit("10 per minute")
-    def icpms_send_samples():
+    async def icpms_send_samples():
         """
         Сонгосон дээжүүдийг ICPMS руу илгээх.
 
@@ -95,7 +97,7 @@ def register_routes(bp):
     @bp.route("/icpms/send-chpp", methods=["POST"])
     @login_required
     @limiter.limit("5 per minute")
-    def icpms_send_chpp():
+    async def icpms_send_chpp():
         """
         CHPP нэгжийн сүүлийн үеийн үр дүнг ICPMS руу илгээх.
 
@@ -137,7 +139,7 @@ def register_routes(bp):
     @bp.route("/icpms/optimization/<int:scenario_id>", methods=["GET"])
     @login_required
     @limiter.limit("30 per minute")
-    def icpms_get_optimization(scenario_id):
+    async def icpms_get_optimization(scenario_id):
         """
         ICPMS-ээс оновчлолын үр дүн авах.
 
@@ -166,7 +168,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/icpms/config", methods=["GET"])
     @login_required
-    def icpms_config():
+    async def icpms_config():
         """
         ICPMS интеграцийн тохиргоо авах (нууц үг хасаад).
 

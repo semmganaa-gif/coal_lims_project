@@ -13,14 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  <!-- Tailwind CSS (Mobile Responsive) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/styles.css') if not config.DEBUG else '' }}">
-  {% if config.DEBUG %}
-  <script type="module">
-    import 'http://localhost:5173/src/styles.css';
-  </script>
-  {% endif %}
-
   <!-- AG Grid (нөхцөлт) -->
   {% if use_aggrid|default(false) %}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
@@ -129,7 +121,7 @@
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-main sticky-top" id="mainNav">
     <div class="container-fluid">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.lab_selector') }}">
         <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}" alt="ER Lab">
         <div class="d-none d-sm-block" style="line-height: 1.1;">
           <span class="text-primary" style="font-size: 1.1rem;">LIMS</span>
@@ -142,8 +134,71 @@
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
+        {% set is_water_lab = request.path.startswith('/labs/water') or request.path.startswith('/labs/microbiology') %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
+
+            {% if is_water_lab %}
+            {# =============== УСНЫ ЛАБ NAVBAR =============== #}
+            <li class="nav-item me-2">
+              <a class="nav-link" href="{{ url_for('main.lab_selector') }}" style="background: rgba(13,202,240,0.08); border-radius: 8px;">
+                <i class="bi bi-arrow-left me-1"></i>Лаб сонгох
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_hub') }}">
+                <i class="bi bi-droplet me-1 text-info"></i>Нүүр
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.register_sample') }}">
+                <i class="bi bi-plus-circle me-1 text-info"></i>Дээж бүртгэл
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-clipboard-data me-1 text-info"></i>Шинжилгээ
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('water.water_analysis_hub') }}">
+                  <i class="bi bi-droplet me-2 text-info"></i>Усны шинжилгээ</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_hub') }}">
+                  <i class="bi bi-bug me-2" style="color:#20c997"></i>Микробиологи</a></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.standards') }}">
+                <i class="bi bi-shield-check me-1 text-info"></i>Стандарт
+              </a>
+            </li>
+
+            {% else %}
+            {# =============== НҮҮРСНИЙ ЛАБ NAVBAR (хуучин) =============== #}
+            <!-- Лаборатори сонгогч -->
+            <li class="nav-item dropdown me-2">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" style="background: rgba(13,110,253,0.05); border-radius: 8px;">
+                <i class="bi bi-building me-1"></i>Лаборатори
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('main.index') }}">
+                  <i class="bi bi-fire me-2 text-danger"></i>Нүүрсний лаб
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('petrography.petro_hub') }}">
+                  <i class="bi bi-gem me-2" style="color:#6f42c1"></i>Петрограф лаб
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('water.water_hub') }}">
+                  <i class="bi bi-droplet me-2 text-info"></i>Усны лаб
+                </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_hub') }}">
+                  <i class="bi bi-bug me-2" style="color:#20c997"></i>Микробиологи
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('main.lab_selector') }}">
+                  <i class="bi bi-grid me-2"></i>Бүх лаборатори
+                </a></li>
+              </ul>
+            </li>
+
             <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('main.index') }}">
                 <i class="bi bi-box-seam me-1 text-primary"></i>Дээж бүртгэл
@@ -191,7 +246,7 @@
               </ul>
             </li>
 
-            <!-- Стандарт (Бүгдэд харагдана) -->
+            <!-- Стандарт -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                 <i class="bi bi-award me-1"></i>Стандарт
@@ -302,7 +357,8 @@
               </ul>
             </li>
             {% endif %}
-          {% endif %}
+            {% endif %}{# end is_water_lab else #}
+          {% endif %}{# end is_authenticated #}
         </ul>
 
         <ul class="navbar-nav ms-auto align-items-center gap-2">

@@ -10,6 +10,8 @@
   - /mass/delete - Delete samples
 """
 
+import asyncio
+
 from flask import (
     request,
     jsonify,
@@ -38,7 +40,7 @@ def register_routes(bp):
     @bp.route("/mass/update_sample_status", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def update_sample_status():
+    async def update_sample_status():
         action = request.form.get("action")
         sample_ids = request.form.getlist("sample_ids")
 
@@ -76,7 +78,7 @@ def register_routes(bp):
     @bp.route("/mass/eligible", methods=["GET"])
     @login_required
     @limiter.limit("100 per minute")
-    def mass_eligible():
+    async def mass_eligible():
         """
         Массын ажлын талбарт харагдах дээжүүд:
           - status ∈ {"new","New"}
@@ -128,7 +130,7 @@ def register_routes(bp):
     @bp.route("/mass/save", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def mass_save():
+    async def mass_save():
         """
         Payload:
         {
@@ -195,7 +197,7 @@ def register_routes(bp):
     @bp.route("/mass/update_weight", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def mass_update_weight():
+    async def mass_update_weight():
         """
         Mass Ready болсон байсан ч зөвхөн жинг нь засаж хадгална.
         Payload: {"sample_id": 123, "weight": 1800}
@@ -231,7 +233,7 @@ def register_routes(bp):
     @bp.route("/mass/unready", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def mass_unready():
+    async def mass_unready():
         """
         mass_ready-г буцааж false болгоно.
         Payload: {"sample_ids":[1,2,3]}
@@ -263,7 +265,7 @@ def register_routes(bp):
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def mass_delete():
+    async def mass_delete():
         """
         Дээжийг бүртгэлээс бүр мөсөн устгана (каскадтай).
         Payload: {"sample_id": 123}

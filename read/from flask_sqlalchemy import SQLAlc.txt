@@ -1,0 +1,81 @@
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
+db = SQLAlchemy()
+
+# 1. ТӨХӨӨРӨМЖИЙН ЖАГСААЛТ
+class Equipment(db.Model):
+    __tablename__ = 'equipment'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)      # Ж: "IKA C2000"
+    model_type = db.Column(db.String(50), nullable=False) # Ж: "Calorimeter", "Sulfur"
+    
+    # Харилцаа
+    calibrations = db.relationship('CalibrationLog', backref='equipment', lazy=True)
+
+# 2. КАЛИБРОВКИЙН ТҮҮХ
+class CalibrationLog(db.Model):
+    __tablename__ = 'calibration_log'
+    id = db.Column(db.Integer, primary_key=True)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'))
+    
+    certificate_value = db.Column(db.Float)   # Стандарт бодисын утга (Ж: 26466)
+    
+    # JSON багана: Төхөөрөмж бүр өөр коэффициенттэй тул энд хадгална
+    # Calorimeter: {"E": 9995, "q1": 90}
+    # Sulfur: {"slope": 1.05, "offset": -0.02}
+    params = db.Column(db.JSON) 
+    
+    performed_by = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+# 3. ШИНЖИЛГЭЭНИЙ ҮР ДҮН
+class SampleResult(db.Model):
+    __tablename__ = 'sample_result'
+    id = db.Column(db.Integer, primary_key=True)
+    sample_id = db.Column(db.String(50)) # Дээжийн дугаар
+    
+    mass = db.Column(db.Float)           # Жин (Mettler-ээс ирсэн)
+    raw_value = db.Column(db.Float)      # Багажны түүхий өгөгдөл (dT эсвэл Abs)
+    final_result = db.Column(db.Float)   # Эцсийн хариу
+    
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id'))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+# setup.py
+from app import app, db, Equipment, CalibrationLog
+
+with app.app_context():
+    db.create_all()
+    
+    # 1. Төхөөрөмж нэмэх
+    c2000 = Equipment(name="IKA C2000", model_type="Calorimeter")
+    sulfur = Equipment(name="Leco S-144DR", model_type="Sulfur")
+    
+    db.session.add(c2000)
+    db.session.add(sulfur)
+    db.session.commit()
+    
+    # 2. Анхны калибровк нэмэх (Туршилт)
+    # Илчлэг: E=10046, q1=90
+    calib1 = CalibrationLog(
+        equipment_id=c2000.id, 
+        certificate_value=26466, 
+        params={"E": 10046, "q1": 90},
+        performed_by="System"
+    )
+    
+    # Хүхэр: Slope=1, Offset=0
+    calib2 = CalibrationLog(
+        equipment_id=sulfur.id, 
+        certificate_value=1.05, 
+        params={"slope": 1.0, "offset": 0.0},
+        performed_by="System"
+    )
+    
+    db.session.add(calib1)
+    db.session.add(calib2)
+    db.session.commit()
+    
+    print("Өгөгдлийн бааз болон анхны тохиргоо үүслээ!")

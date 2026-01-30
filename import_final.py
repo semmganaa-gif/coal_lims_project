@@ -10,22 +10,31 @@ app = create_app()
 
 def parse_date(date_val):
     """Огноог хөрвүүлэх"""
-    if pd.isna(date_val) or str(date_val).strip() == "": return None
+    if pd.isna(date_val) or str(date_val).strip() == "":
+        return None
     try:
-        if isinstance(date_val, datetime): return date_val.date()
+        if isinstance(date_val, datetime):
+            return date_val.date()
         clean_str = str(date_val).replace('.', '-').replace('/', '-')[:10]
         return datetime.strptime(clean_str, "%Y-%m-%d").date()
-    except: return None
+    except Exception:
+        return None
 
 def guess_category(name):
     """Нэрээр нь ангилал таах"""
     name = str(name).lower()
-    if 'зуух' in name or 'furnace' in name: return 'furnace'
-    if 'бутлуур' in name or 'тээрэм' in name or 'mill' in name or 'crusher' in name: return 'prep'
-    if 'жин' in name or 'balance' in name or 'scale' in name: return 'balance'
-    if 'анализатор' in name or 'илчлэг' in name or 'хүхэр' in name: return 'analysis'
-    if 'ус' in name or 'water' in name or 'ph' in name: return 'water'
-    if 'микро' in name or 'micro' in name or 'инкубатор' in name: return 'micro'
+    if 'зуух' in name or 'furnace' in name:
+        return 'furnace'
+    if 'бутлуур' in name or 'тээрэм' in name or 'mill' in name or 'crusher' in name:
+        return 'prep'
+    if 'жин' in name or 'balance' in name or 'scale' in name:
+        return 'balance'
+    if 'анализатор' in name or 'илчлэг' in name or 'хүхэр' in name:
+        return 'analysis'
+    if 'ус' in name or 'water' in name or 'ph' in name:
+        return 'water'
+    if 'микро' in name or 'micro' in name or 'инкубатор' in name:
+        return 'micro'
     return 'other' 
 
 def run_import():
@@ -72,7 +81,8 @@ def run_import():
     with app.app_context():
         # 3. Мөр бүрээр гүйж хадгалах
         for _, row in df.iterrows():
-            if pd.isna(row.get('name')): continue
+            if pd.isna(row.get('name')):
+                continue
 
             # Status тохируулах
             status_val = 'normal'

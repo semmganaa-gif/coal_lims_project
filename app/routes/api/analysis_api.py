@@ -7,6 +7,8 @@
   - /update_result_status
 """
 
+import asyncio
+
 from flask import (
     request,
     jsonify,
@@ -29,18 +31,32 @@ from app.utils.codes import norm_code, BASE_TO_ALIASES
 from app.utils.analysis_rules import determine_result_status
 
 # ✅ DB код -> Стандарт код mapping (QC шалгалтад хэрэглэгдэнэ)
-# DB дахь кодууд (Aad, CV, TS) -> CM/GBW стандарт дахь кодууд (Ad, CV,d, St,d)
-DB_TO_STANDARD_CODE = {
-    'Aad': 'Ad',
-    'Vad': 'Vd',
-    'CV': 'CV,d',
-    'TS': 'St,d',
-    'TRD': 'TRD,d',
+# DB дахь кодууд (Aad, CV, TS) -> CM/GBW стандарт дахь кодууд (Adb,%, CVdb,kcal/kg г.м)
+# CM: CVdb,kcal/kg | GBW: CVdb,MJ/kg (нэгж өөр)
+DB_TO_STANDARD_CODE_CM = {
+    'Aad': 'Adb,%',
+    'Vad': 'Vdb,%',
+    'CV': 'CVdb,kcal/kg',
+    'TS': 'Stdb,%',
+    'TRD': 'TRDdb,g/cm3',
     'CSN': 'CSN',
     'Gi': 'Gi',
-    'P': 'P',
-    'F': 'F',
-    'Cl': 'Cl',
+    'P': 'Pdb,%',
+    'F': 'Fdb,mg/g',
+    'Cl': 'Cldb,%',
+    'Mad': 'Mad',
+}
+DB_TO_STANDARD_CODE_GBW = {
+    'Aad': 'Adb,%',
+    'Vad': 'Vdb,%',
+    'CV': 'CVdb,MJ/kg',  # GBW нь MJ нэгжтэй
+    'TS': 'Stdb,%',
+    'TRD': 'TRDdb,g/cm3',
+    'CSN': 'CSN',
+    'Gi': 'Gi',
+    'P': 'Pdb,%',
+    'F': 'Fdb,mg/g',
+    'Cl': 'Cldb,%',
     'Mad': 'Mad',
 }
 
@@ -76,39 +92,62 @@ def register_routes(bp):
     @bp.route("/eligible_samples/<analysis_code>", methods=["GET"])
     @login_required
     @limiter.limit("100 per minute")
-    def eligible_samples(analysis_code):
+    async def eligible_samples(analysis_code):
         base_code = norm_code(analysis_code).strip()
         if not base_code:
             return jsonify({"samples": []})
 
-        existing_ids_subq = (
-            db.session.query(AnalysisResult.sample_id)
-            .filter(AnalysisResult.analysis_code == base_code)
-            .distinct()
-        )
+        def _query_eligible():
+            existing_ids_subq = (
+                db.session.query(AnalysisResult.sample_id)
+                .filter(AnalysisResult.analysis_code == base_code)
+                .distinct()
+            )
 
-        from sqlalchemy import func
-        text_lc = func.lower(Sample.analyses_to_perform)
-        terms = [base_code.lower()]
-        for alias_lc in (BASE_TO_ALIASES.get(base_code, []) or []):
-            terms.append(alias_lc)
+            from sqlalchemy import func
+            text_lc = func.lower(Sample.analyses_to_perform)
+            terms = [base_code.lower()]
+            for alias_lc in (BASE_TO_ALIASES.get(base_code, []) or []):
+                terms.append(alias_lc)
 
-        like_clauses = [text_lc.like(f'%"{t}"%') for t in terms]
+            like_clauses = [text_lc.like(f'%"{t}"%') for t in terms]
 
-        q = Sample.query.filter(
-            Sample.status.in_(["new", "New"]),
-            or_(*like_clauses),
-            ~Sample.id.in_(existing_ids_subq),
-        )
+            q = Sample.query.filter(
+                Sample.status.in_(["new", "New"]),
+                or_(*like_clauses),
+                ~Sample.id.in_(existing_ids_subq),
+            )
 
-        if _requires_mass_gate(base_code):
-            q = q.filter(or_(not_(_has_m_task_sql()), Sample.mass_ready.is_(True)))
+            if _requires_mass_gate(base_code):
+                q = q.filter(or_(not_(_has_m_task_sql()), Sample.mass_ready.is_(True)))
 
-        from app.constants import MAX_ANALYSIS_RESULTS
-        rows = q.order_by(Sample.received_date.desc()).limit(MAX_ANALYSIS_RESULTS).all()
+            from app.constants import MAX_ANALYSIS_RESULTS
+            return q.order_by(Sample.received_date.desc(), Sample.id.desc()).limit(MAX_ANALYSIS_RESULTS).all()
+
+        rows = await asyncio.to_thread(_query_eligible)
+        from app.constants import CHPP_2H_SAMPLES_ORDER
+
+        # CHPP дээжүүдийг зөв дарааллаар эрэмбэлэх
+        def get_chpp_order(sample):
+            """CHPP дээжийн дараалал олох"""
+            sample_name = getattr(sample, "sample_name", None) or getattr(sample, "name", None) or ""
+            # Огноогоор групплэх (received_date)
+            date_key = sample.received_date.strftime("%Y%m%d") if sample.received_date else "00000000"
+            # CHPP дарааллаас хайх
+            for idx, chpp_name in enumerate(CHPP_2H_SAMPLES_ORDER):
+                if chpp_name in sample_name:
+                    return (date_key, idx)
+            # CHPP биш бол ID-аар
+            return (date_key, 1000 + sample.id)
+
+        # Огноогоор буурах + CHPP дотор дараалал
+        rows_sorted = sorted(rows, key=lambda s: (
+            -(int(get_chpp_order(s)[0])),  # Огноо буурах
+            get_chpp_order(s)[1]            # CHPP дараалал өсөх
+        ))
 
         samples = []
-        for s in rows:
+        for s in rows_sorted:
             samples.append({
                 "id": s.id,
                 "sample_code": s.sample_code or "",
@@ -121,19 +160,22 @@ def register_routes(bp):
         # ✅ Rejected дээжүүд - давтах шаардлагатай
         # Химич: зөвхөн өөрийнхөө rejected дээж
         # Ахлах/Админ: бүх rejected дээж
-        rejected_query = (
-            db.session.query(AnalysisResult, Sample)
-            .join(Sample, AnalysisResult.sample_id == Sample.id)
-            .filter(
-                AnalysisResult.analysis_code == base_code,
-                AnalysisResult.status == "rejected"
+        def _query_rejected():
+            rejected_query = (
+                db.session.query(AnalysisResult, Sample)
+                .join(Sample, AnalysisResult.sample_id == Sample.id)
+                .filter(
+                    AnalysisResult.analysis_code == base_code,
+                    AnalysisResult.status == "rejected"
+                )
             )
-        )
 
-        if current_user.role == "chemist":
-            rejected_query = rejected_query.filter(AnalysisResult.user_id == current_user.id)
+            if current_user.role == "chemist":
+                rejected_query = rejected_query.filter(AnalysisResult.user_id == current_user.id)
 
-        rejected_rows = rejected_query.order_by(AnalysisResult.updated_at.desc()).all()
+            return rejected_query.order_by(AnalysisResult.updated_at.desc()).all()
+
+        rejected_rows = await asyncio.to_thread(_query_rejected)
 
         rejected_samples = []
         for result, sample in rejected_rows:
@@ -159,7 +201,7 @@ def register_routes(bp):
     @bp.route("/unassign_sample", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def unassign_sample():
+    async def unassign_sample():
         """
         Дээжийг тухайн шинжилгээнээс хасах.
         Зөвхөн senior, admin эрхтэй хэрэглэгч.
@@ -223,7 +265,7 @@ def register_routes(bp):
     @bp.route("/save_results", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def save_results():
+    async def save_results():
         data = request.get_json(silent=True)
 
         if data is None:
@@ -361,10 +403,19 @@ def register_routes(bp):
                                         targets_map = {}
 
                                 # 3. Стандарт дотор энэ код (Aad, Vad г.м) байгаа эсэх?
-                                # DB код -> Стандарт код хөрвүүлэх (CV -> CV,d, Aad -> Ad г.м)
-                                standard_code = DB_TO_STANDARD_CODE.get(analysis_code, analysis_code)
-                                if isinstance(targets_map, dict) and standard_code in targets_map:
-                                    control_targets = targets_map[standard_code]
+                                # Эхлээд шууд analysis_code-оор хайна, олдохгүй бол standard_code
+                                # CM болон GBW өөр mapping ашиглана (CV нэгж өөр)
+                                code_map = DB_TO_STANDARD_CODE_GBW if is_gbw else DB_TO_STANDARD_CODE_CM
+                                standard_code = code_map.get(analysis_code, analysis_code)
+                                if isinstance(targets_map, dict):
+                                    # Эхлээд шууд хайх (Aad, Vad, CV, TS г.м)
+                                    if analysis_code in targets_map:
+                                        control_targets = targets_map[analysis_code]
+                                    # Олдохгүй бол хөрвүүлсэн код хайх (Ad, Vd, CV,d г.м)
+                                    elif standard_code in targets_map:
+                                        control_targets = targets_map[standard_code]
+
+                                if control_targets:
 
                                     # --- 4. MAD (Чийг) ОЛОХ ЛОГИК ---
                                     # CM болон GBW нь ихэвчлэн Хуурай суурь (Dry Basis) дээр сертификаттай байдаг тул
@@ -389,9 +440,12 @@ def register_routes(bp):
                                             current_mad = calc.mad
 
                                         # 5. Хөрвүүлэлт (Mad олдсон бол)
-                                    if current_mad is not None and 0 < current_mad < 100:
-                                        # Эдгээр үзүүлэлтүүд л Dry руу хөрвөнө
-                                        if analysis_code in ["Aad", "Vad", "CV", "TS", "St,ad", "S", "Qgr,ad"]:
+                                    # Dry basis руу хөрвүүлэх шаардлагатай үзүүлэлтүүд
+                                    needs_dry_conversion = analysis_code in ["Aad", "Vad", "CV", "TS", "St,ad", "S", "Qgr,ad"]
+
+                                    if needs_dry_conversion:
+                                        if current_mad is not None and 0 < current_mad < 100:
+                                            # Mad байгаа - dry basis руу хөрвүүлж шалгана
 
                                             # АЛХАМ 1: Эхлээд Хуурай суурь руу хөрвүүлэх (Air Dry -> Dry Basis)
                                             factor = 100.0 / (100.0 - current_mad)
@@ -407,6 +461,15 @@ def register_routes(bp):
                                             else:
                                                 # CM болон бусад үзүүлэлтүүд kcal/шууд утгаараа шалгагдана
                                                 val_to_check = val_dry
+                                        else:
+                                            # ⚠️ Mad байхгүй - dry basis руу хөрвүүлэх боломжгүй
+                                            # CM/GBW шалгалт хийхгүй, pending_review болгоно
+                                            control_targets = None
+                                            # Flag тавих - дараа нь pending_review болгохын тулд
+                                            raw_norm["_mad_required"] = True
+                                            current_app.logger.info(
+                                                f"CM/GBW check skipped for {analysis_code}: Mad not available yet"
+                                            )
                     except Exception as e:
                         current_app.logger.error(f"Control/GBW Logic Error: {e}")
                         control_targets = None
@@ -433,6 +496,15 @@ def register_routes(bp):
 
                     if new_status == "rejected" and is_gbw_sample and status_reason:
                         status_reason = status_reason.replace("Control Failure", "GBW Failure")
+
+                    # ------------------------------------------------------------
+                    # ✅ FIX: Mad байхгүй үед pending_review болгох
+                    # ------------------------------------------------------------
+                    # CM/GBW дээжинд Mad шаардлагатай үзүүлэлт (Aad, Vad, CV г.м)
+                    # Mad байхгүй бол ахлахын хяналт руу илгээнэ
+                    if raw_norm.get("_mad_required") and new_status == "approved":
+                        new_status = "pending_review"
+                        status_reason = "Mad шаардлагатай (CM/GBW dry basis шалгалт)"
 
                     # ============================================================
 
@@ -619,7 +691,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/update_result_status/<int:result_id>/<new_status>", methods=["POST"])
     @login_required
-    def update_result_status(result_id, new_status):
+    async def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Эрх хүрэхгүй"}), 403
 
@@ -697,7 +769,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/request_analysis", methods=["POST"])
     @login_required
-    def request_analysis():
+    async def request_analysis():
         """
         Нэгтгэлээс хоосон нүдэн дээр дарж шинжилгээ захиалах.
         Дээжний analyses_to_perform талбарт шинэ код нэмнэ.
@@ -769,7 +841,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/check_ready_samples", methods=["GET"])
     @login_required
-    def check_ready_samples():
+    async def check_ready_samples():
         try:
             cutoff_time = now_local() - timedelta(hours=12)
             pending_samples = Sample.query.filter(

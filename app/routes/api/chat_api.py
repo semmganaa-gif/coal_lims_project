@@ -4,6 +4,7 @@
 Chat REST API endpoints
 """
 
+import asyncio
 import os
 import uuid
 from flask import jsonify, request, current_app
@@ -79,7 +80,7 @@ def register_routes(bp):
 
     @bp.route("/chat/contacts", methods=["GET"])
     @login_required
-    def get_chat_contacts():
+    async def get_chat_contacts():
         """Чат контакт жагсаалт"""
         contacts = []
 
@@ -99,7 +100,7 @@ def register_routes(bp):
                 ChatMessage.sender_id == user.id,
                 ChatMessage.receiver_id == current_user.id,
                 ChatMessage.read_at.is_(None),
-                not ChatMessage.is_deleted
+                ChatMessage.is_deleted == False
             ).count()
 
             last_msg = ChatMessage.query.filter(
@@ -107,7 +108,7 @@ def register_routes(bp):
                     and_(ChatMessage.sender_id == user.id, ChatMessage.receiver_id == current_user.id),
                     and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user.id)
                 ),
-                not ChatMessage.is_deleted
+                ChatMessage.is_deleted == False
             ).order_by(ChatMessage.sent_at.desc()).first()
 
             online_status = db.session.get(UserOnlineStatus, user.id)
@@ -129,7 +130,7 @@ def register_routes(bp):
 
     @bp.route("/chat/history/<int:user_id>", methods=["GET"])
     @login_required
-    def get_chat_history(user_id):
+    async def get_chat_history(user_id):
         """Хоёр хэрэглэгчийн хоорондын мессежийн түүх"""
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
@@ -140,7 +141,7 @@ def register_routes(bp):
                 and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user_id),
                 and_(ChatMessage.sender_id == user_id, ChatMessage.receiver_id == current_user.id)
             ),
-            not ChatMessage.is_deleted
+            ChatMessage.is_deleted == False
         )
 
         # Хайлт
@@ -174,7 +175,7 @@ def register_routes(bp):
 
     @bp.route("/chat/search", methods=["GET"])
     @login_required
-    def search_messages():
+    async def search_messages():
         """Мессеж хайх"""
         query_text = request.args.get('q', '').strip()
         user_id = request.args.get('user_id', type=int)
@@ -185,7 +186,7 @@ def register_routes(bp):
         safe_query_text = escape_like_pattern(query_text)
         q = ChatMessage.query.filter(
             ChatMessage.message.ilike(f'%{safe_query_text}%'),
-            not ChatMessage.is_deleted,
+            ChatMessage.is_deleted == False,
             or_(
                 ChatMessage.sender_id == current_user.id,
                 ChatMessage.receiver_id == current_user.id
@@ -209,18 +210,18 @@ def register_routes(bp):
 
     @bp.route("/chat/unread_count", methods=["GET"])
     @login_required
-    def get_unread_count():
+    async def get_unread_count():
         """Нийт уншаагүй мессежийн тоо"""
         count = ChatMessage.query.filter(
             ChatMessage.receiver_id == current_user.id,
             ChatMessage.read_at.is_(None),
-            not ChatMessage.is_deleted
+            ChatMessage.is_deleted == False
         ).count()
         return jsonify({'unread_count': count})
 
     @bp.route("/chat/upload", methods=["POST"])
     @login_required
-    def upload_chat_file():
+    async def upload_chat_file():
         """Файл upload хийх"""
         if 'file' not in request.files:
             return jsonify({'error': 'Файл олдсонгүй'}), 400
@@ -272,7 +273,7 @@ def register_routes(bp):
 
     @bp.route("/chat/samples/search", methods=["GET"])
     @login_required
-    def search_samples_for_chat():
+    async def search_samples_for_chat():
         """Дээж хайх (чатад холбохын тулд)"""
         query = request.args.get('q', '').strip()
         if not query or len(query) < 2:
@@ -299,7 +300,7 @@ def register_routes(bp):
 
     @bp.route("/chat/templates", methods=["GET"])
     @login_required
-    def get_message_templates():
+    async def get_message_templates():
         """Template мессежүүд"""
         templates = [
             {'id': 1, 'text': 'Дээж бэлэн боллоо', 'icon': '✅'},
@@ -317,11 +318,11 @@ def register_routes(bp):
 
     @bp.route("/chat/broadcasts", methods=["GET"])
     @login_required
-    def get_broadcasts():
+    async def get_broadcasts():
         """Broadcast зарлалууд"""
         broadcasts = ChatMessage.query.filter(
             ChatMessage.is_broadcast,
-            not ChatMessage.is_deleted
+            ChatMessage.is_deleted == False
         ).order_by(ChatMessage.sent_at.desc()).limit(20).all()
 
         return jsonify({

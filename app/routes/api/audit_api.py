@@ -6,6 +6,8 @@
   - /audit_log/<analysis_code> - Audit log for specific analysis (шинэ загвар)
 """
 
+import asyncio
+
 from flask import (
     request,
     render_template,
@@ -34,7 +36,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_hub")
     @login_required
-    def audit_hub():
+    async def audit_hub():
         return render_template("audit_hub.html", title="Аудитын мөр")
 
     # -----------------------------------------------------------
@@ -42,7 +44,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_log/<analysis_code>")
     @login_required
-    def audit_log_page(analysis_code):
+    async def audit_log_page(analysis_code):
         # ✅ Normalize analysis code (Solid -> SOLID, St,ad -> TS г.м.)
         base_code = norm_code(analysis_code)
 
@@ -213,7 +215,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_search")
     @login_required
-    def api_audit_search():
+    async def api_audit_search():
         """
         Бүх шинжилгээнээс аудит хайх API
 
@@ -299,7 +301,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/export/audit")
     @login_required
-    def export_audit():
+    async def export_audit():
         """Аудит логийг Excel экспорт"""
         from app.utils.exports import send_excel_response
         from app.models import AuditLog

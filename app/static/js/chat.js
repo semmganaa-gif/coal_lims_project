@@ -255,6 +255,7 @@
     container.classList.toggle('open');
     if (container.classList.contains('open')) {
       loadContacts();
+      requestNotificationPermission();
     }
   }
 
@@ -809,13 +810,41 @@
 
   // Notifications
   function showNotification(data) {
-    // Browser notification only (sound is played in new_message handler)
-    if (Notification.permission === 'granted') {
-      new Notification(data.sender_name || 'Шинэ мессеж', {
-        body: data.message.substring(0, 50),
-        icon: '/static/favicon.ico'
-      });
+    // Browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(data.sender_name || 'Шинэ мессеж', {
+          body: data.message.substring(0, 50),
+          icon: '/static/favicon.ico'
+        });
+      } catch (e) {
+        console.log('Notification error:', e);
+      }
     }
+
+    // In-app toast (browser notification зөвшөөрөл байхгүй ч харагдана)
+    showInAppToast(data);
+  }
+
+  function showInAppToast(data) {
+    const existing = document.getElementById('chatToast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'chatToast';
+    toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#fff;border-left:4px solid #3a8bc7;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:8px;padding:0.75rem 1rem;max-width:320px;cursor:pointer;animation:slideInRight 0.3s ease-out;';
+    toast.innerHTML = `
+      <div style="font-weight:600;font-size:0.85rem;color:#1e293b;">${escapeHtml(data.sender_name || 'Шинэ мессеж')}</div>
+      <div style="font-size:0.8rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(data.message.substring(0, 60))}</div>
+    `;
+    toast.addEventListener('click', () => {
+      toast.remove();
+      container.classList.add('open');
+      openChat(data.sender_id);
+    });
+    document.body.appendChild(toast);
+
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
   }
 
   function showBroadcastNotification(data) {
@@ -974,6 +1003,13 @@
     selectEmoji: selectEmoji,
     selectSample: selectSample
   };
+
+  // Toast animation CSS
+  (function() {
+    const style = document.createElement('style');
+    style.textContent = '@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}';
+    document.head.appendChild(style);
+  })();
 
   // Initialize when DOM ready
   if (document.readyState === 'loading') {

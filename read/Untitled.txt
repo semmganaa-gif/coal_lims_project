@@ -1,0 +1,7 @@
+
+  # PostgreSQL асаах
+  & 'C:\postgresql-17.6-1-windows-x64-binaries\pgsql\bin\pg_ctl.exe' -D 'C:\postgresql-17.6-1-windows-x64-binaries\pgsql\data' start
+
+  # Production server асаах
+  cd D:\coal_lims_project
+  python run_production.py

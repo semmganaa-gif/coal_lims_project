@@ -8,6 +8,8 @@
   - /sample_history/<int:sample_id> - Sample history
 """
 
+import asyncio
+
 from flask import (
     request,
     jsonify,
@@ -46,7 +48,7 @@ def register_routes(bp):
     @bp.route("/data", methods=["GET"])
     @login_required
     @limiter.limit("100 per minute")
-    def data():
+    async def data():
         draw = int(request.args.get("draw", 1))
         start = int(request.args.get("start", 0))
         length = min(int(request.args.get("length", 25)), 1000)  # Max 1000 хязгаарлалт
@@ -65,7 +67,7 @@ def register_routes(bp):
         date_start = request.args.get("dateFilterStart")
         date_end = request.args.get("dateFilterEnd")
 
-        q = Sample.query
+        q = Sample.query.filter(Sample.lab_type.in_(['coal', 'petrography']))
 
         if date_start:
             try:
@@ -236,7 +238,7 @@ def register_routes(bp):
     @bp.route("/sample_summary", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def sample_summary():
+    async def sample_summary():
         # --- POST (Архивлах) - Service ашиглана ---
         if request.method == "POST":
             action = request.form.get("action")
@@ -268,7 +270,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/sample_report/<int:sample_id>")
     @login_required
-    def sample_report(sample_id):
+    async def sample_report(sample_id):
         # Service-ээс тайлангийн өгөгдөл авах
         report_data = get_sample_report_data(sample_id)
 
@@ -297,7 +299,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/sample_history/<int:sample_id>")
     @login_required
-    def sample_history(sample_id):
+    async def sample_history(sample_id):
         sample = Sample.query.get_or_404(sample_id)
         results = (
             AnalysisResult.query.filter_by(sample_id=sample_id)
@@ -325,7 +327,7 @@ def register_routes(bp):
     @bp.route("/archive_hub", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
-    def archive_hub():
+    async def archive_hub():
         from sqlalchemy import func, extract
         from collections import defaultdict
 
@@ -462,7 +464,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/dashboard_stats")
     @login_required
-    def api_dashboard_stats():
+    async def api_dashboard_stats():
         """
         Dashboard Chart.js-д зориулсан статистик
 
@@ -553,7 +555,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/export/samples")
     @login_required
-    def export_samples():
+    async def export_samples():
         """Дээжний өгөгдлийг Excel экспорт"""
         from app.utils.exports import create_sample_export, send_excel_response
 
@@ -593,7 +595,7 @@ def register_routes(bp):
 
     @bp.route("/export/analysis")
     @login_required
-    def export_analysis():
+    async def export_analysis():
         """Шинжилгээний үр дүнг Excel экспорт"""
         from app.utils.exports import create_analysis_export, send_excel_response
 
@@ -634,14 +636,14 @@ def register_routes(bp):
 
     @bp.route("/sample_count", methods=["GET"])
     @login_required
-    def htmx_sample_count():
+    async def htmx_sample_count():
         """htmx: Нийт дээжний тоог HTML-ээр буцаах."""
         count = Sample.query.count()
         return f'<strong class="text-primary">{count}</strong> дээж'
 
     @bp.route("/search_samples", methods=["GET"])
     @login_required
-    def htmx_search_samples():
+    async def htmx_search_samples():
         """htmx: Дээж хайх (partial HTML)."""
         from app.utils.security import escape_like_pattern
 

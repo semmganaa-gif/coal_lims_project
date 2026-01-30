@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ param.name_mn }} — Анионы шинжилгээ{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('water.water_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <span class="badge bg-primary text-white me-2">{{ analysis_code }}</span>
+    <h5 class="mb-0">{{ param.name_mn }}</h5>
+    <small class="text-muted ms-2">{{ param.get('unit', 'mg/L') }}</small>
+    {% if param.get('mns_limit') %}
+    <span class="badge bg-warning text-dark ms-2">MNS: {{ param.mns_limit[1] }} {{ param.get('unit', '') }}</span>
+    {% endif %}
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-body">
+          <select id="sampleSelect" class="form-select mb-2">
+            <option value="">-- Дээж сонгоно уу --</option>
+          </select>
+          <button class="btn btn-primary btn-sm w-100" onclick="addSample()">
+            <i class="bi bi-plus-circle me-1"></i>Нэмэх
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h6 class="mb-0">{{ param.name_mn }} — Хэмжилт</h6>
+          <button class="btn btn-success btn-sm" onclick="saveAll()">
+            <i class="bi bi-save me-1"></i>Хадгалах
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div id="anionsGrid" class="ag-theme-alpine" style="height: 500px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script>
+const analysisCode = "{{ analysis_code }}";
+const mnsMax = {{ (param.get('mns_limit', [None, None])[1])|tojson }};
+let gridApi;
+
+document.addEventListener('DOMContentLoaded', function() {
+  fetch("{{ url_for('water.eligible_samples', code='CL_W') }}".replace('CL_W', analysisCode))
+    .then(r => r.json())
+    .then(data => {
+      const sel = document.getElementById('sampleSelect');
+      data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
+        sel.appendChild(opt);
+      });
+    });
+
+  const gridDiv = document.getElementById('anionsGrid');
+  const gridOptions = {
+    columnDefs: [
+      { field: 'sample_code', headerName: 'Дээжний код', pinned: 'left', width: 160 },
+      { field: 'concentration', headerName: 'Агуулга ({{ param.get("unit", "mg/L") }})', editable: true, type: 'numericColumn', width: 180,
+        cellStyle: p => {
+          if (!mnsMax || !p.value) return {};
+          return parseFloat(p.value) > mnsMax ? { backgroundColor: '#ffe0e0' } : { backgroundColor: '#e0ffe0' };
+        }
+      },
+      { field: 'notes', headerName: 'Тэмдэглэл', editable: true, flex: 1 },
+    ],
+    rowData: [],
+    defaultColDef: { sortable: true, resizable: true },
+  };
+  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+});
+
+function addSample() {
+  const sel = document.getElementById('sampleSelect');
+  if (!sel.value) return;
+  const opt = sel.options[sel.selectedIndex];
+  const rows = [];
+  gridApi.forEachNode(n => rows.push(n.data));
+  rows.push({
+    sample_id: parseInt(sel.value),
+    sample_code: opt.textContent.split(' (')[0],
+    concentration: '', notes: ''
+  });
+  gridApi.setGridOption('rowData', rows);
+}
+
+function saveAll() {
+  const rows = [];
+  gridApi.forEachNode(n => rows.push(n.data));
+  if (!rows.length) { alert('Өгөгдөл байхгүй'); return; }
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  rows.forEach(row => {
+    fetch("{{ url_for('water.save_results') }}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify({
+        sample_id: row.sample_id,
+        analysis_code: analysisCode,
+        results: { concentration: row.concentration, notes: row.notes }
+      })
+    }).then(r => r.json()).catch(e => console.error(e));
+  });
+  alert('Хадгалагдлаа!');
+}
+</script>
+{% endblock %}

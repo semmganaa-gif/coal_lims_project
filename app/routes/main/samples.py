@@ -39,21 +39,25 @@ def register_routes(bp):
             current_analyses = []
 
         if request.method == "POST":
-            new_code = request.form.get("sample_code", "").strip()
+            new_code = request.form.get("sample_code", "").strip().upper()  # ✅ Том үсэг болгох
             selected_analyses = request.form.getlist("analyses")
 
             original_code = sample.sample_code
-            code_changed = new_code and new_code != original_code
+            code_changed = new_code and new_code.upper() != (original_code or "").upper()
             analyses_changed = set(selected_analyses) != set(current_analyses)
 
             if not new_code:
                 flash("Дээжний код хоосон байх боломжгүй.", "danger")
-            elif code_changed and Sample.query.filter(Sample.sample_code == new_code, Sample.id != sample_id).first():
+            # ✅ Case-insensitive давхардал шалгах
+            elif code_changed and Sample.query.filter(
+                db.func.upper(Sample.sample_code) == new_code.upper(),
+                Sample.id != sample_id
+            ).first():
                 flash(f'АЛДАА: "{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй тул солих боломжгүй.', "danger")
             else:
                 try:
                     if code_changed:
-                        sample.sample_code = new_code
+                        sample.sample_code = new_code  # Model-д @validates автоматаар uppercase болгоно
                     if analyses_changed:
                         sample.analyses_to_perform = json.dumps(selected_analyses)
 

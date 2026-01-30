@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ param.name_mn }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex align-items-center mb-3">
+    <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
+    <h5 class="mb-0">{{ param.name_mn }}</h5>
+    <small class="text-muted ms-2">{{ param.get('standard', '') }}</small>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-body">
+          <select id="sampleSelect" class="form-select mb-2">
+            <option value="">-- Дээж сонгоно уу --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between">
+          <h6 class="mb-0">Нимгэн зүсэлтийн тайлбар</h6>
+          <button class="btn btn-success btn-sm" onclick="saveResults()">
+            <i class="bi bi-save me-1"></i>Хадгалах
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Бүтцийн тодорхойлолт</label>
+            <textarea id="textureDesc" class="form-control" rows="4" placeholder="Бүтэц, ширхэгийн хэлбэр, найрлага..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Тодорхойлогдсон эрдсүүд</label>
+            <textarea id="mineralsIdentified" class="form-control" rows="3" placeholder="Эрдсийн нэрс..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">Зураг оруулах</label>
+            <input type="file" id="imageUpload" class="form-control" accept="image/*" multiple>
+          </div>
+          <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-purple { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  fetch("{{ url_for('petrography.eligible_samples', code='TS') }}")
+    .then(r => r.json())
+    .then(data => {
+      const sel = document.getElementById('sampleSelect');
+      data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
+        sel.appendChild(opt);
+      });
+    });
+
+  document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.style.cssText = 'width:150px;height:150px;object-fit:cover;border-radius:8px;border:2px solid #ddd';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+});
+
+function saveResults() {
+  const sampleId = document.getElementById('sampleSelect').value;
+  if (!sampleId) { alert('Дээж сонгоно уу'); return; }
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  fetch("{{ url_for('petrography.save_results') }}", {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+    body: JSON.stringify({
+      sample_id: parseInt(sampleId),
+      analysis_code: "{{ analysis_code }}",
+      results: {
+        texture_description: document.getElementById('textureDesc').value,
+        minerals_identified: document.getElementById('mineralsIdentified').value,
+      }
+    })
+  })
+  .then(r => r.json())
+  .then(d => { if (d.success) alert('Хадгалагдлаа!'); })
+  .catch(e => console.error(e));
+}
+</script>
+{% endblock %}
