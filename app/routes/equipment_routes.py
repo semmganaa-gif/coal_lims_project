@@ -186,6 +186,25 @@ def edit_equipment(id):
     eq.remark = request.form.get("remark")
     eq.category = request.form.get("category") or "other"
 
+    # Нэмэлт field-үүд (equipment_detail.html modal-аас)
+    if request.form.get("quantity"):
+        try:
+            eq.quantity = int(request.form.get("quantity"))
+        except ValueError:
+            pass
+    eq.manufactured_info = request.form.get("manufactured_info")
+    eq.commissioned_info = request.form.get("commissioned_info")
+    if request.form.get("initial_price"):
+        try:
+            eq.initial_price = float(request.form.get("initial_price"))
+        except ValueError:
+            pass
+    if request.form.get("residual_price"):
+        try:
+            eq.residual_price = float(request.form.get("residual_price"))
+        except ValueError:
+            pass
+
     try:
         db.session.commit()
         flash("Шинэчлэгдлээ.", "success")
@@ -743,6 +762,9 @@ def equipment_journal_special(journal_type):
         }
         if item.extra_data:
             row.update(item.extra_data)
+        # Template-ууд qty ашигладаг бол quantity-аас копилох
+        if 'qty' not in row and item.quantity:
+            row['qty'] = item.quantity
         items_data.append(row)
 
     return render_template(template, journal_type=journal_type, items=items_data)
@@ -759,6 +781,9 @@ def add_register_item(register_type):
     data = request.form.to_dict()
     data.pop('csrf_token', None)
     data.pop('edit_item_id', None)
+    # qty → quantity mapping (measurement, internal_check template-ууд qty ашигладаг)
+    if 'qty' in data and 'quantity' not in data:
+        data['quantity'] = data.pop('qty')
     # Үндсэн field-үүдийг Equipment column-д хадгалах
     new_item = Equipment(
         name=data.pop('name', ''),
@@ -798,6 +823,9 @@ def edit_register_item(id):
     data.pop('csrf_token', None)
     data.pop('edit_item_id', None)
     register_type = item.register_type
+    # qty → quantity mapping
+    if 'qty' in data and 'quantity' not in data:
+        data['quantity'] = data.pop('qty')
 
     item.name = data.pop('name', item.name)
     item.manufacturer = data.pop('manufacturer', item.manufacturer)
