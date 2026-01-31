@@ -2,6 +2,8 @@
 """Микробиологийн лабораторийн routes."""
 
 import os
+import json
+from datetime import datetime, date
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from app import db
@@ -97,7 +99,7 @@ def api_samples():
 @micro_bp.route('/api/save_results', methods=['POST'])
 @login_required
 def save_results():
-    """Үр дүн хадгалах."""
+    """Үр дүн хадгалах (нэг дээжид)."""
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -106,35 +108,65 @@ def save_results():
     if not sample:
         return jsonify({'error': 'Sample not found'}), 404
 
-    import json
     ar = AnalysisResult(
         sample_id=sample.id,
-        analysis_type=data.get('analysis_code'),
-        result_value=json.dumps(data.get('results', {}), ensure_ascii=False),
-        chemist=current_user.username,
+        analysis_code=data.get('analysis_code'),
+        raw_data=json.dumps(data.get('results', {}), ensure_ascii=False),
+        user_id=current_user.id,
     )
     db.session.add(ar)
     db.session.commit()
     return jsonify({'success': True, 'id': ar.id})
 
 
+def _get_or_create_micro_sample(category, sample_code, sample_date_str):
+    """Микробиологийн дээж хайх эсвэл үүсгэх.
+
+    Water: sample_code-р хайна.
+    Air/Surface: Огноо+категориор автомат дээж үүсгэнэ.
+    """
+    if category == 'water':
+        if not sample_code:
+            return None
+        sample = Sample.query.filter_by(sample_code=sample_code).first()
+        return sample
+    else:
+        # Air/Surface: auto-generate sample code from date + category
+        today_str = sample_date_str or date.today().isoformat()
+        prefix = 'CM-AIR' if category == 'air' else 'CM-SUR'
+        auto_code = f'{prefix}-{today_str}'
+
+        sample = Sample.query.filter_by(sample_code=auto_code).first()
+        if not sample:
+            sample = Sample(
+                sample_code=auto_code,
+                lab_type='microbiology',
+                status='analysis',
+                sample_date=datetime.strptime(today_str, '%Y-%m-%d').date() if today_str else date.today(),
+                client_name='LAB',
+                user_id=current_user.id,
+            )
+            db.session.add(sample)
+            db.session.flush()
+        return sample
+
+
 @micro_bp.route('/api/save_batch', methods=['POST'])
 @login_required
 def save_batch():
     """Багцаар үр дүн хадгалах (workspace grid-ээс)."""
-    import json
     data = request.get_json()
     if not data or not data.get('rows'):
         return jsonify({'error': 'No data provided'}), 400
 
     category = data.get('category', 'water')
     rows = data['rows']
-    count = 0
+    saved = 0
+    errors = []
 
     for row in rows:
         sample_code = row.get('sample_code', '').strip()
-        sample_name = row.get('sample_name', '').strip()
-        if not sample_code and not sample_name:
+        if not sample_code:
             continue
 
         # Build result dict (only non-empty fields)
@@ -147,24 +179,80 @@ def save_batch():
         if not results:
             continue
 
-        ar = AnalysisResult(
-            sample_id=None,
-            analysis_type=f'MICRO_{category.upper()}',
-            result_value=json.dumps({
-                'sample_code': sample_code,
-                'sample_name': sample_name,
-                'start_date': row.get('start_date'),
-                'end_date': row.get('end_date'),
-                'category': category,
-                **results,
-            }, ensure_ascii=False),
-            chemist=current_user.username,
-        )
-        db.session.add(ar)
-        count += 1
+        # Get or create sample
+        sample = _get_or_create_micro_sample(category, sample_code, row.get('start_date'))
+        if not sample:
+            errors.append(f'Дээж олдсонгүй: {sample_code}')
+            continue
+
+        analysis_code = f'MICRO_{category.upper()}'
+        raw = json.dumps({
+            'sample_code': sample_code,
+            'start_date': row.get('start_date'),
+            'end_date': row.get('end_date'),
+            'category': category,
+            **results,
+        }, ensure_ascii=False)
+
+        # Upsert: update if exists, insert if not
+        existing = AnalysisResult.query.filter_by(
+            sample_id=sample.id,
+            analysis_code=analysis_code,
+        ).first()
+
+        if existing:
+            existing.raw_data = raw
+            existing.user_id = current_user.id
+        else:
+            ar = AnalysisResult(
+                sample_id=sample.id,
+                analysis_code=analysis_code,
+                raw_data=raw,
+                user_id=current_user.id,
+            )
+            db.session.add(ar)
+
+        saved += 1
 
     db.session.commit()
-    return jsonify({'success': True, 'count': count})
+    resp = {'success': True, 'count': saved}
+    if errors:
+        resp['errors'] = errors
+    return jsonify(resp)
+
+
+@micro_bp.route('/api/load_batch')
+@login_required
+def load_batch():
+    """Хадгалсан үр дүнг ачаалах.
+
+    GET /api/load_batch?category=water&date=2026-01-31
+    """
+    category = request.args.get('category', 'water')
+    date_str = request.args.get('date')
+    analysis_code = f'MICRO_{category.upper()}'
+
+    query = AnalysisResult.query.filter_by(analysis_code=analysis_code)
+
+    if date_str:
+        # Filter by date in raw_data (start_date field)
+        query = query.filter(AnalysisResult.raw_data.contains(date_str))
+
+    results = query.order_by(AnalysisResult.id.desc()).limit(200).all()
+
+    rows = []
+    for ar in results:
+        try:
+            rd = json.loads(ar.raw_data) if ar.raw_data else {}
+        except (json.JSONDecodeError, TypeError):
+            continue
+        rd['id'] = ar.id
+        rd['sample_id'] = ar.sample_id
+        rows.append(rd)
+
+    # Reverse so oldest first (natural order)
+    rows.reverse()
+    return jsonify({'rows': rows})
 
 
 @micro_bp.route('/api/data')
