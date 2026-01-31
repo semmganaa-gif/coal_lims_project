@@ -24,7 +24,7 @@ def register_routes(bp):
     @limiter.limit("5 per minute")  # Brute force халдлагаас хамгаалах
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for("main.index"))
+            return redirect(url_for("main.lab_selector"))
 
         from app.models import User
         form = LoginForm()
@@ -39,7 +39,7 @@ def register_routes(bp):
             log_audit(action='login_success', details={'username': user.username, 'role': user.role})
             next_page = request.args.get("next")
             if not next_page or not is_safe_url(next_page):
-                next_page = url_for("main.index")
+                next_page = url_for("main.lab_selector")
             return redirect(next_page)
 
         return render_template("login.html", title="Нэвтрэх", form=form)
