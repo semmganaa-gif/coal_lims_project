@@ -757,6 +757,8 @@ def add_register_item(register_type):
         return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
     data = request.form.to_dict()
+    data.pop('csrf_token', None)
+    data.pop('edit_item_id', None)
     # Үндсэн field-үүдийг Equipment column-д хадгалах
     new_item = Equipment(
         name=data.pop('name', ''),
@@ -793,6 +795,8 @@ def edit_register_item(id):
 
     item = Equipment.query.get_or_404(id)
     data = request.form.to_dict()
+    data.pop('csrf_token', None)
+    data.pop('edit_item_id', None)
     register_type = item.register_type
 
     item.name = data.pop('name', item.name)
