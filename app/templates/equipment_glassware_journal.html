@@ -1,0 +1,157 @@
+{# app/templates/equipment_glassware_journal.html #}
+{% extends "base.html" %}
+{% block title %}Шилэн хэмжүүрийн бүртгэл{% endblock %}
+
+{% block content %}
+<div class="container-fluid eq-page">
+
+  {% set add_modal_id = 'addGlassModal' %}
+  {% include "partials/equipment_hero_tabs.html" %}
+
+  <div class="eq-toolbar-card">
+    <div class="eq-toolbar-left">
+      <span class="fw-bold"><i class="bi bi-cup-straw text-success"></i> Шилэн хэмжүүрийн бүртгэл</span>
+    </div>
+    <div class="eq-toolbar-right">
+      <button class="btn btn-sm btn-outline-primary" id="btn-edit-row" onclick="editSelectedRow()" disabled>
+        <i class="bi bi-pencil-square"></i> Засах
+      </button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled>
+        <i class="bi bi-trash3"></i> Устгах <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="eq-grid-card">
+    <div id="glasswareGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
+  </div>
+
+  <div class="modal fade" id="addGlassModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Шилэн хэмжүүр нэмэх</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='glassware') }}">
+        <div class="modal-body p-4">
+          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+          <div class="row g-3">
+            <div class="col-md-4"><label class="form-label fw-bold small">Бүлэг</label><input type="text" id="g_group" name="group" class="form-control" placeholder="Колб, Цилиндр..."></div>
+            <div class="col-md-2"><label class="form-label fw-bold small">№</label><input type="text" id="g_no" name="no" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Нэр</label><input type="text" id="g_name" name="name" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Хэмжээ /мл/</label><input type="text" id="g_volume" name="volume" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Үйлдвэрлэгч, загвар</label><input type="text" id="g_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Гэрчилгээний дугаар</label><input type="text" id="g_cert_no" name="cert_no" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Баталгаажуулсан огноо</label><input type="text" id="g_cert_date" name="cert_date" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Баталгаат хугацаа дуусах</label><input type="text" id="g_cert_expire" name="cert_expire" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Дахин баталгаажуулах</label><input type="text" id="g_recert_date" name="recert_date" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
+    <input type="hidden" name="register_type" value="glassware">
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
+
+<style>
+  .tabulator .tabulator-header .tabulator-col { padding:2px 4px; }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    display:flex; align-items:center; gap:4px; padding:2px 4px;
+  }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    white-space:normal; line-height:1.2; flex:1;
+  }
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
+  .tabulator .tabulator-row { min-height:32px; }
+  .tabulator .tabulator-header { background:#f0fdf4; border-bottom:2px solid #e2e8f0; }
+  @media print {
+    .btn, .navbar, footer { display:none!important; }
+    .tabulator { height:auto!important; overflow:visible!important; }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var rowData = {{ items | tojson }};
+
+  var table = new Tabulator("#glasswareGrid", {
+    data: rowData,
+    layout: "fitColumns",
+    height: "75vh",
+    groupBy: "group",
+    groupStartOpen: true,
+    selectable: true,
+    columns: [
+      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+      {title:"№", field:"no", width:55, frozen:true},
+      {title:"Хэмжих хэрэгслийн нэр", field:"name", minWidth:200, frozen:true},
+      {title:"Хэмжээ /мл/", field:"volume", width:110},
+      {title:"Үйлдвэрлэгч, загвар", field:"manufacturer", minWidth:180},
+      {title:"Гэрчилгээний дугаар", field:"cert_no", minWidth:150},
+      {title:"Баталгаажуулсан огноо", field:"cert_date", width:150},
+      {title:"Баталгаат хугацаа дуусах", field:"cert_expire", width:160},
+      {title:"Дахин баталгаажуулах хугацаа", field:"recert_date", width:170},
+    ],
+  });
+
+  var editBtn = document.getElementById('btn-edit-row');
+  var deleteBtn = document.getElementById('btn-delete-row');
+  var countBadge = document.getElementById('selected-count-badge');
+  table.on('rowSelectionChanged', function(data) {
+    editBtn.disabled = (data.length !== 1);
+    deleteBtn.disabled = (!data.length);
+    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
+    else { countBadge.classList.add('d-none'); }
+  });
+
+  document.getElementById('eqTotalCount').textContent = table.getData().length;
+
+  window.editSelectedRow = function() {
+    var sel = table.getSelectedData();
+    if (sel.length !== 1) return;
+    var d = sel[0];
+    ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) {
+      var el = document.getElementById('g_'+f); if(el) el.value = d[f]||'';
+    });
+    if (d.id) {
+      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+    }
+    document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    new bootstrap.Modal(document.getElementById('addGlassModal')).show();
+  };
+
+  document.getElementById('addGlassModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='glassware') }}";
+    document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Шилэн хэмжүүр нэмэх';
+    ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) { document.getElementById('g_'+f).value=''; });
+  });
+
+  window.deleteSelectedRows = function() {
+    var sel = table.getSelectedData();
+    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    var form = document.getElementById('deleteForm');
+    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
+    sel.forEach(function(row) {
+      if (row.id) { var input = document.createElement('input'); input.type='hidden'; input.name='item_ids'; input.value=row.id; form.appendChild(input); }
+    });
+    form.submit();
+  };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+{# app/templates/equipment_spares_register.html #}
+{% extends "base.html" %}
+{% block title %}Сэлбэг хэрэгслийн бүртгэл{% endblock %}
+
+{% block content %}
+<div class="container-fluid eq-page">
+
+  {% set add_modal_id = 'addSpareModal' %}
+  {% include "partials/equipment_hero_tabs.html" %}
+
+  <div class="eq-toolbar-card">
+    <div class="eq-toolbar-left">
+      <span class="fw-bold"><i class="bi bi-gear-wide-connected text-secondary"></i> Сэлбэг хэрэгслийн бүртгэл</span>
+    </div>
+    <div class="eq-toolbar-right">
+      <button class="btn btn-sm btn-outline-primary" id="btn-edit-row" onclick="editSelectedRow()" disabled>
+        <i class="bi bi-pencil-square"></i> Засах
+      </button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled>
+        <i class="bi bi-trash3"></i> Устгах <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="eq-grid-card">
+    <div id="sparesGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
+  </div>
+
+  <div class="modal fade" id="addSpareModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Сэлбэг нэмэх</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='spares_register') }}">
+        <div class="modal-body p-4">
+          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-bold small">Тоног төхөөрөмж</label><input type="text" id="sp_equipment" name="equipment" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label fw-bold small">№</label><input type="text" id="sp_no" name="no" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Сэлбэг нэр</label><input type="text" id="sp_spare_name" name="name" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Англи нэр</label><input type="text" id="sp_eng_name" name="eng_name" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Үлдэгдэл (ш)</label><input type="number" id="sp_remaining" name="remaining" class="form-control" value="0"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Шинээр ирсэн (ш)</label><input type="number" id="sp_new_arrived" name="new_arrived" class="form-control" value="0"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Хэрэглэгдэх хугацаа (сар)</label><input type="text" id="sp_usage_months" name="usage_months" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
+    <input type="hidden" name="register_type" value="spares_register">
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
+
+<style>
+  .tabulator .tabulator-header .tabulator-col { padding:2px 4px; }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    display:flex; align-items:center; gap:4px; padding:2px 4px;
+  }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    white-space:normal; line-height:1.2; flex:1;
+  }
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
+  .tabulator .tabulator-header { background:#f1f5f9; border-bottom:2px solid #e2e8f0; }
+  @media print {
+    .btn, .navbar, footer { display:none!important; }
+    .tabulator { height:auto!important; overflow:visible!important; }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var rowData = {{ items | tojson }};
+
+  var table = new Tabulator("#sparesGrid", {
+    data: rowData,
+    layout: "fitColumns",
+    height: "78vh",
+    groupBy: "equipment",
+    groupStartOpen: true,
+    selectable: true,
+    columns: [
+      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+      {title:"№", field:"no", width:55, frozen:true},
+      {title:"Сэлбэг хэрэгсэлийн нэр", field:"name", minWidth:200, frozen:true},
+      {title:"Англи нэр", field:"eng_name", minWidth:180},
+      {title:"Үлдэгдэл (ш)", field:"remaining", width:110},
+      {title:"Шинээр ирсэн (ш)", field:"new_arrived", width:120},
+      {title:"Нэг бүрийн хэрэглэгдэх хугацаа, сар", field:"usage_months", minWidth:180},
+    ],
+  });
+
+  var editBtn = document.getElementById('btn-edit-row');
+  var deleteBtn = document.getElementById('btn-delete-row');
+  var countBadge = document.getElementById('selected-count-badge');
+  table.on('rowSelectionChanged', function(data) {
+    editBtn.disabled = (data.length !== 1);
+    deleteBtn.disabled = (!data.length);
+    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
+    else { countBadge.classList.add('d-none'); }
+  });
+
+  document.getElementById('eqTotalCount').textContent = table.getData().length;
+
+  window.editSelectedRow = function() {
+    var sel = table.getSelectedData();
+    if (sel.length !== 1) return;
+    var d = sel[0];
+    ['equipment','no','eng_name','remaining','new_arrived','usage_months'].forEach(function(f) {
+      var el=document.getElementById('sp_'+f); if(el) el.value=d[f]||'';
+    });
+    var nameEl = document.getElementById('sp_spare_name'); if(nameEl) nameEl.value = d.name||'';
+    if (d.id) {
+      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+    }
+    document.querySelector('#addSpareModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    new bootstrap.Modal(document.getElementById('addSpareModal')).show();
+  };
+
+  document.getElementById('addSpareModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='spares_register') }}";
+    document.querySelector('#addSpareModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Сэлбэг нэмэх';
+    ['equipment','no','spare_name','eng_name','remaining','new_arrived','usage_months'].forEach(function(f) { var el=document.getElementById('sp_'+f); if(el) el.value=''; });
+  });
+
+  window.deleteSelectedRows = function() {
+    var sel = table.getSelectedData();
+    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    var form = document.getElementById('deleteForm');
+    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
+    sel.forEach(function(row) {
+      if (row.id) { var input = document.createElement('input'); input.type='hidden'; input.name='item_ids'; input.value=row.id; form.appendChild(input); }
+    });
+    form.submit();
+  };
+});
+</script>
+{% endblock %}

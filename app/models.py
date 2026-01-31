@@ -725,6 +725,11 @@ class Equipment(db.Model):
     residual_price = db.Column(db.Float)                      # Үлдэгдэл үнэ (₮)
     remark = db.Column(db.String(255))                        # Бусад тайлбар
 
+    # Бүртгэлийн төрөл (7 тусгай бүртгэл + үндсэн)
+    # 'main', 'measurement', 'glassware', 'internal_check', 'new_equipment', 'out_of_service', 'spares', 'balances'
+    register_type = db.Column(db.String(30), default='main', index=True)
+    extra_data = db.Column(db.JSON)                           # Бүртгэл бүрийн тусгай field-үүд
+
     # Холбоосууд
     logs = db.relationship(
         'MaintenanceLog',

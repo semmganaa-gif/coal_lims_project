@@ -1,0 +1,173 @@
+{# app/templates/equipment_out_of_service.html #}
+{% extends "base.html" %}
+{% block title %}Ашиглалтаас гарсан ТТ бүртгэл{% endblock %}
+
+{% block content %}
+<div class="container-fluid eq-page">
+
+  {% set add_modal_id = 'addOosModal' %}
+  {% include "partials/equipment_hero_tabs.html" %}
+
+  <div class="eq-toolbar-card">
+    <div class="eq-toolbar-left">
+      <span class="fw-bold"><i class="bi bi-x-circle text-danger"></i> Out of Service</span>
+    </div>
+    <div class="eq-toolbar-right">
+      <button class="btn btn-sm btn-outline-primary" id="btn-edit-row" onclick="editSelectedRow()" disabled>
+        <i class="bi bi-pencil-square"></i> Засах
+      </button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled>
+        <i class="bi bi-trash3"></i> Устгах <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="eq-grid-card">
+    <div id="oosGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
+  </div>
+
+  <div class="modal fade" id="addOosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Out of Service нэмэх</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='out_of_service') }}">
+        <div class="modal-body p-4">
+          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+          <div class="row g-3">
+            <div class="col-md-2"><label class="form-label fw-bold small">Д/д</label><input type="text" id="oos_no" name="no" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Нэр</label><input type="text" id="oos_name" name="name" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Үйлдвэрлэгчийн нэр</label><input type="text" id="oos_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Марк, дугаар</label><input type="text" id="oos_mark" name="mark" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Тоо хэмжээ</label><input type="text" id="oos_qty" name="quantity" class="form-control" value="1"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Ашиглалтад орсон огноо</label><input type="text" id="oos_commissioned_date" name="commissioned_date" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Гэмтэл</label><input type="text" id="oos_damage" name="damage" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Эвдэрсэн сэлбэг хэрэгсэл</label><input type="text" id="oos_broken_parts" name="broken_parts" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Засварлах боломжтой</label><select id="oos_repairable" name="repairable" class="form-select"><option value=""></option><option>Тийм</option><option>Үгүй</option></select></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Сэлбэгт ашиглах</label><select id="oos_use_as_spare" name="use_as_spare" class="form-select"><option value=""></option><option>Тийм</option><option>Үгүй</option></select></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Ашиглалтаас хассан огноо</label><input type="text" id="oos_removed_date" name="removed_date" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Акталсан огноо</label><input type="text" id="oos_retired_date" name="retired_date" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
+    <input type="hidden" name="register_type" value="out_of_service">
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
+
+<style>
+  .tabulator .tabulator-header .tabulator-col { padding:2px 4px; }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    display:flex; align-items:center; gap:4px; padding:2px 4px;
+  }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
+    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    white-space:normal; line-height:1.2; flex:1;
+  }
+  .tabulator .tabulator-header .tabulator-col-group .tabulator-col-group-cols { border-top:1px solid #e2e8f0; }
+  .tabulator .tabulator-header .tabulator-col-group > .tabulator-col-content .tabulator-col-title {
+    font-size:0.7rem; font-weight:800; text-align:center;
+  }
+  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
+  .tabulator .tabulator-row { min-height:32px; }
+  .tabulator .tabulator-header { background:#fef2f2; border-bottom:2px solid #e2e8f0; }
+  @media print {
+    .btn, .navbar, footer { display:none!important; }
+    .tabulator { height:auto!important; overflow:visible!important; }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var rowData = {{ items | tojson }};
+
+  var table = new Tabulator("#oosGrid", {
+    data: rowData,
+    layout: "fitColumns",
+    height: "78vh",
+    selectable: true,
+    columns: [
+      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+      {title:"Д/д", field:"no", width:55, frozen:true},
+      {title:"Багаж, тоног төхөөрөмжийн нэр", field:"name", minWidth:180, frozen:true},
+      {title:"Үйлдвэрлэгчийн нэр", field:"manufacturer", minWidth:140},
+      {title:"Марк, дугаар", field:"mark", width:120},
+      {title:"Тоо хэмжээ", field:"quantity", width:90},
+      {title:"Ашиглалтад орсон огноо", field:"commissioned_date", width:140},
+      {title:"Гэмтэлийн мэдээлэл", columns:[
+        {title:"Гэмтэл", field:"damage", minWidth:160},
+        {title:"Эвдэрсэн сэлбэг хэрэгслийн бүртгэл", field:"broken_parts", minWidth:180},
+        {title:"Засварлах боломжтой эсэх", field:"repairable", width:140},
+        {title:"Сэлбэг хэрэгсэлд ашиглах эсэх", field:"use_as_spare", width:150},
+      ]},
+      {title:"Ашиглалтаас хассан огноо", field:"removed_date", width:150},
+      {title:"Акталсан огноо", field:"retired_date", width:130},
+    ],
+  });
+
+  var editBtn = document.getElementById('btn-edit-row');
+  var deleteBtn = document.getElementById('btn-delete-row');
+  var countBadge = document.getElementById('selected-count-badge');
+  table.on('rowSelectionChanged', function(data) {
+    editBtn.disabled = (data.length !== 1);
+    deleteBtn.disabled = (!data.length);
+    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
+    else { countBadge.classList.add('d-none'); }
+  });
+
+  document.getElementById('eqTotalCount').textContent = table.getData().length;
+
+  window.editSelectedRow = function() {
+    var sel = table.getSelectedData();
+    if (sel.length !== 1) return;
+    var d = sel[0];
+    var fields = ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'];
+    fields.forEach(function(f) {
+      var el=document.getElementById('oos_'+f); if(!el) return;
+      if(el.tagName==='SELECT'){for(var i=0;i<el.options.length;i++){if(el.options[i].value===(d[f]||'')){el.selectedIndex=i;break;}}} else el.value=d[f]||'';
+    });
+    var qtyEl = document.getElementById('oos_qty'); if(qtyEl) qtyEl.value = d.quantity||'1';
+    if (d.id) {
+      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+    }
+    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    new bootstrap.Modal(document.getElementById('addOosModal')).show();
+  };
+
+  document.getElementById('addOosModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='out_of_service') }}";
+    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Out of Service нэмэх';
+    ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'].forEach(function(f) {
+      var el=document.getElementById('oos_'+f); if(el){ if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }
+    });
+  });
+
+  window.deleteSelectedRows = function() {
+    var sel = table.getSelectedData();
+    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    var form = document.getElementById('deleteForm');
+    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
+    sel.forEach(function(row) {
+      if (row.id) { var input = document.createElement('input'); input.type='hidden'; input.name='item_ids'; input.value=row.id; form.appendChild(input); }
+    });
+    form.submit();
+  };
+});
+</script>
+{% endblock %}

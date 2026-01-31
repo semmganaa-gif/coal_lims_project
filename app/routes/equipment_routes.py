@@ -41,17 +41,22 @@ def equipment_list():
     warning_date = today + timedelta(days=30)
     view = request.args.get("view", "all")
     page = request.args.get("page", 1, type=int)
-    per_page = 50  # Хуудас тутамд харуулах тоо
+    per_page = 500  # Бүх төхөөрөмжийг нэг хуудсанд харуулах
 
-    query = Equipment.query
+    query = Equipment.query.filter(
+        db.or_(Equipment.register_type == 'main', Equipment.register_type.is_(None))
+    )
 
     # View шүүлтүүрүүд
     if view == "retired":
         query = query.filter(Equipment.status == "retired")
     elif view == "spares":
         query = query.filter(Equipment.status.in_(["needs_spare", "broken"]))
+    elif view == "coal":
+        query = query.filter(Equipment.category.in_(["furnace", "prep", "analysis", "other"]))
+    elif view == "new":
+        query = query.filter(Equipment.status == "normal").order_by(Equipment.id.desc())
     elif view != "all":
-        # Хэрэв view нь category-тай таарч байвал шүүнэ
         query = query.filter(Equipment.category == view)
 
     # "Retired" төлөвтэйг үндсэн жагсаалтад харуулахгүй байх (хэрэв тусгайлан retired-ийг сонгоогүй бол)
@@ -126,7 +131,10 @@ def add_equipment():
         location = request.form.get("location"),
         room_number = request.form.get("room"),
         related_analysis = request.form.get("related"),
-        calibration_note = request.form.get("calibration_note"),
+        calibration_note = ', '.join(filter(None, [request.form.get("chk_checked"), request.form.get("chk_calibrated")])),
+        manufactured_info = request.form.get("manufactured_info"),
+        commissioned_info = request.form.get("commissioned_info"),
+        remark = request.form.get("remark"),
         status = "normal",
         category = request.form.get("category") or "other"
     )
@@ -138,7 +146,8 @@ def add_equipment():
         db.session.rollback()
         current_app.logger.error(f"Database error in add_equipment: {e}")
         flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
-    return redirect(url_for("equipment.equipment_list"))
+    view = request.form.get("category") or "all"
+    return redirect(url_for("equipment.equipment_list", view=view))
 
 
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
@@ -403,6 +412,10 @@ def log_usage_bulk():
 
         for item in items:
             eq_id = item.get("eq_id")
+            try:
+                eq_id = int(eq_id)
+            except (TypeError, ValueError):
+                continue
 
             # Минут болон бусад утгуудыг шалгах
             minutes_val = item.get("minutes")
@@ -410,6 +423,44 @@ def log_usage_bulk():
 
             note = item.get("note", "")
             is_checked = item.get("is_checked", False)
+
+            # Засвар бүртгэл
+            is_repair = item.get("repair", False)
+            if is_repair:
+                repair_date_str = item.get("repair_date", "")
+                spare_parts = item.get("spare_parts", [])
+
+                # Сэлбэг мэдээллийг тайлбарт нэгтгэх
+                desc_parts = []
+                if note:
+                    desc_parts.append(note)
+                for sp in spare_parts:
+                    sp_id = sp.get("spare_id")
+                    try:
+                        sp_id = int(sp_id)
+                    except (TypeError, ValueError):
+                        continue
+                    sp_eq = db.session.get(Equipment, sp_id)
+                    sp_name = f"{sp_eq.lab_code or ''} {sp_eq.name}".strip() if sp_eq else f"ID:{sp.get('spare_id')}"
+                    desc_parts.append(f"Сэлбэг: {sp_name} x{sp.get('qty', 1)} ({sp.get('used_by', '')})")
+
+                repair_date = None
+                if repair_date_str:
+                    try:
+                        from datetime import datetime as dt
+                        repair_date = dt.strptime(repair_date_str, "%Y-%m-%d")
+                    except ValueError:
+                        repair_date = today_date
+
+                mlog = MaintenanceLog(
+                    equipment_id=eq_id,
+                    action_date=repair_date or today_date,
+                    action_type="Repair",
+                    description="\n".join(desc_parts) if desc_parts else "Засвар хийгдсэн",
+                    performed_by=current_user.username,
+                    result="Pass",
+                )
+                db.session.add(mlog)
 
             # Хэрэв ашигласан минут байвал, эсвэл зүгээр л тэмдэглэл/чек хийсэн бол бүртгэнэ
             if minutes > 0 or note or is_checked:
@@ -426,10 +477,12 @@ def log_usage_bulk():
                     start_time=today_date,
                     end_time=end_time,
                     duration_minutes=minutes,
-                    used_by=current_user.username, # Login хийсэн хэрэглэгчийн нэр
+                    used_by=current_user.username,
                     purpose=purpose_text
                 )
                 db.session.add(new_usage)
+                count += 1
+            elif is_repair:
                 count += 1
 
         db.session.commit()
@@ -653,6 +706,148 @@ def equipment_journal_grid():
     )
 
 # app/routes/equipment_routes.py дотор хаа нэгтээ нэмнэ
+
+
+@equipment_bp.route("/equipment_journal/<journal_type>", endpoint="equipment_journal_special")
+@login_required
+def equipment_journal_special(journal_type):
+    """Хэмжих хэрэгсэл / Шилэн хэмжүүрийн журнал."""
+    templates = {
+        "measurement": "equipment_measurement_journal.html",
+        "glassware": "equipment_glassware_journal.html",
+        "internal_check": "equipment_internal_check.html",
+        "new_equipment": "equipment_new_register.html",
+        "out_of_service": "equipment_out_of_service.html",
+        "spares_register": "equipment_spares_register.html",
+        "balances_register": "equipment_balances_register.html",
+    }
+    template = templates.get(journal_type)
+    if not template:
+        flash("Журнал олдсонгүй.", "warning")
+        return redirect(url_for("equipment.equipment_journal"))
+
+    # DB-ээс бүртгэлийн өгөгдлийг уншиж дамжуулах
+    items = Equipment.query.filter_by(register_type=journal_type).order_by(Equipment.id.asc()).all()
+    items_data = []
+    for item in items:
+        row = {
+            'id': item.id,
+            'name': item.name or '',
+            'manufacturer': item.manufacturer or '',
+            'model': item.model or '',
+            'serial_number': item.serial_number or '',
+            'lab_code': item.lab_code or '',
+            'quantity': item.quantity or 1,
+            'location': item.location or '',
+            'remark': item.remark or '',
+        }
+        if item.extra_data:
+            row.update(item.extra_data)
+        items_data.append(row)
+
+    return render_template(template, journal_type=journal_type, items=items_data)
+
+
+@equipment_bp.route("/add_register_item/<register_type>", methods=["POST"])
+@login_required
+def add_register_item(register_type):
+    """Бүртгэлд шинэ мөр нэмэх."""
+    if current_user.role not in ["senior", "manager", "admin"]:
+        flash("Эрх хүрэхгүй.", "danger")
+        return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
+
+    data = request.form.to_dict()
+    # Үндсэн field-үүдийг Equipment column-д хадгалах
+    new_item = Equipment(
+        name=data.pop('name', ''),
+        manufacturer=data.pop('manufacturer', ''),
+        model=data.pop('model', ''),
+        serial_number=data.pop('serial_number', ''),
+        lab_code=data.pop('lab_code', ''),
+        quantity=int(data.pop('quantity', '1') or '1'),
+        location=data.pop('location', ''),
+        remark=data.pop('remark', ''),
+        register_type=register_type,
+        status='normal',
+        category='other',
+        extra_data=data,  # Үлдсэн field-үүдийг JSON-д хадгалах
+    )
+    db.session.add(new_item)
+    try:
+        db.session.commit()
+        flash("Амжилттай нэмэгдлээ.", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error adding register item: {e}")
+        flash(f"Алдаа: {str(e)[:100]}", "danger")
+    return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
+
+
+@equipment_bp.route("/edit_register_item/<int:id>", methods=["POST"])
+@login_required
+def edit_register_item(id):
+    """Бүртгэлийн мөр засах."""
+    if current_user.role not in ["senior", "manager", "admin"]:
+        flash("Эрх хүрэхгүй.", "danger")
+        return redirect(url_for("equipment.equipment_list"))
+
+    item = Equipment.query.get_or_404(id)
+    data = request.form.to_dict()
+    register_type = item.register_type
+
+    item.name = data.pop('name', item.name)
+    item.manufacturer = data.pop('manufacturer', item.manufacturer)
+    item.model = data.pop('model', item.model)
+    item.serial_number = data.pop('serial_number', item.serial_number)
+    item.lab_code = data.pop('lab_code', item.lab_code)
+    item.quantity = int(data.pop('quantity', str(item.quantity or 1)) or '1')
+    item.location = data.pop('location', item.location)
+    item.remark = data.pop('remark', item.remark)
+    # extra_data-г merge хийх
+    existing_extra = item.extra_data or {}
+    existing_extra.update(data)
+    item.extra_data = existing_extra
+
+    try:
+        db.session.commit()
+        flash("Амжилттай засагдлаа.", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error editing register item: {e}")
+        flash(f"Алдаа: {str(e)[:100]}", "danger")
+    return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
+
+
+@equipment_bp.route("/delete_register_items", methods=["POST"])
+@login_required
+def delete_register_items():
+    """Бүртгэлийн мөрүүд устгах."""
+    if current_user.role not in ["senior", "manager", "admin"]:
+        flash("Эрх хүрэхгүй.", "danger")
+        return redirect(url_for("equipment.equipment_list"))
+
+    ids = request.form.getlist('item_ids')
+    register_type = request.form.get('register_type', 'measurement')
+
+    if not ids:
+        flash("Мөр сонгоогүй байна.", "warning")
+        return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
+
+    deleted = 0
+    for item_id in ids:
+        item = Equipment.query.get(item_id)
+        if item and item.register_type == register_type:
+            db.session.delete(item)
+            deleted += 1
+
+    try:
+        db.session.commit()
+        flash(f"{deleted} мөр устгагдлаа.", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting register items: {e}")
+        flash(f"Устгалт амжилтгүй: {str(e)[:100]}", "danger")
+    return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
 
 @equipment_bp.route("/api/equipment_list_json")
