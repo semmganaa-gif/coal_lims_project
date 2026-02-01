@@ -55,7 +55,7 @@
           <i class="bi bi-upc-scan"></i> Лаб дугаар: <span class="fw-semibold">{{ eq.lab_code }}</span>
         </span>
       {% endif %}
-      {% if current_user.role in ['senior', 'admin'] %}
+      {% if current_user.role in ['senior', 'manager', 'admin'] %}
       <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editEqModal">
         <i class="bi bi-pencil"></i> Засах
       </button>
@@ -208,12 +208,12 @@
               <select name="action_type" class="form-select form-select-sm">
                 <option value="Daily Check">✅ Дотоод хяналт (Check)</option>
                 <option value="Maintenance">🔧 Урсгал үйлчилгээ (Maintenance)</option>
-                {% if current_user.role in ['senior', 'admin'] %}
+                {% if current_user.role in ['senior', 'manager', 'admin'] %}
                   <option value="Repair">🛠️ Их засвар (Repair)</option>
                   <option value="Calibration">📏 Баталгаажуулалт (Calibration)</option>
                 {% endif %}
               </select>
-              {% if current_user.role in ['senior', 'admin'] %}
+              {% if current_user.role in ['senior', 'manager', 'admin'] %}
                 <div class="form-text small">"Calibration" сонговол хугацаа автоматаар сунгагдана.</div>
               {% endif %}
             </div>
@@ -388,18 +388,30 @@
             <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
           </div>
 
-          <div class="mb-3">
-            <label class="fw-bold small">Категори (Журнал)</label>
-            <select name="category" class="form-select">
-              <option value="other"   {% if eq.category=='other' %}selected{% endif %}>8. Бусад (Default)</option>
-              <option value="furnace" {% if eq.category=='furnace' %}selected{% endif %}>1. Шатаах зуух</option>
-              <option value="prep"    {% if eq.category=='prep' %}selected{% endif %}>2. Дээж бэлтгэл</option>
-              <option value="analysis"{% if eq.category=='analysis' %}selected{% endif %}>3. Шинжилгээний багаж</option>
-              <option value="water"   {% if eq.category=='water' %}selected{% endif %}>4. Усны лаб</option>
-              <option value="micro"   {% if eq.category=='micro' %}selected{% endif %}>5. Микробиологи лаб</option>
-              <option value="wtl"     {% if eq.category=='wtl' %}selected{% endif %}>6. БС лаб</option>
-              <option value="balance" {% if eq.category=='balance' %}selected{% endif %}>7. Жин</option>
-            </select>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="fw-bold small">Категори (Журнал)</label>
+              <select name="category" class="form-select">
+                <option value="other"   {% if eq.category=='other' %}selected{% endif %}>8. Бусад (Default)</option>
+                <option value="furnace" {% if eq.category=='furnace' %}selected{% endif %}>1. Шатаах зуух</option>
+                <option value="prep"    {% if eq.category=='prep' %}selected{% endif %}>2. Дээж бэлтгэл</option>
+                <option value="analysis"{% if eq.category=='analysis' %}selected{% endif %}>3. Шинжилгээний багаж</option>
+                <option value="water"   {% if eq.category=='water' %}selected{% endif %}>4. Усны лаб</option>
+                <option value="micro"   {% if eq.category=='micro' %}selected{% endif %}>5. Микробиологи лаб</option>
+                <option value="wtl"     {% if eq.category=='wtl' %}selected{% endif %}>6. БС лаб</option>
+                <option value="balance" {% if eq.category=='balance' %}selected{% endif %}>7. Жин</option>
+              </select>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="fw-bold small">Давхар бүртгэл</label>
+              <select name="register_type" class="form-select">
+                <option value="">-- Сонгоогүй --</option>
+                <option value="measurement"     {% if eq.register_type=='measurement' %}selected{% endif %}>Хэмжих хэрэгсэл</option>
+                <option value="glassware"       {% if eq.register_type=='glassware' %}selected{% endif %}>Шилэн хэмжүүр</option>
+                <option value="internal_check"  {% if eq.register_type=='internal_check' %}selected{% endif %}>Дотоод шалгалт</option>
+                <option value="spares_register" {% if eq.register_type=='spares_register' %}selected{% endif %}>Сэлбэг</option>
+              </select>
+            </div>
           </div>
 
           <div class="row">
@@ -495,6 +507,114 @@
           <div class="mb-3">
             <label class="fw-bold small">Бусад тайлбар</label>
             <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
+          </div>
+
+          {# ===== ДАВХАР БҮРТГЭЛИЙН НЭМЭЛТ ТАЛБАРУУД ===== #}
+          {% set ed = eq.extra_data or {} %}
+
+          {# --- Хэмжих хэрэгсэл --- #}
+          <div class="edit-reg-fields edit-reg-measurement" style="display:none">
+            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Хэмжих хэрэгслийн нэмэлт</h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="fw-bold small">Бүлэг</label>
+                <select name="group" class="form-select">
+                  <option {% if ed.get('group','') == '1. Физик химийн хэмжлийн төрлөөр' %}selected{% endif %}>1. Физик химийн хэмжлийн төрлөөр</option>
+                  <option {% if ed.get('group','') == '2. Дулаан болон даралтын хэмжлийн төрлөөр' %}selected{% endif %}>2. Дулаан болон даралтын хэмжлийн төрлөөр</option>
+                  <option {% if ed.get('group','') == '3. Хий, шингэний зарцуулалтын хэмжлийн төрлөөр' %}selected{% endif %}>3. Хий, шингэний зарцуулалтын хэмжлийн төрлөөр</option>
+                  <option {% if ed.get('group','') == '4. Хүндийн хэмжлийн төрлөөр' %}selected{% endif %}>4. Хүндийн хэмжлийн төрлөөр</option>
+                  <option {% if ed.get('group','') == '5. Нягтын хэмжлийн төрлөөр' %}selected{% endif %}>5. Нягтын хэмжлийн төрлөөр</option>
+                </select>
+              </div>
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-3">
+                <label class="fw-bold small">Зориулалт</label>
+                <select name="purpose" class="form-select">
+                  <option value="">-- Сонгох --</option>
+                  <option {% if ed.get('purpose','')=='Төв/лаб' %}selected{% endif %}>Төв/лаб</option>
+                  <option {% if ed.get('purpose','')=='Нүүрс/лаб' %}selected{% endif %}>Нүүрс/лаб</option>
+                  <option {% if ed.get('purpose','')=='Ус-лаб' %}selected{% endif %}>Ус-лаб</option>
+                  <option {% if ed.get('purpose','')=='Микр/лаб' %}selected{% endif %}>Микр/лаб</option>
+                  <option {% if ed.get('purpose','')=='БС/лаб' %}selected{% endif %}>БС/лаб</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="fw-bold small">Хэмжих нэгж</label>
+                <select name="unit" class="form-select">
+                  <option value="">--</option>
+                  {% for u in ['нм','μS/см','г','кг','°C','mPa','%','ppm','г/см3','мл','л'] %}
+                  <option {% if ed.get('unit','')==u %}selected{% endif %}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3"><label class="fw-bold small">Баталг. хэмжих хязгаар</label><input type="text" name="cert_range" class="form-control" value="{{ ed.get('cert_range','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Баталг. нарийвчлал</label><input type="text" name="cert_accuracy" class="form-control" value="{{ ed.get('cert_accuracy','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Шалг. хэмжих хязгаар</label><input type="text" name="chk_range" class="form-control" value="{{ ed.get('chk_range','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Шалг. нарийвчлал</label><input type="text" name="chk_accuracy" class="form-control" value="{{ ed.get('chk_accuracy','') }}"></div>
+              <div class="col-md-3">
+                <label class="fw-bold small">Давтамж (Баталг.)</label>
+                <select name="freq_cert" class="form-select">
+                  <option value="">--</option>
+                  {% for f in ['6 сар','1 жил','2 жил','3 жил'] %}
+                  <option {% if ed.get('freq_cert','')==f %}selected{% endif %}>{{ f }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="fw-bold small">Давтамж (Шалг.)</label>
+                <select name="freq_check" class="form-select">
+                  <option value="">--</option>
+                  {% for f in ['Өдөр бүр','7 хоног','1 сар','3 сар','6 сар','1 жил'] %}
+                  <option {% if ed.get('freq_check','')==f %}selected{% endif %}>{{ f }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3"><label class="fw-bold small">Эталоны төрөл</label><input type="text" name="etalon_type" class="form-control" value="{{ ed.get('etalon_type','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Эталон баталг. огноо</label><input type="text" name="etalon_date" class="form-control" value="{{ ed.get('etalon_date','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control" value="{{ ed.get('cert_date','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Дараагийн баталг.</label><input type="text" name="next_cert" class="form-control" value="{{ ed.get('next_cert','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Сертификатын дугаар</label><input type="text" name="cert_no" class="form-control" value="{{ ed.get('cert_no','') }}"></div>
+              <div class="col-md-6"><label class="fw-bold small">Хариуцах ажилтан</label><input type="text" name="responsible" class="form-control" value="{{ ed.get('responsible','') }}"></div>
+            </div>
+          </div>
+
+          {# --- Шилэн хэмжүүр --- #}
+          <div class="edit-reg-fields edit-reg-glassware" style="display:none">
+            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Шилэн хэмжүүрийн нэмэлт</h6>
+            <div class="row g-3">
+              <div class="col-md-3"><label class="fw-bold small">Бүлэг</label><input type="text" name="group" class="form-control" value="{{ ed.get('group','') }}" placeholder="Колб, Цилиндр..."></div>
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Хэмжээ /мл/</label><input type="text" name="volume" class="form-control" value="{{ ed.get('volume','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Гэрчилгээний дугаар</label><input type="text" name="cert_no" class="form-control" value="{{ ed.get('cert_no','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control" value="{{ ed.get('cert_date','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Баталгаат хугацаа дуусах</label><input type="text" name="cert_expire" class="form-control" value="{{ ed.get('cert_expire','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Дахин баталгаажуулах</label><input type="text" name="recert_date" class="form-control" value="{{ ed.get('recert_date','') }}"></div>
+            </div>
+          </div>
+
+          {# --- Дотоод шалгалт --- #}
+          <div class="edit-reg-fields edit-reg-internal_check" style="display:none">
+            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Дотоод шалгалтын нэмэлт</h6>
+            <div class="row g-3">
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Марк, дугаар</label><input type="text" name="mark" class="form-control" value="{{ ed.get('mark','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control" value="{{ ed.get('commissioned_date','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Шалгалт хийсэн огноо</label><input type="text" name="check_date" class="form-control" value="{{ ed.get('check_date','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Дараагийн шалгалт</label><input type="text" name="next_check_date" class="form-control" value="{{ ed.get('next_check_date','') }}"></div>
+            </div>
+          </div>
+
+          {# --- Сэлбэг --- #}
+          <div class="edit-reg-fields edit-reg-spares_register" style="display:none">
+            <hr><h6 class="fw-bold text-secondary small"><i class="bi bi-gear-wide-connected me-1"></i>Сэлбэг нэмэлт</h6>
+            <div class="row g-3">
+              <div class="col-md-4"><label class="fw-bold small">Тоног төхөөрөмж</label><input type="text" name="equipment" class="form-control" value="{{ ed.get('equipment','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-6"><label class="fw-bold small">Англи нэр</label><input type="text" name="eng_name" class="form-control" value="{{ ed.get('eng_name','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Үлдэгдэл (ш)</label><input type="text" name="remaining" class="form-control" value="{{ ed.get('remaining','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Шинээр ирсэн (ш)</label><input type="text" name="new_arrived" class="form-control" value="{{ ed.get('new_arrived','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Хэрэглэх хугацаа (сар)</label><input type="text" name="usage_months" class="form-control" value="{{ ed.get('usage_months','') }}"></div>
+            </div>
           </div>
 
         </div>
@@ -610,5 +730,27 @@
         });
       });
     });
+
+    // Edit modal: Давхар бүртгэлийн нэмэлт талбарууд toggle
+    var editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
+    if (editRegSelect) {
+      function toggleEditRegFields() {
+        document.querySelectorAll('.edit-reg-fields').forEach(function(el) {
+          el.style.display = 'none';
+          el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
+        });
+        var val = editRegSelect.value;
+        if (val) {
+          var section = document.querySelector('.edit-reg-' + val);
+          if (section) {
+            section.style.display = 'block';
+            section.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = false; });
+          }
+        }
+      }
+      editRegSelect.addEventListener('change', toggleEditRegFields);
+      // Эхний төлөв
+      toggleEditRegFields();
+    }
   </script>
 {% endblock %}
