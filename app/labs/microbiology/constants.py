@@ -58,10 +58,25 @@ MICRO_SWAB_FIELDS = [
 # ШИНЖИЛГЭЭНИЙ ТӨРЛҮҮД (micro_hub дээр харагдана)
 # =====================================================================
 MICRO_ANALYSIS_TYPES = [
+    # Усны микробиологи
     {'code': 'CFU', 'name': 'CFU (Colony Forming Units)', 'order': 1, 'role': 'chemist'},
     {'code': 'ECOLI', 'name': 'E. coli', 'order': 2, 'role': 'chemist'},
     {'code': 'SALM', 'name': 'Salmonella spp.', 'order': 3, 'role': 'chemist'},
+    # Агаарын микробиологи
+    {'code': 'AIR_CFU', 'name': 'Агаарын CFU', 'order': 4, 'role': 'chemist'},
+    {'code': 'AIR_STAPH', 'name': 'Staphylococcus (агаар)', 'order': 5, 'role': 'chemist'},
+    # Арчдасны микробиологи
+    {'code': 'SWAB_CFU', 'name': 'Арчдасны CFU', 'order': 6, 'role': 'chemist'},
+    {'code': 'SWAB_ECOLI', 'name': 'E. coli (арчдас)', 'order': 7, 'role': 'chemist'},
+    {'code': 'SWAB_SALM', 'name': 'Salmonella (арчдас)', 'order': 8, 'role': 'chemist'},
 ]
+
+# Category → analyses_to_perform кодын mapping
+CATEGORY_ANALYSIS_CODES = {
+    'MICRO_WATER': ['CFU', 'ECOLI', 'SALM'],
+    'MICRO_AIR': ['AIR_CFU', 'AIR_STAPH'],
+    'MICRO_SWAB': ['SWAB_CFU', 'SWAB_ECOLI', 'SWAB_SALM'],
+}
 
 # =====================================================================
 # Backward compatibility aliases

@@ -1,5 +1,78 @@
 # CHANGELOG - Coal LIMS Сайжруулалтууд
 
+## [2026-02-02] - Микробиологийн лаб: Нэгтгэл, Ажлын хуудас, Дээж бүртгэл сайжруулалт
+
+### Нэгтгэл хуудас (micro_summary)
+- Микробиологийн нэгтгэл хуудас нэмсэн — 3 tab: Ус, Агаар, Арчдас
+- Tab бүрт MNS стандарт, зөвшөөрөгдөх хэмжээний толгой бүхий хүснэгт
+- Зөвшөөрөгдөх хэмжээнээс хэтэрсэн утгууд улаанаар тодрох (over-limit highlight)
+- Усны tab-д CFU дундаж (22°С + 37°С) / 2 автомат тооцоолол
+- Нэгтгэл линкийг navbar болон micro_hub дээр нэмсэн
+
+### Ажлын хуудас (workspace) сайжруулалт
+- **Draft буг засвар**: `draftMgr.clear()` → `draftMgr.purge()` — хадгалсны дараа мөрүүд буцаж гарахгүй болсон
+- **Дээж сонгох модал шинэчлэл** (нүүрсний лабтай адил загвар):
+  - Захиалагчаар шүүх dropdown нэмсэн
+  - Шүүлтүүр цэвэрлэх товч нэмсэн
+  - "X / Y дээж" тоолуур нэмсэн
+  - Бүгдийг сонгох — зөвхөн шүүлтэд таарсан мөрүүдийг сонгоно
+  - DOM-д шүүлт (re-render хийхгүй, хурдан)
+- **Category-аар дээж шүүлт**: Workspace бүр зөвхөн өөрт хамааралтай дээжийг харуулна
+  - MICRO_WATER модал → CFU/ECOLI/SALM агуулсан дээж
+  - MICRO_AIR модал → AIR_CFU/AIR_STAPH агуулсан дээж
+  - MICRO_SWAB модал → SWAB_CFU/SWAB_ECOLI/SWAB_SALM агуулсан дээж
+- **Хадгалсан дээж хасагдана**: `api_samples` endpoint аль хэдийн AnalysisResult хадгалсан дээжийг жагсаалтаас хасна
+- Шинжилгээ дууссан огноо — HTML5 calendar date picker (DateCellEditor)
+- "Сорьцын дугаар" → "Сорьцын нэр / Sample Name" нэр солисон
+- Буцах товч → analysis_hub руу зөв чиглүүлсэн
+
+### Дээж бүртгэл сайжруулалт
+- **Дотоод хяналт 2 бүлэг болсон**:
+  - "Дотоод хяналт (Агаар)" — 4 дээж, AIR_CFU/AIR_STAPH автомат чеклэгдэнэ
+  - "Дотоод хяналт (Арчдас)" — 5 дээж, SWAB_CFU/SWAB_ECOLI/SWAB_SALM автомат чеклэгдэнэ
+- Нэгж сонгоход `auto_analyses` тохиргоогоор шинжилгээний checkbox автомат чеклэгдэнэ
+- Микробиологи шинжилгээ 3 бүлэг: Ус, Агаар, Арчдас
+- Шинэ шинжилгээний кодууд: AIR_CFU, AIR_STAPH, SWAB_CFU, SWAB_ECOLI, SWAB_SALM
+- Амжилттай бүртгэсний дараа дээжний жагсаалт руу буцна (нүүр хуудас руу биш)
+- `ck_sample_client_name` constraint шинэчлэгдсэн: dotood_air, dotood_swab нэмэгдсэн
+
+### Лаб дугаар (Lab ID) систем
+- XX_YY формат: XX = өдрийн дэс дугаар, YY = нийт дээжийн дэс дугаар
+- Микробиологи болон water & micro төрлийн дээжид автомат үүсгэнэ
+- Дээжний жагсаалтад "Сорьцын дугаар" баганад lab_id харагдана
+- Нэгтгэл хуудасны хүснэгтэд lab_id, sample_name тусдаа баганаар
+
+### Устгах / Засах функц
+- Дээж устгах товч (admin, senior, chemist эрхтэй)
+- Дээж засах товч — нэр, огноо, шинжилгээ засварлах
+- Нүүрсний лабын загвараар хэрэгжүүлсэн
+
+### Lab type шинэчлэл
+- `water & micro` хослол төрөл нэмэгдсэн
+- Ус + микро шинжилгээ хоёуланг сонговол lab_type = "water & micro"
+- Бүх query-д `['water', 'microbiology', 'water & micro']` шүүлт
+
+### Өөрчлөгдсөн файлууд
+
+| Файл | Өөрчлөлт |
+|------|----------|
+| `app/labs/microbiology/routes.py` | summary, api_samples (category шүүлт), edit, delete route |
+| `app/labs/microbiology/constants.py` | AIR/SWAB analysis кодууд, CATEGORY_ANALYSIS_CODES mapping |
+| `app/labs/microbiology/templates/micro_summary.html` | Нэгтгэл хуудас (шинэ) |
+| `app/labs/microbiology/templates/micro_hub.html` | Нэгтгэл линк |
+| `app/labs/microbiology/templates/analysis_forms/micro_workspace.html` | Модал шинэчлэл, draft fix, DateCellEditor |
+| `app/labs/microbiology/templates/analysis_forms/micro_air_workspace.html` | Модал шинэчлэл, draft fix |
+| `app/labs/microbiology/templates/analysis_forms/micro_swab_workspace.html` | Модал шинэчлэл, draft fix |
+| `app/labs/water/constants.py` | dotood_air, dotood_swab бүлэг (auto_analyses) |
+| `app/labs/water/utils.py` | lab_id үүсгэх, water & micro lab_type логик |
+| `app/labs/water/routes.py` | edit, delete, redirect засвар |
+| `app/labs/water/templates/water_register.html` | Агаар/Арчдас шинжилгээ бүлэг, auto_analyses JS |
+| `app/templates/base.html` | Navbar-д нэгтгэл линк |
+| `app/models.py` | ck_sample_client_name constraint шинэчлэл |
+| DB migration | ck_sample_client_name constraint: dotood_air, dotood_swab нэмсэн |
+
+---
+
 ## [2025-12-06] - Production Security & Code Refactoring
 
 ### 🔒 Аюулгүй байдлын шинэчлэлт (CRITICAL)

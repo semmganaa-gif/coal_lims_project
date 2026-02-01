@@ -68,7 +68,7 @@
       <p>Усны микробиологийн шинжилгээ — MNS ISO 6222, 9308-1, 19250</p>
     </div>
     <div class="ws-actions">
-      <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-outline-secondary">
+      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Буцах
       </a>
       <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
@@ -107,8 +107,24 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="text" id="sampleSearch" class="form-control sample-search mb-3"
-               placeholder="Дээжний дугаар хайх...">
+        <!-- Шүүлтүүр -->
+        <div class="row g-2 mb-3">
+          <div class="col-5">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm"
+                   placeholder="🔍 Дээжний код...">
+          </div>
+          <div class="col-4">
+            <select id="filterClient" class="form-select form-select-sm">
+              <option value="">Бүх захиалагч</option>
+            </select>
+          </div>
+          <div class="col-3 d-flex align-items-center gap-2">
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Шүүлтүүр цэвэрлэх">
+              <i class="bi bi-x-circle"></i>
+            </button>
+            <span id="filteredCount" class="text-muted small"></span>
+          </div>
+        </div>
         <div id="sampleListLoading" class="text-center py-4">
           <div class="spinner-border text-success" role="status"></div>
           <p class="mt-2 text-muted">Ачаалж байна...</p>
@@ -148,6 +164,22 @@
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script>
+// Custom Date Cell Editor — HTML5 date input
+class DateCellEditor {
+  init(params) {
+    this.value = params.value || '';
+    this.input = document.createElement('input');
+    this.input.type = 'date';
+    this.input.value = this.value;
+    this.input.style.cssText = 'width:100%;height:100%;border:none;outline:none;padding:0 4px;font-size:0.85rem;';
+    this.input.addEventListener('change', () => { this.value = this.input.value; });
+  }
+  getGui() { return this.input; }
+  afterGuiAttached() { this.input.focus(); this.input.showPicker && this.input.showPicker(); }
+  getValue() { return this.input.value; }
+  isPopup() { return false; }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const draftKey = 'MICRO_WATER';
   const draftMgr = new LIMSDraftManager(draftKey);
@@ -184,11 +216,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const columnDefs = [
     { field: 'seq', headerName: '№', maxWidth: 55, editable: false,
       cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Сорьцын дугаар\nSample No', minWidth: 160, editable: false,
+    { field: 'sample_code', headerName: 'Сорьцын нэр\nSample Name', minWidth: 160, editable: false,
       cellStyle: { fontWeight: '600' },
       headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 130, editable: true },
-    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 130, editable: true },
+    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 140, editable: true,
+      cellEditor: DateCellEditor },
+    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true,
+      cellEditor: DateCellEditor },
     {
       headerName: 'CFU — MNS ISO 6222:1998\n(1мл-т <100)',
       headerClass: 'ag-header-cell-wrap',
@@ -284,10 +318,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('sampleListContainer').style.display = 'none';
     document.getElementById('sampleListEmpty').style.display = 'none';
 
-    fetch("{{ url_for('microbiology.api_samples') }}")
+    fetch("{{ url_for('microbiology.api_samples') }}?category=MICRO_WATER")
       .then(r => r.json())
       .then(samples => {
         allSamples = samples;
+        buildClientFilter(samples);
         renderSampleList(samples);
       })
       .catch(err => {
@@ -297,20 +332,25 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
+  function buildClientFilter(samples) {
+    const sel = document.getElementById('filterClient');
+    sel.innerHTML = '<option value="">Бүх захиалагч</option>';
+    const clients = [...new Set(samples.map(s => s.client_name).filter(Boolean))].sort();
+    clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  }
+
   function renderSampleList(samples) {
     document.getElementById('sampleListLoading').style.display = 'none';
     const tbody = document.getElementById('sampleListBody');
     tbody.innerHTML = '';
 
-    // Grid дээр байгаа sample_code-уудыг цуглуулах
     const existingCodes = new Set();
-    grid.forEachNode(n => {
-      if (n.data.sample_code) existingCodes.add(n.data.sample_code);
-    });
+    grid.forEachNode(n => { if (n.data.sample_code) existingCodes.add(n.data.sample_code); });
 
     if (samples.length === 0) {
       document.getElementById('sampleListEmpty').style.display = '';
       document.getElementById('sampleListContainer').style.display = 'none';
+      document.getElementById('filteredCount').textContent = '';
       return;
     }
 
@@ -319,12 +359,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusMap = { 'new': 'Шинэ', 'in_progress': 'Шинжилж байна', 'analysis': 'Шинжилж байна', 'completed': 'Дууссан' };
     const statusColors = { 'new': 'primary', 'in_progress': 'warning', 'analysis': 'warning', 'completed': 'success' };
 
+    let visibleCount = 0;
     samples.forEach(s => {
       const already = existingCodes.has(s.sample_code);
       const tr = document.createElement('tr');
       tr.className = 'sample-list-item' + (already ? ' table-light' : '');
-      tr.dataset.sampleId = s.id;
-      tr.dataset.sampleCode = s.sample_code;
+      tr.dataset.code = (s.sample_code || '').toLowerCase();
+      tr.dataset.client = (s.client_name || '').toLowerCase();
       tr.innerHTML = `
         <td><input type="checkbox" class="form-check-input sample-check" value="${s.id}"
             data-code="${s.sample_code}" ${already ? 'disabled' : ''}></td>
@@ -333,15 +374,16 @@ document.addEventListener('DOMContentLoaded', function() {
         <td><span class="badge bg-${statusColors[s.status] || 'secondary'}">${statusMap[s.status] || s.status}</span></td>
         <td class="text-muted small">${s.sample_date || '-'}</td>
       `;
-      // Row click toggles checkbox
       tr.addEventListener('click', function(e) {
         if (e.target.type === 'checkbox') return;
         const cb = tr.querySelector('.sample-check');
         if (!cb.disabled) { cb.checked = !cb.checked; updateSelectedCount(); }
       });
       tbody.appendChild(tr);
+      visibleCount++;
     });
 
+    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' дээж';
     updateSelectedCount();
   }
 
@@ -350,20 +392,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('selectedCount').textContent = count + ' дээж сонгосон';
   }
 
-  // Search filter
-  document.getElementById('sampleSearch').addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    const filtered = allSamples.filter(s =>
-      s.sample_code.toLowerCase().includes(q) ||
-      (s.client_name || '').toLowerCase().includes(q)
-    );
-    renderSampleList(filtered);
+  function applyFilters() {
+    const codeQ = (document.getElementById('sampleSearch').value || '').toLowerCase().trim();
+    const clientQ = (document.getElementById('filterClient').value || '').toLowerCase();
+    let visibleCount = 0;
+    document.querySelectorAll('#sampleListBody tr').forEach(tr => {
+      const code = tr.dataset.code || '';
+      const client = tr.dataset.client || '';
+      const matchCode = !codeQ || code.includes(codeQ);
+      const matchClient = !clientQ || client === clientQ;
+      if (matchCode && matchClient) { tr.style.display = ''; visibleCount++; }
+      else { tr.style.display = 'none'; }
+    });
+    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' дээж';
+  }
+
+  document.getElementById('sampleSearch').addEventListener('input', applyFilters);
+  document.getElementById('filterClient').addEventListener('change', applyFilters);
+  document.getElementById('clearFilters').addEventListener('click', function() {
+    document.getElementById('sampleSearch').value = '';
+    document.getElementById('filterClient').value = '';
+    applyFilters();
   });
 
-  // Check all
   document.getElementById('checkAll').addEventListener('change', function() {
     document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb => {
-      cb.checked = this.checked;
+      if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
     });
     updateSelectedCount();
   });
@@ -436,6 +490,11 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('Амжилттай хадгалагдлаа! (' + data.count + ' мөр)', 'success');
         if (data.errors && data.errors.length > 0)
           showToast('Анхааруулга: ' + data.errors.join(', '), 'warning');
+        // Grid цэвэрлэх + draft устгах
+        grid.setGridOption('rowData', []);
+        rowSeq = 0;
+        draftMgr.purge();
+        updateRowCount();
       } else {
         showToast('Алдаа: ' + (data.error || 'Unknown'), 'error');
       }

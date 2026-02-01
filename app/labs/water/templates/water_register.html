@@ -145,6 +145,14 @@
           </button>
           <span class="badge bg-info" id="grid-count">0</span>
           <span class="text-muted small">дээж</span>
+          <div class="ms-auto">
+            <form id="deleteSelectedForm" action="{{ url_for('microbiology.delete_samples') if is_micro else url_for('water.delete_samples') }}" method="post" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="button" id="btnDeleteSelected" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>Устгах
+              </button>
+            </form>
+          </div>
         </div>
         <div id="sampleGrid" class="ag-theme-alpine grid-wrapper"></div>
       </div>
@@ -302,14 +310,44 @@
                     {% endfor %}
                   </div>
                 </div>
-                <div class="form-card">
-                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Микробиологи</h6>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Микробиологи (Ус)</h6>
                   <div class="mb-2">
                     <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">Бүгд</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">Цуцлах</button>
                   </div>
                   <div class="analysis-check-grid" id="mc">
-                    {% for at in micro_analyses %}
+                    {% for at in micro_analyses if at.code in ['CFU','ECOLI','SALM'] %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>Микробиологи (Агаар)</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="mc_air">
+                    {% for at in micro_analyses if at.code in ['AIR_CFU','AIR_STAPH'] %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-card">
+                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>Микробиологи (Арчдас)</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="mc_swab">
+                    {% for at in micro_analyses if at.code in ['SWAB_CFU','SWAB_ECOLI','SWAB_SALM'] %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -358,6 +396,16 @@ function selectUnit(key) {
     };
     list.appendChild(chip);
   });
+  // auto_analyses байвал шинжилгээг автомат чеклэх
+  if (unit.auto_analyses && unit.auto_analyses.length) {
+    // Бүх шинжилгээний checkbox-г эхлээд цуцлах
+    document.querySelectorAll('input[name="analyses"]').forEach(cb => { cb.checked = false; });
+    // auto_analyses дахь кодуудыг чеклэх
+    unit.auto_analyses.forEach(code => {
+      const cb = document.querySelector(`input[name="analyses"][value="${code}"]`);
+      if (cb) cb.checked = true;
+    });
+  }
   updateSampleInputs();
 }
 
@@ -415,7 +463,10 @@ const statusMap = {
 };
 
 const sampleColDefs = [
+  { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 40, pinned: 'left', sortable: false, filter: false },
   { headerName: '№', field: 'seq', width: 50, sortable: false, pinned: 'left' },
+  { headerName: 'Сорьцын дугаар', field: 'lab_id', width: 110, filter: true, pinned: 'left',
+    cellStyle: { fontWeight: '700', color: '#0d9488' } },
   { headerName: 'Дээжний нэр', field: 'sample_name', minWidth: 200, flex: 2, filter: true, pinned: 'left' },
   { headerName: 'Нэгж', field: 'unit_name', minWidth: 120, filter: true },
   { headerName: 'Дээж авсан', field: 'sample_date', width: 110 },
@@ -429,9 +480,19 @@ const sampleColDefs = [
   { headerName: 'Хадгалах', field: 'retention_date', width: 110 },
 { headerName: 'Төлөв', field: 'status', width: 120,
     cellRenderer: p => statusMap[p.value] || p.value },
-  { headerName: 'Лаб', field: 'lab_type', width: 75,
-    cellRenderer: p => p.value === 'microbiology' ? 'Микро' : 'Ус' },
+  { headerName: 'Лаб', field: 'lab_type', width: 100, filter: true,
+    cellRenderer: p => {
+      const m = {'water':'Ус','microbiology':'Микро','water & micro':'Ус & Микро'};
+      return m[p.value] || p.value;
+    }},
   { headerName: 'Тэмдэглэл', field: 'notes', minWidth: 120, flex: 1 },
+  { headerName: '', field: 'id', width: 80, sortable: false, filter: false, pinned: 'right',
+    cellRenderer: p => {
+      const base = {{ 'true' if is_micro else 'false' }}
+        ? '/labs/microbiology/edit_sample/' : '/labs/water/edit_sample/';
+      return '<a href="' + base + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Засах</a>';
+    }
+  },
 ];
 
 function loadSampleGrid() {
@@ -443,7 +504,7 @@ function loadSampleGrid() {
     rowData: [],
     defaultColDef: { resizable: true, sortable: true },
     animateRows: true,
-    rowSelection: 'single',
+    rowSelection: 'multiple',
     autoSizeStrategy: { type: 'fitCellContents' },
     overlayNoRowsTemplate: '<span class="text-muted">Дээж бүртгэгдээгүй байна</span>',
   };
@@ -452,7 +513,7 @@ function loadSampleGrid() {
 }
 
 function refreshSampleGrid() {
-  fetch("{{ url_for('water.water_data') }}")
+  fetch("{{ url_for('microbiology.micro_grid_data') if is_micro else url_for('water.water_data') }}")
     .then(r => r.json())
     .then(data => {
       sampleGridApi.setGridOption('rowData', data);
@@ -468,6 +529,30 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tab шилжихэд grid resize хийх
   document.getElementById('list-tab').addEventListener('shown.bs.tab', function() {
     if (sampleGridApi) sampleGridApi.sizeColumnsToFit();
+  });
+
+  // Устгах товч
+  document.getElementById('btnDeleteSelected').addEventListener('click', function() {
+    if (!sampleGridApi) return;
+    const selectedNodes = sampleGridApi.getSelectedNodes();
+    if (selectedNodes.length === 0) {
+      alert('Устгах дээжээ сонгоно уу!');
+      return;
+    }
+    if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгахдаа итгэлтэй байна уу?')) return;
+
+    const form = document.getElementById('deleteSelectedForm');
+    // Хуучин hidden input-уудыг арилгах
+    form.querySelectorAll('input[name="sample_ids"]').forEach(i => i.remove());
+    // Шинээр нэмэх
+    selectedNodes.forEach(node => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'sample_ids';
+      input.value = node.data.id;
+      form.appendChild(input);
+    });
+    form.submit();
   });
 });
 </script>

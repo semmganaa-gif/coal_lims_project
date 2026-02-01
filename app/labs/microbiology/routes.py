@@ -52,6 +52,121 @@ def micro_hub():
     )
 
 
+@micro_bp.route('/summary')
+@login_required
+@lab_required('microbiology')
+def summary():
+    """Микробиологийн нэгтгэл хуудас."""
+    return render_template('micro_summary.html', title='Микробиологийн нэгтгэл')
+
+
+@micro_bp.route('/edit_sample/<int:sample_id>', methods=['GET', 'POST'])
+@login_required
+@lab_required('microbiology')
+def edit_sample(sample_id):
+    """Микробиологийн дээж засах."""
+    sample = db.session.get(Sample, sample_id)
+    if not sample:
+        flash('Дээж олдсонгүй.', 'danger')
+        return redirect(url_for('microbiology.register_sample'))
+
+    can_edit = current_user.role in ('admin', 'senior', 'chemist')
+    if not can_edit:
+        flash('Дээж засах эрх танд байхгүй.', 'warning')
+        return redirect(url_for('microbiology.register_sample'))
+
+    analyses_list = MICRO_ANALYSIS_TYPES
+    try:
+        current_analyses = json.loads(sample.analyses_to_perform or '[]')
+    except (ValueError, TypeError):
+        current_analyses = []
+
+    if request.method == 'POST':
+        new_code = request.form.get('sample_code', '').strip()
+        selected_analyses = request.form.getlist('analyses')
+
+        original_code = sample.sample_code
+        code_changed = new_code and new_code != original_code
+        analyses_changed = set(selected_analyses) != set(current_analyses)
+
+        if not new_code:
+            flash('Дээжний код хоосон байх боломжгүй.', 'danger')
+        elif code_changed and Sample.query.filter(
+            Sample.sample_code == new_code, Sample.id != sample_id
+        ).first():
+            flash(f'"{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй.', 'danger')
+        else:
+            try:
+                if code_changed:
+                    sample.sample_code = new_code
+                if analyses_changed:
+                    sample.analyses_to_perform = json.dumps(selected_analyses)
+                if code_changed or analyses_changed:
+                    db.session.commit()
+                    flash('Дээжний мэдээлэл шинэчлэгдлээ.', 'success')
+                else:
+                    flash('Өөрчлөлт хийгдээгүй.', 'info')
+                return redirect(url_for('microbiology.register_sample'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Алдаа: {e}', 'danger')
+
+    return render_template(
+        'water_edit_sample.html',
+        title='Дээж засах',
+        sample=sample,
+        analyses_list=analyses_list,
+        current_analyses=current_analyses,
+    )
+
+
+@micro_bp.route('/delete_samples', methods=['POST'])
+@login_required
+@lab_required('microbiology')
+def delete_samples():
+    """Микробиологийн дээж устгах (admin, senior)."""
+    from app.utils.audit import log_audit
+
+    sample_ids = request.form.getlist('sample_ids')
+    if not sample_ids:
+        flash('Устгах дээжээ сонгоно уу!', 'warning')
+        return redirect(url_for('microbiology.register_sample'))
+
+    if current_user.role not in ('admin', 'senior', 'chemist'):
+        flash('Дээж устгах эрх танд байхгүй.', 'danger')
+        return redirect(url_for('microbiology.register_sample'))
+
+    deleted = 0
+    failed = []
+    for sid in sample_ids:
+        try:
+            sample = db.session.get(Sample, int(sid))
+            if not sample:
+                failed.append(f'ID={sid} (Олдсонгүй)')
+                continue
+            if current_user.role in ('senior', 'chemist') and sample.status != 'new':
+                failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
+                continue
+            log_audit(
+                action='sample_deleted',
+                resource_type='Sample',
+                resource_id=sample.id,
+                details={'sample_code': sample.sample_code, 'client_name': sample.client_name},
+            )
+            db.session.delete(sample)
+            deleted += 1
+        except Exception as e:
+            failed.append(f'ID={sid} ({e})')
+
+    if deleted:
+        db.session.commit()
+        flash(f'{deleted} дээж амжилттай устгагдлаа.', 'success')
+    if failed:
+        flash(f'Алдаа: {", ".join(failed)}', 'danger')
+
+    return redirect(url_for('microbiology.register_sample'))
+
+
 @micro_bp.route('/analysis')
 @login_required
 @lab_required('microbiology')
@@ -78,7 +193,7 @@ def register_sample():
                 flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({n_analyses} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
-            return redirect(url_for('microbiology.micro_hub'))
+            return redirect(url_for('microbiology.register_sample'))
         except Exception as e:
             db.session.rollback()
             flash(f'Алдаа: {e}', 'danger')
@@ -130,10 +245,35 @@ def workspace(code):
 @login_required
 @lab_required('microbiology')
 def api_samples():
-    """Микробиологийн дээж (Ус+Микро)."""
-    samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology'])
-    ).order_by(Sample.id.desc()).limit(200).all()
+    """Микробиологийн дээж.
+
+    ?category=MICRO_WATER|MICRO_AIR|MICRO_SWAB
+      → тухайн category-д хамааралтай шинжилгээтэй дээжийг шүүж,
+        аль хэдийн үр дүн хадгалсан дээжийг хасна.
+    """
+    from app.labs.microbiology.constants import CATEGORY_ANALYSIS_CODES
+
+    category = request.args.get('category')
+
+    query = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+    )
+
+    # Category-д хамааралтай analysis код бүхий дээжийг шүүх
+    if category and category in CATEGORY_ANALYSIS_CODES:
+        codes = CATEGORY_ANALYSIS_CODES[category]
+        # analyses_to_perform JSON массив — exact match: '"CFU"' гэж хайна
+        like_clauses = [Sample.analyses_to_perform.contains(f'"{c}"') for c in codes]
+        from sqlalchemy import or_
+        query = query.filter(or_(*like_clauses))
+
+        # Аль хэдийн үр дүн хадгалсан дээжийг хасах
+        saved_ids = db.session.query(AnalysisResult.sample_id).filter_by(
+            analysis_code=category
+        ).subquery()
+        query = query.filter(~Sample.id.in_(saved_ids))
+
+    samples = query.order_by(Sample.id.desc()).limit(200).all()
     return jsonify([{
         'id': s.id,
         'sample_code': s.sample_code,
@@ -141,6 +281,52 @@ def api_samples():
         'status': s.status,
         'sample_date': s.sample_date.isoformat() if s.sample_date else None,
     } for s in samples])
+
+
+@micro_bp.route('/api/data')
+@login_required
+@lab_required('microbiology')
+def micro_grid_data():
+    """Микробиологийн дээжний жагсаалт (grid-д зориулсан)."""
+    import re
+    samples = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+    ).order_by(Sample.id.desc()).limit(200).all()
+
+    result = []
+    for idx, s in enumerate(reversed(samples), 1):
+        lab_id = ''
+        display_name = s.sample_code
+        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+        if m:
+            lab_id = m.group(1)
+            display_name = m.group(2)
+        else:
+            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+            if m2:
+                display_name = m2.group(1)
+
+        result.append({
+            'seq': idx,
+            'id': s.id,
+            'lab_id': lab_id,
+            'sample_name': display_name,
+            'sample_code': s.sample_code,
+            'unit_name': s.client_name or '',
+            'lab_type': s.lab_type,
+            'status': s.status,
+            'sample_date': s.sample_date.isoformat() if s.sample_date else None,
+            'received_date': s.received_date.strftime('%Y-%m-%d %H:%M') if s.received_date else None,
+            'sampled_by': s.sampled_by or '',
+            'sampling_location': s.sampling_location or '',
+            'weight': s.weight,
+            'return_sample': s.return_sample,
+            'retention_date': s.retention_date.isoformat() if s.retention_date else None,
+            'analyses': s.analyses_to_perform or '',
+            'notes': s.notes or '',
+        })
+    result.reverse()
+    return jsonify(result)
 
 
 @micro_bp.route('/api/save_results', methods=['POST'])

@@ -30,7 +30,7 @@
       <p>Арчдасны микробиологийн шинжилгээ — MNS 6410:2018</p>
     </div>
     <div class="ws-actions">
-      <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Буцах</a>
+      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Буцах</a>
       <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Дээж сонгох</button>
       <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Хадгалах</button>
     </div>
@@ -58,7 +58,18 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="text" id="sampleSearch" class="form-control sample-search mb-3" placeholder="Дээжний дугаар хайх...">
+        <div class="row g-2 mb-3">
+          <div class="col-5">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="🔍 Дээжний код...">
+          </div>
+          <div class="col-4">
+            <select id="filterClient" class="form-select form-select-sm"><option value="">Бүх захиалагч</option></select>
+          </div>
+          <div class="col-3 d-flex align-items-center gap-2">
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Шүүлтүүр цэвэрлэх"><i class="bi bi-x-circle"></i></button>
+            <span id="filteredCount" class="text-muted small"></span>
+          </div>
+        </div>
         <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Ачаалж байна...</p></div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
@@ -83,6 +94,20 @@
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script>
+class DateCellEditor {
+  init(params) {
+    this.value = params.value || '';
+    this.input = document.createElement('input');
+    this.input.type = 'date';
+    this.input.value = this.value;
+    this.input.style.cssText = 'width:100%;height:100%;border:none;outline:none;padding:0 4px;font-size:0.85rem;';
+    this.input.addEventListener('change', () => { this.value = this.input.value; });
+  }
+  getGui() { return this.input; }
+  afterGuiAttached() { this.input.focus(); this.input.showPicker && this.input.showPicker(); }
+  getValue() { return this.input.value; }
+  isPopup() { return false; }
+}
 document.addEventListener('DOMContentLoaded', function() {
   const CATEGORY = 'MICRO_SWAB';
   const draftMgr = new LIMSDraftManager(CATEGORY);
@@ -97,9 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const columnDefs = [
     { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Сорьцын дугаар\nSample No', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 130, editable: true },
-    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 130, editable: true },
+    { field: 'sample_code', headerName: 'Сорьцын нэр\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
+    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
     numCol('cfu_swab', 'CFU\nMNS 6410:2018\n(100-с ихгүй)'),
     presenceCol('salmonella_swab', 'Salmonella spp.\n(Илрэхгүй)'),
     presenceCol('ecoli_swab', 'E.coli\n(Илрэхгүй)'),
@@ -123,15 +148,35 @@ document.addEventListener('DOMContentLoaded', function() {
   window._removeRow = function(i) { const n=grid.getDisplayedRowAtIndex(i); if(n){grid.applyTransaction({remove:[n.data]});saveDraft();updateRowCount();} };
 
   let allSamples = [];
-  function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}").then(r=>r.json()).then(s=>{allSamples=s;renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
-  function renderSampleList(samples) { document.getElementById('sampleListLoading').style.display='none'; const tbody=document.getElementById('sampleListBody'); tbody.innerHTML=''; const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)}); if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';return;} document.getElementById('sampleListContainer').style.display=''; const sm={'new':'Шинэ','in_progress':'Шинжилж байна','analysis':'Шинжилж байна','completed':'Дууссан'}; const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'}; samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">нэмэгдсэн</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr)});updateSelectedCount(); }
+  function buildClientFilter(samples) {
+    const sel = document.getElementById('filterClient');
+    sel.innerHTML = '<option value="">Бүх захиалагч</option>';
+    [...new Set(samples.map(s=>s.client_name).filter(Boolean))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  }
+  function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}?category="+CATEGORY).then(r=>r.json()).then(s=>{allSamples=s;buildClientFilter(s);renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
+  function renderSampleList(samples) {
+    document.getElementById('sampleListLoading').style.display='none';
+    const tbody=document.getElementById('sampleListBody'); tbody.innerHTML='';
+    const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)});
+    if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';document.getElementById('filteredCount').textContent='';return;}
+    document.getElementById('sampleListContainer').style.display='';
+    const sm={'new':'Шинэ','in_progress':'Шинжилж байна','analysis':'Шинжилж байна','completed':'Дууссан'};
+    const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'};
+    let vc=0;
+    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">нэмэгдсэн</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
+    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' дээж';
+    updateSelectedCount();
+  }
   function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' дээж сонгосон';}
-  document.getElementById('sampleSearch').addEventListener('input',function(){const q=this.value.toLowerCase().trim();renderSampleList(allSamples.filter(s=>s.sample_code.toLowerCase().includes(q)||(s.client_name||'').toLowerCase().includes(q)));});
-  document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{cb.checked=this.checked});updateSelectedCount();});
+  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' дээж';}
+  document.getElementById('sampleSearch').addEventListener('input',applyFilters);
+  document.getElementById('filterClient').addEventListener('change',applyFilters);
+  document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
+  document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
   document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
   document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Дээж сонгоно уу','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' дээж нэмэгдлээ');});
 
-  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('Хадгалах өгөгдөл байхгүй','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Амжилттай! ('+d.count+' мөр)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');}else showToast('Алдаа: '+(d.error||''),'error');}).catch(e=>showToast('Сүлжээний алдаа: '+e.message,'error'));});
+  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('Хадгалах өгөгдөл байхгүй','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Амжилттай! ('+d.count+' мөр)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Алдаа: '+(d.error||''),'error');}).catch(e=>showToast('Сүлжээний алдаа: '+e.message,'error'));});
   updateRowCount();
 });
 </script>

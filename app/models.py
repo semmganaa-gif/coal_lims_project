@@ -253,7 +253,8 @@ class Sample(db.Model):
         CheckConstraint(
             "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','Proc','LAB',"
             "'naimdain','maiga','tsagaan_khad','sum','uurhaichin','tsetsii',"
-            "'gallerey','negdsen_office','uutsb','sbutsb','busad','dotood_khyanalt')",
+            "'gallerey','negdsen_office','uutsb','sbutsb','busad',"
+            "'dotood_air','dotood_swab')",
             name="ck_sample_client_name",
         ),
     )

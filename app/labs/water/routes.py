@@ -49,7 +49,7 @@ def water_hub():
 def water_analysis_hub():
     """Усны шинжилгээний төв (картууд)."""
     sample_count = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology'])
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
     ).count()
     return render_template(
         'water_analysis_hub.html',
@@ -79,8 +79,8 @@ def register_sample():
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
             if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
-                return redirect(url_for('microbiology.micro_hub'))
-            return redirect(url_for('water.water_hub'))
+                return redirect(url_for('microbiology.register_sample'))
+            return redirect(url_for('water.register_sample'))
         except Exception as e:
             db.session.rollback()
             flash(f'Алдаа: {e}', 'danger')
@@ -201,19 +201,32 @@ def save_results():
 def water_data():
     """Усны дээжийн жагсаалт (ус + микробиологи)."""
     samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology'])
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
     ).order_by(Sample.id.desc()).limit(200).all()
 
+    import re
     result = []
     for idx, s in enumerate(reversed(samples), 1):
-        # Дээжний нэрийг огноогүй харуулах
-        display_name = s.sample_code.rsplit('_', 1)[0] if '_' in s.sample_code else s.sample_code
+        # sample_code задлах: "01_01_нэр_2026-02-02" → lab_id="01_01", name="нэр"
+        # Хуучин формат: "нэр_2026-02-02" → lab_id="", name="нэр"
+        lab_id = ''
+        display_name = s.sample_code
+        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+        if m:
+            lab_id = m.group(1)
+            display_name = m.group(2)
+        else:
+            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+            if m2:
+                display_name = m2.group(1)
+
         # Нэгжийн нэр
         unit_info = WATER_UNITS.get(s.client_name, {})
         unit_name = unit_info.get('name', s.client_name) if unit_info else s.client_name
         result.append({
             'seq': idx,
             'id': s.id,
+            'lab_id': lab_id,
             'sample_name': display_name,
             'sample_code': s.sample_code,
             'unit_name': unit_name,
@@ -231,6 +244,114 @@ def water_data():
         })
     result.reverse()
     return jsonify(result)
+
+
+@water_bp.route('/edit_sample/<int:sample_id>', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def edit_sample(sample_id):
+    """Усны дээж засах."""
+    import json as _json
+    sample = db.session.get(Sample, sample_id)
+    if not sample:
+        flash('Дээж олдсонгүй.', 'danger')
+        return redirect(url_for('water.register_sample'))
+
+    can_edit = current_user.role in ('admin', 'senior', 'chemist')
+    if not can_edit:
+        flash('Дээж засах эрх танд байхгүй.', 'warning')
+        return redirect(url_for('water.register_sample'))
+
+    analyses_list = WATER_ANALYSIS_TYPES + MICRO_ANALYSIS_TYPES
+    try:
+        current_analyses = _json.loads(sample.analyses_to_perform or '[]')
+    except (ValueError, TypeError):
+        current_analyses = []
+
+    if request.method == 'POST':
+        new_code = request.form.get('sample_code', '').strip()
+        selected_analyses = request.form.getlist('analyses')
+
+        original_code = sample.sample_code
+        code_changed = new_code and new_code != original_code
+        analyses_changed = set(selected_analyses) != set(current_analyses)
+
+        if not new_code:
+            flash('Дээжний код хоосон байх боломжгүй.', 'danger')
+        elif code_changed and Sample.query.filter(
+            Sample.sample_code == new_code, Sample.id != sample_id
+        ).first():
+            flash(f'"{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй.', 'danger')
+        else:
+            try:
+                if code_changed:
+                    sample.sample_code = new_code
+                if analyses_changed:
+                    sample.analyses_to_perform = _json.dumps(selected_analyses)
+                if code_changed or analyses_changed:
+                    db.session.commit()
+                    flash('Дээжний мэдээлэл шинэчлэгдлээ.', 'success')
+                else:
+                    flash('Өөрчлөлт хийгдээгүй.', 'info')
+                return redirect(url_for('water.register_sample'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Алдаа: {e}', 'danger')
+
+    return render_template(
+        'water_edit_sample.html',
+        title='Дээж засах',
+        sample=sample,
+        analyses_list=analyses_list,
+        current_analyses=current_analyses,
+    )
+
+
+@water_bp.route('/delete_samples', methods=['POST'])
+@login_required
+@lab_required('water')
+def delete_samples():
+    """Усны/микро дээж устгах (admin, senior эрхтэй)."""
+    from app.utils.audit import log_audit
+
+    sample_ids = request.form.getlist('sample_ids')
+    if not sample_ids:
+        flash('Устгах дээжээ сонгоно уу!', 'warning')
+        return redirect(request.referrer or url_for('water.register_sample'))
+
+    if current_user.role not in ('admin', 'senior', 'chemist'):
+        flash('Дээж устгах эрх танд байхгүй.', 'danger')
+        return redirect(request.referrer or url_for('water.register_sample'))
+
+    deleted = 0
+    failed = []
+    for sid in sample_ids:
+        try:
+            sample = db.session.get(Sample, int(sid))
+            if not sample:
+                failed.append(f'ID={sid} (Олдсонгүй)')
+                continue
+            if current_user.role in ('senior', 'chemist') and sample.status != 'new':
+                failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
+                continue
+            log_audit(
+                action='sample_deleted',
+                resource_type='Sample',
+                resource_id=sample.id,
+                details={'sample_code': sample.sample_code, 'client_name': sample.client_name},
+            )
+            db.session.delete(sample)
+            deleted += 1
+        except Exception as e:
+            failed.append(f'ID={sid} ({e})')
+
+    if deleted:
+        db.session.commit()
+        flash(f'{deleted} дээж амжилттай устгагдлаа.', 'success')
+    if failed:
+        flash(f'Алдаа: {", ".join(failed)}', 'danger')
+
+    return redirect(request.referrer or url_for('water.register_sample'))
 
 
 @water_bp.route('/api/standards')
