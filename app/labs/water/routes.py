@@ -210,7 +210,10 @@ def workspace(code):
 @login_required
 def eligible_samples(code):
     """Боломжит дээж (усны шинжилгээнд)."""
-    samples = Sample.query.filter_by(lab_type='water', status='prepared').all()
+    samples = Sample.query.filter(
+        Sample.lab_type == 'water',
+        Sample.status.in_(['new', 'in_progress'])
+    ).all()
     result = []
     for s in samples:
         result.append({

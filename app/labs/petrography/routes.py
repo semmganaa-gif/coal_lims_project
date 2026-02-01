@@ -1,6 +1,7 @@
 # app/labs/petrography/routes.py
 """Петрограф лабораторийн routes."""
 
+import json
 import os
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
@@ -18,25 +19,32 @@ petro_bp = Blueprint(
 )
 
 
+def _pe_samples(statuses):
+    """Петрограф дээжүүдийг шүүх.
+
+    2 нөхцлийн аль нэг:
+    1. sample_type == 'PE' (PE төрлийн дээж)
+    2. analyses_to_perform дотор 'PE' код байвал (шинжилгээний тохиргоогоор PE чек хийгдсэн)
+    """
+    from sqlalchemy import or_
+    return Sample.query.filter(
+        Sample.status.in_(statuses),
+        or_(
+            Sample.sample_type == 'PE',
+            Sample.analyses_to_perform.contains('"PE"'),
+        )
+    )
+
+
 @petro_bp.route('/')
 @login_required
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
-    # PE дээжүүд (нүүрсний лаб-аас ирсэн)
-    pending_pe = Sample.query.filter(
-        Sample.sample_type == 'PE',
-        Sample.status.in_(['new', 'in_progress', 'analysis'])
-    ).count()
-    # Петрограф лабын дээжүүд
-    total_petro = Sample.query.filter_by(lab_type='petrography').count()
-    in_progress = Sample.query.filter(
-        Sample.lab_type == 'petrography',
-        Sample.status.in_(['in_progress', 'analysis', 'prepared'])
-    ).count()
-    completed = Sample.query.filter(
-        Sample.lab_type == 'petrography',
-        Sample.status == 'completed'
-    ).count()
+    # PE дээжүүд (нүүрсний лаб-аас sample_type='PE' гэж бүртгэгдсэн)
+    pending_pe = _pe_samples(['new', 'in_progress', 'analysis']).count()
+    total_petro = _pe_samples(['new', 'in_progress', 'analysis', 'prepared', 'completed']).count()
+    in_progress = _pe_samples(['in_progress', 'analysis', 'prepared']).count()
+    completed = _pe_samples(['completed']).count()
     return render_template(
         'petro_hub.html',
         title='Петрограф лаборатори',
@@ -63,7 +71,7 @@ def workspace(code):
         'MAC': 'analysis_forms/maceral_form.html',
         'VR': 'analysis_forms/vitrinite_form.html',
         'MM': 'analysis_forms/mineral_form.html',
-        'TS': 'analysis_forms/thin_section_form.html',
+        'TS_PETRO': 'analysis_forms/thin_section_form.html',
         'MOD': 'analysis_forms/mineral_form.html',
         'TEX': 'analysis_forms/thin_section_form.html',
         'GS': 'analysis_forms/mineral_form.html',
@@ -86,16 +94,10 @@ def workspace(code):
 def eligible_samples(code):
     """Боломжит дээж (петрограф шинжилгээнд).
 
-    PE sample_type-тай coal дээж + petrography lab дээж хоёуланг харуулна.
+    Нүүрсний лаб-аас sample_type='PE' гэж бүртгэгдсэн дээжүүд.
     """
-    from sqlalchemy import or_
-    samples = Sample.query.filter(
-        or_(
-            # Нүүрсний лаб-аас PE гэж бүртгэгдсэн дээжүүд
-            db.and_(Sample.sample_type == 'PE', Sample.status.in_(['new', 'in_progress', 'analysis', 'prepared'])),
-            # Петрограф лабын дээжүүд
-            db.and_(Sample.lab_type == 'petrography', Sample.status.in_(['new', 'in_progress', 'analysis', 'prepared'])),
-        )
+    samples = _pe_samples(
+        ['new', 'in_progress', 'analysis', 'prepared']
     ).order_by(Sample.received_date.desc()).all()
     result = []
     for s in samples:
@@ -125,7 +127,6 @@ def save_results():
         return jsonify({'error': 'Sample not found'}), 404
 
     # Үр дүнг хадгалах
-    import json
     ar = AnalysisResult(
         sample_id=sample_id,
         analysis_type=analysis_code,
@@ -141,10 +142,10 @@ def save_results():
 @petro_bp.route('/api/data')
 @login_required
 def petro_data():
-    """Петрограф дээжийн жагсаалт."""
-    samples = Sample.query.filter_by(lab_type='petrography').order_by(
-        Sample.received_date.desc()
-    ).limit(200).all()
+    """Петрограф дээжийн жагсаалт (PE төрлийн дээжүүд)."""
+    samples = _pe_samples(
+        ['new', 'in_progress', 'analysis', 'prepared', 'completed']
+    ).order_by(Sample.received_date.desc()).limit(200).all()
 
     result = []
     for s in samples:

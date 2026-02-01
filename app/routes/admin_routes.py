@@ -69,6 +69,7 @@ def _seed_analysis_types():
         {'code': 'FM',    'name': 'Чөлөөт чийг (FM)',             'order': 17,  'role': 'prep'},
         {'code': 'Solid', 'name': 'Хатуу бодисын үлдэгдэл (Solid)',            'order': 18, 'role': 'prep'},
         {'code': 'm',     'name': 'Масс (m)',                     'order': 19, 'role': 'chemist'},
+        {'code': 'PE',    'name': 'Петрограф (PE)',                 'order': 20, 'role': 'chemist'},
     ]
 
     existing_analysis_types = {at.code: at for at in AnalysisType.query.all()}

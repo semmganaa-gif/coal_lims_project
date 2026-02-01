@@ -42,11 +42,14 @@
             <label class="form-label fw-bold">Тодорхойлогдсон эрдсүүд</label>
             <textarea id="mineralsIdentified" class="form-control" rows="3" placeholder="Эрдсийн нэрс..."></textarea>
           </div>
+          <!-- Зураг upload: backend бэлэн болсны дараа идэвхжүүлнэ -->
+          <!--
           <div class="mb-3">
             <label class="form-label fw-bold">Зураг оруулах</label>
             <input type="file" id="imageUpload" class="form-control" accept="image/*" multiple>
           </div>
           <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+          -->
         </div>
       </div>
     </div>
@@ -73,20 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
 
-  document.getElementById('imageUpload').addEventListener('change', function(e) {
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = '';
-    Array.from(e.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = document.createElement('img');
-        img.src = ev.target.result;
-        img.style.cssText = 'width:150px;height:150px;object-fit:cover;border-radius:8px;border:2px solid #ddd';
-        preview.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    });
-  });
+  // Зураг upload: backend бэлэн болсны дараа идэвхжүүлнэ
 });
 
 function saveResults() {
