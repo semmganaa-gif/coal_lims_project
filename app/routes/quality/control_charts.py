@@ -53,6 +53,7 @@ def _get_mad_for_sample(sample_id: int):
 def _get_qc_samples():
     """CM болон GBW дээжүүдийг олох"""
     return Sample.query.filter(
+        Sample.lab_type == 'coal',
         or_(
             Sample.sample_type.ilike('%CM%'),
             Sample.sample_type.ilike('%GBW%'),

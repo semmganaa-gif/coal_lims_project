@@ -113,6 +113,7 @@ def register_routes(bp):
             like_clauses = [text_lc.like(f'%"{t}"%') for t in terms]
 
             q = Sample.query.filter(
+                Sample.lab_type == 'coal',
                 Sample.status.in_(["new", "New"]),
                 or_(*like_clauses),
                 ~Sample.id.in_(existing_ids_subq),

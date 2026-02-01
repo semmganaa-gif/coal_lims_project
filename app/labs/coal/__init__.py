@@ -32,5 +32,5 @@ class CoalLab(BaseLab):
         return [
             'MT', 'Mad', 'Aad', 'Vad', 'TS', 'CV', 'CSN', 'Gi',
             'TRD', 'P', 'Solid', 'FM', 'F', 'Cl', 'X', 'Y',
-            'CRI', 'CSR', 'm', 'PE'
+            'CRI', 'CSR', 'm'
         ]

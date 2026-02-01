@@ -145,6 +145,7 @@ def register_routes(bp):
 
         # Хугацаа дууссан дээжүүд (retention_date < today, disposal_date = None)
         expired_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             Sample.retention_date < today,
             Sample.disposal_date is None
         ).order_by(Sample.retention_date.asc()).all()
@@ -152,6 +153,7 @@ def register_routes(bp):
         # Удахгүй дуусах дээжүүд (retention_date <= today + 30 days)
         warning_date = today + timedelta(days=warning_days)
         upcoming_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             Sample.retention_date >= today,
             Sample.retention_date <= warning_date,
             Sample.disposal_date is None
@@ -160,11 +162,13 @@ def register_routes(bp):
         # Устгагдсан дээжүүд (сүүлийн 90 хоног)
         disposed_since = today - timedelta(days=90)
         disposed_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             Sample.disposal_date >= disposed_since
         ).order_by(Sample.disposal_date.desc()).limit(100).all()
 
         # Хадгалах хугацаа тодорхойгүй дээжүүд (бүх статус)
         no_retention_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             Sample.retention_date.is_(None),
             Sample.disposal_date.is_(None),
             Sample.return_sample.is_(False)
@@ -172,6 +176,7 @@ def register_routes(bp):
 
         # Буцаах дээжүүд (return_sample=True, шинжилгээ дууссан)
         return_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             Sample.return_sample.is_(True),
             Sample.disposal_date.is_(None),
             Sample.status == 'completed'

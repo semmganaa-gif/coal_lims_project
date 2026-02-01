@@ -67,7 +67,7 @@ def register_routes(bp):
         date_start = request.args.get("dateFilterStart")
         date_end = request.args.get("dateFilterEnd")
 
-        q = Sample.query.filter(Sample.lab_type.in_(['coal', 'petrography']))
+        q = Sample.query.filter(Sample.lab_type == 'coal')
 
         if date_start:
             try:
@@ -478,11 +478,12 @@ def register_routes(bp):
 
         today = now_local().date()
 
-        # 1. Сүүлийн 7 хоногийн дээж тоо
+        # 1. Сүүлийн 7 хоногийн дээж тоо (зөвхөн нүүрс)
         samples_by_day = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
             count = Sample.query.filter(
+                Sample.lab_type == 'coal',
                 func.date(Sample.received_date) == day
             ).count()
             samples_by_day.append({
@@ -491,44 +492,54 @@ def register_routes(bp):
                 "count": count
             })
 
-        # 2. Client тус бүрийн дээж тоо (энэ сар)
+        # 2. Client тус бүрийн дээж тоо (энэ сар, зөвхөн нүүрс)
         first_of_month = today.replace(day=1)
         samples_by_client = db.session.query(
             Sample.client_name,
             func.count(Sample.id).label("count")
         ).filter(
+            Sample.lab_type == 'coal',
             Sample.received_date >= first_of_month
         ).group_by(Sample.client_name).all()
 
-        # 3. Шинжилгээний статусаар тоо (өнөөдөр)
+        # 3. Шинжилгээний статусаар тоо (өнөөдөр, зөвхөн нүүрс)
         analysis_by_status = db.session.query(
             AnalysisResult.status,
             func.count(AnalysisResult.id).label("count")
-        ).filter(
+        ).join(Sample, AnalysisResult.sample_id == Sample.id).filter(
+            Sample.lab_type == 'coal',
             func.date(AnalysisResult.updated_at) == today
         ).group_by(AnalysisResult.status).all()
 
-        # 4. Энэ сарын approve/reject харьцаа
+        # 4. Энэ сарын approve/reject харьцаа (зөвхөн нүүрс)
         approval_stats = db.session.query(
             func.sum(case((AnalysisResult.status == 'approved', 1), else_=0)).label('approved'),
             func.sum(case((AnalysisResult.status == 'rejected', 1), else_=0)).label('rejected'),
             func.sum(case((AnalysisResult.status == 'pending_review', 1), else_=0)).label('pending')
-        ).filter(
+        ).join(Sample, AnalysisResult.sample_id == Sample.id).filter(
+            Sample.lab_type == 'coal',
             AnalysisResult.updated_at >= first_of_month
         ).first()
 
-        # 5. Өнөөдрийн нийт статистик
+        # 5. Өнөөдрийн нийт статистик (зөвхөн нүүрс)
         today_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
             func.date(Sample.received_date) == today
         ).count()
 
-        today_analyses = AnalysisResult.query.filter(
+        today_analyses = db.session.query(func.count(AnalysisResult.id)).join(
+            Sample, AnalysisResult.sample_id == Sample.id
+        ).filter(
+            Sample.lab_type == 'coal',
             func.date(AnalysisResult.created_at) == today
-        ).count()
+        ).scalar()
 
-        pending_review = AnalysisResult.query.filter(
+        pending_review = db.session.query(func.count(AnalysisResult.id)).join(
+            Sample, AnalysisResult.sample_id == Sample.id
+        ).filter(
+            Sample.lab_type == 'coal',
             AnalysisResult.status == 'pending_review'
-        ).count()
+        ).scalar()
 
         return jsonify({
             "samples_by_day": samples_by_day,
@@ -566,7 +577,7 @@ def register_routes(bp):
         end_date = request.args.get('end_date')
         limit = min(int(request.args.get('limit', 1000)), 5000)
 
-        query = Sample.query
+        query = Sample.query.filter(Sample.lab_type == 'coal')
 
         if client:
             query = query.filter(Sample.client_name == client)
@@ -638,7 +649,7 @@ def register_routes(bp):
     @login_required
     async def htmx_sample_count():
         """htmx: Нийт дээжний тоог HTML-ээр буцаах."""
-        count = Sample.query.count()
+        count = Sample.query.filter(Sample.lab_type == 'coal').count()
         return f'<strong class="text-primary">{count}</strong> дээж'
 
     @bp.route("/search_samples", methods=["GET"])

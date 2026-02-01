@@ -192,7 +192,7 @@ def get_samples_with_results(
         .exists()
     )
 
-    query = db.session.query(Sample).filter(exists_q)
+    query = db.session.query(Sample).filter(exists_q, Sample.lab_type == 'coal')
 
     if exclude_archived:
         query = query.filter(Sample.status != "archived")

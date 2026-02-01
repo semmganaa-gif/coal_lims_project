@@ -85,13 +85,15 @@ def dashboard():
 
     # ========== KPI-ууд ==========
 
-    # 1. Дээжний тоо (энэ сар / энэ жил)
+    # 1. Дээжний тоо (энэ сар / энэ жил) — зөвхөн нүүрс
     samples_month = Sample.query.filter(
+        Sample.lab_type == 'coal',
         Sample.received_date >= month_start.date(),
         Sample.received_date < month_end.date()
     ).count()
 
     samples_year = Sample.query.filter(
+        Sample.lab_type == 'coal',
         Sample.received_date >= year_start.date(),
         Sample.received_date < year_end.date()
     ).count()
@@ -102,35 +104,50 @@ def dashboard():
         'UPDATED_AUTO_APPROVED', 'UPDATED_PENDING', 'UPDATED_REJECTED', 'UPDATED_VOID_RETEST',
     ]
 
-    analyses_month = AnalysisResultLog.query.filter(
+    analyses_month = db.session.query(func.count(AnalysisResultLog.id)).join(
+        Sample, Sample.id == AnalysisResultLog.sample_id
+    ).filter(
+        Sample.lab_type == 'coal',
         AnalysisResultLog.action.in_(work_actions),
         AnalysisResultLog.timestamp >= month_start,
         AnalysisResultLog.timestamp < month_end
-    ).count()
+    ).scalar() or 0
 
-    analyses_year = AnalysisResultLog.query.filter(
+    analyses_year = db.session.query(func.count(AnalysisResultLog.id)).join(
+        Sample, Sample.id == AnalysisResultLog.sample_id
+    ).filter(
+        Sample.lab_type == 'coal',
         AnalysisResultLog.action.in_(work_actions),
         AnalysisResultLog.timestamp >= year_start,
         AnalysisResultLog.timestamp < year_end
-    ).count()
+    ).scalar() or 0
 
-    # 3. Алдааны тоо (энэ сар / энэ жил)
-    errors_month = AnalysisResultLog.query.filter(
+    # 3. Алдааны тоо (энэ сар / энэ жил) — зөвхөн нүүрс
+    errors_month = db.session.query(func.count(AnalysisResultLog.id)).join(
+        Sample, Sample.id == AnalysisResultLog.sample_id
+    ).filter(
+        Sample.lab_type == 'coal',
         AnalysisResultLog.action == 'REJECTED',
         AnalysisResultLog.timestamp >= month_start,
         AnalysisResultLog.timestamp < month_end
-    ).count()
+    ).scalar() or 0
 
-    errors_year = AnalysisResultLog.query.filter(
+    errors_year = db.session.query(func.count(AnalysisResultLog.id)).join(
+        Sample, Sample.id == AnalysisResultLog.sample_id
+    ).filter(
+        Sample.lab_type == 'coal',
         AnalysisResultLog.action == 'REJECTED',
         AnalysisResultLog.timestamp >= year_start,
         AnalysisResultLog.timestamp < year_end
-    ).count()
+    ).scalar() or 0
 
-    # 4. Идэвхтэй ажилтнууд (энэ сар)
+    # 4. Идэвхтэй ажилтнууд (энэ сар) — зөвхөн нүүрс
     active_users_month = db.session.query(
         func.count(func.distinct(AnalysisResultLog.user_id))
+    ).join(
+        Sample, Sample.id == AnalysisResultLog.sample_id
     ).filter(
+        Sample.lab_type == 'coal',
         AnalysisResultLog.action.in_(work_actions),
         AnalysisResultLog.timestamp >= month_start,
         AnalysisResultLog.timestamp < month_end
@@ -150,11 +167,14 @@ def dashboard():
         else:
             m_end = datetime(y, m + 1, 1)
 
-        cnt = AnalysisResultLog.query.filter(
+        cnt = db.session.query(func.count(AnalysisResultLog.id)).join(
+            Sample, Sample.id == AnalysisResultLog.sample_id
+        ).filter(
+            Sample.lab_type == 'coal',
             AnalysisResultLog.action.in_(work_actions),
             AnalysisResultLog.timestamp >= m_start,
             AnalysisResultLog.timestamp < m_end
-        ).count()
+        ).scalar() or 0
 
         monthly_stats.append({
             'month': m,
@@ -163,13 +183,15 @@ def dashboard():
             'count': cnt
         })
 
-    # 6. Топ 5 ажилтан (энэ сар)
+    # 6. Топ 5 ажилтан (энэ сар) — зөвхөн нүүрс
     top_users = (
         db.session.query(
             AnalysisResultLog.user_id,
             func.count(AnalysisResultLog.id).label('cnt')
         )
+        .join(Sample, Sample.id == AnalysisResultLog.sample_id)
         .filter(
+            Sample.lab_type == 'coal',
             AnalysisResultLog.action.in_(work_actions),
             AnalysisResultLog.user_id.isnot(None),
             AnalysisResultLog.timestamp >= month_start,
@@ -285,6 +307,7 @@ def consumption():
         )
         .join(Sample, Sample.id == AnalysisResult.sample_id)
         .filter(
+            Sample.lab_type == 'coal',
             date_col.isnot(None),
             extract("year", date_col) == year,
         )
@@ -524,8 +547,8 @@ def _calculate_consumption(
         db.session.query(AnalysisResult, Sample)
         .join(Sample, Sample.id == AnalysisResult.sample_id)
         .filter(
+            Sample.lab_type == 'coal',
             AnalysisResult.status.in_(["approved", "pending_review"]),
-            # created_at ашиглах нь зүйтэй (ажил хэзээ хийгдсэн)
             AnalysisResult.created_at >= start_dt,
             AnalysisResult.created_at < end_dt,
         )
