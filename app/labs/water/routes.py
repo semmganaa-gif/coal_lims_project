@@ -11,6 +11,7 @@ from app.labs.water.constants import (
     ALL_WATER_SAMPLE_NAMES, get_mns_standards
 )
 from app.labs.microbiology.constants import MICRO_ANALYSIS_TYPES
+from app.utils.decorators import lab_required
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 water_bp = Blueprint(
@@ -23,6 +24,7 @@ water_bp = Blueprint(
 
 @water_bp.route('/')
 @login_required
+@lab_required('water')
 def water_hub():
     """Усны лабораторийн dashboard."""
     from app.labs import get_lab
@@ -43,6 +45,7 @@ def water_hub():
 
 @water_bp.route('/analysis')
 @login_required
+@lab_required('water')
 def water_analysis_hub():
     """Усны шинжилгээний төв (картууд)."""
     sample_count = Sample.query.filter(
@@ -59,6 +62,7 @@ def water_analysis_hub():
 
 @water_bp.route('/register', methods=['GET', 'POST'])
 @login_required
+@lab_required('water')
 def register_sample():
     """Усны дээж бүртгэх (Ус + Микробиологи дундын)."""
     if request.method == 'POST':
@@ -96,6 +100,7 @@ def register_sample():
 
 @water_bp.route('/workspace/<code>')
 @login_required
+@lab_required('water')
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
     code_upper = code.upper()
@@ -139,6 +144,7 @@ def workspace(code):
 
 @water_bp.route('/api/eligible/<code>')
 @login_required
+@lab_required('water')
 def eligible_samples(code):
     """Боломжит дээж (усны шинжилгээнд)."""
     samples = Sample.query.filter(
@@ -158,6 +164,7 @@ def eligible_samples(code):
 
 @water_bp.route('/api/save_results', methods=['POST'])
 @login_required
+@lab_required('water')
 def save_results():
     """Үр дүн хадгалах."""
     data = request.get_json()
@@ -190,6 +197,7 @@ def save_results():
 
 @water_bp.route('/api/data')
 @login_required
+@lab_required('water')
 def water_data():
     """Усны дээжийн жагсаалт (ус + микробиологи)."""
     samples = Sample.query.filter(
@@ -227,6 +235,7 @@ def water_data():
 
 @water_bp.route('/api/standards')
 @login_required
+@lab_required('water')
 def standards():
     """MNS/WHO стандартын хязгаарууд."""
     return jsonify(get_mns_standards())

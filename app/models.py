@@ -56,6 +56,13 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20))  # Утасны дугаар
     position = db.Column(db.String(100))  # Албан тушаал
 
+    def has_lab_access(self, lab_key: str) -> bool:
+        """Хэрэглэгч тухайн лабд нэвтрэх эрхтэй эсэх."""
+        if self.role == 'admin':
+            return True
+        labs = self.allowed_labs or ['coal']
+        return lab_key in labs
+
     def set_password(self, password: str) -> None:
         """
         Нууц үг тохируулах. Нууц үгний бодлого шалгаж, hash хийнэ.

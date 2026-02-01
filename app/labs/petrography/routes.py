@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Sample, AnalysisResult, AnalysisType
 from app.labs.petrography.constants import ALL_PETRO_PARAMS, PETRO_ANALYSIS_TYPES
+from app.utils.decorators import lab_required
 
 # Template folder тохируулах
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -39,6 +40,7 @@ def _pe_samples(statuses):
 
 @petro_bp.route('/')
 @login_required
+@lab_required('petrography')
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
     all_statuses = ['new', 'in_progress', 'analysis', 'prepared', 'completed']
@@ -60,6 +62,7 @@ def petro_hub():
 
 @petro_bp.route('/workspace/<code>')
 @login_required
+@lab_required('petrography')
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
     code_upper = code.upper()
@@ -92,6 +95,7 @@ def workspace(code):
 
 @petro_bp.route('/api/eligible/<code>')
 @login_required
+@lab_required('petrography')
 def eligible_samples(code):
     """Боломжит дээж (петрограф шинжилгээнд).
 
@@ -113,6 +117,7 @@ def eligible_samples(code):
 
 @petro_bp.route('/api/save_results', methods=['POST'])
 @login_required
+@lab_required('petrography')
 def save_results():
     """Үр дүн хадгалах."""
     data = request.get_json()
@@ -145,6 +150,7 @@ def save_results():
 
 @petro_bp.route('/api/data')
 @login_required
+@lab_required('petrography')
 def petro_data():
     """Петрограф дээжийн жагсаалт (PE төрлийн дээжүүд)."""
     samples = _pe_samples(

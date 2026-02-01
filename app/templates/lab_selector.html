@@ -73,7 +73,10 @@
     <p>Сайн байна уу, <strong>{{ current_user.username }}</strong>! Лаборатори сонгоно уу.</p>
   </div>
 
+  {% set user_labs = current_user.allowed_labs or ['coal'] %}
+  {% set is_admin = current_user.role == 'admin' %}
   <div class="lab-grid">
+    {% if is_admin or 'coal' in user_labs %}
     <a href="{{ url_for('main.coal_hub') }}" class="lab-card">
       <div class="lab-icon" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
         <i class="bi bi-fire"></i>
@@ -84,7 +87,9 @@
         <span class="badge" style="background:#dc3545">19 шинжилгээ</span>
       </div>
     </a>
+    {% endif %}
 
+    {% if is_admin or 'petrography' in user_labs %}
     <a href="{{ url_for('petrography.petro_hub') }}" class="lab-card">
       <div class="lab-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
         <i class="bi bi-gem"></i>
@@ -95,7 +100,9 @@
         <span class="badge" style="background:#6f42c1">7 шинжилгээ</span>
       </div>
     </a>
+    {% endif %}
 
+    {% if is_admin or 'water' in user_labs %}
     <a href="{{ url_for('water.water_hub') }}" class="lab-card">
       <div class="lab-icon" style="background:linear-gradient(135deg,#06b6d4,#0e7490)">
         <i class="bi bi-droplet-fill"></i>
@@ -106,7 +113,9 @@
         <span class="badge" style="background:#0dcaf0">26 шинжилгээ</span>
       </div>
     </a>
+    {% endif %}
 
+    {% if is_admin or 'microbiology' in user_labs %}
     <a href="{{ url_for('microbiology.micro_hub') }}" class="lab-card">
       <div class="lab-icon" style="background:linear-gradient(135deg,#20c997,#0d9488)">
         <i class="bi bi-bug-fill"></i>
@@ -117,6 +126,7 @@
         <span class="badge" style="background:#20c997">8 шинжилгээ</span>
       </div>
     </a>
+    {% endif %}
   </div>
 
 </body>

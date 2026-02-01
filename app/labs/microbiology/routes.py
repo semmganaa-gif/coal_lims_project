@@ -15,6 +15,7 @@ from app.labs.microbiology.constants import (
 from app.labs.water.constants import (
     WATER_ANALYSIS_TYPES, WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
 )
+from app.utils.decorators import lab_required
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 micro_bp = Blueprint(
@@ -34,6 +35,7 @@ _FIELD_MAP = {
 
 @micro_bp.route('/')
 @login_required
+@lab_required('microbiology')
 def micro_hub():
     """Микробиологийн лабораторийн төв хуудас."""
     from app.labs import get_lab
@@ -52,6 +54,7 @@ def micro_hub():
 
 @micro_bp.route('/analysis')
 @login_required
+@lab_required('microbiology')
 def analysis_hub():
     """Микробиологийн шинжилгээний карт сонгох хуудас."""
     return render_template('micro_analysis_hub.html', title='Микробиологийн шинжилгээ')
@@ -59,6 +62,7 @@ def analysis_hub():
 
 @micro_bp.route('/register', methods=['GET', 'POST'])
 @login_required
+@lab_required('microbiology')
 def register_sample():
     """Микробиологийн дээж бүртгэх."""
     if request.method == 'POST':
@@ -94,6 +98,7 @@ def register_sample():
 
 @micro_bp.route('/workspace/<code>')
 @login_required
+@lab_required('microbiology')
 def workspace(code):
     """Микробиологийн ажлын хуудас.
 
@@ -123,6 +128,7 @@ def workspace(code):
 
 @micro_bp.route('/api/samples')
 @login_required
+@lab_required('microbiology')
 def api_samples():
     """Микробиологийн дээж (Ус+Микро)."""
     samples = Sample.query.filter(
@@ -139,6 +145,7 @@ def api_samples():
 
 @micro_bp.route('/api/save_results', methods=['POST'])
 @login_required
+@lab_required('microbiology')
 def save_results():
     """Үр дүн хадгалах (нэг дээжид)."""
     data = request.get_json()
@@ -162,6 +169,7 @@ def save_results():
 
 @micro_bp.route('/api/save_batch', methods=['POST'])
 @login_required
+@lab_required('microbiology')
 def save_batch():
     """Багцаар үр дүн хадгалах (workspace grid-ээс)."""
     data = request.get_json()
@@ -229,6 +237,7 @@ def save_batch():
 
 @micro_bp.route('/api/load_batch')
 @login_required
+@lab_required('microbiology')
 def load_batch():
     """Хадгалсан үр дүнг ачаалах."""
     category = request.args.get('category', 'MICRO_WATER')
@@ -257,6 +266,7 @@ def load_batch():
 
 @micro_bp.route('/api/data')
 @login_required
+@lab_required('microbiology')
 def micro_data():
     """Микробиологийн дээжийн жагсаалт."""
     samples = Sample.query.filter_by(lab_type='microbiology').order_by(

@@ -124,6 +124,8 @@ def manage_users():
             flash(f'"{form.username.data}" нэртэй хэрэглэгч аль хэдийн байна.', 'warning')
         else:
             user = User(username=form.username.data, role=form.role.data)
+            # Лабораторийн эрх
+            user.allowed_labs = form.allowed_labs.data or ['coal']
             # Профайл мэдээлэл нэмэх
             user.full_name = form.full_name.data or None
             user.email = form.email.data or None
@@ -173,6 +175,8 @@ def edit_user(user_id):
 
         user_to_edit.username = new_username
         user_to_edit.role = form.role.data
+        # Лабораторийн эрх
+        user_to_edit.allowed_labs = form.allowed_labs.data or ['coal']
         # Профайл мэдээлэл шинэчлэх
         user_to_edit.full_name = form.full_name.data or None
         user_to_edit.email = form.email.data or None
@@ -199,6 +203,7 @@ def edit_user(user_id):
 
     form.username.data = user_to_edit.username
     form.role.data = user_to_edit.role
+    form.allowed_labs.data = user_to_edit.allowed_labs or ['coal']
     # Профайл мэдээллийг form-д дүүргэх
     form.full_name.data = user_to_edit.full_name or ""
     form.email.data = user_to_edit.email or ""

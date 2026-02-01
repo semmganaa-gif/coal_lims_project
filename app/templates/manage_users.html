@@ -14,7 +14,7 @@
         <div class="col-lg-8">
             {% call render_card(title='Бүртгэлтэй хэрэглэгчид') %}
                 {% call data_table(id='users-table', striped=true, hover=true) %}
-                    {{ render_table_header(['ID', 'Нэвтрэх нэр', 'Эрхийн түвшин'], actions=true) }}
+                    {{ render_table_header(['ID', 'Нэвтрэх нэр', 'Эрхийн түвшин', 'Лабораториуд'], actions=true) }}
                     <tbody>
                         {% for user in users %}
                         <tr>
@@ -22,6 +22,12 @@
                             <td>{{ user.username }}</td>
                             <td>
                                 {{ render_status_badge(user.role, label=user.role, variant_map={'admin': 'danger', 'analyst': 'info', 'viewer': 'secondary'}) }}
+                            </td>
+                            <td>
+                                {% set lab_names = {'coal': 'Нүүрс', 'petrography': 'Петро', 'water': 'Ус', 'microbiology': 'Микро'} %}
+                                {% for lab in (user.allowed_labs or ['coal']) %}
+                                <span class="badge bg-secondary me-1">{{ lab_names.get(lab, lab) }}</span>
+                                {% endfor %}
                             </td>
                             <td class="text-end">
                                 {% if current_user.id != user.id %}
@@ -53,6 +59,18 @@
                     <div class="mb-3">
                         {{ form.role.label(class="form-label fw-bold") }}
                         {{ form.role(class="form-select") }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Лабораториуд</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for subfield in form.allowed_labs %}
+                            <div class="form-check">
+                                {{ subfield(class="form-check-input") }}
+                                {{ subfield.label(class="form-check-label small") }}
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
 
                     <hr class="my-3">

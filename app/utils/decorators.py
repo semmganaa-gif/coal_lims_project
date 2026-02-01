@@ -129,6 +129,36 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[
     return decorator
 
 
+def lab_required(lab_key: str) -> Callable:
+    """
+    Лабын эрх шалгах decorator.
+    Хэрэглэгчийн allowed_labs жагсаалтад тухайн лаб байгаа эсэхийг шалгана.
+    Admin бүх лабд нэвтрэх боломжтой.
+
+    Args:
+        lab_key: Лабын түлхүүр ('coal', 'petrography', 'water', 'microbiology')
+    """
+    def decorator(f: Callable) -> Callable:
+        @wraps(f)
+        def decorated_function(*args: Any, **kwargs: Any) -> Any:
+            if not current_user.is_authenticated:
+                flash('Эхлээд нэвтэрнэ үү.', 'warning')
+                return redirect(url_for('auth.login'))
+
+            # Admin бүх лабд нэвтрэх боломжтой
+            if current_user.role == 'admin':
+                return f(*args, **kwargs)
+
+            user_labs = current_user.allowed_labs or ['coal']
+            if lab_key not in user_labs:
+                flash(f'Танд энэ лабораторид нэвтрэх эрх байхгүй.', 'danger')
+                return redirect(url_for('main.lab_selector'))
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
 def analysis_role_required(allowed_roles=None):
     """
     Шинжилгээний модульд хандах эрх шалгах декоратор.

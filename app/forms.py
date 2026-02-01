@@ -70,9 +70,21 @@ class UserManagementForm(FlaskForm):
             ("chemist", "Химич (Chemist)"),
             ("senior", "Ахлах химич (Senior Chemist)"),
             ("manager", "Менежер (Manager)"),
-            ("admin", "Админ"),
         ],
         validators=[DataRequired()],
+    )
+    # Лабораторийн эрх
+    allowed_labs = SelectMultipleField(
+        "Зөвшөөрөгдсөн лабораториуд",
+        choices=[
+            ('coal', 'Нүүрсний лаборатори'),
+            ('petrography', 'Петрограф лаборатори'),
+            ('water', 'Усны лаборатори'),
+            ('microbiology', 'Микробиологийн лаборатори'),
+        ],
+        validators=[Optional()],
+        widget=widgets.ListWidget(prefix_label=False),
+        option_widget=widgets.CheckboxInput(),
     )
     # Профайл мэдээлэл (Email signature-д ашиглана)
     full_name = StringField("Бүтэн нэр (Latin)", validators=[Optional(), latin_only])
