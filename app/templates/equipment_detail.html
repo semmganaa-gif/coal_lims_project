@@ -513,7 +513,7 @@
           {% set ed = eq.extra_data or {} %}
 
           {# --- Хэмжих хэрэгсэл --- #}
-          <div class="edit-reg-fields edit-reg-measurement" style="display:none">
+          <div class="edit-reg-fields edit-reg-measurement" style="display:{% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Хэмжих хэрэгслийн нэмэлт</h6>
             <div class="row g-3">
               <div class="col-md-4">
@@ -579,7 +579,7 @@
           </div>
 
           {# --- Шилэн хэмжүүр --- #}
-          <div class="edit-reg-fields edit-reg-glassware" style="display:none">
+          <div class="edit-reg-fields edit-reg-glassware" style="display:{% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Шилэн хэмжүүрийн нэмэлт</h6>
             <div class="row g-3">
               <div class="col-md-3"><label class="fw-bold small">Бүлэг</label><input type="text" name="group" class="form-control" value="{{ ed.get('group','') }}" placeholder="Колб, Цилиндр..."></div>
@@ -593,7 +593,7 @@
           </div>
 
           {# --- Дотоод шалгалт --- #}
-          <div class="edit-reg-fields edit-reg-internal_check" style="display:none">
+          <div class="edit-reg-fields edit-reg-internal_check" style="display:{% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Дотоод шалгалтын нэмэлт</h6>
             <div class="row g-3">
               <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
@@ -605,7 +605,7 @@
           </div>
 
           {# --- Сэлбэг --- #}
-          <div class="edit-reg-fields edit-reg-spares_register" style="display:none">
+          <div class="edit-reg-fields edit-reg-spares_register" style="display:{% if eq.register_type == 'spares_register' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-secondary small"><i class="bi bi-gear-wide-connected me-1"></i>Сэлбэг нэмэлт</h6>
             <div class="row g-3">
               <div class="col-md-4"><label class="fw-bold small">Тоног төхөөрөмж</label><input type="text" name="equipment" class="form-control" value="{{ ed.get('equipment','') }}"></div>

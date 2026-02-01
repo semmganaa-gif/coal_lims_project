@@ -208,6 +208,7 @@ def edit_equipment(id):
             extra_data[key] = request.form.get(key)
     eq.extra_data = extra_data if extra_data else None
 
+
     if request.form.get("initial_price"):
         try:
             eq.initial_price = float(request.form.get("initial_price"))
