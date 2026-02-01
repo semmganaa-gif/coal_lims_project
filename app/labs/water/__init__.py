@@ -27,3 +27,22 @@ class WaterLab(BaseLab):
     def analysis_codes(self) -> list[str]:
         from app.labs.water.constants import WATER_ANALYSIS_TYPES
         return [a['code'] for a in WATER_ANALYSIS_TYPES]
+
+    def sample_query(self, statuses=None):
+        """Ус + Микро хоёр lab_type-ыг хамтад нь шүүнэ."""
+        from app.models import Sample
+        q = Sample.query.filter(Sample.lab_type.in_(['water', 'microbiology']))
+        if statuses:
+            q = q.filter(Sample.status.in_(statuses))
+        return q
+
+    def sample_stats(self):
+        """Ус + Микро хамтын тоон мэдээлэл."""
+        from app.models import Sample
+        base = Sample.query.filter(Sample.lab_type.in_(['water', 'microbiology']))
+        return {
+            'total': base.count(),
+            'new': base.filter(Sample.status == 'new').count(),
+            'in_progress': base.filter(Sample.status.in_(['in_progress', 'analysis'])).count(),
+            'completed': base.filter(Sample.status == 'completed').count(),
+        }

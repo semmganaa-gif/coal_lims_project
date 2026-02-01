@@ -30,6 +30,7 @@ def _pe_samples(statuses):
     return Sample.query.filter(
         Sample.status.in_(statuses),
         or_(
+            Sample.lab_type == 'petrography',
             Sample.sample_type == 'PE',
             Sample.analyses_to_perform.contains('"PE"'),
         )
@@ -40,9 +41,9 @@ def _pe_samples(statuses):
 @login_required
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
-    # PE дээжүүд (нүүрсний лаб-аас sample_type='PE' гэж бүртгэгдсэн)
+    all_statuses = ['new', 'in_progress', 'analysis', 'prepared', 'completed']
     pending_pe = _pe_samples(['new', 'in_progress', 'analysis']).count()
-    total_petro = _pe_samples(['new', 'in_progress', 'analysis', 'prepared', 'completed']).count()
+    total_petro = _pe_samples(all_statuses).count()
     in_progress = _pe_samples(['in_progress', 'analysis', 'prepared']).count()
     completed = _pe_samples(['completed']).count()
     return render_template(
@@ -129,12 +130,15 @@ def save_results():
     # Үр дүнг хадгалах
     ar = AnalysisResult(
         sample_id=sample_id,
-        analysis_type=analysis_code,
-        result_value=json.dumps(results, ensure_ascii=False),
-        chemist=current_user.username,
+        analysis_code=analysis_code,
+        raw_data=json.dumps(results, ensure_ascii=False),
+        user_id=current_user.id,
     )
     db.session.add(ar)
-    db.session.commit()
+
+    from app.utils.database import safe_commit
+    if not safe_commit():
+        return jsonify({'error': 'Үр дүн хадгалахад алдаа гарлаа'}), 500
 
     return jsonify({'success': True, 'id': ar.id})
 

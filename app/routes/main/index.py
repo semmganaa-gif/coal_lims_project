@@ -258,6 +258,10 @@ def register_routes(bp):
                             analyses_to_perform="[]"
                         )
 
+                        # PE дээжид lab_type='petrography' оноох
+                        if sample_type == 'PE':
+                            sample.lab_type = 'petrography'
+
                         # Шинжилгээ оноох
                         # ✅ no_autoflush: Query хийхэд sample-г flush хийхгүй байх
                         with db.session.no_autoflush:

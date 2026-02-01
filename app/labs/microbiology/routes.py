@@ -36,30 +36,17 @@ _FIELD_MAP = {
 @login_required
 def micro_hub():
     """Микробиологийн лабораторийн төв хуудас."""
-    total_samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology'])
-    ).count()
-    new_samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status == 'new'
-    ).count()
-    in_progress = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status.in_(['in_progress', 'analysis'])
-    ).count()
-    completed = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status == 'completed'
-    ).count()
+    from app.labs import get_lab
+    stats = get_lab('microbiology').sample_stats()
     return render_template(
         'micro_hub.html',
         title='Микробиологийн лаборатори',
         analysis_types=MICRO_ANALYSIS_TYPES,
         params=ALL_MICRO_PARAMS,
-        total_samples=total_samples,
-        new_samples=new_samples,
-        in_progress=in_progress,
-        completed=completed,
+        total_samples=stats['total'],
+        new_samples=stats['new'],
+        in_progress=stats['in_progress'],
+        completed=stats['completed'],
     )
 
 
@@ -80,62 +67,11 @@ def register_sample():
             flash('Дээжний нэр заавал сонгоно уу.', 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
-        from app.utils.datetime import now_local
-
-        source_type = request.form.get('source_type', 'other')
-        sample_date_str = request.form.get('sample_date')
-        sample_date = datetime.strptime(sample_date_str, '%Y-%m-%d').date() if sample_date_str else now_local().date()
-
-        analyses = request.form.getlist('analyses')
-        has_micro = any(a in [at['code'] for at in MICRO_ANALYSIS_TYPES] for a in analyses)
-        has_water = any(a in [at['code'] for at in WATER_ANALYSIS_TYPES] for a in analyses)
-
-        lab_type = 'microbiology'
-        if has_water and not has_micro:
-            lab_type = 'water'
-
-        weight = request.form.get('weight')
-        weight = float(weight) if weight else None
-        return_sample = bool(request.form.get('return_sample'))
-        retention_days = int(request.form.get('retention_period', 7))
-        retention_date = sample_date + timedelta(days=retention_days)
-
-        created = []
-        skipped = []
-        for sample_name in sample_names:
-            sample_name = sample_name.strip()
-            if not sample_name:
-                continue
-            sample_code = f"{sample_name}_{sample_date.isoformat()}"
-
-            existing = Sample.query.filter_by(sample_code=sample_code).first()
-            if existing:
-                skipped.append(sample_name)
-                continue
-
-            sample = Sample(
-                lab_type=lab_type,
-                sample_code=sample_code,
-                user_id=current_user.id,
-                client_name=source_type,
-                sample_type='water',
-                sample_date=sample_date,
-                sampling_location=request.form.get('sampling_location', ''),
-                sampled_by=request.form.get('sampled_by', ''),
-                notes=request.form.get('notes', ''),
-                analyses_to_perform=' '.join(analyses) if analyses else '',
-                weight=weight,
-                return_sample=return_sample,
-                retention_date=retention_date,
-                status='new',
-            )
-            db.session.add(sample)
-            created.append(sample_name)
-
+        from app.labs.water.utils import create_water_micro_samples
         try:
-            db.session.commit()
+            created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({len(analyses)} шинжилгээ)', 'success')
+                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({n_analyses} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
             return redirect(url_for('microbiology.micro_hub'))

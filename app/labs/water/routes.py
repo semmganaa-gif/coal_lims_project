@@ -25,31 +25,17 @@ water_bp = Blueprint(
 @login_required
 def water_hub():
     """Усны лабораторийн dashboard."""
-    from sqlalchemy import func
-    total_samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology'])
-    ).count()
-    new_samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status == 'new'
-    ).count()
-    in_progress = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status == 'in_progress'
-    ).count()
-    completed = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology']),
-        Sample.status == 'completed'
-    ).count()
+    from app.labs import get_lab
+    stats = get_lab('water').sample_stats()
     water_count = len(WATER_ANALYSIS_TYPES)
     micro_count = len(MICRO_ANALYSIS_TYPES)
     return render_template(
         'water_hub.html',
         title='Усны лаборатори',
-        total_samples=total_samples,
-        new_samples=new_samples,
-        in_progress=in_progress,
-        completed=completed,
+        total_samples=stats['total'],
+        new_samples=stats['new'],
+        in_progress=stats['in_progress'],
+        completed=stats['completed'],
         water_analysis_count=water_count,
         micro_analysis_count=micro_count,
     )
@@ -81,68 +67,13 @@ def register_sample():
             flash('Дээжний нэр заавал сонгоно уу.', 'danger')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if request.args.get('from') == 'micro' else {})))
 
-        from app.utils.datetime import now_local
-        from datetime import datetime
-
-        source_type = request.form.get('source_type', 'other')
-        sample_date_str = request.form.get('sample_date')
-        sample_date = datetime.strptime(sample_date_str, '%Y-%m-%d').date() if sample_date_str else now_local().date()
-
-        analyses = request.form.getlist('analyses')
-        has_micro = any(a in [at['code'] for at in MICRO_ANALYSIS_TYPES] for a in analyses)
-        has_water = any(a in [at['code'] for at in WATER_ANALYSIS_TYPES] for a in analyses)
-
-        lab_type = 'water'
-        if has_micro and not has_water:
-            lab_type = 'microbiology'
-
-        # Жин, буцаах, хадгалах хугацаа
-        weight = request.form.get('weight')
-        weight = float(weight) if weight else None
-        return_sample = bool(request.form.get('return_sample'))
-        retention_days = int(request.form.get('retention_period', 7))
-        from datetime import timedelta
-        retention_date = sample_date + timedelta(days=retention_days)
-
-        created = []
-        skipped = []
-        for sample_name in sample_names:
-            sample_name = sample_name.strip()
-            if not sample_name:
-                continue
-            sample_code = f"{sample_name}_{sample_date.isoformat()}"
-
-            existing = Sample.query.filter_by(sample_code=sample_code).first()
-            if existing:
-                skipped.append(sample_name)
-                continue
-
-            sample = Sample(
-                lab_type=lab_type,
-                sample_code=sample_code,
-                user_id=current_user.id,
-                client_name=source_type,
-                sample_type='water',
-                sample_date=sample_date,
-                sampling_location=request.form.get('sampling_location', ''),
-                sampled_by=request.form.get('sampled_by', ''),
-                notes=request.form.get('notes', ''),
-                analyses_to_perform=' '.join(analyses) if analyses else '',
-                weight=weight,
-                return_sample=return_sample,
-                retention_date=retention_date,
-                status='new',
-            )
-            db.session.add(sample)
-            created.append(sample_name)
-
+        from app.labs.water.utils import create_water_micro_samples
         try:
-            db.session.commit()
+            created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({len(analyses)} шинжилгээ)', 'success')
+                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({n_analyses} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
-            # Микробиологийн лабаас ирсэн бол тийшээ буцаах
             if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
                 return redirect(url_for('microbiology.micro_hub'))
             return redirect(url_for('water.water_hub'))
@@ -244,12 +175,15 @@ def save_results():
     import json
     ar = AnalysisResult(
         sample_id=sample_id,
-        analysis_type=analysis_code,
-        result_value=json.dumps(results, ensure_ascii=False),
-        chemist=current_user.username,
+        analysis_code=analysis_code,
+        raw_data=json.dumps(results, ensure_ascii=False),
+        user_id=current_user.id,
     )
     db.session.add(ar)
-    db.session.commit()
+
+    from app.utils.database import safe_commit
+    if not safe_commit():
+        return jsonify({'error': 'Үр дүн хадгалахад алдаа гарлаа'}), 500
 
     return jsonify({'success': True, 'id': ar.id})
 
