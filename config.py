@@ -57,6 +57,15 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # DB connection pool тохиргоо (PostgreSQL production-д)
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 10,          # Үндсэн холболтын тоо
+        "max_overflow": 20,       # Нэмэлт холболт (завгүй үед)
+        "pool_recycle": 300,      # 5 мин-д нэг холболт шинэчлэх (idle timeout)
+        "pool_pre_ping": True,    # Query-н өмнө холболт амьд эсэх шалгах
+        "pool_timeout": 10,       # Холболт хүлээх хугацаа (секунд)
+    }
+
     # ✅ САЙЖРУУЛСАН: Cookie аюулгүй байдал
     SESSION_COOKIE_SAMESITE = "Lax"
     # Production-д HTTPS ашиглах тул True, development-д False
