@@ -13,6 +13,13 @@
       <span class="fw-bold"><i class="bi bi-rulers text-info"></i> Хэмжих хэрэгслийн бүртгэл</span>
     </div>
     <div class="eq-toolbar-right">
+      {% if current_user.role in ['senior','manager','admin'] %}
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMeasModal"><i class="bi bi-plus-lg"></i> Нэмэх</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Засах</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Устгах</button>
+      {% endif %}
+      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
     </div>
   </div>
 

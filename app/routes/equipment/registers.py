@@ -124,6 +124,7 @@ def add_register_item(register_type):
 
     if 'qty' in data and 'quantity' not in data:
         data['quantity'] = data.pop('qty')
+    data.pop('qty', None)
 
     # quantity type coercion with validation
     try:
@@ -144,7 +145,7 @@ def add_register_item(register_type):
         register_type=register_type,
         status='normal',
         category='other',
-        extra_data=data,
+        extra_data=data if data else None,
     )
     db.session.add(new_item)
     try:
@@ -173,6 +174,7 @@ def edit_register_item(id):
 
     if 'qty' in data and 'quantity' not in data:
         data['quantity'] = data.pop('qty')
+    data.pop('qty', None)
 
     item.name = data.pop('name', item.name)
     item.manufacturer = data.pop('manufacturer', item.manufacturer)
@@ -190,9 +192,7 @@ def edit_register_item(id):
     item.location = data.pop('location', item.location)
     item.remark = data.pop('remark', item.remark)
 
-    existing_extra = item.extra_data or {}
-    existing_extra.update(data)
-    item.extra_data = existing_extra
+    item.extra_data = data if data else None
 
     try:
         db.session.commit()
