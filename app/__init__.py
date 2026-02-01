@@ -106,7 +106,7 @@ def create_app(config_class=Config):
     from app.routes.import_routes import import_bp
 
     # Тоног төхөөрөмжийн модуль (ISO 17025)
-    from app.routes.equipment_routes import equipment_bp
+    from app.routes.equipment import equipment_bp
 
     # Лиценз хамгаалалт
     from app.routes.license_routes import license_bp
@@ -365,7 +365,7 @@ def create_app(config_class=Config):
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
             "img-src 'self' data: blob:; "
             "connect-src 'self' ws: wss:; "

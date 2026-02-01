@@ -1,0 +1,90 @@
+{# Shared hero header + tabs for all equipment pages #}
+<div class="eq-hero">
+  <div class="eq-hero-inner">
+    <div class="eq-hero-left">
+      <div class="eq-hero-icon">
+        <i class="bi bi-cpu"></i>
+      </div>
+      <div>
+        <h4 class="eq-hero-title">Тоног Төхөөрөмж</h4>
+        <p class="eq-hero-sub">Бүртгэл, баталгаажуулалт, засвар үйлчилгээ</p>
+      </div>
+    </div>
+    <div class="eq-hero-right">
+      <span class="eq-stat">
+        <span class="eq-stat-num" id="eqTotalCount">0</span>
+        <span class="eq-stat-label">Нийт</span>
+      </span>
+      {% if add_modal_id is defined and add_modal_id %}
+      <button class="btn eq-btn-add" data-bs-toggle="modal" data-bs-target="#{{ add_modal_id }}">
+        <i class="bi bi-plus-lg"></i> Шинэ бүртгэл
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% set view_items = [
+  ('all', 'Нийт тоног төхөөрөмж', 'bi-grid-3x3-gap'),
+  ('coal', 'Нүүрс', 'bi-fire'),
+  ('water', 'Ус', 'bi-droplet'),
+  ('micro', 'Микро', 'bi-bug'),
+] %}
+
+{% set register_items = [
+  ('measurement', 'Хэмжих хэрэгслийн бүртгэл', 'bi-rulers'),
+  ('glassware', 'Шилэн хэмжүүрийн бүртгэл', 'bi-cup-straw'),
+  ('internal_check', 'Дотоод шалгалт тохируулга', 'bi-clipboard-check'),
+  ('new_equipment', 'Шинэ ТТ бүртгэл', 'bi-box-arrow-in-right'),
+  ('out_of_service', 'Out of Service', 'bi-x-circle'),
+  ('spares_register', 'Сэлбэг хэрэгслийн бүртгэл', 'bi-gear-wide-connected'),
+  ('balances_register', 'Жин', 'bi-speedometer'),
+] %}
+
+<div class="eq-tabs">
+  {% for key, label, icon in view_items %}
+    <a href="{{ url_for('equipment.equipment_list', view=key) }}"
+       class="eq-tab">
+      <i class="bi {{ icon }}"></i>
+      <span>{{ label }}</span>
+    </a>
+  {% endfor %}
+  <span class="eq-tab-divider"></span>
+  {% for code, label, icon in register_items %}
+    {% set is_active = (journal_type is defined and journal_type == code) %}
+    <a href="{{ url_for('equipment.equipment_journal_special', journal_type=code) }}"
+       class="eq-tab eq-tab-register {{ 'eq-tab-active' if is_active }}">
+      <i class="bi {{ icon }}"></i>
+      <span>{{ label }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+<style>
+  .eq-page { padding: 0; }
+  .eq-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e40af 100%);
+    margin: -1rem -0.75rem 0; padding: 1.5rem 2rem; color: #fff;
+  }
+  .eq-hero-inner { display:flex; justify-content:space-between; align-items:center; max-width:1600px; margin:0 auto; }
+  .eq-hero-left { display:flex; align-items:center; gap:1rem; }
+  .eq-hero-icon { width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; backdrop-filter:blur(10px); }
+  .eq-hero-title { margin:0; font-size:1.4rem; font-weight:800; letter-spacing:-0.02em; }
+  .eq-hero-sub { margin:2px 0 0; font-size:0.82rem; color:rgba(255,255,255,0.65); }
+  .eq-hero-right { display:flex; align-items:center; gap:1.2rem; }
+  .eq-btn-add { background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:0.5rem 1.2rem; font-weight:600; font-size:0.85rem; backdrop-filter:blur(10px); transition:all 0.2s; }
+  .eq-btn-add:hover { background:rgba(255,255,255,0.25); color:#fff; transform:translateY(-1px); }
+  .eq-stat { display:flex; flex-direction:column; align-items:center; }
+  .eq-stat-num { font-size:1.6rem; font-weight:800; line-height:1; }
+  .eq-stat-label { font-size:0.7rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.5px; }
+  .eq-tabs { display:flex; gap:4px; padding:0.8rem 1.5rem 0; margin:0 -0.75rem; background:#f8fafc; border-bottom:1px solid #e2e8f0; overflow-x:auto; }
+  .eq-tab { display:flex; align-items:center; gap:6px; padding:0.55rem 1rem; border-radius:8px 8px 0 0; font-size:0.82rem; font-weight:600; color:#64748b; text-decoration:none; border:1px solid transparent; border-bottom:none; transition:all 0.15s; white-space:nowrap; }
+  .eq-tab:hover { color:#1e40af; background:#eff6ff; }
+  .eq-tab-divider { width:1px; height:24px; background:#cbd5e1; margin:0 4px; align-self:center; }
+  .eq-tab-register { color:#64748b; background:transparent; border:1px solid transparent; border-bottom:none; }
+  .eq-tab-register:hover { color:#1e40af; background:#eff6ff; }
+  .eq-tab-active { background:#fff; color:#1e40af; border-color:#e2e8f0; box-shadow:0 -2px 0 #3b82f6 inset; }
+  .eq-toolbar-card { display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap; padding:0.6rem 1rem; background:#fff; border-bottom:1px solid #f1f5f9; }
+  .eq-toolbar-left, .eq-toolbar-right { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+  .eq-grid-card { background:#fff; border-radius:0 0 12px 12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04); }
+</style>

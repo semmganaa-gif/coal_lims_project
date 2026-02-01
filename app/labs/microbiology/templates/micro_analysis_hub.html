@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Микробиологийн шинжилгээ{% endblock %}
+
+{% block content %}
+<style>
+  .micro-hub {
+    min-height: calc(100vh - 120px); padding: 1.5rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 30%, #f0fdf4 60%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+  .hub-header {
+    background: linear-gradient(135deg, rgba(32,201,151,0.1), rgba(20,184,166,0.08));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(32,201,151,0.1);
+  }
+  .hub-header h1 {
+    font-size: 1.75rem; font-weight: 800;
+    background: linear-gradient(135deg, #20c997 0%, #14b8a6 50%, #0d9488 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.25rem;
+  }
+  .hub-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
+
+  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+  .nav-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.75rem; text-decoration: none; color: #0f172a;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    display: flex; align-items: center; gap: 1.25rem;
+    position: relative; overflow: hidden;
+  }
+  .nav-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .nav-card:hover {
+    transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+    color: #0f172a; text-decoration: none;
+  }
+  .nav-card:hover::before { opacity: 1; }
+  .nav-card-icon {
+    width: 60px; height: 60px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+  }
+  .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
+  .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
+  .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
+
+  .nc-water::before { background: linear-gradient(90deg, #20c997, #0d9488); }
+  .nc-water .nav-card-icon { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+  .nc-air::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .nc-air .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .nc-swab::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+  .nc-swab .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+
+  @media (max-width: 768px) {
+    .micro-hub { padding: 1rem; }
+    .nav-cards { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="micro-hub">
+  <div class="hub-header">
+    <h1><i class="bi bi-clipboard-data me-2"></i>Микробиологийн шинжилгээ</h1>
+    <p>Шинжилгээний төрөл сонгоно уу</p>
+  </div>
+
+  <div class="nav-cards">
+    <a href="{{ url_for('microbiology.workspace', code='water') }}" class="nav-card nc-water">
+      <div class="nav-card-icon"><i class="bi bi-droplet"></i></div>
+      <div class="nav-card-content">
+        <h3>Ус (Water)</h3>
+        <p>CFU (22°С, 37°С), E.coli, Salmonella — MNS ISO 6222, 9308-1, 19250</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('microbiology.workspace', code='air') }}" class="nav-card nc-air">
+      <div class="nav-card-icon"><i class="bi bi-wind"></i></div>
+      <div class="nav-card-content">
+        <h3>Агаар (Air)</h3>
+        <p>CFU, Staphylococcus, Mold/Fungi — MNS 5484:2005</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('microbiology.workspace', code='swab') }}" class="nav-card nc-swab">
+      <div class="nav-card-icon"><i class="bi bi-hand-index"></i></div>
+      <div class="nav-card-content">
+        <h3>Арчдас (Swab)</h3>
+        <p>CFU, Salmonella, E.coli, Staphylococcus — MNS 6410:2018</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -84,8 +84,11 @@
 <div class="water-dash">
   <div class="dash-header">
     <h1><i class="bi bi-droplet-fill me-2"></i>Усны лаборатори</h1>
-    <p>Усны чанар, микробиологийн шинжилгээний удирдлагын самбар</p>
+    <p>Усны чанарын шинжилгээний удирдлагын самбар</p>
   </div>
+
+  <!-- Өдрийг эхлэх -->
+  {% include 'partials/_morning_start.html' %}
 
   <!-- Статистик -->
   <div class="stat-cards">
@@ -126,14 +129,6 @@
       <div class="nav-card-content">
         <h3>Усны шинжилгээ</h3>
         <p>{{ water_analysis_count }} төрлийн усны чанарын шинжилгээ</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('microbiology.micro_hub') }}" class="nav-card nc-micro">
-      <div class="nav-card-icon"><i class="bi bi-bug"></i></div>
-      <div class="nav-card-content">
-        <h3>Микробиологи</h3>
-        <p>{{ micro_analysis_count }} төрлийн микробиологийн шинжилгээ</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

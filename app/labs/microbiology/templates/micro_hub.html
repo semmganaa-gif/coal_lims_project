@@ -20,156 +20,137 @@
   .hub-header {
     background: linear-gradient(135deg, rgba(32,201,151,0.1), rgba(20,184,166,0.08));
     backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 24px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+    border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
     box-shadow: 0 4px 24px rgba(32,201,151,0.1);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
   }
-  .hub-header-content h1 {
+  .hub-header h1 {
     font-size: 1.75rem; font-weight: 800;
     background: linear-gradient(135deg, #20c997 0%, #14b8a6 50%, #0d9488 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.25rem;
   }
-  .hub-header-content p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+  .hub-header p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.5rem; text-align: center; transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+  .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+  .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
 
   .section-title {
     font-size: 1.1rem; font-weight: 700; color: var(--text-primary);
-    margin: 1.5rem auto 1rem; max-width: 1400px;
+    margin: 1.5rem 0 1rem;
     display: flex; align-items: center; gap: 0.5rem;
   }
-  .section-title:first-of-type { margin-top: 0; }
   .section-badge {
     font-size: 0.65rem; font-weight: 700; color: #fff; padding: 0.15rem 0.6rem;
     border-radius: 6px; text-transform: uppercase;
   }
 
-  .cards-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.25rem; max-width: 1400px; margin: 0 auto 1.5rem;
-  }
-  .analysis-card {
-    background: var(--glass-bg); backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); border-radius: 20px;
-    padding: 1.5rem; text-decoration: none; color: var(--text-primary);
+  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .nav-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.75rem; text-decoration: none; color: #0f172a;
     transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
     display: flex; align-items: center; gap: 1.25rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04); position: relative; overflow: hidden;
-    animation: cardFadeIn 0.5s ease backwards;
+    position: relative; overflow: hidden;
   }
-  .analysis-card::before {
+  .nav-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #20c997, #14b8a6); opacity: 0; transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.3s;
   }
-  .analysis-card:hover {
+  .nav-card:hover {
     transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
-    border-color: rgba(32,201,151,0.3); color: var(--text-primary); text-decoration: none;
+    color: #0f172a; text-decoration: none;
   }
-  .analysis-card:hover::before { opacity: 1; }
-  .card-icon {
-    width: 56px; height: 56px; border-radius: 16px;
+  .nav-card:hover::before { opacity: 1; }
+  .nav-card-icon {
+    width: 60px; height: 60px; border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; flex-shrink: 0; transition: transform 0.3s;
+    font-size: 1.6rem; flex-shrink: 0;
   }
-  .analysis-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
-  .icon-emerald { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
-  .icon-teal { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
-  .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-  .icon-amber { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-  .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
+  .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
+  .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
 
-  .card-content { flex: 1; min-width: 0; }
-  .card-code {
-    font-size: 0.7rem; font-weight: 700; color: #fff;
-    background: linear-gradient(135deg, #20c997, #14b8a6);
-    padding: 0.15rem 0.5rem; border-radius: 5px;
-    display: inline-block; margin-bottom: 0.3rem; text-transform: uppercase;
-  }
-  .card-code.cm { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-  .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
-  .card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
-  .card-limit { font-size: 0.72rem; color: #ef4444; font-weight: 600; margin-top: 0.25rem; }
-  .card-arrow {
-    color: var(--text-muted); font-size: 1.3rem; opacity: 0;
-    transform: translateX(-10px); transition: all 0.3s; flex-shrink: 0;
-  }
-  .analysis-card:hover .card-arrow { opacity: 1; transform: translateX(0); color: #20c997; }
+  .nc-register::before { background: linear-gradient(90deg, #20c997, #14b8a6); }
+  .nc-register .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+  .nc-water::before { background: linear-gradient(90deg, #20c997, #0d9488); }
+  .nc-water .nav-card-icon { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+  .nc-air::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .nc-air .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .nc-surface::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+  .nc-surface .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
 
-  .divider {
-    max-width: 1400px; margin: 0.5rem auto 0;
-    border: none; border-top: 2px dashed rgba(148,163,184,0.2);
-  }
-
-  @keyframes cardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 768px) {
     .micro-hub { padding: 1rem; }
-    .hub-header { flex-direction: column; text-align: center; padding: 1.25rem; }
-    .cards-grid { grid-template-columns: 1fr; }
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .nav-cards { grid-template-columns: 1fr; }
   }
 </style>
 
 <div class="micro-hub">
   <div class="hub-header">
-    <div class="hub-header-content">
-      <h1><i class="bi bi-bug-fill me-2"></i>Микробиологийн шинжилгээний төв</h1>
-      <p>Усны микробиологи + Дотоод хяналт (CM)</p>
+    <h1><i class="bi bi-bug-fill me-2"></i>Микробиологийн лаборатори</h1>
+    <p>Усны микробиологи, агаарын хяналт, гадаргуугийн хяналт</p>
+  </div>
+
+  <!-- Өдрийг эхлэх -->
+  {% include 'partials/_morning_start.html' %}
+
+  <!-- Статистик -->
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#20c997"><i class="bi bi-inbox-fill"></i></div>
+      <div class="stat-value" style="color:#0d9488">{{ total_samples }}</div>
+      <div class="stat-label">Нийт дээж</div>
     </div>
-    <div class="hub-header-actions">
-      <a href="{{ url_for('water.register_sample') }}" class="btn text-white fw-bold px-3" style="background:#20c997; border-radius:50px;">
-        <i class="bi bi-plus-circle me-1"></i>Дээж бүртгэх
-      </a>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#14b8a6"><i class="bi bi-plus-circle-fill"></i></div>
+      <div class="stat-value" style="color:#047857">{{ new_samples }}</div>
+      <div class="stat-label">Шинэ дээж</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
+      <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
+      <div class="stat-label">Шинжилж байна</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#10b981"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="stat-value" style="color:#059669">{{ completed }}</div>
+      <div class="stat-label">Дууссан</div>
     </div>
   </div>
 
-  <!-- ============ УСНЫ МИКРОБИОЛОГИ ============ -->
+  <!-- Үндсэн цэс -->
   <div class="section-title">
-    <i class="bi bi-droplet-fill" style="color:#0dcaf0"></i>
-    Усны микробиологийн шинжилгээ
-    <span class="section-badge" style="background:#0dcaf0">MNS 5668:2006</span>
+    <i class="bi bi-clipboard-data" style="color:#20c997"></i>
+    Үндсэн цэс
   </div>
-  <div class="cards-grid">
-    <a href="{{ url_for('microbiology.workspace', code='WATER') }}" class="analysis-card" style="animation-delay:0s;">
-      <div class="card-icon icon-emerald"><i class="bi bi-clipboard-data"></i></div>
-      <div class="card-content">
-        <div class="card-code">ШИНЖИЛГЭЭ</div>
-        <div class="card-title">Усны микробиологийн ажлын хуудас</div>
-        <div class="card-desc">ББЕТ · E.coli · ГБЭТ · Халуунд тэсвэртэй ГБЭТ</div>
+  <div class="nav-cards">
+    <a href="{{ url_for('microbiology.register_sample') }}" class="nav-card nc-register">
+      <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
+      <div class="nav-card-content">
+        <h3>Дээж бүртгэл</h3>
+        <p>Усны болон микробиологийн дээж бүртгэх, жагсаалт харах</p>
       </div>
-      <i class="bi bi-arrow-right card-arrow"></i>
+      <i class="bi bi-arrow-right arrow"></i>
     </a>
-  </div>
-
-  <hr class="divider">
-
-  <!-- ============ ДОТООД ХЯНАЛТ (CM) ============ -->
-  <div class="section-title">
-    <i class="bi bi-shield-check" style="color:#6366f1"></i>
-    Дотоод хяналт (CM)
-    <span class="section-badge" style="background:#6366f1">Control Monitoring</span>
-  </div>
-  <div class="cards-grid">
-    <a href="{{ url_for('microbiology.workspace', code='AIR') }}" class="analysis-card" style="animation-delay:0.08s;">
-      <div class="card-icon icon-blue"><i class="bi bi-wind"></i></div>
-      <div class="card-content">
-        <div class="card-code cm">CM · АГААР</div>
-        <div class="card-title">Агаарын хяналт</div>
-        <div class="card-desc">
-          Ламинар бокс, Шинжилгээний өрөө<br>
-          (ариутгалын өмнө / дараа) — 4 цэг
-        </div>
+    <a href="{{ url_for('microbiology.analysis_hub') }}" class="nav-card nc-water">
+      <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
+      <div class="nav-card-content">
+        <h3>Шинжилгээ</h3>
+        <p>Ус, Агаар, Арчдас — микробиологийн шинжилгээний ажлын хуудас</p>
       </div>
-      <i class="bi bi-arrow-right card-arrow"></i>
-    </a>
-    <a href="{{ url_for('microbiology.workspace', code='SURFACE') }}" class="analysis-card" style="animation-delay:0.16s;">
-      <div class="card-icon icon-purple"><i class="bi bi-hand-index"></i></div>
-      <div class="card-content">
-        <div class="card-code cm">CM · АРЧДАС</div>
-        <div class="card-title">Арчдасын хяналт</div>
-        <div class="card-desc">
-          Ламинар бокс (өмнө / дараа),<br>
-          Зейтца 1–3 — 5 цэг
-        </div>
-      </div>
-      <i class="bi bi-arrow-right card-arrow"></i>
+      <i class="bi bi-arrow-right arrow"></i>
     </a>
   </div>
 </div>

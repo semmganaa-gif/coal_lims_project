@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Нүүрсний лаборатори{% endblock %}
+
+{% block content %}
+<style>
+  .coal-dash {
+    min-height: calc(100vh - 120px); padding: 1.5rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f1f5f9 100%);
+    background-attachment: fixed;
+  }
+  .dash-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.06));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(59,130,246,0.08);
+  }
+  .dash-header h1 {
+    font-size: 1.75rem; font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #4f46e5 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .dash-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
+
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .stat-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.5rem; text-align: center; transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+  .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+  .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
+
+  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+  .nav-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.75rem; text-decoration: none; color: #0f172a;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    display: flex; align-items: center; gap: 1.25rem;
+    position: relative; overflow: hidden;
+  }
+  .nav-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .nav-card:hover {
+    transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+    color: #0f172a; text-decoration: none;
+  }
+  .nav-card:hover::before { opacity: 1; }
+  .nav-card-icon {
+    width: 60px; height: 60px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+  }
+  .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
+  .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
+  .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
+
+  .nc-sample::before { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+  .nc-sample .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .nc-analysis::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+  .nc-analysis .nav-card-icon { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+  .nc-equip::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+  .nc-equip .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .nc-quality::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .nc-quality .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .nc-report::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
+  .nc-report .nav-card-icon { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0e7490; }
+  .nc-standard::before { background: linear-gradient(90deg, #ec4899, #db2777); }
+  .nc-standard .nav-card-icon { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
+
+  @media (max-width: 768px) {
+    .coal-dash { padding: 1rem; }
+    .stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .nav-cards { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="coal-dash">
+  <div class="dash-header">
+    <h1><i class="bi bi-minecart-loaded me-2"></i>Нүүрсний лаборатори</h1>
+    <p>Нүүрсний чанарын шинжилгээний удирдлагын самбар</p>
+  </div>
+
+  <!-- Өдрийг эхлэх -->
+  {% include 'partials/_morning_start.html' %}
+
+  <!-- Статистик -->
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-inbox-fill"></i></div>
+      <div class="stat-value" style="color:#1d4ed8">{{ total_samples }}</div>
+      <div class="stat-label">Нийт дээж</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#6366f1"><i class="bi bi-plus-circle-fill"></i></div>
+      <div class="stat-value" style="color:#4f46e5">{{ new_samples }}</div>
+      <div class="stat-label">Шинэ дээж</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
+      <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
+      <div class="stat-label">Шинжилж байна</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#22c55e"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="stat-value" style="color:#15803d">{{ completed }}</div>
+      <div class="stat-label">Дууссан</div>
+    </div>
+  </div>
+
+  <!-- Навигацийн картууд -->
+  <div class="nav-cards">
+    <a href="{{ url_for('main.index') }}" class="nav-card nc-sample">
+      <div class="nav-card-icon"><i class="bi bi-box-seam"></i></div>
+      <div class="nav-card-content">
+        <h3>Дээж бүртгэл</h3>
+        <p>Дээж бүртгэх, жагсаалт харах, засварлах</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('analysis.analysis_hub') }}" class="nav-card nc-analysis">
+      <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
+      <div class="nav-card-content">
+        <h3>Шинжилгээ</h3>
+        <p>Шинжилгээний ажлын талбар, үр дүн оруулах</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('equipment.equipment_list') }}" class="nav-card nc-equip">
+      <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
+      <div class="nav-card-content">
+        <h3>Тоног төхөөрөмж</h3>
+        <p>Бүртгэл, засвар үйлчилгээ, журнал</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('quality.capa_list') }}" class="nav-card nc-quality">
+      <div class="nav-card-icon"><i class="bi bi-clipboard-check"></i></div>
+      <div class="nav-card-content">
+        <h3>Чанарын удирдлага</h3>
+        <p>CAPA, PT Testing, орчны нөхцөл, гомдол</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('reports.dashboard') }}" class="nav-card nc-report">
+      <div class="nav-card-icon"><i class="bi bi-bar-chart"></i></div>
+      <div class="nav-card-content">
+        <h3>Тайлан</h3>
+        <p>Dashboard, consumption, monthly plan</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('admin.manage_standards') }}" class="nav-card nc-standard">
+      <div class="nav-card-icon"><i class="bi bi-award"></i></div>
+      <div class="nav-card-content">
+        <h3>Стандарт</h3>
+        <p>CM, GBW стандарт, хяналтын график</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+</div>
+{% endblock %}

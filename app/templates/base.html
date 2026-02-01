@@ -134,11 +134,67 @@
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
-        {% set is_water_lab = request.path.startswith('/labs/water') or request.path.startswith('/labs/microbiology') %}
+        {% set is_water_lab = request.path.startswith('/labs/water') %}
+        {% set is_micro_lab = request.path.startswith('/labs/microbiology') %}
+        {% set is_petro_lab = request.path.startswith('/labs/petrography') %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
 
-            {% if is_water_lab %}
+            {% if is_petro_lab %}
+            {# =============== ПЕТРОГРАФ ЛАБ NAVBAR =============== #}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('petrography.petro_hub') }}">
+                <i class="bi bi-gem me-1" style="color:#8b5cf6"></i>Нүүр
+              </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-microscope me-1" style="color:#8b5cf6"></i>Шинжилгээ
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MAC') }}">
+                  <i class="bi bi-eye me-2" style="color:#8b5cf6"></i>Мацерал (MAC)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='VR') }}">
+                  <i class="bi bi-brightness-high me-2" style="color:#8b5cf6"></i>Витринит ойлт (VR)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MM') }}">
+                  <i class="bi bi-diamond me-2" style="color:#8b5cf6"></i>Эрдэс бодис (MM)</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='TS_PETRO') }}">
+                  <i class="bi bi-layers me-2" style="color:#8b5cf6"></i>Нимгэн зүсэлт (TS)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MOD') }}">
+                  <i class="bi bi-pie-chart me-2" style="color:#8b5cf6"></i>Модал (MOD)</a></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('equipment.equipment_list') }}">
+                <i class="bi bi-tools me-1" style="color:#8b5cf6"></i>Тоног төхөөрөмж
+              </a>
+            </li>
+
+            {% elif is_micro_lab %}
+            {# =============== МИКРОБИОЛОГИЙН ЛАБ NAVBAR =============== #}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
+                <i class="bi bi-bug me-1" style="color:#20c997"></i>Нүүр
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('microbiology.register_sample') }}">
+                <i class="bi bi-plus-circle me-1" style="color:#20c997"></i>Дээж бүртгэл
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('microbiology.analysis_hub') }}">
+                <i class="bi bi-clipboard-data me-1" style="color:#20c997"></i>Шинжилгээ
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('equipment.equipment_list', view='micro') }}">
+                <i class="bi bi-tools me-1" style="color:#20c997"></i>Тоног төхөөрөмж
+              </a>
+            </li>
+
+            {% elif is_water_lab %}
             {# =============== УСНЫ ЛАБ NAVBAR =============== #}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_hub') }}">
@@ -150,16 +206,10 @@
                 <i class="bi bi-plus-circle me-1 text-info"></i>Дээж бүртгэл
               </a>
             </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_analysis_hub') }}">
                 <i class="bi bi-clipboard-data me-1 text-info"></i>Шинжилгээ
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('water.water_analysis_hub') }}">
-                  <i class="bi bi-droplet me-2 text-info"></i>Усны шинжилгээ</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_hub') }}">
-                  <i class="bi bi-bug me-2" style="color:#20c997"></i>Микробиологи</a></li>
-              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.standards') }}">
@@ -169,6 +219,11 @@
 
             {% else %}
             {# =============== НҮҮРСНИЙ ЛАБ NAVBAR =============== #}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.coal_hub') }}">
+                <i class="bi bi-house-door me-1 text-primary"></i>Нүүр
+              </a>
+            </li>
             <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('main.index') }}">
                 <i class="bi bi-box-seam me-1 text-primary"></i>Дээж бүртгэл

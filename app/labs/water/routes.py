@@ -79,7 +79,7 @@ def register_sample():
         sample_names = request.form.getlist('sample_codes')
         if not sample_names:
             flash('Дээжний нэр заавал сонгоно уу.', 'danger')
-            return redirect(url_for('water.register_sample'))
+            return redirect(url_for('water.register_sample', **({'from': 'micro'} if request.args.get('from') == 'micro' else {})))
 
         from app.utils.datetime import now_local
         from datetime import datetime
@@ -142,11 +142,15 @@ def register_sample():
                 flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({len(analyses)} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
+            # Микробиологийн лабаас ирсэн бол тийшээ буцаах
+            if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
+                return redirect(url_for('microbiology.micro_hub'))
             return redirect(url_for('water.water_hub'))
         except Exception as e:
             db.session.rollback()
             flash(f'Алдаа: {e}', 'danger')
-            return redirect(url_for('water.register_sample'))
+            from_param = request.args.get('from', '')
+            return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
     return render_template(
         'water_register.html',

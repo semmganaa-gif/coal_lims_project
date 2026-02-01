@@ -96,6 +96,35 @@ def register_routes(bp):
         return render_template("lab_selector.html", title="Лаборатори сонгох")
 
     # =====================================================================
+    # 0.5. НҮҮРСНИЙ ЛАБ — НҮҮР ХУУДАС (HUB)
+    # =====================================================================
+    @bp.route("/coal/hub")
+    @login_required
+    def coal_hub():
+        """Нүүрсний лабораторийн dashboard."""
+        total_samples = Sample.query.filter_by(lab_type='coal').count()
+        new_samples = Sample.query.filter(
+            Sample.lab_type == 'coal',
+            Sample.status == 'new'
+        ).count()
+        in_progress = Sample.query.filter(
+            Sample.lab_type == 'coal',
+            Sample.status.in_(['in_progress', 'analysis'])
+        ).count()
+        completed = Sample.query.filter(
+            Sample.lab_type == 'coal',
+            Sample.status == 'completed'
+        ).count()
+        return render_template(
+            'coal_hub.html',
+            title='Нүүрсний лаборатори',
+            total_samples=total_samples,
+            new_samples=new_samples,
+            in_progress=in_progress,
+            completed=completed,
+        )
+
+    # =====================================================================
     # 1. НҮҮРСНИЙ ЛАБ / ДЭЭЖ БҮРТГЭХ
     # =====================================================================
     @bp.route("/coal", methods=["GET", "POST"])

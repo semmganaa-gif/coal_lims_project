@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+  .micro-ws { min-height: calc(100vh - 120px); padding: 1.5rem; background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #f8fafc 100%); background-attachment: fixed; }
+  .ws-header { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.08)); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px rgba(139,92,246,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+  .ws-header h1 { font-size: 1.4rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #8b5cf6, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .ws-header p { color: #64748b; font-size: 0.85rem; margin: 0; }
+  .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+  .grid-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(148,163,184,0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+  .grid-card .card-header { background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(124,58,237,0.04)); border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem; }
+  .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
+  .ag-theme-alpine { --ag-header-background-color: #faf5ff; --ag-odd-row-background-color: #fdfaff; --ag-row-hover-color: #faf5ff; --ag-header-foreground-color: #0f172a; --ag-border-color: #e2e8f0; }
+  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .sample-list-item { cursor: pointer; transition: background 0.15s; }
+  .sample-list-item:hover { background: #faf5ff; }
+  .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
+  @media (max-width: 768px) { .micro-ws { padding: 1rem; } .ws-header { flex-direction: column; text-align: center; } }
+</style>
+
+<div class="micro-ws">
+  <div class="ws-header">
+    <div>
+      <h1><i class="bi bi-hand-index me-2"></i>{{ title }}</h1>
+      <p>Арчдасны микробиологийн шинжилгээ — MNS 6410:2018</p>
+    </div>
+    <div class="ws-actions">
+      <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Буцах</a>
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Дээж сонгох</button>
+      <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Хадгалах</button>
+    </div>
+  </div>
+  <div class="grid-card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h6><i class="bi bi-table me-1" style="color:#8b5cf6"></i>Арчдасны микробиологийн хүснэгт <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
+    </div>
+    <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: 100-с ихгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> E.coli: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Staphylococcus: Илрэхгүй</div>
+    </div>
+  </div>
+</div>
+
+<!-- Дээж сонгох модал -->
+<div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #faf5ff, #f5f3ff);">
+        <h5 class="modal-title"><i class="bi bi-hand-index me-2" style="color:#8b5cf6"></i>Дээж сонгох</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="sampleSearch" class="form-control sample-search mb-3" placeholder="Дээжний дугаар хайх...">
+        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Ачаалж байна...</p></div>
+        <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>Дээжний дугаар</th><th>Захиалагч</th><th>Төлөв</th><th>Огноо</th></tr></thead>
+            <tbody id="sampleListBody"></tbody>
+          </table>
+        </div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">Дээж олдсонгүй</div>
+      </div>
+      <div class="modal-footer">
+        <span id="selectedCount" class="me-auto text-muted small">0 дээж сонгосон</span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn text-white" style="background:#8b5cf6;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>Нэмэх</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const CATEGORY = 'MICRO_SWAB';
+  const draftMgr = new LIMSDraftManager(CATEGORY);
+  let rowSeq = 0;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  const numCol = (field, headerName) => ({ field, headerName, minWidth: 95, editable: true, type: 'numericColumn', headerClass: 'ag-header-cell-wrap', valueParser: p => { const v = Number(p.newValue); return isNaN(v) ? null : v; } });
+  const presenceCol = (field, headerName) => ({ field, headerName, minWidth: 130, editable: true, headerClass: 'ag-header-cell-wrap', cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] }, cellStyle: p => ({ color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857', fontWeight: '600' }) });
+
+  function showToast(msg, type) { type=type||'success'; const c={success:'#8b5cf6',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
+  function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
+
+  const columnDefs = [
+    { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
+    { field: 'sample_code', headerName: 'Сорьцын дугаар\nSample No', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 130, editable: true },
+    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 130, editable: true },
+    numCol('cfu_swab', 'CFU\nMNS 6410:2018\n(100-с ихгүй)'),
+    presenceCol('salmonella_swab', 'Salmonella spp.\n(Илрэхгүй)'),
+    presenceCol('ecoli_swab', 'E.coli\n(Илрэхгүй)'),
+    presenceCol('staphylococcus_swab', 'Staphylococcus spp.\n(Илрэхгүй)'),
+    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Устгах" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
+  ];
+
+  let initialRows = [];
+  const savedDraft = draftMgr.restore();
+  if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) { initialRows = savedDraft.rows; rowSeq = initialRows.length; }
+
+  const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
+    editableColIds: ['start_date', 'end_date', 'cfu_swab', 'salmonella_swab', 'ecoli_swab', 'staphylococcus_swab'],
+    undoRedoCellEditing: true, undoRedoCellEditingLimit: 20,
+    onCellValueChanged: () => saveDraft(),
+    onFirstDataRendered: p => { p.api.autoSizeAllColumns(); updateRowCount(); },
+    onRowDataUpdated: () => updateRowCount(),
+  });
+
+  function saveDraft() { const rows=[]; grid.forEachNode(n=>rows.push({...n.data})); draftMgr.save({rows},false); }
+  window._removeRow = function(i) { const n=grid.getDisplayedRowAtIndex(i); if(n){grid.applyTransaction({remove:[n.data]});saveDraft();updateRowCount();} };
+
+  let allSamples = [];
+  function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}").then(r=>r.json()).then(s=>{allSamples=s;renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
+  function renderSampleList(samples) { document.getElementById('sampleListLoading').style.display='none'; const tbody=document.getElementById('sampleListBody'); tbody.innerHTML=''; const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)}); if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';return;} document.getElementById('sampleListContainer').style.display=''; const sm={'new':'Шинэ','in_progress':'Шинжилж байна','analysis':'Шинжилж байна','completed':'Дууссан'}; const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'}; samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">нэмэгдсэн</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr)});updateSelectedCount(); }
+  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' дээж сонгосон';}
+  document.getElementById('sampleSearch').addEventListener('input',function(){const q=this.value.toLowerCase().trim();renderSampleList(allSamples.filter(s=>s.sample_code.toLowerCase().includes(q)||(s.client_name||'').toLowerCase().includes(q)));});
+  document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{cb.checked=this.checked});updateSelectedCount();});
+  document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
+  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Дээж сонгоно уу','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' дээж нэмэгдлээ');});
+
+  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('Хадгалах өгөгдөл байхгүй','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Амжилттай! ('+d.count+' мөр)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');}else showToast('Алдаа: '+(d.error||''),'error');}).catch(e=>showToast('Сүлжээний алдаа: '+e.message,'error'));});
+  updateRowCount();
+});
+</script>
+{% endblock %}

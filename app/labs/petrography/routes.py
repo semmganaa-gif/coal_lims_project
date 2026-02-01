@@ -22,11 +22,30 @@ petro_bp = Blueprint(
 @login_required
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
+    # PE дээжүүд (нүүрсний лаб-аас ирсэн)
+    pending_pe = Sample.query.filter(
+        Sample.sample_type == 'PE',
+        Sample.status.in_(['new', 'in_progress', 'analysis'])
+    ).count()
+    # Петрограф лабын дээжүүд
+    total_petro = Sample.query.filter_by(lab_type='petrography').count()
+    in_progress = Sample.query.filter(
+        Sample.lab_type == 'petrography',
+        Sample.status.in_(['in_progress', 'analysis', 'prepared'])
+    ).count()
+    completed = Sample.query.filter(
+        Sample.lab_type == 'petrography',
+        Sample.status == 'completed'
+    ).count()
     return render_template(
         'petro_hub.html',
         title='Петрограф лаборатори',
         analysis_types=PETRO_ANALYSIS_TYPES,
         params=ALL_PETRO_PARAMS,
+        pending_pe=pending_pe,
+        total_petro=total_petro,
+        in_progress=in_progress,
+        completed=completed,
     )
 
 
@@ -65,8 +84,19 @@ def workspace(code):
 @petro_bp.route('/api/eligible/<code>')
 @login_required
 def eligible_samples(code):
-    """Боломжит дээж (петрограф шинжилгээнд)."""
-    samples = Sample.query.filter_by(lab_type='petrography', status='prepared').all()
+    """Боломжит дээж (петрограф шинжилгээнд).
+
+    PE sample_type-тай coal дээж + petrography lab дээж хоёуланг харуулна.
+    """
+    from sqlalchemy import or_
+    samples = Sample.query.filter(
+        or_(
+            # Нүүрсний лаб-аас PE гэж бүртгэгдсэн дээжүүд
+            db.and_(Sample.sample_type == 'PE', Sample.status.in_(['new', 'in_progress', 'analysis', 'prepared'])),
+            # Петрограф лабын дээжүүд
+            db.and_(Sample.lab_type == 'petrography', Sample.status.in_(['new', 'in_progress', 'analysis', 'prepared'])),
+        )
+    ).order_by(Sample.received_date.desc()).all()
     result = []
     for s in samples:
         result.append({

@@ -22,7 +22,7 @@
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
   .ws-header p { color: #64748b; font-size: 0.85rem; margin: 0; }
-  .ws-actions { display: flex; gap: 0.5rem; }
+  .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
 
   .grid-card {
@@ -36,7 +36,6 @@
   }
   .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
 
-  /* AG Grid custom */
   .ag-theme-alpine {
     --ag-header-background-color: #f0fdfa;
     --ag-odd-row-background-color: #fafffe;
@@ -45,20 +44,16 @@
     --ag-border-color: #e2e8f0;
   }
   .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
-  .header-group-cfu { background: #d1fae5 !important; }
-  .header-group-ecoli { background: #fee2e2 !important; }
-  .header-group-salm { background: #fef3c7 !important; }
-  .header-group-air { background: #dbeafe !important; }
-  .header-group-surface { background: #f3e8ff !important; }
-
-  .cell-pass { color: #047857; font-weight: 600; }
-  .cell-fail { color: #dc2626; font-weight: 700; background: #fef2f2; }
-  .cell-detected { color: #dc2626; font-weight: 700; }
-  .cell-not-detected { color: #047857; font-weight: 600; }
 
   .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
   .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
   .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Sample modal */
+  .sample-list-item { cursor: pointer; transition: background 0.15s; }
+  .sample-list-item:hover { background: #ecfdf5; }
+  .sample-list-item.selected { background: #d1fae5; border-color: #20c997; }
+  .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
 
   @media (max-width: 768px) {
     .micro-ws { padding: 1rem; }
@@ -70,17 +65,15 @@
   <div class="ws-header">
     <div>
       <h1><i class="bi bi-bug-fill me-2"></i>{{ title }}</h1>
-      <p>
-        {% if category == 'water' %}MNS 5668:2006 стандартын дагуу усны микробиологийн шинжилгээ
-        {% elif category == 'air' %}MNS 5484:2005 стандартын дагуу агаарын микробиологийн шинжилгээ
-        {% elif category == 'surface' %}MNS 6410:2018 стандартын дагуу гадаргуугийн микробиологийн шинжилгээ
-        {% endif %}
-      </p>
+      <p>Усны микробиологийн шинжилгээ — MNS ISO 6222, 9308-1, 19250</p>
     </div>
     <div class="ws-actions">
       <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Буцах
       </a>
+      <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+        <i class="bi bi-plus-circle me-1"></i>Дээж сонгох
+      </button>
       <button id="btnSave" class="btn text-white" style="background:#20c997;">
         <i class="bi bi-save me-1"></i>Хадгалах
       </button>
@@ -91,28 +84,60 @@
     <div class="card-header d-flex align-items-center justify-content-between">
       <h6>
         <i class="bi bi-table me-1" style="color:#20c997"></i>
-        {% if category == 'water' %}Усны микробиологийн шинжилгээний хүснэгт
-        {% elif category == 'air' %}Агаарын микробиологийн шинжилгээний хүснэгт
-        {% elif category == 'surface' %}Гадаргуугийн микробиологийн шинжилгээний хүснэгт
-        {% endif %}
+        Усны микробиологийн шинжилгээний хүснэгт
+        <span id="rowCount" class="badge bg-secondary ms-2">0</span>
       </h6>
-      <button id="btnAddRow" class="btn btn-sm btn-outline-success">
-        <i class="bi bi-plus me-1"></i>Мөр нэмэх
-      </button>
     </div>
-    <div id="microGrid" class="ag-theme-alpine" style="height: 500px; width: 100%;"></div>
+    <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      {% if category == 'water' %}
-      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> ББЕТ (MNS 5668:2006) — N=Σ/(n1+0.1*n2)*d — ≤100 КОЕ/мл</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fee2e2"></div> E.coli, ГБЭТ, Халуунд тэсвэртэй ГБЭТ — Илрэхгүй</div>
-      {% elif category == 'air' %}
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> CFU (MNS 5484:2005) — 1м³-т ≤50</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#f3e8ff"></div> Staphylococcus — Илрэхгүй</div>
-      {% elif category == 'surface' %}
-      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> CFU (MNS 6410:2018) — 50см²-т ≤100</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fee2e2"></div> E.coli — Илрэхгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Salmonella — Илрэхгүй</div>
-      {% endif %}
+      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> CFU Дундаж = (22°С + 37°С) / 2 автомат</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#20c997"></div> CFU: 1мл-т &lt;100</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> E.coli: 100мл-т илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Salmonella: 25мл-т илрэхгүй</div>
+    </div>
+  </div>
+</div>
+
+<!-- Дээж сонгох модал -->
+<div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #ecfdf5, #f0fdfa);">
+        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#20c997"></i>Дээж сонгох</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="sampleSearch" class="form-control sample-search mb-3"
+               placeholder="Дээжний дугаар хайх...">
+        <div id="sampleListLoading" class="text-center py-4">
+          <div class="spinner-border text-success" role="status"></div>
+          <p class="mt-2 text-muted">Ачаалж байна...</p>
+        </div>
+        <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+                <th>Дээжний дугаар</th>
+                <th>Захиалагч</th>
+                <th>Төлөв</th>
+                <th>Огноо</th>
+              </tr>
+            </thead>
+            <tbody id="sampleListBody"></tbody>
+          </table>
+        </div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">
+          Дээж олдсонгүй
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="selectedCount" class="me-auto text-muted small">0 дээж сонгосон</span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn text-white" style="background:#20c997;" id="btnAddSelected">
+          <i class="bi bi-plus-circle me-1"></i>Нэмэх
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -124,187 +149,21 @@
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const category = '{{ category }}';
-  const draftKey = 'MICRO_' + category.toUpperCase();
+  const draftKey = 'MICRO_WATER';
   const draftMgr = new LIMSDraftManager(draftKey);
   let rowSeq = 0;
-
-  // ============ Editable field IDs (сум навигацид хэрэгтэй) ============
-  const editableFieldsByCategory = {
-    water: ['sample_code', 'start_date', 'end_date', 'bbet_s1', 'bbet_s2', 'ecoli', 'gbet', 'gbet_thermo'],
-    air: ['sample_code', 'start_date', 'end_date', 'cfu_air', 'staph'],
-    surface: ['sample_code', 'start_date', 'end_date', 'cfu_surface', 'ecoli_s', 'salm_s'],
-  };
-  const editColIds = editableFieldsByCategory[category] || [];
-
-  // ============ Column definitions by category ============
-  const baseCols = [
-    { field: 'seq', headerName: '№', maxWidth: 55, editable: false,
-      cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Дээжний дугаар', minWidth: 140, flex: 1, editable: true },
-    { headerName: 'Шинжилсэн огноо', headerClass: 'header-group-cfu',
-      children: [
-        { field: 'start_date', headerName: 'Эхэлсэн хугацаа', minWidth: 110, editable: true },
-        { field: 'end_date', headerName: 'Дууссан хугацаа', minWidth: 110, editable: true },
-      ]
-    },
-  ];
-
-  let analysisCols = [];
-
-  // Илрээгүй/Илэрсэн нийтлэг тохиргоо
-  const presenceCol = (field, headerName, headerClass) => ({
-    field, headerName, minWidth: 90, editable: true,
-    headerClass,
-    cellEditor: 'agSelectCellEditor',
-    cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
-    cellClassRules: {
-      'cell-not-detected': p => p.value === 'Илрээгүй',
-      'cell-detected': p => p.value === 'Илэрсэн',
-    },
-  });
-
-  if (category === 'water') {
-    analysisCols = [
-      {
-        headerName: 'ББЕТ  N=Σ/(n1+0.1*n2)*d',
-        headerClass: 'header-group-cfu',
-        children: [
-          { field: 'bbet_s1', headerName: 'Сорьц1', minWidth: 70, editable: true, type: 'numericColumn',
-            headerClass: 'header-group-cfu',
-            valueParser: LIMS_AGGRID.numParser,
-            cellClassRules: {
-              'cell-pass': p => p.value != null && p.value <= 100,
-              'cell-fail': p => p.value != null && p.value > 100,
-            }},
-          { field: 'bbet_s2', headerName: 'Сорьц2', minWidth: 70, editable: true, type: 'numericColumn',
-            headerClass: 'header-group-cfu',
-            valueParser: LIMS_AGGRID.numParser,
-            cellClassRules: {
-              'cell-pass': p => p.value != null && p.value <= 100,
-              'cell-fail': p => p.value != null && p.value > 100,
-            }},
-          { field: 'bbet_avg', headerName: 'Дундаж', minWidth: 70, editable: false, type: 'numericColumn',
-            headerClass: 'header-group-cfu',
-            valueGetter: p => {
-              const a = p.data.bbet_s1, b = p.data.bbet_s2;
-              if (a != null && b != null) return Math.round((Number(a) + Number(b)) / 2);
-              return null;
-            },
-            cellClassRules: {
-              'cell-pass': p => p.value != null && p.value <= 100,
-              'cell-fail': p => p.value != null && p.value > 100,
-            }},
-        ]
-      },
-      { headerName: 'E.coli', headerClass: 'header-group-ecoli',
-        children: [presenceCol('ecoli', 'Үр дүн', 'header-group-ecoli')] },
-      { headerName: 'ГБЭТ', headerClass: 'header-group-air',
-        children: [presenceCol('gbet', 'Үр дүн', 'header-group-air')] },
-      { headerName: 'Халуунд тэсвэртэй ГБЭТ', headerClass: 'header-group-salm',
-        children: [presenceCol('gbet_thermo', 'Үр дүн', 'header-group-salm')] },
-    ];
-  } else if (category === 'air') {
-    analysisCols = [
-      { headerName: 'CFU  /MNS 5484:2005/', headerClass: 'header-group-air',
-        children: [
-          { field: 'cfu_air', headerName: 'CFU/1м³', minWidth: 80, editable: true, type: 'numericColumn',
-            headerClass: 'header-group-air', valueParser: LIMS_AGGRID.numParser,
-            cellClassRules: {
-              'cell-pass': p => p.value != null && p.value <= 50,
-              'cell-fail': p => p.value != null && p.value > 50,
-            }},
-        ]
-      },
-      { headerName: 'Staphylococcus  /MNS 5484:2005/', headerClass: 'header-group-surface',
-        children: [presenceCol('staph', 'Үр дүн', 'header-group-surface')] },
-    ];
-  } else if (category === 'surface') {
-    analysisCols = [
-      { headerName: 'CFU  /MNS 6410:2018/', headerClass: 'header-group-cfu',
-        children: [
-          { field: 'cfu_surface', headerName: 'CFU/50см²', minWidth: 90, editable: true, type: 'numericColumn',
-            headerClass: 'header-group-cfu', valueParser: LIMS_AGGRID.numParser,
-            cellClassRules: {
-              'cell-pass': p => p.value != null && p.value <= 100,
-              'cell-fail': p => p.value != null && p.value > 100,
-            }},
-        ]
-      },
-      { headerName: 'E.coli  /MNS 6410:2018/', headerClass: 'header-group-ecoli',
-        children: [presenceCol('ecoli_s', 'Үр дүн', 'header-group-ecoli')] },
-      { headerName: 'Salmonella  /MNS 6410:2018/', headerClass: 'header-group-salm',
-        children: [presenceCol('salm_s', 'Үр дүн', 'header-group-salm')] },
-    ];
-  }
-
-  const columnDefs = [...baseCols, ...analysisCols];
-
-  // ============ Pre-fill sample names for air/surface ============
-  const sampleNames = {{ sample_names | tojson }};
-  let initialRows = [];
-  if (sampleNames.length > 0) {
-    sampleNames.forEach((name, i) => {
-      initialRows.push({
-        seq: i + 1,
-        sample_code: name,
-        start_date: null,
-        end_date: null,
-      });
-    });
-    rowSeq = sampleNames.length;
-  }
-
-  // ============ Draft сэргээх ============
-  const savedDraft = draftMgr.restore();
-  if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) {
-    initialRows = savedDraft.rows;
-    rowSeq = initialRows.length;
-    console.log('✅ Draft сэргээгдлээ:', rowSeq, 'мөр');
-  }
-
-  // ============ Create Grid (LIMS_AGGRID helper) ============
-  const gridDiv = document.getElementById('microGrid');
-  const grid = LIMS_AGGRID.createGrid(gridDiv, columnDefs, initialRows, {
-    editableColIds: editColIds,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 20,
-    autoSizeStrategy: { type: 'fitCellContents' },
-
-    // ============ Auto-draft: утга өөрчлөгдөх бүрт localStorage-д хадгалах ============
-    onCellValueChanged: function(params) {
-      saveDraft();
-    },
-    onFirstDataRendered: function(params) {
-      params.api.autoSizeAllColumns();
-    },
-  });
-
-  // ============ Draft хадгалах функц ============
-  function saveDraft() {
-    const rows = [];
-    grid.forEachNode(node => rows.push({...node.data}));
-    draftMgr.save({ rows: rows }, false);
-  }
-
-  // ============ Add Row ============
-  document.getElementById('btnAddRow').addEventListener('click', function() {
-    rowSeq++;
-    grid.applyTransaction({
-      add: [{
-        seq: rowSeq,
-        sample_code: '',
-        start_date: null,
-        end_date: null,
-      }]
-    });
-    saveDraft();
-  });
-
-  // ============ CSRF token ============
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  // ============ Toast мэдэгдэл ============
+  // ============ Helpers ============
+  const numCol = (field, headerName) => ({
+    field, headerName,
+    minWidth: 95, editable: true, type: 'numericColumn',
+    valueParser: p => {
+      const v = Number(p.newValue);
+      return isNaN(v) ? null : v;
+    },
+  });
+
   function showToast(message, type) {
     type = type || 'success';
     const colors = { success: '#20c997', error: '#dc3545', warning: '#ffc107' };
@@ -315,40 +174,247 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 500); }, 3000);
   }
 
-  // ============ Load saved data ============
-  function loadSavedData() {
-    const today = new Date().toISOString().slice(0, 10);
-    fetch("{{ url_for('microbiology.load_batch') }}?category=" + category + "&date=" + today)
-      .then(r => r.json())
-      .then(data => {
-        if (data.rows && data.rows.length > 0) {
-          // Merge with existing grid rows (for air/surface with pre-filled sample names)
-          const loadedRows = data.rows.map((row, i) => ({
-            seq: i + 1,
-            sample_code: row.sample_code || '',
-            start_date: row.start_date || null,
-            end_date: row.end_date || null,
-            bbet_s1: row.bbet_s1, bbet_s2: row.bbet_s2,
-            ecoli: row.ecoli, gbet: row.gbet, gbet_thermo: row.gbet_thermo,
-            cfu_air: row.cfu_air, staph: row.staph,
-            cfu_surface: row.cfu_surface, ecoli_s: row.ecoli_s, salm_s: row.salm_s,
-          }));
-          rowSeq = loadedRows.length;
-          grid.setGridOption('rowData', loadedRows);
-          console.log('📦 Серверээс ' + loadedRows.length + ' мөр ачааллаа');
-        }
-      })
-      .catch(err => console.warn('Load batch error:', err));
+  function updateRowCount() {
+    let count = 0;
+    grid.forEachNode(() => count++);
+    document.getElementById('rowCount').textContent = count;
   }
-  loadSavedData();
 
-  // ============ Save to server ============
+  // ============ Column definitions ============
+  const columnDefs = [
+    { field: 'seq', headerName: '№', maxWidth: 55, editable: false,
+      cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
+    { field: 'sample_code', headerName: 'Сорьцын дугаар\nSample No', minWidth: 160, editable: false,
+      cellStyle: { fontWeight: '600' },
+      headerClass: 'ag-header-cell-wrap' },
+    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 130, editable: true },
+    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 130, editable: true },
+    {
+      headerName: 'CFU — MNS ISO 6222:1998\n(1мл-т <100)',
+      headerClass: 'ag-header-cell-wrap',
+      children: [
+        numCol('cfu_22', '22°С'),
+        numCol('cfu_37', '37°С'),
+        {
+          field: 'cfu_avg', headerName: 'Дундаж', minWidth: 90,
+          editable: false, type: 'numericColumn',
+          valueGetter: p => {
+            const v22 = Number(p.data.cfu_22);
+            const v37 = Number(p.data.cfu_37);
+            if (!isNaN(v22) && !isNaN(v37) && p.data.cfu_22 !== null && p.data.cfu_22 !== '' &&
+                p.data.cfu_37 !== null && p.data.cfu_37 !== '') {
+              return Math.round(((v22 + v37) / 2) * 100) / 100;
+            }
+            return null;
+          },
+          cellStyle: { fontWeight: '700', color: '#0d9488', background: '#f0fdfa' },
+        },
+      ]
+    },
+    {
+      field: 'ecoli', headerName: 'E.coli\nMNS ISO 9308-1:1998\n(100мл-т илрэхгүй)',
+      minWidth: 140, editable: true,
+      headerClass: 'ag-header-cell-wrap',
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
+      cellStyle: p => ({
+        color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857',
+        fontWeight: '600',
+      }),
+    },
+    {
+      field: 'salmonella', headerName: 'Salmonella\nMNS ISO 19250:2017\n(25мл-т илрэхгүй)',
+      minWidth: 140, editable: true,
+      headerClass: 'ag-header-cell-wrap',
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
+      cellStyle: p => ({
+        color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857',
+        fontWeight: '600',
+      }),
+    },
+    {
+      headerName: '', maxWidth: 50, editable: false, sortable: false,
+      cellRenderer: p => {
+        return '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Устгах" onclick="window._removeMicroRow(' + p.node.rowIndex + ')"><i class="bi bi-x"></i></button>';
+      },
+      cellStyle: { textAlign: 'center', padding: '4px' },
+    },
+  ];
+
+  // ============ Draft сэргээх ============
+  let initialRows = [];
+  const savedDraft = draftMgr.restore();
+  if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) {
+    initialRows = savedDraft.rows;
+    rowSeq = initialRows.length;
+  }
+
+  // ============ Create Grid ============
+  const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
+    editableColIds: ['start_date', 'end_date', 'cfu_22', 'cfu_37', 'ecoli', 'salmonella'],
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 20,
+    onCellValueChanged: function() { saveDraft(); },
+    onFirstDataRendered: function(p) { p.api.autoSizeAllColumns(); updateRowCount(); },
+    onRowDataUpdated: function() { updateRowCount(); },
+  });
+
+  function saveDraft() {
+    const rows = [];
+    grid.forEachNode(node => rows.push({...node.data}));
+    draftMgr.save({ rows: rows }, false);
+  }
+
+  // ============ Remove row ============
+  window._removeMicroRow = function(rowIndex) {
+    const rowNode = grid.getDisplayedRowAtIndex(rowIndex);
+    if (rowNode) {
+      grid.applyTransaction({ remove: [rowNode.data] });
+      saveDraft();
+      updateRowCount();
+    }
+  };
+
+  // ============ Sample selection modal ============
+  let allSamples = [];
+
+  function loadSampleList() {
+    document.getElementById('sampleListLoading').style.display = '';
+    document.getElementById('sampleListContainer').style.display = 'none';
+    document.getElementById('sampleListEmpty').style.display = 'none';
+
+    fetch("{{ url_for('microbiology.api_samples') }}")
+      .then(r => r.json())
+      .then(samples => {
+        allSamples = samples;
+        renderSampleList(samples);
+      })
+      .catch(err => {
+        document.getElementById('sampleListLoading').style.display = 'none';
+        document.getElementById('sampleListEmpty').style.display = '';
+        console.error('Sample load error:', err);
+      });
+  }
+
+  function renderSampleList(samples) {
+    document.getElementById('sampleListLoading').style.display = 'none';
+    const tbody = document.getElementById('sampleListBody');
+    tbody.innerHTML = '';
+
+    // Grid дээр байгаа sample_code-уудыг цуглуулах
+    const existingCodes = new Set();
+    grid.forEachNode(n => {
+      if (n.data.sample_code) existingCodes.add(n.data.sample_code);
+    });
+
+    if (samples.length === 0) {
+      document.getElementById('sampleListEmpty').style.display = '';
+      document.getElementById('sampleListContainer').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('sampleListContainer').style.display = '';
+
+    const statusMap = { 'new': 'Шинэ', 'in_progress': 'Шинжилж байна', 'analysis': 'Шинжилж байна', 'completed': 'Дууссан' };
+    const statusColors = { 'new': 'primary', 'in_progress': 'warning', 'analysis': 'warning', 'completed': 'success' };
+
+    samples.forEach(s => {
+      const already = existingCodes.has(s.sample_code);
+      const tr = document.createElement('tr');
+      tr.className = 'sample-list-item' + (already ? ' table-light' : '');
+      tr.dataset.sampleId = s.id;
+      tr.dataset.sampleCode = s.sample_code;
+      tr.innerHTML = `
+        <td><input type="checkbox" class="form-check-input sample-check" value="${s.id}"
+            data-code="${s.sample_code}" ${already ? 'disabled' : ''}></td>
+        <td class="fw-semibold">${s.sample_code}${already ? ' <span class="badge bg-secondary">нэмэгдсэн</span>' : ''}</td>
+        <td class="text-muted small">${s.client_name || '-'}</td>
+        <td><span class="badge bg-${statusColors[s.status] || 'secondary'}">${statusMap[s.status] || s.status}</span></td>
+        <td class="text-muted small">${s.sample_date || '-'}</td>
+      `;
+      // Row click toggles checkbox
+      tr.addEventListener('click', function(e) {
+        if (e.target.type === 'checkbox') return;
+        const cb = tr.querySelector('.sample-check');
+        if (!cb.disabled) { cb.checked = !cb.checked; updateSelectedCount(); }
+      });
+      tbody.appendChild(tr);
+    });
+
+    updateSelectedCount();
+  }
+
+  function updateSelectedCount() {
+    const count = document.querySelectorAll('.sample-check:checked').length;
+    document.getElementById('selectedCount').textContent = count + ' дээж сонгосон';
+  }
+
+  // Search filter
+  document.getElementById('sampleSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    const filtered = allSamples.filter(s =>
+      s.sample_code.toLowerCase().includes(q) ||
+      (s.client_name || '').toLowerCase().includes(q)
+    );
+    renderSampleList(filtered);
+  });
+
+  // Check all
+  document.getElementById('checkAll').addEventListener('change', function() {
+    document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb => {
+      cb.checked = this.checked;
+    });
+    updateSelectedCount();
+  });
+
+  // Modal open → load samples
+  document.getElementById('selectSamplesModal').addEventListener('show.bs.modal', function() {
+    document.getElementById('sampleSearch').value = '';
+    loadSampleList();
+  });
+
+  // Add selected samples to grid
+  document.getElementById('btnAddSelected').addEventListener('click', function() {
+    const checked = document.querySelectorAll('.sample-check:checked');
+    if (checked.length === 0) {
+      showToast('Дээж сонгоно уу', 'warning');
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const sampleMap = {};
+    allSamples.forEach(s => { sampleMap[String(s.id)] = s; });
+
+    const newRows = [];
+    checked.forEach(cb => {
+      rowSeq++;
+      const sId = cb.value;
+      const sample = sampleMap[sId];
+      newRows.push({
+        seq: rowSeq,
+        sample_id: parseInt(sId),
+        sample_code: sample ? sample.sample_code : (cb.getAttribute('data-code') || ''),
+        start_date: today,
+        end_date: '',
+      });
+    });
+
+    grid.applyTransaction({ add: newRows });
+    saveDraft();
+    updateRowCount();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));
+    if (modal) modal.hide();
+    showToast(newRows.length + ' дээж нэмэгдлээ', 'success');
+  });
+
+  // ============ Save ============
   document.getElementById('btnSave').addEventListener('click', function() {
     const rows = [];
     grid.forEachNode(node => {
-      if (node.data.sample_code) {
-        rows.push(node.data);
-      }
+      if (node.data.sample_code) rows.push(node.data);
     });
 
     if (rows.length === 0) {
@@ -362,21 +428,23 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch("{{ url_for('microbiology.save_batch') }}", {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ category: category, rows: rows }),
+      body: JSON.stringify({ category: 'MICRO_WATER', rows: rows }),
     })
     .then(r => r.json())
     .then(data => {
       if (data.success) {
         showToast('Амжилттай хадгалагдлаа! (' + data.count + ' мөр)', 'success');
-        if (data.errors && data.errors.length > 0) {
+        if (data.errors && data.errors.length > 0)
           showToast('Анхааруулга: ' + data.errors.join(', '), 'warning');
-        }
       } else {
-        showToast('Алдаа: ' + (data.error || 'Unknown error'), 'error');
+        showToast('Алдаа: ' + (data.error || 'Unknown'), 'error');
       }
     })
     .catch(err => showToast('Сүлжээний алдаа: ' + err.message, 'error'));
   });
+
+  // Initial row count
+  updateRowCount();
 });
 </script>
 {% endblock %}

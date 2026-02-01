@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Усны дээж бүртгэл{% endblock %}
+{% set is_micro = is_micro_lab | default(false) %}
+{% block title %}{{ 'Микробиологийн' if is_micro else 'Усны' }} дээж бүртгэл{% endblock %}
 
 {% block head %}
 <style>
@@ -151,7 +152,7 @@
 
     <!-- ===== TAB 2: Шинэ дээж ===== -->
     <div class="tab-pane fade" id="add-pane" role="tabpanel">
-      <form action="{{ url_for('water.register_sample') }}" method="post" id="water-sample-form">
+      <form action="{{ url_for('microbiology.register_sample') if is_micro else url_for('water.register_sample') }}" method="post" id="water-sample-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="source_type" id="source_type_input" value="">
         <div id="sample_codes_container"></div>
@@ -161,7 +162,7 @@
           <!-- PHASE 1: Нэгж сонгох -->
           <div class="water-hub-section" id="water-unit-hub">
             <div class="water-hub-header">
-              <h1><i class="bi bi-droplet-fill"></i> Нэгж сонгох</h1>
+              <h1><i class="bi {{ 'bi-bug-fill' if is_micro else 'bi-droplet-fill' }}"></i> Нэгж сонгох</h1>
               <p>{{ units|length }} нэгж, {{ total_samples }} дээж</p>
             </div>
             <div class="unit-grid">
@@ -209,7 +210,19 @@
                   </div>
                   <div class="mb-2">
                     <label class="form-label small">Дээж авсан цаг</label>
-                    <input type="time" name="sample_time" class="form-control form-control-sm">
+                    <div class="d-flex align-items-center gap-2">
+                      <input type="time" name="sample_time" id="sample_time" class="form-control form-control-sm" style="max-width:130px;">
+                      <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" style="font-size:0.72rem; white-space:nowrap;" onclick="setNowTime()">
+                        <i class="bi bi-clock me-1"></i>Одоо
+                      </button>
+                      <div class="d-flex gap-1 flex-wrap" id="quickTimeButtons">
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('08:00')">08:00</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('10:00')">10:00</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('12:00')">12:00</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('14:00')">14:00</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('16:00')">16:00</button>
+                      </div>
+                    </div>
                   </div>
                   <div class="mb-2">
                     <label class="form-label small">Байршил / GPS</label>
@@ -379,6 +392,17 @@ function goBack() {
 
 function toggleAll(id, checked) {
   document.querySelectorAll(`#${id} input[type="checkbox"]`).forEach(cb => cb.checked = checked);
+}
+
+// ============ Цаг сонгох хялбар товчлуурууд ============
+function setNowTime() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('sample_time').value = hh + ':' + mm;
+}
+function setQuickTime(t) {
+  document.getElementById('sample_time').value = t;
 }
 
 // ============ Tab 1: AG Grid жагсаалт ============

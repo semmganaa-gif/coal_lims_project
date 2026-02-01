@@ -3,12 +3,18 @@
 
 import os
 import json
-from datetime import datetime, date
-from flask import Blueprint, render_template, jsonify, request
+from datetime import datetime, date, timedelta
+from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.models import Sample, AnalysisResult
-from app.labs.microbiology.constants import ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES
+from app.labs.microbiology.constants import (
+    ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES,
+    MICRO_WATER_FIELDS, MICRO_AIR_FIELDS, MICRO_SWAB_FIELDS,
+)
+from app.labs.water.constants import (
+    WATER_ANALYSIS_TYPES, WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
+)
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 micro_bp = Blueprint(
@@ -18,64 +24,163 @@ micro_bp = Blueprint(
     url_prefix='/labs/microbiology'
 )
 
+# Workspace code → field list mapping
+_FIELD_MAP = {
+    'water': MICRO_WATER_FIELDS,
+    'air': MICRO_AIR_FIELDS,
+    'swab': MICRO_SWAB_FIELDS,
+}
+
 
 @micro_bp.route('/')
 @login_required
 def micro_hub():
     """Микробиологийн лабораторийн төв хуудас."""
+    total_samples = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology'])
+    ).count()
+    new_samples = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology']),
+        Sample.status == 'new'
+    ).count()
+    in_progress = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology']),
+        Sample.status.in_(['in_progress', 'analysis'])
+    ).count()
+    completed = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology']),
+        Sample.status == 'completed'
+    ).count()
     return render_template(
         'micro_hub.html',
         title='Микробиологийн лаборатори',
         analysis_types=MICRO_ANALYSIS_TYPES,
         params=ALL_MICRO_PARAMS,
+        total_samples=total_samples,
+        new_samples=new_samples,
+        in_progress=in_progress,
+        completed=completed,
+    )
+
+
+@micro_bp.route('/analysis')
+@login_required
+def analysis_hub():
+    """Микробиологийн шинжилгээний карт сонгох хуудас."""
+    return render_template('micro_analysis_hub.html', title='Микробиологийн шинжилгээ')
+
+
+@micro_bp.route('/register', methods=['GET', 'POST'])
+@login_required
+def register_sample():
+    """Микробиологийн дээж бүртгэх."""
+    if request.method == 'POST':
+        sample_names = request.form.getlist('sample_codes')
+        if not sample_names:
+            flash('Дээжний нэр заавал сонгоно уу.', 'danger')
+            return redirect(url_for('microbiology.register_sample'))
+
+        from app.utils.datetime import now_local
+
+        source_type = request.form.get('source_type', 'other')
+        sample_date_str = request.form.get('sample_date')
+        sample_date = datetime.strptime(sample_date_str, '%Y-%m-%d').date() if sample_date_str else now_local().date()
+
+        analyses = request.form.getlist('analyses')
+        has_micro = any(a in [at['code'] for at in MICRO_ANALYSIS_TYPES] for a in analyses)
+        has_water = any(a in [at['code'] for at in WATER_ANALYSIS_TYPES] for a in analyses)
+
+        lab_type = 'microbiology'
+        if has_water and not has_micro:
+            lab_type = 'water'
+
+        weight = request.form.get('weight')
+        weight = float(weight) if weight else None
+        return_sample = bool(request.form.get('return_sample'))
+        retention_days = int(request.form.get('retention_period', 7))
+        retention_date = sample_date + timedelta(days=retention_days)
+
+        created = []
+        skipped = []
+        for sample_name in sample_names:
+            sample_name = sample_name.strip()
+            if not sample_name:
+                continue
+            sample_code = f"{sample_name}_{sample_date.isoformat()}"
+
+            existing = Sample.query.filter_by(sample_code=sample_code).first()
+            if existing:
+                skipped.append(sample_name)
+                continue
+
+            sample = Sample(
+                lab_type=lab_type,
+                sample_code=sample_code,
+                user_id=current_user.id,
+                client_name=source_type,
+                sample_type='water',
+                sample_date=sample_date,
+                sampling_location=request.form.get('sampling_location', ''),
+                sampled_by=request.form.get('sampled_by', ''),
+                notes=request.form.get('notes', ''),
+                analyses_to_perform=' '.join(analyses) if analyses else '',
+                weight=weight,
+                return_sample=return_sample,
+                retention_date=retention_date,
+                status='new',
+            )
+            db.session.add(sample)
+            created.append(sample_name)
+
+        try:
+            db.session.commit()
+            if created:
+                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({len(analyses)} шинжилгээ)', 'success')
+            if skipped:
+                flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
+            return redirect(url_for('microbiology.micro_hub'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Алдаа: {e}', 'danger')
+            return redirect(url_for('microbiology.register_sample'))
+
+    return render_template(
+        'water_register.html',
+        title='Микробиологийн дээж бүртгэл',
+        units=WATER_UNITS,
+        total_samples=len(ALL_WATER_SAMPLE_NAMES),
+        water_analyses=WATER_ANALYSIS_TYPES,
+        micro_analyses=MICRO_ANALYSIS_TYPES,
+        use_aggrid=True,
+        is_micro_lab=True,
     )
 
 
 @micro_bp.route('/workspace/<code>')
 @login_required
 def workspace(code):
-    """Шинжилгээний ажлын талбар (категориор)."""
-    code_upper = code.upper()
+    """Микробиологийн ажлын хуудас.
 
-    # Category-р workspace нээх
-    from app.labs.microbiology.constants import (
-        WATER_MICRO_PARAMS, AIR_MICRO_PARAMS, SURFACE_MICRO_PARAMS,
-        AIR_SAMPLE_NAMES, SURFACE_SAMPLE_NAMES
-    )
-
-    category_map = {
-        'WATER': {'params': WATER_MICRO_PARAMS, 'title': 'Усны микробиологи', 'category': 'water'},
-        'AIR': {'params': AIR_MICRO_PARAMS, 'title': 'Агаарын микробиологи', 'category': 'air',
-                'sample_names': AIR_SAMPLE_NAMES},
-        'SURFACE': {'params': SURFACE_MICRO_PARAMS, 'title': 'Гадаргуугийн микробиологи', 'category': 'surface',
-                    'sample_names': SURFACE_SAMPLE_NAMES},
+    /workspace/water, /workspace/air, /workspace/surface
+    """
+    code_lower = code.lower()
+    titles = {
+        'water': 'Усны микробиологийн ажлын хуудас',
+        'air': 'Агаарын микробиологийн ажлын хуудас',
+        'swab': 'Арчдасны микробиологийн ажлын хуудас',
+    }
+    templates = {
+        'water': 'analysis_forms/micro_workspace.html',
+        'air': 'analysis_forms/micro_air_workspace.html',
+        'swab': 'analysis_forms/micro_swab_workspace.html',
     }
 
-    # Шууд код (CFU_W, ECOLI_W гэх мэт) эсвэл категори (WATER, AIR, SURFACE)
-    if code_upper in category_map:
-        cat_info = category_map[code_upper]
-        return render_template(
-            'analysis_forms/micro_workspace.html',
-            title=cat_info['title'],
-            category=cat_info['category'],
-            params=cat_info['params'],
-            sample_names=cat_info.get('sample_names', []),
-        )
+    title = titles.get(code_lower, f'Микробиологи — {code}')
+    template = templates.get(code_lower)
+    if not template:
+        return jsonify({'error': f'Unknown workspace: {code}'}), 404
 
-    # Хуучин кодоор хандах → категори руу redirect
-    param = ALL_MICRO_PARAMS.get(code_upper)
-    if not param:
-        return jsonify({'error': f'Unknown analysis code: {code}'}), 404
-
-    # Find category from MICRO_ANALYSIS_TYPES
-    cat = 'water'
-    for at in MICRO_ANALYSIS_TYPES:
-        if at['code'] == code_upper:
-            cat = at.get('category', 'water')
-            break
-
-    from flask import redirect, url_for as _url_for
-    return redirect(_url_for('microbiology.workspace', code=cat.upper()))
+    return render_template(template, title=title, workspace_code=code_lower)
 
 
 # ============ API endpoints ============
@@ -119,38 +224,6 @@ def save_results():
     return jsonify({'success': True, 'id': ar.id})
 
 
-def _get_or_create_micro_sample(category, sample_code, sample_date_str):
-    """Микробиологийн дээж хайх эсвэл үүсгэх.
-
-    Water: sample_code-р хайна.
-    Air/Surface: Огноо+категориор автомат дээж үүсгэнэ.
-    """
-    if category == 'water':
-        if not sample_code:
-            return None
-        sample = Sample.query.filter_by(sample_code=sample_code).first()
-        return sample
-    else:
-        # Air/Surface: auto-generate sample code from date + category
-        today_str = sample_date_str or date.today().isoformat()
-        prefix = 'CM-AIR' if category == 'air' else 'CM-SUR'
-        auto_code = f'{prefix}-{today_str}'
-
-        sample = Sample.query.filter_by(sample_code=auto_code).first()
-        if not sample:
-            sample = Sample(
-                sample_code=auto_code,
-                lab_type='microbiology',
-                status='analysis',
-                sample_date=datetime.strptime(today_str, '%Y-%m-%d').date() if today_str else date.today(),
-                client_name='LAB',
-                user_id=current_user.id,
-            )
-            db.session.add(sample)
-            db.session.flush()
-        return sample
-
-
 @micro_bp.route('/api/save_batch', methods=['POST'])
 @login_required
 def save_batch():
@@ -159,7 +232,8 @@ def save_batch():
     if not data or not data.get('rows'):
         return jsonify({'error': 'No data provided'}), 400
 
-    category = data.get('category', 'water')
+    category = data.get('category', 'MICRO_WATER')
+    fields = _FIELD_MAP.get(category.replace('MICRO_', '').lower(), MICRO_WATER_FIELDS)
     rows = data['rows']
     saved = 0
     errors = []
@@ -169,23 +243,20 @@ def save_batch():
         if not sample_code:
             continue
 
-        # Build result dict (only non-empty fields)
         results = {}
-        for key in ['bbet_s1', 'bbet_s2', 'bbet_avg', 'ecoli', 'gbet', 'gbet_thermo',
-                     'cfu_air', 'staph', 'cfu_surface', 'ecoli_s', 'salm_s']:
+        for key in fields:
             if row.get(key) is not None and row.get(key) != '':
                 results[key] = row[key]
 
         if not results:
             continue
 
-        # Get or create sample
-        sample = _get_or_create_micro_sample(category, sample_code, row.get('start_date'))
+        sample = Sample.query.filter_by(sample_code=sample_code).first()
         if not sample:
             errors.append(f'Дээж олдсонгүй: {sample_code}')
             continue
 
-        analysis_code = f'MICRO_{category.upper()}'
+        analysis_code = category
         raw = json.dumps({
             'sample_code': sample_code,
             'start_date': row.get('start_date'),
@@ -194,7 +265,6 @@ def save_batch():
             **results,
         }, ensure_ascii=False)
 
-        # Upsert: update if exists, insert if not
         existing = AnalysisResult.query.filter_by(
             sample_id=sample.id,
             analysis_code=analysis_code,
@@ -224,18 +294,13 @@ def save_batch():
 @micro_bp.route('/api/load_batch')
 @login_required
 def load_batch():
-    """Хадгалсан үр дүнг ачаалах.
-
-    GET /api/load_batch?category=water&date=2026-01-31
-    """
-    category = request.args.get('category', 'water')
+    """Хадгалсан үр дүнг ачаалах."""
+    category = request.args.get('category', 'MICRO_WATER')
     date_str = request.args.get('date')
-    analysis_code = f'MICRO_{category.upper()}'
 
-    query = AnalysisResult.query.filter_by(analysis_code=analysis_code)
+    query = AnalysisResult.query.filter_by(analysis_code=category)
 
     if date_str:
-        # Filter by date in raw_data (start_date field)
         query = query.filter(AnalysisResult.raw_data.contains(date_str))
 
     results = query.order_by(AnalysisResult.id.desc()).limit(200).all()
@@ -250,7 +315,6 @@ def load_batch():
         rd['sample_id'] = ar.sample_id
         rows.append(rd)
 
-    # Reverse so oldest first (natural order)
     rows.reverse()
     return jsonify({'rows': rows})
 
