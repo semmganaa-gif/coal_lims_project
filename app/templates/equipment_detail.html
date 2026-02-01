@@ -735,22 +735,32 @@
     var editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
     if (editRegSelect) {
       function toggleEditRegFields() {
+        // Бүх section нуух (disabled хэрэглэхгүй — form submit-д нөлөөлнө)
         document.querySelectorAll('.edit-reg-fields').forEach(function(el) {
           el.style.display = 'none';
-          el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
         });
         var val = editRegSelect.value;
         if (val) {
           var section = document.querySelector('.edit-reg-' + val);
           if (section) {
             section.style.display = 'block';
-            section.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = false; });
           }
         }
       }
       editRegSelect.addEventListener('change', toggleEditRegFields);
-      // Эхний төлөв
+      document.getElementById('editEqModal').addEventListener('shown.bs.modal', toggleEditRegFields);
       toggleEditRegFields();
+
+      // Form submit: нуугдсан section-ийн input утгуудыг хоослох (backend-д илгээхгүй)
+      document.querySelector('#editEqModal form').addEventListener('submit', function() {
+        document.querySelectorAll('.edit-reg-fields').forEach(function(el) {
+          if (el.style.display === 'none') {
+            el.querySelectorAll('input, select').forEach(function(inp) {
+              inp.removeAttribute('name');
+            });
+          }
+        });
+      });
     }
   </script>
 {% endblock %}
