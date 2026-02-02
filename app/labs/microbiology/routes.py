@@ -494,9 +494,9 @@ def micro_data():
 
 # ============ Micro lab types for monthly plan ============
 MICRO_SAMPLE_TYPES = {
-    'MICRO_WATER': ['Ундны ус', 'Технологийн ус', 'Хаягдал ус'],
-    'MICRO_AIR': ['Лаб агаар', 'Үйлдвэр агаар'],
-    'MICRO_SWAB': ['Тоног төхөөрөмж', 'Ажлын гадаргуу'],
+    'MICRO_WATER': ['Water'],
+    'MICRO_AIR': ['Air'],
+    'MICRO_SWAB': ['Swab'],
 }
 
 _MICRO_LAB_TYPES = ['water', 'microbiology', 'water & micro']

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Микро Monthly Plan{% endblock %}
+{% block title %}Micro Monthly Plan{% endblock %}
 
 {% block content %}
 <style>
@@ -35,7 +35,6 @@
   .btn-save { background: linear-gradient(135deg, #059669, #047857); color: #fff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
   .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
 
-  /* Week summary */
   .week-summary {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
     border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
@@ -52,7 +51,6 @@
   .week-item .wk-plan { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 6px; }
   .week-item .wk-perf { font-size: 0.8rem; color: #059669; font-weight: 600; }
 
-  /* Plan table */
   .plan-card {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
     border: 1px solid rgba(148,163,184,0.15); border-radius: 16px;
@@ -80,7 +78,6 @@
   .pct-good { color: #16a34a; font-weight: 700; }
   .pct-bad { color: #dc2626; font-weight: 700; }
 
-  /* Chart */
   .chart-card {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
     border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
@@ -88,7 +85,6 @@
   }
   .chart-card h6 { font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
 
-  /* Staff settings */
   .staff-row {
     display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;
     background: rgba(255,255,255,0.85); border-radius: 14px; padding: 0.75rem 1.25rem;
@@ -101,8 +97,8 @@
 <div class="micro-plan">
   <div class="plan-header">
     <div>
-      <h4><i class="bi bi-calendar3-week me-2"></i>Микро Monthly Plan</h4>
-      <p class="subtitle">{{ month_name }} {{ year }} - Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+      <h4><i class="bi bi-calendar3-week me-2"></i>Micro Monthly Plan</h4>
+      <p class="subtitle">{{ month_name }} {{ year }} — Weekly plan vs performance</p>
     </div>
     <form method="get" class="filter-row">
       <select name="year" id="selYear">
@@ -113,13 +109,13 @@
       <select name="month" id="selMonth">
         {% for m in range(1,13) %}
         <option value="{{ m }}" {% if m==month %}selected{% endif %}>
-          {{ ['','1-р','2-р','3-р','4-р','5-р','6-р','7-р','8-р','9-р','10-р','11-р','12-р'][m] }} сар
+          {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] }}
         </option>
         {% endfor %}
       </select>
-      <button type="submit" class="btn-micro"><i class="bi bi-funnel-fill"></i> Шүүх</button>
+      <button type="submit" class="btn-micro"><i class="bi bi-funnel-fill"></i> Filter</button>
       {% if current_user.role in ['senior','admin'] %}
-      <button type="button" class="btn-save" id="btnSave"><i class="bi bi-save"></i> Хадгалах</button>
+      <button type="button" class="btn-save" id="btnSave"><i class="bi bi-save"></i> Save</button>
       {% endif %}
       <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px">
         <i class="bi bi-arrow-left"></i>
@@ -130,20 +126,20 @@
   <!-- Staff settings -->
   {% if current_user.role in ['senior','admin'] %}
   <div class="staff-row">
-    <label>Микробиолог:</label>
+    <label>Microbiologist:</label>
     <input type="number" id="staffMicro" value="{{ staff_count }}" min="1" max="50">
-    <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Хадгалах</button>
+    <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Save</button>
   </div>
   {% endif %}
 
   <!-- Week Summary -->
   <div class="week-summary">
-    <h6 style="font-weight:700;color:#0f172a;margin-bottom:0.75rem"><i class="bi bi-calendar-week me-2" style="color:#20c997"></i>Долоо хоногийн нэгтгэл</h6>
+    <h6 style="font-weight:700;color:#0f172a;margin-bottom:0.75rem"><i class="bi bi-calendar-week me-2" style="color:#20c997"></i>Weekly Summary</h6>
     <div class="week-grid">
       {% for w in weeks %}
       <div class="week-item">
-        <div class="wk-label">{{ ['','I','II','III','IV','V'][w.week] }} week</div>
-        <div class="wk-dates">/{{ w.start.day }}-{{ w.end.day }}/</div>
+        <div class="wk-label">W{{ w.week }}</div>
+        <div class="wk-dates">{{ w.start.day }}-{{ w.end.day }}</div>
         <div class="wk-plan">{{ week_totals[w.week].plan }}</div>
         <div class="wk-perf">{{ week_totals[w.week].perf }} perf</div>
       </div>
@@ -173,11 +169,11 @@
       <table class="plan-table">
         <thead>
           <tr>
-            <th>Төрөл</th>
+            <th>Category</th>
             {% for w in weeks %}
-            <th colspan="1">W{{ w.week }}<br><span style="font-size:0.6rem;color:#94a3b8">{{ w.start.day }}-{{ w.end.day }}</span></th>
+            <th>W{{ w.week }}<br><span style="font-size:0.6rem;color:#94a3b8">{{ w.start.day }}-{{ w.end.day }}</span></th>
             {% endfor %}
-            <th>Нийт</th>
+            <th>Total</th>
             <th>%</th>
           </tr>
         </thead>
@@ -211,7 +207,7 @@
 
   <!-- Bar chart -->
   <div class="chart-card">
-    <h6><i class="bi bi-bar-chart me-2" style="color:#20c997"></i>Plan vs Actual (долоо хоногоор)</h6>
+    <h6><i class="bi bi-bar-chart me-2" style="color:#20c997"></i>Plan vs Actual (weekly)</h6>
     <canvas id="planChart" height="100"></canvas>
   </div>
 </div>
@@ -223,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const year = {{ year }};
   const month = {{ month }};
 
-  // Bar chart
   const weekLabels = [{% for w in weeks %}'W{{ w.week }}'{% if not loop.last %},{% endif %}{% endfor %}];
   const planData = [{% for w in weeks %}{{ week_totals[w.week].plan }}{% if not loop.last %},{% endif %}{% endfor %}];
   const perfData = [{% for w in weeks %}{{ week_totals[w.week].perf }}{% if not loop.last %},{% endif %}{% endfor %}];
@@ -233,8 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
     data: {
       labels: weekLabels,
       datasets: [
-        { label: 'Төлөвлөгөө', data: planData, backgroundColor: 'rgba(32,201,151,0.6)', borderColor: '#20c997', borderWidth: 1 },
-        { label: 'Гүйцэтгэл', data: perfData, backgroundColor: 'rgba(13,148,136,0.6)', borderColor: '#0d9488', borderWidth: 1 }
+        { label: 'Plan', data: planData, backgroundColor: 'rgba(32,201,151,0.6)', borderColor: '#20c997', borderWidth: 1 },
+        { label: 'Actual', data: perfData, backgroundColor: 'rgba(13,148,136,0.6)', borderColor: '#0d9488', borderWidth: 1 }
       ]
     },
     options: {
@@ -253,15 +248,15 @@ document.addEventListener('DOMContentLoaded', function() {
       inputs.forEach(inp => { plans[inp.dataset.key] = parseInt(inp.value) || 0; });
 
       try {
-        const r = await fetch('{{ url_for("microbiology.api_monthly_plan") }}', {
+        const r = await fetch('{{ url_for("microbiology.api_save_monthly_plan") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year, month, plans })
         });
         const res = await r.json();
-        if (res.success) { alert('Хадгалагдлаа!'); location.reload(); }
-        else { alert('Алдаа: ' + (res.error || '')); }
-      } catch(e) { alert('Алдаа: ' + e.message); }
+        if (res.success) { alert('Saved!'); location.reload(); }
+        else { alert('Error: ' + (res.error || '')); }
+      } catch(e) { alert('Error: ' + e.message); }
     });
   }
 
@@ -279,9 +274,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const res = await r.json();
         if (res.success) {
           btnStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> OK';
-          setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> Хадгалах'; }, 1500);
+          setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> Save'; }, 1500);
         }
-      } catch(e) { alert('Алдаа: ' + e.message); }
+      } catch(e) { alert('Error: ' + e.message); }
     });
   }
 });

@@ -134,8 +134,8 @@
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
-        {% set is_water_lab = request.path.startswith('/labs/water') %}
-        {% set is_micro_lab = request.path.startswith('/labs/microbiology') %}
+        {% set is_water_lab = request.path.startswith('/labs/water') or request.args.get('from_lab') == 'water' %}
+        {% set is_micro_lab = request.path.startswith('/labs/microbiology') or request.args.get('from_lab') == 'micro' %}
         {% set is_petro_lab = request.path.startswith('/labs/petrography') %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
@@ -194,9 +194,22 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('equipment.equipment_list', view='micro') }}">
+              <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}">
                 <i class="bi bi-tools me-1" style="color:#20c997"></i>Тоног төхөөрөмж
               </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-graph-up me-1" style="color:#20c997"></i>Reports
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_dashboard') }}">
+                  <i class="bi bi-speedometer2 me-2" style="color:#20c997"></i>Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_consumption') }}">
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>Consumption</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_monthly_plan') }}">
+                  <i class="bi bi-calendar-check me-2" style="color:#14b8a6"></i>Monthly Plan</a></li>
+              </ul>
             </li>
 
             {% elif is_water_lab %}
@@ -219,6 +232,11 @@
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.standards') }}">
                 <i class="bi bi-shield-check me-1 text-info"></i>Стандарт
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}">
+                <i class="bi bi-tools me-1 text-info"></i>Тоног төхөөрөмж
               </a>
             </li>
 
