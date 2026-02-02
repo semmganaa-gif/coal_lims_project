@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Микро Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  .micro-dash {
+    min-height: calc(100vh - 80px); padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 30%, #f0fdf4 60%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+  .dash-header {
+    background: linear-gradient(135deg, rgba(32,201,151,0.1), rgba(13,148,136,0.08));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px; padding: 1.25rem 2rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    box-shadow: 0 4px 24px rgba(32,201,151,0.1);
+  }
+  .dash-header h4 {
+    margin: 0; font-size: 1.5rem; font-weight: 800;
+    background: linear-gradient(135deg, #20c997 0%, #0d9488 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .dash-header .subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .kpi-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.5rem; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+  .kpi-card .d-flex { display: flex; justify-content: space-between; align-items: flex-start; }
+  .kpi-card h6 { color: #64748b; font-size: 0.82rem; margin-bottom: 0.5rem; }
+  .kpi-card h2 { margin: 0; font-size: 2rem; font-weight: 800; }
+  .kpi-card small { color: #64748b; font-size: 0.78rem; }
+  .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+
+  .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+  @media (max-width: 992px) { .chart-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.25rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .chart-card h6 { font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
+
+  .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+  .quick-links a {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.85rem 1.25rem; border-radius: 14px;
+    text-decoration: none; font-weight: 600; font-size: 0.9rem;
+    transition: all 0.2s; color: #0f172a;
+    background: rgba(255,255,255,0.8); border: 1px solid rgba(148,163,184,0.15);
+  }
+  .quick-links a:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+</style>
+
+<div class="micro-dash">
+  <div class="dash-header">
+    <div>
+      <h4><i class="bi bi-speedometer2 me-2"></i>Микро Dashboard</h4>
+      <p class="subtitle">{{ month }}-р сар, {{ year }} он</p>
+    </div>
+    <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Буцах
+    </a>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="d-flex">
+        <div>
+          <h6>Дээж (энэ сар)</h6>
+          <h2 style="color:#0d9488">{{ "{:,}".format(samples_month) }}</h2>
+          <small>Жилд: {{ "{:,}".format(samples_year) }}</small>
+        </div>
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#ccfbf1,#99f6e4);color:#0d9488">
+          <i class="bi bi-droplet-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="d-flex">
+        <div>
+          <h6>Шинжилгээ (энэ сар)</h6>
+          <h2 style="color:#059669">{{ "{:,}".format(analyses_month) }}</h2>
+          <small>Жилд: {{ "{:,}".format(analyses_year) }}</small>
+        </div>
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669">
+          <i class="bi bi-clipboard-check-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="d-flex">
+        <div>
+          <h6>Категори</h6>
+          <h2 style="color:#20c997">{{ category_counts|length }}</h2>
+          <small>Water / Air / Swab</small>
+        </div>
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#ccfbf1,#a7f3d0);color:#14b8a6">
+          <i class="bi bi-pie-chart-fill"></i>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="d-flex">
+        <div>
+          <h6>Pass rate</h6>
+          <h2 style="color:{% if pass_rate >= 90 %}#059669{% else %}#dc2626{% endif %}">{{ "%.0f"|format(pass_rate) }}%</h2>
+          <small>{{ pass_count }} pass / {{ fail_count }} fail</small>
+        </div>
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#d1fae5,#bbf7d0);color:#15803d">
+          <i class="bi bi-shield-check"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h6><i class="bi bi-graph-up me-2" style="color:#20c997"></i>Сүүлийн 6 сарын шинжилгээ</h6>
+      <canvas id="trendChart" height="120"></canvas>
+    </div>
+    <div class="chart-card">
+      <h6><i class="bi bi-pie-chart me-2" style="color:#14b8a6"></i>Категориар</h6>
+      <canvas id="categoryChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="chart-card">
+    <h6><i class="bi bi-link-45deg me-2" style="color:#20c997"></i>Тайлангууд</h6>
+    <div class="quick-links">
+      <a href="{{ url_for('microbiology.micro_consumption') }}">
+        <i class="bi bi-journal-bookmark" style="color:#0d9488;font-size:1.2rem"></i> Consumption
+      </a>
+      <a href="{{ url_for('microbiology.micro_monthly_plan') }}">
+        <i class="bi bi-calendar-check" style="color:#20c997;font-size:1.2rem"></i> Monthly Plan
+      </a>
+      <a href="{{ url_for('microbiology.micro_hub') }}">
+        <i class="bi bi-house" style="color:#64748b;font-size:1.2rem"></i> Micro Hub
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Trend chart
+  const trendLabels = [{% for s in monthly_stats %}'{{ s.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
+  const trendData = [{% for s in monthly_stats %}{{ s.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: trendLabels,
+      datasets: [{
+        label: 'Шинжилгээ',
+        data: trendData,
+        borderColor: '#20c997',
+        backgroundColor: 'rgba(32,201,151,0.1)',
+        fill: true, tension: 0.3,
+        pointBackgroundColor: '#0d9488', pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Category doughnut
+  const catLabels = [{% for c in category_counts %}'{{ c.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
+  const catData = [{% for c in category_counts %}{{ c.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{
+        data: catData,
+        backgroundColor: ['#20c997', '#0d9488', '#14b8a6'],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
+    }
+  });
+});
+</script>
+{% endblock %}

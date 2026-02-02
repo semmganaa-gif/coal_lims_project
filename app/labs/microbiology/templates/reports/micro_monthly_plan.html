@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}Микро Monthly Plan{% endblock %}
+
+{% block content %}
+<style>
+  .micro-plan {
+    min-height: calc(100vh - 80px); padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 30%, #f0fdf4 60%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+  .plan-header {
+    background: linear-gradient(135deg, rgba(32,201,151,0.1), rgba(13,148,136,0.08));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px; padding: 1.25rem 2rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    box-shadow: 0 4px 24px rgba(32,201,151,0.1);
+  }
+  .plan-header h4 {
+    margin: 0; font-size: 1.4rem; font-weight: 800;
+    background: linear-gradient(135deg, #20c997, #0d9488);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .plan-header .subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+
+  .filter-row {
+    display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+  }
+  .filter-row select {
+    border: 2px solid #e2e8f0; border-radius: 10px; padding: 8px 12px;
+    font-size: 0.85rem; background: rgba(255,255,255,0.9); min-width: 80px;
+  }
+  .filter-row select:focus { outline: none; border-color: #20c997; box-shadow: 0 0 0 3px rgba(32,201,151,0.15); }
+  .btn-micro { background: linear-gradient(135deg, #20c997, #0d9488); color: #fff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-micro:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(32,201,151,0.3); }
+  .btn-save { background: linear-gradient(135deg, #059669, #047857); color: #fff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+
+  /* Week summary */
+  .week-summary {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.25rem; margin-bottom: 1.25rem;
+  }
+  .week-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem; }
+  .week-item {
+    background: rgba(248,250,252,0.8); border-radius: 12px; padding: 0.75rem; text-align: center; transition: all 0.2s;
+  }
+  .week-item:hover { background: rgba(32,201,151,0.08); transform: translateY(-2px); }
+  .week-item.total-col { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .week-item .wk-label { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+  .week-item .wk-dates { font-size: 0.65rem; color: #94a3b8; margin-top: 2px; }
+  .week-item .wk-plan { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-top: 6px; }
+  .week-item .wk-perf { font-size: 0.8rem; color: #059669; font-weight: 600; }
+
+  /* Plan table */
+  .plan-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 16px;
+    margin-bottom: 1rem; overflow: hidden;
+  }
+  .plan-card-header {
+    background: linear-gradient(135deg, #ecfdf5, #ccfbf1);
+    padding: 0.75rem 1.25rem; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(32,201,151,0.15);
+  }
+  .plan-card-header h6 { margin: 0; font-weight: 700; color: #065f46; font-size: 0.9rem; }
+  .plan-card-body { padding: 0.75rem; overflow-x: auto; }
+
+  .plan-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .plan-table th, .plan-table td { border: 1px solid #cbd5e1; padding: 0.4rem 0.5rem; text-align: center; }
+  .plan-table thead th { background: linear-gradient(180deg, #f0fdfa, #ccfbf1); font-weight: 700; font-size: 0.7rem; color: #065f46; }
+  .plan-table .type-name { text-align: left; font-weight: 600; min-width: 120px; background: #f8fafc; }
+  .plan-table .sum-col { background: #fef9c3; font-weight: 700; color: #854d0e; }
+  .plan-table input[type=number] {
+    width: 46px; padding: 3px; border: 1px solid #e2e8f0; border-radius: 6px;
+    text-align: center; font-size: 0.75rem; font-weight: 600;
+  }
+  .plan-table input:focus { outline: none; border-color: #20c997; }
+  .plan-table .perf-val { font-size: 0.7rem; color: #059669; }
+  .pct-good { color: #16a34a; font-weight: 700; }
+  .pct-bad { color: #dc2626; font-weight: 700; }
+
+  /* Chart */
+  .chart-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    padding: 1.25rem; margin-top: 1.25rem;
+  }
+  .chart-card h6 { font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
+
+  /* Staff settings */
+  .staff-row {
+    display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap;
+    background: rgba(255,255,255,0.85); border-radius: 14px; padding: 0.75rem 1.25rem;
+    border: 1px solid rgba(148,163,184,0.15);
+  }
+  .staff-row label { font-size: 0.82rem; font-weight: 600; color: #64748b; }
+  .staff-row input { width: 60px; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 600; }
+</style>
+
+<div class="micro-plan">
+  <div class="plan-header">
+    <div>
+      <h4><i class="bi bi-calendar3-week me-2"></i>Микро Monthly Plan</h4>
+      <p class="subtitle">{{ month_name }} {{ year }} - Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+    </div>
+    <form method="get" class="filter-row">
+      <select name="year" id="selYear">
+        {% for y in years %}
+        <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+      <select name="month" id="selMonth">
+        {% for m in range(1,13) %}
+        <option value="{{ m }}" {% if m==month %}selected{% endif %}>
+          {{ ['','1-р','2-р','3-р','4-р','5-р','6-р','7-р','8-р','9-р','10-р','11-р','12-р'][m] }} сар
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-micro"><i class="bi bi-funnel-fill"></i> Шүүх</button>
+      {% if current_user.role in ['senior','admin'] %}
+      <button type="button" class="btn-save" id="btnSave"><i class="bi bi-save"></i> Хадгалах</button>
+      {% endif %}
+      <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+    </form>
+  </div>
+
+  <!-- Staff settings -->
+  {% if current_user.role in ['senior','admin'] %}
+  <div class="staff-row">
+    <label>Микробиолог:</label>
+    <input type="number" id="staffMicro" value="{{ staff_count }}" min="1" max="50">
+    <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Хадгалах</button>
+  </div>
+  {% endif %}
+
+  <!-- Week Summary -->
+  <div class="week-summary">
+    <h6 style="font-weight:700;color:#0f172a;margin-bottom:0.75rem"><i class="bi bi-calendar-week me-2" style="color:#20c997"></i>Долоо хоногийн нэгтгэл</h6>
+    <div class="week-grid">
+      {% for w in weeks %}
+      <div class="week-item">
+        <div class="wk-label">{{ ['','I','II','III','IV','V'][w.week] }} week</div>
+        <div class="wk-dates">/{{ w.start.day }}-{{ w.end.day }}/</div>
+        <div class="wk-plan">{{ week_totals[w.week].plan }}</div>
+        <div class="wk-perf">{{ week_totals[w.week].perf }} perf</div>
+      </div>
+      {% endfor %}
+      <div class="week-item total-col">
+        <div class="wk-label">TOTAL</div>
+        <div class="wk-dates">{{ month_name }}</div>
+        <div class="wk-plan">{{ grand_total.plan }}</div>
+        <div class="wk-perf">{{ grand_total.perf }} perf</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category plan cards -->
+  {% for cat_code, cat_info in data.items() %}
+  <div class="plan-card">
+    <div class="plan-card-header">
+      <h6><i class="bi bi-layers me-2"></i>{{ cat_code }}</h6>
+      <span style="font-size:0.8rem;color:#64748b">
+        Plan: {{ cat_info.total.plan }} / Perf: {{ cat_info.total.perf }}
+        {% if cat_info.total.plan > 0 %}
+        ({{ "%.0f"|format(cat_info.pct) }}%)
+        {% endif %}
+      </span>
+    </div>
+    <div class="plan-card-body">
+      <table class="plan-table">
+        <thead>
+          <tr>
+            <th>Төрөл</th>
+            {% for w in weeks %}
+            <th colspan="1">W{{ w.week }}<br><span style="font-size:0.6rem;color:#94a3b8">{{ w.start.day }}-{{ w.end.day }}</span></th>
+            {% endfor %}
+            <th>Нийт</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sample_type, row_data in cat_info.types.items() %}
+          <tr>
+            <td class="type-name">{{ sample_type }}</td>
+            {% for w in weeks %}
+            {% set key = cat_code ~ '|' ~ sample_type ~ '|' ~ w.week %}
+            {% set wd = row_data.weeks[w.week] %}
+            <td>
+              {% if current_user.role in ['senior','admin'] %}
+              <input type="number" class="planned-input" data-key="{{ key }}" value="{{ wd.plan }}" min="0">
+              {% else %}
+              {{ wd.plan }}
+              {% endif %}
+              <div class="perf-val">{{ wd.perf }}</div>
+            </td>
+            {% endfor %}
+            <td class="sum-col">{{ row_data.total_plan }}/{{ row_data.total_perf }}</td>
+            <td class="{% if row_data.total_plan > 0 %}{% if row_data.pct >= 100 %}pct-good{% else %}pct-bad{% endif %}{% endif %}">
+              {% if row_data.total_plan > 0 %}{{ "%.0f"|format(row_data.pct) }}%{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Bar chart -->
+  <div class="chart-card">
+    <h6><i class="bi bi-bar-chart me-2" style="color:#20c997"></i>Plan vs Actual (долоо хоногоор)</h6>
+    <canvas id="planChart" height="100"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const year = {{ year }};
+  const month = {{ month }};
+
+  // Bar chart
+  const weekLabels = [{% for w in weeks %}'W{{ w.week }}'{% if not loop.last %},{% endif %}{% endfor %}];
+  const planData = [{% for w in weeks %}{{ week_totals[w.week].plan }}{% if not loop.last %},{% endif %}{% endfor %}];
+  const perfData = [{% for w in weeks %}{{ week_totals[w.week].perf }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+  new Chart(document.getElementById('planChart'), {
+    type: 'bar',
+    data: {
+      labels: weekLabels,
+      datasets: [
+        { label: 'Төлөвлөгөө', data: planData, backgroundColor: 'rgba(32,201,151,0.6)', borderColor: '#20c997', borderWidth: 1 },
+        { label: 'Гүйцэтгэл', data: perfData, backgroundColor: 'rgba(13,148,136,0.6)', borderColor: '#0d9488', borderWidth: 1 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Save plan
+  const btnSave = document.getElementById('btnSave');
+  if (btnSave) {
+    btnSave.addEventListener('click', async function() {
+      const inputs = document.querySelectorAll('.planned-input');
+      const plans = {};
+      inputs.forEach(inp => { plans[inp.dataset.key] = parseInt(inp.value) || 0; });
+
+      try {
+        const r = await fetch('{{ url_for("microbiology.api_monthly_plan") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify({ year, month, plans })
+        });
+        const res = await r.json();
+        if (res.success) { alert('Хадгалагдлаа!'); location.reload(); }
+        else { alert('Алдаа: ' + (res.error || '')); }
+      } catch(e) { alert('Алдаа: ' + e.message); }
+    });
+  }
+
+  // Save staff
+  const btnStaff = document.getElementById('btnSaveStaff');
+  if (btnStaff) {
+    btnStaff.addEventListener('click', async function() {
+      const count = parseInt(document.getElementById('staffMicro')?.value) || 3;
+      try {
+        const r = await fetch('{{ url_for("microbiology.api_save_staff") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify({ year, month, staff_count: count })
+        });
+        const res = await r.json();
+        if (res.success) {
+          btnStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> OK';
+          setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> Хадгалах'; }, 1500);
+        }
+      } catch(e) { alert('Алдаа: ' + e.message); }
+    });
+  }
+});
+</script>
+{% endblock %}

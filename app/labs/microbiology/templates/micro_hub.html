@@ -89,6 +89,8 @@
   .nc-air .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
   .nc-surface::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
   .nc-surface .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .nc-equipment::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
 
   @media (max-width: 768px) {
     .micro-hub { padding: 1rem; }
@@ -157,6 +159,47 @@
       <div class="nav-card-content">
         <h3>Нэгтгэл</h3>
         <p>Ус, Агаар, Арчдас — хадгалсан үр дүнгийн нэгтгэл хүснэгт</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}" class="nav-card nc-equipment">
+      <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
+      <div class="nav-card-content">
+        <h3>Тоног төхөөрөмж</h3>
+        <p>Микробиологийн лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+
+  <!-- Тайлан -->
+  <div class="section-title">
+    <i class="bi bi-graph-up" style="color:#0d9488"></i>
+    Тайлан
+    <span class="section-badge" style="background:linear-gradient(135deg,#20c997,#0d9488)">Reports</span>
+  </div>
+  <div class="nav-cards">
+    <a href="{{ url_for('microbiology.micro_dashboard') }}" class="nav-card nc-water">
+      <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
+      <div class="nav-card-content">
+        <h3>Dashboard</h3>
+        <p>KPI, сарын тренд, категори хуваарилалт, pass/fail</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('microbiology.micro_consumption') }}" class="nav-card nc-register">
+      <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
+      <div class="nav-card-content">
+        <h3>Consumption</h3>
+        <p>Захиалагч, категори, сараар нэгтгэсэн тайлан</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('microbiology.micro_monthly_plan') }}" class="nav-card nc-surface">
+      <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
+      <div class="nav-card-content">
+        <h3>Monthly Plan</h3>
+        <p>Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
