@@ -207,13 +207,10 @@ def water_data():
     import re
     result = []
     for idx, s in enumerate(reversed(samples), 1):
-        # sample_code задлах: "01_01_нэр_2026-02-02" → lab_id="01_01", name="нэр"
-        # Хуучин формат: "нэр_2026-02-02" → lab_id="", name="нэр"
-        lab_id = ''
+        # display_name: sample_code-оос огноо, lab_id хассан нэр
         display_name = s.sample_code
         m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
         if m:
-            lab_id = m.group(1)
             display_name = m.group(2)
         else:
             m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
@@ -226,7 +223,8 @@ def water_data():
         result.append({
             'seq': idx,
             'id': s.id,
-            'lab_id': lab_id,
+            'chem_lab_id': s.chem_lab_id or '',
+            'micro_lab_id': s.micro_lab_id or '',
             'sample_name': display_name,
             'sample_code': s.sample_code,
             'unit_name': unit_name,

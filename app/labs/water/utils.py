@@ -17,6 +17,7 @@ MICRO_CODES = {at['code'] for at in MICRO_ANALYSIS_TYPES}
 
 
 _MICRO_TYPES = ['microbiology', 'water & micro']
+_CHEM_TYPES = ['water', 'water & micro']
 
 
 def _generate_micro_lab_id(sample_date):
@@ -50,6 +51,39 @@ def _generate_micro_lab_id(sample_date):
     total_samples = Sample.query.filter(micro_filter).count()
 
     return day_num, total_samples
+
+
+def _generate_chem_lab_id(sample_date):
+    """Химийн лабын дугаар үүсгэх.
+
+    Формат: {batch}_{seq}
+      batch = тухайн огноонд хэддэх удаагийн дээж (water lab_type-тэй өдрүүдийн тоо)
+      seq = нийт дэс дугаар (бүх өдрүүдийн нийлбэр)
+    """
+    chem_filter = Sample.lab_type.in_(_CHEM_TYPES)
+
+    distinct_days = db.session.query(
+        func.count(func.distinct(Sample.sample_date))
+    ).filter(chem_filter).scalar() or 0
+
+    today_count = Sample.query.filter(
+        chem_filter,
+        Sample.sample_date == sample_date,
+    ).count()
+
+    if today_count > 0:
+        batch = db.session.query(
+            func.count(func.distinct(Sample.sample_date))
+        ).filter(
+            chem_filter,
+            Sample.sample_date <= sample_date,
+        ).scalar() or 1
+    else:
+        batch = distinct_days + 1
+
+    total_samples = Sample.query.filter(chem_filter).count()
+
+    return batch, total_samples
 
 
 def create_water_micro_samples(form, user_id):
@@ -86,13 +120,24 @@ def create_water_micro_samples(form, user_id):
     retention_days = int(form.get('retention_period', 7))
     retention_date = sample_date + timedelta(days=retention_days)
 
-    # Микро лабын дугаар тооцоолох (microbiology эсвэл water & micro)
-    needs_lab_id = lab_type in ('microbiology', 'water & micro')
-    if needs_lab_id:
-        day_num, total_samples = _generate_micro_lab_id(sample_date)
-        seq = total_samples
+    # Микро лабын дугаар тооцоолох
+    needs_micro_id = has_micro
+    if needs_micro_id:
+        micro_day_num, micro_total = _generate_micro_lab_id(sample_date)
+        micro_seq = micro_total
     else:
-        day_num = seq = 0
+        micro_day_num = micro_seq = 0
+
+    # Химийн лабын дугаар тооцоолох
+    needs_chem_id = has_water
+    if needs_chem_id:
+        chem_batch, chem_total = _generate_chem_lab_id(sample_date)
+        chem_seq = chem_total
+    else:
+        chem_batch = chem_seq = 0
+
+    # sample_code-д micro lab_id ашиглах (хуучин формат хадгалах)
+    needs_lab_id = lab_type in ('microbiology', 'water & micro')
 
     created = []
     skipped = []
@@ -101,9 +146,21 @@ def create_water_micro_samples(form, user_id):
         if not sample_name:
             continue
 
+        # Micro lab_id
+        cur_micro_lab_id = None
+        if needs_micro_id:
+            micro_seq += 1
+            cur_micro_lab_id = f"{micro_day_num:02d}_{micro_seq:02d}"
+
+        # Chem lab_id
+        cur_chem_lab_id = None
+        if needs_chem_id:
+            chem_seq += 1
+            cur_chem_lab_id = f"{chem_batch}_{chem_seq:02d}"
+
+        # sample_code (хуучин формат хадгалах)
         if needs_lab_id:
-            seq += 1
-            lab_id = f"{day_num:02d}_{seq:02d}"
+            lab_id = cur_micro_lab_id
             sample_code = f"{lab_id}_{sample_name}_{sample_date.isoformat()}"
         else:
             sample_code = f"{sample_name}_{sample_date.isoformat()}"
@@ -128,6 +185,8 @@ def create_water_micro_samples(form, user_id):
             return_sample=return_sample,
             retention_date=retention_date,
             status='new',
+            chem_lab_id=cur_chem_lab_id,
+            micro_lab_id=cur_micro_lab_id,
         )
         db.session.add(sample)
         created.append(sample_name)

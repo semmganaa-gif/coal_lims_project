@@ -238,6 +238,10 @@ class Sample(db.Model):
     mass_ready_at = db.Column(db.DateTime, nullable=True)
     mass_ready_by_id = db.Column(db.Integer, nullable=True)
 
+    # Усны лабын тусдаа дугаарууд
+    chem_lab_id = db.Column(db.String(20), nullable=True, index=True)   # "1_05" = batch 1, сорьц 5
+    micro_lab_id = db.Column(db.String(20), nullable=True, index=True)  # "01_05" = өдөр 1, дэс 5
+
     # 🆕 ISO 17025: Chain of Custody & Sample Retention
     sampled_by = db.Column(db.String(100))  # Хэн авсан
     sampling_date = db.Column(db.DateTime)  # Хэзээ авсан

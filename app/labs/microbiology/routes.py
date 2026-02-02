@@ -310,6 +310,8 @@ def micro_grid_data():
             'seq': idx,
             'id': s.id,
             'lab_id': lab_id,
+            'chem_lab_id': s.chem_lab_id or '',
+            'micro_lab_id': s.micro_lab_id or '',
             'sample_name': display_name,
             'sample_code': s.sample_code,
             'unit_name': s.client_name or '',

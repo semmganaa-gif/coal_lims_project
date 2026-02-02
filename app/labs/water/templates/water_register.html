@@ -465,8 +465,10 @@ const statusMap = {
 const sampleColDefs = [
   { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 40, pinned: 'left', sortable: false, filter: false },
   { headerName: '№', field: 'seq', width: 50, sortable: false, pinned: 'left' },
-  { headerName: 'Сорьцын дугаар', field: 'lab_id', width: 110, filter: true, pinned: 'left',
+  { headerName: 'Хим дугаар', field: 'chem_lab_id', width: 100, filter: true, pinned: 'left',
     cellStyle: { fontWeight: '700', color: '#0d9488' } },
+  { headerName: 'Микро дугаар', field: 'micro_lab_id', width: 110, filter: true, pinned: 'left',
+    cellStyle: { fontWeight: '700', color: '#8b5cf6' } },
   { headerName: 'Дээжний нэр', field: 'sample_name', minWidth: 200, flex: 2, filter: true, pinned: 'left' },
   { headerName: 'Нэгж', field: 'unit_name', minWidth: 120, filter: true },
   { headerName: 'Дээж авсан', field: 'sample_date', width: 110 },
