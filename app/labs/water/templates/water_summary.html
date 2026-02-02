@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Усны шинжилгээний нэгтгэл{% endblock %}
+
+{% block content %}
+<style>
+  .summary-wrap {
+    min-height: calc(100vh - 120px); padding: 1.5rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 30%, #f8fafc 60%, #f0f4ff 100%);
+    background-attachment: fixed;
+  }
+  .summary-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(32,201,151,0.08));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px; padding: 1.25rem 2rem; margin-bottom: 1.25rem;
+    box-shadow: 0 4px 24px rgba(59,130,246,0.08);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+  .summary-header h1 {
+    font-size: 1.4rem; font-weight: 800; margin: 0;
+    background: linear-gradient(135deg, #3b82f6, #20c997);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .summary-header p { color: #64748b; font-size: 0.85rem; margin: 0.25rem 0 0; }
+  .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  .header-actions .btn { border-radius: 10px; font-weight: 600; font-size: 0.82rem; }
+
+  .grid-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  .grid-card .card-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(32,201,151,0.04));
+    border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
+
+  #summaryGrid {
+    height: calc(100vh - 280px); min-height: 400px; width: 100%;
+  }
+  .ag-theme-alpine {
+    --ag-header-background-color: #f0f4ff;
+    --ag-odd-row-background-color: #fafbff;
+    --ag-row-hover-color: #eff6ff;
+    --ag-header-foreground-color: #0f172a;
+    --ag-border-color: #e2e8f0;
+    --ag-font-size: 13px;
+  }
+  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.75rem; }
+  /* Хими баганы header */
+  .chem-header { background: #eff6ff !important; }
+  /* Микро баганы header */
+  .micro-header { background: #ecfdf5 !important; }
+  /* Over/within limit */
+  .cell-over-limit { background: #fee2e2 !important; color: #dc2626 !important; font-weight: 700 !important; }
+  .cell-within-limit { background: #f0fdf4 !important; }
+  .cell-detect-fail { background: #fee2e2 !important; color: #dc2626 !important; font-weight: 700 !important; }
+  .cell-detect-pass { background: #f0fdf4 !important; color: #047857 !important; font-weight: 600 !important; }
+</style>
+
+<div class="summary-wrap">
+  <div class="summary-header">
+    <div>
+      <h1><i class="bi bi-table me-2"></i>Усны шинжилгээний нэгтгэл</h1>
+      <p>Усны хими + микробиологийн нэгдсэн үр дүн</p>
+    </div>
+    <div class="header-actions">
+      <input type="date" id="dateFrom" class="form-control form-control-sm" style="width:140px;border-radius:10px;">
+      <span class="text-muted">—</span>
+      <input type="date" id="dateTo" class="form-control form-control-sm" style="width:140px;border-radius:10px;">
+      <button id="btnLoad" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Хайх</button>
+      <div class="btn-group">
+        <button id="btnExportCsv" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</button>
+        <button id="btnCopy" class="btn btn-sm btn-outline-success"><i class="bi bi-clipboard-check me-1"></i>Хуулах</button>
+      </div>
+      <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Буцах</a>
+    </div>
+  </div>
+
+  <div class="grid-card">
+    <div class="card-header">
+      <h6><i class="bi bi-droplet-fill me-1" style="color:#3b82f6"></i>Хими
+        <span class="text-muted mx-2">+</span>
+        <i class="bi bi-bug-fill me-1" style="color:#20c997"></i>Микробиологи
+        <span id="rowCount" class="badge bg-secondary ms-2">0</span>
+      </h6>
+    </div>
+    <div id="summaryGrid" class="ag-theme-alpine"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script>
+(function(){
+  'use strict';
+
+  const COL_STATE_KEY = 'water_summary_col_state_v1';
+  let gridApi = null;
+  let chemParams = [];
+  let microFields = [];
+
+  // ══════════ Helpers ══════════
+  function fmtVal(code, val) {
+    if (val == null || val === '') return '';
+    const n = parseFloat(val);
+    if (isNaN(n)) return String(val);
+    if (Math.abs(n) < 0.01 && n !== 0) return n.toExponential(2);
+    if (n === Math.floor(n)) return n.toString();
+    return n.toFixed(n < 1 ? 3 : 2);
+  }
+
+  function fmtLimit(limit) {
+    if (!limit) return '';
+    if (Array.isArray(limit)) {
+      const lo = limit[0], hi = limit[1];
+      if (lo !== null && hi !== null) return lo + '—' + hi;
+      if (hi !== null) return '\u2264' + hi;
+      if (lo !== null) return '\u2265' + lo;
+    }
+    return String(limit);
+  }
+
+  // ══════════ Column state ══════════
+  function saveColState() {
+    if (!gridApi) return;
+    try { localStorage.setItem(COL_STATE_KEY, JSON.stringify(gridApi.getColumnState())); } catch(e) {}
+  }
+  function restoreColState() {
+    if (!gridApi) return;
+    try {
+      const s = localStorage.getItem(COL_STATE_KEY);
+      if (s) gridApi.applyColumnState({ state: JSON.parse(s), applyOrder: true });
+    } catch(e) {}
+  }
+
+  // ══════════ Build columns ══════════
+  function buildColumnDefs(chemP, microF) {
+    const cols = [
+      {
+        headerName: '№', field: '_seq', width: 55, pinned: 'left',
+        valueGetter: p => p.node.rowIndex + 1,
+        cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' },
+        sortable: false, filter: false
+      },
+      {
+        headerName: 'Дээж', field: 'sample_name', width: 200, pinned: 'left',
+        sortable: true, filter: 'agTextColumnFilter', floatingFilter: true,
+        floatingFilterComponentParams: { suppressFilterButton: true, debounceMs: 300 },
+        cellStyle: { fontWeight: 600 },
+        tooltipValueGetter: p => p.data?.sample_code || ''
+      },
+      {
+        headerName: 'Огноо', field: 'sample_date', width: 110,
+        sortable: true, filter: 'agDateColumnFilter', floatingFilter: true,
+        cellStyle: { color: '#64748b', fontSize: '0.8rem' }
+      },
+      {
+        headerName: 'Нэгж', field: 'client_name', width: 120,
+        sortable: true, filter: 'agTextColumnFilter', floatingFilter: true,
+        floatingFilterComponentParams: { suppressFilterButton: true, debounceMs: 300 },
+      }
+    ];
+
+    // ── Хими баганууд ──
+    chemP.forEach(p => {
+      cols.push({
+        headerName: p.name + (p.unit ? '\n(' + p.unit + ')' : ''),
+        headerTooltip: p.name + ' — MNS: ' + (fmtLimit(p.mns_limit) || '-'),
+        field: p.code,
+        width: 95, minWidth: 70,
+        sortable: true, filter: 'agNumberColumnFilter', floatingFilter: false,
+        type: 'numericColumn',
+        headerClass: 'chem-header',
+        valueFormatter: params => fmtVal(p.code, params.value),
+        cellClassRules: {
+          'cell-over-limit': params => {
+            if (!p.mns_limit || params.value == null) return false;
+            const n = parseFloat(params.value);
+            if (isNaN(n)) return false;
+            const lim = p.mns_limit;
+            if (Array.isArray(lim)) {
+              return (lim[0] !== null && n < lim[0]) || (lim[1] !== null && n > lim[1]);
+            }
+            return false;
+          },
+          'cell-within-limit': params => {
+            if (!p.mns_limit || params.value == null) return false;
+            const n = parseFloat(params.value);
+            if (isNaN(n)) return false;
+            const lim = p.mns_limit;
+            if (Array.isArray(lim)) {
+              const lo = lim[0], hi = lim[1];
+              return !((lo !== null && n < lo) || (hi !== null && n > hi));
+            }
+            return false;
+          }
+        }
+      });
+    });
+
+    // ── Микро баганууд ──
+    microF.forEach(p => {
+      const isDetect = !!p.detect;
+      cols.push({
+        headerName: p.name + (p.unit ? '\n(' + p.unit + ')' : ''),
+        headerTooltip: p.name + (isDetect ? ' — Илрэхгүй' : ' — MNS: ' + (fmtLimit(p.mns_limit) || '-')),
+        field: p.code,
+        width: 100, minWidth: 70,
+        sortable: true, filter: isDetect ? 'agTextColumnFilter' : 'agNumberColumnFilter', floatingFilter: false,
+        headerClass: 'micro-header',
+        valueFormatter: params => fmtVal(p.code, params.value),
+        cellClassRules: isDetect ? {
+          'cell-detect-fail': params => {
+            if (params.value == null || params.value === '') return false;
+            const s = String(params.value).trim().toLowerCase();
+            if (['илрэсэн','илэрсэн','detected','+'].includes(s)) return true;
+            const n = parseFloat(params.value);
+            return !isNaN(n) && n > 0;
+          },
+          'cell-detect-pass': params => {
+            if (params.value == null || params.value === '') return false;
+            const s = String(params.value).trim().toLowerCase();
+            if (['илрээгүй','not detected','-'].includes(s)) return true;
+            const n = parseFloat(params.value);
+            return !isNaN(n) && n === 0;
+          }
+        } : {
+          'cell-over-limit': params => {
+            if (!p.mns_limit || params.value == null) return false;
+            const n = parseFloat(params.value);
+            if (isNaN(n)) return false;
+            const lim = p.mns_limit;
+            return Array.isArray(lim) && lim[1] !== null && n > lim[1];
+          },
+          'cell-within-limit': params => {
+            if (!p.mns_limit || params.value == null) return false;
+            const n = parseFloat(params.value);
+            if (isNaN(n)) return false;
+            const lim = p.mns_limit;
+            return Array.isArray(lim) && !(lim[1] !== null && n > lim[1]);
+          }
+        }
+      });
+    });
+
+    return cols;
+  }
+
+  // ══════════ Create / update grid ══════════
+  function renderGrid(rows, chemP, microF) {
+    chemParams = chemP;
+    microFields = microF;
+    document.getElementById('rowCount').textContent = rows.length;
+
+    const columnDefs = buildColumnDefs(chemP, microF);
+
+    if (gridApi) {
+      gridApi.setGridOption('columnDefs', columnDefs);
+      gridApi.setGridOption('rowData', rows);
+      return;
+    }
+
+    const gridDiv = document.getElementById('summaryGrid');
+    const gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rows,
+      defaultColDef: {
+        resizable: true, sortable: true, filter: true,
+        suppressHeaderMenuButton: true,
+        wrapHeaderText: true, autoHeaderHeight: true,
+      },
+      rowHeight: 28,
+      headerHeight: 48,
+      floatingFiltersHeight: 28,
+      rowSelection: 'multiple',
+      suppressCellFocus: true,
+      enableBrowserTooltips: true,
+      tooltipShowDelay: 200,
+      onGridReady: function(params) {
+        gridApi = params.api;
+        setTimeout(restoreColState, 100);
+      },
+      onColumnMoved: saveColState,
+      onColumnPinned: saveColState,
+      onColumnVisible: saveColState,
+      onColumnResized: function(p) { if (p.finished) saveColState(); },
+    };
+
+    if (typeof agGrid !== 'undefined' && agGrid.createGrid) {
+      gridApi = agGrid.createGrid(gridDiv, gridOptions);
+    } else if (window.LIMS_AGGRID) {
+      gridApi = LIMS_AGGRID.createGrid('#summaryGrid', columnDefs, rows, {
+        rowSelection: 'multiple',
+        suppressCellFocus: true,
+        headerHeight: 48,
+      });
+    }
+  }
+
+  // ══════════ Load data ══════════
+  function loadData() {
+    const df = document.getElementById('dateFrom').value;
+    const dt = document.getElementById('dateTo').value;
+    let url = "{{ url_for('water.summary_data') }}";
+    const qs = [];
+    if (df) qs.push('date_from=' + df);
+    if (dt) qs.push('date_to=' + dt);
+    if (qs.length) url += '?' + qs.join('&');
+
+    document.getElementById('rowCount').textContent = '...';
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => { renderGrid(data.rows || [], data.chem_params || [], data.micro_fields || []); })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('rowCount').textContent = 'Алдаа';
+      });
+  }
+
+  // ══════════ Export CSV ══════════
+  document.getElementById('btnExportCsv').addEventListener('click', function() {
+    if (!gridApi) return;
+    gridApi.exportDataAsCsv({
+      fileName: 'water_micro_summary_' + new Date().toISOString().slice(0,10) + '.csv',
+      processCellCallback: function(p) { return p.value != null ? p.value : ''; },
+      processHeaderCallback: function(p) {
+        return (p.column.getColDef().headerName || '').replace(/\n/g, ' ');
+      }
+    });
+  });
+
+  // ══════════ Copy selected ══════════
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    if (!gridApi) return;
+    const nodes = gridApi.getSelectedNodes();
+    if (!nodes.length) { alert('Хуулах мөрүүдээ сонгоно уу.'); return; }
+
+    const columns = gridApi.getAllDisplayedColumns().filter(c => c.getColId() !== '_seq');
+    const header = columns.map(c => (c.getColDef().headerName || '').replace(/\n/g,' ')).join('\t');
+    const dataRows = nodes.map(n => {
+      return columns.map(c => {
+        const v = n.data[c.getColId()];
+        return v != null ? v : '';
+      }).join('\t');
+    }).join('\n');
+
+    const text = header + '\n' + dataRows;
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(() => alert(nodes.length + ' мөр хуулагдлаа!'));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); alert(nodes.length + ' мөр хуулагдлаа!'); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  });
+
+  // ══════════ Init ══════════
+  document.getElementById('btnLoad').addEventListener('click', loadData);
+  loadData();
+})();
+</script>
+{% endblock %}

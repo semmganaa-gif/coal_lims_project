@@ -4,8 +4,7 @@
 import json
 from datetime import datetime, timedelta
 
-import sqlalchemy as sa
-from sqlalchemy import func, cast, Date as SADate
+from sqlalchemy import func
 
 from app import db
 from app.models import Sample
@@ -21,7 +20,7 @@ _MICRO_TYPES = ['microbiology', 'water & micro']
 _CHEM_TYPES = ['water', 'water & micro']
 
 
-def _generate_micro_lab_id(sample_date):
+def _generate_micro_lab_id(sample_date, next_batch=False):
     """Микробиологийн лабын дугаар үүсгэх.
 
     Формат: XX_YY
@@ -39,7 +38,9 @@ def _generate_micro_lab_id(sample_date):
         Sample.sample_date == sample_date,
     ).count()
 
-    if today_count > 0:
+    if next_batch:
+        day_num = distinct_days + 1
+    elif today_count > 0:
         day_num = db.session.query(
             func.count(func.distinct(Sample.sample_date))
         ).filter(
@@ -54,6 +55,30 @@ def _generate_micro_lab_id(sample_date):
     return day_num, total_samples
 
 
+def _max_batch(extra_filters=None):
+    """Хамгийн том batch дугаар олох (chem_lab_id байгаа бүх дээжээс)."""
+    chem_filter = Sample.lab_type.in_(_CHEM_TYPES)
+    q = db.session.query(Sample.chem_lab_id).filter(
+        chem_filter,
+        Sample.chem_lab_id.isnot(None),
+        Sample.chem_lab_id != '',
+    )
+    if extra_filters:
+        for f in extra_filters:
+            q = q.filter(f)
+    rows = q.all()
+    max_b = 0
+    for (lid,) in rows:
+        if lid and '_' in lid:
+            try:
+                b = int(lid.split('_')[0])
+                if b > max_b:
+                    max_b = b
+            except (ValueError, IndexError):
+                pass
+    return max_b
+
+
 def _generate_chem_lab_id(sample_date, next_batch=False):
     """Химийн лабын дугаар үүсгэх.
 
@@ -63,18 +88,7 @@ def _generate_chem_lab_id(sample_date, next_batch=False):
     """
     chem_filter = Sample.lab_type.in_(_CHEM_TYPES)
 
-    # Одоо байгаа хамгийн том batch дугаар олох
-    max_batch = db.session.query(
-        func.max(
-            func.cast(
-                func.split_part(Sample.chem_lab_id, '_', 1),
-                sa.Integer
-            )
-        )
-    ).filter(
-        chem_filter,
-        Sample.chem_lab_id.isnot(None),
-    ).scalar() or 0
+    max_b = _max_batch()
 
     today_count = Sample.query.filter(
         chem_filter,
@@ -82,24 +96,12 @@ def _generate_chem_lab_id(sample_date, next_batch=False):
     ).count()
 
     if next_batch:
-        batch = max_batch + 1
+        batch = max_b + 1
     elif today_count > 0:
-        # Өнөөдөр аль хэдийн дээж байвал тэр өдрийн batch-г ашиглах
-        today_batch = db.session.query(
-            func.max(
-                func.cast(
-                    func.split_part(Sample.chem_lab_id, '_', 1),
-                    sa.Integer
-                )
-            )
-        ).filter(
-            chem_filter,
-            Sample.sample_date == sample_date,
-            Sample.chem_lab_id.isnot(None),
-        ).scalar()
-        batch = today_batch if today_batch else max_batch + 1
+        today_b = _max_batch([Sample.sample_date == sample_date])
+        batch = today_b if today_b else max_b + 1
     else:
-        batch = max_batch + 1
+        batch = max_b + 1
 
     total_samples = Sample.query.filter(chem_filter).count()
 
@@ -148,15 +150,15 @@ def create_water_micro_samples(form, user_id):
     retention_date = sample_date + timedelta(days=retention_days)
 
     # Микро лабын дугаар тооцоолох
+    next_batch = bool(form.get('next_batch'))
     needs_micro_id = has_micro
     if needs_micro_id:
-        micro_day_num, micro_total = _generate_micro_lab_id(sample_date)
+        micro_day_num, micro_total = _generate_micro_lab_id(sample_date, next_batch=next_batch)
         micro_seq = micro_total
     else:
         micro_day_num = micro_seq = 0
 
     # Химийн лабын дугаар тооцоолох
-    next_batch = bool(form.get('next_batch'))
     needs_chem_id = has_water
     if needs_chem_id:
         chem_batch, chem_total = _generate_chem_lab_id(sample_date, next_batch=next_batch)

@@ -60,6 +60,130 @@ def water_analysis_hub():
     )
 
 
+@water_bp.route('/summary')
+@login_required
+@lab_required('water')
+def water_summary():
+    """Усны хими + микробиологийн нэгдсэн үр дүнгийн нэгтгэл."""
+    return render_template(
+        'water_summary.html',
+        title='Усны шинжилгээний үр дүнгийн нэгтгэл',
+    )
+
+
+@water_bp.route('/api/summary_data')
+@login_required
+@lab_required('water')
+def summary_data():
+    """Усны хими + микробиологийн үр дүнг нэгтгэж буцаана."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    # Ус + микро дээжүүд бүгд
+    q = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+    )
+    if date_from:
+        q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
+    if date_to:
+        q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
+    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300).all()
+    if not samples:
+        return jsonify({'rows': [], 'chem_params': [], 'micro_fields': []})
+
+    sample_ids = [s.id for s in samples]
+
+    # ── Химийн идэвхтэй анализ кодууд ──
+    active_chem_codes = [
+        a['code'] for a in WATER_ANALYSIS_TYPES
+        if 'archive' not in a.get('categories', [])
+    ]
+
+    # ── Бүх үр дүн (хими + микро) нэг query ──
+    all_codes = active_chem_codes + ['MICRO_WATER']
+    results = AnalysisResult.query.filter(
+        AnalysisResult.sample_id.in_(sample_ids),
+        AnalysisResult.analysis_code.in_(all_codes),
+    ).all()
+
+    # sample_id → { code → value } (хими)
+    # sample_id → { micro fields } (микро)
+    chem_map = {}
+    micro_map = {}
+    for r in results:
+        try:
+            raw = _json.loads(r.raw_data) if isinstance(r.raw_data, str) else (r.raw_data or {})
+        except (ValueError, TypeError):
+            raw = {}
+
+        if r.analysis_code == 'MICRO_WATER':
+            # Микро raw_data: {cfu_22, cfu_37, ecoli, salmonella, ...}
+            micro_map[r.sample_id] = raw
+        else:
+            if r.sample_id not in chem_map:
+                chem_map[r.sample_id] = {}
+            val = raw.get('value') or raw.get('result') or raw.get('average') or r.final_result
+            chem_map[r.sample_id][r.analysis_code] = val
+
+    import re
+    rows = []
+    for s in samples:
+        display_name = s.sample_code
+        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+        if m:
+            display_name = m.group(2)
+        else:
+            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+            if m2:
+                display_name = m2.group(1)
+
+        row = {
+            'sample_id': s.id,
+            'sample_code': s.sample_code,
+            'sample_name': display_name,
+            'sample_date': s.sample_date.isoformat() if s.sample_date else '',
+            'client_name': s.client_name or '',
+        }
+        # Хими
+        cres = chem_map.get(s.id, {})
+        for code in active_chem_codes:
+            row[code] = cres.get(code)
+        # Микро
+        mres = micro_map.get(s.id, {})
+        row['cfu_22'] = mres.get('cfu_22')
+        row['cfu_37'] = mres.get('cfu_37')
+        row['cfu_avg'] = mres.get('cfu_avg')
+        row['ecoli'] = mres.get('ecoli')
+        row['salmonella'] = mres.get('salmonella')
+
+        rows.append(row)
+
+    # Химийн параметр мэдээлэл
+    chem_params = []
+    for code in active_chem_codes:
+        p = ALL_WATER_PARAMS.get(code, {})
+        chem_params.append({
+            'code': code,
+            'name': p.get('name_mn', code),
+            'unit': p.get('unit', ''),
+            'mns_limit': p.get('mns_limit'),
+        })
+
+    # Микро баганууд
+    micro_fields = [
+        {'code': 'cfu_22', 'name': 'CFU 22°C', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
+        {'code': 'cfu_37', 'name': 'CFU 37°C', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
+        {'code': 'cfu_avg', 'name': 'CFU дундаж', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
+        {'code': 'ecoli', 'name': 'E.coli', 'unit': '100мл', 'mns_limit': None, 'detect': True},
+        {'code': 'salmonella', 'name': 'Salmonella', 'unit': '25мл', 'mns_limit': None, 'detect': True},
+    ]
+
+    return jsonify({'rows': rows, 'chem_params': chem_params, 'micro_fields': micro_fields})
+
+
 @water_bp.route('/register', methods=['GET', 'POST'])
 @login_required
 @lab_required('water')
@@ -103,32 +227,126 @@ def register_sample():
 @lab_required('water')
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
+    import json as _json
     code_upper = code.upper()
     param = ALL_WATER_PARAMS.get(code_upper)
     if not param:
         return jsonify({'error': f'Unknown analysis code: {code}'}), 404
 
     form_templates = {
+        # Шууд хэмжилт
         'PH': 'analysis_forms/ph_ec_form.html',
         'EC': 'analysis_forms/ph_ec_form.html',
         'TEMP': 'analysis_forms/ph_ec_form.html',
-        'FE_W': 'analysis_forms/metals_form.html',
-        'MN_W': 'analysis_forms/metals_form.html',
-        'CU_W': 'analysis_forms/metals_form.html',
-        'ZN_W': 'analysis_forms/metals_form.html',
-        'PB_W': 'analysis_forms/metals_form.html',
-        'AS_W': 'analysis_forms/metals_form.html',
-        'CD_W': 'analysis_forms/metals_form.html',
-        'CR_W': 'analysis_forms/metals_form.html',
-        'HG_W': 'analysis_forms/metals_form.html',
-        'CL_W': 'analysis_forms/anions_form.html',
-        'SO4': 'analysis_forms/anions_form.html',
-        'NO3': 'analysis_forms/anions_form.html',
-        'CN_W': 'analysis_forms/anions_form.html',
-        'TURB': 'analysis_forms/physical_form.html',
-        'TSS': 'analysis_forms/physical_form.html',
-        'COLOR': 'analysis_forms/physical_form.html',
+        'F_W': 'analysis_forms/ph_ec_form.html',
+        'CL_FREE': 'analysis_forms/ph_ec_form.html',
+        'DS': 'analysis_forms/ph_ec_form.html',
+        'TURB': 'analysis_forms/ph_ec_form.html',
+        'DUST': 'analysis_forms/ph_ec_form.html',
+        'SLUDGE': 'analysis_forms/ph_ec_form.html',
+        'BOD': 'analysis_forms/ph_ec_form.html',
+        'COD': 'analysis_forms/ph_ec_form.html',
+        'DO_W': 'analysis_forms/ph_ec_form.html',
+        'CA': 'analysis_forms/ph_ec_form.html',
+        'MG': 'analysis_forms/ph_ec_form.html',
+        'ALK': 'analysis_forms/ph_ec_form.html',
+        # Спектрофотометр
+        'NH4': 'analysis_forms/spectro_form.html',
+        'NO2': 'analysis_forms/spectro_form.html',
+        'NO3': 'analysis_forms/spectro_form.html',
+        'FE_W': 'analysis_forms/spectro_form.html',
+        'COLOR': 'analysis_forms/spectro_form.html',
+        'PO4': 'analysis_forms/spectro_form.html',
+        # Титрлэлт
+        'HARD': 'analysis_forms/titration_form.html',
+        'CL_W': 'analysis_forms/titration_form.html',
+        # Жингийн арга
+        'TDS': 'analysis_forms/gravimetric_form.html',
+        # Архив
+        'MN_W': 'analysis_forms/spectro_form.html',
+        'CU_W': 'analysis_forms/spectro_form.html',
+        'ZN_W': 'analysis_forms/spectro_form.html',
+        'PB_W': 'analysis_forms/spectro_form.html',
+        'AS_W': 'analysis_forms/spectro_form.html',
+        'CD_W': 'analysis_forms/spectro_form.html',
+        'CR_W': 'analysis_forms/spectro_form.html',
+        'HG_W': 'analysis_forms/spectro_form.html',
+        'SO4': 'analysis_forms/spectro_form.html',
+        'CN_W': 'analysis_forms/spectro_form.html',
+        'TSS': 'analysis_forms/ph_ec_form.html',
     }
+
+    # ── Дээж бэлтгэх (нүүрсний лабын загвараар) ──
+    newly_selected_ids_str = request.args.get('sample_ids', '')
+    new_ids = [int(x) for x in newly_selected_ids_str.split(',') if x.isdigit()]
+
+    # Approved дээжүүдийг хасах
+    approved_ids = {r.sample_id for r in db.session.query(AnalysisResult.sample_id).filter(
+        AnalysisResult.analysis_code == code_upper,
+        AnalysisResult.status == 'approved'
+    ).distinct().all()}
+
+    # Хуучин хадгалагдсан (pending/rejected) + шинэ сонгосон
+    seen = set()
+    samples_to_analyze = []
+
+    # A: Одоо байгаа үр дүнтэй дээжүүд
+    existing_results_q = AnalysisResult.query.filter(
+        AnalysisResult.user_id == current_user.id,
+        AnalysisResult.analysis_code == code_upper,
+        ~AnalysisResult.sample_id.in_(approved_ids) if approved_ids else True
+    ).all()
+    for r in existing_results_q:
+        if r.sample_id not in seen:
+            s = db.session.get(Sample, r.sample_id)
+            if s:
+                samples_to_analyze.append(s)
+                seen.add(r.sample_id)
+
+    # B: Шинэ сонгосон
+    if new_ids:
+        new_samples = Sample.query.filter(Sample.id.in_(new_ids)).all()
+        smap = {s.id: s for s in new_samples}
+        for sid in new_ids:
+            if sid not in seen and sid not in approved_ids and sid in smap:
+                samples_to_analyze.append(smap[sid])
+                seen.add(sid)
+
+    # Existing results map
+    existing_results_map = {}
+    rejected_samples_info = {}
+    if samples_to_analyze:
+        sample_ids = [s.id for s in samples_to_analyze]
+        results = AnalysisResult.query.filter(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.analysis_code == code_upper,
+            AnalysisResult.status.in_(['pending_review', 'rejected'])
+        ).all()
+        for r in results:
+            raw = r.raw_data
+            if isinstance(raw, str):
+                try:
+                    raw = _json.loads(raw)
+                except (ValueError, TypeError):
+                    raw = {}
+            elif raw is None:
+                raw = {}
+
+            if r.status == 'rejected':
+                reason = getattr(r, 'rejection_comment', None) or 'Ахлах буцаасан'
+                reason_code = getattr(r, 'rejection_category', None) or getattr(r, 'error_reason', None)
+                rejected_samples_info[r.sample_id] = {
+                    'reason': reason,
+                    'reason_code': reason_code,
+                }
+                if reason_code != 'data_entry':
+                    raw = {}
+
+            existing_results_map[r.sample_id] = {
+                'status': r.status,
+                'raw_data': raw,
+                'final_result': r.final_result,
+            }
 
     template = form_templates.get(code_upper, 'analysis_forms/ph_ec_form.html')
     return render_template(
@@ -137,6 +355,11 @@ def workspace(code):
         analysis_code=code_upper,
         param=param,
         use_aggrid=True,
+        samples=samples_to_analyze,
+        aggrid_samples=samples_to_analyze,
+        existing_results_map=existing_results_map,
+        rejected_samples_info=rejected_samples_info,
+        error_labels={},
     )
 
 
@@ -200,9 +423,17 @@ def save_results():
 @lab_required('water')
 def water_data():
     """Усны дээжийн жагсаалт (ус + микробиологи)."""
-    samples = Sample.query.filter(
+    from datetime import datetime as _dt
+    q = Sample.query.filter(
         Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
-    ).order_by(Sample.id.desc()).limit(200).all()
+    )
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    if date_from:
+        q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
+    if date_to:
+        q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
+    samples = q.order_by(Sample.id.desc()).limit(500).all()
 
     import re
     result = []
@@ -218,8 +449,8 @@ def water_data():
                 display_name = m2.group(1)
 
         # Нэгжийн нэр
-        unit_info = WATER_UNITS.get(s.client_name, {})
-        unit_name = unit_info.get('name', s.client_name) if unit_info else s.client_name
+        unit_info = WATER_UNITS.get(s.client_name)
+        unit_name = unit_info.get('short_name', unit_info['name']) if unit_info else s.client_name
         result.append({
             'seq': idx,
             'id': s.id,

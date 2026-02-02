@@ -26,8 +26,9 @@
   /* Grid wrapper */
   .grid-wrapper { width: 100%; height: calc(100% - 50px); }
   .ag-theme-alpine .ag-header-cell-label { white-space: normal !important; line-height: 1.2; }
-  .ag-theme-alpine .ag-header-row { height: 50px !important; }
-  .ag-theme-alpine .ag-header-cell { padding-top: 4px; padding-bottom: 4px; }
+  .ag-theme-alpine .ag-header-row-column { height: 60px !important; }
+  .ag-theme-alpine .ag-header-row-column-filter { height: 32px !important; }
+  .ag-theme-alpine .ag-header-cell { padding-top: 2px; padding-bottom: 2px; }
 
   /* ---- Add form styles ---- */
   .water-gateway {
@@ -142,9 +143,16 @@
     <!-- ===== TAB 1: Жагсаалт ===== -->
     <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
       <div class="card border-0 shadow-sm h-100" style="border-radius: 0 12px 12px 12px;">
-        <div class="p-2 d-flex align-items-center gap-2">
+        <div class="p-2 d-flex align-items-center gap-2 flex-wrap">
+          <label class="small fw-bold mb-0">From:</label>
+          <input type="date" id="dateFrom" class="form-control form-control-sm" style="width:130px;">
+          <label class="small fw-bold mb-0">To:</label>
+          <input type="date" id="dateTo" class="form-control form-control-sm" style="width:130px;">
           <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshSampleGrid()">
             <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearDateFilter()">
+            All
           </button>
           <span class="badge bg-info" id="grid-count">0</span>
           <span class="text-muted small">samples</span>
@@ -299,13 +307,43 @@
               <!-- Баруун: Шинжилгээ -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Усны шинжилгээ</h6>
+                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Унд ахуйн усны шинжилгээ</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">Цуцлах</button>
                   </div>
-                  <div class="analysis-check-grid" id="wc">
-                    {% for at in water_analyses %}
+                  <div class="analysis-check-grid" id="wc_drink">
+                    {% for at in water_analyses if 'drinking' in at.categories %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>Бохир усны шинжилгээ</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="wc_waste">
+                    {% for at in water_analyses if 'wastewater' in at.categories and 'drinking' not in at.categories %}
+                    <label class="analysis-check">
+                      <input type="checkbox" name="analyses" value="{{ at.code }}">
+                      <span>{{ at.name }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>Бусад шинжилгээ</h6>
+                  <div class="mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">Бүгд</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">Цуцлах</button>
+                  </div>
+                  <div class="analysis-check-grid" id="wc_other">
+                    {% for at in water_analyses if 'other' in at.categories %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -470,11 +508,13 @@ const sampleColDefs = [
     width: 40, pinned: 'left', filter: false, suppressMenu: true },
   { headerName: 'No.', field: 'seq', width: 55, pinned: 'left',
     filter: 'agNumberColumnFilter' },
-  { headerName: 'Chemistry Laboratory Number', field: 'chem_lab_id', width: 90, pinned: 'left',
+  { headerName: 'Chemistry Laboratory Number', field: 'chem_lab_id',
+    width: 120, minWidth: 120, maxWidth: 120, pinned: 'left',
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter',
     cellStyle: { fontWeight: '700', color: '#0d9488' } },
-  { headerName: 'Microbiology Laboratory Number', field: 'micro_lab_id', width: 90, pinned: 'left',
+  { headerName: 'Microbiology Laboratory Number', field: 'micro_lab_id',
+    width: 120, minWidth: 120, maxWidth: 120, pinned: 'left',
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter',
     cellStyle: { fontWeight: '700', color: '#8b5cf6' } },
@@ -485,10 +525,10 @@ const sampleColDefs = [
     filter: 'agTextColumnFilter' },
   { headerName: 'Sampling Date', field: 'sample_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
-    filter: 'agDateColumnFilter' },
+    filter: 'agTextColumnFilter' },
   { headerName: 'Registration Date', field: 'received_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
-    filter: 'agDateColumnFilter' },
+    filter: 'agTextColumnFilter' },
   { headerName: 'Sampled By', field: 'sampled_by', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
@@ -501,7 +541,7 @@ const sampleColDefs = [
     cellRenderer: p => p.value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '' },
   { headerName: 'Retention Date', field: 'retention_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
-    filter: 'agDateColumnFilter' },
+    filter: 'agTextColumnFilter' },
   { headerName: 'Status', field: 'status', width: 100,
     filter: 'agTextColumnFilter',
     cellRenderer: p => statusMap[p.value] || p.value },
@@ -549,7 +589,14 @@ function loadSampleGrid() {
 }
 
 function refreshSampleGrid() {
-  fetch("{{ url_for('microbiology.micro_grid_data') if is_micro else url_for('water.water_data') }}")
+  const base = "{{ url_for('microbiology.micro_grid_data') if is_micro else url_for('water.water_data') }}";
+  const params = new URLSearchParams();
+  const df = document.getElementById('dateFrom').value;
+  const dt = document.getElementById('dateTo').value;
+  if (df) params.set('date_from', df);
+  if (dt) params.set('date_to', dt);
+  const url = params.toString() ? base + '?' + params.toString() : base;
+  fetch(url)
     .then(r => r.json())
     .then(data => {
       sampleGridApi.setGridOption('rowData', data);
@@ -558,6 +605,12 @@ function refreshSampleGrid() {
         sampleGridApi.autoSizeAllColumns();
       }, 100);
     });
+}
+
+function clearDateFilter() {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  refreshSampleGrid();
 }
 
 document.addEventListener('DOMContentLoaded', function() {

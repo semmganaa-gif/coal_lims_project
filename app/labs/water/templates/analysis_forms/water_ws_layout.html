@@ -1,0 +1,716 @@
+{% extends "base.html" %}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+{% block title %}{{ param.name_mn }} - Ажлын талбар{% endblock %}
+
+{% block content %}
+<style>
+  .water-ws {
+    min-height: calc(100vh - 120px); padding: 1.5rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
+    background-attachment: fixed;
+  }
+  .ws-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.08));
+    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+    box-shadow: 0 4px 24px rgba(59,130,246,0.1);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .ws-header h1 {
+    font-size: 1.4rem; font-weight: 800; margin: 0;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .ws-header .ws-meta { color: #64748b; font-size: 0.85rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+
+  .grid-card {
+    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+    overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  .grid-card .card-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(37,99,235,0.04));
+    border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem;
+  }
+  .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
+
+  .ag-theme-alpine {
+    --ag-header-background-color: #eff6ff;
+    --ag-odd-row-background-color: #fafbff;
+    --ag-row-hover-color: #eff6ff;
+    --ag-header-foreground-color: #0f172a;
+    --ag-border-color: #e2e8f0;
+    --ag-font-size: 14px;
+    --ag-font-family: "Noto Sans", sans-serif;
+  }
+  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0; padding: 0.75rem 1.25rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Quick reference */
+  #waterQuickRef {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.15); border-radius: 16px;
+    margin-bottom: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  #waterQuickRef .ref-body { padding: 1rem 1.25rem; }
+  #waterQuickRef table { font-size: 0.82rem; }
+  #waterQuickRef th { background: #eff6ff; font-weight: 600; }
+
+  /* Sample modal */
+  .sample-list-item { cursor: pointer; transition: background 0.15s; }
+  .sample-list-item:hover { background: #eff6ff; }
+  .sample-list-item.selected { background: #dbeafe; border-color: #3b82f6; }
+  .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
+
+  @media (max-width: 768px) {
+    .water-ws { padding: 1rem; }
+    .ws-header { flex-direction: column; text-align: center; }
+  }
+</style>
+
+<div class="water-ws">
+  {# ── HEADER ── #}
+  <div class="ws-header">
+    <div>
+      <h1><i class="bi bi-droplet-fill me-2"></i>{{ param.name_mn }}</h1>
+      <div class="ws-meta">
+        <span class="badge bg-primary bg-opacity-75">{{ analysis_code }}</span>
+        {% if param.get('unit') %}<span>{{ param.unit }}</span>{% endif %}
+        {% if param.get('standard') %}<span class="badge bg-secondary bg-opacity-50">{{ param.standard }}</span>{% endif %}
+        {% if param.get('mns_limit') %}
+          <span class="badge bg-warning text-dark">MNS:
+            {% if param.mns_limit is iterable and param.mns_limit is not string %}
+              {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
+            {% else %}{{ param.mns_limit }}{% endif %}
+            {{ param.get('unit','') }}
+          </span>
+        {% endif %}
+        {% block method_badge %}{% endblock %}
+      </div>
+    </div>
+    <div class="ws-actions">
+      <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Буцах
+      </a>
+      <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#waterQuickRef">
+        <i class="bi bi-journal-bookmark me-1"></i>Стандарт
+      </button>
+      <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel">
+        <i class="bi bi-stopwatch me-1"></i>Цаг
+      </button>
+      <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#waterSampleModal">
+        <i class="bi bi-plus-circle me-1"></i>Дээж сонгох
+      </button>
+      <button id="btnSave" class="btn text-white" style="background:#3b82f6;">
+        <i class="bi bi-save me-1"></i>Хадгалах
+      </button>
+    </div>
+  </div>
+
+  {# ── QUICK REFERENCE (collapsible) ── #}
+  <div class="collapse" id="waterQuickRef">
+    <div class="ref-body">
+      <h6 class="mb-2"><i class="bi bi-journal-bookmark me-1" style="color:#3b82f6"></i>Стандартын лавлах</h6>
+      <table class="table table-sm table-bordered mb-0">
+        <thead><tr><th>Параметр</th><th>Нэгж</th><th>MNS хязгаар</th><th>Стандарт</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>{{ param.name_mn }}</td>
+            <td>{{ param.get('unit','') }}</td>
+            <td>
+              {% if param.get('mns_limit') %}
+                {% if param.mns_limit is iterable and param.mns_limit is not string %}
+                  {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
+                {% else %}{{ param.mns_limit }}{% endif %}
+              {% else %}-{% endif %}
+            </td>
+            <td>{{ param.get('standard','MNS 4586:2007') }}</td>
+          </tr>
+        </tbody>
+      </table>
+      {% block extra_ref %}{% endblock %}
+    </div>
+  </div>
+
+  {# ── TIMER PANEL (collapsible) ── #}
+  <div class="collapse mb-3" id="waterTimerPanel">
+    <div class="card border-0 shadow-sm" style="border-radius:16px; overflow:hidden;">
+      <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between"
+           style="background:linear-gradient(135deg,#fef3c7,#fffbeb); border-bottom:1px solid #fde68a;">
+        <span class="fw-bold" style="font-size:0.9rem; color:#92400e;">
+          <i class="bi bi-stopwatch-fill me-1"></i>Цаг хэмжигч
+        </span>
+        <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel"></button>
+      </div>
+      <div class="card-body p-3">
+        <div class="d-flex flex-wrap gap-2 mb-3" id="waterTimerPresets"></div>
+        <div id="waterTimerList" class="d-flex flex-wrap gap-3"></div>
+        <div id="waterTimerEmpty" class="text-muted small text-center py-2">
+          <i class="bi bi-info-circle me-1"></i>Preset товч дарж эсвэл шинэ timer нэмнэ үү.
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+    .water-timer-card {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 0.75rem 1rem; min-width: 200px; max-width: 260px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .water-timer-card .timer-name { font-weight: 700; font-size: 0.82rem; color: #1e293b; margin-bottom: 0.25rem; }
+    .water-timer-card .timer-display { font-size: 1.4rem; font-weight: 800; font-family: 'Courier New', monospace; color: #0f172a; }
+    .water-timer-card .timer-display.timer-done { color: #dc2626; animation: wtBlink 1s infinite; }
+    @keyframes wtBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .water-timer-card .btn-group .btn { font-size: 0.75rem; padding: 2px 8px; }
+  </style>
+
+  {# ── GRID CARD ── #}
+  <div class="grid-card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h6>
+        <i class="bi bi-table me-1" style="color:#3b82f6"></i>
+        {{ param.name_mn }} — шинжилгээний хүснэгт
+        <span id="rowCount" class="badge bg-secondary ms-2">0</span>
+      </h6>
+    </div>
+    <div id="waterGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e0ffe0"></div> MNS хязгаарт нийцсэн</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffe0e0"></div> MNS хязгаараас давсан</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9ecef"></div> Хадгалагдсан (засах боломжгүй)</div>
+    </div>
+  </div>
+</div>
+
+{# ── SAMPLE SELECT MODAL ── #}
+<div class="modal fade" id="waterSampleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #eff6ff, #f0f9ff);">
+        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#3b82f6"></i>Дээж сонгох</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3">
+          <div class="col-5">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="Дээжний код хайх...">
+          </div>
+          <div class="col-4">
+            <select id="filterClient" class="form-select form-select-sm">
+              <option value="">Бүх захиалагч</option>
+            </select>
+          </div>
+          <div class="col-3 d-flex align-items-center gap-2">
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Цэвэрлэх"><i class="bi bi-x-circle"></i></button>
+            <span id="filteredCount" class="text-muted small"></span>
+          </div>
+        </div>
+        <div id="sampleListLoading" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Ачаалж байна...</p>
+        </div>
+        <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+                <th>Дээжний код</th>
+                <th>Захиалагч</th>
+                <th>Огноо</th>
+              </tr>
+            </thead>
+            <tbody id="sampleListBody"></tbody>
+          </table>
+        </div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">Боломжит дээж олдсонгүй</div>
+      </div>
+      <div class="modal-footer">
+        <span id="selectedCount" class="me-auto text-muted small">0 сонгосон</span>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn text-white btn-sm" style="background:#3b82f6;" id="btnConfirmSamples">
+          <i class="bi bi-check-lg me-1"></i>Нэмэх
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  'use strict';
+
+  // ══════════ CONSTANTS ══════════
+  const ANALYSIS_CODE = {{ analysis_code | tojson }};
+  const ELIGIBLE_URL = {{ url_for('water.eligible_samples', code=analysis_code) | tojson }};
+  const SAVE_URL = {{ url_for('water.save_results') | tojson }};
+  const mnsLimit = {{ param.get('mns_limit', 'null') | tojson }};
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const storageKey = 'water_worksheet_' + ANALYSIS_CODE + '_sample_ids';
+
+  {{ aggrid_macros.dataset_block() | safe }}
+
+  const draftMgr = new LIMSDraftManager('WATER_' + ANALYSIS_CODE);
+  const numParser = LIMS_AGGRID.numParser;
+  const fmt4 = p => p.value != null ? parseFloat(p.value).toFixed(4) : '';
+  const fmt3 = p => p.value != null ? parseFloat(p.value).toFixed(3) : '';
+  const fmt2 = p => p.value != null ? parseFloat(p.value).toFixed(2) : '';
+  const fmt1 = p => p.value != null ? parseFloat(p.value).toFixed(1) : '';
+
+  // ══════════ HELPERS ══════════
+  function checkLimit(val) {
+    if (!mnsLimit || val == null) return {};
+    const v = parseFloat(val);
+    if (isNaN(v)) return {};
+    if (Array.isArray(mnsLimit)) {
+      const [lo, hi] = mnsLimit;
+      if ((lo !== null && v < lo) || (hi !== null && v > hi)) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      return { backgroundColor: '#e0ffe0' };
+    }
+    return {};
+  }
+
+  const editCol = {
+    editable: p => !p.data.is_saved,
+    cellEditor: 'agTextCellEditor',
+    valueParser: numParser,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+  };
+
+  function showToast(message, type) {
+    type = type || 'success';
+    const colors = { success: '#3b82f6', error: '#dc3545', warning: '#f59e0b' };
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:' + (colors[type] || colors.success);
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 3000);
+  }
+
+  function updateRowCount() {
+    let c = 0;
+    window.waterGridApi.forEachNode(() => c++);
+    document.getElementById('rowCount').textContent = c;
+  }
+
+  // ══════════ COLUMN DEFS (from child block) ══════════
+  const baseCols = [
+    {
+      headerName: '№', field: 'index', width: 55, pinned: 'left',
+      cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' }
+    },
+    {
+      headerName: 'Дээжний нэр', field: 'sample_code', width: 260, pinned: 'left',
+      cellRenderer: p => {
+        let h = '<div style="font-weight:600">' + p.value + '</div>';
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) h += '<div style="font-size:0.7rem;color:#dc3545"><i class="bi bi-exclamation-triangle"></i> ' + rej.reason + '</div>';
+        return h;
+      }
+    }
+  ];
+
+  const actionCol = {
+    headerName: '', width: 80, pinned: 'right',
+    cellRenderer: p => {
+      if (p.data.is_saved) return '<span class="text-muted small">&#10003;</span>';
+      return '<button class="btn btn-sm btn-outline-danger" onclick="window._waterRemove(' + p.data.sample_id + ')"><i class="bi bi-x"></i></button>';
+    },
+    cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+  };
+
+  // ── Form-specific column defs injected by child templates ──
+  {% block column_defs %}
+  // Default: ph/ec simple measurement
+  var formColumns = [
+    { headerName: 'Хэмжилт 1', field: 'm1', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Хэмжилт 2', field: 'm2', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Хэмжилт 3', field: 'm3', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    {
+      headerName: 'Дундаж', field: 'average', width: 110,
+      valueGetter: p => {
+        const vals = [p.data.m1, p.data.m2, p.data.m3].filter(v => v != null && !isNaN(v));
+        return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+      },
+      valueFormatter: fmt3,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    }
+  ];
+  var editableFields = ['m1', 'm2', 'm3', 'notes'];
+  var computedCols = ['average'];
+  {% endblock %}
+
+  const notesCol = {
+    headerName: 'Тэмдэглэл', field: 'notes', flex: 1,
+    editable: p => !p.data.is_saved,
+    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+  };
+
+  const columnDefs = [...baseCols, ...formColumns, notesCol, actionCol];
+
+  // ══════════ ROW DATA ══════════
+  {% block row_builder %}
+  // Default row builder for ph/ec
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      m1: raw.m1 ?? raw.value ?? null,
+      m2: raw.m2 ?? null,
+      m3: raw.m3 ?? null,
+      notes: raw.notes || ''
+    };
+  });
+  {% endblock %}
+
+  // ── Restore drafts ──
+  const drafts = draftMgr.restore() || {};
+  rowData.forEach(r => {
+    if (!r.is_saved) {
+      const d = drafts[r.sample_id];
+      if (d) { Object.keys(d).forEach(k => { if (d[k] != null) r[k] = d[k]; }); }
+    }
+  });
+
+  // ══════════ CREATE GRID ══════════
+  window.waterGridApi = LIMS_AGGRID.createGrid('#waterGrid', columnDefs, rowData, {
+    editableColIds: editableFields,
+    onCellValueChanged: function(params) {
+      params.api.refreshCells({ rowNodes: [params.node], columns: computedCols });
+      saveDrafts();
+    },
+    onFirstDataRendered: function() { updateRowCount(); },
+    onRowDataUpdated: function() { updateRowCount(); },
+  });
+  updateRowCount();
+
+  // ══════════ DRAFT ══════════
+  function saveDrafts() {
+    const d = {};
+    window.waterGridApi.forEachNode(n => {
+      if (!n.data.is_saved) {
+        const r = { ...n.data };
+        delete r.index; delete r.sample_code; delete r.is_saved; delete r.sample_id;
+        d[n.data.sample_id] = r;
+      }
+    });
+    draftMgr.save(d);
+  }
+
+  // ══════════ REMOVE ROW ══════════
+  window._waterRemove = function(sampleId) {
+    const rows = [];
+    window.waterGridApi.forEachNode(n => { if (n.data.sample_id !== sampleId) rows.push(n.data); });
+    rows.forEach((r, i) => r.index = i + 1);
+    window.waterGridApi.setGridOption('rowData', rows);
+    draftMgr.purge([sampleId]);
+    updateRowCount();
+  };
+
+  // ══════════ SAVE ══════════
+  {% block save_collector %}
+  // Default save collector for ph/ec
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const vals = [d.m1, d.m2, d.m3].filter(v => v != null && !isNaN(v));
+      const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: { m1: d.m1, m2: d.m2, m3: d.m3, value: avg, notes: d.notes }
+      });
+    });
+    return items;
+  }
+  {% endblock %}
+
+  document.getElementById('btnSave').addEventListener('click', async function() {
+    const items = collectSaveItems();
+    if (!items.length) { showToast('Хадгалах өгөгдөл байхгүй', 'warning'); return; }
+
+    let ok = 0;
+    for (const item of items) {
+      try {
+        const r = await fetch(SAVE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+          body: JSON.stringify({ sample_id: item.sample_id, analysis_code: ANALYSIS_CODE, results: item.raw_data })
+        });
+        const res = await r.json();
+        if (res.success) ok++;
+      } catch(e) { console.error(e); }
+    }
+    if (ok > 0) {
+      draftMgr.purge(items.map(i => i.sample_id));
+      showToast(ok + ' дээжний үр дүн амжилттай хадгалагдлаа!', 'success');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast('Хадгалахад алдаа гарлаа', 'error');
+    }
+  });
+
+  // ══════════ SAMPLE MODAL ══════════
+  let allSamples = [];
+  let modalSelected = new Set();
+
+  // localStorage sync
+  (function syncIds() {
+    const url = new URL(window.location.href);
+    const urlIds = url.searchParams.get('sample_ids');
+    if (urlIds) {
+      try { localStorage.setItem(storageKey, urlIds); } catch(e) {}
+    } else {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved && saved.trim()) {
+          url.searchParams.set('sample_ids', saved);
+          window.location.href = url.toString();
+        }
+      } catch(e) {}
+    }
+  })();
+
+  function loadSampleList() {
+    document.getElementById('sampleListLoading').style.display = '';
+    document.getElementById('sampleListContainer').style.display = 'none';
+    document.getElementById('sampleListEmpty').style.display = 'none';
+
+    const existingIds = new Set();
+    window.waterGridApi.forEachNode(n => existingIds.add(String(n.data.sample_id)));
+
+    fetch(ELIGIBLE_URL)
+      .then(r => r.json())
+      .then(list => {
+        allSamples = list;
+        document.getElementById('sampleListLoading').style.display = 'none';
+        if (!list.length) {
+          document.getElementById('sampleListEmpty').style.display = '';
+          return;
+        }
+        // Build client filter
+        const sel = document.getElementById('filterClient');
+        sel.innerHTML = '<option value="">Бүх захиалагч</option>';
+        [...new Set(list.map(s => s.client_name).filter(Boolean))].sort().forEach(c => {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+        });
+        // Render rows
+        const tbody = document.getElementById('sampleListBody');
+        tbody.innerHTML = '';
+        list.forEach(s => {
+          const inGrid = existingIds.has(String(s.id));
+          const tr = document.createElement('tr');
+          tr.className = 'sample-list-item' + (inGrid ? ' table-secondary' : '');
+          tr.dataset.code = (s.sample_code || '').toLowerCase();
+          tr.dataset.client = (s.client_name || '').toLowerCase();
+          if (inGrid) tr.style.opacity = '0.5';
+          tr.innerHTML = '<td><input type="checkbox" class="form-check-input ws-chk" value="' + s.id + '"' + (inGrid ? ' disabled' : '') + '></td>'
+            + '<td>' + s.sample_code + '</td>'
+            + '<td class="text-muted small">' + (s.client_name || '-') + '</td>'
+            + '<td class="text-muted small">' + (s.sample_date || '-') + '</td>';
+          tr.addEventListener('click', function(e) {
+            if (e.target.tagName === 'INPUT') return;
+            const c = this.querySelector('.ws-chk');
+            if (c && !c.disabled) { c.checked = !c.checked; c.dispatchEvent(new Event('change')); }
+          });
+          tbody.appendChild(tr);
+        });
+        document.getElementById('sampleListContainer').style.display = '';
+        updateFilteredCount();
+        // Checkbox events
+        tbody.querySelectorAll('.ws-chk').forEach(c => {
+          c.addEventListener('change', function() {
+            if (this.checked) modalSelected.add(this.value); else modalSelected.delete(this.value);
+            updateSelectedCount();
+          });
+        });
+      })
+      .catch(() => {
+        document.getElementById('sampleListLoading').style.display = 'none';
+        document.getElementById('sampleListEmpty').style.display = '';
+      });
+  }
+
+  function updateFilteredCount() {
+    let vis = 0;
+    document.querySelectorAll('#sampleListBody tr').forEach(tr => { if (tr.style.display !== 'none') vis++; });
+    document.getElementById('filteredCount').textContent = vis + ' / ' + allSamples.length;
+  }
+  function updateSelectedCount() {
+    document.getElementById('selectedCount').textContent = modalSelected.size + ' сонгосон';
+  }
+  function applyFilters() {
+    const q = (document.getElementById('sampleSearch').value || '').toLowerCase().trim();
+    const cl = (document.getElementById('filterClient').value || '').toLowerCase();
+    document.querySelectorAll('#sampleListBody tr').forEach(tr => {
+      const mc = !q || (tr.dataset.code || '').includes(q);
+      const ml = !cl || (tr.dataset.client || '') === cl;
+      tr.style.display = (mc && ml) ? '' : 'none';
+    });
+    updateFilteredCount();
+  }
+
+  document.getElementById('sampleSearch')?.addEventListener('input', applyFilters);
+  document.getElementById('filterClient')?.addEventListener('change', applyFilters);
+  document.getElementById('clearFilters')?.addEventListener('click', function() {
+    document.getElementById('sampleSearch').value = '';
+    document.getElementById('filterClient').value = '';
+    applyFilters();
+  });
+  document.getElementById('checkAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.ws-chk:not(:disabled)').forEach(c => {
+      if (c.closest('tr').style.display !== 'none') { c.checked = this.checked; if (this.checked) modalSelected.add(c.value); else modalSelected.delete(c.value); }
+    });
+    updateSelectedCount();
+  });
+
+  document.getElementById('waterSampleModal')?.addEventListener('show.bs.modal', function() {
+    modalSelected = new Set();
+    document.getElementById('sampleSearch').value = '';
+    loadSampleList();
+  });
+
+  document.getElementById('btnConfirmSamples')?.addEventListener('click', function() {
+    if (!modalSelected.size) { showToast('Дээж сонгоно уу', 'warning'); return; }
+    const url = new URL(window.location.href);
+    const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
+    const allIds = [...exist, ...[...modalSelected].filter(x => !exist.includes(x))];
+    try { localStorage.setItem(storageKey, allIds.join(',')); } catch(e) {}
+    url.searchParams.set('sample_ids', allIds.join(','));
+    window.location.href = url.toString();
+  });
+
+})();
+
+// ══════════ TIMER ══════════
+(function() {
+  const STORAGE_PREFIX = 'tmr_WATER_';
+  const PRESETS = [
+    { label: 'BOD5 инкубаци 20°C 5 хоног', seconds: 432000 },
+    { label: 'Хатаах 105°C 2 цаг', seconds: 7200 },
+    { label: 'Шатаах 550°C 1 цаг', seconds: 3600 },
+    { label: 'Титрлэлт 30 мин', seconds: 1800 },
+  ];
+  let timers = [], nextId = 1;
+
+  function saveTimers() {
+    const data = timers.map(t => ({ id:t.id, name:t.name, totalSec:t.totalSec, remaining:t.remaining, running:t.running, startedAt:t.startedAt||null }));
+    try { sessionStorage.setItem(STORAGE_PREFIX+'timers', JSON.stringify(data)); } catch(e) {}
+  }
+  function loadTimers() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_PREFIX+'timers');
+      if (!raw) return;
+      JSON.parse(raw).forEach(d => {
+        let rem = d.remaining;
+        if (d.running && d.startedAt) { rem = Math.max(0, rem - Math.floor((Date.now()-d.startedAt)/1000)); }
+        const t = { id:d.id, name:d.name, totalSec:d.totalSec, remaining:rem, running:false, intervalId:null, startedAt:null };
+        timers.push(t);
+        if (d.running && rem > 0) startTimer(t);
+        if (nextId <= d.id) nextId = d.id + 1;
+      });
+    } catch(e) {}
+  }
+  function fmtTime(sec) {
+    if (sec <= 0) return '00:00:00';
+    const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+  function playAlarm() {
+    try {
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      [0,0.3,0.6].forEach(delay => {
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value=880; osc.type='sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime+delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+delay+0.25);
+        osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+0.25);
+      });
+    } catch(e) {}
+  }
+  function startTimer(t) {
+    if (t.running) return;
+    t.running = true; t.startedAt = Date.now();
+    t.intervalId = setInterval(() => {
+      t.remaining--;
+      if (t.remaining <= 0) { t.remaining=0; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; playAlarm(); }
+      renderTimers(); saveTimers();
+    }, 1000);
+    saveTimers();
+  }
+  function pauseTimer(t) { if (!t.running) return; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; saveTimers(); }
+  function resetTimer(t) { pauseTimer(t); t.remaining=t.totalSec; saveTimers(); renderTimers(); }
+  function removeTimer(t) { pauseTimer(t); timers=timers.filter(x=>x.id!==t.id); saveTimers(); renderTimers(); }
+  function addTimer(name, seconds) {
+    const t = { id:nextId++, name:name, totalSec:seconds, remaining:seconds, running:false, intervalId:null, startedAt:null };
+    timers.push(t); startTimer(t); renderTimers();
+  }
+  function renderTimers() {
+    const list=document.getElementById('waterTimerList'), empty=document.getElementById('waterTimerEmpty');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!timers.length) { empty.style.display=''; return; }
+    empty.style.display='none';
+    timers.forEach(t => {
+      const done = t.remaining<=0 && !t.running;
+      const card = document.createElement('div');
+      card.className = 'water-timer-card';
+      card.innerHTML = '<div class="timer-name">'+t.name+'</div>'
+        +'<div class="timer-display'+(done?' timer-done':'')+'">'+fmtTime(t.remaining)+'</div>'
+        +'<div class="btn-group mt-1 w-100">'
+        +(t.running
+          ? '<button class="btn btn-outline-warning btn-sm tmr-pause"><i class="bi bi-pause-fill"></i></button>'
+          : '<button class="btn btn-outline-success btn-sm tmr-start"><i class="bi bi-play-fill"></i></button>')
+        +'<button class="btn btn-outline-secondary btn-sm tmr-reset"><i class="bi bi-arrow-counterclockwise"></i></button>'
+        +'<button class="btn btn-outline-danger btn-sm tmr-remove"><i class="bi bi-x-lg"></i></button>'
+        +'</div>';
+      const startBtn=card.querySelector('.tmr-start'), pauseBtn=card.querySelector('.tmr-pause');
+      if (startBtn) startBtn.onclick=()=>{startTimer(t);renderTimers();};
+      if (pauseBtn) pauseBtn.onclick=()=>{pauseTimer(t);renderTimers();};
+      card.querySelector('.tmr-reset').onclick=()=>resetTimer(t);
+      card.querySelector('.tmr-remove').onclick=()=>removeTimer(t);
+      list.appendChild(card);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const pc = document.getElementById('waterTimerPresets');
+    if (!pc) return;
+    PRESETS.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className='btn btn-sm btn-outline-warning';
+      btn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
+      btn.innerHTML='<i class="bi bi-stopwatch me-1"></i>'+p.label;
+      btn.onclick=()=>addTimer(p.label,p.seconds);
+      pc.appendChild(btn);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className='btn btn-sm btn-outline-secondary';
+    addBtn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
+    addBtn.innerHTML='<i class="bi bi-plus-circle me-1"></i>Шинэ timer';
+    addBtn.onclick=()=>{
+      const name=prompt('Timer нэр:','Custom timer');
+      if(!name)return;
+      const minStr=prompt('Хугацаа (минут):','60');
+      const mins=parseInt(minStr);
+      if(isNaN(mins)||mins<=0)return;
+      addTimer(name,mins*60);
+    };
+    pc.appendChild(addBtn);
+    loadTimers(); renderTimers();
+  });
+})();
+</script>
+{% endblock %}

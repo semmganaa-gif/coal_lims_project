@@ -169,36 +169,102 @@ CHEMICAL_PARAMS = {
         'unit': 'mg/L',
         'mns_limit': None,
     },
+    'TDS': {
+        'name': 'Total dissolved solids',
+        'name_mn': 'Хуурай үлдэгдэл',
+        'unit': 'mg/L',
+        'mns_limit': (None, 1000),
+    },
+    'NH4': {
+        'name': 'Ammonium',
+        'name_mn': 'Аммонийн ион',
+        'unit': 'mg/L',
+        'mns_limit': (None, 0.5),
+    },
+    'NO2': {
+        'name': 'Nitrite',
+        'name_mn': 'Нитритийн ион',
+        'unit': 'mg/L',
+        'mns_limit': (None, 3.0),
+    },
+    'DS': {
+        'name': 'Dissolved salts',
+        'name_mn': 'Ууссан давс',
+        'unit': 'mg/L',
+        'mns_limit': None,
+    },
+    'F_W': {
+        'name': 'Fluoride',
+        'name_mn': 'Фторид',
+        'unit': 'mg/L',
+        'mns_limit': (None, 1.5),
+    },
+    'CL_FREE': {
+        'name': 'Free residual chlorine',
+        'name_mn': 'Чөлөөт үлдэгдэл хлор',
+        'unit': 'mg/L',
+        'mns_limit': (0.3, 0.5),
+    },
+    'PO4': {
+        'name': 'Phosphate',
+        'name_mn': 'Фосфат ион',
+        'unit': 'mg/L',
+        'mns_limit': None,
+    },
+    'DUST': {
+        'name': 'Dust',
+        'name_mn': 'Тоос',
+        'unit': 'mg/m³',
+        'mns_limit': None,
+    },
+    'SLUDGE': {
+        'name': 'Sludge',
+        'name_mn': 'Лаг',
+        'unit': 'mg/L',
+        'mns_limit': None,
+    },
 }
 
 # Бүх усны шинжилгээний төрлүүд
 WATER_ANALYSIS_TYPES = [
-    {'code': 'PH', 'name': 'pH', 'order': 1, 'role': 'chemist'},
-    {'code': 'EC', 'name': 'Цахилгаан дамжуулалт (EC)', 'order': 2, 'role': 'chemist'},
-    {'code': 'TURB', 'name': 'Булингар (Turbidity)', 'order': 3, 'role': 'chemist'},
-    {'code': 'TSS', 'name': 'Нийт хатуу бодис (TSS)', 'order': 4, 'role': 'chemist'},
-    {'code': 'COLOR', 'name': 'Өнгө (Color)', 'order': 5, 'role': 'chemist'},
-    {'code': 'TEMP', 'name': 'Температур', 'order': 6, 'role': 'chemist'},
-    {'code': 'CA', 'name': 'Кальци (Ca)', 'order': 10, 'role': 'chemist'},
-    {'code': 'MG', 'name': 'Магни (Mg)', 'order': 11, 'role': 'chemist'},
-    {'code': 'HARD', 'name': 'Хатуулаг (Hardness)', 'order': 12, 'role': 'chemist'},
-    {'code': 'ALK', 'name': 'Шүлтлэг (Alkalinity)', 'order': 13, 'role': 'chemist'},
-    {'code': 'CL_W', 'name': 'Хлорид (Cl-)', 'order': 14, 'role': 'chemist'},
-    {'code': 'SO4', 'name': 'Сульфат (SO4)', 'order': 15, 'role': 'chemist'},
-    {'code': 'NO3', 'name': 'Нитрат (NO3)', 'order': 16, 'role': 'chemist'},
-    {'code': 'FE_W', 'name': 'Төмөр (Fe)', 'order': 20, 'role': 'chemist'},
-    {'code': 'MN_W', 'name': 'Манган (Mn)', 'order': 21, 'role': 'chemist'},
-    {'code': 'CU_W', 'name': 'Зэс (Cu)', 'order': 22, 'role': 'chemist'},
-    {'code': 'ZN_W', 'name': 'Цайр (Zn)', 'order': 23, 'role': 'chemist'},
-    {'code': 'PB_W', 'name': 'Хар тугалга (Pb)', 'order': 24, 'role': 'chemist'},
-    {'code': 'AS_W', 'name': 'Хүнцэл (As)', 'order': 25, 'role': 'chemist'},
-    {'code': 'CD_W', 'name': 'Кадми (Cd)', 'order': 26, 'role': 'chemist'},
-    {'code': 'CR_W', 'name': 'Хром (Cr)', 'order': 27, 'role': 'chemist'},
-    {'code': 'HG_W', 'name': 'Мөнгөн ус (Hg)', 'order': 28, 'role': 'chemist'},
-    {'code': 'CN_W', 'name': 'Цианид (CN)', 'order': 29, 'role': 'chemist'},
-    {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 30, 'role': 'chemist'},
-    {'code': 'COD', 'name': 'ХХХ (COD)', 'order': 31, 'role': 'chemist'},
-    {'code': 'DO_W', 'name': 'Ууссан хүчилтөрөгч (DO)', 'order': 32, 'role': 'chemist'},
+    # ─── Унд ахуйн (12) + Бохир ус (12) — олон категорид хамаарч болно ───
+    {'code': 'HARD', 'name': 'Ерөнхий хатуулаг', 'order': 1, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'TDS', 'name': 'Хуурай үлдэгдэл (Умбуур)', 'order': 2, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'NH4', 'name': 'Аммонийн ион (NH₄⁺)', 'order': 3, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'NO2', 'name': 'Нитритийн ион (NO₂⁻)', 'order': 4, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'NO3', 'name': 'Нитратын ион (NO₃⁻)', 'order': 5, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'FE_W', 'name': 'Төмрийн ион (Fe)', 'order': 6, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'COLOR', 'name': 'Өнгө', 'order': 7, 'role': 'chemist', 'categories': ['drinking']},
+    {'code': 'EC', 'name': 'ЦДЧ (EC)', 'order': 8, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'DS', 'name': 'Ууссан давс', 'order': 9, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'F_W', 'name': 'Фторид (F⁻)', 'order': 10, 'role': 'chemist', 'categories': ['drinking']},
+    {'code': 'CL_FREE', 'name': 'Чөлөөт үлдэгдэл хлор', 'order': 11, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'PH', 'name': 'Усны орчин (pH)', 'order': 12, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'PO4', 'name': 'Фосфат ион (PO₄³⁻)', 'order': 14, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 15, 'role': 'chemist', 'categories': ['wastewater']},
+    # ─── Бусад ───
+    {'code': 'DUST', 'name': 'Тоос', 'order': 20, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE', 'name': 'Лаг', 'order': 21, 'role': 'chemist', 'categories': ['other']},
+    # ─── Архив (түр хадгалсан, ашиглахгүй байгаа) ───
+    {'code': 'COD', 'name': 'ХХХ (COD)', 'order': 90, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'DO_W', 'name': 'Ууссан хүчилтөрөгч (DO)', 'order': 91, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'TSS', 'name': 'Нийт хатуу бодис (TSS)', 'order': 92, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'TURB', 'name': 'Булингар (Turbidity)', 'order': 93, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'TEMP', 'name': 'Температур', 'order': 94, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'CA', 'name': 'Кальци (Ca)', 'order': 95, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'MG', 'name': 'Магни (Mg)', 'order': 96, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'ALK', 'name': 'Шүлтлэг (Alkalinity)', 'order': 97, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'SO4', 'name': 'Сульфат (SO₄²⁻)', 'order': 98, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'MN_W', 'name': 'Манган (Mn)', 'order': 99, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'CU_W', 'name': 'Зэс (Cu)', 'order': 100, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'ZN_W', 'name': 'Цайр (Zn)', 'order': 101, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'PB_W', 'name': 'Хар тугалга (Pb)', 'order': 102, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'AS_W', 'name': 'Хүнцэл (As)', 'order': 103, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'CD_W', 'name': 'Кадми (Cd)', 'order': 104, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'CR_W', 'name': 'Хром (Cr)', 'order': 105, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'HG_W', 'name': 'Мөнгөн ус (Hg)', 'order': 106, 'role': 'chemist', 'categories': ['archive']},
+    {'code': 'CN_W', 'name': 'Цианид (CN)', 'order': 107, 'role': 'chemist', 'categories': ['archive']},
 ]
 
 # Бүх параметр нэгтгэл
@@ -211,6 +277,7 @@ ALL_WATER_PARAMS = {**PHYSICAL_PARAMS, **CHEMICAL_PARAMS}
 WATER_UNITS = {
     'uutsb': {
         'name': 'УУЦБ',
+        'short_name': 'УУЦБ',
         'icon': 'bi-gear-wide-connected',
         'color': '#06b6d4',
         'samples': [
@@ -222,6 +289,7 @@ WATER_UNITS = {
     },
     'negdsen_office': {
         'name': 'Нэгдсэн оффис',
+        'short_name': 'Нэгдсэн оффис',
         'icon': 'bi-building',
         'color': '#8b5cf6',
         'samples': [
@@ -231,6 +299,7 @@ WATER_UNITS = {
     },
     'tsagaan_khad': {
         'name': 'Цагаан хад',
+        'short_name': 'TKH',
         'icon': 'bi-building',
         'color': '#6366f1',
         'samples': [
@@ -240,6 +309,7 @@ WATER_UNITS = {
     },
     'tsetsii': {
         'name': 'Цэций хороолол',
+        'short_name': 'Цэций хороолол',
         'icon': 'bi-thermometer-half',
         'color': '#ef4444',
         'samples': [
@@ -248,6 +318,7 @@ WATER_UNITS = {
     },
     'naymant': {
         'name': '"Наймант" гүний худаг',
+        'short_name': 'Наймант',
         'icon': 'bi-arrow-down-circle',
         'color': '#0dcaf0',
         'samples': [
@@ -265,6 +336,7 @@ WATER_UNITS = {
     },
     'naimdai': {
         'name': '"Наймдайн хөндий" гүний худаг',
+        'short_name': 'Наймдай',
         'icon': 'bi-arrow-down-circle',
         'color': '#3b82f6',
         'samples': [
@@ -282,6 +354,7 @@ WATER_UNITS = {
     },
     'malchdyn_hudag': {
         'name': 'Малчдын худаг',
+        'short_name': 'Малчдын худаг',
         'icon': 'bi-droplet-half',
         'color': '#f59e0b',
         'samples': [
@@ -312,6 +385,7 @@ WATER_UNITS = {
     },
     'hyanalт': {
         'name': 'Хяналтын цооног',
+        'short_name': 'Хяналтын цооног',
         'icon': 'bi-eyeglasses',
         'color': '#14b8a6',
         'samples': [
@@ -324,6 +398,7 @@ WATER_UNITS = {
     },
     'tsf': {
         'name': 'TSF',
+        'short_name': 'TSF',
         'icon': 'bi-water',
         'color': '#ec4899',
         'samples': [
@@ -335,6 +410,7 @@ WATER_UNITS = {
     },
     'uarp': {
         'name': 'UARP',
+        'short_name': 'UARP',
         'icon': 'bi-house-gear',
         'color': '#10b981',
         'samples': [
@@ -347,6 +423,7 @@ WATER_UNITS = {
     },
     'shine_camp': {
         'name': 'Шинэ кэмп',
+        'short_name': 'Шинэ кэмп',
         'icon': 'bi-house',
         'color': '#f97316',
         'samples': [
@@ -356,6 +433,7 @@ WATER_UNITS = {
     },
     'busad': {
         'name': 'Бусад',
+        'short_name': 'Бусад',
         'icon': 'bi-three-dots',
         'color': '#64748b',
         'samples': [
@@ -376,6 +454,7 @@ WATER_UNITS = {
     },
     'dotood_air': {
         'name': 'Дотоод хяналт (Агаар)',
+        'short_name': 'CM (Агаар)',
         'icon': 'bi-wind',
         'color': '#6366f1',
         'samples': [
@@ -391,6 +470,7 @@ WATER_UNITS = {
     },
     'dotood_swab': {
         'name': 'Дотоод хяналт (Арчдас)',
+        'short_name': 'CM (Арчдас)',
         'icon': 'bi-hand-index',
         'color': '#8b5cf6',
         'samples': [

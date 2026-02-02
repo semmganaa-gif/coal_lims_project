@@ -1,0 +1,51 @@
+{% extends "analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Жингийн арга</span>{% endblock %}
+
+{% block column_defs %}
+  var formColumns = [
+    { headerName: 'V дээж, мл', field: 'volume', width: 110, type: 'numericColumn', ...editCol },
+    { headerName: 'm1 (хоосон), г', field: 'm1', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    { headerName: 'm2 (дараах), г', field: 'm2', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    {
+      headerName: 'Үр дүн, мг/л', field: 'result', width: 130,
+      valueGetter: p => {
+        const m1 = p.data.m1, m2 = p.data.m2, v = p.data.volume;
+        if (m1 == null || m2 == null || !v) return null;
+        return ((m2 - m1) * 1000 * 1000) / v;
+      },
+      valueFormatter: fmt1,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    }
+  ];
+  var editableFields = ['volume', 'm1', 'm2', 'notes'];
+  var computedCols = ['result'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      volume: raw.volume ?? 100, m1: raw.m1 ?? null, m2: raw.m2 ?? null, notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const result = (d.m1 != null && d.m2 != null && d.volume) ? ((d.m2 - d.m1) * 1e6) / d.volume : null;
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: { volume: d.volume, m1: d.m1, m2: d.m2, result: result, notes: d.notes }
+      });
+    });
+    return items;
+  }
+{% endblock %}

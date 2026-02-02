@@ -1,0 +1,82 @@
+{% extends "analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Титрлэлт</span>{% endblock %}
+
+{% block column_defs %}
+  const ANALYSIS_CODE_LOCAL = {{ analysis_code | tojson }};
+
+  function calcResult(d) {
+    const v1 = d.v1, v2 = d.v2;
+    if (v1 == null && v2 == null) return null;
+    const vAvg = (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2);
+    const N = d.normality || 0.1;
+    const dil = d.dilution || 1;
+    const vSample = d.v_sample || 100;
+    if (ANALYSIS_CODE_LOCAL === 'CL_W') {
+      const blank = d.blank || 0;
+      return ((vAvg - blank) * 35.453 * N * dil) / vSample;
+    }
+    return (N * vAvg * 1000) / vSample * dil;
+  }
+
+  var formColumns = [
+    { headerName: 'V дээж, мл', field: 'v_sample', width: 100, type: 'numericColumn', ...editCol },
+    { headerName: 'N (норм)', field: 'normality', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Шингэрүүлэлт', field: 'dilution', width: 110, type: 'numericColumn', ...editCol },
+  ];
+  if (ANALYSIS_CODE_LOCAL === 'CL_W') {
+    formColumns.push({ headerName: 'Хоосон утга', field: 'blank', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 });
+  }
+  formColumns.push(
+    { headerName: 'V1', field: 'v1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'V2', field: 'v2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    {
+      headerName: 'V дундаж', field: 'v_avg', width: 100,
+      valueGetter: p => {
+        const v1 = p.data.v1, v2 = p.data.v2;
+        return (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2 || null);
+      }, valueFormatter: fmt3
+    },
+    {
+      headerName: 'Үр дүн', field: 'result', width: 110,
+      valueGetter: p => calcResult(p.data),
+      valueFormatter: fmt2,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    }
+  );
+  var editableFields = ANALYSIS_CODE_LOCAL === 'CL_W'
+    ? ['v_sample', 'normality', 'dilution', 'blank', 'v1', 'v2', 'notes']
+    : ['v_sample', 'normality', 'dilution', 'v1', 'v2', 'notes'];
+  var computedCols = ['v_avg', 'result'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      v_sample: raw.v_sample ?? 100,
+      normality: raw.normality ?? ({{ analysis_code | tojson }} === 'HARD' ? 0.02 : 0.1),
+      dilution: raw.dilution ?? 1, blank: raw.blank ?? null,
+      v1: raw.v1 ?? null, v2: raw.v2 ?? null, notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const result = calcResult(d);
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: { v_sample: d.v_sample, normality: d.normality, dilution: d.dilution, blank: d.blank, v1: d.v1, v2: d.v2, result: result, notes: d.notes }
+      });
+    });
+    return items;
+  }
+{% endblock %}

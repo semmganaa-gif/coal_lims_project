@@ -73,6 +73,8 @@
   .nc-micro .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
   .nc-standard::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
   .nc-standard .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .nc-equipment::before { background: linear-gradient(90deg, #8b5cf6, #6366f1); }
+  .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #6d28d9; }
 
   @media (max-width: 768px) {
     .water-dash { padding: 1rem; }
@@ -137,6 +139,14 @@
       <div class="nav-card-content">
         <h3>MNS Стандарт</h3>
         <p>Усны чанарын стандартын хязгаарууд (шинжилгээний хуудсанд)</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}" class="nav-card nc-equipment">
+      <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
+      <div class="nav-card-content">
+        <h3>Тоног төхөөрөмж</h3>
+        <p>Усны лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

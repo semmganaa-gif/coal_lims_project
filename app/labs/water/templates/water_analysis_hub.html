@@ -134,6 +134,9 @@
       <p>Усны чанарын {{ analysis_types|length }} шинжилгээ ({{ sample_count }} дээж)</p>
     </div>
     <div class="hub-header-actions">
+      <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-primary" style="border-radius:12px;font-weight:600;">
+        <i class="bi bi-table me-1"></i>Нэгтгэл
+      </a>
       <div class="hub-search">
         <i class="bi bi-search"></i>
         <input type="text" id="analysis-search" placeholder="Хайх... (pH, Төмөр, SO4)">
@@ -142,20 +145,16 @@
   </div>
 
   <div class="category-tabs">
-    <div class="cat-tab active" data-cat="physical">
-      <i class="bi bi-thermometer-half"></i> Физик
+    <div class="cat-tab active" data-cat="drinking">
+      <i class="bi bi-cup-straw"></i> Унд ахуйн
       <span class="tab-count">0</span>
     </div>
-    <div class="cat-tab" data-cat="chemical">
-      <i class="bi bi-droplet-half"></i> Хими — Ионууд
+    <div class="cat-tab" data-cat="wastewater">
+      <i class="bi bi-water"></i> Бохир ус
       <span class="tab-count">0</span>
     </div>
-    <div class="cat-tab" data-cat="metals">
-      <i class="bi bi-shield-exclamation"></i> Хүнд металл
-      <span class="tab-count">0</span>
-    </div>
-    <div class="cat-tab" data-cat="organic">
-      <i class="bi bi-water"></i> Органик
+    <div class="cat-tab" data-cat="other">
+      <i class="bi bi-three-dots"></i> Бусад
       <span class="tab-count">0</span>
     </div>
   </div>
@@ -168,11 +167,7 @@
 
   <div class="cards-grid" id="analysis-list">
     {% for at in analysis_types %}
-    {% set cat = 'organic' %}
-    {% if at.order < 10 %}{% set cat = 'physical' %}
-    {% elif at.order < 20 %}{% set cat = 'chemical' %}
-    {% elif at.order < 30 %}{% set cat = 'metals' %}
-    {% endif %}
+    {% set cats = at.categories|default(['other'])|join(',') %}
 
     {% set ic = 'icon-cyan' %}{% set ii = 'bi-droplet' %}
     {% if at.code == 'PH' %}{% set ic = 'icon-blue' %}{% set ii = 'bi-speedometer2' %}
@@ -192,7 +187,7 @@
        class="analysis-card"
        data-name="{{ at.name|lower }}"
        data-code="{{ at.code|lower }}"
-       data-cat="{{ cat }}"
+       data-cats="{{ cats }}"
        style="animation-delay: {{ loop.index0 * 0.05 }}s;">
       <div class="card-icon {{ ic }}">
         <i class="bi {{ ii }}"></i>
@@ -226,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const cards = document.querySelectorAll('#analysis-list .analysis-card');
   const tabs = document.querySelectorAll('.cat-tab');
   const noResults = document.getElementById('no-results');
-  let currentCat = 'physical';
+  let currentCat = 'drinking';
 
   tabs.forEach(tab => {
     tab.addEventListener('click', function() {
@@ -240,14 +235,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (searchInput) searchInput.addEventListener('input', () => filterCards());
 
+  function getCats(card) { return (card.dataset.cats || '').split(','); }
+
   function filterCards() {
     const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
     let visible = 0;
     cards.forEach(card => {
       const name = card.dataset.name || '';
       const code = card.dataset.code || '';
-      const cat = card.dataset.cat || '';
-      const match = (!q || name.includes(q) || code.includes(q)) && cat === currentCat;
+      const cats = getCats(card);
+      const match = (!q || name.includes(q) || code.includes(q)) && cats.includes(currentCat);
       card.style.display = match ? '' : 'none';
       if (match) { card.style.animationDelay = (visible * 0.05) + 's'; visible++; }
     });
@@ -257,13 +254,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function updateCounts() {
     const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
-    const counts = { physical: 0, chemical: 0, metals: 0, organic: 0 };
+    const counts = { drinking: 0, wastewater: 0, other: 0 };
     cards.forEach(card => {
       const name = card.dataset.name || '';
       const code = card.dataset.code || '';
-      const cat = card.dataset.cat || '';
+      const cats = getCats(card);
       if (!q || name.includes(q) || code.includes(q)) {
-        if (counts[cat] !== undefined) counts[cat]++;
+        cats.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
       }
     });
     tabs.forEach(tab => {

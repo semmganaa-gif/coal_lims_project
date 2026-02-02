@@ -62,12 +62,16 @@ class LicenseManager:
     def get_current_license(self):
         """Одоогийн лиценз авах"""
         from app.models import SystemLicense
+        from app import db
 
         # Cache шалгах
         now = datetime.utcnow()
         if self._license_cache and self._last_check:
             if now - self._last_check < self._check_interval:
-                return self._license_cache
+                try:
+                    return db.session.merge(self._license_cache, load=False)
+                except Exception:
+                    pass
 
         # Database-аас авах
         license_obj = SystemLicense.query.filter_by(is_active=True).first()
