@@ -1,5 +1,57 @@
 # CHANGELOG - LIMS Сайжруулалтууд
 
+## [2026-02-03] - Усны химийн workspace шинэчлэл + Нэгдсэн нэгтгэл хуудас
+
+### Shared Layout Template (Шинэ)
+- `water_ws_layout.html` — микро workspace загвартай нэгдсэн layout
+- Glassmorphism header, AG Grid, дээж сонгох modal, toast, draft manager
+- Цаг хэмжигч panel — BOD5 (5 хоног), Хатаах (2 цаг), Шатаах (1 цаг), Титрлэлт (30 мин)
+- Jinja2 block overrides: column_defs, row_builder, save_collector
+
+### 4 Form Template дахин бичсэн (layout extend)
+- `ph_ec_form.html` — m1/m2/m3 дундаж (default баганууд)
+- `spectro_form.html` — dilution, abs1/2, r1/r2, average, diff, control
+- `titration_form.html` — v_sample, normality, blank (CL_W), v1/v2, result
+- `gravimetric_form.html` — volume, m1, m2, result = ((m2-m1)×1e6)/volume
+
+### Нэгдсэн нэгтгэл хуудас (Шинэ)
+- `water_summary.html` — усны хими + микробиологи нэг AG Grid хүснэгтэнд
+- `/api/summary_data` API — chem + micro data, date filter, 300 limit
+- AG Grid: floatingFilter, column state localStorage, CSV export, clipboard copy
+- cellClassRules: MNS limit хэтэрсэн → улаан, норм → ногоон
+- headerClass: chem-header (цэнхэр), micro-header (ногоон)
+
+### Hub линкүүд
+- `micro_hub.html` — Нэгтгэл → combined summary руу заасан
+- `water_analysis_hub.html` — Нэгтгэл товч нэмсэн
+- `water_hub.html` — Нэгтгэл nav card нэмсэн
+
+### Бусад
+- `constants.py` — params бүтэц, categories нэмсэн
+- `utils.py` — туслах функц
+- `aggrid_macros.html` — water macro устгасан (layout-д шилжсэн)
+
+### Өөрчлөгдсөн файлууд (14)
+
+| Файл | Төрөл |
+|------|-------|
+| `app/labs/water/templates/analysis_forms/water_ws_layout.html` | Шинэ |
+| `app/labs/water/templates/analysis_forms/ph_ec_form.html` | Дахин бичсэн |
+| `app/labs/water/templates/analysis_forms/spectro_form.html` | Шинэ |
+| `app/labs/water/templates/analysis_forms/titration_form.html` | Шинэ |
+| `app/labs/water/templates/analysis_forms/gravimetric_form.html` | Шинэ |
+| `app/labs/water/templates/water_summary.html` | Шинэ |
+| `app/labs/water/routes.py` | Засвар |
+| `app/labs/water/templates/water_analysis_hub.html` | Засвар |
+| `app/labs/water/templates/water_hub.html` | Засвар |
+| `app/labs/water/templates/water_register.html` | Засвар |
+| `app/labs/water/constants.py` | Засвар |
+| `app/labs/water/utils.py` | Засвар |
+| `app/labs/microbiology/templates/micro_hub.html` | Засвар |
+| `app/utils/license_protection.py` | Засвар |
+
+---
+
 ## [2026-02-02] - Микробиологийн лаб: Нэгтгэл, Ажлын хуудас, Дээж бүртгэл сайжруулалт
 
 ### Нэгтгэл хуудас (micro_summary)
