@@ -4,6 +4,7 @@
 import json
 from datetime import datetime, timedelta
 
+import sqlalchemy as sa
 from sqlalchemy import func, cast, Date as SADate
 
 from app import db
@@ -53,33 +54,52 @@ def _generate_micro_lab_id(sample_date):
     return day_num, total_samples
 
 
-def _generate_chem_lab_id(sample_date):
+def _generate_chem_lab_id(sample_date, next_batch=False):
     """Химийн лабын дугаар үүсгэх.
 
     Формат: {batch}_{seq}
-      batch = тухайн огноонд хэддэх удаагийн дээж (water lab_type-тэй өдрүүдийн тоо)
-      seq = нийт дэс дугаар (бүх өдрүүдийн нийлбэр)
+      batch = багц дугаар (next_batch=True бол өмнөх max + 1)
+      seq = нийт дэс дугаар
     """
     chem_filter = Sample.lab_type.in_(_CHEM_TYPES)
 
-    distinct_days = db.session.query(
-        func.count(func.distinct(Sample.sample_date))
-    ).filter(chem_filter).scalar() or 0
+    # Одоо байгаа хамгийн том batch дугаар олох
+    max_batch = db.session.query(
+        func.max(
+            func.cast(
+                func.split_part(Sample.chem_lab_id, '_', 1),
+                sa.Integer
+            )
+        )
+    ).filter(
+        chem_filter,
+        Sample.chem_lab_id.isnot(None),
+    ).scalar() or 0
 
     today_count = Sample.query.filter(
         chem_filter,
         Sample.sample_date == sample_date,
     ).count()
 
-    if today_count > 0:
-        batch = db.session.query(
-            func.count(func.distinct(Sample.sample_date))
+    if next_batch:
+        batch = max_batch + 1
+    elif today_count > 0:
+        # Өнөөдөр аль хэдийн дээж байвал тэр өдрийн batch-г ашиглах
+        today_batch = db.session.query(
+            func.max(
+                func.cast(
+                    func.split_part(Sample.chem_lab_id, '_', 1),
+                    sa.Integer
+                )
+            )
         ).filter(
             chem_filter,
-            Sample.sample_date <= sample_date,
-        ).scalar() or 1
+            Sample.sample_date == sample_date,
+            Sample.chem_lab_id.isnot(None),
+        ).scalar()
+        batch = today_batch if today_batch else max_batch + 1
     else:
-        batch = distinct_days + 1
+        batch = max_batch + 1
 
     total_samples = Sample.query.filter(chem_filter).count()
 
@@ -129,9 +149,10 @@ def create_water_micro_samples(form, user_id):
         micro_day_num = micro_seq = 0
 
     # Химийн лабын дугаар тооцоолох
+    next_batch = bool(form.get('next_batch'))
     needs_chem_id = has_water
     if needs_chem_id:
-        chem_batch, chem_total = _generate_chem_lab_id(sample_date)
+        chem_batch, chem_total = _generate_chem_lab_id(sample_date, next_batch=next_batch)
         chem_seq = chem_total
     else:
         chem_batch = chem_seq = 0

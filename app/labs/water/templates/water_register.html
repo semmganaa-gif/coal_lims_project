@@ -198,6 +198,14 @@
               </div>
             </div>
 
+            <!-- Шинэ багц дугаар -->
+            <div class="mb-2 d-flex align-items-center gap-2">
+              <label class="form-label small fw-bold mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
+                <input type="checkbox" name="next_batch" value="1"> Шинэ багц дугаар
+              </label>
+              <span class="text-muted" style="font-size:0.72rem;">(өдөрт 2+ удаа дээж бүртгэхэд чеклэнэ)</span>
+            </div>
+
             <!-- Дээжний нэр сонгох -->
             <div class="mb-1 d-flex align-items-center gap-2">
               <label class="form-label small fw-bold mb-0">Дээжний нэр:</label>
@@ -233,10 +241,6 @@
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label small">Байршил / GPS</label>
-                    <input type="text" name="sampling_location" class="form-control form-control-sm">
-                  </div>
-                  <div class="mb-2">
                     <label class="form-label small">Дээж авсан хүн</label>
                     <input type="text" name="sampled_by" class="form-control form-control-sm">
                   </div>
@@ -259,32 +263,29 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-box me-1"></i>Жин / Эзэлхүүн</h6>
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <label class="form-label small">Жин (г) / Эзэлхүүн (мл)</label>
-                      <input type="number" step="0.01" name="weight" class="form-control form-control-sm" placeholder="0.00">
-                    </div>
-                    <div class="col-6">
-                      <label class="form-label small d-flex align-items-center gap-1">
-                        <input type="checkbox" name="return_sample" value="1"> Дээж буцаах
-                      </label>
-                    </div>
+                  <h6><i class="bi bi-box me-1"></i>Эзэлхүүн</h6>
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="volume_2l" value="1"> 2 л
+                    </label>
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="volume_05l" value="1"> 0.5 л
+                    </label>
+                    <span class="mx-2 text-muted">|</span>
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="return_sample" value="1"> Дээж буцаах
+                    </label>
                   </div>
                 </div>
                 <div class="form-card">
                   <h6><i class="bi bi-calendar-check me-1"></i>Хадгалах хугацаа</h6>
                   <div class="d-flex flex-wrap gap-1">
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7" checked>
-                    <label class="btn btn-outline-danger btn-sm" for="ret_7">7 хоног</label>
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_14" value="14">
-                    <label class="btn btn-outline-danger btn-sm" for="ret_14">14 хоног</label>
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_30" value="30">
-                    <label class="btn btn-outline-warning btn-sm" for="ret_30">1 сар</label>
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_730" value="730">
-                    <label class="btn btn-outline-success btn-sm" for="ret_730">2 жил</label>
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_1825" value="1825">
-                    <label class="btn btn-outline-success btn-sm" for="ret_1825">5 жил</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_1" value="1">
+                    <label class="btn btn-outline-danger btn-sm" for="ret_1">1 хоног</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_3" value="3" checked>
+                    <label class="btn btn-outline-warning btn-sm" for="ret_3">3 хоног</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7">
+                    <label class="btn btn-outline-success btn-sm" for="ret_7">7 хоног</label>
                   </div>
                   <div class="mt-2">
                     <label class="form-label small">Тэмдэглэл</label>
