@@ -25,6 +25,9 @@
 
   /* Grid wrapper */
   .grid-wrapper { width: 100%; height: calc(100% - 50px); }
+  .ag-theme-alpine .ag-header-cell-label { white-space: normal !important; line-height: 1.2; }
+  .ag-theme-alpine .ag-header-row { height: 50px !important; }
+  .ag-theme-alpine .ag-header-cell { padding-top: 4px; padding-bottom: 4px; }
 
   /* ---- Add form styles ---- */
   .water-gateway {
@@ -141,15 +144,18 @@
       <div class="card border-0 shadow-sm h-100" style="border-radius: 0 12px 12px 12px;">
         <div class="p-2 d-flex align-items-center gap-2">
           <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshSampleGrid()">
-            <i class="bi bi-arrow-clockwise me-1"></i>Шинэчлэх
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
           </button>
           <span class="badge bg-info" id="grid-count">0</span>
-          <span class="text-muted small">дээж</span>
-          <div class="ms-auto">
+          <span class="text-muted small">samples</span>
+          <div class="ms-auto d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-success" id="btnExportCsv">
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+            </button>
             <form id="deleteSelectedForm" action="{{ url_for('microbiology.delete_samples') if is_micro else url_for('water.delete_samples') }}" method="post" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="button" id="btnDeleteSelected" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash me-1"></i>Устгах
+                <i class="bi bi-trash me-1"></i>Delete
               </button>
             </form>
           </div>
@@ -191,19 +197,15 @@
             <div class="ws-header">
               <button type="button" class="btn-back" onclick="goBack()"><i class="bi bi-arrow-left"></i></button>
               <div class="unit-badge" id="unit-badge"><i class="bi bi-droplet"></i> <span id="unit-name-display"></span></div>
-              <div class="ms-auto">
+              <div class="ms-auto d-flex align-items-center gap-2">
+                <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
+                  <input type="checkbox" name="next_batch" value="1" class="form-check-input" style="width:2.5em; height:1.3em;" id="nextBatchCheck">
+                  <span class="fw-bold text-warning" style="font-size:0.82rem;">Шинэ багц</span>
+                </label>
                 <button type="submit" class="btn btn-info text-white fw-bold px-4">
                   <i class="bi bi-check-circle me-1"></i>Бүртгэх
                 </button>
               </div>
-            </div>
-
-            <!-- Шинэ багц дугаар -->
-            <div class="mb-2 d-flex align-items-center gap-2">
-              <label class="form-label small fw-bold mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
-                <input type="checkbox" name="next_batch" value="1"> Шинэ багц дугаар
-              </label>
-              <span class="text-muted" style="font-size:0.72rem;">(өдөрт 2+ удаа дээж бүртгэхэд чеклэнэ)</span>
             </div>
 
             <!-- Дээжний нэр сонгох -->
@@ -457,43 +459,67 @@ function setQuickTime(t) {
 // ============ Tab 1: AG Grid жагсаалт ============
 let sampleGridApi = null;
 const statusMap = {
-  'new': '<span class="badge bg-primary">Шинэ</span>',
-  'in_progress': '<span class="badge bg-warning text-dark">Шинжилж байна</span>',
-  'completed': '<span class="badge bg-success">Дууссан</span>',
-  'approved': '<span class="badge bg-info">Баталсан</span>',
+  'new': '<span class="badge bg-primary">New</span>',
+  'in_progress': '<span class="badge bg-warning text-dark">In Progress</span>',
+  'completed': '<span class="badge bg-success">Completed</span>',
+  'approved': '<span class="badge bg-info">Approved</span>',
 };
 
 const sampleColDefs = [
-  { headerName: '', checkboxSelection: true, headerCheckboxSelection: true, width: 40, pinned: 'left', sortable: false, filter: false },
-  { headerName: '№', field: 'seq', width: 50, sortable: false, pinned: 'left' },
-  { headerName: 'Хим дугаар', field: 'chem_lab_id', width: 100, filter: true, pinned: 'left',
+  { headerName: '', checkboxSelection: true, headerCheckboxSelection: true,
+    width: 40, pinned: 'left', filter: false, suppressMenu: true },
+  { headerName: 'No.', field: 'seq', width: 55, pinned: 'left',
+    filter: 'agNumberColumnFilter' },
+  { headerName: 'Chemistry Laboratory Number', field: 'chem_lab_id', width: 90, pinned: 'left',
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agTextColumnFilter',
     cellStyle: { fontWeight: '700', color: '#0d9488' } },
-  { headerName: 'Микро дугаар', field: 'micro_lab_id', width: 110, filter: true, pinned: 'left',
+  { headerName: 'Microbiology Laboratory Number', field: 'micro_lab_id', width: 90, pinned: 'left',
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agTextColumnFilter',
     cellStyle: { fontWeight: '700', color: '#8b5cf6' } },
-  { headerName: 'Дээжний нэр', field: 'sample_name', minWidth: 200, flex: 2, filter: true, pinned: 'left' },
-  { headerName: 'Нэгж', field: 'unit_name', minWidth: 120, filter: true },
-  { headerName: 'Дээж авсан', field: 'sample_date', width: 110 },
-  { headerName: 'Бүртгэсэн', field: 'received_date', width: 140 },
-  { headerName: 'Авсан хүн', field: 'sampled_by', width: 110, filter: true },
-  { headerName: 'Байршил', field: 'sampling_location', width: 120 },
-  { headerName: 'Жин (г)', field: 'weight', width: 80,
-    valueFormatter: p => p.value != null ? p.value : '-' },
-  { headerName: 'Буцаах', field: 'return_sample', width: 70,
+  { headerName: 'Sample Name', field: 'sample_name', minWidth: 200, flex: 2, pinned: 'left',
+    filter: 'agTextColumnFilter' },
+  { headerName: 'Source Unit', field: 'unit_name', minWidth: 100,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agTextColumnFilter' },
+  { headerName: 'Sampling Date', field: 'sample_date', width: 100,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agDateColumnFilter' },
+  { headerName: 'Registration Date', field: 'received_date', width: 100,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agDateColumnFilter' },
+  { headerName: 'Sampled By', field: 'sampled_by', width: 100,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agTextColumnFilter' },
+  { headerName: 'Volume', field: 'volume', width: 75,
+    filter: 'agTextColumnFilter',
+    valueFormatter: p => p.value || '-' },
+  { headerName: 'Return Sample', field: 'return_sample', width: 70,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: false,
     cellRenderer: p => p.value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '' },
-  { headerName: 'Хадгалах', field: 'retention_date', width: 110 },
-{ headerName: 'Төлөв', field: 'status', width: 120,
+  { headerName: 'Retention Date', field: 'retention_date', width: 100,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agDateColumnFilter' },
+  { headerName: 'Status', field: 'status', width: 100,
+    filter: 'agTextColumnFilter',
     cellRenderer: p => statusMap[p.value] || p.value },
-  { headerName: 'Лаб', field: 'lab_type', width: 100, filter: true,
+  { headerName: 'Laboratory Type', field: 'lab_type', width: 90,
+    wrapHeaderText: true, autoHeaderHeight: true,
+    filter: 'agTextColumnFilter',
     cellRenderer: p => {
-      const m = {'water':'Ус','microbiology':'Микро','water & micro':'Ус & Микро'};
+      const m = {'water':'Water','microbiology':'Microbiology','water & micro':'Water & Micro'};
       return m[p.value] || p.value;
     }},
-  { headerName: 'Тэмдэглэл', field: 'notes', minWidth: 120, flex: 1 },
-  { headerName: '', field: 'id', width: 80, sortable: false, filter: false, pinned: 'right',
+  { headerName: 'Notes', field: 'notes', minWidth: 120, flex: 1,
+    filter: 'agTextColumnFilter' },
+  { headerName: '', field: 'id', width: 80, filter: false, sortable: false, pinned: 'right',
+    suppressMenu: true,
     cellRenderer: p => {
       const base = {{ 'true' if is_micro else 'false' }}
         ? '/labs/microbiology/edit_sample/' : '/labs/water/edit_sample/';
-      return '<a href="' + base + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Засах</a>';
+      return '<a href="' + base + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Edit</a>';
     }
   },
 ];
@@ -505,11 +531,18 @@ function loadSampleGrid() {
   const gridOptions = {
     columnDefs: sampleColDefs,
     rowData: [],
-    defaultColDef: { resizable: true, sortable: true },
+    defaultColDef: {
+      resizable: true,
+      sortable: true,
+      filter: true,
+      floatingFilter: true,
+      menuTabs: ['filterMenuTab'],
+    },
     animateRows: true,
     rowSelection: 'multiple',
-    autoSizeStrategy: { type: 'fitCellContents' },
-    overlayNoRowsTemplate: '<span class="text-muted">Дээж бүртгэгдээгүй байна</span>',
+    domLayout: 'normal',
+    overlayLoadingTemplate: '<span class="ag-overlay-loading-center">Loading...</span>',
+    overlayNoRowsTemplate: '<span class="text-muted">No samples registered</span>',
   };
   sampleGridApi = agGrid.createGrid(gridDiv, gridOptions);
   refreshSampleGrid();
@@ -532,6 +565,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tab шилжихэд grid resize хийх
   document.getElementById('list-tab').addEventListener('shown.bs.tab', function() {
     if (sampleGridApi) sampleGridApi.sizeColumnsToFit();
+  });
+
+  // CSV Export
+  document.getElementById('btnExportCsv').addEventListener('click', function() {
+    if (sampleGridApi) sampleGridApi.exportDataAsCsv({ fileName: 'WaterSamples.csv' });
   });
 
   // Устгах товч

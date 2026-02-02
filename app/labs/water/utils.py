@@ -133,9 +133,16 @@ def create_water_micro_samples(form, user_id):
     else:
         lab_type = 'water'
 
-    # Жин, буцаах, хадгалах хугацаа
-    weight = form.get('weight')
-    weight = float(weight) if weight else None
+    # Эзэлхүүн (2л=2000мл, 0.5л=500мл), буцаах, хадгалах хугацаа
+    vol_2l = bool(form.get('volume_2l'))
+    vol_05l = bool(form.get('volume_05l'))
+    weight = None
+    if vol_2l and vol_05l:
+        weight = 2500.0
+    elif vol_2l:
+        weight = 2000.0
+    elif vol_05l:
+        weight = 500.0
     return_sample = bool(form.get('return_sample'))
     retention_days = int(form.get('retention_period', 7))
     retention_date = sample_date + timedelta(days=retention_days)
