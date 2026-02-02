@@ -1,13 +1,13 @@
 # LIMS Системийн Мэргэжлийн Харьцуулалт
 
 **Огноо:** 2025-12-17
-**Харьцуулсан системүүд:** Coal LIMS vs Zobo LIMS (DevExpress)
+**Харьцуулсан системүүд:** LIMS vs Zobo LIMS (DevExpress)
 
 ---
 
 ## 1. Техникийн архитектур
 
-| Шинж чанар | Coal LIMS | Zobo LIMS |
+| Шинж чанар | LIMS | Zobo LIMS |
 |------------|-----------|-----------|
 | **Платформ** | Web Application | Desktop Application |
 | **Backend** | Python Flask | C# .NET Framework |
@@ -19,7 +19,7 @@
 
 ### Үнэлгээ:
 
-| Шалгуур | Coal LIMS | Zobo |
+| Шалгуур | LIMS | Zobo |
 |---------|:---------:|:----:|
 | Хандалт | 5/5 | 3/5 |
 | Cross-platform | 5/5 | 2/5 |
@@ -29,7 +29,7 @@
 
 ## 2. ISO 17025 Compliance
 
-| ISO 17025 Шаардлага | Coal LIMS | Zobo |
+| ISO 17025 Шаардлага | LIMS | Zobo |
 |---------------------|:---------:|:----:|
 | **6.2 Personnel** | ✅ Role-based (5 түвшин) | ✅ (магадгүй) |
 | **6.3 Facilities** | ✅ EnvironmentalLog | ❓ |
@@ -45,7 +45,7 @@
 
 ### Үнэлгээ:
 
-| Шалгуур | Coal LIMS | Zobo |
+| Шалгуур | LIMS | Zobo |
 |---------|:---------:|:----:|
 | ISO 17025 | 5/5 | 3/5 |
 
@@ -55,7 +55,7 @@
 
 ### 3.1 Дээж удирдлага (Sample Management)
 
-| Функц | Coal LIMS | Zobo |
+| Функц | LIMS | Zobo |
 |-------|:---------:|:----:|
 | Дээж бүртгэл | ✅ | ✅ |
 | Автомат код үүсгэх | ✅ | ✅ |
@@ -67,7 +67,7 @@
 
 ### 3.2 Шинжилгээний модуль
 
-| Шинжилгээ | Coal LIMS | Zobo |
+| Шинжилгээ | LIMS | Zobo |
 |-----------|:---------:|:----:|
 | **Mad** (Чийг) | ✅ | ✅ |
 | **Aad** (Үнс) | ✅ | ✅ |
@@ -86,7 +86,7 @@
 
 ### 3.3 Тооцоолол
 
-| Тооцоолол | Coal LIMS | Zobo |
+| Тооцоолол | LIMS | Zobo |
 |-----------|:---------:|:----:|
 | ad → dry | ✅ | ✅ |
 | ad → ar | ✅ | ✅ |
@@ -97,7 +97,7 @@
 
 ### 3.4 Чанарын удирдлага (QC)
 
-| QC Функц | Coal LIMS | Zobo |
+| QC Функц | LIMS | Zobo |
 |----------|:---------:|:----:|
 | Control Standards | ✅ | ❓ |
 | GBW Standards | ✅ | ❓ |
@@ -109,7 +109,7 @@
 
 ### 3.5 Тайлан
 
-| Тайлан | Coal LIMS | Zobo |
+| Тайлан | LIMS | Zobo |
 |--------|:---------:|:----:|
 | Sample report | ✅ | ✅ |
 | Shift/Daily report | ✅ | ✅ |
@@ -123,7 +123,7 @@
 
 ## 4. UI/UX Components
 
-### Coal LIMS (80+ templates)
+### LIMS (80+ templates)
 
 ```
 templates/
@@ -165,7 +165,7 @@ DevExpress v18.1/
 
 ### UI Харьцуулалт:
 
-| UI Шинж | Coal LIMS | Zobo |
+| UI Шинж | LIMS | Zobo |
 |---------|:---------:|:----:|
 | **Grid** | AG-Grid (Enterprise) | DevExpress XtraGrid |
 | **Charts** | Chart.js | DevExpress XtraCharts |
@@ -178,7 +178,7 @@ DevExpress v18.1/
 
 ## 5. Аюулгүй байдал
 
-| Security | Coal LIMS | Zobo |
+| Security | LIMS | Zobo |
 |----------|:---------:|:----:|
 | Password hashing | ✅ Werkzeug | ❓ |
 | Password policy | ✅ 8+ chars, mixed | ❓ |
@@ -193,7 +193,7 @@ DevExpress v18.1/
 
 ## 6. API & Integration
 
-| API | Coal LIMS | Zobo |
+| API | LIMS | Zobo |
 |-----|:---------:|:----:|
 | REST API | ✅ /api/* endpoints | ❓ |
 | WebSocket | ✅ SocketIO | ❌ |
@@ -207,7 +207,7 @@ DevExpress v18.1/
 
 ## 7. Development & Maintenance
 
-| Шинж | Coal LIMS | Zobo |
+| Шинж | LIMS | Zobo |
 |------|:---------:|:----:|
 | **Open source** | ✅ Өөрийн эзэмшил | ❌ Closed |
 | **Customizable** | ✅ 100% | Хязгаарлагдмал |
@@ -220,7 +220,7 @@ DevExpress v18.1/
 
 ## 8. Нийт үнэлгээ
 
-| Категори | Coal LIMS | Zobo |
+| Категори | LIMS | Zobo |
 |----------|:---------:|:----:|
 | Техникийн архитектур | 5/5 | 4/5 |
 | ISO 17025 Compliance | 5/5 | 3/5 |
@@ -229,6 +229,7 @@ DevExpress v18.1/
 | Аюулгүй байдал | 5/5 | 3/5 |
 | Уян хатан байдал | 5/5 | 2/5 |
 | Хөгжүүлэлт | 5/5 | 3/5 |
+| Multi-lab дэмжлэг | 5/5 | 1/5 |
 | **Нийт** | **34/35** | **23/35** |
 | **Grade** | **A+** | **B** |
 
@@ -236,7 +237,7 @@ DevExpress v18.1/
 
 ## 9. Дүгнэлт
 
-### Coal LIMS давуу талууд:
+### LIMS давуу талууд:
 
 1. **Web-based** - Хаанаас ч хандах боломжтой
 2. **ISO 17025 бүрэн** - CAPA, PT, QC charts, Complaints
@@ -255,7 +256,7 @@ DevExpress v18.1/
 
 ## 10. Зөвлөмж
 
-Coal LIMS систем нь Zobo-оос илүү орчин үеийн, уян хатан, ISO 17025-д бүрэн нийцсэн систем юм. Цаашид хөгжүүлэх чиглэл:
+LIMS систем нь Zobo-оос илүү орчин үеийн, уян хатан, ISO 17025-д бүрэн нийцсэн систем юм. Цаашид хөгжүүлэх чиглэл:
 
 1. **Mobile app** - Progressive Web App (PWA) болгох
 2. **Offline mode** - Service Worker ашиглан offline дэмжлэг

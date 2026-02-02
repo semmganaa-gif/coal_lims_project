@@ -1,5 +1,5 @@
 # PRECISION & REPEATABILITY БАРИМТ БИЧИГ
-# Coal LIMS System
+# LIMS System
 # Огноо: 2025-12-04
 
 ---

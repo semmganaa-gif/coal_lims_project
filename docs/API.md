@@ -1,4 +1,4 @@
-# Coal LIMS - API Documentation
+# LIMS - API Documentation
 
 ## Base URL
 
@@ -463,6 +463,345 @@ Content-Type: application/json
 ```http
 POST /api/equipment/{id}/calibration
 Content-Type: application/json
+```
+
+---
+
+## Water Lab API
+
+Water quality analysis endpoints. URL prefix: `/labs/water`
+
+### Water Samples List
+
+```http
+GET /labs/water/api/data
+```
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "WTR-2026-001",
+      "source": "Intake",
+      "status": "active",
+      "created_at": "2026-01-15T08:00:00"
+    }
+  ],
+  "total": 42
+}
+```
+
+### Eligible Samples for Analysis
+
+```http
+GET /labs/water/api/eligible/{code}
+```
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "WTR-2026-001",
+      "assigned_analyses": ["pH", "TDS", "Hardness"]
+    }
+  ]
+}
+```
+
+### Save Water Analysis Results
+
+```http
+POST /labs/water/api/save_results
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "sample_id": 1,
+  "data": [
+    {
+      "analysis_code": "pH",
+      "final_result": 7.2
+    },
+    {
+      "analysis_code": "TDS",
+      "final_result": 320.5
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Үр дүн хадгалагдлаа"
+}
+```
+
+### MNS/WHO Standards
+
+```http
+GET /labs/water/api/standards
+```
+
+**Response:**
+
+```json
+{
+  "standards": [
+    {
+      "parameter": "pH",
+      "mns_min": 6.5,
+      "mns_max": 8.5,
+      "who_min": 6.5,
+      "who_max": 8.5
+    },
+    {
+      "parameter": "TDS",
+      "mns_max": 1000,
+      "who_max": 600
+    }
+  ]
+}
+```
+
+---
+
+## Microbiology Lab API
+
+Microbiology analysis endpoints for water, air, and swab samples. URL prefix: `/labs/microbiology`
+
+### Samples by Category
+
+```http
+GET /labs/microbiology/api/samples?category=MICRO_WATER|MICRO_AIR|MICRO_SWAB
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| category | string | MICRO_WATER, MICRO_AIR, or MICRO_SWAB |
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "MIC-2026-001",
+      "category": "MICRO_WATER",
+      "status": "active"
+    }
+  ]
+}
+```
+
+### Micro Samples List
+
+```http
+GET /labs/microbiology/api/data
+```
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "MIC-2026-001",
+      "category": "MICRO_WATER",
+      "status": "active",
+      "created_at": "2026-01-20T09:00:00"
+    }
+  ],
+  "total": 28
+}
+```
+
+### Save Single Result
+
+```http
+POST /labs/microbiology/api/save_results
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "sample_id": 1,
+  "data": {
+    "analysis_code": "coliform",
+    "final_result": 0,
+    "unit": "CFU/mL"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Үр дүн хадгалагдлаа"
+}
+```
+
+### Save Batch Results
+
+```http
+POST /labs/microbiology/api/save_batch
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "results": [
+    {
+      "sample_id": 1,
+      "analysis_code": "coliform",
+      "final_result": 0
+    },
+    {
+      "sample_id": 2,
+      "analysis_code": "coliform",
+      "final_result": 2
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "saved_count": 2
+}
+```
+
+### Load Saved Batch
+
+```http
+GET /labs/microbiology/api/load_batch
+```
+
+**Response:**
+
+```json
+{
+  "batch": [
+    {
+      "sample_id": 1,
+      "sample_code": "MIC-2026-001",
+      "analysis_code": "coliform",
+      "final_result": 0,
+      "saved_at": "2026-01-20T10:30:00"
+    }
+  ]
+}
+```
+
+---
+
+## Petrography Lab API
+
+Petrographic (PE) analysis endpoints. URL prefix: `/labs/petrography`
+
+### PE Samples List
+
+```http
+GET /labs/petrography/api/data
+```
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "PE-2026-001",
+      "status": "active",
+      "created_at": "2026-01-18T11:00:00"
+    }
+  ],
+  "total": 15
+}
+```
+
+### Eligible PE Samples
+
+```http
+GET /labs/petrography/api/eligible/{code}
+```
+
+**Response:**
+
+```json
+{
+  "samples": [
+    {
+      "id": 1,
+      "sample_code": "PE-2026-001",
+      "assigned_analyses": ["vitrinite", "maceral"]
+    }
+  ]
+}
+```
+
+### Save PE Results
+
+```http
+POST /labs/petrography/api/save_results
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "sample_id": 1,
+  "data": [
+    {
+      "analysis_code": "vitrinite",
+      "final_result": 0.85
+    },
+    {
+      "analysis_code": "maceral",
+      "raw_data": {
+        "vitrinite_pct": 65.2,
+        "inertinite_pct": 28.1,
+        "liptinite_pct": 6.7
+      },
+      "final_result": null
+    }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Үр дүн хадгалагдлаа"
+}
 ```
 
 ---

@@ -1,6 +1,6 @@
-# Coal LIMS - Laboratory Information Management System
+# LIMS - Laboratory Information Management System
 
-**Нүүрсний лабораторийн мэдээллийн удирдлагын систем**
+**Лабораторийн мэдээллийн удирдлагын систем**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1.2-green.svg)](https://flask.palletsprojects.com/)
@@ -27,17 +27,41 @@
 
 ## 🎯 Төслийн тухай
 
-Coal LIMS нь **Energy Resources LLC** компанийн нүүрсний лабораторид зориулсан цогц лабораторийн мэдээллийн удирдлагын систем юм. Систем нь **ISO 17025** стандартын шаардлагыг хангахаар бүтээгдсэн.
+LIMS нь **Energy Resources LLC** компанийн олон лабораторид зориулсан цогц мэдээллийн удирдлагын систем юм. Систем нь 4 лабораторийн модулийг (Нүүрс, Ус, Микробиологи, Петрограф) нэгтгэн удирддаг бөгөөд **ISO 17025** стандартын шаардлагыг хангахаар бүтээгдсэн.
+
+---
+
+## Лабораторийн модулиуд
+
+### Нүүрсний лаб (Coal Lab)
+- 18 шинжилгээний код: MT, Mad, Aad, Vad, TS, CV, CSN, Gi, TRD, P, SiO2, Al2O3, Fe2O3, CaO, MgO, Na2O, K2O, TiO2
+- Basis conversion (ad, d, daf, ar)
+- ISO 17025 QC (repeatability, reproducibility)
+
+### Усны лаб (Water Lab)
+- 32 параметр: PH, EC, металлууд, анионууд гэх мэт
+- MNS/WHO стандартын харьцуулалт
+
+### Микробиологийн лаб (Microbiology Lab)
+- 8 код, 3 ангилал:
+  - Ус: CFU, ECOLI, SALM
+  - Агаар: AIR_CFU, AIR_STAPH
+  - Арчдас: SWAB_CFU, SWAB_ECOLI, SWAB_SALM
+
+### Петрограф лаб (Petrography Lab)
+- 7 код: MAC, VR, MM, TS_PETRO, MOD, TEX, GS
 
 ### Зорилго
 
-- 🔬 Нүүрсний дээжний бүртгэл, удирдлага
-- 📊 Шинжилгээний үр дүнгий бүртгэл, тооцоолол
-- 📈 Чанарын хяналтын удирдлага (QC)
-- 📝 Тайлан, сертификат үүсгэх
-- 🔧 Лабораторийн хэрэгслийн удирдлага
-- 👥 Хэрэглэгчийн эрх, эрхийн удирдлага
-- 📋 ISO 17025 дагуу мөрдөх баримт бичгийн удирдлага
+- Дээжний бүртгэл, удирдлага
+- Шинжилгээний үр дүнгий бүртгэл, тооцоолол
+- Чанарын хяналтын удирдлага (QC)
+- Тайлан, сертификат үүсгэх
+- Лабораторийн хэрэгслийн удирдлага
+- Хэрэглэгчийн эрх, эрхийн удирдлага
+- ISO 17025 дагуу мөрдөх баримт бичгийн удирдлага
+- Олон лабораторийн дэмжлэг (BaseLab pattern)
+- Лаб тусгай эрхийн удирдлага (allowed_labs)
 
 ---
 
@@ -77,7 +101,7 @@ Coal LIMS нь **Energy Resources LLC** компанийн нүүрсний ла
 - ✅ Certificate upload
 
 ### 6. Хэрэглэгчийн удирдлага
-- ✅ Role-based access control (admin, ahlah, senior, beltgegch, himich)
+- ✅ Role-based access control (admin, ahlah, senior, beltgegch, himich) + allowed_labs эрх
 - ✅ Нууц үгний бодлого
 - ✅ Login rate limiting
 - ✅ Audit logging
@@ -361,7 +385,7 @@ server {
 
 ```ini
 [Unit]
-Description=Coal LIMS
+Description=LIMS
 After=network.target
 
 [Service]
@@ -464,16 +488,16 @@ API баримт бичиг: http://localhost:5000/api/docs (Swagger UI)
 
 ## 📄 Лиценз
 
-Proprietary - Coal LIMS by Gantulga
+Proprietary - LIMS by Gantulga
 
-© 2024-2025 Coal LIMS. Developed by Gantulga (semmganaa@gmail.com)
+© 2024-2025 LIMS. Developed by Gantulga (semmganaa@gmail.com)
 
 ---
 
 ## 👥 Team
 
 - **Project Lead:** Gantulga U.
-- **Development:** Coal LIMS Development
+- **Development:** LIMS Development
 - **Testing:** Quality Assurance Team
 
 ---
@@ -496,9 +520,9 @@ Proprietary - Coal LIMS by Gantulga
 
 - Flask framework болон бусад open-source libraries
 - MongoDB Mongolian User Group community
-- Coal LIMS customers
+- LIMS customers
 
 ---
 
-**Last Updated:** 2025-11-29
+**Last Updated:** 2026-02-02
 **Version:** 1.0.0

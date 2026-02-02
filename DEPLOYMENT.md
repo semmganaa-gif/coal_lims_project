@@ -1,6 +1,8 @@
-# 🚀 Coal LIMS - Production Deployment Guide
+# 🚀 LIMS - Production Deployment Guide
 
-Coal LIMS - Laboratory Information Management System
+LIMS - Laboratory Information Management System
+
+> **Тэмдэглэл:** Deployment тохиргоонд `coal_lims` нэрс (database, Docker container, service) хэвээр ашиглагдана. Энэ нь production infra-тай нийцтэй байх зорилготой. Систем нь 4 лабораторийн модулийг (Coal, Water, Microbiology, Petrography) дэмжинэ.
 
 ---
 
@@ -352,7 +354,7 @@ sudo systemctl restart nginx
 
 ```ini
 [Unit]
-Description=Coal LIMS Gunicorn Service
+Description=LIMS Gunicorn Service
 After=network.target postgresql.service
 
 [Service]
@@ -472,7 +474,7 @@ from app import create_app
 app = create_app()
 
 if __name__ == '__main__':
-    print("Starting Coal LIMS on http://0.0.0.0:8000")
+    print("Starting LIMS on http://0.0.0.0:8000")
     serve(app, host='0.0.0.0', port=8000, threads=4)
 ```
 
@@ -504,7 +506,7 @@ nssm start CoalLIMS
 
 ```powershell
 # Port 8000 нээх (хэрэв Nginx ашиглахгүй бол)
-netsh advfirewall firewall add rule name="Coal LIMS" dir=in action=allow protocol=TCP localport=8000
+netsh advfirewall firewall add rule name="LIMS" dir=in action=allow protocol=TCP localport=8000
 
 # Эсвэл 80, 443 (Nginx ашиглавал)
 netsh advfirewall firewall add rule name="HTTP" dir=in action=allow protocol=TCP localport=80
@@ -784,4 +786,5 @@ pip freeze > requirements.txt
 ---
 
 **Амжилт хүсье! 🚀**
+
 

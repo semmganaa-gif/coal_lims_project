@@ -122,6 +122,8 @@ def manage_users():
         )
         if existing_user:
             flash(f'"{form.username.data}" нэртэй хэрэглэгч аль хэдийн байна.', 'warning')
+        elif form.role.data == 'admin':
+            flash('Шинэ админ хэрэглэгч үүсгэх боломжгүй.', 'danger')
         else:
             user = User(username=form.username.data, role=form.role.data)
             # Лабораторийн эрх
@@ -174,7 +176,11 @@ def edit_user(user_id):
                                        user=user_to_edit)
 
         user_to_edit.username = new_username
-        user_to_edit.role = form.role.data
+        # Админ хэрэглэгчийн role-г өөрчлөхийг хориглох
+        if user_to_edit.role != 'admin':
+            user_to_edit.role = form.role.data
+        elif form.role.data != 'admin':
+            flash('Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.', 'warning')
         # Лабораторийн эрх
         user_to_edit.allowed_labs = form.allowed_labs.data or ['coal']
         # Профайл мэдээлэл шинэчлэх

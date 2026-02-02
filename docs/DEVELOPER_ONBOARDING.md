@@ -1,8 +1,8 @@
-# Coal LIMS - Developer Onboarding Guide
+# LIMS - Developer Onboarding Guide
 
 ## Тавтай морилно уу!
 
-Энэхүү гарын авлага нь Coal LIMS төсөлд шинээр нэгдэж буй хөгжүүлэгчдэд зориулагдсан.
+Энэхүү гарын авлага нь LIMS төсөлд шинээр нэгдэж буй хөгжүүлэгчдэд зориулагдсан.
 
 ---
 
@@ -121,6 +121,12 @@ coal_lims_project/
 │   │   ├── analysis/      # Analysis workspace
 │   │   ├── api/           # REST API
 │   │   └── ...
+│   ├── labs/              # Multi-lab modules
+│   │   ├── base.py        # BaseLab abstract class
+│   │   ├── coal/          # Coal lab (18 analyses)
+│   │   ├── water/         # Water lab (32 params)
+│   │   ├── microbiology/  # Microbiology (8 codes)
+│   │   └── petrography/   # Petrography (7 codes)
 │   ├── services/          # Business logic
 │   ├── repositories/      # Data access layer
 │   ├── utils/             # Utility functions
@@ -265,6 +271,40 @@ npm run e2e
 ## 5. Шинэ Feature нэмэх
 
 ### 5.1 Жишээ: Шинэ шинжилгээ нэмэх
+
+**1. Constant нэмэх:**
+
+### 5.2 Шинэ лаб модуль нэмэх
+
+BaseLab abstract class нь бүх лабын үндсэн загварыг тодорхойлдог. Шинэ лаб нэмэхдээ:
+
+```python
+# app/labs/new_lab/base.py
+from app.labs.base import BaseLab
+
+class NewLabModule(BaseLab):
+    """Шинэ лабын үндсэн класс."""
+
+    def get_analyses(self) -> list[str]:
+        """Энэ лабын шинжилгээ кодууд."""
+        return ["code1", "code2", "code3"]
+
+    def validate_result(self, code: str, value: float) -> bool:
+        """Үр дүнг баталгаажуулах."""
+        pass
+
+    def calculate_result(self, code: str, raw_data: dict) -> float:
+        """Түүхий өгөгдлөөс үр дүн тооцоолох."""
+        pass
+```
+
+Дараа нь `app/__init__.py` дээр регистер хийх:
+```python
+from app.labs.new_lab.base import NewLabModule
+# Factories нэмэх
+```
+
+---
 
 **1. Constant нэмэх:**
 ```python

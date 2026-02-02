@@ -1,6 +1,6 @@
 # Performance Testing
 
-Coal LIMS-ийн гүйцэтгэлийн тестүүд.
+LIMS-ийн гүйцэтгэлийн тестүүд.
 
 ## k6 (Recommended)
 

@@ -1,4 +1,4 @@
-# Coal LIMS Production Readiness Report
+# LIMS Production Readiness Report
 
 **Огноо:** 2025-12-17
 **Шалгасан:** Claude Code
@@ -310,12 +310,14 @@ pip-compile --upgrade requirements.in
 
 ### Production Ready: ✅ YES
 
-Coal LIMS систем production-д гарахад **бэлэн** байна. Доорх 4 зүйлийг заавал хийх хэрэгтэй:
+LIMS систем production-д гарахад **бэлэн** байна. Доорх 4 зүйлийг заавал хийх хэрэгтэй:
 
 1. **Database password** солих (201320 → strong password)
 2. **FLASK_ENV=production** тохируулах
 3. **SSL certificate** үүсгэх (HTTPS)
 4. **Production server** (Waitress/Gunicorn) ашиглах
+
+LIMS систем 4 лабораторийн модулийг (Coal, Water, Microbiology, Petrography) дэмжиж байна.
 
 ### Дараагийн алхамууд:
 

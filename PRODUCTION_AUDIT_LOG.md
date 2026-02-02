@@ -1,4 +1,4 @@
-# Coal LIMS - Production Audit Log
+# LIMS - Production Audit Log
 
 **Огноо:** 2025-12-11
 **Шалгагч:** Claude Code
@@ -160,7 +160,7 @@
 | Файл | Зориулалт |
 |------|-----------|
 | `app/static/js/serial_balance.js` | Mettler Toledo жинтэй Web Serial API-р холбогдох модуль |
-| `docs/LIMS_Comparison_Report_2025-12-17.md` | Coal LIMS vs Zobo харьцуулалт тайлан |
+| `docs/LIMS_Comparison_Report_2025-12-17.md` | LIMS vs Zobo харьцуулалт тайлан |
 
 ### 15.2 Шинэчлэгдсэн файлууд (17 файл)
 
@@ -276,3 +276,41 @@
 ---
 
 **Шалгалт дууссан:** 2025-12-18
+
+## 17. Multi-Lab Architecture Expansion
+
+**Огноо:** 2026-02-03
+**Хөгжүүлэгч:** Claude Code
+
+### 17.1 Архитектурын өөрчлөлт
+
+| Ажил | Статус | Тайлбар |
+|------|--------|---------|
+| BaseLab abstract class | **DONE** | `app/labs/base.py` — бүх лабын суурь класс |
+| Lab Registry | **DONE** | `app/labs/__init__.py` — INSTALLED_LABS dict |
+| allowed_labs эрх | **DONE** | User model-д JSON column нэмэгдсэн |
+| @lab_required decorator | **DONE** | Лаб тусгай эрхийн шалгалт |
+
+### 17.2 Шинэ лабораторийн модулиуд
+
+| Лаб | Blueprint | Routes | Templates | Constants | Статус |
+|-----|-----------|--------|-----------|-----------|--------|
+| Coal | Legacy | Main routes | Main templates | 19 код | Ажиллаж байна |
+| Water | water_bp | 362 LOC | 8 файл | 16 код | Production ready |
+| Microbiology | micro_bp | 467 LOC | 6 файл | 9 код | Production ready |
+| Petrography | petro_bp | 170 LOC | 5 файл | 7 код | Production ready |
+
+### 17.3 Баримтжуулалт шинэчлэлт
+
+| Файл | Өөрчлөлт |
+|------|----------|
+| README.md | 4 лабын тайлбар, BaseLab pattern |
+| docs/API.md | Water, Micro, Petro API endpoints нэмэгдсэн |
+| docs/ARCHITECTURE.md | Multi-lab диаграм, BaseLab тайлбар |
+| docs/TECHNICAL_DOCUMENTATION.md | Ус, Микро, Петро шинжилгээний кодууд |
+| docs/ISO_17025_DOCUMENTATION.md | 4 лабын ISO compliance |
+| docs/DEVELOPER_ONBOARDING.md | Multi-lab onboarding |
+
+---
+
+**Шинэчлэлт дууссан:** 2026-02-03

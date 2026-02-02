@@ -70,6 +70,7 @@ class UserManagementForm(FlaskForm):
             ("chemist", "Химич (Chemist)"),
             ("senior", "Ахлах химич (Senior Chemist)"),
             ("manager", "Менежер (Manager)"),
+            ("admin", "Админ (зөвхөн одоо байгааг засах)"),
         ],
         validators=[DataRequired()],
     )

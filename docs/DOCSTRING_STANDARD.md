@@ -1,4 +1,4 @@
-# Coal LIMS - Docstring & Comment Standard
+# LIMS - Docstring & Comment Standard
 
 ## 1. Файлын толгой (Module Docstring)
 

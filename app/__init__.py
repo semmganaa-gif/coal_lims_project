@@ -118,9 +118,20 @@ def create_app(config_class=Config):
     from app.routes.yield_routes import yield_bp
 
     # Мульти-лаборатори (Петрограф, Усны лаб, Микробиологи)
+    from app.labs import register_lab
+    from app.labs.coal import CoalLab
+    from app.labs.petrography import PetrographyLab
+    from app.labs.water import WaterLab
+    from app.labs.microbiology import MicrobiologyLab
     from app.labs.petrography.routes import petro_bp
     from app.labs.water.routes import water_bp
     from app.labs.microbiology.routes import micro_bp
+
+    # Лаб instance-уудыг бүртгэх
+    register_lab(CoalLab())
+    register_lab(PetrographyLab())
+    register_lab(WaterLab())
+    register_lab(MicrobiologyLab())
 
     # Blueprint давхар бүртгэгдэхээс хамгаалах (тест орчинд чухал)
     def safe_register_blueprint(blueprint):

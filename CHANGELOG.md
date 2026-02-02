@@ -1,4 +1,4 @@
-# CHANGELOG - Coal LIMS Сайжруулалтууд
+# CHANGELOG - LIMS Сайжруулалтууд
 
 ## [2026-02-02] - Микробиологийн лаб: Нэгтгэл, Ажлын хуудас, Дээж бүртгэл сайжруулалт
 
@@ -1215,7 +1215,7 @@ python run.py
 
 ### 📄 License
 
-Coal LIMS - Developed by Gantulga (semmganaa@gmail.com, 80872013)
+LIMS - Developed by Gantulga (semmganaa@gmail.com, 80872013)
 
 ---
 

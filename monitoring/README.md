@@ -1,4 +1,4 @@
-# Coal LIMS - Monitoring Stack
+# LIMS - Monitoring Stack
 
 Prometheus, Grafana, Loki, Alertmanager бүхий бүрэн monitoring stack.
 

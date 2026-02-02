@@ -1,5 +1,5 @@
 # ТЕСТИЙН БАРИМТ БИЧИГ
-# Coal LIMS System
+# LIMS System
 # Огноо: 2025-12-04
 
 ---
@@ -125,12 +125,16 @@ def auth_admin(client):
 
 | Сценари | Зорилго |
 |---------|---------|
-| `CoalLIMSUser` | Mixed usage patterns |
+| `CoalLIMSUser` (legacy нэр) | Mixed usage patterns |
 | `PaginationBenchmark` | Pagination performance |
 | `IndexBenchmark` | Database index performance |
 | `EquipmentListLoadTest` | Equipment list scenarios |
 | `SampleListLoadTest` | Sample list scenarios |
 | `ConcurrentWriteTest` | Race condition testing |
+
+### 4.5 Multi-Lab Tests
+
+Лаб бүрийн API endpoint тест: Water (`/labs/water/api/*`), Microbiology (`/labs/microbiology/api/*`), Petrography (`/labs/petrography/api/*`)
 
 ---
 

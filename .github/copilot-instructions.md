@@ -1,7 +1,7 @@
-# Copilot Instructions for Coal LIMS
+# Copilot Instructions for LIMS
 
 ## Project Overview
-- **Coal LIMS** is a laboratory information management system for coal analysis, developed by Gantulga, designed to comply with **ISO 17025** standards.
+- **LIMS** is a laboratory information management system for laboratory analysis (coal, water, microbiology, petrography), developed by Gantulga, designed to comply with **ISO 17025** standards.
 - Main backend: **Flask** (3.1+), ORM: **SQLAlchemy**, migrations: **Alembic**.
 - Frontend: **Jinja2** templates, **Bootstrap 5**, **Vanilla JS**, **Chart.js**.
 - Data: SQLite (dev), PostgreSQL (prod).
@@ -9,6 +9,7 @@
 ## Architecture & Key Patterns
 - **app/** contains core modules: `models.py` (ORM), `forms.py` (Flask-WTF), `services/` (business logic), `routes/` (Flask blueprints), `schemas/` (validation), `utils/` (helpers).
 - **Templates** use Jinja2 macros for forms/tables. See `app/templates/macros/README.md` for macro usage and examples.
+- **Multi-lab**: `app/labs/` contains BaseLab pattern with 4 lab modules (coal, water, microbiology, petrography). Each lab registers via `register_lab()` in `app/__init__.py`.
 - **Role-based access**: User roles (admin, senior, analyst, etc.) enforced in routes/services.
 - **Config**: Use `config.py` and `.env` for environment variables. See README for required keys.
 - **Seed scripts**: Use `flask seed-analysis-types`, `flask seed-sample-types`, `flask seed-error-reasons` for initial data.

@@ -1,8 +1,59 @@
-# Coal LIMS - System Architecture
+# LIMS - System Architecture
 
 ## Overview
 
-Coal LIMS нь нүүрсний лабораторийн мэдээллийн удирдлагын систем бөгөөд ISO 17025 стандартын дагуу хөгжүүлэгдсэн.
+LIMS нь лабораторийн мэдээллийн удирдлагын систем бөгөөд 4 лабораторийн модулийг (Coal, Water, Microbiology, Petrography) дэмжих ISO 17025 стандартын дагуу хөгжүүлэгдсэн.
+
+## Multi-Lab Architecture
+
+```mermaid
+graph TB
+    subgraph "Lab Modules"
+        Coal[Coal Lab<br/>18 analyses<br/>bi-fire]
+        Water[Water Lab<br/>32 parameters<br/>bi-droplet]
+        Micro[Microbiology Lab<br/>8 codes<br/>bi-bug]
+        Petro[Petrography Lab<br/>7 codes<br/>bi-gem]
+    end
+
+    subgraph "Core Framework"
+        BaseLab[BaseLab Abstract Class]
+        Registry[Lab Registry]
+        Auth[allowed_labs Access Control]
+    end
+
+    subgraph "Shared Infrastructure"
+        Models[SQLAlchemy Models]
+        QC[QC Engine / Westgard]
+        Reports[Report Generator]
+    end
+
+    Coal --> BaseLab
+    Water --> BaseLab
+    Micro --> BaseLab
+    Petro --> BaseLab
+    BaseLab --> Registry
+    Registry --> Auth
+    Auth --> Models
+    Auth --> QC
+    Auth --> Reports
+```
+
+### BaseLab Pattern
+
+Бүх лабораторийн модулиуд `BaseLab` абстракт класс-аас удамшина. Энэ нь дараах гол атрибут, методуудыг тодорхойлно:
+
+- **key** — лабын дотоод нэр (жнь: `"coal"`, `"water"`)
+- **name** — хэрэглэгчид харагдах нэр
+- **icon** — Bootstrap icon class
+- **color** — UI өнгө
+- **analysis_codes** — тухайн лабын шинжилгээний кодуудын жагсаалт
+- **get_blueprint()** — Flask Blueprint буцаана
+- **sample_query()** — тухайн лабын дээжийн query буцаана
+- **sample_stats()** — тухайн лабын статистик мэдээлэл буцаана
+
+### allowed_labs Access Control
+
+Хэрэглэгч бүрийн `allowed_labs` талбар нь тухайн хэрэглэгчийн хандах боломжтой лабуудыг тодорхойлно. Админ хэрэглэгч бүрт лабын эрхийг тусад нь тохируулж өгнө. Зөвшөөрөгдөөгүй лабын route, API-д хандахыг хориглоно.
 
 ## High-Level Architecture
 
@@ -183,7 +234,15 @@ app/
 ├── monitoring.py            # Prometheus metrics
 ├── sentry_integration.py    # Error tracking
 │
-├── routes/                  # Blueprint routes
+├── labs/                    # Multi-lab modules
+│   ├── __init__.py          # Lab registry, LAB_TYPES
+│   ├── base.py              # BaseLab abstract class
+│   ├── coal/                # Coal lab (18 analyses)
+│   ├── water/               # Water lab (32 parameters)
+│   ├── microbiology/        # Microbiology lab (8 codes)
+│   └── petrography/         # Petrography lab (7 codes)
+│
+├── routes/                  # Core + Coal routes
 │   ├── main/               # Main pages (index, login)
 │   ├── analysis/           # Analysis workspace
 │   ├── api/                # REST API endpoints

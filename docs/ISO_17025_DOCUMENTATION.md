@@ -1,6 +1,6 @@
 # ISO 17025 БАРИМТ БИЧИГ
-# Coal LIMS - ISO/IEC 17025:2017 Нийцэл
-# Огноо: 2025-12-04
+# LIMS - ISO/IEC 17025:2017 Нийцэл
+# Огноо: 2026-02-02
 
 ---
 
@@ -38,6 +38,38 @@
 - ✅ environmental_list.html
 - ✅ control_charts.html
 - ✅ complaints_list.html, complaints_form.html
+
+### 2.4 ISO нийцлийн хяналтын хэрэгслүүд
+- ✅ Westgard QC rules
+- ✅ Control Charts
+- ✅ Proficiency Testing
+
+## 2.5 Лаб бүрийн ISO нийцэл
+
+### Нүүрсний лаборатори (Coal)
+- ✅ 18 шинжилгээний тооцоолол серверт баталгаажуулагдана
+- ✅ Basis conversion (ad ↔ d ↔ daf ↔ ar) ISO 1170 дагуу
+- ✅ Repeatability limits (ISO 5725) — YAML config
+- ✅ Westgard QC rules (1:2s, 1:3s, 2:2s, R:4s, 4:1s, 10x)
+- ✅ Control Charts + Proficiency Testing (Z-score)
+
+### Усны лаборатори (Water)
+- ✅ MNS/WHO стандартын хязгаарын хяналт
+- ✅ 32 параметрийн шинжилгээ
+- ✅ PH, EC, Metals, Anions бүлэг тус бүрт workspace
+- ✅ Дээж бүртгэл, шинжилгээний workflow
+
+### Микробиологийн лаборатори (Microbiology)
+- ✅ MNS ISO 6222, MNS ISO 9308-1, MNS ISO 19250 стандартууд
+- ✅ 3 категори: Ус, Агаар, Арчдас
+- ✅ CFU тоолол, E. coli, Salmonella шинжилгээ
+- ✅ Нэгтгэл хуудас — зөвшөөрөгдөх хэмжээний хяналт
+
+### Петрограф лаборатори (Petrography)
+- ✅ ISO 7404-3 (Maceral analysis)
+- ✅ ISO 7404-5 (Vitrinite reflectance)
+- ✅ Coal & Rock petrography
+- ✅ Нимгэн зүсэлт, модал шинжилгээ
 
 ---
 
@@ -77,4 +109,4 @@
 
 ---
 
-**Сүүлд шинэчилсэн:** 2025-12-04
+**Сүүлд шинэчилсэн:** 2026-02-02
