@@ -189,7 +189,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('microbiology.summary') }}">
+              <a class="nav-link" href="{{ url_for('water.water_summary') }}">
                 <i class="bi bi-table me-1" style="color:#20c997"></i>Нэгтгэл
               </a>
             </li>
@@ -235,9 +235,27 @@
               </a>
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_summary') }}">
+                <i class="bi bi-table me-1 text-info"></i>Нэгтгэл
+              </a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}">
                 <i class="bi bi-tools me-1 text-info"></i>Тоног төхөөрөмж
               </a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-graph-up me-1 text-info"></i>Reports
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('water.water_dashboard') }}">
+                  <i class="bi bi-speedometer2 me-2" style="color:#3b82f6"></i>Dashboard</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('water.water_consumption') }}">
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>Consumption</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('water.water_monthly_plan') }}">
+                  <i class="bi bi-calendar-check me-2" style="color:#15803d"></i>Monthly Plan</a></li>
+              </ul>
             </li>
 
             {% else %}

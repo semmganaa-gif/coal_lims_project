@@ -223,6 +223,24 @@ CHEMICAL_PARAMS = {
         'unit': 'mg/L',
         'mns_limit': None,
     },
+    'SLUDGE_VOL': {
+        'name': 'Sludge Volume',
+        'name_mn': 'Лагийн эзлэхүүн',
+        'unit': 'мл',
+        'mns_limit': (70, 80),
+    },
+    'SLUDGE_DOSE': {
+        'name': 'Sludge Dose',
+        'name_mn': 'Лагийн тун',
+        'unit': 'г/л',
+        'mns_limit': (2, 4),
+    },
+    'SLUDGE_INDEX': {
+        'name': 'Sludge Index',
+        'name_mn': 'Лагийн индекс',
+        'unit': 'мл/г',
+        'mns_limit': (80, 150),
+    },
 }
 
 # Бүх усны шинжилгээний төрлүүд
@@ -243,9 +261,13 @@ WATER_ANALYSIS_TYPES = [
     {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'PO4', 'name': 'Фосфат ион (PO₄³⁻)', 'order': 14, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 15, 'role': 'chemist', 'categories': ['wastewater']},
+    # ─── Лагийн шинжилгээ ───
+    {'code': 'SLUDGE_VOL', 'name': 'Лагийн эзлэхүүн (SV)', 'order': 16, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'SLUDGE_DOSE', 'name': 'Лагийн тун (SD)', 'order': 17, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'SLUDGE_INDEX', 'name': 'Лагийн индекс (SI)', 'order': 18, 'role': 'chemist', 'categories': ['wastewater']},
     # ─── Бусад ───
     {'code': 'DUST', 'name': 'Тоос', 'order': 20, 'role': 'chemist', 'categories': ['other']},
-    {'code': 'SLUDGE', 'name': 'Лаг', 'order': 21, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE', 'name': 'Лаг', 'order': 21, 'role': 'chemist', 'categories': ['archive']},
     # ─── Архив (түр хадгалсан, ашиглахгүй байгаа) ───
     {'code': 'COD', 'name': 'ХХХ (COD)', 'order': 90, 'role': 'chemist', 'categories': ['archive']},
     {'code': 'DO_W', 'name': 'Ууссан хүчилтөрөгч (DO)', 'order': 91, 'role': 'chemist', 'categories': ['archive']},

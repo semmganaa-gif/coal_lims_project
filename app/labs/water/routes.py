@@ -60,15 +60,175 @@ def water_analysis_hub():
     )
 
 
-@water_bp.route('/summary')
+@water_bp.route('/summary', methods=['GET', 'POST'])
 @login_required
 @lab_required('water')
 def water_summary():
     """Усны хими + микробиологийн нэгдсэн үр дүнгийн нэгтгэл."""
+    # POST: Архивлах
+    if request.method == 'POST':
+        action = request.form.get('action')
+        sample_ids_str = request.form.get('sample_ids')
+        if sample_ids_str and action == 'archive':
+            from app.services import archive_samples
+            sample_ids = [int(sid) for sid in sample_ids_str.split(',') if sid.isdigit()]
+            result = archive_samples(sample_ids, archive=True)
+            flash(result.message, 'success' if result.success else 'danger')
+        return redirect(url_for('water.water_summary'))
+
     return render_template(
         'water_summary.html',
         title='Усны шинжилгээний үр дүнгийн нэгтгэл',
     )
+
+
+@water_bp.route('/archive', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def water_archive():
+    """Усны архив хуудас."""
+    # POST: Сэргээх
+    if request.method == 'POST':
+        action = request.form.get('action')
+        sample_ids_str = request.form.get('sample_ids')
+        if sample_ids_str and action == 'unarchive':
+            from app.services import archive_samples
+            sample_ids = [int(sid) for sid in sample_ids_str.split(',') if sid.isdigit()]
+            result = archive_samples(sample_ids, archive=False)
+            flash(result.message, 'success' if result.success else 'danger')
+        return redirect(url_for('water.water_archive'))
+
+    archived_count = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.status == 'archived'
+    ).count()
+
+    return render_template(
+        'water_archive.html',
+        title='Усны архив',
+        archived_count=archived_count,
+    )
+
+
+@water_bp.route('/api/archive_data')
+@login_required
+@lab_required('water')
+def archive_data():
+    """Архивлагдсан усны дээжүүд + шинжилгээний үр дүн."""
+    import re
+    import json as _json
+
+    lab_type_filter = request.args.get('lab_type', 'all')
+
+    q = Sample.query.filter(Sample.status == 'archived')
+
+    if lab_type_filter == 'water':
+        q = q.filter(Sample.lab_type == 'water')
+    elif lab_type_filter == 'microbiology':
+        q = q.filter(Sample.lab_type == 'microbiology')
+    elif lab_type_filter == 'water & micro':
+        q = q.filter(Sample.lab_type == 'water & micro')
+    else:
+        q = q.filter(Sample.lab_type.in_(['water', 'microbiology', 'water & micro']))
+
+    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
+
+    # Тоо тоолох
+    all_archived = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.status == 'archived'
+    ).all()
+    water_count = sum(1 for s in all_archived if s.lab_type == 'water')
+    micro_count = sum(1 for s in all_archived if s.lab_type == 'microbiology')
+    combined_count = sum(1 for s in all_archived if s.lab_type == 'water & micro')
+
+    if not samples:
+        return jsonify({
+            'rows': [],
+            'water_count': water_count,
+            'micro_count': micro_count,
+            'combined_count': combined_count,
+            'total_count': len(all_archived),
+        })
+
+    sample_ids = [s.id for s in samples]
+
+    # ── Химийн идэвхтэй анализ кодууд ──
+    active_chem_codes = [
+        a['code'] for a in WATER_ANALYSIS_TYPES
+        if 'archive' not in a.get('categories', [])
+    ]
+
+    # ── Бүх үр дүн (хими + микро) ──
+    all_codes = active_chem_codes + ['MICRO_WATER']
+    results = AnalysisResult.query.filter(
+        AnalysisResult.sample_id.in_(sample_ids),
+        AnalysisResult.analysis_code.in_(all_codes),
+    ).all()
+
+    # sample_id → { code → value } (хими)
+    # sample_id → { micro fields } (микро)
+    chem_map = {}
+    micro_map = {}
+    for r in results:
+        try:
+            raw = _json.loads(r.raw_data) if isinstance(r.raw_data, str) else (r.raw_data or {})
+        except (ValueError, TypeError):
+            raw = {}
+
+        if r.analysis_code == 'MICRO_WATER':
+            micro_map[r.sample_id] = raw
+        else:
+            if r.sample_id not in chem_map:
+                chem_map[r.sample_id] = {}
+            val = raw.get('value') or raw.get('result') or raw.get('average') or r.final_result
+            chem_map[r.sample_id][r.analysis_code] = val
+
+    rows = []
+    for s in samples:
+        display_name = s.sample_code
+        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+        if m:
+            display_name = m.group(2)
+        else:
+            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
+            if m2:
+                display_name = m2.group(1)
+
+        row = {
+            'sample_id': s.id,
+            'sample_code': s.sample_code,
+            'sample_name': display_name,
+            'sample_date': s.sample_date.isoformat() if s.sample_date else '',
+            'received_date': s.received_date.strftime('%Y-%m-%d') if s.received_date else '',
+            'chem_lab_id': s.chem_lab_id or '',
+            'micro_lab_id': s.micro_lab_id or '',
+            'client_name': s.client_name or '',
+            'lab_type': s.lab_type or '',
+        }
+        # Хими
+        cres = chem_map.get(s.id, {})
+        for code in active_chem_codes:
+            row[code] = cres.get(code)
+        # Микро
+        mres = micro_map.get(s.id, {})
+        row['cfu_22'] = mres.get('cfu_22')
+        row['cfu_37'] = mres.get('cfu_37')
+        row['cfu_avg'] = mres.get('cfu_avg')
+        row['ecoli'] = mres.get('ecoli')
+        row['salmonella'] = mres.get('salmonella')
+        row['air_cfu'] = mres.get('air_cfu')
+        row['staph'] = mres.get('staph')
+
+        rows.append(row)
+
+    return jsonify({
+        'rows': rows,
+        'water_count': water_count,
+        'micro_count': micro_count,
+        'combined_count': combined_count,
+        'total_count': len(all_archived),
+    })
 
 
 @water_bp.route('/api/summary_data')
@@ -82,9 +242,10 @@ def summary_data():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    # Ус + микро дээжүүд бүгд
+    # Ус + микро дээжүүд (архивлагдаагүй)
     q = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.status != 'archived'
     )
     if date_from:
         q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
@@ -145,6 +306,9 @@ def summary_data():
             'sample_code': s.sample_code,
             'sample_name': display_name,
             'sample_date': s.sample_date.isoformat() if s.sample_date else '',
+            'received_date': s.received_date.strftime('%Y-%m-%d') if s.received_date else '',
+            'chem_lab_id': s.chem_lab_id or '',
+            'micro_lab_id': s.micro_lab_id or '',
             'client_name': s.client_name or '',
         }
         # Хими
@@ -588,3 +752,420 @@ def delete_samples():
 def standards():
     """MNS/WHO стандартын хязгаарууд."""
     return jsonify(get_mns_standards())
+
+
+# ======================================================================
+#  REPORTS: Dashboard
+# ======================================================================
+
+@water_bp.route('/reports/dashboard')
+@login_required
+@lab_required('water')
+def water_dashboard():
+    """Усны хими Dashboard - KPI, тренд."""
+    from datetime import datetime
+    from sqlalchemy import extract
+
+    now = datetime.now()
+    year = now.year
+    month = now.month
+
+    month_start = datetime(year, month, 1)
+    month_end = datetime(year, month + 1, 1) if month < 12 else datetime(year + 1, 1, 1)
+    year_start = datetime(year, 1, 1)
+    year_end = datetime(year + 1, 1, 1)
+
+    _WATER_LAB_TYPES = ['water', 'water & micro']
+
+    # Дээжний тоо
+    samples_month = Sample.query.filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        Sample.received_date >= month_start.date(),
+        Sample.received_date < month_end.date()
+    ).count()
+
+    samples_year = Sample.query.filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        Sample.received_date >= year_start.date(),
+        Sample.received_date < year_end.date()
+    ).count()
+
+    # Шинжилгээний тоо
+    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
+
+    analyses_month = AnalysisResult.query.join(
+        Sample, Sample.id == AnalysisResult.sample_id
+    ).filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        AnalysisResult.analysis_code.in_(active_chem_codes),
+        AnalysisResult.created_at >= month_start,
+        AnalysisResult.created_at < month_end
+    ).count()
+
+    analyses_year = AnalysisResult.query.join(
+        Sample, Sample.id == AnalysisResult.sample_id
+    ).filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        AnalysisResult.analysis_code.in_(active_chem_codes),
+        AnalysisResult.created_at >= year_start,
+        AnalysisResult.created_at < year_end
+    ).count()
+
+    # Категори тоо
+    cat_counts = []
+    cat_labels = {'Унд ахуй': 'Унд ахуй', 'Бохир ус': 'Бохир ус', 'Лаг': 'Лаг'}
+    for unit_name in WATER_UNITS:
+        cnt = Sample.query.filter(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            Sample.client_name == unit_name,
+            Sample.received_date >= year_start.date(),
+            Sample.received_date < year_end.date()
+        ).count()
+        if cnt > 0:
+            cat_counts.append({'label': unit_name, 'count': cnt})
+
+    # Pass/Fail тоолох (pH, MNS limit шалгалт)
+    pass_count = 0
+    fail_count = 0
+    ph_results = AnalysisResult.query.join(
+        Sample, Sample.id == AnalysisResult.sample_id
+    ).filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        AnalysisResult.analysis_code == 'PH',
+        AnalysisResult.created_at >= year_start,
+        AnalysisResult.created_at < year_end
+    ).all()
+
+    import json
+    for ar in ph_results:
+        try:
+            rd = json.loads(ar.raw_data) if ar.raw_data else {}
+            val = rd.get('value') or rd.get('result') or ar.final_result
+            if val is not None:
+                v = float(val)
+                if 6.5 <= v <= 8.5:
+                    pass_count += 1
+                else:
+                    fail_count += 1
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
+
+    total_checked = pass_count + fail_count
+    pass_rate = (pass_count / total_checked * 100) if total_checked > 0 else 100
+
+    # Сүүлийн 6 сарын тренд
+    monthly_stats = []
+    for i in range(5, -1, -1):
+        m = month - i
+        y = year
+        if m <= 0:
+            m += 12
+            y -= 1
+        m_start = datetime(y, m, 1)
+        m_end = datetime(y, m + 1, 1) if m < 12 else datetime(y + 1, 1, 1)
+        cnt = AnalysisResult.query.join(
+            Sample, Sample.id == AnalysisResult.sample_id
+        ).filter(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(active_chem_codes),
+            AnalysisResult.created_at >= m_start,
+            AnalysisResult.created_at < m_end
+        ).count()
+        monthly_stats.append({'month': m, 'year': y, 'label': f'{m}-р сар', 'count': cnt})
+
+    return render_template(
+        'reports/water_dashboard.html',
+        title='Усны хими Dashboard',
+        year=year, month=month,
+        samples_month=samples_month, samples_year=samples_year,
+        analyses_month=analyses_month, analyses_year=analyses_year,
+        category_counts=cat_counts,
+        pass_count=pass_count, fail_count=fail_count, pass_rate=pass_rate,
+        monthly_stats=monthly_stats,
+    )
+
+
+# ======================================================================
+#  REPORTS: Consumption
+# ======================================================================
+
+@water_bp.route('/reports/consumption')
+@login_required
+@lab_required('water')
+def water_consumption():
+    """Усны хими Consumption тайлан."""
+    from datetime import datetime
+    from sqlalchemy import extract
+    from collections import defaultdict
+
+    now = datetime.now()
+    try:
+        year = int(request.args.get('year', now.year))
+    except (ValueError, TypeError):
+        year = now.year
+
+    _WATER_LAB_TYPES = ['water', 'water & micro']
+    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
+
+    date_col = AnalysisResult.created_at
+    rows = (
+        db.session.query(
+            AnalysisResult.sample_id.label('sid'),
+            AnalysisResult.analysis_code.label('code'),
+            extract('month', date_col).label('mon'),
+            Sample.client_name.label('unit'),
+        )
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .filter(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(active_chem_codes),
+            extract('year', date_col) == year
+        )
+        .all()
+    )
+
+    # unit → sample_type → { sample_cnt: {1..12}, prop_rows: [(code, {1..12}, total)] }
+    tree = defaultdict(lambda: defaultdict(lambda: {
+        'sample_cnt': defaultdict(int),
+        'code_cnt': defaultdict(lambda: defaultdict(int)),
+    }))
+
+    seen_samples = defaultdict(set)
+    for sid, code, mon, unit in rows:
+        unit = unit or 'Unknown'
+        stype = 'Хими'
+        mon = int(mon)
+        tree[unit][stype]['code_cnt'][code][mon] += 1
+        if sid not in seen_samples[(unit, stype, mon)]:
+            seen_samples[(unit, stype, mon)].add(sid)
+            tree[unit][stype]['sample_cnt'][mon] += 1
+
+    # Grand totals
+    grand_samples = defaultdict(int)
+    grand_codes = defaultdict(lambda: defaultdict(int))
+    for unit, stypes in tree.items():
+        for stype, data in stypes.items():
+            for m, c in data['sample_cnt'].items():
+                grand_samples[m] += c
+            for code, mdict in data['code_cnt'].items():
+                for m, c in mdict.items():
+                    grand_codes[code][m] += c
+
+    # Build view
+    view = []
+    for unit in sorted(tree.keys()):
+        subs = []
+        for stype in sorted(tree[unit].keys()):
+            data = tree[unit][stype]
+            prop_rows = []
+            for code in sorted(data['code_cnt'].keys()):
+                monthly = data['code_cnt'][code]
+                row_total = sum(monthly.values())
+                prop_rows.append((code, monthly, row_total))
+            subs.append({
+                'stype': stype,
+                'sample_cnt': data['sample_cnt'],
+                'sample_total': sum(data['sample_cnt'].values()),
+                'prop_rows': prop_rows,
+            })
+        view.append((unit, subs))
+
+    grand_rows = []
+    for code in sorted(grand_codes.keys()):
+        monthly = grand_codes[code]
+        total = sum(monthly.values())
+        grand_rows.append((code, monthly, total))
+
+    return render_template(
+        'reports/water_consumption.html',
+        title=f'Усны хими Consumption — {year}',
+        year=year, data=view,
+        grand_samples=grand_samples, grand_rows=grand_rows,
+    )
+
+
+@water_bp.route('/api/consumption_cell')
+@login_required
+@lab_required('water')
+def api_consumption_cell():
+    """Consumption drill-down."""
+    from datetime import datetime
+    from sqlalchemy import extract
+
+    try:
+        year = int(request.args.get('year'))
+        month = int(request.args.get('month'))
+        unit = request.args.get('unit', '')
+        stype = request.args.get('stype', '')
+        kind = request.args.get('kind', 'samples')
+        code = request.args.get('code', '')
+    except (ValueError, TypeError):
+        return jsonify({'ok': False, 'items': []})
+
+    _WATER_LAB_TYPES = ['water', 'water & micro']
+    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
+
+    q = (
+        db.session.query(
+            AnalysisResult.sample_id,
+            AnalysisResult.analysis_code,
+            Sample.sample_code,
+            AnalysisResult.created_at
+        )
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .filter(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            Sample.client_name == unit,
+            extract('year', AnalysisResult.created_at) == year,
+            extract('month', AnalysisResult.created_at) == month,
+        )
+    )
+
+    if kind == 'code' and code:
+        q = q.filter(AnalysisResult.analysis_code == code)
+    else:
+        q = q.filter(AnalysisResult.analysis_code.in_(active_chem_codes))
+
+    rows = q.limit(200).all()
+    items = [
+        {
+            'sample_id': r.sample_id,
+            'code': r.analysis_code,
+            'sample_code': r.sample_code,
+            'analysis_date': r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+    return jsonify({'ok': True, 'items': items})
+
+
+# ======================================================================
+#  REPORTS: Monthly Plan
+# ======================================================================
+
+@water_bp.route('/reports/monthly_plan')
+@login_required
+@lab_required('water')
+def water_monthly_plan():
+    """Усны хими Monthly Plan."""
+    from datetime import datetime, timedelta
+    from calendar import monthrange
+    from collections import defaultdict
+    from sqlalchemy import extract
+
+    now = datetime.now()
+    try:
+        year = int(request.args.get('year', now.year))
+        month = int(request.args.get('month', now.month))
+    except (ValueError, TypeError):
+        year, month = now.year, now.month
+
+    years = list(range(now.year - 2, now.year + 2))
+    month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    month_name = month_names[month]
+
+    # Долоо хоногууд
+    _, days_in_month = monthrange(year, month)
+    first_day = datetime(year, month, 1)
+    weeks = []
+    wk = 1
+    d = first_day
+    while d.month == month:
+        week_start = d
+        week_end = min(d + timedelta(days=6 - d.weekday()), datetime(year, month, days_in_month))
+        if week_end.month != month:
+            week_end = datetime(year, month, days_in_month)
+        weeks.append({'week': wk, 'start': week_start, 'end': week_end})
+        d = week_end + timedelta(days=1)
+        wk += 1
+
+    _WATER_LAB_TYPES = ['water', 'water & micro']
+    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
+
+    # Performance data
+    perf_data = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+    results = (
+        db.session.query(
+            Sample.client_name,
+            AnalysisResult.analysis_code,
+            AnalysisResult.created_at
+        )
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .filter(
+            Sample.lab_type.in_(_WATER_LAB_TYPES),
+            AnalysisResult.analysis_code.in_(active_chem_codes),
+            extract('year', AnalysisResult.created_at) == year,
+            extract('month', AnalysisResult.created_at) == month,
+        )
+        .all()
+    )
+
+    for client, code, created_at in results:
+        cat = client or 'Unknown'
+        for w in weeks:
+            if w['start'] <= created_at <= w['end'] + timedelta(days=1):
+                perf_data[cat][code][w['week']] += 1
+                break
+
+    # Build data structure
+    data = {}
+    for cat in set(perf_data.keys()) | set(WATER_UNITS):
+        if cat not in data:
+            data[cat] = {'types': {}, 'total': {'plan': 0, 'perf': 0}, 'pct': 0}
+        types = data[cat]['types']
+        if 'Хими' not in types:
+            types['Хими'] = {
+                'weeks': {w['week']: {'plan': 0, 'perf': 0} for w in weeks},
+                'total_plan': 0, 'total_perf': 0, 'pct': 0
+            }
+        for code in active_chem_codes:
+            for w in weeks:
+                types['Хими']['weeks'][w['week']]['perf'] += perf_data[cat].get(code, {}).get(w['week'], 0)
+        types['Хими']['total_perf'] = sum(wd['perf'] for wd in types['Хими']['weeks'].values())
+        data[cat]['total']['perf'] = types['Хими']['total_perf']
+
+    # Week totals
+    week_totals = {w['week']: {'plan': 0, 'perf': 0} for w in weeks}
+    for cat_info in data.values():
+        for row_data in cat_info['types'].values():
+            for wk, wd in row_data['weeks'].items():
+                week_totals[wk]['plan'] += wd['plan']
+                week_totals[wk]['perf'] += wd['perf']
+
+    grand_total = {
+        'plan': sum(wt['plan'] for wt in week_totals.values()),
+        'perf': sum(wt['perf'] for wt in week_totals.values())
+    }
+
+    staff_count = 2
+
+    return render_template(
+        'reports/water_monthly_plan.html',
+        title='Water Monthly Plan',
+        years=years, year=year, month=month, month_name=month_name,
+        weeks=weeks, data=data,
+        week_totals=week_totals, grand_total=grand_total,
+        staff_count=staff_count,
+    )
+
+
+@water_bp.route('/api/save_monthly_plan', methods=['POST'])
+@login_required
+@lab_required('water')
+def api_save_monthly_plan():
+    """Monthly plan хадгалах."""
+    if current_user.role not in ('senior', 'admin'):
+        return jsonify({'success': False, 'error': 'Permission denied'})
+    # TODO: Implement plan saving
+    return jsonify({'success': True})
+
+
+@water_bp.route('/api/save_staff', methods=['POST'])
+@login_required
+@lab_required('water')
+def api_save_staff():
+    """Staff count хадгалах."""
+    if current_user.role not in ('senior', 'admin'):
+        return jsonify({'success': False, 'error': 'Permission denied'})
+    # TODO: Implement staff saving
+    return jsonify({'success': True})

@@ -159,6 +159,45 @@
     </div>
   </div>
 
+  <!-- Reports Section -->
+  <div class="reports-section" style="margin-bottom: 1.5rem;">
+    <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <i class="bi bi-bar-chart-fill" style="color: #3b82f6;"></i> Тайлангууд
+    </h5>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; max-width: 800px;">
+      <a href="{{ url_for('water.water_dashboard') }}" class="analysis-card" style="animation-delay: 0s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb;">
+          <i class="bi bi-speedometer2"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Dashboard</div>
+          <div class="card-unit">Хураангуй тойм</div>
+        </div>
+        <i class="bi bi-arrow-right card-arrow"></i>
+      </a>
+      <a href="{{ url_for('water.water_consumption') }}" class="analysis-card" style="animation-delay: 0.05s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0284c7;">
+          <i class="bi bi-journal-bookmark"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Consumption</div>
+          <div class="card-unit">Зарцуулалт</div>
+        </div>
+        <i class="bi bi-arrow-right card-arrow"></i>
+      </a>
+      <a href="{{ url_for('water.water_monthly_plan') }}" class="analysis-card" style="animation-delay: 0.1s;">
+        <div class="card-icon" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d;">
+          <i class="bi bi-calendar3-week"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Monthly Plan</div>
+          <div class="card-unit">Сарын төлөвлөгөө</div>
+        </div>
+        <i class="bi bi-arrow-right card-arrow"></i>
+      </a>
+    </div>
+  </div>
+
   <div class="no-results" id="no-results">
     <i class="bi bi-search"></i>
     <h4>Илэрц олдсонгүй</h4>
