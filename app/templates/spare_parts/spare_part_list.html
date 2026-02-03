@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Сэлбэг хэрэгсэл{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-gear-wide-connected text-primary me-2"></i>Сэлбэг хэрэгсэл
+      </h4>
+      <p class="text-muted mb-0">Нөөцийн удирдлага, зарцуулалтын хяналт</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if current_user.role in ['manager', 'admin'] %}
+      <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-tags me-1"></i>Категори
+      </a>
+      {% endif %}
+      <a href="{{ url_for('spare_parts.add_spare_part') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Шинэ сэлбэг
+      </a>
+    </div>
+  </div>
+
+  {# Stats Cards #}
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-primary bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-box-seam text-primary fs-4"></i>
+            </div>
+            <div class="ms-3">
+              <h3 class="mb-0">{{ stats.total }}</h3>
+              <small class="text-muted">Нийт сэлбэг</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 {{ 'border-warning' if stats.low_stock > 0 }}">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-warning bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+            </div>
+            <div class="ms-3">
+              <h3 class="mb-0">{{ stats.low_stock }}</h3>
+              <small class="text-muted">Нөөц бага</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100 {{ 'border-danger' if stats.out_of_stock > 0 }}">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-danger bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-x-circle text-danger fs-4"></i>
+            </div>
+            <div class="ms-3">
+              <h3 class="mb-0">{{ stats.out_of_stock }}</h3>
+              <small class="text-muted">Дууссан</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-shrink-0 bg-success bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-check-circle text-success fs-4"></i>
+            </div>
+            <div class="ms-3">
+              <h3 class="mb-0">{{ stats.total - stats.low_stock - stats.out_of_stock }}</h3>
+              <small class="text-muted">Хэвийн</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Filters #}
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+      <form method="GET" class="row g-2 align-items-center">
+        <div class="col-auto">
+          <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">Бүх категори</option>
+            {% for val, label in categories %}
+            <option value="{{ val }}" {{ 'selected' if category == val }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">Бүх төлөв</option>
+            {% for val, label in status_types %}
+            <option value="{{ val }}" {{ 'selected' if status == val }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <a href="{{ url_for('spare_parts.spare_part_list', view='low_stock') }}"
+             class="btn btn-sm {{ 'btn-warning' if view == 'low_stock' else 'btn-outline-warning' }}">
+            <i class="bi bi-exclamation-triangle me-1"></i>Нөөц бага
+          </a>
+        </div>
+        <div class="col-auto">
+          <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Table #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div id="sparePartsGrid" style="width:100%;min-height:500px;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const data = {{ spare_parts|tojson|safe }};
+
+  // Тоног төхөөрөмжөөр категори (database-аас)
+  const categoryNames = {{ categories_dict|tojson|safe }};
+
+  const table = new Tabulator("#sparePartsGrid", {
+    data: data,
+    layout: "fitDataFill",
+    height: "65vh",
+    resizableColumns: true,
+    columns: [
+      {title: "Нэр", field: "name", widthGrow: 2,
+       formatter: function(cell) {
+         const d = cell.getRow().getData();
+         let badge = '';
+         if (d.status === 'out_of_stock') badge = '<span class="badge bg-danger ms-2">Дууссан</span>';
+         else if (d.status === 'low_stock') badge = '<span class="badge bg-warning ms-2">Бага</span>';
+         return `<a href="/spare_parts/${d.id}" class="text-decoration-none fw-medium">${d.name}</a>${badge}`;
+       }
+      },
+      {title: "Англи нэр", field: "name_en", widthGrow: 1.5},
+      {title: "Тоног төхөөрөмж", field: "category", widthGrow: 1,
+       formatter: function(cell) {
+         return categoryNames[cell.getValue()] || cell.getValue();
+       }
+      },
+      {title: "Нөөц", field: "quantity", hozAlign: "center", widthGrow: 0.5,
+       formatter: function(cell) {
+         const d = cell.getRow().getData();
+         const qty = d.quantity || 0;
+         const reorder = d.reorder_level || 0;
+         let cls = 'text-success';
+         if (qty <= 0) cls = 'text-danger fw-bold';
+         else if (qty <= reorder) cls = 'text-warning fw-bold';
+         return `<span class="${cls}">${qty} ${d.unit}</span>`;
+       }
+      },
+      {title: "Захиалах", field: "reorder_level", hozAlign: "center", widthGrow: 0.5},
+      {title: "Байршил", field: "storage_location", widthGrow: 1},
+    ],
+  });
+});
+</script>
+{% endblock %}

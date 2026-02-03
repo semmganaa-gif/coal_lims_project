@@ -9,6 +9,7 @@ from app.models import Equipment, MaintenanceLog, UsageLog
 from datetime import datetime, timedelta
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
+from app.utils.audit import log_audit
 from sqlalchemy import func
 
 from app.routes.equipment import equipment_bp
@@ -30,7 +31,20 @@ def _filter_equipment_by_category(query, category):
 def log_usage_bulk():
     """
     Frontend-ээс ирсэн олон төхөөрөмжийн бүртгэлийг хүлээж авч хадгална.
-    JSON бүтэц: { "items": [ { "eq_id": 1, "minutes": 60, "note": "...", "is_checked": true }, ... ] }
+    JSON бүтэц: {
+        "items": [{
+            "eq_id": 1,
+            "minutes": 60,
+            "note": "...",
+            "is_checked": true,
+            "calibration": {
+                "type": "temperature|weight|analysis",
+                "set_temp": 815, "actual_temp": 814.5,  // furnace
+                "weights": [{"standard": 200, "measured": 200.0001}],  // balance
+                "standard_name": "...", "certified_value": 5.2, "measured_value": 5.18  // analysis
+            }
+        }, ...]
+    }
     """
     try:
         data = request.get_json() or {}
@@ -55,6 +69,106 @@ def log_usage_bulk():
             note = item.get("note", "")
             is_checked = item.get("is_checked", False)
 
+            # Калибровка/шалгалт бүртгэл
+            calibration = item.get("calibration")
+            if calibration:
+                calib_type = calibration.get("type", "")
+                desc_parts = []
+                result = "Pass"
+
+                if calib_type == "temperature":
+                    set_temp = calibration.get("set_temp")
+                    actual_temp = calibration.get("actual_temp")
+                    if set_temp is not None and actual_temp is not None:
+                        diff = actual_temp - set_temp
+                        desc_parts.append(f"Тохируулсан: {set_temp}°C")
+                        desc_parts.append(f"Хэмжсэн: {actual_temp}°C")
+                        desc_parts.append(f"Зөрүү: {'+' if diff >= 0 else ''}{diff:.1f}°C")
+                        if abs(diff) > 5:
+                            result = "Fail"
+
+                elif calib_type == "weight":
+                    weights = calibration.get("weights", [])
+                    for i, w in enumerate(weights, 1):
+                        std = w.get("standard")
+                        meas = w.get("measured")
+                        if std is not None and meas is not None:
+                            diff = abs(meas - std)
+                            tolerance = 0.0002 if std < 1 else 0.001
+                            status = "OK" if diff <= tolerance else "FAIL"
+                            desc_parts.append(f"Жин {i}: Стд={std}g, Хэмжсэн={meas}g ({status})")
+                            if diff > tolerance:
+                                result = "Fail"
+
+                elif calib_type == "sulfur":
+                    # Хүхэр багаж - 5 стандарт
+                    standards = calibration.get("standards", [])
+                    desc_parts.append("Хүхэр багаж калибровка:")
+                    for i, std in enumerate(standards, 1):
+                        name = std.get("name", f"Стд {i}")
+                        cert = std.get("certified")
+                        meas = std.get("measured")
+                        if cert is not None and meas is not None:
+                            diff_pct = abs((meas - cert) / cert * 100) if cert else 0
+                            status = "OK" if diff_pct <= 5 else "FAIL"
+                            desc_parts.append(f"  {i}. {name}: Батл={cert}%, Хэмж={meas}% ({status})")
+                            if diff_pct > 5:
+                                result = "Fail"
+
+                elif calib_type == "calorimeter":
+                    # Илчлэг багаж - 5 хэмжилт
+                    std_name = calibration.get("standard_name", "Бензой хүчил")
+                    cert_val = calibration.get("certified_value", 26454)
+                    measurements = calibration.get("measurements", [])
+                    if measurements:
+                        avg = sum(measurements) / len(measurements)
+                        if len(measurements) >= 2:
+                            std_dev = (sum((x - avg) ** 2 for x in measurements) / (len(measurements) - 1)) ** 0.5
+                            rsd = (std_dev / avg) * 100 if avg else 0
+                        else:
+                            rsd = 0
+                        avg_diff = abs(avg - cert_val)
+                        desc_parts.append(f"Илчлэг багаж ({std_name}):")
+                        desc_parts.append(f"  Баталгаат: {cert_val} cal/g")
+                        desc_parts.append(f"  Хэмжилтүүд: {', '.join(str(int(m)) for m in measurements)}")
+                        desc_parts.append(f"  Дундаж: {avg:.0f}, RSD: {rsd:.3f}%")
+                        if rsd > 0.1 or avg_diff > 60:
+                            result = "Fail"
+                            desc_parts.append(f"  Шалтгаан: {'RSD > 0.1%' if rsd > 0.1 else 'Зөрүү > 60 cal/g'}")
+
+                elif calib_type == "analysis":
+                    std_name = calibration.get("standard_name", "")
+                    cert_val = calibration.get("certified_value")
+                    meas_val = calibration.get("measured_value")
+                    if cert_val is not None and meas_val is not None:
+                        diff_pct = (meas_val - cert_val) / cert_val * 100 if cert_val else 0
+                        desc_parts.append(f"Стандарт: {std_name}")
+                        desc_parts.append(f"Баталгаат: {cert_val}")
+                        desc_parts.append(f"Хэмжсэн: {meas_val}")
+                        desc_parts.append(f"Зөрүү: {'+' if diff_pct >= 0 else ''}{diff_pct:.2f}%")
+                        if abs(diff_pct) > 2:
+                            result = "Fail"
+
+                if desc_parts:
+                    action_type_map = {
+                        "temperature": "Temperature Check",
+                        "sulfur": "Sulfur Calibration",
+                        "calorimeter": "Calorimeter Check",
+                        "weight": "Balance Check",
+                        "analysis": "Calibration Check"
+                    }
+                    mlog = MaintenanceLog(
+                        equipment_id=eq_id,
+                        action_date=today_date,
+                        action_type=action_type_map.get(calib_type, "Check"),
+                        description="\n".join(desc_parts),
+                        performed_by=current_user.username,
+                        performed_by_id=current_user.id,
+                        result=result,
+                    )
+                    db.session.add(mlog)
+                    count += 1
+
             # Засвар бүртгэл
             is_repair = item.get("repair", False)
             if is_repair:
@@ -64,15 +178,56 @@ def log_usage_bulk():
                 desc_parts = []
                 if note:
                     desc_parts.append(note)
+
+                # SparePart модел ашиглаж нөөцөөс хасах
+                from app.models import SparePart, SparePartUsage, SparePartLog
                 for sp in spare_parts:
                     sp_id = sp.get("spare_id")
                     try:
                         sp_id = int(sp_id)
                     except (TypeError, ValueError):
                         continue
-                    sp_eq = db.session.get(Equipment, sp_id)
-                    sp_name = f"{sp_eq.lab_code or ''} {sp_eq.name}".strip() if sp_eq else f"ID:{sp.get('spare_id')}"
-                    desc_parts.append(f"Сэлбэг: {sp_name} x{sp.get('qty', 1)} ({sp.get('used_by', '')})")
+
+                    sp_item = db.session.get(SparePart, sp_id)
+                    if not sp_item:
+                        continue
+
+                    qty_used = int(sp.get('qty', 1))
+                    used_by = sp.get('used_by', current_user.username)
+                    sp_name = sp_item.name
+
+                    # Нөөцөөс хасах
+                    old_qty = sp_item.quantity
+                    if qty_used <= sp_item.quantity:
+                        sp_item.quantity -= qty_used
+                        sp_item.update_status()
+
+                        # SparePartUsage бүртгэл
+                        usage = SparePartUsage(
+                            spare_part_id=sp_id,
+                            equipment_id=eq_id,
+                            quantity_used=qty_used,
+                            unit=sp_item.unit,
+                            purpose=f"Засвар: {note}" if note else "Засвар",
+                            used_by_id=current_user.id,
+                            quantity_before=old_qty,
+                            quantity_after=sp_item.quantity,
+                        )
+                        db.session.add(usage)
+
+                        # SparePartLog аудит
+                        sp_log = SparePartLog(
+                            spare_part_id=sp_id,
+                            action='consumed',
+                            quantity_change=-qty_used,
+                            quantity_before=old_qty,
+                            quantity_after=sp_item.quantity,
+                            user_id=current_user.id,
+                            details=f"Засвар: Equipment ID {eq_id}"
+                        )
+                        db.session.add(sp_log)
+
+                    desc_parts.append(f"Сэлбэг: {sp_name} x{qty_used} ({used_by})")
 
                 repair_date = None
                 if repair_date_str:
@@ -87,6 +242,7 @@ def log_usage_bulk():
                     action_type="Repair",
                     description="\n".join(desc_parts) if desc_parts else "Засвар хийгдсэн",
                     performed_by=current_user.username,
+                    performed_by_id=current_user.id,
                     result="Pass",
                 )
                 db.session.add(mlog)
@@ -104,6 +260,7 @@ def log_usage_bulk():
                     end_time=end_time,
                     duration_minutes=minutes,
                     used_by=current_user.username,
+                    used_by_id=current_user.id,
                     purpose=purpose_text
                 )
                 db.session.add(new_usage)
@@ -112,6 +269,16 @@ def log_usage_bulk():
                 count += 1
 
         db.session.commit()
+
+        # Audit log
+        if count > 0:
+            log_audit(
+                action='bulk_usage_log',
+                resource_type='Equipment',
+                resource_id=None,
+                details={'count': count, 'items_count': len(items)}
+            )
+
         return jsonify({"status": "success", "count": count})
 
     except Exception as e:

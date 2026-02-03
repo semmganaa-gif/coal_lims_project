@@ -1,5 +1,90 @@
 # CHANGELOG - LIMS Сайжруулалтууд
 
+## [2026-02-04] - Тоног төхөөрөмжийн калибровка + Сэлбэг хэрэгслийн интеграц
+
+### Калибровка/Шалгалтын систем (Шинэ)
+Тоног төхөөрөмжийн modal-д шалгалт/калибровкын функц нэмэгдсэн:
+
+**Зуух (Furnace)**
+- Температурын шалгалт: Тохируулсан vs Хэмжсэн
+- Tolerance: ±5°C
+- Улбар шар панел
+
+**Жин (Balance)**
+- Туухайгаар шалгалт: Олон стандарт жин оруулах боломжтой
+- Tolerance: ±0.0002g (1g-с доош), ±0.001g (1g-с дээш)
+- Цэнхэр панел
+
+**Хүхэр багаж (Sulfur Analyzer)**
+- 5 өөр стандартаар калибровка
+- Стандарт нэр, баталгаат утга (%), хэмжсэн утга
+- Tolerance: ±5% (relative)
+- Шар gradient панел
+
+**Илчлэг багаж (Calorimeter)**
+- 1 дээж (Бензой хүчил), 5 удаа хэмжилт
+- Дундаж болон RSD автомат тооцоолол
+- Tolerance: RSD ≤ 0.1% ба дундаж ±60 cal/g
+- Улаан gradient панел
+
+### Сэлбэг хэрэгслийн интеграц
+- **Dropdown засвар**: `/spare_parts/api/list` API руу зөв холбогдсон
+- Нөөцтэй сэлбэгүүдийг л харуулдаг (quantity > 0)
+- Тоо ширхэг болон нэгж харагдана: `Нэр (10 pcs)`
+
+### Сэлбэг зарцуулалт (Spare Parts Consumption)
+Засварт сэлбэг хэрэглэхэд автоматаар:
+- `SparePart.quantity`-с хасагдана
+- `SparePartUsage` бүртгэл үүсдэг
+- `SparePartLog` аудит хадгалагдана
+- Статус автомат шинэчлэгддэг (active → low_stock → out_of_stock)
+
+### MaintenanceLog action types (Шинэ)
+| Type | Тайлбар |
+|------|---------|
+| Temperature Check | Зуухны температур шалгалт |
+| Balance Check | Жингийн туухай шалгалт |
+| Sulfur Calibration | Хүхэр багажийн 5 стандарт калибровка |
+| Calorimeter Check | Илчлэг багажийн 5 хэмжилт шалгалт |
+| Calibration Check | Бусад багажийн калибровка |
+| Repair | Засвар (сэлбэгтэй) |
+
+### Усны химийн лаб - Equipment Modal (Шинэ)
+- `water_ws_layout.html`-д equipment modal нэмэгдсэн
+- Төхөөрөмж товч header-т нэмэгдсэн
+- `related_equipments` route-д нэмэгдсэн (category='water' эсвэл related_analysis)
+- Калибровкын бүх функц ажиллана
+
+### Микробиологийн лаб - Калибровка нэмэгдсэн
+- `micro_workspace.html` - Калибровкын панел + функцууд
+- `micro_swab_workspace.html` - Сэлбэг API засагдсан
+- `micro_air_workspace.html` - Сэлбэг API засагдсан
+
+### Сэлбэг хэрэгслийн хуудас
+- Хуудаслалт (pagination) болиулагдсан
+- Бүх сэлбэг нэг дор харагдана
+
+### Өөрчлөгдсөн файлууд (12)
+
+| Файл | Төрөл |
+|------|-------|
+| `app/templates/analysis_page.html` | Засвар - Калибровка панел + JS |
+| `app/routes/equipment/api.py` | Засвар - Калибровка + Сэлбэг зарцуулалт |
+| `app/labs/water/routes.py` | Засвар - related_equipments нэмсэн |
+| `app/labs/water/templates/analysis_forms/water_ws_layout.html` | Засвар - Equipment modal |
+| `app/labs/microbiology/templates/analysis_forms/micro_workspace.html` | Засвар - Калибровка |
+| `app/labs/microbiology/templates/analysis_forms/micro_swab_workspace.html` | Засвар - Сэлбэг API |
+| `app/labs/microbiology/templates/analysis_forms/micro_air_workspace.html` | Засвар - Сэлбэг API |
+| `app/templates/spare_parts/spare_part_list.html` | Засвар - Pagination устгасан |
+
+### Багаж таних логик
+Template-д `eq.name` дээр үндэслэн калибровкын төрөл автомат тодорхойлогддог:
+- **Хүхэр**: `хүхэр`, `sulfur`, `s-144`, `5e-irs`
+- **Илчлэг**: `илчлэг`, `calorimeter`, `c2000`, `c5000`, `c6000`
+- **Бусад**: Ерөнхий калибровка панел
+
+---
+
 ## [2026-02-03] - Усны химийн workspace шинэчлэл + Нэгдсэн нэгтгэл хуудас
 
 ### Shared Layout Template (Шинэ)

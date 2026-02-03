@@ -62,13 +62,16 @@ def equipment_journal_grid():
 @login_required
 def equipment_journal_special(journal_type):
     """Хэмжих хэрэгсэл / Шилэн хэмжүүрийн журнал."""
+    # Redirect spares_register to dedicated Spare Parts module
+    if journal_type == "spares_register":
+        return redirect(url_for("spare_parts.spare_part_list"))
+
     templates = {
         "measurement": "equipment_measurement_journal.html",
         "glassware": "equipment_glassware_journal.html",
         "internal_check": "equipment_internal_check.html",
         "new_equipment": "equipment_new_register.html",
         "out_of_service": "equipment_out_of_service.html",
-        "spares_register": "equipment_spares_register.html",
         "balances_register": "equipment_balances_register.html",
     }
     template = templates.get(journal_type)

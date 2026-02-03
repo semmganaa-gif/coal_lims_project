@@ -188,6 +188,80 @@
   #equipmentModal .modal-dialog {
     max-width: 90vw;
   }
+  /* Calibration Check Styles */
+  #equipmentModal .calib-btn {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+  #equipmentModal .calib-panel {
+    background: #f0fff4;
+    border: 1px solid #9ae6b4;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 8px;
+  }
+  #equipmentModal .calib-panel.furnace-panel {
+    background: #fffaf0;
+    border-color: #fbd38d;
+  }
+  #equipmentModal .calib-panel.balance-panel {
+    background: #ebf8ff;
+    border-color: #90cdf4;
+  }
+  #equipmentModal .calib-panel.analysis-panel {
+    background: #faf5ff;
+    border-color: #d6bcfa;
+  }
+  #equipmentModal .calib-panel-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #equipmentModal .furnace-panel .calib-panel-title { color: #c05621; }
+  #equipmentModal .balance-panel .calib-panel-title { color: #2b6cb0; }
+  #equipmentModal .analysis-panel .calib-panel-title { color: #6b46c1; }
+  #equipmentModal .calib-input-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  #equipmentModal .calib-input-group label {
+    font-size: 0.7rem;
+    color: #4a5568;
+    min-width: 70px;
+  }
+  #equipmentModal .calib-input-group input {
+    flex: 1;
+    font-size: 0.8rem;
+  }
+  #equipmentModal .calib-weight-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 3px;
+  }
+  #equipmentModal .calib-weight-row input {
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  #equipmentModal .calib-status {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  #equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
+  #equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
+  /* Хүхэр багаж калибровка */
+  #equipmentModal .sulfur-panel { background: linear-gradient(135deg, #fefce8, #fef9c3); border-color: #fde047; }
+  #equipmentModal .sulfur-panel .calib-panel-title { color: #a16207; }
+  #equipmentModal .sulfur-panel .calib-std-row input { font-size: 0.75rem; }
+  /* Илчлэг багаж калибровка */
+  #equipmentModal .calorimeter-panel { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-color: #fca5a5; }
+  #equipmentModal .calorimeter-panel .calib-panel-title { color: #b91c1c; }
 </style>
 <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -205,17 +279,18 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 22%; min-width:140px;">Лаб дугаар / Нэр</th>
-                <th style="width: 7%; text-align:center;">Бүрэн<br>бүтэн</th>
-                <th style="width: 10%; text-align:center;">Ашиглалт<br>(мин)</th>
-                <th style="width: 20%;">Тэмдэглэл</th>
-                <th style="width: 7%; text-align:center;">Засвар</th>
-                <th style="width: 34%;">Засварын мэдээлэл</th>
+                <th style="width: 18%; min-width:140px;">Лаб дугаар / Нэр</th>
+                <th style="width: 6%; text-align:center;">Бүрэн<br>бүтэн</th>
+                <th style="width: 8%; text-align:center;">Ашиглалт<br>(мин)</th>
+                <th style="width: 14%;">Тэмдэглэл</th>
+                <th style="width: 6%; text-align:center;">Шалгалт</th>
+                <th style="width: 6%; text-align:center;">Засвар</th>
+                <th style="width: 42%;">Шалгалт / Засварын мэдээлэл</th>
               </tr>
             </thead>
             <tbody>
               {% for eq in related_equipments %}
-              <tr data-eq-id="{{ eq.id }}">
+              <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
                 <td>
                   <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
                   {% if eq.lab_code and eq.name != eq.lab_code %}
@@ -235,11 +310,133 @@
                          placeholder="Тэмдэглэл..." style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
+                  {% if eq.category in ['furnace', 'balance', 'analysis'] %}
+                  <button type="button" class="btn btn-outline-success btn-sm calib-btn"
+                          onclick="toggleCalibPanel(this)" title="Шалгалт хийх">
+                    <i class="bi bi-thermometer-half"></i>
+                  </button>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
                   <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
                          style="width: 22px; height: 22px; cursor: pointer;"
                          onchange="toggleRepairPanel(this)">
                 </td>
-                <td class="repair-info-cell">
+                <td class="calib-repair-cell">
+                  {# Calibration Panel - Category based #}
+                  {% if eq.category == 'furnace' %}
+                  <div class="calib-panel furnace-panel d-none">
+                    <div class="calib-panel-title">
+                      <i class="bi bi-thermometer-sun"></i> Температурын шалгалт
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Тохируулсан:</label>
+                      <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Хэмжсэн:</label>
+                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Зөрүү:</label>
+                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
+                      <span class="calib-status d-none"></span>
+                    </div>
+                  </div>
+                  {% elif eq.category == 'balance' %}
+                  <div class="calib-panel balance-panel d-none">
+                    <div class="calib-panel-title">
+                      <i class="bi bi-speedometer2"></i> Жингийн шалгалт (туухай)
+                    </div>
+                    <div class="mb-2">
+                      <small class="text-muted">Стандарт жин → Хэмжсэн утга</small>
+                    </div>
+                    <div class="calib-weights-list">
+                      <div class="calib-weight-row">
+                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
+                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+                        <span class="calib-status d-none" style="min-width:50px;"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
+                      <i class="bi bi-plus"></i> Жин нэмэх
+                    </button>
+                  </div>
+                  {% elif eq.category == 'analysis' %}
+                    {# Хүхэр багаж - 5 стандартаар калибровка #}
+                    {% if 'хүхэр' in (eq.name|lower) or 'sulfur' in (eq.name|lower) or 's-144' in (eq.name|lower) or '5e-irs' in (eq.name|lower) %}
+                    <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="sulfur">
+                      <div class="calib-panel-title">
+                        <i class="bi bi-droplet-half"></i> Хүхэр багаж калибровка (5 стандарт)
+                      </div>
+                      <div class="mb-2"><small class="text-muted">Стандарт нэр → Баталгаат → Хэмжсэн</small></div>
+                      <div class="sulfur-stds-list">
+                        {% for i in range(1, 6) %}
+                        <div class="calib-std-row mb-1" style="display:flex; gap:4px; align-items:center;">
+                          <span style="font-size:0.7rem; min-width:18px;">{{ i }}.</span>
+                          <input type="text" class="form-control form-control-sm sulfur-std-name" placeholder="Стд нэр" style="flex:2">
+                          <input type="number" class="form-control form-control-sm sulfur-cert-val" placeholder="Батл %" step="0.001" style="flex:1">
+                          <input type="number" class="form-control form-control-sm sulfur-meas-val" placeholder="Хэмжсэн" step="0.001" style="flex:1" oninput="checkSulfurRow(this)">
+                          <span class="calib-status d-none" style="min-width:45px;"></span>
+                        </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {# Илчлэг багаж - 1 дээж, 5 хэмжилт #}
+                    {% elif 'илчлэг' in (eq.name|lower) or 'calorimeter' in (eq.name|lower) or 'c2000' in (eq.name|lower) or 'c5000' in (eq.name|lower) or 'c6000' in (eq.name|lower) %}
+                    <div class="calib-panel analysis-panel calorimeter-panel d-none" data-calib-type="calorimeter">
+                      <div class="calib-panel-title">
+                        <i class="bi bi-fire"></i> Илчлэг багаж шалгалт (1 дээж, 5 хэмжилт)
+                      </div>
+                      <div class="calib-input-group mb-2">
+                        <label>Стандарт:</label>
+                        <input type="text" class="form-control form-control-sm cal-std-name" placeholder="Бензой хүчил" value="Бензой хүчил">
+                        <label class="ms-2">Батл:</label>
+                        <input type="number" class="form-control form-control-sm cal-cert-val" placeholder="cal/g" value="26454" step="1" style="max-width:80px;">
+                      </div>
+                      <div class="mb-1"><small class="text-muted">5 удаагийн хэмжилт (cal/g):</small></div>
+                      <div class="cal-measurements" style="display:flex; gap:4px; flex-wrap:wrap;">
+                        {% for i in range(1, 6) %}
+                        <input type="number" class="form-control form-control-sm cal-meas" placeholder="M{{ i }}" step="1" style="width:70px;" oninput="checkCalorimeter(this)">
+                        {% endfor %}
+                      </div>
+                      <div class="mt-2 d-flex align-items-center gap-2">
+                        <span style="font-size:0.75rem;">Дундаж:</span>
+                        <input type="text" class="form-control form-control-sm cal-avg" readonly style="width:80px; background:#f7fafc;">
+                        <span style="font-size:0.75rem;">RSD:</span>
+                        <input type="text" class="form-control form-control-sm cal-rsd" readonly style="width:60px; background:#f7fafc;">
+                        <span class="calib-status d-none"></span>
+                      </div>
+                    </div>
+                    {# Бусад шинжилгээний багаж #}
+                    {% else %}
+                    <div class="calib-panel analysis-panel d-none" data-calib-type="general">
+                      <div class="calib-panel-title">
+                        <i class="bi bi-gear"></i> Багажийн калибровка
+                      </div>
+                      <div class="calib-input-group">
+                        <label>Стандарт:</label>
+                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Стандартын нэр">
+                      </div>
+                      <div class="calib-input-group">
+                        <label>Баталгаат:</label>
+                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Утга" step="0.001">
+                      </div>
+                      <div class="calib-input-group">
+                        <label>Хэмжсэн:</label>
+                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Утга" step="0.001" oninput="checkAnalysisDiff(this)">
+                      </div>
+                      <div class="calib-input-group">
+                        <label>Зөрүү (%):</label>
+                        <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
+                        <span class="calib-status d-none"></span>
+                      </div>
+                    </div>
+                    {% endif %}
+                  {% endif %}
+                  {# Repair Panel #}
                   <div class="repair-panel d-none">
                     <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Засварын огноо</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
@@ -476,13 +673,13 @@
 
 {# --- Тоног төхөөрөмжийн ашиглалт хадгалах --- #}
 <script>
-let _spareEquipments = null;
+let _spareParts = null;
 
-function loadSpareEquipments() {
-  if (_spareEquipments) return Promise.resolve(_spareEquipments);
-  return fetch('/api/equipment_list_json')
+function loadSpareParts() {
+  if (_spareParts) return Promise.resolve(_spareParts);
+  return fetch('/spare_parts/api/list')
     .then(r => r.json())
-    .then(data => { _spareEquipments = data; return data; });
+    .then(data => { _spareParts = data; return data; });
 }
 
 function toggleRepairPanel(cb) {
@@ -510,14 +707,180 @@ function addSparePart(btn) {
   `;
   list.appendChild(row);
   const sel = row.querySelector('.spare-select');
-  loadSpareEquipments().then(eqs => {
-    eqs.forEach(eq => {
-      const opt = document.createElement('option');
-      opt.value = eq.id;
-      opt.textContent = `${eq.lab_code || ''} ${eq.name}`.trim();
-      sel.appendChild(opt);
+  loadSpareParts().then(parts => {
+    parts.forEach(sp => {
+      if (sp.quantity > 0) {  // Нөөцтэй сэлбэгүүдийг л харуулах
+        const opt = document.createElement('option');
+        opt.value = sp.id;
+        opt.textContent = `${sp.name} (${sp.quantity} ${sp.unit || 'ш'})`;
+        opt.dataset.quantity = sp.quantity;
+        sel.appendChild(opt);
+      }
     });
   });
+}
+
+// Calibration Panel Functions
+function toggleCalibPanel(btn) {
+  const row = btn.closest('tr');
+  const panel = row.querySelector('.calib-panel');
+  if (panel) {
+    panel.classList.toggle('d-none');
+    btn.classList.toggle('btn-outline-success');
+    btn.classList.toggle('btn-success');
+  }
+}
+
+// Furnace Temperature Check
+function checkTempDiff(input) {
+  const row = input.closest('tr');
+  const setTemp = parseFloat(row.querySelector('.calib-set-temp')?.value) || 0;
+  const actualTemp = parseFloat(input.value) || 0;
+  const diffInput = row.querySelector('.calib-temp-diff');
+  const statusSpan = row.querySelector('.furnace-panel .calib-status');
+
+  if (setTemp > 0 && actualTemp > 0) {
+    const diff = actualTemp - setTemp;
+    diffInput.value = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' °C';
+
+    // ±5°C tolerance for furnace
+    statusSpan.classList.remove('d-none');
+    if (Math.abs(diff) <= 5) {
+      statusSpan.textContent = 'OK';
+      statusSpan.className = 'calib-status pass';
+    } else {
+      statusSpan.textContent = 'Зөрүү!';
+      statusSpan.className = 'calib-status fail';
+    }
+  } else {
+    diffInput.value = '';
+    statusSpan.classList.add('d-none');
+  }
+}
+
+// Balance Weight Check
+function checkWeightDiff(input) {
+  const weightRow = input.closest('.calib-weight-row');
+  const stdWt = parseFloat(weightRow.querySelector('.calib-std-wt')?.value) || 0;
+  const measWt = parseFloat(input.value) || 0;
+  const statusSpan = weightRow.querySelector('.calib-status');
+
+  if (stdWt > 0 && measWt > 0) {
+    const diff = Math.abs(measWt - stdWt);
+    // ±0.0002g tolerance for analytical balance
+    const tolerance = stdWt < 1 ? 0.0002 : 0.001;
+
+    statusSpan.classList.remove('d-none');
+    if (diff <= tolerance) {
+      statusSpan.textContent = 'OK';
+      statusSpan.className = 'calib-status pass';
+    } else {
+      statusSpan.textContent = '±' + diff.toFixed(4);
+      statusSpan.className = 'calib-status fail';
+    }
+  } else {
+    statusSpan.classList.add('d-none');
+  }
+}
+
+function addWeightRow(btn) {
+  const list = btn.closest('.balance-panel').querySelector('.calib-weights-list');
+  const row = document.createElement('div');
+  row.className = 'calib-weight-row';
+  row.innerHTML = `
+    <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
+    <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+    <span class="calib-status d-none" style="min-width:50px;"></span>
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.calib-weight-row').remove()" style="padding:2px 6px;">
+      <i class="bi bi-x"></i>
+    </button>
+  `;
+  list.appendChild(row);
+}
+
+// Analysis Equipment Calibration Check
+function checkAnalysisDiff(input) {
+  const row = input.closest('tr');
+  const certVal = parseFloat(row.querySelector('.calib-cert-val')?.value) || 0;
+  const measVal = parseFloat(input.value) || 0;
+  const diffInput = row.querySelector('.calib-diff-pct');
+  const statusSpan = row.querySelector('.analysis-panel .calib-status');
+
+  if (certVal > 0 && measVal > 0) {
+    const diffPct = ((measVal - certVal) / certVal * 100);
+    diffInput.value = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + ' %';
+
+    // ±2% tolerance for analysis equipment
+    statusSpan.classList.remove('d-none');
+    if (Math.abs(diffPct) <= 2) {
+      statusSpan.textContent = 'OK';
+      statusSpan.className = 'calib-status pass';
+    } else {
+      statusSpan.textContent = 'Зөрүү!';
+      statusSpan.className = 'calib-status fail';
+    }
+  } else {
+    diffInput.value = '';
+    statusSpan.classList.add('d-none');
+  }
+}
+
+// Хүхэр багаж - 5 стандартын шалгалт
+function checkSulfurRow(input) {
+  const stdRow = input.closest('.calib-std-row');
+  const certVal = parseFloat(stdRow.querySelector('.sulfur-cert-val')?.value) || 0;
+  const measVal = parseFloat(input.value) || 0;
+  const statusSpan = stdRow.querySelector('.calib-status');
+
+  if (certVal > 0 && measVal > 0) {
+    const diffPct = Math.abs((measVal - certVal) / certVal * 100);
+    statusSpan.classList.remove('d-none');
+    // ±5% relative tolerance for sulfur
+    if (diffPct <= 5) {
+      statusSpan.textContent = 'OK';
+      statusSpan.className = 'calib-status pass';
+    } else {
+      statusSpan.textContent = diffPct.toFixed(1) + '%';
+      statusSpan.className = 'calib-status fail';
+    }
+  } else {
+    statusSpan.classList.add('d-none');
+  }
+}
+
+// Илчлэг багаж - 5 хэмжилтийн шалгалт
+function checkCalorimeter(input) {
+  const panel = input.closest('.calorimeter-panel');
+  const certVal = parseFloat(panel.querySelector('.cal-cert-val')?.value) || 26454;
+  const measurements = [...panel.querySelectorAll('.cal-meas')].map(i => parseFloat(i.value) || 0).filter(v => v > 0);
+
+  const avgInput = panel.querySelector('.cal-avg');
+  const rsdInput = panel.querySelector('.cal-rsd');
+  const statusSpan = panel.querySelector('.calib-status');
+
+  if (measurements.length >= 2) {
+    const avg = measurements.reduce((a, b) => a + b, 0) / measurements.length;
+    const stdDev = Math.sqrt(measurements.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / (measurements.length - 1));
+    const rsd = (stdDev / avg) * 100;
+
+    avgInput.value = avg.toFixed(0);
+    rsdInput.value = rsd.toFixed(2) + '%';
+
+    // Check: RSD < 0.1% and avg within ±60 cal/g of certified
+    statusSpan.classList.remove('d-none');
+    const avgDiff = Math.abs(avg - certVal);
+    if (rsd <= 0.1 && avgDiff <= 60) {
+      statusSpan.textContent = 'OK';
+      statusSpan.className = 'calib-status pass';
+    } else {
+      statusSpan.textContent = rsd > 0.1 ? 'RSD!' : 'Зөрүү!';
+      statusSpan.className = 'calib-status fail';
+    }
+  } else {
+    avgInput.value = '';
+    rsdInput.value = '';
+    statusSpan.classList.add('d-none');
+  }
 }
 
 function submitEquipmentUsage() {
@@ -526,6 +889,7 @@ function submitEquipmentUsage() {
 
   rows.forEach(row => {
     const eqId = row.dataset.eqId;
+    const category = row.dataset.category;
     const isChecked = row.querySelector('.eq-check')?.checked ?? true;
     const minutesVal = row.querySelector('.eq-minutes')?.value;
     const note = row.querySelector('.eq-note')?.value || '';
@@ -538,6 +902,85 @@ function submitEquipmentUsage() {
       minutes: minutes,
       note: note
     };
+
+    // Calibration data based on category
+    const calibPanel = row.querySelector('.calib-panel:not(.d-none)');
+    if (calibPanel) {
+      if (category === 'furnace') {
+        const setTemp = row.querySelector('.calib-set-temp')?.value;
+        const actualTemp = row.querySelector('.calib-actual-temp')?.value;
+        if (setTemp || actualTemp) {
+          item.calibration = {
+            type: 'temperature',
+            set_temp: parseFloat(setTemp) || null,
+            actual_temp: parseFloat(actualTemp) || null
+          };
+        }
+      } else if (category === 'balance') {
+        const weights = [];
+        row.querySelectorAll('.calib-weight-row').forEach(wr => {
+          const std = wr.querySelector('.calib-std-wt')?.value;
+          const meas = wr.querySelector('.calib-meas-wt')?.value;
+          if (std || meas) {
+            weights.push({
+              standard: parseFloat(std) || null,
+              measured: parseFloat(meas) || null
+            });
+          }
+        });
+        if (weights.length > 0) {
+          item.calibration = { type: 'weight', weights: weights };
+        }
+      } else if (category === 'analysis') {
+        const calibType = calibPanel.dataset.calibType;
+
+        if (calibType === 'sulfur') {
+          // Хүхэр багаж - 5 стандарт
+          const standards = [];
+          calibPanel.querySelectorAll('.calib-std-row').forEach(stdRow => {
+            const name = stdRow.querySelector('.sulfur-std-name')?.value;
+            const cert = stdRow.querySelector('.sulfur-cert-val')?.value;
+            const meas = stdRow.querySelector('.sulfur-meas-val')?.value;
+            if (name || cert || meas) {
+              standards.push({
+                name: name || null,
+                certified: parseFloat(cert) || null,
+                measured: parseFloat(meas) || null
+              });
+            }
+          });
+          if (standards.length > 0) {
+            item.calibration = { type: 'sulfur', standards: standards };
+          }
+        } else if (calibType === 'calorimeter') {
+          // Илчлэг багаж - 5 хэмжилт
+          const stdName = calibPanel.querySelector('.cal-std-name')?.value;
+          const certVal = calibPanel.querySelector('.cal-cert-val')?.value;
+          const measurements = [...calibPanel.querySelectorAll('.cal-meas')].map(i => parseFloat(i.value) || null).filter(v => v !== null);
+          if (measurements.length > 0) {
+            item.calibration = {
+              type: 'calorimeter',
+              standard_name: stdName || 'Бензой хүчил',
+              certified_value: parseFloat(certVal) || 26454,
+              measurements: measurements
+            };
+          }
+        } else {
+          // Бусад шинжилгээний багаж
+          const stdName = row.querySelector('.calib-std-name')?.value;
+          const certVal = row.querySelector('.calib-cert-val')?.value;
+          const measVal = row.querySelector('.calib-meas-val')?.value;
+          if (stdName || certVal || measVal) {
+            item.calibration = {
+              type: 'analysis',
+              standard_name: stdName || null,
+              certified_value: parseFloat(certVal) || null,
+              measured_value: parseFloat(measVal) || null
+            };
+          }
+        }
+      }
+    }
 
     if (needsRepair) {
       item.repair = true;
@@ -554,7 +997,7 @@ function submitEquipmentUsage() {
       item.spare_parts = spares;
     }
 
-    if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair) {
+    if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) {
       items.push(item);
     }
   });
@@ -578,6 +1021,16 @@ function submitEquipmentUsage() {
       document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
       document.querySelectorAll('.eq-note').forEach(i => i.value = '');
       document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
+      // Reset calibration panels
+      document.querySelectorAll('.calib-panel').forEach(p => {
+        p.classList.add('d-none');
+        p.querySelectorAll('input').forEach(i => i.value = '');
+        p.querySelectorAll('.calib-status').forEach(s => s.classList.add('d-none'));
+      });
+      document.querySelectorAll('.calib-btn').forEach(btn => {
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+      });
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();

@@ -5,7 +5,8 @@ import os
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
-from app.models import Sample, AnalysisResult, AnalysisType
+from app.models import Sample, AnalysisResult, AnalysisType, Equipment
+from sqlalchemy import or_
 from app.labs.water.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
     ALL_WATER_SAMPLE_NAMES, get_mns_standards
@@ -513,6 +514,25 @@ def workspace(code):
             }
 
     template = form_templates.get(code_upper, 'analysis_forms/ph_ec_form.html')
+
+    # Related equipments for this analysis
+    related_equipments = []
+    try:
+        related_equipments = (
+            Equipment.query
+            .filter(
+                or_(
+                    Equipment.related_analysis.ilike(f'%{code_upper}%'),
+                    Equipment.category == 'water'
+                ),
+                or_(Equipment.status.is_(None), Equipment.status != 'retired')
+            )
+            .order_by(Equipment.name.asc())
+            .all()
+        )
+    except Exception:
+        pass
+
     return render_template(
         template,
         title=f'{param["name_mn"]} - Ажлын талбар',
@@ -524,6 +544,7 @@ def workspace(code):
         existing_results_map=existing_results_map,
         rejected_samples_info=rejected_samples_info,
         error_labels={},
+        related_equipments=related_equipments,
     )
 
 
@@ -1169,3 +1190,721 @@ def api_save_staff():
         return jsonify({'success': False, 'error': 'Permission denied'})
     # TODO: Implement staff saving
     return jsonify({'success': True})
+
+
+# ============================================================
+# УУСМАЛ БЭЛДЭХ ДЭВТЭР (Solution Journal)
+# ============================================================
+
+@water_bp.route('/solution_journal')
+@login_required
+@lab_required('water')
+def solution_journal():
+    """Уусмал бэлдэх дэвтэр - жагсаалт."""
+    from app.models import SolutionPreparation
+    from datetime import date, timedelta
+
+    # Шүүлтүүр
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    status = request.args.get('status', 'all')
+
+    query = SolutionPreparation.query
+
+    if start_date:
+        from datetime import datetime
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+        query = query.filter(SolutionPreparation.prepared_date >= start_dt)
+
+    if end_date:
+        from datetime import datetime
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+        query = query.filter(SolutionPreparation.prepared_date <= end_dt)
+
+    if status and status != 'all':
+        query = query.filter(SolutionPreparation.status == status)
+
+    solutions = query.order_by(SolutionPreparation.prepared_date.desc()).all()
+
+    # Статистик
+    today = date.today()
+    stats = {
+        'total': SolutionPreparation.query.count(),
+        'active': SolutionPreparation.query.filter_by(status='active').count(),
+        'expired': SolutionPreparation.query.filter(
+            SolutionPreparation.expiry_date < today
+        ).count() if SolutionPreparation.query.first() else 0,
+    }
+
+    return render_template(
+        'solution_journal.html',
+        title='Уусмал бэлдэх дэвтэр',
+        solutions=solutions,
+        stats=stats,
+        start_date=start_date,
+        end_date=end_date,
+        status=status,
+    )
+
+
+@water_bp.route('/solution_journal/add', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def add_solution():
+    """Шинэ уусмал бүртгэх."""
+    from app.models import SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
+    from datetime import datetime
+
+    if request.method == 'POST':
+        try:
+            # Огноо parse
+            prepared_date = datetime.strptime(
+                request.form.get('prepared_date'), '%Y-%m-%d'
+            ).date()
+
+            expiry_date = None
+            if request.form.get('expiry_date'):
+                expiry_date = datetime.strptime(
+                    request.form.get('expiry_date'), '%Y-%m-%d'
+                ).date()
+
+            # Float талбарууд
+            def parse_float(val):
+                if val and val.strip():
+                    return float(val)
+                return None
+
+            chemical_used_mg = parse_float(request.form.get('chemical_used_mg'))
+            chemical_id = request.form.get('chemical_id')
+
+            solution = SolutionPreparation(
+                solution_name=request.form.get('solution_name'),
+                concentration=parse_float(request.form.get('concentration')),
+                concentration_unit=request.form.get('concentration_unit', 'mg/L'),
+                volume_ml=parse_float(request.form.get('volume_ml')),
+                chemical_used_mg=chemical_used_mg,
+                prepared_date=prepared_date,
+                expiry_date=expiry_date,
+                v1=parse_float(request.form.get('v1')),
+                v2=parse_float(request.form.get('v2')),
+                v3=parse_float(request.form.get('v3')),
+                titer_coefficient=parse_float(request.form.get('titer_coefficient')),
+                preparation_notes=request.form.get('preparation_notes'),
+                prepared_by_id=current_user.id,
+            )
+
+            # Дундаж тооцоолох
+            solution.calculate_v_avg()
+
+            # Chemical холбох + автомат зарцуулалт
+            if chemical_id and chemical_used_mg and chemical_used_mg > 0:
+                chemical = Chemical.query.get(int(chemical_id))
+                if chemical:
+                    solution.chemical_id = chemical.id
+
+                    # mg → g хөрвүүлэх (хэрэв chemical нь g нэгжтэй бол)
+                    quantity_to_deduct = chemical_used_mg
+                    if chemical.unit == 'g':
+                        quantity_to_deduct = chemical_used_mg / 1000  # mg to g
+                    elif chemical.unit == 'kg':
+                        quantity_to_deduct = chemical_used_mg / 1000000  # mg to kg
+                    elif chemical.unit == 'mL' or chemical.unit == 'L':
+                        # mL/L нэгжтэй бодисын хувьд mg-ыг шууд хасахгүй
+                        # Нягт мэдэхгүй тул mg-ыг mL гэж тооцно (ойролцоо)
+                        if chemical.unit == 'L':
+                            quantity_to_deduct = chemical_used_mg / 1000000
+                        else:
+                            quantity_to_deduct = chemical_used_mg / 1000
+
+                    old_quantity = chemical.quantity
+
+                    # Хүрэлцэхгүй бол анхааруулга
+                    if quantity_to_deduct > chemical.quantity:
+                        flash(f"Анхааруулга: {chemical.name} нөөц ({chemical.quantity} {chemical.unit}) хүрэлцэхгүй байна!", 'warning')
+
+                    # Хасах
+                    chemical.quantity = max(0, chemical.quantity - quantity_to_deduct)
+                    new_quantity = chemical.quantity
+
+                    # ChemicalUsage бүртгэл үүсгэх
+                    usage = ChemicalUsage(
+                        chemical_id=chemical.id,
+                        quantity_used=quantity_to_deduct,
+                        unit=chemical.unit,
+                        purpose=f"Уусмал бэлдэх: {solution.solution_name}",
+                        analysis_code='SOLUTION_PREP',
+                        used_by_id=current_user.id,
+                        quantity_before=old_quantity,
+                        quantity_after=new_quantity,
+                    )
+                    db.session.add(usage)
+
+                    # ChemicalLog аудит бүртгэл
+                    log = ChemicalLog(
+                        chemical_id=chemical.id,
+                        user_id=current_user.id,
+                        action='consumed',
+                        quantity_change=-quantity_to_deduct,
+                        quantity_before=old_quantity,
+                        quantity_after=new_quantity,
+                        details=f"Уусмал бэлдэхэд зарцуулав: {solution.solution_name} ({chemical_used_mg} мг)"
+                    )
+                    db.session.add(log)
+
+                    # Химийн бодисын төлөв шинэчлэх
+                    chemical.update_status()
+
+            db.session.add(solution)
+            db.session.commit()
+
+            flash(f"'{solution.solution_name}' амжилттай бүртгэгдлээ.", 'success')
+            return redirect(url_for('water.solution_journal'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Алдаа: {str(e)}', 'danger')
+
+    # GET - Химийн бодисын жагсаалт
+    chemicals = Chemical.query.filter(
+        Chemical.status != 'disposed',
+        (Chemical.lab_type == 'water') | (Chemical.lab_type == 'all')
+    ).order_by(Chemical.name).all()
+
+    return render_template(
+        'solution_form.html',
+        title='Шинэ уусмал бүртгэх',
+        solution=None,
+        chemicals=chemicals,
+        mode='add',
+    )
+
+
+@water_bp.route('/solution_journal/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def edit_solution(id):
+    """Уусмал засварлах."""
+    from app.models import SolutionPreparation, Chemical
+    from datetime import datetime
+
+    solution = SolutionPreparation.query.get_or_404(id)
+
+    if request.method == 'POST':
+        try:
+            # Огноо parse
+            solution.prepared_date = datetime.strptime(
+                request.form.get('prepared_date'), '%Y-%m-%d'
+            ).date()
+
+            if request.form.get('expiry_date'):
+                solution.expiry_date = datetime.strptime(
+                    request.form.get('expiry_date'), '%Y-%m-%d'
+                ).date()
+            else:
+                solution.expiry_date = None
+
+            # Float талбарууд
+            def parse_float(val):
+                if val and val.strip():
+                    return float(val)
+                return None
+
+            solution.solution_name = request.form.get('solution_name')
+            solution.concentration = parse_float(request.form.get('concentration'))
+            solution.concentration_unit = request.form.get('concentration_unit', 'mg/L')
+            solution.volume_ml = parse_float(request.form.get('volume_ml'))
+            solution.chemical_used_mg = parse_float(request.form.get('chemical_used_mg'))
+            solution.v1 = parse_float(request.form.get('v1'))
+            solution.v2 = parse_float(request.form.get('v2'))
+            solution.v3 = parse_float(request.form.get('v3'))
+            solution.titer_coefficient = parse_float(request.form.get('titer_coefficient'))
+            solution.preparation_notes = request.form.get('preparation_notes')
+            solution.status = request.form.get('status', 'active')
+
+            # Дундаж тооцоолох
+            solution.calculate_v_avg()
+
+            # Chemical холбох
+            chemical_id = request.form.get('chemical_id')
+            if chemical_id:
+                solution.chemical_id = int(chemical_id)
+            else:
+                solution.chemical_id = None
+
+            db.session.commit()
+            flash('Амжилттай шинэчлэгдлээ.', 'success')
+            return redirect(url_for('water.solution_journal'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Алдаа: {str(e)}', 'danger')
+
+    # GET
+    chemicals = Chemical.query.filter(
+        Chemical.status != 'disposed',
+        (Chemical.lab_type == 'water') | (Chemical.lab_type == 'all')
+    ).order_by(Chemical.name).all()
+
+    return render_template(
+        'solution_form.html',
+        title='Уусмал засварлах',
+        solution=solution,
+        chemicals=chemicals,
+        mode='edit',
+    )
+
+
+@water_bp.route('/solution_journal/delete/<int:id>', methods=['POST'])
+@login_required
+@lab_required('water')
+def delete_solution(id):
+    """Уусмал устгах."""
+    from app.models import SolutionPreparation
+
+    if current_user.role not in ('senior', 'admin'):
+        flash('Эрх хүрэхгүй.', 'danger')
+        return redirect(url_for('water.solution_journal'))
+
+    solution = SolutionPreparation.query.get_or_404(id)
+    name = solution.solution_name
+
+    db.session.delete(solution)
+    db.session.commit()
+
+    flash(f"'{name}' устгагдлаа.", 'warning')
+    return redirect(url_for('water.solution_journal'))
+
+
+@water_bp.route('/api/solutions')
+@login_required
+@lab_required('water')
+def api_solutions():
+    """Уусмалын жагсаалт API."""
+    from app.models import SolutionPreparation
+
+    solutions = SolutionPreparation.query.order_by(
+        SolutionPreparation.prepared_date.desc()
+    ).all()
+
+    data = [{
+        'id': s.id,
+        'solution_name': s.solution_name,
+        'concentration': s.concentration,
+        'concentration_unit': s.concentration_unit,
+        'volume_ml': s.volume_ml,
+        'chemical_used_mg': s.chemical_used_mg,
+        'prepared_date': s.prepared_date.strftime('%Y-%m-%d') if s.prepared_date else '',
+        'expiry_date': s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '',
+        'v1': s.v1,
+        'v2': s.v2,
+        'v3': s.v3,
+        'v_avg': s.v_avg,
+        'titer_coefficient': s.titer_coefficient,
+        'status': s.status,
+        'prepared_by': s.prepared_by.username if s.prepared_by else '',
+    } for s in solutions]
+
+    return jsonify(data)
+
+
+# ============================================================
+# УУСМАЛЫН ЖОР (Solution Recipes) - Карт систем
+# ============================================================
+
+@water_bp.route('/solution_recipes')
+@login_required
+@lab_required('water')
+def solution_recipes():
+    """Уусмалын жорын жагсаалт - карт хэлбэрээр."""
+    from app.models import SolutionRecipe, SolutionPreparation
+
+    recipes = SolutionRecipe.query.filter_by(
+        lab_type='water', is_active=True
+    ).order_by(SolutionRecipe.name).all()
+
+    # Recipe бүрийн сүүлийн бэлдэлтийн мэдээлэл
+    recipe_stats = {}
+    for recipe in recipes:
+        last_prep = SolutionPreparation.query.filter_by(
+            recipe_id=recipe.id
+        ).order_by(SolutionPreparation.prepared_date.desc()).first()
+        prep_count = SolutionPreparation.query.filter_by(recipe_id=recipe.id).count()
+        recipe_stats[recipe.id] = {
+            'last_prep': last_prep,
+            'prep_count': prep_count,
+        }
+
+    return render_template(
+        'solution_recipes.html',
+        title='Уусмалын жор',
+        recipes=recipes,
+        recipe_stats=recipe_stats,
+    )
+
+
+@water_bp.route('/solution_recipes/<int:id>')
+@login_required
+@lab_required('water')
+def recipe_detail(id):
+    """Уусмалын жорын дэлгэрэнгүй + найруулах форм."""
+    from app.models import SolutionRecipe, SolutionPreparation
+
+    recipe = SolutionRecipe.query.get_or_404(id)
+
+    # Сүүлийн 10 бэлдэлт
+    recent_preps = SolutionPreparation.query.filter_by(
+        recipe_id=recipe.id
+    ).order_by(SolutionPreparation.prepared_date.desc()).limit(10).all()
+
+    # Орц бодисуудын одоогийн нөөц
+    ingredients_info = []
+    for ing in recipe.ingredients:
+        chemical = ing.chemical
+        if chemical:
+            ingredients_info.append({
+                'ingredient': ing,
+                'chemical': chemical,
+                'stock': chemical.quantity,
+                'stock_unit': chemical.unit,
+            })
+
+    return render_template(
+        'solution_recipe_detail.html',
+        title=recipe.name,
+        recipe=recipe,
+        recent_preps=recent_preps,
+        ingredients_info=ingredients_info,
+    )
+
+
+@water_bp.route('/solution_recipes/<int:id>/prepare', methods=['POST'])
+@login_required
+@lab_required('water')
+def prepare_from_recipe(id):
+    """Жороор уусмал найруулах - химийн бодис автоматаар хасагдана."""
+    from app.models import SolutionRecipe, SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
+    from datetime import datetime, date
+
+    recipe = SolutionRecipe.query.get_or_404(id)
+
+    try:
+        # Найруулах эзэлхүүн
+        target_volume = float(request.form.get('volume_ml', recipe.standard_volume_ml or 1000))
+
+        # Шаардлагатай бодисуудыг тооцоолох
+        required_ingredients = recipe.calculate_ingredients(target_volume)
+
+        # Нөөц шалгах
+        insufficient = []
+        for item in required_ingredients:
+            chemical = item['chemical']
+            if chemical:
+                required_amount = item['amount']
+                # Нэгж хөрвүүлэлт (жорын нэгж → химийн бодисын нэгж)
+                converted_amount = convert_recipe_unit_to_chemical(
+                    required_amount, item['unit'], chemical.unit
+                )
+                if converted_amount > chemical.quantity:
+                    insufficient.append({
+                        'chemical': chemical.name,
+                        'required': f"{converted_amount:.4f} {chemical.unit}",
+                        'available': f"{chemical.quantity:.4f} {chemical.unit}",
+                    })
+
+        if insufficient:
+            msg = "Нөөц хүрэлцэхгүй: " + ", ".join(
+                [f"{i['chemical']} (хэрэгтэй: {i['required']}, байгаа: {i['available']})" for i in insufficient]
+            )
+            flash(msg, 'danger')
+            return redirect(url_for('water.recipe_detail', id=id))
+
+        # Титрийн утгууд (optional)
+        def parse_float(val):
+            if val and val.strip():
+                return float(val)
+            return None
+
+        v1 = parse_float(request.form.get('v1'))
+        v2 = parse_float(request.form.get('v2'))
+        v3 = parse_float(request.form.get('v3'))
+        titer_coefficient = parse_float(request.form.get('titer_coefficient'))
+
+        # Хугацаа
+        expiry_date = None
+        if request.form.get('expiry_date'):
+            expiry_date = datetime.strptime(request.form.get('expiry_date'), '%Y-%m-%d').date()
+
+        # Бэлдэлт үүсгэх
+        preparation = SolutionPreparation(
+            solution_name=recipe.name,
+            concentration=recipe.concentration,
+            concentration_unit=recipe.concentration_unit,
+            volume_ml=target_volume,
+            recipe_id=recipe.id,
+            prepared_date=date.today(),
+            expiry_date=expiry_date,
+            v1=v1,
+            v2=v2,
+            v3=v3,
+            titer_coefficient=titer_coefficient,
+            preparation_notes=request.form.get('notes'),
+            prepared_by_id=current_user.id,
+        )
+
+        # Дундаж тооцоолох
+        preparation.calculate_v_avg()
+
+        # Бодис хасах + бүртгэл
+        total_consumed = []
+        for item in required_ingredients:
+            chemical = item['chemical']
+            if chemical:
+                required_amount = item['amount']
+                converted_amount = convert_recipe_unit_to_chemical(
+                    required_amount, item['unit'], chemical.unit
+                )
+
+                old_quantity = chemical.quantity
+                chemical.quantity = max(0, chemical.quantity - converted_amount)
+                new_quantity = chemical.quantity
+
+                # ChemicalUsage бүртгэл
+                usage = ChemicalUsage(
+                    chemical_id=chemical.id,
+                    quantity_used=converted_amount,
+                    unit=chemical.unit,
+                    purpose=f"Уусмал найруулах: {recipe.name} ({target_volume}мл)",
+                    analysis_code='SOLUTION_PREP',
+                    used_by_id=current_user.id,
+                    quantity_before=old_quantity,
+                    quantity_after=new_quantity,
+                )
+                db.session.add(usage)
+
+                # ChemicalLog аудит
+                log = ChemicalLog(
+                    chemical_id=chemical.id,
+                    user_id=current_user.id,
+                    action='consumed',
+                    quantity_change=-converted_amount,
+                    quantity_before=old_quantity,
+                    quantity_after=new_quantity,
+                    details=f"Уусмал найруулахад зарцуулав: {recipe.name} ({target_volume}мл)"
+                )
+                db.session.add(log)
+
+                # Төлөв шинэчлэх
+                chemical.update_status()
+
+                total_consumed.append(f"{chemical.name}: {converted_amount:.4f} {chemical.unit}")
+
+        # Нийт зарцуулсан бодисыг mg-ээр хадгалах (эхний бодис)
+        if required_ingredients:
+            first_ing = required_ingredients[0]
+            if first_ing['chemical']:
+                preparation.chemical_id = first_ing['chemical'].id
+                preparation.chemical_used_mg = first_ing['amount'] * (
+                    1000 if first_ing['unit'] == 'g' else 1
+                )
+
+        db.session.add(preparation)
+        db.session.commit()
+
+        consumed_str = ", ".join(total_consumed) if total_consumed else "бодис байхгүй"
+        flash(f"'{recipe.name}' ({target_volume}мл) амжилттай найруулагдлаа. Зарцуулсан: {consumed_str}", 'success')
+        return redirect(url_for('water.recipe_detail', id=id))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Алдаа: {str(e)}', 'danger')
+        return redirect(url_for('water.recipe_detail', id=id))
+
+
+def convert_recipe_unit_to_chemical(amount, recipe_unit, chemical_unit):
+    """
+    Жорын нэгжийг химийн бодисын нэгж рүү хөрвүүлэх.
+
+    Args:
+        amount: Хэмжээ
+        recipe_unit: Жорын нэгж (g, mg, mL)
+        chemical_unit: Химийн бодисын нэгж (g, kg, mL, L)
+
+    Returns:
+        Хөрвүүлсэн хэмжээ
+    """
+    # Эхлээд грамм руу хөрвүүлэх
+    if recipe_unit == 'mg':
+        amount_g = amount / 1000
+    elif recipe_unit == 'g':
+        amount_g = amount
+    elif recipe_unit == 'kg':
+        amount_g = amount * 1000
+    elif recipe_unit == 'mL':
+        amount_g = amount  # Нягт ~1 гэж үзнэ
+    elif recipe_unit == 'L':
+        amount_g = amount * 1000
+    else:
+        amount_g = amount
+
+    # Химийн бодисын нэгж рүү хөрвүүлэх
+    if chemical_unit == 'mg':
+        return amount_g * 1000
+    elif chemical_unit == 'g':
+        return amount_g
+    elif chemical_unit == 'kg':
+        return amount_g / 1000
+    elif chemical_unit == 'mL':
+        return amount_g  # Нягт ~1 гэж үзнэ
+    elif chemical_unit == 'L':
+        return amount_g / 1000
+    else:
+        return amount_g
+
+
+@water_bp.route('/solution_recipes/add', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def add_recipe():
+    """Шинэ уусмалын жор нэмэх."""
+    from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
+
+    if request.method == 'POST':
+        try:
+            def parse_float(val):
+                if val and val.strip():
+                    return float(val)
+                return None
+
+            recipe = SolutionRecipe(
+                name=request.form.get('name'),
+                concentration=parse_float(request.form.get('concentration')),
+                concentration_unit=request.form.get('concentration_unit', 'N'),
+                standard_volume_ml=parse_float(request.form.get('standard_volume_ml')) or 1000,
+                preparation_notes=request.form.get('preparation_notes'),
+                lab_type='water',
+                category=request.form.get('category'),
+                created_by_id=current_user.id,
+            )
+            db.session.add(recipe)
+            db.session.flush()  # ID авахын тулд
+
+            # Орц нэмэх
+            chemical_ids = request.form.getlist('chemical_id[]')
+            amounts = request.form.getlist('amount[]')
+            units = request.form.getlist('ingredient_unit[]')
+
+            for i, chem_id in enumerate(chemical_ids):
+                if chem_id and amounts[i]:
+                    ingredient = SolutionRecipeIngredient(
+                        recipe_id=recipe.id,
+                        chemical_id=int(chem_id),
+                        amount=float(amounts[i]),
+                        unit=units[i] if i < len(units) else 'g',
+                    )
+                    db.session.add(ingredient)
+
+            db.session.commit()
+            flash(f"'{recipe.name}' жор амжилттай үүсгэгдлээ.", 'success')
+            return redirect(url_for('water.solution_recipes'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Алдаа: {str(e)}', 'danger')
+
+    # GET
+    chemicals = Chemical.query.filter(
+        Chemical.status != 'disposed',
+        (Chemical.lab_type == 'water') | (Chemical.lab_type == 'all')
+    ).order_by(Chemical.name).all()
+
+    return render_template(
+        'solution_recipe_form.html',
+        title='Шинэ жор нэмэх',
+        recipe=None,
+        chemicals=chemicals,
+        mode='add',
+    )
+
+
+@water_bp.route('/solution_recipes/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@lab_required('water')
+def edit_recipe(id):
+    """Уусмалын жор засварлах."""
+    from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
+
+    recipe = SolutionRecipe.query.get_or_404(id)
+
+    if request.method == 'POST':
+        try:
+            def parse_float(val):
+                if val and val.strip():
+                    return float(val)
+                return None
+
+            recipe.name = request.form.get('name')
+            recipe.concentration = parse_float(request.form.get('concentration'))
+            recipe.concentration_unit = request.form.get('concentration_unit', 'N')
+            recipe.standard_volume_ml = parse_float(request.form.get('standard_volume_ml')) or 1000
+            recipe.preparation_notes = request.form.get('preparation_notes')
+            recipe.category = request.form.get('category')
+
+            # Хуучин орц устгаад шинээр нэмэх
+            SolutionRecipeIngredient.query.filter_by(recipe_id=recipe.id).delete()
+
+            chemical_ids = request.form.getlist('chemical_id[]')
+            amounts = request.form.getlist('amount[]')
+            units = request.form.getlist('ingredient_unit[]')
+
+            for i, chem_id in enumerate(chemical_ids):
+                if chem_id and amounts[i]:
+                    ingredient = SolutionRecipeIngredient(
+                        recipe_id=recipe.id,
+                        chemical_id=int(chem_id),
+                        amount=float(amounts[i]),
+                        unit=units[i] if i < len(units) else 'g',
+                    )
+                    db.session.add(ingredient)
+
+            db.session.commit()
+            flash('Жор амжилттай шинэчлэгдлээ.', 'success')
+            return redirect(url_for('water.solution_recipes'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Алдаа: {str(e)}', 'danger')
+
+    # GET
+    chemicals = Chemical.query.filter(
+        Chemical.status != 'disposed',
+        (Chemical.lab_type == 'water') | (Chemical.lab_type == 'all')
+    ).order_by(Chemical.name).all()
+
+    return render_template(
+        'solution_recipe_form.html',
+        title='Жор засварлах',
+        recipe=recipe,
+        chemicals=chemicals,
+        mode='edit',
+    )
+
+
+@water_bp.route('/solution_recipes/delete/<int:id>', methods=['POST'])
+@login_required
+@lab_required('water')
+def delete_recipe(id):
+    """Уусмалын жор устгах."""
+    from app.models import SolutionRecipe
+
+    if current_user.role not in ('senior', 'admin'):
+        flash('Эрх хүрэхгүй.', 'danger')
+        return redirect(url_for('water.solution_recipes'))
+
+    recipe = SolutionRecipe.query.get_or_404(id)
+    name = recipe.name
+
+    db.session.delete(recipe)
+    db.session.commit()
+
+    flash(f"'{name}' жор устгагдлаа.", 'warning')
+    return redirect(url_for('water.solution_recipes'))

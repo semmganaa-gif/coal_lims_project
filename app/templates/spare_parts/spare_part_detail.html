@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% block title %}{{ spare_part.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  {# Back button #}
+  <div class="mb-3">
+    <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+  </div>
+
+  <div class="row">
+    {# Left: Info + Actions #}
+    <div class="col-lg-7">
+      {# Main Info Card #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center"
+             style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: #fff;">
+          <div>
+            <h5 class="mb-1">{{ spare_part.name }}</h5>
+            {% if spare_part.name_en %}
+            <small class="text-light">{{ spare_part.name_en }}</small>
+            {% endif %}
+          </div>
+          <div>
+            {% if spare_part.status == 'out_of_stock' %}
+            <span class="badge bg-danger fs-6">Дууссан</span>
+            {% elif spare_part.status == 'low_stock' %}
+            <span class="badge bg-warning text-dark fs-6">Нөөц бага</span>
+            {% else %}
+            <span class="badge bg-success fs-6">Хэвийн</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card-body">
+          {# Зураг #}
+          {% if spare_part.image_path %}
+          <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename=spare_part.image_path) }}"
+                 alt="{{ spare_part.name }}"
+                 class="img-fluid rounded shadow-sm"
+                 style="max-height: 200px; object-fit: contain;">
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Нөөц</small>
+              <span class="fs-4 fw-bold {{ 'text-danger' if spare_part.quantity <= 0 else ('text-warning' if spare_part.quantity <= (spare_part.reorder_level or 0) else 'text-success') }}">
+                {{ spare_part.quantity }} {{ spare_part.unit }}
+              </span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Дахин захиалах</small>
+              <span class="fs-5">{{ spare_part.reorder_level or '-' }} {{ spare_part.unit }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Нэгж үнэ</small>
+              <span class="fs-5">{{ spare_part.unit_price|default('-', true) }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Part №</small>
+              <span>{{ spare_part.part_number or '-' }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Үйлдвэрлэгч</small>
+              <span>{{ spare_part.manufacturer or '-' }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Нийлүүлэгч</small>
+              <span>{{ spare_part.supplier or '-' }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Байршил</small>
+              <span>{{ spare_part.storage_location or '-' }}</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Ашиглалтын хугацаа</small>
+              <span>{{ spare_part.usage_life_months or '-' }} сар</span>
+            </div>
+            <div class="col-6 col-md-4">
+              <small class="text-muted d-block">Категори</small>
+              {% set cat_name = categories|selectattr('0', 'equalto', spare_part.category)|map(attribute='1')|first %}
+              <span>{{ cat_name or spare_part.category or '-' }}</span>
+            </div>
+            <div class="col-6 col-md-8">
+              <small class="text-muted d-block">Тохирох тоног төхөөрөмж</small>
+              <span>{{ spare_part.compatible_equipment or '-' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer bg-light">
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#receiveModal">
+              <i class="bi bi-plus-circle me-1"></i>Нөөц нэмэх
+            </button>
+            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#consumeModal">
+              <i class="bi bi-dash-circle me-1"></i>Зарцуулах
+            </button>
+            <a href="{{ url_for('spare_parts.edit_spare_part', id=spare_part.id) }}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil me-1"></i>Засах
+            </a>
+            {% if current_user.role in ['senior', 'manager', 'admin'] and spare_part.status != 'disposed' %}
+            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#disposeModal">
+              <i class="bi bi-trash me-1"></i>Устгах
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {# Usage History #}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Зарцуулалтын түүх</h6>
+        </div>
+        <div class="card-body p-0">
+          {% if usages %}
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Огноо</th>
+                  <th>Тоо</th>
+                  <th>Зорилго</th>
+                  <th>Тоног төхөөрөмж</th>
+                  <th>Хэрэглэгч</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for u in usages %}
+                <tr>
+                  <td>{{ u.used_at.strftime('%Y-%m-%d %H:%M') if u.used_at else '-' }}</td>
+                  <td class="text-danger">-{{ u.quantity_used }} {{ u.unit }}</td>
+                  <td>{{ u.purpose or '-' }}</td>
+                  <td>{{ u.equipment.name if u.equipment else '-' }}</td>
+                  <td>{{ u.used_by.username if u.used_by else '-' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+            <p class="mt-2 mb-0">Зарцуулалтын түүх байхгүй</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Right: Audit Log #}
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>Аудит лог</h6>
+        </div>
+        <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+          {% if logs %}
+          <div class="list-group list-group-flush">
+            {% for log in logs %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  {% if log.action == 'created' %}
+                  <span class="badge bg-info me-1">Үүсгэв</span>
+                  {% elif log.action == 'received' %}
+                  <span class="badge bg-success me-1">Нэмсэн</span>
+                  {% elif log.action == 'consumed' %}
+                  <span class="badge bg-warning text-dark me-1">Зарцуулсан</span>
+                  {% elif log.action == 'adjusted' %}
+                  <span class="badge bg-secondary me-1">Тохируулсан</span>
+                  {% else %}
+                  <span class="badge bg-dark me-1">{{ log.action }}</span>
+                  {% endif %}
+                  <small>{{ log.user.username if log.user else '-' }}</small>
+                </div>
+                <small class="text-muted">{{ log.timestamp.strftime('%m-%d %H:%M') if log.timestamp else '' }}</small>
+              </div>
+              {% if log.quantity_change %}
+              <div class="mt-1">
+                <small class="{{ 'text-success' if log.quantity_change > 0 else 'text-danger' }}">
+                  {{ '+' if log.quantity_change > 0 else '' }}{{ log.quantity_change }}
+                </small>
+                <small class="text-muted">({{ log.quantity_before }} → {{ log.quantity_after }})</small>
+              </div>
+              {% endif %}
+              {% if log.details %}
+              <small class="text-muted d-block">{{ log.details }}</small>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <p class="mb-0">Лог байхгүй</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Receive Modal #}
+<div class="modal fade" id="receiveModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Нөөц нэмэх</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('spare_parts.receive_spare_part', id=spare_part.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Тоо хэмжээ <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01">
+              <span class="input-group-text">{{ spare_part.unit }}</span>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Тэмдэглэл</label>
+            <input type="text" name="notes" class="form-control" placeholder="Ж: Шинээр худалдан авсан">
+          </div>
+          <div class="alert alert-info small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Одоогийн нөөц: <strong>{{ spare_part.quantity }} {{ spare_part.unit }}</strong>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-success">Нэмэх</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# Consume Modal #}
+<div class="modal fade" id="consumeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="bi bi-dash-circle me-2"></i>Зарцуулах</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('spare_parts.consume_spare_part', id=spare_part.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Тоо хэмжээ <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01"
+                     max="{{ spare_part.quantity }}">
+              <span class="input-group-text">{{ spare_part.unit }}</span>
+            </div>
+            <small class="text-muted">Хамгийн ихдээ: {{ spare_part.quantity }}</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Зорилго</label>
+            <select name="purpose" class="form-select">
+              <option value="Засвар">Засвар</option>
+              <option value="Солих">Солих</option>
+              <option value="Урьдчилан сэргийлэх">Урьдчилан сэргийлэх</option>
+              <option value="Бусад">Бусад</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Тэмдэглэл</label>
+            <input type="text" name="notes" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-warning">Зарцуулах</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# Dispose Modal #}
+<div class="modal fade" id="disposeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Устгах</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('spare_parts.dispose_spare_part', id=spare_part.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>{{ spare_part.name }}</strong> устгах гэж байна. Энэ үйлдлийг буцаах боломжгүй!
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Шалтгаан</label>
+            <select name="reason" class="form-select">
+              <option value="Гэмтсэн">Гэмтсэн</option>
+              <option value="Хугацаа дууссан">Хугацаа дууссан</option>
+              <option value="Шаардлага хангахгүй">Шаардлага хангахгүй</option>
+              <option value="Бусад">Бусад</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="submit" class="btn btn-danger">Устгах</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

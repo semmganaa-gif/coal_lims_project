@@ -89,28 +89,14 @@
 {% block scripts %}
 {{ super() }}
 <link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
 
 <style>
-  .tabulator .tabulator-header .tabulator-col { padding:2px 4px; }
-  .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
-    display:flex; align-items:center; gap:4px; padding:2px 4px;
-  }
-  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
-    font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.02em;
-    white-space:normal; line-height:1.2; flex:1;
-  }
-  .tabulator .tabulator-header .tabulator-col-group .tabulator-col-group-cols { border-top:1px solid #e2e8f0; }
-  .tabulator .tabulator-header .tabulator-col-group > .tabulator-col-content .tabulator-col-title {
-    font-size:0.7rem; font-weight:800; text-align:center;
-  }
+  /* Page-specific: new equipment has yellow header */
+  .tabulator .tabulator-header { background:#fffbeb; }
   .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
   .tabulator .tabulator-row { min-height:32px; }
-  .tabulator .tabulator-header { background:#fffbeb; border-bottom:2px solid #e2e8f0; }
-  @media print {
-    .btn, .navbar, footer { display:none!important; }
-    .tabulator { height:auto!important; overflow:visible!important; }
-  }
 </style>
 
 <script>

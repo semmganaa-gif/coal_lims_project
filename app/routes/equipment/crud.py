@@ -13,6 +13,7 @@ from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
 from datetime import datetime, timedelta
 from app.utils.datetime import now_local
+from app.utils.audit import log_audit
 from sqlalchemy.exc import IntegrityError
 
 from app.routes.equipment import equipment_bp, MAX_FILE_SIZE, ALLOWED_EXTENSIONS
@@ -138,9 +139,21 @@ def add_equipment():
         register_type=register_type,
         extra_data=extra_data if extra_data else None,
     )
+    new_eq.created_by_id = current_user.id
     db.session.add(new_eq)
     try:
         db.session.commit()
+        # Audit log
+        log_audit(
+            action='create_equipment',
+            resource_type='Equipment',
+            resource_id=new_eq.id,
+            details={
+                'name': new_eq.name,
+                'category': new_eq.category,
+                'register_type': register_type
+            }
+        )
         flash("Амжилттай бүртгэгдлээ", "success")
     except Exception as e:
         db.session.rollback()
@@ -222,6 +235,17 @@ def edit_equipment(id):
 
     try:
         db.session.commit()
+        # Audit log
+        log_audit(
+            action='update_equipment',
+            resource_type='Equipment',
+            resource_id=eq.id,
+            details={
+                'name': eq.name,
+                'status': eq.status,
+                'category': eq.category
+            }
+        )
         flash("Шинэчлэгдлээ.", "success")
     except IntegrityError as e:
         db.session.rollback()
@@ -245,18 +269,28 @@ def delete_equipment(id):
         return redirect(url_for("equipment.equipment_list"))
 
     eq = Equipment.query.get_or_404(id)
+    eq_name = eq.name
+    eq_id = eq.id
     has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
                   UsageLog.query.filter_by(equipment_id=eq.id).first()
 
+    action = 'retire_equipment' if has_history else 'delete_equipment'
     if has_history:
         eq.status = "retired"
-        flash(f"'{eq.name}' төхөөрөмж түүхтэй тул 'Retired' (Ашиглалтаас гарсан) төлөвт шилжүүллээ.", "warning")
+        flash(f"'{eq_name}' төхөөрөмж түүхтэй тул 'Retired' (Ашиглалтаас гарсан) төлөвт шилжүүллээ.", "warning")
     else:
         db.session.delete(eq)
-        flash(f"'{eq.name}' устгагдлаа.", "success")
+        flash(f"'{eq_name}' устгагдлаа.", "success")
 
     try:
         db.session.commit()
+        # Audit log
+        log_audit(
+            action=action,
+            resource_type='Equipment',
+            resource_id=eq_id,
+            details={'name': eq_name, 'had_history': has_history}
+        )
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in delete_equipment: {e}")
@@ -281,6 +315,8 @@ def bulk_delete():
 
     deleted_count = 0
     retired_count = 0
+    deleted_names = []
+    retired_names = []
 
     for eq_id in ids:
         eq = Equipment.query.get(eq_id)
@@ -290,12 +326,27 @@ def bulk_delete():
             if has_history:
                 eq.status = "retired"
                 retired_count += 1
+                retired_names.append(eq.name)
             else:
+                deleted_names.append(eq.name)
                 db.session.delete(eq)
                 deleted_count += 1
 
     try:
         db.session.commit()
+        # Audit log
+        if deleted_count > 0 or retired_count > 0:
+            log_audit(
+                action='bulk_delete_equipment',
+                resource_type='Equipment',
+                resource_id=None,
+                details={
+                    'deleted_count': deleted_count,
+                    'retired_count': retired_count,
+                    'deleted_names': deleted_names[:10],  # Эхний 10
+                    'retired_names': retired_names[:10]
+                }
+            )
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in bulk_delete: {e}")
@@ -371,7 +422,8 @@ def add_maintenance_log(id):
     log = MaintenanceLog(
         equipment_id=eq.id, action_type=action_type, description=request.form.get("description"),
         performed_by=request.form.get("performed_by"), certificate_no=request.form.get("certificate_no"),
-        action_date=action_date, file_path=file_filename
+        action_date=action_date, file_path=file_filename,
+        performed_by_id=current_user.id  # Дотоод хэрэглэгч
     )
 
     if action_type == "Calibration":
@@ -385,6 +437,18 @@ def add_maintenance_log(id):
     db.session.add(log)
     try:
         db.session.commit()
+        # Audit log
+        log_audit(
+            action='add_maintenance_log',
+            resource_type='Equipment',
+            resource_id=eq.id,
+            details={
+                'equipment_name': eq.name,
+                'action_type': action_type,
+                'log_id': log.id,
+                'has_file': file_filename is not None
+            }
+        )
         flash("Тэмдэглэл амжилттай хадгалагдлаа.", "success")
     except Exception as e:
         db.session.rollback()

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Категори засах' if mode == 'edit' else 'Шинэ категори' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="mb-3">
+    <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header py-3"
+             style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: #fff;">
+          <h5 class="mb-0">
+            <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
+            {{ 'Категори засах' if mode == 'edit' else 'Шинэ категори нэмэх' }}
+          </h5>
+        </div>
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="card-body p-4">
+            <div class="row g-3">
+              {% if mode == 'add' %}
+              <div class="col-md-6">
+                <label class="form-label">Код <span class="text-danger">*</span></label>
+                <input type="text" name="code" class="form-control" required
+                       placeholder="Ж: muffle_zf300"
+                       title="Жижиг үсэг, тоо, доогуур зураас (_)">
+                <small class="text-muted">Жижиг үсэг, тоо, доогуур зураас (_)</small>
+              </div>
+              {% else %}
+              <div class="col-md-6">
+                <label class="form-label">Код</label>
+                <input type="text" class="form-control" value="{{ category.code }}" readonly disabled>
+              </div>
+              {% endif %}
+
+              <div class="col-md-6">
+                <label class="form-label">Нэр <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required
+                       value="{{ category.name if category else '' }}"
+                       placeholder="Ж: Муфель зуух ZF-300">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Англи нэр / Model</label>
+                <input type="text" name="name_en" class="form-control"
+                       value="{{ category.name_en if category else '' }}"
+                       placeholder="Ж: ZF-300">
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">Тоног төхөөрөмж</label>
+                <select name="equipment_id" class="form-select">
+                  <option value="">-- Сонгоогүй --</option>
+                  {% for eq in equipments %}
+                  <option value="{{ eq.id }}" {{ 'selected' if category and category.equipment_id == eq.id }}>
+                    {{ eq.name }}{% if eq.model %} ({{ eq.model }}){% endif %}
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="text-muted">Тоног төхөөрөмжтэй холбох (заавал биш)</small>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Дараалал</label>
+                <input type="number" name="sort_order" class="form-control"
+                       value="{{ category.sort_order if category else 0 }}" min="0">
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Төлөв</label>
+                <div class="form-check form-switch mt-2">
+                  <input class="form-check-input" type="checkbox" name="is_active" id="isActive"
+                         {{ 'checked' if not category or category.is_active }}>
+                  <label class="form-check-label" for="isActive">Идэвхтэй</label>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Тайлбар</label>
+                <textarea name="description" class="form-control" rows="2"
+                          placeholder="Тоног төхөөрөмжийн дэлгэрэнгүй мэдээлэл">{{ category.description if category else '' }}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+            <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary">Болих</a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{{ 'Хадгалах' if mode == 'edit' else 'Нэмэх' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

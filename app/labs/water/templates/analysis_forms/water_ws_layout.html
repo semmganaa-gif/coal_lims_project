@@ -105,6 +105,9 @@
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel">
         <i class="bi bi-stopwatch me-1"></i>Цаг
       </button>
+      <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
+        <i class="bi bi-tools me-1"></i>Төхөөрөмж
+      </button>
       <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#waterSampleModal">
         <i class="bi bi-plus-circle me-1"></i>Дээж сонгох
       </button>
@@ -237,6 +240,194 @@
         <button type="button" class="btn text-white btn-sm" style="background:#3b82f6;" id="btnConfirmSamples">
           <i class="bi bi-check-lg me-1"></i>Нэмэх
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# --- ТОНОГ ТӨХӨӨРӨМЖИЙН MODAL --- #}
+<style>
+  #equipmentModal .modal-header {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    color: #fff; border-bottom: 3px solid #60a5fa;
+  }
+  #equipmentModal .modal-header .btn-close { filter: invert(1); }
+  #equipmentModal .eq-table thead th {
+    background: #eff6ff; color: #0f172a; font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #93c5fd;
+    padding: 10px 8px; white-space: nowrap;
+  }
+  #equipmentModal .eq-table tbody tr { transition: background 0.15s; }
+  #equipmentModal .eq-table tbody tr:hover { background: #eff6ff; }
+  #equipmentModal .eq-table tbody td { padding: 8px; vertical-align: middle; border-color: #e2e8f0; }
+  #equipmentModal .eq-lab-code { font-weight: 600; color: #1d4ed8; font-size: 0.9rem; }
+  #equipmentModal .eq-lab-name { font-size: 0.75rem; color: #64748b; }
+  #equipmentModal .eq-check-ok:checked { background-color: #3b82f6; border-color: #3b82f6; }
+  #equipmentModal .eq-repair-cb:checked { background-color: #e53e3e; border-color: #e53e3e; }
+  #equipmentModal .repair-panel { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px; }
+  #equipmentModal .repair-panel .repair-date-label { font-size: 0.7rem; color: #c53030; font-weight: 600; margin-bottom: 2px; }
+  #equipmentModal .spare-row { background: #fff; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; }
+  #equipmentModal .modal-footer { background: #eff6ff; border-top: 1px solid #bfdbfe; }
+  #equipmentModal .modal-content { resize: both; overflow: auto; min-width: 500px; min-height: 300px; }
+  #equipmentModal .modal-dialog { max-width: 90vw; }
+  /* Calibration Check Styles */
+  #equipmentModal .calib-btn { font-size: 0.75rem; padding: 3px 8px; }
+  #equipmentModal .calib-panel { background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 6px; padding: 10px; margin-top: 8px; }
+  #equipmentModal .calib-panel.furnace-panel { background: #fffaf0; border-color: #fbd38d; }
+  #equipmentModal .calib-panel.balance-panel { background: #ebf8ff; border-color: #90cdf4; }
+  #equipmentModal .calib-panel.analysis-panel { background: #faf5ff; border-color: #d6bcfa; }
+  #equipmentModal .calib-panel-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+  #equipmentModal .furnace-panel .calib-panel-title { color: #c05621; }
+  #equipmentModal .balance-panel .calib-panel-title { color: #2b6cb0; }
+  #equipmentModal .analysis-panel .calib-panel-title { color: #6b46c1; }
+  #equipmentModal .calib-input-group { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+  #equipmentModal .calib-input-group label { font-size: 0.7rem; color: #4a5568; min-width: 70px; }
+  #equipmentModal .calib-input-group input { flex: 1; font-size: 0.8rem; }
+  #equipmentModal .calib-weight-row { display: flex; gap: 4px; margin-bottom: 3px; }
+  #equipmentModal .calib-weight-row input { font-size: 0.75rem; text-align: center; }
+  #equipmentModal .calib-status { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; }
+  #equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
+  #equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
+</style>
+<div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+      <div class="modal-header py-3">
+        <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
+          <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
+          <span>Тоног төхөөрөмжийн ашиглалт & засвар</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        {% if related_equipments %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
+            <thead>
+              <tr>
+                <th style="width: 18%; min-width:140px;">Лаб дугаар / Нэр</th>
+                <th style="width: 6%; text-align:center;">Бүрэн<br>бүтэн</th>
+                <th style="width: 8%; text-align:center;">Ашиглалт<br>(мин)</th>
+                <th style="width: 14%;">Тэмдэглэл</th>
+                <th style="width: 6%; text-align:center;">Шалгалт</th>
+                <th style="width: 6%; text-align:center;">Засвар</th>
+                <th style="width: 42%;">Шалгалт / Засварын мэдээлэл</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for eq in related_equipments %}
+              <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
+                <td>
+                  <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
+                  {% if eq.lab_code and eq.name != eq.lab_code %}
+                  <div class="eq-lab-name">{{ eq.name }}</div>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <input class="form-check-input eq-check eq-check-ok" type="checkbox" style="width: 22px; height: 22px; cursor: pointer;" checked>
+                </td>
+                <td>
+                  <input type="number" class="form-control form-control-sm text-center eq-minutes" placeholder="0" min="0" style="border-color: #cbd5e0;">
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm eq-note" placeholder="Тэмдэглэл..." style="border-color: #cbd5e0;">
+                </td>
+                <td class="text-center">
+                  {% if eq.category in ['furnace', 'balance', 'analysis', 'water'] %}
+                  <button type="button" class="btn btn-outline-success btn-sm calib-btn" onclick="toggleCalibPanel(this)" title="Шалгалт хийх">
+                    <i class="bi bi-thermometer-half"></i>
+                  </button>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <input class="form-check-input eq-repair eq-repair-cb" type="checkbox" style="width: 22px; height: 22px; cursor: pointer;" onchange="toggleRepairPanel(this)">
+                </td>
+                <td class="calib-repair-cell">
+                  {% if eq.category == 'furnace' %}
+                  <div class="calib-panel furnace-panel d-none">
+                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> Температурын шалгалт</div>
+                    <div class="calib-input-group">
+                      <label>Тохируулсан:</label>
+                      <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Хэмжсэн:</label>
+                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Зөрүү:</label>
+                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
+                      <span class="calib-status d-none"></span>
+                    </div>
+                  </div>
+                  {% elif eq.category == 'balance' %}
+                  <div class="calib-panel balance-panel d-none">
+                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> Жингийн шалгалт (туухай)</div>
+                    <div class="mb-2"><small class="text-muted">Стандарт жин → Хэмжсэн утга</small></div>
+                    <div class="calib-weights-list">
+                      <div class="calib-weight-row">
+                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
+                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+                        <span class="calib-status d-none" style="min-width:50px;"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
+                      <i class="bi bi-plus"></i> Жин нэмэх
+                    </button>
+                  </div>
+                  {% elif eq.category in ['analysis', 'water'] %}
+                  <div class="calib-panel analysis-panel d-none">
+                    <div class="calib-panel-title"><i class="bi bi-gear"></i> Багажийн шалгалт</div>
+                    <div class="calib-input-group">
+                      <label>Стандарт:</label>
+                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Стандартын нэр">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Баталгаат:</label>
+                      <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Утга" step="0.001">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Хэмжсэн:</label>
+                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Утга" step="0.001" oninput="checkAnalysisDiff(this)">
+                    </div>
+                    <div class="calib-input-group">
+                      <label>Зөрүү (%):</label>
+                      <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
+                      <span class="calib-status d-none"></span>
+                    </div>
+                  </div>
+                  {% endif %}
+                  <div class="repair-panel d-none">
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Засварын огноо</div>
+                    <input type="date" class="form-control form-control-sm mb-2 repair-date">
+                    <div class="spare-parts-list"></div>
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1" onclick="addSparePart(this)">
+                      <i class="bi bi-plus-circle me-1"></i>Сэлбэг нэмэх
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+          <i class="bi bi-info-circle me-2"></i>Усны лабын тоног төхөөрөмж бүртгэгдээгүй байна.
+        </div>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg me-1"></i>Хаах
+        </button>
+        {% if related_equipments %}
+        <button type="button" class="btn text-white px-4" style="background:#3b82f6;" onclick="submitEquipmentUsage()">
+          <i class="bi bi-save me-1"></i>Хадгалах
+        </button>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -711,6 +902,187 @@
     pc.appendChild(addBtn);
     loadTimers(); renderTimers();
   });
+})();
+
+// ══════════ EQUIPMENT USAGE ══════════
+(function() {
+let _spareParts = null;
+const eqCsrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+function loadSpareParts() {
+  if (_spareParts) return Promise.resolve(_spareParts);
+  return fetch('/spare_parts/api/list').then(r => r.json()).then(data => { _spareParts = data; return data; });
+}
+
+window.toggleRepairPanel = function(cb) {
+  const panel = cb.closest('tr').querySelector('.repair-panel');
+  if (cb.checked) { panel.classList.remove('d-none'); } else { panel.classList.add('d-none'); }
+};
+
+window.toggleCalibPanel = function(btn) {
+  const row = btn.closest('tr');
+  const panel = row.querySelector('.calib-panel');
+  if (panel) { panel.classList.toggle('d-none'); btn.classList.toggle('btn-outline-success'); btn.classList.toggle('btn-success'); }
+};
+
+window.checkTempDiff = function(input) {
+  const row = input.closest('tr');
+  const setTemp = parseFloat(row.querySelector('.calib-set-temp')?.value) || 0;
+  const actualTemp = parseFloat(input.value) || 0;
+  const diffInput = row.querySelector('.calib-temp-diff');
+  const statusSpan = row.querySelector('.furnace-panel .calib-status');
+  if (setTemp > 0 && actualTemp > 0) {
+    const diff = actualTemp - setTemp;
+    diffInput.value = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' °C';
+    statusSpan.classList.remove('d-none');
+    if (Math.abs(diff) <= 5) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+    else { statusSpan.textContent = 'Зөрүү!'; statusSpan.className = 'calib-status fail'; }
+  } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
+};
+
+window.checkWeightDiff = function(input) {
+  const weightRow = input.closest('.calib-weight-row');
+  const stdWt = parseFloat(weightRow.querySelector('.calib-std-wt')?.value) || 0;
+  const measWt = parseFloat(input.value) || 0;
+  const statusSpan = weightRow.querySelector('.calib-status');
+  if (stdWt > 0 && measWt > 0) {
+    const diff = Math.abs(measWt - stdWt);
+    const tolerance = stdWt < 1 ? 0.0002 : 0.001;
+    statusSpan.classList.remove('d-none');
+    if (diff <= tolerance) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+    else { statusSpan.textContent = '±' + diff.toFixed(4); statusSpan.className = 'calib-status fail'; }
+  } else { statusSpan.classList.add('d-none'); }
+};
+
+window.addWeightRow = function(btn) {
+  const list = btn.closest('.balance-panel').querySelector('.calib-weights-list');
+  const row = document.createElement('div');
+  row.className = 'calib-weight-row';
+  row.innerHTML = '<input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">'
+    +'<input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">'
+    +'<span class="calib-status d-none" style="min-width:50px;"></span>'
+    +'<button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest(\'.calib-weight-row\').remove()" style="padding:2px 6px;"><i class="bi bi-x"></i></button>';
+  list.appendChild(row);
+};
+
+window.checkAnalysisDiff = function(input) {
+  const row = input.closest('tr');
+  const certVal = parseFloat(row.querySelector('.calib-cert-val')?.value) || 0;
+  const measVal = parseFloat(input.value) || 0;
+  const diffInput = row.querySelector('.calib-diff-pct');
+  const statusSpan = row.querySelector('.analysis-panel .calib-status');
+  if (certVal > 0 && measVal > 0) {
+    const diffPct = ((measVal - certVal) / certVal * 100);
+    diffInput.value = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + ' %';
+    statusSpan.classList.remove('d-none');
+    if (Math.abs(diffPct) <= 2) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+    else { statusSpan.textContent = 'Зөрүү!'; statusSpan.className = 'calib-status fail'; }
+  } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
+};
+
+window.addSparePart = function(btn) {
+  const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
+  const row = document.createElement('div');
+  row.className = 'input-group input-group-sm mb-1 spare-row';
+  row.innerHTML = '<select class="form-select form-select-sm spare-select" style="flex:3"><option value="">Сэлбэг сонгох...</option></select>'
+    +'<input type="number" class="form-control spare-qty" placeholder="Тоо" min="1" value="1" style="flex:1; max-width:60px">'
+    +'<input type="text" class="form-control spare-user" placeholder="Хэн" style="flex:2">'
+    +'<button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest(\'.spare-row\').remove()"><i class="bi bi-x"></i></button>';
+  list.appendChild(row);
+  const sel = row.querySelector('.spare-select');
+  loadSpareParts().then(parts => {
+    parts.forEach(sp => {
+      if (sp.quantity > 0) {
+        const opt = document.createElement('option');
+        opt.value = sp.id;
+        opt.textContent = sp.name + ' (' + sp.quantity + ' ' + (sp.unit || 'ш') + ')';
+        opt.dataset.quantity = sp.quantity;
+        sel.appendChild(opt);
+      }
+    });
+  });
+};
+
+window.submitEquipmentUsage = function() {
+  const rows = document.querySelectorAll('#equipmentCheckTable tbody tr');
+  const items = [];
+  rows.forEach(row => {
+    const eqId = row.dataset.eqId;
+    const category = row.dataset.category;
+    const isChecked = row.querySelector('.eq-check')?.checked ?? true;
+    const minutesVal = row.querySelector('.eq-minutes')?.value;
+    const note = row.querySelector('.eq-note')?.value || '';
+    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
+    const needsRepair = row.querySelector('.eq-repair')?.checked || false;
+    const item = { eq_id: eqId, is_checked: isChecked, minutes: minutes, note: note };
+
+    const calibPanel = row.querySelector('.calib-panel:not(.d-none)');
+    if (calibPanel) {
+      if (category === 'furnace') {
+        const setTemp = row.querySelector('.calib-set-temp')?.value;
+        const actualTemp = row.querySelector('.calib-actual-temp')?.value;
+        if (setTemp || actualTemp) {
+          item.calibration = { type: 'temperature', set_temp: parseFloat(setTemp) || null, actual_temp: parseFloat(actualTemp) || null };
+        }
+      } else if (category === 'balance') {
+        const weights = [];
+        row.querySelectorAll('.calib-weight-row').forEach(wr => {
+          const std = wr.querySelector('.calib-std-wt')?.value;
+          const meas = wr.querySelector('.calib-meas-wt')?.value;
+          if (std || meas) { weights.push({ standard: parseFloat(std) || null, measured: parseFloat(meas) || null }); }
+        });
+        if (weights.length > 0) { item.calibration = { type: 'weight', weights: weights }; }
+      } else if (category === 'analysis' || category === 'water') {
+        const stdName = row.querySelector('.calib-std-name')?.value;
+        const certVal = row.querySelector('.calib-cert-val')?.value;
+        const measVal = row.querySelector('.calib-meas-val')?.value;
+        if (stdName || certVal || measVal) {
+          item.calibration = { type: 'analysis', standard_name: stdName || null, certified_value: parseFloat(certVal) || null, measured_value: parseFloat(measVal) || null };
+        }
+      }
+    }
+
+    if (needsRepair) {
+      item.repair = true;
+      item.repair_date = row.querySelector('.repair-date')?.value || '';
+      const spares = [];
+      row.querySelectorAll('.spare-row').forEach(sr => {
+        const spareId = sr.querySelector('.spare-select')?.value;
+        const qty = sr.querySelector('.spare-qty')?.value;
+        const user = sr.querySelector('.spare-user')?.value || '';
+        if (spareId) spares.push({ spare_id: parseInt(spareId), qty: parseInt(qty) || 1, used_by: user });
+      });
+      item.spare_parts = spares;
+    }
+    if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
+  });
+  if (items.length === 0) { alert('Бүртгэх мэдээлэл алга байна.'); return; }
+  fetch('/api/log_usage_bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': eqCsrf },
+    body: JSON.stringify({ items: items })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'success') {
+      document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
+      document.querySelectorAll('.eq-note').forEach(i => i.value = '');
+      document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
+      document.querySelectorAll('.calib-panel').forEach(p => {
+        p.classList.add('d-none');
+        p.querySelectorAll('input').forEach(i => i.value = '');
+        p.querySelectorAll('.calib-status').forEach(s => s.classList.add('d-none'));
+      });
+      document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
+      const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
+      if (modal) modal.hide();
+      alert('Төхөөрөмжийн ашиглалт амжилттай хадгалагдлаа!');
+    } else {
+      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+    }
+  })
+  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
+};
 })();
 </script>
 {% endblock %}

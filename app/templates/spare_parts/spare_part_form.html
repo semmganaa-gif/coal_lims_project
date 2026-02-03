@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  {# Back button #}
+  <div class="mb-3">
+    <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header py-3"
+             style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: #fff;">
+          <h5 class="mb-0">
+            <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
+            {{ title }}
+          </h5>
+        </div>
+
+        <form method="POST" action="{{ url_for('spare_parts.edit_spare_part', id=spare_part.id) if mode == 'edit' else url_for('spare_parts.add_spare_part') }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="card-body p-4">
+
+            {# Basic Info #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-info-circle me-2"></i>Үндсэн мэдээлэл
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Сэлбэгийн нэр <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required
+                       value="{{ spare_part.name if spare_part else '' }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Англи нэр</label>
+                <input type="text" name="name_en" class="form-control"
+                       value="{{ spare_part.name_en if spare_part else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Part №</label>
+                <input type="text" name="part_number" class="form-control"
+                       value="{{ spare_part.part_number if spare_part else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Категори</label>
+                <select name="category" class="form-select">
+                  {% for val, label in categories %}
+                  <option value="{{ val }}" {{ 'selected' if spare_part and spare_part.category == val }}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Тоног төхөөрөмж</label>
+                <select name="equipment_id" class="form-select">
+                  <option value="">-- Сонгох --</option>
+                  {% for eq in equipments %}
+                  <option value="{{ eq.id }}" {{ 'selected' if spare_part and spare_part.equipment_id == eq.id }}>
+                    {{ eq.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Тайлбар</label>
+                <textarea name="description" class="form-control" rows="2">{{ spare_part.description if spare_part else '' }}</textarea>
+              </div>
+            </div>
+
+            {# Stock Info #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-box-seam me-2"></i>Нөөц
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-3">
+                <label class="form-label">Тоо хэмжээ</label>
+                <input type="number" name="quantity" class="form-control" step="0.01" min="0"
+                       value="{{ spare_part.quantity if spare_part else 0 }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Нэгж</label>
+                <select name="unit" class="form-select">
+                  {% for u in units %}
+                  <option value="{{ u }}" {{ 'selected' if spare_part and spare_part.unit == u }}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Дахин захиалах түвшин</label>
+                <input type="number" name="reorder_level" class="form-control" step="0.01" min="0"
+                       value="{{ spare_part.reorder_level if spare_part else 1 }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Нэгж үнэ</label>
+                <input type="number" name="unit_price" class="form-control" step="0.01"
+                       value="{{ spare_part.unit_price if spare_part else '' }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Хадгалах байршил</label>
+                <input type="text" name="storage_location" class="form-control"
+                       value="{{ spare_part.storage_location if spare_part else '' }}"
+                       placeholder="Ж: Агуулах A, Тавиур 3">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Ашиглалтын хугацаа (сар)</label>
+                <input type="number" name="usage_life_months" class="form-control" min="0"
+                       value="{{ spare_part.usage_life_months if spare_part else '' }}">
+              </div>
+            </div>
+
+            {# Supplier Info #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-truck me-2"></i>Нийлүүлэгч
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Үйлдвэрлэгч</label>
+                <input type="text" name="manufacturer" class="form-control"
+                       value="{{ spare_part.manufacturer if spare_part else '' }}">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Нийлүүлэгч</label>
+                <input type="text" name="supplier" class="form-control"
+                       value="{{ spare_part.supplier if spare_part else '' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Тохирох тоног төхөөрөмж</label>
+                <textarea name="compatible_equipment" class="form-control" rows="2"
+                          placeholder="Ж: XRF, ICP-OES, Муфель зуух">{{ spare_part.compatible_equipment if spare_part else '' }}</textarea>
+              </div>
+            </div>
+
+            {# Image Upload #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-image me-2"></i>Зураг
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Зураг оруулах</label>
+                <input type="file" name="image" class="form-control" accept="image/*">
+                <small class="text-muted">PNG, JPG, JPEG, GIF, WEBP (Max 5MB)</small>
+              </div>
+              {% if mode == 'edit' and spare_part and spare_part.image_path %}
+              <div class="col-md-6">
+                <label class="form-label">Одоогийн зураг</label>
+                <div class="d-flex align-items-start gap-3">
+                  <img src="{{ url_for('static', filename=spare_part.image_path) }}"
+                       alt="{{ spare_part.name }}"
+                       class="img-thumbnail"
+                       style="max-height: 120px; max-width: 150px; object-fit: contain;">
+                  <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="delete_image" value="yes" id="deleteImage">
+                    <label class="form-check-label text-danger" for="deleteImage">
+                      <i class="bi bi-trash me-1"></i>Зураг устгах
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+            <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-outline-secondary">Болих</a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>{{ 'Хадгалах' if mode == 'edit' else 'Нэмэх' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

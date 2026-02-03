@@ -313,14 +313,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {# --- Тоног төхөөрөмжийн ашиглалт --- #}
 <script>
-let _spareEquipments = null;
+let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
 
-function loadSpareEquipments() {
-  if (_spareEquipments) return Promise.resolve(_spareEquipments);
-  return fetch('/api/equipment_list_json')
+function loadSpareParts() {
+  if (_spareParts) return Promise.resolve(_spareParts);
+  return fetch('/spare_parts/api/list')
     .then(r => r.json())
-    .then(data => { _spareEquipments = data; return data; });
+    .then(data => { _spareParts = data; return data; });
 }
 
 function toggleRepairPanel(cb) {
@@ -345,12 +345,15 @@ function addSparePart(btn) {
   `;
   list.appendChild(row);
   const sel = row.querySelector('.spare-select');
-  loadSpareEquipments().then(eqs => {
-    eqs.forEach(eq => {
-      const opt = document.createElement('option');
-      opt.value = eq.id;
-      opt.textContent = `${eq.lab_code || ''} ${eq.name}`.trim();
-      sel.appendChild(opt);
+  loadSpareParts().then(parts => {
+    parts.forEach(sp => {
+      if (sp.quantity > 0) {
+        const opt = document.createElement('option');
+        opt.value = sp.id;
+        opt.textContent = `${sp.name} (${sp.quantity} ${sp.unit || 'ш'})`;
+        opt.dataset.quantity = sp.quantity;
+        sel.appendChild(opt);
+      }
     });
   });
 }
