@@ -101,3 +101,22 @@ node_modules/
 app/static/dist/
 coverage-js/
 *.tsbuildinfo
+
+# Temporary files
+*.dump
+temp_*.json
+seed_*.py
+update_*.py
+
+# Screenshots
+Capture.*
+
+# Excel files
+*.xlsx
+
+# Documents
+*.docx
+
+# Temp folders
+.tmp.driveupload/
+{
