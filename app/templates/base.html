@@ -134,9 +134,12 @@
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
-        {% set is_water_lab = request.path.startswith('/labs/water-lab/chemistry') or request.args.get('from_lab') == 'water' %}
-        {% set is_micro_lab = request.path.startswith('/labs/water-lab/microbiology') or request.args.get('from_lab') == 'micro' %}
-        {% set is_petro_lab = request.path.startswith('/labs/petrography') %}
+        {% set lab_param = request.args.get('lab') or request.args.get('from_lab') %}
+        {% set is_water_lab_main = request.path == '/labs/water-lab' or request.path == '/labs/water-lab/' %}
+        {% set is_water_lab = request.path.startswith('/labs/water-lab/chemistry') or lab_param == 'water' %}
+        {% set is_micro_lab = request.path.startswith('/labs/water-lab/microbiology') or lab_param == 'micro' or lab_param == 'microbiology' %}
+        {% set is_petro_lab = request.path.startswith('/labs/petrography') or lab_param == 'petrography' %}
+        {% set is_any_water_lab = is_water_lab_main or is_water_lab or is_micro_lab %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
 
@@ -263,11 +266,6 @@
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.standards') }}">
-                <i class="bi bi-shield-check me-1 text-info"></i>Стандарт
-              </a>
-            </li>
-            <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_summary') }}">
                 <i class="bi bi-table me-1 text-info"></i>Нэгтгэл
               </a>
@@ -297,12 +295,37 @@
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='water') }}">
                   <i class="bi bi-box-seam me-2 text-info"></i>Химийн бодис</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='water') }}">
+                  <i class="bi bi-trash3 me-2 text-warning"></i>Хог хаягдал</a></li>
+                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.solution_journal') }}">
                   <i class="bi bi-journal-text me-2" style="color:#0d9488"></i>Уусмал бэлдсэн</a></li>
-                <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.solution_recipes') }}">
                   <i class="bi bi-journal-code me-2" style="color:#6366f1"></i>Уусмалын жор</a></li>
               </ul>
+            </li>
+
+            {% elif is_water_lab_main %}
+            {# =============== УСНЫ ЛАБ НҮҮР NAVBAR =============== #}
+            <li class="nav-item">
+              <a class="nav-link active" href="{{ url_for('water_lab.main_hub') }}">
+                <i class="bi bi-droplet-fill me-1" style="color:#0891b2"></i>Усны лаб
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_hub') }}">
+                <i class="bi bi-droplet-half me-1 text-info"></i>Хими
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
+                <i class="bi bi-bug me-1" style="color:#20c997"></i>Микробиологи
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_summary') }}">
+                <i class="bi bi-table me-1 text-info"></i>Нэгтгэл
+              </a>
             </li>
 
             {% else %}
@@ -343,10 +366,16 @@
             </li>
 
             <!-- Химийн бодис -->
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='coal') }}">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                 <i class="bi bi-droplet-fill me-1 text-info"></i>Хими
               </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='coal') }}">
+                  <i class="bi bi-box-seam me-2 text-info"></i>Химийн бодис</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='coal') }}">
+                  <i class="bi bi-trash3 me-2 text-warning"></i>Хог хаягдал</a></li>
+              </ul>
             </li>
 
             <!-- Чанарын удирдлага -->

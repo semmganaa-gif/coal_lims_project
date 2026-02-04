@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  {# ===== HEADER ===== #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-journal-text text-info me-2"></i>
+        Химийн бодисын журнал
+      </h4>
+      <p class="text-muted mb-0">Хэрэглээний бүртгэлийн түүх</p>
+    </div>
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Жагсаалт руу
+    </a>
+  </div>
+
+  {# ===== FILTERS ===== #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label">Лаб</label>
+          <select name="lab" class="form-select">
+            <option value="all" {{ 'selected' if lab == 'all' }}>Бүгд</option>
+            <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
+            <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
+            <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
+            <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Эхлэх огноо</label>
+          <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Дуусах огноо</label>
+          <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-funnel me-1"></i> Шүүх
+          </button>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-outline-secondary w-100" onclick="exportJournal()">
+            <i class="bi bi-download me-1"></i> Excel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# ===== JOURNAL TABLE ===== #}
+  <style>
+    #journalTable th, #journalTable td { white-space: nowrap; padding: 0.5rem 0.75rem; }
+    #journalTable .col-date { min-width: 140px; }
+    #journalTable .col-purpose { white-space: normal; min-width: 150px; max-width: 300px; }
+  </style>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% if usages %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" id="journalTable">
+          <thead class="table-light">
+            <tr>
+              <th class="col-date">Огноо</th>
+              <th>Химийн бодис</th>
+              <th>Тоо хэмжээ</th>
+              <th>Зорилго</th>
+              <th>Шинжилгээ</th>
+              <th>Хэрэглэгч</th>
+              <th>Нөөц</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usage, chemical in usages %}
+            <tr>
+              <td class="small col-date">{{ usage.used_at.strftime('%Y-%m-%d %H:%M') if usage.used_at else '-' }}</td>
+              <td>
+                <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="text-decoration-none">
+                  {{ chemical.name }}
+                </a>
+                {% if chemical.formula %}
+                <small class="text-muted">({{ chemical.formula }})</small>
+                {% endif %}
+              </td>
+              <td class="text-danger fw-medium">
+                -{{ usage.quantity_used }} {{ usage.unit or chemical.unit }}
+              </td>
+              <td class="small col-purpose">{{ usage.purpose or '-' }}</td>
+              <td class="small">{{ usage.analysis_code or '-' }}</td>
+              <td class="small">{{ usage.used_by.username if usage.used_by else '-' }}</td>
+              <td class="small text-muted">
+                {{ usage.quantity_before|round(2) if usage.quantity_before else '-' }} →
+                {{ usage.quantity_after|round(2) if usage.quantity_after else '-' }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer bg-white border-0 text-muted small">
+        Нийт {{ usages|length }} бүртгэл
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+        <p>Хэрэглээний бүртгэл олдсонгүй</p>
+        <p class="small">Огноо эсвэл лаб сонгоно уу</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+function exportJournal() {
+  // Simple CSV export
+  const table = document.getElementById('journalTable');
+  if (!table) {
+    alert('Экспортлох өгөгдөл байхгүй');
+    return;
+  }
+
+  let csv = [];
+  const rows = table.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll('td, th');
+    const rowData = [];
+    cols.forEach(col => {
+      let text = col.innerText.replace(/"/g, '""');
+      rowData.push('"' + text + '"');
+    });
+    csv.push(rowData.join(','));
+  });
+
+  const csvContent = '\uFEFF' + csv.join('\n'); // BOM for UTF-8
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `chemical_journal_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+}
+</script>
+{% endblock %}

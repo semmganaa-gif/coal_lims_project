@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+  {# ===== BACK BUTTON ===== #}
+  <div class="mb-3">
+    {% if chemical %}
+    <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+    {% else %}
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient text-white py-3" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+          <h5 class="mb-0">
+            <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
+            {{ 'Химийн бодис засварлах' if mode == 'edit' else 'Шинэ химийн бодис нэмэх' }}
+          </h5>
+        </div>
+
+        <form action="{{ url_for('chemicals.edit_chemical', id=chemical.id) if mode == 'edit' else url_for('chemicals.add_chemical') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="card-body p-4">
+
+            {# === Үндсэн мэдээлэл === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-info-circle me-2"></i>Үндсэн мэдээлэл
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Нэр <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required
+                       value="{{ chemical.name if chemical else '' }}"
+                       placeholder="Ж: Hydrochloric Acid">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Томъёо</label>
+                <input type="text" name="formula" class="form-control"
+                       value="{{ chemical.formula if chemical else '' }}"
+                       placeholder="Ж: HCl">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">CAS дугаар</label>
+                <input type="text" name="cas_number" class="form-control"
+                       value="{{ chemical.cas_number if chemical else '' }}"
+                       placeholder="Ж: 7647-01-0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Ангилал</label>
+                <select name="category" class="form-select">
+                  {% for code, label in categories %}
+                  <option value="{{ code }}" {{ 'selected' if chemical and chemical.category == code }}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Лаб</label>
+                <select name="lab_type" class="form-select">
+                  <option value="all" {{ 'selected' if (not chemical) or chemical.lab_type == 'all' }}>Бүх лаб</option>
+                  <option value="coal" {{ 'selected' if chemical and chemical.lab_type == 'coal' }}>Нүүрс</option>
+                  <option value="water" {{ 'selected' if chemical and chemical.lab_type == 'water' }}>Ус</option>
+                  <option value="microbiology" {{ 'selected' if chemical and chemical.lab_type == 'microbiology' }}>Микробиологи</option>
+                  <option value="petrography" {{ 'selected' if chemical and chemical.lab_type == 'petrography' }}>Петрограф</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Зэрэг (Grade)</label>
+                <input type="text" name="grade" class="form-control"
+                       value="{{ chemical.grade if chemical else '' }}"
+                       placeholder="Ж: AR, CP, HPLC, ACS">
+              </div>
+            </div>
+
+            {# === Нийлүүлэлт === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-truck me-2"></i>Нийлүүлэлтийн мэдээлэл
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label">Үйлдвэрлэгч</label>
+                <input type="text" name="manufacturer" class="form-control"
+                       value="{{ chemical.manufacturer if chemical else '' }}"
+                       placeholder="Ж: Merck, Sigma-Aldrich">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Нийлүүлэгч</label>
+                <input type="text" name="supplier" class="form-control"
+                       value="{{ chemical.supplier if chemical else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Каталогийн №</label>
+                <input type="text" name="catalog_number" class="form-control"
+                       value="{{ chemical.catalog_number if chemical else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Lot/Batch №</label>
+                <input type="text" name="lot_number" class="form-control"
+                       value="{{ chemical.lot_number if chemical else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Хүлээн авсан огноо</label>
+                <input type="date" name="received_date" class="form-control"
+                       value="{{ chemical.received_date.strftime('%Y-%m-%d') if chemical and chemical.received_date else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Дуусах хугацаа</label>
+                <input type="date" name="expiry_date" class="form-control"
+                       value="{{ chemical.expiry_date.strftime('%Y-%m-%d') if chemical and chemical.expiry_date else '' }}">
+              </div>
+            </div>
+
+            {# === Тоо хэмжээ === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-box me-2"></i>Тоо хэмжээ
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-3">
+                <label class="form-label">Тоо хэмжээ <span class="text-danger">*</span></label>
+                <input type="number" name="quantity" class="form-control" required
+                       step="0.01" min="0"
+                       value="{{ chemical.quantity if chemical else 0 }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Нэгж</label>
+                <select name="unit" class="form-select">
+                  {% for u in units %}
+                  <option value="{{ u }}" {{ 'selected' if chemical and chemical.unit == u }}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Дахин захиалах түвшин</label>
+                <input type="number" name="reorder_level" class="form-control"
+                       step="0.01" min="0"
+                       value="{{ chemical.reorder_level if chemical and chemical.reorder_level else '' }}"
+                       placeholder="Бага болоход анхааруулна">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Нээсэн огноо</label>
+                <input type="date" name="opened_date" class="form-control"
+                       value="{{ chemical.opened_date.strftime('%Y-%m-%d') if chemical and chemical.opened_date else '' }}">
+              </div>
+            </div>
+
+            {# === Хадгалалт === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-archive me-2"></i>Хадгалалт & Аюулгүй байдал
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label">Байршил</label>
+                <input type="text" name="storage_location" class="form-control"
+                       value="{{ chemical.storage_location if chemical else '' }}"
+                       placeholder="Ж: Шүүгээ A, Тавиур 3">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Хадгалах нөхцөл</label>
+                <input type="text" name="storage_conditions" class="form-control"
+                       value="{{ chemical.storage_conditions if chemical else '' }}"
+                       placeholder="Ж: 2-8°C, харанхуй газар">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Аюулын ангилал</label>
+                <input type="text" name="hazard_class" class="form-control"
+                       value="{{ chemical.hazard_class if chemical else '' }}"
+                       placeholder="Ж: Corrosive, Flammable">
+              </div>
+            </div>
+
+            {# === Тэмдэглэл === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-chat-left-text me-2"></i>Тэмдэглэл
+            </h6>
+            <div class="row g-3">
+              <div class="col-12">
+                <textarea name="notes" class="form-control" rows="3"
+                          placeholder="Нэмэлт тэмдэглэл...">{{ chemical.notes if chemical else '' }}</textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+            {% if chemical %}
+            <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="btn btn-outline-secondary">
+              Болих
+            </a>
+            {% else %}
+            <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary">
+              Болих
+            </a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>
+              {{ 'Хадгалах' if mode == 'edit' else 'Бүртгэх' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

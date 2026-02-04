@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Усны чанарын стандарт — MNS/WHO{% endblock %}
+
+{% block content %}
+<style>
+  .standards-page {
+    min-height: calc(100vh - 120px);
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 30%, #f0f9ff 60%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
+  .page-header {
+    background: linear-gradient(135deg, rgba(13,202,240,0.1), rgba(32,201,151,0.08));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(13,202,240,0.1);
+  }
+  .page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0dcaf0 0%, #20c997 50%, #0891b2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .page-header p {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  .standards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+  .standard-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  }
+  .standard-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  }
+  .standard-card .param-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+  }
+  .standard-card .param-code {
+    display: inline-block;
+    background: linear-gradient(135deg, #0dcaf0, #20c997);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+  }
+  .standard-card .limit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .limit-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(13,202,240,0.1);
+    border: 1px solid rgba(13,202,240,0.2);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  .limit-badge i {
+    color: #0891b2;
+  }
+  .limit-badge .limit-value {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .limit-badge .limit-unit {
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+
+  .search-box {
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .search-box input {
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    width: 100%;
+    outline: none;
+  }
+  .search-box input::placeholder {
+    color: #94a3b8;
+  }
+
+  .info-banner {
+    background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.08));
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .info-banner i {
+    font-size: 1.5rem;
+    color: #16a34a;
+  }
+  .info-banner span {
+    color: #166534;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="standards-page">
+  <div class="page-header">
+    <h1><i class="bi bi-shield-check me-2"></i>Усны чанарын стандарт</h1>
+    <p>MNS 4586:2007 болон WHO стандартын дагуу усны чанарын хязгаарлалт</p>
+  </div>
+
+  <div class="info-banner">
+    <i class="bi bi-info-circle-fill"></i>
+    <span><strong>{{ standards | length }}</strong> параметрийн стандарт хязгаар тодорхойлогдсон байна. Энэ нь усны шинжилгээний үр дүнг үнэлэхэд ашиглагдана.</span>
+  </div>
+
+  <div class="search-box">
+    <i class="bi bi-search text-muted me-2"></i>
+    <input type="text" id="searchInput" placeholder="Параметр хайх...">
+  </div>
+
+  <div class="standards-grid" id="standardsGrid">
+    {% for code, data in standards.items() %}
+    <div class="standard-card" data-name="{{ data.name | lower }}" data-code="{{ code | lower }}">
+      <div class="param-name">
+        {{ data.name }}
+        <span class="param-code">{{ code }}</span>
+      </div>
+      <div class="limit-row">
+        {% if data.limit[0] is not none and data.limit[1] is not none %}
+          {# Range limit #}
+          <div class="limit-badge">
+            <i class="bi bi-arrow-left-right"></i>
+            <span class="limit-value">{{ data.limit[0] }} - {{ data.limit[1] }}</span>
+            <span class="limit-unit">{{ data.unit }}</span>
+          </div>
+        {% elif data.limit[0] is none and data.limit[1] is not none %}
+          {# Upper limit only #}
+          <div class="limit-badge">
+            <i class="bi bi-chevron-double-down"></i>
+            <span class="limit-value">≤ {{ data.limit[1] }}</span>
+            <span class="limit-unit">{{ data.unit }}</span>
+          </div>
+        {% elif data.limit[0] is not none and data.limit[1] is none %}
+          {# Lower limit only #}
+          <div class="limit-badge">
+            <i class="bi bi-chevron-double-up"></i>
+            <span class="limit-value">≥ {{ data.limit[0] }}</span>
+            <span class="limit-unit">{{ data.unit }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+  const query = this.value.toLowerCase().trim();
+  const cards = document.querySelectorAll('.standard-card');
+
+  cards.forEach(card => {
+    const name = card.dataset.name;
+    const code = card.dataset.code;
+    if (name.includes(query) || code.includes(query)) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid chem-page">
+
+  {# ===== HERO HEADER ===== #}
+  <div class="chem-hero">
+    <div class="chem-hero-inner">
+      <div class="chem-hero-left">
+        <div class="chem-hero-icon">
+          <i class="bi bi-droplet-fill"></i>
+        </div>
+        <div>
+          <h4 class="chem-hero-title">Химийн бодис</h4>
+          <p class="chem-hero-sub">Бүртгэл, нөөц, хэрэглээний хяналт</p>
+        </div>
+      </div>
+      <div class="chem-hero-right">
+        <span class="chem-stat">
+          <span class="chem-stat-num">{{ stats.total }}</span>
+          <span class="chem-stat-label">Нийт</span>
+        </span>
+        {% if stats.low_stock > 0 %}
+        <span class="chem-stat chem-stat-warning">
+          <span class="chem-stat-num">{{ stats.low_stock }}</span>
+          <span class="chem-stat-label">Бага нөөц</span>
+        </span>
+        {% endif %}
+        {% if stats.expired > 0 %}
+        <span class="chem-stat chem-stat-danger">
+          <span class="chem-stat-num">{{ stats.expired }}</span>
+          <span class="chem-stat-label">Хугацаа дууссан</span>
+        </span>
+        {% endif %}
+        {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] %}
+        <a href="{{ url_for('chemicals.add_chemical', lab=lab) }}" class="btn chem-btn-add">
+          <i class="bi bi-plus-lg"></i> Шинэ бүртгэл
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ===== FILTER TABS ===== #}
+  <div class="chem-tabs">
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}"
+       class="chem-tab {{ 'chem-tab-active' if view == 'all' }}">
+      <i class="bi bi-grid-3x3-gap"></i> Бүгд
+    </a>
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='low_stock') }}"
+       class="chem-tab {{ 'chem-tab-active' if view == 'low_stock' }}">
+      <i class="bi bi-exclamation-triangle"></i> Бага нөөц
+    </a>
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='expiring') }}"
+       class="chem-tab {{ 'chem-tab-active' if view == 'expiring' }}">
+      <i class="bi bi-clock-history"></i> Хугацаа дуусах
+    </a>
+    <span class="chem-tab-divider"></span>
+    <a href="{{ url_for('chemicals.chemical_journal', lab=lab) }}"
+       class="chem-tab chem-tab-journal">
+      <i class="bi bi-journal-text"></i> Журнал
+    </a>
+  </div>
+
+  {# ===== TOOLBAR ===== #}
+  <div class="chem-toolbar-card">
+    <div class="chem-toolbar-left">
+      <div class="chem-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="chemQuickFilter" placeholder="Хайх...">
+      </div>
+      <select id="labFilter" class="chem-select" onchange="filterByLab(this.value)">
+        <option value="all" {{ 'selected' if lab == 'all' }}>Бүх лаб</option>
+        <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
+        <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
+        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
+        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
+      </select>
+      <select id="categoryFilter" class="chem-select">
+        <option value="">Бүх ангилал</option>
+        {% for code, label in categories %}
+        <option value="{{ code }}" {{ 'selected' if category == code }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select id="statusFilter" class="chem-select">
+        <option value="">Бүх төлөв</option>
+        {% for code, label in status_types %}
+        <option value="{{ code }}" {{ 'selected' if status == code }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="chem-toolbar-right">
+      <button class="btn btn-outline-secondary btn-sm" onclick="exportToExcel()">
+        <i class="bi bi-download"></i> Excel
+      </button>
+    </div>
+  </div>
+
+  {# ===== TABULATOR GRID ===== #}
+  <div class="chem-grid-card">
+    <div id="chemicalGrid" class="chem-grid-wrapper"></div>
+  </div>
+
+</div>
+
+<style>
+  .chem-page { padding: 0; }
+
+  .chem-hero {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1rem;
+    color: white;
+  }
+  .chem-hero-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .chem-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .chem-hero-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+  }
+  .chem-hero-title {
+    margin: 0;
+    font-weight: 700;
+  }
+  .chem-hero-sub {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+  }
+  .chem-hero-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .chem-stat {
+    text-align: center;
+  }
+  .chem-stat-num {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .chem-stat-label {
+    font-size: 0.75rem;
+    opacity: 0.9;
+  }
+  .chem-stat-warning .chem-stat-num { color: #fbbf24; }
+  .chem-stat-danger .chem-stat-num { color: #f87171; }
+  .chem-btn-add {
+    background: white;
+    color: #0284c7;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: transform 0.2s;
+  }
+  .chem-btn-add:hover {
+    transform: translateY(-2px);
+    color: #0369a1;
+  }
+
+  .chem-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .chem-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+  }
+  .chem-tab:hover {
+    background: #e2e8f0;
+    color: #334155;
+  }
+  .chem-tab-active {
+    background: #0ea5e9;
+    color: white;
+  }
+  .chem-tab-active:hover {
+    background: #0284c7;
+    color: white;
+  }
+  .chem-tab-divider {
+    width: 1px;
+    background: #e2e8f0;
+    margin: 0 0.5rem;
+  }
+  .chem-tab-journal {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+  .chem-tab-journal:hover {
+    background: #dcfce7;
+  }
+
+  .chem-toolbar-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .chem-toolbar-left {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .chem-search {
+    position: relative;
+  }
+  .chem-search i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+  }
+  .chem-search input {
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 200px;
+  }
+  .chem-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.875rem;
+  }
+
+  .chem-grid-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .chem-grid-wrapper {
+    min-height: 500px;
+  }
+
+  /* Status badges */
+  .status-active { color: #16a34a; }
+  .status-low_stock { color: #d97706; }
+  .status-expired { color: #dc2626; }
+  .status-empty { color: #6b7280; }
+  .status-disposed { color: #9ca3af; text-decoration: line-through; }
+
+  /* Row highlighting */
+  .tabulator-row.row-low-stock { background: #fef3c7 !important; }
+  .tabulator-row.row-expired { background: #fee2e2 !important; }
+  .tabulator-row.row-expiring { background: #fef9c3 !important; }
+</style>
+
+<!-- Tabulator CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+
+<script>
+let table;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const data = {{ chemicals|tojson|safe if chemicals else '[]' }};
+
+  // Transform data for display
+  const rows = data.map(c => ({
+    id: c.id,
+    name: c.name,
+    formula: c.formula || '',
+    cas_number: c.cas_number || '',
+    manufacturer: c.manufacturer || '',
+    lot_number: c.lot_number || '',
+    grade: c.grade || '',
+    quantity: c.quantity,
+    unit: c.unit,
+    reorder_level: c.reorder_level,
+    expiry_date: c.expiry_date ? c.expiry_date.split('T')[0] : '',
+    storage_location: c.storage_location || '',
+    lab_type: c.lab_type,
+    category: c.category,
+    status: c.status,
+  }));
+
+  table = new Tabulator("#chemicalGrid", {
+    data: rows,
+    layout: "fitDataFill",
+    height: "calc(100vh - 380px)",
+    minHeight: 400,
+    pagination: false,
+    placeholder: "Химийн бодис олдсонгүй",
+    rowFormatter: function(row) {
+      const data = row.getData();
+      if (data.status === 'low_stock') {
+        row.getElement().classList.add('row-low-stock');
+      } else if (data.status === 'expired') {
+        row.getElement().classList.add('row-expired');
+      } else if (data.expiry_date) {
+        const exp = new Date(data.expiry_date);
+        const today = new Date();
+        const diff = (exp - today) / (1000 * 60 * 60 * 24);
+        if (diff > 0 && diff <= 30) {
+          row.getElement().classList.add('row-expiring');
+        }
+      }
+    },
+    columns: [
+      {
+        title: "Нэр",
+        field: "name",
+        minWidth: 180,
+        formatter: function(cell) {
+          const data = cell.getRow().getData();
+          return `<a href="/chemicals/${data.id}" class="text-decoration-none fw-semibold">${data.name}</a>`;
+        }
+      },
+      { title: "Томъёо", field: "formula", width: 100 },
+      { title: "CAS", field: "cas_number", width: 110 },
+      { title: "Үйлдвэрлэгч", field: "manufacturer", width: 130 },
+      { title: "Lot №", field: "lot_number", width: 100 },
+      { title: "Зэрэг", field: "grade", width: 70 },
+      {
+        title: "Тоо хэмжээ",
+        field: "quantity",
+        width: 100,
+        hozAlign: "right",
+        formatter: function(cell) {
+          const data = cell.getRow().getData();
+          let cls = '';
+          if (data.status === 'low_stock') cls = 'text-warning fw-bold';
+          else if (data.status === 'empty') cls = 'text-muted';
+          return `<span class="${cls}">${data.quantity} ${data.unit}</span>`;
+        }
+      },
+      {
+        title: "Дуусах огноо",
+        field: "expiry_date",
+        width: 110,
+        formatter: function(cell) {
+          const val = cell.getValue();
+          if (!val) return '-';
+          const exp = new Date(val);
+          const today = new Date();
+          const diff = Math.floor((exp - today) / (1000 * 60 * 60 * 24));
+          let cls = '';
+          if (diff < 0) cls = 'text-danger fw-bold';
+          else if (diff <= 30) cls = 'text-warning';
+          return `<span class="${cls}">${val}</span>`;
+        }
+      },
+      { title: "Байршил", field: "storage_location", width: 120 },
+      {
+        title: "Ангилал",
+        field: "category",
+        width: 100,
+        formatter: function(cell) {
+          const map = {
+            acid: 'Хүчил', base: 'Суурь', solvent: 'Уусгагч',
+            indicator: 'Индикатор', standard: 'Стандарт', media: 'Орчин',
+            buffer: 'Буфер', salt: 'Давс', other: 'Бусад'
+          };
+          return map[cell.getValue()] || cell.getValue();
+        }
+      },
+      {
+        title: "Төлөв",
+        field: "status",
+        width: 100,
+        formatter: function(cell) {
+          const map = {
+            active: '<span class="badge bg-success">Идэвхтэй</span>',
+            low_stock: '<span class="badge bg-warning">Бага нөөц</span>',
+            expired: '<span class="badge bg-danger">Хугацаа дууссан</span>',
+            empty: '<span class="badge bg-secondary">Дууссан</span>',
+            disposed: '<span class="badge bg-dark">Устгагдсан</span>'
+          };
+          return map[cell.getValue()] || cell.getValue();
+        }
+      },
+      {
+        title: "",
+        width: 80,
+        hozAlign: "center",
+        formatter: function(cell) {
+          const id = cell.getRow().getData().id;
+          return `
+            <a href="/chemicals/${id}" class="btn btn-sm btn-outline-primary" title="Дэлгэрэнгүй">
+              <i class="bi bi-eye"></i>
+            </a>
+          `;
+        }
+      }
+    ]
+  });
+
+  // Quick filter
+  document.getElementById('chemQuickFilter').addEventListener('input', function(e) {
+    table.setFilter([
+      [
+        {field: "name", type: "like", value: e.target.value},
+        {field: "formula", type: "like", value: e.target.value},
+        {field: "cas_number", type: "like", value: e.target.value},
+        {field: "manufacturer", type: "like", value: e.target.value},
+      ]
+    ]);
+  });
+
+  // Category filter
+  document.getElementById('categoryFilter').addEventListener('change', function(e) {
+    if (e.target.value) {
+      table.setFilter("category", "=", e.target.value);
+    } else {
+      table.clearFilter();
+    }
+  });
+
+  // Status filter
+  document.getElementById('statusFilter').addEventListener('change', function(e) {
+    if (e.target.value) {
+      table.setFilter("status", "=", e.target.value);
+    } else {
+      table.clearFilter();
+    }
+  });
+});
+
+function filterByLab(lab) {
+  window.location.href = `/chemicals?lab=${lab}`;
+}
+
+function exportToExcel() {
+  table.download("xlsx", "chemicals.xlsx");
+}
+</script>
+
+{% endblock %}

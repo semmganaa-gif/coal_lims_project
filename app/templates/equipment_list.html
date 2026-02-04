@@ -161,12 +161,34 @@
               </div>
               <div class="col-md-4">
                 <label class="eq-label">Баталгаажуулах давтамж (хоног)</label>
-                <input type="number" name="cycle" class="form-control" value="365">
+                <input type="number" name="cycle" id="addCycle" class="form-control" value="365">
               </div>
               <div class="col-md-4">
                 <label class="eq-label">Өрөөний дугаар</label>
                 <input type="text" name="room" class="form-control">
               </div>
+
+              {# Баталгаажуулалтын огноонууд #}
+              <div class="col-md-6">
+                <label class="eq-label text-success">
+                  <i class="bi bi-calendar-check me-1"></i>Сүүлд баталгаажсан
+                </label>
+                <input type="date" name="calibration_date" id="addCalibDate" class="form-control">
+                <div class="form-text small">Огноо оруулахад дараагийн хугацаа автомат тооцоологдоно</div>
+              </div>
+              <div class="col-md-6">
+                <label class="eq-label text-danger">
+                  <i class="bi bi-calendar-event me-1"></i>Дараагийн хугацаа
+                  <span class="badge bg-secondary-subtle text-secondary ms-1" id="addCalcBadge" style="display:none"></span>
+                </label>
+                <input type="date" name="next_calibration_date" id="addNextCalibDate" class="form-control">
+                <div class="form-text small">
+                  <a href="#" id="addCalcNextDateBtn" class="text-decoration-none">
+                    <i class="bi bi-calculator"></i> Давтамжаас тооцоолох
+                  </a>
+                </div>
+              </div>
+
               <div class="col-md-6">
                 <label class="eq-label">Үйлдвэрлэсэн огноо</label>
                 <input type="text" name="manufactured_info" class="form-control" placeholder="Ж: 2023.06">
@@ -587,6 +609,45 @@ document.addEventListener('DOMContentLoaded', function () {
     // Эхний төлөв: бүх нэмэлт талбаруудыг disabled болгох
     document.querySelectorAll('.reg-fields').forEach(function(el) {
       el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
+    });
+  }
+
+  // --- Баталгаажуулалтын огноо автомат тооцоолох (Add Modal) ---
+  const addCalibDate = document.getElementById('addCalibDate');
+  const addNextCalibDate = document.getElementById('addNextCalibDate');
+  const addCycle = document.getElementById('addCycle');
+  const addCalcBtn = document.getElementById('addCalcNextDateBtn');
+  const addCalcBadge = document.getElementById('addCalcBadge');
+
+  function calcAddNextDate() {
+    const calibDate = addCalibDate?.value;
+    const cycleDays = parseInt(addCycle?.value) || 365;
+    if (calibDate) {
+      const date = new Date(calibDate);
+      date.setDate(date.getDate() + cycleDays);
+      addNextCalibDate.value = date.toISOString().split('T')[0];
+      if (addCalcBadge) {
+        addCalcBadge.style.display = '';
+        addCalcBadge.textContent = '+' + cycleDays + ' хоног';
+      }
+    }
+  }
+
+  if (addCalibDate) {
+    addCalibDate.addEventListener('change', calcAddNextDate);
+  }
+  if (addCycle) {
+    addCycle.addEventListener('change', function() {
+      if (addCalibDate?.value) calcAddNextDate();
+    });
+  }
+  if (addCalcBtn) {
+    addCalcBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (!addCalibDate?.value) {
+        addCalibDate.value = new Date().toISOString().split('T')[0];
+      }
+      calcAddNextDate();
     });
   }
 });

@@ -767,11 +767,20 @@ def delete_samples():
     return redirect(request.referrer or url_for('water.register_sample'))
 
 
-@water_bp.route('/api/standards')
+@water_bp.route('/standards')
 @login_required
 @lab_required('water')
 def standards():
-    """MNS/WHO стандартын хязгаарууд."""
+    """MNS/WHO стандартын хуудас."""
+    standards_data = get_mns_standards()
+    return render_template('water_standards.html', standards=standards_data)
+
+
+@water_bp.route('/api/standards')
+@login_required
+@lab_required('water')
+def api_standards():
+    """MNS/WHO стандартын хязгаарууд (API)."""
     return jsonify(get_mns_standards())
 
 

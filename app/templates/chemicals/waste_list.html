@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Хог хаягдлын бүртгэл{% endblock %}
+
+{% block content %}
+<style>
+  .waste-page { padding: 1.5rem; }
+  .month-input {
+    width: 60px; text-align: center; padding: 0.25rem;
+    border: 1px solid #dee2e6; border-radius: 4px;
+  }
+  .month-input:focus { border-color: #0d6efd; outline: none; }
+  .total-cell { font-weight: 600; background: #f8f9fa; }
+  .waste-table th { font-size: 0.8rem; white-space: nowrap; }
+  .waste-table td { font-size: 0.85rem; vertical-align: middle; }
+  .badge-hazard { background: #dc3545; }
+  .badge-safe { background: #198754; }
+</style>
+
+<div class="waste-page">
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-trash3 text-warning me-2"></i>
+        Хог хаягдлын бүртгэл
+      </h4>
+      <p class="text-muted mb-0">Химийн хорт болон аюултай хог хаягдлын сарын бүртгэл</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('chemicals.waste_report', year=year, lab=lab) }}" class="btn btn-outline-info">
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Тайлан
+      </a>
+      <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Шинэ нэмэх
+      </a>
+    </div>
+  </div>
+
+  {# Filters #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+      <form method="GET" class="row g-2 align-items-center">
+        <div class="col-auto">
+          <label class="form-label mb-0 small">Жил:</label>
+        </div>
+        <div class="col-auto">
+          <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% for y in range(2024, 2030) %}
+            <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label mb-0 small">Лаб:</label>
+        </div>
+        <div class="col-auto">
+          <select name="lab" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% for key, val in lab_types.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == lab }}>{{ val }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Table #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% if waste_data %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover mb-0 waste-table">
+          <thead class="table-light">
+            <tr>
+              <th rowspan="2" style="min-width: 200px;">Хог хаягдлын нэр</th>
+              <th rowspan="2" style="min-width: 120px;">Сард гарах</th>
+              <th rowspan="2" style="min-width: 150px;">Хаягдах газар</th>
+              <th colspan="12" class="text-center">Сарын бүртгэл ({{ year }})</th>
+              <th rowspan="2" class="text-center">Нийт</th>
+              <th rowspan="2" class="text-center">Үлдэгдэл</th>
+              <th rowspan="2"></th>
+            </tr>
+            <tr>
+              {% for m in range(1, 13) %}
+              <th class="text-center" style="width: 55px;">{{ m }}-р</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in waste_data %}
+            <tr data-waste-id="{{ item.waste.id }}">
+              <td>
+                <div class="fw-medium">{{ item.waste.name_mn }}</div>
+                {% if item.waste.name_en %}
+                <small class="text-muted">{{ item.waste.name_en }}</small>
+                {% endif %}
+                {% if item.waste.is_hazardous %}
+                <span class="badge badge-hazard ms-1">Аюултай</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {{ item.waste.monthly_amount or '-' }} {{ item.waste.unit }}
+              </td>
+              <td class="small">{{ item.waste.disposal_location or '-' }}</td>
+              {% for m in range(1, 13) %}
+              <td class="text-center p-1">
+                <input type="number" step="0.01" min="0"
+                       class="month-input"
+                       data-month="{{ m }}"
+                       value="{{ item.monthly.get(m, '') or '' }}"
+                       onchange="saveRecord({{ item.waste.id }}, {{ year }}, {{ m }}, this.value)">
+              </td>
+              {% endfor %}
+              <td class="text-center total-cell">{{ '%.2f'|format(item.total) if item.total else '0' }}</td>
+              <td class="text-center">
+                <input type="number" step="0.01" min="0"
+                       class="month-input"
+                       style="width: 70px;"
+                       value="{{ item.ending_balance or '' }}"
+                       onchange="saveBalance({{ item.waste.id }}, {{ year }}, this.value)">
+              </td>
+              <td class="text-center">
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('chemicals.edit_waste', id=item.waste.id) }}">
+                        <i class="bi bi-pencil me-2"></i>Засах
+                      </a>
+                    </li>
+                    <li>
+                      <form action="{{ url_for('chemicals.delete_waste', id=item.waste.id) }}" method="POST"
+                            onsubmit="return confirm('Устгах уу?')">
+                        <button type="submit" class="dropdown-item text-danger">
+                          <i class="bi bi-trash me-2"></i>Устгах
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+        <p>Бүртгэл олдсонгүй</p>
+        <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-1"></i> Шинэ нэмэх
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function saveRecord(wasteId, year, month, value) {
+  fetch('{{ url_for("chemicals.save_waste_record") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      waste_id: wasteId,
+      year: year,
+      month: month,
+      quantity: parseFloat(value) || 0
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Нийт дүн шинэчлэх
+      updateRowTotal(wasteId);
+    } else {
+      alert('Алдаа: ' + data.error);
+    }
+  })
+  .catch(err => console.error(err));
+}
+
+function saveBalance(wasteId, year, value) {
+  // Сүүлийн сарын бүртгэлд хадгалах (12-р сар)
+  fetch('{{ url_for("chemicals.save_waste_record") }}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      waste_id: wasteId,
+      year: year,
+      month: 12,
+      quantity: 0,
+      ending_balance: parseFloat(value) || 0
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success) alert('Алдаа: ' + data.error);
+  })
+  .catch(err => console.error(err));
+}
+
+function updateRowTotal(wasteId) {
+  const row = document.querySelector(`tr[data-waste-id="${wasteId}"]`);
+  if (!row) return;
+
+  const inputs = row.querySelectorAll('input[data-month]');
+  let total = 0;
+  inputs.forEach(inp => {
+    total += parseFloat(inp.value) || 0;
+  });
+
+  const totalCell = row.querySelector('.total-cell');
+  if (totalCell) totalCell.textContent = total.toFixed(2);
+}
+</script>
+{% endblock %}

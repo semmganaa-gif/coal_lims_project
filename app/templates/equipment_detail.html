@@ -1,368 +1,736 @@
 {% extends "base.html" %}
 {% from "partials/equipment_shared.html" import lab_purpose_options, category_options, register_type_options, status_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options, status_badge, category_labels %}
 
+{% block title %}{{ eq.name }} — Тоног төхөөрөмж{% endblock %}
+
 {% block content %}
-<div class="container-fluid mt-4 eq-detail-page">
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(148, 163, 184, 0.2);
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+  }
+  .eq-page {
+    min-height: calc(100vh - 120px);
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 30%, #e2e8f0 60%, #f8fafc 100%);
+    background-attachment: fixed;
+  }
 
+  /* Header */
+  .eq-header {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 24px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(99,102,241,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .eq-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .eq-back-btn {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .eq-back-btn:hover {
+    background: #fff;
+    color: #6366f1;
+    transform: translateX(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .eq-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.25rem;
+  }
+  .eq-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .eq-lab-code {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* Status badges */
+  .status-pill {
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .status-normal { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+  .status-broken { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+  .status-maintenance { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .status-needs_spare { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+  .status-retired { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); color: #475569; }
+
+  /* Cards */
+  .eq-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .eq-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .eq-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+  .eq-card-header i {
+    font-size: 1.1rem;
+  }
+  .eq-card-body {
+    padding: 1.25rem;
+  }
+
+  /* Info list */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed rgba(148,163,184,0.15);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .info-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+  }
+
+  /* Calibration alert */
+  .cal-alert {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .cal-ok { background: rgba(34,197,94,0.1); color: #15803d; }
+  .cal-warn { background: rgba(251,191,36,0.15); color: #b45309; }
+  .cal-danger { background: rgba(239,68,68,0.12); color: #dc2626; }
+
+  /* Timeline */
+  .timeline-section {
+    position: relative;
+  }
+  .timeline-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .filter-chip {
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.6);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-chip:hover {
+    background: rgba(99,102,241,0.1);
+    border-color: rgba(99,102,241,0.3);
+    color: #6366f1;
+  }
+  .filter-chip.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .timeline-search {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  .timeline-search input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    background: rgba(255,255,255,0.8);
+    transition: all 0.3s;
+  }
+  .timeline-search input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    background: #fff;
+  }
+  .timeline-search i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+
+  .timeline-list {
+    max-height: 550px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+  .timeline-item {
+    position: relative;
+    padding: 1rem 1rem 1rem 3rem;
+    margin-bottom: 0.75rem;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    transition: all 0.3s;
+  }
+  .timeline-item:hover {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    transform: translateX(4px);
+  }
+  .timeline-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+  .icon-check { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+  .icon-maint { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .icon-repair { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+  .icon-calib { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.35rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .timeline-type {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .type-check { background: rgba(59,130,246,0.1); color: #1d4ed8; }
+  .type-maint { background: rgba(251,191,36,0.15); color: #b45309; }
+  .type-repair { background: rgba(239,68,68,0.12); color: #dc2626; }
+  .type-calib { background: rgba(34,197,94,0.12); color: #15803d; }
+
+  .timeline-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .timeline-performer {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+  .timeline-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .timeline-cert {
+    margin-top: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: #6366f1;
+    text-decoration: none;
+    padding: 0.25rem 0.6rem;
+    background: rgba(99,102,241,0.08);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .timeline-cert:hover {
+    background: rgba(99,102,241,0.15);
+    color: #4f46e5;
+  }
+
+  .timeline-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+  .timeline-empty i {
+    font-size: 3rem;
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Add log form */
+  .add-form-card {
+    background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.03));
+  }
+  .add-form-card .eq-card-header {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-bottom: none;
+  }
+  .form-floating-sm {
+    margin-bottom: 0.75rem;
+  }
+  .form-floating-sm label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  .form-floating-sm .form-control,
+  .form-floating-sm .form-select {
+    font-size: 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    padding: 0.5rem 0.75rem;
+  }
+  .form-floating-sm .form-control:focus,
+  .form-floating-sm .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  .btn-submit {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    width: 100%;
+    transition: all 0.3s;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+    color: #fff;
+  }
+
+  @media (max-width: 992px) {
+    .eq-page { padding: 1rem; }
+    .eq-header { flex-direction: column; text-align: center; }
+  }
+</style>
+
+<div class="eq-page">
   {# ================= HEADER ================= #}
-  {% set category_label = category_labels[eq.category] | default('8. Бусад') %}
+  {% set category_label = category_labels[eq.category] | default('Бусад') %}
 
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <div class="d-flex align-items-center gap-2">
-      <a href="{{ url_for('equipment.equipment_list') }}"
-         class="text-decoration-none text-muted me-1 eq-back-pill">
+  <div class="eq-header">
+    <div class="eq-header-left">
+      <a href="{{ url_for('equipment.equipment_list') }}" class="eq-back-btn">
         <i class="bi bi-arrow-left"></i>
       </a>
       <div>
-        <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
-          <span class="eq-name">
-            {{ eq.name }}
-          </span>
-          {% if eq.status %}
-            {{ status_badge(eq.status) }}
+        <h1 class="eq-title">{{ eq.name }}</h1>
+        <div class="eq-subtitle">
+          <i class="bi bi-folder2-open"></i> {{ category_label }}
+          {% if eq.lab_code %}
+            <span class="eq-lab-code">{{ eq.lab_code }}</span>
           {% endif %}
-        </h4>
-        <div class="small text-muted">
-          <i class="bi bi-journal-text"></i>
-          {{ category_label }}
         </div>
       </div>
     </div>
-
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      {% if eq.lab_code %}
-        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">
-          <i class="bi bi-upc-scan"></i> Лаб дугаар: <span class="fw-semibold">{{ eq.lab_code }}</span>
-        </span>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if eq.status == 'normal' %}
+        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> Хэвийн</span>
+      {% elif eq.status == 'broken' %}
+        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> Эвдэрсэн</span>
+      {% elif eq.status == 'maintenance' %}
+        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> Засварт</span>
+      {% elif eq.status == 'needs_spare' %}
+        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> Сэлбэг хэрэгтэй</span>
+      {% elif eq.status == 'retired' %}
+        <span class="status-pill status-retired"><i class="bi bi-archive"></i> Ашиглалтаас гарсан</span>
       {% endif %}
+
       {% if current_user.role in ['senior', 'manager', 'admin'] %}
-      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editEqModal">
-        <i class="bi bi-pencil"></i> Засах
-      </button>
+        <button class="btn btn-sm btn-outline-secondary" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#editEqModal">
+          <i class="bi bi-pencil"></i> Засах
+        </button>
       {% endif %}
     </div>
   </div>
 
   <div class="row g-4">
-    {# ============= LEFT: INFO + FORM ============= #}
+    {# ============= LEFT COLUMN ============= #}
     <div class="col-lg-4">
-
       {# 1. Үндсэн мэдээлэл #}
-      <div class="card shadow-sm border-0 eq-card mb-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="text-uppercase text-muted fw-bold small mb-0">
-              <i class="bi bi-info-circle"></i> Үндсэн мэдээлэл
-            </h6>
-            {% if eq.quantity %}
-              <span class="badge rounded-pill bg-light text-muted">
-                Тоо: <span class="fw-semibold text-dark">{{ eq.quantity }}</span>
-              </span>
-            {% endif %}
+      <div class="eq-card mb-4">
+        <div class="eq-card-header">
+          <i class="bi bi-info-circle" style="color:#6366f1"></i>
+          Үндсэн мэдээлэл
+        </div>
+        <div class="eq-card-body">
+          <div class="info-row">
+            <span class="info-label">Үйлдвэрлэгч</span>
+            <span class="info-value">{{ eq.manufacturer or '-' }}</span>
           </div>
-          <hr class="my-2">
-
-          <dl class="row mb-0 eq-dl">
-            <dt class="col-5 text-muted small">Үйлдвэрлэгч</dt>
-            <dd class="col-7 fw-semibold">{{ eq.manufacturer or '-' }}</dd>
-
-            <dt class="col-5 text-muted small">Марк / Модель</dt>
-            <dd class="col-7 fw-semibold">{{ eq.model or '-' }}</dd>
-
-            <dt class="col-5 text-muted small">Сериал №</dt>
-            <dd class="col-7 fw-semibold">
-              <span class="font-monospace small">{{ eq.serial_number or '-' }}</span>
-            </dd>
-
-            <dt class="col-5 text-muted small">Лаб дугаар</dt>
-            <dd class="col-7 fw-semibold">
-              <span class="font-monospace small">{{ eq.lab_code or '-' }}</span>
-            </dd>
-
-            <dt class="col-5 text-muted small">Байршил / Өрөө</dt>
-            <dd class="col-7">
-              <span class="fw-semibold">{{ eq.location or '-' }}</span>
-              {% if eq.room_number %}
-                <span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>
-              {% endif %}
-            </dd>
-
-            <dt class="col-5 text-muted small">Хамааралтай шинжилгээ</dt>
-            <dd class="col-7">
-              {% if eq.related_analysis %}
-                <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis">
-                  {{ eq.related_analysis }}
-                </span>
-              {% else %}
-                <span class="text-muted">-</span>
-              {% endif %}
-            </dd>
-          </dl>
+          <div class="info-row">
+            <span class="info-label">Марк / Модель</span>
+            <span class="info-value">{{ eq.model or '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Сериал №</span>
+            <span class="info-value font-monospace" style="font-size:0.8rem">{{ eq.serial_number or '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Байршил</span>
+            <span class="info-value">
+              {{ eq.location or '-' }}
+              {% if eq.room_number %}<span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>{% endif %}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Тоо хэмжээ</span>
+            <span class="info-value">{{ eq.quantity or 1 }}</span>
+          </div>
+          {% if eq.related_analysis %}
+          <div class="info-row">
+            <span class="info-label">Хамааралтай шинжилгээ</span>
+            <span class="info-value">
+              <span class="badge bg-primary-subtle text-primary-emphasis">{{ eq.related_analysis }}</span>
+            </span>
+          </div>
+          {% endif %}
         </div>
       </div>
 
-      {# 2. Шалгалт / Баталгаажуулалт #}
-      <div class="card shadow-sm border-0 eq-card mb-4">
-        <div class="card-body">
-          <h6 class="text-uppercase text-muted fw-bold small mb-1">
-            <i class="bi bi-activity"></i> Шалгалт тохируулга
-          </h6>
-          <hr class="my-2">
-
-          <div class="small text-muted mb-1">Товч тэмдэглэл:</div>
-          <div class="small mb-2">
-            {{ eq.calibration_note or '-' }}
-          </div>
-
-          <div class="small text-muted mb-1">Сүүлд баталгаажсан:</div>
-          <div class="small mb-2">
-            <strong>{{ eq.calibration_date or '-' }}</strong>
-          </div>
-
-          <div class="small text-muted mb-1">Дараагийн хугацаа:</div>
-          <div class="small">
-            {% if eq.next_calibration_date %}
-              {% if eq.next_calibration_date < now_local().date() %}
-                <span class="text-danger fw-bold">
-                  <i class="bi bi-exclamation-circle-fill"></i>
-                  {{ eq.next_calibration_date }} (Хугацаа дууссан!)
-                </span>
-              {% else %}
-                <span class="text-success fw-semibold">
-                  {{ eq.next_calibration_date }}
-                </span>
-              {% endif %}
-            {% else %}
-              -
-            {% endif %}
-          </div>
+      {# 2. Баталгаажуулалт #}
+      <div class="eq-card mb-4">
+        <div class="eq-card-header">
+          <i class="bi bi-shield-check" style="color:#22c55e"></i>
+          Баталгаажуулалт
         </div>
-      </div>
-
-      {# 3. Үйлдвэрлэсэн / Ашиглалтад / Үнэ / Тайлбар #}
-      <div class="card shadow-sm border-0 eq-card mb-4">
-        <div class="card-body">
-          <h6 class="text-uppercase text-muted fw-bold small mb-1">
-            <i class="bi bi-building"></i> Амьдралын цикл & үнэ
-          </h6>
-          <hr class="my-2">
-
-          <div class="small text-muted">Үйлдвэрлэсэн:</div>
-          <div class="small mb-2">
-            <strong>{{ eq.manufactured_info or '-' }}</strong>
+        <div class="eq-card-body">
+          <div class="info-row">
+            <span class="info-label">Сүүлд баталгаажсан</span>
+            <span class="info-value">{{ eq.calibration_date or '-' }}</span>
           </div>
-          <div class="small text-muted">Ашиглалтад:</div>
-          <div class="small mb-2">
-            <strong>{{ eq.commissioned_info or '-' }}</strong>
+          <div class="info-row">
+            <span class="info-label">Давтамж</span>
+            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} хоног</span>
           </div>
-
-          {% if eq.initial_price or eq.residual_price %}
-          <div class="mt-2 p-2 rounded bg-light">
-            <div class="small text-muted">Үнийн мэдээлэл (₮):</div>
-            <div class="small">Анхны үнэ: <strong>{{ eq.initial_price or '-' }}</strong></div>
-            <div class="small">Үлдэгдэл үнэ: <strong>{{ eq.residual_price or '-' }}</strong></div>
+          <div class="info-row">
+            <span class="info-label">Дараагийн хугацаа</span>
+            <span class="info-value">
+              {% if eq.next_calibration_date %}
+                {{ eq.next_calibration_date }}
+              {% else %}
+                -
+              {% endif %}
+            </span>
+          </div>
+          {% if eq.calibration_note %}
+          <div class="info-row">
+            <span class="info-label">Тэмдэглэл</span>
+            <span class="info-value" style="max-width:180px">{{ eq.calibration_note }}</span>
           </div>
           {% endif %}
 
+          {# Calibration alert #}
+          {% if eq.next_calibration_date %}
+            {% set days_left = (eq.next_calibration_date - now_local().date()).days %}
+            {% if days_left < 0 %}
+              <div class="cal-alert cal-danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Хугацаа {{ -days_left }} хоногийн өмнө дууссан!
+              </div>
+            {% elif days_left <= 7 %}
+              <div class="cal-alert cal-warn">
+                <i class="bi bi-clock-fill"></i>
+                {{ days_left }} хоногийн дотор дуусна
+              </div>
+            {% elif days_left <= 30 %}
+              <div class="cal-alert cal-ok">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ days_left }} хоног үлдсэн
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      {# 3. Нэмэлт мэдээлэл #}
+      {% if eq.manufactured_info or eq.commissioned_info or eq.initial_price or eq.remark %}
+      <div class="eq-card mb-4">
+        <div class="eq-card-header">
+          <i class="bi bi-building" style="color:#f59e0b"></i>
+          Нэмэлт мэдээлэл
+        </div>
+        <div class="eq-card-body">
+          {% if eq.manufactured_info %}
+          <div class="info-row">
+            <span class="info-label">Үйлдвэрлэсэн</span>
+            <span class="info-value">{{ eq.manufactured_info }}</span>
+          </div>
+          {% endif %}
+          {% if eq.commissioned_info %}
+          <div class="info-row">
+            <span class="info-label">Ашиглалтад орсон</span>
+            <span class="info-value">{{ eq.commissioned_info }}</span>
+          </div>
+          {% endif %}
+          {% if eq.initial_price %}
+          <div class="info-row">
+            <span class="info-label">Анхны үнэ</span>
+            <span class="info-value">{{ "{:,.0f}".format(eq.initial_price) }}₮</span>
+          </div>
+          {% endif %}
+          {% if eq.residual_price %}
+          <div class="info-row">
+            <span class="info-label">Үлдэгдэл үнэ</span>
+            <span class="info-value">{{ "{:,.0f}".format(eq.residual_price) }}₮</span>
+          </div>
+          {% endif %}
           {% if eq.remark %}
-          <div class="mt-2 p-2 rounded bg-light">
-            <div class="small text-muted">Бусад тайлбар:</div>
-            <div class="small">{{ eq.remark }}</div>
+          <div style="margin-top:0.75rem; padding:0.75rem; background:rgba(0,0,0,0.02); border-radius:10px;">
+            <div class="info-label" style="margin-bottom:0.25rem">Тайлбар</div>
+            <div style="font-size:0.8rem; color:var(--text-primary)">{{ eq.remark }}</div>
           </div>
           {% endif %}
         </div>
       </div>
+      {% endif %}
 
-      {# 4. Тэмдэглэл / засвар нэмэх FORM #}
-      <div class="card shadow-sm border-0 eq-card">
-        <div class="card-header bg-primary text-white fw-bold py-2">
-          <i class="bi bi-pencil-square"></i> Тэмдэглэл / Засвар нэмэх
+      {# 4. Тэмдэглэл нэмэх form #}
+      <div class="eq-card add-form-card">
+        <div class="eq-card-header">
+          <i class="bi bi-plus-circle"></i>
+          Тэмдэглэл / Засвар нэмэх
         </div>
-        <div class="card-body">
-          <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}"
-                method="POST" enctype="multipart/form-data">
+        <div class="eq-card-body">
+          <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-            <div class="mb-2">
-              <label class="small fw-bold text-muted">Үйлдлийн төрөл</label>
-              <select name="action_type" class="form-select form-select-sm">
+            <div class="form-floating-sm">
+              <label>Үйлдлийн төрөл</label>
+              <select name="action_type" class="form-select">
                 <option value="Daily Check">✅ Дотоод хяналт (Check)</option>
-                <option value="Maintenance">🔧 Урсгал үйлчилгээ (Maintenance)</option>
+                <option value="Maintenance">🔧 Урсгал үйлчилгээ</option>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                  <option value="Repair">🛠️ Их засвар (Repair)</option>
-                  <option value="Calibration">📏 Баталгаажуулалт (Calibration)</option>
+                <option value="Repair">🛠️ Их засвар</option>
+                <option value="Calibration">📏 Баталгаажуулалт</option>
                 {% endif %}
               </select>
-              {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <div class="form-text small">"Calibration" сонговол хугацаа автоматаар сунгагдана.</div>
-              {% endif %}
             </div>
 
-            <div class="mb-2">
-              <label class="small fw-bold text-muted">Огноо</label>
-              <input type="date" name="action_date"
-                     class="form-control form-control-sm"
-                     value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+            <div class="row">
+              <div class="col-6">
+                <div class="form-floating-sm">
+                  <label>Огноо</label>
+                  <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-floating-sm">
+                  <label>Гүйцэтгэсэн</label>
+                  <input type="text" name="performed_by" class="form-control" value="{{ current_user.username }}">
+                </div>
+              </div>
             </div>
 
-            <div class="mb-2">
-              <label class="small fw-bold text-muted">Гүйцэтгэсэн</label>
-              <input type="text" name="performed_by"
-                     class="form-control form-control-sm"
-                     placeholder="Ажилтан эсвэл Байгууллага"
-                     value="{{ current_user.username }}">
+            <div class="form-floating-sm">
+              <label>Гэрчилгээ №</label>
+              <input type="text" name="certificate_no" class="form-control" placeholder="Гэрчилгээний дугаар">
             </div>
 
-            <div class="mb-2">
-              <label class="small fw-bold text-muted">Гэрчилгээ №</label>
-              <input type="text" name="certificate_no" class="form-control form-control-sm">
+            <div class="form-floating-sm">
+              <label>Гэрчилгээ / Файл</label>
+              <input type="file" name="certificate_file" class="form-control">
             </div>
 
-            <div class="mb-2">
-              <label class="small fw-bold text-muted">Гэрчилгээ / Файл</label>
-              <input type="file" name="certificate_file" class="form-control form-control-sm">
+            <div class="form-floating-sm">
+              <label>Тайлбар / Үр дүн</label>
+              <textarea name="description" class="form-control" rows="2" placeholder="Хийсэн ажлын тайлбар..."></textarea>
             </div>
 
-            <div class="mb-3">
-              <label class="small fw-bold text-muted">Тайлбар / Үр дүн</label>
-              <textarea name="description" class="form-control form-control-sm" rows="3"></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-sm w-100">
-              Хадгалах
+            <button type="submit" class="btn-submit">
+              <i class="bi bi-check2-circle me-1"></i> Хадгалах
             </button>
           </form>
         </div>
       </div>
     </div>
 
-    {# ============= RIGHT: HISTORY / TIMELINE ============= #}
+    {# ============= RIGHT COLUMN: TIMELINE ============= #}
     <div class="col-lg-8">
-      <div class="card shadow-sm border-0 eq-card">
-        <div class="card-header bg-white fw-bold border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div>
-            <i class="bi bi-clock-history"></i> Түүх (Log History)
-            <div class="small text-muted">Ашиглалт, арчилгаа, баталгаажуулалт, их засварын бүртгэл</div>
-          </div>
-
-          <div class="d-flex flex-wrap align-items-center gap-2">
-            <div class="btn-group btn-group-sm" role="group">
-              <button type="button" class="btn btn-outline-secondary active log-filter-btn" data-type="all">
-                Бүгд
-              </button>
-              <button type="button" class="btn btn-outline-secondary log-filter-btn" data-type="Daily Check">
-                Check
-              </button>
-              <button type="button" class="btn btn-outline-secondary log-filter-btn" data-type="Maintenance">
-                Maint
-              </button>
-              <button type="button" class="btn btn-outline-secondary log-filter-btn" data-type="Repair">
-                Repair
-              </button>
-              <button type="button" class="btn btn-outline-secondary log-filter-btn" data-type="Calibration">
-                Calib
-              </button>
-            </div>
-
-            <div class="input-group input-group-sm">
-              <span class="input-group-text bg-white border-end-0">
-                <i class="bi bi-search"></i>
-              </span>
-              <input type="text" id="logSearch"
-                     class="form-control border-start-0"
-                     placeholder="Тайлбар, гүйцэтгэсэн, гэрчилгээ...">
-            </div>
-          </div>
+      <div class="eq-card timeline-section">
+        <div class="eq-card-header">
+          <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
+          Түүх (Timeline)
+          <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length }}</span>
         </div>
+        <div class="eq-card-body">
+          {# Filters #}
+          <div class="timeline-filters">
+            <span class="filter-chip active" data-type="all">Бүгд</span>
+            <span class="filter-chip" data-type="Daily Check">
+              <i class="bi bi-check-square"></i> Check
+            </span>
+            <span class="filter-chip" data-type="Maintenance">
+              <i class="bi bi-wrench"></i> Maintenance
+            </span>
+            <span class="filter-chip" data-type="Repair">
+              <i class="bi bi-tools"></i> Repair
+            </span>
+            <span class="filter-chip" data-type="Calibration">
+              <i class="bi bi-award"></i> Calibration
+            </span>
+          </div>
 
-        <div class="card-body p-0">
-          <div class="table-responsive" style="max-height: 620px; overflow-y: auto;">
-            <table class="table table-hover mb-0 align-middle eq-log-table">
-              <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
-                <tr class="small text-muted">
-                  <th style="width: 120px;">Огноо</th>
-                  <th style="width: 110px;">Төрөл</th>
-                  <th style="width: 140px;">Гүйцэтгэсэн</th>
-                  <th style="width: 160px;">Гэрчилгээ / Файл</th>
-                  <th>Тайлбар</th>
-                </tr>
-              </thead>
-              <tbody>
-              {% for log in eq.logs %}
-                <tr class="log-row"
-                    data-type="{{ log.action_type }}"
-                    data-search="
-                      {{ log.action_date.strftime('%Y-%m-%d') }}
-                      {{ log.action_type }}
-                      {{ log.performed_by or '' }}
-                      {{ log.description or '' }}
-                      {{ log.certificate_no or '' }}
-                    ">
-                  <td class="font-monospace small text-muted">
-                    {{ log.action_date.strftime('%Y-%m-%d') }}
-                  </td>
-                  <td>
-                    {% if log.action_type == 'Calibration' %}
-                      <span class="badge bg-success-subtle text-success-emphasis">Calibration</span>
-                    {% elif log.action_type == 'Repair' %}
-                      <span class="badge bg-danger-subtle text-danger-emphasis">Repair</span>
-                    {% elif log.action_type == 'Daily Check' %}
-                      <span class="badge bg-info-subtle text-info-emphasis text-dark">Daily Check</span>
-                    {% elif log.action_type == 'Maintenance' %}
-                      <span class="badge bg-warning-subtle text-warning-emphasis">Maintenance</span>
-                    {% else %}
-                      <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ log.action_type }}</span>
-                    {% endif %}
-                  </td>
-                  <td class="small">
-                    {{ log.performed_by }}
-                  </td>
-                  <td>
-                    {% if log.file_path %}
-                      <a href="{{ url_for('equipment.download_certificate', log_id=log.id) }}" 
-                         class="btn btn-sm btn-outline-primary border-0"
-                         target="_blank"
-                         title="Файл татах">
-                        <i class="bi bi-paperclip"></i>
-                        {{ log.certificate_no or 'Татах' }}
-                      </a>
-                    {% else %}
-                      <span class="text-muted small">{{ log.certificate_no or '' }}</span>
-                    {% endif %}
-                  </td>
-                  <td class="small text-muted">
-                    {{ log.description }}
-                  </td>
-                </tr>
+          {# Search #}
+          <div class="timeline-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="timelineSearch" placeholder="Хайх... (тайлбар, гүйцэтгэсэн, гэрчилгээ)">
+          </div>
+
+          {# Timeline list #}
+          <div class="timeline-list" id="timelineList">
+            {% for log in eq.logs|sort(attribute='action_date', reverse=true) %}
+            <div class="timeline-item"
+                 data-type="{{ log.action_type }}"
+                 data-search="{{ log.action_date.strftime('%Y-%m-%d') }} {{ log.action_type }} {{ log.performed_by or '' }} {{ log.description or '' }} {{ log.certificate_no or '' }}">
+
+              {# Icon #}
+              {% if log.action_type == 'Calibration' %}
+                <div class="timeline-icon icon-calib"><i class="bi bi-award"></i></div>
+              {% elif log.action_type == 'Repair' %}
+                <div class="timeline-icon icon-repair"><i class="bi bi-tools"></i></div>
+              {% elif log.action_type == 'Maintenance' %}
+                <div class="timeline-icon icon-maint"><i class="bi bi-wrench"></i></div>
               {% else %}
-                <tr>
-                  <td colspan="5" class="text-center text-muted py-4">
-                    Түүх олдсонгүй.
-                  </td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
+                <div class="timeline-icon icon-check"><i class="bi bi-check-lg"></i></div>
+              {% endif %}
+
+              <div class="timeline-header">
+                {# Type badge #}
+                {% if log.action_type == 'Calibration' %}
+                  <span class="timeline-type type-calib">Calibration</span>
+                {% elif log.action_type == 'Repair' %}
+                  <span class="timeline-type type-repair">Repair</span>
+                {% elif log.action_type == 'Maintenance' %}
+                  <span class="timeline-type type-maint">Maintenance</span>
+                {% else %}
+                  <span class="timeline-type type-check">Daily Check</span>
+                {% endif %}
+
+                <span class="timeline-date">
+                  <i class="bi bi-calendar3"></i>
+                  {{ log.action_date.strftime('%Y-%m-%d') }}
+                </span>
+              </div>
+
+              {% if log.performed_by %}
+              <div class="timeline-performer">
+                <i class="bi bi-person-fill" style="color:#6366f1"></i>
+                {{ log.performed_by }}
+              </div>
+              {% endif %}
+
+              {% if log.description %}
+              <div class="timeline-desc">{{ log.description }}</div>
+              {% endif %}
+
+              {% if log.file_path or log.certificate_no %}
+              <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
+                 class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
+                <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
+                {{ log.certificate_no or 'Файл татах' }}
+              </a>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="timeline-empty" id="timelineEmpty">
+              <i class="bi bi-clock-history d-block"></i>
+              <h5>Түүх олдсонгүй</h5>
+              <p class="mb-0">Энэ төхөөрөмжид одоогоор бүртгэл байхгүй байна.</p>
+            </div>
+            {% endfor %}
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
-{# ------------------------- ЗАСАХ МОДАЛ ------------------------- #}
+{# ========================= EDIT MODAL ========================= #}
 <div class="modal fade" id="editEqModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <form action="{{ url_for('equipment.edit_equipment', id=eq.id) }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Төхөөрөмж засах</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-content" style="border-radius:20px; overflow:hidden;">
+        <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-pencil-square me-2"></i>Төхөөрөмж засах
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-
+        <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
           <div class="mb-3">
             <label class="fw-bold small">Нэр</label>
             <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
@@ -370,7 +738,7 @@
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Категори (Журнал)</label>
+              <label class="fw-bold small">Категори</label>
               <select name="category" class="form-select">
                 {{ category_options(eq.category or 'other') }}
               </select>
@@ -404,7 +772,7 @@
               <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Лаб (байршил)</label>
+              <label class="fw-bold small">Байршил</label>
               <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
             </div>
             <div class="col-4 mb-3">
@@ -423,7 +791,7 @@
               <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Ашиглалтын байдал</label>
+              <label class="fw-bold small">Статус</label>
               <select name="status" class="form-select">
                 {{ status_options(eq.status or 'normal') }}
               </select>
@@ -432,130 +800,113 @@
 
           <div class="mb-3">
             <label class="fw-bold small text-primary">Хамааралтай шинжилгээ</label>
-            <input type="text" name="related" class="form-control"
-                   value="{{ eq.related_analysis or '' }}" placeholder="Ж: Aad,Mad">
+            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="Ж: Aad,Mad">
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Шалгалт тохируулгын товч тэмдэглэл</label>
+            <label class="fw-bold small">Шалгалт тохируулгын тэмдэглэл</label>
             <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
           </div>
 
-          <hr class="my-2">
+          {# Баталгаажуулалтын огноонууд #}
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="fw-bold small text-success">
+                <i class="bi bi-calendar-check me-1"></i>Сүүлд баталгаажсан
+              </label>
+              <input type="date" name="calibration_date" id="editCalibDate" class="form-control"
+                     value="{{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '' }}">
+              <div class="form-text small">Огноо оруулахад дараагийн хугацаа автомат тооцоологдоно</div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="fw-bold small text-danger">
+                <i class="bi bi-calendar-event me-1"></i>Дараагийн хугацаа
+                <span class="badge bg-secondary-subtle text-secondary ms-1" id="calcBadge" style="display:none">автомат</span>
+              </label>
+              <input type="date" name="next_calibration_date" id="editNextCalibDate" class="form-control"
+                     value="{{ eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else '' }}">
+              <div class="form-text small">
+                <a href="#" id="calcNextDateBtn" class="text-decoration-none">
+                  <i class="bi bi-calculator"></i> Давтамжаас тооцоолох
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <hr>
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Үйлдвэрлэсэн огноо (Мэдээлэл)</label>
-              <input type="text" name="manufactured_info" class="form-control"
-                     value="{{ eq.manufactured_info or '' }}" placeholder="Ж: 2023 он">
+              <label class="fw-bold small">Үйлдвэрлэсэн огноо</label>
+              <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}">
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Ашиглалтад орсон огноо (Мэдээлэл)</label>
-              <input type="text" name="commissioned_info" class="form-control"
-                     value="{{ eq.commissioned_info or '' }}" placeholder="Ж: 2023-05-01">
+              <label class="fw-bold small">Ашиглалтад орсон</label>
+              <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-6 mb-3">
               <label class="fw-bold small">Анхны үнэ (₮)</label>
-              <input type="number" step="0.01" name="initial_price" class="form-control"
-                     value="{{ eq.initial_price or '' }}">
+              <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
             </div>
             <div class="col-6 mb-3">
               <label class="fw-bold small">Үлдэгдэл үнэ (₮)</label>
-              <input type="number" step="0.01" name="residual_price" class="form-control"
-                     value="{{ eq.residual_price or '' }}">
+              <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Бусад тайлбар</label>
+            <label class="fw-bold small">Тайлбар</label>
             <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
           </div>
 
           {# ===== ДАВХАР БҮРТГЭЛИЙН НЭМЭЛТ ТАЛБАРУУД ===== #}
           {% set ed = eq.extra_data or {} %}
 
-          {# --- Хэмжих хэрэгсэл --- #}
           <div class="edit-reg-fields edit-reg-measurement" style="display:{% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Хэмжих хэрэгслийн нэмэлт</h6>
-            <div class="row g-3">
+            <div class="row g-2">
               <div class="col-md-4">
                 <label class="fw-bold small">Бүлэг</label>
-                <select name="group" class="form-select">
-                  {{ measurement_group_options(ed.get('group', '')) }}
-                </select>
+                <select name="group" class="form-select form-select-sm">{{ measurement_group_options(ed.get('group', '')) }}</select>
               </div>
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
               <div class="col-md-3">
                 <label class="fw-bold small">Зориулалт</label>
-                <select name="purpose" class="form-select">
-                  {{ lab_purpose_options(ed.get('purpose', '')) }}
-                </select>
+                <select name="purpose" class="form-select form-select-sm">{{ lab_purpose_options(ed.get('purpose', '')) }}</select>
               </div>
               <div class="col-md-3">
                 <label class="fw-bold small">Хэмжих нэгж</label>
-                <select name="unit" class="form-select">
-                  {{ measurement_unit_options(ed.get('unit', '')) }}
-                </select>
+                <select name="unit" class="form-select form-select-sm">{{ measurement_unit_options(ed.get('unit', '')) }}</select>
               </div>
-              <div class="col-md-3"><label class="fw-bold small">Баталг. хэмжих хязгаар</label><input type="text" name="cert_range" class="form-control" value="{{ ed.get('cert_range','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Баталг. нарийвчлал</label><input type="text" name="cert_accuracy" class="form-control" value="{{ ed.get('cert_accuracy','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Шалг. хэмжих хязгаар</label><input type="text" name="chk_range" class="form-control" value="{{ ed.get('chk_range','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Шалг. нарийвчлал</label><input type="text" name="chk_accuracy" class="form-control" value="{{ ed.get('chk_accuracy','') }}"></div>
-              <div class="col-md-3">
-                <label class="fw-bold small">Давтамж (Баталг.)</label>
-                <select name="freq_cert" class="form-select">
-                  {{ freq_cert_options(ed.get('freq_cert', '')) }}
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="fw-bold small">Давтамж (Шалг.)</label>
-                <select name="freq_check" class="form-select">
-                  {{ freq_check_options(ed.get('freq_check', '')) }}
-                </select>
-              </div>
-              <div class="col-md-3"><label class="fw-bold small">Эталоны төрөл</label><input type="text" name="etalon_type" class="form-control" value="{{ ed.get('etalon_type','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Эталон баталг. огноо</label><input type="text" name="etalon_date" class="form-control" value="{{ ed.get('etalon_date','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control" value="{{ ed.get('cert_date','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Дараагийн баталг.</label><input type="text" name="next_cert" class="form-control" value="{{ ed.get('next_cert','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Сертификатын дугаар</label><input type="text" name="cert_no" class="form-control" value="{{ ed.get('cert_no','') }}"></div>
-              <div class="col-md-6"><label class="fw-bold small">Хариуцах ажилтан</label><input type="text" name="responsible" class="form-control" value="{{ ed.get('responsible','') }}"></div>
             </div>
           </div>
 
-          {# --- Шилэн хэмжүүр --- #}
           <div class="edit-reg-fields edit-reg-glassware" style="display:{% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Шилэн хэмжүүрийн нэмэлт</h6>
-            <div class="row g-3">
-              <div class="col-md-3"><label class="fw-bold small">Бүлэг</label><input type="text" name="group" class="form-control" value="{{ ed.get('group','') }}" placeholder="Колб, Цилиндр..."></div>
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Хэмжээ /мл/</label><input type="text" name="volume" class="form-control" value="{{ ed.get('volume','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Гэрчилгээний дугаар</label><input type="text" name="cert_no" class="form-control" value="{{ ed.get('cert_no','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control" value="{{ ed.get('cert_date','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Баталгаат хугацаа дуусах</label><input type="text" name="cert_expire" class="form-control" value="{{ ed.get('cert_expire','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Дахин баталгаажуулах</label><input type="text" name="recert_date" class="form-control" value="{{ ed.get('recert_date','') }}"></div>
+            <div class="row g-2">
+              <div class="col-md-3"><label class="fw-bold small">Бүлэг</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Хэмжээ /мл/</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Гэрчилгээний №</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
             </div>
           </div>
 
-          {# --- Дотоод шалгалт --- #}
           <div class="edit-reg-fields edit-reg-internal_check" style="display:{% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}">
             <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Дотоод шалгалтын нэмэлт</h6>
-            <div class="row g-3">
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Марк, дугаар</label><input type="text" name="mark" class="form-control" value="{{ ed.get('mark','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control" value="{{ ed.get('commissioned_date','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Шалгалт хийсэн огноо</label><input type="text" name="check_date" class="form-control" value="{{ ed.get('check_date','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Дараагийн шалгалт</label><input type="text" name="next_check_date" class="form-control" value="{{ ed.get('next_check_date','') }}"></div>
+            <div class="row g-2">
+              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Марк, дугаар</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Шалгалт хийсэн</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
             </div>
           </div>
-
-
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
-          <button type="submit" class="btn btn-primary">Хадгалах</button>
+          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">Хадгалах</button>
         </div>
       </div>
     </form>
@@ -564,74 +915,121 @@
 {% endblock %}
 
 {% block scripts %}
-  {{ super() }}
-  <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Timeline filtering
+  const filterChips = document.querySelectorAll('.filter-chip');
+  const searchInput = document.getElementById('timelineSearch');
+  const timelineItems = document.querySelectorAll('.timeline-item');
+  const emptyState = document.getElementById('timelineEmpty');
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const searchInput = document.getElementById('logSearch');
-      const filterBtns = document.querySelectorAll('.log-filter-btn');
-      const rows = document.querySelectorAll('.log-row');
+  let currentFilter = 'all';
 
-      let currentType = 'all';
+  function applyFilters() {
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    let visibleCount = 0;
 
-      function applyFilters() {
-        const q = (searchInput?.value || '').toLowerCase().trim();
-        rows.forEach(row => {
-          const type = row.dataset.type || '';
-          const text = (row.dataset.search || '').toLowerCase();
+    timelineItems.forEach(item => {
+      const type = item.dataset.type || '';
+      const searchText = (item.dataset.search || '').toLowerCase();
 
-          const typeOk = (currentType === 'all') || (type === currentType);
-          const searchOk = !q || text.includes(q);
+      const typeMatch = currentFilter === 'all' || type === currentFilter;
+      const searchMatch = !query || searchText.includes(query);
 
-          row.style.display = (typeOk && searchOk) ? '' : 'none';
-        });
+      if (typeMatch && searchMatch) {
+        item.style.display = '';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
       }
-
-      if (searchInput) {
-        searchInput.addEventListener('input', applyFilters);
-      }
-
-      filterBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-          filterBtns.forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          currentType = this.dataset.type || 'all';
-          applyFilters();
-        });
-      });
     });
 
-    // Edit modal: Давхар бүртгэлийн нэмэлт талбарууд toggle
-    var editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
-    if (editRegSelect) {
-      function toggleEditRegFields() {
-        // Бүх section нуух (disabled хэрэглэхгүй — form submit-д нөлөөлнө)
-        document.querySelectorAll('.edit-reg-fields').forEach(function(el) {
-          el.style.display = 'none';
-        });
-        var val = editRegSelect.value;
-        if (val) {
-          var section = document.querySelector('.edit-reg-' + val);
-          if (section) {
-            section.style.display = 'block';
-          }
-        }
-      }
-      editRegSelect.addEventListener('change', toggleEditRegFields);
-      document.getElementById('editEqModal').addEventListener('shown.bs.modal', toggleEditRegFields);
-      toggleEditRegFields();
-
-      // Form submit: нуугдсан section-ийн input утгуудыг хоослох (backend-д илгээхгүй)
-      document.querySelector('#editEqModal form').addEventListener('submit', function() {
-        document.querySelectorAll('.edit-reg-fields').forEach(function(el) {
-          if (el.style.display === 'none') {
-            el.querySelectorAll('input, select').forEach(function(inp) {
-              inp.removeAttribute('name');
-            });
-          }
-        });
-      });
+    // Show/hide empty state
+    if (emptyState) {
+      emptyState.style.display = visibleCount === 0 ? '' : 'none';
     }
-  </script>
+  }
+
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', function() {
+      filterChips.forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.type || 'all';
+      applyFilters();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilters);
+  }
+
+  // Edit modal: toggle extra fields
+  const editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
+  if (editRegSelect) {
+    function toggleEditRegFields() {
+      document.querySelectorAll('.edit-reg-fields').forEach(el => el.style.display = 'none');
+      const val = editRegSelect.value;
+      if (val) {
+        const section = document.querySelector('.edit-reg-' + val);
+        if (section) section.style.display = 'block';
+      }
+    }
+    editRegSelect.addEventListener('change', toggleEditRegFields);
+    document.getElementById('editEqModal').addEventListener('shown.bs.modal', toggleEditRegFields);
+    toggleEditRegFields();
+
+    // Clear hidden section inputs on submit
+    document.querySelector('#editEqModal form').addEventListener('submit', function() {
+      document.querySelectorAll('.edit-reg-fields').forEach(el => {
+        if (el.style.display === 'none') {
+          el.querySelectorAll('input, select').forEach(inp => inp.removeAttribute('name'));
+        }
+      });
+    });
+  }
+
+  // Calibration date auto-calculate
+  const calibDateInput = document.getElementById('editCalibDate');
+  const nextCalibDateInput = document.getElementById('editNextCalibDate');
+  const cycleInput = document.querySelector('#editEqModal input[name="cycle"]');
+  const calcBtn = document.getElementById('calcNextDateBtn');
+  const calcBadge = document.getElementById('calcBadge');
+
+  function calculateNextCalibDate() {
+    const calibDate = calibDateInput?.value;
+    const cycleDays = parseInt(cycleInput?.value) || 365;
+
+    if (calibDate) {
+      const date = new Date(calibDate);
+      date.setDate(date.getDate() + cycleDays);
+      const nextDate = date.toISOString().split('T')[0];
+      nextCalibDateInput.value = nextDate;
+      if (calcBadge) {
+        calcBadge.style.display = '';
+        calcBadge.textContent = `+${cycleDays} хоног`;
+      }
+    }
+  }
+
+  if (calibDateInput) {
+    calibDateInput.addEventListener('change', calculateNextCalibDate);
+  }
+  if (cycleInput) {
+    cycleInput.addEventListener('change', function() {
+      if (calibDateInput?.value) calculateNextCalibDate();
+    });
+  }
+  if (calcBtn) {
+    calcBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (!calibDateInput?.value) {
+        // Өнөөдрийн огноогоор тооцоолох
+        calibDateInput.value = new Date().toISOString().split('T')[0];
+      }
+      calculateNextCalibDate();
+    });
+  }
+});
+</script>
 {% endblock %}

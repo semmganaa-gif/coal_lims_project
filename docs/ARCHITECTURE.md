@@ -249,7 +249,14 @@ app/
 │   ├── admin_routes.py     # Admin panel
 │   ├── report_routes.py    # Report generation
 │   ├── quality/            # QC management
-│   └── equipment_routes.py # Equipment tracking
+│   ├── equipment/          # Equipment tracking (ISO 17025 Section 6.4)
+│   │   ├── crud.py         # CRUD + audit logging
+│   │   ├── api.py          # JSON APIs
+│   │   └── registers.py    # 7 specialized journals
+│   ├── spare_parts/        # Spare parts inventory
+│   │   ├── crud.py         # CRUD operations
+│   │   └── api.py          # JSON APIs
+│   └── chemicals/          # Chemical inventory
 │
 ├── services/               # Business logic
 │   ├── sample_service.py

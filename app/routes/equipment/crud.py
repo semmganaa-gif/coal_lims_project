@@ -104,12 +104,29 @@ def add_equipment():
 
     register_type = request.form.get("register_type", "main") or "main"
 
+    # Баталгаажуулалтын огноонууд
+    calibration_date = None
+    calibration_date_str = request.form.get("calibration_date")
+    if calibration_date_str:
+        try:
+            calibration_date = datetime.strptime(calibration_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+
+    next_calibration_date = None
+    next_calibration_date_str = request.form.get("next_calibration_date")
+    if next_calibration_date_str:
+        try:
+            next_calibration_date = datetime.strptime(next_calibration_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+
     # Үндсэн талбаруудаас гадна register_type-д зориулсан нэмэлт талбаруудыг extra_data-д хадгална
     base_fields = {
         'csrf_token', 'name', 'manufacturer', 'model', 'serial', 'lab_code',
         'quantity', 'cycle', 'location', 'room', 'related', 'chk_checked',
         'chk_calibrated', 'manufactured_info', 'commissioned_info', 'remark',
-        'category', 'register_type',
+        'category', 'register_type', 'calibration_date', 'next_calibration_date',
     }
     extra_data = {}
     if register_type != 'main':
@@ -127,6 +144,8 @@ def add_equipment():
         lab_code=request.form.get("lab_code"),
         quantity=quantity,
         calibration_cycle_days=calibration_cycle_days,
+        calibration_date=calibration_date,
+        next_calibration_date=next_calibration_date,
         location=request.form.get("location"),
         room_number=request.form.get("room"),
         related_analysis=request.form.get("related"),
@@ -199,6 +218,25 @@ def edit_equipment(id):
     eq.category = request.form.get("category") or "other"
     eq.register_type = request.form.get("register_type") or "main"
 
+    # Баталгаажуулалтын огноонууд
+    calibration_date_str = request.form.get("calibration_date")
+    if calibration_date_str:
+        try:
+            eq.calibration_date = datetime.strptime(calibration_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    elif calibration_date_str == '':
+        eq.calibration_date = None
+
+    next_calibration_date_str = request.form.get("next_calibration_date")
+    if next_calibration_date_str:
+        try:
+            eq.next_calibration_date = datetime.strptime(next_calibration_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    elif next_calibration_date_str == '':
+        eq.next_calibration_date = None
+
     if request.form.get("quantity"):
         try:
             eq.quantity = int(request.form.get("quantity"))
@@ -213,7 +251,7 @@ def edit_equipment(id):
         'quantity', 'cycle', 'location', 'room', 'related', 'chk_checked',
         'chk_calibrated', 'manufactured_info', 'commissioned_info', 'remark',
         'category', 'register_type', 'status', 'calibration_note',
-        'initial_price', 'residual_price',
+        'initial_price', 'residual_price', 'calibration_date', 'next_calibration_date',
     }
     extra_data = {}
     for key in request.form:

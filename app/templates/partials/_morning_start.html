@@ -245,6 +245,13 @@
   document.getElementById('morningTime').textContent =
     now.toLocaleTimeString('mn-MN', { hour:'2-digit', minute:'2-digit' });
 
+  // --- Detect lab type from URL (SLAM key-д хэрэгтэй тул эхэнд тодорхойлно) ---
+  const path = window.location.pathname;
+  let labType = 'coal';
+  if (path.startsWith('/labs/water-lab/microbiology')) labType = 'micro';
+  else if (path.startsWith('/labs/water-lab/chemistry') || path.startsWith('/labs/water-lab')) labType = 'water';
+  else if (path.startsWith('/labs/petrography')) labType = 'petro';
+
   // --- SLAM localStorage (өдөр бүр reset) ---
   const slamKey = 'slam_' + labType + '_' + now.toISOString().slice(0,10);
   let slamState = JSON.parse(localStorage.getItem(slamKey) || '{}');
@@ -280,13 +287,6 @@
     renderSlam();
   };
   renderSlam();
-
-  // --- Detect lab type from URL ---
-  const path = window.location.pathname;
-  let labType = 'coal';
-  if (path.startsWith('/labs/microbiology')) labType = 'micro';
-  else if (path.startsWith('/labs/water')) labType = 'water';
-  else if (path.startsWith('/labs/petrography')) labType = 'petro';
 
   // --- Fetch morning data ---
   fetch('/api/morning_dashboard?lab=' + labType)

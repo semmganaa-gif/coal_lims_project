@@ -75,9 +75,16 @@
 
 ## 3. САЙН ТАЛУУД
 
-1. **Equipment Management** - Бүрэн ✅
-   - Calibration tracking
-   - Maintenance logs
+1. **Equipment Management** - Бүрэн ✅ (ISO 17025 Section 6.4)
+   - Calibration tracking + cycle management
+   - Maintenance logs (immutable audit trail)
+   - Usage logs (equipment utilization)
+   - **Audit logging (2026-02-04 шинэчлэл):**
+     - `created_at`, `updated_at`, `created_by_id` timestamps
+     - `performed_by_id`, `used_by_id` user FK tracking
+     - All CRUD operations logged to AuditLog
+   - 7 тусгай журнал (measurement, glassware, internal_check, etc.)
+   - Spare parts integration
 
 2. **Method Documentation** - 13 SOP баримт ✅
 

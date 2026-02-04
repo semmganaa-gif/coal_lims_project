@@ -36,7 +36,7 @@
   .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
   .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
 
-  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
   .nav-card {
     background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
     border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
@@ -65,16 +65,30 @@
   .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
   .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
 
+  .section-title {
+    font-size: 1.1rem; font-weight: 700; color: #0f172a;
+    margin: 1.5rem 0 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .section-badge {
+    font-size: 0.65rem; font-weight: 700; color: #fff; padding: 0.15rem 0.6rem;
+    border-radius: 6px; text-transform: uppercase;
+  }
+
   .nc-register::before { background: linear-gradient(90deg, #0dcaf0, #06b6d4); }
   .nc-register .nav-card-icon { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
   .nc-water::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
   .nc-water .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .nc-micro::before { background: linear-gradient(90deg, #20c997, #14b8a6); }
-  .nc-micro .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
-  .nc-standard::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
-  .nc-standard .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-  .nc-equipment::before { background: linear-gradient(90deg, #8b5cf6, #6366f1); }
-  .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #6d28d9; }
+  .nc-summary::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+  .nc-summary .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .nc-equipment::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+  .nc-dashboard::before { background: linear-gradient(90deg, #0dcaf0, #0891b2); }
+  .nc-dashboard .nav-card-icon { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+  .nc-consumption::before { background: linear-gradient(90deg, #20c997, #14b8a6); }
+  .nc-consumption .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+  .nc-monthly::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .nc-monthly .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
 
   @media (max-width: 768px) {
     .water-dash { padding: 1rem; }
@@ -116,7 +130,11 @@
     </div>
   </div>
 
-  <!-- Навигацийн картууд -->
+  <!-- Үндсэн цэс -->
+  <div class="section-title">
+    <i class="bi bi-clipboard-data" style="color:#0dcaf0"></i>
+    Үндсэн цэс
+  </div>
   <div class="nav-cards">
     <a href="{{ url_for('water.register_sample') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
@@ -129,16 +147,16 @@
     <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Усны шинжилгээ</h3>
+        <h3>Шинжилгээ</h3>
         <p>{{ water_analysis_count }} төрлийн усны чанарын шинжилгээ</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
-    <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-standard">
-      <div class="nav-card-icon"><i class="bi bi-shield-check"></i></div>
+    <a href="{{ url_for('water.water_summary') }}" class="nav-card nc-summary">
+      <div class="nav-card-icon"><i class="bi bi-table"></i></div>
       <div class="nav-card-content">
-        <h3>MNS Стандарт</h3>
-        <p>Усны чанарын стандартын хязгаарууд (шинжилгээний хуудсанд)</p>
+        <h3>Нэгтгэл</h3>
+        <p>Усны хими + микробиологи — нэгдсэн үр дүнгийн нэгтгэл</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -146,7 +164,40 @@
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
         <h3>Тоног төхөөрөмж</h3>
-        <p>Усны лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
+        <p>Хими лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+  </div>
+
+  <!-- Тайлан -->
+  <div class="section-title">
+    <i class="bi bi-graph-up" style="color:#0891b2"></i>
+    Тайлан
+    <span class="section-badge" style="background:linear-gradient(135deg,#0dcaf0,#0891b2)">Reports</span>
+  </div>
+  <div class="nav-cards">
+    <a href="{{ url_for('water.water_dashboard') }}" class="nav-card nc-dashboard">
+      <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
+      <div class="nav-card-content">
+        <h3>Dashboard</h3>
+        <p>KPI, сарын тренд, категори хуваарилалт</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('water.water_consumption') }}" class="nav-card nc-consumption">
+      <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
+      <div class="nav-card-content">
+        <h3>Consumption</h3>
+        <p>Захиалагч, категори, сараар нэгтгэсэн тайлан</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('water.water_monthly_plan') }}" class="nav-card nc-monthly">
+      <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
+      <div class="nav-card-content">
+        <h3>Monthly Plan</h3>
+        <p>Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

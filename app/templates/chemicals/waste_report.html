@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Хог хаягдлын тайлан - {{ year }}{% endblock %}
+
+{% block content %}
+<style>
+  .report-table th, .report-table td {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
+  }
+  .report-table .name-cell { white-space: normal; min-width: 180px; }
+  @media print {
+    .no-print { display: none !important; }
+    .report-table { font-size: 9pt; }
+  }
+</style>
+
+<div class="container-fluid p-4">
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>
+        Хог хаягдлын тайлан
+      </h4>
+      <p class="text-muted mb-0">{{ year }} оны жилийн тайлан</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button onclick="window.print()" class="btn btn-outline-secondary">
+        <i class="bi bi-printer me-1"></i> Хэвлэх
+      </button>
+      <button onclick="exportToExcel()" class="btn btn-success">
+        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+      </button>
+      <a href="{{ url_for('chemicals.waste_list', year=year, lab=lab) }}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left me-1"></i> Буцах
+      </a>
+    </div>
+  </div>
+
+  {# Report Title (for print) #}
+  <div class="text-center mb-4">
+    <h5 class="fw-bold">Химийн хорт болон аюултай бодисын сав, баглаа боодлын тайлан</h5>
+    <p class="text-muted">{{ year }} он</p>
+  </div>
+
+  {# Table #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered mb-0 report-table" id="reportTable">
+          <thead class="table-light">
+            <tr>
+              <th rowspan="2" class="text-center align-middle">№</th>
+              <th rowspan="2" class="name-cell align-middle">Хог хаягдлын нэр (MN)</th>
+              <th rowspan="2" class="name-cell align-middle">Waste name (EN)</th>
+              <th rowspan="2" class="text-center align-middle">Сард гарах</th>
+              <th rowspan="2" class="align-middle">Хаягдах газар</th>
+              <th colspan="12" class="text-center">Сарын хэмжээ</th>
+              <th rowspan="2" class="text-center align-middle">Нийт</th>
+            </tr>
+            <tr>
+              <th class="text-center">1</th>
+              <th class="text-center">2</th>
+              <th class="text-center">3</th>
+              <th class="text-center">4</th>
+              <th class="text-center">5</th>
+              <th class="text-center">6</th>
+              <th class="text-center">7</th>
+              <th class="text-center">8</th>
+              <th class="text-center">9</th>
+              <th class="text-center">10</th>
+              <th class="text-center">11</th>
+              <th class="text-center">12</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in report_data %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td class="name-cell">{{ item.name_mn }}</td>
+              <td class="name-cell">{{ item.name_en or '-' }}</td>
+              <td class="text-center">{{ item.monthly_amount or '-' }} {{ item.unit }}</td>
+              <td>{{ item.disposal_location or '-' }}</td>
+              {% for m in range(1, 13) %}
+              <td class="text-center">
+                {% if item.monthly.get(m) %}
+                  {{ item.monthly[m].qty if item.monthly[m].qty else '' }}
+                {% endif %}
+              </td>
+              {% endfor %}
+              <td class="text-center fw-bold">{{ '%.2f'|format(item.total) if item.total else '0' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# Footer #}
+  <div class="mt-4 text-muted small">
+    <p>Тайлан гаргасан: {{ now().strftime('%Y-%m-%d %H:%M') if now is defined else '' }}</p>
+  </div>
+</div>
+
+<script>
+function exportToExcel() {
+  const table = document.getElementById('reportTable');
+  if (!table) return;
+
+  let csv = [];
+  const rows = table.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll('td, th');
+    const rowData = [];
+    cols.forEach(col => {
+      let text = col.innerText.replace(/"/g, '""').trim();
+      rowData.push('"' + text + '"');
+    });
+    csv.push(rowData.join(','));
+  });
+
+  const csvContent = '\uFEFF' + csv.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `waste_report_{{ year }}.csv`;
+  link.click();
+}
+</script>
+{% endblock %}
