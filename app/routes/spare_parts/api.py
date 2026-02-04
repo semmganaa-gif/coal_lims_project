@@ -1,11 +1,16 @@
 # app/routes/spare_parts/api.py
 """Сэлбэг хэрэгслийн API routes."""
 
+from datetime import date
+
 from flask import jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
+
 from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, Equipment
 from app.routes.spare_parts import spare_parts_bp
+from app.utils.security import escape_like_pattern
 
 
 @spare_parts_bp.route('/api/list')
@@ -55,8 +60,6 @@ def api_low_stock():
 @login_required
 def api_stats():
     """Статистик API."""
-    from sqlalchemy import func
-
     stats = {
         'total': SparePart.query.count(),
         'active': SparePart.query.filter_by(status='active').count(),
@@ -99,8 +102,6 @@ def api_consume():
         old_quantity = spare_part.quantity
         spare_part.quantity -= quantity
         spare_part.update_status()
-
-        from datetime import date
         spare_part.last_used_date = date.today()
 
         # Usage бүртгэл
@@ -117,7 +118,7 @@ def api_consume():
         )
         db.session.add(usage)
 
-        # Аудит лог
+        # Аудит лог (with hash - ISO 17025)
         log = SparePartLog(
             spare_part_id=spare_part.id,
             action='consumed',
@@ -127,6 +128,7 @@ def api_consume():
             user_id=current_user.id,
             details=f"API: {purpose}"
         )
+        log.data_hash = log.compute_hash()
         db.session.add(log)
         db.session.commit()
 
@@ -175,8 +177,6 @@ def api_consume_bulk():
             old_quantity = spare_part.quantity
             spare_part.quantity -= quantity
             spare_part.update_status()
-
-            from datetime import date
             spare_part.last_used_date = date.today()
 
             usage = SparePartUsage(
@@ -201,6 +201,7 @@ def api_consume_bulk():
                 user_id=current_user.id,
                 details=f"Bulk API: {purpose}"
             )
+            log.data_hash = log.compute_hash()
             db.session.add(log)
 
             results.append({
@@ -231,10 +232,12 @@ def api_search():
     if len(q) < 2:
         return jsonify([])
 
+    # ✅ SQL Injection хамгаалалт
+    safe_q = escape_like_pattern(q)
     spare_parts = SparePart.query.filter(
-        (SparePart.name.ilike(f'%{q}%')) |
-        (SparePart.name_en.ilike(f'%{q}%')) |
-        (SparePart.part_number.ilike(f'%{q}%'))
+        (SparePart.name.ilike(f'%{safe_q}%')) |
+        (SparePart.name_en.ilike(f'%{safe_q}%')) |
+        (SparePart.part_number.ilike(f'%{safe_q}%'))
     ).limit(20).all()
 
     data = [{

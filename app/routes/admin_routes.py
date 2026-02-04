@@ -17,9 +17,10 @@ import json
 
 # Forms болон Constants импорт
 from app.forms import UserManagementForm, SimpleProfileForm
-from app.constants import SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS
+from app.constants import SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS, MASTER_ANALYSIS_TYPES_LIST
 from app.models import ControlStandard
 from app.models import GbwStandard
+from app.utils.audit import log_audit
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -49,33 +50,11 @@ def senior_or_admin_required(f):
 # --- Шинжилгээний төрлийг автоматаар үүсгэх/шинэчлэх функц ---
 def _seed_analysis_types():
     """Шинжилгээний төрлүүдийг автоматаар үүсгэх/шинэчлэх."""
-    required_analyses = [
-        {'code': 'MT',    'name': 'Нийт чийг (MT)',               'order': 1,  'role': 'chemist'},
-        {'code': 'Mad',   'name': 'Дотоод чийг (Mad)',            'order': 2,  'role': 'chemist'},
-        {'code': 'Aad',   'name': 'Үнс (Aad)',                    'order': 3,  'role': 'chemist'},
-        {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',        'order': 4,  'role': 'chemist'},
-        {'code': 'TS',    'name': 'Нийт хүхэр (TS)',              'order': 5,  'role': 'chemist'},
-        {'code': 'CV',    'name': 'Илчлэг (CV)',                  'order': 6,  'role': 'chemist'},
-        {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',         'order': 7,  'role': 'chemist'},
-        {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',       'order': 8,  'role': 'chemist'},
-        {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',        'order': 9, 'role': 'chemist'},
-        {'code': 'P',     'name': 'Фосфор (P)',                   'order': 10, 'role': 'chemist'},
-        {'code': 'F',     'name': 'Фтор (F)',                     'order': 11, 'role': 'chemist'},
-        {'code': 'Cl',    'name': 'Хлор (Cl)',                    'order': 12, 'role': 'chemist'},
-        {'code': 'X',     'name': 'Пластометр (X)',             'order': 13, 'role': 'chemist'},
-        {'code': 'Y',     'name': 'Пластометр (Y)',             'order': 14, 'role': 'chemist'},
-        {'code': 'CRI',   'name': 'Коксын урвалын идэвх (CRI)',   'order': 15, 'role': 'chemist'},
-        {'code': 'CSR',   'name': 'Урвалын дараах бат бэх (CSR)', 'order': 16, 'role': 'chemist'},
-        {'code': 'FM',    'name': 'Чөлөөт чийг (FM)',             'order': 17,  'role': 'prep'},
-        {'code': 'Solid', 'name': 'Хатуу бодисын үлдэгдэл (Solid)',            'order': 18, 'role': 'prep'},
-        {'code': 'm',     'name': 'Масс (m)',                     'order': 19, 'role': 'chemist'},
-        {'code': 'PE',    'name': 'Петрограф (PE)',                 'order': 20, 'role': 'chemist'},
-    ]
-
+    # MASTER_ANALYSIS_TYPES_LIST-г constants.py-с import хийсэн
     existing_analysis_types = {at.code: at for at in AnalysisType.query.all()}
     needs_commit = False
 
-    for req in required_analyses:
+    for req in MASTER_ANALYSIS_TYPES_LIST:
         if req['code'] not in existing_analysis_types:
             new_at = AnalysisType(
                 code=req['code'],
@@ -142,6 +121,17 @@ def manage_users():
             db.session.add(user)
             try:
                 db.session.commit()
+                # Audit log
+                log_audit(
+                    action='create_user',
+                    resource_type='User',
+                    resource_id=user.id,
+                    details={
+                        'username': user.username,
+                        'role': user.role,
+                        'allowed_labs': user.allowed_labs
+                    }
+                )
                 flash(f'"{user.username}" нэртэй хэрэглэгч амжилттай нэмэгдлээ.', 'success')
             except Exception as e:
                 db.session.rollback()
@@ -201,6 +191,18 @@ def edit_user(user_id):
 
         try:
             db.session.commit()
+            # Audit log
+            log_audit(
+                action='edit_user',
+                resource_type='User',
+                resource_id=user_to_edit.id,
+                details={
+                    'username': user_to_edit.username,
+                    'role': user_to_edit.role,
+                    'allowed_labs': user_to_edit.allowed_labs,
+                    'password_changed': bool(form.password.data)
+                }
+            )
             flash(f'"{user_to_edit.username}" хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ.', 'success')
         except Exception as e:
             db.session.rollback()
@@ -228,10 +230,24 @@ def delete_user(user_id):
         return redirect(url_for('admin.manage_users'))
 
     user_to_delete = User.query.get_or_404(user_id)
+
+    # Админ хэрэглэгчийг устгахыг хориглох
+    if user_to_delete.role == 'admin':
+        flash("Админ хэрэглэгчийг устгах боломжгүй.", 'danger')
+        return redirect(url_for('admin.manage_users'))
+
     username = user_to_delete.username
+    user_role = user_to_delete.role
     db.session.delete(user_to_delete)
     try:
         db.session.commit()
+        # Audit log
+        log_audit(
+            action='delete_user',
+            resource_type='User',
+            resource_id=user_id,
+            details={'username': username, 'role': user_role}
+        )
         flash(f'"{username}" нэртэй хэрэглэгч амжилттай устгагдлаа.', 'success')
     except Exception as e:
         db.session.rollback()

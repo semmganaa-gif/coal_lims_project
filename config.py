@@ -77,8 +77,7 @@ class Config:
     WTF_CSRF_TIME_LIMIT = 3600  # Токен 1 цагийн дараа дуусна (секундээр)
     WTF_CSRF_SSL_STRICT = ENV != "development"  # Production-д HTTPS шаардах
 
-    # Session тохиргоо
-    SECRET_KEY = _secret_key()  # Давхар тодорхойлох
+    # Session тохиргоо (SECRET_KEY дээр тодорхойлогдсон)
 
     # ✅ ШИНЭ: Файл хадгалах зам (Гэрчилгээ хавсаргахад)
     # BASE_DIR ашиглан замыг бүтэн зааж өгнө.

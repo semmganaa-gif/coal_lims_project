@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 """Тоног төхөөрөмжийн API endpoints."""
 
+from datetime import datetime, timedelta
+
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import func
+
 from app import db
-from app.models import Equipment, MaintenanceLog, UsageLog
-from datetime import datetime, timedelta
+from app.models import Equipment, MaintenanceLog, UsageLog, SparePart, SparePartUsage, SparePartLog
+from app.routes.equipment import equipment_bp
+from app.routes.api.helpers import api_success, api_error
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from app.utils.audit import log_audit
-from sqlalchemy import func
-
-from app.routes.equipment import equipment_bp
 
 
 def _filter_equipment_by_category(query, category):
@@ -51,7 +53,7 @@ def log_usage_bulk():
         items = data.get("items", [])
 
         if not items:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
+            return api_error("No data provided")
 
         count = 0
         today_date = now_local()
@@ -180,7 +182,6 @@ def log_usage_bulk():
                     desc_parts.append(note)
 
                 # SparePart модел ашиглаж нөөцөөс хасах
-                from app.models import SparePart, SparePartUsage, SparePartLog
                 for sp in spare_parts:
                     sp_id = sp.get("spare_id")
                     try:
@@ -215,7 +216,7 @@ def log_usage_bulk():
                         )
                         db.session.add(usage)
 
-                        # SparePartLog аудит
+                        # SparePartLog аудит (with hash - ISO 17025)
                         sp_log = SparePartLog(
                             spare_part_id=sp_id,
                             action='consumed',
@@ -225,6 +226,7 @@ def log_usage_bulk():
                             user_id=current_user.id,
                             details=f"Засвар: Equipment ID {eq_id}"
                         )
+                        sp_log.data_hash = sp_log.compute_hash()
                         db.session.add(sp_log)
 
                     desc_parts.append(f"Сэлбэг: {sp_name} x{qty_used} ({used_by})")
@@ -279,12 +281,12 @@ def log_usage_bulk():
                 details={'count': count, 'items_count': len(items)}
             )
 
-        return jsonify({"status": "success", "count": count})
+        return api_success({"count": count}, f"{count} бүртгэл хадгалагдлаа")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Bulk Usage Log Error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return api_error(str(e), status_code=500)
 
 
 # -------------------------------------------------
@@ -448,7 +450,12 @@ def api_equipment_monthly_stats():
 @login_required
 def api_equipment_list_json():
     """Төхөөрөмжийн жагсаалт JSON API (AG Grid-д)."""
-    equipments = Equipment.query.order_by(Equipment.name.asc()).all()
+    # ✅ Retired filter нэмсэн + limit
+    include_retired = request.args.get("include_retired", "false").lower() == "true"
+    query = Equipment.query
+    if not include_retired:
+        query = query.filter(Equipment.status != "retired")
+    equipments = query.order_by(Equipment.name.asc()).limit(1000).all()
 
     data = []
     today = now_local().date()

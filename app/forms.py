@@ -179,8 +179,8 @@ class AddSampleForm(FlaskForm):
         validators=[
             DataRequired(message="Нэр оруулна уу."),
             Regexp(
-                "^[A-Za-z0-9_.]*$",
-                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+                r"^[A-Za-z0-9_.\s-]*$",
+                message="Зөвхөн латин үсэг, тоо, зай ашиглана уу.",
             ),
         ],
     )
@@ -195,8 +195,8 @@ class AddSampleForm(FlaskForm):
         validators=[
             DataRequired(message="Нэр оруулна уу."),
             Regexp(
-                "^[A-Za-z0-9_.]*$",
-                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+                r"^[A-Za-z0-9_.\s-]*$",
+                message="Зөвхөн латин үсэг, тоо, зай ашиглана уу.",
             ),
         ],
     )

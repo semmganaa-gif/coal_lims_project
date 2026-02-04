@@ -388,3 +388,101 @@ flowchart TD
     H -->|Approve| E
     H -->|Reject| R
 ```
+
+## Architectural Decisions
+
+### ADR-001: Async/Await Strategy (2026-02-05)
+
+#### Context
+Зарим API route-ууд `async def` ашиглаж байгаа боловч `await` ашиглаагүй. SQLAlchemy синхрон session ашиглаж байна.
+
+#### Нөлөөлсөн файлууд
+| Файл | Async routes | Await ашигласан |
+|------|-------------|-----------------|
+| `routes/api/chat_api.py` | 10 | ❌ |
+| `routes/api/samples_api.py` | 10 | ❌ |
+| `routes/api/mass_api.py` | 6 | ❌ |
+| `routes/api/icpms_api.py` | 5 | ❌ |
+
+#### Decision
+**Async код түр үлдээх (устгахгүй)**
+
+#### Rationale
+1. **Код хэвийн ажиллана** - `async def` нь `await` байхгүй ч алдаа гаргахгүй
+2. **Overhead бага** - ~1-2ms нэмэлт хугацаа (ашиглагдахуйц биш)
+3. **Ирээдүйд бэлэн** - SQLAlchemy AsyncSession нэмэхэд код бэлэн
+4. **LIMS ачаалал бага** - 10-50 хэрэглэгч, high concurrency шаардлагагүй
+
+#### Current State (Синхрон)
+```python
+@bp.route("/chat/contacts", methods=["GET"])
+async def get_chat_contacts():
+    users = User.query.all()  # Синхрон SQLAlchemy
+    return jsonify({'contacts': contacts})
+```
+
+#### Future State (Бодит async - 500+ хэрэглэгч болоход)
+```python
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+engine = create_async_engine("postgresql+asyncpg://...")
+
+@bp.route("/chat/contacts", methods=["GET"])
+async def get_chat_contacts():
+    async with AsyncSession(engine) as session:
+        result = await session.execute(select(User))
+        users = result.scalars().all()
+    return jsonify({'contacts': contacts})
+```
+
+#### Migration Steps (Ирээдүйд)
+1. `pip install sqlalchemy[asyncio] asyncpg`
+2. `create_async_engine()` үүсгэх
+3. `AsyncSession` context manager ашиглах
+4. Бүх query-д `await` нэмэх
+5. Connection pool тохиргоо шинэчлэх
+
+#### Consequences
+- ✅ Одоо: Код хэвийн ажиллана, өөрчлөлт шаардлагагүй
+- ✅ Ирээдүй: Async руу шилжихэд `async def` аль хэдийн бэлэн
+- ⚠️ Анхаарал: Шинэ route нэмэхдээ `async def` эсвэл `def` аль нэгийг тууштай ашиглах
+
+---
+
+### ADR-002: API Response Format (2026-02-05)
+
+#### Context
+Хоёр өөр API хариу формат ашиглаж байсан:
+- `{success: true, data: {...}}` - Шинэ формат
+- `{ok: true, ...}` - Хуучин формат
+
+#### Decision
+**Completed** - Бүх API endpoint-ууд `success` формат руу шилжсэн.
+
+#### Standard Format
+```python
+# Амжилттай
+{
+    "success": true,
+    "data": {...},
+    "message": "Optional message"
+}
+
+# Алдаа
+{
+    "success": false,
+    "error": "Error message"
+}
+```
+
+#### Changed Files
+- `routes/api/mass_api.py` - `api_success()`, `api_error()` ашигласан
+- `routes/api/helpers.py` - `api_ok()`, `api_fail()` deprecated болгосон
+- `labs/water_lab/chemistry/routes.py` - jsonify success формат
+- `labs/water_lab/microbiology/routes.py` - jsonify success формат
+- `routes/settings_routes.py` - jsonify success формат
+- `routes/report_routes.py` - jsonify success формат
+- `templates/analysis_forms/mass_aggrid.html` - JS `data.success` шалгах
+- `templates/settings/bottle_constants_bulk.html` - JS `data.success` шалгах
+- `templates/analysis_forms/trd_aggrid.html` - JS `js.success` шалгах
+- `static/js/calculators/TRD_calculator.js` - JS `js.success` шалгах

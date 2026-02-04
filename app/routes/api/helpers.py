@@ -88,11 +88,16 @@ def api_error(message, code=None, status_code=400, details=None):
 
 
 # =============================================================================
-# ХУУЧИН API ХАРИУНЫ ФОРМАТ (ok: True/False)
+# ХУУЧИН API ХАРИУНЫ ФОРМАТ (ok: True/False) - DEPRECATED
 # =============================================================================
+# ⚠️ DEPRECATED: Шинэ код бичихдээ api_success(), api_error() ашиглана уу!
+# Энэ функцүүд зөвхөн хуучин код дэмжих зорилгоор үлдээсэн.
+# 2026-02-05: Бүх API endpoint-ууд success формат руу шилжсэн.
 
 def api_ok(message=None, **kwargs):
     """
+    ⚠️ DEPRECATED - api_success() ашиглана уу!
+
     Legacy амжилттай API хариу (ok формат)
 
     Args:
@@ -103,8 +108,13 @@ def api_ok(message=None, **kwargs):
         Flask Response (JSON)
 
     Example:
+        # Хуучин:
         return api_ok("Амжилттай", sample_id=123)
+        # Шинэ:
+        return api_success({"sample_id": 123}, "Амжилттай")
     """
+    import warnings
+    warnings.warn("api_ok() is deprecated, use api_success() instead", DeprecationWarning, stacklevel=2)
     response = {"ok": True}
     if message:
         response["message"] = message
@@ -114,6 +124,8 @@ def api_ok(message=None, **kwargs):
 
 def api_fail(message, status_code=400, **kwargs):
     """
+    ⚠️ DEPRECATED - api_error() ашиглана уу!
+
     Legacy алдааны API хариу (ok формат)
 
     Args:
@@ -125,8 +137,13 @@ def api_fail(message, status_code=400, **kwargs):
         Flask Response (JSON) with status code
 
     Example:
+        # Хуучин:
         return api_fail("Олдсонгүй", 404)
+        # Шинэ:
+        return api_error("Олдсонгүй", status_code=404)
     """
+    import warnings
+    warnings.warn("api_fail() is deprecated, use api_error() instead", DeprecationWarning, stacklevel=2)
     response = {"ok": False, "message": message}
     response.update(kwargs)
     return jsonify(response), status_code

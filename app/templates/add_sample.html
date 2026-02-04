@@ -894,7 +894,7 @@
                 <div class="condition-toggle">
                   {{ subfield(class="") }}
                   <label class="condition-toggle-label" for="{{ subfield.id }}">
-                    {% if subfield.data == 'wet' %}<i class="bi bi-droplet"></i>{% else %}<i class="bi bi-sun"></i>{% endif %}
+                    {% if subfield.data in ['Чийгтэй', 'Шингэн'] %}<i class="bi bi-droplet"></i>{% else %}<i class="bi bi-sun"></i>{% endif %}
                     {{ subfield.label.text }}
                   </label>
                 </div>

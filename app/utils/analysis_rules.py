@@ -139,6 +139,40 @@ def determine_result_status(
         if raw_data.get("is_low_avg", False):
             return "rejected", "GI_RETEST_3_3"
 
+    # ДҮРЭМ: CSN (Crucible Swelling Number) - MNS ISO 501
+    # CSN утга 0-9 хооронд байх ёстой (0, 0.5, 1, 1.5, ..., 9)
+    if analysis_code == 'CSN':
+        # A. Хүчинтэй утга шалгах (0-9)
+        if value is not None:
+            if value < 0 or value > 9:
+                return "rejected", f"CSN утга хүчингүй ({value}). 0-9 байх ёстой."
+
+        # B. Parallel зөрүү шалгах (хэрэв raw_data-д байвал)
+        p1_csn = raw_data.get("p1_csn") or raw_data.get("p1", {}).get("csn")
+        p2_csn = raw_data.get("p2_csn") or raw_data.get("p2", {}).get("csn")
+
+        if p1_csn is not None and p2_csn is not None:
+            try:
+                p1_val = float(p1_csn)
+                p2_val = float(p2_csn)
+                csn_diff = abs(p1_val - p2_val)
+
+                # MNS ISO 501: 2 дээжийн зөрүү 1-ээс их байвал давтах
+                if csn_diff > 1.0:
+                    return "pending_review", f"CSN parallel зөрүү хэтэрсэн ({csn_diff} > 1.0)"
+
+                # Хэрэв зөрүү нь яг 1 бол анхааруулга
+                if csn_diff == 1.0:
+                    return "pending_review", f"CSN parallel зөрүү хязгаарт ({csn_diff} = 1.0)"
+
+            except (ValueError, TypeError):
+                pass  # Тоо биш бол алгасна
+
+        # C. Хэрэв CSN = 0 бол coking coal биш гэсэн үг (мэдээлэл)
+        if value == 0:
+            # Зөвшөөрнө гэхдээ тайлбар нэмнэ
+            pass  # approved болно, тайлбаргүй
+
     # ДҮРЭМ: CSR (Coke Strength after Reaction)
     if analysis_code == 'CSR' and value is not None:
         if value < 20.0:

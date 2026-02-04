@@ -7,7 +7,8 @@
   - /update_result_status/<int:result_id>/<new_status> - Үр дүнг батлах/буцаах
 """
 
-from flask import request, render_template, jsonify
+from flask import request, render_template, jsonify, current_app
+from markupsafe import escape
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from datetime import datetime
@@ -152,7 +153,9 @@ def register_routes(bp):
             return jsonify({"message": "Буруу статус"}), 400
 
         data = request.get_json(silent=True) or request.form.to_dict() or {}
-        rejection_comment = data.get("rejection_comment")
+        # ✅ XSS хамгаалалт
+        rejection_comment_raw = data.get("rejection_comment")
+        rejection_comment = str(escape(rejection_comment_raw)) if rejection_comment_raw else None
         rejection_category = data.get("rejection_category")
 
         res.status = new_status
@@ -190,7 +193,10 @@ def register_routes(bp):
             rejection_category=rejection_category,
             error_reason=rejection_category,
             reason=reason_text,
+            sample_code_snapshot=Sample.query.get(res.sample_id).sample_code if res.sample_id else None,
         )
+        # ✅ CRITICAL FIX: Hash тооцоолох (ISO 17025 audit integrity)
+        audit.data_hash = audit.compute_hash()
         db.session.add(audit)
         db.session.commit()
 
@@ -222,7 +228,9 @@ def register_routes(bp):
         data = request.get_json(silent=True) or {}
         result_ids = data.get("result_ids", [])
         new_status = data.get("status")
-        rejection_comment = data.get("rejection_comment")
+        # ✅ XSS хамгаалалт
+        rejection_comment_raw = data.get("rejection_comment")
+        rejection_comment = str(escape(rejection_comment_raw)) if rejection_comment_raw else None
         rejection_category = data.get("rejection_category")
 
         if not result_ids:
@@ -268,6 +276,7 @@ def register_routes(bp):
                         res.error_reason = None
 
                 # Audit log
+                sample = Sample.query.get(res.sample_id)
                 audit = AnalysisResultLog(
                     timestamp=now_local(),
                     user_id=current_user.id,
@@ -280,11 +289,15 @@ def register_routes(bp):
                     rejection_category=rejection_category if new_status == "rejected" else None,
                     error_reason=rejection_category if new_status == "rejected" else None,
                     reason=rejection_comment or ("Bulk Approved" if new_status == "approved" else "Bulk Rejected"),
+                    sample_code_snapshot=sample.sample_code if sample else None,
                 )
+                # ✅ CRITICAL FIX: Hash тооцоолох (ISO 17025 audit integrity)
+                audit.data_hash = audit.compute_hash()
                 db.session.add(audit)
                 success_count += 1
 
-            except (ValueError, Exception):
+            except Exception as e:
+                current_app.logger.warning(f"bulk_update_status: result_id={rid} алдаа: {e}")
                 failed_ids.append(rid)
                 continue
 

@@ -199,13 +199,13 @@ def bottles_constants_bulk_save():
     from flask import jsonify
 
     if not _is_senior_or_admin():
-        return jsonify({"ok": False, "message": "Эрх хүрэлцэхгүй"}), 403
+        return jsonify({"success": False, "error": "Эрх хүрэлцэхгүй"}), 403
 
     data = request.get_json(silent=True) or {}
     rows = data.get("rows", [])
 
     if not rows:
-        return jsonify({"ok": False, "message": "Хадгалах өгөгдөл алга"}), 400
+        return jsonify({"success": False, "error": "Хадгалах өгөгдөл алга"}), 400
 
     created = 0
     errors = []
@@ -270,7 +270,7 @@ def bottles_constants_bulk_save():
         created += 1
 
     db.session.commit()
-    return jsonify({"ok": True, "created": created, "errors": errors})
+    return jsonify({"success": True, "data": {"created": created, "errors": errors}})
 
 
 # ============================
@@ -381,7 +381,7 @@ def api_bottle_active(serial_no):
     # Зөвхөн ахлах/админ бус—химич ч үзэж болно (шинжилгээнд хэрэгтэй)
     bottle = Bottle.query.filter_by(serial_no=serial_no).first()
     if not bottle:
-        return {"ok": False, "error": "not_found"}, 404
+        return {"success": False, "error": "not_found"}, 404
     const = (
         BottleConstant.query
         .filter_by(bottle_id=bottle.id)
@@ -389,12 +389,14 @@ def api_bottle_active(serial_no):
         .first()
     )
     if not const:
-        return {"ok": False, "error": "no_constant"}, 404
+        return {"success": False, "error": "no_constant"}, 404
     return {
-        "ok": True,
-        "avg_value": float(const.avg_value),
-        "temperature_c": float(const.temperature_c or 20.0),
-        "effective_from": const.effective_from.isoformat() if const.effective_from else None,
+        "success": True,
+        "data": {
+            "avg_value": float(const.avg_value),
+            "temperature_c": float(const.temperature_c or 20.0),
+            "effective_from": const.effective_from.isoformat() if const.effective_from else None,
+        }
     }
 
 

@@ -5,7 +5,7 @@ import os
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
-from app.models import Sample, AnalysisResult, AnalysisType, Equipment
+from app.models import Sample, AnalysisResult, Equipment
 from sqlalchemy import or_
 from app.labs.water_lab.chemistry.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
@@ -13,6 +13,7 @@ from app.labs.water_lab.chemistry.constants import (
 )
 from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
+from app.utils.converters import to_float
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 water_bp = Blueprint(
@@ -1030,7 +1031,7 @@ def api_consumption_cell():
         kind = request.args.get('kind', 'samples')
         code = request.args.get('code', '')
     except (ValueError, TypeError):
-        return jsonify({'ok': False, 'items': []})
+        return jsonify({'success': False, 'data': {'items': []}})
 
     _WATER_LAB_TYPES = ['water', 'water & micro']
     active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
@@ -1066,7 +1067,7 @@ def api_consumption_cell():
         }
         for r in rows
     ]
-    return jsonify({'ok': True, 'items': items})
+    return jsonify({'success': True, 'data': {'items': items}})
 
 
 # ======================================================================
@@ -1179,30 +1180,9 @@ def water_monthly_plan():
     )
 
 
-@water_bp.route('/api/save_monthly_plan', methods=['POST'])
-@login_required
-@lab_required('water')
-def api_save_monthly_plan():
-    """Monthly plan хадгалах."""
-    if current_user.role not in ('senior', 'admin'):
-        return jsonify({'success': False, 'error': 'Permission denied'})
-    # TODO: Implement plan saving
-    return jsonify({'success': True})
-
-
-@water_bp.route('/api/save_staff', methods=['POST'])
-@login_required
-@lab_required('water')
-def api_save_staff():
-    """Staff count хадгалах."""
-    if current_user.role not in ('senior', 'admin'):
-        return jsonify({'success': False, 'error': 'Permission denied'})
-    # TODO: Implement staff saving
-    return jsonify({'success': True})
-
-
 # ============================================================
 # УУСМАЛ БЭЛДЭХ ДЭВТЭР (Solution Journal)
+# Note: api_save_monthly_plan, api_save_staff → report_routes.py дээр бүрэн хэрэгжүүлсэн
 # ============================================================
 
 @water_bp.route('/solution_journal')
@@ -1211,7 +1191,7 @@ def api_save_staff():
 def solution_journal():
     """Уусмал бэлдэх дэвтэр - жагсаалт."""
     from app.models import SolutionPreparation
-    from datetime import date, timedelta
+    from datetime import date, datetime, timedelta
 
     # Шүүлтүүр
     start_date = request.args.get('start_date')
@@ -1221,12 +1201,10 @@ def solution_journal():
     query = SolutionPreparation.query
 
     if start_date:
-        from datetime import datetime
         start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
         query = query.filter(SolutionPreparation.prepared_date >= start_dt)
 
     if end_date:
-        from datetime import datetime
         end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
         query = query.filter(SolutionPreparation.prepared_date <= end_dt)
 
@@ -1278,26 +1256,21 @@ def add_solution():
                 ).date()
 
             # Float талбарууд
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
-            chemical_used_mg = parse_float(request.form.get('chemical_used_mg'))
+            chemical_used_mg = to_float(request.form.get('chemical_used_mg'))
             chemical_id = request.form.get('chemical_id')
 
             solution = SolutionPreparation(
                 solution_name=request.form.get('solution_name'),
-                concentration=parse_float(request.form.get('concentration')),
+                concentration=to_float(request.form.get('concentration')),
                 concentration_unit=request.form.get('concentration_unit', 'mg/L'),
-                volume_ml=parse_float(request.form.get('volume_ml')),
+                volume_ml=to_float(request.form.get('volume_ml')),
                 chemical_used_mg=chemical_used_mg,
                 prepared_date=prepared_date,
                 expiry_date=expiry_date,
-                v1=parse_float(request.form.get('v1')),
-                v2=parse_float(request.form.get('v2')),
-                v3=parse_float(request.form.get('v3')),
-                titer_coefficient=parse_float(request.form.get('titer_coefficient')),
+                v1=to_float(request.form.get('v1')),
+                v2=to_float(request.form.get('v2')),
+                v3=to_float(request.form.get('v3')),
+                titer_coefficient=to_float(request.form.get('titer_coefficient')),
                 preparation_notes=request.form.get('preparation_notes'),
                 prepared_by_id=current_user.id,
             )
@@ -1348,7 +1321,7 @@ def add_solution():
                     )
                     db.session.add(usage)
 
-                    # ChemicalLog аудит бүртгэл
+                    # ChemicalLog аудит бүртгэл (with hash - ISO 17025)
                     log = ChemicalLog(
                         chemical_id=chemical.id,
                         user_id=current_user.id,
@@ -1358,6 +1331,7 @@ def add_solution():
                         quantity_after=new_quantity,
                         details=f"Уусмал бэлдэхэд зарцуулав: {solution.solution_name} ({chemical_used_mg} мг)"
                     )
+                    log.data_hash = log.compute_hash()
                     db.session.add(log)
 
                     # Химийн бодисын төлөв шинэчлэх
@@ -1413,20 +1387,15 @@ def edit_solution(id):
                 solution.expiry_date = None
 
             # Float талбарууд
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
             solution.solution_name = request.form.get('solution_name')
-            solution.concentration = parse_float(request.form.get('concentration'))
+            solution.concentration = to_float(request.form.get('concentration'))
             solution.concentration_unit = request.form.get('concentration_unit', 'mg/L')
-            solution.volume_ml = parse_float(request.form.get('volume_ml'))
-            solution.chemical_used_mg = parse_float(request.form.get('chemical_used_mg'))
-            solution.v1 = parse_float(request.form.get('v1'))
-            solution.v2 = parse_float(request.form.get('v2'))
-            solution.v3 = parse_float(request.form.get('v3'))
-            solution.titer_coefficient = parse_float(request.form.get('titer_coefficient'))
+            solution.volume_ml = to_float(request.form.get('volume_ml'))
+            solution.chemical_used_mg = to_float(request.form.get('chemical_used_mg'))
+            solution.v1 = to_float(request.form.get('v1'))
+            solution.v2 = to_float(request.form.get('v2'))
+            solution.v3 = to_float(request.form.get('v3'))
+            solution.titer_coefficient = to_float(request.form.get('titer_coefficient'))
             solution.preparation_notes = request.form.get('preparation_notes')
             solution.status = request.form.get('status', 'active')
 
@@ -1628,15 +1597,10 @@ def prepare_from_recipe(id):
             return redirect(url_for('water.recipe_detail', id=id))
 
         # Титрийн утгууд (optional)
-        def parse_float(val):
-            if val and val.strip():
-                return float(val)
-            return None
-
-        v1 = parse_float(request.form.get('v1'))
-        v2 = parse_float(request.form.get('v2'))
-        v3 = parse_float(request.form.get('v3'))
-        titer_coefficient = parse_float(request.form.get('titer_coefficient'))
+        v1 = to_float(request.form.get('v1'))
+        v2 = to_float(request.form.get('v2'))
+        v3 = to_float(request.form.get('v3'))
+        titer_coefficient = to_float(request.form.get('titer_coefficient'))
 
         # Хугацаа
         expiry_date = None
@@ -1690,7 +1654,7 @@ def prepare_from_recipe(id):
                 )
                 db.session.add(usage)
 
-                # ChemicalLog аудит
+                # ChemicalLog аудит (with hash - ISO 17025)
                 log = ChemicalLog(
                     chemical_id=chemical.id,
                     user_id=current_user.id,
@@ -1700,6 +1664,7 @@ def prepare_from_recipe(id):
                     quantity_after=new_quantity,
                     details=f"Уусмал найруулахад зарцуулав: {recipe.name} ({target_volume}мл)"
                 )
+                log.data_hash = log.compute_hash()
                 db.session.add(log)
 
                 # Төлөв шинэчлэх
@@ -1779,16 +1744,11 @@ def add_recipe():
 
     if request.method == 'POST':
         try:
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
             recipe = SolutionRecipe(
                 name=request.form.get('name'),
-                concentration=parse_float(request.form.get('concentration')),
+                concentration=to_float(request.form.get('concentration')),
                 concentration_unit=request.form.get('concentration_unit', 'N'),
-                standard_volume_ml=parse_float(request.form.get('standard_volume_ml')) or 1000,
+                standard_volume_ml=to_float(request.form.get('standard_volume_ml')) or 1000,
                 preparation_notes=request.form.get('preparation_notes'),
                 lab_type='water',
                 category=request.form.get('category'),
@@ -1846,15 +1806,10 @@ def edit_recipe(id):
 
     if request.method == 'POST':
         try:
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
             recipe.name = request.form.get('name')
-            recipe.concentration = parse_float(request.form.get('concentration'))
+            recipe.concentration = to_float(request.form.get('concentration'))
             recipe.concentration_unit = request.form.get('concentration_unit', 'N')
-            recipe.standard_volume_ml = parse_float(request.form.get('standard_volume_ml')) or 1000
+            recipe.standard_volume_ml = to_float(request.form.get('standard_volume_ml')) or 1000
             recipe.preparation_notes = request.form.get('preparation_notes')
             recipe.category = request.form.get('category')
 

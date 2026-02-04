@@ -85,8 +85,9 @@
          return null;
       }
       const js = await resp.json();
-      if (js && js.ok && typeof js.avg_value === 'number') {
-        BOTTLE_CACHE[key] = { avg_value: js.avg_value, temperature_c: js.temperature_c };
+      const d = js.data || js;
+      if (js && js.success && typeof d.avg_value === 'number') {
+        BOTTLE_CACHE[key] = { avg_value: d.avg_value, temperature_c: d.temperature_c };
         return BOTTLE_CACHE[key];
       }
     } catch (e) {

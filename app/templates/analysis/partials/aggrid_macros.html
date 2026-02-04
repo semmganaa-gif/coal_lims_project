@@ -255,3 +255,195 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   };
 </script>
 {% endmacro %}
+
+{# ============================================ #}
+{# COMMON COLUMN DEFINITIONS #}
+{# ============================================ #}
+
+{# Index column with row span #}
+{% macro col_index(width=50, pinned='left') %}
+{
+  headerName: '№',
+  field: 'index',
+  width: {{ width }},
+  pinned: '{{ pinned }}',
+  rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+  cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+  cellStyle: {
+    textAlign: 'center',
+    color: '#6c757d',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  valueFormatter: p => p.data.parallel === 1 ? p.value : ''
+}
+{% endmacro %}
+
+{# Sample code column with reject badge #}
+{% macro col_sample_code(width=300, pinned='left') %}
+{
+  headerName: 'Дээжийн нэр',
+  field: 'sample_code',
+  width: {{ width }},
+  pinned: '{{ pinned }}',
+  rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+  cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+  cellStyle: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    lineHeight: '1.2'
+  },
+  cellRenderer: p => {
+    if (p.data.parallel !== 1) return '';
+    let h = `<div class="sample-name">${p.value}</div>`;
+    const rej = rejectedInfo[p.data.sample_id];
+    if (rej) {
+      h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
+        errorLabels[rej.reason_code] || rej.reason
+      }</div>`;
+    }
+    return h;
+  }
+}
+{% endmacro %}
+
+{# Tolerance column #}
+{% macro col_tolerance(width=90) %}
+{
+  headerName: 'Тохирц',
+  field: 'tolerance',
+  width: {{ width }},
+  rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+  cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+  valueFormatter: p => {
+    if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+      return parseFloat(p.value).toFixed(2);
+    }
+    return '';
+  },
+  cellStyle: p => {
+    if (!p.data.is_saved) {
+      return { color: '#ccc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+    }
+    return {
+      color: p.data.t_exceeded ? '#dc3545' : '#6c757d',
+      fontWeight: 'bold',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    };
+  }
+}
+{% endmacro %}
+
+{# Average column #}
+{% macro col_average(width=90) %}
+{
+  headerName: 'Дундаж',
+  field: 'average',
+  width: {{ width }},
+  rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+  cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+  valueFormatter: p => {
+    if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+      return parseFloat(p.value).toFixed(2);
+    }
+    return '';
+  },
+  cellStyle: p => ({
+    color: p.data.is_saved ? '#198754' : '#ccc',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  })
+}
+{% endmacro %}
+
+{# Action column (remove button) #}
+{% macro col_actions(width=90, pinned='right') %}
+{
+  headerName: 'Үйлдэл',
+  width: {{ width }},
+  pinned: '{{ pinned }}',
+  rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+  cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+  cellRenderer: p => {
+    if (p.data.parallel !== 1) return '';
+    if (p.data.is_saved) {
+      return '<span class="text-muted small">Хадгалагдсан</span>';
+    }
+    return `
+      <button type="button"
+              class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+              data-sample-id="${p.data.sample_id}"
+              title="Дээж хасах">
+        <i class="bi bi-x"></i>
+      </button>
+    `;
+  },
+  cellStyle: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+}
+{% endmacro %}
+
+{# ============================================ #}
+{# DRAFT MANAGEMENT #}
+{# ============================================ #}
+{% macro draft_manager_init(analysis_code) %}
+let draftMgr;
+if (typeof LIMSDraftManager !== 'undefined') {
+  draftMgr = new LIMSDraftManager('{{ analysis_code }}');
+  console.log('✅ Draft Manager initialized for {{ analysis_code }}');
+} else {
+  console.warn('⚠️ LIMSDraftManager not loaded, using fallback');
+  draftMgr = {
+    save: (data) => localStorage.setItem('draft_{{ analysis_code }}', JSON.stringify(data)),
+    restore: () => JSON.parse(localStorage.getItem('draft_{{ analysis_code }}') || '{}'),
+    purge: (ids) => {
+      if (!ids || ids.length === 0) {
+        localStorage.removeItem('draft_{{ analysis_code }}');
+      }
+    }
+  };
+}
+{% endmacro %}
+
+{# ============================================ #}
+{# SAMPLE ID PERSISTENCE #}
+{# ============================================ #}
+{% macro sample_id_persistence(analysis_code) %}
+const STORAGE_KEY = `worksheet_{{ analysis_code }}_sample_ids`;
+const urlParams = new URLSearchParams(window.location.search);
+const urlIds = urlParams.get('sample_ids');
+
+if (urlIds) {
+  try {
+    localStorage.setItem(STORAGE_KEY, urlIds);
+    console.log('✅ Sample IDs saved to localStorage:', urlIds);
+  } catch(e) {
+    console.warn('localStorage save failed:', e);
+  }
+} else {
+  try {
+    const savedIds = localStorage.getItem(STORAGE_KEY);
+    if (savedIds) {
+      console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+      const url = new URL(window.location.href);
+      url.searchParams.set('sample_ids', savedIds);
+      window.history.replaceState({}, '', url.toString());
+      console.warn('⚠️ Reloading page to fetch samples from backend...');
+      window.location.reload();
+      return;
+    }
+  } catch(e) {
+    console.warn('localStorage restore failed:', e);
+  }
+}
+{% endmacro %}

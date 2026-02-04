@@ -73,6 +73,9 @@ def log_audit(
         user_agent=user_agent
     )
 
+    # ISO 17025: Audit log integrity hash
+    entry.data_hash = entry.compute_hash()
+
     db.session.add(entry)
 
     try:

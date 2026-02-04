@@ -29,8 +29,48 @@ from math import isfinite
 # Security logger
 security_logger = logging.getLogger('security')
 
-# Tolerance for float comparison (0.01%)
-EPSILON = 0.01
+# Absolute difference threshold for calculation mismatch detection
+# Used together with percent threshold (1%) to filter out rounding differences
+CALC_MISMATCH_ABS_THRESHOLD = 0.01
+
+# ============================================================================
+# UNIT CONVERSION CONSTANTS (CV/Calorific Value)
+# ============================================================================
+# cal/g (calorie per gram) - Лабораторийн анхны тооцоолол
+# kcal/kg = cal/g (тэнцүү, 1 kcal/kg = 1 cal/g)
+# MJ/kg = cal/g * 4.1868 / 1000 = cal/g * 0.0041868
+#
+# CM Standard: kcal/kg (= cal/g)
+# GBW Standard: MJ/kg
+# ============================================================================
+J_PER_CAL = 4.1868  # 1 calorie = 4.1868 joules
+MJ_PER_KCAL = 0.0041868  # 1 kcal = 0.0041868 MJ
+
+
+def cv_cal_to_mj(cv_cal_g: float) -> float:
+    """
+    Convert CV from cal/g (= kcal/kg) to MJ/kg.
+
+    Args:
+        cv_cal_g: Calorific value in cal/g
+
+    Returns:
+        Calorific value in MJ/kg
+    """
+    return cv_cal_g * MJ_PER_KCAL
+
+
+def cv_mj_to_cal(cv_mj_kg: float) -> float:
+    """
+    Convert CV from MJ/kg to cal/g (= kcal/kg).
+
+    Args:
+        cv_mj_kg: Calorific value in MJ/kg
+
+    Returns:
+        Calorific value in cal/g
+    """
+    return cv_mj_kg / MJ_PER_KCAL
 
 
 def _safe_float(value: Any) -> Optional[float]:
@@ -378,7 +418,7 @@ def calc_chlorine_cl(raw_data: Dict) -> Optional[float]:
     return sum(results) / len(results)
 
 
-def calc_calorific_value_cv(raw_data: Dict) -> Optional[float]:
+def calc_calorific_value_cv(raw_data: Dict, unit: str = "cal/g") -> Optional[float]:
     """
     Илчлэг (CV) тооцоолол - Bomb Calorimeter Method
 
@@ -397,9 +437,15 @@ def calc_calorific_value_cv(raw_data: Dict) -> Optional[float]:
             "batch": {"E": ..., "q1": ..., "q2": ...},
             "s_used": ... (sulfur value)
         }
+        unit: Output unit - "cal/g" (default, = kcal/kg), "MJ/kg", or "J/g"
 
     Returns:
-        Average CV in cal/g or None
+        Average CV in specified unit or None
+
+    Unit Notes:
+        - cal/g = kcal/kg (CM Standard)
+        - MJ/kg = cal/g * 0.0041868 (GBW Standard)
+        - J/g = cal/g * 4.1868
     """
     # Constants
     J_PER_CAL = 4.1868
@@ -479,7 +525,15 @@ def calc_calorific_value_cv(raw_data: Dict) -> Optional[float]:
     if not results:
         return None
 
-    return sum(results) / len(results)
+    avg_cal_g = sum(results) / len(results)
+
+    # Unit conversion
+    if unit == "MJ/kg":
+        return cv_cal_to_mj(avg_cal_g)
+    elif unit == "J/g":
+        return avg_cal_g * J_PER_CAL
+    else:  # Default: cal/g = kcal/kg
+        return avg_cal_g
 
 
 def calc_gray_king_gi(raw_data: Dict) -> Optional[float]:
@@ -914,7 +968,7 @@ def verify_and_recalculate(
         diff = abs(server_result - client_final_result)
         percent_diff = (diff / max(abs(server_result), 0.0001)) * 100
 
-        if diff > EPSILON and percent_diff > 1.0:  # More than 1% difference
+        if diff > CALC_MISMATCH_ABS_THRESHOLD and percent_diff > 1.0:  # More than 1% difference
             warning_msg = (
                 f"⚠️ CALCULATION MISMATCH: {analysis_code} - "
                 f"Client={client_final_result:.4f}, Server={server_result:.4f}, "

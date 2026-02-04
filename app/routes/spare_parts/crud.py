@@ -10,6 +10,7 @@ from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategory, Equipment
 from datetime import datetime, date
 from app.routes.spare_parts import spare_parts_bp, UNITS, STATUS_TYPES
+from app.utils.converters import to_float
 
 
 # Зураг upload тохиргоо
@@ -53,7 +54,7 @@ def delete_image(image_path):
 
 def log_spare_part_action(spare_part, action, quantity_change=None,
                           quantity_before=None, quantity_after=None, details=None):
-    """Сэлбэг хэрэгслийн үйлдлийг бүртгэх (audit log)."""
+    """Сэлбэг хэрэгслийн үйлдлийг бүртгэх (audit log with hash - ISO 17025)."""
     log = SparePartLog(
         spare_part_id=spare_part.id,
         user_id=current_user.id,
@@ -63,6 +64,7 @@ def log_spare_part_action(spare_part, action, quantity_change=None,
         quantity_after=quantity_after,
         details=details
     )
+    log.data_hash = log.compute_hash()
     db.session.add(log)
 
 
@@ -299,11 +301,6 @@ def add_spare_part():
 
     if request.method == 'POST':
         try:
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
             def parse_int(val):
                 if val and val.strip():
                     return int(val)
@@ -316,10 +313,10 @@ def add_spare_part():
                 description=request.form.get('description'),
                 manufacturer=request.form.get('manufacturer'),
                 supplier=request.form.get('supplier'),
-                quantity=parse_float(request.form.get('quantity')) or 0,
+                quantity=to_float(request.form.get('quantity')) or 0,
                 unit=request.form.get('unit', 'pcs'),
-                reorder_level=parse_float(request.form.get('reorder_level')) or 1,
-                unit_price=parse_float(request.form.get('unit_price')),
+                reorder_level=to_float(request.form.get('reorder_level')) or 1,
+                unit_price=to_float(request.form.get('unit_price')),
                 storage_location=request.form.get('storage_location'),
                 compatible_equipment=request.form.get('compatible_equipment'),
                 usage_life_months=parse_int(request.form.get('usage_life_months')),
@@ -389,11 +386,6 @@ def edit_spare_part(id):
 
     if request.method == 'POST':
         try:
-            def parse_float(val):
-                if val and val.strip():
-                    return float(val)
-                return None
-
             def parse_int(val):
                 if val and val.strip():
                     return int(val)
@@ -407,10 +399,10 @@ def edit_spare_part(id):
             spare_part.description = request.form.get('description')
             spare_part.manufacturer = request.form.get('manufacturer')
             spare_part.supplier = request.form.get('supplier')
-            spare_part.quantity = parse_float(request.form.get('quantity')) or 0
+            spare_part.quantity = to_float(request.form.get('quantity')) or 0
             spare_part.unit = request.form.get('unit', 'pcs')
-            spare_part.reorder_level = parse_float(request.form.get('reorder_level')) or 1
-            spare_part.unit_price = parse_float(request.form.get('unit_price'))
+            spare_part.reorder_level = to_float(request.form.get('reorder_level')) or 1
+            spare_part.unit_price = to_float(request.form.get('unit_price'))
             spare_part.storage_location = request.form.get('storage_location')
             spare_part.compatible_equipment = request.form.get('compatible_equipment')
             spare_part.usage_life_months = parse_int(request.form.get('usage_life_months'))

@@ -49,7 +49,7 @@ def waste_list():
     lab = request.args.get("lab", "all")
     year = request.args.get("year", datetime.now().year, type=int)
 
-    query = ChemicalWaste.query.filter(ChemicalWaste.is_active == True)
+    query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
 
     if lab and lab != "all":
         query = query.filter(
@@ -255,7 +255,7 @@ def waste_report():
     year = request.args.get("year", datetime.now().year, type=int)
     lab = request.args.get("lab", "all")
 
-    query = ChemicalWaste.query.filter(ChemicalWaste.is_active == True)
+    query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
     if lab and lab != "all":
         query = query.filter(
             (ChemicalWaste.lab_type == lab) | (ChemicalWaste.lab_type == 'all')

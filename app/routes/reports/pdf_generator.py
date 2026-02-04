@@ -3,9 +3,17 @@
 """PDF тайлан үүсгэгч."""
 
 import os
-from flask import render_template, current_app, url_for, request
-from xhtml2pdf import pisa
 from io import BytesIO
+
+from flask import render_template, current_app, url_for, request
+
+# Optional import - xhtml2pdf дутуу байж болно
+try:
+    from xhtml2pdf import pisa
+    XHTML2PDF_AVAILABLE = True
+except ImportError:
+    pisa = None
+    XHTML2PDF_AVAILABLE = False
 from datetime import datetime
 from app import db
 from app.models import LabReport, Sample, AnalysisResult, ReportSignature
@@ -35,6 +43,9 @@ def register_fonts():
 
 def create_pdf_from_html(html_content, output_path):
     """HTML-ээс PDF үүсгэх."""
+    if not XHTML2PDF_AVAILABLE:
+        raise RuntimeError("xhtml2pdf модуль суулгаагүй байна. pip install xhtml2pdf")
+
     register_fonts()
 
     with open(output_path, "wb") as pdf_file:

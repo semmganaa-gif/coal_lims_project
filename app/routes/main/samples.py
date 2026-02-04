@@ -147,8 +147,8 @@ def register_routes(bp):
         expired_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.retention_date < today,
-            Sample.disposal_date is None
-        ).order_by(Sample.retention_date.asc()).all()
+            Sample.disposal_date.is_(None)
+        ).order_by(Sample.retention_date.asc()).limit(200).all()
 
         # Удахгүй дуусах дээжүүд (retention_date <= today + 30 days)
         warning_date = today + timedelta(days=warning_days)
@@ -156,8 +156,8 @@ def register_routes(bp):
             Sample.lab_type == 'coal',
             Sample.retention_date >= today,
             Sample.retention_date <= warning_date,
-            Sample.disposal_date is None
-        ).order_by(Sample.retention_date.asc()).all()
+            Sample.disposal_date.is_(None)
+        ).order_by(Sample.retention_date.asc()).limit(200).all()
 
         # Устгагдсан дээжүүд (сүүлийн 90 хоног)
         disposed_since = today - timedelta(days=90)
@@ -180,7 +180,7 @@ def register_routes(bp):
             Sample.return_sample.is_(True),
             Sample.disposal_date.is_(None),
             Sample.status == 'completed'
-        ).order_by(Sample.received_date.desc()).all()
+        ).order_by(Sample.received_date.desc()).limit(100).all()
 
         return render_template(
             "sample_disposal.html",
@@ -221,7 +221,7 @@ def register_routes(bp):
         for sid in sample_ids:
             try:
                 sample = Sample.query.get(int(sid))
-                if sample and Sample.disposal_date is None:
+                if sample and sample.disposal_date is None:
                     sample.disposal_date = today
                     sample.disposal_method = disposal_method
 
@@ -235,7 +235,8 @@ def register_routes(bp):
                         }
                     )
                     disposed_count += 1
-            except (ValueError, Exception):
+            except Exception as e:
+                current_app.logger.warning(f"dispose_samples: sample_id={sid} алдаа: {e}")
                 continue
 
         if disposed_count > 0:
@@ -308,10 +309,11 @@ def register_routes(bp):
             flash("Хугацаа сонгоно уу.", "warning")
             return redirect(url_for("main.sample_disposal"))
 
-        # Хугацаагүй бүх дээжийг олох
+        # Хугацаагүй нүүрсний дээжийг олох (зөвхөн coal lab)
         samples = Sample.query.filter(
-            Sample.retention_date is None,
-            Sample.disposal_date is None
+            Sample.lab_type == 'coal',
+            Sample.retention_date.is_(None),
+            Sample.disposal_date.is_(None)
         ).all()
 
         if not samples:

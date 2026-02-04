@@ -752,7 +752,7 @@ def api_consumption_cell():
         if not (1 <= month <= 12):
             raise ValueError
     except Exception:
-        return jsonify({'ok': False, 'message': 'параметр буруу'}), 400
+        return jsonify({'success': False, 'error': 'параметр буруу'}), 400
 
     date_col = AnalysisResult.created_at
     q = (
@@ -796,7 +796,7 @@ def api_consumption_cell():
             'analysis_date': r.dt.isoformat() if r.dt else '',
         } for r in results]
 
-    return jsonify({'ok': True, 'items': items})
+    return jsonify({'success': True, 'data': {'items': items}})
 
 
 # ======================================================================

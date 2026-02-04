@@ -18,6 +18,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy import or_, not_
+from markupsafe import escape
 import json
 
 from app import db, limiter
@@ -316,6 +317,14 @@ def register_routes(bp):
                     equipment_id_raw = item.get("equipment_id")
                     equipment_id, _ = validate_equipment_id(equipment_id_raw, allow_none=True)
 
+                    # ✅ Equipment exists check
+                    if equipment_id is not None:
+                        from app.models import Equipment
+                        equipment = db.session.get(Equipment, equipment_id)
+                        if not equipment:
+                            current_app.logger.warning(f"Equipment ID {equipment_id} not found, ignoring")
+                            equipment_id = None  # Reset to None if not found
+
                     sample = db.session.get(Sample, sample_id)
                     if not sample:
                         raise ValueError(f"Sample {sample_id} not found")
@@ -342,9 +351,10 @@ def register_routes(bp):
 
                     if analysis_code == "CSN" and diff is None:
                         diff = 0.0
-                    # Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
-                    EPSILON = 1e-6
-                    t_exceeded = (diff is not None) and ((abs(diff) - (effective_limit or 0)) > EPSILON)
+                    # Floating point comparison tolerance for tolerance check
+                    # Small epsilon to handle rounding errors (1e-6 is ~0.0001%)
+                    FLOAT_TOLERANCE = 1e-6
+                    t_exceeded = (diff is not None) and ((abs(diff) - (effective_limit or 0)) > FLOAT_TOLERANCE)
 
                     raw_norm.update({
                         "t_band": band,
@@ -517,7 +527,10 @@ def register_routes(bp):
 
                     action = ""
                     # UI-аас ирсэн коммент эсвэл автомат статус тайлбар
-                    reason = status_reason if status_reason else (item.get("rejection_comment") or "Химич хадгалсан")
+                    # ✅ XSS хамгаалалт: Хэрэглэгчийн оруулсан текстийг escape хийх
+                    user_comment = item.get("rejection_comment")
+                    safe_comment = str(escape(user_comment)) if user_comment else None
+                    reason = status_reason if status_reason else (safe_comment or "Химич хадгалсан")
 
                     # Автомат KPI алдаа оноох (QC Failure)
                     auto_error_reason = None
@@ -710,7 +723,9 @@ def register_routes(bp):
         action_type = data.get("action_type")
         rejection_category = data.get("rejection_category")
         rejection_subcategory = data.get("rejection_subcategory")
-        rejection_comment = data.get("rejection_comment")
+        # ✅ XSS хамгаалалт: Хэрэглэгчийн оруулсан текстийг escape хийх
+        rejection_comment_raw = data.get("rejection_comment")
+        rejection_comment = str(escape(rejection_comment_raw)) if rejection_comment_raw else None
         error_reason = data.get("error_reason") or None
 
         res.status = new_status

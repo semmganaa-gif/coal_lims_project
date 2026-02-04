@@ -22,6 +22,7 @@ from flask_login import login_required
 from datetime import datetime, timedelta
 import json
 
+from sqlalchemy.orm import joinedload
 from app import db, limiter
 from app.models import Sample, AnalysisResult, AnalysisResultLog
 from app.utils.datetime import now_local
@@ -102,16 +103,9 @@ def register_routes(bp):
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.sample_type.ilike(f"%{safe_val}%"))
             elif idx == 5:
-                # ✅ ДЭЭЖНИЙ ТӨЛӨВ (хуурай / чийгтэй / шингэн)
-                cond_col = None
-                if hasattr(Sample, "sample_condition"):
-                    cond_col = Sample.sample_condition
-                elif hasattr(Sample, "sample_state"):
-                    cond_col = Sample.sample_state
-                else:
-                    cond_col = Sample.status  # fallback
+                # Дээжний төлөв (хуурай / чийгтэй / шингэн)
                 safe_val = escape_like_pattern(val)
-                q = q.filter(cond_col.ilike(f"%{safe_val}%"))
+                q = q.filter(Sample.sample_condition.ilike(f"%{safe_val}%"))
             elif idx == 6:
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.delivered_by.ilike(f"%{safe_val}%"))
@@ -302,12 +296,15 @@ def register_routes(bp):
     async def sample_history(sample_id):
         sample = Sample.query.get_or_404(sample_id)
         results = (
-            AnalysisResult.query.filter_by(sample_id=sample_id)
+            AnalysisResult.query
+            .options(joinedload(AnalysisResult.user))
+            .filter_by(sample_id=sample_id)
             .order_by(AnalysisResult.created_at.desc())
             .all()
         )
         logs = (
-            AnalysisResultLog.query.filter_by(sample_id=sample_id)
+            AnalysisResultLog.query
+            .filter_by(sample_id=sample_id)
             .order_by(AnalysisResultLog.timestamp.desc())
             .all()
         )

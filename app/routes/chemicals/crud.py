@@ -9,7 +9,7 @@ from flask import (
 from flask_login import login_required, current_user
 from app import db
 from app.models import Chemical, ChemicalUsage, ChemicalLog
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from app.utils.datetime import now_local
 from sqlalchemy.exc import IntegrityError
 
@@ -18,7 +18,7 @@ from app.routes.chemicals import chemicals_bp, LAB_TYPES, CATEGORIES, UNITS, STA
 
 def log_chemical_action(chemical, action, quantity_change=None,
                         quantity_before=None, quantity_after=None, details=None):
-    """Химийн бодисын үйлдлийг бүртгэх (audit log)."""
+    """Химийн бодисын үйлдлийг бүртгэх (audit log with hash - ISO 17025)."""
     log = ChemicalLog(
         chemical_id=chemical.id,
         user_id=current_user.id,
@@ -28,6 +28,7 @@ def log_chemical_action(chemical, action, quantity_change=None,
         quantity_after=quantity_after,
         details=details
     )
+    log.data_hash = log.compute_hash()
     db.session.add(log)
 
 
@@ -63,7 +64,6 @@ def chemical_list():
 
     # Хугацаа дуусах, бага нөөцтэй
     if view == "expiring":
-        from datetime import timedelta
         warning_date = date.today() + timedelta(days=30)
         query = query.filter(
             Chemical.expiry_date <= warning_date,

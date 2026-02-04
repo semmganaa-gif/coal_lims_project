@@ -425,7 +425,7 @@ def consumption_cell():
         if not (1 <= month <= 12):
             raise ValueError
     except Exception:
-        return jsonify({"ok": False, "message": "параметр буруу"}), 400
+        return jsonify({"success": False, "error": "параметр буруу"}), 400
 
     date_col = _pick_date_col()
 
@@ -499,7 +499,7 @@ def consumption_cell():
                 }
             )
 
-    return jsonify({"ok": True, "items": items})
+    return jsonify({"success": True, "data": {"items": items}})
 
 
 # ======================================================================

@@ -182,8 +182,8 @@
         body: JSON.stringify({ items, mark_ready: !!$markReady.checked })
       });
       const data = await res.json();
-      if(!res.ok || data.ok === false){
-        toast(data.message || 'Хадгалах үед алдаа гарлаа.', 'danger');
+      if(!res.ok || data.success === false){
+        toast(data.message || data.error || 'Хадгалах үед алдаа гарлаа.', 'danger');
         return;
       }
       toast(data.message || 'Амжилттай хадгаллаа.', 'success');
@@ -212,7 +212,7 @@
           body: JSON.stringify({ sample_id:Number(id), weight:w })
         });
         const js = await res.json();
-        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
         toast(js.message || 'Жин шинэчлэгдлээ.', 'success');
       }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
       return;
@@ -226,7 +226,7 @@
           body: JSON.stringify({ sample_ids:[Number(id)] })
         });
         const js = await res.json();
-        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
         toast(js.message || 'OK', 'success');
         fetchEligible();
       }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
@@ -241,7 +241,7 @@
           body: JSON.stringify({ sample_id:Number(id) })
         });
         const js = await res.json();
-        if(!res.ok || js.ok === false){ toast(js.message || 'Алдаа.', 'danger'); return; }
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
         toast(js.message || 'Дээж устлаа.', 'success');
         fetchEligible();
       }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }

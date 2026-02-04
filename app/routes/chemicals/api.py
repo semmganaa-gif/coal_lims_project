@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 """Химийн бодисын API endpoints."""
 
+from datetime import datetime, date, timedelta
+
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
-from app import db
-from app.models import Chemical, ChemicalUsage, ChemicalLog
-from datetime import datetime, date, timedelta
-from app.utils.datetime import now_local
 from sqlalchemy import func
 
+from app import db
+from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.routes.chemicals import chemicals_bp
+from app.routes.api.helpers import api_success, api_error
+from app.utils.security import escape_like_pattern
 
 
 # -------------------------------------------------
@@ -43,7 +45,8 @@ def api_chemical_list():
     if not include_disposed:
         query = query.filter(Chemical.status != 'disposed')
 
-    chemicals = query.order_by(Chemical.name.asc()).all()
+    # ✅ Limit нэмсэн
+    chemicals = query.order_by(Chemical.name.asc()).limit(2000).all()
     today = date.today()
     warning_date = today + timedelta(days=30)
 
@@ -171,17 +174,14 @@ def api_consume():
         sample_id = data.get("sample_id")
 
         if not chemical_id or quantity_used <= 0:
-            return jsonify({"status": "error", "message": "Invalid data"}), 400
+            return api_error("Invalid data")
 
         chemical = Chemical.query.get(chemical_id)
         if not chemical:
-            return jsonify({"status": "error", "message": "Chemical not found"}), 404
+            return api_error("Chemical not found", status_code=404)
 
         if quantity_used > chemical.quantity:
-            return jsonify({
-                "status": "error",
-                "message": f"Insufficient stock. Available: {chemical.quantity} {chemical.unit}"
-            }), 400
+            return api_error(f"Insufficient stock. Available: {chemical.quantity} {chemical.unit}")
 
         old_quantity = chemical.quantity
         chemical.quantity -= quantity_used
@@ -212,7 +212,7 @@ def api_consume():
 
         chemical.update_status()
 
-        # Аудит лог
+        # Аудит лог (with hash - ISO 17025)
         log = ChemicalLog(
             chemical_id=chemical.id,
             user_id=current_user.id,
@@ -222,21 +222,20 @@ def api_consume():
             quantity_after=new_quantity,
             details=purpose
         )
+        log.data_hash = log.compute_hash()
         db.session.add(log)
 
         db.session.commit()
 
-        return jsonify({
-            "status": "success",
-            "message": f"Consumed {quantity_used} {chemical.unit}",
+        return api_success({
             "new_quantity": new_quantity,
             "chemical_status": chemical.status
-        })
+        }, f"Consumed {quantity_used} {chemical.unit}")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"API consume error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return api_error(str(e), status_code=500)
 
 
 # -------------------------------------------------
@@ -254,11 +253,13 @@ def api_search():
     if len(q) < 2:
         return jsonify([])
 
+    # ✅ SQL Injection хамгаалалт
+    safe_q = escape_like_pattern(q)
     query = Chemical.query.filter(
         Chemical.status != 'disposed',
-        (Chemical.name.ilike(f"%{q}%") |
-         Chemical.formula.ilike(f"%{q}%") |
-         Chemical.cas_number.ilike(f"%{q}%"))
+        (Chemical.name.ilike(f"%{safe_q}%") |
+         Chemical.formula.ilike(f"%{safe_q}%") |
+         Chemical.cas_number.ilike(f"%{safe_q}%"))
     )
 
     if lab and lab != "all":
@@ -398,7 +399,7 @@ def api_consume_bulk():
         sample_id = data.get("sample_id")
 
         if not items:
-            return jsonify({"status": "error", "message": "No items provided"}), 400
+            return api_error("No items provided")
 
         count = 0
         errors = []
@@ -456,18 +457,18 @@ def api_consume_bulk():
                 quantity_after=new_quantity,
                 details=purpose
             )
+            log.data_hash = log.compute_hash()
             db.session.add(log)
             count += 1
 
         db.session.commit()
 
-        return jsonify({
-            "status": "success",
+        return api_success({
             "count": count,
             "errors": errors
-        })
+        }, f"{count} бодис хэрэглэгдлээ")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Bulk consume error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return api_error(str(e), status_code=500)

@@ -20,6 +20,40 @@ FLOAT_EPSILON = 1e-9
 
 
 # -------------------------
+# MIXINS
+# -------------------------
+class HashableMixin:
+    """
+    ISO 17025 audit log integrity mixin.
+
+    Аудит бүртгэлүүдийн бүрэн бүтэн байдлыг SHA-256 hash-аар хангана.
+    Бүртгэл өөрчлөгдсөн эсэхийг шалгах боломжтой.
+
+    Usage:
+        class MyLog(HashableMixin, db.Model):
+            data_hash = db.Column(db.String(64), nullable=True)
+
+            def _get_hash_data(self) -> str:
+                return f"{self.field1}|{self.field2}|..."
+    """
+
+    def _get_hash_data(self) -> str:
+        """Override: Return pipe-separated string of fields to hash."""
+        raise NotImplementedError("Subclass must implement _get_hash_data()")
+
+    def compute_hash(self) -> str:
+        """Compute SHA-256 hash of the record data."""
+        import hashlib
+        return hashlib.sha256(self._get_hash_data().encode('utf-8')).hexdigest()
+
+    def verify_hash(self) -> bool:
+        """Verify hash integrity. Returns True if hash is valid or not set."""
+        if not self.data_hash:
+            return True
+        return self.data_hash == self.compute_hash()
+
+
+# -------------------------
 # ХЭРЭГЛЭГЧ
 # -------------------------
 class User(UserMixin, db.Model):
@@ -271,16 +305,6 @@ class Sample(db.Model):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
-
-    @property
-    def is_mass_ready(self) -> bool:
-        """
-        Mass gate-д бэлэн эсэхийг буцаана.
-
-        Returns:
-            bool: mass_ready талбарын boolean утга
-        """
-        return bool(self.mass_ready)
 
     def get_calculations(self) -> 'SampleCalculations':
         """
@@ -602,30 +626,6 @@ class AnalysisProfile(db.Model):
         except (json.JSONDecodeError, TypeError):
             return []
 
-    def get_tokens_as_dict(self) -> Dict[str, List[str]]:
-        """
-        UI дээр Pattern-ийг гоё харуулах туслах функц.
-
-        Returns:
-            dict: Pattern-ийн бүрэлдэхүүн хэсгүүд
-        """
-        groups = {}
-        raw = self.pattern or ""
-        try:
-            if raw.startswith("^CC_"):
-                groups["Prefix"] = ["CC_"]
-                others = raw.replace("^CC_", "").replace("$", "")
-                groups["Suffix"] = [others] if others else []
-            elif "_Dry_" in raw:
-                groups["Contains"] = ["_Dry_"]
-            elif raw.startswith("^("):
-                groups["Complex Start"] = [raw[0:10] + "..."]
-            else:
-                groups["General"] = [raw]
-            return groups
-        except (AttributeError, TypeError):
-            return {}
-
     def __repr__(self) -> str:
         if self.profile_type == "simple":
             return f"<Profile Simple: {self.client_name} - {self.sample_type}>"
@@ -755,12 +755,14 @@ class Equipment(db.Model):
         'MaintenanceLog',
         backref='equipment',
         lazy=True,
+        cascade='all, delete-orphan',
         order_by="desc(MaintenanceLog.action_date)"
     )
     usages = db.relationship(
         'UsageLog',
         backref='equipment',
-        lazy=True
+        lazy=True,
+        cascade='all, delete-orphan'
     )
 
 
@@ -1036,7 +1038,7 @@ class SparePartUsage(db.Model):
         return f"<SparePartUsage {self.spare_part_id}: {self.quantity_used}>"
 
 
-class SparePartLog(db.Model):
+class SparePartLog(HashableMixin, db.Model):
     """
     Сэлбэг хэрэгслийн аудит лог - бүх өөрчлөлтийн түүх.
 
@@ -1073,8 +1075,19 @@ class SparePartLog(db.Model):
     # Нэмэлт
     details = db.Column(db.Text)
 
+    # ISO 17025: Audit log hash (өөрчлөгдсөн эсэхийг шалгах)
+    data_hash = db.Column(db.String(64), nullable=True)
+
     # Relationship
     user = db.relationship('User', foreign_keys=[user_id])
+
+    def _get_hash_data(self) -> str:
+        """HashableMixin: Return data string for hashing."""
+        return (
+            f"{self.spare_part_id}|{self.action}|{self.quantity_change}|"
+            f"{self.quantity_before}|{self.quantity_after}|{self.user_id}|"
+            f"{self.timestamp}|{self.details}"
+        )
 
     def __repr__(self):
         return f"<SparePartLog {self.spare_part_id} {self.action}>"
@@ -1282,7 +1295,7 @@ class SampleCalculations:
 # -------------------------
 # ҮР ДҮН – ЛОГ (Audit)
 # -------------------------
-class AnalysisResultLog(db.Model):
+class AnalysisResultLog(HashableMixin, db.Model):
     """
     Шинжилгээний үр дүнгийн түүх/лог (Audit trail - ISO 17025).
 
@@ -1392,24 +1405,12 @@ class AnalysisResultLog(db.Model):
         db.Index('ix_result_log_user_timestamp', 'user_id', 'timestamp'),
     )
 
-    def compute_hash(self) -> str:
-        """
-        Бүртгэлийн hash-ийг тооцоолох (өөрчлөгдсөн эсэхийг шалгахад ашиглана).
-        """
-        import hashlib
-        data = (
+    def _get_hash_data(self) -> str:
+        """HashableMixin: Return data string for hashing."""
+        return (
             f"{self.sample_id}|{self.analysis_code}|{self.action}|"
             f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{self.timestamp}"
         )
-        return hashlib.sha256(data.encode('utf-8')).hexdigest()
-
-    def verify_hash(self) -> bool:
-        """
-        Hash зөв эсэхийг шалгах (өөрчлөгдсөн эсэх).
-        """
-        if not self.data_hash:
-            return True  # Hash байхгүй бол шалгахгүй
-        return self.data_hash == self.compute_hash()
 
     def __repr__(self) -> str:
         return f"<AnalysisResultLog {self.id}: {self.action}>"
@@ -1684,7 +1685,7 @@ class GbwStandard(db.Model):
 # -------------------------
 # AUDIT LOG
 # -------------------------
-class AuditLog(db.Model):
+class AuditLog(HashableMixin, db.Model):
     """
     Аудитын лог - бүх чухал үйлдлүүдийг бүртгэнэ.
 
@@ -1711,8 +1712,18 @@ class AuditLog(db.Model):
     ip_address = db.Column(db.String(50))
     user_agent = db.Column(db.String(200))
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     # Relationship
     user = db.relationship("User", backref="audit_logs")
+
+    def _get_hash_data(self) -> str:
+        """HashableMixin: Return data string for hashing."""
+        return (
+            f"{self.user_id}|{self.action}|{self.resource_type}|"
+            f"{self.resource_id}|{self.timestamp}|{self.details}|{self.ip_address}"
+        )
 
     def __repr__(self) -> str:
         return f"<AuditLog {self.action} by user_id={self.user_id} at {self.timestamp}>"
@@ -2592,7 +2603,7 @@ class ChemicalUsage(db.Model):
         return f"<ChemicalUsage {self.quantity_used} {self.unit} at {self.used_at}>"
 
 
-class ChemicalLog(db.Model):
+class ChemicalLog(HashableMixin, db.Model):
     """
     Химийн бодисын аудит түүх (Audit Trail).
 
@@ -2651,12 +2662,23 @@ class ChemicalLog(db.Model):
     # Дэлгэрэнгүй
     details = db.Column(db.Text)                # JSON эсвэл текст
 
+    # ISO 17025: Audit log hash (өөрчлөгдсөн эсэхийг шалгах)
+    data_hash = db.Column(db.String(64), nullable=True)
+
     # Relationships
     user = db.relationship('User', foreign_keys=[user_id])
 
     __table_args__ = (
         db.Index('ix_chemical_log_chemical_timestamp', 'chemical_id', 'timestamp'),
     )
+
+    def _get_hash_data(self) -> str:
+        """HashableMixin: Return data string for hashing."""
+        return (
+            f"{self.chemical_id}|{self.action}|{self.quantity_change}|"
+            f"{self.quantity_before}|{self.quantity_after}|{self.user_id}|"
+            f"{self.timestamp}|{self.details}"
+        )
 
     def __repr__(self):
         return f"<ChemicalLog {self.action} at {self.timestamp}>"
