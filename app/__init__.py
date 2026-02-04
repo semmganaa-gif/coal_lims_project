@@ -111,6 +111,9 @@ def create_app(config_class=Config):
     # Химийн бодисын модуль
     from app.routes.chemicals import chemicals_bp
 
+    # PDF тайлангийн модуль
+    from app.routes.reports import pdf_reports_bp
+
     # Сэлбэг хэрэгслийн модуль
     from app.routes.spare_parts import spare_parts_bp
 
@@ -158,6 +161,7 @@ def create_app(config_class=Config):
     safe_register_blueprint(import_bp)
     safe_register_blueprint(equipment_bp)
     safe_register_blueprint(chemicals_bp)
+    safe_register_blueprint(pdf_reports_bp)
     safe_register_blueprint(spare_parts_bp)
     safe_register_blueprint(license_bp)
     safe_register_blueprint(yield_bp)

@@ -25,7 +25,16 @@
           </button>
         </div>
 
-        {% if current_user.role in ['senior', 'admin'] %}
+        {% if current_user.role in ['senior', 'admin', 'manager'] %}
+        <!-- Report buttons -->
+        <div class="btn-group">
+          <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="Усны хими тайлан">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Хими
+          </button>
+          <button type="button" id="btnReportMicro" class="btn btn-sm btn-warning" title="Микробиологи тайлан">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Микро
+          </button>
+        </div>
         <!-- Archive button -->
         <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="Сонгосоныг архивлах">
           <i class="bi bi-archive-fill me-1"></i>Архивлах

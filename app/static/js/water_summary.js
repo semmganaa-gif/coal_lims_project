@@ -613,6 +613,77 @@ const WaterSummaryGrid = (function() {
       });
     }
 
+    // Report buttons helper function
+    function createReport(labType, btn, originalHtml) {
+      const ids = getSelectedIds();
+      if (ids.length === 0) {
+        alert('Тайлан үүсгэх дээжийг сонгоно уу.');
+        return;
+      }
+
+      // Get date range from selected rows
+      const nodes = gridApi.getSelectedNodes();
+      let dateFrom = null, dateTo = null;
+      nodes.forEach(n => {
+        const d = n.data.received_date || n.data.sample_date;
+        if (d) {
+          if (!dateFrom || d < dateFrom) dateFrom = d;
+          if (!dateTo || d > dateTo) dateTo = d;
+        }
+      });
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>...';
+
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      fetch('/pdf-reports/api/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+          lab_type: labType,
+          sample_ids: ids,
+          date_from: dateFrom,
+          date_to: dateTo
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+
+        if (data.success) {
+          alert('Тайлан амжилттай үүслээ: ' + data.report_number);
+          window.location.href = data.redirect_url;
+        } else {
+          alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        alert('Сүлжээний алдаа: ' + err.message);
+      });
+    }
+
+    // Water chemistry report button
+    const btnReportWater = document.getElementById('btnReportWater');
+    if (btnReportWater) {
+      btnReportWater.addEventListener('click', function() {
+        createReport('water', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Хими');
+      });
+    }
+
+    // Microbiology report button
+    const btnReportMicro = document.getElementById('btnReportMicro');
+    if (btnReportMicro) {
+      btnReportMicro.addEventListener('click', function() {
+        createReport('microbiology', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Микро');
+      });
+    }
+
     // Initial load
     refreshData();
   }

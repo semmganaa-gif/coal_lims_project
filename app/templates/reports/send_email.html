@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Тайлан илгээх - {{ report.report_number }}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px;">
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">
+        <i class="bi bi-envelope text-primary me-2"></i>
+        Тайлан имэйлээр илгээх
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info mb-4">
+        <strong>Тайлан:</strong> {{ report.report_number }} - {{ report.title }}
+      </div>
+
+      <form method="POST">
+        <div class="mb-3">
+          <label class="form-label">Хүлээн авагчийн имэйл <span class="text-danger">*</span></label>
+          <input type="text" name="recipients" class="form-control" required
+                 placeholder="email1@example.com, email2@example.com"
+                 value="{{ report.email_recipients or '' }}">
+          <div class="form-text">Олон хаяг бол таслалаар тусгаарлана</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Гарчиг</label>
+          <input type="text" name="subject" class="form-control"
+                 value="Сорилтын тайлан - {{ report.report_number }}"
+                 placeholder="Имэйлийн гарчиг">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Агуулга</label>
+          <textarea name="body" class="form-control" rows="8" placeholder="Имэйлийн агуулга...">Эрхэм хүндэт,
+
+Энэхүү имэйлд "{{ report.title }}" сорилтын тайлан хавсаргав.
+
+Тайлангийн дугаар: {{ report.report_number }}
+Огноо: {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '' }} - {{ report.date_to.strftime('%Y-%m-%d') if report.date_to else '' }}
+
+Асуулт байвал бидэнтэй холбоо барина уу.
+
+Хүндэтгэсэн,
+Усны шинжилгээний лаборатори
+И-мэйл: laboratory@mmc.mn</textarea>
+        </div>
+
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Анхааруулга:</strong> PDF файл хавсаргагдана.
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('pdf_reports.report_detail', id=report.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Буцах
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send me-1"></i> Илгээх
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

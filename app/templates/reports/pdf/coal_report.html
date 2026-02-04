@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 1.5cm;
+    }
+    body {
+      font-family: 'DejaVuSans', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #000;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .header-address {
+      font-size: 9pt;
+      color: #333;
+    }
+    .report-title {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: bold;
+      margin: 25px 0 15px 0;
+    }
+    .report-number {
+      text-align: center;
+      font-size: 12pt;
+      margin-bottom: 20px;
+    }
+    .meta-row {
+      text-align: right;
+      font-size: 10pt;
+      margin-bottom: 5px;
+    }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    .info-table td, .info-table th {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+      font-size: 10pt;
+    }
+    .info-table th {
+      background-color: #f0f0f0;
+    }
+    .sample-info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .sample-info-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: center;
+      font-size: 10pt;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .results-table th, .results-table td {
+      border: 1px solid #000;
+      padding: 5px;
+      text-align: center;
+      font-size: 9pt;
+    }
+    .results-table th {
+      background-color: #f0f0f0;
+    }
+    .results-label {
+      font-weight: bold;
+      margin: 15px 0 10px 0;
+      font-size: 10pt;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 9pt;
+      margin: 20px 0;
+      font-style: italic;
+    }
+    .signature-section {
+      margin-top: 30px;
+    }
+    .signature-img {
+      height: 50px;
+      margin: 5px 0;
+    }
+    .watermark {
+      text-align: center;
+      font-size: 8pt;
+      color: #666;
+      margin-top: 30px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">НҮҮРСНИЙ ШИНЖИЛГЭЭНИЙ ЛАБОРАТОРИ</div>
+    <div class="header-address">
+      Өмнөговь аймаг, Цогтцэций сум, "Ухаа Худаг" нүүрсний уурхай<br>
+      И-мэйл хаяг: laboratory@mmc.mn
+    </div>
+  </div>
+
+  <!-- Report Title -->
+  <div class="report-title">СОРИЛТЫН ТАЙЛАН</div>
+  <div class="report-number">№: {{ report.report_number }}</div>
+
+  <!-- Meta info -->
+  <div class="meta-row">Хэвлэсэн огноо: {{ now.strftime('%Y.%m.%d') }}</div>
+  <div class="meta-row">Хуудасны дугаар: 1/1</div>
+
+  <!-- Info table -->
+  <table class="info-table">
+    <tr>
+      <th>Лабораторийн дугаар</th>
+      <th>Техникийн шаардлага</th>
+      <th>Сорьцын тодорхойлолт</th>
+      <th>Сорьц авсан аргачлал</th>
+    </tr>
+    <tr>
+      <td>
+        {% if samples %}
+          {{ samples[0].lab_number }} – {{ samples[-1].lab_number }}
+        {% endif %}
+      </td>
+      <td>ISO 17025</td>
+      <td>Нүүрсний дээж</td>
+      <td>ISO 18283</td>
+    </tr>
+  </table>
+
+  <!-- Sample info -->
+  <table class="sample-info-table">
+    <tr>
+      <td><strong>Дээжийн тоо</strong><br>{{ samples|length }} ш</td>
+      <td><strong>Дээж авсан огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+      <td><strong>Шинжилсэн огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
+    </tr>
+  </table>
+
+  <!-- Results -->
+  <div class="results-label">Шинжилгээний үр дүн:</div>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>№</th>
+        <th>Дээжийн дугаар</th>
+        <th>Дээжийн нэр</th>
+        <th>Mad,%</th>
+        <th>Adb,%</th>
+        <th>Vdb,%</th>
+        <th>FCdb,%</th>
+        <th>Stdb,%</th>
+        <th>CVdb,kcal/kg</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in results_data %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ item.sample.lab_number }}</td>
+        <td style="text-align: left;">{{ item.sample.sample_name }}</td>
+        <td>{{ item.results.get('Mad', {}).value if item.results.get('Mad') else '-' }}</td>
+        <td>{{ item.results.get('Adb', {}).value if item.results.get('Adb') else '-' }}</td>
+        <td>{{ item.results.get('Vdb', {}).value if item.results.get('Vdb') else '-' }}</td>
+        <td>{{ item.results.get('FCdb', {}).value if item.results.get('FCdb') else '-' }}</td>
+        <td>{{ item.results.get('Stdb', {}).value if item.results.get('Stdb') else '-' }}</td>
+        <td>{{ item.results.get('CVdb', {}).value if item.results.get('CVdb') else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer-note">Энэхүү сорилтын дүн нь тухайн сорьцын хувьд хүчинтэй.</div>
+
+  <!-- Signatures -->
+  <div class="signature-section">
+    <table style="width: 100%;">
+      <tr>
+        <td style="width: 60%;">
+          <strong>Шинжилгээ гүйцэтгэсэн:</strong> Химич
+        </td>
+        <td style="width: 40%; text-align: right;">
+          {% if report.analyst_signature and report.analyst_signature.image_path %}
+          <img src="{{ url_for('static', filename=report.analyst_signature.image_path) }}" class="signature-img">
+          {% endif %}
+          /{{ report.analyst_signature.name if report.analyst_signature else '________________' }}/
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Хянаж баталгаажуулсан:</strong> Ахлах менежер
+        </td>
+        <td style="text-align: right;">
+          {% if report.manager_signature and report.manager_signature.image_path %}
+          <img src="{{ url_for('static', filename=report.manager_signature.image_path) }}" class="signature-img">
+          {% endif %}
+          /{{ report.manager_signature.name if report.manager_signature else '________________' }}/
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Stamp -->
+  {% if report.stamp and report.stamp.image_path %}
+  <div style="position: relative;">
+    <img src="{{ url_for('static', filename=report.stamp.image_path) }}"
+         style="position: absolute; right: 50px; top: -80px; width: 100px; opacity: 0.9;">
+  </div>
+  {% endif %}
+
+  <div class="watermark">
+    Сорилтын лабораторийн зөвшөөрөлгүй хуулбарлахыг хориглоно.
+  </div>
+</body>
+</html>

@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     try {
-      const response = await fetch('{{ url_for("reports.api_plan_statistics") }}?' + params);
+      const response = await fetch('{{ url_for("pdf_reports.api_plan_statistics") }}?' + params);
       const data = await response.json();
       renderSummary(data);
       renderCharts(data);
@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       try {
-        const response = await fetch('{{ url_for("reports.api_save_monthly_plan") }}', {
+        const response = await fetch('{{ url_for("pdf_reports.api_save_monthly_plan") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year: parseInt(year), month: parseInt(month), plans })
@@ -1089,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const chem = parseInt(staffChem?.value) || 10;
 
       try {
-        const response = await fetch('{{ url_for("reports.api_save_staff_settings") }}', {
+        const response = await fetch('{{ url_for("pdf_reports.api_save_staff_settings") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year: parseInt(year), month: parseInt(month), staff_preparers: prep, staff_chemists: chem })

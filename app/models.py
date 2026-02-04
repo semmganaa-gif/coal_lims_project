@@ -744,7 +744,13 @@ class Equipment(db.Model):
     register_type = db.Column(db.String(30), default='main', index=True)
     extra_data = db.Column(db.JSON)                           # Бүртгэл бүрийн тусгай field-үүд
 
+    # Timestamps (audit trail)
+    created_at = db.Column(db.DateTime, default=now_mn)
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
     # Холбоосууд
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
     logs = db.relationship(
         'MaintenanceLog',
         backref='equipment',
@@ -794,12 +800,19 @@ class MaintenanceLog(db.Model):
     action_date = db.Column(db.DateTime, default=now_mn, index=True)
     action_type = db.Column(db.String(50))    # 'Calibration', 'Repair', 'Maintenance', 'Daily Check' ...
     description = db.Column(db.Text)          # Юу хийсэн, ямар солисон, тэмдэглэл
-    performed_by = db.Column(db.String(50))   # Гүйцэтгэсэн хүн / байгууллага
+    performed_by = db.Column(db.String(50))   # Гүйцэтгэсэн хүн / байгууллага (гадны)
+    performed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # Дотоод хэрэглэгч
     certificate_no = db.Column(db.String(50)) # Гэрчилгээний № (хэрэв байгаа бол)
     result = db.Column(db.String(20))         # 'Pass', 'Fail', 'Warning' ...
 
-    # ✅ ШИНЭ: Файл хадгалах зам (Гэрчилгээ хавсаргахад зориулав)
+    # Файл хадгалах зам (Гэрчилгээ хавсаргахад зориулав)
     file_path = db.Column(db.String(256), nullable=True)
+
+    # Audit timestamps
+    created_at = db.Column(db.DateTime, default=now_mn)  # Системд бүртгэсэн огноо
+
+    # Холбоос
+    performed_by_user = db.relationship('User', foreign_keys=[performed_by_id])
 
 
 class UsageLog(db.Model):
@@ -838,8 +851,234 @@ class UsageLog(db.Model):
     start_time = db.Column(db.DateTime)
     end_time = db.Column(db.DateTime)
     duration_minutes = db.Column(db.Integer)   # Нийт ажилласан минут
-    used_by = db.Column(db.String(100), nullable=True)  # Хэрэглэгчийн нэр
+    used_by = db.Column(db.String(100), nullable=True)  # Хэрэглэгчийн нэр (хуучин, backward compat)
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)  # Дотоод хэрэглэгч
     purpose = db.Column(db.String(255), nullable=True)  # Ашигласан зорилго
+
+    # Audit timestamp
+    created_at = db.Column(db.DateTime, default=now_mn)
+
+    # Холбоос
+    used_by_user = db.relationship('User', foreign_keys=[used_by_id])
+
+
+# -------------------------
+# СЭЛБЭГ ХЭРЭГСЭЛ (Spare Parts Inventory)
+# -------------------------
+
+
+class SparePartCategory(db.Model):
+    """
+    Сэлбэг хэрэгслийн категори - тоног төхөөрөмжөөр ангилал.
+
+    Админ хэрэглэгч нэмж, хасч, засварлах боломжтой.
+    """
+    __tablename__ = 'spare_part_category'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(150), nullable=False)
+    name_en = db.Column(db.String(150))
+    description = db.Column(db.Text)
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=now_mn)
+
+    # Equipment холбоос (optional)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'))
+    equipment = db.relationship('Equipment', foreign_keys=[equipment_id])
+
+    def __repr__(self):
+        return f"<SparePartCategory {self.code}: {self.name}>"
+
+
+class SparePart(db.Model):
+    """
+    Сэлбэг хэрэгслийн бүртгэл - нөөцийн удирдлага.
+
+    Химийн бодисын загвараар хийгдсэн - нөөц, зарцуулалт,
+    автомат хасалт, low stock анхааруулга.
+
+    Attributes:
+        id (int): Primary key
+        name (str): Сэлбэгийн нэр
+        name_en (str): Англи нэр
+        part_number (str): Part number / Catalog number
+        manufacturer (str): Үйлдвэрлэгч
+        supplier (str): Нийлүүлэгч
+        quantity (float): Одоогийн нөөц
+        unit (str): Нэгж (pcs, set, box, roll)
+        reorder_level (float): Дахин захиалах түвшин
+        unit_price (float): Нэгж үнэ
+        storage_location (str): Хадгалах байршил
+        compatible_equipment (str): Тохирох тоног төхөөрөмж
+        usage_life_months (int): Ашиглалтын хугацаа (сар)
+        status (str): Төлөв (active, low_stock, out_of_stock)
+    """
+    __tablename__ = 'spare_part'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Үндсэн мэдээлэл
+    name = db.Column(db.String(200), nullable=False, index=True)
+    name_en = db.Column(db.String(200))  # Англи нэр
+    part_number = db.Column(db.String(100), index=True)  # Part number
+    description = db.Column(db.Text)  # Тайлбар
+
+    # Нийлүүлэгч
+    manufacturer = db.Column(db.String(150))
+    supplier = db.Column(db.String(150))
+
+    # Нөөц
+    quantity = db.Column(db.Float, default=0)
+    unit = db.Column(db.String(20), default='pcs')  # pcs, set, box, roll, m, pack
+    reorder_level = db.Column(db.Float, default=1)
+    unit_price = db.Column(db.Float)  # Нэгж үнэ
+
+    # Хадгалалт
+    storage_location = db.Column(db.String(150))
+
+    # Зураг
+    image_path = db.Column(db.String(255))  # uploads/spare_parts/filename.jpg
+
+    # Тоног төхөөрөмжтэй холбоос
+    compatible_equipment = db.Column(db.Text)  # Тохирох төхөөрөмжүүд (text)
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'), index=True)
+
+    # Ашиглалт
+    usage_life_months = db.Column(db.Integer)  # Нэг ширхэгийн ашиглалтын хугацаа
+
+    # Огноо
+    received_date = db.Column(db.Date)  # Сүүлд авсан огноо
+    last_used_date = db.Column(db.Date)  # Сүүлд ашигласан огноо
+
+    # Категори
+    category = db.Column(db.String(50), default='general', index=True)
+    # general, filter, belt, lamp, fuse, bearing, seal, tube, sensor, other
+
+    # Төлөв
+    status = db.Column(db.String(20), default='active', index=True)
+    # active, low_stock, out_of_stock
+
+    # Аудит
+    created_at = db.Column(db.DateTime, default=now_mn)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Relationships
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+    equipment = db.relationship('Equipment', foreign_keys=[equipment_id])
+    usages = db.relationship('SparePartUsage', backref='spare_part', lazy='dynamic')
+    logs = db.relationship('SparePartLog', backref='spare_part', lazy='dynamic')
+
+    def update_status(self):
+        """Нөөцөнд үндэслэн төлөв автоматаар шинэчлэх."""
+        if self.quantity <= 0:
+            self.status = 'out_of_stock'
+        elif self.reorder_level and self.quantity <= self.reorder_level:
+            self.status = 'low_stock'
+        else:
+            self.status = 'active'
+
+    def __repr__(self):
+        return f"<SparePart {self.name} ({self.quantity} {self.unit})>"
+
+
+class SparePartUsage(db.Model):
+    """
+    Сэлбэг хэрэгслийн зарцуулалт - хэзээ, хаана, хэдийг ашигласан.
+
+    Attributes:
+        id (int): Primary key
+        spare_part_id (int): Foreign key → SparePart
+        equipment_id (int): Аль төхөөрөмжид ашигласан
+        maintenance_log_id (int): Аль засварт ашигласан
+        quantity_used (float): Ашигласан тоо
+        used_by_id (int): Хэн ашигласан
+        used_at (datetime): Хэзээ
+        purpose (str): Зорилго
+        quantity_before (float): Өмнөх нөөц
+        quantity_after (float): Дараах нөөц
+    """
+    __tablename__ = 'spare_part_usage'
+
+    id = db.Column(db.Integer, primary_key=True)
+    spare_part_id = db.Column(db.Integer, db.ForeignKey('spare_part.id', ondelete='CASCADE'),
+                              nullable=False, index=True)
+
+    # Хаана ашигласан
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'), index=True)
+    maintenance_log_id = db.Column(db.Integer, db.ForeignKey('maintenance_logs.id', ondelete='SET NULL'))
+
+    # Зарцуулалт
+    quantity_used = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String(20))
+
+    # Зорилго
+    purpose = db.Column(db.String(255))  # Засвар, солих, урьдчилан сэргийлэх г.м.
+
+    # Хэн, хэзээ
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    used_at = db.Column(db.DateTime, default=now_mn)
+
+    # Нөөцийн өөрчлөлт
+    quantity_before = db.Column(db.Float)
+    quantity_after = db.Column(db.Float)
+
+    # Тэмдэглэл
+    notes = db.Column(db.Text)
+
+    # Relationships
+    used_by = db.relationship('User', foreign_keys=[used_by_id])
+    equipment = db.relationship('Equipment', foreign_keys=[equipment_id])
+    maintenance_log = db.relationship('MaintenanceLog', foreign_keys=[maintenance_log_id])
+
+    def __repr__(self):
+        return f"<SparePartUsage {self.spare_part_id}: {self.quantity_used}>"
+
+
+class SparePartLog(db.Model):
+    """
+    Сэлбэг хэрэгслийн аудит лог - бүх өөрчлөлтийн түүх.
+
+    Attributes:
+        id (int): Primary key
+        spare_part_id (int): Foreign key → SparePart
+        action (str): Үйлдэл (created, received, consumed, adjusted, disposed)
+        quantity_change (float): Өөрчлөлтийн хэмжээ (+/-)
+        quantity_before (float): Өмнөх нөөц
+        quantity_after (float): Дараах нөөц
+        user_id (int): Хэн хийсэн
+        timestamp (datetime): Хэзээ
+        details (str): Нэмэлт мэдээлэл
+    """
+    __tablename__ = 'spare_part_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    spare_part_id = db.Column(db.Integer, db.ForeignKey('spare_part.id', ondelete='CASCADE'),
+                              nullable=False, index=True)
+
+    # Үйлдэл
+    action = db.Column(db.String(30), nullable=False, index=True)
+    # created, updated, received, consumed, adjusted, disposed
+
+    # Тоо хэмжээ
+    quantity_change = db.Column(db.Float)  # +/- өөрчлөлт
+    quantity_before = db.Column(db.Float)
+    quantity_after = db.Column(db.Float)
+
+    # Хэн, хэзээ
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    timestamp = db.Column(db.DateTime, default=now_mn, index=True)
+
+    # Нэмэлт
+    details = db.Column(db.Text)
+
+    # Relationship
+    user = db.relationship('User', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f"<SparePartLog {self.spare_part_id} {self.action}>"
+
 
 # -------------------------
 # ТООЦООЛОЛ
@@ -2151,3 +2390,715 @@ class PlantYield(db.Model):
 
     def __repr__(self):
         return f"<PlantYield {self.production_date} {self.product_type} = {self.actual_yield}%>"
+
+
+# -------------------------
+# ХИМИЙН БОДИС
+# -------------------------
+class Chemical(db.Model):
+    """
+    Химийн бодисын бүртгэл (ISO 17025 - Reagent Management).
+
+    Лабораторид ашиглагдах химийн бодис, урвалж, индикатор,
+    стандартуудын бүртгэл, нөөц, хугацааны хяналт.
+
+    Attributes:
+        id (int): Primary key
+        name (str): Химийн бодисын нэр
+        cas_number (str): CAS дугаар (Chemical Abstracts Service)
+        formula (str): Химийн томъёо
+        manufacturer (str): Үйлдвэрлэгч
+        supplier (str): Нийлүүлэгч
+        catalog_number (str): Каталогийн дугаар
+        lot_number (str): Багц дугаар (Lot/Batch)
+        grade (str): Зэрэг (AR, CP, HPLC, ACS гэх мэт)
+        quantity (float): Одоогийн тоо хэмжээ
+        unit (str): Хэмжих нэгж (mL, g, L, kg)
+        reorder_level (float): Дахин захиалах түвшин
+        received_date (date): Хүлээн авсан огноо
+        expiry_date (date): Дуусах хугацаа
+        opened_date (date): Нээсэн огноо
+        storage_location (str): Хадгалах байршил
+        storage_conditions (str): Хадгалах нөхцөл
+        hazard_class (str): Аюулын ангилал
+        sds_file_path (str): SDS файлын зам
+        lab_type (str): Лабын төрөл (coal, water, microbiology, petrography, all)
+        category (str): Ангилал (acid, base, solvent, indicator, standard, media, other)
+        status (str): Төлөв (active, low_stock, expired, empty, disposed)
+
+    Status values:
+        - active: Хэвийн ашиглагдаж буй
+        - low_stock: Бага нөөцтэй
+        - expired: Хугацаа дууссан
+        - empty: Дууссан
+        - disposed: Устгагдсан
+
+    Category values:
+        - acid: Хүчил
+        - base: Суурь
+        - solvent: Уусгагч
+        - indicator: Индикатор
+        - standard: Стандарт уусмал
+        - media: Орчин (микробиологид)
+        - buffer: Буфер уусмал
+        - salt: Давс
+        - other: Бусад
+
+    Example:
+        >>> chemical = Chemical(
+        ...     name='Hydrochloric Acid',
+        ...     formula='HCl',
+        ...     cas_number='7647-01-0',
+        ...     quantity=2500,
+        ...     unit='mL',
+        ...     category='acid',
+        ...     lab_type='coal'
+        ... )
+    """
+    __tablename__ = 'chemical'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Үндсэн мэдээлэл
+    name = db.Column(db.String(200), nullable=False, index=True)
+    cas_number = db.Column(db.String(50))                       # CAS Registry Number
+    formula = db.Column(db.String(100))                         # Химийн томъёо
+
+    # Нийлүүлэлтийн мэдээлэл
+    manufacturer = db.Column(db.String(150))                    # Үйлдвэрлэгч
+    supplier = db.Column(db.String(150))                        # Нийлүүлэгч
+    catalog_number = db.Column(db.String(100))                  # Каталогийн №
+    lot_number = db.Column(db.String(100))                      # Багц № (Lot/Batch)
+    grade = db.Column(db.String(50))                            # AR, CP, HPLC, ACS
+
+    # Тоо хэмжээ
+    quantity = db.Column(db.Float, default=0)                   # Одоогийн тоо хэмжээ
+    unit = db.Column(db.String(20), default='mL')               # mL, g, L, kg, pcs
+    reorder_level = db.Column(db.Float)                         # Дахин захиалах түвшин
+
+    # Огноо
+    received_date = db.Column(db.Date)                          # Хүлээн авсан огноо
+    expiry_date = db.Column(db.Date, index=True)                # Дуусах хугацаа
+    opened_date = db.Column(db.Date)                            # Нээсэн огноо
+
+    # Хадгалалт
+    storage_location = db.Column(db.String(100))                # Байршил (шүүгээ, тавиур)
+    storage_conditions = db.Column(db.String(200))              # Нөхцөл (температур, гэх мэт)
+
+    # Аюулгүй байдал
+    hazard_class = db.Column(db.String(100))                    # Аюулын ангилал
+    sds_file_path = db.Column(db.String(255))                   # Safety Data Sheet файл
+
+    # Ангилал
+    lab_type = db.Column(db.String(30), default='all', index=True)  # coal, water, microbiology, petrography, all
+    category = db.Column(db.String(30), default='other', index=True)  # acid, base, solvent, indicator, standard, media, other
+
+    # Төлөв
+    status = db.Column(db.String(20), default='active', index=True)  # active, low_stock, expired, empty, disposed
+
+    # Тэмдэглэл
+    notes = db.Column(db.Text)
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=now_mn)
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+
+    # Relationships
+    usages = db.relationship('ChemicalUsage', backref='chemical', lazy='dynamic',
+                             cascade='all, delete-orphan')
+    logs = db.relationship('ChemicalLog', backref='chemical', lazy='dynamic',
+                           cascade='all, delete-orphan')
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+
+    def update_status(self):
+        """Нөөц болон хугацаанд үндэслэн төлөвийг автоматаар шинэчлэх."""
+        from datetime import date
+        today = date.today()
+
+        if self.status == 'disposed':
+            return  # Устгагдсан бол өөрчлөхгүй
+
+        if self.quantity <= 0:
+            self.status = 'empty'
+        elif self.expiry_date and self.expiry_date < today:
+            self.status = 'expired'
+        elif self.reorder_level and self.quantity <= self.reorder_level:
+            self.status = 'low_stock'
+        else:
+            self.status = 'active'
+
+    def __repr__(self):
+        return f"<Chemical {self.name} ({self.quantity} {self.unit})>"
+
+
+class ChemicalUsage(db.Model):
+    """
+    Химийн бодисын хэрэглээний бүртгэл.
+
+    Хэрэглэсэн тоо хэмжээ, зорилго, шинжилгээтэй холбох.
+
+    Attributes:
+        id (int): Primary key
+        chemical_id (int): Foreign key → Chemical
+        quantity_used (float): Хэрэглэсэн тоо хэмжээ
+        unit (str): Нэгж
+        sample_id (int): Foreign key → Sample (optional)
+        analysis_code (str): Шинжилгээний код (optional)
+        purpose (str): Зорилго
+        used_by_id (int): Foreign key → User
+        used_at (datetime): Хэрэглэсэн огноо/цаг
+        quantity_before (float): Хэрэглэхээс өмнөх тоо хэмжээ
+        quantity_after (float): Хэрэглэсний дараах тоо хэмжээ
+
+    Example:
+        >>> usage = ChemicalUsage(
+        ...     chemical_id=1,
+        ...     quantity_used=50,
+        ...     unit='mL',
+        ...     purpose='Aad шинжилгээ',
+        ...     used_by_id=current_user.id
+        ... )
+    """
+    __tablename__ = 'chemical_usage'
+
+    id = db.Column(db.Integer, primary_key=True)
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id'), nullable=False, index=True)
+
+    # Хэрэглээний мэдээлэл
+    quantity_used = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String(20))
+
+    # Шинжилгээтэй холбох (optional)
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete='SET NULL'))
+    analysis_code = db.Column(db.String(50))
+
+    # Зорилго, тайлбар
+    purpose = db.Column(db.String(255))
+
+    # Хэрэглэгч
+    used_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    used_at = db.Column(db.DateTime, default=now_mn, index=True)
+
+    # Нөөцийн өөрчлөлт
+    quantity_before = db.Column(db.Float)
+    quantity_after = db.Column(db.Float)
+
+    # Relationships
+    used_by = db.relationship('User', foreign_keys=[used_by_id])
+    sample = db.relationship('Sample', foreign_keys=[sample_id])
+
+    def __repr__(self):
+        return f"<ChemicalUsage {self.quantity_used} {self.unit} at {self.used_at}>"
+
+
+class ChemicalLog(db.Model):
+    """
+    Химийн бодисын аудит түүх (Audit Trail).
+
+    Бүх өөрчлөлтийн түүхийг хадгална.
+
+    Attributes:
+        id (int): Primary key
+        chemical_id (int): Foreign key → Chemical
+        timestamp (datetime): Үйлдлийн цаг
+        user_id (int): Foreign key → User
+        action (str): Үйлдлийн төрөл
+        quantity_change (float): Тоо хэмжээний өөрчлөлт (+ эсвэл -)
+        quantity_before (float): Өмнөх тоо хэмжээ
+        quantity_after (float): Дараах тоо хэмжээ
+        details (str): Дэлгэрэнгүй тайлбар (JSON)
+
+    Action values:
+        - created: Шинээр бүртгэсэн
+        - updated: Засварласан
+        - received: Нөөц нэмсэн
+        - consumed: Хэрэглэсэн
+        - disposed: Устгасан
+        - adjusted: Тоо хэмжээ засварласан (инвентор)
+
+    Example:
+        >>> log = ChemicalLog(
+        ...     chemical_id=1,
+        ...     user_id=current_user.id,
+        ...     action='received',
+        ...     quantity_change=2500,
+        ...     quantity_before=0,
+        ...     quantity_after=2500,
+        ...     details='Шинэ багц хүлээн авав'
+        ... )
+    """
+    __tablename__ = 'chemical_log'
+
+    id = db.Column(db.Integer, primary_key=True)
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id'), nullable=False, index=True)
+
+    # Цаг хугацаа
+    timestamp = db.Column(db.DateTime, default=now_mn, index=True)
+
+    # Хэрэглэгч
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+
+    # Үйлдэл
+    action = db.Column(db.String(30), nullable=False, index=True)
+    # 'created', 'updated', 'received', 'consumed', 'disposed', 'adjusted'
+
+    # Тоо хэмжээний өөрчлөлт
+    quantity_change = db.Column(db.Float)       # + нэмэгдсэн, - хасагдсан
+    quantity_before = db.Column(db.Float)
+    quantity_after = db.Column(db.Float)
+
+    # Дэлгэрэнгүй
+    details = db.Column(db.Text)                # JSON эсвэл текст
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id])
+
+    __table_args__ = (
+        db.Index('ix_chemical_log_chemical_timestamp', 'chemical_id', 'timestamp'),
+    )
+
+    def __repr__(self):
+        return f"<ChemicalLog {self.action} at {self.timestamp}>"
+
+
+# -------------------------
+# ХОГ ХАЯГДЛЫН БҮРТГЭЛ (Chemical Waste)
+# -------------------------
+class ChemicalWaste(db.Model):
+    """
+    Химийн хорт болон аюултай хог хаягдлын бүртгэл.
+
+    Лабораторийн хог хаягдал, сав баглаа, шинжилгээний хаягдал зэргийг
+    бүртгэж, сар бүрийн хэмжээг хянах.
+
+    Attributes:
+        id (int): Primary key
+        name_mn (str): Хог хаягдлын монгол нэр
+        name_en (str): Хог хаягдлын олон улсын нэр
+        monthly_amount (float): Сард гардаг хэмжээ (дундаж)
+        unit (str): Хэмжих нэгж (л, кг, ш)
+        disposal_method (str): Хаягдах арга (sewer, evaporate, special, incinerate)
+        disposal_location (str): Хаягдах газар
+        is_hazardous (bool): Аюултай эсэх
+        hazard_type (str): Аюулын төрөл
+        lab_type (str): Лабын төрөл
+        is_active (bool): Идэвхтэй эсэх
+        notes (str): Тэмдэглэл
+        created_at (datetime): Үүсгэсэн огноо
+    """
+    __tablename__ = 'chemical_waste'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Нэршил
+    name_mn = db.Column(db.String(255), nullable=False)
+    name_en = db.Column(db.String(255))
+
+    # Хэмжээ
+    monthly_amount = db.Column(db.Float)  # Сард гардаг дундаж хэмжээ
+    unit = db.Column(db.String(20), default='л')  # л, кг, ш, мл
+
+    # Хаягдах мэдээлэл
+    disposal_method = db.Column(db.String(50))
+    # sewer: бохирын шугам, evaporate: ууршина, special: тусгай сав, incinerate: шатаах
+    disposal_location = db.Column(db.String(255))
+
+    # Аюултай ангилал
+    is_hazardous = db.Column(db.Boolean, default=True)
+    hazard_type = db.Column(db.String(100))  # corrosive, toxic, flammable, etc.
+
+    # Лаб
+    lab_type = db.Column(db.String(30), default='all')
+
+    # Төлөв
+    is_active = db.Column(db.Boolean, default=True)
+    notes = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=now_mn)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Relationships
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+    records = db.relationship('ChemicalWasteRecord', back_populates='waste', lazy='dynamic')
+
+    def __repr__(self):
+        return f"<ChemicalWaste {self.name_mn}>"
+
+
+class ChemicalWasteRecord(db.Model):
+    """
+    Хог хаягдлын сарын бүртгэл.
+
+    Сар бүрийн хаягдсан хэмжээ, үлдэгдэл бүртгэл.
+
+    Attributes:
+        id (int): Primary key
+        waste_id (int): Foreign key → ChemicalWaste
+        year (int): Жил
+        month (int): Сар (1-12)
+        quantity (float): Хаягдсан хэмжээ
+        starting_balance (float): Эхний үлдэгдэл
+        ending_balance (float): Эцсийн үлдэгдэл
+        notes (str): Тэмдэглэл
+        recorded_at (datetime): Бүртгэсэн огноо
+        recorded_by_id (int): Бүртгэсэн хэрэглэгч
+    """
+    __tablename__ = 'chemical_waste_record'
+
+    id = db.Column(db.Integer, primary_key=True)
+    waste_id = db.Column(db.Integer, db.ForeignKey('chemical_waste.id'), nullable=False, index=True)
+
+    # Огноо
+    year = db.Column(db.Integer, nullable=False, index=True)
+    month = db.Column(db.Integer, nullable=False, index=True)  # 1-12
+
+    # Хэмжээ
+    quantity = db.Column(db.Float, default=0)  # Тухайн сард хаягдсан хэмжээ
+    starting_balance = db.Column(db.Float, default=0)  # Эхний үлдэгдэл
+    ending_balance = db.Column(db.Float, default=0)  # Эцсийн үлдэгдэл
+
+    notes = db.Column(db.Text)
+
+    # Бүртгэсэн
+    recorded_at = db.Column(db.DateTime, default=now_mn)
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Relationships
+    waste = db.relationship('ChemicalWaste', back_populates='records')
+    recorded_by = db.relationship('User', foreign_keys=[recorded_by_id])
+
+    __table_args__ = (
+        db.UniqueConstraint('waste_id', 'year', 'month', name='uq_waste_year_month'),
+        db.Index('ix_waste_record_year_month', 'year', 'month'),
+    )
+
+    def __repr__(self):
+        return f"<WasteRecord {self.year}-{self.month}: {self.quantity}>"
+
+
+# -------------------------
+# ТАЙЛАНГИЙН СИСТЕМ (Report Generation)
+# -------------------------
+class ReportSignature(db.Model):
+    """
+    Гарын үсэг, тамганы зураг хадгалах.
+
+    Чанарын менежер, шинжээч нарын гарын үсэг болон
+    лабораторийн тамганы зургийг хадгална.
+
+    Attributes:
+        id (int): Primary key
+        name (str): Нэр (жишээ: "Ц.Бэхцэцэг - Ахлах менежер")
+        signature_type (str): Төрөл (signature, stamp)
+        image_path (str): Зургийн зам
+        user_id (int): Холбоотой хэрэглэгч (optional)
+        lab_type (str): Лаб төрөл
+        is_active (bool): Идэвхтэй эсэх
+        position (str): Албан тушаал
+    """
+    __tablename__ = 'report_signature'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    signature_type = db.Column(db.String(20), nullable=False)  # 'signature', 'stamp'
+    image_path = db.Column(db.String(255))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    lab_type = db.Column(db.String(30), default='all')
+    is_active = db.Column(db.Boolean, default=True)
+    position = db.Column(db.String(100))  # Албан тушаал
+
+    created_at = db.Column(db.DateTime, default=now_mn)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f"<ReportSignature {self.name} ({self.signature_type})>"
+
+
+class LabReport(db.Model):
+    """
+    Лабораторийн тайлангийн бүртгэл.
+
+    Нэгтгэлээс үүсгэсэн PDF тайлангуудыг хадгалах,
+    баталгаажуулах, имэйлээр илгээх.
+
+    Attributes:
+        id (int): Primary key
+        report_number (str): Тайлангийн дугаар (жишээ: 2026_15)
+        lab_type (str): Лаб төрөл (coal, water, microbiology, petrography)
+        report_type (str): Тайлангийн төрөл (analysis, summary, certificate)
+        title (str): Гарчиг
+        status (str): Төлөв (draft, pending_approval, approved, sent)
+
+        # Дээжийн мэдээлэл
+        sample_ids (JSON): Холбоотой дээжийн ID-ууд
+        date_from (date): Эхлэх огноо
+        date_to (date): Дуусах огноо
+
+        # Файл
+        pdf_path (str): PDF файлын зам
+
+        # Гарын үсэг
+        analyst_signature_id (int): Шинжээчийн гарын үсэг
+        manager_signature_id (int): Менежерийн гарын үсэг
+        stamp_id (int): Тамга
+
+        # Баталгаажуулалт
+        approved_by_id (int): Баталгаажуулсан хүн
+        approved_at (datetime): Баталгаажуулсан огноо
+
+        # Имэйл
+        email_sent (bool): Илгээсэн эсэх
+        email_sent_at (datetime): Илгээсэн огноо
+        email_recipients (str): Хүлээн авагчид
+
+        # Мета
+        created_by_id (int): Үүсгэсэн хүн
+        created_at (datetime): Үүсгэсэн огноо
+    """
+    __tablename__ = 'lab_report'
+
+    id = db.Column(db.Integer, primary_key=True)
+    report_number = db.Column(db.String(50), unique=True, nullable=False)
+    lab_type = db.Column(db.String(30), nullable=False, index=True)
+    report_type = db.Column(db.String(30), default='analysis')
+    title = db.Column(db.String(255))
+    status = db.Column(db.String(20), default='draft', index=True)
+    # draft, pending_approval, approved, sent
+
+    # Дээжийн мэдээлэл
+    sample_ids = db.Column(db.JSON)  # [1, 2, 3, ...]
+    date_from = db.Column(db.Date)
+    date_to = db.Column(db.Date)
+
+    # Тайлангийн агуулга (JSON)
+    report_data = db.Column(db.JSON)
+
+    # PDF файл
+    pdf_path = db.Column(db.String(255))
+
+    # Гарын үсэг, тамга
+    analyst_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
+    manager_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
+    stamp_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
+
+    # Баталгаажуулалт
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    approved_at = db.Column(db.DateTime)
+
+    # Имэйл
+    email_sent = db.Column(db.Boolean, default=False)
+    email_sent_at = db.Column(db.DateTime)
+    email_recipients = db.Column(db.Text)  # comma-separated
+
+    # Мета
+    notes = db.Column(db.Text)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=now_mn)
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+
+    # Relationships
+    analyst_signature = db.relationship('ReportSignature', foreign_keys=[analyst_signature_id])
+    manager_signature = db.relationship('ReportSignature', foreign_keys=[manager_signature_id])
+    stamp = db.relationship('ReportSignature', foreign_keys=[stamp_id])
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+
+    __table_args__ = (
+        db.Index('ix_lab_report_lab_status', 'lab_type', 'status'),
+    )
+
+    def __repr__(self):
+        return f"<LabReport {self.report_number} ({self.status})>"
+
+    def get_status_display(self):
+        status_map = {
+            'draft': 'Ноорог',
+            'pending_approval': 'Хүлээгдэж буй',
+            'approved': 'Баталгаажсан',
+            'sent': 'Илгээсэн',
+        }
+        return status_map.get(self.status, self.status)
+
+
+# -------------------------
+# УУСМАЛ БЭЛДЭХ ДЭВТЭР (Усны хими)
+# -------------------------
+class SolutionPreparation(db.Model):
+    """
+    Уусмал бэлдэх дэвтэр (Усны химийн лаб).
+
+    Стандарт уусмал бэлдэх, титр тогтоох бүртгэл.
+
+    Attributes:
+        id (int): Primary key
+        solution_name (str): Уусмалын нэр
+        concentration (float): Концентраци (мг/л)
+        volume_ml (float): Эзэлхүүн (мл)
+        chemical_used_mg (float): Зарцуулсан бодис (мг)
+        prepared_date (date): Огноо
+        v1 (float): Титрийн V1 хэмжилт
+        v2 (float): Титрийн V2 хэмжилт
+        v_avg (float): Vд - дундаж
+        titer_coefficient (float): Титрийн коэффициент
+        preparation_notes (str): Уусмал бэлдэх явц / заалт
+        prepared_by_id (int): Foreign key → User
+        chemical_id (int): Foreign key → Chemical (optional)
+
+    Example:
+        >>> solution = SolutionPreparation(
+        ...     solution_name='HCl 0.1N',
+        ...     concentration=0.1,
+        ...     volume_ml=1000,
+        ...     chemical_used_mg=3650,
+        ...     titer_coefficient=0.9985
+        ... )
+    """
+    __tablename__ = 'solution_preparation'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Үндсэн мэдээлэл
+    solution_name = db.Column(db.String(200), nullable=False, index=True)
+    concentration = db.Column(db.Float)                     # Концентраци (мг/л, mol/L, N)
+    concentration_unit = db.Column(db.String(20), default='mg/L')  # mg/L, mol/L, N, %
+    volume_ml = db.Column(db.Float)                         # Эзэлхүүн (мл)
+
+    # Зарцуулсан бодис
+    chemical_used_mg = db.Column(db.Float)                  # Зарцуулсан бодис (мг)
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'))
+
+    # Жортой холбоос (шинэ)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('solution_recipe.id', ondelete='SET NULL'), index=True)
+
+    # Огноо
+    prepared_date = db.Column(db.Date, nullable=False, index=True)
+    expiry_date = db.Column(db.Date)                        # Хүчинтэй хугацаа
+
+    # Титр тогтоолт
+    v1 = db.Column(db.Float)                                # V1 хэмжилт
+    v2 = db.Column(db.Float)                                # V2 хэмжилт
+    v3 = db.Column(db.Float)                                # V3 хэмжилт (optional)
+    v_avg = db.Column(db.Float)                             # Vд - дундаж
+    titer_coefficient = db.Column(db.Float)                 # Титрийн коэффициент (K)
+
+    # Уусмал бэлдэх явц
+    preparation_notes = db.Column(db.Text)                  # Бэлдэх заавар / тэмдэглэл
+
+    # Төлөв
+    status = db.Column(db.String(20), default='active', index=True)  # active, expired, empty
+
+    # Хэрэглэгч
+    prepared_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_at = db.Column(db.DateTime, default=now_mn)
+
+    # Relationships
+    prepared_by = db.relationship('User', foreign_keys=[prepared_by_id])
+    chemical = db.relationship('Chemical', foreign_keys=[chemical_id])
+
+    def calculate_v_avg(self):
+        """Дундаж V тооцоолох."""
+        values = [v for v in [self.v1, self.v2, self.v3] if v is not None]
+        if values:
+            self.v_avg = sum(values) / len(values)
+        return self.v_avg
+
+    def __repr__(self):
+        return f"<SolutionPreparation {self.solution_name} ({self.prepared_date})>"
+
+
+class SolutionRecipe(db.Model):
+    """
+    Уусмалын жор (Recipe) - урьдчилан тодорхойлсон уусмал бэлдэх заавар.
+
+    Жишээ нь: Трилон Б 0.05N, HCl 0.1N, NaOH 0.1M гэх мэт.
+    Тус бүрдээ ямар химийн бодис, хэр хэмжээгээр орох вэ гэдгийг тодорхойлно.
+
+    Attributes:
+        id (int): Primary key
+        name (str): Уусмалын нэр (жнь: "Трилон Б 0.05N")
+        concentration (float): Зорилтот концентраци
+        concentration_unit (str): Нэгж (N, M, %, mg/L)
+        standard_volume_ml (float): Жорын стандарт эзэлхүүн (жнь: 1000мл)
+        preparation_notes (str): Уусмал бэлдэх дэлгэрэнгүй заавар
+        lab_type (str): Лабын төрөл (water, coal, micro, petro)
+        is_active (bool): Идэвхтэй эсэх
+    """
+    __tablename__ = 'solution_recipe'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, index=True)
+    concentration = db.Column(db.Float)
+    concentration_unit = db.Column(db.String(20), default='N')  # N, M, %, mg/L
+    standard_volume_ml = db.Column(db.Float, default=1000)  # Стандарт эзэлхүүн
+
+    # Бэлдэх заавар
+    preparation_notes = db.Column(db.Text)  # Дэлгэрэнгүй заавар
+
+    # Категори
+    lab_type = db.Column(db.String(20), default='water', index=True)  # water, coal, micro, petro
+    category = db.Column(db.String(50))  # titrant, buffer, indicator, standard, reagent
+
+    # Төлөв
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=now_mn)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Relationships
+    created_by = db.relationship('User', foreign_keys=[created_by_id])
+    ingredients = db.relationship('SolutionRecipeIngredient', backref='recipe', lazy='dynamic',
+                                  cascade='all, delete-orphan')
+    preparations = db.relationship('SolutionPreparation', backref='recipe', lazy='dynamic')
+
+    def calculate_ingredients(self, target_volume_ml):
+        """
+        Зорилтот эзэлхүүнд шаардагдах бодисын хэмжээг тооцоолох.
+
+        Args:
+            target_volume_ml: Бэлдэх эзэлхүүн (мл)
+
+        Returns:
+            list: [{'chemical': Chemical, 'amount': float, 'unit': str}, ...]
+        """
+        ratio = target_volume_ml / self.standard_volume_ml if self.standard_volume_ml else 1
+        result = []
+        for ing in self.ingredients:
+            result.append({
+                'chemical': ing.chemical,
+                'chemical_id': ing.chemical_id,
+                'amount': ing.amount * ratio,
+                'unit': ing.unit,
+                'ingredient_id': ing.id
+            })
+        return result
+
+    def __repr__(self):
+        return f"<SolutionRecipe {self.name}>"
+
+
+class SolutionRecipeIngredient(db.Model):
+    """
+    Уусмалын жорын найрлага (орц) - нэг жорт хэд хэдэн химийн бодис орж болно.
+
+    Attributes:
+        id (int): Primary key
+        recipe_id (int): Foreign key → SolutionRecipe
+        chemical_id (int): Foreign key → Chemical
+        amount (float): Хэмжээ (стандарт эзэлхүүнд)
+        unit (str): Нэгж (g, mg, mL)
+    """
+    __tablename__ = 'solution_recipe_ingredient'
+
+    id = db.Column(db.Integer, primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('solution_recipe.id', ondelete='CASCADE'), nullable=False)
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'))
+    amount = db.Column(db.Float, nullable=False)  # Стандарт эзэлхүүнд орох хэмжээ
+    unit = db.Column(db.String(20), default='g')  # g, mg, mL
+
+    # Relationship
+    chemical = db.relationship('Chemical')
+
+    def __repr__(self):
+        return f"<SolutionRecipeIngredient {self.chemical.name if self.chemical else 'Unknown'}: {self.amount} {self.unit}>"

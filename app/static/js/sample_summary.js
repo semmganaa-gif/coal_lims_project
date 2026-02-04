@@ -790,6 +790,53 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) form.submit();
   });
 
+  // Report button (PDF report generation)
+  safeAddListener('reportBtn', 'click', function(e) {
+    e.preventDefault();
+
+    const ids = GridModule.getSelectedIds();
+    if (ids.length === 0) {
+      alert("Тайлан үүсгэх дээжийг сонгоно уу.");
+      return;
+    }
+
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Үүсгэж байна...';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    fetch('/pdf-reports/api/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        lab_type: 'coal',
+        sample_ids: ids,
+        date_from: null,
+        date_to: null
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Тайлан';
+
+      if (data.success) {
+        alert('Тайлан амжилттай үүслээ: ' + data.report_number);
+        window.location.href = data.redirect_url;
+      } else {
+        alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Тайлан';
+      alert('Сүлжээний алдаа: ' + err.message);
+    });
+  });
+
   // Export CSV button
   safeAddListener('exportCsvBtn', 'click', function() {
     GridModule.exportCsv();

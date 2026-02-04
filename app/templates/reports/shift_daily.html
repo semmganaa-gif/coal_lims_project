@@ -3,7 +3,7 @@
 {% block title %}Ээлжийн гүйцэтгэл (Daily){% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pdf_reports.css') }}">
 
 <div class="report-page">
   <!-- Header -->
@@ -13,7 +13,7 @@
       <p class="subtitle">Өдөр тутмын шинжилгээний урсгал, гүйцэтгэл болон алдааны статистикийг ээлжээр шүүж харах</p>
     </div>
     <div class="report-header-actions">
-      <a href="{{ url_for('reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
+      <a href="{{ url_for('pdf_reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-bar-chart-line"></i> Monthly Plan
       </a>
     </div>

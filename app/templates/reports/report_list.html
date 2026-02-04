@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Тайлангийн жагсаалт{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+  {# Header #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+        Тайлангийн жагсаалт
+      </h4>
+      <p class="text-muted mb-0">Үүсгэсэн PDF тайлангууд</p>
+    </div>
+    <a href="{{ url_for('pdf_reports.signature_list') }}" class="btn btn-outline-primary">
+      <i class="bi bi-pen me-1"></i> Гарын үсэг, тамга
+    </a>
+  </div>
+
+  {# Filters #}
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+      <form method="GET" class="row g-2 align-items-center">
+        <div class="col-auto">
+          <label class="form-label mb-0 small">Лаб:</label>
+        </div>
+        <div class="col-auto">
+          <select name="lab" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="all">Бүгд</option>
+            {% for key, val in lab_types.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == lab }}>{{ val }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label mb-0 small">Төлөв:</label>
+        </div>
+        <div class="col-auto">
+          <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="all">Бүгд</option>
+            {% for key, val in report_statuses.items() %}
+            <option value="{{ key }}" {{ 'selected' if key == status }}>{{ val }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Table #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      {% if reports %}
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Дугаар</th>
+              <th>Гарчиг</th>
+              <th>Лаб</th>
+              <th>Огноо</th>
+              <th>Төлөв</th>
+              <th>Үүсгэсэн</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in reports %}
+            <tr>
+              <td>
+                <a href="{{ url_for('pdf_reports.report_detail', id=r.id) }}" class="fw-medium text-decoration-none">
+                  {{ r.report_number }}
+                </a>
+              </td>
+              <td>{{ r.title or '-' }}</td>
+              <td>
+                <span class="badge bg-{{ 'info' if r.lab_type == 'water' else 'success' if r.lab_type == 'microbiology' else 'warning' }}">
+                  {{ lab_types.get(r.lab_type, r.lab_type) }}
+                </span>
+              </td>
+              <td class="small">
+                {{ r.date_from.strftime('%Y-%m-%d') if r.date_from else '-' }}
+                {% if r.date_to %} - {{ r.date_to.strftime('%Y-%m-%d') }}{% endif %}
+              </td>
+              <td>
+                {% if r.status == 'draft' %}
+                <span class="badge bg-secondary">Ноорог</span>
+                {% elif r.status == 'pending_approval' %}
+                <span class="badge bg-warning text-dark">Хүлээгдэж буй</span>
+                {% elif r.status == 'approved' %}
+                <span class="badge bg-success">Баталгаажсан</span>
+                {% elif r.status == 'sent' %}
+                <span class="badge bg-primary">Илгээсэн</span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                {{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '-' }}
+              </td>
+              <td>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('pdf_reports.report_detail', id=r.id) }}">
+                        <i class="bi bi-eye me-2"></i>Харах
+                      </a>
+                    </li>
+                    {% if r.pdf_path %}
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('pdf_reports.download_report', id=r.id) }}">
+                        <i class="bi bi-download me-2"></i>Татах
+                      </a>
+                    </li>
+                    {% endif %}
+                    {% if r.status == 'approved' %}
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('pdf_reports.send_email', id=r.id) }}">
+                        <i class="bi bi-envelope me-2"></i>Илгээх
+                      </a>
+                    </li>
+                    {% endif %}
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+        <p>Тайлан олдсонгүй</p>
+        <p class="small">Нэгтгэл хуудаснаас тайлан үүсгэнэ үү</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
