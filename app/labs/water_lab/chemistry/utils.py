@@ -1,4 +1,4 @@
-# app/labs/water/utils.py
+# app/labs/water_lab/chemistry/utils.py
 """Ус + Микробиологи дундын дээж бүртгэлийн helper."""
 
 import json
@@ -9,8 +9,8 @@ from sqlalchemy import func
 from app import db
 from app.models import Sample
 from app.utils.database import safe_commit
-from app.labs.water.constants import WATER_ANALYSIS_TYPES
-from app.labs.microbiology.constants import MICRO_ANALYSIS_TYPES
+from app.labs.water_lab.chemistry.constants import WATER_ANALYSIS_TYPES
+from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 
 WATER_CODES = {at['code'] for at in WATER_ANALYSIS_TYPES}
 MICRO_CODES = {at['code'] for at in MICRO_ANALYSIS_TYPES}

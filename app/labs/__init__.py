@@ -29,6 +29,7 @@ def get_all_labs() -> dict:
 LAB_TYPES = {
     'coal': {'name': 'Нүүрсний лаборатори', 'icon': 'bi-fire', 'color': '#dc3545'},
     'petrography': {'name': 'Петрограф лаборатори', 'icon': 'bi-gem', 'color': '#6f42c1'},
-    'water': {'name': 'Усны лаборатори', 'icon': 'bi-droplet', 'color': '#0dcaf0'},
-    'microbiology': {'name': 'Микробиологийн лаборатори', 'icon': 'bi-bug', 'color': '#20c997'},
+    'water_lab': {'name': 'Усны лаборатори', 'icon': 'bi-droplet-fill', 'color': '#0891b2'},
+    'water': {'name': 'Хими лаборатори', 'icon': 'bi-droplet-half', 'color': '#0dcaf0', 'parent': 'water_lab'},
+    'microbiology': {'name': 'Микробиологийн лаборатори', 'icon': 'bi-bug', 'color': '#20c997', 'parent': 'water_lab'},
 }

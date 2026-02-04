@@ -108,6 +108,12 @@ def create_app(config_class=Config):
     # Тоног төхөөрөмжийн модуль (ISO 17025)
     from app.routes.equipment import equipment_bp
 
+    # Химийн бодисын модуль
+    from app.routes.chemicals import chemicals_bp
+
+    # Сэлбэг хэрэгслийн модуль
+    from app.routes.spare_parts import spare_parts_bp
+
     # Лиценз хамгаалалт
     from app.routes.license_routes import license_bp
 
@@ -117,20 +123,25 @@ def create_app(config_class=Config):
     # Theoretical Yield тооцоолол (Washability)
     from app.routes.yield_routes import yield_bp
 
-    # Мульти-лаборатори (Петрограф, Усны лаб, Микробиологи)
+    # Мульти-лаборатори (Петрограф, Усны лаб)
     from app.labs import register_lab
     from app.labs.coal import CoalLab
     from app.labs.petrography import PetrographyLab
-    from app.labs.water import WaterLab
-    from app.labs.microbiology import MicrobiologyLab
     from app.labs.petrography.routes import petro_bp
-    from app.labs.water.routes import water_bp
-    from app.labs.microbiology.routes import micro_bp
+
+    # Усны лаборатори (Water Lab = Chemistry + Microbiology)
+    from app.labs.water_lab import WaterLaboratory
+    from app.labs.water_lab.chemistry import ChemistryLab
+    from app.labs.water_lab.microbiology import MicrobiologyLab
+    from app.labs.water_lab.routes import water_lab_bp
+    from app.labs.water_lab.chemistry.routes import water_bp
+    from app.labs.water_lab.microbiology.routes import micro_bp
 
     # Лаб instance-уудыг бүртгэх
     register_lab(CoalLab())
     register_lab(PetrographyLab())
-    register_lab(WaterLab())
+    register_lab(WaterLaboratory())  # Parent lab
+    register_lab(ChemistryLab())     # water key for backward compatibility
     register_lab(MicrobiologyLab())
 
     # Blueprint давхар бүртгэгдэхээс хамгаалах (тест орчинд чухал)
@@ -146,11 +157,14 @@ def create_app(config_class=Config):
     safe_register_blueprint(reports_bp)
     safe_register_blueprint(import_bp)
     safe_register_blueprint(equipment_bp)
+    safe_register_blueprint(chemicals_bp)
+    safe_register_blueprint(spare_parts_bp)
     safe_register_blueprint(license_bp)
     safe_register_blueprint(yield_bp)
     safe_register_blueprint(petro_bp)
-    safe_register_blueprint(water_bp)
-    safe_register_blueprint(micro_bp)
+    safe_register_blueprint(water_lab_bp)  # Parent: /labs/water-lab
+    safe_register_blueprint(water_bp)      # Chemistry: /labs/water-lab/chemistry
+    safe_register_blueprint(micro_bp)      # Microbiology: /labs/water-lab/microbiology
 
     # Чанарын удирдлагын route-уудыг бүртгэх
     if quality_bp.name not in app.blueprints:
@@ -167,8 +181,10 @@ def create_app(config_class=Config):
     # API blueprint-g CSRF-ees cholooloh
     csrf.exempt(api_bp)
     csrf.exempt(petro_bp)
+    csrf.exempt(water_lab_bp)
     csrf.exempt(water_bp)
     csrf.exempt(micro_bp)
+    csrf.exempt(chemicals_bp)
 
     # ======================================================
     # Лиценз хамгаалалт - before_request hook

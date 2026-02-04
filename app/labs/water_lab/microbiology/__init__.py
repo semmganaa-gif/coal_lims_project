@@ -1,5 +1,5 @@
-# app/labs/microbiology/__init__.py
-"""Микробиологийн лаборатори."""
+# app/labs/water_lab/microbiology/__init__.py
+"""Микробиологийн лаборатори (Microbiology Lab)."""
 
 from app.labs.base import BaseLab
 
@@ -25,7 +25,7 @@ class MicrobiologyLab(BaseLab):
 
     @property
     def analysis_codes(self) -> list[str]:
-        from app.labs.microbiology.constants import MICRO_ANALYSIS_TYPES
+        from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
         return [a['code'] for a in MICRO_ANALYSIS_TYPES]
 
     def sample_query(self, statuses=None):

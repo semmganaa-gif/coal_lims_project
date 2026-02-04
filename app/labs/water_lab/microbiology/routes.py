@@ -1,4 +1,4 @@
-# app/labs/microbiology/routes.py
+# app/labs/water_lab/microbiology/routes.py
 """Микробиологийн лабораторийн routes."""
 
 import os
@@ -11,12 +11,12 @@ from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 from app import db
 from app.models import Sample, AnalysisResult
-from app.labs.microbiology.constants import (
+from app.labs.water_lab.microbiology.constants import (
     ALL_MICRO_PARAMS, MICRO_ANALYSIS_TYPES,
     MICRO_WATER_FIELDS, MICRO_AIR_FIELDS, MICRO_SWAB_FIELDS,
     CATEGORY_ANALYSIS_CODES,
 )
-from app.labs.water.constants import (
+from app.labs.water_lab.chemistry.constants import (
     WATER_ANALYSIS_TYPES, WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
 )
 from app.utils.decorators import lab_required
@@ -27,7 +27,7 @@ micro_bp = Blueprint(
     'microbiology',
     __name__,
     template_folder=_template_dir,
-    url_prefix='/labs/microbiology'
+    url_prefix='/labs/water-lab/microbiology'
 )
 
 # Workspace code → field list mapping
@@ -55,14 +55,6 @@ def micro_hub():
         in_progress=stats['in_progress'],
         completed=stats['completed'],
     )
-
-
-@micro_bp.route('/summary')
-@login_required
-@lab_required('microbiology')
-def summary():
-    """Микробиологийн нэгтгэл хуудас."""
-    return render_template('micro_summary.html', title='Микробиологийн нэгтгэл')
 
 
 @micro_bp.route('/edit_sample/<int:sample_id>', methods=['GET', 'POST'])
@@ -191,7 +183,7 @@ def register_sample():
             flash('Дээжний нэр заавал сонгоно уу.', 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
-        from app.labs.water.utils import create_water_micro_samples
+        from app.labs.water_lab.chemistry.utils import create_water_micro_samples
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
@@ -269,7 +261,7 @@ def api_samples():
       → тухайн category-д хамааралтай шинжилгээтэй дээжийг шүүж,
         аль хэдийн үр дүн хадгалсан дээжийг хасна.
     """
-    from app.labs.microbiology.constants import CATEGORY_ANALYSIS_CODES
+    from app.labs.water_lab.microbiology.constants import CATEGORY_ANALYSIS_CODES
 
     category = request.args.get('category')
 

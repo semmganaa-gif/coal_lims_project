@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  {# ===== HEADER ===== #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bi bi-journal-code text-primary me-2"></i>Уусмалын жор
+      </h4>
+      <p class="text-muted mb-0">Урьдчилан тодорхойлсон уусмалуудын жагсаалт</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-1"></i>Бэлдэлтийн түүх
+      </a>
+      <a href="{{ url_for('water.add_recipe') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Шинэ жор
+      </a>
+    </div>
+  </div>
+
+  {# ===== RECIPE CARDS ===== #}
+  {% if recipes %}
+  <div class="row g-4">
+    {% for recipe in recipes %}
+    <div class="col-lg-4 col-md-6">
+      <div class="card h-100 border-0 shadow-sm recipe-card" style="cursor: pointer;"
+           onclick="window.location='{{ url_for('water.recipe_detail', id=recipe.id) }}'">
+        <div class="recipe-card-header py-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="mb-1 text-white fw-semibold">{{ recipe.name }}</h5>
+              {% if recipe.concentration %}
+              <span class="badge bg-light text-dark">
+                {{ recipe.concentration }} {{ recipe.concentration_unit or 'N' }}
+              </span>
+              {% endif %}
+            </div>
+            <span class="badge bg-white text-primary">
+              {{ recipe.standard_volume_ml or 1000 }} мл
+            </span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          {# Орц бодисууд #}
+          <h6 class="text-muted small mb-2">
+            <i class="bi bi-list-check me-1"></i>Орц бодис:
+          </h6>
+          <ul class="list-unstyled small mb-3">
+            {% for ing in recipe.ingredients[:3] %}
+            <li class="mb-1">
+              <i class="bi bi-dot text-primary"></i>
+              {{ ing.chemical.name if ing.chemical else 'Тодорхойгүй' }}:
+              <strong>{{ ing.amount }} {{ ing.unit }}</strong>
+            </li>
+            {% endfor %}
+            {% if recipe.ingredients.count() > 3 %}
+            <li class="text-muted">... +{{ recipe.ingredients.count() - 3 }} бусад</li>
+            {% endif %}
+            {% if recipe.ingredients.count() == 0 %}
+            <li class="text-muted fst-italic">Орц тодорхойлоогүй</li>
+            {% endif %}
+          </ul>
+
+          {# Статистик #}
+          <div class="d-flex justify-content-between text-muted small border-top pt-2">
+            <span>
+              <i class="bi bi-clock me-1"></i>
+              {% if recipe_stats[recipe.id].last_prep %}
+                Сүүлд: {{ recipe_stats[recipe.id].last_prep.prepared_date.strftime('%Y-%m-%d') }}
+              {% else %}
+                Бэлдээгүй
+              {% endif %}
+            </span>
+            <span>
+              <i class="bi bi-bar-chart me-1"></i>
+              {{ recipe_stats[recipe.id].prep_count }} удаа
+            </span>
+          </div>
+        </div>
+
+        <div class="card-footer bg-light border-0">
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('water.recipe_detail', id=recipe.id) }}"
+               class="btn btn-primary btn-sm flex-grow-1" onclick="event.stopPropagation();">
+              <i class="bi bi-eyedropper me-1"></i>Найруулах
+            </a>
+            <a href="{{ url_for('water.edit_recipe', id=recipe.id) }}"
+               class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation();">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  {# Empty state #}
+  <div class="text-center py-5">
+    <i class="bi bi-journal-x text-muted" style="font-size: 4rem;"></i>
+    <h5 class="mt-3 text-muted">Уусмалын жор байхгүй</h5>
+    <p class="text-muted">Эхний жороо нэмж эхлээрэй</p>
+    <a href="{{ url_for('water.add_recipe') }}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>Шинэ жор нэмэх
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.recipe-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.recipe-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+.recipe-card-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 1rem 1.25rem;
+}
+.recipe-card-header h5 {
+  color: #fff !important;
+  font-size: 1.1rem;
+  margin: 0;
+}
+</style>
+{% endblock %}

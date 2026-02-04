@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+  {# ===== BACK BUTTON ===== #}
+  <div class="mb-3">
+    <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left"></i> Буцах
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient text-white py-3" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
+          <h5 class="mb-0">
+            <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
+            {{ 'Уусмал засварлах' if mode == 'edit' else 'Шинэ уусмал бүртгэх' }}
+          </h5>
+        </div>
+
+        <form action="{{ url_for('water.edit_solution', id=solution.id) if mode == 'edit' else url_for('water.add_solution') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="card-body p-4">
+
+            {# === Үндсэн мэдээлэл === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-droplet-half me-2"></i>Уусмалын мэдээлэл
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Уусмалын нэр <span class="text-danger">*</span></label>
+                <input type="text" name="solution_name" class="form-control" required
+                       value="{{ solution.solution_name if solution else '' }}"
+                       placeholder="Ж: HCl 0.1N, NaOH 0.1M">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Концентраци</label>
+                <input type="number" name="concentration" class="form-control" step="0.0001"
+                       value="{{ solution.concentration if solution else '' }}"
+                       placeholder="Ж: 0.1">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Нэгж</label>
+                <select name="concentration_unit" class="form-select">
+                  <option value="mg/L" {{ 'selected' if solution and solution.concentration_unit == 'mg/L' }}>мг/л</option>
+                  <option value="mol/L" {{ 'selected' if solution and solution.concentration_unit == 'mol/L' }}>мол/л (M)</option>
+                  <option value="N" {{ 'selected' if solution and solution.concentration_unit == 'N' }}>N (норм)</option>
+                  <option value="%" {{ 'selected' if solution and solution.concentration_unit == '%' }}>%</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Эзэлхүүн (мл)</label>
+                <input type="number" name="volume_ml" class="form-control" step="0.1"
+                       value="{{ solution.volume_ml if solution else '' }}"
+                       placeholder="Ж: 1000">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Химийн бодис <span class="text-danger">*</span></label>
+                <select name="chemical_id" id="chemicalSelect" class="form-select" onchange="updateChemicalInfo()">
+                  <option value="">-- Сонгох --</option>
+                  {% for c in chemicals %}
+                  <option value="{{ c.id }}"
+                          data-quantity="{{ c.quantity }}"
+                          data-unit="{{ c.unit }}"
+                          {{ 'selected' if solution and solution.chemical_id == c.id }}>
+                    {{ c.name }} ({{ c.quantity }} {{ c.unit }})
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="text-muted" id="chemicalStock">Нөөц: -</small>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Зарцуулсан бодис (мг) <span class="text-danger">*</span></label>
+                <input type="number" name="chemical_used_mg" id="chemicalUsedMg" class="form-control" step="0.01"
+                       value="{{ solution.chemical_used_mg if solution else '' }}"
+                       placeholder="Ж: 3650" onchange="checkStock()">
+                <small class="text-muted" id="stockWarning"></small>
+              </div>
+            </div>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <div class="alert alert-info small mb-0" id="consumptionInfo" style="display: none;">
+                  <i class="bi bi-info-circle me-2"></i>
+                  <span id="consumptionText"></span>
+                </div>
+              </div>
+            </div>
+
+            {# === Огноо === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-calendar3 me-2"></i>Огноо
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label">Бэлдсэн огноо <span class="text-danger">*</span></label>
+                <input type="date" name="prepared_date" class="form-control" required
+                       value="{{ solution.prepared_date.strftime('%Y-%m-%d') if solution and solution.prepared_date else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Хүчинтэй хугацаа</label>
+                <input type="date" name="expiry_date" class="form-control"
+                       value="{{ solution.expiry_date.strftime('%Y-%m-%d') if solution and solution.expiry_date else '' }}">
+              </div>
+              {% if mode == 'edit' %}
+              <div class="col-md-4">
+                <label class="form-label">Төлөв</label>
+                <select name="status" class="form-select">
+                  <option value="active" {{ 'selected' if solution and solution.status == 'active' }}>Идэвхтэй</option>
+                  <option value="expired" {{ 'selected' if solution and solution.status == 'expired' }}>Хугацаа дууссан</option>
+                  <option value="empty" {{ 'selected' if solution and solution.status == 'empty' }}>Дууссан</option>
+                </select>
+              </div>
+              {% endif %}
+            </div>
+
+            {# === Титр тогтоолт === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-clipboard-data me-2"></i>Титр тогтоолт
+            </h6>
+            <div class="row g-3 mb-4">
+              <div class="col-md-2">
+                <label class="form-label">V1</label>
+                <input type="number" name="v1" class="form-control" step="0.0001"
+                       value="{{ solution.v1 if solution and solution.v1 else '' }}"
+                       placeholder="0.0000">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">V2</label>
+                <input type="number" name="v2" class="form-control" step="0.0001"
+                       value="{{ solution.v2 if solution and solution.v2 else '' }}"
+                       placeholder="0.0000">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">V3 (optional)</label>
+                <input type="number" name="v3" class="form-control" step="0.0001"
+                       value="{{ solution.v3 if solution and solution.v3 else '' }}"
+                       placeholder="0.0000">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Vд (дундаж)</label>
+                <input type="text" class="form-control bg-light" readonly id="v_avg_display"
+                       value="{{ '%.4f'|format(solution.v_avg) if solution and solution.v_avg else '-' }}">
+                <small class="text-muted">Автоматаар тооцоологдоно</small>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Титрийн коэффициент (K)</label>
+                <input type="number" name="titer_coefficient" class="form-control" step="0.0001"
+                       value="{{ solution.titer_coefficient if solution and solution.titer_coefficient else '' }}"
+                       placeholder="Ж: 0.9985">
+              </div>
+            </div>
+
+            {# === Уусмал бэлдэх явц === #}
+            <h6 class="text-primary mb-3 border-bottom pb-2">
+              <i class="bi bi-journal-text me-2"></i>Уусмал бэлдэх явц / заалт
+            </h6>
+            <div class="row g-3">
+              <div class="col-12">
+                <textarea name="preparation_notes" class="form-control" rows="4"
+                          placeholder="Уусмал бэлдэх дараалал, заавар, тэмдэглэл...">{{ solution.preparation_notes if solution else '' }}</textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+            <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary">
+              Болих
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg me-1"></i>
+              {{ 'Хадгалах' if mode == 'edit' else 'Бүртгэх' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Химийн бодисын нөөц мэдээлэл харуулах
+function updateChemicalInfo() {
+  const select = document.getElementById('chemicalSelect');
+  const stockInfo = document.getElementById('chemicalStock');
+  const option = select.options[select.selectedIndex];
+
+  if (option && option.value) {
+    const quantity = option.dataset.quantity;
+    const unit = option.dataset.unit;
+    stockInfo.innerHTML = '<i class="bi bi-box-seam me-1"></i>Нөөц: <strong>' + quantity + ' ' + unit + '</strong>';
+    stockInfo.classList.remove('text-muted');
+    stockInfo.classList.add('text-success');
+  } else {
+    stockInfo.innerHTML = 'Нөөц: -';
+    stockInfo.classList.remove('text-success');
+    stockInfo.classList.add('text-muted');
+  }
+  checkStock();
+}
+
+// Зарцуулалт шалгах
+function checkStock() {
+  const select = document.getElementById('chemicalSelect');
+  const usedInput = document.getElementById('chemicalUsedMg');
+  const warning = document.getElementById('stockWarning');
+  const consumptionInfo = document.getElementById('consumptionInfo');
+  const consumptionText = document.getElementById('consumptionText');
+  const option = select.options[select.selectedIndex];
+
+  if (!option || !option.value || !usedInput.value) {
+    warning.innerHTML = '';
+    consumptionInfo.style.display = 'none';
+    return;
+  }
+
+  const usedMg = parseFloat(usedInput.value);
+  const stockQuantity = parseFloat(option.dataset.quantity);
+  const unit = option.dataset.unit;
+
+  // Нэгж хөрвүүлэлт: mg -> бусад нэгж
+  let usedInStockUnit = usedMg;
+  let conversionText = '';
+
+  if (unit === 'g') {
+    usedInStockUnit = usedMg / 1000;
+    conversionText = usedMg + ' мг = ' + usedInStockUnit.toFixed(4) + ' г';
+  } else if (unit === 'kg') {
+    usedInStockUnit = usedMg / 1000000;
+    conversionText = usedMg + ' мг = ' + usedInStockUnit.toFixed(6) + ' кг';
+  } else if (unit === 'mL' || unit === 'ml') {
+    usedInStockUnit = usedMg / 1000;  // assuming density ~1
+    conversionText = usedMg + ' мг ≈ ' + usedInStockUnit.toFixed(4) + ' мл';
+  } else if (unit === 'L') {
+    usedInStockUnit = usedMg / 1000000;
+    conversionText = usedMg + ' мг ≈ ' + usedInStockUnit.toFixed(6) + ' л';
+  } else {
+    conversionText = usedMg + ' мг';
+  }
+
+  // Нөөц шалгах
+  if (usedInStockUnit > stockQuantity) {
+    warning.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Нөөц хүрэлцэхгүй байна!</span>';
+    consumptionInfo.style.display = 'block';
+    consumptionInfo.className = 'alert alert-danger small mb-0';
+    consumptionText.innerHTML = conversionText + ' зарцуулна. Нөөц: ' + stockQuantity + ' ' + unit + ' (Дутагдал: ' + (usedInStockUnit - stockQuantity).toFixed(4) + ' ' + unit + ')';
+  } else {
+    warning.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>OK</span>';
+    consumptionInfo.style.display = 'block';
+    consumptionInfo.className = 'alert alert-info small mb-0';
+    const remaining = stockQuantity - usedInStockUnit;
+    consumptionText.innerHTML = conversionText + ' зарцуулна. Үлдэгдэл: ' + remaining.toFixed(4) + ' ' + unit;
+  }
+}
+
+// Дундаж V автоматаар тооцоолох
+document.addEventListener('DOMContentLoaded', function() {
+  const v1Input = document.querySelector('input[name="v1"]');
+  const v2Input = document.querySelector('input[name="v2"]');
+  const v3Input = document.querySelector('input[name="v3"]');
+  const vAvgDisplay = document.getElementById('v_avg_display');
+
+  function calculateAvg() {
+    const values = [v1Input.value, v2Input.value, v3Input.value]
+      .filter(v => v && v.trim() !== '')
+      .map(v => parseFloat(v));
+
+    if (values.length > 0) {
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      vAvgDisplay.value = avg.toFixed(4);
+    } else {
+      vAvgDisplay.value = '-';
+    }
+  }
+
+  [v1Input, v2Input, v3Input].forEach(input => {
+    input.addEventListener('input', calculateAvg);
+  });
+
+  // Өнөөдрийн огноо default
+  const prepDateInput = document.querySelector('input[name="prepared_date"]');
+  if (prepDateInput && !prepDateInput.value) {
+    prepDateInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Хуудас ачаалахад сонгосон химийн бодис байвал мэдээлэл харуулах
+  updateChemicalInfo();
+});
+</script>
+{% endblock %}

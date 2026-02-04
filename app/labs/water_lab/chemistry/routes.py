@@ -1,5 +1,5 @@
-# app/labs/water/routes.py
-"""Усны лабораторийн routes."""
+# app/labs/water_lab/chemistry/routes.py
+"""Усны хими лабораторийн routes."""
 
 import os
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
@@ -7,11 +7,11 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import Sample, AnalysisResult, AnalysisType, Equipment
 from sqlalchemy import or_
-from app.labs.water.constants import (
+from app.labs.water_lab.chemistry.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
     ALL_WATER_SAMPLE_NAMES, get_mns_standards
 )
-from app.labs.microbiology.constants import MICRO_ANALYSIS_TYPES
+from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -19,7 +19,7 @@ water_bp = Blueprint(
     'water',
     __name__,
     template_folder=_template_dir,
-    url_prefix='/labs/water'
+    url_prefix='/labs/water-lab/chemistry'
 )
 
 
@@ -27,14 +27,14 @@ water_bp = Blueprint(
 @login_required
 @lab_required('water')
 def water_hub():
-    """Усны лабораторийн dashboard."""
+    """Усны хими лабораторийн dashboard."""
     from app.labs import get_lab
     stats = get_lab('water').sample_stats()
     water_count = len(WATER_ANALYSIS_TYPES)
     micro_count = len(MICRO_ANALYSIS_TYPES)
     return render_template(
         'water_hub.html',
-        title='Усны лаборатори',
+        title='Хими лаборатори',
         total_samples=stats['total'],
         new_samples=stats['new'],
         in_progress=stats['in_progress'],
@@ -360,7 +360,7 @@ def register_sample():
             flash('Дээжний нэр заавал сонгоно уу.', 'danger')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if request.args.get('from') == 'micro' else {})))
 
-        from app.labs.water.utils import create_water_micro_samples
+        from app.labs.water_lab.chemistry.utils import create_water_micro_samples
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
