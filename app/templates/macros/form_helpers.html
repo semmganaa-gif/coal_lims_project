@@ -173,7 +173,8 @@
     {% endif %}
 
     {% if delete_url %}
-      <form method="post" action="{{ delete_url }}" style="display: inline;" onsubmit="return confirm('{{ delete_confirm }}');">
+      {# ✅ XSS сэргийлэлт: delete_confirm escape #}
+      <form method="post" action="{{ delete_url }}" style="display: inline;" onsubmit="return confirm('{{ delete_confirm | e }}');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <button type="submit" class="btn btn-outline-danger" title="Устгах">
           <i class="bi bi-trash"></i>

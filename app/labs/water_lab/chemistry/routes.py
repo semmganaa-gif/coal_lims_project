@@ -14,6 +14,8 @@ from app.labs.water_lab.chemistry.constants import (
 from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
 from app.utils.converters import to_float
+from app.utils.security import escape_like_pattern
+from markupsafe import escape as html_escape
 
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 water_bp = Blueprint(
@@ -135,14 +137,20 @@ def archive_data():
 
     samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
 
-    # Тоо тоолох
-    all_archived = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+    # Тоо тоолох (✅ .all() → .count() - memory optimization)
+    water_count = Sample.query.filter(
+        Sample.lab_type == 'water',
         Sample.status == 'archived'
-    ).all()
-    water_count = sum(1 for s in all_archived if s.lab_type == 'water')
-    micro_count = sum(1 for s in all_archived if s.lab_type == 'microbiology')
-    combined_count = sum(1 for s in all_archived if s.lab_type == 'water & micro')
+    ).count()
+    micro_count = Sample.query.filter(
+        Sample.lab_type == 'microbiology',
+        Sample.status == 'archived'
+    ).count()
+    combined_count = Sample.query.filter(
+        Sample.lab_type == 'water & micro',
+        Sample.status == 'archived'
+    ).count()
+    total_archived = water_count + micro_count + combined_count
 
     if not samples:
         return jsonify({
@@ -150,7 +158,7 @@ def archive_data():
             'water_count': water_count,
             'micro_count': micro_count,
             'combined_count': combined_count,
-            'total_count': len(all_archived),
+            'total_count': total_archived,
         })
 
     sample_ids = [s.id for s in samples]
@@ -229,7 +237,7 @@ def archive_data():
         'water_count': water_count,
         'micro_count': micro_count,
         'combined_count': combined_count,
-        'total_count': len(all_archived),
+        'total_count': total_archived,
     })
 
 
@@ -373,7 +381,8 @@ def register_sample():
             return redirect(url_for('water.register_sample'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {e}', 'danger')
+            # ✅ XSS сэргийлэлт: exception message escape
+            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
             from_param = request.args.get('from', '')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
@@ -517,13 +526,15 @@ def workspace(code):
     template = form_templates.get(code_upper, 'analysis_forms/ph_ec_form.html')
 
     # Related equipments for this analysis
+    # ✅ LIKE injection сэргийлэлт
     related_equipments = []
     try:
+        safe_code = escape_like_pattern(code_upper)
         related_equipments = (
             Equipment.query
             .filter(
                 or_(
-                    Equipment.related_analysis.ilike(f'%{code_upper}%'),
+                    Equipment.related_analysis.ilike(f'%{safe_code}%', escape='\\'),
                     Equipment.category == 'water'
                 ),
                 or_(Equipment.status.is_(None), Equipment.status != 'retired')
@@ -710,7 +721,8 @@ def edit_sample(sample_id):
                 return redirect(url_for('water.register_sample'))
             except Exception as e:
                 db.session.rollback()
-                flash(f'Алдаа: {e}', 'danger')
+                # ✅ XSS сэргийлэлт
+                flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     return render_template(
         'water_edit_sample.html',
@@ -1345,7 +1357,8 @@ def add_solution():
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            # ✅ XSS сэргийлэлт
+            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     # GET - Химийн бодисын жагсаалт
     chemicals = Chemical.query.filter(
@@ -1415,7 +1428,8 @@ def edit_solution(id):
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            # ✅ XSS сэргийлэлт
+            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1690,7 +1704,8 @@ def prepare_from_recipe(id):
 
     except Exception as e:
         db.session.rollback()
-        flash(f'Алдаа: {str(e)}', 'danger')
+        # ✅ XSS сэргийлэлт
+        flash(f'Алдаа: {html_escape(str(e))}', 'danger')
         return redirect(url_for('water.recipe_detail', id=id))
 
 
@@ -1778,7 +1793,8 @@ def add_recipe():
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            # ✅ XSS сэргийлэлт
+            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1836,7 +1852,8 @@ def edit_recipe(id):
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            # ✅ XSS сэргийлэлт
+            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(

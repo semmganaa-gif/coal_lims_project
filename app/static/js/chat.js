@@ -294,7 +294,8 @@
       })
       .catch(err => {
         console.error('Error loading contacts:', err);
-        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Алдаа: ${err.message}</p>`;
+        // ✅ XSS сэргийлэлт: err.message escape
+        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Алдаа: ${escapeHtml(err.message || 'Unknown error')}</p>`;
       });
   }
 

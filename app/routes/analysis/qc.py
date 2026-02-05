@@ -7,12 +7,16 @@
   - /correlation_check - Correlation check
 """
 
+from collections import defaultdict
+
 from flask import request, render_template, flash, redirect, url_for
 from flask_login import login_required
 import re
 
 from app import db
 from app.models import Sample, AnalysisResult
+from app.utils.decorators import analysis_role_required
+from app.utils.security import escape_like_pattern
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
 from app.constants import NAME_CLASS_MASTER_SPECS, NAME_CLASS_SPEC_BANDS
@@ -62,9 +66,11 @@ def _auto_find_hourly_samples(com_sample_ids: list) -> list:
 
     for family in families:
         # Family pattern: "SC20251205_D" → хайх: "SC20251205_D%"
-        pattern = f"{family}%"
+        # ✅ LIKE injection сэргийлэлт
+        safe_family = escape_like_pattern(family)
+        pattern = f"{safe_family}%"
         matching_samples = Sample.query.filter(
-            Sample.sample_code.like(pattern)
+            Sample.sample_code.like(pattern, escape='\\')
         ).all()
 
         for s in matching_samples:
@@ -199,6 +205,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/qc/composite_check")
     @login_required
+    @analysis_role_required()
     def qc_composite_check():
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
@@ -223,6 +230,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/qc/norm_limit")
     @login_required
+    @analysis_role_required()
     def qc_norm_limit():
         """
         Дээж тус бүрийн утгыг сонгосон Spec (Name Class)-тэй харьцуулах.
@@ -234,8 +242,8 @@ def register_routes(bp):
             flash("Spec шалгах дээж олдсонгүй.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
-        # Дээжүүдийг татах
-        samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).all()
+        # Дээжүүдийг татах (✅ pagination limit нэмсэн)
+        samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).limit(5000).all()
         if not samples:
             flash("Дээж олдсонгүй.", "warning")
             return redirect(url_for("analysis.sample_summary"))
@@ -255,7 +263,7 @@ def register_routes(bp):
         for r in results:
             try:
                 values_by_sample[r.sample_id][r.analysis_code] = float(r.final_result)
-            except Exception:
+            except (ValueError, TypeError):
                 continue
 
         # ✅ Vdaf тооцоолол: Vdaf = Vad × 100 / (100 - Mad - Aad)
@@ -328,6 +336,7 @@ def register_routes(bp):
     # =====================================================================
     @bp.route("/correlation_check")
     @login_required
+    @analysis_role_required()
     def correlation_check():
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
@@ -336,15 +345,29 @@ def register_routes(bp):
             flash("Хамаарал шалгах дээж олдсонгүй.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
-        samples = Sample.query.filter(Sample.id.in_(ids)).all()
+        # ✅ Pagination limit нэмсэн
+        samples = Sample.query.filter(Sample.id.in_(ids)).limit(5000).all()
+        if not samples:
+            flash("Дээж олдсонгүй.", "warning")
+            return redirect(url_for("analysis.sample_summary"))
+
+        # ✅ N+1 QUERY ЗАСВАР: Бүх үр дүнг нэг query-ээр татах
+        sample_ids = [s.id for s in samples]
+        all_results = AnalysisResult.query.filter(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.status.in_(["approved", "pending_review"])
+        ).all()
+
+        # sample_id-аар group хийх
+        results_by_sample = defaultdict(list)
+        for r in all_results:
+            results_by_sample[r.sample_id].append(r)
+
         data_list = []
 
         for s in samples:
-            # 1. DB-ээс түүхий өгөгдөл
-            results = AnalysisResult.query.filter(
-                AnalysisResult.sample_id == s.id,
-                AnalysisResult.status.in_(["approved", "pending_review"])
-            ).all()
+            # 1. DB-ээс түүхий өгөгдөл (✅ N+1 засагдсан)
+            results = results_by_sample.get(s.id, [])
 
             res_map = {r.analysis_code: r.final_result for r in results}
 

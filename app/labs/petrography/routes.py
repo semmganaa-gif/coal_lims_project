@@ -5,10 +5,12 @@ import json
 import os
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
+from markupsafe import escape as html_escape
 from app import db
-from app.models import Sample, AnalysisResult, AnalysisType
+from app.models import Sample, AnalysisResult
 from app.labs.petrography.constants import ALL_PETRO_PARAMS, PETRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
+from app.routes.api.helpers import api_success, api_error
 
 # Template folder тохируулах
 _template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -101,18 +103,21 @@ def eligible_samples(code):
 
     Нүүрсний лаб-аас sample_type='PE' гэж бүртгэгдсэн дээжүүд.
     """
+    # ✅ Pagination limit нэмсэн
     samples = _pe_samples(
         ['new', 'in_progress', 'analysis', 'prepared']
-    ).order_by(Sample.received_date.desc()).all()
+    ).order_by(Sample.received_date.desc()).limit(500).all()
     result = []
     for s in samples:
         result.append({
             'id': s.id,
             'sample_code': s.sample_code,
-            'client_name': s.client_name,
+            # ✅ XSS сэргийлэлт: client_name escape
+            'client_name': str(html_escape(s.client_name)) if s.client_name else None,
             'sample_date': s.sample_date.isoformat() if s.sample_date else None,
         })
-    return jsonify(result)
+    # ✅ API response format стандартчилсан
+    return api_success(result)
 
 
 @petro_bp.route('/api/save_results', methods=['POST'])
@@ -122,30 +127,43 @@ def save_results():
     """Үр дүн хадгалах."""
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        return api_error('No data provided', status_code=400)
 
     sample_id = data.get('sample_id')
     analysis_code = data.get('analysis_code')
     results = data.get('results', {})
 
+    # ✅ Input validation
+    if not sample_id or not analysis_code:
+        return api_error('sample_id болон analysis_code шаардлагатай', status_code=400)
+
+    # ✅ analysis_code validation
+    valid_codes = [a['code'] for a in PETRO_ANALYSIS_TYPES]
+    if analysis_code.upper() not in valid_codes:
+        return api_error(f'Буруу analysis_code: {analysis_code}', status_code=400)
+
     sample = db.session.get(Sample, sample_id)
     if not sample:
-        return jsonify({'error': 'Sample not found'}), 404
+        return api_error('Sample not found', status_code=404)
 
     # Үр дүнг хадгалах
-    ar = AnalysisResult(
-        sample_id=sample_id,
-        analysis_code=analysis_code,
-        raw_data=json.dumps(results, ensure_ascii=False),
-        user_id=current_user.id,
-    )
-    db.session.add(ar)
+    try:
+        ar = AnalysisResult(
+            sample_id=sample_id,
+            analysis_code=analysis_code.upper(),
+            raw_data=json.dumps(results, ensure_ascii=False),
+            user_id=current_user.id,
+        )
+        db.session.add(ar)
 
-    from app.utils.database import safe_commit
-    if not safe_commit():
-        return jsonify({'error': 'Үр дүн хадгалахад алдаа гарлаа'}), 500
+        from app.utils.database import safe_commit
+        if not safe_commit():
+            return api_error('Үр дүн хадгалахад алдаа гарлаа', status_code=500)
 
-    return jsonify({'success': True, 'id': ar.id})
+        return api_success({'id': ar.id}, 'Үр дүн хадгалагдлаа')
+    except Exception as e:
+        db.session.rollback()
+        return api_error(f'Алдаа: {html_escape(str(e))}', status_code=500)
 
 
 @petro_bp.route('/api/data')
@@ -162,9 +180,11 @@ def petro_data():
         result.append({
             'id': s.id,
             'sample_code': s.sample_code,
-            'client_name': s.client_name,
+            # ✅ XSS сэргийлэлт
+            'client_name': str(html_escape(s.client_name)) if s.client_name else None,
             'status': s.status,
             'sample_date': s.sample_date.isoformat() if s.sample_date else None,
             'received_date': s.received_date.isoformat() if s.received_date else None,
         })
-    return jsonify(result)
+    # ✅ API response format стандартчилсан
+    return api_success(result)
