@@ -106,6 +106,7 @@ coverage-js/
 *.dump
 temp_*.json
 seed_*.py
+!scripts/seeds/seed_*.py
 update_*.py
 
 # Screenshots
