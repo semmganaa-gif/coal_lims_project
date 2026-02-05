@@ -89,8 +89,8 @@
     </div>
   </div>
 
-  {% include 'analysis_forms/micro_quick_ref.html' %}
-  {% include 'analysis_forms/micro_timer_panel.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_timer_panel.html' %}
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
@@ -444,11 +444,11 @@ document.addEventListener('DOMContentLoaded', function() {
     { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true,
       cellEditor: DateCellEditor },
     {
-      headerName: 'CFU — MNS ISO 6222:1998\n(1мл-т <100)',
+      headerName: 'CFU\n/MNS ISO 6222:1998/\n1 мл-т 100',
       headerClass: 'ag-header-cell-wrap',
       children: [
-        numCol('cfu_22', '22°С'),
-        numCol('cfu_37', '37°С'),
+        numCol('cfu_22', '22°C'),
+        numCol('cfu_37', '37°C'),
         {
           field: 'cfu_avg', headerName: 'Дундаж', minWidth: 90,
           editable: false, type: 'numericColumn',
@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const v37 = Number(p.data.cfu_37);
             if (!isNaN(v22) && !isNaN(v37) && p.data.cfu_22 !== null && p.data.cfu_22 !== '' &&
                 p.data.cfu_37 !== null && p.data.cfu_37 !== '') {
-              return Math.round(((v22 + v37) / 2) * 100) / 100;
+              return Math.round((v22 + v37) / 2);
             }
             return null;
           },
@@ -466,8 +466,8 @@ document.addEventListener('DOMContentLoaded', function() {
       ]
     },
     {
-      field: 'ecoli', headerName: 'E.coli\nMNS ISO 9308-1:1998\n(100мл-т илрэхгүй)',
-      minWidth: 140, editable: true,
+      field: 'ecoli', headerName: 'E.coli\n/MNS ISO 9308-1:1998/\n100 мл-т Илрэхгүй',
+      minWidth: 160, editable: true,
       headerClass: 'ag-header-cell-wrap',
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
@@ -477,8 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }),
     },
     {
-      field: 'salmonella', headerName: 'Salmonella\nMNS ISO 19250:2017\n(25мл-т илрэхгүй)',
-      minWidth: 140, editable: true,
+      field: 'salmonella', headerName: 'Salmonella.spp\n/MNS ISO 19250:2017/\n25 мл-т Илрэхгүй',
+      minWidth: 160, editable: true,
       headerClass: 'ag-header-cell-wrap',
       cellEditor: 'agSelectCellEditor',
       cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },

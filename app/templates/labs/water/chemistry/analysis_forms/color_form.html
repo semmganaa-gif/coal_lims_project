@@ -1,0 +1,120 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Спектрофотометр</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 1097:2023 - Өнгө</h6>
+  <small class="text-muted">
+    <strong>Дундаж</strong> = (Үр дүн 1 + Үр дүн 2) / 2<br>
+    <strong>Эцсийн үр дүн</strong> = Дундаж × Шингэрүүлэлт<br>
+    <span class="text-info">MNS хязгаар: ≤20</span>
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  var formColumns = [
+    { headerName: 'Сорьцын V, мл', field: 'v_sample', width: 110, type: 'numericColumn', ...editCol,
+      headerTooltip: 'Сорьцын эзэлхүүн' },
+    { headerName: 'Шингэрүүлэлт', field: 'dilution', width: 100, type: 'numericColumn',
+      ...editCol, valueFormatter: p => p.value != null ? p.value : '1' },
+    { headerName: 'Abs 1', field: 'abs1', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt3,
+      headerTooltip: 'Гэрэл шингээлт 1' },
+    { headerName: 'Abs 2', field: 'abs2', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt3,
+      headerTooltip: 'Гэрэл шингээлт 2' },
+    { headerName: 'Үр дүн 1', field: 'r1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+      headerTooltip: 'Шингээлтийн үр дүн 1' },
+    { headerName: 'Үр дүн 2', field: 'r2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+      headerTooltip: 'Шингээлтийн үр дүн 2' },
+    {
+      headerName: 'Дундаж', field: 'average', width: 90,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2;
+        if (r1 != null && r2 != null) return (r1 + r2) / 2;
+        if (r1 != null) return r1;
+        if (r2 != null) return r2;
+        return null;
+      },
+      valueFormatter: fmt2,
+      cellStyle: { color: '#0d6efd', fontWeight: '600' },
+      headerTooltip: 'Шинжилгээний дундаж утга'
+    },
+    {
+      headerName: 'Үр дүн', field: 'result', width: 100,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2;
+        const dil = p.data.dilution || 1;
+        let avg = null;
+        if (r1 != null && r2 != null) avg = (r1 + r2) / 2;
+        else if (r1 != null) avg = r1;
+        else if (r2 != null) avg = r2;
+        return avg != null ? avg * dil : null;
+      },
+      valueFormatter: fmt1,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    },
+    {
+      headerName: 'Зөрүү', field: 'diff', width: 70,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2;
+        return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;
+      },
+      valueFormatter: fmt2
+    },
+  ];
+  var editableFields = ['v_sample', 'dilution', 'abs1', 'abs2', 'r1', 'r2', 'notes'];
+  var computedCols = ['average', 'result', 'diff'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      v_sample: raw.v_sample ?? 50,
+      dilution: raw.dilution ?? 1,
+      abs1: raw.abs1 ?? null,
+      abs2: raw.abs2 ?? null,
+      r1: raw.r1 ?? null,
+      r2: raw.r2 ?? null,
+      notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const dil = d.dilution || 1;
+
+      let avg = null;
+      if (d.r1 != null && d.r2 != null) avg = (d.r1 + d.r2) / 2;
+      else if (d.r1 != null) avg = d.r1;
+      else if (d.r2 != null) avg = d.r2;
+
+      const result = avg != null ? avg * dil : null;
+
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: {
+          v_sample: d.v_sample,
+          dilution: d.dilution,
+          abs1: d.abs1,
+          abs2: d.abs2,
+          r1: d.r1,
+          r2: d.r2,
+          average: avg,
+          result: result,
+          notes: d.notes
+        }
+      });
+    });
+    return items;
+  }
+{% endblock %}

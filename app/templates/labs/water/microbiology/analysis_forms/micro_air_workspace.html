@@ -14,6 +14,8 @@
   .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
   .ag-theme-alpine { --ag-header-background-color: #eef2ff; --ag-odd-row-background-color: #fafbff; --ag-row-hover-color: #eef2ff; --ag-header-foreground-color: #0f172a; --ag-border-color: #e2e8f0; }
   .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+  .ag-theme-alpine .ag-header-cell-wrap .ag-header-cell-text { white-space: pre-line !important; line-height: 1.3; text-align: center; }
+  .ag-theme-alpine .ag-header-row { height: auto !important; min-height: 80px; }
   .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
   .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
   .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -44,8 +46,8 @@
       <button id="btnSave" class="btn text-white" style="background:#6366f1;"><i class="bi bi-save me-1"></i>Хадгалах</button>
     </div>
   </div>
-  {% include 'analysis_forms/micro_quick_ref.html' %}
-  {% include 'analysis_forms/micro_timer_panel.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_timer_panel.html' %}
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
@@ -53,9 +55,9 @@
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#c7d2fe"></div> CFU: 1м³-д &lt;3000</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Staphylococcus: 1м³-д &lt;50</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Mold/Fungi: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c7d2fe"></div> Бактерийн тоо: MNS 5484:2005 (1м³-д &lt;3000)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> S.aureus: MNS 5484:2005 (1м³-д &lt;50)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Илрээгүй" эсвэл "Илэрсэн" → тоо оруулах</em></div>
     </div>
   </div>
 </div>
@@ -243,8 +245,76 @@ document.addEventListener('DOMContentLoaded', function() {
   let rowSeq = 0;
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  const numCol = (field, headerName) => ({ field, headerName, minWidth: 95, editable: true, type: 'numericColumn', valueParser: p => { const v = Number(p.newValue); return isNaN(v) ? null : v; } });
-  const presenceCol = (field, headerName) => ({ field, headerName, minWidth: 130, editable: true, headerClass: 'ag-header-cell-wrap', cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] }, cellStyle: p => ({ color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857', fontWeight: '600' }) });
+  // "Илрээгүй"/"Илэрсэн" сонгоод, "Илэрсэн" бол тоо оруулах Cell Editor
+  class PresenceNumberEditor {
+    init(params) {
+      this.params = params;
+      this.limit = params.limit || 9999;
+      this.value = params.value;
+
+      this.container = document.createElement('div');
+      this.container.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;min-width:120px;';
+
+      // Select dropdown
+      this.select = document.createElement('select');
+      this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
+      this.select.innerHTML = '<option value="Илрээгүй">Илрээгүй</option><option value="Илэрсэн">Илэрсэн (тоо оруулах)</option>';
+
+      // Number input (hidden initially)
+      this.numInput = document.createElement('input');
+      this.numInput.type = 'number';
+      this.numInput.min = '0';
+      this.numInput.placeholder = 'Тоо оруулах...';
+      this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
+
+      this.container.appendChild(this.select);
+      this.container.appendChild(this.numInput);
+
+      // Set initial value
+      if (this.value && this.value !== 'Илрээгүй') {
+        this.select.value = 'Илэрсэн';
+        this.numInput.value = this.value;
+        this.numInput.style.display = 'block';
+      }
+
+      // Event listeners
+      this.select.addEventListener('change', () => {
+        if (this.select.value === 'Илэрсэн') {
+          this.numInput.style.display = 'block';
+          this.numInput.focus();
+        } else {
+          this.numInput.style.display = 'none';
+          this.numInput.value = '';
+        }
+      });
+
+      this.numInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { this.params.stopEditing(); }
+        if (e.key === 'Escape') { this.params.stopEditing(true); }
+      });
+    }
+    getGui() { return this.container; }
+    afterGuiAttached() { this.select.focus(); }
+    getValue() {
+      if (this.select.value === 'Илрээгүй') return 'Илрээгүй';
+      const num = parseFloat(this.numInput.value);
+      return isNaN(num) ? 'Илрээгүй' : num;
+    }
+    isPopup() { return true; }
+  }
+
+  // Микро баганы тохиргоо
+  const microCol = (field, headerName, limit) => ({
+    field, headerName, minWidth: 120, editable: true, headerClass: 'ag-header-cell-wrap',
+    cellEditor: PresenceNumberEditor,
+    cellEditorParams: { limit },
+    cellStyle: p => {
+      if (p.value === 'Илрээгүй') return { color: '#047857', fontWeight: '600' };
+      const num = Number(p.value);
+      if (!isNaN(num) && limit && num >= limit) return { color: '#dc2626', fontWeight: '600', background: '#fef2f2' };
+      return { fontWeight: '500' };
+    }
+  });
 
   function showToast(msg, type) { type=type||'success'; const c={success:'#6366f1',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
   function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
@@ -254,9 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
     { field: 'sample_code', headerName: 'Сорьцын нэр\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
     { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
     { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    numCol('cfu_air', 'CFU\nMNS 5484:2005\n(1м³-д <3000)'),
-    numCol('staphylococcus', 'Staphylococcus spp.\n(1м³-д <50)'),
-    presenceCol('mold_fungi', 'Mold/Fungi\n(Илрэхгүй)'),
+    microCol('cfu_air', 'Бактерийн тоо\nMNS 5484:2005\nЗөвшөөрөгдөх хэмжээ\n1м³-д <3000', 3000),
+    microCol('staphylococcus', 'S.aureus\nMNS 5484:2005\nЗөвшөөрөгдөх хэмжээ\n1м³-д <50', 50),
     { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Устгах" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
   ];
 
@@ -265,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) { initialRows = savedDraft.rows; rowSeq = initialRows.length; }
 
   const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
-    editableColIds: ['start_date', 'end_date', 'cfu_air', 'staphylococcus', 'mold_fungi'],
+    editableColIds: ['start_date', 'end_date', 'cfu_air', 'staphylococcus'],
     undoRedoCellEditing: true, undoRedoCellEditingLimit: 20,
     onCellValueChanged: () => saveDraft(),
     onFirstDataRendered: p => { p.api.autoSizeAllColumns(); updateRowCount(); },

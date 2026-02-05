@@ -258,7 +258,7 @@ WATER_ANALYSIS_TYPES = [
     {'code': 'F_W', 'name': 'Фторид (F⁻)', 'order': 10, 'role': 'chemist', 'categories': ['drinking']},
     {'code': 'CL_FREE', 'name': 'Чөлөөт үлдэгдэл хлор', 'order': 11, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
     {'code': 'PH', 'name': 'Усны орчин (pH)', 'order': 12, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
     {'code': 'PO4', 'name': 'Фосфат ион (PO₄³⁻)', 'order': 14, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 15, 'role': 'chemist', 'categories': ['wastewater']},
     # ─── Лагийн шинжилгээ ───
@@ -327,6 +327,7 @@ WATER_UNITS = {
         'samples': [
             'Цагаан хад боловсруулагдах ус',
             'Цагаан хад цэвэршүүлсэн ус',
+            'Цагаан хад гүний худаг',
         ],
     },
     'tsetsii': {

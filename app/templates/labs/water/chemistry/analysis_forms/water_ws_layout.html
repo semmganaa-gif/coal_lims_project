@@ -656,12 +656,12 @@
   let allSamples = [];
   let modalSelected = new Set();
 
-  // localStorage sync
+  // localStorage sync (graceful fallback when blocked)
   (function syncIds() {
     const url = new URL(window.location.href);
     const urlIds = url.searchParams.get('sample_ids');
     if (urlIds) {
-      try { localStorage.setItem(storageKey, urlIds); } catch(e) {}
+      try { localStorage.setItem(storageKey, urlIds); } catch(e) { /* localStorage blocked */ }
     } else {
       try {
         const saved = localStorage.getItem(storageKey);
@@ -669,7 +669,7 @@
           url.searchParams.set('sample_ids', saved);
           window.location.href = url.toString();
         }
-      } catch(e) {}
+      } catch(e) { /* localStorage blocked - URL params only mode */ }
     }
   })();
 

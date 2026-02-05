@@ -63,7 +63,7 @@
       <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="Шинэчлэх">
         <i class="bi bi-arrow-clockwise"></i>
       </button>
-      <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-secondary" title="Нэгтгэл руу">
+      <a href="{{ url_for('water.water_summary', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="Нэгтгэл руу">
         <i class="bi bi-arrow-left me-1"></i>Нэгтгэл
       </a>
     </div>
@@ -367,6 +367,8 @@
         document.getElementById('rowCount').textContent = (data.rows || []).length;
         document.getElementById('gridTitle').innerHTML = (TAB_CONFIG[currentType] || TAB_CONFIG['water']).title;
         setGridData(data.rows || []);
+        // Баганы өргөнийг текстийн өргөнөөр тохируулах
+        setTimeout(function() { if (gridApi) gridApi.autoSizeAllColumns(); }, 100);
       })
       .catch(function(err) {
         console.error('Load error:', err);

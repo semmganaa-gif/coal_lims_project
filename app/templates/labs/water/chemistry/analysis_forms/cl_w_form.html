@@ -1,0 +1,142 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Титрлэлт (AgNO₃)</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 4424:2005 - Хлорид ион</h6>
+  <small class="text-muted">
+    <strong>K</strong> = Vt_теор / Vt_дундаж (засварын коэффициент)<br>
+    <strong>Томьёо:</strong> Cl⁻ (мг/л) = (Vd - V0) × K × N × 35.453 × 1000 / V × Шингэрүүлэлт<br>
+    <span class="text-info">MNS хязгаар: ≤1000 мг/л</span>
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  const CL_MASS = 35.453;
+
+  function calcChloride(d) {
+    const v1 = d.v1, v2 = d.v2, v0 = d.v0 || 0;
+    if (v1 == null && v2 == null) return null;
+    const vd = (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2);
+    const K = d.k_coef || 1;
+    const N = d.n_agno3 || 0.1;
+    const V = d.v_sample || 50;
+    const dil = d.dilution || 1;
+    if (V === 0) return null;
+    return ((vd - v0) * K * N * CL_MASS * 1000 / V) * dil;
+  }
+
+  var formColumns = [
+    // Засварын коэффициент
+    {
+      headerName: 'Засварын коэффициент',
+      children: [
+        { headerName: 'Vt1', field: 'vt1', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'Vt2', field: 'vt2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        {
+          headerName: 'Vtd', field: 'vtd', width: 85,
+          valueGetter: p => {
+            const vt1 = p.data.vt1, vt2 = p.data.vt2;
+            return (vt1 != null && vt2 != null) ? (vt1 + vt2) / 2 : (vt1 || vt2 || null);
+          },
+          valueFormatter: fmt2
+        },
+        {
+          headerName: 'K', field: 'k_coef', width: 110, type: 'numericColumn', ...editCol,
+          valueFormatter: p => p.value != null ? p.value.toFixed(6) : '',
+          headerTooltip: 'Засварын коэффициент = Vt_теор / Vt_дундаж'
+        },
+      ]
+    },
+    // AgNO3 параметрүүд
+    { headerName: 'N', field: 'n_agno3', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+      headerTooltip: 'AgNO₃ концентраци' },
+    { headerName: 'V, мл', field: 'v_sample', width: 85, type: 'numericColumn', ...editCol,
+      headerTooltip: 'Сорьцын эзлэхүүн' },
+    { headerName: 'V0', field: 'v0', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+      headerTooltip: 'Хоосон титрлэлт' },
+    // Сорьц титрлэлт
+    {
+      headerName: 'Сорьц титрлэлт',
+      children: [
+        { headerName: 'V1', field: 'v1', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'V2', field: 'v2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        {
+          headerName: 'Vd', field: 'vd', width: 85,
+          valueGetter: p => {
+            const v1 = p.data.v1, v2 = p.data.v2;
+            return (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2 || null);
+          },
+          valueFormatter: fmt2,
+          cellStyle: { fontWeight: '600', color: '#0d6efd' }
+        },
+      ]
+    },
+    { headerName: 'Шинг.', field: 'dilution', width: 80, type: 'numericColumn', ...editCol,
+      valueFormatter: p => p.value != null ? p.value : '1',
+      headerTooltip: 'Шингэрүүлэлт' },
+    {
+      headerName: 'Cl⁻ мг/л', field: 'result', width: 110,
+      valueGetter: p => calcChloride(p.data),
+      valueFormatter: fmt2,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    },
+  ];
+  var editableFields = ['vt1', 'vt2', 'k_coef', 'n_agno3', 'v_sample', 'v0', 'v1', 'v2', 'dilution', 'notes'];
+  var computedCols = ['vtd', 'vd', 'result'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      vt1: raw.vt1 ?? null,
+      vt2: raw.vt2 ?? null,
+      k_coef: raw.k_coef ?? 1,
+      n_agno3: raw.n_agno3 ?? 0.1,
+      v_sample: raw.v_sample ?? 50,
+      v0: raw.v0 ?? null,
+      v1: raw.v1 ?? null,
+      v2: raw.v2 ?? null,
+      dilution: raw.dilution ?? 1,
+      notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const vtd = (d.vt1 != null && d.vt2 != null) ? (d.vt1 + d.vt2) / 2 : (d.vt1 || d.vt2 || null);
+      const vd = (d.v1 != null && d.v2 != null) ? (d.v1 + d.v2) / 2 : (d.v1 || d.v2 || null);
+      const result = calcChloride(d);
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: {
+          vt1: d.vt1,
+          vt2: d.vt2,
+          vtd: vtd,
+          k_coef: d.k_coef,
+          n_agno3: d.n_agno3,
+          v_sample: d.v_sample,
+          v0: d.v0,
+          v1: d.v1,
+          v2: d.v2,
+          vd: vd,
+          dilution: d.dilution,
+          result: result,
+          notes: d.notes
+        }
+      });
+    });
+    return items;
+  }
+{% endblock %}

@@ -167,16 +167,18 @@ def archive_data():
     ]
 
     # ── Бүх үр дүн (хими + микро) ──
-    all_codes = active_chem_codes + ['MICRO_WATER']
+    all_codes = active_chem_codes + ['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']
     results = AnalysisResult.query.filter(
         AnalysisResult.sample_id.in_(sample_ids),
         AnalysisResult.analysis_code.in_(all_codes),
     ).all()
 
     # sample_id → { code → value } (хими)
-    # sample_id → { micro fields } (микро)
+    # sample_id → { micro fields } (микро water + air + swab)
     chem_map = {}
     micro_map = {}
+    air_map = {}
+    swab_map = {}
     for r in results:
         try:
             raw = _json.loads(r.raw_data) if isinstance(r.raw_data, str) else (r.raw_data or {})
@@ -185,6 +187,10 @@ def archive_data():
 
         if r.analysis_code == 'MICRO_WATER':
             micro_map[r.sample_id] = raw
+        elif r.analysis_code == 'MICRO_AIR':
+            air_map[r.sample_id] = raw
+        elif r.analysis_code == 'MICRO_SWAB':
+            swab_map[r.sample_id] = raw
         else:
             if r.sample_id not in chem_map:
                 chem_map[r.sample_id] = {}
@@ -217,15 +223,31 @@ def archive_data():
         cres = chem_map.get(s.id, {})
         for code in active_chem_codes:
             row[code] = cres.get(code)
-        # Микро
+        # Микро (усны)
         mres = micro_map.get(s.id, {})
         row['cfu_22'] = mres.get('cfu_22')
         row['cfu_37'] = mres.get('cfu_37')
-        row['cfu_avg'] = mres.get('cfu_avg')
-        row['ecoli'] = mres.get('ecoli')
-        row['salmonella'] = mres.get('salmonella')
-        row['air_cfu'] = mres.get('air_cfu')
-        row['staph'] = mres.get('staph')
+        # CFU дундаж - raw_data-д байвал авах, үгүй бол тооцоолох
+        cfu_avg = mres.get('cfu_avg')
+        if cfu_avg is None:
+            c22 = mres.get('cfu_22')
+            c37 = mres.get('cfu_37')
+            if c22 is not None and c37 is not None:
+                try:
+                    cfu_avg = round((float(c22) + float(c37)) / 2)
+                except (ValueError, TypeError):
+                    cfu_avg = None
+        # Агаарын микро (MICRO_AIR)
+        ares = air_map.get(s.id, {})
+        row['air_cfu'] = ares.get('cfu_air')
+        # Арчдасны микро (MICRO_SWAB)
+        sres = swab_map.get(s.id, {})
+        # CFU дундаж - ус эсвэл арчдасаас авах (нэгтгэсэн)
+        row['cfu_avg'] = cfu_avg or sres.get('cfu_swab')
+        # E.coli, Salmonella, S.aureus - ус эсвэл арчдасаас авах (нэгтгэсэн)
+        row['ecoli'] = mres.get('ecoli') or sres.get('ecoli_swab')
+        row['salmonella'] = mres.get('salmonella') or sres.get('salmonella_swab')
+        row['staph'] = ares.get('staphylococcus') or sres.get('staphylococcus_swab')
 
         rows.append(row)
 
@@ -271,16 +293,18 @@ def summary_data():
     ]
 
     # ── Бүх үр дүн (хими + микро) нэг query ──
-    all_codes = active_chem_codes + ['MICRO_WATER']
+    all_codes = active_chem_codes + ['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']
     results = AnalysisResult.query.filter(
         AnalysisResult.sample_id.in_(sample_ids),
         AnalysisResult.analysis_code.in_(all_codes),
     ).all()
 
     # sample_id → { code → value } (хими)
-    # sample_id → { micro fields } (микро)
+    # sample_id → { micro fields } (микро water + air + swab)
     chem_map = {}
     micro_map = {}
+    air_map = {}
+    swab_map = {}
     for r in results:
         try:
             raw = _json.loads(r.raw_data) if isinstance(r.raw_data, str) else (r.raw_data or {})
@@ -290,6 +314,12 @@ def summary_data():
         if r.analysis_code == 'MICRO_WATER':
             # Микро raw_data: {cfu_22, cfu_37, ecoli, salmonella, ...}
             micro_map[r.sample_id] = raw
+        elif r.analysis_code == 'MICRO_AIR':
+            # Агаарын микро raw_data: {cfu_air, staphylococcus, ...}
+            air_map[r.sample_id] = raw
+        elif r.analysis_code == 'MICRO_SWAB':
+            # Арчдасны микро raw_data: {cfu_swab, ecoli_swab, salmonella_swab, staphylococcus_swab, ...}
+            swab_map[r.sample_id] = raw
         else:
             if r.sample_id not in chem_map:
                 chem_map[r.sample_id] = {}
@@ -322,13 +352,31 @@ def summary_data():
         cres = chem_map.get(s.id, {})
         for code in active_chem_codes:
             row[code] = cres.get(code)
-        # Микро
+        # Микро (усны)
         mres = micro_map.get(s.id, {})
         row['cfu_22'] = mres.get('cfu_22')
         row['cfu_37'] = mres.get('cfu_37')
-        row['cfu_avg'] = mres.get('cfu_avg')
-        row['ecoli'] = mres.get('ecoli')
-        row['salmonella'] = mres.get('salmonella')
+        # CFU дундаж - raw_data-д байвал авах, үгүй бол тооцоолох
+        cfu_avg = mres.get('cfu_avg')
+        if cfu_avg is None:
+            c22 = mres.get('cfu_22')
+            c37 = mres.get('cfu_37')
+            if c22 is not None and c37 is not None:
+                try:
+                    cfu_avg = round((float(c22) + float(c37)) / 2)
+                except (ValueError, TypeError):
+                    cfu_avg = None
+        # Агаарын микро (MICRO_AIR)
+        ares = air_map.get(s.id, {})
+        row['air_cfu'] = ares.get('cfu_air')
+        # Арчдасны микро (MICRO_SWAB)
+        sres = swab_map.get(s.id, {})
+        # CFU дундаж - ус эсвэл арчдасаас авах (нэгтгэсэн)
+        row['cfu_avg'] = cfu_avg or sres.get('cfu_swab')
+        # E.coli, Salmonella, S.aureus - ус эсвэл арчдасаас авах (нэгтгэсэн)
+        row['ecoli'] = mres.get('ecoli') or sres.get('ecoli_swab')
+        row['salmonella'] = mres.get('salmonella') or sres.get('salmonella_swab')
+        row['staph'] = ares.get('staphylococcus') or sres.get('staphylococcus_swab')
 
         rows.append(row)
 
@@ -423,17 +471,17 @@ def workspace(code):
         'MG': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'ALK': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         # Спектрофотометр
-        'NH4': 'labs/water/chemistry/analysis_forms/spectro_form.html',
-        'NO2': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'NH4': 'labs/water/chemistry/analysis_forms/nh4_form.html',
+        'NO2': 'labs/water/chemistry/analysis_forms/no2_form.html',
         'NO3': 'labs/water/chemistry/analysis_forms/spectro_form.html',
         'FE_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
-        'COLOR': 'labs/water/chemistry/analysis_forms/spectro_form.html',
-        'PO4': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'COLOR': 'labs/water/chemistry/analysis_forms/color_form.html',
+        'PO4': 'labs/water/chemistry/analysis_forms/po4_form.html',
         # Титрлэлт
         'HARD': 'labs/water/chemistry/analysis_forms/titration_form.html',
-        'CL_W': 'labs/water/chemistry/analysis_forms/titration_form.html',
+        'CL_W': 'labs/water/chemistry/analysis_forms/cl_w_form.html',
         # Жингийн арга
-        'TDS': 'labs/water/chemistry/analysis_forms/gravimetric_form.html',
+        'TDS': 'labs/water/chemistry/analysis_forms/tds_form.html',
         # Архив
         'MN_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
         'CU_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
@@ -563,9 +611,9 @@ def workspace(code):
 @login_required
 @lab_required('water')
 def eligible_samples(code):
-    """Боломжит дээж (усны шинжилгээнд)."""
+    """Боломжит дээж (усны химийн шинжилгээнд)."""
     samples = Sample.query.filter(
-        Sample.lab_type == 'water',
+        Sample.lab_type.in_(['water', 'water & micro']),  # microbiology хасагдсан
         Sample.status.in_(['new', 'in_progress'])
     ).all()
     result = []

@@ -12,11 +12,11 @@
 {% set source = aggrid_samples if aggrid_samples is defined else samples %}
 const {{ samples_var }} = [
   {% for sample in source %}
-  {% set primary_name = sample.code | default(sample.sample_code, true) %}
-  {% if primary_name in [None, ''] %}
-    {% set primary_name = sample.name | default(sample.sample_name, true) %}
+  {% set primary_name = sample.sample_code | default(sample.code, true) %}
+  {% if not primary_name %}
+    {% set primary_name = sample.name | default('', true) %}
   {% endif %}
-  {% if primary_name in [None, ''] %}
+  {% if not primary_name %}
     {% set primary_name = 'ID ' ~ sample.id %}
   {% endif %}
   { id: {{ sample.id }}, code: {{ primary_name | tojson | safe }}{% if include_client %}, client: {{ (sample.client_name or '-') | tojson | safe }}{% endif %} }{% if not loop.last %},{% endif %}
@@ -28,7 +28,7 @@ const _dbg_samples_defined = {{ (samples is defined) | lower }};
 const _dbg_aggrid_len = {{ aggrid_samples|length if aggrid_samples is defined else -1 }};
 const _dbg_samples_len = {{ samples|length if samples is defined else -1 }};
 const _dbg_combined_ids = {{ (aggrid_samples or samples or []) | map(attribute='id') | list | tojson | safe }};
-console.log('AGGrid dataset {{ samples_var }} len=', {{ source|length }}, 'ids=', {{ samples_var }}_ids, 'aggrid_defined=', _dbg_aggrid_defined, 'samples_defined=', _dbg_samples_defined, 'aggrid_len=', _dbg_aggrid_len, 'samples_len=', _dbg_samples_len, 'combined_ids=', _dbg_combined_ids);
+console.log('AGGrid dataset {{ samples_var }}:', {{ samples_var }}, 'len=', {{ source|length }});
 {% if include_existing %}
 const {{ existing_var }} = {{ existing_results_map | default({}) | tojson | safe }};
 {% endif %}

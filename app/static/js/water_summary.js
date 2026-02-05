@@ -190,20 +190,21 @@ const WaterSummaryGrid = (function() {
     { code: 'SLUDGE_INDEX', name: 'Лагийн индекс', shortName: 'SI', unit: 'мл/г', mns_limit: [80, 150] }
   ];
 
-  // Микробиологийн баганууд - давхардаагүй
-  // primary: true = үргэлж харагдана, false = зөвхөн group дэлгэсэн үед
+  // Микробиологийн баганууд - Ус, Агаар, Арчдас нэгтгэсэн
   const MICRO_COLUMNS = [
-    // Ус - MNS ISO 6222:1998 - үндсэн 3 багана үргэлж харагдана
-    { code: 'cfu_avg', name: 'CFU дундаж', shortName: 'CFU', unit: '1мл', mns_limit: [null, 100], standard: 'MNS ISO 6222:1998', primary: true },
-    { code: 'ecoli', name: 'E.coli', shortName: 'E.coli', unit: '100мл', detect: true, standard: 'MNS ISO 9308-1:1998', primary: true },
-    { code: 'salmonella', name: 'Salmonella', shortName: 'Salm', unit: '25мл', detect: true, standard: 'MNS ISO 19250:2017', primary: true },
-    // Дэлгэсэн үед харагдах баганууд
-    { code: 'cfu_22', name: 'CFU 22°C', shortName: '22°C', unit: '1мл', mns_limit: [null, 100], standard: 'MNS ISO 6222:1998' },
-    { code: 'cfu_37', name: 'CFU 37°C', shortName: '37°C', unit: '1мл', mns_limit: [null, 100], standard: 'MNS ISO 6222:1998' },
-    // Агаар - MNS 5484:2005 (давхардаагүй)
-    { code: 'air_cfu', name: 'Бактерийн тоо', shortName: 'AirCFU', unit: '1м³', mns_limit: [null, 3000], standard: 'MNS 5484:2005' },
-    // S.aureus - Агаар & Арчдас хоёуланд
-    { code: 'staph', name: 'S.aureus', shortName: 'S.aur', unit: '', detect: true, standard: 'MNS 5484/6410' }
+    // CFU (ус: 22°C, 37°C)
+    { code: 'cfu_22', headerName: 'CFU 22°C', headerTooltip: 'MNS ISO 6222:1998 / 1 мл-т ≤100', mns_limit: [null, 100], integer: true },
+    { code: 'cfu_37', headerName: 'CFU 37°C', headerTooltip: 'MNS ISO 6222:1998 / 1 мл-т ≤100', mns_limit: [null, 100], integer: true },
+    // CFU Дундаж (ус + арчдас нэгтгэсэн)
+    { code: 'cfu_avg', headerName: 'CFU Дундаж', headerTooltip: 'Ус: MNS ISO 6222 ≤100 / Арчдас: MNS 6410 <100', mns_limit: [null, 100], integer: true },
+    // E.coli (ус + арчдас)
+    { code: 'ecoli', headerName: 'E.coli', headerTooltip: 'Ус: MNS ISO 9308-1 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    // Salmonella (ус + арчдас)
+    { code: 'salmonella', headerName: 'Salmonella', headerTooltip: 'Ус: MNS ISO 19250 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    // S.aureus (агаар + арчдас)
+    { code: 'staph', headerName: 'S.aureus', headerTooltip: 'Агаар: MNS 5484 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    // Агаарын бактерийн тоо
+    { code: 'air_cfu', headerName: 'Бактерийн тоо', headerTooltip: 'MNS 5484:2005 / 1м³-д <3000', mns_limit: [null, 3000], integer: true }
   ];
 
   /* -------- BUILD COLUMN DEFINITIONS -------- */
@@ -326,24 +327,41 @@ const WaterSummaryGrid = (function() {
       children: chemChildren
     });
 
-    // Микробиологийн баганууд
+    // Микробиологийн баганууд (5 багана)
     var microChildren = [];
-    for (var j = 0; j < MICRO_COLUMNS.length; j++) {
-      var m = MICRO_COLUMNS[j];
-      var isDetect = !!m.detect;
-      var microColDef = {
-        headerName: m.shortName,
-        headerTooltip: m.name + (m.unit ? ' (' + m.unit + ')' : '') + (isDetect ? ' — Илрэхгүй' : ' — ≤' + (m.mns_limit ? m.mns_limit[1] : '-')) + (m.standard ? '\n' + m.standard : ''),
-        field: m.code,
-        minWidth: 40,
-        maxWidth: 65,
+
+    for (var m = 0; m < MICRO_COLUMNS.length; m++) {
+      var mc = MICRO_COLUMNS[m];
+      var isDetect = !!mc.detect;
+      var headerClass = 'micro-header';
+      if (mc.italic) headerClass += ' micro-italic-header';
+
+      microChildren.push({
+        headerName: mc.headerName,
+        headerTooltip: mc.headerTooltip,
+        field: mc.code,
+        minWidth: mc.minWidth || 70,
+        maxWidth: mc.maxWidth || 120,
         sortable: false,
         filter: false,
         floatingFilter: false,
-        headerClass: 'micro-header',
-        valueFormatter: (function(code) {
-          return function(params) { return formatValue(code, params.value); };
-        })(m.code),
+        headerClass: headerClass,
+        valueFormatter: isDetect ? function(params) {
+          if (params.value == null || params.value === '') return '';
+          var s = String(params.value).trim().toLowerCase();
+          if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') return 'Илрээгүй';
+          if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) return 'Илэрсэн';
+          return params.value;
+        } : (function(isInt) {
+          return function(params) {
+            if (params.value == null || params.value === '') return '';
+            // Таслал/цэгийг боловсруулах
+            var val = String(params.value).replace(',', '.');
+            var n = parseFloat(val);
+            if (isNaN(n)) return params.value;
+            return isInt ? Math.round(n).toString() : formatValue('', n);
+          };
+        })(mc.integer),
         cellClassRules: isDetect ? {
           'cell-detect-fail': function(params) { return isDetectFail(params.value); },
           'cell-detect-pass': function(params) { return isDetectPass(params.value); },
@@ -354,17 +372,13 @@ const WaterSummaryGrid = (function() {
             'cell-within-limit': function(params) { return isWithinLimit(limit, params.value); },
             'cell-empty': function(params) { return params.value == null || params.value === ''; }
           };
-        })(m.mns_limit)
-      };
-      // primary биш баганууд зөвхөн group дэлгэсэн үед харагдана
-      if (!m.primary) {
-        microColDef.columnGroupShow = 'open';
-      }
-      microChildren.push(microColDef);
+        })(mc.mns_limit)
+      });
     }
 
     cols.push({
-      headerName: 'Микро ▸',
+      headerName: 'Микробиологи',
+      headerTooltip: 'MNS 0900:2018',
       headerClass: 'micro-header-group',
       marryChildren: false,
       children: microChildren
@@ -387,7 +401,7 @@ const WaterSummaryGrid = (function() {
       },
       rowHeight: 28,
       headerHeight: 32,
-      groupHeaderHeight: 28,
+      groupHeaderHeight: 32,
       floatingFiltersHeight: 28,
       rowSelection: 'multiple',
       suppressCellFocus: true,

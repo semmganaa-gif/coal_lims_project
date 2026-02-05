@@ -14,6 +14,8 @@
   .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
   .ag-theme-alpine { --ag-header-background-color: #faf5ff; --ag-odd-row-background-color: #fdfaff; --ag-row-hover-color: #faf5ff; --ag-header-foreground-color: #0f172a; --ag-border-color: #e2e8f0; }
   .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+  .ag-theme-alpine .ag-header-cell-wrap .ag-header-cell-text { white-space: pre-line !important; line-height: 1.3; text-align: center; }
+  .ag-theme-alpine .ag-header-row { height: auto !important; min-height: 80px; }
   .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
   .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
   .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -44,8 +46,8 @@
       <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Хадгалах</button>
     </div>
   </div>
-  {% include 'analysis_forms/micro_quick_ref.html' %}
-  {% include 'analysis_forms/micro_timer_panel.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
+  {% include 'labs/water/microbiology/analysis_forms/micro_timer_panel.html' %}
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
@@ -53,10 +55,11 @@
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: 100-с ихгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: MNS 6410:2018 (50см²-д &lt;100)</div>
       <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> E.coli: Илрэхгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Staphylococcus: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> S.aureus: Илрэхгүй</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Илрээгүй" эсвэл "Илэрсэн" сонгох</em></div>
     </div>
   </div>
 </div>
@@ -244,8 +247,80 @@ document.addEventListener('DOMContentLoaded', function() {
   let rowSeq = 0;
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  const numCol = (field, headerName) => ({ field, headerName, minWidth: 95, editable: true, type: 'numericColumn', headerClass: 'ag-header-cell-wrap', valueParser: p => { const v = Number(p.newValue); return isNaN(v) ? null : v; } });
-  const presenceCol = (field, headerName) => ({ field, headerName, minWidth: 130, editable: true, headerClass: 'ag-header-cell-wrap', cellEditor: 'agSelectCellEditor', cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] }, cellStyle: p => ({ color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857', fontWeight: '600' }) });
+  // "Илрээгүй"/"Илэрсэн" сонгоод, "Илэрсэн" бол тоо оруулах Cell Editor
+  class PresenceNumberEditor {
+    init(params) {
+      this.params = params;
+      this.limit = params.limit || 9999;
+      this.value = params.value;
+
+      this.container = document.createElement('div');
+      this.container.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;min-width:120px;';
+
+      this.select = document.createElement('select');
+      this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
+      this.select.innerHTML = '<option value="Илрээгүй">Илрээгүй</option><option value="Илэрсэн">Илэрсэн (тоо оруулах)</option>';
+
+      this.numInput = document.createElement('input');
+      this.numInput.type = 'number';
+      this.numInput.min = '0';
+      this.numInput.placeholder = 'Тоо оруулах...';
+      this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
+
+      this.container.appendChild(this.select);
+      this.container.appendChild(this.numInput);
+
+      if (this.value && this.value !== 'Илрээгүй') {
+        this.select.value = 'Илэрсэн';
+        this.numInput.value = this.value;
+        this.numInput.style.display = 'block';
+      }
+
+      this.select.addEventListener('change', () => {
+        if (this.select.value === 'Илэрсэн') {
+          this.numInput.style.display = 'block';
+          this.numInput.focus();
+        } else {
+          this.numInput.style.display = 'none';
+          this.numInput.value = '';
+        }
+      });
+
+      this.numInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { this.params.stopEditing(); }
+        if (e.key === 'Escape') { this.params.stopEditing(true); }
+      });
+    }
+    getGui() { return this.container; }
+    afterGuiAttached() { this.select.focus(); }
+    getValue() {
+      if (this.select.value === 'Илрээгүй') return 'Илрээгүй';
+      const num = parseFloat(this.numInput.value);
+      return isNaN(num) ? 'Илрээгүй' : num;
+    }
+    isPopup() { return true; }
+  }
+
+  // Микро баганы тохиргоо (CFU - тоо оруулах)
+  const microCol = (field, headerName, limit) => ({
+    field, headerName, minWidth: 120, editable: true, headerClass: 'ag-header-cell-wrap',
+    cellEditor: PresenceNumberEditor,
+    cellEditorParams: { limit },
+    cellStyle: p => {
+      if (p.value === 'Илрээгүй') return { color: '#047857', fontWeight: '600' };
+      const num = Number(p.value);
+      if (!isNaN(num) && limit && num >= limit) return { color: '#dc2626', fontWeight: '600', background: '#fef2f2' };
+      return { fontWeight: '500' };
+    }
+  });
+
+  // Илрээгүй/Илэрсэн сонголт (тоо оруулахгүй)
+  const presenceCol = (field, headerName) => ({
+    field, headerName, minWidth: 110, editable: true, headerClass: 'ag-header-cell-wrap',
+    cellEditor: 'agSelectCellEditor',
+    cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
+    cellStyle: p => ({ color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857', fontWeight: '600' })
+  });
 
   function showToast(msg, type) { type=type||'success'; const c={success:'#8b5cf6',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
   function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
@@ -255,10 +330,10 @@ document.addEventListener('DOMContentLoaded', function() {
     { field: 'sample_code', headerName: 'Сорьцын нэр\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
     { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
     { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    numCol('cfu_swab', 'CFU\nMNS 6410:2018\n(100-с ихгүй)'),
-    presenceCol('salmonella_swab', 'Salmonella spp.\n(Илрэхгүй)'),
-    presenceCol('ecoli_swab', 'E.coli\n(Илрэхгүй)'),
-    presenceCol('staphylococcus_swab', 'Staphylococcus spp.\n(Илрэхгүй)'),
+    microCol('cfu_swab', 'CFU\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\n50см²-д <100', 100),
+    presenceCol('ecoli_swab', 'E.coli\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
+    presenceCol('salmonella_swab', 'Salmonella spp.\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
+    presenceCol('staphylococcus_swab', 'S.aureus\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
     { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Устгах" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
   ];
 

@@ -42,7 +42,7 @@
         {% endif %}
 
         <!-- Archive link -->
-        <a href="{{ url_for('water.water_archive') }}" class="btn btn-sm btn-outline-secondary" title="Архив">
+        <a href="{{ url_for('water.water_archive', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="Архив">
           <i class="bi bi-archive me-1"></i>Архив
         </a>
 
@@ -50,7 +50,8 @@
         <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="Шинэчлэх">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
-        <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="Буцах">
+        {% set from_micro = request.args.get('lab') == 'micro' %}
+        <a href="{{ url_for('microbiology.analysis_hub') if from_micro else url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="Буцах">
           <i class="bi bi-arrow-left me-1"></i>Буцах
         </a>
       </div>
@@ -126,26 +127,27 @@
           <span class="std-name">SI</span>
           <span class="std-limit">80-150</span>
         </div>
-        <!-- Микро -->
-        <div class="ws-std-item micro">
+        <!-- Микро - MNS 0900:2018 -->
+        <div class="ws-std-divider"></div>
+        <div class="ws-std-item micro" title="MNS ISO 6222:1998">
           <span class="std-name">CFU</span>
-          <span class="std-limit">≤100</span>
+          <span class="std-limit">1мл ≤100</span>
         </div>
-        <div class="ws-std-item micro">
-          <span class="std-name">E.coli</span>
-          <span class="std-limit">–</span>
+        <div class="ws-std-item micro" title="MNS ISO 9308-1:1998">
+          <span class="std-name"><em>E.coli</em></span>
+          <span class="std-limit">Илрэхгүй</span>
         </div>
-        <div class="ws-std-item micro">
-          <span class="std-name">Salm</span>
-          <span class="std-limit">–</span>
+        <div class="ws-std-item micro" title="MNS ISO 19250:2017">
+          <span class="std-name"><em>Salmonella</em></span>
+          <span class="std-limit">Илрэхгүй</span>
         </div>
-        <div class="ws-std-item micro">
-          <span class="std-name">AirCFU</span>
-          <span class="std-limit"><3000</span>
+        <div class="ws-std-item micro" title="MNS 5484/6410">
+          <span class="std-name"><em>S.aureus</em></span>
+          <span class="std-limit">Илрэхгүй</span>
         </div>
-        <div class="ws-std-item micro">
-          <span class="std-name">S.aur</span>
-          <span class="std-limit">–</span>
+        <div class="ws-std-item micro" title="MNS 5484:2005">
+          <span class="std-name">Бактери</span>
+          <span class="std-limit">1м³ ≤3000</span>
         </div>
       </div>
     </div>

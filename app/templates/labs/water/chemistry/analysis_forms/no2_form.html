@@ -1,0 +1,128 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Спектрофотометр</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>Тооцооллын томьёо</h6>
+  <small class="text-muted">
+    <strong>Багажны уншилт:</strong> NO₂-N (азот хэлбэрээр)<br>
+    <strong>NO₂-N (мг/л)</strong> = Дундаж × Шингэрүүлэлт<br>
+    <strong>NO₂⁻ (мг/л)</strong> = NO₂-N × 3.286 (46.005 ÷ 14.007)<br>
+    <span class="text-info">MNS хязгаар NO₂⁻ ион дээр хэрэглэгдэнэ</span>
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  // NO2 conversion factor: NO2/N = 46.005/14.007 = 3.286 (N → Ion руу шилжүүлэх)
+  const N_TO_NO2 = 3.286;
+
+  var formColumns = [
+    { headerName: 'Шингэрүүлэлт', field: 'dilution', width: 110, type: 'numericColumn',
+      ...editCol, valueFormatter: p => p.value != null ? p.value : '1' },
+    { headerName: 'Abs 1', field: 'abs1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Abs 2', field: 'abs2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Үр дүн 1', field: 'r1', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Үр дүн 2', field: 'r2', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    {
+      headerName: 'Дундаж', field: 'avg_raw', width: 90,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2;
+        if (r1 != null && r2 != null) return (r1 + r2) / 2;
+        if (r1 != null) return r1;
+        if (r2 != null) return r2;
+        return null;
+      },
+      valueFormatter: fmt3,
+      cellStyle: { color: '#6c757d' }
+    },
+    {
+      headerName: 'NO₂-N мг/л', field: 'no2_n', width: 110,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2, dil = p.data.dilution || 1;
+        let avg = null;
+        if (r1 != null && r2 != null) avg = (r1 + r2) / 2;
+        else if (r1 != null) avg = r1;
+        else if (r2 != null) avg = r2;
+        return avg != null ? avg * dil : null;
+      },
+      valueFormatter: fmt3,
+      cellStyle: { color: '#6c757d' }
+    },
+    {
+      headerName: 'NO₂⁻ мг/л', field: 'no2_ion', width: 110,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2, dil = p.data.dilution || 1;
+        let avg = null;
+        if (r1 != null && r2 != null) avg = (r1 + r2) / 2;
+        else if (r1 != null) avg = r1;
+        else if (r2 != null) avg = r2;
+        if (avg == null) return null;
+        return avg * dil * N_TO_NO2;
+      },
+      valueFormatter: fmt2,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    },
+    {
+      headerName: 'Зөрүү', field: 'diff', width: 80,
+      valueGetter: p => {
+        const r1 = p.data.r1, r2 = p.data.r2;
+        return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;
+      },
+      valueFormatter: fmt3
+    },
+    { headerName: 'Хяналт', field: 'control', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+  ];
+  var editableFields = ['dilution', 'abs1', 'abs2', 'r1', 'r2', 'control', 'notes'];
+  var computedCols = ['avg_raw', 'no2_n', 'no2_ion', 'diff'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      dilution: raw.dilution ?? 1, abs1: raw.abs1 ?? null, abs2: raw.abs2 ?? null,
+      r1: raw.r1 ?? null, r2: raw.r2 ?? null, control: raw.control ?? null, notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const dil = d.dilution || 1;
+      let avg = null;
+      if (d.r1 != null && d.r2 != null) avg = (d.r1 + d.r2) / 2;
+      else if (d.r1 != null) avg = d.r1;
+      else if (d.r2 != null) avg = d.r2;
+
+      const no2_n = avg != null ? avg * dil : null;           // Азот хэлбэр (багажнаас)
+      const no2_ion = no2_n != null ? no2_n * N_TO_NO2 : null; // Ион хэлбэр (тайлагнах)
+
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: {
+          dilution: d.dilution,
+          abs1: d.abs1,
+          abs2: d.abs2,
+          r1: d.r1,
+          r2: d.r2,
+          avg_raw: avg,
+          no2_n: no2_n,
+          no2_ion: no2_ion,    // Эцсийн үр дүн (NO2- ион)
+          result: no2_ion,     // final_result-д хадгалагдана
+          control: d.control,
+          notes: d.notes
+        }
+      });
+    });
+    return items;
+  }
+{% endblock %}
