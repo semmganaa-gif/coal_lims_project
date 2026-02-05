@@ -99,16 +99,19 @@ class ICPMSIntegration:
             {"status": "ok/error", "message": str, "version": str}
         """
         try:
+            # ICPMS root endpoint шалгах (/ эсвэл /health)
             response = requests.get(
-                f'{self.base_url}/api/health',
+                f'{self.base_url}/',
                 timeout=5
             )
 
             if response.status_code == 200:
+                data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
                 return {
                     "status": "ok",
                     "message": "ICPMS холболт амжилттай",
-                    "url": self.base_url
+                    "url": self.base_url,
+                    "version": data.get("version", "unknown")
                 }
             else:
                 return {
