@@ -4,7 +4,7 @@ Chat Events - unit тестүүд
 """
 import pytest
 from unittest.mock import patch, MagicMock, PropertyMock
-from app.routes.chat_events import (
+from app.routes.chat.events import (
     get_user_room,
     update_online_status,
     online_users,
