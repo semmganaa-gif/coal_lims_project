@@ -37,8 +37,8 @@ class TestOnlineUsers:
 class TestUpdateOnlineStatus:
     """update_online_status function tests"""
 
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.now_mn')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.now_mn')
     def test_update_existing_status(self, mock_now, mock_db):
         """Update existing user online status"""
         mock_now.return_value = MagicMock()
@@ -51,8 +51,8 @@ class TestUpdateOnlineStatus:
         assert mock_status.socket_id == 'socket123'
         mock_db.session.commit.assert_called_once()
 
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.now_mn')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.now_mn')
     def test_create_new_status(self, mock_now, mock_db):
         """Create new status when not exists"""
         mock_now.return_value = MagicMock()
@@ -63,8 +63,8 @@ class TestUpdateOnlineStatus:
         mock_db.session.add.assert_called_once()
         mock_db.session.commit.assert_called_once()
 
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.now_mn')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.now_mn')
     def test_set_offline(self, mock_now, mock_db):
         """Set user offline"""
         mock_now.return_value = MagicMock()
@@ -77,9 +77,9 @@ class TestUpdateOnlineStatus:
         assert mock_status.socket_id is None
         mock_db.session.commit.assert_called_once()
 
-    @patch('app.routes.chat_events.logger')
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.now_mn')
+    @patch('app.routes.chat.events.logger')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.now_mn')
     def test_handles_exception(self, mock_now, mock_db, mock_logger):
         """Handles database exceptions"""
         mock_now.return_value = MagicMock()
@@ -99,23 +99,23 @@ class TestSocketIOHandlers:
         """Test connect handler for authenticated user - requires SocketIO client"""
         pass
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_connect_unauthenticated(self, mock_user):
         """Test connect handler for unauthenticated user"""
-        from app.routes.chat_events import handle_connect
+        from app.routes.chat.events import handle_connect
 
         mock_user.is_authenticated = False
 
         result = handle_connect()
         assert result is False
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.leave_room')
-    @patch('app.routes.chat_events.current_user')
-    @patch('app.routes.chat_events.update_online_status')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.leave_room')
+    @patch('app.routes.chat.events.current_user')
+    @patch('app.routes.chat.events.update_online_status')
     def test_handle_disconnect(self, mock_update, mock_user, mock_leave, mock_emit):
         """Test disconnect handler"""
-        from app.routes.chat_events import handle_disconnect, online_users
+        from app.routes.chat.events import handle_disconnect, online_users
 
         mock_user.is_authenticated = True
         mock_user.id = 1
@@ -128,21 +128,21 @@ class TestSocketIOHandlers:
         mock_update.assert_called_once_with(1, False, None)
         assert 1 not in online_users
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_disconnect_unauthenticated(self, mock_user):
         """Test disconnect handler for unauthenticated user"""
-        from app.routes.chat_events import handle_disconnect
+        from app.routes.chat.events import handle_disconnect
 
         mock_user.is_authenticated = False
 
         result = handle_disconnect()
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_send_message_unauthenticated(self, mock_user, mock_emit):
         """Test send_message for unauthenticated user"""
-        from app.routes.chat_events import handle_send_message
+        from app.routes.chat.events import handle_send_message
 
         mock_user.is_authenticated = False
 
@@ -150,11 +150,11 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_once_with('error', {'message': 'Нэвтрэх шаардлагатай'})
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_send_message_empty(self, mock_user, mock_emit):
         """Test send_message with empty message"""
-        from app.routes.chat_events import handle_send_message
+        from app.routes.chat.events import handle_send_message
 
         mock_user.is_authenticated = True
 
@@ -162,12 +162,12 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Мессеж хоосон байна'})
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_send_message_invalid_receiver(self, mock_user, mock_db, mock_emit):
         """Test send_message with invalid receiver"""
-        from app.routes.chat_events import handle_send_message
+        from app.routes.chat.events import handle_send_message
 
         mock_user.is_authenticated = True
         mock_db.session.get.return_value = None
@@ -176,11 +176,11 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Хүлээн авагч олдсонгүй'})
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_send_file_unauthenticated(self, mock_user, mock_emit):
         """Test send_file for unauthenticated user"""
-        from app.routes.chat_events import handle_send_file
+        from app.routes.chat.events import handle_send_file
 
         mock_user.is_authenticated = False
 
@@ -188,11 +188,11 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_once_with('error', {'message': 'Нэвтрэх шаардлагатай'})
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_send_file_no_url(self, mock_user, mock_emit):
         """Test send_file without URL"""
-        from app.routes.chat_events import handle_send_file
+        from app.routes.chat.events import handle_send_file
 
         mock_user.is_authenticated = True
 
@@ -200,22 +200,22 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Файл URL шаардлагатай'})
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_delete_message_unauthenticated(self, mock_user):
         """Test delete_message for unauthenticated user"""
-        from app.routes.chat_events import handle_delete_message
+        from app.routes.chat.events import handle_delete_message
 
         mock_user.is_authenticated = False
 
         result = handle_delete_message({})
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_delete_message_not_found(self, mock_user, mock_db, mock_emit):
         """Test delete_message when message not found"""
-        from app.routes.chat_events import handle_delete_message
+        from app.routes.chat.events import handle_delete_message
 
         mock_user.is_authenticated = True
         mock_db.session.get.return_value = None
@@ -224,12 +224,12 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Мессеж олдсонгүй'})
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_delete_message_not_owner(self, mock_user, mock_db, mock_emit):
         """Test delete_message when not the owner"""
-        from app.routes.chat_events import handle_delete_message
+        from app.routes.chat.events import handle_delete_message
 
         mock_user.is_authenticated = True
         mock_user.id = 1
@@ -240,21 +240,21 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Зөвхөн өөрийн мессежийг устгах боломжтой'})
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_broadcast_unauthenticated(self, mock_user):
         """Test broadcast for unauthenticated user"""
-        from app.routes.chat_events import handle_broadcast
+        from app.routes.chat.events import handle_broadcast
 
         mock_user.is_authenticated = False
 
         result = handle_broadcast({})
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_broadcast_not_admin(self, mock_user, mock_emit):
         """Test broadcast for non-admin user"""
-        from app.routes.chat_events import handle_broadcast
+        from app.routes.chat.events import handle_broadcast
 
         mock_user.is_authenticated = True
         mock_user.role = 'analyst'
@@ -263,10 +263,10 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Зөвхөн ахлах болон админ зарлал илгээх эрхтэй'})
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_broadcast_empty_message(self, mock_user):
         """Test broadcast with empty message"""
-        from app.routes.chat_events import handle_broadcast
+        from app.routes.chat.events import handle_broadcast
 
         mock_user.is_authenticated = True
         mock_user.role = 'admin'
@@ -274,31 +274,31 @@ class TestSocketIOHandlers:
         result = handle_broadcast({'message': ''})
         assert result is None
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_mark_read_unauthenticated(self, mock_user):
         """Test mark_read for unauthenticated user"""
-        from app.routes.chat_events import handle_mark_read
+        from app.routes.chat.events import handle_mark_read
 
         mock_user.is_authenticated = False
 
         result = handle_mark_read({})
         assert result is None
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_typing_unauthenticated(self, mock_user):
         """Test typing for unauthenticated user"""
-        from app.routes.chat_events import handle_typing
+        from app.routes.chat.events import handle_typing
 
         mock_user.is_authenticated = False
 
         result = handle_typing({})
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_typing(self, mock_user, mock_emit):
         """Test typing handler"""
-        from app.routes.chat_events import handle_typing
+        from app.routes.chat.events import handle_typing
 
         mock_user.is_authenticated = True
         mock_user.id = 1
@@ -308,21 +308,21 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_once()
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_stop_typing_unauthenticated(self, mock_user):
         """Test stop_typing for unauthenticated user"""
-        from app.routes.chat_events import handle_stop_typing
+        from app.routes.chat.events import handle_stop_typing
 
         mock_user.is_authenticated = False
 
         result = handle_stop_typing({})
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_stop_typing(self, mock_user, mock_emit):
         """Test stop_typing handler"""
-        from app.routes.chat_events import handle_stop_typing
+        from app.routes.chat.events import handle_stop_typing
 
         mock_user.is_authenticated = True
         mock_user.id = 1
@@ -331,22 +331,22 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_once()
 
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_get_online_users_unauthenticated(self, mock_user):
         """Test get_online_users for unauthenticated user"""
-        from app.routes.chat_events import handle_get_online_users
+        from app.routes.chat.events import handle_get_online_users
 
         mock_user.is_authenticated = False
 
         result = handle_get_online_users()
         assert result is None
 
-    @patch('app.routes.chat_events.emit')
-    @patch('app.routes.chat_events.db')
-    @patch('app.routes.chat_events.current_user')
+    @patch('app.routes.chat.events.emit')
+    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.current_user')
     def test_handle_get_online_users(self, mock_user, mock_db, mock_emit):
         """Test get_online_users handler"""
-        from app.routes.chat_events import handle_get_online_users, online_users
+        from app.routes.chat.events import handle_get_online_users, online_users
 
         mock_user.is_authenticated = True
 

@@ -24,6 +24,7 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SECRET_KEY = 'test-secret-key'
     RATELIMIT_ENABLED = False
+    SQLALCHEMY_ENGINE_OPTIONS = {}  # SQLite-д pool тохиргоо хэрэггүй
 
 
 @pytest.fixture

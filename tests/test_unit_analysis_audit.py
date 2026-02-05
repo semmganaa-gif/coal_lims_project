@@ -276,6 +276,6 @@ class TestChatEventsHelpers:
 
     def test_get_user_room(self):
         """get_user_room function"""
-        from app.routes.chat_events import get_user_room
+        from app.routes.chat.events import get_user_room
         assert get_user_room(1) == "user_1"
         assert get_user_room(123) == "user_123"
