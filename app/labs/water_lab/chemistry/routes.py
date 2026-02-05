@@ -1,7 +1,6 @@
 # app/labs/water_lab/chemistry/routes.py
 """Усны хими лабораторийн routes."""
 
-import os
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
@@ -17,11 +16,9 @@ from app.utils.converters import to_float
 from app.utils.security import escape_like_pattern
 from markupsafe import escape as html_escape
 
-_template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 water_bp = Blueprint(
     'water',
     __name__,
-    template_folder=_template_dir,
     url_prefix='/labs/water-lab/chemistry'
 )
 
@@ -36,7 +33,7 @@ def water_hub():
     water_count = len(WATER_ANALYSIS_TYPES)
     micro_count = len(MICRO_ANALYSIS_TYPES)
     return render_template(
-        'water_hub.html',
+        'labs/water/chemistry/water_hub.html',
         title='Хими лаборатори',
         total_samples=stats['total'],
         new_samples=stats['new'],
@@ -56,7 +53,7 @@ def water_analysis_hub():
         Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
     ).count()
     return render_template(
-        'water_analysis_hub.html',
+        'labs/water/chemistry/water_analysis_hub.html',
         title='Усны шинжилгээний төв',
         analysis_types=WATER_ANALYSIS_TYPES,
         params=ALL_WATER_PARAMS,
@@ -81,7 +78,7 @@ def water_summary():
         return redirect(url_for('water.water_summary'))
 
     return render_template(
-        'water_summary.html',
+        'labs/water/chemistry/water_summary.html',
         title='Усны шинжилгээний үр дүнгийн нэгтгэл',
     )
 
@@ -108,7 +105,7 @@ def water_archive():
     ).count()
 
     return render_template(
-        'water_archive.html',
+        'labs/water/chemistry/water_archive.html',
         title='Усны архив',
         archived_count=archived_count,
     )
@@ -387,7 +384,7 @@ def register_sample():
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
     return render_template(
-        'water_register.html',
+        'labs/water/chemistry/water_register.html',
         title='Усны дээж бүртгэл',
         units=WATER_UNITS,
         total_samples=len(ALL_WATER_SAMPLE_NAMES),
@@ -410,45 +407,45 @@ def workspace(code):
 
     form_templates = {
         # Шууд хэмжилт
-        'PH': 'analysis_forms/ph_ec_form.html',
-        'EC': 'analysis_forms/ph_ec_form.html',
-        'TEMP': 'analysis_forms/ph_ec_form.html',
-        'F_W': 'analysis_forms/ph_ec_form.html',
-        'CL_FREE': 'analysis_forms/ph_ec_form.html',
-        'DS': 'analysis_forms/ph_ec_form.html',
-        'TURB': 'analysis_forms/ph_ec_form.html',
-        'DUST': 'analysis_forms/ph_ec_form.html',
-        'SLUDGE': 'analysis_forms/ph_ec_form.html',
-        'BOD': 'analysis_forms/ph_ec_form.html',
-        'COD': 'analysis_forms/ph_ec_form.html',
-        'DO_W': 'analysis_forms/ph_ec_form.html',
-        'CA': 'analysis_forms/ph_ec_form.html',
-        'MG': 'analysis_forms/ph_ec_form.html',
-        'ALK': 'analysis_forms/ph_ec_form.html',
+        'PH': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'EC': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'TEMP': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'F_W': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'CL_FREE': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'DS': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'TURB': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'DUST': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'SLUDGE': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'BOD': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'COD': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'DO_W': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'CA': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'MG': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'ALK': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         # Спектрофотометр
-        'NH4': 'analysis_forms/spectro_form.html',
-        'NO2': 'analysis_forms/spectro_form.html',
-        'NO3': 'analysis_forms/spectro_form.html',
-        'FE_W': 'analysis_forms/spectro_form.html',
-        'COLOR': 'analysis_forms/spectro_form.html',
-        'PO4': 'analysis_forms/spectro_form.html',
+        'NH4': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'NO2': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'NO3': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'FE_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'COLOR': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'PO4': 'labs/water/chemistry/analysis_forms/spectro_form.html',
         # Титрлэлт
-        'HARD': 'analysis_forms/titration_form.html',
-        'CL_W': 'analysis_forms/titration_form.html',
+        'HARD': 'labs/water/chemistry/analysis_forms/titration_form.html',
+        'CL_W': 'labs/water/chemistry/analysis_forms/titration_form.html',
         # Жингийн арга
-        'TDS': 'analysis_forms/gravimetric_form.html',
+        'TDS': 'labs/water/chemistry/analysis_forms/gravimetric_form.html',
         # Архив
-        'MN_W': 'analysis_forms/spectro_form.html',
-        'CU_W': 'analysis_forms/spectro_form.html',
-        'ZN_W': 'analysis_forms/spectro_form.html',
-        'PB_W': 'analysis_forms/spectro_form.html',
-        'AS_W': 'analysis_forms/spectro_form.html',
-        'CD_W': 'analysis_forms/spectro_form.html',
-        'CR_W': 'analysis_forms/spectro_form.html',
-        'HG_W': 'analysis_forms/spectro_form.html',
-        'SO4': 'analysis_forms/spectro_form.html',
-        'CN_W': 'analysis_forms/spectro_form.html',
-        'TSS': 'analysis_forms/ph_ec_form.html',
+        'MN_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'CU_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'ZN_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'PB_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'AS_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'CD_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'CR_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'HG_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'SO4': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'CN_W': 'labs/water/chemistry/analysis_forms/spectro_form.html',
+        'TSS': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
     }
 
     # ── Дээж бэлтгэх (нүүрсний лабын загвараар) ──
@@ -523,7 +520,7 @@ def workspace(code):
                 'final_result': r.final_result,
             }
 
-    template = form_templates.get(code_upper, 'analysis_forms/ph_ec_form.html')
+    template = form_templates.get(code_upper, 'labs/water/chemistry/analysis_forms/ph_ec_form.html')
 
     # Related equipments for this analysis
     # ✅ LIKE injection сэргийлэлт
@@ -725,7 +722,7 @@ def edit_sample(sample_id):
                 flash(f'Алдаа: {html_escape(str(e))}', 'danger')
 
     return render_template(
-        'water_edit_sample.html',
+        'labs/water/chemistry/water_edit_sample.html',
         title='Дээж засах',
         sample=sample,
         analyses_list=analyses_list,
@@ -786,7 +783,7 @@ def delete_samples():
 def standards():
     """MNS/WHO стандартын хуудас."""
     standards_data = get_mns_standards()
-    return render_template('water_standards.html', standards=standards_data)
+    return render_template('labs/water/chemistry/water_standards.html', standards=standards_data)
 
 
 @water_bp.route('/api/standards')
@@ -917,7 +914,7 @@ def water_dashboard():
         monthly_stats.append({'month': m, 'year': y, 'label': f'{m}-р сар', 'count': cnt})
 
     return render_template(
-        'reports/water_dashboard.html',
+        'labs/water/chemistry/reports/water_dashboard.html',
         title='Усны хими Dashboard',
         year=year, month=month,
         samples_month=samples_month, samples_year=samples_year,
@@ -1020,7 +1017,7 @@ def water_consumption():
         grand_rows.append((code, monthly, total))
 
     return render_template(
-        'reports/water_consumption.html',
+        'labs/water/chemistry/reports/water_consumption.html',
         title=f'Усны хими Consumption — {year}',
         year=year, data=view,
         grand_samples=grand_samples, grand_rows=grand_rows,
@@ -1183,7 +1180,7 @@ def water_monthly_plan():
     staff_count = 2
 
     return render_template(
-        'reports/water_monthly_plan.html',
+        'labs/water/chemistry/reports/water_monthly_plan.html',
         title='Water Monthly Plan',
         years=years, year=year, month=month, month_name=month_name,
         weeks=weeks, data=data,
@@ -1236,7 +1233,7 @@ def solution_journal():
     }
 
     return render_template(
-        'solution_journal.html',
+        'labs/water/chemistry/solution_journal.html',
         title='Уусмал бэлдэх дэвтэр',
         solutions=solutions,
         stats=stats,
@@ -1367,7 +1364,7 @@ def add_solution():
     ).order_by(Chemical.name).all()
 
     return render_template(
-        'solution_form.html',
+        'labs/water/chemistry/solution_form.html',
         title='Шинэ уусмал бүртгэх',
         solution=None,
         chemicals=chemicals,
@@ -1438,7 +1435,7 @@ def edit_solution(id):
     ).order_by(Chemical.name).all()
 
     return render_template(
-        'solution_form.html',
+        'labs/water/chemistry/solution_form.html',
         title='Уусмал засварлах',
         solution=solution,
         chemicals=chemicals,
@@ -1527,7 +1524,7 @@ def solution_recipes():
         }
 
     return render_template(
-        'solution_recipes.html',
+        'labs/water/chemistry/solution_recipes.html',
         title='Уусмалын жор',
         recipes=recipes,
         recipe_stats=recipe_stats,
@@ -1561,7 +1558,7 @@ def recipe_detail(id):
             })
 
     return render_template(
-        'solution_recipe_detail.html',
+        'labs/water/chemistry/solution_recipe_detail.html',
         title=recipe.name,
         recipe=recipe,
         recent_preps=recent_preps,
@@ -1803,7 +1800,7 @@ def add_recipe():
     ).order_by(Chemical.name).all()
 
     return render_template(
-        'solution_recipe_form.html',
+        'labs/water/chemistry/solution_recipe_form.html',
         title='Шинэ жор нэмэх',
         recipe=None,
         chemicals=chemicals,
@@ -1862,7 +1859,7 @@ def edit_recipe(id):
     ).order_by(Chemical.name).all()
 
     return render_template(
-        'solution_recipe_form.html',
+        'labs/water/chemistry/solution_recipe_form.html',
         title='Жор засварлах',
         recipe=recipe,
         chemicals=chemicals,

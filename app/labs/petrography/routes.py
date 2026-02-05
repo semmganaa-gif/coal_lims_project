@@ -2,7 +2,6 @@
 """Петрограф лабораторийн routes."""
 
 import json
-import os
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from markupsafe import escape as html_escape
@@ -12,12 +11,9 @@ from app.labs.petrography.constants import ALL_PETRO_PARAMS, PETRO_ANALYSIS_TYPE
 from app.utils.decorators import lab_required
 from app.routes.api.helpers import api_success, api_error
 
-# Template folder тохируулах
-_template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 petro_bp = Blueprint(
     'petrography',
     __name__,
-    template_folder=_template_dir,
     url_prefix='/labs/petrography'
 )
 
@@ -51,7 +47,7 @@ def petro_hub():
     in_progress = _pe_samples(['in_progress', 'analysis', 'prepared']).count()
     completed = _pe_samples(['completed']).count()
     return render_template(
-        'petro_hub.html',
+        'labs/petrography/petro_hub.html',
         title='Петрограф лаборатори',
         analysis_types=PETRO_ANALYSIS_TYPES,
         params=ALL_PETRO_PARAMS,
@@ -74,16 +70,16 @@ def workspace(code):
 
     # Форм template mapping
     form_templates = {
-        'MAC': 'analysis_forms/maceral_form.html',
-        'VR': 'analysis_forms/vitrinite_form.html',
-        'MM': 'analysis_forms/mineral_form.html',
-        'TS_PETRO': 'analysis_forms/thin_section_form.html',
-        'MOD': 'analysis_forms/mineral_form.html',
-        'TEX': 'analysis_forms/thin_section_form.html',
-        'GS': 'analysis_forms/mineral_form.html',
+        'MAC': 'labs/petrography/analysis_forms/maceral_form.html',
+        'VR': 'labs/petrography/analysis_forms/vitrinite_form.html',
+        'MM': 'labs/petrography/analysis_forms/mineral_form.html',
+        'TS_PETRO': 'labs/petrography/analysis_forms/thin_section_form.html',
+        'MOD': 'labs/petrography/analysis_forms/mineral_form.html',
+        'TEX': 'labs/petrography/analysis_forms/thin_section_form.html',
+        'GS': 'labs/petrography/analysis_forms/mineral_form.html',
     }
 
-    template = form_templates.get(code_upper, 'analysis_forms/maceral_form.html')
+    template = form_templates.get(code_upper, 'labs/petrography/analysis_forms/maceral_form.html')
     return render_template(
         template,
         title=f'{param["name_mn"]} - Ажлын талбар',

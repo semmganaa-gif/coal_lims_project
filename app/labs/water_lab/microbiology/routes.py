@@ -1,7 +1,6 @@
 # app/labs/water_lab/microbiology/routes.py
 """Микробиологийн лабораторийн routes."""
 
-import os
 import json
 import calendar
 from datetime import datetime, date, timedelta
@@ -22,11 +21,9 @@ from app.labs.water_lab.chemistry.constants import (
 from app.utils.decorators import lab_required
 from app.utils.datetime import now_local
 
-_template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 micro_bp = Blueprint(
     'microbiology',
     __name__,
-    template_folder=_template_dir,
     url_prefix='/labs/water-lab/microbiology'
 )
 
@@ -46,7 +43,7 @@ def micro_hub():
     from app.labs import get_lab
     stats = get_lab('microbiology').sample_stats()
     return render_template(
-        'micro_hub.html',
+        'labs/water/microbiology/micro_hub.html',
         title='Микробиологийн лаборатори',
         analysis_types=MICRO_ANALYSIS_TYPES,
         params=ALL_MICRO_PARAMS,
@@ -109,7 +106,7 @@ def edit_sample(sample_id):
                 flash(f'Алдаа: {e}', 'danger')
 
     return render_template(
-        'water_edit_sample.html',
+        'labs/water/chemistry/water_edit_sample.html',
         title='Дээж засах',
         sample=sample,
         analyses_list=analyses_list,
@@ -169,7 +166,7 @@ def delete_samples():
 @lab_required('microbiology')
 def analysis_hub():
     """Микробиологийн шинжилгээний карт сонгох хуудас."""
-    return render_template('micro_analysis_hub.html', title='Микробиологийн шинжилгээ')
+    return render_template('labs/water/microbiology/micro_analysis_hub.html', title='Микробиологийн шинжилгээ')
 
 
 @micro_bp.route('/register', methods=['GET', 'POST'])
@@ -197,7 +194,7 @@ def register_sample():
             return redirect(url_for('microbiology.register_sample'))
 
     return render_template(
-        'water_register.html',
+        'labs/water/chemistry/water_register.html',
         title='Микробиологийн дээж бүртгэл',
         units=WATER_UNITS,
         total_samples=len(ALL_WATER_SAMPLE_NAMES),
@@ -223,9 +220,9 @@ def workspace(code):
         'swab': 'Арчдасны микробиологийн ажлын хуудас',
     }
     templates = {
-        'water': 'analysis_forms/micro_workspace.html',
-        'air': 'analysis_forms/micro_air_workspace.html',
-        'swab': 'analysis_forms/micro_swab_workspace.html',
+        'water': 'labs/water/microbiology/analysis_forms/micro_workspace.html',
+        'air': 'labs/water/microbiology/analysis_forms/micro_air_workspace.html',
+        'swab': 'labs/water/microbiology/analysis_forms/micro_swab_workspace.html',
     }
 
     title = titles.get(code_lower, f'Микробиологи — {code}')
@@ -625,7 +622,7 @@ def micro_dashboard():
         monthly_stats.append({'month': m, 'year': y, 'label': f'{m}-р сар', 'count': cnt})
 
     return render_template(
-        'reports/micro_dashboard.html',
+        'labs/water/microbiology/reports/micro_dashboard.html',
         title='Микро Dashboard',
         year=year, month=month,
         samples_month=samples_month, samples_year=samples_year,
@@ -731,7 +728,7 @@ def micro_consumption():
             grand_rows.append((c, monthly, total))
 
     return render_template(
-        'reports/micro_consumption.html',
+        'labs/water/microbiology/reports/micro_consumption.html',
         title=f'Микро Consumption — {year}',
         year=year, data=view,
         grand_samples=grand['samples'], grand_rows=grand_rows,
@@ -915,7 +912,7 @@ def micro_monthly_plan():
     staff_count = staff_settings.preparers if staff_settings else 3
 
     return render_template(
-        'reports/micro_monthly_plan.html',
+        'labs/water/microbiology/reports/micro_monthly_plan.html',
         title='Микро Monthly Plan',
         years=years, year=year, month=month, month_name=month_name,
         weeks=weeks, data=data,
