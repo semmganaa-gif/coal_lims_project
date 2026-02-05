@@ -79,7 +79,7 @@ def create_app(config_class=Config):
 
     # Register SocketIO events
     with app.app_context():
-        from app.routes import chat_events  # noqa: F401
+        from app.routes.chat import events as chat_events  # noqa: F401
 
     # ---- Setup Structured Logging
     from app.logging_config import setup_logging
@@ -99,11 +99,11 @@ def create_app(config_class=Config):
     # ---- Blueprints (Route-уудыг бүртгэх)
     from app.routes.main import main_bp
     from app.routes.analysis import analysis_bp
-    from app.routes.admin_routes import admin_bp
+    from app.routes.admin.routes import admin_bp
     from app.routes.api import api_bp
-    from app.routes.settings_routes import settings_bp
-    from app.routes.report_routes import reports_bp
-    from app.routes.import_routes import import_bp
+    from app.routes.settings.routes import settings_bp
+    from app.routes.reports.routes import reports_bp
+    from app.routes.imports.routes import import_bp
 
     # Тоног төхөөрөмжийн модуль (ISO 17025)
     from app.routes.equipment import equipment_bp
@@ -118,13 +118,13 @@ def create_app(config_class=Config):
     from app.routes.spare_parts import spare_parts_bp
 
     # Лиценз хамгаалалт
-    from app.routes.license_routes import license_bp
+    from app.routes.license.routes import license_bp
 
     # Чанарын удирдлага (ISO 17025 - Quality Management Systems)
     from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
 
     # Theoretical Yield тооцоолол (Washability)
-    from app.routes.yield_routes import yield_bp
+    from app.routes.yield_calc.routes import yield_bp
 
     # Мульти-лаборатори (Петрограф, Усны лаб)
     from app.labs import register_lab
