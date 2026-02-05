@@ -11,6 +11,9 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SECRET_KEY = 'test-secret-key'
 
+    # SQLite-д pool тохиргоо хэрэггүй - хоослох
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+
     # Rate limiting идэвхгүй болгох (тест орчинд)
     RATELIMIT_ENABLED = False
     RATELIMIT_STORAGE_URI = "memory://"
