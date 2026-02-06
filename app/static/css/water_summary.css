@@ -114,14 +114,28 @@ body { background: var(--ws-bg); background-attachment: fixed; }
   white-space: nowrap;
 }
 
+/* Divider between chem and micro standards */
+.ws-std-divider {
+  width: 1px;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, #10b981, transparent);
+  margin: 0 0.5rem;
+}
+
 /* Micro standards items */
 .ws-std-item.micro {
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   border-color: rgba(32,201,151,0.2);
+  min-width: 70px;
 }
 
 .ws-std-item.micro .std-name {
   color: #059669;
+}
+
+.ws-std-item.micro .std-limit {
+  font-size: 0.62rem;
+  white-space: nowrap;
 }
 
 .ws-header-left h1 {
@@ -303,6 +317,13 @@ body { background: var(--ws-bg); background-attachment: fixed; }
 .micro-header {
   background: #ecfdf5 !important;
 }
+
+/* Scientific names italic (E.coli, Salmonella, S.aureus) */
+.micro-italic-header .ag-header-cell-text {
+  font-style: italic !important;
+}
+
+
 
 /* Cell Styles */
 .cell-over-limit {

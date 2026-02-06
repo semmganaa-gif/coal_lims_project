@@ -41,7 +41,8 @@
       <button type="submit" class="btn btn-primary">
         <i class="bi bi-check-circle me-1"></i>Хадгалах
       </button>
-      <a href="{{ request.referrer or url_for('water.register_sample') }}" class="btn btn-secondary">
+      {% set is_micro_edit = request.path.startswith('/labs/water-lab/microbiology') %}
+      <a href="{{ request.referrer or (url_for('microbiology.register_sample') if is_micro_edit else url_for('water.register_sample')) }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left me-1"></i>Буцах
       </a>
     </div>

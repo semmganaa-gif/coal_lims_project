@@ -51,14 +51,9 @@
         <i class="bi bi-archive-fill"></i> Архивлах
       </button>
 
-      <div class="btn-group">
-        <button type="button" id="icpmsSendBtn" class="btn btn-sm btn-primary" title="ICPMS руу илгээх">
-          <i class="bi bi-send"></i> ICPMS
-        </button>
-        <button type="button" id="icpmsChppBtn" class="btn btn-sm btn-outline-primary" title="CHPP дээжийг ICPMS руу илгээх">
-          <i class="bi bi-building"></i> CHPP
-        </button>
-      </div>
+      <button type="button" id="simulatorSendBtn" class="btn btn-sm btn-warning" title="Сонгосон дээжүүдийг CHPP Simulator руу илгээх">
+        <i class="bi bi-cpu"></i> Simulator
+      </button>
       {% elif current_user.role == 'manager' %}
       {# Manager зөвхөн Архив товч харна #}
       <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="Архив Төв">
@@ -102,9 +97,8 @@
       qcCorr: "{{ url_for('analysis.correlation_check') }}",
       updateStatus: "/api/update_result_status",
       requestAnalysis: "/api/request_analysis",
-      icpmsSend: "/api/icpms/send",
-      icpmsSendChpp: "/api/icpms/send-chpp",
-      icpmsStatus: "/api/icpms/status"
+      simulatorSendChpp: "/api/send_to_simulator/chpp",
+      simulatorSendWtl: "/api/send_to_simulator/wtl"
     },
     analysisTypes: [
       {% for at in analysis_types %}

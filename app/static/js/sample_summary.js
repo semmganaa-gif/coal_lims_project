@@ -881,114 +881,114 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // =====================================
-  // ICPMS INTEGRATION BUTTONS
+  // SIMULATOR INTEGRATION BUTTON
   // =====================================
 
-  // Helper function for ICPMS API calls
-  function icpmsApiCall(url, data) {
-    return fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('[name="csrf_token"]')?.value || ''
-      },
-      body: JSON.stringify(data)
-    })
-    .then(function(response) {
-      if (!response.ok) {
-        return response.json().then(function(data) {
-          throw new Error(data.error || data.message || 'ICPMS алдаа');
+  safeAddListener('simulatorSendBtn', 'click', function(e) {
+    e.preventDefault();
+
+    var ids = GridModule.getSelectedIds();
+    if (ids.length === 0) {
+      alert("Simulator руу илгээх дээжүүдийг сонгоно уу.");
+      return;
+    }
+
+    // Get selected rows data to determine client_name
+    var api = GridModule.getApi();
+    var selectedRows = api
+      ? api.getSelectedNodes().map(function(n) { return n.data; })
+      : [];
+
+    // Separate CHPP and WTL samples
+    var chppSamples = selectedRows.filter(function(r) { return r.client_name === 'CHPP'; });
+    var wtlSamples = selectedRows.filter(function(r) { return r.client_name === 'WTL'; });
+    var otherSamples = selectedRows.filter(function(r) {
+      return r.client_name !== 'CHPP' && r.client_name !== 'WTL';
+    });
+
+    if (otherSamples.length > 0) {
+      alert("Зөвхөн CHPP болон WTL дээжүүдийг Simulator руу илгээх боломжтой.\n" +
+            otherSamples.length + " дээж тохирохгүй байна.");
+      return;
+    }
+
+    if (chppSamples.length === 0 && wtlSamples.length === 0) {
+      alert("CHPP эсвэл WTL дээж сонгоно уу.");
+      return;
+    }
+
+    var msg = 'Simulator руу илгээх:\n';
+    if (chppSamples.length > 0) msg += '  CHPP: ' + chppSamples.length + ' дээж\n';
+    if (wtlSamples.length > 0) msg += '  WTL: ' + wtlSamples.length + ' дээж\n';
+    msg += '\nИлгээх үү?';
+
+    if (!confirm(msg)) return;
+
+    var btn = this;
+    var originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Илгээж байна...';
+
+    var promises = [];
+
+    // Send CHPP samples one by one
+    chppSamples.forEach(function(sample) {
+      var url = (GridModule.URLS.simulatorSendChpp || '/api/send_to_simulator/chpp') + '/' + sample.id;
+      promises.push(
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name="csrf_token"]')?.value || ''
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { return { sample: sample.sample_code, result: data }; })
+        .catch(function(err) { return { sample: sample.sample_code, error: err.message }; })
+      );
+    });
+
+    // Send WTL samples by lab_number
+    var wtlLabNumbers = {};
+    wtlSamples.forEach(function(sample) {
+      var code = sample.sample_code || '';
+      var labNumber = code.split('/')[0] || code;
+      wtlLabNumbers[labNumber] = sample;
+    });
+
+    Object.keys(wtlLabNumbers).forEach(function(labNumber) {
+      var url = (GridModule.URLS.simulatorSendWtl || '/api/send_to_simulator/wtl') + '/' + encodeURIComponent(labNumber);
+      promises.push(
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name="csrf_token"]')?.value || ''
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { return { sample: 'WTL-' + labNumber, result: data }; })
+        .catch(function(err) { return { sample: 'WTL-' + labNumber, error: err.message }; })
+      );
+    });
+
+    Promise.all(promises).then(function(results) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+
+      var successes = results.filter(function(r) { return r.result && r.result.success; });
+      var failures = results.filter(function(r) { return r.error || (r.result && r.result.error); });
+
+      var resultMsg = 'Simulator илгээлт:\n';
+      resultMsg += '  Амжилттай: ' + successes.length + '\n';
+      if (failures.length > 0) {
+        resultMsg += '  Алдаатай: ' + failures.length + '\n\n';
+        failures.forEach(function(f) {
+          var errMsg = f.error || (f.result && f.result.error) || 'Тодорхойгүй';
+          resultMsg += '  ' + f.sample + ': ' + errMsg + '\n';
         });
       }
-      return response.json();
-    });
-  }
-
-  // ICPMS Send Selected button
-  safeAddListener('icpmsSendBtn', 'click', function(e) {
-    e.preventDefault();
-
-    const ids = GridModule.getSelectedIds();
-    if (ids.length === 0) {
-      alert("ICPMS руу илгээх дээжүүдийг сонгоно уу.");
-      return;
-    }
-
-    if (!confirm('Сонгосон ' + ids.length + ' дээжийг ICPMS руу илгээх үү?')) {
-      return;
-    }
-
-    // Disable button and show loading
-    const btn = this;
-    const originalHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Илгээж байна...';
-
-    const sendUrl = GridModule.URLS.icpmsSend || '/api/icpms/send';
-
-    icpmsApiCall(sendUrl, {
-      sample_ids: ids.map(function(id) { return parseInt(id); }),
-      include_washability: true
-    })
-    .then(function(result) {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-
-      if (result.success) {
-        let msg = 'ICPMS руу ' + result.sent_count + ' дээж амжилттай илгээгдлээ.';
-        if (result.errors && result.errors.length > 0) {
-          msg += '\n\nАнхааруулга:\n' + result.errors.slice(0, 3).join('\n');
-          if (result.errors.length > 3) {
-            msg += '\n... +' + (result.errors.length - 3) + ' алдаа';
-          }
-        }
-        alert(msg);
-      } else {
-        alert('Алдаа: ' + (result.error || 'Илгээлт амжилтгүй'));
-      }
-    })
-    .catch(function(error) {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-      alert('ICPMS холболтын алдаа: ' + error.message);
-    });
-  });
-
-  // ICPMS Send CHPP button
-  safeAddListener('icpmsChppBtn', 'click', function(e) {
-    e.preventDefault();
-
-    if (!confirm('CHPP нэгжийн сүүлийн 7 хоногийн батлагдсан үр дүнг ICPMS руу илгээх үү?')) {
-      return;
-    }
-
-    // Disable button and show loading
-    const btn = this;
-    const originalHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Илгээж байна...';
-
-    const sendUrl = GridModule.URLS.icpmsSendChpp || '/api/icpms/send-chpp';
-
-    icpmsApiCall(sendUrl, { days_back: 7 })
-    .then(function(result) {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-
-      if (result.success || result.sent_count !== undefined) {
-        let msg = result.message || ('ICPMS руу ' + result.sent_count + ' дээж илгээгдлээ.');
-        if (result.errors && result.errors.length > 0) {
-          msg += '\n\nАнхааруулга:\n' + result.errors.slice(0, 3).join('\n');
-        }
-        alert(msg);
-      } else {
-        alert('Алдаа: ' + (result.error || 'Илгээлт амжилтгүй'));
-      }
-    })
-    .catch(function(error) {
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-      alert('ICPMS холболтын алдаа: ' + error.message);
+      alert(resultMsg);
     });
   });
 });

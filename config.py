@@ -115,3 +115,8 @@ class Config:
 
     # Logs директори үүсгэх
     os.makedirs(os.path.join(INSTANCE_DIR, 'logs'), exist_ok=True)
+
+    # ========================================================
+    # CHPP SIMULATOR INTEGRATION
+    # ========================================================
+    SIMULATOR_URL = os.getenv('SIMULATOR_URL', 'http://192.168.1.136:8001')

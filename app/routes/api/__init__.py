@@ -25,8 +25,8 @@ from . import analysis_api
 from . import audit_api
 from . import mass_api
 from . import chat_api
-from . import icpms_api
 from . import morning_api
+from . import simulator_api
 
 # Route-уудыг бүртгэх
 samples_api.register_routes(api_bp)
@@ -34,5 +34,5 @@ analysis_api.register_routes(api_bp)
 audit_api.register_routes(api_bp)
 mass_api.register_routes(api_bp)
 chat_api.register_routes(api_bp)
-icpms_api.register_routes(api_bp)
 morning_api.register_routes(api_bp)
+simulator_api.register_routes(api_bp)

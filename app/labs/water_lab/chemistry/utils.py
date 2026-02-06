@@ -29,9 +29,21 @@ def _generate_micro_lab_id(sample_date, next_batch=False):
     """
     micro_filter = Sample.lab_type.in_(_MICRO_TYPES)
 
-    distinct_days = db.session.query(
-        func.count(func.distinct(Sample.sample_date))
-    ).filter(micro_filter).scalar() or 0
+    # Хамгийн том day_num олох (micro_lab_id-аас)
+    max_day_num = 0
+    rows = db.session.query(Sample.micro_lab_id).filter(
+        micro_filter,
+        Sample.micro_lab_id.isnot(None),
+        Sample.micro_lab_id != '',
+    ).all()
+    for (lid,) in rows:
+        if lid and '_' in lid:
+            try:
+                d = int(lid.split('_')[0])
+                if d > max_day_num:
+                    max_day_num = d
+            except (ValueError, IndexError):
+                pass
 
     today_count = Sample.query.filter(
         micro_filter,
@@ -39,16 +51,41 @@ def _generate_micro_lab_id(sample_date, next_batch=False):
     ).count()
 
     if next_batch:
-        day_num = distinct_days + 1
+        # Шинэ багц - хамгийн том day_num + 1 (үргэлж шинэ дугаар)
+        day_num = max_day_num + 1
+        # Хэрэв өнөөдрийн дээж байгаа ч гэсэн шинэ багц үүсгэнэ
+        if today_count > 0:
+            # Мөн өнөөдрийн хамгийн том day_num-тай харьцуулж, том нь-г авна
+            existing_today = db.session.query(Sample.micro_lab_id).filter(
+                micro_filter,
+                Sample.sample_date == sample_date,
+                Sample.micro_lab_id.isnot(None),
+            ).all()
+            for (lid,) in existing_today:
+                if lid and '_' in lid:
+                    try:
+                        d = int(lid.split('_')[0])
+                        if d >= day_num:
+                            day_num = d + 1
+                    except (ValueError, IndexError):
+                        pass
     elif today_count > 0:
-        day_num = db.session.query(
-            func.count(func.distinct(Sample.sample_date))
-        ).filter(
+        # Өнөөдрийн дээж байгаа - тэр өдрийн day_num авах
+        existing = db.session.query(Sample.micro_lab_id).filter(
             micro_filter,
-            Sample.sample_date <= sample_date,
-        ).scalar() or 1
+            Sample.sample_date == sample_date,
+            Sample.micro_lab_id.isnot(None),
+        ).first()
+        if existing and existing[0] and '_' in existing[0]:
+            try:
+                day_num = int(existing[0].split('_')[0])
+            except (ValueError, IndexError):
+                day_num = max_day_num + 1
+        else:
+            day_num = max_day_num + 1
     else:
-        day_num = distinct_days + 1
+        # Шинэ өдөр - шинэ day_num
+        day_num = max_day_num + 1
 
     total_samples = Sample.query.filter(micro_filter).count()
 

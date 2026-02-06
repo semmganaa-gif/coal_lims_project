@@ -558,7 +558,7 @@ const sampleColDefs = [
     suppressMenu: true,
     cellRenderer: p => {
       const base = {{ 'true' if is_micro else 'false' }}
-        ? '/labs/microbiology/edit_sample/' : '/labs/water/edit_sample/';
+        ? '/labs/water-lab/microbiology/edit_sample/' : '/labs/water-lab/chemistry/edit_sample/';
       return '<a href="' + base + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Edit</a>';
     }
   },
