@@ -59,11 +59,14 @@
 
     <!-- Table -->
     <style>
-        #complaintsTable { table-layout: fixed; width: 100%; }
+        #complaintsTable { width: 100%; }
+        #complaintsTable th:nth-child(1),
+        #complaintsTable td:nth-child(1) { min-width: 250px !important; }
         #complaintsTable td:nth-child(5) {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            max-width: 300px;
         }
     </style>
     <div class="card">
