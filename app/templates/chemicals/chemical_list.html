@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   table = new Tabulator("#chemicalGrid", {
     data: rows,
-    layout: "fitDataFill",
+    layout: "fitColumns",
     height: "calc(100vh - 380px)",
     minHeight: 400,
     pagination: false,
@@ -341,21 +341,22 @@ document.addEventListener('DOMContentLoaded', function() {
       {
         title: "Нэр",
         field: "name",
-        minWidth: 180,
+        widthGrow: 2,
+        minWidth: 150,
         formatter: function(cell) {
           const data = cell.getRow().getData();
           return `<a href="/chemicals/${data.id}" class="text-decoration-none fw-semibold">${data.name}</a>`;
         }
       },
-      { title: "Томъёо", field: "formula", width: 100 },
-      { title: "CAS", field: "cas_number", width: 110 },
-      { title: "Үйлдвэрлэгч", field: "manufacturer", width: 130 },
-      { title: "Lot №", field: "lot_number", width: 100 },
-      { title: "Зэрэг", field: "grade", width: 70 },
+      { title: "Томъёо", field: "formula", width: 90 },
+      { title: "CAS", field: "cas_number", width: 100 },
+      { title: "Үйлдвэрлэгч", field: "manufacturer", widthGrow: 1, minWidth: 100 },
+      { title: "Lot №", field: "lot_number", width: 90 },
+      { title: "Зэрэг", field: "grade", width: 65 },
       {
         title: "Тоо хэмжээ",
         field: "quantity",
-        width: 100,
+        width: 95,
         hozAlign: "right",
         formatter: function(cell) {
           const data = cell.getRow().getData();
@@ -368,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
       {
         title: "Дуусах огноо",
         field: "expiry_date",
-        width: 110,
+        width: 105,
         formatter: function(cell) {
           const val = cell.getValue();
           if (!val) return '-';
@@ -381,11 +382,11 @@ document.addEventListener('DOMContentLoaded', function() {
           return `<span class="${cls}">${val}</span>`;
         }
       },
-      { title: "Байршил", field: "storage_location", width: 120 },
+      { title: "Байршил", field: "storage_location", widthGrow: 1, minWidth: 100 },
       {
         title: "Ангилал",
         field: "category",
-        width: 100,
+        width: 90,
         formatter: function(cell) {
           const map = {
             acid: 'Хүчил', base: 'Суурь', solvent: 'Уусгагч',
@@ -412,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       {
         title: "",
-        width: 80,
+        width: 60,
         hozAlign: "center",
         formatter: function(cell) {
           const id = cell.getRow().getData().id;

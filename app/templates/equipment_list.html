@@ -503,9 +503,9 @@ document.addEventListener('DOMContentLoaded', function () {
       {title:'Ашиглалтад орсон огноо', field:'commissioned_info', minWidth:130},
       {title:'Байршил', field:'location', width:100},
       {title:'Ашиглалтын байдал', columns:[
-        {title:'Хэвийн (✔)', field:'_chk_normal', width:95, formatter:statusCheckFormatter('normal'), headerSort:false},
-        {title:'Эвдрэлтэй (✔)', field:'_chk_broken', width:100, formatter:statusCheckFormatter('broken'), headerSort:false},
-        {title:'Сэлбэг хэрэгсэл шаардлагатай (✔)', field:'_chk_spare', width:150, formatter:statusCheckFormatter('needs_spare'), headerSort:false},
+        {title:'Хэвийн', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
+        {title:'Эвдрэлтэй', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
+        {title:'Сэлбэг шаардлагатай', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
       ]},
       {title:'Бусад тайлбар', field:'remark', minWidth:120},
     ],

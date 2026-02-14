@@ -4,10 +4,10 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2><i class="bi bi-tools me-2"></i>Залруулах ажиллагааны бүртгэл</h2>
-            <p class="text-muted mb-0">LAB.02.00.04 | ISO 17025 - 8.7 заалт</p>
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Үл тохирол, үл тохирох ажлын бүртгэл</h2>
+            <p class="text-muted mb-0">LAB.10.00.01 | ISO 17025 - 7.10 заалт</p>
         </div>
-        <a href="{{ url_for('quality.capa_new') }}" class="btn btn-primary">
+        <a href="{{ url_for('quality.nonconformity_new') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i>Шинэ бүртгэл
         </a>
     </div>
@@ -17,7 +17,7 @@
             <div class="card bg-info text-white"><div class="card-body py-2"><h6>Нийт</h6><h3>{{ stats.total }}</h3></div></div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-danger text-white"><div class="card-body py-2"><h6>Нээлттэй</h6><h3>{{ stats.open }}</h3></div></div>
+            <div class="card bg-warning text-dark"><div class="card-body py-2"><h6>Хүлээгдэж буй</h6><h3>{{ stats.pending }}</h3></div></div>
         </div>
         <div class="col-md-3">
             <div class="card bg-primary text-white"><div class="card-body py-2"><h6>Хянагдсан</h6><h3>{{ stats.reviewed }}</h3></div></div>
@@ -28,8 +28,8 @@
     </div>
 
     <style>
-        #capaTable { table-layout: fixed; width: 100%; }
-        #capaTable td:nth-child(3) {
+        #ncTable { table-layout: fixed; width: 100%; }
+        #ncTable td:nth-child(5) {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -37,15 +37,15 @@
     </style>
     <div class="card">
         <div class="card-body">
-            <table class="table table-striped table-hover" id="capaTable">
+            <table class="table table-striped table-hover" id="ncTable">
                 <thead>
                     <tr>
                         <th>Дугаар</th>
                         <th>Огноо</th>
-                        <th>Үл тохирлын тайлбар</th>
-                        <th>Хариуцагч</th>
-                        <th>Хугацаа</th>
-                        <th>Хянагдсан</th>
+                        <th>Илрүүлсэн</th>
+                        <th>Хэсэг</th>
+                        <th>Тайлбар</th>
+                        <th>Хариуцах</th>
                         <th>Статус</th>
                         <th>Үйлдэл</th>
                     </tr>
@@ -53,25 +53,17 @@
                 <tbody>
                     {% for r in records %}
                     <tr>
-                        <td><strong>{{ r.ca_number }}</strong></td>
-                        <td>{{ r.issue_date.strftime('%Y-%m-%d') if r.issue_date else '-' }}</td>
-                        <td>{{ (r.issue_description or '')[:60] }}{% if (r.issue_description or '')|length > 60 %}...{% endif %}</td>
-                        <td>{{ r.responsible_person.username if r.responsible_person else '-' }}</td>
-                        <td>{{ r.target_date.strftime('%Y-%m-%d') if r.target_date else '-' }}</td>
+                        <td><strong>{{ r.record_no }}</strong></td>
+                        <td>{{ r.record_date.strftime('%Y-%m-%d') if r.record_date else '-' }}</td>
+                        <td>{{ r.detector_name or '-' }}</td>
+                        <td>{{ r.detector_department or '-' }}</td>
+                        <td>{{ (r.nc_description or '')[:60] }}{% if (r.nc_description or '')|length > 60 %}...{% endif %}</td>
+                        <td>{{ r.responsible_person or '-' }}</td>
                         <td>
-                            {% if r.fully_resolved is not none %}
-                                {% if r.fully_resolved %}
-                                    <span class="badge bg-success">Бүрэн</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Хэсэгчлэн</span>
-                                {% endif %}
-                            {% else %}-{% endif %}
-                        </td>
-                        <td>
-                            {% if r.status == 'open' %}
-                                <span class="badge bg-danger">Нээлттэй</span>
-                            {% elif r.status == 'in_progress' %}
-                                <span class="badge bg-warning text-dark">Хэрэгжүүлж буй</span>
+                            {% if r.status == 'pending' %}
+                                <span class="badge bg-secondary">Хүлээгдэж буй</span>
+                            {% elif r.status == 'investigating' %}
+                                <span class="badge bg-warning text-dark">Шалгаж буй</span>
                             {% elif r.status == 'reviewed' %}
                                 <span class="badge bg-primary">Хянагдсан</span>
                             {% else %}
@@ -79,7 +71,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('quality.capa_detail', id=r.id) }}"
+                            <a href="{{ url_for('quality.nonconformity_detail', id=r.id) }}"
                                class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
                         </td>
                     </tr>
@@ -92,17 +84,17 @@
 
 <script>
 $(document).ready(function() {
-    $('#capaTable').DataTable({
+    $('#ncTable').DataTable({
         order: [[1, 'desc']],
         pageLength: 25,
         autoWidth: false,
         columnDefs: [
             { targets: 0, width: '90px' },
             { targets: 1, width: '100px' },
-            { targets: 3, width: '130px' },
-            { targets: 4, width: '100px' },
-            { targets: 5, width: '100px' },
-            { targets: 6, width: '130px' },
+            { targets: 2, width: '130px' },
+            { targets: 3, width: '120px' },
+            { targets: 5, width: '130px' },
+            { targets: 6, width: '120px' },
             { targets: 7, width: '60px' }
         ],
         language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json' }

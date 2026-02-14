@@ -11,8 +11,14 @@
   }
   .month-input:focus { border-color: #0d6efd; outline: none; }
   .total-cell { font-weight: 600; background: #f8f9fa; }
+  .waste-table { table-layout: fixed; width: 100%; }
   .waste-table th { font-size: 0.8rem; white-space: nowrap; }
   .waste-table td { font-size: 0.85rem; vertical-align: middle; }
+  .waste-table td:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .badge-hazard { background: #dc3545; }
   .badge-safe { background: #198754; }
 </style>
@@ -73,9 +79,9 @@
         <table class="table table-bordered table-hover mb-0 waste-table">
           <thead class="table-light">
             <tr>
-              <th rowspan="2" style="min-width: 200px;">Хог хаягдлын нэр</th>
-              <th rowspan="2" style="min-width: 120px;">Сард гарах</th>
-              <th rowspan="2" style="min-width: 150px;">Хаягдах газар</th>
+              <th rowspan="2" style="width: 180px;">Хог хаягдлын нэр</th>
+              <th rowspan="2" style="width: 100px;">Сард гарах</th>
+              <th rowspan="2" style="width: 120px;">Хаягдах газар</th>
               <th colspan="12" class="text-center">Сарын бүртгэл ({{ year }})</th>
               <th rowspan="2" class="text-center">Нийт</th>
               <th rowspan="2" class="text-center">Үлдэгдэл</th>

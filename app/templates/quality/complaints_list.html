@@ -1,22 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-#complaintsTable th:first-child,
-#complaintsTable td:first-child {
-    min-width: 200px !important;
-    width: 200px !important;
-}
-</style>
 <div class="container-fluid mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2><i class="fas fa-comment-dots"></i> Үйлчлүүлэгчийн гомдол</h2>
-            <p class="text-muted">ISO 17025 - 8.9 заалт: Үйлчлүүлэгчийн гомдлын менежмент</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-chat-left-dots me-2"></i>Санал гомдлын бүртгэл</h2>
+            <p class="text-muted mb-0">LAB.02.00.01 | ISO 17025 - 7.9 заалт</p>
         </div>
-        <div class="col-md-4 text-right">
+        <div>
+            <a href="{{ url_for('quality.complaints_dashboard') }}" class="btn btn-info text-white me-2">
+                <i class="bi bi-graph-up me-1"></i>Дашбоард
+            </a>
             <a href="{{ url_for('quality.complaints_new') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Шинэ гомдол бүртгэх
+                <i class="bi bi-plus-circle me-1"></i>Шинэ бүртгэл
             </a>
         </div>
     </div>
@@ -25,97 +21,94 @@
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5>Нийт</h5>
-                    <h2>{{ stats.total }}</h2>
+                <div class="card-body py-2">
+                    <h6>Нийт</h6>
+                    <h3>{{ stats.total }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card bg-secondary text-white">
-                <div class="card-body">
-                    <h5>Хүлээгдэж байгаа</h5>
-                    <h2>{{ stats.received }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5>Шалгаж байгаа</h5>
-                    <h2>{{ stats.investigating }}</h2>
+                <div class="card-body py-2">
+                    <h6>Хүлээн авсан</h6>
+                    <h3>{{ stats.received }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Шийдэгдсэн</h5>
-                    <h2>{{ stats.resolved }}</h2>
+                <div class="card-body py-2">
+                    <h6>Шийдэгдсэн</h6>
+                    <h3>{{ stats.resolved }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Хаагдсан</h5>
-                    <h2>{{ stats.closed }}</h2>
+                <div class="card-body py-2">
+                    <h6>Хаагдсан</h6>
+                    <h3>{{ stats.closed }}</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Complaints Table -->
+    <!-- Table -->
+    <style>
+        #complaintsTable { table-layout: fixed; width: 100%; }
+        #complaintsTable td:nth-child(5) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
     <div class="card">
         <div class="card-body">
             <table class="table table-striped table-hover" id="complaintsTable">
                 <thead>
                     <tr>
-                        <th>Гомдлын №</th>
+                        <th>Дугаар</th>
                         <th>Огноо</th>
-                        <th>Үйлчлүүлэгч</th>
-                        <th>Төрөл</th>
-                        <th>Тайлбар</th>
-                        <th>Шалгасан</th>
+                        <th>Гомдол гаргагч</th>
+                        <th>Хэсэг</th>
+                        <th>Агуулга</th>
+                        <th>Үндэслэлтэй</th>
                         <th>Статус</th>
-                        <th>CAPA</th>
                         <th>Үйлдэл</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for complaint in complaints %}
+                    {% for c in complaints %}
                     <tr>
-                        <td><strong>{{ complaint.complaint_no }}</strong></td>
-                        <td>{{ complaint.complaint_date.strftime('%Y-%m-%d') if complaint.complaint_date else '-' }}</td>
+                        <td><strong>{{ c.complaint_no }}</strong></td>
+                        <td>{{ c.complaint_date.strftime('%Y-%m-%d') if c.complaint_date else '-' }}</td>
+                        <td>{{ c.complainant_name or c.client_name or '-' }}</td>
+                        <td>{{ c.complainant_department or '-' }}</td>
+                        <td>{{ (c.complaint_content or c.description or '')[:60] }}{% if (c.complaint_content or c.description or '')|length > 60 %}...{% endif %}</td>
                         <td>
-                            <strong>{{ complaint.client_name }}</strong><br>
-                            <small class="text-muted">{{ complaint.contact_person }}</small>
+                            {% if c.is_justified is not none %}
+                                {% if c.is_justified %}
+                                    <span class="badge bg-success">Тийм</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Үгүй</span>
+                                {% endif %}
+                            {% else %}-{% endif %}
                         </td>
-                        <td><span class="badge bg-info text-dark">{{ complaint.complaint_type }}</span></td>
-                        <td>{{ complaint.description[:80] }}...</td>
-                        <td>{{ complaint.investigated_by.username if complaint.investigated_by else '-' }}</td>
                         <td>
-                            {% if complaint.status == 'received' %}
-                                <span class="badge bg-secondary">Хүлээгдэж байна</span>
-                            {% elif complaint.status == 'investigating' %}
-                                <span class="badge bg-warning text-dark">Шалгаж байна</span>
-                            {% elif complaint.status == 'resolved' %}
+                            {% if c.status == 'draft' %}
+                                <span class="badge bg-secondary">Ноорог</span>
+                            {% elif c.status == 'received' %}
+                                <span class="badge bg-warning text-dark">Хүлээн авсан</span>
+                            {% elif c.status == 'resolved' %}
                                 <span class="badge bg-primary">Шийдэгдсэн</span>
                             {% else %}
                                 <span class="badge bg-success">Хаагдсан</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if complaint.capa_created %}
-                                <span class="badge bg-danger">✓ Үүссэн</span>
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('quality.complaints_detail', id=complaint.id) }}"
-                               class="btn btn-sm btn-info">
-                                <i class="fas fa-eye"></i> Харах
+                            <a href="{{ url_for('quality.complaints_detail', id=c.id) }}"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
                             </a>
                         </td>
                     </tr>
@@ -133,11 +126,15 @@ $(document).ready(function() {
         pageLength: 25,
         autoWidth: false,
         columnDefs: [
-            { width: '200px', targets: 0 }
+            { targets: 0, width: '90px' },
+            { targets: 1, width: '100px' },
+            { targets: 2, width: '150px' },
+            { targets: 3, width: '120px' },
+            { targets: 5, width: '100px' },
+            { targets: 6, width: '120px' },
+            { targets: 7, width: '60px' }
         ],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json'
-        }
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json' }
     });
 });
 </script>
