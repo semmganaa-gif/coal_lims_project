@@ -147,7 +147,7 @@
       }
     },
     {
-      headerName: 'Crucible #',
+      headerName: 'Crucible',
       field: 'crucible_num',
       width: 90,
       headerClass: 'ag-header-cell-centered',
@@ -208,7 +208,7 @@
     {
       headerName: 'Tolerance',
       field: 'tolerance',
-      width: 90,
+      width: 120,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => {

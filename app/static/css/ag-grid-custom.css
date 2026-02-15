@@ -52,6 +52,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  text-transform: none;
 }
 
 /* Header group separation for parallel measurements */

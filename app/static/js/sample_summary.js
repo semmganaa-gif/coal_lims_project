@@ -314,7 +314,7 @@ const GridModule = (function() {
         field: col.code,
         cellRenderer: resultValueRenderer,
         flex: 1,
-        minWidth: 80,
+        minWidth: 70,
         sortable: true,
         filter: 'agNumberColumnFilter',
         floatingFilter: false,

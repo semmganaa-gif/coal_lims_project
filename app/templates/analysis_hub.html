@@ -222,7 +222,6 @@
     border-radius: 6px;
     display: inline-block;
     margin-bottom: 0.4rem;
-    text-transform: uppercase;
     letter-spacing: 0.03em;
   }
   .card-desc {
@@ -349,22 +348,18 @@
   </div>
 
   {% if analysis_types %}
-  <!-- Category Tabs - 4 ангилал -->
+  <!-- Category Tabs - 3 categories (ISO nomenclature) -->
   <div class="category-tabs">
     <div class="cat-tab active" data-cat="tech">
       <i class="bi bi-speedometer2"></i> Technical Analysis
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="element">
-      <i class="bi bi-diagram-3"></i> Elemental Analysis
+      <i class="bi bi-diagram-3"></i> Elemental &amp; Trace Analysis
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="coking">
-      <i class="bi bi-fire"></i> Coking Properties
-      <span class="tab-count">0</span>
-    </div>
-    <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots"></i> Other
+      <i class="bi bi-fire"></i> Physical &amp; Coking
       <span class="tab-count">0</span>
     </div>
   </div>
@@ -382,13 +377,13 @@
     {% set disp_name = a.display_name if a.display_name is defined and a.display_name else a.name %}
     {% set disp_badge = a.display_badge if a.display_badge is defined and a.display_badge else (a.code|fmt_code) %}
 
-    {# Categorize by code - 4 ангилал #}
-    {% set cat = 'other' %}
-    {% if a.code in ['MT', 'Mad', 'Aad', 'Vad', 'CV'] %}
+    {# Categorize by code - 4 categories (ISO nomenclature from нэршил.xlsx) #}
+    {% set cat = 'tech' %}
+    {% if a.code in ['MT', 'Mad', 'Aad', 'Vad', 'FCd', 'FM', 'CV', 'Solid'] %}
       {% set cat = 'tech' %}
     {% elif a.code in ['TS', 'C', 'H', 'N', 'O', 'P', 'F', 'Cl'] %}
       {% set cat = 'element' %}
-    {% elif a.code in ['CSN', 'Gi', 'X', 'Y', 'XY', 'CRI', 'CSR', 'CRICSR'] %}
+    {% elif a.code in ['TRD', 'CSN', 'Gi', 'X', 'Y', 'XY', 'CRI', 'CSR', 'CRICSR', 'PE'] %}
       {% set cat = 'coking' %}
     {% endif %}
 
@@ -528,8 +523,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateTabCounts() {
     const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
 
-    // 4 ангилал
-    const counts = { tech: 0, element: 0, coking: 0, other: 0 };
+    // 3 categories (ISO nomenclature)
+    const counts = { tech: 0, element: 0, coking: 0 };
 
     cards.forEach(function(card) {
       const name = card.dataset.name || '';
