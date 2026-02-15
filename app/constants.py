@@ -19,6 +19,102 @@ if hasattr(sys.stdout, "reconfigure"):
 
 
 # =====================================================================
+# НҮҮРСНИЙ ШИНЖИЛГЭЭНИЙ АЛБАН ЁСНЫ НЭРШИЛ (MNS / ISO Standard Nomenclature)
+# =====================================================================
+#
+# Доод индекс (subscript) тайлбар:
+#   ar  = as received        (Ажлын төлөв)
+#   ad  = air-dried basis    (Агаарт хатаасан төлөв)
+#   d   = dry basis          (Хуурай төлөв)
+#   daf = dry, ash-free basis (Хуурай, үнсгүй төлөв)
+#   t   = total              (Нийт)
+#   gr  = gross              (Нийт/Бүдүүвч)
+#   net = net                (Цэвэр)
+#
+# Жишээ: M_ad → M subscript ad → HTML: M<sub>ad</sub>
+#         S_t,d → S subscript t,d → HTML: S<sub>t,d</sub>
+#
+# Эх сурвалж:
+#   - MNS ISO 17246:2010 (Нүүрс. Техникийн шинжилгээ / Proximate analysis)
+#   - MNS ISO 1170:2007  (Шинжилгээний дүнг өөр төлөвт шилжүүлэн тооцох)
+#   - MNS ISO 501:2020   (Тигелийн хөөлтийн зэрэг тодорхойлох)
+# =====================================================================
+
+# fmt_code filter-д ашиглах subscript mapping
+# key: normalized code (lowercase), value: (prefix, subscript)
+# HTML output: prefix + <sub>subscript</sub>
+ANALYSIS_CODE_SUBSCRIPTS = {
+    # --- Чийг (Moisture) ---
+    'mt':       ('M', 'T,ar'),       # Total Moisture (as received)
+    'mt,ar':    ('M', 'T,ar'),
+    'mad':      ('M', 'ad'),         # Moisture in analysis sample (air-dried)
+    'm,ad':     ('M', 'ad'),
+    'fm':       ('FM', ''),          # Free Moisture
+
+    # --- Үнслэг (Ash) ---
+    'aad':      ('A', 'ad'),         # Ash (air-dried)
+    'a,ad':     ('A', 'ad'),
+    'a,ar':     ('A', 'ar'),
+    'a,d':      ('A', 'd'),          # Ash (dry basis)
+    'ad':       ('A', 'd'),
+
+    # --- Дэгдэмхий бодис (Volatile Matter) ---
+    'vad':      ('V', 'ad'),         # Volatile Matter (air-dried)
+    'v,ad':     ('V', 'ad'),
+    'v,ar':     ('V', 'ar'),
+    'v,d':      ('V', 'd'),          # Volatile Matter (dry basis)
+    'vdaf':     ('V', 'daf'),        # Volatile Matter (dry, ash-free)
+    'v,daf':    ('V', 'daf'),
+
+    # --- Холбоот нүүрстөрөгч (Fixed Carbon) ---
+    'fcd':      ('FC', 'd'),         # Fixed Carbon (dry basis)
+    'fc,d':     ('FC', 'd'),
+    'fcad':     ('FC', 'ad'),
+    'fc,ad':    ('FC', 'ad'),
+
+    # --- Хүхэр (Sulfur) ---
+    'ts':       ('S', 't'),          # Total Sulfur
+    'st,ad':    ('S', 't,ad'),       # Total Sulfur (air-dried)
+    'st,d':     ('S', 't,d'),        # Total Sulfur (dry basis)
+    's,t,ad':   ('S', 't,ad'),
+    's,t,d':    ('S', 't,d'),
+
+    # --- Илчлэг (Calorific Value) ---
+    'cv':       ('Q', 'gr,ad'),      # Calorific Value (gross, air-dried)
+    'qgr,ad':   ('Q', 'gr,ad'),
+    'qgr,ar':   ('Q', 'gr,ar'),      # Calorific Value (gross, as received)
+    'qgr,d':    ('Q', 'gr,d'),
+    'qnet,ar':  ('Q', 'net,ar'),     # Net Calorific Value (as received)
+
+    # --- Коксжих чанар (Coking Properties) ---
+    'csn':      ('CSN', ''),         # Crucible Swelling Number
+    'gi':       ('G', 'i'),          # Caking Index (G-index)
+    'x':        ('X', ''),           # Plastometric Shrinkage
+    'y':        ('Y', ''),           # Plastometric Thickness
+
+    # --- Харьцангуй нягт (Relative Density) ---
+    'trd':      ('TRD', 'ad'),       # True Relative Density (air-dried)
+    'trd,ad':   ('TRD', 'ad'),
+    'trd,d':    ('TRD', 'd'),        # True Relative Density (dry basis)
+
+    # --- Бичил элементүүд (Trace Elements) ---
+    'p':        ('P', 'ad'),         # Phosphorus (air-dried)
+    'p,ad':     ('P', 'ad'),
+    'p,d':      ('P', 'd'),
+    'f':        ('F', 'ad'),         # Fluorine (air-dried)
+    'f,ad':     ('F', 'ad'),
+    'f,d':      ('F', 'd'),
+    'cl':       ('Cl', 'ad'),        # Chlorine (air-dried)
+    'cl,ad':    ('Cl', 'ad'),
+    'cl,d':     ('Cl', 'd'),
+
+    # --- CRI/CSR ---
+    'cri':      ('CRI', ''),         # Coke Reactivity Index
+    'csr':      ('CSR', ''),         # Coke Strength after Reaction
+    'cricsr':   ('CRI/CSR', ''),
+}
+
+# =====================================================================
 # ХЭСЭГ 1: ШИНЖИЛГЭЭНИЙ ПАРАМЕТРҮҮД (PARAMETER DEFINITIONS)
 # =====================================================================
 
@@ -758,26 +854,26 @@ WTL_FL_NAMES = ['C1', 'C2', 'C3', 'C4', 'T1', 'T2', 'Initial']
 # 5. СИСТЕМИЙН ҮНДСЭН ШИНЖИЛГЭЭНҮҮД (Admin Seed)
 # =====================================================================
 MASTER_ANALYSIS_TYPES_LIST = [
-    {'code': 'MT',    'name': 'Нийт чийг (MT)',               'order': 1,  'role': 'chemist'},
-    {'code': 'Mad',   'name': 'Дотоод чийг (Mad)',            'order': 2,  'role': 'chemist'},
-    {'code': 'Aad',   'name': 'Үнс (Aad)',                    'order': 3,  'role': 'chemist'},
-    {'code': 'Vad',   'name': 'Дэгдэмхий бодис (Vad)',        'order': 4,  'role': 'chemist'},
-    {'code': 'TS',    'name': 'Нийт хүхэр (TS)',              'order': 5,  'role': 'chemist'},
-    {'code': 'CV',    'name': 'Илчлэг (CV)',                  'order': 6,  'role': 'chemist'},
-    {'code': 'CSN',   'name': 'Хөөлтийн зэрэг (CSN)',         'order': 7,  'role': 'chemist'},
-    {'code': 'Gi',    'name': 'Барьцалдах чадвар (Gi)',       'order': 8,  'role': 'chemist'},
-    {'code': 'TRD',   'name': 'Харьцангуй нягт (TRD)',        'order': 9,  'role': 'chemist'},
-    {'code': 'P',     'name': 'Фосфор (P)',                   'order': 10, 'role': 'chemist'},
-    {'code': 'F',     'name': 'Фтор (F)',                     'order': 11, 'role': 'chemist'},
-    {'code': 'Cl',    'name': 'Хлор (Cl)',                    'order': 12, 'role': 'chemist'},
-    {'code': 'X',     'name': 'Пластометр (X)',               'order': 13, 'role': 'chemist'},
-    {'code': 'Y',     'name': 'Пластометр (Y)',               'order': 14, 'role': 'chemist'},
-    {'code': 'CRI',   'name': 'Коксын урвалын идэвх (CRI)',   'order': 15, 'role': 'chemist'},
-    {'code': 'CSR',   'name': 'Урвалын дараах бат бэх (CSR)', 'order': 16, 'role': 'chemist'},
-    {'code': 'FM',    'name': 'Чөлөөт чийг (FM)',             'order': 17, 'role': 'prep'},
-    {'code': 'Solid', 'name': 'Хатуу бодисын үлдэгдэл (Solid)', 'order': 18, 'role': 'prep'},
-    {'code': 'm',     'name': 'Масс (m)',                     'order': 19, 'role': 'chemist'},
-    {'code': 'PE',    'name': 'Петрограф (PE)',               'order': 20, 'role': 'chemist'},
+    {'code': 'MT',    'name': 'Total Moisture',               'order': 1,  'role': 'chemist'},
+    {'code': 'Mad',   'name': 'Moisture (air-dried)',         'order': 2,  'role': 'chemist'},
+    {'code': 'Aad',   'name': 'Ash (air-dried)',              'order': 3,  'role': 'chemist'},
+    {'code': 'Vad',   'name': 'Volatile Matter (air-dried)',  'order': 4,  'role': 'chemist'},
+    {'code': 'TS',    'name': 'Total Sulfur',                 'order': 5,  'role': 'chemist'},
+    {'code': 'CV',    'name': 'Calorific Value (gross)',       'order': 6,  'role': 'chemist'},
+    {'code': 'CSN',   'name': 'Crucible Swelling Number',     'order': 7,  'role': 'chemist'},
+    {'code': 'Gi',    'name': 'Caking Index',                 'order': 8,  'role': 'chemist'},
+    {'code': 'TRD',   'name': 'True Relative Density',        'order': 9,  'role': 'chemist'},
+    {'code': 'P',     'name': 'Phosphorus (air-dried)',       'order': 10, 'role': 'chemist'},
+    {'code': 'F',     'name': 'Fluorine (air-dried)',         'order': 11, 'role': 'chemist'},
+    {'code': 'Cl',    'name': 'Chlorine (air-dried)',         'order': 12, 'role': 'chemist'},
+    {'code': 'X',     'name': 'Plastometric Shrinkage (X)',   'order': 13, 'role': 'chemist'},
+    {'code': 'Y',     'name': 'Plastometric Thickness (Y)',   'order': 14, 'role': 'chemist'},
+    {'code': 'CRI',   'name': 'Coke Reactivity Index',        'order': 15, 'role': 'chemist'},
+    {'code': 'CSR',   'name': 'Coke Strength after Reaction', 'order': 16, 'role': 'chemist'},
+    {'code': 'FM',    'name': 'Free Moisture',                'order': 17, 'role': 'prep'},
+    {'code': 'Solid', 'name': 'Solid Residue',                'order': 18, 'role': 'prep'},
+    {'code': 'm',     'name': 'Mass',                         'order': 19, 'role': 'chemist'},
+    {'code': 'PE',    'name': 'Petrography',                  'order': 20, 'role': 'chemist'},
 ]
 
 

@@ -280,38 +280,40 @@ def create_app(config_class=Config):
         name="fmt_result"
     )
 
-    # 3) fmt_code
-    _REV: dict[str, set[str]] = {}
-    for alias_lc, base in ALIAS_TO_BASE_ANALYSIS.items():
-        if not base:
-            continue
-        _REV.setdefault(base, set()).add(alias_lc)
+    # 3) fmt_code — subscript-тэй шинжилгээний код (HTML output)
+    #    Жишээ: 'Mad' → 'M<sub>ad</sub>', 'St,d' → 'S<sub>t,d</sub>'
+    from markupsafe import Markup
+    from app.constants import ANALYSIS_CODE_SUBSCRIPTS
 
-    _PREF_ORDER = ["st,ad", "qgr,ad", "mt,ar", "trd,d", "p,ad", "f,ad", "cl,ad"]
-
-    def _pick_display_alias(base: str) -> str:
-        aliases = _REV.get(base, set())
-        for pref in _PREF_ORDER:
-            if pref in aliases:
-                return pref
-        return base
-
-    def fmt_code(code: str | None) -> str:
+    def fmt_code(code: str | None) -> Markup:
         if not code:
-            return ""
+            return Markup("")
         c = str(code).strip()
+        lookup = c.lower().replace(" ", "")
+        sub = ANALYSIS_CODE_SUBSCRIPTS.get(lookup)
+        if sub:
+            prefix, subscript = sub
+            if subscript:
+                return Markup(f'{prefix}<sub>{subscript}</sub>')
+            return Markup(prefix)
+        # Fallback: comma байвал subscript болгох (Ж: "St,d" → S<sub>t,d</sub>)
         if "," in c:
-            return c
-        base = norm_code(c)
-        alias = _pick_display_alias(base)
-        if alias and "," in alias:
-            left, right = alias.split(",", 1)
-            if left:
-                left_norm = left[0].upper() + left[1:].lower()
-            else:
-                left_norm = left
-            return f"{left_norm},{right.lower()}"
-        return alias or c
+            parts = c.split(",", 1)
+            prefix_part = parts[0]
+            sub_part = parts[1]
+            # prefix-ийн сүүлийн жижиг үсгүүдийг subscript-д нэмэх
+            i = len(prefix_part)
+            for j in range(len(prefix_part) - 1, 0, -1):
+                if prefix_part[j].islower():
+                    i = j
+                else:
+                    break
+            if i < len(prefix_part):
+                real_prefix = prefix_part[:i]
+                sub_start = prefix_part[i:]
+                return Markup(f'{real_prefix}<sub>{sub_start},{sub_part}</sub>')
+            return Markup(f'{prefix_part}<sub>{sub_part}</sub>')
+        return Markup(c)
 
     app.add_template_filter(fmt_code, name="fmt_code")
 

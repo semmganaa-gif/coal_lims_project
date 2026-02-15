@@ -16,7 +16,7 @@ DEFAULT_PARALLEL_COLUMNS = [
 # decimals: тоон нарийвчлал (0=бүхэл, 2=0.01, 3=0.001, 4=0.0001)
 # highlight: өнгө тодруулах (p1, p2, diff, avg)
 DEFAULT_AUDIT_COLUMNS = [
-    {"key": "num", "label": "Тигель", "decimals": 0},
+    {"key": "num", "label": "Crucible", "decimals": 0},
     {"key": "m1", "label": "m1", "decimals": 4},
     {"key": "m2", "label": "m2", "decimals": 4},
     {"key": "m3", "label": "m3", "decimals": 4},
@@ -101,7 +101,7 @@ ANALYSIS_SCHEMAS: dict[str, dict] = {
     "TRD": {
         "parallels": {
             "columns": [
-                {"key": "num", "label": "Тигель №"},
+                {"key": "num", "label": "Crucible No."},
                 {"key": "m1", "label": "m1 (хоосон)", "unit": "g"},
                 {"key": "m2", "label": "m2 (дүүрэн)", "unit": "g"},
                 {"key": "m", "label": "m (нүүрсний масс)", "unit": "g"},
@@ -154,7 +154,7 @@ ANALYSIS_SCHEMAS: dict[str, dict] = {
             ]
         },
         "audit_columns": [
-            {"key": "num", "label": "Тигель", "decimals": 0},
+            {"key": "num", "label": "Crucible", "decimals": 0},
             {"key": "m1", "label": "m1", "decimals": 4},
             {"key": "m2", "label": "m2", "decimals": 4},
             {"key": "m3", "label": "m3", "decimals": 4},
