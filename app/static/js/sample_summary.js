@@ -208,6 +208,33 @@ const GridModule = (function() {
     }
   };
 
+  /* -------- HTML HEADER COMPONENT (for subscript support) -------- */
+
+  class HtmlHeaderComponent {
+    init(params) {
+      this.eGui = document.createElement('div');
+      this.eGui.classList.add('ag-cell-label-container');
+      this.eGui.style.display = 'flex';
+      this.eGui.style.alignItems = 'center';
+      this.eGui.style.width = '100%';
+
+      const label = document.createElement('span');
+      label.classList.add('ag-header-cell-text');
+      label.innerHTML = params.displayName;
+      this.eGui.appendChild(label);
+
+      // Sort icon support
+      if (params.enableSorting) {
+        this.eGui.style.cursor = 'pointer';
+        this.eGui.addEventListener('click', (e) => {
+          params.progressSort(e.shiftKey);
+        });
+      }
+    }
+    getGui() { return this.eGui; }
+    destroy() {}
+  }
+
   /* -------- COLUMN DEFINITIONS -------- */
 
   function buildColumnDefs() {
@@ -279,10 +306,11 @@ const GridModule = (function() {
       }
     ];
 
-    // Add dynamic analysis columns (хуучин дараалал)
+    // Add dynamic analysis columns with HTML header (subscript support)
     dynamicCols.forEach(function(col) {
       cols.push({
         headerName: col.header,
+        headerComponent: HtmlHeaderComponent,
         field: col.code,
         cellRenderer: resultValueRenderer,
         flex: 1,

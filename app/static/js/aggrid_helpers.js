@@ -294,6 +294,27 @@
   w.LIMS_AGGRID.numFmt2 = numFmt2;  // дундаж
   w.LIMS_AGGRID.numFmt0 = numFmt0;  // тигель, бюкс дугаар
 
+  // HTML Header Component (for subscript rendering in AG-Grid headers)
+  class HtmlHeaderComp {
+    init(params) {
+      this.eGui = document.createElement('div');
+      this.eGui.classList.add('ag-cell-label-container');
+      this.eGui.style.display = 'flex';
+      this.eGui.style.alignItems = 'center';
+      const label = document.createElement('span');
+      label.classList.add('ag-header-cell-text');
+      label.innerHTML = params.displayName;
+      this.eGui.appendChild(label);
+      if (params.enableSorting) {
+        this.eGui.style.cursor = 'pointer';
+        this.eGui.addEventListener('click', (e) => params.progressSort(e.shiftKey));
+      }
+    }
+    getGui() { return this.eGui; }
+    destroy() {}
+  }
+  w.LIMS_AGGRID.HtmlHeaderComp = HtmlHeaderComp;
+
   // Base configs
   w.LIMS_AGGRID.baseDefaultColDef = baseDefaultColDef;
   w.LIMS_AGGRID.baseGridOptions = baseGridOptions;
