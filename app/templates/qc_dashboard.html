@@ -6,7 +6,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{{ title }}</h1>
     <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-      ← Sampleний нэгтгэл рүү буцах
+      ← Back to Sample Summary
     </a>
   </div>
 
@@ -144,7 +144,7 @@
             <tr>
               <th rowspan="2" style="min-width: 40px;">#</th>
               <th rowspan="2" style="min-width: 70px;">Мөр</th>
-              <th rowspan="2" style="min-width: 220px;">Sampleний код</th>
+              <th rowspan="2" style="min-width: 220px;">Sample Code</th>
               {% for code in param_codes %}
                 <th colspan="2" class="text-center">{{ code }}</th>
               {% endfor %}

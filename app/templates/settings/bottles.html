@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container-fluid mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Bottleо тогтмол</h3>
+    <h3 class="mb-0">Bottle Constants</h3>
     <a class="btn btn-outline-primary" href="{{ url_for('settings.new_bottle_constant') }}">
       <i class="bi bi-plus-circle"></i> Хоосон тодорхойлолт (шинэ)
     </a>
@@ -16,7 +16,7 @@
     <table class="table table-sm align-middle">
       <thead class="table-light">
         <tr>
-          <th>#</th><th>Bottleоны №</th><th>Nameшил</th>
+          <th>#</th><th>Bottle No.</th><th>Label</th>
           <th>Идэвхитэй тогтмол</th><th>T (°C)</th><th>Хүчинтэй</th><th></th>
         </tr>
       </thead>
@@ -31,7 +31,7 @@
             {% if ac %}
               <span class="badge text-bg-success">K = {{ '%.5f'|format(ac.avg_value) }}</span>
             {% else %}
-              <span class="badge text-bg-secondary">Constantгүй</span>
+              <span class="badge text-bg-secondary">No Constant</span>
             {% endif %}
           </td>
           <td>{{ ac.temperature_c if ac else '' }}</td>

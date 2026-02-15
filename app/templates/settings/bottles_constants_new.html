@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0">Bottleо тогтмол — шинэ оруулах</h3>
+  <h3 class="mb-0">Bottle Constant — Add New</h3>
   <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary">
     <i class="bi bi-arrow-left"></i> Жагсаалт руу
   </a>
@@ -14,7 +14,7 @@
 
       <!-- Bottleо № -->
       <div class="col-md-4">
-        <label class="form-label">Bottleо № (serial_no) <span class="text-danger">*</span></label>
+        <label class="form-label">Bottle No. (serial_no) <span class="text-danger">*</span></label>
         <input name="serial_no" class="form-control" placeholder="Ж: PY-001" required>
         <div class="form-text">Зөвхөн дугаараа оруулна. Сонгох үед идэвхтэй тогтмол автоматаар татагдана.</div>
       </div>

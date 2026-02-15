@@ -33,7 +33,7 @@ def register_routes(bp):
             'quality/improvement_list.html',
             records=records,
             stats=stats,
-            title="Improvementын бүртгэл"
+            title="Improvement Records"
         )
 
     @bp.route("/improvement/new", methods=["GET", "POST"])

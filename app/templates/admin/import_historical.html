@@ -63,7 +63,7 @@
 
       {% if errors and errors|length > 0 %}
         <div class="alert alert-warning mt-3">
-          <div class="fw-bold">Анхаар: Errorтай мөрүүд (эхний {{ errors|length }}):</div>
+          <div class="fw-bold">Warning: Rows with errors (эхний {{ errors|length }}):</div>
           <ul class="mb-0 small">
             {% for e in errors %}<li class="mono">{{ e }}</li>{% endfor %}
           </ul>

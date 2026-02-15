@@ -94,7 +94,7 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-clipboard-data"></i> Analysisний гүйцэтгэл</strong>
+          <strong><i class="bi bi-clipboard-data"></i> Analysis Performance</strong>
         </div>
         <div class="card-body p-0">
           <div class="report-table-wrap">
@@ -167,10 +167,10 @@
             </table>
           </div>
 
-          <!-- Sampleний гүйцэтгэл -->
+          <!-- Sample Performance -->
           {% if shift_summary %}
           <div class="card-body border-top pt-3">
-            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Sampleний гүйцэтгэл</h6>
+            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Sample Performance</h6>
             <table class="report-table table-sm">
               <thead>
                 <tr>
@@ -232,7 +232,7 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-exclamation-triangle"></i> Errorны шалтгаан</strong>
+          <strong><i class="bi bi-exclamation-triangle"></i> Error Reasons</strong>
           <span class="badge bg-danger">{{ error_stats.total if error_stats else 0 }}</span>
         </div>
         <div class="card-body">
@@ -243,7 +243,7 @@
             {% else %}
               <div class="report-empty" style="padding: 2rem;">
                 <i class="bi bi-check-circle"></i>
-                <p class="mb-0">Errorны бүртгэл байхгүй</p>
+                <p class="mb-0">No error records</p>
               </div>
             {% endif %}
           </div>
@@ -282,7 +282,7 @@
                 {% else %}
                   <tr>
                     <td colspan="3" class="text-center text-muted py-3">
-                      Errorны шалтгааны лог олдсонгүй
+                      No error reason logs found
                     </td>
                   </tr>
                 {% endif %}

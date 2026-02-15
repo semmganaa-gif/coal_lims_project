@@ -27,7 +27,7 @@ window.saveInputValue = saveInputValue;
 
 /** sessionStorage-с унших */
 function loadInputValue(inputId) {
-    if (!ANАLYSIS_CODE || ANALYSIS_CODE === 'window.LIMS_ANALYSIS_CODE') {
+    if (!ANALYSIS_CODE || ANALYSIS_CODE === 'window.LIMS_ANALYSIS_CODE') {
         console.error("loadInputValue: ANALYSIS_CODE тодорхойгүй эсвэл буруу тохирсон байна!");
         return null;
     }

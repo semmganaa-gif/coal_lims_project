@@ -29,16 +29,16 @@
           <label class="form-label">Гарчиг</label>
           <input type="text" name="subject" class="form-control"
                  value="Сорилтын тайлан - {{ report.report_number }}"
-                 placeholder="Emailийн гарчиг">
+                 placeholder="Email subject">
         </div>
 
         <div class="mb-4">
           <label class="form-label">Агуулга</label>
-          <textarea name="body" class="form-control" rows="8" placeholder="Emailийн агуулга...">Roleэм хүндэт,
+          <textarea name="body" class="form-control" rows="8" placeholder="Email body...">Dear Sir/Madam,
 
-Энэхүү имэйлд "{{ report.title }}" сорилтын тайлан хавсаргав.
+Please find attached the test report "{{ report.title }}".
 
-Reportгийн дугаар: {{ report.report_number }}
+Report No.: {{ report.report_number }}
 Date: {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '' }} - {{ report.date_to.strftime('%Y-%m-%d') if report.date_to else '' }}
 
 Асуулт байвал бидэнтэй холбоо барина уу.

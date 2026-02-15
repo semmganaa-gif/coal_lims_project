@@ -130,7 +130,7 @@
   <!-- Info table -->
   <table class="info-table">
     <tr>
-      <th>Laboratoryйн дугаар</th>
+      <th>Laboratory No.</th>
       <th>Техникийн шаардлага</th>
       <th>Сорьцын тодорхойлолт</th>
       <th>Сорьц авсан аргачлал</th>
@@ -150,20 +150,20 @@
   <!-- Sample info -->
   <table class="sample-info-table">
     <tr>
-      <td><strong>Sampleийн тоо</strong><br>{{ samples|length }} ш</td>
+      <td><strong>Number of Samples</strong><br>{{ samples|length }} ш</td>
       <td><strong>Sample авсан огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
       <td><strong>Шинжилсэн огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
     </tr>
   </table>
 
   <!-- Results -->
-  <div class="results-label">Analysisний үр дүн:</div>
+  <div class="results-label">Analysis Results:</div>
   <table class="results-table">
     <thead>
       <tr>
         <th>№</th>
-        <th>Sampleийн дугаар</th>
-        <th>Sampleийн нэр</th>
+        <th>Sample No.</th>
+        <th>Sample Name</th>
         <th>Mad,%</th>
         <th>Adb,%</th>
         <th>Vdb,%</th>
