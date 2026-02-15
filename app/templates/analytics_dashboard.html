@@ -12,20 +12,20 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="{{ url_for('api.export_samples') }}?limit=1000">
-                        <i class="fas fa-vial me-2"></i>Дээж (Сүүлийн 1000)
+                        <i class="fas fa-vial me-2"></i>Samples (Last 1000)
                     </a></li>
                     <li><a class="dropdown-item" href="{{ url_for('api.export_analysis') }}?limit=1000">
-                        <i class="fas fa-flask me-2"></i>Шинжилгээ (Сүүлийн 1000)
+                        <i class="fas fa-flask me-2"></i>Analysis (Last 1000)
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" onclick="showExportModal()">
-                        <i class="fas fa-filter me-2"></i>Шүүлтүүртэй экспорт...
+                        <i class="fas fa-filter me-2"></i>Filtered export...
                     </a></li>
                 </ul>
             </div>
             {% endif %}
             <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Буцах
+                <i class="fas fa-arrow-left me-1"></i> Back
             </a>
         </div>
     </div>
@@ -44,24 +44,24 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Төрөл</label>
+                    <label class="form-label">Type</label>
                     <select id="exportType" class="form-select">
-                        <option value="samples">Дээж</option>
-                        <option value="analysis">Шинжилгээ</option>
+                        <option value="samples">Samples</option>
+                        <option value="analysis">Analysis</option>
                     </select>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Эхлэх огноо</label>
+                        <label class="form-label">Start Date</label>
                         <input type="date" id="exportStartDate" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Дуусах огноо</label>
+                        <label class="form-label">End Date</label>
                         <input type="date" id="exportEndDate" class="form-control">
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Хязгаар</label>
+                    <label class="form-label">Limit</label>
                     <select id="exportLimit" class="form-select">
                         <option value="500">500</option>
                         <option value="1000" selected>1,000</option>
@@ -71,9 +71,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-success" onclick="doExport()">
-                    <i class="fas fa-download me-1"></i> Татах
+                    <i class="fas fa-download me-1"></i> Download
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Нүүрсний лаборатори{% endblock %}
+{% block title %}Coal Laboratory{% endblock %}
 
 {% block content %}
 <style>
@@ -86,8 +86,8 @@
 
 <div class="coal-dash">
   <div class="dash-header">
-    <h1><i class="bi bi-minecart-loaded me-2"></i>Нүүрсний лаборатори</h1>
-    <p>Нүүрсний чанарын шинжилгээний удирдлагын самбар</p>
+    <h1><i class="bi bi-minecart-loaded me-2"></i>Coal Laboratory</h1>
+    <p>Coal quality analysis management dashboard</p>
   </div>
 
   <!-- Өдрийг эхлэх -->
@@ -98,22 +98,22 @@
     <div class="stat-card">
       <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#1d4ed8">{{ total_samples }}</div>
-      <div class="stat-label">Нийт дээж</div>
+      <div class="stat-label">Total Samples</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#6366f1"><i class="bi bi-plus-circle-fill"></i></div>
       <div class="stat-value" style="color:#4f46e5">{{ new_samples }}</div>
-      <div class="stat-label">Шинэ дээж</div>
+      <div class="stat-label">New Samples</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="stat-label">Шинжилж байна</div>
+      <div class="stat-label">In Progress</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#22c55e"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-value" style="color:#15803d">{{ completed }}</div>
-      <div class="stat-label">Дууссан</div>
+      <div class="stat-label">Completed</div>
     </div>
   </div>
 
@@ -122,39 +122,39 @@
     <a href="{{ url_for('main.index') }}" class="nav-card nc-sample">
       <div class="nav-card-icon"><i class="bi bi-box-seam"></i></div>
       <div class="nav-card-content">
-        <h3>Дээж бүртгэл</h3>
-        <p>Дээж бүртгэх, жагсаалт харах, засварлах</p>
+        <h3>Sample Registration</h3>
+        <p>Register, view list, edit samples</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('analysis.analysis_hub') }}" class="nav-card nc-analysis">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Шинжилгээ</h3>
-        <p>Шинжилгээний ажлын талбар, үр дүн оруулах</p>
+        <h3>Analysis</h3>
+        <p>Analysis workspace, enter results</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('equipment.equipment_list') }}" class="nav-card nc-equip">
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Тоног төхөөрөмж</h3>
-        <p>Бүртгэл, засвар үйлчилгээ, журнал</p>
+        <h3>Equipment</h3>
+        <p>Records, maintenance, journal</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
-    <a href="{{ url_for('quality.capa_list') }}" class="nav-card nc-quality">
+    <a href="{{ url_for('quality.complaints_list') }}" class="nav-card nc-quality">
       <div class="nav-card-icon"><i class="bi bi-clipboard-check"></i></div>
       <div class="nav-card-content">
-        <h3>Чанарын удирдлага</h3>
-        <p>CAPA, PT Testing, орчны нөхцөл, гомдол</p>
+        <h3>Quality Management</h3>
+        <p>Complaints, PT Testing, environmental</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('reports.dashboard') }}" class="nav-card nc-report">
       <div class="nav-card-icon"><i class="bi bi-bar-chart"></i></div>
       <div class="nav-card-content">
-        <h3>Тайлан</h3>
+        <h3>Reports</h3>
         <p>Dashboard, consumption, monthly plan</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
@@ -162,8 +162,8 @@
     <a href="{{ url_for('admin.manage_standards') }}" class="nav-card nc-standard">
       <div class="nav-card-icon"><i class="bi bi-award"></i></div>
       <div class="nav-card-content">
-        <h3>Стандарт</h3>
-        <p>CM, GBW стандарт, хяналтын график</p>
+        <h3>Standards</h3>
+        <p>CM, GBW standards, control charts</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

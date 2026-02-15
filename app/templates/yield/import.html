@@ -15,13 +15,13 @@
                     </ol>
                 </nav>
                 <h2><i class="bi bi-upload me-2"></i>Excel Import</h2>
-                <p class="text-muted">Washability Report Excel файлыг импортлох</p>
+                <p class="text-muted">Import Washability Report Excel file</p>
             </div>
 
             <!-- Upload Card -->
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Файл сонгох</h5>
+                    <h5 class="mb-0">Select File</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" id="uploadForm">
@@ -31,13 +31,13 @@
                         <div class="mb-4">
                             <div class="border rounded p-5 text-center bg-light" id="dropZone">
                                 <i class="bi bi-file-earmark-excel fs-1 text-success mb-3 d-block"></i>
-                                <h5>Excel файлаа энд чирж оруулна уу</h5>
-                                <p class="text-muted mb-3">эсвэл</p>
+                                <h5>Drag and drop your Excel file here</h5>
+                                <p class="text-muted mb-3">or</p>
                                 <input type="file" name="file" id="fileInput" class="d-none" accept=".xlsx,.xls">
                                 <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                                    <i class="bi bi-folder2-open me-1"></i> Файл сонгох
+                                    <i class="bi bi-folder2-open me-1"></i> Choose File
                                 </button>
-                                <p class="text-muted mt-3 mb-0 small">Дэмжигдэх формат: .xlsx, .xls</p>
+                                <p class="text-muted mt-3 mb-0 small">Supported formats: .xlsx, .xls</p>
                             </div>
                             <div id="selectedFile" class="mt-3 d-none">
                                 <div class="alert alert-info d-flex align-items-center">
@@ -55,8 +55,8 @@
 
                         <!-- Target Ash Settings -->
                         <div class="mb-4">
-                            <label class="form-label">Зорилтот үнслэг (Target Ash)</label>
-                            <p class="text-muted small">Тооцоолох үнслэгийн утгуудыг сонгоно уу</p>
+                            <label class="form-label">Target Ash</label>
+                            <p class="text-muted small">Select the ash values to calculate</p>
                             <div class="row">
                                 {% for ash in [8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0] %}
                                 <div class="col-md-4 col-6">
@@ -75,7 +75,7 @@
                         <!-- Submit -->
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
-                                <i class="bi bi-cloud-upload me-2"></i> Импортлох
+                                <i class="bi bi-cloud-upload me-2"></i> Import
                             </button>
                         </div>
                     </form>
@@ -85,19 +85,19 @@
             <!-- Excel Format Info -->
             <div class="card mt-4">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Excel файлын бүтэц</h6>
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Excel File Structure</h6>
                 </div>
                 <div class="card-body">
-                    <p>Импортлох Excel файл дараах sheet-үүдтэй байх ёстой:</p>
+                    <p>The import Excel file must contain the following sheets:</p>
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <strong>Front</strong> - Тайлангийн мэдээлэл (Lab Number, Sample Name, Date)
+                            <strong>Front</strong> - Report information (Lab Number, Sample Name, Date)
                         </li>
                         <li class="list-group-item">
-                            <strong>Raw Coal analysis</strong> - Анхны нүүрсний шинжилгээ (TM, IM, Ash, Vol, CSN, G Index, TRD)
+                            <strong>Raw Coal analysis</strong> - Raw coal analysis data (TM, IM, Ash, Vol, CSN, G Index, TRD)
                         </li>
                         <li class="list-group-item">
-                            <strong>Float sink</strong> - Float-sink шинжилгээний дата (Size fraction, Density, Mass, Ash, etc.)
+                            <strong>Float sink</strong> - Float-sink analysis data (Size fraction, Density, Mass, Ash, etc.)
                         </li>
                     </ul>
                 </div>

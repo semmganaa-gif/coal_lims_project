@@ -28,7 +28,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'main.login'
-login.login_message = "Энэ хуудсанд хандахын тулд нэвтэрнэ үү."
+login.login_message = "Please log in to access this page."
 mail = Mail()
 
 # WebSocket - Real-time чат
@@ -239,17 +239,17 @@ def create_app(config_class=Config):
             # Admin хэрэглэгч бол лиценз идэвхжүүлэх хуудас руу
             if current_user.role == 'admin':
                 if error == 'LICENSE_NOT_FOUND':
-                    flash('Лиценз олдсонгүй. Идэвхжүүлнэ үү.', 'warning')
+                    flash('License not found. Please activate.', 'warning')
                     return redirect(url_for('license.activate'))
                 elif error == 'LICENSE_EXPIRED':
-                    flash('Лицензийн хугацаа дууссан.', 'error')
+                    flash('License has expired.', 'error')
                     return redirect(url_for('license.expired'))
                 else:
-                    flash(f'Лицензийн алдаа: {error}', 'error')
+                    flash(f'License error: {error}', 'error')
                     return redirect(url_for('license.error'))
             else:
                 # Энгийн хэрэглэгч - алдааны мэдээлэл
-                flash('Системийн лицензийн асуудал байна. Админтай холбогдоно уу.', 'error')
+                flash('System license issue. Please contact administrator.', 'error')
                 return redirect(url_for('license.error'))
 
         return None
@@ -370,7 +370,7 @@ def create_app(config_class=Config):
         # API request бол JSON буцаах
         if request.path.startswith('/api/'):
             return jsonify({
-                'error': 'Хэт олон хүсэлт илгээсэн байна. Түр хүлээгээд дахин оролдоно уу.',
+                'error': 'Too many requests. Please wait and try again.',
                 'status': 429
             }), 429
         # Бусад тохиолдолд HTML template

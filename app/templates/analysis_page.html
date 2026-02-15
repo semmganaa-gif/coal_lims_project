@@ -35,28 +35,28 @@
       {# Desktop товчнууд (mobile дээр нуух) #}
       <div class="d-none d-md-flex gap-2">
         <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Буцах
+          <i class="bi bi-arrow-left"></i> Back
         </a>
-        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Тоног төхөөрөмж">
-          <i class="bi bi-tools"></i> Төхөөрөмж
+        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Equipment">
+          <i class="bi bi-tools"></i> Equipment
         </button>
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}Дээж (M){% else %}Дээж{% endif %}
+          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}Sample (M){% else %}Sample{% endif %}
         </button>
         {% if not is_mass_page %}
         <button class="btn btn-success btn-sm" id="save-analysis-results" data-action="save-results">
-          <i class="bi bi-check-lg"></i> Хадгалах
+          <i class="bi bi-check-lg"></i> Save
         </button>
         {% endif %}
       </div>
-      {# Mobile: Дээж + Хадгалах товч #}
+      {# Mobile: Sample + Save buttons #}
       <div class="d-md-none d-flex gap-2">
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> Дээж
+          <i class="bi bi-plus-circle"></i> Sample
         </button>
         {% if not is_mass_page %}
         <button class="btn btn-success btn-sm" id="save-analysis-results-mobile" data-action="save-results">
-          <i class="bi bi-check-lg"></i> Хадгалах
+          <i class="bi bi-check-lg"></i> Save
         </button>
         {% endif %}
       </div>
@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    {# Шинжилгээний хүснэгт - Full width on mobile #}
+    {# Analysisний хүснэгт - Full width on mobile #}
     <div class="col-12 col-lg-9">
       <div class="card shadow-sm mb-3 border-0">
         <div class="card-body p-0">
@@ -98,19 +98,19 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Дээж сонгох</h5>
+        <h5 class="modal-title">Select Samples</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body"><p class="text-center">Ачаалж байна...</p></div>
+      <div class="modal-body"><p class="text-center">Loading...</p></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
-        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">Нэмэх</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">Add</button>
       </div>
     </div>
   </div>
 </div>
 
-{# --- ТОНОГ ТӨХӨӨРӨМЖИЙН MODAL --- #}
+{# --- EQUIPMENT MODAL --- #}
 <style>
   #equipmentModal .modal-header {
     background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
@@ -255,7 +255,7 @@
   }
   #equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
   #equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
-  /* Хүхэр багаж калибровка */
+  /* Sulfur багаж калибровка */
   #equipmentModal .sulfur-panel { background: linear-gradient(135deg, #fefce8, #fef9c3); border-color: #fde047; }
   #equipmentModal .sulfur-panel .calib-panel-title { color: #a16207; }
   #equipmentModal .sulfur-panel .calib-std-row input { font-size: 0.75rem; }
@@ -269,7 +269,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Тоног төхөөрөмжийн ашиглалт & засвар</span>
+          <span>Equipment Usage & Repair</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -279,13 +279,13 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 18%; min-width:140px;">Лаб дугаар / Нэр</th>
-                <th style="width: 6%; text-align:center;">Бүрэн<br>бүтэн</th>
-                <th style="width: 8%; text-align:center;">Ашиглалт<br>(мин)</th>
-                <th style="width: 14%;">Тэмдэглэл</th>
-                <th style="width: 6%; text-align:center;">Шалгалт</th>
-                <th style="width: 6%; text-align:center;">Засвар</th>
-                <th style="width: 42%;">Шалгалт / Засварын мэдээлэл</th>
+                <th style="width: 18%; min-width:140px;">Lab Code / Name</th>
+                <th style="width: 6%; text-align:center;">Condition<br>OK</th>
+                <th style="width: 8%; text-align:center;">Usage<br>(min)</th>
+                <th style="width: 14%;">Notes</th>
+                <th style="width: 6%; text-align:center;">Calibration</th>
+                <th style="width: 6%; text-align:center;">Repair</th>
+                <th style="width: 42%;">Calibration / Repair Details</th>
               </tr>
             </thead>
             <tbody>
@@ -307,12 +307,12 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Тэмдэглэл..." style="border-color: #cbd5e0;">
+                         placeholder="Notes..." style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   {% if eq.category in ['furnace', 'balance', 'analysis'] %}
                   <button type="button" class="btn btn-outline-success btn-sm calib-btn"
-                          onclick="toggleCalibPanel(this)" title="Шалгалт хийх">
+                          onclick="toggleCalibPanel(this)" title="Run Calibration">
                     <i class="bi bi-thermometer-half"></i>
                   </button>
                   {% else %}
@@ -329,18 +329,18 @@
                   {% if eq.category == 'furnace' %}
                   <div class="calib-panel furnace-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-sun"></i> Температурын шалгалт
+                      <i class="bi bi-thermometer-sun"></i> Temperature Check
                     </div>
                     <div class="calib-input-group">
-                      <label>Тохируулсан:</label>
+                      <label>Set Temp:</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Хэмжсэн:</label>
+                      <label>Measured:</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Зөрүү:</label>
+                      <label>Diff:</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
@@ -348,37 +348,37 @@
                   {% elif eq.category == 'balance' %}
                   <div class="calib-panel balance-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-speedometer2"></i> Жингийн шалгалт (туухай)
+                      <i class="bi bi-speedometer2"></i> Balance Check (Weights)
                     </div>
                     <div class="mb-2">
-                      <small class="text-muted">Стандарт жин → Хэмжсэн утга</small>
+                      <small class="text-muted">Standard Weight -> Measured Value</small>
                     </div>
                     <div class="calib-weights-list">
                       <div class="calib-weight-row">
-                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
-                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
+                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
                         <span class="calib-status d-none" style="min-width:50px;"></span>
                       </div>
                     </div>
                     <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> Жин нэмэх
+                      <i class="bi bi-plus"></i> Add Weight
                     </button>
                   </div>
                   {% elif eq.category == 'analysis' %}
-                    {# Хүхэр багаж - 5 стандартаар калибровка #}
+                    {# Sulfur багаж - 5 стандартаар калибровка #}
                     {% if 'хүхэр' in (eq.name|lower) or 'sulfur' in (eq.name|lower) or 's-144' in (eq.name|lower) or '5e-irs' in (eq.name|lower) %}
                     <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="sulfur">
                       <div class="calib-panel-title">
-                        <i class="bi bi-droplet-half"></i> Хүхэр багаж калибровка (5 стандарт)
+                        <i class="bi bi-droplet-half"></i> Sulfur Analyzer Calibration (5 Standards)
                       </div>
-                      <div class="mb-2"><small class="text-muted">Стандарт нэр → Баталгаат → Хэмжсэн</small></div>
+                      <div class="mb-2"><small class="text-muted">Standard Name -> Certified -> Measured</small></div>
                       <div class="sulfur-stds-list">
                         {% for i in range(1, 6) %}
                         <div class="calib-std-row mb-1" style="display:flex; gap:4px; align-items:center;">
                           <span style="font-size:0.7rem; min-width:18px;">{{ i }}.</span>
-                          <input type="text" class="form-control form-control-sm sulfur-std-name" placeholder="Стд нэр" style="flex:2">
-                          <input type="number" class="form-control form-control-sm sulfur-cert-val" placeholder="Батл %" step="0.001" style="flex:1">
-                          <input type="number" class="form-control form-control-sm sulfur-meas-val" placeholder="Хэмжсэн" step="0.001" style="flex:1" oninput="checkSulfurRow(this)">
+                          <input type="text" class="form-control form-control-sm sulfur-std-name" placeholder="Std Name" style="flex:2">
+                          <input type="number" class="form-control form-control-sm sulfur-cert-val" placeholder="Cert %" step="0.001" style="flex:1">
+                          <input type="number" class="form-control form-control-sm sulfur-meas-val" placeholder="Measured" step="0.001" style="flex:1" oninput="checkSulfurRow(this)">
                           <span class="calib-status d-none" style="min-width:45px;"></span>
                         </div>
                         {% endfor %}
@@ -388,22 +388,22 @@
                     {% elif 'илчлэг' in (eq.name|lower) or 'calorimeter' in (eq.name|lower) or 'c2000' in (eq.name|lower) or 'c5000' in (eq.name|lower) or 'c6000' in (eq.name|lower) %}
                     <div class="calib-panel analysis-panel calorimeter-panel d-none" data-calib-type="calorimeter">
                       <div class="calib-panel-title">
-                        <i class="bi bi-fire"></i> Илчлэг багаж шалгалт (1 дээж, 5 хэмжилт)
+                        <i class="bi bi-fire"></i> Calorimeter Check (1 Sample, 5 Measurements)
                       </div>
                       <div class="calib-input-group mb-2">
-                        <label>Стандарт:</label>
-                        <input type="text" class="form-control form-control-sm cal-std-name" placeholder="Бензой хүчил" value="Бензой хүчил">
-                        <label class="ms-2">Батл:</label>
+                        <label>Standard:</label>
+                        <input type="text" class="form-control form-control-sm cal-std-name" placeholder="Benzoic Acid" value="Benzoic Acid">
+                        <label class="ms-2">Cert:</label>
                         <input type="number" class="form-control form-control-sm cal-cert-val" placeholder="cal/g" value="26454" step="1" style="max-width:80px;">
                       </div>
-                      <div class="mb-1"><small class="text-muted">5 удаагийн хэмжилт (cal/g):</small></div>
+                      <div class="mb-1"><small class="text-muted">5 measurements (cal/g):</small></div>
                       <div class="cal-measurements" style="display:flex; gap:4px; flex-wrap:wrap;">
                         {% for i in range(1, 6) %}
                         <input type="number" class="form-control form-control-sm cal-meas" placeholder="M{{ i }}" step="1" style="width:70px;" oninput="checkCalorimeter(this)">
                         {% endfor %}
                       </div>
                       <div class="mt-2 d-flex align-items-center gap-2">
-                        <span style="font-size:0.75rem;">Дундаж:</span>
+                        <span style="font-size:0.75rem;">Average:</span>
                         <input type="text" class="form-control form-control-sm cal-avg" readonly style="width:80px; background:#f7fafc;">
                         <span style="font-size:0.75rem;">RSD:</span>
                         <input type="text" class="form-control form-control-sm cal-rsd" readonly style="width:60px; background:#f7fafc;">
@@ -414,22 +414,22 @@
                     {% else %}
                     <div class="calib-panel analysis-panel d-none" data-calib-type="general">
                       <div class="calib-panel-title">
-                        <i class="bi bi-gear"></i> Багажийн калибровка
+                        <i class="bi bi-gear"></i> Instrument Calibration
                       </div>
                       <div class="calib-input-group">
-                        <label>Стандарт:</label>
-                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Стандартын нэр">
+                        <label>Standard:</label>
+                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Standard Name">
                       </div>
                       <div class="calib-input-group">
-                        <label>Баталгаат:</label>
-                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Утга" step="0.001">
+                        <label>Certified:</label>
+                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Value" step="0.001">
                       </div>
                       <div class="calib-input-group">
-                        <label>Хэмжсэн:</label>
-                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Утга" step="0.001" oninput="checkAnalysisDiff(this)">
+                        <label>Measured:</label>
+                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Value" step="0.001" oninput="checkAnalysisDiff(this)">
                       </div>
                       <div class="calib-input-group">
-                        <label>Зөрүү (%):</label>
+                        <label>Diff (%):</label>
                         <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
                         <span class="calib-status d-none"></span>
                       </div>
@@ -438,12 +438,12 @@
                   {% endif %}
                   {# Repair Panel #}
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Засварын огноо</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Сэлбэг нэмэх
+                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
                     </button>
                   </div>
                 </td>
@@ -454,17 +454,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>Энэ шинжилгээнд холбогдсон төхөөрөмж байхгүй.
+          <i class="bi bi-info-circle me-2"></i>No equipment associated with this analysis.
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Хаах
+          <i class="bi bi-x-lg me-1"></i>Close
         </button>
         {% if related_equipments %}
         <button type="button" class="btn btn-success px-4" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Хадгалах
+          <i class="bi bi-save me-1"></i>Save
         </button>
         {% endif %}
       </div>
@@ -574,43 +574,43 @@
 
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      alert('Serial Balance модуль ачаалагдаагүй байна.');
+      alert('Serial Balance module not loaded.');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
+      alert('Web Serial API is not supported. Please use Chrome 89+ browser.');
       return;
     }
 
     if (window.labBalance.isConnected) {
       await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      updateBalanceStatus('Not Connected', 'secondary');
       return;
     }
 
-    updateBalanceStatus('Холбогдож байна...', 'warning');
+    updateBalanceStatus('Connecting...', 'warning');
     const connected = await window.labBalance.connect();
 
     if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Connected';
       $btnConnect.classList.remove('btn-outline-primary');
       $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('Холбогдсон', 'success');
+      updateBalanceStatus('Connected', 'success');
     } else {
-      updateBalanceStatus('Алдаа', 'danger');
+      updateBalanceStatus('Error', 'danger');
     }
   });
 
   if (window.labBalance) {
     window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Салсан', 'secondary');
+      updateBalanceStatus('Disconnected', 'secondary');
     };
   }
 
@@ -640,7 +640,7 @@
       e.preventDefault();
       e.stopPropagation();
 
-      updateBalanceStatus('Жин татаж байна...', 'warning');
+      updateBalanceStatus('Fetching weight...', 'warning');
       const weight = await window.labBalance.getStableWeight();
 
       if (weight !== null) {
@@ -661,7 +661,7 @@
           }
         }
       } else {
-        updateBalanceStatus('Жин авч чадсангүй', 'danger');
+        updateBalanceStatus('Failed to get weight', 'danger');
       }
       break;
     }
@@ -671,7 +671,7 @@
 })();
 </script>
 
-{# --- Тоног төхөөрөмжийн ашиглалт хадгалах --- #}
+{# --- Equipmentийн ашиглалт хадгалах --- #}
 <script>
 let _spareParts = null;
 
@@ -697,10 +697,10 @@ function addSparePart(btn) {
   row.className = 'input-group input-group-sm mb-1 spare-row';
   row.innerHTML = `
     <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">Сэлбэг сонгох...</option>
+      <option value="">Select spare part...</option>
     </select>
-    <input type="number" class="form-control spare-qty" placeholder="Тоо" min="1" value="1" style="flex:1; max-width:60px">
-    <input type="text" class="form-control spare-user" placeholder="Хэн" style="flex:2">
+    <input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">
+    <input type="text" class="form-control spare-user" placeholder="Who" style="flex:2">
     <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.spare-row').remove()">
       <i class="bi bi-x"></i>
     </button>
@@ -749,7 +749,7 @@ function checkTempDiff(input) {
       statusSpan.textContent = 'OK';
       statusSpan.className = 'calib-status pass';
     } else {
-      statusSpan.textContent = 'Зөрүү!';
+      statusSpan.textContent = 'Diff!';
       statusSpan.className = 'calib-status fail';
     }
   } else {
@@ -788,8 +788,8 @@ function addWeightRow(btn) {
   const row = document.createElement('div');
   row.className = 'calib-weight-row';
   row.innerHTML = `
-    <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
-    <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+    <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
+    <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
     <span class="calib-status d-none" style="min-width:50px;"></span>
     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.calib-weight-row').remove()" style="padding:2px 6px;">
       <i class="bi bi-x"></i>
@@ -816,7 +816,7 @@ function checkAnalysisDiff(input) {
       statusSpan.textContent = 'OK';
       statusSpan.className = 'calib-status pass';
     } else {
-      statusSpan.textContent = 'Зөрүү!';
+      statusSpan.textContent = 'Deviation!';
       statusSpan.className = 'calib-status fail';
     }
   } else {
@@ -825,7 +825,7 @@ function checkAnalysisDiff(input) {
   }
 }
 
-// Хүхэр багаж - 5 стандартын шалгалт
+// Sulfur analyzer - 5 standards check
 function checkSulfurRow(input) {
   const stdRow = input.closest('.calib-std-row');
   const certVal = parseFloat(stdRow.querySelector('.sulfur-cert-val')?.value) || 0;
@@ -873,7 +873,7 @@ function checkCalorimeter(input) {
       statusSpan.textContent = 'OK';
       statusSpan.className = 'calib-status pass';
     } else {
-      statusSpan.textContent = rsd > 0.1 ? 'RSD!' : 'Зөрүү!';
+      statusSpan.textContent = rsd > 0.1 ? 'RSD!' : 'Deviation!';
       statusSpan.className = 'calib-status fail';
     }
   } else {
@@ -935,7 +935,7 @@ function submitEquipmentUsage() {
         const calibType = calibPanel.dataset.calibType;
 
         if (calibType === 'sulfur') {
-          // Хүхэр багаж - 5 стандарт
+          // Sulfur багаж - 5 стандарт
           const standards = [];
           calibPanel.querySelectorAll('.calib-std-row').forEach(stdRow => {
             const name = stdRow.querySelector('.sulfur-std-name')?.value;
@@ -960,7 +960,7 @@ function submitEquipmentUsage() {
           if (measurements.length > 0) {
             item.calibration = {
               type: 'calorimeter',
-              standard_name: stdName || 'Бензой хүчил',
+              standard_name: stdName || 'Benzoic Acid',
               certified_value: parseFloat(certVal) || 26454,
               measurements: measurements
             };
@@ -1003,7 +1003,7 @@ function submitEquipmentUsage() {
   });
 
   if (items.length === 0) {
-    alert('Бүртгэх мэдээлэл алга байна.');
+    alert('No data to register.');
     return;
   }
 
@@ -1035,14 +1035,14 @@ function submitEquipmentUsage() {
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
 
-      alert('Төхөөрөмжийн ашиглалт амжилттай хадгалагдлаа!');
+      alert('Equipment usage saved successfully!');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('Error: ' + (data.message || 'Unknown error'));
     }
   })
   .catch(err => {
     console.error('Equipment usage error:', err);
-    alert('Серверийн алдаа!');
+    alert('Server error!');
   });
 }
 </script>

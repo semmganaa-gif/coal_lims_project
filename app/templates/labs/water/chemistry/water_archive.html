@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Усны архив{% endblock %}
+{% block title %}Water Archive{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/water_summary.css') }}">
@@ -37,34 +37,34 @@
   <!-- Header -->
   <div class="ws-header">
     <div class="ws-header-left">
-      <h1><i class="bi bi-archive-fill"></i> Усны архив</h1>
+      <h1><i class="bi bi-archive-fill"></i> Water Archive</h1>
       <span class="badge bg-secondary" id="totalCount">0</span>
     </div>
 
     <div class="ws-header-actions">
       <!-- Export buttons -->
       <div class="btn-group">
-        <button id="btnExportCsv" class="btn btn-sm btn-success" title="CSV татах">
+        <button id="btnExportCsv" class="btn btn-sm btn-success" title="Download CSV">
           <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
         </button>
-        <button id="btnCopy" class="btn btn-sm btn-outline-success" title="Сонгосоныг хуулах">
-          <i class="bi bi-clipboard-check me-1"></i>Хуулах
+        <button id="btnCopy" class="btn btn-sm btn-outline-success" title="Copy selected">
+          <i class="bi bi-clipboard-check me-1"></i>Copy
         </button>
       </div>
 
       {% if current_user.role in ['senior', 'admin'] %}
       <!-- Unarchive button -->
-      <button type="button" id="btnUnarchive" class="btn btn-sm btn-warning" title="Сонгосоныг сэргээх">
-        <i class="bi bi-box-arrow-up me-1"></i>Сэргээх
+      <button type="button" id="btnUnarchive" class="btn btn-sm btn-warning" title="Restore selected">
+        <i class="bi bi-box-arrow-up me-1"></i>Restore
       </button>
       {% endif %}
 
       <!-- Refresh & Back buttons -->
-      <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="Шинэчлэх">
+      <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="Refresh">
         <i class="bi bi-arrow-clockwise"></i>
       </button>
-      <a href="{{ url_for('water.water_summary', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="Нэгтгэл руу">
-        <i class="bi bi-arrow-left me-1"></i>Нэгтгэл
+      <a href="{{ url_for('water.water_summary', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="Go to Summary">
+        <i class="bi bi-arrow-left me-1"></i>Summary
       </a>
     </div>
   </div>
@@ -80,19 +80,19 @@
   <ul class="nav archive-tabs">
     <li class="nav-item">
       <button class="nav-link tab-water active" data-type="water">
-        <i class="bi bi-droplet-fill"></i> Усны хими
+        <i class="bi bi-droplet-fill"></i> Water Chemistry
         <span class="badge bg-primary" id="waterCount">0</span>
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link tab-micro" data-type="microbiology">
-        <i class="bi bi-bug-fill"></i> Микробиологи
+        <i class="bi bi-bug-fill"></i> Microbiology
         <span class="badge bg-success" id="microCount">0</span>
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link tab-combined" data-type="water & micro">
-        <i class="bi bi-layers-fill"></i> Хамт
+        <i class="bi bi-layers-fill"></i> Combined
         <span class="badge bg-info" id="combinedCount">0</span>
       </button>
     </li>
@@ -103,7 +103,7 @@
     <div class="ws-grid-card" style="border-top-left-radius: 0; height: 100%;">
       <div class="card-header">
         <h6 id="gridTitle">
-          <i class="bi bi-droplet-fill" style="color:#3b82f6"></i> Усны хими архив
+          <i class="bi bi-droplet-fill" style="color:#3b82f6"></i> Water Chemistry Archive
         </h6>
         <span class="badge bg-light text-dark" id="rowCount">0</span>
       </div>
@@ -128,9 +128,9 @@
   let currentType = 'water';
 
   const TAB_CONFIG = {
-    'water': { title: '<i class="bi bi-droplet-fill" style="color:#3b82f6"></i> Усны хими архив' },
-    'microbiology': { title: '<i class="bi bi-bug-fill" style="color:#20c997"></i> Микробиологи архив' },
-    'water & micro': { title: '<i class="bi bi-layers-fill" style="color:#8b5cf6"></i> Хамт архив' }
+    'water': { title: '<i class="bi bi-droplet-fill" style="color:#3b82f6"></i> Water Chemistry Archive' },
+    'microbiology': { title: '<i class="bi bi-bug-fill" style="color:#20c997"></i> Microbiology Archive' },
+    'water & micro': { title: '<i class="bi bi-layers-fill" style="color:#8b5cf6"></i> Combined Archive' }
   };
 
   // ── Utility functions ──
@@ -233,38 +233,38 @@
       width: 40, minWidth: 40, maxWidth: 40, pinned: 'left', sortable: false, filter: false, resizable: false
     });
 
-    // Бүртгэл
+    // Record
     cols.push({
-      headerName: 'Бүртгэл', field: 'received_date', width: 95, minWidth: 85, pinned: 'left',
+      headerName: 'Registered', field: 'received_date', width: 95, minWidth: 85, pinned: 'left',
       sortable: true, filter: 'agTextColumnFilter', floatingFilter: true,
       cellStyle: { fontWeight: '600', color: '#1e40af' }
     });
 
-    // Хими № - зөвхөн хими эсвэл хамт
+    // Chem No. - chemistry or combined only
     if (showChem) {
       cols.push({
-        headerName: 'Хими №', field: 'chem_lab_id', width: 90, minWidth: 90, maxWidth: 90, pinned: 'left',
+        headerName: 'Chem No.', field: 'chem_lab_id', width: 90, minWidth: 90, maxWidth: 90, pinned: 'left',
         sortable: false, filter: 'agTextColumnFilter', floatingFilter: true, resizable: false,
         cellStyle: { textAlign: 'center', fontWeight: '600', color: '#3b82f6' }
       });
     }
 
-    // Микро № - зөвхөн микро эсвэл хамт
+    // Micro No. - micro or combined only
     if (showMicro) {
       cols.push({
-        headerName: 'Микро №', field: 'micro_lab_id', width: 95, minWidth: 95, maxWidth: 95, pinned: 'left',
+        headerName: 'Micro No.', field: 'micro_lab_id', width: 95, minWidth: 95, maxWidth: 95, pinned: 'left',
         sortable: false, filter: 'agTextColumnFilter', floatingFilter: true, resizable: false,
         cellStyle: { textAlign: 'center', fontWeight: '600', color: '#10b981' }
       });
     }
 
-    // Сорьцын нэр
+    // Sample name
     cols.push({
-      headerName: 'Сорьцын нэр', field: 'sample_name', width: 340, minWidth: 280, pinned: 'left',
+      headerName: 'Sample Name', field: 'sample_name', width: 340, minWidth: 280, pinned: 'left',
       sortable: true, filter: 'agTextColumnFilter', floatingFilter: true
     });
 
-    // Хими баганууд - зөвхөн хими эсвэл хамт
+    // Chemistry columns - chemistry or combined only
     if (showChem) {
       var chemChildren = [];
       for (var i = 0; i < WATER_CHEM_COLUMNS.length; i++) {
@@ -285,10 +285,10 @@
         if (!p.primary) colDef.columnGroupShow = 'open';
         chemChildren.push(colDef);
       }
-      cols.push({ headerName: 'Хими ▸', headerClass: 'chem-header-group', marryChildren: false, children: chemChildren });
+      cols.push({ headerName: 'Chem ▸', headerClass: 'chem-header-group', marryChildren: false, children: chemChildren });
     }
 
-    // Микро баганууд - зөвхөн микро эсвэл хамт
+    // Micro columns - micro or combined only
     if (showMicro) {
       var microChildren = [];
       for (var j = 0; j < MICRO_COLUMNS.length; j++) {
@@ -313,7 +313,7 @@
         if (!m.primary) microColDef.columnGroupShow = 'open';
         microChildren.push(microColDef);
       }
-      cols.push({ headerName: 'Микро ▸', headerClass: 'micro-header-group', marryChildren: false, children: microChildren });
+      cols.push({ headerName: 'Micro ▸', headerClass: 'micro-header-group', marryChildren: false, children: microChildren });
     }
 
     return cols;
@@ -389,11 +389,11 @@
   function copySelected() {
     if (!gridApi) return;
     var nodes = gridApi.getSelectedNodes();
-    if (nodes.length === 0) { alert('Хуулах мөрүүдээ сонгоно уу.'); return; }
+    if (nodes.length === 0) { alert('Please select rows to copy.'); return; }
     var columns = gridApi.getAllDisplayedColumns().filter(function(c) { var id = c.getColId(); return id !== '_sel'; });
     var header = columns.map(function(c) { return c.getColDef().headerName || ''; }).join('\t');
     var dataRows = nodes.map(function(n) { return columns.map(function(c) { var v = n.data[c.getColId()]; return v != null ? v : ''; }).join('\t'); }).join('\n');
-    if (navigator.clipboard) navigator.clipboard.writeText(header + '\n' + dataRows).then(function() { alert(nodes.length + ' мөр хуулагдлаа!'); });
+    if (navigator.clipboard) navigator.clipboard.writeText(header + '\n' + dataRows).then(function() { alert(nodes.length + ' rows copied!'); });
   }
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -417,7 +417,7 @@
         new agGrid.Grid(gridDiv, gridOptions);
       }
     } catch (e) {
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid алдаа: ' + e.message + '</div>';
+      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid error: ' + e.message + '</div>';
     }
 
     // Tab handlers
@@ -445,8 +445,8 @@
     if (btnUnarchive) {
       btnUnarchive.addEventListener('click', function() {
         var ids = getSelectedIds();
-        if (ids.length === 0) { alert('Сэргээх дээжийг сонгоно уу.'); return; }
-        if (!confirm('Сонгосон ' + ids.length + ' дээжийг сэргээхэд итгэлтэй байна уу?')) return;
+        if (ids.length === 0) { alert('Please select samples to restore.'); return; }
+        if (!confirm('Are you sure you want to restore ' + ids.length + ' selected sample(s)?')) return;
         document.getElementById('unarchiveSampleIds').value = ids.join(',');
         document.getElementById('unarchiveForm').submit();
       });

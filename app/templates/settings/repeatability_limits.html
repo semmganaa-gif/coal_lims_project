@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
   <h3 class="mb-3">Repeatability (T) лимитүүд</h3>
-  <p class="text-muted">Админ зөвшөөрлөөр хүснэгт дээрээс лимитүүдийг засварлаад хадгална. Save дармагц front/back шинэ утга ашиглана.</p>
+  <p class="text-muted">Admin зөвшөөрлөөр хүснэгт дээрээс лимитүүдийг засварлаад хадгална. Save дармагц front/back шинэ утга ашиглана.</p>
 
   <form method="post" id="limitsForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -12,7 +12,7 @@
         <thead class="table-light">
           <tr>
             <th>Код</th>
-            <th>Стандарт</th>
+            <th>Standard</th>
             <th>Таарц</th>
             <th>Single limit</th>
             <th>Single mode</th>
@@ -78,8 +78,8 @@
     </div>
     <input type="hidden" name="limits_json" id="limits_json">
     <div class="d-flex">
-      <button type="submit" class="btn btn-primary">Хадгалах</button>
-      <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">Буцах</a>
+      <button type="submit" class="btn btn-primary">Save</button>
+      <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">Back</a>
     </div>
   </form>
 </div>

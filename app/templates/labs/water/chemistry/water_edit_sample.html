@@ -3,20 +3,20 @@
 {% block content %}
 <div class="container mt-4" style="max-width: 700px;">
   <h4 class="fw-bold mb-3">
-    <i class="bi bi-pencil-square me-2 text-info"></i>"{{ sample.sample_code }}" дээж засах
+    <i class="bi bi-pencil-square me-2 text-info"></i>Edit Sample "{{ sample.sample_code }}"
   </h4>
   <hr>
   <form action="" method="post" novalidate>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div class="mb-3">
-      <label for="sample_code" class="form-label fw-bold">Дээжний код:</label>
+      <label for="sample_code" class="form-label fw-bold">Sample Code:</label>
       <input type="text" id="sample_code" name="sample_code"
              value="{{ sample.sample_code }}" class="form-control" required>
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-bold">Шинжилгээний даалгавар:</label>
+      <label class="form-label fw-bold">Analysis Assignment:</label>
       <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
         <div class="row">
           {% for at in analyses_list %}
@@ -31,7 +31,7 @@
             </div>
           </div>
           {% else %}
-          <p class="text-muted">Шинжилгээний төрөл олдсонгүй.</p>
+          <p class="text-muted">No analysis types found.</p>
           {% endfor %}
         </div>
       </div>
@@ -39,11 +39,11 @@
 
     <div class="d-flex gap-2">
       <button type="submit" class="btn btn-primary">
-        <i class="bi bi-check-circle me-1"></i>Хадгалах
+        <i class="bi bi-check-circle me-1"></i>Save
       </button>
       {% set is_micro_edit = request.path.startswith('/labs/water-lab/microbiology') %}
       <a href="{{ request.referrer or (url_for('microbiology.register_sample') if is_micro_edit else url_for('water.register_sample')) }}" class="btn btn-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Буцах
+        <i class="bi bi-arrow-left me-1"></i>Back
       </a>
     </div>
   </form>

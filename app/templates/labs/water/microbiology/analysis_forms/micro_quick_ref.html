@@ -4,7 +4,7 @@
     <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between"
          style="background:linear-gradient(135deg,#ecfdf5,#f0fdfa); border-bottom:1px solid #d1fae5;">
       <span class="fw-bold" style="font-size:0.9rem; color:#065f46;">
-        <i class="bi bi-journal-bookmark-fill me-1"></i>Стандартын лавлах
+        <i class="bi bi-journal-bookmark-fill me-1"></i>Standards Reference
       </span>
       <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#microQuickRef" aria-label="Close"></button>
     </div>
@@ -12,35 +12,35 @@
       {% if workspace_code == 'water' %}
       <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
         <thead class="table-light">
-          <tr><th>Стандарт</th><th>Үзүүлэлт</th><th>Зөвшөөрөгдөх хэмжээ</th></tr>
+          <tr><th>Standard</th><th>Parameter</th><th>Permissible Limit</th></tr>
         </thead>
         <tbody>
-          <tr><td>MNS ISO 6222:1998</td><td>CFU (нийт бичил биетэн)</td><td>1мл-т &lt;100 CFU (22°C & 37°C)</td></tr>
-          <tr><td>MNS ISO 9308-1:1998</td><td>E.coli</td><td>100мл-т илрэхгүй</td></tr>
-          <tr><td>MNS ISO 19250:2017</td><td>Salmonella</td><td>25мл-т илрэхгүй</td></tr>
+          <tr><td>MNS ISO 6222:1998</td><td>CFU (Total Microorganisms)</td><td>&lt;100 CFU per 1ml (22°C & 37°C)</td></tr>
+          <tr><td>MNS ISO 9308-1:1998</td><td>E.coli</td><td>Not detected in 100ml</td></tr>
+          <tr><td>MNS ISO 19250:2017</td><td>Salmonella</td><td>Not detected in 25ml</td></tr>
         </tbody>
       </table>
       {% elif workspace_code == 'air' %}
       <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
         <thead class="table-light">
-          <tr><th>Стандарт</th><th>Үзүүлэлт</th><th>Зөвшөөрөгдөх хэмжээ</th></tr>
+          <tr><th>Standard</th><th>Parameter</th><th>Permissible Limit</th></tr>
         </thead>
         <tbody>
-          <tr><td>MNS 5484:2005</td><td>Нийт бичил биетэн (CFU)</td><td>1м³-д &lt;3000 CFU</td></tr>
-          <tr><td>MNS 5484:2005</td><td>Staphylococcus spp.</td><td>1м³-д &lt;50</td></tr>
-          <tr><td>MNS 5484:2005</td><td>Mold/Fungi</td><td>Илрэхгүй</td></tr>
+          <tr><td>MNS 5484:2005</td><td>Total Microorganisms (CFU)</td><td>&lt;3000 CFU per 1m³</td></tr>
+          <tr><td>MNS 5484:2005</td><td>Staphylococcus spp.</td><td>&lt;50 per 1m³</td></tr>
+          <tr><td>MNS 5484:2005</td><td>Mold/Fungi</td><td>Not detected</td></tr>
         </tbody>
       </table>
       {% elif workspace_code == 'swab' %}
       <table class="table table-sm table-bordered mb-0" style="font-size:0.82rem;">
         <thead class="table-light">
-          <tr><th>Стандарт</th><th>Үзүүлэлт</th><th>Зөвшөөрөгдөх хэмжээ</th></tr>
+          <tr><th>Standard</th><th>Parameter</th><th>Permissible Limit</th></tr>
         </thead>
         <tbody>
-          <tr><td>MNS 6410:2018</td><td>CFU (нийт бичил биетэн)</td><td>100-с ихгүй</td></tr>
-          <tr><td>MNS 6410:2018</td><td>Salmonella spp.</td><td>Илрэхгүй</td></tr>
-          <tr><td>MNS 6410:2018</td><td>E.coli</td><td>Илрэхгүй</td></tr>
-          <tr><td>MNS 6410:2018</td><td>Staphylococcus spp.</td><td>Илрэхгүй</td></tr>
+          <tr><td>MNS 6410:2018</td><td>CFU (Total Microorganisms)</td><td>Not more than 100</td></tr>
+          <tr><td>MNS 6410:2018</td><td>Salmonella spp.</td><td>Not detected</td></tr>
+          <tr><td>MNS 6410:2018</td><td>E.coli</td><td>Not detected</td></tr>
+          <tr><td>MNS 6410:2018</td><td>Staphylococcus spp.</td><td>Not detected</td></tr>
         </tbody>
       </table>
       {% endif %}

@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 
 
-def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Өгөгдөл хадгалахад алдаа гарлаа") -> bool:
+def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Error saving data") -> bool:
     """
     Database commit-ийг аюулгүй хийх helper функц.
     IntegrityError болон бусад алдааг барьж, хэрэглэгчид мэдэгдэнэ.
@@ -59,7 +59,7 @@ def safe_delete(obj: Any, success_msg: Optional[str] = None, error_msg: str = "�
 
     Жишээ ашиглалт:
         >>> sample = Sample.query.get(sample_id)
-        >>> if safe_delete(sample, "Дээж устгагдлаа"):
+        >>> if safe_delete(sample, "Дээж deleted.):
         >>>     return redirect(url_for('main.index'))
     """
     try:
@@ -92,7 +92,7 @@ def safe_add(
 
     Жишээ ашиглалт:
         >>> user = User(username="test")
-        >>> if safe_add(user, "Хэрэглэгч нэмэгдлээ", "Нэр давхардсан"):
+        >>> if safe_add(user, "Хэрэглэгч added., "Нэр давхардсан"):
         >>>     return redirect(url_for('admin.users'))
     """
     try:

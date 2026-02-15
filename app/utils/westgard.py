@@ -164,7 +164,7 @@ def get_qc_status(violations: List[WestgardViolation]) -> Dict:
         return {
             "status": "pass",
             "rules_violated": [],
-            "message": "Бүх Westgard дүрмүүд хэвийн"
+            "message": "All Westgard rules normal"
         }
 
     has_reject = any(v.severity == "reject" for v in violations)
@@ -180,7 +180,7 @@ def get_qc_status(violations: List[WestgardViolation]) -> Dict:
         return {
             "status": "warning",
             "rules_violated": rules,
-            "message": f"QC Анхааруулга: {', '.join(rules)}"
+            "message": f"QC Warning: {', '.join(rules)}"
         }
 
 

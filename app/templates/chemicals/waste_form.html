@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Хог хаягдал засах' if mode == 'edit' else 'Шинэ хог хаягдал' }}{% endblock %}
+{% block title %}{{ 'Хог хаягдал засах' if mode == 'edit' else 'New хог хаягдал' }}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 700px;">
@@ -8,12 +8,12 @@
     <div class="card-header bg-white border-0 py-3">
       <h5 class="mb-0">
         <i class="bi bi-{{ 'pencil' if mode == 'edit' else 'plus-circle' }} text-primary me-2"></i>
-        {{ 'Хог хаягдал засах' if mode == 'edit' else 'Шинэ хог хаягдал нэмэх' }}
+        {{ 'Хог хаягдал засах' if mode == 'edit' else 'New хог хаягдал нэмэх' }}
       </h5>
     </div>
     <div class="card-body">
       <form method="POST">
-        {# Нэршил #}
+        {# Nameшил #}
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Монгол нэр <span class="text-danger">*</span></label>
@@ -93,7 +93,7 @@
 
         {# Лаб #}
         <div class="mb-3">
-          <label class="form-label">Лаборатори</label>
+          <label class="form-label">Laboratory</label>
           <select name="lab_type" class="form-select">
             {% for key, val in lab_types.items() %}
             <option value="{{ key }}" {{ 'selected' if waste and waste.lab_type == key }}>{{ val }}</option>

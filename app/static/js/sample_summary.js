@@ -154,7 +154,7 @@ const GridModule = (function() {
     // Empty cell - show "request analysis" button
     if (data === null || data === undefined || data === 'null' || data === '') {
       if (sampleId) {
-        return `<button type="button" class="request-analysis-btn" data-sample-id="${sampleId}" data-analysis-code="${escapeHtml(code)}" title="Шинжилгээ захиалах">+</button>`;
+        return `<button type="button" class="request-analysis-btn" data-sample-id="${sampleId}" data-analysis-code="${escapeHtml(code)}" title="Order analysis">+</button>`;
       }
       return '';
     }
@@ -170,7 +170,7 @@ const GridModule = (function() {
       // Empty value in object - show request button
       if (!val) {
         if (sampleId) {
-          return `<button type="button" class="request-analysis-btn" data-sample-id="${sampleId}" data-analysis-code="${escapeHtml(code)}" title="Шинжилгээ захиалах">+</button>`;
+          return `<button type="button" class="request-analysis-btn" data-sample-id="${sampleId}" data-analysis-code="${escapeHtml(code)}" title="Order analysis">+</button>`;
         }
         return '';
       }
@@ -183,7 +183,7 @@ const GridModule = (function() {
       }
 
       const rejectBtn = rid
-        ? `<button type="button" class="ajax-reject-btn" data-result-id="${rid}" title="Буцаах">↩</button>`
+        ? `<button type="button" class="ajax-reject-btn" data-result-id="${rid}" title="Return">↩</button>`
         : '';
 
       return `<div class="result-cell-wrapper" title="${escapeHtml(val)}">${statusHtml}${rejectBtn}</div>`;
@@ -241,7 +241,7 @@ const GridModule = (function() {
       },
       // Sample name
       {
-        headerName: 'Дээжний нэр',
+        headerName: 'Sample Name',
         field: 'name',
         cellRenderer: sampleNameRenderer,
         minWidth: 200, width: 220,
@@ -257,7 +257,7 @@ const GridModule = (function() {
       },
       // Client name
       {
-        headerName: 'Нэгж',
+        headerName: 'Unit',
         field: 'client_name',
         minWidth: 100, width: 120,
         sortable: true,
@@ -268,7 +268,7 @@ const GridModule = (function() {
       },
       // Sample type
       {
-        headerName: 'Төрөл',
+        headerName: 'Type',
         field: 'sample_type',
         minWidth: 100, width: 120,
         sortable: true,
@@ -307,7 +307,7 @@ const GridModule = (function() {
 
     // Огнооны багануудыг хамгийн сүүлд нэмэх
     cols.push({
-      headerName: 'Бүртгэсэн',
+      headerName: 'Registered',
       field: 'received_date',
       minWidth: 120, width: 130,
       sortable: true,
@@ -323,7 +323,7 @@ const GridModule = (function() {
     });
 
     cols.push({
-      headerName: 'Шинжилсэн',
+      headerName: 'Analyzed',
       field: 'analysis_date',
       minWidth: 120, width: 130,
       sortable: true,
@@ -371,7 +371,7 @@ const GridModule = (function() {
   function handleRejectClick(resultId) {
     if (!resultId) return;
 
-    if (!confirm("Үр дүнг буцаахад итгэлтэй байна уу?")) return;
+    if (!confirm("Are you sure you want to return this result?")) return;
 
     const updateUrl = (URLS.updateStatus || "/api/update_result_status") + "/" + resultId + "/rejected";
 
@@ -385,17 +385,17 @@ const GridModule = (function() {
     .then(function(response) {
       if (!response.ok) {
         return response.json().then(function(data) {
-          throw new Error(data.message || 'Үйлдэл амжилтгүй');
+          throw new Error(data.message || 'Action failed');
         });
       }
       return response.json();
     })
     .then(function() {
-      alert('Үр дүн амжилттай буцаагдлаа.');
+      alert('Result returned successfully.');
       window.location.reload();
     })
     .catch(function(error) {
-      alert('Алдаа: ' + error.message);
+      alert('Error: ' + error.message);
     });
   }
 
@@ -404,7 +404,7 @@ const GridModule = (function() {
   function handleRequestAnalysis(sampleId, analysisCode) {
     if (!sampleId || !analysisCode) return;
 
-    if (!confirm("\"" + analysisCode + "\" шинжилгээг захиалах уу?")) return;
+    if (!confirm("\"" + analysisCode + "\" order this analysis?")) return;
 
     const requestUrl = URLS.requestAnalysis || "/api/request_analysis";
 
@@ -422,17 +422,17 @@ const GridModule = (function() {
     .then(function(response) {
       if (!response.ok) {
         return response.json().then(function(data) {
-          throw new Error(data.message || 'Үйлдэл амжилтгүй');
+          throw new Error(data.message || 'Action failed');
         });
       }
       return response.json();
     })
     .then(function(data) {
-      alert(data.message || 'Шинжилгээ амжилттай захиалагдлаа.');
+      alert(data.message || 'Analysis ordered successfully.');
       window.location.reload();
     })
     .catch(function(error) {
-      alert('Алдаа: ' + error.message);
+      alert('Error: ' + error.message);
     });
   }
 
@@ -558,7 +558,7 @@ const GridModule = (function() {
 
   function exportCsv() {
     if (!gridApi) {
-      alert('Grid үүсээгүй байна.');
+      alert('Grid not initialized.');
       return;
     }
 
@@ -583,7 +583,7 @@ const GridModule = (function() {
     // Grid API шалгах
     const api = gridApi || (gridOptions.api ? gridOptions.api : null);
     if (!api) {
-      alert('Grid үүсээгүй байна.');
+      alert('Grid not initialized.');
       console.error('copySelected: gridApi is null');
       return;
     }
@@ -608,7 +608,7 @@ const GridModule = (function() {
     }
 
     if (selectedNodes.length === 0) {
-      alert("Хуулах мөрүүдээ сонгоно уу.");
+      alert("Please select rows to copy.");
       return;
     }
 
@@ -667,7 +667,7 @@ const GridModule = (function() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(finalString)
         .then(function() {
-          alert(selectedNodes.length + ' мөр амжилттай хуулагдлаа!');
+          alert(selectedNodes.length + ' rows copied successfully!');
         })
         .catch(function(err) {
           console.warn('Clipboard API failed:', err);
@@ -688,9 +688,9 @@ const GridModule = (function() {
 
     try {
       document.execCommand('copy');
-      alert(count + ' мөр амжилттай хуулагдлаа!');
+      alert(count + ' rows copied successfully!');
     } catch (err) {
-      alert("Хуулахад алдаа гарлаа.");
+      alert("Copy error occurred.");
     }
 
     document.body.removeChild(textArea);
@@ -706,7 +706,7 @@ const GridModule = (function() {
     // Check if AG Grid is loaded
     if (typeof agGrid === 'undefined') {
       console.error('AG Grid library not loaded');
-      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">AG Grid ачаалагдаагүй байна.</div>';
+      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">AG Grid failed to load.</div>';
       return;
     }
 
@@ -721,7 +721,7 @@ const GridModule = (function() {
       }
     } catch (e) {
       console.error('Grid initialization error:', e);
-      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">Grid үүсгэхэд алдаа: ' + e.message + '</div>';
+      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">Grid creation error: ' + e.message + '</div>';
     }
   }
 
@@ -772,12 +772,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const action = this.getAttribute('value') || this.value || 'archive';
 
     if (ids.length === 0) {
-      alert("Архивлах дээжийг сонгоно уу.");
+      alert("Please select samples to archive.");
       return;
     }
 
-    const actionText = action === 'archive' ? 'архивлахад' : 'сэргээхэд';
-    if (!confirm('Сонгосон ' + ids.length + ' дээжийг ' + actionText + ' итгэлтэй байна уу?')) {
+    const actionText = action === 'archive' ? 'archive' : 'restore';
+    if (!confirm('Are you sure you want to ' + ids.length + ' ' + actionText + ' selected samples?')) {
       return;
     }
 
@@ -796,13 +796,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ids = GridModule.getSelectedIds();
     if (ids.length === 0) {
-      alert("Тайлан үүсгэх дээжийг сонгоно уу.");
+      alert("Please select samples for report.");
       return;
     }
 
     const btn = this;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Үүсгэж байна...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
     fetch('/pdf-reports/api/create', {
@@ -827,7 +827,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Тайлан амжилттай үүслээ: ' + data.report_number);
         window.location.href = data.redirect_url;
       } else {
-        alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
+        alert('Error: ' + (data.error || 'Тодорхойгүй'));
       }
     })
     .catch(err => {

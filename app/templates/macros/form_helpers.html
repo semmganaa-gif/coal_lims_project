@@ -148,7 +148,7 @@
     text: Button текст (default: 'Буцах')
     variant: Button төрөл (default: 'secondary')
 #}
-{% macro render_cancel_button(url, text='Буцах', variant='secondary') %}
+{% macro render_cancel_button(url, text='Back', variant='secondary') %}
   <a href="{{ url }}" class="btn btn-{{ variant }}">
     <i class="bi bi-arrow-left"></i> {{ text }}
   </a>
@@ -164,10 +164,10 @@
     delete_confirm: Delete confirmation текст (optional)
     custom_buttons: Нэмэлт button-ууд (optional, HTML string)
 #}
-{% macro render_action_buttons(edit_url='', delete_url='', delete_confirm='Устгах уу?', custom_buttons='') %}
+{% macro render_action_buttons(edit_url='', delete_url='', delete_confirm='Are you sure you want to delete?', custom_buttons='') %}
   <div class="btn-group btn-group-sm" role="group">
     {% if edit_url %}
-      <a href="{{ edit_url }}" class="btn btn-outline-primary" title="Засах">
+      <a href="{{ edit_url }}" class="btn btn-outline-primary" title="Edit">
         <i class="bi bi-pencil"></i>
       </a>
     {% endif %}
@@ -176,7 +176,7 @@
       {# ✅ XSS сэргийлэлт: delete_confirm escape #}
       <form method="post" action="{{ delete_url }}" style="display: inline;" onsubmit="return confirm('{{ delete_confirm | e }}');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <button type="submit" class="btn btn-outline-danger" title="Устгах">
+        <button type="submit" class="btn btn-outline-danger" title="Delete">
           <i class="bi bi-trash"></i>
         </button>
       </form>

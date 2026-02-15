@@ -38,9 +38,9 @@
 
     if(p1r!=null && p2r!=null){
       avg=(p1r+p2r)/2; diff=Math.abs(p1r-p2r); t_exceeded=diff>REPEATABILITY_LIMIT;
-      if(r.diff){ r.diff.textContent=diff.toFixed(2); r.diff.classList.remove('text-success','text-danger','fw-bold'); if(t_exceeded){r.diff.classList.add('text-danger','fw-bold'); r.diff.title=`T > ${REPEATABILITY_LIMIT} (хэтэрсэн)`;} else {r.diff.classList.add('text-success'); r.diff.title=`T ≤ ${REPEATABILITY_LIMIT} (OK)`;} }
+      if(r.diff){ r.diff.textContent=diff.toFixed(2); r.diff.classList.remove('text-success','text-danger','fw-bold'); if(t_exceeded){r.diff.classList.add('text-danger','fw-bold'); r.diff.title=`T > ${REPEATABILITY_LIMIT} (exceeded)`;} else {r.diff.classList.add('text-success'); r.diff.title=`T ≤ ${REPEATABILITY_LIMIT} (OK)`;} }
       if(r.avg) r.avg.textContent=avg.toFixed(3);
-      if(r.calc) r.calc.innerHTML=t_exceeded?`<span class="text-warning">T хэтэрсэн</span>`:`<span class="text-success">OK</span>`;
+      if(r.calc) r.calc.innerHTML=t_exceeded?`<span class="text-warning">T exceeded</span>`:`<span class="text-success">OK</span>`;
     } else if (p1r!=null || p2r!=null){ avg=(p1r!=null?p1r:p2r); resetUI(); if(r.avg) r.avg.textContent=avg.toFixed(3); } else { resetUI(); }
 
     if(lockInputs && avg!=null){

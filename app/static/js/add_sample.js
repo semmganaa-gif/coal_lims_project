@@ -78,11 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
     entryContainer.innerHTML = `
       <div class="sample-list-empty">
         <i class="bi bi-inbox"></i>
-        <h4>Дээж бүртгэгдээгүй</h4>
-        <p>"Дээж үүсгэх" товчийг дарна уу</p>
+        <h4>No samples registered</h4>
+        <p>Click the "Create Sample" button</p>
       </div>
     `;
-    if(sampleCountBadge) sampleCountBadge.textContent = '0 дээж';
+    if(sampleCountBadge) sampleCountBadge.textContent = '0 samples';
   }
 
   // Main update function - called when unit is selected from hub
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showEmptyState();
 
     if (!selectedClient) {
-      sampleTypeContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.78rem;">Нэгж сонгогдоогүй</span>';
+      sampleTypeContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.78rem;">No unit selected</span>';
       return;
     }
 
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (targetClients.includes(clientValue) && (isLateDay || isLateNight)) {
       if (pDate) pDate.value = todayStr;
-      if (pBy) { pBy.value = ""; pBy.placeholder = "Дараагийн ээлж..."; }
+      if (pBy) { pBy.value = ""; pBy.placeholder = "Next shift..."; }
     } else {
       if (pDate && !pDate.value) pDate.value = todayStr;
       if (pBy && pBy.value === "") { pBy.value = GLOBAL_DATA.currentUser || ""; pBy.placeholder = ""; }
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
     });
-    sampleTypeContainer.innerHTML = chipsHtml || '<span style="color: #ef4444; font-size: 0.78rem;">Төрөл олдсонгүй</span>';
+    sampleTypeContainer.innerHTML = chipsHtml || '<span style="color: #ef4444; font-size: 0.78rem;">No types found</span>';
 
     // Type Change Event
     document.querySelectorAll('#sample-type-container input').forEach(r => {
@@ -191,11 +191,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ------------------------ 6. GENERATE LIST FUNCTION ------------------------
   function generateSampleList() {
     const cRadio = document.querySelector('input[name="client_name"]:checked');
-    if (!cRadio) { showAlert('Нэгж сонгоно уу!'); return; }
+    if (!cRadio) { showAlert('Please select a unit!'); return; }
     const cVal = cRadio.value;
 
     const dateVal = document.getElementById('sample_date').value;
-    if (!dateVal) { showAlert('Огноо сонгоно уу!'); return; }
+    if (!dateVal) { showAlert('Please select a date!'); return; }
     const fDate = dateVal.replace(/-/g, '');
 
     let samples = [];
@@ -213,13 +213,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (cVal === 'CHPP') {
       const tRadio = document.querySelector('#sample-type-container input:checked');
-      if (!tRadio) { showAlert('Төрөл сонгоно уу!'); return; }
+      if (!tRadio) { showAlert('Please select a type!'); return; }
       const tVal = tRadio.value;
 
       if (tVal === '2 hourly') {
         listType = 'chpp_2h'; requiresWeight = true;
         const sc = get2hSC();
-        const pp = twohPrimarySelect.value; if(!pp){showAlert('CC сонгоно уу!');return;}
+        const pp = twohPrimarySelect.value; if(!pp){showAlert('Please select a CC!');return;}
 
         // Group by CC/TC and Modules
         groupedSamples['CC'] = [`${pp}_${fDate}${sc}`];
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (tVal === '12 hourly') {
         listType = 'chpp_12h';
         const cr = document.querySelector('.condition-toggle input:checked');
-        if(!cr){showAlert('Төлөв сонгоно уу!');return;}
+        if(!cr){showAlert('Please select a condition!');return;}
         const sc = get12hSC();
         const mods=[];
         if(document.getElementById('chpp_12h_mod1').checked) mods.push('MOD I');
@@ -281,14 +281,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
       } else if (tVal === 'com') {
         listType = 'chpp_com'; requiresWeight = true;
-        const pp = comPrimarySelect.value; if(!pp){showAlert('CC сонгоно уу!');return;}
+        const pp = comPrimarySelect.value; if(!pp){showAlert('Please select a CC!');return;}
         const sfx = getComSuffix();
         const sps = Array.from(comSecondarySelect.selectedOptions).map(o=>o.value).filter(v=>v!=='none');
         const pfs = [];
         if(document.getElementById('com_pf211').checked) pfs.push('PF211');
         if(document.getElementById('com_pf221').checked) pfs.push('PF221');
         if(document.getElementById('com_pf231').checked) pfs.push('PF231');
-        if(!pfs.length){showAlert('PF сонгоно уу!');return;}
+        if(!pfs.length){showAlert('Please select a PF!');return;}
 
         groupedSamples['CC'] = [`${pp}_${fDate}_${sfx}`];
         if(sps.length) {
@@ -304,17 +304,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } else if (['UHG-Geo','BN-Geo','QC','Proc'].includes(cVal)) {
       listType = 'multi_gen'; requiresWeight = true;
-      const tr = document.querySelector('#sample-type-container input:checked'); if(!tr){showAlert('Төрөл сонгоно уу!');return;}
+      const tr = document.querySelector('#sample-type-container input:checked'); if(!tr){showAlert('Please select a type!');return;}
       const loc = document.getElementById('location').value;
       // QC бүх төрөлд байршил заавал биш
-      if(!loc && cVal !== 'QC'){showAlert('Байршил оруулна уу!');return;}
-      const cnt = parseInt(document.getElementById('sample_count').value); if(!cnt){showAlert('Тоо оруулна уу!');return;}
+      if(!loc && cVal !== 'QC'){showAlert('Please enter a location!');return;}
+      const cnt = parseInt(document.getElementById('sample_count').value); if(!cnt){showAlert('Please enter a count!');return;}
       const prod = document.getElementById('product') ? document.getElementById('product').value : '';
       for(let i=1; i<=cnt; i++) {
         let sampleCode;
         if(cVal === 'QC' && tr.value === 'Fine'){
           // QC Fine: ECO_20251202_1 формат (байршил хэрэггүй)
-          if(!prod){showAlert('Бүтээгдэхүүн оруулна уу!');return;}
+          if(!prod){showAlert('Please enter a product!');return;}
           sampleCode = `${prod}_${fDate}_${i}`;
         } else if(cVal === 'QC'){
           // QC (Fine-ээс бусад): байршил байвал loc_prod_type, байхгүй бол prod_type
@@ -349,8 +349,8 @@ document.addEventListener('DOMContentLoaded', function() {
       entryContainer.innerHTML = `
         <div class="sample-list-empty">
           <i class="bi bi-info-circle"></i>
-          <h4>Автомат үүсгэгч байхгүй</h4>
-          <p>Шууд бүртгэгдэнэ</p>
+          <h4>No auto-generator available</h4>
+          <p>Will be registered directly</p>
         </div>
       `;
       return;
@@ -360,15 +360,15 @@ document.addEventListener('DOMContentLoaded', function() {
       entryContainer.innerHTML = `
         <div class="sample-list-empty">
           <i class="bi bi-exclamation-circle" style="color: #ef4444;"></i>
-          <h4>Дээж олдсонгүй</h4>
-          <p>Тохиргоог шалгана уу</p>
+          <h4>No samples found</h4>
+          <p>Please check the settings</p>
         </div>
       `;
       return;
     }
 
     // Update badge
-    if(sampleCountBadge) sampleCountBadge.textContent = `${samples.length} дээж`;
+    if(sampleCountBadge) sampleCountBadge.textContent = `${samples.length} sample(s)`;
 
     let html = '';
 
@@ -446,9 +446,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <thead>
           <tr>
             <th class="row-num">#</th>
-            <th>Код</th>
-            <th>Шинжилгээ</th>
-            ${requiresWeight ? '<th style="width:60px;">Жин</th>' : ''}
+            <th>Code</th>
+            <th>Analysis</th>
+            ${requiresWeight ? '<th style="width:60px;">Weight</th>' : ''}
           </tr>
         </thead>
         <tbody>`;

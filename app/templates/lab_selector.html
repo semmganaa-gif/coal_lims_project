@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="mn">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coal LIMS - Лаборатори сонгох</title>
+  <title>Coal LIMS - Select Laboratory</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -70,7 +70,7 @@
 
   <div class="hub-header">
     <h1><i class="bi bi-building me-2"></i>Coal LIMS</h1>
-    <p>Сайн байна уу, <strong>{{ current_user.username }}</strong>! Лаборатори сонгоно уу.</p>
+    <p>Hello, <strong>{{ current_user.username }}</strong>! Please select a laboratory.</p>
   </div>
 
   {% set user_labs = current_user.allowed_labs or ['coal'] %}
@@ -82,9 +82,9 @@
         <i class="bi bi-fire"></i>
       </div>
       <div class="lab-info">
-        <h5>Нүүрсний лаборатори</h5>
+        <h5>Coal Laboratory</h5>
         <p>Proximate, Ultimate, CV, CSN, Gi, TRD...</p>
-        <span class="badge" style="background:#dc3545">19 шинжилгээ</span>
+        <span class="badge" style="background:#dc3545">19 analyses</span>
       </div>
     </a>
     {% endif %}
@@ -95,9 +95,9 @@
         <i class="bi bi-gem"></i>
       </div>
       <div class="lab-info">
-        <h5>Петрограф лаборатори</h5>
+        <h5>Petrography Laboratory</h5>
         <p>Maceral, Vitrinite Ro%, Thin section...</p>
-        <span class="badge" style="background:#6f42c1">7 шинжилгээ</span>
+        <span class="badge" style="background:#6f42c1">7 analyses</span>
       </div>
     </a>
     {% endif %}
@@ -108,10 +108,10 @@
         <i class="bi bi-droplet-fill"></i>
       </div>
       <div class="lab-info">
-        <h5>Усны лаборатори</h5>
-        <p>Хими (pH, EC, металл) + Микробиологи (Колиформ, E.coli)</p>
-        <span class="badge" style="background:#0dcaf0">Хими</span>
-        <span class="badge" style="background:#20c997">Микро</span>
+        <h5>Water Laboratory</h5>
+        <p>Chemistry (pH, EC, metals) + Microbiology (Coliform, E.coli)</p>
+        <span class="badge" style="background:#0dcaf0">Chemistry</span>
+        <span class="badge" style="background:#20c997">Micro</span>
       </div>
     </a>
     {% endif %}

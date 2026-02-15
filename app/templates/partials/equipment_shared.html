@@ -3,116 +3,116 @@
 
 {# ==================== LAB PURPOSE OPTIONS ==================== #}
 {% macro lab_purpose_options(selected='') %}
-<option value="">-- Сонгох --</option>
-<option {% if selected == 'Төв/лаб' %}selected{% endif %}>Төв/лаб</option>
-<option {% if selected == 'Нүүрс/лаб' %}selected{% endif %}>Нүүрс/лаб</option>
-<option {% if selected == 'Ус-лаб' %}selected{% endif %}>Ус-лаб</option>
-<option {% if selected == 'Микр/лаб' %}selected{% endif %}>Микр/лаб</option>
-<option {% if selected == 'БС/лаб' %}selected{% endif %}>БС/лаб</option>
+<option value="">-- Select --</option>
+<option {% if selected == 'Central Lab' %}selected{% endif %}>Central Lab</option>
+<option {% if selected == 'Coal Lab' %}selected{% endif %}>Coal Lab</option>
+<option {% if selected == 'Water Lab' %}selected{% endif %}>Water Lab</option>
+<option {% if selected == 'Micro Lab' %}selected{% endif %}>Micro Lab</option>
+<option {% if selected == 'WTL Lab' %}selected{% endif %}>WTL Lab</option>
 {% endmacro %}
 
 {# ==================== CATEGORY OPTIONS ==================== #}
 {% macro category_options(selected='other') %}
-<option value="other"    {% if selected == 'other' %}selected{% endif %}>8. Бусад (Default)</option>
-<option value="furnace"  {% if selected == 'furnace' %}selected{% endif %}>1. Шатаах зуух</option>
-<option value="prep"     {% if selected == 'prep' %}selected{% endif %}>2. Дээж бэлтгэл</option>
-<option value="analysis" {% if selected == 'analysis' %}selected{% endif %}>3. Шинжилгээний багаж</option>
-<option value="water"    {% if selected == 'water' %}selected{% endif %}>4. Усны лаб</option>
-<option value="micro"    {% if selected == 'micro' %}selected{% endif %}>5. Микробиологи лаб</option>
-<option value="wtl"      {% if selected == 'wtl' %}selected{% endif %}>6. БС лаб</option>
-<option value="balance"  {% if selected == 'balance' %}selected{% endif %}>7. Жин</option>
+<option value="other"    {% if selected == 'other' %}selected{% endif %}>8. Other (Default)</option>
+<option value="furnace"  {% if selected == 'furnace' %}selected{% endif %}>1. Furnace</option>
+<option value="prep"     {% if selected == 'prep' %}selected{% endif %}>2. Sample Preparation</option>
+<option value="analysis" {% if selected == 'analysis' %}selected{% endif %}>3. Analysis Instruments</option>
+<option value="water"    {% if selected == 'water' %}selected{% endif %}>4. Water Lab</option>
+<option value="micro"    {% if selected == 'micro' %}selected{% endif %}>5. Microbiology Lab</option>
+<option value="wtl"      {% if selected == 'wtl' %}selected{% endif %}>6. WTL Lab</option>
+<option value="balance"  {% if selected == 'balance' %}selected{% endif %}>7. Balance</option>
 {% endmacro %}
 
 {# ==================== REGISTER TYPE OPTIONS ==================== #}
 {% macro register_type_options(selected='') %}
-<option value="">-- Сонгоогүй --</option>
-<option value="measurement"     {% if selected == 'measurement' %}selected{% endif %}>Хэмжих хэрэгсэл</option>
-<option value="glassware"       {% if selected == 'glassware' %}selected{% endif %}>Шилэн хэмжүүр</option>
-<option value="internal_check"  {% if selected == 'internal_check' %}selected{% endif %}>Дотоод шалгалт</option>
+<option value="">-- Not Selected --</option>
+<option value="measurement"     {% if selected == 'measurement' %}selected{% endif %}>Measuring Instrument</option>
+<option value="glassware"       {% if selected == 'glassware' %}selected{% endif %}>Glassware</option>
+<option value="internal_check"  {% if selected == 'internal_check' %}selected{% endif %}>Internal Check</option>
 {% endmacro %}
 
 {# ==================== STATUS OPTIONS ==================== #}
 {% macro status_options(selected='normal') %}
-<option value="normal"      {% if selected == 'normal' %}selected{% endif %}>Хэвийн</option>
-<option value="broken"      {% if selected == 'broken' %}selected{% endif %}>Эвдэрсэн</option>
-<option value="needs_spare" {% if selected == 'needs_spare' %}selected{% endif %}>Сэлбэг хэрэгтэй</option>
-<option value="maintenance" {% if selected == 'maintenance' %}selected{% endif %}>Засварт</option>
-<option value="retired"     {% if selected == 'retired' %}selected{% endif %}>Ашиглалтаас гарсан</option>
+<option value="normal"      {% if selected == 'normal' %}selected{% endif %}>Normal</option>
+<option value="broken"      {% if selected == 'broken' %}selected{% endif %}>Out of Order</option>
+<option value="needs_spare" {% if selected == 'needs_spare' %}selected{% endif %}>Spare Parts Required</option>
+<option value="maintenance" {% if selected == 'maintenance' %}selected{% endif %}>Under Maintenance</option>
+<option value="retired"     {% if selected == 'retired' %}selected{% endif %}>Decommissioned</option>
 {% endmacro %}
 
 {# ==================== MEASUREMENT GROUP OPTIONS ==================== #}
 {% macro measurement_group_options(selected='') %}
-<option {% if selected == '1. Физик химийн хэмжлийн төрлөөр' or not selected %}selected{% endif %}>1. Физик химийн хэмжлийн төрлөөр</option>
-<option {% if selected == '2. Дулаан болон даралтын хэмжлийн төрлөөр' %}selected{% endif %}>2. Дулаан болон даралтын хэмжлийн төрлөөр</option>
-<option {% if selected == '3. Хий, шингэний зарцуулалтын хэмжлийн төрлөөр' %}selected{% endif %}>3. Хий, шингэний зарцуулалтын хэмжлийн төрлөөр</option>
-<option {% if selected == '4. Хүндийн хэмжлийн төрлөөр' %}selected{% endif %}>4. Хүндийн хэмжлийн төрлөөр</option>
-<option {% if selected == '5. Нягтын хэмжлийн төрлөөр' %}selected{% endif %}>5. Нягтын хэмжлийн төрлөөр</option>
+<option {% if selected == '1. Physical-Chemical Measurement' or not selected %}selected{% endif %}>1. Physical-Chemical Measurement</option>
+<option {% if selected == '2. Thermal & Pressure Measurement' %}selected{% endif %}>2. Thermal & Pressure Measurement</option>
+<option {% if selected == '3. Gas & Liquid Flow Measurement' %}selected{% endif %}>3. Gas & Liquid Flow Measurement</option>
+<option {% if selected == '4. Weight Measurement' %}selected{% endif %}>4. Weight Measurement</option>
+<option {% if selected == '5. Density Measurement' %}selected{% endif %}>5. Density Measurement</option>
 {% endmacro %}
 
 {# ==================== MEASUREMENT UNIT OPTIONS ==================== #}
 {% macro measurement_unit_options(selected='') %}
-<option value="">-- Сонгох --</option>
-{% for u in ['нм', 'μS/см', 'г', 'кг', 'мг', 'Ж', '°C', 'mPa', '%', 'ppm', '%/ppm', 'г/см3', 'мл', 'л'] %}
+<option value="">-- Select --</option>
+{% for u in ['nm', 'μS/cm', 'g', 'kg', 'mg', 'J', '°C', 'mPa', '%', 'ppm', '%/ppm', 'g/cm3', 'mL', 'L'] %}
 <option {% if selected == u %}selected{% endif %}>{{ u }}</option>
 {% endfor %}
 {% endmacro %}
 
 {# ==================== FREQUENCY OPTIONS ==================== #}
 {% macro freq_cert_options(selected='') %}
-<option value="">-- Сонгох --</option>
-{% for f in ['6 сар', '1 жил', '2 жил', '3 жил'] %}
+<option value="">-- Select --</option>
+{% for f in ['6 months', '1 year', '2 years', '3 years'] %}
 <option {% if selected == f %}selected{% endif %}>{{ f }}</option>
 {% endfor %}
 {% endmacro %}
 
 {% macro freq_check_options(selected='') %}
-<option value="">-- Сонгох --</option>
-{% for f in ['Өдөр бүр', '7 хоног', '1 сар', '3 сар', '6 сар', '1 жил'] %}
+<option value="">-- Select --</option>
+{% for f in ['Daily', '7 days', '1 month', '3 months', '6 months', '1 year'] %}
 <option {% if selected == f %}selected{% endif %}>{{ f }}</option>
 {% endfor %}
 {% endmacro %}
 
 {# ==================== CATEGORY LABELS ==================== #}
-{# Use: {% set cat_label = category_labels[eq.category] | default('8. Бусад') %} #}
+{# Use: {% set cat_label = category_labels[eq.category] | default('8. Other') %} #}
 {% set category_labels = {
-  'furnace': '1. Шатаах зуух',
-  'prep': '2. Дээж бэлтгэл',
-  'analysis': '3. Шинжилгээний багаж',
-  'water': '4. Усны лаб',
-  'micro': '5. Микробиологи лаб',
-  'wtl': '6. БС лаб (WTL)',
-  'balance': '7. Жин',
-  'other': '8. Бусад'
+  'furnace': '1. Furnace',
+  'prep': '2. Sample Preparation',
+  'analysis': '3. Analysis Instruments',
+  'water': '4. Water Lab',
+  'micro': '5. Microbiology Lab',
+  'wtl': '6. WTL Lab',
+  'balance': '7. Balance',
+  'other': '8. Other'
 } %}
 
 {# ==================== STATUS BADGE MACRO ==================== #}
 {% macro status_badge(status) %}
 {% if status == 'broken' %}
-  <span class="badge rounded-pill eq-status-broken">Эвдэрсэн</span>
+  <span class="badge rounded-pill eq-status-broken">Out of Order</span>
 {% elif status == 'needs_spare' %}
-  <span class="badge rounded-pill eq-status-spare">Сэлбэг хэрэгтэй</span>
+  <span class="badge rounded-pill eq-status-spare">Spare Parts Required</span>
 {% elif status == 'maintenance' %}
-  <span class="badge rounded-pill eq-status-maint">Засварт</span>
+  <span class="badge rounded-pill eq-status-maint">Under Maintenance</span>
 {% elif status == 'retired' %}
-  <span class="badge rounded-pill eq-status-retired">Ашиглалтаас</span>
+  <span class="badge rounded-pill eq-status-retired">Decommissioned</span>
 {% else %}
-  <span class="badge rounded-pill eq-status-normal">Хэвийн</span>
+  <span class="badge rounded-pill eq-status-normal">Normal</span>
 {% endif %}
 {% endmacro %}
 
 {# ==================== VIEW & REGISTER TABS DATA ==================== #}
 {% set view_items = [
-  ('all', 'Нийт тоног төхөөрөмж', 'bi-grid-3x3-gap'),
-  ('coal', 'Нүүрс', 'bi-fire'),
-  ('water', 'Ус', 'bi-droplet'),
-  ('micro', 'Микро', 'bi-bug'),
+  ('all', 'All Equipment', 'bi-grid-3x3-gap'),
+  ('coal', 'Coal', 'bi-fire'),
+  ('water', 'Water', 'bi-droplet'),
+  ('micro', 'Micro', 'bi-bug'),
 ] %}
 
 {% set register_items = [
-  ('measurement', 'Хэмжих хэрэгслийн бүртгэл', 'bi-rulers'),
-  ('glassware', 'Шилэн хэмжүүрийн бүртгэл', 'bi-cup-straw'),
-  ('internal_check', 'Дотоод шалгалт тохируулга', 'bi-clipboard-check'),
-  ('new_equipment', 'Шинэ ТТ бүртгэл', 'bi-box-arrow-in-right'),
+  ('measurement', 'Measuring Instruments Register', 'bi-rulers'),
+  ('glassware', 'Glassware Register', 'bi-cup-straw'),
+  ('internal_check', 'Internal Check & Adjustment', 'bi-clipboard-check'),
+  ('new_equipment', 'New Equipment Register', 'bi-box-arrow-in-right'),
   ('out_of_service', 'Out of Service', 'bi-x-circle'),
-  ('balances_register', 'Жин', 'bi-speedometer'),
+  ('balances_register', 'Balance', 'bi-speedometer'),
 ] %}

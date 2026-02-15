@@ -73,12 +73,12 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# ============================================ #}
 {% macro balance_connection_ui() %}
 <div class="d-flex align-items-center gap-2 mb-2">
-  <button id="btnConnectBalance" class="btn btn-sm btn-outline-primary" title="Mettler жинтэй холбогдох (Chrome 89+)">
-    <i class="bi bi-usb-plug"></i> Жин холбох
+  <button id="btnConnectBalance" class="btn btn-sm btn-outline-primary" title="Connect to Mettler balance (Chrome 89+)">
+    <i class="bi bi-usb-plug"></i> Connect Balance
   </button>
-  <span id="balanceStatus" class="badge bg-secondary small">Холбогдоогүй</span>
+  <span id="balanceStatus" class="badge bg-secondary small">Disconnected</span>
   <span class="text-muted small ms-2">
-    <i class="bi bi-info-circle"></i> m1/m2/m3 нүдэнд <kbd>F2</kbd> дарж жин авна
+    <i class="bi bi-info-circle"></i> Press <kbd>F2</kbd> in m1/m2/m3 cells to read weight
   </span>
 </div>
 {% endmacro %}
@@ -98,53 +98,53 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
     return;
   }
 
-  // Статус шинэчлэх
+  // Update status
   function updateBalanceStatus(message, type = 'secondary') {
     $balanceStatus.textContent = message;
     $balanceStatus.className = `badge bg-${type} small`;
   }
 
-  // Холбогдох товч
+  // Connect button
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      alert('Serial Balance модуль ачаалагдаагүй байна.');
+      alert('Serial Balance module is not loaded.');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
+      alert('Web Serial API is not supported. Please use Chrome 89+ browser.');
       return;
     }
 
     if (window.labBalance.isConnected) {
       await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      updateBalanceStatus('Disconnected', 'secondary');
       return;
     }
 
-    updateBalanceStatus('Холбогдож байна...', 'warning');
+    updateBalanceStatus('Connecting...', 'warning');
     const connected = await window.labBalance.connect();
 
     if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Connected';
       $btnConnect.classList.remove('btn-outline-primary');
       $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('Холбогдсон', 'success');
+      updateBalanceStatus('Connected', 'success');
     } else {
-      updateBalanceStatus('Алдаа', 'danger');
+      updateBalanceStatus('Error', 'danger');
     }
   });
 
-  // Callback-ууд
+  // Callbacks
   if (window.labBalance) {
     window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жин холбох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Салсан', 'secondary');
+      updateBalanceStatus('Disconnected', 'secondary');
     };
   }
 
@@ -159,14 +159,14 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
       return null;
     }
 
-    updateBalanceStatus('Жин татаж байна...', 'warning');
+    updateBalanceStatus('Fetching weight...', 'warning');
     const weight = await window.labBalance.getStableWeight();
 
     if (weight !== null) {
       updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
       return weight;
     } else {
-      updateBalanceStatus('Жин авч чадсангүй', 'danger');
+      updateBalanceStatus('Failed to get weight', 'danger');
       return null;
     }
   };
@@ -204,7 +204,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
           rowNode.setDataValue(colId, weight);
           gridApi.refreshCells({ rowNodes: [rowNode], columns: [colId] });
 
-          // Дараагийн нүд рүү шилжих
+          // Move to next cell
           const colIds = WEIGHT_COLUMNS;
           const currentIdx = colIds.indexOf(colId);
           if (currentIdx >= 0 && currentIdx < colIds.length - 1) {
@@ -284,7 +284,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# Sample code column with reject badge #}
 {% macro col_sample_code(width=300, pinned='left') %}
 {
-  headerName: 'Дээжийн нэр',
+  headerName: 'Sample Name',
   field: 'sample_code',
   width: {{ width }},
   pinned: '{{ pinned }}',
@@ -313,7 +313,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# Tolerance column #}
 {% macro col_tolerance(width=90) %}
 {
-  headerName: 'Тохирц',
+  headerName: 'Tolerance',
   field: 'tolerance',
   width: {{ width }},
   rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -342,7 +342,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# Average column #}
 {% macro col_average(width=90) %}
 {
-  headerName: 'Дундаж',
+  headerName: 'Average',
   field: 'average',
   width: {{ width }},
   rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -366,7 +366,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# Action column (remove button) #}
 {% macro col_actions(width=90, pinned='right') %}
 {
-  headerName: 'Үйлдэл',
+  headerName: 'Action',
   width: {{ width }},
   pinned: '{{ pinned }}',
   rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -374,13 +374,13 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   cellRenderer: p => {
     if (p.data.parallel !== 1) return '';
     if (p.data.is_saved) {
-      return '<span class="text-muted small">Хадгалагдсан</span>';
+      return '<span class="text-muted small">Saved</span>';
     }
     return `
       <button type="button"
               class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
               data-sample-id="${p.data.sample_id}"
-              title="Дээж хасах">
+              title="Remove sample">
         <i class="bi bi-x"></i>
       </button>
     `;

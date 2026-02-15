@@ -2,30 +2,30 @@
 
 {% block content %}
 <style>
-    /* "Буцаагдсан", "Зассaн" гэх мэт үйлдлийг ялгах загвар */
+    /* Style for differentiating actions like Rejected, Edited */
     .log-entry {
-        border-left: 5px solid #dee2e6; /* Анхдагч саарал */
+        border-left: 5px solid #dee2e6;
         padding: 1rem 1.25rem;
         margin-bottom: 1rem;
         background: #fff;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         border-radius: 8px;
     }
-    
-    /* Үйлдлийн өнгө */
-    .log-action-REJECTED { border-left-color: #dc3545; } /* Улаан */
-    .log-action-APPROVED { border-left-color: #198754; } /* Ногоон */
-    .log-action-EDITED { border-left-color: #ffc107; }   /* Шар */
-    .log-action-CREATED { border-left-color: #0d6efd; }  /* Цэнхэр */
+
+    /* Action colors */
+    .log-action-REJECTED { border-left-color: #dc3545; }
+    .log-action-APPROVED { border-left-color: #198754; }
+    .log-action-EDITED { border-left-color: #ffc107; }
+    .log-action-CREATED { border-left-color: #0d6efd; }
 
     .log-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 0.5rem;
-        flex-wrap: wrap; /* Жижиг дэлгэцэнд зөв харуулах */
+        flex-wrap: wrap;
     }
-    
+
     .log-action-badge {
         font-size: 0.9rem;
         font-weight: 600;
@@ -33,8 +33,8 @@
         border-radius: 6px;
         color: #fff;
     }
-    
-    /* Үйлдлийн өнгө */
+
+    /* Action colors */
     .badge-REJECTED { background-color: #dc3545; }
     .badge-APPROVED { background-color: #198754; }
     .badge-EDITED { background-color: #ffc107; color: #333 !important; }
@@ -59,50 +59,49 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1>{{ title }}</h1>
-            <p class="text-muted fs-5">Дээж: <strong>{{ sample.sample_code }}</strong> (ID: {{ sample.id }})</p>
+            <p class="text-muted fs-5">Sample: <strong>{{ sample.sample_code }}</strong> (ID: {{ sample.id }})</p>
         </div>
-        <!-- "Дээжний нэгдгэл" рүү буцах товч -->
         <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Нэгтгэл рүү буцах
+            <i class="bi bi-arrow-left"></i> Back to Summary
         </a>
     </div>
 
     {% if logs %}
         {% for log in logs %}
-            {# --- Тухайн нэг бичлэг --- #}
+            {# --- Single log entry --- #}
             <div class="log-entry log-action-{{ log.action }}">
-                
+
                 <div class="log-header">
-                    <!-- Үйлдэл (EDITED, APPROVED г.м) -->
+                    <!-- Action (EDITED, APPROVED etc.) -->
                     <div>
                         <span class="log-action-badge badge-{{ log.action }}">{{ log.action }}</span>
                         <span class="fs-5 fw-bold ms-2">{{ log.analysis_code }}</span>
                     </div>
-                    <!-- Огноо -->
+                    <!-- Date -->
                     <span class="log-meta">
                         <i class="bi bi-calendar-event"></i>
                         {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
                     </span>
                 </div>
-                
+
                 <p class="mb-2 log-meta">
-                    <strong><i class="bi bi-person-fill"></i> Хэрэглэгч:</strong> {{ log.user.username }}
+                    <strong><i class="bi bi-person-fill"></i> User:</strong> {{ log.user.username }}
                     {% if log.reason %}
                         <br>
-                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Шалтгаан:</strong> 
+                        <strong><i class="bi bi-exclamation-triangle-fill"></i> Reason:</strong>
                         <span class="text-danger fw-bold">{{ log.reason }}</span>
                     {% endif %}
                 </p>
-                
-                <!-- Тухайн үеийн түүхий өгөгдөл -->
+
+                <!-- Raw data snapshot -->
                 <div class="log-details">
                     <p class="mb-1 mt-2">
-                        <strong>Эцсийн дундаж (Snapshot):</strong> 
+                        <strong>Final Average (Snapshot):</strong>
                         <span class="fs-5 fw-bold text-primary">
                             {{ log.final_result_snapshot if log.final_result_snapshot is not none else 'N/A' }}
                         </span>
                     </p>
-                    <p class="mb-1 mt-2">Анхдагч өгөгдөл (Snapshot):</p>
+                    <p class="mb-1 mt-2">Raw Data (Snapshot):</p>
                     <pre>{{ log.raw_data_snapshot | tojson(indent=2) }}</pre>
                 </div>
             </div>
@@ -110,7 +109,7 @@
     {% else %}
         <div class="alert alert-info">
             <i class="bi bi-info-circle-fill me-2"></i>
-            Энэ дээжинд хамаарах үйлдлийн түүх (аудитын мөр) олдсонгүй.
+            No audit trail found for this sample.
         </div>
     {% endif %}
 </div>

@@ -803,11 +803,11 @@
   <div class="page-header">
     <div class="header-content">
       <h4><i class="bi bi-shield-lock-fill me-2"></i>{{ title }}</h4>
-      <div class="subtitle">Химичдийн хадгалсан үр дүнг хянах, баталгаажуулах</div>
+      <div class="subtitle">Review and approve results saved by chemists</div>
     </div>
     <div class="live-indicator">
       <span class="live-dot"></span>
-      <span id="metrics-refresh">Шинэчлэгдсэн: -</span>
+      <span id="metrics-refresh">Updated: -</span>
     </div>
   </div>
 
@@ -820,7 +820,7 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-stack"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Нийт</div>
+              <div class="metric-label">Total</div>
               <div class="metric-value" id="metric-total">0</div>
             </div>
           </div>
@@ -830,7 +830,7 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Хүлээгдэж буй</div>
+              <div class="metric-label">Pending</div>
               <div class="metric-value" id="metric-pending">0</div>
             </div>
           </div>
@@ -840,13 +840,13 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-exclamation-octagon"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Буцаагдсан</div>
+              <div class="metric-label">Rejected</div>
               <div class="metric-value" id="metric-rejected">0</div>
             </div>
           </div>
           <div class="metric-sub">
-            <span class="kpi-badge red" id="kpi-shift-total">0</span> ээлж
-            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> 14 хоног
+            <span class="kpi-badge red" id="kpi-shift-total">0</span> shift
+            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> 14 days
           </div>
         </div>
 
@@ -854,74 +854,74 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-patch-check-fill"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Баталгаажсан</div>
+              <div class="metric-label">Approved</div>
               <div class="metric-value" id="metric-approved">0</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Дээж бүртгэл - Нэгжээр -->
+      <!-- Samples by Unit -->
       <div class="metric-card samples-unit">
         <div class="metric-card-inner">
           <div class="metric-icon-wrap"><i class="bi bi-building"></i></div>
           <div class="metric-content">
-            <div class="metric-label">Дээж (Нэгж)</div>
+            <div class="metric-label">Samples (Unit)</div>
             <div class="metric-value" id="samples-total-badge">0</div>
           </div>
         </div>
         <div class="metric-expand" id="sidebar-samples-unit">
-          <div class="metric-expand-item">Ачааллаж байна...</div>
+          <div class="metric-expand-item">Loading...</div>
         </div>
       </div>
 
-      <!-- Дээж бүртгэл - Төрлөөр -->
+      <!-- Samples by Type -->
       <div class="metric-card samples-type">
         <div class="metric-card-inner">
           <div class="metric-icon-wrap"><i class="bi bi-box-seam"></i></div>
           <div class="metric-content">
-            <div class="metric-label">Дээж (Төрөл)</div>
+            <div class="metric-label">Samples (Type)</div>
             <div class="metric-value" id="samples-type-badge">0</div>
           </div>
         </div>
         <div class="metric-expand" id="sidebar-samples-type">
-          <div class="metric-expand-item">Ачааллаж байна...</div>
+          <div class="metric-expand-item">Loading...</div>
         </div>
       </div>
     </div>
 
     <!-- Main Content Area -->
     <div class="ahlah-main">
-  <!-- Stats Panels: Химич & Шинжилгээ -->
+  <!-- Stats Panels: Chemist & Analysis -->
   <div class="stats-row">
-    <!-- Химичийн статистик -->
+    <!-- Chemist Statistics -->
     <div class="stats-panel">
       <div class="stats-panel-header">
         <div class="stats-panel-title">
-          <i class="bi bi-people-fill"></i> Химичийн шинжилгээ
+          <i class="bi bi-people-fill"></i> Chemist Analysis
         </div>
-        <div class="stats-panel-badge" id="chemist-total-badge">0 химич</div>
+        <div class="stats-panel-badge" id="chemist-total-badge">0 chemists</div>
       </div>
       <div class="stats-list" id="chemist-stats-list">
         <div class="stats-empty">
           <i class="bi bi-hourglass"></i>
-          Ачааллаж байна...
+          Loading...
         </div>
       </div>
     </div>
 
-    <!-- Шинжилгээний төрөл статистик -->
+    <!-- Analysis Type Statistics -->
     <div class="stats-panel">
       <div class="stats-panel-header">
         <div class="stats-panel-title">
-          <i class="bi bi-clipboard-data-fill"></i> Шинжилгээний төрөл
+          <i class="bi bi-clipboard-data-fill"></i> Analysis Type
         </div>
-        <div class="stats-panel-badge" id="analysis-total-badge">0 төрөл</div>
+        <div class="stats-panel-badge" id="analysis-total-badge">0 types</div>
       </div>
       <div class="stats-list" id="analysis-stats-list">
         <div class="stats-empty">
           <i class="bi bi-hourglass"></i>
-          Ачааллаж байна...
+          Loading...
         </div>
       </div>
     </div>
@@ -931,31 +931,31 @@
   <div class="filter-card">
     <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}" class="filter-row">
       <div class="filter-group">
-        <label><i class="bi bi-calendar-event me-1"></i>Эхлэх огноо</label>
+        <label><i class="bi bi-calendar-event me-1"></i>Start Date</label>
         <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-calendar-check me-1"></i>Дуусах огноо</label>
+        <label><i class="bi bi-calendar-check me-1"></i>End Date</label>
         <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-search me-1"></i>Дээжний нэр</label>
-        <input type="text" name="sample_name" placeholder="Хайх..." value="{{ request.args.get('sample_name','') }}">
+        <label><i class="bi bi-search me-1"></i>Sample Name</label>
+        <input type="text" name="sample_name" placeholder="Search..." value="{{ request.args.get('sample_name','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-funnel me-1"></i>Статус</label>
+        <label><i class="bi bi-funnel me-1"></i>Status</label>
         <select name="status">
-          <option value="">Бүгд</option>
-          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>Хүлээгдэж буй</option>
-          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>Буцаагдсан</option>
+          <option value="">All</option>
+          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>Pending</option>
+          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>Rejected</option>
         </select>
       </div>
       <div class="filter-actions">
         <button type="submit" class="btn-filter primary">
-          <i class="bi bi-search"></i> Шүүх
+          <i class="bi bi-search"></i> Filter
         </button>
         <a href="{{ url_for('analysis.ahlah_dashboard') }}" class="btn-filter secondary">
-          <i class="bi bi-arrow-counterclockwise"></i> Цэвэрлэх
+          <i class="bi bi-arrow-counterclockwise"></i> Clear
         </a>
       </div>
     </form>
@@ -965,17 +965,17 @@
   <div id="bulk-toolbar" class="bulk-toolbar" style="display: none;">
     <div class="bulk-info">
       <input type="checkbox" id="select-all-results" class="form-check-input me-2">
-      <span id="selected-count">0</span> сонгогдсон
+      <span id="selected-count">0</span> selected
     </div>
     <div class="bulk-actions">
       <button type="button" class="btn btn-success btn-sm" id="bulk-approve-btn">
-        <i class="bi bi-check-all"></i> Бүгдийг батлах
+        <i class="bi bi-check-all"></i> Approve All
       </button>
       <button type="button" class="btn btn-danger btn-sm" id="bulk-reject-btn" data-bs-toggle="modal" data-bs-target="#bulkRejectModal">
-        <i class="bi bi-x-lg"></i> Бүгдийг буцаах
+        <i class="bi bi-x-lg"></i> Reject All
       </button>
       <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection-btn">
-        <i class="bi bi-x-circle"></i> Цуцлах
+        <i class="bi bi-x-circle"></i> Cancel
       </button>
     </div>
   </div>
@@ -984,11 +984,11 @@
   <div id="results-container" class="results-container">
     <div class="loading-spinner">
       <i class="bi bi-arrow-repeat"></i>
-      <p class="mt-3 text-muted">Ачааллаж байна...</p>
+      <p class="mt-3 text-muted">Loading...</p>
     </div>
   </div>
 
-  <!-- Буцаах modal -->
+  <!-- Reject Modal -->
   <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form id="reject-form" method="POST">
@@ -996,9 +996,9 @@
         <div class="modal-content premium">
           <div class="modal-header premium">
             <h5 class="modal-title" id="rejectModalLabel">
-              <i class="bi bi-x-octagon-fill me-2"></i>Үр дүн буцаах
+              <i class="bi bi-x-octagon-fill me-2"></i>Reject Result
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Хаах"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body premium">
             <div class="alert" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: none; border-radius: 12px; padding: 1rem;">
@@ -1008,25 +1008,25 @@
             <input type="hidden" id="reject-result-id" name="result_id" value="">
             <div class="mb-3">
               <label class="form-label fw-bold">
-                <i class="bi bi-tag me-1"></i>Буцаах шалтгаан (KPI код) <span class="text-danger">*</span>
+                <i class="bi bi-tag me-1"></i>Rejection Reason (KPI Code) <span class="text-danger">*</span>
               </label>
               <select name="rejection_category" id="rejection_category" class="form-select" required style="border-radius: 12px; padding: 12px;">
-                <option value="">-- Сонгох --</option>
-                <option value="sample_prep">1. Дээж бэлтгэлийн алдаа</option>
-                <option value="measurement">2. Шинжилгээний гүйцэтгэлийн алдаа</option>
-                <option value="qc_fail">3. QC / Стандарт дээжийн зөрүү</option>
-                <option value="equipment">4. Тоног төхөөрөмж / Орчны нөхцөл</option>
-                <option value="data_entry">5. Өгөгдөл шивэлт / Тооцооллын алдаа</option>
-                <option value="method">6. Арга аргачлал зөрчсөн (SOP)</option>
-                <option value="sample_mixup">7. Дээж солигдсон / Буруу дээж</option>
-                <option value="chemist_error">8. Химичийн алдаа / Асгасан</option>
+                <option value="">-- Select --</option>
+                <option value="sample_prep">1. Sample preparation error</option>
+                <option value="measurement">2. Analysis execution error</option>
+                <option value="qc_fail">3. QC / Standard sample deviation</option>
+                <option value="equipment">4. Equipment / Environmental condition</option>
+                <option value="data_entry">5. Data entry / Calculation error</option>
+                <option value="method">6. Method violation (SOP)</option>
+                <option value="sample_mixup">7. Sample mix-up / Wrong sample</option>
+                <option value="customer_complaint">8. Complaint / Control analysis</option>
               </select>
             </div>
           </div>
           <div class="modal-footer premium">
-            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Цуцлах</button>
+            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
             <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626);">
-              <i class="bi bi-x-circle me-1"></i> Буцаах
+              <i class="bi bi-x-circle me-1"></i> Reject
             </button>
           </div>
         </div>
@@ -1039,32 +1039,32 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content premium">
         <div class="modal-header premium">
-          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>Олон үр дүн буцаах</h5>
+          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>Reject Multiple Results</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body premium">
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <span id="bulk-reject-count">0</span> үр дүн буцаагдах гэж байна.
+            <span id="bulk-reject-count">0</span> results will be rejected.
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">Буцаах шалтгаан</label>
+            <label class="form-label fw-bold">Rejection Reason</label>
             <select id="bulk-rejection-category" class="form-select" required>
-              <option value="">-- Сонгоно уу --</option>
+              <option value="">-- Select --</option>
               {% for key, label in error_labels.items() %}
               <option value="{{ key }}">{{ label }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Нэмэлт тайлбар</label>
-            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="Нэмэлт тайлбар..."></textarea>
+            <label class="form-label">Additional Remarks</label>
+            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="Additional remarks..."></textarea>
           </div>
         </div>
         <div class="modal-footer premium">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Цуцлах</button>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-danger" id="confirm-bulk-reject-btn">
-            <i class="bi bi-x-circle me-1"></i> Буцаах
+            <i class="bi bi-x-circle me-1"></i> Reject
           </button>
         </div>
       </div>
@@ -1109,8 +1109,8 @@ function loadResults() {
       document.getElementById('results-container').innerHTML = `
         <div class="empty-state">
           <i class="bi bi-exclamation-triangle"></i>
-          <h5>Алдаа гарлаа</h5>
-          <p>Өгөгдөл ачаалахад алдаа гарлаа. Дахин оролдоно уу.</p>
+          <h5>Error occurred</h5>
+          <p>Failed to load data. Please try again.</p>
         </div>
       `;
     });
@@ -1123,8 +1123,8 @@ function renderResults(data) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-inbox"></i>
-        <h5>Хяналт хүлээж буй үр дүн байхгүй</h5>
-        <p>Одоогоор шалгах шаардлагатай үр дүн алга байна.</p>
+        <h5>No results pending review</h5>
+        <p>There are currently no results that require review.</p>
       </div>
     `;
     return;
@@ -1140,7 +1140,7 @@ function renderResults(data) {
   container.querySelectorAll('.btn-approve').forEach(btn => {
     btn.addEventListener('click', function() {
       const id = this.dataset.id;
-      if (confirm('Энэ үр дүнг баталгаажуулах уу?')) {
+      if (confirm('Approve this result?')) {
         approveResult(id);
       }
     });
@@ -1157,7 +1157,7 @@ function renderResults(data) {
 
 function renderResultCard(item, idx) {
   const statusClass = item.status === 'rejected' ? 'rejected' : 'pending';
-  const statusText = item.status === 'rejected' ? 'Буцаагдсан' : 'Хүлээгдэж буй';
+  const statusText = item.status === 'rejected' ? 'Rejected' : 'Pending';
   const raw = item.raw_data || {};
 
   // Parallel data
@@ -1181,7 +1181,7 @@ function renderResultCard(item, idx) {
             <th>m1</th>
             <th>m2</th>
             <th>m3</th>
-            <th>Үр дүн</th>
+            <th>Result</th>
           </tr>
         </thead>
         <tbody>
@@ -1232,7 +1232,7 @@ function renderResultCard(item, idx) {
         ${parallelHtml ? `
           <div class="raw-data-section">
             <div class="raw-data-title">
-              <i class="bi bi-table"></i> Параллел хэмжилт
+              <i class="bi bi-table"></i> Parallel Measurements
             </div>
             ${parallelHtml}
           </div>
@@ -1241,19 +1241,19 @@ function renderResultCard(item, idx) {
         <div class="summary-row">
           ${avg !== undefined && avg !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Дундаж</div>
+              <div class="summary-item-label">Average</div>
               <div class="summary-item-value avg">${formatNum(avg, 3)}</div>
             </div>
           ` : ''}
           ${diff !== undefined && diff !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Тохирц (T)</div>
+              <div class="summary-item-label">Tolerance (T)</div>
               <div class="summary-item-value diff">${formatNum(diff, 4)}</div>
             </div>
           ` : ''}
           ${finalVal !== undefined && finalVal !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Эцсийн үр дүн</div>
+              <div class="summary-item-label">Final Result</div>
               <div class="summary-item-value final">${formatNum(finalVal, 3)}</div>
             </div>
           ` : ''}
@@ -1270,14 +1270,14 @@ function renderResultCard(item, idx) {
 
           <div class="result-actions">
             <button type="button" class="btn-action approve btn-approve" data-id="${item.result_id}">
-              <i class="bi bi-check-lg"></i> Батлах
+              <i class="bi bi-check-lg"></i> Approve
             </button>
             <button type="button" class="btn-action reject btn-reject"
               data-id="${item.result_id}"
               data-sample-code="${escapeHtml(item.sample_code)}"
               data-analysis-name="${escapeHtml(item.analysis_name)}"
               data-bs-toggle="modal" data-bs-target="#rejectModal">
-              <i class="bi bi-x-lg"></i> Буцаах
+              <i class="bi bi-x-lg"></i> Reject
             </button>
           </div>
         </div>
@@ -1313,7 +1313,7 @@ function updateMetrics(data) {
 
   const now = new Date();
   document.getElementById('metrics-refresh').textContent =
-    'Шинэчлэгдсэн: ' + now.toLocaleString('mn-MN', { hour12: false });
+    'Updated: ' + now.toLocaleString('en-US', { hour12: false });
 }
 
 function loadKpiSummary() {
@@ -1346,20 +1346,20 @@ function loadAhlahStats() {
         if (approved) approved.textContent = data.summary.approved || 0;
       }
 
-      // Дээж бүртгэл - нийт тоо
+      // Sample бүртгэл - нийт тоо
       const samplesBadge = document.getElementById('samples-total-badge');
-      if (samplesBadge) samplesBadge.textContent = (data.samples_today || 0) + ' дээж';
+      if (samplesBadge) samplesBadge.textContent = (data.samples_today || 0) + ' samples';
 
-      // Дээж бүртгэл - Нэгжээр
+      // Sample бүртгэл - Unitээр
       renderSamplesByUnit(data.samples_by_unit || []);
 
-      // Дээж бүртгэл - Төрлөөр
+      // Sample бүртгэл - Төрлөөр
       renderSamplesByType(data.samples_by_type || []);
 
-      // Химичийн статистик
+      // Analystийн статистик
       renderChemistStats(data.chemists || []);
 
-      // Шинжилгээний төрөл статистик
+      // Analysisний төрөл статистик
       renderAnalysisStats(data.analysis_types || []);
     })
     .catch(err => console.error('Stats load error:', err));
@@ -1376,7 +1376,7 @@ function renderSamplesByUnit(units) {
 
   if (container) {
     if (units.length === 0) {
-      container.innerHTML = '<div class="metric-expand-empty">Өнөөдөр дээж бүртгэгдээгүй</div>';
+      container.innerHTML = '<div class="metric-expand-empty">No samples registered today</div>';
     } else {
       let html = '';
       units.forEach(function(u) {
@@ -1402,7 +1402,7 @@ function renderSamplesByType(types) {
 
   if (container) {
     if (types.length === 0) {
-      container.innerHTML = '<div class="metric-expand-empty">Өнөөдөр дээж бүртгэгдээгүй</div>';
+      container.innerHTML = '<div class="metric-expand-empty">No samples registered today</div>';
     } else {
       let html = '';
       types.forEach(function(t) {
@@ -1425,14 +1425,14 @@ function renderChemistStats(chemists) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = chemists.length + ' химич';
+    badge.textContent = chemists.length + ' chemists';
   }
 
   if (chemists.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        Өнөөдөр шинжилгээ хийгээгүй
+        No analyses performed today
       </div>
     `;
     return;
@@ -1448,10 +1448,10 @@ function renderChemistStats(chemists) {
           <span>${escapeHtml(c.username)}</span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Нийт">${c.total}</span>
-          <span class="stats-count approved" title="Баталсан">${c.approved}</span>
-          <span class="stats-count pending" title="Хүлээгдэж буй">${c.pending}</span>
-          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${c.rejected}</span>` : ''}
+          <span class="stats-count total" title="Total">${c.total}</span>
+          <span class="stats-count approved" title="Approved">${c.approved}</span>
+          <span class="stats-count pending" title="Pending">${c.pending}</span>
+          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${c.rejected}</span>` : ''}
         </div>
       </div>
     `;
@@ -1467,14 +1467,14 @@ function renderAnalysisStats(analysisTypes) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = analysisTypes.length + ' төрөл';
+    badge.textContent = analysisTypes.length + ' types';
   }
 
   if (analysisTypes.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        Өнөөдөр шинжилгээ алга
+        No analyses today
       </div>
     `;
     return;
@@ -1489,10 +1489,10 @@ function renderAnalysisStats(analysisTypes) {
           <span>${escapeHtml(a.name)} <small class="text-muted">(${escapeHtml(a.code)})</small></span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Нийт">${a.total}</span>
-          <span class="stats-count approved" title="Баталсан">${a.approved}</span>
-          <span class="stats-count pending" title="Хүлээгдэж буй">${a.pending}</span>
-          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${a.rejected}</span>` : ''}
+          <span class="stats-count total" title="Total">${a.total}</span>
+          <span class="stats-count approved" title="Approved">${a.approved}</span>
+          <span class="stats-count pending" title="Pending">${a.pending}</span>
+          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${a.rejected}</span>` : ''}
         </div>
       </div>
     `;
@@ -1511,12 +1511,12 @@ function approveResult(id) {
     if (data.message === 'OK') {
       location.reload();
     } else {
-      alert(data.message || 'Алдаа гарлаа');
+      alert(data.message || 'An error occurred');
     }
   })
   .catch(err => {
     console.error(err);
-    alert('Алдаа гарлаа');
+    alert('An error occurred');
   });
 }
 
@@ -1529,13 +1529,13 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
   const catText = document.querySelector('#rejection_category option:checked').textContent;
 
   if (!cat) {
-    alert('Буцаах шалтгаан сонгоно уу');
+    alert('Please select a rejection reason');
     return;
   }
 
   const btn = this.querySelector('button[type="submit"]');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Уншиж байна...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
 
   fetch('/api/update_result_status/' + id + '/rejected', {
     method: 'POST',
@@ -1552,16 +1552,16 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
       bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
       location.reload();
     } else {
-      alert(data.message || 'Алдаа гарлаа');
+      alert(data.message || 'An error occurred');
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
     }
   })
   .catch(err => {
     console.error(err);
-    alert('Алдаа гарлаа');
+    alert('An error occurred');
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
   });
 });
 
@@ -1653,11 +1653,11 @@ document.getElementById('clear-selection-btn').addEventListener('click', functio
 // Bulk Approve
 document.getElementById('bulk-approve-btn').addEventListener('click', function() {
   if (selectedResultIds.size === 0) return;
-  if (!confirm(`${selectedResultIds.size} үр дүнг баталгаажуулах уу?`)) return;
+  if (!confirm(`Approve ${selectedResultIds.size} results?`)) return;
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Please wait...';
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1673,13 +1673,13 @@ document.getElementById('bulk-approve-btn').addEventListener('click', function()
     if (data.success_count > 0) location.reload();
     else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-check-all"></i> Бүгдийг батлах';
+      btn.innerHTML = '<i class="bi bi-check-all"></i> Approve All';
     }
   })
   .catch(err => {
-    alert('Алдаа: ' + err);
+    alert('Error: ' + err);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-check-all"></i> Бүгдийг батлах';
+    btn.innerHTML = '<i class="bi bi-check-all"></i> Approve All';
   });
 });
 
@@ -1694,13 +1694,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
   const comment = document.getElementById('bulk-rejection-comment').value;
 
   if (!category) {
-    alert('Буцаах шалтгаан сонгоно уу');
+    alert('Please select a rejection reason');
     return;
   }
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Please wait...';
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1718,13 +1718,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
     if (data.success_count > 0) location.reload();
     else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
     }
   })
   .catch(err => {
-    alert('Алдаа: ' + err);
+    alert('Error: ' + err);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
   });
 });
 </script>

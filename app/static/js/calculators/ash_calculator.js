@@ -104,11 +104,11 @@ function calculateAndDisplayForRow(sampleId, lockInputs = false) {
 
         if (diff > currentLimit) {
             $diffCel.addClass('text-danger fw-bold')
-                    .attr('title', `Тохирц хэтэрсэн! (Лимит: ${currentLimit})`);
+                    .attr('title', `Tolerance exceeded! (Limit: ${currentLimit})`);
         } else {
             $diffCel.removeClass('text-danger fw-bold')
                     .addClass('text-success')
-                    .attr('title', `OK (Лимит: ${currentLimit})`);
+                    .attr('title', `OK (Limit: ${currentLimit})`);
         }
 
     } else if (!isNaN(res1) && !$row2.length) {

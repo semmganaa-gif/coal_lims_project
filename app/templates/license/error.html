@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="mn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лицензийн алдаа - Coal LIMS</title>
+    <title>License Error - Coal LIMS</title>
     <style>
         * {
             margin: 0;
@@ -111,40 +111,40 @@
     <div class="container">
         <div class="header">
             <div class="icon">⚠️</div>
-            <h1>Лицензийн алдаа илэрлээ</h1>
-            <p>Системийг ашиглах боломжгүй байна</p>
+            <h1>License Error Detected</h1>
+            <p>The system is currently unavailable</p>
         </div>
 
         <div class="content">
             <div class="error-box">
-                <h3>Юу болсон бэ?</h3>
+                <h3>What happened?</h3>
                 <p>
-                    Таны лиценз энэ компьютер дээр хүчингүй болсон байна.
-                    Энэ нь хэд хэдэн шалтгааны улмаас үүсч болно.
+                    Your license has become invalid on this computer.
+                    This can occur due to several reasons.
                 </p>
             </div>
 
             <div class="reasons">
-                <h4>Боломжит шалтгаанууд:</h4>
+                <h4>Possible reasons:</h4>
                 <ul>
-                    <li>Лицензийг өөр компьютерт шилжүүлсэн</li>
-                    <li>Компьютерийн hardware солигдсон</li>
-                    <li>Системийг хууль бусаар хуулсан</li>
-                    <li>Лицензийн файл гэмтсэн</li>
+                    <li>The license was transferred to another computer</li>
+                    <li>Computer hardware has been changed</li>
+                    <li>The system was copied without authorization</li>
+                    <li>The license file is corrupted</li>
                 </ul>
             </div>
 
             <div class="hardware-id">
-                <strong>Одоогийн Hardware ID:</strong><br>
+                <strong>Current Hardware ID:</strong><br>
                 {{ hardware_id }}
             </div>
 
             <div class="contact-info">
-                <p><strong>Асуудлыг шийдвэрлэхийн тулд:</strong></p>
-                <p>📧 <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a> хаягаар холбогдоно уу</p>
+                <p><strong>To resolve this issue:</strong></p>
+                <p>📧 Contact <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
                 <p>📞 80872013</p>
                 <p style="margin-top: 16px; font-size: 12px;">
-                    Hardware ID-г дээрх имэйл хаягаар илгээнэ үү
+                    Please send the Hardware ID to the email address above
                 </p>
             </div>
         </div>

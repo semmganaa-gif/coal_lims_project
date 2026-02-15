@@ -71,7 +71,7 @@
   <div class="cons-header">
     <div>
       <h4><i class="bi bi-journal-bookmark me-2"></i>{{ title }}</h4>
-      <p class="subtitle">Захиалагч, категори, сараар нэгтгэсэн</p>
+      <p class="subtitle">Client, категори, сараар нэгтгэсэн</p>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
       <form method="get" style="display:flex;gap:0.5rem;align-items:center">
@@ -94,11 +94,11 @@
   <div class="kpi-row">
     <div class="kpi-mini">
       <div class="val">{{ data|length }}</div>
-      <div class="lbl">Нийт захиалагч</div>
+      <div class="lbl">Total захиалагч</div>
     </div>
     <div class="kpi-mini">
       <div class="val">{{ grand_samples.values()|sum }}</div>
-      <div class="lbl">Нийт дээж (жил)</div>
+      <div class="lbl">Total дээж (жил)</div>
     </div>
   </div>
 
@@ -118,12 +118,12 @@
             {% for m in ["1-р","2-р","3-р","4-р","5-р","6-р","7-р","8-р","9-р","10-р","11-р","12-р"] %}
             <th>{{ m }}</th>
             {% endfor %}
-            <th class="sum">Нийт</th>
+            <th class="sum">Total</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="cap">Дээж</td>
+            <td class="cap">Sample</td>
             {% for m in range(1,13) %}
             <td class="cell-click" data-kind="samples" data-unit="{{ unit }}" data-stype="{{ s.stype }}" data-month="{{ m }}">
               {{ s.sample_cnt[m] }}
@@ -158,12 +158,12 @@
           {% for m in ["1-р","2-р","3-р","4-р","5-р","6-р","7-р","8-р","9-р","10-р","11-р","12-р"] %}
           <th>{{ m }}</th>
           {% endfor %}
-          <th class="sum">Нийт</th>
+          <th class="sum">Total</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="cap">Дээж</td>
+          <td class="cap">Sample</td>
           {% for m in range(1,13) %}
           <td>{{ grand_samples[m] }}</td>
           {% endfor %}
@@ -196,14 +196,14 @@
         <div class="table-responsive">
           <table class="table table-sm table-bordered" style="font-size:0.85rem">
             <thead class="table-light">
-              <tr><th>ID</th><th>Код</th><th>Дээж</th><th>Огноо</th></tr>
+              <tr><th>ID</th><th>Код</th><th>Sample</th><th>Date</th></tr>
             </thead>
             <tbody id="cellRows"></tbody>
           </table>
         </div>
       </div>
       <div class="modal-footer" style="background:#f8fafc">
-        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Хаах</button>
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -257,7 +257,7 @@
         <td>${it.analysis_date ? it.analysis_date.replace('T',' ') : ''}</td>
       </tr>`).join('');
     } catch(e) {
-      body.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Алдаа</td></tr>';
+      body.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error</td></tr>';
     }
   }
 

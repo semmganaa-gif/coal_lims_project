@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/equipment_shared.html" import lab_purpose_options, category_options, register_type_options, status_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options, status_badge, category_labels %}
 
-{% block title %}{{ eq.name }} — Тоног төхөөрөмж{% endblock %}
+{% block title %}{{ eq.name }} — Equipment{% endblock %}
 
 {% block content %}
 <style>
@@ -378,7 +378,7 @@
 
 <div class="eq-page">
   {# ================= HEADER ================= #}
-  {% set category_label = category_labels[eq.category] | default('Бусад') %}
+  {% set category_label = category_labels[eq.category] | default('Other') %}
 
   <div class="eq-header">
     <div class="eq-header-left">
@@ -397,20 +397,20 @@
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       {% if eq.status == 'normal' %}
-        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> Хэвийн</span>
+        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> Normal</span>
       {% elif eq.status == 'broken' %}
-        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> Эвдэрсэн</span>
+        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> Out of Order</span>
       {% elif eq.status == 'maintenance' %}
-        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> Засварт</span>
+        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> Under Maintenance</span>
       {% elif eq.status == 'needs_spare' %}
-        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> Сэлбэг хэрэгтэй</span>
+        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> Spare Parts Required</span>
       {% elif eq.status == 'retired' %}
-        <span class="status-pill status-retired"><i class="bi bi-archive"></i> Ашиглалтаас гарсан</span>
+        <span class="status-pill status-retired"><i class="bi bi-archive"></i> Retired</span>
       {% endif %}
 
       {% if current_user.role in ['senior', 'manager', 'admin'] %}
         <button class="btn btn-sm btn-outline-secondary" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#editEqModal">
-          <i class="bi bi-pencil"></i> Засах
+          <i class="bi bi-pencil"></i> Edit
         </button>
       {% endif %}
     </div>
@@ -419,39 +419,39 @@
   <div class="row g-4">
     {# ============= LEFT COLUMN ============= #}
     <div class="col-lg-4">
-      {# 1. Үндсэн мэдээлэл #}
+      {# 1. Basic Information #}
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-info-circle" style="color:#6366f1"></i>
-          Үндсэн мэдээлэл
+          Basic Information
         </div>
         <div class="eq-card-body">
           <div class="info-row">
-            <span class="info-label">Үйлдвэрлэгч</span>
+            <span class="info-label">Manufacturer</span>
             <span class="info-value">{{ eq.manufacturer or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Марк / Модель</span>
+            <span class="info-label">Model</span>
             <span class="info-value">{{ eq.model or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Сериал №</span>
+            <span class="info-label">Serial No.</span>
             <span class="info-value font-monospace" style="font-size:0.8rem">{{ eq.serial_number or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Байршил</span>
+            <span class="info-label">Location</span>
             <span class="info-value">
               {{ eq.location or '-' }}
               {% if eq.room_number %}<span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>{% endif %}
             </span>
           </div>
           <div class="info-row">
-            <span class="info-label">Тоо хэмжээ</span>
+            <span class="info-label">Quantity</span>
             <span class="info-value">{{ eq.quantity or 1 }}</span>
           </div>
           {% if eq.related_analysis %}
           <div class="info-row">
-            <span class="info-label">Хамааралтай шинжилгээ</span>
+            <span class="info-label">Related Analysis</span>
             <span class="info-value">
               <span class="badge bg-primary-subtle text-primary-emphasis">{{ eq.related_analysis }}</span>
             </span>
@@ -460,23 +460,23 @@
         </div>
       </div>
 
-      {# 2. Баталгаажуулалт #}
+      {# 2. Calibration #}
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-shield-check" style="color:#22c55e"></i>
-          Баталгаажуулалт
+          Calibration
         </div>
         <div class="eq-card-body">
           <div class="info-row">
-            <span class="info-label">Сүүлд баталгаажсан</span>
+            <span class="info-label">Last Calibrated</span>
             <span class="info-value">{{ eq.calibration_date or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Давтамж</span>
-            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} хоног</span>
+            <span class="info-label">Cycle</span>
+            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} days</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Дараагийн хугацаа</span>
+            <span class="info-label">Next Due</span>
             <span class="info-value">
               {% if eq.next_calibration_date %}
                 {{ eq.next_calibration_date }}
@@ -487,7 +487,7 @@
           </div>
           {% if eq.calibration_note %}
           <div class="info-row">
-            <span class="info-label">Тэмдэглэл</span>
+            <span class="info-label">Notes</span>
             <span class="info-value" style="max-width:180px">{{ eq.calibration_note }}</span>
           </div>
           {% endif %}
@@ -498,58 +498,58 @@
             {% if days_left < 0 %}
               <div class="cal-alert cal-danger">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                Хугацаа {{ -days_left }} хоногийн өмнө дууссан!
+                Expired {{ -days_left }} days ago!
               </div>
             {% elif days_left <= 7 %}
               <div class="cal-alert cal-warn">
                 <i class="bi bi-clock-fill"></i>
-                {{ days_left }} хоногийн дотор дуусна
+                Expires in {{ days_left }} days
               </div>
             {% elif days_left <= 30 %}
               <div class="cal-alert cal-ok">
                 <i class="bi bi-check-circle-fill"></i>
-                {{ days_left }} хоног үлдсэн
+                {{ days_left }} days remaining
               </div>
             {% endif %}
           {% endif %}
         </div>
       </div>
 
-      {# 3. Нэмэлт мэдээлэл #}
+      {# 3. Additional Information #}
       {% if eq.manufactured_info or eq.commissioned_info or eq.initial_price or eq.remark %}
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-building" style="color:#f59e0b"></i>
-          Нэмэлт мэдээлэл
+          Additional Information
         </div>
         <div class="eq-card-body">
           {% if eq.manufactured_info %}
           <div class="info-row">
-            <span class="info-label">Үйлдвэрлэсэн</span>
+            <span class="info-label">Manufactured</span>
             <span class="info-value">{{ eq.manufactured_info }}</span>
           </div>
           {% endif %}
           {% if eq.commissioned_info %}
           <div class="info-row">
-            <span class="info-label">Ашиглалтад орсон</span>
+            <span class="info-label">Commissioned</span>
             <span class="info-value">{{ eq.commissioned_info }}</span>
           </div>
           {% endif %}
           {% if eq.initial_price %}
           <div class="info-row">
-            <span class="info-label">Анхны үнэ</span>
+            <span class="info-label">Initial Price</span>
             <span class="info-value">{{ "{:,.0f}".format(eq.initial_price) }}₮</span>
           </div>
           {% endif %}
           {% if eq.residual_price %}
           <div class="info-row">
-            <span class="info-label">Үлдэгдэл үнэ</span>
+            <span class="info-label">Residual Price</span>
             <span class="info-value">{{ "{:,.0f}".format(eq.residual_price) }}₮</span>
           </div>
           {% endif %}
           {% if eq.remark %}
           <div style="margin-top:0.75rem; padding:0.75rem; background:rgba(0,0,0,0.02); border-radius:10px;">
-            <div class="info-label" style="margin-bottom:0.25rem">Тайлбар</div>
+            <div class="info-label" style="margin-bottom:0.25rem">Remarks</div>
             <div style="font-size:0.8rem; color:var(--text-primary)">{{ eq.remark }}</div>
           </div>
           {% endif %}
@@ -557,24 +557,24 @@
       </div>
       {% endif %}
 
-      {# 4. Тэмдэглэл нэмэх form #}
+      {# 4. Add Log / Maintenance form #}
       <div class="eq-card add-form-card">
         <div class="eq-card-header">
           <i class="bi bi-plus-circle"></i>
-          Тэмдэглэл / Засвар нэмэх
+          Add Log / Maintenance
         </div>
         <div class="eq-card-body">
           <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
             <div class="form-floating-sm">
-              <label>Үйлдлийн төрөл</label>
+              <label>Action Type</label>
               <select name="action_type" class="form-select">
-                <option value="Daily Check">✅ Дотоод хяналт (Check)</option>
-                <option value="Maintenance">🔧 Урсгал үйлчилгээ</option>
+                <option value="Daily Check">Daily Check</option>
+                <option value="Maintenance">Maintenance</option>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">🛠️ Их засвар</option>
-                <option value="Calibration">📏 Баталгаажуулалт</option>
+                <option value="Repair">Repair</option>
+                <option value="Calibration">Calibration</option>
                 {% endif %}
               </select>
             </div>
@@ -582,35 +582,35 @@
             <div class="row">
               <div class="col-6">
                 <div class="form-floating-sm">
-                  <label>Огноо</label>
+                  <label>Date</label>
                   <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
                 </div>
               </div>
               <div class="col-6">
                 <div class="form-floating-sm">
-                  <label>Гүйцэтгэсэн</label>
+                  <label>Performed By</label>
                   <input type="text" name="performed_by" class="form-control" value="{{ current_user.username }}">
                 </div>
               </div>
             </div>
 
             <div class="form-floating-sm">
-              <label>Гэрчилгээ №</label>
-              <input type="text" name="certificate_no" class="form-control" placeholder="Гэрчилгээний дугаар">
+              <label>Certificate No.</label>
+              <input type="text" name="certificate_no" class="form-control" placeholder="Certificate number">
             </div>
 
             <div class="form-floating-sm">
-              <label>Гэрчилгээ / Файл</label>
+              <label>Certificate / File</label>
               <input type="file" name="certificate_file" class="form-control">
             </div>
 
             <div class="form-floating-sm">
-              <label>Тайлбар / Үр дүн</label>
-              <textarea name="description" class="form-control" rows="2" placeholder="Хийсэн ажлын тайлбар..."></textarea>
+              <label>Description / Result</label>
+              <textarea name="description" class="form-control" rows="2" placeholder="Description of work performed..."></textarea>
             </div>
 
             <button type="submit" class="btn-submit">
-              <i class="bi bi-check2-circle me-1"></i> Хадгалах
+              <i class="bi bi-check2-circle me-1"></i> Save
             </button>
           </form>
         </div>
@@ -622,13 +622,13 @@
       <div class="eq-card timeline-section">
         <div class="eq-card-header">
           <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
-          Түүх (Timeline)
+          History (Timeline)
           <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length }}</span>
         </div>
         <div class="eq-card-body">
           {# Filters #}
           <div class="timeline-filters">
-            <span class="filter-chip active" data-type="all">Бүгд</span>
+            <span class="filter-chip active" data-type="all">All</span>
             <span class="filter-chip" data-type="Daily Check">
               <i class="bi bi-check-square"></i> Check
             </span>
@@ -646,7 +646,7 @@
           {# Search #}
           <div class="timeline-search">
             <i class="bi bi-search"></i>
-            <input type="text" id="timelineSearch" placeholder="Хайх... (тайлбар, гүйцэтгэсэн, гэрчилгээ)">
+            <input type="text" id="timelineSearch" placeholder="Search... (description, performer, certificate)">
           </div>
 
           {# Timeline list #}
@@ -700,15 +700,15 @@
               <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
                  class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
                 <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
-                {{ log.certificate_no or 'Файл татах' }}
+                {{ log.certificate_no or 'Download File' }}
               </a>
               {% endif %}
             </div>
             {% else %}
             <div class="timeline-empty" id="timelineEmpty">
               <i class="bi bi-clock-history d-block"></i>
-              <h5>Түүх олдсонгүй</h5>
-              <p class="mb-0">Энэ төхөөрөмжид одоогоор бүртгэл байхгүй байна.</p>
+              <h5>No History Found</h5>
+              <p class="mb-0">No records have been registered for this equipment yet.</p>
             </div>
             {% endfor %}
           </div>
@@ -726,25 +726,25 @@
       <div class="modal-content" style="border-radius:20px; overflow:hidden;">
         <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;">
           <h5 class="modal-title fw-bold">
-            <i class="bi bi-pencil-square me-2"></i>Төхөөрөмж засах
+            <i class="bi bi-pencil-square me-2"></i>Edit Equipment
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
           <div class="mb-3">
-            <label class="fw-bold small">Нэр</label>
+            <label class="fw-bold small">Name</label>
             <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
           </div>
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Категори</label>
+              <label class="fw-bold small">Category</label>
               <select name="category" class="form-select">
                 {{ category_options(eq.category or 'other') }}
               </select>
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Давхар бүртгэл</label>
+              <label class="fw-bold small">Register Type</label>
               <select name="register_type" class="form-select">
                 {{ register_type_options(eq.register_type or '') }}
               </select>
@@ -753,45 +753,45 @@
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Үйлдвэрлэгч</label>
+              <label class="fw-bold small">Manufacturer</label>
               <input type="text" name="manufacturer" class="form-control" value="{{ eq.manufacturer or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Марк / Модель</label>
+              <label class="fw-bold small">Model</label>
               <input type="text" name="model" class="form-control" value="{{ eq.model or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Сериал №</label>
+              <label class="fw-bold small">Serial No.</label>
               <input type="text" name="serial" class="form-control" value="{{ eq.serial_number or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Лабораторийн дугаар</label>
+              <label class="fw-bold small">Lab Code</label>
               <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Байршил</label>
+              <label class="fw-bold small">Location</label>
               <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Өрөөний №</label>
+              <label class="fw-bold small">Room No.</label>
               <input type="text" name="room" class="form-control" value="{{ eq.room_number or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Тоо хэмжээ</label>
+              <label class="fw-bold small">Quantity</label>
               <input type="number" name="quantity" class="form-control" value="{{ eq.quantity or 1 }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Давтамж (хоног)</label>
+              <label class="fw-bold small">Cycle (days)</label>
               <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Статус</label>
+              <label class="fw-bold small">Status</label>
               <select name="status" class="form-select">
                 {{ status_options(eq.status or 'normal') }}
               </select>
@@ -799,35 +799,35 @@
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small text-primary">Хамааралтай шинжилгээ</label>
-            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="Ж: Aad,Mad">
+            <label class="fw-bold small text-primary">Related Analysis</label>
+            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="e.g. Aad,Mad">
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Шалгалт тохируулгын тэмдэглэл</label>
+            <label class="fw-bold small">Check & Adjustment Notes</label>
             <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
           </div>
 
-          {# Баталгаажуулалтын огноонууд #}
+          {# Calibration dates #}
           <div class="row">
             <div class="col-6 mb-3">
               <label class="fw-bold small text-success">
-                <i class="bi bi-calendar-check me-1"></i>Сүүлд баталгаажсан
+                <i class="bi bi-calendar-check me-1"></i>Last Calibrated
               </label>
               <input type="date" name="calibration_date" id="editCalibDate" class="form-control"
                      value="{{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '' }}">
-              <div class="form-text small">Огноо оруулахад дараагийн хугацаа автомат тооцоологдоно</div>
+              <div class="form-text small">Next due date will be calculated automatically</div>
             </div>
             <div class="col-6 mb-3">
               <label class="fw-bold small text-danger">
-                <i class="bi bi-calendar-event me-1"></i>Дараагийн хугацаа
-                <span class="badge bg-secondary-subtle text-secondary ms-1" id="calcBadge" style="display:none">автомат</span>
+                <i class="bi bi-calendar-event me-1"></i>Next Due
+                <span class="badge bg-secondary-subtle text-secondary ms-1" id="calcBadge" style="display:none">auto</span>
               </label>
               <input type="date" name="next_calibration_date" id="editNextCalibDate" class="form-control"
                      value="{{ eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else '' }}">
               <div class="form-text small">
                 <a href="#" id="calcNextDateBtn" class="text-decoration-none">
-                  <i class="bi bi-calculator"></i> Давтамжаас тооцоолох
+                  <i class="bi bi-calculator"></i> Calculate from cycle
                 </a>
               </div>
             </div>
@@ -837,76 +837,76 @@
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Үйлдвэрлэсэн огноо</label>
+              <label class="fw-bold small">Manufactured Date</label>
               <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}">
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Ашиглалтад орсон</label>
+              <label class="fw-bold small">Commissioned Date</label>
               <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Анхны үнэ (₮)</label>
+              <label class="fw-bold small">Initial Price</label>
               <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Үлдэгдэл үнэ (₮)</label>
+              <label class="fw-bold small">Residual Price</label>
               <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Тайлбар</label>
+            <label class="fw-bold small">Remarks</label>
             <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
           </div>
 
-          {# ===== ДАВХАР БҮРТГЭЛИЙН НЭМЭЛТ ТАЛБАРУУД ===== #}
+          {# ===== REGISTER TYPE EXTRA FIELDS ===== #}
           {% set ed = eq.extra_data or {} %}
 
           <div class="edit-reg-fields edit-reg-measurement" style="display:{% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Хэмжих хэрэгслийн нэмэлт</h6>
+            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Measuring Instrument Details</h6>
             <div class="row g-2">
               <div class="col-md-4">
-                <label class="fw-bold small">Бүлэг</label>
+                <label class="fw-bold small">Group</label>
                 <select name="group" class="form-select form-select-sm">{{ measurement_group_options(ed.get('group', '')) }}</select>
               </div>
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
               <div class="col-md-3">
-                <label class="fw-bold small">Зориулалт</label>
+                <label class="fw-bold small">Purpose</label>
                 <select name="purpose" class="form-select form-select-sm">{{ lab_purpose_options(ed.get('purpose', '')) }}</select>
               </div>
               <div class="col-md-3">
-                <label class="fw-bold small">Хэмжих нэгж</label>
+                <label class="fw-bold small">Measurement Unit</label>
                 <select name="unit" class="form-select form-select-sm">{{ measurement_unit_options(ed.get('unit', '')) }}</select>
               </div>
             </div>
           </div>
 
           <div class="edit-reg-fields edit-reg-glassware" style="display:{% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Шилэн хэмжүүрийн нэмэлт</h6>
+            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Glassware Details</h6>
             <div class="row g-2">
-              <div class="col-md-3"><label class="fw-bold small">Бүлэг</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Хэмжээ /мл/</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Гэрчилгээний №</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Group</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Volume (mL)</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Certificate No.</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
             </div>
           </div>
 
           <div class="edit-reg-fields edit-reg-internal_check" style="display:{% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Дотоод шалгалтын нэмэлт</h6>
+            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Internal Check Details</h6>
             <div class="row g-2">
-              <div class="col-md-2"><label class="fw-bold small">№</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Марк, дугаар</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Шалгалт хийсэн</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">Model No.</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Commissioned Date</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">Check Date</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
-          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">Хадгалах</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">Save</button>
         </div>
       </div>
     </form>
@@ -1007,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', function() {
       nextCalibDateInput.value = nextDate;
       if (calcBadge) {
         calcBadge.style.display = '';
-        calcBadge.textContent = `+${cycleDays} хоног`;
+        calcBadge.textContent = `+${cycleDays} days`;
       }
     }
   }
@@ -1024,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calcBtn.addEventListener('click', function(e) {
       e.preventDefault();
       if (!calibDateInput?.value) {
-        // Өнөөдрийн огноогоор тооцоолох
+        // Calculate from today's date
         calibDateInput.value = new Date().toISOString().split('T')[0];
       }
       calculateNextCalibDate();

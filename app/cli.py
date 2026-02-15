@@ -85,7 +85,7 @@ def register_commands(app):
     def create_user(username, password, role):
         """Шинэ хэрэглэгч үүсгэх."""
         if User.query.filter_by(username=username).first():
-            click.echo(f"'{username}' нэртэй хэрэглэгч аль хэдийн байна.")
+            click.echo(f"'{username}' user already exists.")
             return
 
         if role not in ["prep", "chemist", "senior", "manager", "admin"]:
@@ -99,7 +99,7 @@ def register_commands(app):
         try:
             user.set_password(password)
         except ValueError as e:
-            click.echo(f"Алдаа: {e}")
+            click.echo(f"Error: {e}")
             return
         db.session.add(user)
         db.session.commit()

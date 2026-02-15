@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}403 - Нэвтрэх эрхгүй{% endblock %}
+{% block title %}403 - Access Denied{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -12,37 +12,37 @@
                         <i class="bi bi-shield-lock text-danger" style="font-size: 5rem;"></i>
                     </div>
                     <h1 class="display-4 fw-bold text-danger">403</h1>
-                    <h2 class="h4 mb-4">Нэвтрэх эрхгүй</h2>
+                    <h2 class="h4 mb-4">Access Denied</h2>
                     <p class="text-muted mb-4">
-                        Уучлаарай, та энэ хуудас руу нэвтрэх эрхгүй байна.
-                        Энэ функцид нэвтрэхийн тулд тусгай эрх шаардлагатай.
+                        Sorry, you do not have permission to access this page.
+                        Special privileges are required to access this function.
                     </p>
 
                     <div class="alert alert-light border">
                         <p class="mb-0 small">
-                            <strong>Шалтгаанууд:</strong>
+                            <strong>Possible reasons:</strong>
                         </p>
                         <ul class="text-start mb-0 mt-2 small">
-                            <li>Таны эрх энэ үйлдэлд хүрэхгүй байна</li>
-                            <li>Та нэвтрээгүй эсвэл session-ий хугацаа дууссан</li>
-                            <li>Энэ хэсэг тодорхой албан тушаалд л зориулагдсан</li>
+                            <li>Your role does not have sufficient privileges for this action</li>
+                            <li>You are not logged in or your session has expired</li>
+                            <li>This section is restricted to specific roles only</li>
                         </ul>
                     </div>
 
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
                         {% if current_user.is_authenticated %}
                             <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-house-door me-2"></i>Нүүр хуудас руу буцах
+                                <i class="bi bi-house-door me-2"></i>Return to Home Page
                             </a>
                             <button onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Буцах
+                                <i class="bi bi-arrow-left me-2"></i>Go Back
                             </button>
                         {% else %}
                             <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Нэвтрэх
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Log In
                             </a>
                             <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-house-door me-2"></i>Нүүр хуудас
+                                <i class="bi bi-house-door me-2"></i>Home Page
                             </a>
                         {% endif %}
                     </div>
@@ -51,8 +51,8 @@
 
             <div class="text-center mt-4">
                 <p class="text-muted small">
-                    Хэрэв танд энэ эрх байх ёстой гэж бодож байвал
-                    <a href="mailto:admin@energyresources.mn">администратор</a>-т хандаарай.
+                    If you believe you should have access,
+                    please contact the <a href="mailto:admin@energyresources.mn">administrator</a>.
                 </p>
             </div>
         </div>

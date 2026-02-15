@@ -55,7 +55,7 @@
       loss = +(Wb - Wa);
       if (r.lossCell){
         r.lossCell.textContent = loss.toFixed(3);
-        r.lossCell.title = 'Алдагдсан жин (g)';
+        r.lossCell.title = 'Weight loss (g)';
       }
     }
 
@@ -72,7 +72,7 @@
         if (r.fmCell){
           r.fmCell.textContent = '—';
           r.fmCell.classList.add('text-danger');
-          r.fmCell.title = 'Хуваарь (after - tray) ≤ 0 — утгаа шалгана уу.';
+          r.fmCell.title = 'Denominator (after - tray) <= 0 — please check values.';
         }
       }
     }

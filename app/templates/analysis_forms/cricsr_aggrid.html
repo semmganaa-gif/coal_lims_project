@@ -106,7 +106,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Дээжийн нэр',
+      headerName: 'Sample Name',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -131,7 +131,7 @@
       }
     },
     {
-      headerName: 'Параллель',
+      headerName: 'Parallel',
       field: 'parallel',
       width: 90,
       cellStyle: p => ({
@@ -154,7 +154,7 @@
       ...editCol
     },
     {
-      headerName: 'CRI тохирц',
+      headerName: 'CRI Tolerance',
       field: 'cri_diff',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -180,7 +180,7 @@
       }
     },
     {
-      headerName: 'CRI дундаж',
+      headerName: 'CRI Average',
       field: 'cri_avg',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -207,7 +207,7 @@
       }
     },
     {
-      headerName: 'CSR тохирц',
+      headerName: 'CSR Tolerance',
       field: 'csr_diff',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -233,7 +233,7 @@
       }
     },
     {
-      headerName: 'CSR дундаж',
+      headerName: 'CSR Average',
       field: 'csr_avg',
       width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -260,7 +260,7 @@
       }
     },
     {
-      headerName: 'Үйлдэл',
+      headerName: 'Action',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -271,14 +271,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Хадгалагдсан</span>';
+          return '<span class="text-muted small">Saved</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Дээж хасах">
+                  title="Remove sample">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -523,7 +523,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

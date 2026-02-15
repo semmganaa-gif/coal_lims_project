@@ -466,7 +466,7 @@ def api_consume_bulk():
         return api_success({
             "count": count,
             "errors": errors
-        }, f"{count} бодис хэрэглэгдлээ")
+        }, f"{count} chemicals consumed.")
 
     except Exception as e:
         db.session.rollback()

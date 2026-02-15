@@ -55,7 +55,7 @@
             <table class="table table-sm">
               <thead class="table-light">
                 <tr>
-                  <th>Бодис</th>
+                  <th>Chemical</th>
                   <th class="text-end">Хэмжээ</th>
                   <th class="text-end">Нөөц</th>
                   <th class="text-center">Төлөв</th>
@@ -110,7 +110,7 @@
                 <input type="number" name="volume_ml" class="form-control" required
                        value="{{ recipe.standard_volume_ml or 1000 }}"
                        step="0.1" min="1" id="targetVolume" onchange="calculateRequired()">
-                <small class="text-muted">Стандарт: {{ recipe.standard_volume_ml or 1000 }} мл</small>
+                <small class="text-muted">Standard: {{ recipe.standard_volume_ml or 1000 }} мл</small>
               </div>
 
               {# Expiry date #}
@@ -123,7 +123,7 @@
               <div class="col-12">
                 <div class="alert alert-info small mb-0" id="requiredInfo">
                   <i class="bi bi-calculator me-2"></i>
-                  <span id="requiredText">Стандарт эзэлхүүнд шаардагдах бодис дээр харуулав.</span>
+                  <span id="requiredText">Standard эзэлхүүнд шаардагдах бодис дээр харуулав.</span>
                 </div>
               </div>
             </div>

@@ -59,6 +59,8 @@ from app.models.models import (
     EnvironmentalLog,
     QCControlChart,
     CustomerComplaint,
+    ImprovementRecord,
+    NonConformityRecord,
 
     # Planning
     MonthlyPlan,
@@ -142,6 +144,8 @@ __all__ = [
     'EnvironmentalLog',
     'QCControlChart',
     'CustomerComplaint',
+    'ImprovementRecord',
+    'NonConformityRecord',
 
     # Planning
     'MonthlyPlan',

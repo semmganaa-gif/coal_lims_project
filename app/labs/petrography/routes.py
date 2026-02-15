@@ -131,12 +131,12 @@ def save_results():
 
     # ✅ Input validation
     if not sample_id or not analysis_code:
-        return api_error('sample_id болон analysis_code шаардлагатай', status_code=400)
+        return api_error('sample_id and analysis_code are required', status_code=400)
 
     # ✅ analysis_code validation
     valid_codes = [a['code'] for a in PETRO_ANALYSIS_TYPES]
     if analysis_code.upper() not in valid_codes:
-        return api_error(f'Буруу analysis_code: {analysis_code}', status_code=400)
+        return api_error(f'Invalid analysis_code: {analysis_code}', status_code=400)
 
     sample = db.session.get(Sample, sample_id)
     if not sample:
@@ -154,12 +154,12 @@ def save_results():
 
         from app.utils.database import safe_commit
         if not safe_commit():
-            return api_error('Үр дүн хадгалахад алдаа гарлаа', status_code=500)
+            return api_error('Error saving results', status_code=500)
 
-        return api_success({'id': ar.id}, 'Үр дүн хадгалагдлаа')
+        return api_success({'id': ar.id}, 'Results saved')
     except Exception as e:
         db.session.rollback()
-        return api_error(f'Алдаа: {html_escape(str(e))}', status_code=500)
+        return api_error(f'Error: {html_escape(str(e))}', status_code=500)
 
 
 @petro_bp.route('/api/data')

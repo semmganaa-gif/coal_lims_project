@@ -11,14 +11,14 @@
 {# ✨ TRD-specific input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-6">
-    <label class="form-label">Температур (°C)</label>
+    <label class="form-label">Temperature (°C)</label>
     <input type="number" step="0.1" class="form-control" id="trd-temp-c" value="20.0">
-    <div class="form-text">Kt: 6–35°C интерполяц хийнэ.</div>
+    <div class="form-text">Kt: Interpolated for 6–35°C.</div>
   </div>
   <div class="col-md-6">
-    <label class="form-label">Тохирцын зөрүү (T)</label>
+    <label class="form-label">Tolerance Limit (T)</label>
     <input type="number" step="0.001" class="form-control" id="trd-tol" value="0.02">
-    <div class="form-text">TRD-ийн лимит, default 0.02.</div>
+    <div class="form-text">TRD limit, default 0.02.</div>
   </div>
 </div>
 
@@ -160,7 +160,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Дээжийн нэр',
+      headerName: 'Sample Name',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -208,7 +208,7 @@
       }
     },
     {
-      headerName: 'Бортог №',
+      headerName: 'Bottle #',
       field: 'bottle_num',
       width: 120,
       headerClass: 'ag-header-cell-centered',
@@ -256,7 +256,7 @@
       ...editCol
     },
     {
-      headerName: 'Үр дүн (TRD)',
+      headerName: 'Result (TRD)',
       field: 'result',
       width: 130,
       valueFormatter: p =>
@@ -269,7 +269,7 @@
       }
     },
     {
-      headerName: 'Тохирц',
+      headerName: 'Tolerance',
       field: 'tolerance',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -301,7 +301,7 @@
       }
     },
     {
-      headerName: 'Дундаж',
+      headerName: 'Average',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -322,7 +322,7 @@
       })
     },
     {
-      headerName: 'Үйлдэл',
+      headerName: 'Action',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -333,14 +333,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Хадгалагдсан</span>';
+          return '<span class="text-muted small">Saved</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Дээж хасах">
+                  title="Remove sample">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -414,7 +414,7 @@
         }
       ];
     } else {
-      // Шинэ дээж
+      // New дээж
       return [
         {
           ...base,
@@ -640,7 +640,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -676,7 +676,7 @@
         const mad = p1.mad_used ?? p2.mad_used ?? MAD_MAP[String(sid)] ?? MAD_MAP[sid] ?? null;
 
         if (mad == null || mad === 0) {
-          console.warn(`⚠️ Дээж "${p1.sample_code || sid}": Mad үр дүн байхгүй - TRD тооцоолох боломжгүй`);
+          console.warn(`⚠️ Sample "${p1.sample_code || sid}": Mad үр дүн байхгүй - TRD тооцоолох боломжгүй`);
           incomplete.push(`${p1.sample_code || sid} (Mad байхгүй)`);
           return;
         }
@@ -745,14 +745,14 @@
         const missing = [];
         if (!hasP1) missing.push('Parallel 1');
         if (!hasP2) missing.push('Parallel 2');
-        console.warn(`⚠️ Дээж "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        console.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
         incomplete.push(sampleCode);
       }
     });
 
     // ✅ Summary logging
     if (incomplete.length > 0) {
-      console.log(`📊 Нийт: ${Object.keys(map).length} дээж`);
+      console.log(`📊 Total: ${Object.keys(map).length} дээж`);
       console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
       console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
     } else {
@@ -769,7 +769,7 @@
     const savedSampleIds = savedPayload.map(r => r.sample_id);
     const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
 
-    // ✅ Алдаатай дээжийн мэдээлэл
+    // ✅ Errorтай дээжийн мэдээлэл
     if (failedItems.length > 0) {
       console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
       failedItems.forEach(err => {
@@ -881,7 +881,7 @@
             n.data.mad_used = raw.mad_used ?? n.data.mad_used;
           }
 
-          // Үр дүнгийн утгуудыг тохируулах
+          // Resultгийн утгуудыг тохируулах
           const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
           if (pData) {
             n.data.bottle_num = pData.num ?? pData.bottle ?? pData.bottle_num;

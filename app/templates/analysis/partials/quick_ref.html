@@ -22,7 +22,7 @@
     <div class="d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-journal-text"></i>
-        <strong>Стандартын лавлах</strong>
+        <strong>Standards Quick Reference</strong>
         <span class="text-muted">({{ code|upper }} – {{ name }})</span>
       </div>
       <button class="btn btn-sm btn-outline-secondary"
@@ -30,67 +30,67 @@
               data-bs-toggle="collapse"
               data-bs-target="#quickRefBox"
               aria-expanded="true">
-        Харах / нуух
+        Show / Hide
       </button>
     </div>
 
     <div id="quickRefBox" class="collapse show mt-2">
 
-      {# ===================== Үнс (Aad) ===================== #}
+      {# ===================== Ash (Aad) ===================== #}
       {% if code in ['aad','ash','lab.07.05'] %}
-        <div class="mb-2"><strong>Томъёо</strong>:
+        <div class="mb-2"><strong>Formula</strong>:
           <code>Aad(%) = ((m3 − m1) / m2) × 100</code>
         </div>
         <ul class="mb-2">
-          <li><em>m1</em>: хоосон тигелийн жин</li>
-          <li><em>m2</em>: дээжийн жин</li>
-          <li><em>m3</em>: үнстэй тигелийн жин</li>
+          <li><em>m1</em>: empty crucible weight</li>
+          <li><em>m2</em>: sample weight</li>
+          <li><em>m3</em>: crucible with ash weight</li>
         </ul>
         <div class="text-muted mb-2">MNS GB/T 212:2015 • 815 ± 10 °C • десиккатор ≥ 15′</div>
-        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div><strong>Tolerance Limit (T)</strong></div>
         <div class="row row-cols-3 g-2 text-center mt-1">
           <div class="col"><div class="border rounded p-2">&lt;15<br><strong>0.20</strong></div></div>
           <div class="col"><div class="border rounded p-2">15–30<br><strong>0.30</strong></div></div>
           <div class="col"><div class="border rounded p-2">&gt;30<br><strong>0.50</strong></div></div>
         </div>
 
-      {# ===================== Дэгдэмхий (Vad) ===================== #}
+      {# ===================== Volatile Matter (Vad) ===================== #}
       {% elif code in ['vad','lab.07.04'] %}
-        <div class="mb-2"><strong>Томьёо</strong>:
+        <div class="mb-2"><strong>Formula</strong>:
           <code>Vad(%) = [((m1 + m2) − m3) / m2] × 100 − Mad</code>
         </div>
         <ul class="mb-2">
-          <li><em>m1</em>: хоосон тигелийн жин</li>
-          <li><em>m2</em>: дээжийн жин</li>
-          <li><em>m3</em>: тигел + үлдэгдлийн жин</li>
-          <li><em>Mad</em>: дотоод чийг (%)</li>
+          <li><em>m1</em>: empty crucible weight</li>
+          <li><em>m2</em>: sample weight</li>
+          <li><em>m3</em>: crucible + residue weight</li>
+          <li><em>Mad</em>: inherent moisture (%)</li>
         </ul>
         <div class="text-muted mb-2">MNS GB/T 212:2015</div>
-        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div><strong>Tolerance Limit (T)</strong></div>
         <div class="row row-cols-3 g-2 text-center mt-1">
           <div class="col"><div class="border rounded p-2">&lt;20<br><strong>0.30</strong></div></div>
           <div class="col"><div class="border rounded p-2">20–40<br><strong>0.50</strong></div></div>
           <div class="col"><div class="border rounded p-2">&gt;40<br><strong>0.80</strong></div></div>
         </div>
 
-      {# ============ Нийт/дотоод чийг (MT, Mad) ============ #}
+      {# ============ Total/Inherent Moisture (MT, Mad) ============ #}
       {% elif code in ['Mt','mad','lab.07.02','lab.07.03'] %}
-        <div class="mb-2"><strong>Тайлбар (чийг)</strong></div>
+        <div class="mb-2"><strong>Description (Moisture)</strong></div>
         <ul class="mb-2">
-          <li><em>MT</em> (нийт чийг): журамд заасан нөхцөлөөр шаталт/хатаалт.</li>
-          <li><em>Mad</em> (дотоод чийг): GB/T 212 процесс.</li>
+          <li><em>MT</em> (total moisture): combustion/drying per prescribed conditions.</li>
+          <li><em>Mad</em> (inherent moisture): GB/T 212 process.</li>
         </ul>
-        <div class="text-muted mb-2">Стандарт: MNS ISO 589:2003 (нийт), MNS GB/T 212:2015 (дотоод)</div>
-        <div><strong>Тохирцын зааг (жишиг)</strong></div>
+        <div class="text-muted mb-2">Standard: MNS ISO 589:2003 (нийт), MNS GB/T 212:2015 (дотоод)</div>
+        <div><strong>Tolerance Limit (reference)</strong></div>
         <div class="row row-cols-2 g-2 text-center mt-1">
-          <div class="col"><div class="border rounded p-2">10%-иас бага<br><strong>0.50%</strong></div></div>
-          <div class="col"><div class="border rounded p-2">≥10%<br><strong>үр дүнгийн 1/2</strong></div></div>
+          <div class="col"><div class="border rounded p-2">Less than 10%<br><strong>0.50%</strong></div></div>
+          <div class="col"><div class="border rounded p-2">>=10%<br><strong>1/2 of result</strong></div></div>
         </div>
 
-      {# ===================== Хүхэр (St,ad / TS) ===================== #}
+      {# ===================== Sulfur (St,ad / TS) ===================== #}
       {% elif code in ['St,ad','ts','lab.07.08'] %}
-        <div class="mb-2"><strong>Тайлбар</strong>: Нийт хүхэр (ажлын суурь, ad).</div>
-        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="mb-2"><strong>Description</strong>: Total sulfur (as-determined basis, ad).</div>
+        <div><strong>Tolerance Limit (T)</strong></div>
         <div class="row row-cols-3 g-2 text-center mt-1">
           <div class="col"><div class="border rounded p-2">&lt;2.0<br><strong>0.05</strong></div></div>
           <div class="col"><div class="border rounded p-2">2.0–5.0<br><strong>0.10</strong></div></div>
@@ -99,65 +99,65 @@
 
       {# ===================== Илчлэг (Qgr,ad / CV) ===================== #}
       {% elif code in ['Qgr,ad','cv','lab.07.12'] %}
-        <div class="mb-2"><strong>Тайлбар</strong>: Нийт илчлэг (gross), ad суурь.</div>
-        <div class="text-muted mb-2">CV (Qgr,ad) багажны стандарт журам.</div>
-        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="mb-2"><strong>Description</strong>: Gross calorific value, ad basis.</div>
+        <div class="text-muted mb-2">CV (Qgr,ad) instrument standard procedure.</div>
+        <div><strong>Tolerance Limit (T)</strong></div>
         <div class="row row-cols-1 g-2 text-center mt-1">
-          <div class="col"><div class="border rounded p-2">Нэг тогтмол<br><strong>120</strong></div></div>
+          <div class="col"><div class="border rounded p-2">Constant<br><strong>120</strong></div></div>
         </div>
 
       {# =====================Хөөлтийн зэрэг CSN ===================== #}
       {% elif code in ['csn'] %}
-        <div class="mb-2"><strong>Тайлбар</strong>: Хөөлтийн зэрэг (Crucible swelling number).</div>
-        <div><strong>Тохирцын зааг (T)</strong></div>
+        <div class="mb-2"><strong>Description</strong>: Crucible swelling number (CSN).</div>
+        <div><strong>Tolerance Limit (T)</strong></div>
         <div class="row row-cols-1 g-2 text-center mt-1">
-          <div class="col"><div class="border rounded p-2">Нэг тогтмол<br><strong>0.50</strong></div></div>
+          <div class="col"><div class="border rounded p-2">Constant<br><strong>0.50</strong></div></div>
         </div>
 
       {# =====================Барьцалдах чанар Gi ===================== #}
       {% elif code in ['gi'] %}
-        <div class="mb-2"><strong>Тайлбар</strong>: Барьцалдах чадварын индекс (15:00 + 00:30 хоёр шат).</div>
-        <div class="text-muted">Дундаж &lt; 18 бол 3:3 дахин шинжилгээ (retest) горим хэрэгжинэ.</div>
+        <div class="mb-2"><strong>Description</strong>: Caking index (15:00 + 00:30 two stages).</div>
+        <div class="text-muted">If average &lt; 18, retest protocol (3:3) is triggered.</div>
 
       {# ===================== Бусад / default ===================== #}
       {% else %}
-        <div class="text-muted">Энэ анализын товч заавар, томьёог энд нэмнэ.</div>
+        <div class="text-muted">Brief instructions and formula for this analysis will be added here.</div>
       {% endif %}
 
       {# ===================== SOP / MNS Файлуудын холбоос ===================== #}
       <hr class="my-2">
-      <div class="mb-2"><i class="bi bi-file-earmark-pdf me-1"></i><strong>Холбогдох баримт бичиг</strong></div>
+      <div class="mb-2"><i class="bi bi-file-earmark-pdf me-1"></i><strong>Related Documents</strong></div>
 
-      {# Үнс (Aad) #}
+      {# Ash (Aad) #}
       {% if code in ['aad','ash','lab.07.05'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf') }}" target="_blank" class="text-decoration-none small">
             <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 212:2015 (Техникийн шинжилгээ)
           </a>
-          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.05 Үнслэгийн гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.05 Үнслэгийн гарц тодорхойлох
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.05 Ashлэгийн гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.05 Ashлэгийн гарц тодорхойлох
           </a>
         </div>
 
-      {# Дэгдэмхий (Vad) #}
+      {# Volatile (Vad) #}
       {% elif code in ['vad','lab.07.04'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf') }}" target="_blank" class="text-decoration-none small">
             <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 212:2015 (Техникийн шинжилгээ)
           </a>
-          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.04 Дэгдэмхий бодисын гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.04 Дэгдэмхий бодисын гарц тодорхойлох
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.04 Volatile бодисын гарц тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.04 Volatile бодисын гарц тодорхойлох
           </a>
         </div>
 
-      {# Нийт чийг (MT) #}
+      {# Total чийг (MT) #}
       {% elif code in ['mt'] %}
         <div class="d-flex flex-column gap-1">
-          <a href="{{ url_for('settings.view_standard_file', filename='2. MNS ISO 589-2003 Нийт чийгийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 589:2003 (Нийт чийг)
+          <a href="{{ url_for('settings.view_standard_file', filename='2. MNS ISO 589-2003 Total чийгийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 589:2003 (Total чийг)
           </a>
-          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.02 Нийт чийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.02 Нийт чийг тодорхойлох
+          <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.02 Total чийг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.02 Total чийг тодорхойлох
           </a>
         </div>
 
@@ -172,14 +172,14 @@
           </a>
         </div>
 
-      {# Хүхэр (TS) #}
+      {# Sulfur (TS) #}
       {% elif code in ['st,ad','ts','lab.07.08'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='8. MNS ISO 19579-2014 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 19579:2014 (Хүхэр)
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS ISO 19579:2014 (Sulfur)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.08 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.08 Хүхэр тодорхойлох
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.08 Sulfur тодорхойлох
           </a>
         </div>
 
@@ -220,43 +220,43 @@
       {% elif code in ['x','y','xy'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='14. Битумжсан нүүрсний пластометрийн үзүүлэлтийг тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-danger me-1"></i>Пластометрийн үзүүлэлт (Стандарт)
+            <i class="bi bi-file-pdf text-danger me-1"></i>Пластометрийн үзүүлэлт (Standard)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.14 Нүүрсний Пластометрийн үзүүлэлт тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
             <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.14 Пластометр тодорхойлох
           </a>
         </div>
 
-      {# Фосфор (P) #}
+      {# Phosphorus (P) #}
       {% elif code in ['p','p,ad'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
             <i class="bi bi-file-pdf text-danger me-1"></i>MNS 7057:2024 (XRF)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Фосфор, хлор тодорхойлох
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Phosphorus, хлор тодорхойлох
           </a>
         </div>
 
-      {# Хлор (Cl) #}
+      {# Chlorine (Cl) #}
       {% elif code in ['cl','cl,ad'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
             <i class="bi bi-file-pdf text-danger me-1"></i>MNS 7057:2024 (XRF)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Фосфор, хлор тодорхойлох
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.09 Phosphorus, хлор тодорхойлох
           </a>
         </div>
 
-      {# Фтор (F) #}
+      {# Fluorine (F) #}
       {% elif code in ['f','f,ad'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='10. MNS GB-T 4633-2024 Нүүрсэнд фторын агуулга тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 4633:2024 (Фтор)
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 4633:2024 (Fluorine)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.10 Нүүрсэнд фторын агуулга тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.10 Фтор тодорхойлох
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.10 Fluorine тодорхойлох
           </a>
         </div>
 
@@ -271,24 +271,24 @@
           </a>
         </div>
 
-      {# Чөлөөт чийг / Дээж бэлтгэл (FM, Solid) #}
+      {# Чөлөөт чийг / Sample бэлтгэл (FM, Solid) #}
       {% elif code in ['fm','solid','m'] %}
         <div class="d-flex flex-column gap-1">
           <a href="{{ url_for('settings.view_standard_file', filename='1. MNS GB-T 474-2015 Нүүрсний дээж бэлтгэх арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 474:2015 (Дээж бэлтгэх)
+            <i class="bi bi-file-pdf text-danger me-1"></i>MNS GB/T 474:2015 (Sample бэлтгэх)
           </a>
           <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.01 Нүүрсний дээж бэлтгэх арга.pdf') }}" target="_blank" class="text-decoration-none small">
-            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.01 Дээж бэлтгэх арга
+            <i class="bi bi-file-pdf text-info me-1"></i>LAB.07.01 Sample бэлтгэх арга
           </a>
         </div>
 
       {% else %}
-        <div class="text-muted small">Энэ анализын холбогдох баримт бичиг бүртгэгдээгүй.</div>
+        <div class="text-muted small">No related documents registered for this analysis.</div>
       {% endif %}
 
       <hr class="my-2">
       <div class="text-muted" style="font-size: 0.75rem;">
-        * T-ийн бодит шалгалт хадгалсны дараа серверт хийгдэнэ.
+        * Actual T check is performed on the server after saving.
       </div>
     </div>
   </div>

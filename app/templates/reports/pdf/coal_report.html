@@ -130,7 +130,7 @@
   <!-- Info table -->
   <table class="info-table">
     <tr>
-      <th>Лабораторийн дугаар</th>
+      <th>Laboratoryйн дугаар</th>
       <th>Техникийн шаардлага</th>
       <th>Сорьцын тодорхойлолт</th>
       <th>Сорьц авсан аргачлал</th>
@@ -150,20 +150,20 @@
   <!-- Sample info -->
   <table class="sample-info-table">
     <tr>
-      <td><strong>Дээжийн тоо</strong><br>{{ samples|length }} ш</td>
-      <td><strong>Дээж авсан огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+      <td><strong>Sampleийн тоо</strong><br>{{ samples|length }} ш</td>
+      <td><strong>Sample авсан огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
       <td><strong>Шинжилсэн огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
     </tr>
   </table>
 
   <!-- Results -->
-  <div class="results-label">Шинжилгээний үр дүн:</div>
+  <div class="results-label">Analysisний үр дүн:</div>
   <table class="results-table">
     <thead>
       <tr>
         <th>№</th>
-        <th>Дээжийн дугаар</th>
-        <th>Дээжийн нэр</th>
+        <th>Sampleийн дугаар</th>
+        <th>Sampleийн нэр</th>
         <th>Mad,%</th>
         <th>Adb,%</th>
         <th>Vdb,%</th>
@@ -196,7 +196,7 @@
     <table style="width: 100%;">
       <tr>
         <td style="width: 60%;">
-          <strong>Шинжилгээ гүйцэтгэсэн:</strong> Химич
+          <strong>Analysis гүйцэтгэсэн:</strong> Analyst
         </td>
         <td style="width: 40%; text-align: right;">
           {% if report.analyst_signature and report.analyst_signature.image_path %}
@@ -207,7 +207,7 @@
       </tr>
       <tr>
         <td>
-          <strong>Хянаж баталгаажуулсан:</strong> Ахлах менежер
+          <strong>Хянаж баталгаажуулсан:</strong> Senior менежер
         </td>
         <td style="text-align: right;">
           {% if report.manager_signature and report.manager_signature.image_path %}

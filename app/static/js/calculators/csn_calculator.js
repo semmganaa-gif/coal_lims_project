@@ -88,9 +88,9 @@
     if(r.avgCell) r.avgCell.textContent = (data.avg != null) ? Number(data.avg).toFixed(1) : '-';
     if(r.calcCell) {
       if (data.t_exceeded) {
-        r.calcCell.innerHTML = `<span class="text-danger">T > ${LIMIT_T} (Хэтэрсэн)</span>`;
+        r.calcCell.innerHTML = `<span class="text-danger">T > ${LIMIT_T} (Exceeded)</span>`;
       } else {
-        r.calcCell.innerHTML = `<span class="text-success">T ≤ ${LIMIT_T} (Тохирсон)</span>`;
+        r.calcCell.innerHTML = `<span class="text-success">T ≤ ${LIMIT_T} (Within tolerance)</span>`;
       }
     }
   }

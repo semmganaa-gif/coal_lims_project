@@ -42,7 +42,7 @@
     </div>
     <button @click="drawerOpen = false"
             class="tw-p-2 tw-rounded-lg tw-text-white/80 hover:tw-text-white hover:tw-bg-white/10 tw-transition"
-            aria-label="Хаах">
+            aria-label="Close">
       <i class="bi bi-x-lg tw-text-xl"></i>
     </button>
   </div>
@@ -56,7 +56,7 @@
     <div class="tw-mobile-card" x-data="{ expanded: true }">
       <button @click="expanded = !expanded"
               class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-info-circle tw-mr-2 tw-text-er-blue"></i>Лавлах мэдээлэл</span>
+        <span><i class="bi bi-info-circle tw-mr-2 tw-text-er-blue"></i>Quick Reference</span>
         <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       </button>
       <div x-show="expanded" x-collapse class="tw-mt-3">
@@ -70,7 +70,7 @@
     <div class="tw-mobile-card" x-data="{ expanded: true }">
       <button @click="expanded = !expanded"
               class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-stopwatch tw-mr-2 tw-text-er-orange"></i>Цаг хэмжигч</span>
+        <span><i class="bi bi-stopwatch tw-mr-2 tw-text-er-orange"></i>Timer</span>
         <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       </button>
       <div x-show="expanded" x-collapse class="tw-mt-3">
@@ -83,23 +83,23 @@
     {# Navigation Links #}
     <div class="tw-mobile-card">
       <div class="tw-font-semibold tw-text-gray-700 tw-mb-3">
-        <i class="bi bi-grid tw-mr-2 tw-text-er-blue"></i>Шинжилгээ
+        <i class="bi bi-grid tw-mr-2 tw-text-er-blue"></i>Analysis
       </div>
       <nav class="tw-space-y-1">
         <a href="{{ url_for('analysis.analysis_hub') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-house"></i>
-          <span>Шинжилгээний төв</span>
+          <span>Analysis Hub</span>
         </a>
         <a href="{{ url_for('main.index') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-box"></i>
-          <span>Дээжүүд</span>
+          <span>Samples</span>
         </a>
-        <a href="{{ url_for('quality.capa_list') }}"
+        <a href="{{ url_for('quality.complaints_list') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-check-circle"></i>
-          <span>Чанар</span>
+          <span>Quality</span>
         </a>
       </nav>
     </div>
@@ -116,7 +116,7 @@
       </div>
       <a href="{{ url_for('main.logout') }}"
          class="tw-text-red-500 hover:tw-text-red-600 tw-transition">
-        <i class="bi bi-box-arrow-right"></i> Гарах
+        <i class="bi bi-box-arrow-right"></i> Logout
       </a>
     </div>
     <div class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">

@@ -243,15 +243,15 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h4 class="mb-1 fw-bold text-primary">
-        <i class="bi bi-sliders me-2"></i>Шинжилгээний Тохиргоо
+        <i class="bi bi-sliders me-2"></i>Analysis Configuration
       </h4>
       <p class="text-muted small mb-0">
-        Нэгж, төрөл бүрт хийх шинжилгээг тохируулна. Chip дээр дарж сонгох/болиулах.
+        Configure analyses for each unit and type. Click chips to select/deselect.
       </p>
     </div>
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#giModal">
-        <i class="bi bi-gear me-1"></i>Gi Ээлж
+        <i class="bi bi-gear me-1"></i>Gi Shifts
       </button>
     </div>
   </div>
@@ -263,8 +263,8 @@
     {% if chpp_profiles %}
     <div class="client-card">
       <div class="client-header chpp" data-bs-toggle="collapse" data-bs-target="#chpp-content">
-        <h5><i class="bi bi-building-fill me-2"></i>CHPP (Баяжуулах үйлдвэр)</h5>
-        <span class="badge bg-light text-dark">{{ chpp_profiles|length }} тохиргоо</span>
+        <h5><i class="bi bi-building-fill me-2"></i>CHPP (Coal Handling & Preparation Plant)</h5>
+        <span class="badge bg-light text-dark">{{ chpp_profiles|length }} configs</span>
       </div>
       <div id="chpp-content" class="collapse show">
         {% set current_type = namespace(value='') %}
@@ -289,9 +289,9 @@
                 <i class="bi bi-tag me-1"></i>{{ profile.pattern }}
               </span>
               <div class="quick-actions">
-                <button type="button" class="quick-btn" onclick="selectAll(this, 'chpp-{{ profile.id }}')">Бүгд</button>
-                <button type="button" class="quick-btn" onclick="selectStandard(this, 'chpp-{{ profile.id }}')">Стандарт</button>
-                <button type="button" class="quick-btn" onclick="selectNone(this, 'chpp-{{ profile.id }}')">Хоосон</button>
+                <button type="button" class="quick-btn" onclick="selectAll(this, 'chpp-{{ profile.id }}')">All</button>
+                <button type="button" class="quick-btn" onclick="selectStandard(this, 'chpp-{{ profile.id }}')">Standard</button>
+                <button type="button" class="quick-btn" onclick="selectNone(this, 'chpp-{{ profile.id }}')">None</button>
               </div>
             </div>
             <div class="analysis-chips" data-profile="chpp-{{ profile.id }}">
@@ -320,7 +320,7 @@
     <div class="client-card">
       <div class="client-header" data-bs-toggle="collapse" data-bs-target="#client-{{ loop.index }}-content">
         <h5><i class="bi bi-building me-2"></i>{{ client_name }}</h5>
-        <span class="badge bg-light text-dark">{{ profiles|length }} төрөл</span>
+        <span class="badge bg-light text-dark">{{ profiles|length }} types</span>
       </div>
       <div id="client-{{ loop.index }}-content" class="collapse show">
         {% for profile in profiles %}
@@ -328,15 +328,15 @@
           <div class="sample-type-header {% if not loop.first %}collapsed{% endif %}" onclick="toggleSection(this)">
             <div class="d-flex align-items-center gap-2">
               <span class="type-name">{{ profile.sample_type }}</span>
-              <span class="count-badge">{{ profile.get_analyses()|length }} шинжилгээ</span>
+              <span class="count-badge">{{ profile.get_analyses()|length }} analyses</span>
             </div>
             <i class="bi bi-chevron-down chevron"></i>
           </div>
           <div class="analysis-grid {% if loop.first %}show{% endif %}">
             <div class="quick-actions">
-              <button type="button" class="quick-btn" onclick="selectAll(this, 'simple-{{ profile.id }}')">Бүгд</button>
-              <button type="button" class="quick-btn" onclick="selectStandard(this, 'simple-{{ profile.id }}')">Стандарт</button>
-              <button type="button" class="quick-btn" onclick="selectNone(this, 'simple-{{ profile.id }}')">Хоосон</button>
+              <button type="button" class="quick-btn" onclick="selectAll(this, 'simple-{{ profile.id }}')">All</button>
+              <button type="button" class="quick-btn" onclick="selectStandard(this, 'simple-{{ profile.id }}')">Standard</button>
+              <button type="button" class="quick-btn" onclick="selectNone(this, 'simple-{{ profile.id }}')">None</button>
             </div>
             <div class="analysis-chips" data-profile="simple-{{ profile.id }}">
               {% for analysis in analysis_types %}
@@ -368,7 +368,7 @@
     <!-- Floating Save Button -->
     <div class="floating-save">
       <button type="submit" class="btn btn-primary btn-lg">
-        <i class="bi bi-check-lg me-2"></i>Хадгалах
+        <i class="bi bi-check-lg me-2"></i>Save
       </button>
     </div>
   </form>
@@ -380,25 +380,25 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="bi bi-calendar-week me-2"></i>Gi Ээлжийн Тохиргоо
+          <i class="bi bi-calendar-week me-2"></i>Gi Shift Configuration
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="gi-modal-body">
         <p class="text-muted small mb-4">
-          PF код бүрт Gi шинжилгээ хийх ээлжүүдийг сонгоно.
-          Сонгогдоогүй ээлжийн дээжинд Gi автоматаар хасагдана.
+          Select shifts to perform Gi analysis for each PF code.
+          Gi will be automatically excluded for unselected shifts.
         </p>
 
         {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
         <div class="gi-pf-section">
           <div class="gi-pf-title">
             <span class="badge bg-primary">{{ pf_code }}</span>
-            <span class="text-muted small">- ээлжүүдийг сонгоно</span>
+            <span class="text-muted small">- select shifts</span>
           </div>
 
           <div class="mb-2">
-            <small class="text-info fw-medium">Өдөр (D)</small>
+            <small class="text-info fw-medium">Day (D)</small>
           </div>
           <div class="gi-shifts-grid mb-3">
             {% for i in range(1, 7) %}
@@ -410,7 +410,7 @@
           </div>
 
           <div class="mb-2">
-            <small class="text-warning fw-medium">Шөнө (N)</small>
+            <small class="text-warning fw-medium">Night (N)</small>
           </div>
           <div class="gi-shifts-grid">
             {% for i in range(1, 7) %}
@@ -423,25 +423,25 @@
 
           <div class="mt-3 d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'odd')">
-              Сондгой (1,3,5)
+              Odd (1,3,5)
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'even')">
-              Тэгш (2,4,6)
+              Even (2,4,6)
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'all')">
-              Бүгд
+              All
             </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'none')">
-              Цэвэрлэх
+              Clear
             </button>
           </div>
         </div>
         {% endfor %}
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" onclick="saveGiConfig()" data-bs-dismiss="modal">
-          <i class="bi bi-check-lg me-1"></i>Хадгалах
+          <i class="bi bi-check-lg me-1"></i>Save
         </button>
       </div>
     </div>
@@ -478,7 +478,7 @@ function updateCountBadge(chip) {
   const header = container.previousElementSibling;
   if (header) {
     const badge = header.querySelector('.count-badge');
-    if (badge) badge.textContent = count + ' шинжилгээ';
+    if (badge) badge.textContent = count + ' analyses';
   }
 }
 

@@ -115,15 +115,15 @@
       saveable = false;
     } else if (mode === '5_1' && avg < MIN_AVG_THRESHOLD) {
       // 5:1 горимд 18-аас бага бол 3:3-аар дахин шинжилнэ
-      refs.calc.innerHTML = `<span class="text-danger fw-bold">Дундаж &lt; ${MIN_AVG_THRESHOLD}.<br>3:3 харьцаагаар дахин шинжил.</span>`;
+      refs.calc.innerHTML = `<span class="text-danger fw-bold">Average &lt; ${MIN_AVG_THRESHOLD}.<br>Re-test with 3:3 ratio.</span>`;
       is_low_avg = true;
       saveable = true; // сервер рүү тугаа илгээхийн тулд хадгалж болно
     } else {
       is_low_avg = false;
       if (t_exceeded) {
-        refs.calc.innerHTML = `<span class="text-warning">T &gt; ${REPEATABILITY_LIMIT} (Хэтэрсэн)</span>`;
+        refs.calc.innerHTML = `<span class="text-warning">T &gt; ${REPEATABILITY_LIMIT} (Exceeded)</span>`;
       } else {
-        refs.calc.innerHTML = `<span class="text-success">T ≤ ${REPEATABILITY_LIMIT} (Тохирсон)</span>`;
+        refs.calc.innerHTML = `<span class="text-success">T ≤ ${REPEATABILITY_LIMIT} (Within tolerance)</span>`;
       }
       saveable = true;
     }

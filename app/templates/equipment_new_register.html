@@ -1,22 +1,22 @@
 {# app/templates/equipment_new_register.html #}
 {% extends "base.html" %}
-{% block title %}Шинээр ашиглалтанд орсон ТТ бүртгэл{% endblock %}
+{% block title %}New Equipment Register{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id устгасан #}
+  {# add_modal_id removed #}
   {% include "partials/equipment_hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-box-arrow-in-right text-warning"></i> Шинэ ТТ бүртгэл</span>
+      <span class="fw-bold"><i class="bi bi-box-arrow-in-right text-warning"></i> New Equipment Register</span>
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addNewEqModal"><i class="bi bi-plus-lg"></i> Нэмэх</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Засах</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Устгах</button>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addNewEqModal"><i class="bi bi-plus-lg"></i> Add</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Edit</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Delete</button>
       {% endif %}
       <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
       <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
@@ -31,7 +31,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Шинэ ТТ нэмэх</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Equipment</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='new_equipment') }}">
@@ -39,40 +39,40 @@
         <div class="modal-body p-4">
           <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
           <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">Д/д</label><input type="text" id="ne_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Нэр</label><input type="text" id="ne_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Үйлдвэрлэгчийн нэр</label><input type="text" id="ne_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Марк, дугаар</label><input type="text" id="ne_mark" name="mark" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Лабораторийн дугаар</label><input type="text" id="ne_lab_code" name="lab_code" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Serial №</label><input type="text" id="ne_serial" name="serial_number" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Тоо хэмжээ</label><input type="text" id="ne_qty" name="quantity" class="form-control" value="1"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Үйлдвэрлэсэн огноо</label><input type="text" id="ne_manufactured_date" name="manufactured_date" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Ашиглалтад орсон огноо</label><input type="text" id="ne_commissioned_date" name="commissioned_date" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Байршил</label><input type="text" id="ne_location" name="location" class="form-control"></div>
-            <div class="col-12"><label class="form-label fw-bold small">Ашиглалтын байдал</label>
+            <div class="col-md-2"><label class="form-label fw-bold small">No.</label><input type="text" id="ne_no" name="no" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Name</label><input type="text" id="ne_name" name="name" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Manufacturer</label><input type="text" id="ne_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Model No.</label><input type="text" id="ne_mark" name="mark" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Lab Code</label><input type="text" id="ne_lab_code" name="lab_code" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Serial No.</label><input type="text" id="ne_serial" name="serial_number" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Quantity</label><input type="text" id="ne_qty" name="quantity" class="form-control" value="1"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Manufactured Date</label><input type="text" id="ne_manufactured_date" name="manufactured_date" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Commissioned Date</label><input type="text" id="ne_commissioned_date" name="commissioned_date" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Location</label><input type="text" id="ne_location" name="location" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small">Operational Status</label>
               <div class="d-flex gap-3">
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_normal" name="status_normal" value="true"><label class="form-check-label small" for="ne_status_normal">Хэвийн</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_broken" name="status_broken" value="true"><label class="form-check-label small" for="ne_status_broken">Эвдрэлтэй</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_spare" name="status_spare" value="true"><label class="form-check-label small" for="ne_status_spare">Сэлбэг шаардлагатай</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_normal" name="status_normal" value="true"><label class="form-check-label small" for="ne_status_normal">Normal</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_broken" name="status_broken" value="true"><label class="form-check-label small" for="ne_status_broken">Out of Order</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_status_spare" name="status_spare" value="true"><label class="form-check-label small" for="ne_status_spare">Spare Parts Required</label></div>
               </div>
             </div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Хүлээж авах байдал</label><select id="ne_condition" name="condition" class="form-select"><option>Хэвийн</option><option>Хэвийн бус</option></select></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Тохиргоо шаардлагатай</label><select id="ne_needs_setup" name="needs_setup" class="form-select"><option>Үгүй</option><option>Тийм</option></select></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Шалгалт тохируулга</label>
+            <div class="col-md-4"><label class="form-label fw-bold small">Receiving Condition</label><select id="ne_condition" name="condition" class="form-select"><option>Normal</option><option>Abnormal</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Setup Required</label><select id="ne_needs_setup" name="needs_setup" class="form-select"><option>No</option><option>Yes</option></select></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Check & Adjustment</label>
               <div class="d-flex gap-3 mt-1">
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ne_chk_temp">Температур</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_chk_other" name="chk_other" value="true"><label class="form-check-label small" for="ne_chk_other">Бусад</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ne_chk_temp">Temperature</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ne_chk_other" name="chk_other" value="true"><label class="form-check-label small" for="ne_chk_other">Other</label></div>
               </div>
             </div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Дагалдах сэлбэг хэрэгсэл</label><input type="text" id="ne_accessories" name="accessories" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Шалгасан ажилтан</label><input type="text" id="ne_checked_by" name="checked_by" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Зөвшөөрсөн ажилтан</label><input type="text" id="ne_approved_by" name="approved_by" class="form-control"></div>
-            <div class="col-12"><label class="form-label fw-bold small">Тайлбар</label><input type="text" id="ne_remark" name="remark" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Accessories / Spare Parts</label><input type="text" id="ne_accessories" name="accessories" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Checked By</label><input type="text" id="ne_checked_by" name="checked_by" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Approved By</label><input type="text" id="ne_approved_by" name="approved_by" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small">Remarks</label><input type="text" id="ne_remark" name="remark" class="form-control"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
         </div>
         </form>
       </div>
@@ -115,31 +115,31 @@ document.addEventListener('DOMContentLoaded', function() {
     selectable: true,
     columns: [
       {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"Д/д", field:"no", width:55, frozen:true},
-      {title:"Багаж, тоног төхөөрөмжийн нэр", field:"name", minWidth:180, frozen:true},
-      {title:"Үйлдвэрлэгчийн нэр", field:"manufacturer", minWidth:140},
-      {title:"Марк, дугаар", field:"mark", width:120},
-      {title:"Лабораторийн дугаар", field:"lab_code", width:120},
-      {title:"Serial №", field:"serial_number", width:120},
-      {title:"Тоо хэмжээ", field:"quantity", width:80},
-      {title:"Үйлдвэрлэсэн огноо", field:"manufactured_date", width:130},
-      {title:"Ашиглалтад орсон огноо", field:"commissioned_date", width:140},
-      {title:"Байршил", field:"location", width:100},
-      {title:"Ашиглалтын байдал", columns:[
-        {title:"Хэвийн", field:"status_normal", width:90, formatter:"tickCross"},
-        {title:"Эвдрэлтэй", field:"status_broken", width:100, formatter:"tickCross"},
-        {title:"Сэлбэг шаардлагатай", field:"status_spare", width:140, formatter:"tickCross"},
+      {title:"No.", field:"no", width:55, frozen:true},
+      {title:"Equipment Name", field:"name", minWidth:180, frozen:true},
+      {title:"Manufacturer", field:"manufacturer", minWidth:140},
+      {title:"Model No.", field:"mark", width:120},
+      {title:"Lab Code", field:"lab_code", width:120},
+      {title:"Serial No.", field:"serial_number", width:120},
+      {title:"Quantity", field:"quantity", width:80},
+      {title:"Manufactured Date", field:"manufactured_date", width:130},
+      {title:"Commissioned Date", field:"commissioned_date", width:140},
+      {title:"Location", field:"location", width:100},
+      {title:"Operational Status", columns:[
+        {title:"Normal", field:"status_normal", width:90, formatter:"tickCross"},
+        {title:"Out of Order", field:"status_broken", width:100, formatter:"tickCross"},
+        {title:"Spare Parts Required", field:"status_spare", width:140, formatter:"tickCross"},
       ]},
-      {title:"Хүлээж авах үеийн байдал", field:"condition", width:150},
-      {title:"Тохиргоо шаардлагатай эсэх", field:"needs_setup", width:150},
-      {title:"Шалгалт тохируулга", columns:[
-        {title:"Температур", field:"chk_temp", width:100, formatter:"tickCross"},
-        {title:"Бусад", field:"chk_other", width:90, formatter:"tickCross"},
+      {title:"Receiving Condition", field:"condition", width:150},
+      {title:"Setup Required", field:"needs_setup", width:150},
+      {title:"Check & Adjustment", columns:[
+        {title:"Temperature", field:"chk_temp", width:100, formatter:"tickCross"},
+        {title:"Other", field:"chk_other", width:90, formatter:"tickCross"},
       ]},
-      {title:"Дагалдах сэлбэг хэрэгсэл", field:"accessories", minWidth:150},
-      {title:"Шалгасан ажилтан", field:"checked_by", width:140},
-      {title:"Зөвшөөрсөн ажилтан", field:"approved_by", width:140},
-      {title:"Бусад тайлбар", field:"remark", minWidth:120},
+      {title:"Accessories / Spare Parts", field:"accessories", minWidth:150},
+      {title:"Checked By", field:"checked_by", width:140},
+      {title:"Approved By", field:"approved_by", width:140},
+      {title:"Remarks", field:"remark", minWidth:120},
     ],
   });
 
@@ -172,20 +172,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (d.id) {
       document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
     }
-    document.querySelector('#addNewEqModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    document.querySelector('#addNewEqModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit';
     new bootstrap.Modal(document.getElementById('addNewEqModal')).show();
   };
 
   document.getElementById('addNewEqModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='new_equipment') }}";
-    document.querySelector('#addNewEqModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Шинэ ТТ нэмэх';
+    document.querySelector('#addNewEqModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add New Equipment';
     ['no','name','manufacturer','mark','lab_code','qty','manufactured_date','commissioned_date','location','accessories','checked_by','approved_by','remark'].forEach(function(f) { var el=document.getElementById('ne_'+f); if(el) { if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }});
     ['status_normal','status_broken','status_spare','chk_temp','chk_other'].forEach(function(f) { document.getElementById('ne_'+f).checked=false; });
   });
 
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    if (!sel.length || !confirm('Delete ' + sel.length + ' row(s)?')) return;
     var form = document.getElementById('deleteForm');
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
     sel.forEach(function(row) {

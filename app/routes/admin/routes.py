@@ -83,7 +83,7 @@ def _seed_analysis_types():
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            flash(f'Шинжилгээний төрлийг үүсгэх/шинэчлэхэд алдаа гарлаа: {e}', 'danger')
+            flash(f'Error creating/updating analysis type: {e}', 'danger')
 
 
 # ==============================================================================
@@ -100,9 +100,9 @@ def manage_users():
             sa.select(User).where(User.username == form.username.data)
         )
         if existing_user:
-            flash(f'"{form.username.data}" нэртэй хэрэглэгч аль хэдийн байна.', 'warning')
+            flash(f'"{form.username.data}" user already exists.', 'warning')
         elif form.role.data == 'admin':
-            flash('Шинэ админ хэрэглэгч үүсгэх боломжгүй.', 'danger')
+            flash('Cannot create new admin user.', 'danger')
         else:
             user = User(username=form.username.data, role=form.role.data)
             # Лабораторийн эрх
@@ -132,10 +132,10 @@ def manage_users():
                         'allowed_labs': user.allowed_labs
                     }
                 )
-                flash(f'"{user.username}" нэртэй хэрэглэгч амжилттай нэмэгдлээ.', 'success')
+                flash(f'"{user.username}" user added successfully.', 'success')
             except Exception as e:
                 db.session.rollback()
-                flash(f'Хэрэглэгч үүсгэхэд алдаа гарлаа: {str(e)[:100]}', 'danger')
+                flash(f'User creation error: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.manage_users'))
 
     users = User.query.order_by(User.id).all()
@@ -159,7 +159,7 @@ def edit_user(user_id):
                 sa.select(User).where(User.username == new_username)
             )
             if existing_user:
-                flash(f'"{new_username}" нэртэй хэрэглэгч аль хэдийн байна.', 'danger')
+                flash(f'"{new_username}" user already exists.', 'danger')
                 return render_template('edit_user.html',
                                        title='Хэрэглэгч засах',
                                        form=form,
@@ -170,7 +170,7 @@ def edit_user(user_id):
         if user_to_edit.role != 'admin':
             user_to_edit.role = form.role.data
         elif form.role.data != 'admin':
-            flash('Админ хэрэглэгчийн эрхийн түвшинг өөрчлөх боломжгүй.', 'warning')
+            flash('Cannot change admin user role level.', 'warning')
         # Лабораторийн эрх
         user_to_edit.allowed_labs = form.allowed_labs.data or ['coal']
         # Профайл мэдээлэл шинэчлэх
@@ -203,10 +203,10 @@ def edit_user(user_id):
                     'password_changed': bool(form.password.data)
                 }
             )
-            flash(f'"{user_to_edit.username}" хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ.', 'success')
+            flash(f'"{user_to_edit.username}" user info updated successfully.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Хэрэглэгч шинэчлэхэд алдаа гарлаа: {str(e)[:100]}', 'danger')
+            flash(f'User update error: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.manage_users'))
 
     form.username.data = user_to_edit.username
@@ -226,14 +226,14 @@ def edit_user(user_id):
 def delete_user(user_id):
     """Хэрэглэгч устгах."""
     if current_user.id == user_id:
-        flash("Админ хэрэглэгч өөрийгөө устгах боломжгүй.", 'danger')
+        flash("Admin user cannot delete themselves.", 'danger')
         return redirect(url_for('admin.manage_users'))
 
     user_to_delete = User.query.get_or_404(user_id)
 
     # Админ хэрэглэгчийг устгахыг хориглох
     if user_to_delete.role == 'admin':
-        flash("Админ хэрэглэгчийг устгах боломжгүй.", 'danger')
+        flash("Cannot delete admin user.", 'danger')
         return redirect(url_for('admin.manage_users'))
 
     username = user_to_delete.username
@@ -248,10 +248,10 @@ def delete_user(user_id):
             resource_id=user_id,
             details={'username': username, 'role': user_role}
         )
-        flash(f'"{username}" нэртэй хэрэглэгч амжилттай устгагдлаа.', 'success')
+        flash(f'"{username}" user deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Хэрэглэгч устгахад алдаа гарлаа: {str(e)[:100]}', 'danger')
+        flash(f'User deletion error: {str(e)[:100]}', 'danger')
     return redirect(url_for('admin.manage_users'))
 
 
@@ -312,10 +312,10 @@ def analysis_config():
 
         try:
             db.session.commit()
-            flash(f'{updated_count} тохиргоо амжилттай хадгалагдлаа.', 'success')
+            flash(f'{updated_count} settings saved successfully.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Тохиргоо хадгалахад алдаа гарлаа: {str(e)[:100]}', 'danger')
+            flash(f'Error saving settings: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.analysis_config'))
 
     # 3. Auto-populate Simple Profiles (CHPP-ээс бусад)
@@ -366,7 +366,7 @@ def analysis_config():
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            flash(f'Profile үүсгэхэд алдаа: {str(e)[:100]}', 'danger')
+            flash(f'Profile creation error: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.analysis_config'))
 
     # 5. Data Fetch for GET
@@ -571,10 +571,10 @@ def analysis_config_simple_save():
 
     try:
         db.session.commit()
-        flash(f'{updated_count} тохиргоо амжилттай хадгалагдлаа.', 'success')
+        flash(f'{updated_count} settings saved successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Алдаа гарлаа: {str(e)[:100]}', 'danger')
+        flash(f'Error occurred: {str(e)[:100]}', 'danger')
 
     return redirect(url_for('admin.analysis_config_simple'))
 
@@ -590,12 +590,12 @@ def delete_pattern_profile(profile_id):
         db.session.delete(profile)
         try:
             db.session.commit()
-            flash('Дүрэм устгагдлаа.', 'success')
+            flash('Rule deleted.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Устгахад алдаа: {str(e)[:100]}', 'danger')
+            flash(f'Delete error: {str(e)[:100]}', 'danger')
     else:
-        flash('Энгийн тохиргоог устгах боломжгүй.', 'warning')
+        flash('Cannot delete default configuration.', 'warning')
     return redirect(url_for('admin.analysis_config'))
 
 # ==============================================================================
@@ -622,16 +622,16 @@ def create_standard():
     targets = data.get('targets')
 
     if not name or not targets:
-        return jsonify({"message": "Нэр болон утгууд шаардлагатай"}), 400
+        return jsonify({"message": "Name and values are required"}), 400
 
     new_std = ControlStandard(name=name, targets=targets, is_active=False)
     db.session.add(new_std)
     try:
         db.session.commit()
-        return jsonify({"message": "Амжилттай үүсгэлээ"})
+        return jsonify({"message": "Created successfully"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 2. ЗАСАХ (UPDATE) (Senior, Manager, Admin)
 
@@ -646,16 +646,16 @@ def update_standard(id):
 
     # Validation
     if not data.get('name') or not data.get('targets'):
-        return jsonify({"message": "Мэдээлэл дутуу байна"}), 400
+        return jsonify({"message": "Incomplete data"}), 400
 
     std.name = data.get('name')
     std.targets = data.get('targets')
     try:
         db.session.commit()
-        return jsonify({"message": "Амжилттай шинэчиллээ"})
+        return jsonify({"message": "Updated successfully"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 3. УСТГАХ (DELETE) (Senior, Manager, Admin)
 
@@ -668,15 +668,15 @@ def delete_standard(id):
     std = ControlStandard.query.get_or_404(id)
 
     if std.is_active:
-        return jsonify({"message": "Идэвхтэй стандартыг устгах боломжгүй!"}), 400
+        return jsonify({"message": "Cannot delete active standard!"}), 400
 
     db.session.delete(std)
     try:
         db.session.commit()
-        return jsonify({"message": "Устгагдлаа"})
+        return jsonify({"message": "Deleted"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 4. ИДЭВХЖҮҮЛЭХ (ACTIVATE) (Senior, Manager, Admin)
 
@@ -691,10 +691,10 @@ def activate_standard(id):
     std.is_active = True
     try:
         db.session.commit()
-        return jsonify({"message": "Идэвхжлээ"})
+        return jsonify({"message": "Activated"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # ==============================================================================
 # Б. GBW Хуудас харуулах (Бүгдэд харагдана)
@@ -721,17 +721,17 @@ def create_gbw():
     targets = data.get('targets')
 
     if not name or not targets:
-        return jsonify({"message": "GBW дугаар болон утгууд шаардлагатай"}), 400
+        return jsonify({"message": "GBW number and values are required"}), 400
 
     # Шинэ GBW үүсгэх
     new_gbw = GbwStandard(name=name, targets=targets, is_active=False)
     db.session.add(new_gbw)
     try:
         db.session.commit()
-        return jsonify({"message": "GBW амжилттай бүртгэгдлээ"})
+        return jsonify({"message": "GBW registered successfully"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 2. ЗАСАХ (GBW UPDATE) (Senior, Manager, Admin)
 
@@ -745,16 +745,16 @@ def update_gbw(id):
     data = request.get_json()
 
     if not data.get('name') or not data.get('targets'):
-        return jsonify({"message": "Мэдээлэл дутуу байна"}), 400
+        return jsonify({"message": "Incomplete data"}), 400
 
     gbw.name = data.get('name')
     gbw.targets = data.get('targets')
     try:
         db.session.commit()
-        return jsonify({"message": "GBW мэдээлэл шинэчлэгдлээ"})
+        return jsonify({"message": "GBW data updated"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 3. УСТГАХ (GBW DELETE) (Senior, Manager, Admin)
 
@@ -767,15 +767,15 @@ def delete_gbw(id):
     gbw = GbwStandard.query.get_or_404(id)
 
     if gbw.is_active:
-        return jsonify({"message": "Ашиглагдаж буй GBW-ийг устгах боломжгүй!"}), 400
+        return jsonify({"message": "Cannot delete GBW in use!"}), 400
 
     db.session.delete(gbw)
     try:
         db.session.commit()
-        return jsonify({"message": "GBW устгагдлаа"})
+        return jsonify({"message": "GBW deleted"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 # 4. ИДЭВХЖҮҮЛЭХ (GBW ACTIVATE) (Senior, Manager, Admin)
 
@@ -794,10 +794,10 @@ def activate_gbw(id):
 
     try:
         db.session.commit()
-        return jsonify({"message": "GBW идэвхжлээ"})
+        return jsonify({"message": "GBW activated"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500
 
 
 # 5. ИДЭВХГҮЙ БОЛГОХ (GBW DEACTIVATE) (Senior, Manager, Admin)
@@ -810,7 +810,7 @@ def deactivate_gbw(id):
     gbw.is_active = False
     try:
         db.session.commit()
-        return jsonify({"message": "Амжилттай идэвхгүй болголоо"})
+        return jsonify({"message": "Deactivated successfully"})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Алдаа: {str(e)[:100]}"}), 500
+        return jsonify({"message": f"Error: {str(e)[:100]}"}), 500

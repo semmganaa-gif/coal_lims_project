@@ -339,12 +339,12 @@
   <!-- Header -->
   <div class="hub-header">
     <div class="hub-header-content">
-      <h1><i class="bi bi-flask me-2"></i>Шинжилгээний төв</h1>
-      <p>Нүүрсний чанарын шинжилгээнүүдийг хийх</p>
+      <h1><i class="bi bi-flask me-2"></i>Analysis Hub</h1>
+      <p>Perform coal quality analyses</p>
     </div>
     <div class="hub-search">
       <i class="bi bi-search"></i>
-      <input type="text" id="analysis-search" placeholder="Шинжилгээ хайх... (Aad, CV, чийг)">
+      <input type="text" id="analysis-search" placeholder="Search analysis... (Aad, CV, moisture)">
     </div>
   </div>
 
@@ -352,19 +352,19 @@
   <!-- Category Tabs - 4 ангилал -->
   <div class="category-tabs">
     <div class="cat-tab active" data-cat="tech">
-      <i class="bi bi-speedometer2"></i> Техникийн анализ
+      <i class="bi bi-speedometer2"></i> Technical Analysis
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="element">
-      <i class="bi bi-diagram-3"></i> Элементийн анализ
+      <i class="bi bi-diagram-3"></i> Elemental Analysis
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="coking">
-      <i class="bi bi-fire"></i> Коксжих чанар
+      <i class="bi bi-fire"></i> Coking Properties
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots"></i> Бусад
+      <i class="bi bi-three-dots"></i> Other
       <span class="tab-count">0</span>
     </div>
   </div>
@@ -372,8 +372,8 @@
   <!-- No Results Message -->
   <div class="no-results" id="no-results">
     <i class="bi bi-search"></i>
-    <h4>Илэрц олдсонгүй</h4>
-    <p>Өөр түлхүүр үгээр хайна уу</p>
+    <h4>No results found</h4>
+    <p>Please try a different keyword</p>
   </div>
 
   <!-- Cards Grid -->
@@ -436,7 +436,7 @@
           {% if a.description %}
             {{ a.description }}
           {% else %}
-            Шинжилгээний ажил гүйцэтгэх
+            Perform analysis
           {% endif %}
         </div>
         {% if a.required_role %}
@@ -452,8 +452,8 @@
   {% else %}
   <div class="empty-state">
     <i class="bi bi-inbox"></i>
-    <h3>Шинжилгээ олдсонгүй</h3>
-    <p>Энэ хэрэглэгчид тохирох шинжилгээ алга байна.</p>
+    <h3>No analyses found</h3>
+    <p>No analyses available for this user.</p>
   </div>
   {% endif %}
 </div>

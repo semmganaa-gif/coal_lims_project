@@ -90,7 +90,7 @@ def bottles_index():
 @login_required
 def bottles_constants_new():
     if not _is_senior_or_admin():
-        flash("Энэ хэсэгт зөвхөн ахлах/админ нэвтрэнэ.", "danger")
+        flash("Only senior/admin users can access this section.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     if request.method == "POST":
@@ -101,7 +101,7 @@ def bottles_constants_new():
             t1 = float(request.form.get("trial_1") or "nan")
             t2 = float(request.form.get("trial_2") or "nan")
         except Exception:
-            flash("Туршилт 1, 2 тоон утга шаардлагатай.", "danger")
+            flash("Trial 1 and 2 require numeric values.", "danger")
             return redirect(url_for("settings.bottles_constants_new"))
 
         t3_raw = request.form.get("trial_3")
@@ -116,7 +116,7 @@ def bottles_constants_new():
         remarks = (request.form.get("remarks") or "").strip()
 
         if not serial_no:
-            flash("Бортогын дугаар (serial_no) шаардлагатай.", "danger")
+            flash("Bottle serial number (serial_no) is required.", "danger")
             return redirect(url_for("settings.bottles_constants_new"))
 
         # Bottle хайх/үүсгэх
@@ -160,7 +160,7 @@ def bottles_constants_new():
         db.session.add(const)
         db.session.commit()
 
-        flash(f"Хадгаллаа. Дундаж m₂ = {avg_value:.5f} (ашигласан хос: {used_pair})", "success")
+        flash(f"Saved. Average m₂ = {avg_value:.5f} (used pair: {used_pair})", "success")
         return redirect(url_for("settings.bottles_index"))
 
     # GET
@@ -178,7 +178,7 @@ def bottles_constants_new():
 def bottles_constants_bulk():
     """Олон бортогод нэг дор тогтмол оруулах хуудас"""
     if not _is_senior_or_admin():
-        flash("Энэ хэсэгт зөвхөн ахлах/админ нэвтрэнэ.", "danger")
+        flash("Only senior/admin users can access this section.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     # Идэвхтэй бортогуудыг natural sorting-ээр харуулах
@@ -199,13 +199,13 @@ def bottles_constants_bulk_save():
     from flask import jsonify
 
     if not _is_senior_or_admin():
-        return jsonify({"success": False, "error": "Эрх хүрэлцэхгүй"}), 403
+        return jsonify({"success": False, "error": "Permission denied"}), 403
 
     data = request.get_json(silent=True) or {}
     rows = data.get("rows", [])
 
     if not rows:
-        return jsonify({"success": False, "error": "Хадгалах өгөгдөл алга"}), 400
+        return jsonify({"success": False, "error": "No data to save"}), 400
 
     created = 0
     errors = []
@@ -220,7 +220,7 @@ def bottles_constants_bulk_save():
         remarks = row.get("remarks", "")
 
         if not serial or t1 is None or t2 is None:
-            errors.append({"serial": serial, "error": "serial, trial_1, trial_2 шаардлагатай"})
+            errors.append({"serial": serial, "error": "serial, trial_1, trial_2 are required"})
             continue
 
         # Бортого хайх/үүсгэх
@@ -280,7 +280,7 @@ def bottles_constants_bulk_save():
 @login_required
 def bottle_edit(bottle_id: int):
     if not _is_senior_or_admin():
-        flash("Энэ хэсэгт зөвхөн ахлах/админ нэвтрэнэ.", "danger")
+        flash("Only senior/admin users can access this section.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     bottle = Bottle.query.get_or_404(bottle_id)
@@ -290,20 +290,20 @@ def bottle_edit(bottle_id: int):
         is_active = True if request.form.get("is_active") == "1" else False
 
         if not serial_no:
-            flash("Бортогын дугаар хоосон байж болохгүй.", "danger")
+            flash("Bottle serial number cannot be empty.", "danger")
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
         # serial_no давхцахгүй байх шалгалт (өөрөөс нь бусадтай)
         dup = Bottle.query.filter(Bottle.serial_no == serial_no, Bottle.id != bottle.id).first()
         if dup:
-            flash("Ижил дугаартай бортого бүртгэлтэй байна.", "danger")
+            flash("A bottle with the same serial number already exists.", "danger")
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
         bottle.serial_no = serial_no
         bottle.is_active = is_active
         db.session.add(bottle)
         db.session.commit()
-        flash("Бортогын мэдээлэл шинэчлэгдлээ.", "success")
+        flash("Bottle information updated.", "success")
         return redirect(url_for("settings.bottles_index"))
 
     # GET
@@ -327,7 +327,7 @@ def bottle_delete(bottle_id: int):
     serial = bottle.serial_no
     db.session.delete(bottle)  # cascade → constants устна
     db.session.commit()
-    flash(f"Бортого {serial} бүртгэлээс устлаа.", "success")
+    flash(f"Bottle {serial} deleted from registry.", "success")
     return redirect(url_for("settings.bottles_index"))
 
 
@@ -407,7 +407,7 @@ def api_bottle_active(serial_no):
 @login_required
 def repeatability_limits():
     if not _is_senior_or_admin():
-        flash("Зөвхөн ахлах эрхтэй хэрэглэгч засварлана.", "danger")
+        flash("Only senior-level users can edit this.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     current_rules = load_limit_rules()
@@ -416,9 +416,9 @@ def repeatability_limits():
         try:
             parsed = json.loads(raw_json)
             if not isinstance(parsed, dict):
-                raise ValueError("JSON нь объект байх ёстой.")
+                raise ValueError("JSON must be an object.")
         except Exception as e:
-            flash(f"JSON уншихад алдаа: {e}", "danger")
+            flash(f"JSON parse error: {e}", "danger")
             return render_template(
                 "settings/repeatability_limits.html",
                 title="Repeatability лимитүүд",
@@ -432,7 +432,7 @@ def repeatability_limits():
         setting.value = json.dumps(parsed, ensure_ascii=False)
         db.session.commit()
         clear_cache()
-        flash("Лимитүүд амжилттай хадгаллаа.", "success")
+        flash("Limits saved successfully.", "success")
         current_rules = parsed
 
     pretty = json.dumps(current_rules, ensure_ascii=False, indent=2)
@@ -452,7 +452,7 @@ def repeatability_limits():
 def notification_settings():
     """Email мэдэгдлийн тохиргоо"""
     if not _is_admin():
-        flash("Зөвхөн админ засварлана.", "danger")
+        flash("Only admin can edit this.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     notification_types = [
@@ -488,7 +488,7 @@ def notification_settings():
             setting.value = recipients
 
         db.session.commit()
-        flash("Мэдэгдлийн тохиргоо хадгалагдлаа.", "success")
+        flash("Notification settings saved.", "success")
 
         # Reload
         for nt in notification_types:
@@ -514,7 +514,7 @@ def notification_settings():
 def email_recipients():
     """Тайлан илгээх имэйл хаягийн тохиргоо (TO, CC)"""
     if not _is_admin():
-        flash("Зөвхөн админ засварлана.", "danger")
+        flash("Only admin can edit this.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
     # Одоогийн тохиргоог авах
@@ -549,7 +549,7 @@ def email_recipients():
         cc_setting.is_active = True
 
         db.session.commit()
-        flash("Имэйл хаягууд хадгалагдлаа.", "success")
+        flash("Email addresses saved.", "success")
 
         current_to = new_to
         current_cc = new_cc

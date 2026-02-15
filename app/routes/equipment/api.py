@@ -181,7 +181,7 @@ def log_usage_bulk():
                 if note:
                     desc_parts.append(note)
 
-                # SparePart модел ашиглаж нөөцөөс хасах
+                # SparePart модел ашиглаж exceeds stock хасах
                 for sp in spare_parts:
                     sp_id = sp.get("spare_id")
                     try:
@@ -281,7 +281,7 @@ def log_usage_bulk():
                 details={'count': count, 'items_count': len(items)}
             )
 
-        return api_success({"count": count}, f"{count} бүртгэл хадгалагдлаа")
+        return api_success({"count": count}, f"{count} records saved")
 
     except Exception as e:
         db.session.rollback()

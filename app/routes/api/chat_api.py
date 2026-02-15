@@ -224,14 +224,14 @@ def register_routes(bp):
     async def upload_chat_file():
         """Файл upload хийх"""
         if 'file' not in request.files:
-            return jsonify({'error': 'Файл олдсонгүй'}), 400
+            return jsonify({'error': 'File not found'}), 400
 
         file = request.files['file']
         if file.filename == '':
-            return jsonify({'error': 'Файл сонгоогүй'}), 400
+            return jsonify({'error': 'No file selected'}), 400
 
         if not allowed_file(file.filename):
-            return jsonify({'error': 'Энэ төрлийн файл зөвшөөрөгдөөгүй'}), 400
+            return jsonify({'error': 'This file type is not allowed'}), 400
 
         # Check file size
         file.seek(0, 2)
@@ -239,18 +239,18 @@ def register_routes(bp):
         file.seek(0)
 
         if file_size > MAX_FILE_SIZE:
-            return jsonify({'error': 'Файл хэт том (max 10MB)'}), 400
+            return jsonify({'error': 'File too large (max 10MB)'}), 400
 
         # ✅ ЗАСВАРЛАСАН: Аюулгүй файл нэр үүсгэх
         original_filename = secure_filename(file.filename)
         if not original_filename or '.' not in original_filename:
-            return jsonify({'error': 'Буруу файлын нэр'}), 400
+            return jsonify({'error': 'Invalid file name'}), 400
 
         extension = original_filename.rsplit('.', 1)[1].lower()
 
         # ✅ Magic bytes validation (зураг, PDF)
         if not validate_file_content(file, extension):
-            return jsonify({'error': 'Файлын агуулга өргөтгөлтэй таарахгүй байна'}), 400
+            return jsonify({'error': 'File content does not match extension'}), 400
 
         # ✅ UUID ашиглах (timestamp биш - урьдчилан таах боломжгүй)
         unique_filename = f"{uuid.uuid4().hex}.{extension}"

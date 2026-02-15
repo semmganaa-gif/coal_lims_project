@@ -11,19 +11,19 @@
 {# CV batch constants input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-4">
-    <label class="form-label">Бомб дулаан багтаамж (E) <span class="text-danger">*</span></label>
+    <label class="form-label">Bomb Heat Capacity (E) <span class="text-danger">*</span></label>
     <input type="number" step="0.01" class="form-control" id="batch_calorific_system" placeholder="9081" required>
-    <div class="form-text">Нэгж: J/K. Жишиг: 9081.</div>
+    <div class="form-text">Unit: J/K. Reference: 9081.</div>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Гал өдөөх утасны дулаан (q1) <span class="text-danger">*</span></label>
+    <label class="form-label">Fuse Wire Heat (q1) <span class="text-danger">*</span></label>
     <input type="number" step="0.1" class="form-control" id="batch_fuse_correction" placeholder="90.0" required>
-    <div class="form-text">Нэгж: J. Жишиг: 90.0.</div>
+    <div class="form-text">Unit: J. Reference: 90.0.</div>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Нэмэлт дулаан (q2) <span class="text-muted">(заавал биш)</span></label>
+    <label class="form-label">Additional Heat (q2) <span class="text-muted">(optional)</span></label>
     <input type="number" step="0.1" class="form-control" id="batch_acid_correction" placeholder="0">
-    <div class="form-text">Нэгж: J. Хэрэв байхгүй бол 0.</div>
+    <div class="form-text">Unit: J. If none, enter 0.</div>
   </div>
 </div>
 
@@ -155,7 +155,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Дээжийн нэр',
+      headerName: 'Sample Name',
       field: 'sample_code',
       width: 250,
       pinned: 'left',
@@ -216,7 +216,7 @@
       editable: p => !p.data.is_saved,
       cellEditor: 'agTextCellEditor',
       valueParser: numParser,
-      valueFormatter: p => (p.value != null) ? String(p.value) : '',  // Хязгааргүй орон
+      valueFormatter: p => (p.value != null) ? String(p.value) : '',  // Limitгүй орон
       cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
     },
     {
@@ -231,7 +231,7 @@
       }
     },
     {
-      headerName: 'Үр дүн',
+      headerName: 'Result',
       field: 'result',
       width: 120,
       valueFormatter: p =>
@@ -244,7 +244,7 @@
       }
     },
     {
-      headerName: 'Тохирц',
+      headerName: 'Tolerance',
       field: 'tolerance',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -276,7 +276,7 @@
       }
     },
     {
-      headerName: 'Дундаж',
+      headerName: 'Average',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -297,7 +297,7 @@
       })
     },
     {
-      headerName: 'Үйлдэл',
+      headerName: 'Action',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -308,14 +308,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Хадгалагдсан</span>';
+          return '<span class="text-muted small">Saved</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Дээж хасах">
+                  title="Remove sample">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -398,7 +398,7 @@
         }
       ];
     } else {
-      // Шинэ дээж
+      // New дээж
       const batchNow = currentBatch();
       return [
         {
@@ -659,7 +659,7 @@
       if (!btn) return;
 
       const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('Дээжийг жагсаалтаас хасах уу?')) return;
+      if (!confirm('Remove this sample from the list?')) return;
 
       const url = new URL(window.location.href);
       let ids = (url.searchParams.get('sample_ids') || '').split(',');
@@ -677,7 +677,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -692,12 +692,12 @@
     // ✅ Batch constants шалгах
     const batch = currentBatch();
     if (batch.E == null || batch.E === 0) {
-      alert('⚠️ Бомб дулаан багтаамж (E) оруулна уу!');
+      alert('⚠️ Please enter Bomb Heat Capacity (E)!');
       document.getElementById('batch_calorific_system')?.focus();
       return [];
     }
     if (batch.q1 == null) {
-      alert('⚠️ Гал өдөөх утасны дулаан (q1) оруулна уу!');
+      alert('⚠️ Please enter Fuse Wire Heat (q1)!');
       document.getElementById('batch_fuse_correction')?.focus();
       return [];
     }
@@ -729,9 +729,9 @@
         const q2 = p1.batchQ2 ?? batchNow.q2;
         const S = p1.S ?? sulfurMap[String(sid)] ?? sulfurMap[sid] ?? null;
 
-        // ✅ Хүхэр (S) заавал байх ёстой - Vad-д Mad шаарддагтай адил
+        // ✅ Sulfur (S) заавал байх ёстой - Vad-д Mad шаарддагтай адил
         if (S == null || S === 0) {
-          console.warn(`⚠️ Дээж "${p1.sample_code || sid}": Хүхрийн (S) үр дүн байхгүй - CV тооцоолох боломжгүй`);
+          console.warn(`⚠️ Sample "${p1.sample_code || sid}": Хүхрийн (S) үр дүн байхгүй - CV тооцоолох боломжгүй`);
           incomplete.push(`${p1.sample_code || sid} (S байхгүй)`);
           return;
         }
@@ -793,14 +793,14 @@
         const missing = [];
         if (!hasP1) missing.push('Parallel 1');
         if (!hasP2) missing.push('Parallel 2');
-        console.warn(`⚠️ Дээж "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        console.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
         incomplete.push(sampleCode);
       }
     });
 
     // ✅ Summary logging
     if (incomplete.length > 0) {
-      console.log(`📊 Нийт: ${Object.keys(map).length} дээж`);
+      console.log(`📊 Total: ${Object.keys(map).length} дээж`);
       console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
       console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
     } else {
@@ -817,7 +817,7 @@
     const savedSampleIds = savedPayload.map(r => r.sample_id);
     const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
 
-    // ✅ Алдаатай дээжийн мэдээлэл
+    // ✅ Errorтай дээжийн мэдээлэл
     if (failedItems.length > 0) {
       console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
       failedItems.forEach(err => {
@@ -928,7 +928,7 @@
             n.data.t_exceeded = t_exceeded;
           }
 
-          // Үр дүнгийн утгуудыг тохируулах
+          // Resultгийн утгуудыг тохируулах
           const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
           if (pData) {
             n.data.m = pData.m;

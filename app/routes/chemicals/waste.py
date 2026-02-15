@@ -100,7 +100,7 @@ def waste_list():
 def add_waste():
     """Шинэ хог хаягдал нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     if request.method == "POST":
@@ -121,12 +121,12 @@ def add_waste():
 
             db.session.add(waste)
             db.session.commit()
-            flash(f"'{waste.name_mn}' амжилттай нэмэгдлээ.", "success")
+            flash(f"'{waste.name_mn}' added successfully.", "success")
             return redirect(url_for("chemicals.waste_list"))
 
         except Exception as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(f"Error: {str(e)[:100]}", "danger")
 
     return render_template(
         "chemicals/waste_form.html",
@@ -146,7 +146,7 @@ def add_waste():
 def edit_waste(id):
     """Хог хаягдал засах."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     waste = ChemicalWaste.query.get_or_404(id)
@@ -165,12 +165,12 @@ def edit_waste(id):
             waste.notes = request.form.get("notes")
 
             db.session.commit()
-            flash("Амжилттай шинэчлэгдлээ.", "success")
+            flash("Updated successfully.", "success")
             return redirect(url_for("chemicals.waste_list"))
 
         except Exception as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(f"Error: {str(e)[:100]}", "danger")
 
     return render_template(
         "chemicals/waste_form.html",
@@ -190,13 +190,13 @@ def edit_waste(id):
 def delete_waste(id):
     """Хог хаягдал устгах (идэвхгүй болгох)."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for("chemicals.waste_list"))
 
     waste = ChemicalWaste.query.get_or_404(id)
     waste.is_active = False
     db.session.commit()
-    flash(f"'{waste.name_mn}' устгагдлаа.", "warning")
+    flash(f"'{waste.name_mn}' deleted.", "warning")
     return redirect(url_for("chemicals.waste_list"))
 
 
@@ -238,7 +238,7 @@ def save_waste_record():
             db.session.add(record)
 
         db.session.commit()
-        return jsonify({"success": True, "message": "Хадгалагдлаа"})
+        return jsonify({"success": True, "message": "Saved"})
 
     except Exception as e:
         db.session.rollback()

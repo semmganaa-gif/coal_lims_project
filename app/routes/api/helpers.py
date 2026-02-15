@@ -50,7 +50,7 @@ def api_success(data=None, message=None):
         Flask Response (JSON)
 
     Example:
-        return api_success({"sample_id": 123}, "Дээж үүсгэгдлээ")
+        return api_success({"sample_id": 123}, "Sample created")
     """
     response = {"success": True}
     if data is not None:
@@ -74,7 +74,7 @@ def api_error(message, code=None, status_code=400, details=None):
         Flask Response (JSON) with status code
 
     Example:
-        return api_error("Буруу утга", "INVALID_VALUE", 400)
+        return api_error("Invalid value", "INVALID_VALUE", 400)
     """
     response = {
         "success": False,
@@ -109,9 +109,9 @@ def api_ok(message=None, **kwargs):
 
     Example:
         # Хуучин:
-        return api_ok("Амжилттай", sample_id=123)
+        return api_ok("Success", sample_id=123)
         # Шинэ:
-        return api_success({"sample_id": 123}, "Амжилттай")
+        return api_success({"sample_id": 123}, "Success")
     """
     import warnings
     warnings.warn("api_ok() is deprecated, use api_success() instead", DeprecationWarning, stacklevel=2)
@@ -138,9 +138,9 @@ def api_fail(message, status_code=400, **kwargs):
 
     Example:
         # Хуучин:
-        return api_fail("Олдсонгүй", 404)
+        return api_fail("Not found", 404)
         # Шинэ:
-        return api_error("Олдсонгүй", status_code=404)
+        return api_error("Not found", status_code=404)
     """
     import warnings
     warnings.warn("api_fail() is deprecated, use api_error() instead", DeprecationWarning, stacklevel=2)

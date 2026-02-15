@@ -17,7 +17,7 @@
              style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
           <h5 class="mb-0">
             <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
-            {{ 'Жор засварлах' if mode == 'edit' else 'Шинэ жор нэмэх' }}
+            {{ 'Жор засварлах' if mode == 'edit' else 'New жор нэмэх' }}
           </h5>
         </div>
 
@@ -37,13 +37,13 @@
                        placeholder="Ж: Трилон Б 0.05N, HCl 0.1N">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Концентраци</label>
+                <label class="form-label">Concentration</label>
                 <input type="number" name="concentration" class="form-control" step="0.0001"
                        value="{{ recipe.concentration if recipe else '' }}"
                        placeholder="Ж: 0.05">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Нэгж</label>
+                <label class="form-label">Unit</label>
                 <select name="concentration_unit" class="form-select">
                   <option value="N" {{ 'selected' if recipe and recipe.concentration_unit == 'N' }}>N (норм)</option>
                   <option value="mol/L" {{ 'selected' if recipe and recipe.concentration_unit == 'mol/L' }}>мол/л (M)</option>
@@ -52,7 +52,7 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Стандарт эзэлхүүн (мл)</label>
+                <label class="form-label">Standard эзэлхүүн (мл)</label>
                 <input type="number" name="standard_volume_ml" class="form-control" step="0.1"
                        value="{{ recipe.standard_volume_ml if recipe else 1000 }}"
                        placeholder="1000">
@@ -65,7 +65,7 @@
                   <option value="titrant" {{ 'selected' if recipe and recipe.category == 'titrant' }}>Титрант</option>
                   <option value="buffer" {{ 'selected' if recipe and recipe.category == 'buffer' }}>Буфер</option>
                   <option value="indicator" {{ 'selected' if recipe and recipe.category == 'indicator' }}>Индикатор</option>
-                  <option value="standard" {{ 'selected' if recipe and recipe.category == 'standard' }}>Стандарт</option>
+                  <option value="standard" {{ 'selected' if recipe and recipe.category == 'standard' }}>Standard</option>
                   <option value="reagent" {{ 'selected' if recipe and recipe.category == 'reagent' }}>Урвалж</option>
                 </select>
               </div>
@@ -137,7 +137,7 @@
               {% endif %}
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addIngredient()">
-              <i class="bi bi-plus me-1"></i>Бодис нэмэх
+              <i class="bi bi-plus me-1"></i>Chemical нэмэх
             </button>
 
             {# === Уусмал бэлдэх явц === #}

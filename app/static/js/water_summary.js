@@ -169,42 +169,42 @@ const WaterSummaryGrid = (function() {
   // primary: true = үргэлж харагдана, false = зөвхөн group дэлгэсэн үед
   const WATER_CHEM_COLUMNS = [
     // Унд ахуйн ус - үндсэн 5 багана үргэлж харагдана
-    { code: 'COLOR', name: 'Өнгө', shortName: 'Color', unit: '°', mns_limit: [null, 20], primary: true },
-    { code: 'EC', name: 'Цахилгаан дамжуулах чанар', shortName: 'EC', unit: 'µS/см', mns_limit: [null, 1000], primary: true },
-    { code: 'PH', name: 'Усны орчин', shortName: 'pH', unit: '', mns_limit: [6.5, 8.5], primary: true },
-    { code: 'F_W', name: 'Фторид', shortName: 'F⁻', unit: 'мг/л', mns_limit: [0.7, 1.5], primary: true },
-    { code: 'CL_FREE', name: 'Чөлөөт хлор', shortName: 'Cl₂', unit: 'мг/л', mns_limit: [0.2, 0.3], primary: true },
+    { code: 'COLOR', name: 'Color', shortName: 'Color', unit: '°', mns_limit: [null, 20], primary: true },
+    { code: 'EC', name: 'Electrical Conductivity', shortName: 'EC', unit: 'µS/cm', mns_limit: [null, 1000], primary: true },
+    { code: 'PH', name: 'pH', shortName: 'pH', unit: '', mns_limit: [6.5, 8.5], primary: true },
+    { code: 'F_W', name: 'Fluoride', shortName: 'F⁻', unit: 'mg/L', mns_limit: [0.7, 1.5], primary: true },
+    { code: 'CL_FREE', name: 'Free Chlorine', shortName: 'Cl₂', unit: 'mg/L', mns_limit: [0.2, 0.3], primary: true },
     // Дэлгэсэн үед харагдах баганууд
-    { code: 'HARD', name: 'Ерөнхий хатуулаг', shortName: 'Hard', unit: 'мг-экв/л', mns_limit: [null, 7] },
-    { code: 'NH4', name: 'Аммонийн ион', shortName: 'NH₄⁺', unit: 'мг/л', mns_limit: [null, 1.5] },
-    { code: 'NO2', name: 'Нитрит ион', shortName: 'NO₂⁻', unit: 'мг/л', mns_limit: [null, 1] },
-    { code: 'FE_W', name: 'Төмөр', shortName: 'Fe', unit: 'мг/л', mns_limit: [null, 0.3] },
+    { code: 'HARD', name: 'Total Hardness', shortName: 'Hard', unit: 'meq/L', mns_limit: [null, 7] },
+    { code: 'NH4', name: 'Ammonium Ion', shortName: 'NH₄⁺', unit: 'mg/L', mns_limit: [null, 1.5] },
+    { code: 'NO2', name: 'Nitrite Ion', shortName: 'NO₂⁻', unit: 'mg/L', mns_limit: [null, 1] },
+    { code: 'FE_W', name: 'Iron', shortName: 'Fe', unit: 'mg/L', mns_limit: [null, 0.3] },
     // Бохир ус (давхардаагүй)
-    { code: 'TDS', name: 'Умбуур бодис', shortName: 'TDS', unit: 'мг/л', mns_limit: [null, 400] },
-    { code: 'CL_W', name: 'Хлорид', shortName: 'Cl⁻', unit: 'мг/л', mns_limit: [null, 350] },
-    { code: 'PO4', name: 'Фосфат ион', shortName: 'PO₄³⁻', unit: 'мг/л', mns_limit: [null, 5] },
-    { code: 'BOD', name: 'Биохимийн хэрэгцээт хүчилтөрөгч', shortName: 'BOD', unit: 'мг/л', mns_limit: [null, 20] },
+    { code: 'TDS', name: 'Total Dissolved Solids', shortName: 'TDS', unit: 'mg/L', mns_limit: [null, 400] },
+    { code: 'CL_W', name: 'Chloride', shortName: 'Cl⁻', unit: 'mg/L', mns_limit: [null, 350] },
+    { code: 'PO4', name: 'Phosphate Ion', shortName: 'PO₄³⁻', unit: 'mg/L', mns_limit: [null, 5] },
+    { code: 'BOD', name: 'Biochemical Oxygen Demand', shortName: 'BOD', unit: 'mg/L', mns_limit: [null, 20] },
     // Лагийн шинжилгээ
-    { code: 'SLUDGE_VOL', name: 'Лагийн эзлэхүүн', shortName: 'SV', unit: 'мл', mns_limit: [70, 80] },
-    { code: 'SLUDGE_DOSE', name: 'Лагийн тун', shortName: 'SD', unit: 'г/л', mns_limit: [2, 4] },
-    { code: 'SLUDGE_INDEX', name: 'Лагийн индекс', shortName: 'SI', unit: 'мл/г', mns_limit: [80, 150] }
+    { code: 'SLUDGE_VOL', name: 'Sludge Volume', shortName: 'SV', unit: 'mL', mns_limit: [70, 80] },
+    { code: 'SLUDGE_DOSE', name: 'Sludge Dose', shortName: 'SD', unit: 'g/L', mns_limit: [2, 4] },
+    { code: 'SLUDGE_INDEX', name: 'Sludge Index', shortName: 'SI', unit: 'mL/g', mns_limit: [80, 150] }
   ];
 
   // Микробиологийн баганууд - Ус, Агаар, Арчдас нэгтгэсэн
   const MICRO_COLUMNS = [
     // CFU (ус: 22°C, 37°C)
-    { code: 'cfu_22', headerName: 'CFU 22°C', headerTooltip: 'MNS ISO 6222:1998 / 1 мл-т ≤100', mns_limit: [null, 100], integer: true },
-    { code: 'cfu_37', headerName: 'CFU 37°C', headerTooltip: 'MNS ISO 6222:1998 / 1 мл-т ≤100', mns_limit: [null, 100], integer: true },
+    { code: 'cfu_22', headerName: 'CFU 22°C', headerTooltip: 'MNS ISO 6222:1998 / per 1 mL ≤100', mns_limit: [null, 100], integer: true },
+    { code: 'cfu_37', headerName: 'CFU 37°C', headerTooltip: 'MNS ISO 6222:1998 / per 1 mL ≤100', mns_limit: [null, 100], integer: true },
     // CFU Дундаж (ус + арчдас нэгтгэсэн)
-    { code: 'cfu_avg', headerName: 'CFU Дундаж', headerTooltip: 'Ус: MNS ISO 6222 ≤100 / Арчдас: MNS 6410 <100', mns_limit: [null, 100], integer: true },
+    { code: 'cfu_avg', headerName: 'CFU Avg', headerTooltip: 'Water: MNS ISO 6222 ≤100 / Swab: MNS 6410 <100', mns_limit: [null, 100], integer: true },
     // E.coli (ус + арчдас)
-    { code: 'ecoli', headerName: 'E.coli', headerTooltip: 'Ус: MNS ISO 9308-1 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    { code: 'ecoli', headerName: 'E.coli', headerTooltip: 'Water: MNS ISO 9308-1 / Swab: MNS 6410:2018', detect: true, italic: true },
     // Salmonella (ус + арчдас)
-    { code: 'salmonella', headerName: 'Salmonella', headerTooltip: 'Ус: MNS ISO 19250 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    { code: 'salmonella', headerName: 'Salmonella', headerTooltip: 'Water: MNS ISO 19250 / Swab: MNS 6410:2018', detect: true, italic: true },
     // S.aureus (агаар + арчдас)
-    { code: 'staph', headerName: 'S.aureus', headerTooltip: 'Агаар: MNS 5484 / Арчдас: MNS 6410:2018', detect: true, italic: true },
+    { code: 'staph', headerName: 'S.aureus', headerTooltip: 'Air: MNS 5484 / Swab: MNS 6410:2018', detect: true, italic: true },
     // Агаарын бактерийн тоо
-    { code: 'air_cfu', headerName: 'Бактерийн тоо', headerTooltip: 'MNS 5484:2005 / 1м³-д <3000', mns_limit: [null, 3000], integer: true }
+    { code: 'air_cfu', headerName: 'Bacteria Count', headerTooltip: 'MNS 5484:2005 / per 1m³ <3000', mns_limit: [null, 3000], integer: true }
   ];
 
   /* -------- BUILD COLUMN DEFINITIONS -------- */
@@ -230,7 +230,7 @@ const WaterSummaryGrid = (function() {
 
     // Бүртгэсэн огноо
     cols.push({
-      headerName: 'Бүртгэл',
+      headerName: 'Registered',
       field: 'received_date',
       width: 95,
       minWidth: 85,
@@ -243,7 +243,7 @@ const WaterSummaryGrid = (function() {
 
     // Хими лаб номер
     cols.push({
-      headerName: 'Хими №',
+      headerName: 'Chem #',
       field: 'chem_lab_id',
       width: 90,
       minWidth: 90,
@@ -258,7 +258,7 @@ const WaterSummaryGrid = (function() {
 
     // Микро лаб номер
     cols.push({
-      headerName: 'Микро №',
+      headerName: 'Micro #',
       field: 'micro_lab_id',
       width: 95,
       minWidth: 95,
@@ -273,7 +273,7 @@ const WaterSummaryGrid = (function() {
 
     // Сорьцын нэр
     cols.push({
-      headerName: 'Сорьцын нэр',
+      headerName: 'Sample Name',
       field: 'sample_name',
       width: 340,
       minWidth: 280,
@@ -321,7 +321,7 @@ const WaterSummaryGrid = (function() {
     }
 
     cols.push({
-      headerName: 'Хими ▸',
+      headerName: 'Chemistry ▸',
       headerClass: 'chem-header-group',
       marryChildren: false,
       children: chemChildren
@@ -349,8 +349,8 @@ const WaterSummaryGrid = (function() {
         valueFormatter: isDetect ? function(params) {
           if (params.value == null || params.value === '') return '';
           var s = String(params.value).trim().toLowerCase();
-          if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') return 'Илрээгүй';
-          if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) return 'Илэрсэн';
+          if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') return 'Not Detected';
+          if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) return 'Detected';
           return params.value;
         } : (function(isInt) {
           return function(params) {
@@ -377,7 +377,7 @@ const WaterSummaryGrid = (function() {
     }
 
     cols.push({
-      headerName: 'Микробиологи',
+      headerName: 'Microbiology',
       headerTooltip: 'MNS 0900:2018',
       headerClass: 'micro-header-group',
       marryChildren: false,
@@ -476,7 +476,7 @@ const WaterSummaryGrid = (function() {
 
     // Check AG Grid
     if (typeof agGrid === 'undefined') {
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">AG Grid ачаалагдаагүй байна.</div>';
+      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">AG Grid library not loaded.</div>';
       return;
     }
 
@@ -492,7 +492,7 @@ const WaterSummaryGrid = (function() {
       }
     } catch (e) {
       console.error('Grid creation error:', e);
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid үүсгэхэд алдаа: ' + e.message + '</div>';
+      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid creation error: ' + e.message + '</div>';
     }
   }
 
@@ -507,7 +507,7 @@ const WaterSummaryGrid = (function() {
 
   function exportCsv() {
     if (!gridApi) {
-      alert('Grid үүсээгүй байна.');
+      alert('Grid not initialized.');
       return;
     }
 
@@ -525,13 +525,13 @@ const WaterSummaryGrid = (function() {
 
   function copySelected() {
     if (!gridApi) {
-      alert('Grid үүсээгүй байна.');
+      alert('Grid not initialized.');
       return;
     }
 
     const nodes = gridApi.getSelectedNodes();
     if (nodes.length === 0) {
-      alert('Хуулах мөрүүдээ сонгоно уу.');
+      alert('Please select rows to copy.');
       return;
     }
 
@@ -559,7 +559,7 @@ const WaterSummaryGrid = (function() {
     // Copy to clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
-        .then(function() { alert(nodes.length + ' мөр хуулагдлаа!'); })
+        .then(function() { alert(nodes.length + ' rows copied!'); })
         .catch(function() { fallbackCopy(text, nodes.length); });
     } else {
       fallbackCopy(text, nodes.length);
@@ -575,9 +575,9 @@ const WaterSummaryGrid = (function() {
     ta.select();
     try {
       document.execCommand('copy');
-      alert(count + ' мөр хуулагдлаа!');
+      alert(count + ' rows copied!');
     } catch (e) {
-      alert('Хуулахад алдаа гарлаа.');
+      alert('Error copying to clipboard.');
     }
     document.body.removeChild(ta);
   }
@@ -612,10 +612,10 @@ const WaterSummaryGrid = (function() {
       btnArchive.addEventListener('click', function() {
         const ids = getSelectedIds();
         if (ids.length === 0) {
-          alert('Архивлах дээжийг сонгоно уу.');
+          alert('Please select samples to archive.');
           return;
         }
-        if (!confirm('Сонгосон ' + ids.length + ' дээжийг архивлахад итгэлтэй байна уу?')) {
+        if (!confirm('Are you sure you want to archive ' + ids.length + ' selected samples?')) {
           return;
         }
         const form = document.getElementById('archiveForm');
@@ -631,7 +631,7 @@ const WaterSummaryGrid = (function() {
     function createReport(labType, btn, originalHtml) {
       const ids = getSelectedIds();
       if (ids.length === 0) {
-        alert('Тайлан үүсгэх дээжийг сонгоно уу.');
+        alert('Please select samples to generate report.');
         return;
       }
 
@@ -669,16 +669,16 @@ const WaterSummaryGrid = (function() {
         btn.innerHTML = originalHtml;
 
         if (data.success) {
-          alert('Тайлан амжилттай үүслээ: ' + data.report_number);
+          alert('Report created successfully: ' + data.report_number);
           window.location.href = data.redirect_url;
         } else {
-          alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
+          alert('Error: ' + (data.error || 'Unknown'));
         }
       })
       .catch(err => {
         btn.disabled = false;
         btn.innerHTML = originalHtml;
-        alert('Сүлжээний алдаа: ' + err.message);
+        alert('Network error: ' + err.message);
       });
     }
 
@@ -686,7 +686,7 @@ const WaterSummaryGrid = (function() {
     const btnReportWater = document.getElementById('btnReportWater');
     if (btnReportWater) {
       btnReportWater.addEventListener('click', function() {
-        createReport('water', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Хими');
+        createReport('water', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Chemistry');
       });
     }
 
@@ -694,7 +694,7 @@ const WaterSummaryGrid = (function() {
     const btnReportMicro = document.getElementById('btnReportMicro');
     if (btnReportMicro) {
       btnReportMicro.addEventListener('click', function() {
-        createReport('microbiology', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Микро');
+        createReport('microbiology', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Micro');
       });
     }
 

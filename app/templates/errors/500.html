@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}500 - Серверийн алдаа{% endblock %}
+{% block title %}500 - Server Error{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -12,29 +12,29 @@
                         <i class="bi bi-x-octagon text-danger" style="font-size: 5rem;"></i>
                     </div>
                     <h1 class="display-4 fw-bold text-danger">500</h1>
-                    <h2 class="h4 mb-4">Серверийн алдаа</h2>
+                    <h2 class="h4 mb-4">Server Error</h2>
                     <p class="text-muted mb-4">
-                        Уучлаарай, серверт алдаа гарлаа.
-                        Манай багийн гишүүд асуудлыг шийдвэрлэх болно.
+                        Sorry, an internal server error occurred.
+                        Our team will work on resolving the issue.
                     </p>
 
                     <div class="alert alert-light border">
                         <p class="mb-0 small">
-                            <strong>Юу хийх вэ?</strong>
+                            <strong>What to do?</strong>
                         </p>
                         <ul class="text-start mb-0 mt-2 small">
-                            <li>Хуудсыг дахин ачаалж үзээрэй</li>
-                            <li>Хэдэн минутын дараа дахин оролдоорой</li>
-                            <li>Асуудал үргэлжилвэл администратор-т мэдэгдээрэй</li>
+                            <li>Try refreshing the page</li>
+                            <li>Try again in a few minutes</li>
+                            <li>If the problem persists, notify the administrator</li>
                         </ul>
                     </div>
 
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
                         <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4">
-                            <i class="bi bi-house-door me-2"></i>Нүүр хуудас руу буцах
+                            <i class="bi bi-house-door me-2"></i>Return to Home Page
                         </a>
                         <button onclick="location.reload()" class="btn btn-outline-secondary btn-lg px-4">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Дахин ачаалах
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reload Page
                         </button>
                     </div>
                 </div>
@@ -42,8 +42,8 @@
 
             <div class="text-center mt-4">
                 <p class="text-muted small">
-                    Асуудал: <strong>Серверийн дотоод алдаа</strong><br>
-                    Холбоо барих: <a href="mailto:support@energyresources.mn">support@energyresources.mn</a>
+                    Issue: <strong>Internal Server Error</strong><br>
+                    Contact: <a href="mailto:support@energyresources.mn">support@energyresources.mn</a>
                 </p>
             </div>
         </div>

@@ -68,7 +68,7 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     ).order_by(Sample.sample_date, Sample.id).all()
 
     if not samples:
-        return None, "Дээж олдсонгүй"
+        return None, "Sample not found"
 
     # Тайлангийн дугаар
     report_number = get_next_report_number('microbiology')
@@ -126,7 +126,7 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
     ).order_by(Sample.sample_date, Sample.id).all()
 
     if not samples:
-        return None, "Дээж олдсонгүй"
+        return None, "Sample not found"
 
     report_number = get_next_report_number('water')
 
@@ -179,7 +179,7 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
     ).order_by(Sample.sample_date, Sample.id).all()
 
     if not samples:
-        return None, "Дээж олдсонгүй"
+        return None, "Sample not found"
 
     report_number = get_next_report_number('coal')
 

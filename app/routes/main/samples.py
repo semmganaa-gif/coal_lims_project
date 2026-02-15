@@ -1,7 +1,7 @@
 # app/routes/main/samples.py
 # -*- coding: utf-8 -*-
 """
-Дээж засах/устгах (Sample management) routes
+Sample management routes (edit/delete/disposal)
 """
 
 from flask import render_template, flash, redirect, url_for, request
@@ -13,10 +13,10 @@ from app.utils.audit import log_audit
 
 
 def register_routes(bp):
-    """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
+    """Register routes on the given blueprint"""
 
     # =====================================================================
-    # 1. ДЭЭЖ ЗАСАХ
+    # 1. EDIT SAMPLE
     # =====================================================================
     @bp.route("/edit_sample/<int:sample_id>", methods=["GET", "POST"])
     @login_required
@@ -28,7 +28,7 @@ def register_routes(bp):
             current_user.role == "prep" and sample.status == "new"
         )
         if not can_edit:
-            flash("Энэ дээжийг засах эрх танд байхгүй эсвэл дээж аль хэдийн боловсруулалтад орсон байна.", "warning")
+            flash("You do not have permission to edit this sample, or it is already in processing.", "warning")
             return redirect(url_for("main.index"))
 
         all_analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
@@ -39,7 +39,7 @@ def register_routes(bp):
             current_analyses = []
 
         if request.method == "POST":
-            new_code = request.form.get("sample_code", "").strip().upper()  # ✅ Том үсэг болгох
+            new_code = request.form.get("sample_code", "").strip().upper()  # Convert to uppercase
             selected_analyses = request.form.getlist("analyses")
 
             original_code = sample.sample_code
@@ -47,40 +47,40 @@ def register_routes(bp):
             analyses_changed = set(selected_analyses) != set(current_analyses)
 
             if not new_code:
-                flash("Дээжний код хоосон байх боломжгүй.", "danger")
-            # ✅ Case-insensitive давхардал шалгах
+                flash("Sample code cannot be empty.", "danger")
+            # Case-insensitive duplicate check
             elif code_changed and Sample.query.filter(
                 db.func.upper(Sample.sample_code) == new_code.upper(),
                 Sample.id != sample_id
             ).first():
-                flash(f'АЛДАА: "{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй тул солих боломжгүй.', "danger")
+                flash(f'ERROR: A sample with code "{new_code}" already exists.', "danger")
             else:
                 try:
                     if code_changed:
-                        sample.sample_code = new_code  # Model-д @validates автоматаар uppercase болгоно
+                        sample.sample_code = new_code  # Model @validates auto-uppercases
                     if analyses_changed:
                         sample.analyses_to_perform = json.dumps(selected_analyses)
 
                     if code_changed or analyses_changed:
                         db.session.commit()
-                        flash("Дээжний мэдээлэл амжилттай шинэчлэгдлээ.", "success")
+                        flash("Sample information updated successfully.", "success")
                     else:
-                        flash("Ямар нэгэн өөрчлөлт хийгдээгүй.", "info")
+                        flash("No changes were made.", "info")
                     return redirect(url_for("main.index"))
                 except Exception as e:
                     db.session.rollback()
-                    flash(f"Хадгалахад алдаа гарлаа: {e}", "danger")
+                    flash(f"Error saving: {e}", "danger")
 
         return render_template(
             "edit_sample.html",
-            title="Дээж засах",
+            title="Edit Sample",
             sample=sample,
             all_analysis_types=all_analysis_types,
             current_analyses=current_analyses,
         )
 
     # =====================================================================
-    # 2. ДЭЭЖ УСТГАХ
+    # 2. DELETE SAMPLES
     # =====================================================================
     @bp.route("/delete_selected_samples", methods=["POST"])
     @login_required
@@ -89,11 +89,11 @@ def register_routes(bp):
         sample_ids_to_delete = request.form.getlist("sample_ids")
 
         if not sample_ids_to_delete:
-            flash("Устгах дээжээ сонгоно уу!", "warning")
+            flash("Please select samples to delete!", "warning")
             return redirect(url_for("main.index"))
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Сонгосон дээжийг устгах эрх танд байхгүй.", "danger")
+            flash("You do not have permission to delete samples.", "danger")
             return redirect(url_for("main.index"))
 
         deleted_count = 0
@@ -104,7 +104,7 @@ def register_routes(bp):
                 sample_to_delete = Sample.query.get(sample_id)
                 if sample_to_delete:
                     if current_user.role == "senior" and sample_to_delete.status != "new":
-                        failed_samples.append(f"{sample_to_delete.sample_code} (Боловсруулалтад орсон)")
+                        failed_samples.append(f"{sample_to_delete.sample_code} (Already in processing)")
                         continue
                     # Audit log before deletion
                     log_audit(
@@ -119,38 +119,38 @@ def register_routes(bp):
                     db.session.delete(sample_to_delete)
                     deleted_count += 1
                 else:
-                    failed_samples.append(f"ID={sample_id_str} (Олдсонгүй)")
+                    failed_samples.append(f"ID={sample_id_str} (Not found)")
             except Exception as e:
-                failed_samples.append(f"ID={sample_id_str} (Алдаа: {e})")
+                failed_samples.append(f"ID={sample_id_str} (Error: {e})")
 
         if deleted_count > 0:
             db.session.commit()
-            flash(f"{deleted_count} ш дээж амжилттай устгагдлаа.", "success")
+            flash(f"{deleted_count} sample(s) deleted successfully.", "success")
         if failed_samples:
-            flash(f'Алдаа: Дараах дээжнүүдийг устгаж чадсангүй: {", ".join(failed_samples)}', "danger")
+            flash(f'Error: Could not delete the following samples: {", ".join(failed_samples)}', "danger")
 
         return redirect(url_for("main.index"))
 
     # =====================================================================
-    # 3. ДЭЭЖ ХАДГАЛАЛТ & УСТГАЛ (Sample Retention & Disposal)
+    # 3. SAMPLE RETENTION & DISPOSAL
     # =====================================================================
     @bp.route("/sample_disposal")
     @login_required
     def sample_disposal():
-        """Дээж хадгалалт ба устгалын удирдлага - Бүгдэд харагдана"""
+        """Sample retention and disposal management - Visible to all"""
         from app.models import Sample
 
         today = date.today()
-        warning_days = 30  # 30 хоногийн өмнө анхааруулга
+        warning_days = 30  # Warn 30 days before expiry
 
-        # Хугацаа дууссан дээжүүд (retention_date < today, disposal_date = None)
+        # Expired samples (retention_date < today, disposal_date = None)
         expired_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.retention_date < today,
             Sample.disposal_date.is_(None)
         ).order_by(Sample.retention_date.asc()).limit(200).all()
 
-        # Удахгүй дуусах дээжүүд (retention_date <= today + 30 days)
+        # Upcoming expiry samples (retention_date <= today + 30 days)
         warning_date = today + timedelta(days=warning_days)
         upcoming_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
@@ -159,14 +159,14 @@ def register_routes(bp):
             Sample.disposal_date.is_(None)
         ).order_by(Sample.retention_date.asc()).limit(200).all()
 
-        # Устгагдсан дээжүүд (сүүлийн 90 хоног)
+        # Disposed samples (last 90 days)
         disposed_since = today - timedelta(days=90)
         disposed_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.disposal_date >= disposed_since
         ).order_by(Sample.disposal_date.desc()).limit(100).all()
 
-        # Хадгалах хугацаа тодорхойгүй дээжүүд (бүх статус)
+        # Samples with no retention date set (all statuses)
         no_retention_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.retention_date.is_(None),
@@ -174,7 +174,7 @@ def register_routes(bp):
             Sample.return_sample.is_(False)
         ).order_by(Sample.received_date.desc()).limit(100).all()
 
-        # Буцаах дээжүүд (return_sample=True, шинжилгээ дууссан)
+        # Samples to return (return_sample=True, analysis completed)
         return_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.return_sample.is_(True),
@@ -184,7 +184,7 @@ def register_routes(bp):
 
         return render_template(
             "sample_disposal.html",
-            title="Дээж хадгалалт & устгал",
+            title="Sample Retention & Disposal",
             expired_samples=expired_samples,
             upcoming_samples=upcoming_samples,
             disposed_samples=disposed_samples,
@@ -197,22 +197,22 @@ def register_routes(bp):
     @bp.route("/dispose_samples", methods=["POST"])
     @login_required
     def dispose_samples():
-        """Дээжүүдийг устгасанд тооцох (Bulk disposal)"""
+        """Mark samples as disposed (Bulk disposal)"""
         from app.models import Sample
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Энэ үйлдлийг хийх эрх байхгүй.", "danger")
+            flash("You do not have permission to perform this action.", "danger")
             return redirect(url_for("main.sample_disposal"))
 
         sample_ids = request.form.getlist("sample_ids")
         disposal_method = request.form.get("disposal_method", "").strip()
 
         if not sample_ids:
-            flash("Устгах дээж сонгоогүй байна.", "warning")
+            flash("No samples selected for disposal.", "warning")
             return redirect(url_for("main.sample_disposal"))
 
         if not disposal_method:
-            flash("Устгасан арга оруулна уу.", "warning")
+            flash("Please enter a disposal method.", "warning")
             return redirect(url_for("main.sample_disposal"))
 
         disposed_count = 0
@@ -236,42 +236,42 @@ def register_routes(bp):
                     )
                     disposed_count += 1
             except Exception as e:
-                current_app.logger.warning(f"dispose_samples: sample_id={sid} алдаа: {e}")
+                current_app.logger.warning(f"dispose_samples: sample_id={sid} error: {e}")
                 continue
 
         if disposed_count > 0:
             try:
                 db.session.commit()
-                flash(f"{disposed_count} дээж амжилттай устгагдсанд тооцогдлоо.", "success")
+                flash(f"{disposed_count} sample(s) marked as disposed.", "success")
             except Exception as e:
                 db.session.rollback()
-                flash(f"Алдаа: {str(e)[:100]}", "danger")
+                flash(f"Error: {str(e)[:100]}", "danger")
 
         return redirect(url_for("main.sample_disposal"))
 
     @bp.route("/set_retention_date", methods=["POST"])
     @login_required
     def set_retention_date():
-        """Дээжийн хадгалах хугацаа тохируулах"""
+        """Set sample retention date"""
         from app.models import Sample
 
         if current_user.role not in ["admin", "senior"]:
-            flash("Энэ үйлдлийг хийх эрх байхгүй.", "danger")
+            flash("You do not have permission to perform this action.", "danger")
             return redirect(url_for("main.sample_disposal"))
 
         sample_ids = request.form.getlist("sample_ids")
         retention_days = request.form.get("retention_days", "90")
 
         if not sample_ids:
-            flash("Дээж сонгоогүй байна.", "warning")
+            flash("No samples selected.", "warning")
             return redirect(url_for("main.sample_disposal"))
 
         try:
             days = int(retention_days)
             if days < 1 or days > 3650:
-                raise ValueError("Хугацаа 1-3650 хоногийн хооронд байх ёстой")
+                raise ValueError("Duration must be between 1 and 3650 days")
         except ValueError as e:
-            flash(f"Буруу хугацаа: {e}", "danger")
+            flash(f"Invalid duration: {e}", "danger")
             return redirect(url_for("main.sample_disposal"))
 
         updated_count = 0
@@ -289,27 +289,27 @@ def register_routes(bp):
         if updated_count > 0:
             try:
                 db.session.commit()
-                flash(f"{updated_count} дээжийн хадгалах хугацаа {retention_date} болгож тохируулагдлаа.", "success")
+                flash(f"Retention date set to {retention_date} for {updated_count} sample(s).", "success")
             except Exception as e:
                 db.session.rollback()
-                flash(f"Алдаа: {str(e)[:100]}", "danger")
+                flash(f"Error: {str(e)[:100]}", "danger")
 
         return redirect(url_for("main.sample_disposal"))
 
     @bp.route("/bulk_set_retention", methods=["POST"])
     @login_required
     def bulk_set_retention():
-        """Бүх хугацаагүй дээжид retention тохируулах"""
+        """Set retention date for all samples without one"""
         from app.models import Sample
 
         retention_days = request.form.get("retention_days", type=int)
         from_date_type = request.form.get("from_date", "received")
 
         if not retention_days:
-            flash("Хугацаа сонгоно уу.", "warning")
+            flash("Please select a duration.", "warning")
             return redirect(url_for("main.sample_disposal"))
 
-        # Хугацаагүй нүүрсний дээжийг олох (зөвхөн coal lab)
+        # Find coal samples without retention date
         samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             Sample.retention_date.is_(None),
@@ -317,7 +317,7 @@ def register_routes(bp):
         ).all()
 
         if not samples:
-            flash("Хугацаа тодорхойгүй дээж байхгүй.", "info")
+            flash("No samples without retention date found.", "info")
             return redirect(url_for("main.sample_disposal"))
 
         today = date.today()
@@ -334,10 +334,10 @@ def register_routes(bp):
                 updated_count += 1
 
             db.session.commit()
-            flash(f"{updated_count} дээжид хадгалах хугацаа тохируулагдлаа.", "success")
+            flash(f"Retention date set for {updated_count} sample(s).", "success")
         except Exception as e:
             db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+            flash(f"Error: {str(e)[:100]}", "danger")
 
         return redirect(url_for("main.sample_disposal"))
 
@@ -347,8 +347,8 @@ def register_routes(bp):
     @bp.route("/analytics")
     @login_required
     def analytics_dashboard():
-        """Шинжилгээний статистик дашбоард"""
+        """Analysis statistics dashboard"""
         return render_template(
             "analytics_dashboard.html",
-            title="Шинжилгээний статистик"
+            title="Analysis Statistics"
         )

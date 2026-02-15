@@ -184,7 +184,7 @@ def register_routes(bp):
                 AnalysisResult.status == "rejected"
             ).all()
             for r in rejected_results:
-                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлах буцаасан"
+                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Returned by senior"
                 rejected_samples_info[r.sample_id] = {
                     "reason": reason_val,
                     "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None),

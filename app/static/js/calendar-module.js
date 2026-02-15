@@ -17,12 +17,12 @@ const CalendarModule = (function() {
 
   // Монгол сарын нэрс
   const MONTH_NAMES = [
-    "1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар",
-    "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
   ];
 
   // Долоо хоногийн өдрүүд
-  const WEEK_DAYS = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
+  const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   /**
    * Сарын нэр + жил форматлах

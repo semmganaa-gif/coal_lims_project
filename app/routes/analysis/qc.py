@@ -210,7 +210,7 @@ def register_routes(bp):
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
         if not ids:
-            flash("QC Dashboard-д дээж олдсонгүй.", "warning")
+            flash("No samples found for QC Dashboard.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ COM дээж сонгосон бол автоматаар hourly дээжүүдийг олох
@@ -239,13 +239,13 @@ def register_routes(bp):
         ids_str = request.args.get("ids", "").strip()
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
         if not ids:
-            flash("Spec шалгах дээж олдсонгүй.", "warning")
+            flash("No samples found for spec check.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # Дээжүүдийг татах (✅ pagination limit нэмсэн)
         samples = Sample.query.filter(Sample.id.in_(ids)).order_by(Sample.sample_code.asc()).limit(5000).all()
         if not samples:
-            flash("Дээж олдсонгүй.", "warning")
+            flash("Sample not found.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ Vdaf тооцоолоход Vad хэрэгтэй
@@ -342,13 +342,13 @@ def register_routes(bp):
         ids = [int(x) for x in ids_str.split(",") if x.strip().isdigit()]
 
         if not ids:
-            flash("Хамаарал шалгах дээж олдсонгүй.", "warning")
+            flash("No samples found for correlation check.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ Pagination limit нэмсэн
         samples = Sample.query.filter(Sample.id.in_(ids)).limit(5000).all()
         if not samples:
-            flash("Дээж олдсонгүй.", "warning")
+            flash("Sample not found.", "warning")
             return redirect(url_for("analysis.sample_summary"))
 
         # ✅ N+1 QUERY ЗАСВАР: Бүх үр дүнг нэг query-ээр татах

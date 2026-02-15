@@ -131,8 +131,8 @@
     const mad = Number(MAD_BY_SAMPLE[sampleId]);
 
     if (isNaN(mad)) {
-      cell1.textContent = 'Mad алга!'; cell1.classList.add('text-danger');
-      cell2.textContent = 'Mad алга!'; cell2.classList.add('text-danger');
+      cell1.textContent = 'Mad missing!'; cell1.classList.add('text-danger');
+      cell2.textContent = 'Mad missing!'; cell2.classList.add('text-danger');
       window.TRD_RESULTS_CACHE[sampleId] = null; // Тооцоолох боломжгүй
       return null;
     } else {
@@ -205,8 +205,8 @@
           if (isNaN(MAD_BY_SAMPLE[sampleId])) {
               const cell1 = tr1.querySelector(`.trd-cell[data-parallel="1"]`);
               const cell2 = tr2.querySelector(`.trd-cell[data-parallel="2"]`);
-              cell1.textContent = 'Mad алга!'; cell1.classList.add('text-danger');
-              cell2.textContent = 'Mad алга!'; cell2.classList.add('text-danger');
+              cell1.textContent = 'Mad missing!'; cell1.classList.add('text-danger');
+              cell2.textContent = 'Mad missing!'; cell2.classList.add('text-danger');
           }
           return;
       }

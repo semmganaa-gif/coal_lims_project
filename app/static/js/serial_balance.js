@@ -64,23 +64,23 @@ class SerialBalance {
      */
     async connect() {
         if (!this.isSupported()) {
-            this._emitError("Web Serial API дэмжигдэхгүй байна. Chrome 89+ ашиглана уу.");
+            this._emitError("Web Serial API is not supported. Please use Chrome 89+.");
             return false;
         }
 
         try {
-            this._emitStatus("Жин сонгож байна...");
+            this._emitStatus("Selecting balance...");
 
             // Хэрэглэгчээс порт сонгуулах
             this.port = await navigator.serial.requestPort();
 
-            this._emitStatus("Холбогдож байна...");
+            this._emitStatus("Connecting...");
 
             // Порт нээх
             await this.port.open(this.config);
 
             this.isConnected = true;
-            this._emitStatus("Холбогдлоо");
+            this._emitStatus("Connected");
 
             if (this.onConnect) {
                 this.onConnect();
@@ -97,11 +97,11 @@ class SerialBalance {
             console.error("Balance connect error:", err);
 
             if (err.name === 'NotFoundError') {
-                this._emitError("Жин сонгогдоогүй байна.");
+                this._emitError("No balance selected.");
             } else if (err.name === 'SecurityError') {
-                this._emitError("Хандах эрх байхгүй байна.");
+                this._emitError("Access permission denied.");
             } else {
-                this._emitError(`Холбогдож чадсангүй: ${err.message}`);
+                this._emitError(`Connection failed: ${err.message}`);
             }
 
             return false;
@@ -132,10 +132,10 @@ class SerialBalance {
     async tare() {
         try {
             await this._sendCommand(this.commands.TARE);
-            this._emitStatus("Tare хийгдлээ");
+            this._emitStatus("Tare completed");
             return true;
         } catch (err) {
-            this._emitError("Tare хийж чадсангүй");
+            this._emitError("Tare failed");
             return false;
         }
     }
@@ -169,12 +169,12 @@ class SerialBalance {
      */
     async _sendCommandAndRead(command, timeout = 10000) {
         if (!this.isConnected || !this.port) {
-            this._emitError("Жин холбогдоогүй байна");
+            this._emitError("Balance not connected");
             return null;
         }
 
         try {
-            this._emitStatus("Жин тогтворжихыг хүлээж байна...");
+            this._emitStatus("Waiting for stable weight...");
 
             // Команд илгээх
             await this._sendCommand(command);
@@ -183,7 +183,7 @@ class SerialBalance {
             const response = await this._readResponse(timeout);
 
             if (!response) {
-                this._emitError("Жингээс хариу ирсэнгүй");
+                this._emitError("No response from balance");
                 return null;
             }
 
@@ -191,7 +191,7 @@ class SerialBalance {
             const weight = this._parseResponse(response);
 
             if (weight !== null) {
-                this._emitStatus(`Жин: ${weight.toFixed(4)} g`);
+                this._emitStatus(`Weight: ${weight.toFixed(4)} g`);
 
                 if (this.onWeightReceived) {
                     this.onWeightReceived(weight);
@@ -202,7 +202,7 @@ class SerialBalance {
 
         } catch (err) {
             console.error("Read weight error:", err);
-            this._emitError(`Алдаа: ${err.message}`);
+            this._emitError(`Error: ${err.message}`);
             return null;
         }
     }
@@ -308,7 +308,7 @@ class SerialBalance {
     _handleDisconnect() {
         this.isConnected = false;
         this.port = null;
-        this._emitStatus("Холболт салсан");
+        this._emitStatus("Disconnected");
 
         if (this.onDisconnect) {
             this.onDisconnect();

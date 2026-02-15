@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ param.name_mn }} - Витринитийн ойлт{% endblock %}
+{% block title %}{{ param.name_mn }} - Vitrinite Reflectance{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
@@ -21,20 +21,20 @@
   <div class="row g-3">
     <div class="col-md-3">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">Select Sample</h6></div>
         <div class="card-body">
           <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- Дээж сонгоно уу --</option>
+            <option value="">-- Select a sample --</option>
           </select>
           <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
-            <i class="bi bi-plus-circle me-1"></i>Нэмэх
+            <i class="bi bi-plus-circle me-1"></i>Add
           </button>
         </div>
       </div>
 
-      <!-- Тооцоолол -->
+      <!-- Calculation -->
       <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white"><h6 class="mb-0">Ro% тооцоо</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">Ro% Calculation</h6></div>
         <div class="card-body">
           <div class="mb-2">
             <label class="form-label small">Ro mean:</label>
@@ -45,7 +45,7 @@
             <input type="text" id="roStd" class="form-control form-control-sm" readonly>
           </div>
           <div class="mb-2">
-            <label class="form-label small">Тоо (n):</label>
+            <label class="form-label small">Count (n):</label>
             <input type="text" id="roCount" class="form-control form-control-sm" readonly>
           </div>
         </div>
@@ -55,7 +55,7 @@
     <div class="col-md-9">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">Vitrinite Reflectance — Хэмжилтийн цэгүүд</h6>
+          <h6 class="mb-0">Vitrinite Reflectance — Measurement Points</h6>
           <div>
             <button class="btn btn-outline-secondary btn-sm me-1" onclick="calcStats()">
               <i class="bi bi-calculator me-1"></i>Тооцоолох
@@ -141,7 +141,7 @@ function calcStats() {
 }
 
 function saveResults() {
-  if (!selectedSampleId) { alert('Дээж сонгоно уу'); return; }
+  if (!selectedSampleId) { alert('Sample сонгоно уу'); return; }
   calcStats();
 
   const points = [];

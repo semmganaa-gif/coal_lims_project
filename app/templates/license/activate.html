@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="mn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лиценз идэвхжүүлэх - Coal LIMS</title>
+    <title>Activate License - Coal LIMS</title>
     <style>
         * {
             margin: 0;
@@ -169,7 +169,7 @@
         <div class="header">
             <div class="logo">🔐</div>
             <h1>Coal LIMS</h1>
-            <p>Лиценз идэвхжүүлэх</p>
+            <p>Activate License</p>
         </div>
 
         <div class="content">
@@ -187,23 +187,23 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="form-group">
-                    <label for="license_key">Лиценз түлхүүр</label>
+                    <label for="license_key">License Key</label>
                     <textarea id="license_key" name="license_key"
-                              placeholder="Лиценз түлхүүрээ энд буулгана уу..."
+                              placeholder="Paste your license key here..."
                               required></textarea>
                 </div>
 
-                <button type="submit" class="btn">Идэвхжүүлэх</button>
+                <button type="submit" class="btn">Activate</button>
             </form>
 
             <div class="hardware-info">
-                <h3>Таны системийн мэдээлэл</h3>
+                <h3>Your System Information</h3>
                 <div class="hardware-item">
                     <span class="label">Hardware ID:</span>
                     <span class="value">
                         {{ hardware_info.short_id }}
                         <button class="copy-btn" onclick="copyToClipboard('{{ hardware_info.short_id }}')">
-                            Хуулах
+                            Copy
                         </button>
                     </span>
                 </div>
@@ -218,7 +218,7 @@
             </div>
 
             <div class="contact-info">
-                <p>Лиценз авахын тулд холбогдоно уу:</p>
+                <p>Contact us to obtain a license:</p>
                 <p><a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
             </div>
         </div>
@@ -227,7 +227,7 @@
     <script>
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(function() {
-                alert('Hardware ID хуулагдлаа!');
+                alert('Hardware ID copied!');
             });
         }
     </script>

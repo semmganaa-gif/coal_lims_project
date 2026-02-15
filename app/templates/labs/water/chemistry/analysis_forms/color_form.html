@@ -6,8 +6,8 @@
 <div class="mt-2 p-2 bg-light rounded">
   <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 1097:2023 - Өнгө</h6>
   <small class="text-muted">
-    <strong>Дундаж</strong> = (Үр дүн 1 + Үр дүн 2) / 2<br>
-    <strong>Эцсийн үр дүн</strong> = Дундаж × Шингэрүүлэлт<br>
+    <strong>Average</strong> = (Result 1 + Result 2) / 2<br>
+    <strong>Эцсийн үр дүн</strong> = Average × Шингэрүүлэлт<br>
     <span class="text-info">MNS хязгаар: ≤20</span>
   </small>
 </div>
@@ -23,12 +23,12 @@
       headerTooltip: 'Гэрэл шингээлт 1' },
     { headerName: 'Abs 2', field: 'abs2', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt3,
       headerTooltip: 'Гэрэл шингээлт 2' },
-    { headerName: 'Үр дүн 1', field: 'r1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+    { headerName: 'Result 1', field: 'r1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
       headerTooltip: 'Шингээлтийн үр дүн 1' },
-    { headerName: 'Үр дүн 2', field: 'r2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+    { headerName: 'Result 2', field: 'r2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
       headerTooltip: 'Шингээлтийн үр дүн 2' },
     {
-      headerName: 'Дундаж', field: 'average', width: 90,
+      headerName: 'Average', field: 'average', width: 90,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         if (r1 != null && r2 != null) return (r1 + r2) / 2;
@@ -38,10 +38,10 @@
       },
       valueFormatter: fmt2,
       cellStyle: { color: '#0d6efd', fontWeight: '600' },
-      headerTooltip: 'Шинжилгээний дундаж утга'
+      headerTooltip: 'Analysisний дундаж утга'
     },
     {
-      headerName: 'Үр дүн', field: 'result', width: 100,
+      headerName: 'Result', field: 'result', width: 100,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         const dil = p.data.dilution || 1;
@@ -55,7 +55,7 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
     {
-      headerName: 'Зөрүү', field: 'diff', width: 70,
+      headerName: 'Difference', field: 'diff', width: 70,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;

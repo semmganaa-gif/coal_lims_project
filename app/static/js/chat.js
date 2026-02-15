@@ -92,7 +92,7 @@
     const msgSearchBtn = document.getElementById('chatMsgSearchBtn');
     if (msgSearchBtn) {
       msgSearchBtn.addEventListener('click', () => {
-        const query = prompt('Хайх үг:');
+        const query = prompt('Search keyword:');
         if (query && query.trim()) {
           searchMessagesInChat(query.trim());
         }
@@ -186,7 +186,7 @@
     socket.on('user_online', (data) => {
       updateContactStatus(data.user_id, true);
       if (currentChatUserId === data.user_id) {
-        partnerStatus.textContent = 'Онлайн';
+        partnerStatus.textContent = 'Online';
         partnerStatus.classList.remove('offline');
       }
     });
@@ -194,7 +194,7 @@
     socket.on('user_offline', (data) => {
       updateContactStatus(data.user_id, false);
       if (currentChatUserId === data.user_id) {
-        partnerStatus.textContent = 'Офлайн';
+        partnerStatus.textContent = 'Offline';
         partnerStatus.classList.add('offline');
       }
     });
@@ -219,7 +219,7 @@
       if (msgEl) {
         msgEl.classList.add('deleted');
         const textEl = msgEl.querySelector('.message-text');
-        if (textEl) textEl.textContent = 'Мессеж устгагдсан';
+        if (textEl) textEl.textContent = 'Message deleted';
       }
     });
 
@@ -280,7 +280,7 @@
 
   // Load contacts
   function loadContacts() {
-    contactsEmpty.innerHTML = '<i class="bi bi-hourglass-split"></i><p>Ачаалж байна...</p>';
+    contactsEmpty.innerHTML = '<i class="bi bi-hourglass-split"></i><p>Loading...</p>';
     contactsEmpty.style.display = 'flex';
 
     fetch('/api/chat/contacts')
@@ -295,14 +295,14 @@
       .catch(err => {
         console.error('Error loading contacts:', err);
         // ✅ XSS сэргийлэлт: err.message escape
-        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Алдаа: ${escapeHtml(err.message || 'Unknown error')}</p>`;
+        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Error: ${escapeHtml(err.message || 'Unknown error')}</p>`;
       });
   }
 
   // Render contacts
   function renderContacts() {
     if (contacts.length === 0) {
-      contactsEmpty.innerHTML = '<i class="bi bi-people"></i><p>Холбогдох хэрэглэгч байхгүй</p>';
+      contactsEmpty.innerHTML = '<i class="bi bi-people"></i><p>No contacts available</p>';
       contactsEmpty.style.display = 'flex';
       return;
     }
@@ -314,7 +314,7 @@
       const initial = c.username.charAt(0).toUpperCase();
       const onlineClass = c.is_online ? '' : 'offline';
       const roleClass = c.role === 'senior' ? 'senior' : (c.role === 'admin' ? 'admin' : '');
-      const roleLabel = c.role === 'senior' ? 'Ахлах' : (c.role === 'admin' ? 'Админ' : (c.role === 'chemist' ? 'Химич' : 'Бэлтгэгч'));
+      const roleLabel = c.role === 'senior' ? 'Senior' : (c.role === 'admin' ? 'Admin' : (c.role === 'chemist' ? 'Chemist' : 'Preparer'));
       const urgentIcon = c.last_message_urgent ? '<i class="bi bi-exclamation-triangle text-danger"></i> ' : '';
 
       html += `
@@ -328,7 +328,7 @@
               ${c.username}
               <span class="contact-role ${roleClass}">${roleLabel}</span>
             </div>
-            <div class="contact-preview">${urgentIcon}${c.last_message || 'Шинэ харилцаа эхлүүлэх'}</div>
+            <div class="contact-preview">${urgentIcon}${c.last_message || 'Start a new conversation'}</div>
           </div>
           ${c.unread_count > 0 ? `<span class="contact-unread">${c.unread_count}</span>` : ''}
         </div>
@@ -347,7 +347,7 @@
       .then(data => {
         const broadcasts = data.broadcasts || [];
         if (broadcasts.length === 0) {
-          broadcastsEl.innerHTML = '<div class="chat-empty"><i class="bi bi-megaphone"></i><p>Зарлал байхгүй</p></div>';
+          broadcastsEl.innerHTML = '<div class="chat-empty"><i class="bi bi-megaphone"></i><p>No announcements</p></div>';
           return;
         }
 
@@ -379,7 +379,7 @@
 
     partnerName.textContent = contact.username;
     partnerAvatar.textContent = contact.username.charAt(0).toUpperCase();
-    partnerStatus.textContent = contact.is_online ? 'Онлайн' : 'Офлайн';
+    partnerStatus.textContent = contact.is_online ? 'Online' : 'Offline';
     partnerStatus.classList.toggle('offline', !contact.is_online);
 
     listView.style.display = 'none';
@@ -399,7 +399,7 @@
 
   // Load chat messages
   function loadMessages(userId) {
-    messagesEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem;">Ачаалж байна...</div>';
+    messagesEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem;">Loading...</div>';
 
     fetch(`/api/chat/history/${userId}`)
       .then(r => r.json())
@@ -411,14 +411,14 @@
       })
       .catch(err => {
         console.error('Error loading messages:', err);
-        messagesEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">Алдаа гарлаа</div>';
+        messagesEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">An error occurred</div>';
       });
   }
 
   // Render messages
   function renderMessages(messages) {
     if (messages.length === 0) {
-      messagesEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem;">Мессеж байхгүй. Харилцаа эхлүүлээрэй!</div>';
+      messagesEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem;">No messages. Start a conversation!</div>';
       return;
     }
 
@@ -444,7 +444,7 @@
       content += `<div class="message-image-wrapper"><img src="${m.file_url}" class="message-image" onclick="window.open('${m.file_url}')" alt="Image"></div>`;
     } else if (m.message_type === 'file' && m.file_url) {
       const size = m.file_size ? formatFileSize(m.file_size) : '';
-      content += `<div class="message-file"><i class="bi bi-file-earmark"></i><a href="${m.file_url}" target="_blank">${m.file_name || 'Файл'}</a> <small>(${size})</small></div>`;
+      content += `<div class="message-file"><i class="bi bi-file-earmark"></i><a href="${m.file_url}" target="_blank">${m.file_name || 'File'}</a> <small>(${size})</small></div>`;
     }
 
     // Sample link
@@ -455,7 +455,7 @@
 
     const deleteBtn = isSent && !m.is_deleted ? `
       <div class="message-actions">
-        <button class="message-delete-btn" onclick="window.LIMS_CHAT.deleteMessage(${m.id})" title="Устгах"><i class="bi bi-trash"></i></button>
+        <button class="message-delete-btn" onclick="window.LIMS_CHAT.deleteMessage(${m.id})" title="Delete"><i class="bi bi-trash"></i></button>
       </div>
     ` : '';
 
@@ -534,7 +534,7 @@
 
   // Delete message
   function deleteMessage(messageId) {
-    if (!confirm('Мессеж устгах уу?')) return;
+    if (!confirm('Delete this message?')) return;
     socket.emit('delete_message', { message_id: messageId });
   }
 
@@ -553,7 +553,7 @@
 
     // Check size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('Файл хэт том (max 10MB)');
+      alert('File is too large (max 10MB)');
       return;
     }
 
@@ -583,7 +583,7 @@
       })
       .catch(err => {
         console.error('File upload error:', err);
-        alert('Файл upload алдаа');
+        alert('File upload error');
       });
 
     e.target.value = '';
@@ -648,7 +648,7 @@
         const samples = data.samples || [];
 
         if (samples.length === 0) {
-          list.innerHTML = '<div style="padding:0.5rem;color:#94a3b8;text-align:center;">Олдсонгүй</div>';
+          list.innerHTML = '<div style="padding:0.5rem;color:#94a3b8;text-align:center;">Not found</div>';
           return;
         }
 
@@ -664,7 +664,7 @@
   function selectSample(id, code) {
     selectedSampleId = id;
     document.getElementById('selectedSample').style.display = 'block';
-    document.getElementById('selectedSampleText').textContent = `Дээж: ${code}`;
+    document.getElementById('selectedSampleText').textContent = `Sample: ${code}`;
     closeAllPopups();
   }
 
@@ -687,7 +687,7 @@
         // Display search results
         const messages = data.messages || [];
         if (messages.length === 0) {
-          contactsEmpty.innerHTML = '<i class="bi bi-search"></i><p>Олдсонгүй</p>';
+          contactsEmpty.innerHTML = '<i class="bi bi-search"></i><p>Not found</p>';
           contactsEmpty.style.display = 'flex';
           return;
         }
@@ -698,7 +698,7 @@
           const time = formatTime(m.sent_at);
           const isFromMe = m.sender_id === window.CHAT_USER_ID;
           const otherUserId = isFromMe ? m.receiver_id : m.sender_id;
-          const otherName = isFromMe ? (m.receiver_name || 'Хэрэглэгч') : (m.sender_name || 'Хэрэглэгч');
+          const otherName = isFromMe ? (m.receiver_name || 'User') : (m.sender_name || 'User');
 
           html += `
             <div class="contact-item" onclick="window.LIMS_CHAT.openChat(${otherUserId})">
@@ -727,7 +727,7 @@
       .then(data => {
         const messages = data.messages || [];
         if (messages.length === 0) {
-          alert('Олдсонгүй');
+          alert('Not found');
           return;
         }
         renderMessages(messages);
@@ -754,7 +754,7 @@
     socket.emit('broadcast_message', { message: text });
     input.value = '';
     hideBroadcastView();
-    alert('Зарлал илгээгдлээ!');
+    alert('Announcement sent!');
   }
 
   // Popups
@@ -814,7 +814,7 @@
     // Browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification(data.sender_name || 'Шинэ мессеж', {
+        new Notification(data.sender_name || 'New message', {
           body: data.message.substring(0, 50),
           icon: '/static/favicon.ico'
         });
@@ -835,7 +835,7 @@
     toast.id = 'chatToast';
     toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#fff;border-left:4px solid #3a8bc7;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:8px;padding:0.75rem 1rem;max-width:320px;cursor:pointer;animation:slideInRight 0.3s ease-out;';
     toast.innerHTML = `
-      <div style="font-weight:600;font-size:0.85rem;color:#1e293b;">${escapeHtml(data.sender_name || 'Шинэ мессеж')}</div>
+      <div style="font-weight:600;font-size:0.85rem;color:#1e293b;">${escapeHtml(data.sender_name || 'New message')}</div>
       <div style="font-size:0.8rem;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(data.message.substring(0, 60))}</div>
     `;
     toast.addEventListener('click', () => {
@@ -850,7 +850,7 @@
 
   function showBroadcastNotification(data) {
     if (Notification.permission === 'granted') {
-      new Notification('Зарлал: ' + (data.sender_name || 'Админ'), {
+      new Notification('Announcement: ' + (data.sender_name || 'Admin'), {
         body: data.message.substring(0, 100),
         icon: '/static/favicon.ico'
       });
@@ -860,7 +860,7 @@
 
   function showUrgentNotification(data) {
     if (Notification.permission === 'granted') {
-      new Notification('ЯАРАЛТАЙ: ' + (data.sender_name || ''), {
+      new Notification('URGENT: ' + (data.sender_name || ''), {
         body: data.message,
         icon: '/static/favicon.ico',
         requireInteraction: true
@@ -968,10 +968,10 @@
     const isToday = date.toDateString() === now.toDateString();
 
     if (isToday) {
-      return date.toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     } else {
-      return date.toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) + ' ' +
-             date.toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+             date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
   }
 

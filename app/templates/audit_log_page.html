@@ -223,15 +223,15 @@
         <h5><i class="bi bi-table me-1"></i>{{ title }} <small class="text-muted">({{ analysis_type.code }})</small></h5>
       </div>
       <div class="stats-row">
-        <div class="stat-item">Нийт: <span class="num">{{ stats.total_samples }}</span></div>
-        <div class="stat-item warning">Давтсан: <span class="num text-warning">{{ stats.with_retries }}</span></div>
-        <div class="stat-item">Баталсан: <span class="num text-success">{{ stats.approved }}</span></div>
-        <div class="stat-item">Хүлээгдэж: <span class="num text-primary">{{ stats.pending }}</span></div>
-        <div class="stat-item">Буцаагдсан: <span class="num text-danger">{{ stats.rejected }}</span></div>
+        <div class="stat-item">Total: <span class="num">{{ stats.total_samples }}</span></div>
+        <div class="stat-item warning">Retried: <span class="num text-warning">{{ stats.with_retries }}</span></div>
+        <div class="stat-item">Approved: <span class="num text-success">{{ stats.approved }}</span></div>
+        <div class="stat-item">Pending: <span class="num text-primary">{{ stats.pending }}</span></div>
+        <div class="stat-item">Rejected: <span class="num text-danger">{{ stats.rejected }}</span></div>
       </div>
     </div>
     <a href="{{ url_for('api.audit_hub') }}" class="btn btn-sm btn-outline-secondary py-1">
-      <i class="bi bi-arrow-left"></i> Буцах
+      <i class="bi bi-arrow-left"></i> Back
     </a>
   </div>
 
@@ -242,7 +242,7 @@
       <div class="calendar-card" data-type="start">
         <div class="calendar-header">
           <div>
-            <div class="calendar-title">Эхлэх огноо</div>
+            <div class="calendar-title">Start Date</div>
             <div class="calendar-sub" id="startCalLabel">---</div>
           </div>
           <div class="calendar-nav">
@@ -257,7 +257,7 @@
       <div class="calendar-card" data-type="end">
         <div class="calendar-header">
           <div>
-            <div class="calendar-title">Дуусах огноо</div>
+            <div class="calendar-title">End Date</div>
             <div class="calendar-sub" id="endCalLabel">---</div>
           </div>
           <div class="calendar-nav">
@@ -273,7 +273,7 @@
 
       <div class="d-flex flex-column gap-2 ms-auto">
         <button type="submit" class="btn btn-primary btn-sm">
-          <i class="bi bi-search"></i> Шүүх
+          <i class="bi bi-search"></i> Filter
         </button>
         <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn">
           <i class="bi bi-file-earmark-spreadsheet"></i> CSV
@@ -305,7 +305,7 @@ const AUDIT_DATA = {
     {% set total_groups = grouped_samples|length %}
     {% for group in grouped_samples %}
       {% set sample = group.sample %}
-      {% set sample_code_display = group.get('sample_code_snapshot') or (sample.sample_code if sample else 'Устгагдсан') %}
+      {% set sample_code_display = group.get('sample_code_snapshot') or (sample.sample_code if sample else 'Deleted') %}
       {% set is_last_group = loop.last %}
       {% for attempt in group.attempts %}
         {% set row_num.val = row_num.val + 1 %}
@@ -411,7 +411,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'sampleCode',
-      headerName: 'Дээж',
+      headerName: 'Sample',
       width: 150,
       pinned: 'left',
       cellRenderer: sampleRenderer,
@@ -420,14 +420,14 @@ function buildDynamicColumns() {
     },
     {
       field: 'attemptNum',
-      headerName: 'Орол',
+      headerName: 'Attempt',
       width: 60,
       valueGetter: p => `${p.data.attemptNum}/${p.data.totalAttempts}`,
       filter: false
     },
     {
       field: 'date',
-      headerName: 'Огноо',
+      headerName: 'Date',
       width: 70,
       cellClass: 'mono',
       filter: 'agTextColumnFilter',
@@ -435,7 +435,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'time',
-      headerName: 'Цаг',
+      headerName: 'Time',
       width: 55,
       cellClass: 'mono',
       filter: 'agTextColumnFilter',
@@ -443,14 +443,14 @@ function buildDynamicColumns() {
     },
     {
       field: 'user',
-      headerName: 'Химич',
+      headerName: 'Chemist',
       width: 80,
       filter: 'agTextColumnFilter',
       floatingFilter: true
     },
     {
       field: 'shift',
-      headerName: 'Ээлж',
+      headerName: 'Shift',
       width: 55,
       filter: 'agTextColumnFilter',
       floatingFilter: true,
@@ -464,9 +464,9 @@ function buildDynamicColumns() {
       headerName: '🔒',
       width: 45,
       cellRenderer: p => {
-        if (p.value === true) return '<span style="color: #16a34a" title="Баталгаажсан - өөрчлөгдөөгүй">✓</span>';
-        if (p.value === false) return '<span style="color: #dc2626" title="АНХААРУУЛГА: Бичлэг өөрчлөгдсөн!">⚠</span>';
-        return '<span style="color: #9ca3af" title="Хуучин бичлэг (hash байхгүй)">-</span>';
+        if (p.value === true) return '<span style="color: #16a34a" title="Verified - not modified">✓</span>';
+        if (p.value === false) return '<span style="color: #dc2626" title="WARNING: Record modified!">⚠</span>';
+        return '<span style="color: #9ca3af" title="Legacy record (no hash)">-</span>';
       },
       filter: false
     }
@@ -494,12 +494,12 @@ function buildDynamicColumns() {
     }));
 
     dataColumns.push({
-      headerName: 'Хэмжилт',
+      headerName: 'Measurements',
       headerClass: 'header-p1',
       children: singleCols
     });
   } else {
-    // Стандарт p1/p2 parallel бүтэц
+    // Standard p1/p2 parallel бүтэц
     // Helper: key-ийн утгыг олох (fallback дэмжсэн)
     const getVal = (obj, key) => {
       if (!obj) return null;
@@ -547,12 +547,12 @@ function buildDynamicColumns() {
   // Summary columns - AUDIT_NO_PARALLEL байхад тохирц/дундаж нуух
   const summaryCols = [];
 
-  // Тохирц/дундаж зөвхөн parallel шинжилгээнд харуулах
+  // Tolerance/дундаж зөвхөн parallel шинжилгээнд харуулах
   if (!AUDIT_NO_PARALLEL) {
     summaryCols.push(
       {
         field: 'diff',
-        headerName: 'Тохирц',
+        headerName: 'Diff',
         width: 70,
         cellRenderer: diffRenderer,
         cellClass: 'mono col-diff',
@@ -560,7 +560,7 @@ function buildDynamicColumns() {
       },
       {
         field: 'avg',
-        headerName: 'Дундаж',
+        headerName: 'Average',
         width: 70,
         cellClass: 'mono col-avg',
         headerClass: 'header-avg',
@@ -602,7 +602,7 @@ function buildDynamicColumns() {
   summaryCols.push(
     {
       field: 'action',
-      headerName: 'Статус',
+      headerName: 'Status',
       width: 65,
       cellRenderer: statusRenderer,
       filter: 'agTextColumnFilter',
@@ -619,7 +619,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'reason',
-      headerName: 'Шалтгаан',
+      headerName: 'Reason',
       flex: 1,
       minWidth: 200,
       filter: 'agTextColumnFilter',
@@ -665,7 +665,7 @@ function buildDynamicColumns() {
   // Add extra columns group if exists
   if (extraCols.length > 0) {
     cols.push({
-      headerName: 'Тогтмол',
+      headerName: 'Constants',
       headerClass: 'header-extra',
       children: extraCols
     });
@@ -712,8 +712,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== CALENDAR LOGIC ====================
 function formatDateLabel(date) {
-  const months = ["1-р сар", "2-р сар", "3-р сар", "4-р сар", "5-р сар", "6-р сар",
-                  "7-р сар", "8-р сар", "9-р сар", "10-р сар", "11-р сар", "12-р сар"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return months[date.getMonth()] + " " + date.getFullYear();
 }
 
@@ -734,7 +734,7 @@ function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) 
   const trHead = document.createElement('tr');
   const trBody = document.createElement('tr');
 
-  const weekDays = ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"];
+  const weekDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
   for (let i = 0; i < 7; i++) {
     let currentDate = new Date(startDate);

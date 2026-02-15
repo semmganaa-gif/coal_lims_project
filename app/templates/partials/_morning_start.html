@@ -143,7 +143,7 @@
   <div class="morning-title">
     <div class="sunrise-icon"><i class="bi bi-sunrise"></i></div>
     <div>
-      <span id="morningGreeting">Өдрийг эхлэх</span>
+      <span id="morningGreeting">Start the Day</span>
       <div style="font-size:0.72rem; font-weight:500; color:#64748b;" id="morningDate"></div>
     </div>
     <span style="margin-left:auto; font-size:0.7rem; color:#94a3b8; font-weight:600;" id="morningTime"></span>
@@ -152,82 +152,82 @@
   <div class="morning-grid">
     <!-- 1. SLAM Book -->
     <div class="slam-card">
-      <h4><i class="bi bi-shield-exclamation"></i> SLAM — Аюулгүй ажиллагааны үнэлгээ</h4>
+      <h4><i class="bi bi-shield-exclamation"></i> SLAM — Safety Assessment</h4>
       <ul class="slam-list" id="slamList">
         <li data-slam="S" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamS"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#ef4444">S</div>
           <div>
-            <div class="slam-text">Stop — Зогс</div>
-            <div class="slam-sub">Ажлын орчноо анхааралтай ажигла</div>
+            <div class="slam-text">Stop</div>
+            <div class="slam-sub">Carefully observe your work environment</div>
           </div>
         </li>
         <li data-slam="L" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamL"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#f59e0b">L</div>
           <div>
-            <div class="slam-text">Look — Хар</div>
-            <div class="slam-sub">Аюул, эрсдэл байгаа эсэхийг шалга</div>
+            <div class="slam-text">Look</div>
+            <div class="slam-sub">Check for any hazards or risks</div>
           </div>
         </li>
         <li data-slam="A" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamA"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#3b82f6">A</div>
           <div>
-            <div class="slam-text">Assess — Үнэл</div>
-            <div class="slam-sub">Эрсдэлийн түвшинг үнэлж, хамгаалалтаа шалга</div>
+            <div class="slam-text">Assess</div>
+            <div class="slam-sub">Evaluate risk level and check safety measures</div>
           </div>
         </li>
         <li data-slam="M" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamM"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#16a34a">M</div>
           <div>
-            <div class="slam-text">Manage — Удирд</div>
-            <div class="slam-sub">Шаардлагатай арга хэмжээ авч, ажлаа эхэл</div>
+            <div class="slam-text">Manage</div>
+            <div class="slam-sub">Take necessary measures and begin work</div>
           </div>
         </li>
       </ul>
       <div class="slam-progress"><div class="slam-progress-bar" id="slamProgress" style="width:0%"></div></div>
     </div>
 
-    <!-- 2. Тоног Төхөөрөмж -->
+    <!-- 2. Equipment Төхөөрөмж -->
     <div class="equip-card">
-      <h4><i class="bi bi-tools"></i> Тоног төхөөрөмжийн анхааруулга</h4>
+      <h4><i class="bi bi-tools"></i> Equipment Alerts</h4>
       <div class="equip-alert-list" id="equipAlerts">
         <div class="text-center py-3" style="color:#94a3b8; font-size:0.8rem;">
-          <i class="bi bi-arrow-repeat spin"></i> Ачааллаж байна...
+          <i class="bi bi-arrow-repeat spin"></i> Loading...
         </div>
       </div>
     </div>
 
     <!-- 3. Өнөөдрийн ажил -->
     <div class="tasks-card">
-      <h4><i class="bi bi-list-check"></i> Өнөөдрийн дээж & ажил</h4>
+      <h4><i class="bi bi-list-check"></i> Today's Samples & Tasks</h4>
       <div class="task-stat-row">
         <div class="task-stat-box">
           <div class="num" style="color:#0891b2" id="statTodayReceived">-</div>
-          <div class="lbl">Өнөөдөр ирсэн</div>
+          <div class="lbl">Received Today</div>
         </div>
         <div class="task-stat-box">
           <div class="num" style="color:#2563eb" id="statNew">-</div>
-          <div class="lbl">Хүлээгдэж буй</div>
+          <div class="lbl">Pending</div>
         </div>
         <div class="task-stat-box">
           <div class="num" style="color:#d97706" id="statInProgress">-</div>
-          <div class="lbl">Шинжилж байна</div>
+          <div class="lbl">In Progress</div>
         </div>
       </div>
     </div>
 
     <!-- 4. Сануулга -->
     <div class="reminder-card">
-      <h4><i class="bi bi-bell"></i> Өдөр тутмын сануулга</h4>
+      <h4><i class="bi bi-bell"></i> Daily Reminders</h4>
       <ul class="reminder-list">
-        <li><i class="bi bi-check-circle-fill"></i> Хувийн хамгаалах хэрэгсэл (PPE) зүүсэн эсэх</li>
-        <li><i class="bi bi-check-circle-fill"></i> Ажлын байрны цэвэрлэгээ хийгдсэн эсэх</li>
-        <li><i class="bi bi-check-circle-fill"></i> Урвалж бодисын хугацаа шалгах</li>
-        <li><i class="bi bi-check-circle-fill"></i> Хэмжих багажийн тэг тохируулга</li>
-        <li><i class="bi bi-check-circle-fill"></i> Орчны температур, чийглэг бүртгэх</li>
+        <li><i class="bi bi-check-circle-fill"></i> Personal Protective Equipment (PPE) worn</li>
+        <li><i class="bi bi-check-circle-fill"></i> Workplace cleaning completed</li>
+        <li><i class="bi bi-check-circle-fill"></i> Check reagent expiration dates</li>
+        <li><i class="bi bi-check-circle-fill"></i> Zero-calibrate measuring instruments</li>
+        <li><i class="bi bi-check-circle-fill"></i> Record environmental temperature and humidity</li>
       </ul>
     </div>
   </div>
@@ -238,12 +238,12 @@
   // --- Date & greeting ---
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? 'Өглөөний мэнд!' : hour < 17 ? 'Өдрийн мэнд!' : 'Оройн мэнд!';
+  const greeting = hour < 12 ? 'Good Morning!' : hour < 17 ? 'Good Afternoon!' : 'Good Evening!';
   document.getElementById('morningGreeting').textContent = greeting;
   document.getElementById('morningDate').textContent =
-    now.toLocaleDateString('mn-MN', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+    now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
   document.getElementById('morningTime').textContent =
-    now.toLocaleTimeString('mn-MN', { hour:'2-digit', minute:'2-digit' });
+    now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
 
   // --- Detect lab type from URL (SLAM key-д хэрэгтэй тул эхэнд тодорхойлно) ---
   const path = window.location.pathname;
@@ -298,21 +298,21 @@
       if (data.calibration_overdue && data.calibration_overdue.length) {
         data.calibration_overdue.forEach(e => {
           html += `<div class="equip-alert-item overdue">
-            <span class="badge-sm" style="background:#dc2626">${e.days_overdue} хоног</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>хугацаа хэтэрсэн</em>
+            <span class="badge-sm" style="background:#dc2626">${e.days_overdue} days</span>
+            <strong>${e.lab_code}</strong> ${e.name} — <em>overdue</em>
           </div>`;
         });
       }
       if (data.calibration_due && data.calibration_due.length) {
         data.calibration_due.forEach(e => {
           html += `<div class="equip-alert-item due-soon">
-            <span class="badge-sm" style="background:#d97706">${e.days_left} хоног</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>баталгаажуулалт дөхөж байна</em>
+            <span class="badge-sm" style="background:#d97706">${e.days_left} days</span>
+            <strong>${e.lab_code}</strong> ${e.name} — <em>calibration due soon</em>
           </div>`;
         });
       }
       if (data.broken_equipment && data.broken_equipment.length) {
-        const statusMn = { broken: 'Эвдэрсэн', maintenance: 'Засварт', needs_spare: 'Сэлбэг хэрэгтэй' };
+        const statusMn = { broken: 'Out of Order', maintenance: 'Under Maintenance', needs_spare: 'Spare Parts Required' };
         data.broken_equipment.forEach(e => {
           html += `<div class="equip-alert-item broken">
             <span class="badge-sm" style="background:#b91c1c"><i class="bi bi-exclamation-triangle"></i></span>
@@ -321,7 +321,7 @@
         });
       }
       if (!html) {
-        html = '<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> Бүх тоног төхөөрөмж хэвийн</div>';
+        html = '<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> All equipment is in normal condition</div>';
       }
       el.innerHTML = html;
 
@@ -334,7 +334,7 @@
     })
     .catch(() => {
       document.getElementById('equipAlerts').innerHTML =
-        '<div class="text-center py-2" style="color:#94a3b8; font-size:0.8rem;">Мэдээлэл ачаалахад алдаа гарлаа</div>';
+        '<div class="text-center py-2" style="color:#94a3b8; font-size:0.8rem;">Failed to load data</div>';
     });
 })();
 </script>

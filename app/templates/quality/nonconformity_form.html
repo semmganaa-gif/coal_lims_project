@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-exclamation-triangle me-2"></i>Nonconformity / Nonconforming Work Register</h2>
+    <p class="text-muted">LAB.10.00.01 | ISO 17025 - 7.10</p>
+
+    <form method="POST" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Date:</label>
+                <input type="date" name="record_date" class="form-control" value="{{ today }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">No.:</label>
+                <input type="text" class="form-control" value="Auto-generated" disabled>
+            </div>
+        </div>
+
+        {# ═══ Section 1: Detector ═══ #}
+        <div class="card mt-3">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-person-exclamation me-2"></i>Section to be filled by the person who detected the nonconformity</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Full name, position <span class="text-danger">*</span></label>
+                        <input type="text" name="detector_name" class="form-control"
+                               placeholder="E.g.: B.Bold, Analyst" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Department / Unit</label>
+                        <input type="text" name="detector_department" class="form-control"
+                               placeholder="E.g.: Coal Laboratory">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nonconformity details, documented evidence <span class="text-danger">*</span></label>
+                    <small class="form-text text-muted d-block mb-1">Describe the related activity, the violated procedure, instruction, or standard clause</small>
+                    <textarea name="nc_description" class="form-control" rows="5"
+                              placeholder="Detailed description of the nonconformity..." required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Proposed action</label>
+                    <textarea name="proposed_action" class="form-control" rows="3"
+                              placeholder="Suggested measures"></textarea>
+                </div>
+
+                <div class="border-top pt-3">
+                    <p class="mb-1"><strong>Signature:</strong></p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-save me-1"></i> Register
+            </button>
+            <a href="{{ url_for('quality.nonconformity_list') }}" class="btn btn-secondary btn-lg ms-2">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

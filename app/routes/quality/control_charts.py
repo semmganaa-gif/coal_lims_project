@@ -294,7 +294,7 @@ def register_routes(bp):
                     "analysis_code": analysis_code,
                     "status": "insufficient_data",
                     "count": len(results_list),
-                    "message": "Хамгийн багадаа 2 хэмжилт хэрэгтэй"
+                    "message": "At least 2 measurements required"
                 })
                 continue
 
@@ -345,7 +345,7 @@ def register_routes(bp):
         """
         qc_samples = _get_qc_samples()
         if not qc_samples:
-            return jsonify({"error": "QC дээж олдсонгүй"})
+            return jsonify({"error": "QC sample not found"})
 
         filtered_samples = []
         for s in qc_samples:
@@ -360,7 +360,7 @@ def register_routes(bp):
                     filtered_samples.append(s)
 
         if not filtered_samples:
-            return jsonify({"error": f"{qc_type} дээж олдсонгүй"})
+            return jsonify({"error": f"{qc_type} sample not found"})
 
         sample_ids = [s.id for s in filtered_samples]
         samples_map = {s.id: s for s in filtered_samples}

@@ -12,18 +12,18 @@
           <i class="bi bi-cpu"></i>
         </div>
         <div>
-          <h4 class="eq-hero-title">Тоног Төхөөрөмж</h4>
-          <p class="eq-hero-sub">Бүртгэл, баталгаажуулалт, засвар үйлчилгээ</p>
+          <h4 class="eq-hero-title">Equipment</h4>
+          <p class="eq-hero-sub">Records, Calibration, Maintenance</p>
         </div>
       </div>
       <div class="eq-hero-right">
         <span class="eq-stat">
           <span class="eq-stat-num">{{ equipments|length }}</span>
-          <span class="eq-stat-label">Нийт</span>
+          <span class="eq-stat-label">Total</span>
         </span>
         {% if current_user.role == 'admin' %}
         <button class="btn eq-btn-add" data-bs-toggle="modal" data-bs-target="#addEqModal">
-          <i class="bi bi-plus-lg"></i> Шинэ бүртгэл
+          <i class="bi bi-plus-lg"></i> New Record
         </button>
         {% endif %}
       </div>
@@ -32,19 +32,19 @@
 
   {# ===== VIEW TABS ===== #}
   {% set view_items = [
-    ('all', 'Нийт тоног төхөөрөмж', 'bi-grid-3x3-gap'),
-    ('coal', 'Нүүрс', 'bi-fire'),
-    ('water', 'Ус', 'bi-droplet'),
-    ('micro', 'Микро', 'bi-bug'),
+    ('all', 'All Equipment', 'bi-grid-3x3-gap'),
+    ('coal', 'Coal', 'bi-fire'),
+    ('water', 'Water', 'bi-droplet'),
+    ('micro', 'Micro', 'bi-bug'),
   ] %}
 
   {% set register_items = [
-    ('measurement', 'Хэмжих хэрэгслийн бүртгэл', 'bi-rulers'),
-    ('glassware', 'Шилэн хэмжүүрийн бүртгэл', 'bi-cup-straw'),
-    ('internal_check', 'Дотоод шалгалт тохируулга', 'bi-clipboard-check'),
-    ('new_equipment', 'Шинэ ТТ бүртгэл', 'bi-box-arrow-in-right'),
+    ('measurement', 'Measuring Instruments Register', 'bi-rulers'),
+    ('glassware', 'Glassware Register', 'bi-cup-straw'),
+    ('internal_check', 'Internal Check & Adjustment', 'bi-clipboard-check'),
+    ('new_equipment', 'New Equipment Register', 'bi-box-arrow-in-right'),
     ('out_of_service', 'Out of Service', 'bi-x-circle'),
-    ('balances_register', 'Жин', 'bi-speedometer'),
+    ('balances_register', 'Balance', 'bi-speedometer'),
   ] %}
 
   <div class="eq-tabs">
@@ -71,23 +71,23 @@
     <div class="eq-toolbar-left">
       <div class="eq-search">
         <i class="bi bi-search"></i>
-        <input type="text" id="eqQuickFilter" placeholder="Хайх...">
+        <input type="text" id="eqQuickFilter" placeholder="Search...">
       </div>
       <select id="statusFilter" class="eq-select">
-        <option value="">Бүх байдал</option>
-        <option value="normal">Хэвийн</option>
-        <option value="maintenance">Засварт</option>
-        <option value="needs_spare">Сэлбэг хэрэгтэй</option>
-        <option value="broken">Эвдэрсэн</option>
+        <option value="">All Status</option>
+        <option value="normal">Normal</option>
+        <option value="maintenance">Under Maintenance</option>
+        <option value="needs_spare">Spare Parts Required</option>
+        <option value="broken">Out of Order</option>
       </select>
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role == 'admin' %}
       <button class="btn btn-outline-primary btn-sm" id="btn-edit-selected" onclick="editSelected()" disabled>
-        <i class="bi bi-pencil-square"></i> Засах
+        <i class="bi bi-pencil-square"></i> Edit
       </button>
       <button class="btn btn-outline-danger btn-sm" id="btn-delete-selected" disabled>
-        <i class="bi bi-trash3"></i> Устгах
+        <i class="bi bi-trash3"></i> Delete
         <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
       </button>
       {% endif %}
@@ -114,91 +114,91 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-content eq-modal">
           <div class="modal-header eq-modal-header">
-            <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Шинэ тоног төхөөрөмж</h5>
+            <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>New Equipment</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body p-4">
             <div class="row g-3">
               <div class="col-md-8">
-                <label class="eq-label">Нэр <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" required placeholder="Ж: Analytic Balance">
+                <label class="eq-label">Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required placeholder="e.g. Analytic Balance">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Категори</label>
+                <label class="eq-label">Category</label>
                 <select name="category" id="addEqCategory" class="form-select">
                   {{ category_options('other') }}
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Давхар бүртгэл</label>
+                <label class="eq-label">Register Type</label>
                 <select name="register_type" id="addEqRegType" class="form-select">
                   {{ register_type_options('') }}
                 </select>
               </div>
               <div class="col-md-6">
-                <label class="eq-label">Үйлдвэрлэгч</label>
+                <label class="eq-label">Manufacturer</label>
                 <input type="text" name="manufacturer" class="form-control">
               </div>
               <div class="col-md-6">
-                <label class="eq-label">Марк / Модель</label>
+                <label class="eq-label">Model</label>
                 <input type="text" name="model" class="form-control">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Сериал №</label>
+                <label class="eq-label">Serial No.</label>
                 <input type="text" name="serial" class="form-control">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Лаб код</label>
+                <label class="eq-label">Lab Code</label>
                 <input type="text" name="lab_code" class="form-control">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Байршил</label>
+                <label class="eq-label">Location</label>
                 <input type="text" name="location" class="form-control">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Тоо ширхэг</label>
+                <label class="eq-label">Quantity</label>
                 <input type="number" name="quantity" class="form-control" value="1" min="1">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Баталгаажуулах давтамж (хоног)</label>
+                <label class="eq-label">Calibration Cycle (days)</label>
                 <input type="number" name="cycle" id="addCycle" class="form-control" value="365">
               </div>
               <div class="col-md-4">
-                <label class="eq-label">Өрөөний дугаар</label>
+                <label class="eq-label">Room No.</label>
                 <input type="text" name="room" class="form-control">
               </div>
 
-              {# Баталгаажуулалтын огноонууд #}
+              {# Calibration dates #}
               <div class="col-md-6">
                 <label class="eq-label text-success">
-                  <i class="bi bi-calendar-check me-1"></i>Сүүлд баталгаажсан
+                  <i class="bi bi-calendar-check me-1"></i>Last Calibrated
                 </label>
                 <input type="date" name="calibration_date" id="addCalibDate" class="form-control">
-                <div class="form-text small">Огноо оруулахад дараагийн хугацаа автомат тооцоологдоно</div>
+                <div class="form-text small">Next due date will be calculated automatically</div>
               </div>
               <div class="col-md-6">
                 <label class="eq-label text-danger">
-                  <i class="bi bi-calendar-event me-1"></i>Дараагийн хугацаа
+                  <i class="bi bi-calendar-event me-1"></i>Next Due
                   <span class="badge bg-secondary-subtle text-secondary ms-1" id="addCalcBadge" style="display:none"></span>
                 </label>
                 <input type="date" name="next_calibration_date" id="addNextCalibDate" class="form-control">
                 <div class="form-text small">
                   <a href="#" id="addCalcNextDateBtn" class="text-decoration-none">
-                    <i class="bi bi-calculator"></i> Давтамжаас тооцоолох
+                    <i class="bi bi-calculator"></i> Calculate from cycle
                   </a>
                 </div>
               </div>
 
               <div class="col-md-6">
-                <label class="eq-label">Үйлдвэрлэсэн огноо</label>
-                <input type="text" name="manufactured_info" class="form-control" placeholder="Ж: 2023.06">
+                <label class="eq-label">Manufactured Date</label>
+                <input type="text" name="manufactured_info" class="form-control" placeholder="e.g. 2023.06">
               </div>
               <div class="col-md-6">
-                <label class="eq-label">Ашиглалтад орсон огноо</label>
-                <input type="text" name="commissioned_info" class="form-control" placeholder="Ж: 2024.01">
+                <label class="eq-label">Commissioned Date</label>
+                <input type="text" name="commissioned_info" class="form-control" placeholder="e.g. 2024.01">
               </div>
               <div class="col-md-6">
-                <label class="eq-label">Шалгалт тохируулга</label>
+                <label class="eq-label">Check & Adjustment</label>
                 <div class="d-flex gap-3 mt-1">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="chk_checked" id="chkChecked" value="checked">
@@ -211,26 +211,26 @@
                 </div>
               </div>
               <div class="col-12">
-                <label class="eq-label">Хамааралтай шинжилгээ</label>
-                <input type="text" name="related" class="form-control" placeholder="Ж: Ash, Moist, CV...">
+                <label class="eq-label">Related Analysis</label>
+                <input type="text" name="related" class="form-control" placeholder="e.g. Ash, Moist, CV...">
               </div>
               <div class="col-12">
-                <label class="eq-label">Тайлбар</label>
+                <label class="eq-label">Remarks</label>
                 <input type="text" name="remark" class="form-control">
               </div>
 
-              {# ===== ДИНАМИК НЭМЭЛТ ТАЛБАРУУД (register_type-аар) ===== #}
+              {# ===== DYNAMIC EXTRA FIELDS (by register_type) ===== #}
 
-              {# --- Жингийн бүртгэл --- #}
+              {# --- Balance Register --- #}
               <div class="col-12 reg-fields reg-balances_register" style="display:none">
-                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-speedometer me-1"></i>Жингийн нэмэлт мэдээлэл</h6>
+                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-speedometer me-1"></i>Balance Additional Info</h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label class="eq-label">Хэмжих хязгаар</label>
-                    <input type="text" name="range" class="form-control" placeholder="Ж: 0-220г">
+                    <label class="eq-label">Measurement Range</label>
+                    <input type="text" name="range" class="form-control" placeholder="e.g. 0-220g">
                   </div>
                   <div class="col-md-4">
-                    <label class="eq-label">Зориулалт</label>
+                    <label class="eq-label">Purpose</label>
                     <select name="purpose" class="form-select">
                       {{ lab_purpose_options('') }}
                     </select>
@@ -238,12 +238,12 @@
                 </div>
               </div>
 
-              {# --- Хэмжих хэрэгсэл --- #}
+              {# --- Measuring Instrument --- #}
               <div class="col-12 reg-fields reg-measurement" style="display:none">
-                <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Хэмжих хэрэгслийн нэмэлт</h6>
+                <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Measuring Instrument Details</h6>
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label class="eq-label">Бүлэг</label>
+                    <label class="eq-label">Group</label>
                     <select name="group" class="form-select">
                       {{ measurement_group_options('') }}
                     </select>
@@ -253,87 +253,87 @@
                     <input type="text" name="no" class="form-control">
                   </div>
                   <div class="col-md-3">
-                    <label class="eq-label">Зориулалт</label>
+                    <label class="eq-label">Purpose</label>
                     <select name="purpose" class="form-select">
                       {{ lab_purpose_options('') }}
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="eq-label">Хэмжих нэгж</label>
+                    <label class="eq-label">Measurement Unit</label>
                     <select name="unit" class="form-select">
                       {{ measurement_unit_options('') }}
                     </select>
                   </div>
-                  <div class="col-md-3"><label class="eq-label">Баталг. хэмжих хязгаар</label><input type="text" name="cert_range" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Баталг. нарийвчлал</label><input type="text" name="cert_accuracy" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Шалг. хэмжих хязгаар</label><input type="text" name="chk_range" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Шалг. нарийвчлал</label><input type="text" name="chk_accuracy" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Cert. Meas. Range</label><input type="text" name="cert_range" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Cert. Accuracy</label><input type="text" name="cert_accuracy" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Check Meas. Range</label><input type="text" name="chk_range" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Check Accuracy</label><input type="text" name="chk_accuracy" class="form-control"></div>
                   <div class="col-md-3">
-                    <label class="eq-label">Давтамж (Баталг.)</label>
+                    <label class="eq-label">Frequency (Cert.)</label>
                     <select name="freq_cert" class="form-select">{{ freq_cert_options('') }}</select>
                   </div>
                   <div class="col-md-3">
-                    <label class="eq-label">Давтамж (Шалг.)</label>
+                    <label class="eq-label">Frequency (Check)</label>
                     <select name="freq_check" class="form-select">{{ freq_check_options('') }}</select>
                   </div>
-                  <div class="col-md-3"><label class="eq-label">Эталоны төрөл</label><input type="text" name="etalon_type" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Эталон баталг. огноо</label><input type="text" name="etalon_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Дараагийн баталг.</label><input type="text" name="next_cert" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Сертификатын дугаар</label><input type="text" name="cert_no" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">Хариуцах ажилтан</label><input type="text" name="responsible" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Reference Standard Type</label><input type="text" name="etalon_type" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Reference Cert. Date</label><input type="text" name="etalon_date" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Calibration Date</label><input type="text" name="cert_date" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Next Calibration</label><input type="text" name="next_cert" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Certificate No.</label><input type="text" name="cert_no" class="form-control"></div>
+                  <div class="col-md-6"><label class="eq-label">Responsible Person</label><input type="text" name="responsible" class="form-control"></div>
                 </div>
               </div>
 
-              {# --- Шилэн хэмжүүр --- #}
+              {# --- Glassware --- #}
               <div class="col-12 reg-fields reg-glassware" style="display:none">
-                <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Шилэн хэмжүүрийн нэмэлт</h6>
+                <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Glassware Details</h6>
                 <div class="row g-3">
-                  <div class="col-md-3"><label class="eq-label">Бүлэг</label><input type="text" name="group" class="form-control" placeholder="Колб, Цилиндр..."></div>
-                  <div class="col-md-2"><label class="eq-label">№</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Хэмжээ /мл/</label><input type="text" name="volume" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Гэрчилгээний дугаар</label><input type="text" name="cert_no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Баталгаажуулсан огноо</label><input type="text" name="cert_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Баталгаат хугацаа дуусах</label><input type="text" name="cert_expire" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Дахин баталгаажуулах</label><input type="text" name="recert_date" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Group</label><input type="text" name="group" class="form-control" placeholder="Flask, Cylinder..."></div>
+                  <div class="col-md-2"><label class="eq-label">No.</label><input type="text" name="no" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Volume (mL)</label><input type="text" name="volume" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Certificate No.</label><input type="text" name="cert_no" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Calibration Date</label><input type="text" name="cert_date" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Certification Expiry</label><input type="text" name="cert_expire" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Recalibration Date</label><input type="text" name="recert_date" class="form-control"></div>
                 </div>
               </div>
 
-              {# --- Дотоод шалгалт --- #}
+              {# --- Internal Check --- #}
               <div class="col-12 reg-fields reg-internal_check" style="display:none">
-                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Дотоод шалгалтын нэмэлт</h6>
+                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Internal Check Details</h6>
                 <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">№</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Марк, дугаар</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Шалгалт хийсэн огноо</label><input type="text" name="check_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Дараагийн шалгалт</label><input type="text" name="next_check_date" class="form-control"></div>
+                  <div class="col-md-2"><label class="eq-label">No.</label><input type="text" name="no" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Model No.</label><input type="text" name="mark" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Commissioned Date</label><input type="text" name="commissioned_date" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Check Date</label><input type="text" name="check_date" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Next Check Date</label><input type="text" name="next_check_date" class="form-control"></div>
                 </div>
               </div>
 
-              {# --- Шинэ ТТ --- #}
+              {# --- New Equipment --- #}
               <div class="col-12 reg-fields reg-new_equipment" style="display:none">
-                <hr><h6 class="fw-bold text-warning small"><i class="bi bi-box-arrow-in-right me-1"></i>Шинэ ТТ нэмэлт</h6>
+                <hr><h6 class="fw-bold text-warning small"><i class="bi bi-box-arrow-in-right me-1"></i>New Equipment Details</h6>
                 <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">Д/д</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Марк, дугаар</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Үйлдв. огноо</label><input type="text" name="manufactured_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">Ашиглалтад орсон</label><input type="text" name="commissioned_date" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">Шалгасан ажилтан</label><input type="text" name="checked_by" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">Зөвшөөрсөн ажилтан</label><input type="text" name="approved_by" class="form-control"></div>
+                  <div class="col-md-2"><label class="eq-label">No.</label><input type="text" name="no" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Model No.</label><input type="text" name="mark" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Manufactured Date</label><input type="text" name="manufactured_date" class="form-control"></div>
+                  <div class="col-md-3"><label class="eq-label">Commissioned Date</label><input type="text" name="commissioned_date" class="form-control"></div>
+                  <div class="col-md-6"><label class="eq-label">Checked By</label><input type="text" name="checked_by" class="form-control"></div>
+                  <div class="col-md-6"><label class="eq-label">Approved By</label><input type="text" name="approved_by" class="form-control"></div>
                 </div>
               </div>
 
               {# --- Out of Service --- #}
               <div class="col-12 reg-fields reg-out_of_service" style="display:none">
-                <hr><h6 class="fw-bold text-danger small"><i class="bi bi-x-circle me-1"></i>Out of Service нэмэлт</h6>
+                <hr><h6 class="fw-bold text-danger small"><i class="bi bi-x-circle me-1"></i>Out of Service Details</h6>
                 <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">Д/д</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Марк, дугаар</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">Гэмтэл</label><input type="text" name="damage" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Засварлах боломж</label><select name="repairable" class="form-select"><option value="">--</option><option>Тийм</option><option>Үгүй</option></select></div>
-                  <div class="col-md-4"><label class="eq-label">Хассан огноо</label><input type="text" name="removed_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">Акталсан огноо</label><input type="text" name="retired_date" class="form-control"></div>
+                  <div class="col-md-2"><label class="eq-label">No.</label><input type="text" name="no" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Model No.</label><input type="text" name="mark" class="form-control"></div>
+                  <div class="col-md-6"><label class="eq-label">Damage</label><input type="text" name="damage" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Repairable</label><select name="repairable" class="form-select"><option value="">--</option><option>Yes</option><option>No</option></select></div>
+                  <div class="col-md-4"><label class="eq-label">Removed Date</label><input type="text" name="removed_date" class="form-control"></div>
+                  <div class="col-md-4"><label class="eq-label">Retired Date</label><input type="text" name="retired_date" class="form-control"></div>
                 </div>
               </div>
 
@@ -341,8 +341,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Бүртгэх</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Register</button>
           </div>
         </div>
       </form>
@@ -407,19 +407,19 @@ document.addEventListener('DOMContentLoaded', function () {
   var today = parseDate(todayStr);
 
   var categoryMap = {
-    furnace:'Нүүрс лаб', prep:'Нүүрс лаб', analysis:'Нүүрс лаб',
-    water:'Усны лаб', micro:'Микро лаб', wtl:'БС лаб',
-    balance:'Жин', other:'Бусад'
+    furnace:'Coal Lab', prep:'Coal Lab', analysis:'Coal Lab',
+    water:'Water Lab', micro:'Micro Lab', wtl:'WTL Lab',
+    balance:'Balance', other:'Other'
   };
 
   function statusFormatter(cell) {
     var s = cell.getValue() || 'normal';
     var m = {
-      broken:     ['eq-status-broken',  'bi-x-circle-fill',             'Эвдэрсэн'],
-      needs_spare:['eq-status-spare',   'bi-exclamation-triangle-fill', 'Сэлбэг'],
-      maintenance:['eq-status-maint',   'bi-wrench-adjustable',         'Засварт'],
-      retired:    ['eq-status-retired',  'bi-archive',                   'Гарсан'],
-      normal:     ['eq-status-normal',   'bi-check-circle-fill',         'Хэвийн'],
+      broken:     ['eq-status-broken',  'bi-x-circle-fill',             'Out of Order'],
+      needs_spare:['eq-status-spare',   'bi-exclamation-triangle-fill', 'Spare Parts'],
+      maintenance:['eq-status-maint',   'bi-wrench-adjustable',         'Maintenance'],
+      retired:    ['eq-status-retired',  'bi-archive',                   'Retired'],
+      normal:     ['eq-status-normal',   'bi-check-circle-fill',         'Normal'],
     };
     var info = m[s] || m.normal;
     return '<span class="eq-status-badge ' + info[0] + '"><i class="bi ' + info[1] + '"></i> ' + info[2] + '</span>';
@@ -452,11 +452,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var cat = cell.getRow().getData().category || 'other';
     var label = categoryMap[cat] || cat;
     var colors = {
-      'Нүүрс лаб':['#fef3c7','#92400e'], 'Усны лаб':['#dbeafe','#1e40af'],
-      'Микро лаб':['#ede9fe','#6d28d9'], 'БС лаб':['#fce7f3','#be185d'],
-      'Жин':['#ecfdf5','#059669'], 'Бусад':['#f1f5f9','#475569']
+      'Coal Lab':['#fef3c7','#92400e'], 'Water Lab':['#dbeafe','#1e40af'],
+      'Micro Lab':['#ede9fe','#6d28d9'], 'WTL Lab':['#fce7f3','#be185d'],
+      'Balance':['#ecfdf5','#059669'], 'Other':['#f1f5f9','#475569']
     };
-    var c = colors[label] || colors['Бусад'];
+    var c = colors[label] || colors['Other'];
     return '<span style="background:'+c[0]+';color:'+c[1]+';padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700">'+label+'</span>';
   }
 
@@ -479,35 +479,35 @@ document.addEventListener('DOMContentLoaded', function () {
     'all': [
       colChk,
       colNo,
-      {title:'Тоног төхөөрөмжийн нэр', field:'name', minWidth:170, formatter:nameFormatter, frozen:true},
-      {title:'Үйлдвэрлэгч', field:'manufacturer', minWidth:100},
-      {title:'Марк дугаар', field:'model', minWidth:100},
+      {title:'Equipment Name', field:'name', minWidth:170, formatter:nameFormatter, frozen:true},
+      {title:'Manufacturer', field:'manufacturer', minWidth:100},
+      {title:'Model', field:'model', minWidth:100},
       {title:'Serial №', field:'serial_number', minWidth:100, formatter:serialFormatter},
-      {title:'Лаб дугаар', field:'lab_code', minWidth:90, formatter:labCodeFormatter},
-      {title:'Зориулалт', field:'category', minWidth:95, formatter:purposeFormatter},
-      {title:'Шалгалт тохируулга', field:'calibration_note', minWidth:110},
-      {title:'Тоо хэмжээ', field:'quantity', width:80, formatter:qtyFormatter},
-      {title:'Үйлдвэрлэсэн огноо', field:'manufactured_info', minWidth:120},
-      {title:'Ашиглалтанд орсон огноо', field:'commissioned_info', minWidth:130},
-      {title:'Тайлбар', field:'remark', minWidth:100},
+      {title:'Lab Code', field:'lab_code', minWidth:90, formatter:labCodeFormatter},
+      {title:'Purpose', field:'category', minWidth:95, formatter:purposeFormatter},
+      {title:'Check & Adjustment', field:'calibration_note', minWidth:110},
+      {title:'Quantity', field:'quantity', width:80, formatter:qtyFormatter},
+      {title:'Manufactured Date', field:'manufactured_info', minWidth:120},
+      {title:'Commissioned Date', field:'commissioned_info', minWidth:130},
+      {title:'Remarks', field:'remark', minWidth:100},
     ],
     'coal': [
       colChk,
-      {title:'Д/д', formatter:'rownum', width:55, frozen:true, headerSort:false},
-      {title:'Багаж, тоног төхөөрөмжийн нэр', field:'name', minWidth:170, frozen:true},
-      {title:'Үйлдвэрлэгчийн нэр', field:'manufacturer', minWidth:120},
-      {title:'Марк, дугаар', field:'model', width:120},
-      {title:'Лабораторийн дугаар', field:'lab_code', width:120, formatter:labCodeFormatter},
+      {title:'No.', formatter:'rownum', width:55, frozen:true, headerSort:false},
+      {title:'Equipment Name', field:'name', minWidth:170, frozen:true},
+      {title:'Manufacturer', field:'manufacturer', minWidth:120},
+      {title:'Model No.', field:'model', width:120},
+      {title:'Lab Code', field:'lab_code', width:120, formatter:labCodeFormatter},
       {title:'Serial №', field:'serial_number', width:110, formatter:serialFormatter},
-      {title:'Тоо хэмжээ', field:'quantity', width:80, formatter:qtyFormatter},
-      {title:'Ашиглалтад орсон огноо', field:'commissioned_info', minWidth:130},
-      {title:'Байршил', field:'location', width:100},
-      {title:'Ашиглалтын байдал', columns:[
-        {title:'Хэвийн', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
-        {title:'Эвдрэлтэй', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
-        {title:'Сэлбэг шаардлагатай', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
+      {title:'Quantity', field:'quantity', width:80, formatter:qtyFormatter},
+      {title:'Commissioned Date', field:'commissioned_info', minWidth:130},
+      {title:'Location', field:'location', width:100},
+      {title:'Operational Status', columns:[
+        {title:'Normal', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
+        {title:'Out of Order', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
+        {title:'Spare Parts Required', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
       ]},
-      {title:'Бусад тайлбар', field:'remark', minWidth:120},
+      {title:'Remarks', field:'remark', minWidth:120},
     ],
   };
 
@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.editSelected = function() {
     var sel = table.getSelectedData();
     if (sel.length === 1 && sel[0].detail_url) window.location.href = sel[0].detail_url;
-    else if (sel.length > 1) alert('Зөвхөн 1 мөр сонгоно уу.');
+    else if (sel.length > 1) alert('Please select only 1 row.');
   };
 
   table.on('rowSelectionChanged', function(data) {
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (bulkBtn) {
     bulkBtn.addEventListener('click', function() {
       var sel = table.getSelectedData();
-      if (!sel.length || !confirm(sel.length + ' төхөөрөмж устгах уу?')) return;
+      if (!sel.length || !confirm('Delete ' + sel.length + ' equipment item(s)?')) return;
       var form = document.getElementById('bulk-action-form');
       form.querySelectorAll('input[name="equipment_ids"]').forEach(function(el) { el.remove(); });
       sel.forEach(function(row) {
@@ -582,19 +582,19 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   window.confirmDelete = function(id, name) {
-    if (!confirm('"' + name + '" устгах уу?')) return;
+    if (!confirm('Delete "' + name + '"?')) return;
     var form = document.getElementById('delete-form-single');
     form.action = '/equipment/delete/' + id;
     form.submit();
   };
 
-  // --- Бүртгэлийн төрөл сонгоход динамик талбарууд харуулах ---
+  // --- Show dynamic fields based on register type selection ---
   var regTypeSelect = document.getElementById('addEqRegType');
   if (regTypeSelect) {
     regTypeSelect.addEventListener('change', function() {
       document.querySelectorAll('.reg-fields').forEach(function(el) {
         el.style.display = 'none';
-        // Нуусан section-ийн input-уудыг disabled болгох (form-д илгээхгүй)
+        // Disable inputs in hidden sections (won't be sent with form)
         el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
       });
       var sel = this.value;
@@ -606,13 +606,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       }
     });
-    // Эхний төлөв: бүх нэмэлт талбаруудыг disabled болгох
+    // Initial state: disable all extra fields
     document.querySelectorAll('.reg-fields').forEach(function(el) {
       el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
     });
   }
 
-  // --- Баталгаажуулалтын огноо автомат тооцоолох (Add Modal) ---
+  // --- Auto-calculate calibration date (Add Modal) ---
   const addCalibDate = document.getElementById('addCalibDate');
   const addNextCalibDate = document.getElementById('addNextCalibDate');
   const addCycle = document.getElementById('addCycle');
@@ -628,7 +628,7 @@ document.addEventListener('DOMContentLoaded', function () {
       addNextCalibDate.value = date.toISOString().split('T')[0];
       if (addCalcBadge) {
         addCalcBadge.style.display = '';
-        addCalcBadge.textContent = '+' + cycleDays + ' хоног';
+        addCalcBadge.textContent = '+' + cycleDays + ' days';
       }
     }
   }

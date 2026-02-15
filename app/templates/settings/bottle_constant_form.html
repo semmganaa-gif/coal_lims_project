@@ -9,30 +9,30 @@
 <div class="container-fluid mt-4">
   <div class="k-card card shadow-sm">
     <div class="card-body">
-      <h4 class="mb-1">Хоосон тодорхойлолт (Бортого тогтмол)</h4>
+      <h4 class="mb-1">Blank Determination (Bottle Constant)</h4>
       <div class="small muted mb-3">
-        7.4.1&ndash;7.4.8: 20 &plusmn; 0.5 °C, 3 хэмжилт, тохирцын зөрүү ≤ <code>0.0015 g</code>.
+        7.4.1&ndash;7.4.8: 20 &plusmn; 0.5 °C, 3 measurements, concordance deviation ≤ <code>0.0015 g</code>.
       </div>
 
       <form method="post" oninput="calcAvg()">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">Бортого</label>
+            <label class="form-label">Bottle</label>
             <select class="form-select" name="bottle_id" required>
-              <option value="" selected disabled>Сонго…</option>
+              <option value="" selected disabled>Select...</option>
               {% for b in bottles %}
                 <option value="{{ b.id }}">{{ b.serial_no }} {{ '(' ~ (b.label or '') ~ ')' }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Температур (°C)</label>
+            <label class="form-label">Temperature (°C)</label>
             <input type="number" step="0.01" name="temperature_c" class="form-control" value="20.00" required>
-            <div class="form-text">Зорилтот: 20 ± 0.50</div>
+            <div class="form-text">Target: 20 ± 0.50</div>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Хүчинтэй огноо</label>
+            <label class="form-label">Effective Date</label>
             <input type="date" name="effective_from" class="form-control"
                    value="{{ (now() or none)|default('',true) }}">
           </div>
@@ -42,19 +42,19 @@
 
         <div class="row g-3">
           <div class="col-md-3">
-            <label class="form-label">1-р хэмжилт</label>
+            <label class="form-label">1st Measurement</label>
             <input type="number" step="0.00001" name="trial_1" id="t1" class="form-control" required>
           </div>
           <div class="col-md-3">
-            <label class="form-label">2-р хэмжилт</label>
+            <label class="form-label">2nd Measurement</label>
             <input type="number" step="0.00001" name="trial_2" id="t2" class="form-control" required>
           </div>
           <div class="col-md-3">
-            <label class="form-label">3-р хэмжилт</label>
+            <label class="form-label">3rd Measurement</label>
             <input type="number" step="0.00001" name="trial_3" id="t3" class="form-control" required>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Дундаж (K)</label>
+            <label class="form-label">Average (K)</label>
             <input type="text" id="tavg" class="form-control bg-light" readonly>
           </div>
         </div>
@@ -62,13 +62,13 @@
         <div class="small mt-2" id="hint" ></div>
 
         <div class="mt-3">
-          <label class="form-label">Тайлбар (шаардлагатай бол)</label>
+          <label class="form-label">Remarks (if needed)</label>
           <input type="text" name="remarks" class="form-control">
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
-          <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">Буцах</a>
-          <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Хадгалах</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">Back</a>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Save</button>
         </div>
       </form>
     </div>
@@ -85,12 +85,12 @@ function calcAvg(){
   if(t1!=null && t2!=null && t3!=null){
     const avg = (t1+t2+t3)/3.0;
     document.getElementById('tavg').value = avg.toFixed(5);
-    // Тохирцын шалгалт: max diff ≤ 0.0015 g
+    // Concordance check: max diff ≤ 0.0015 g
     const maxd = Math.max(Math.abs(t1-avg), Math.abs(t2-avg), Math.abs(t3-avg));
     if(maxd > 0.0015){
-      msg = '⚠️ Тохирцын зөрүү ' + maxd.toFixed(5) + ' g (> 0.0015 g). Дахин шалгана уу.';
+      msg = '⚠️ Concordance deviation ' + maxd.toFixed(5) + ' g (> 0.0015 g). Please recheck.';
     }else{
-      msg = '✅ Тохирц OK (' + maxd.toFixed(5) + ' g ≤ 0.0015 g).';
+      msg = '✅ Concordance OK (' + maxd.toFixed(5) + ' g ≤ 0.0015 g).';
     }
   }else{
     document.getElementById('tavg').value = '';

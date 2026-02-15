@@ -13,7 +13,7 @@
   Usage:
     {{ render_accessible_input(
         field_id='username',
-        label='Хэрэглэгчийн нэр',
+        label='Userийн нэр',
         field_type='text',
         required=true,
         help_text='3-30 тэмдэгт оруулна уу',
@@ -51,7 +51,7 @@
 <div class="mb-3">
   <label for="{{ field_id }}" class="form-label">
     {{ label }}
-    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+    {% if required %}<span class="text-danger" aria-label="required">*</span>{% endif %}
   </label>
 
   <input
@@ -102,7 +102,7 @@
     error_text='',
     classes='form-select',
     include_blank=true,
-    blank_text='-- Сонгоно уу --'
+    blank_text='-- Select --'
 ) %}
 {% set field_name = name if name else field_id %}
 {% set describedby_ids = [] %}
@@ -116,7 +116,7 @@
 <div class="mb-3">
   <label for="{{ field_id }}" class="form-label">
     {{ label }}
-    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+    {% if required %}<span class="text-danger" aria-label="required">*</span>{% endif %}
   </label>
 
   <select
@@ -241,7 +241,7 @@
 <div class="mb-3">
   <label for="{{ field_id }}" class="form-label">
     {{ label }}
-    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+    {% if required %}<span class="text-danger" aria-label="required">*</span>{% endif %}
   </label>
 
   <textarea
@@ -298,7 +298,7 @@
 <div class="mb-3">
   <label for="{{ field_id }}" class="form-label">
     {{ label }}
-    {% if required %}<span class="text-danger" aria-label="шаардлагатай">*</span>{% endif %}
+    {% if required %}<span class="text-danger" aria-label="required">*</span>{% endif %}
   </label>
 
   <input
@@ -355,11 +355,11 @@
   Accessible submit button with loading state support
 #}
 {% macro render_accessible_submit(
-    text='Хадгалах',
+    text='Save',
     button_id='submit-button',
     classes='btn btn-primary',
     icon='check-circle',
-    loading_text='Хадгалж байна...'
+    loading_text='Saving...'
 ) %}
 <button
   type="submit"
@@ -404,7 +404,7 @@
   {{ message }}
 
   {% if dismissible %}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Хаах"></button>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   {% endif %}
 </div>
 {% endmacro %}
@@ -412,7 +412,7 @@
 {#
   Skip link for keyboard navigation
 #}
-{% macro render_skip_link(target_id='main-content', text='Үндсэн агуулга руу үсрэх') %}
+{% macro render_skip_link(target_id='main-content', text='Skip to main content') %}
 <a href="#{{ target_id }}" class="skip-link visually-hidden-focusable">
   {{ text }}
 </a>

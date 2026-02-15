@@ -5,24 +5,24 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
         <h4 class="mb-0">
-            <i class="bi bi-person-badge me-2"></i>Ажилтны гүйцэтгэл
+            <i class="bi bi-person-badge me-2"></i>Staff Performance
         </h4>
         <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
             <div class="input-group input-group-sm" style="width: auto;">
                 <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                <input type="date" name="date_from" class="form-control" value="{{ date_from }}" title="Эхлэх огноо">
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}" title="Start Date">
                 <span class="input-group-text">-</span>
-                <input type="date" name="date_to" class="form-control" value="{{ date_to }}" title="Дуусах огноо">
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}" title="End Date">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
             </div>
             <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('pdf_reports.chemist_report', year=year-1) }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('reports.chemist_report', year=year-1) }}" class="btn btn-outline-secondary">
                     <i class="bi bi-chevron-left"></i> {{ year - 1 }}
                 </a>
-                <a href="{{ url_for('pdf_reports.chemist_report', year=year) }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('reports.chemist_report', year=year) }}" class="btn btn-outline-primary">
                     {{ year }}
                 </a>
-                <a href="{{ url_for('pdf_reports.chemist_report', year=year+1) }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('reports.chemist_report', year=year+1) }}" class="btn btn-outline-secondary">
                     {{ year + 1 }} <i class="bi bi-chevron-right"></i>
                 </a>
             </div>
@@ -35,7 +35,7 @@
             <div class="card bg-primary text-white h-100">
                 <div class="card-body py-2 text-center">
                     <h4 class="mb-0">{{ chemists|length }}</h4>
-                    <small>Ажилтан</small>
+                    <small>Staff</small>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
             <div class="card bg-success text-white h-100">
                 <div class="card-body py-2 text-center">
                     <h4 class="mb-0">{{ "{:,}".format(grand_total) }}</h4>
-                    <small>Шинжилгээ</small>
+                    <small>Analyses</small>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
             <div class="card bg-danger text-white h-100">
                 <div class="card-body py-2 text-center">
                     <h4 class="mb-0">{{ grand_error_total }}</h4>
-                    <small>Алдаа</small>
+                    <small>Errors</small>
                 </div>
             </div>
         </div>
@@ -61,7 +61,7 @@
                     <h4 class="mb-0">
                         {% if grand_total > 0 %}{{ ((grand_error_total / grand_total) * 100)|round(2) }}%{% else %}0%{% endif %}
                     </h4>
-                    <small>Алдааны %</small>
+                    <small>Error %</small>
                 </div>
             </div>
         </div>
@@ -81,12 +81,12 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button">
-                <i class="bi bi-list-check me-1"></i>Шинжилгээ
+                <i class="bi bi-list-check me-1"></i>Analysis
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="errors-tab" data-bs-toggle="tab" data-bs-target="#errors" type="button">
-                <i class="bi bi-exclamation-triangle me-1"></i>Алдаа
+                <i class="bi bi-exclamation-triangle me-1"></i>Error
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -175,11 +175,11 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th class="sticky-col col-num">#</th>
-                                    <th class="sticky-col col-name">Нэр</th>
+                                    <th class="sticky-col col-name">Name</th>
                                     {% for m in range(1, 13) %}
                                     <th class="col-data">{{ m }}</th>
                                     {% endfor %}
-                                    <th class="col-total bg-primary">Нийт</th>
+                                    <th class="col-total bg-primary">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -224,11 +224,11 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th class="col-num">#</th>
-                                    <th class="col-name">Нэр</th>
+                                    <th class="col-name">Name</th>
                                     {% for code in analysis_codes %}
                                     <th class="col-data">{{ code }}</th>
                                     {% endfor %}
-                                    <th class="col-total bg-primary">Нийт</th>
+                                    <th class="col-total bg-primary">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -277,7 +277,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th class="col-num">#</th>
-                                    <th class="col-name">Нэр</th>
+                                    <th class="col-name">Name</th>
                                     {% for key in error_reason_keys %}
                                     <th class="col-data" title="{{ error_reason_labels[key] }}">{{ loop.index }}</th>
                                     {% endfor %}
@@ -346,7 +346,7 @@
                                     <thead class="table-light sticky-top">
                                         <tr>
                                             <th style="width: 40px;">#</th>
-                                            <th>Нэр</th>
+                                            <th>Name</th>
                                             <th class="text-end" style="width: 60px;">Тоо</th>
                                         </tr>
                                     </thead>
@@ -381,7 +381,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header bg-primary text-white py-2">
-                            <i class="bi bi-shield-check me-2"></i>Чанараар (Алдаа бага = Сайн)
+                            <i class="bi bi-shield-check me-2"></i>Чанараар (Error бага = Сайн)
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive" style="max-height: 400px;">
@@ -389,7 +389,7 @@
                                     <thead class="table-light sticky-top">
                                         <tr>
                                             <th style="width: 40px;">#</th>
-                                            <th>Нэр</th>
+                                            <th>Name</th>
                                             <th class="text-end" style="width: 55px;">%</th>
                                             <th class="text-end" style="width: 70px;">Тоо</th>
                                         </tr>
@@ -442,7 +442,7 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th class="col-num">#</th>
-                                            <th class="col-name">Нэр</th>
+                                            <th class="col-name">Name</th>
                                             <th class="col-data">Q1</th>
                                             <th class="col-data">→</th>
                                             <th class="col-data">Q2</th>
@@ -450,7 +450,7 @@
                                             <th class="col-data">Q3</th>
                                             <th class="col-data">→</th>
                                             <th class="col-data">Q4</th>
-                                            <th class="col-total">Нийт</th>
+                                            <th class="col-total">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -513,11 +513,11 @@
                         </div>
                     </div>
                 </div>
-                <!-- Алдааны график -->
+                <!-- Errorны график -->
                 <div class="col-lg-6">
                     <div class="card">
                         <div class="card-header bg-danger text-white py-2">
-                            <i class="bi bi-exclamation-triangle me-2"></i>Алдааны төрөл
+                            <i class="bi bi-exclamation-triangle me-2"></i>Errorны төрөл
                         </div>
                         <div class="card-body">
                             <canvas id="errorChart" height="200"></canvas>
@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: top10Names,
             datasets: [{
-                label: 'Нийт',
+                label: 'Total',
                 data: top10Values,
                 backgroundColor: [
                     'rgba(255, 193, 7, 0.8)',
@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Алдааны өгөгдөл
+    // Errorны өгөгдөл
     const errorLabels = [{% for key in error_reason_keys %}'{{ error_reason_labels[key].split(". ")[1] if ". " in error_reason_labels[key] else error_reason_labels[key] }}'{% if not loop.last %},{% endif %}{% endfor %}];
     const errorValues = [{% for key in error_reason_keys %}{{ grand_errors[key] }}{% if not loop.last %},{% endif %}{% endfor %}];
 

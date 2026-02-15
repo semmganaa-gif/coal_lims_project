@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Тайлан илгээх - {{ report.report_number }}{% endblock %}
+{% block title %}Report илгээх - {{ report.report_number }}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 700px;">
@@ -8,12 +8,12 @@
     <div class="card-header bg-white border-0 py-3">
       <h5 class="mb-0">
         <i class="bi bi-envelope text-primary me-2"></i>
-        Тайлан имэйлээр илгээх
+        Report имэйлээр илгээх
       </h5>
     </div>
     <div class="card-body">
       <div class="alert alert-info mb-4">
-        <strong>Тайлан:</strong> {{ report.report_number }} - {{ report.title }}
+        <strong>Report:</strong> {{ report.report_number }} - {{ report.title }}
       </div>
 
       <form method="POST">
@@ -29,17 +29,17 @@
           <label class="form-label">Гарчиг</label>
           <input type="text" name="subject" class="form-control"
                  value="Сорилтын тайлан - {{ report.report_number }}"
-                 placeholder="Имэйлийн гарчиг">
+                 placeholder="Emailийн гарчиг">
         </div>
 
         <div class="mb-4">
           <label class="form-label">Агуулга</label>
-          <textarea name="body" class="form-control" rows="8" placeholder="Имэйлийн агуулга...">Эрхэм хүндэт,
+          <textarea name="body" class="form-control" rows="8" placeholder="Emailийн агуулга...">Roleэм хүндэт,
 
 Энэхүү имэйлд "{{ report.title }}" сорилтын тайлан хавсаргав.
 
-Тайлангийн дугаар: {{ report.report_number }}
-Огноо: {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '' }} - {{ report.date_to.strftime('%Y-%m-%d') if report.date_to else '' }}
+Reportгийн дугаар: {{ report.report_number }}
+Date: {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '' }} - {{ report.date_to.strftime('%Y-%m-%d') if report.date_to else '' }}
 
 Асуулт байвал бидэнтэй холбоо барина уу.
 
@@ -50,7 +50,7 @@
 
         <div class="alert alert-warning">
           <i class="bi bi-exclamation-triangle me-2"></i>
-          <strong>Анхааруулга:</strong> PDF файл хавсаргагдана.
+          <strong>Warning:</strong> PDF файл хавсаргагдана.
         </div>
 
         <div class="d-flex justify-content-between">

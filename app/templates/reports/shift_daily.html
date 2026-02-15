@@ -3,7 +3,7 @@
 {% block title %}Ээлжийн гүйцэтгэл (Daily){% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pdf_reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
 
 <div class="report-page">
   <!-- Header -->
@@ -13,7 +13,7 @@
       <p class="subtitle">Өдөр тутмын шинжилгээний урсгал, гүйцэтгэл болон алдааны статистикийг ээлжээр шүүж харах</p>
     </div>
     <div class="report-header-actions">
-      <a href="{{ url_for('pdf_reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
+      <a href="{{ url_for('reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-bar-chart-line"></i> Monthly Plan
       </a>
     </div>
@@ -64,7 +64,7 @@
       </div>
       <div class="col-md-2 mt-2">
         {{ form.user_name.label(class="form-label") }}
-        {{ form.user_name(class="form-control form-control-sm", placeholder="Нэр") }}
+        {{ form.user_name(class="form-control form-control-sm", placeholder="Name") }}
       </div>
       <div class="col-md-2 mt-2 d-grid align-self-end">
         <button type="submit" class="btn btn-primary btn-sm">
@@ -77,12 +77,12 @@
   <!-- KPI Cards -->
   <div class="report-kpi-row">
     <div class="report-kpi-card total">
-      <div class="kpi-label">Нийт тоо ({{ form.kpi_target.data }})</div>
+      <div class="kpi-label">Total тоо ({{ form.kpi_target.data }})</div>
       <div class="kpi-value">{{ total_count }}</div>
     </div>
     {% if error_stats %}
     <div class="report-kpi-card error">
-      <div class="kpi-label">Нийт алдааны тохиолдол</div>
+      <div class="kpi-label">Total алдааны тохиолдол</div>
       <div class="kpi-value">{{ error_stats.total or 0 }}</div>
     </div>
     {% endif %}
@@ -94,7 +94,7 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-clipboard-data"></i> Шинжилгээний гүйцэтгэл</strong>
+          <strong><i class="bi bi-clipboard-data"></i> Analysisний гүйцэтгэл</strong>
         </div>
         <div class="card-body p-0">
           <div class="report-table-wrap">
@@ -102,7 +102,7 @@
               <thead>
                 <tr>
                   <th>Ээлж</th>
-                  <th>Нийт</th>
+                  <th>Total</th>
                   <th>Хувь</th>
                   <th><i class="bi bi-sun-fill text-warning"></i> Өдөр</th>
                   <th><i class="bi bi-moon-stars-fill text-primary"></i> Шөнө</th>
@@ -151,14 +151,14 @@
                 {% else %}
                   <tr>
                     <td colspan="5" class="text-center text-muted py-4">
-                      <i class="bi bi-inbox"></i> Мэдээлэл алга
+                      <i class="bi bi-inbox"></i> Information алга
                     </td>
                   </tr>
                 {% endif %}
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="text-left fw-bold">Нийт</td>
+                  <td class="text-left fw-bold">Total</td>
                   <td class="fw-bold">{{ total_count }}</td>
                   <td class="fw-bold">100%</td>
                   <td colspan="2"></td>
@@ -167,22 +167,22 @@
             </table>
           </div>
 
-          <!-- Дээжний гүйцэтгэл -->
+          <!-- Sampleний гүйцэтгэл -->
           {% if shift_summary %}
           <div class="card-body border-top pt-3">
-            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Дээжний гүйцэтгэл</h6>
+            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Sampleний гүйцэтгэл</h6>
             <table class="report-table table-sm">
               <thead>
                 <tr>
                   <th rowspan="2" class="align-middle">Ээлж</th>
-                  <th colspan="3" class="text-center border-start"><i class="bi bi-inbox-fill text-success"></i> Хүлээн авсан</th>
+                  <th colspan="3" class="text-center border-start"><i class="bi bi-inbox-fill text-success"></i> Received</th>
                   <th colspan="3" class="text-center border-start"><i class="bi bi-check2-circle text-info"></i> Бэлтгэсэн</th>
                 </tr>
                 <tr class="small">
-                  <th class="text-center border-start">Нийт</th>
+                  <th class="text-center border-start">Total</th>
                   <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
                   <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
-                  <th class="text-center border-start">Нийт</th>
+                  <th class="text-center border-start">Total</th>
                   <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
                   <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
                 </tr>
@@ -212,7 +212,7 @@
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="fw-bold">Нийт</td>
+                  <td class="fw-bold">Total</td>
                   <td class="text-center border-start fw-bold">{{ recv_total }}</td>
                   <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_day') }}</td>
                   <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_night') }}</td>
@@ -232,7 +232,7 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-exclamation-triangle"></i> Алдааны шалтгаан</strong>
+          <strong><i class="bi bi-exclamation-triangle"></i> Errorны шалтгаан</strong>
           <span class="badge bg-danger">{{ error_stats.total if error_stats else 0 }}</span>
         </div>
         <div class="card-body">
@@ -243,7 +243,7 @@
             {% else %}
               <div class="report-empty" style="padding: 2rem;">
                 <i class="bi bi-check-circle"></i>
-                <p class="mb-0">Алдааны бүртгэл байхгүй</p>
+                <p class="mb-0">Errorны бүртгэл байхгүй</p>
               </div>
             {% endif %}
           </div>
@@ -282,14 +282,14 @@
                 {% else %}
                   <tr>
                     <td colspan="3" class="text-center text-muted py-3">
-                      Алдааны шалтгааны лог олдсонгүй
+                      Errorны шалтгааны лог олдсонгүй
                     </td>
                   </tr>
                 {% endif %}
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="text-left fw-bold">Нийт</td>
+                  <td class="text-left fw-bold">Total</td>
                   <td class="fw-bold">{{ error_stats.total if error_stats else 0 }}</td>
                   <td class="fw-bold">100%</td>
                 </tr>

@@ -30,103 +30,103 @@ import re
 
 
 def latin_only(form, field):
-    """Зөвхөн латин үсэг, тоо, зай, цэг тэмдэгт зөвшөөрнө"""
+    """Allow only Latin letters, numbers, spaces, and common punctuation"""
     if field.data:
         # Latin letters, numbers, spaces, common punctuation
         if not re.match(r'^[A-Za-z0-9\s\.\,\-\_\(\)\']+$', field.data):
-            raise ValidationError('Зөвхөн латин үсэг ашиглана уу (Latin characters only)')
+            raise ValidationError('Only Latin characters are allowed')
 
 
-# --- Checkbox-той олон сонголт хийхэд зориулсан туслах класс ---
-# (Analysis Config дээр олон шинжилгээ сонгоход ашиглана)
+# --- Helper class for multi-select checkboxes ---
+# (Used for selecting multiple analyses in Analysis Config)
 class MultiCheckboxField(SelectMultipleField):
-    """Олон сонголттой checkbox field."""
+    """Multi-select checkbox field."""
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
 
 # ==============================================================================
-# 1. ЛОГИН, ХЭРЭГЛЭГЧИЙН УДИРДЛАГЫН ФОРМУУД
+# 1. LOGIN AND USER MANAGEMENT FORMS
 # ==============================================================================
 class LoginForm(FlaskForm):
-    """Хэрэглэгч нэвтрэх форм."""
-    username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
-    password = PasswordField("Нууц үг", validators=[DataRequired()])
-    remember_me = BooleanField("Намайг сана")
-    submit = SubmitField("Нэвтрэх")
+    """User login form."""
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    remember_me = BooleanField("Remember me")
+    submit = SubmitField("Login")
 
 
 class UserManagementForm(FlaskForm):
-    """Хэрэглэгч үүсгэх/засах форм."""
-    username = StringField("Нэвтрэх нэр", validators=[DataRequired()])
+    """User create/edit form."""
+    username = StringField("Username", validators=[DataRequired()])
     password = PasswordField(
-        "Нууц үг (Шинээр оруулах эсвэл солих бол бичнэ үү)",
+        "Password (Enter to create new or change)",
         validators=[Optional()],
     )
     role = SelectField(
-        "Эрхийн түвшин",
+        "Role",
         choices=[
-            ("prep", "Дээж бэлтгэгч (Sample Preparation)"),
-            ("chemist", "Химич (Chemist)"),
-            ("senior", "Ахлах химич (Senior Chemist)"),
-            ("manager", "Менежер (Manager)"),
-            ("admin", "Админ (зөвхөн одоо байгааг засах)"),
+            ("prep", "Sample Preparation"),
+            ("chemist", "Chemist"),
+            ("senior", "Senior Chemist"),
+            ("manager", "Manager"),
+            ("admin", "Admin (edit existing only)"),
         ],
         validators=[DataRequired()],
     )
-    # Лабораторийн эрх
+    # Laboratory permissions
     allowed_labs = SelectMultipleField(
-        "Зөвшөөрөгдсөн лабораториуд",
+        "Allowed Laboratories",
         choices=[
-            ('coal', 'Нүүрсний лаборатори'),
-            ('petrography', 'Петрограф лаборатори'),
-            ('water', 'Усны лаборатори'),
-            ('microbiology', 'Микробиологийн лаборатори'),
+            ('coal', 'Coal Laboratory'),
+            ('petrography', 'Petrography Laboratory'),
+            ('water', 'Water Laboratory'),
+            ('microbiology', 'Microbiology Laboratory'),
         ],
         validators=[Optional()],
         widget=widgets.ListWidget(prefix_label=False),
         option_widget=widgets.CheckboxInput(),
     )
-    # Профайл мэдээлэл (Email signature-д ашиглана)
-    full_name = StringField("Бүтэн нэр (Latin)", validators=[Optional(), latin_only])
-    email = StringField("Ажлын имэйл", validators=[Optional(), Email(message="Зөв имэйл хаяг оруулна уу")])
-    phone = StringField("Утас", validators=[Optional()])
-    position = StringField("Албан тушаал (Latin)", validators=[Optional(), latin_only])
-    submit = SubmitField("Хадгалах")
+    # Profile information (used for Email signature)
+    full_name = StringField("Full Name (Latin)", validators=[Optional(), latin_only])
+    email = StringField("Work Email", validators=[Optional(), Email(message="Please enter a valid email address")])
+    phone = StringField("Phone", validators=[Optional()])
+    position = StringField("Position (Latin)", validators=[Optional(), latin_only])
+    submit = SubmitField("Save")
 
 
 class UserProfileForm(FlaskForm):
-    """Хэрэглэгчийн профайл тохиргооны форм (Email signature)"""
+    """User profile settings form (Email signature)"""
     full_name = StringField(
-        "Бүтэн нэр",
-        validators=[DataRequired(message="Нэрээ оруулна уу"), latin_only],
+        "Full Name",
+        validators=[DataRequired(message="Please enter your name"), latin_only],
         render_kw={"placeholder": "e.g. GANTULGA Ulziibuyan"}
     )
     email = StringField(
-        "Ажлын имэйл",
-        validators=[DataRequired(message="Имэйл оруулна уу"), Email(message="Зөв имэйл хаяг оруулна уу")],
+        "Work Email",
+        validators=[DataRequired(message="Please enter your email"), Email(message="Please enter a valid email address")],
         render_kw={"placeholder": "e.g. gantulga.u@mmc.mn"}
     )
     phone = StringField(
-        "Утасны дугаар",
+        "Phone Number",
         validators=[Optional()],
         render_kw={"placeholder": "e.g. 80872013"}
     )
     position = StringField(
-        "Албан тушаал",
+        "Position",
         validators=[Optional(), latin_only],
         render_kw={"placeholder": "e.g. Senior Chemist, Laboratory"}
     )
-    submit = SubmitField("Хадгалах")
+    submit = SubmitField("Save")
 
 
 # ==============================================================================
-# 2. ДЭЭЖ БҮРТГЭХ ФОРМ (AddSampleForm)
+# 2. SAMPLE REGISTRATION FORM (AddSampleForm)
 # ==============================================================================
 class AddSampleForm(FlaskForm):
-    """Шинэ дээж бүртгэх форм."""
+    """New sample registration form."""
     client_name = RadioField(
-        "Хүлээлгэн өгсөн нэгж",
+        "Submitting Unit",
         choices=[
             ("CHPP", "CHPP"),
             ("UHG-Geo", "UHG-Geo"),
@@ -136,91 +136,91 @@ class AddSampleForm(FlaskForm):
             ("WTL", "WTL"),
             ("LAB", "LAB"),
         ],
-        validators=[DataRequired(message="Нэгжийг сонгоно уу.")],
+        validators=[DataRequired(message="Please select a unit.")],
     )
 
     sample_type = RadioField(
-        "Дээжний төрөл",
-        choices=[],  # JS + route дээрээс динамикаар тохируулна
-        validators=[DataRequired(message="Дээжний төрлийг сонгоно уу.")],
+        "Sample Type",
+        choices=[],  # Dynamically set from JS + route
+        validators=[DataRequired(message="Please select a sample type.")],
     )
 
     sample_condition = RadioField(
-        "Дээжийн төлөв байдал",
+        "Sample Condition",
         choices=[
             ("Хуурай", "Хуурай"),
             ("Чийгтэй", "Чийгтэй"),
             ("Шингэн", "Шингэн"),
         ],
-        validators=[DataRequired(message="Төлөв байдал сонгоно уу.")],
+        validators=[DataRequired(message="Please select a condition.")],
     )
 
     sample_date = DateField(
-        "Дээж авсан огноо",
-        validators=[DataRequired(message="Огноо сонгоно уу.")],
+        "Sample Date",
+        validators=[DataRequired(message="Please select a date.")],
     )
 
-    return_sample = BooleanField("Дээжийг буцаах эсэх")
+    return_sample = BooleanField("Return Sample")
 
     retention_period = SelectField(
-        "Хадгалах хугацаа",
+        "Retention Period",
         choices=[
-            ("7", "7 хоног"),
-            ("14", "14 хоног"),
-            ("30", "1 сар"),
-            ("730", "2 жил"),
-            ("1825", "5 жил"),
+            ("7", "7 days"),
+            ("14", "14 days"),
+            ("30", "1 month"),
+            ("730", "2 years"),
+            ("1825", "5 years"),
         ],
         default="30",
     )
 
     delivered_by = StringField(
-        "Хүлээлгэн өгсөн ажилтны нэр",
+        "Delivered By",
         validators=[
-            DataRequired(message="Нэр оруулна уу."),
+            DataRequired(message="Please enter a name."),
             Regexp(
                 r"^[A-Za-z0-9_.\s-]*$",
-                message="Зөвхөн латин үсэг, тоо, зай ашиглана уу.",
+                message="Only Latin letters, numbers, and spaces are allowed.",
             ),
         ],
     )
 
     prepared_date = DateField(
-        "Бэлдсэн он сар өдөр",
-        validators=[DataRequired(message="Огноо сонгоно уу.")],
+        "Prepared Date",
+        validators=[DataRequired(message="Please select a date.")],
     )
 
     prepared_by = StringField(
-        "Бэлтгэсэн ажилтан",
+        "Prepared By",
         validators=[
-            DataRequired(message="Нэр оруулна уу."),
+            DataRequired(message="Please enter a name."),
             Regexp(
                 r"^[A-Za-z0-9_.\s-]*$",
-                message="Зөвхөн латин үсэг, тоо, зай ашиглана уу.",
+                message="Only Latin letters, numbers, and spaces are allowed.",
             ),
         ],
     )
 
     notes = TextAreaField(
-        "Тайлбар",
+        "Notes",
         validators=[
             Optional(),
             Regexp(
                 r"^[A-Za-z0-9_.\s-]*$",
-                message="Зөвхөн латин үсэг, тоо ашиглана уу.",
+                message="Only Latin letters and numbers are allowed.",
             ),
         ],
     )
 
-    # --- CHPP 2 цаг тутмын ---
+    # --- CHPP 2 hourly ---
     chpp_2h_mod1 = BooleanField("PF211 (MOD I)")
     chpp_2h_mod2 = BooleanField("PF221 (MOD II)")
     chpp_2h_mod3 = BooleanField("PF231 (MOD III)")
-    chpp_2h_tc_missing = BooleanField("TC дээж ирээгүй")
+    chpp_2h_tc_missing = BooleanField("TC sample not received")
 
-    # --- CHPP 4 цаг тутмын ---
+    # --- CHPP 4 hourly ---
     chpp_4h_timeslot = SelectField(
-        "Цагийн бүс",
+        "Time Slot",
         choices=[
             ("", ""),
             ("10:00", "10:00"),
@@ -236,104 +236,101 @@ class AddSampleForm(FlaskForm):
     chpp_4h_mod2 = BooleanField("MOD II")
     chpp_4h_mod3 = BooleanField("MOD III")
 
-    # --- CHPP 12 цаг тутмын ---
+    # --- CHPP 12 hourly ---
     chpp_12h_mod1 = BooleanField("MOD I")
     chpp_12h_mod2 = BooleanField("MOD II")
     chpp_12h_mod3 = BooleanField("MOD III")
 
-    # --- UHG/BN/QC/Proc олон үүсгэгч ---
+    # --- UHG/BN/QC/Proc multi-generator ---
     location = StringField(
         "Location",
         validators=[
             Optional(),
             Regexp(
                 "^[A-Za-z0-9_-]*$",
-                message="Зөвхөн латин үсэг, тоо, -, _ ашиглана уу.",
+                message="Only Latin letters, numbers, -, _ are allowed.",
             ),
         ],
     )
 
     sample_count = IntegerField(
-        "Дээжний тоо",
+        "Sample Count",
         validators=[
             Optional(),
-            NumberRange(min=1, message="Ядаж 1 байх ёстой."),
+            NumberRange(min=1, message="Must be at least 1."),
         ],
     )
 
     product = StringField(
-        "Бүтээгдэхүүн",
+        "Product",
         validators=[
             Optional(),
             Regexp(
                 "^[A-Za-z0-9_-]*$",
-                message="Зөвхөн латин үсэг, тоо, -, _ ашиглана уу.",
+                message="Only Latin letters, numbers, -, _ are allowed.",
             ),
         ],
     )
 
     # --- WTL ---
     lab_number = StringField(
-        "Лаб дугаар",
+        "Lab Number",
         validators=[
             Optional(),
             Regexp(
                 r"^[A-Za-z0-9_#/-]*$",
-                message="Зөвхөн латин үсэг, тоо, #, _, /, - ашиглана уу.",
+                message="Only Latin letters, numbers, #, _, /, - are allowed.",
             ),
         ],
     )
 
-    # WTL (MG/Test) болон бусад үед гараар өгөх нэр
+    # Manual sample_code for WTL (MG/Test) and other cases
     sample_code = StringField("Sample name", validators=[Optional()])
 
-    submit = SubmitField("Бүртгэх")
+    submit = SubmitField("Register")
 
 
 # ==============================================================================
-# 3. ШИНЖИЛГЭЭНИЙ ТОХИРГООНЫ ФОРМУУД (ANALYSIS CONFIG) - ✅ ШИНЭЧЛЭГДСЭН
+# 3. ANALYSIS CONFIG FORMS
 # ==============================================================================
 
-# 🧩 Энгийн профайл (Simple Matrix)
+# Simple profile (Simple Matrix)
 class SimpleProfileForm(FlaskForm):
-    """Энгийн шинжилгээний профайл форм (Simple Matrix)."""
-    # Matrix хүснэгт нь HTML талаас loop хийж өгөгдлөө илгээдэг тул
-    # энд зөвхөн Submit товчлуур байхад хангалттай.
-    submit_simple = SubmitField("Энгийн тохиргоог хадгалах")
+    """Simple analysis profile form (Simple Matrix)."""
+    submit_simple = SubmitField("Save simple config")
 
 
-# 🧩 Pattern профайл (Regex Rules)
+# Pattern profile (Regex Rules)
 class PatternProfileForm(FlaskForm):
-    """Pattern-д суурилсан шинжилгээний профайл форм."""
+    """Pattern-based analysis profile form."""
     pattern = StringField(
-        "Нэрний бүтэц (Pattern)",
-        validators=[DataRequired(message="Бүтэц оруулна уу.")],
+        "Name Pattern",
+        validators=[DataRequired(message="Please enter a pattern.")],
     )
 
     analyses = MultiCheckboxField(
-        "Шинжилгээнүүд",
-        choices=[],  # __init__ дотор DB-ээс дүүргэнэ
+        "Analyses",
+        choices=[],  # Populated from DB in __init__
         coerce=str,
-        validators=[DataRequired(message="Ядаж нэг шинжилгээ сонгоно уу.")],
+        validators=[DataRequired(message="Please select at least one analysis.")],
     )
 
-    # ✅ ШИНЭЧЛЭЛ: admin_routes.py дээрх логиктой уялдуулан эдгээрийг нэмэв
     priority = HiddenField('Priority', default=50)
     rule = HiddenField('Rule', default='merge')
 
-    submit_pattern = SubmitField("Шинэ бүтэц нэмэх")
+    submit_pattern = SubmitField("Add new pattern")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
-            # Аппликейшн ажиллаж байх үед л DB-ээс татна
+            # Load from DB only when application is running
             from app.models import AnalysisType
             items = AnalysisType.query.order_by(AnalysisType.order_num).all()
             self.analyses.choices = [
                 (a.code, f"{a.order_num:02d} — {a.name} ({a.code})") for a in items
             ]
         except (RuntimeError, ImportError):
-            # DB холболт байхгүй үед (миграци г.м) алдаа өгөхгүй байх
+            # No error when DB connection is unavailable (e.g. migrations)
             self.analyses.choices = []
 
 

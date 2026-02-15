@@ -6,7 +6,7 @@
   {# ===== BACK BUTTON ===== #}
   <div class="mb-3">
     <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> Буцах
+      <i class="bi bi-arrow-left"></i> Back
     </a>
   </div>
 
@@ -16,7 +16,7 @@
         <div class="card-header bg-gradient text-white py-3" style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
           <h5 class="mb-0">
             <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
-            {{ 'Уусмал засварлах' if mode == 'edit' else 'Шинэ уусмал бүртгэх' }}
+            {{ 'Edit Solution' if mode == 'edit' else 'Register New Solution' }}
           </h5>
         </div>
 
@@ -26,23 +26,23 @@
 
             {# === Үндсэн мэдээлэл === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-droplet-half me-2"></i>Уусмалын мэдээлэл
+              <i class="bi bi-droplet-half me-2"></i>Solution Information
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="form-label">Уусмалын нэр <span class="text-danger">*</span></label>
+                <label class="form-label">Solution Name <span class="text-danger">*</span></label>
                 <input type="text" name="solution_name" class="form-control" required
                        value="{{ solution.solution_name if solution else '' }}"
                        placeholder="Ж: HCl 0.1N, NaOH 0.1M">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Концентраци</label>
+                <label class="form-label">Concentration</label>
                 <input type="number" name="concentration" class="form-control" step="0.0001"
                        value="{{ solution.concentration if solution else '' }}"
-                       placeholder="Ж: 0.1">
+                       placeholder="e.g.: 0.1">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Нэгж</label>
+                <label class="form-label">Unit</label>
                 <select name="concentration_unit" class="form-select">
                   <option value="mg/L" {{ 'selected' if solution and solution.concentration_unit == 'mg/L' }}>мг/л</option>
                   <option value="mol/L" {{ 'selected' if solution and solution.concentration_unit == 'mol/L' }}>мол/л (M)</option>
@@ -51,15 +51,15 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Эзэлхүүн (мл)</label>
+                <label class="form-label">Volume (mL)</label>
                 <input type="number" name="volume_ml" class="form-control" step="0.1"
                        value="{{ solution.volume_ml if solution else '' }}"
-                       placeholder="Ж: 1000">
+                       placeholder="e.g.: 1000">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Химийн бодис <span class="text-danger">*</span></label>
+                <label class="form-label">Chemical <span class="text-danger">*</span></label>
                 <select name="chemical_id" id="chemicalSelect" class="form-select" onchange="updateChemicalInfo()">
-                  <option value="">-- Сонгох --</option>
+                  <option value="">-- Select --</option>
                   {% for c in chemicals %}
                   <option value="{{ c.id }}"
                           data-quantity="{{ c.quantity }}"
@@ -69,13 +69,13 @@
                   </option>
                   {% endfor %}
                 </select>
-                <small class="text-muted" id="chemicalStock">Нөөц: -</small>
+                <small class="text-muted" id="chemicalStock">Stock: -</small>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Зарцуулсан бодис (мг) <span class="text-danger">*</span></label>
+                <label class="form-label">Chemical Used (mg) <span class="text-danger">*</span></label>
                 <input type="number" name="chemical_used_mg" id="chemicalUsedMg" class="form-control" step="0.01"
                        value="{{ solution.chemical_used_mg if solution else '' }}"
-                       placeholder="Ж: 3650" onchange="checkStock()">
+                       placeholder="e.g.: 3650" onchange="checkStock()">
                 <small class="text-muted" id="stockWarning"></small>
               </div>
             </div>
@@ -88,28 +88,28 @@
               </div>
             </div>
 
-            {# === Огноо === #}
+            {# === Date === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-calendar3 me-2"></i>Огноо
+              <i class="bi bi-calendar3 me-2"></i>Date
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-4">
-                <label class="form-label">Бэлдсэн огноо <span class="text-danger">*</span></label>
+                <label class="form-label">Preparation Date <span class="text-danger">*</span></label>
                 <input type="date" name="prepared_date" class="form-control" required
                        value="{{ solution.prepared_date.strftime('%Y-%m-%d') if solution and solution.prepared_date else '' }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Хүчинтэй хугацаа</label>
+                <label class="form-label">Expiry Date</label>
                 <input type="date" name="expiry_date" class="form-control"
                        value="{{ solution.expiry_date.strftime('%Y-%m-%d') if solution and solution.expiry_date else '' }}">
               </div>
               {% if mode == 'edit' %}
               <div class="col-md-4">
-                <label class="form-label">Төлөв</label>
+                <label class="form-label">Status</label>
                 <select name="status" class="form-select">
-                  <option value="active" {{ 'selected' if solution and solution.status == 'active' }}>Идэвхтэй</option>
-                  <option value="expired" {{ 'selected' if solution and solution.status == 'expired' }}>Хугацаа дууссан</option>
-                  <option value="empty" {{ 'selected' if solution and solution.status == 'empty' }}>Дууссан</option>
+                  <option value="active" {{ 'selected' if solution and solution.status == 'active' }}>Active</option>
+                  <option value="expired" {{ 'selected' if solution and solution.status == 'expired' }}>Expired</option>
+                  <option value="empty" {{ 'selected' if solution and solution.status == 'empty' }}>Empty</option>
                 </select>
               </div>
               {% endif %}
@@ -117,7 +117,7 @@
 
             {# === Титр тогтоолт === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-clipboard-data me-2"></i>Титр тогтоолт
+              <i class="bi bi-clipboard-data me-2"></i>Titer Determination
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-2">
@@ -139,27 +139,27 @@
                        placeholder="0.0000">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Vд (дундаж)</label>
+                <label class="form-label">V avg (average)</label>
                 <input type="text" class="form-control bg-light" readonly id="v_avg_display"
                        value="{{ '%.4f'|format(solution.v_avg) if solution and solution.v_avg else '-' }}">
-                <small class="text-muted">Автоматаар тооцоологдоно</small>
+                <small class="text-muted">Calculated automatically</small>
               </div>
               <div class="col-md-3">
-                <label class="form-label">Титрийн коэффициент (K)</label>
+                <label class="form-label">Titer Coefficient (K)</label>
                 <input type="number" name="titer_coefficient" class="form-control" step="0.0001"
                        value="{{ solution.titer_coefficient if solution and solution.titer_coefficient else '' }}"
-                       placeholder="Ж: 0.9985">
+                       placeholder="e.g.: 0.9985">
               </div>
             </div>
 
             {# === Уусмал бэлдэх явц === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-journal-text me-2"></i>Уусмал бэлдэх явц / заалт
+              <i class="bi bi-journal-text me-2"></i>Solution Preparation Procedure / Notes
             </h6>
             <div class="row g-3">
               <div class="col-12">
                 <textarea name="preparation_notes" class="form-control" rows="4"
-                          placeholder="Уусмал бэлдэх дараалал, заавар, тэмдэглэл...">{{ solution.preparation_notes if solution else '' }}</textarea>
+                          placeholder="Preparation procedure, instructions, notes...">{{ solution.preparation_notes if solution else '' }}</textarea>
               </div>
             </div>
 
@@ -167,11 +167,11 @@
 
           <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
             <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary">
-              Болих
+              Cancel
             </a>
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-check-lg me-1"></i>
-              {{ 'Хадгалах' if mode == 'edit' else 'Бүртгэх' }}
+              {{ 'Save' if mode == 'edit' else 'Register' }}
             </button>
           </div>
         </form>
@@ -190,11 +190,11 @@ function updateChemicalInfo() {
   if (option && option.value) {
     const quantity = option.dataset.quantity;
     const unit = option.dataset.unit;
-    stockInfo.innerHTML = '<i class="bi bi-box-seam me-1"></i>Нөөц: <strong>' + quantity + ' ' + unit + '</strong>';
+    stockInfo.innerHTML = '<i class="bi bi-box-seam me-1"></i>Stock: <strong>' + quantity + ' ' + unit + '</strong>';
     stockInfo.classList.remove('text-muted');
     stockInfo.classList.add('text-success');
   } else {
-    stockInfo.innerHTML = 'Нөөц: -';
+    stockInfo.innerHTML = 'Stock: -';
     stockInfo.classList.remove('text-success');
     stockInfo.classList.add('text-muted');
   }
@@ -220,7 +220,7 @@ function checkStock() {
   const stockQuantity = parseFloat(option.dataset.quantity);
   const unit = option.dataset.unit;
 
-  // Нэгж хөрвүүлэлт: mg -> бусад нэгж
+  // Unit хөрвүүлэлт: mg -> бусад нэгж
   let usedInStockUnit = usedMg;
   let conversionText = '';
 
@@ -251,11 +251,11 @@ function checkStock() {
     consumptionInfo.style.display = 'block';
     consumptionInfo.className = 'alert alert-info small mb-0';
     const remaining = stockQuantity - usedInStockUnit;
-    consumptionText.innerHTML = conversionText + ' зарцуулна. Үлдэгдэл: ' + remaining.toFixed(4) + ' ' + unit;
+    consumptionText.innerHTML = conversionText + ' зарцуулна. Remaining: ' + remaining.toFixed(4) + ' ' + unit;
   }
 }
 
-// Дундаж V автоматаар тооцоолох
+// Average V автоматаар тооцоолох
 document.addEventListener('DOMContentLoaded', function() {
   const v1Input = document.querySelector('input[name="v1"]');
   const v2Input = document.querySelector('input[name="v2"]');

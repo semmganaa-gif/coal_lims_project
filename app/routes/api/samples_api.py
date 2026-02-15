@@ -1,7 +1,7 @@
 # app/routes/api/samples_api.py
 # -*- coding: utf-8 -*-
 """
-Дээжтэй холбоотой API endpoints:
+Sample-related API endpoints:
   - /data - DataTables sample listing
   - /sample_summary - Sample summary with archive/unarchive
   - /sample_report/<int:sample_id> - Individual sample report
@@ -40,10 +40,10 @@ from app.services import (
 
 
 def register_routes(bp):
-    """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
+    """Register routes on the given blueprint"""
 
     # -----------------------------------------------------------
-    # 1) DataTables-д өгөгдөл өгөх (index.html)
+    # 1) DataTables data provider (index.html)
     #    GET /api/data
     # -----------------------------------------------------------
     @bp.route("/data", methods=["GET"])
@@ -52,9 +52,9 @@ def register_routes(bp):
     async def data():
         draw = int(request.args.get("draw", 1))
         start = int(request.args.get("start", 0))
-        length = min(int(request.args.get("length", 25)), 1000)  # Max 1000 хязгаарлалт
+        length = min(int(request.args.get("length", 25)), 1000)  # Max 1000 limit
 
-        # DataTables-н багана тус бүрийн шүүлтүүр
+        # Per-column search filters for DataTables
         column_search = {}
         i = 0
         while True:
@@ -75,15 +75,15 @@ def register_routes(bp):
                 ds = datetime.fromisoformat(date_start)
                 q = q.filter(Sample.received_date >= ds)
             except ValueError:
-                pass  # Буруу огноо формат
+                pass  # Invalid date format
         if date_end:
             try:
                 de = datetime.fromisoformat(date_end)
                 q = q.filter(Sample.received_date <= de)
             except ValueError:
-                pass  # Буруу огноо формат
+                pass  # Invalid date format
 
-        # Баганын шүүлтүүрүүд
+        # Column filters
         for idx, val in column_search.items():
             if not val:
                 continue
@@ -92,7 +92,7 @@ def register_routes(bp):
                 try:
                     q = q.filter(Sample.id == int(val))
                 except ValueError:
-                    pass  # Тоо биш
+                    pass  # Not a number
             elif idx == 2:
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.sample_code.ilike(f"%{safe_val}%"))
@@ -103,7 +103,7 @@ def register_routes(bp):
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.sample_type.ilike(f"%{safe_val}%"))
             elif idx == 5:
-                # Дээжний төлөв (хуурай / чийгтэй / шингэн)
+                # Sample condition (dry / moist / liquid)
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.sample_condition.ilike(f"%{safe_val}%"))
             elif idx == 6:
@@ -120,7 +120,7 @@ def register_routes(bp):
                     w = float(val)
                     q = q.filter(Sample.weight == w)
                 except ValueError:
-                    pass  # Тоо биш
+                    pass  # Not a number
             elif idx == 13:
                 safe_val = escape_like_pattern(val)
                 q = q.filter(Sample.analyses_to_perform.ilike(f"%{safe_val}%"))
@@ -135,7 +135,7 @@ def register_routes(bp):
             .all()
         )
 
-        # ✅ Нэг дор бүх дээжийн шинжилгээний статустай map үүсгэнэ
+        # Build analysis status map for all samples in one query
         sample_ids = [s.id for s in samples]
         status_map: dict[int, set[str]] = {}
         if sample_ids:
@@ -152,7 +152,7 @@ def register_routes(bp):
 
         data_rows = []
         for s in samples:
-            # ✅ analyses_to_perform → base кодын жагсаалт
+            # analyses_to_perform -> base code list
             try:
                 raw_codes = json.loads(s.analyses_to_perform or "[]")
             except (json.JSONDecodeError, TypeError):
@@ -160,38 +160,38 @@ def register_routes(bp):
             analyses_base = to_base_list(raw_codes)
             analyses_txt = json.dumps(analyses_base, ensure_ascii=False)
 
-            # ✅ ДЭЭЖНИЙ ТӨЛӨВ (condition)
+            # SAMPLE CONDITION
             sample_condition_val = ""
             if hasattr(s, "sample_condition") and getattr(s, "sample_condition") is not None:
-                sample_condition_val = getattr(s, "sample_condition")  # Хуурай/Чийгтэй/Шингэн
+                sample_condition_val = getattr(s, "sample_condition")  # Dry/Moist/Liquid
             elif hasattr(s, "sample_state") and getattr(s, "sample_state") is not None:
                 sample_condition_val = getattr(s, "sample_state")
 
-            # ✅ НЭГТСЭН ТӨЛӨВ (шинжилгээний статус)
+            # AGGREGATED STATUS (analysis status)
             result_statuses = status_map.get(s.id, set())
             workflow_status = _aggregate_sample_status(s.status or "", result_statuses)
 
             action_html = (
                 f'<a href="{url_for("main.edit_sample", sample_id=s.id)}" '
-                f'class="btn btn-sm btn-outline-primary">Засах</a>'
+                f'class="btn btn-sm btn-outline-primary">Edit</a>'
             )
 
-            # Хадгалах хугацааны тооцоо
+            # Retention date calculation
             retention_html = ""
             if s.return_sample:
-                retention_html = '<span class="badge bg-primary">Буцаах</span>'
+                retention_html = '<span class="badge bg-primary">Return</span>'
             elif s.retention_date:
                 from datetime import date
                 today = date.today()
                 days_left = (s.retention_date - today).days
                 if days_left < 0:
-                    retention_html = f'<span class="badge bg-danger">{abs(days_left)} хоног хэтэрсэн</span>'
+                    retention_html = f'<span class="badge bg-danger">{abs(days_left)} days overdue</span>'
                 elif days_left <= 7:
-                    retention_html = f'<span class="badge bg-warning text-dark">{days_left} хоног</span>'
+                    retention_html = f'<span class="badge bg-warning text-dark">{days_left} days</span>'
                 elif days_left <= 30:
-                    retention_html = f'<span class="badge bg-info">{days_left} хоног</span>'
+                    retention_html = f'<span class="badge bg-info">{days_left} days</span>'
                 else:
-                    retention_html = f'<span class="badge bg-success">{days_left} хоног</span>'
+                    retention_html = f'<span class="badge bg-success">{days_left} days</span>'
             else:
                 retention_html = '<span class="badge bg-secondary">-</span>'
 
@@ -202,16 +202,16 @@ def register_routes(bp):
                     s.sample_code or "",  # 2
                     s.client_name or "",  # 3
                     s.sample_type or "",  # 4
-                    sample_condition_val or "",  # 5  ✅ ДЭЭЖНИЙ ТӨЛӨВ
+                    sample_condition_val or "",  # 5  SAMPLE CONDITION
                     s.delivered_by or "",  # 6
                     s.prepared_by or "",  # 7
                     s.prepared_date.strftime("%Y-%m-%d") if s.prepared_date else "",  # 8
                     s.notes or "",  # 9
                     s.received_date.strftime("%Y-%m-%d %H:%M") if s.received_date else "",  # 10
                     s.weight or "",  # 11
-                    workflow_status,  # 12 ✅ НЭГТСЭН ТӨЛӨВ
+                    workflow_status,  # 12 AGGREGATED STATUS
                     analyses_txt,  # 13
-                    retention_html,  # 14 ✅ ХАДГАЛАХ ХУГАЦАА
+                    retention_html,  # 14 RETENTION DATE
                     action_html,  # 15
                 ]
             )
@@ -226,14 +226,14 @@ def register_routes(bp):
         )
 
     # -----------------------------------------------------------
-    # 2) sample_summary.html → архив / сэргээх (POST /api/sample_summary)
-    #    ✅ REFACTORED: Service layer ашиглана
+    # 2) sample_summary.html -> archive / restore (POST /api/sample_summary)
+    #    REFACTORED: Uses service layer
     # -----------------------------------------------------------
     @bp.route("/sample_summary", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def sample_summary():
-        # --- POST (Архивлах) - Service ашиглана ---
+        # --- POST (Archive) - Uses service ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
@@ -245,13 +245,13 @@ def register_routes(bp):
                 flash(result.message, "success" if result.success else "danger")
                 return redirect(url_for("api.sample_summary", **request.args))
 
-        # --- GET: Service-ээс өгөгдөл авах ---
+        # --- GET: Fetch data from service ---
         samples = get_samples_with_results(exclude_archived=True, sort_by="full")
         summary_data = build_sample_summary_data(samples)
 
         return render_template(
             "sample_summary.html",
-            title="Дээжний нэгтгэл",
+            title="Sample Summary",
             samples=samples,
             analysis_types=summary_data["analysis_types"],
             results_map=summary_data["results_map"],
@@ -259,37 +259,37 @@ def register_routes(bp):
         )
 
     # -----------------------------------------------------------
-    # 3) ДЭЭЖНИЙ ТАЙЛАН
-    #    ✅ REFACTORED: Service layer ашиглана
+    # 3) SAMPLE REPORT
+    #    REFACTORED: Uses service layer
     # -----------------------------------------------------------
     @bp.route("/sample_report/<int:sample_id>")
     @login_required
     async def sample_report(sample_id):
-        # Service-ээс тайлангийн өгөгдөл авах
+        # Fetch report data from service
         report_data = get_sample_report_data(sample_id)
 
-        # Алдаа шалгах
+        # Error check
         if report_data.error == "SAMPLE_NOT_FOUND":
-            flash("Дээж олдсонгүй.", "danger")
+            flash("Sample not found.", "danger")
             return redirect(url_for("api.sample_summary"))
 
         if report_data.error:
             flash(
-                f"{report_data.error}. Шаардлагатай (MT, Mad) утгууд орсон эсэхийг шалгана уу.",
+                f"{report_data.error}. Please check that required values (MT, Mad) are entered.",
                 "danger",
             )
             return redirect(request.referrer or url_for("api.sample_summary"))
 
         return render_template(
             "report.html",
-            title=f"Тайлан: {report_data.sample.sample_code}",
+            title=f"Report: {report_data.sample.sample_code}",
             sample=report_data.sample,
             calcs=report_data.calculations,
             report_date=report_data.report_date,
         )
 
     # -----------------------------------------------------------
-    # 4) ДЭЭЖНИЙ ТҮҮХ
+    # 4) SAMPLE HISTORY
     # -----------------------------------------------------------
     @bp.route("/sample_history/<int:sample_id>")
     @login_required
@@ -310,16 +310,16 @@ def register_routes(bp):
         )
         return render_template(
             "sample_history.html",
-            title=f"Түүх: {sample.sample_code}",  # ✅ sample_code болгосон
+            title=f"History: {sample.sample_code}",
             sample=sample,
             results=results,
             logs=logs,
         )
 
     # -----------------------------------------------------------
-    # 5) АРХИВ ТӨВ (Archive Hub)
-    #    Нэгж → Он → Сар бүтэцтэй архивын удирдлага
-    #    ✅ REFACTORED: Service layer ашиглана (unarchive)
+    # 5) ARCHIVE HUB
+    #    Client -> Year -> Month tree structure
+    #    REFACTORED: Uses service layer (unarchive)
     # -----------------------------------------------------------
     @bp.route("/archive_hub", methods=["GET", "POST"])
     @login_required
@@ -328,7 +328,7 @@ def register_routes(bp):
         from sqlalchemy import func, extract
         from collections import defaultdict
 
-        # --- POST: Сэргээх - Service ашиглана ---
+        # --- POST: Restore - Uses service ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
@@ -340,14 +340,14 @@ def register_routes(bp):
                 flash(result.message, "success" if result.success else "danger")
             return redirect(url_for("api.archive_hub", **request.args))
 
-        # --- GET: Архив харах ---
-        # Шүүлтүүрийн параметрүүд
+        # --- GET: View archive ---
+        # Filter parameters
         selected_client = request.args.get("client")
         selected_type = request.args.get("type")
         selected_year = request.args.get("year", type=int)
         selected_month = request.args.get("month", type=int)
 
-        # 1. Бүх архивлагдсан дээжүүдийн статистик (Нэгж → Төрөл → Он → Сар)
+        # 1. Statistics for all archived samples (Client -> Type -> Year -> Month)
         archive_stats = (
             db.session.query(
                 Sample.client_name,
@@ -372,14 +372,14 @@ def register_routes(bp):
             .all()
         )
 
-        # 2. Tree бүтэц: client -> sample_type -> year -> month
+        # 2. Tree structure: client -> sample_type -> year -> month
         tree_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int))))
         client_totals = defaultdict(int)
         total_archived = 0
 
         for row in archive_stats:
-            client = row.client_name or "Тодорхойгүй"
-            stype = row.sample_type or "Бусад"
+            client = row.client_name or "Unknown"
+            stype = row.sample_type or "Other"
             year = int(row.year) if row.year else 0
             month = int(row.month) if row.month else 0
             count = row.count
@@ -388,7 +388,7 @@ def register_routes(bp):
             client_totals[client] += count
             total_archived += count
 
-        # 3. Сонгосон бүлгийн дээжүүд (хэрэв шүүлтүүр байвал)
+        # 3. Samples for selected group (if filter applied)
         samples = []
         results_map = {}
 
@@ -410,7 +410,7 @@ def register_routes(bp):
             query = query.order_by(Sample.received_date.desc())
             samples = query.limit(500).all()  # Max 500
 
-            # Хялбар хэлбэр: Түүхий үр дүнг шууд авах
+            # Simple form: Get raw results directly
             if samples:
                 sample_ids = [s.id for s in samples]
                 all_results = (
@@ -428,20 +428,20 @@ def register_routes(bp):
                         "status": r.status,
                     }
 
-        # 4. Шинжилгээний төрлүүд (AnalysisType-аас)
+        # 4. Analysis types (from AnalysisType)
         from app.models import AnalysisType
         analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
 
-        # Сарын нэрс
+        # Month names
         MONTH_NAMES = {
-            1: "1-р сар", 2: "2-р сар", 3: "3-р сар", 4: "4-р сар",
-            5: "5-р сар", 6: "6-р сар", 7: "7-р сар", 8: "8-р сар",
-            9: "9-р сар", 10: "10-р сар", 11: "11-р сар", 12: "12-р сар",
+            1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
+            5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
+            9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec",
         }
 
         return render_template(
             "archive_hub.html",
-            title="Архив Төв",
+            title="Archive Hub",
             tree_data=dict(tree_data),
             client_totals=dict(client_totals),
             total_archived=total_archived,
@@ -457,25 +457,25 @@ def register_routes(bp):
 
     # -----------------------------------------------------------
     # 6) DASHBOARD STATISTICS API
-    #    Chart.js-д зориулсан статистик
+    #    Statistics for Chart.js
     # -----------------------------------------------------------
     @bp.route("/dashboard_stats")
     @login_required
     async def api_dashboard_stats():
         """
-        Dashboard Chart.js-д зориулсан статистик
+        Dashboard statistics for Chart.js
 
         Returns:
-            - samples_by_day: Сүүлийн 7 хоногийн дээж тоо
-            - samples_by_client: Client тус бүрийн дээж тоо
-            - analysis_by_status: Шинжилгээний статусаар тоо
-            - daily_trend: Өдрийн trend
+            - samples_by_day: Sample count for last 7 days
+            - samples_by_client: Sample count per client
+            - analysis_by_status: Count by analysis status
+            - daily_trend: Daily trend
         """
         from sqlalchemy import func, case
 
         today = now_local().date()
 
-        # 1. Сүүлийн 7 хоногийн дээж тоо (зөвхөн нүүрс)
+        # 1. Sample count for last 7 days (coal only)
         samples_by_day = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
@@ -485,11 +485,11 @@ def register_routes(bp):
             ).count()
             samples_by_day.append({
                 "date": day.strftime("%m/%d"),
-                "day_name": ["Ня", "Да", "Мя", "Лх", "Пү", "Ба", "Бя"][day.weekday()],
+                "day_name": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day.weekday()],
                 "count": count
             })
 
-        # 2. Client тус бүрийн дээж тоо (энэ сар, зөвхөн нүүрс)
+        # 2. Sample count per client (this month, coal only)
         first_of_month = today.replace(day=1)
         samples_by_client = db.session.query(
             Sample.client_name,
@@ -499,7 +499,7 @@ def register_routes(bp):
             Sample.received_date >= first_of_month
         ).group_by(Sample.client_name).all()
 
-        # 3. Шинжилгээний статусаар тоо (өнөөдөр, зөвхөн нүүрс)
+        # 3. Count by analysis status (today, coal only)
         analysis_by_status = db.session.query(
             AnalysisResult.status,
             func.count(AnalysisResult.id).label("count")
@@ -508,7 +508,7 @@ def register_routes(bp):
             func.date(AnalysisResult.updated_at) == today
         ).group_by(AnalysisResult.status).all()
 
-        # 4. Энэ сарын approve/reject харьцаа (зөвхөн нүүрс)
+        # 4. This month's approve/reject ratio (coal only)
         approval_stats = db.session.query(
             func.sum(case((AnalysisResult.status == 'approved', 1), else_=0)).label('approved'),
             func.sum(case((AnalysisResult.status == 'rejected', 1), else_=0)).label('rejected'),
@@ -518,7 +518,7 @@ def register_routes(bp):
             AnalysisResult.updated_at >= first_of_month
         ).first()
 
-        # 5. Өнөөдрийн нийт статистик (зөвхөн нүүрс)
+        # 5. Today's overall statistics (coal only)
         today_samples = Sample.query.filter(
             Sample.lab_type == 'coal',
             func.date(Sample.received_date) == today
@@ -564,7 +564,7 @@ def register_routes(bp):
     @bp.route("/export/samples")
     @login_required
     async def export_samples():
-        """Дээжний өгөгдлийг Excel экспорт"""
+        """Export sample data to Excel"""
         from app.utils.exports import create_sample_export, send_excel_response
 
         # Query parameters
@@ -604,7 +604,7 @@ def register_routes(bp):
     @bp.route("/export/analysis")
     @login_required
     async def export_analysis():
-        """Шинжилгээний үр дүнг Excel экспорт"""
+        """Export analysis results to Excel"""
         from app.utils.exports import create_analysis_export, send_excel_response
 
         # Query parameters
@@ -639,25 +639,25 @@ def register_routes(bp):
         return send_excel_response(excel_data, filename)
 
     # -----------------------------------------------------------
-    # HTMX ENDPOINTS - HTML fragments буцаадаг
+    # HTMX ENDPOINTS - Return HTML fragments
     # -----------------------------------------------------------
 
     @bp.route("/sample_count", methods=["GET"])
     @login_required
     async def htmx_sample_count():
-        """htmx: Нийт дээжний тоог HTML-ээр буцаах."""
+        """htmx: Return total sample count as HTML."""
         count = Sample.query.filter(Sample.lab_type == 'coal').count()
-        return f'<strong class="text-primary">{count}</strong> дээж'
+        return f'<strong class="text-primary">{count}</strong> samples'
 
     @bp.route("/search_samples", methods=["GET"])
     @login_required
     async def htmx_search_samples():
-        """htmx: Дээж хайх (partial HTML)."""
+        """htmx: Search samples (partial HTML)."""
         from app.utils.security import escape_like_pattern
 
         q = request.args.get("q", "").strip()
         if len(q) < 2:
-            return '<div class="text-muted small">2+ тэмдэгт оруулна уу</div>'
+            return '<div class="text-muted small">Enter 2+ characters</div>'
 
         safe_q = escape_like_pattern(q)
         samples = (
@@ -668,7 +668,7 @@ def register_routes(bp):
         )
 
         if not samples:
-            return '<div class="text-muted small">Олдсонгүй</div>'
+            return '<div class="text-muted small">Not found</div>'
 
         html = '<div class="list-group list-group-flush">'
         for s in samples:
@@ -679,3 +679,56 @@ def register_routes(bp):
             </a>'''
         html += '</div>'
         return html
+
+    @bp.route("/sample_analysis_results/<int:sample_id>")
+    @login_required
+    def sample_analysis_results(sample_id):
+        """Return all analysis results for a sample as JSON (used in complaints)."""
+        results = AnalysisResult.query.filter_by(
+            sample_id=sample_id
+        ).order_by(AnalysisResult.analysis_code).all()
+
+        return jsonify({
+            "success": True,
+            "data": [
+                {
+                    "id": r.id,
+                    "analysis_code": r.analysis_code,
+                    "final_result": r.final_result,
+                    "status": r.status,
+                    "user": r.user.username if r.user else None,
+                    "created_at": r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else None
+                }
+                for r in results
+            ]
+        })
+
+    @bp.route("/search_samples_json", methods=["GET"])
+    @login_required
+    def search_samples_json():
+        """JSON: Search samples (used in complaints, registrations, etc.)."""
+        from app.utils.security import escape_like_pattern
+
+        q = request.args.get("q", "").strip()
+        if len(q) < 2:
+            return jsonify([])
+
+        safe_q = escape_like_pattern(q)
+        samples = (
+            Sample.query
+            .filter(Sample.sample_code.ilike(f"%{safe_q}%"))
+            .order_by(Sample.received_date.desc())
+            .limit(10)
+            .all()
+        )
+
+        return jsonify([
+            {
+                "id": s.id,
+                "sample_code": s.sample_code,
+                "client_name": s.client_name or "",
+                "lab_type": s.lab_type or "",
+                "status": s.status or ""
+            }
+            for s in samples
+        ])

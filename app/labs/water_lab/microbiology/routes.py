@@ -61,12 +61,12 @@ def edit_sample(sample_id):
     """Микробиологийн дээж засах."""
     sample = db.session.get(Sample, sample_id)
     if not sample:
-        flash('Дээж олдсонгүй.', 'danger')
+        flash('Sample not found.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
     can_edit = current_user.role in ('admin', 'senior', 'chemist')
     if not can_edit:
-        flash('Дээж засах эрх танд байхгүй.', 'warning')
+        flash('You do not have permission to edit samples.', 'warning')
         return redirect(url_for('microbiology.register_sample'))
 
     analyses_list = MICRO_ANALYSIS_TYPES
@@ -84,11 +84,11 @@ def edit_sample(sample_id):
         analyses_changed = set(selected_analyses) != set(current_analyses)
 
         if not new_code:
-            flash('Дээжний код хоосон байх боломжгүй.', 'danger')
+            flash('Sample code cannot be empty.', 'danger')
         elif code_changed and Sample.query.filter(
             Sample.sample_code == new_code, Sample.id != sample_id
         ).first():
-            flash(f'"{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй.', 'danger')
+            flash(f'"{new_code}" sample already registered.', 'danger')
         else:
             try:
                 if code_changed:
@@ -97,13 +97,13 @@ def edit_sample(sample_id):
                     sample.analyses_to_perform = json.dumps(selected_analyses)
                 if code_changed or analyses_changed:
                     db.session.commit()
-                    flash('Дээжний мэдээлэл шинэчлэгдлээ.', 'success')
+                    flash('Sample information updated.', 'success')
                 else:
-                    flash('Өөрчлөлт хийгдээгүй.', 'info')
+                    flash('No changes were made.', 'info')
                 return redirect(url_for('microbiology.register_sample'))
             except Exception as e:
                 db.session.rollback()
-                flash(f'Алдаа: {e}', 'danger')
+                flash(f'Error: {e}', 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -123,11 +123,11 @@ def delete_samples():
 
     sample_ids = request.form.getlist('sample_ids')
     if not sample_ids:
-        flash('Устгах дээжээ сонгоно уу!', 'warning')
+        flash('Please select samples to delete!', 'warning')
         return redirect(url_for('microbiology.register_sample'))
 
     if current_user.role not in ('admin', 'senior', 'chemist'):
-        flash('Дээж устгах эрх танд байхгүй.', 'danger')
+        flash('You do not have permission to delete samples.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
     deleted = 0
@@ -154,9 +154,9 @@ def delete_samples():
 
     if deleted:
         db.session.commit()
-        flash(f'{deleted} дээж амжилттай устгагдлаа.', 'success')
+        flash(f'{deleted} samples deleted successfully.', 'success')
     if failed:
-        flash(f'Алдаа: {", ".join(failed)}', 'danger')
+        flash(f'Error: {", ".join(failed)}', 'danger')
 
     return redirect(url_for('microbiology.register_sample'))
 
@@ -177,20 +177,20 @@ def register_sample():
     if request.method == 'POST':
         sample_names = request.form.getlist('sample_codes')
         if not sample_names:
-            flash('Дээжний нэр заавал сонгоно уу.', 'danger')
+            flash('Sample name is required.', 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
         from app.labs.water_lab.chemistry.utils import create_water_micro_samples
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({n_analyses} шинжилгээ)', 'success')
+                flash(f'{len(created)} дээж registered successfully. ({n_analyses} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
             return redirect(url_for('microbiology.register_sample'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {e}', 'danger')
+            flash(f'Error: {e}', 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
     return render_template(
@@ -397,7 +397,7 @@ def save_batch():
 
         sample = Sample.query.filter_by(sample_code=sample_code).first()
         if not sample:
-            errors.append(f'Дээж олдсонгүй: {sample_code}')
+            errors.append(f'Sample not found. {sample_code}')
             continue
 
         analysis_code = category
@@ -749,7 +749,7 @@ def api_consumption_cell():
         if not (1 <= month <= 12):
             raise ValueError
     except Exception:
-        return jsonify({'success': False, 'error': 'параметр буруу'}), 400
+        return jsonify({'success': False, 'error': 'Invalid parameter'}), 400
 
     date_col = AnalysisResult.created_at
     q = (
@@ -946,7 +946,7 @@ def api_get_monthly_plan():
 def api_save_monthly_plan():
     from app import models as M
     if current_user.role not in ['senior', 'admin']:
-        return jsonify({'error': 'Зөвхөн ахлах эрхтэй'}), 403
+        return jsonify({'error': 'Senior access only'}), 403
 
     req_data = request.get_json()
     year = req_data.get('year')
@@ -1013,7 +1013,7 @@ def api_plan_stats():
 def api_save_staff():
     from app import models as M
     if current_user.role not in ['senior', 'admin']:
-        return jsonify({'error': 'Зөвхөн ахлах эрхтэй'}), 403
+        return jsonify({'error': 'Senior access only'}), 403
 
     req_data = request.get_json()
     year = req_data.get('year')

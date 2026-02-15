@@ -7,7 +7,7 @@
   <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>Тооцооллын томьёо</h6>
   <small class="text-muted">
     <strong>Багажны уншилт:</strong> NO₂-N (азот хэлбэрээр)<br>
-    <strong>NO₂-N (мг/л)</strong> = Дундаж × Шингэрүүлэлт<br>
+    <strong>NO₂-N (мг/л)</strong> = Average × Шингэрүүлэлт<br>
     <strong>NO₂⁻ (мг/л)</strong> = NO₂-N × 3.286 (46.005 ÷ 14.007)<br>
     <span class="text-info">MNS хязгаар NO₂⁻ ион дээр хэрэглэгдэнэ</span>
   </small>
@@ -23,10 +23,10 @@
       ...editCol, valueFormatter: p => p.value != null ? p.value : '1' },
     { headerName: 'Abs 1', field: 'abs1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     { headerName: 'Abs 2', field: 'abs2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Үр дүн 1', field: 'r1', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Үр дүн 2', field: 'r2', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Result 1', field: 'r1', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Result 2', field: 'r2', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     {
-      headerName: 'Дундаж', field: 'avg_raw', width: 90,
+      headerName: 'Average', field: 'avg_raw', width: 90,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         if (r1 != null && r2 != null) return (r1 + r2) / 2;
@@ -65,14 +65,14 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
     {
-      headerName: 'Зөрүү', field: 'diff', width: 80,
+      headerName: 'Difference', field: 'diff', width: 80,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;
       },
       valueFormatter: fmt3
     },
-    { headerName: 'Хяналт', field: 'control', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Control', field: 'control', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
   ];
   var editableFields = ['dilution', 'abs1', 'abs2', 'r1', 'r2', 'control', 'notes'];
   var computedCols = ['avg_raw', 'no2_n', 'no2_ion', 'diff'];

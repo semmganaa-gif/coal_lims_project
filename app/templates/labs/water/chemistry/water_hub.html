@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Хими лаборатори — Dashboard{% endblock %}
+{% block title %}Chemistry Lab — Dashboard{% endblock %}
 
 {% block content %}
 <style>
@@ -99,81 +99,81 @@
 
 <div class="water-dash">
   <div class="dash-header">
-    <h1><i class="bi bi-droplet-half me-2"></i>Хими лаборатори</h1>
-    <p>Усны физик-химийн шинжилгээний удирдлагын самбар</p>
+    <h1><i class="bi bi-droplet-half me-2"></i>Chemistry Lab</h1>
+    <p>Water physico-chemical analysis management dashboard</p>
   </div>
 
-  <!-- Өдрийг эхлэх -->
+  <!-- Morning start -->
   {% include 'partials/_morning_start.html' %}
 
-  <!-- Статистик -->
+  <!-- Statistics -->
   <div class="stat-cards">
     <div class="stat-card">
       <div class="stat-icon" style="color:#0dcaf0"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#0891b2">{{ total_samples }}</div>
-      <div class="stat-label">Нийт дээж</div>
+      <div class="stat-label">Total Samples</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-plus-circle-fill"></i></div>
       <div class="stat-value" style="color:#1d4ed8">{{ new_samples }}</div>
-      <div class="stat-label">Шинэ дээж</div>
+      <div class="stat-label">New Samples</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="stat-label">Шинжилж байна</div>
+      <div class="stat-label">In Progress</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#20c997"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-value" style="color:#047857">{{ completed }}</div>
-      <div class="stat-label">Дууссан</div>
+      <div class="stat-label">Completed</div>
     </div>
   </div>
 
-  <!-- Үндсэн цэс -->
+  <!-- Main Menu -->
   <div class="section-title">
     <i class="bi bi-clipboard-data" style="color:#0dcaf0"></i>
-    Үндсэн цэс
+    Main Menu
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('water.register_sample') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
       <div class="nav-card-content">
-        <h3>Дээж бүртгэл</h3>
-        <p>Усны болон микробиологийн дээж бүртгэх, жагсаалт харах</p>
+        <h3>Sample Registration</h3>
+        <p>Register water and microbiology samples, view list</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Шинжилгээ</h3>
-        <p>{{ water_analysis_count }} төрлийн усны чанарын шинжилгээ</p>
+        <h3>Analysis</h3>
+        <p>{{ water_analysis_count }} types of water quality analysis</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_summary') }}" class="nav-card nc-summary">
       <div class="nav-card-icon"><i class="bi bi-table"></i></div>
       <div class="nav-card-content">
-        <h3>Нэгтгэл</h3>
-        <p>Усны хими + микробиологи — нэгдсэн үр дүнгийн нэгтгэл</p>
+        <h3>Summary</h3>
+        <p>Water chemistry + microbiology — combined results summary</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}" class="nav-card nc-equipment">
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Тоног төхөөрөмж</h3>
-        <p>Хими лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
+        <h3>Equipment</h3>
+        <p>Chemistry lab equipment usage and maintenance journal</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
   </div>
 
-  <!-- Тайлан -->
+  <!-- Reports -->
   <div class="section-title">
     <i class="bi bi-graph-up" style="color:#0891b2"></i>
-    Тайлан
+    Reports
     <span class="section-badge" style="background:linear-gradient(135deg,#0dcaf0,#0891b2)">Reports</span>
   </div>
   <div class="nav-cards">
@@ -181,7 +181,7 @@
       <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
       <div class="nav-card-content">
         <h3>Dashboard</h3>
-        <p>KPI, сарын тренд, категори хуваарилалт</p>
+        <p>KPI, monthly trends, category distribution</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -189,7 +189,7 @@
       <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
       <div class="nav-card-content">
         <h3>Consumption</h3>
-        <p>Захиалагч, категори, сараар нэгтгэсэн тайлан</p>
+        <p>Reports summarized by client, category, and month</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -197,7 +197,7 @@
       <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
       <div class="nav-card-content">
         <h3>Monthly Plan</h3>
-        <p>Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+        <p>Weekly plan and execution</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

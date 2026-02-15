@@ -24,7 +24,7 @@
         <div class="col-md-2">
           <label class="form-label">Лаб</label>
           <select name="lab" class="form-select">
-            <option value="all" {{ 'selected' if lab == 'all' }}>Бүгд</option>
+            <option value="all" {{ 'selected' if lab == 'all' }}>All</option>
             <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
             <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
             <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
@@ -69,12 +69,12 @@
         <table class="table table-hover mb-0" id="journalTable">
           <thead class="table-light">
             <tr>
-              <th class="col-date">Огноо</th>
+              <th class="col-date">Date</th>
               <th>Химийн бодис</th>
-              <th>Тоо хэмжээ</th>
+              <th>Quantity</th>
               <th>Зорилго</th>
-              <th>Шинжилгээ</th>
-              <th>Хэрэглэгч</th>
+              <th>Analysis</th>
+              <th>User</th>
               <th>Нөөц</th>
             </tr>
           </thead>
@@ -106,13 +106,13 @@
         </table>
       </div>
       <div class="card-footer bg-white border-0 text-muted small">
-        Нийт {{ usages|length }} бүртгэл
+        Total {{ usages|length }} бүртгэл
       </div>
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
         <p>Хэрэглээний бүртгэл олдсонгүй</p>
-        <p class="small">Огноо эсвэл лаб сонгоно уу</p>
+        <p class="small">Date эсвэл лаб сонгоно уу</p>
       </div>
       {% endif %}
     </div>

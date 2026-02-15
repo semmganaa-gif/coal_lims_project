@@ -2,171 +2,215 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2>{{ capa.ca_number }}</h2>
-            <p class="text-muted">{{ capa.issue_source }} | {{ capa.issue_date.strftime('%Y-%m-%d') }}</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-tools me-2"></i>Corrective Action Register</h2>
+            <p class="text-muted mb-0">LAB.02.00.04 | {{ record.ca_number }}</p>
         </div>
-        <div class="col-md-4 text-right">
-            <a href="{{ url_for('quality.capa_edit', id=capa.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Засах
-            </a>
-            <a href="{{ url_for('quality.capa_list') }}" class="btn btn-secondary">
-                <i class="fas fa-list"></i> Буцах
+        <div>
+            {% if record.status == 'open' %}
+                <span class="badge bg-danger fs-6">Open</span>
+            {% elif record.status == 'in_progress' %}
+                <span class="badge bg-warning text-dark fs-6">In Progress</span>
+            {% elif record.status == 'reviewed' %}
+                <span class="badge bg-primary fs-6">Reviewed</span>
+            {% else %}
+                <span class="badge bg-success fs-6">Closed</span>
+            {% endif %}
+            <a href="{{ url_for('quality.capa_list') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left me-1"></i>Back
             </a>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <!-- Асуудал -->
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
-                    <h5>Асуудлын мэдээлэл</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th width="200">Эх үүсвэр:</th>
-                            <td><span class="badge badge-info">{{ capa.issue_source }}</span></td>
-                        </tr>
-                        <tr>
-                            <th>Ноцтой байдал:</th>
-                            <td>
-                                {% if capa.severity == 'Critical' %}
-                                    <span class="badge badge-danger">Эрс</span>
-                                {% elif capa.severity == 'Major' %}
-                                    <span class="badge badge-warning">Томоохон</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">Бага</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Тайлбар:</th>
-                            <td>{{ capa.issue_description }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+    <div class="row mb-3">
+        <div class="col-md-3"><strong>Date:</strong> {{ record.issue_date.strftime('%Y-%m-%d') if record.issue_date else '-' }}</div>
+        <div class="col-md-3"><strong>No.:</strong> {{ record.ca_number }}</div>
+        <div class="col-md-3"><strong>Responsible:</strong> {{ record.responsible_person.username if record.responsible_person else '-' }}</div>
+    </div>
 
-            <!-- Шалтгаан -->
-            {% if capa.root_cause %}
-            <div class="card mb-3">
-                <div class="card-header bg-info text-white">
-                    <h5>Шалтгааны шинжилгээ</h5>
+    {# ═══ Section 1: Implementer Section ═══ #}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Corrective Action Implementer Section</h5>
+        </div>
+        <div class="card-body">
+            {% if record.status == 'open' and not record.corrective_action %}
+            {# Implementer fill form #}
+            <form method="POST" action="{{ url_for('quality.capa_fill', id=record.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nonconformity description</label>
+                    <textarea name="issue_description" class="form-control" rows="4">{{ record.issue_description or '' }}</textarea>
                 </div>
-                <div class="card-body">
-                    <p><strong>Аргачлал:</strong> {{ capa.root_cause_method or '-' }}</p>
-                    <p><strong>Үндсэн шалтгаан:</strong></p>
-                    <p>{{ capa.root_cause }}</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Corrective action / Plan <span class="text-danger">*</span></label>
+                    <textarea name="corrective_action" class="form-control" rows="3"
+                              placeholder="Action measures, plan..." required></textarea>
                 </div>
-            </div>
-            {% endif %}
-
-            <!-- Арга хэмжээ -->
-            <div class="card mb-3">
-                <div class="card-header bg-warning">
-                    <h5>Арга хэмжээ</h5>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Deadline</label>
+                        <input type="date" name="target_date" class="form-control"
+                               value="{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '' }}">
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if capa.corrective_action %}
-                    <p><strong>Засах үйлдэл:</strong></p>
-                    <p>{{ capa.corrective_action }}</p>
-                    {% endif %}
-
-                    {% if capa.preventive_action %}
-                    <p><strong>Урьдчилан сэргийлэх:</strong></p>
-                    <p>{{ capa.preventive_action }}</p>
-                    {% endif %}
-
-                    <table class="table table-sm mt-3">
-                        <tr>
-                            <th>Хариуцагч:</th>
-                            <td>{{ capa.responsible_person.username if capa.responsible_person else '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Зорилтот огноо:</th>
-                            <td>{{ capa.target_date.strftime('%Y-%m-%d') if capa.target_date else '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Гүйцэтгэсэн огноо:</th>
-                            <td>{{ capa.completion_date.strftime('%Y-%m-%d') if capa.completion_date else '-' }}</td>
-                        </tr>
-                    </table>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Documented evidence, additional remarks</label>
+                    <textarea name="notes" class="form-control" rows="2">{{ record.notes or '' }}</textarea>
                 </div>
-            </div>
-
-            <!-- Баталгаажуулалт -->
-            {% if capa.verification_date or current_user.role in ['senior', 'admin'] %}
-            <div class="card mb-3">
-                <div class="card-header bg-success text-white">
-                    <h5>Баталгаажуулалт</h5>
-                </div>
-                <div class="card-body">
-                    {% if capa.verification_date %}
-                        <p><strong>Баталгаажуулсан:</strong> {{ capa.verified_by.username }} ({{ capa.verification_date.strftime('%Y-%m-%d') }})</p>
-                        <p><strong>Арга:</strong> {{ capa.verification_method }}</p>
-                        <p><strong>Үр дүнтэй байдал:</strong>
-                            {% if capa.effectiveness == 'Effective' %}
-                                <span class="badge badge-success">Үр дүнтэй</span>
-                            {% elif capa.effectiveness == 'Not effective' %}
-                                <span class="badge badge-danger">Үр дүнгүй</span>
-                            {% else %}
-                                <span class="badge badge-secondary">Хүлээгдэж байна</span>
-                            {% endif %}
-                        </p>
-                    {% else %}
-                        <form method="POST" action="{{ url_for('quality.capa_verify', id=capa.id) }}">
-                            <div class="form-group">
-                                <label>Баталгаажуулах арга:</label>
-                                <textarea name="verification_method" class="form-control" rows="2"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Үр дүнтэй байдал:</label>
-                                <select name="effectiveness" class="form-control">
-                                    <option value="Pending">Хүлээгдэж байна</option>
-                                    <option value="Effective">Үр дүнтэй</option>
-                                    <option value="Not effective">Үр дүнгүй</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-success">Баталгаажуулах</button>
-                        </form>
-                    {% endif %}
-                </div>
-            </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>Save
+                </button>
+            </form>
+            {% else %}
+            {# Filled - read-only #}
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Nonconformity description</th>
+                    <td style="white-space: pre-wrap;">{{ record.issue_description or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Corrective action / Plan</th>
+                    <td style="white-space: pre-wrap;">{{ record.corrective_action or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Deadline</th>
+                    <td>{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Documentation, additional remarks</th>
+                    <td style="white-space: pre-wrap;">{{ record.notes or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature</th>
+                    <td><i class="bi bi-person-check me-1"></i>{{ record.responsible_person.username if record.responsible_person else '-' }}</td>
+                </tr>
+            </table>
             {% endif %}
         </div>
+    </div>
 
-        <div class="col-md-4">
-            <!-- Status card -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Төлөв</h5>
+    {# ═══ Section 2: Control (Technical Manager) ═══ #}
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Control Section: Results After Corrective Action Implementation</h5>
+        </div>
+        <div class="card-body">
+            {% if record.technical_manager_id %}
+            {# Reviewed - read-only #}
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50%">Criteria</th>
+                        <th class="text-center" style="width:25%">Yes</th>
+                        <th class="text-center" style="width:25%">No</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Corrected within the established deadline?</strong></td>
+                        <td class="text-center">
+                            {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Corrective action fully resolved?</strong></td>
+                        <td class="text-center">
+                            {% if record.fully_resolved %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.fully_resolved %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Residual risk exists?</strong></td>
+                        <td class="text-center">
+                            {% if record.residual_risk_exists %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.residual_risk_exists %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Management system change required?</strong></td>
+                        <td class="text-center">
+                            {% if record.management_change_needed %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.management_change_needed %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Additional remarks</th>
+                    <td style="white-space: pre-wrap;">{{ record.control_notes or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Date</th>
+                    <td>{{ record.control_date.strftime('%Y-%m-%d') if record.control_date else '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature: Technical Manager</th>
+                    <td><i class="bi bi-person-check me-1"></i>{{ record.technical_manager.username if record.technical_manager else '-' }}</td>
+                </tr>
+            </table>
+            {% elif record.status in ['in_progress', 'reviewed'] or record.corrective_action %}
+            {# Not reviewed - form (only if Section 1 is filled) #}
+            <form method="POST" action="{{ url_for('quality.capa_review', id=record.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50%">Criteria</th>
+                            <th class="text-center" style="width:25%">Yes</th>
+                            <th class="text-center" style="width:25%">No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Corrected within the established deadline?</strong></td>
+                            <td class="text-center"><input type="radio" name="completed_on_time" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="completed_on_time" value="0" class="form-check-input" checked></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Corrective action fully resolved?</strong></td>
+                            <td class="text-center"><input type="radio" name="fully_resolved" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="fully_resolved" value="0" class="form-check-input" checked></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Residual risk exists?</strong></td>
+                            <td class="text-center"><input type="radio" name="residual_risk_exists" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="residual_risk_exists" value="0" class="form-check-input" checked></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Management system change required?</strong></td>
+                            <td class="text-center"><input type="radio" name="management_change_needed" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="management_change_needed" value="0" class="form-check-input" checked></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mb-3">
+                    <label class="form-label">Additional remarks:</label>
+                    <textarea name="control_notes" class="form-control" rows="3"></textarea>
                 </div>
-                <div class="card-body text-center">
-                    <h3>
-                        {% if capa.status == 'open' %}
-                            <span class="badge badge-danger badge-lg">Нээлттэй</span>
-                        {% elif capa.status == 'in_progress' %}
-                            <span class="badge badge-warning badge-lg">Гүйцэтгэлд</span>
-                        {% else %}
-                            <span class="badge badge-success badge-lg">Хаагдсан</span>
-                        {% endif %}
-                    </h3>
+                <div class="border-top pt-3 mb-3">
+                    <p class="mb-1"><strong>Signature: Technical Manager</strong></p>
+                    <p class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
                 </div>
-            </div>
-
-            <!-- Notes -->
-            {% if capa.notes %}
-            <div class="card">
-                <div class="card-header">
-                    <h5>Тэмдэглэл</h5>
-                </div>
-                <div class="card-body">
-                    <p>{{ capa.notes }}</p>
-                </div>
-            </div>
+                <button type="submit" class="btn btn-info text-white">
+                    <i class="bi bi-check2-square me-1"></i>Submit Review
+                </button>
+            </form>
+            {% else %}
+            <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Review will be available after Section 1 is completed.</p>
             {% endif %}
         </div>
     </div>

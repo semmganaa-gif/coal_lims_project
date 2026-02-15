@@ -119,9 +119,9 @@ window.calculateAndDisplayForRow = function (sampleId, lockInputs = false) {
 
   // Mad байхгүй бол хадгалж болохгүй
   if (isNaN(madUsed)) {
-    $row1.find('.result-cell').text('Mad алга!').addClass('text-danger');
+    $row1.find('.result-cell').text('Mad missing!').addClass('text-danger');
     if ($row2.length) {
-      $row2.find('.result-cell').text('Mad алга!').addClass('text-danger');
+      $row2.find('.result-cell').text('Mad missing!').addClass('text-danger');
     }
     $diffCell.text('-').removeClass('text-success text-danger fw-bold');
     $avgCell.text('-');
@@ -154,13 +154,13 @@ window.calculateAndDisplayForRow = function (sampleId, lockInputs = false) {
         .addClass('text-danger fw-bold')
         .attr(
           'title',
-          `Зөвшөөрөгдөх хязгаараас (${VOLATILE_REPEATABILITY_LIMIT}) хэтэрсэн!`
+          `Exceeded allowable limit (${VOLATILE_REPEATABILITY_LIMIT})!`
         );
     } else {
       $diffCell
         .removeClass('text-danger fw-bold')
         .addClass('text-success')
-        .attr('title', `Зөвшөөрөгдөх хязгаар: ${VOLATILE_REPEATABILITY_LIMIT}`);
+        .attr('title', `Allowable limit: ${VOLATILE_REPEATABILITY_LIMIT}`);
     }
   } else if (!isNaN(res1) && !$row2.length) {
     // ганц параллел

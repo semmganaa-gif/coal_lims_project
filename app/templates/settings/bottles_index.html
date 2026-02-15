@@ -3,36 +3,36 @@
 <div class="container-fluid">
 
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Бортого тогтмол — жагсаалт</h3>
+    <h3 class="mb-0">Bottle Constants — List</h3>
 
     {% if can_create %}
       <div class="btn-group">
         <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
-          <i class="bi bi-plus-circle"></i> Шинэ тогтмол
+          <i class="bi bi-plus-circle"></i> New Constant
         </a>
         <a class="btn btn-outline-primary" href="{{ url_for('settings.bottles_constants_bulk') }}">
-          <i class="bi bi-grid-3x3"></i> Bulk оруулалт
+          <i class="bi bi-grid-3x3"></i> Bulk Entry
         </a>
       </div>
     {% endif %}
   </div>
 
   <p class="text-muted small">
-    Химич: зөвхөн харах. Ахлах/Админ: шинэ тогтмол оруулах боломжтой.
+    Chemist: view only. Senior/Admin: can add new constants.
   </p>
 
   <div class="table-responsive">
     <table class="table table-sm align-middle">
       <thead>
         <tr>
-          <th style="width:140px;">Бортого №</th>
-          <th style="width:120px;">Идэвхтэй</th>
-          <th>Сүүлийн дундаж (m₂)</th>
-          <th style="width:110px;">Темп. (°C)</th>
-          <th style="width:210px;">Тохиргоо хүчинтэй огноо</th>
-          <th style="width:170px;">Үүсгэсэн огноо</th>
+          <th style="width:140px;">Bottle No.</th>
+          <th style="width:120px;">Active</th>
+          <th>Last Average (m₂)</th>
+          <th style="width:110px;">Temp. (°C)</th>
+          <th style="width:210px;">Settings Valid Date</th>
+          <th style="width:170px;">Created Date</th>
           {% if can_edit_delete %}
-            <th style="width:160px;" class="text-end">Үйлдэл</th>
+            <th style="width:160px;" class="text-end">Actions</th>
           {% endif %}
         </tr>
       </thead>
@@ -57,15 +57,15 @@
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary"
                    href="{{ url_for('settings.bottle_edit', bottle_id=b.id) }}">
-                  <i class="bi bi-pencil-square"></i> Засах
+                  <i class="bi bi-pencil-square"></i> Edit
                 </a>
 
                 <form class="d-inline" method="post"
                       action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
-                      onsubmit="return confirm('Бортого {{ b.serial_no }}-г бүр мөсөн устгах уу? (түүх өгөгдөл хамт устна)');">
+                      onsubmit="return confirm('Permanently delete bottle {{ b.serial_no }}? (historical data will also be deleted)');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-trash"></i> Устгах
+                    <i class="bi bi-trash"></i> Delete
                   </button>
                 </form>
               </td>

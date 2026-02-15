@@ -1,20 +1,14 @@
 # app/routes/quality/capa.py
-# -*- coding: utf-8 -*-
-"""
-CAPA (Corrective and Preventive Actions) Management
-ISO 17025 - Clause 8.7
-"""
-# Залруулах ажиллагааны бүртгэл
+"""Залруулах ажиллагааны бүртгэл - LAB.02.00.04 / ISO 17025 Clause 8.7"""
 
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import CorrectiveAction, User
+from app.models import CorrectiveAction
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
-    generate_sequential_code,
-    parse_date
+    generate_sequential_code
 )
 from datetime import date
 import logging
@@ -23,136 +17,113 @@ logger = logging.getLogger(__name__)
 
 
 def register_routes(bp):
-    """CAPA route-ууд бүртгэх"""
+    """Залруулах ажиллагааны route-уудыг бүртгэх."""
 
     @bp.route("/capa")
     @login_required
     def capa_list():
-        """CAPA жагсаалт"""
-        capas = CorrectiveAction.query.order_by(CorrectiveAction.issue_date.desc()).all()
-        stats = calculate_status_stats(capas, status_values=['open', 'in_progress', 'closed'])
-
+        records = CorrectiveAction.query.order_by(
+            CorrectiveAction.issue_date.desc()
+        ).limit(2000).all()
+        stats = calculate_status_stats(
+            records,
+            status_values=['open', 'in_progress', 'reviewed', 'closed']
+        )
         return render_template(
             'quality/capa_list.html',
-            capas=capas,
+            records=records,
             stats=stats,
-            title="CAPA - Засвар арга хэмжээ"
+            title="Залруулах ажиллагааны бүртгэл"
         )
 
     @bp.route("/capa/new", methods=["GET", "POST"])
     @login_required
     @require_quality_edit('quality.capa_list')
     def capa_new():
-        """Шинэ CAPA үүсгэх"""
         if request.method == "POST":
-            # Generate CA number using helper
-            ca_number = generate_sequential_code(CorrectiveAction, 'ca_number', 'CA')
+            desc = request.form.get('issue_description', '').strip()
+            if not desc:
+                flash("Non-conformity description is required.", "danger")
+                return render_template(
+                    'quality/capa_form.html',
+                    today=date.today().isoformat(),
+                    title="Шинэ залруулах ажиллагаа"
+                )
 
-            # Parse dates safely
-            issue_date = parse_date(request.form.get('issue_date'), date.today())
-            target_date = parse_date(request.form.get('target_date'))
-
-            # Create CAPA
-            capa = CorrectiveAction(
-                ca_number=ca_number,
-                issue_date=issue_date,
-                issue_source=request.form.get('issue_source'),
-                issue_description=request.form.get('issue_description'),
-                severity=request.form.get('severity', 'Minor'),
-                responsible_person_id=request.form.get('responsible_person_id'),
-                target_date=target_date,
-                status='open'
+            ca_number = generate_sequential_code(
+                CorrectiveAction, 'ca_number', 'CA'
             )
 
-            db.session.add(capa)
+            target_str = request.form.get('target_date', '').strip()
+
+            record = CorrectiveAction(
+                ca_number=ca_number,
+                issue_date=request.form.get('issue_date') or date.today(),
+                issue_description=desc,
+                corrective_action=request.form.get('corrective_action', '').strip(),
+                target_date=target_str if target_str else None,
+                responsible_person_id=current_user.id,
+                notes=request.form.get('notes', '').strip(),
+                status='open'
+            )
+            db.session.add(record)
             db.session.commit()
 
-            logger.info(f"CAPA created: {ca_number}, severity: {capa.severity}, user: {current_user.username}")
-            flash(f"CAPA {ca_number} амжилттай үүслээ", "success")
-            return redirect(url_for('quality.capa_detail', id=capa.id))
+            logger.info(f"CAPA created: {ca_number}, user: {current_user.username}")
+            flash(f"Corrective action {ca_number} registered", "success")
+            return redirect(url_for('quality.capa_list'))
 
-        # GET - form харуулах
-        users = User.query.all()
         return render_template(
             'quality/capa_form.html',
-            users=users,
-            title="Шинэ CAPA үүсгэх"
+            today=date.today().isoformat(),
+            title="Шинэ залруулах ажиллагаа"
         )
 
     @bp.route("/capa/<int:id>")
     @login_required
     def capa_detail(id):
-        """CAPA дэлгэрэнгүй"""
-        capa = CorrectiveAction.query.get_or_404(id)
+        record = CorrectiveAction.query.get_or_404(id)
         return render_template(
             'quality/capa_detail.html',
-            capa=capa,
-            title=f"CAPA - {capa.ca_number}"
+            record=record,
+            title=f"Залруулах ажиллагаа - {record.ca_number}"
         )
 
-    @bp.route("/capa/<int:id>/edit", methods=["GET", "POST"])
+    @bp.route("/capa/<int:id>/fill", methods=["POST"])
     @login_required
-    @require_quality_edit('quality.capa_list')
-    def capa_edit(id):
-        """CAPA засах"""
-        capa = CorrectiveAction.query.get_or_404(id)
+    def capa_fill(id):
+        """Хэсэг 1: Хэрэгжүүлэгч бөглөх."""
+        record = CorrectiveAction.query.get_or_404(id)
+        record.issue_description = request.form.get('issue_description', '').strip() or record.issue_description
+        record.corrective_action = request.form.get('corrective_action', '').strip()
+        record.notes = request.form.get('notes', '').strip()
 
-        if request.method == "POST":
-            capa.issue_source = request.form.get('issue_source')
-            capa.issue_description = request.form.get('issue_description')
-            capa.severity = request.form.get('severity')
-            capa.root_cause = request.form.get('root_cause')
-            capa.root_cause_method = request.form.get('root_cause_method')
-            capa.corrective_action = request.form.get('corrective_action')
-            capa.preventive_action = request.form.get('preventive_action')
-            capa.responsible_person_id = request.form.get('responsible_person_id')
+        target_str = request.form.get('target_date', '').strip()
+        record.target_date = target_str if target_str else None
 
-            # Parse dates safely
-            target_date = parse_date(request.form.get('target_date'))
-            if target_date:
-                capa.target_date = target_date
-
-            completion_date = parse_date(request.form.get('completion_date'))
-            if completion_date:
-                capa.completion_date = completion_date
-
-            capa.status = request.form.get('status', capa.status)
-            capa.notes = request.form.get('notes')
-
-            db.session.commit()
-
-            logger.info(f"CAPA updated: {capa.ca_number}, status: {capa.status}, user: {current_user.username}")
-            flash(f"CAPA {capa.ca_number} шинэчлэгдлээ", "success")
-            return redirect(url_for('quality.capa_detail', id=capa.id))
-
-        users = User.query.all()
-        return render_template(
-            'quality/capa_form.html',
-            capa=capa,
-            users=users,
-            title=f"CAPA засах - {capa.ca_number}"
-        )
-
-    @bp.route("/capa/<int:id>/verify", methods=["POST"])
-    @login_required
-    @require_quality_edit('quality.capa_list')
-    def capa_verify(id):
-        """CAPA баталгаажуулах"""
-        capa = CorrectiveAction.query.get_or_404(id)
-
-        capa.verification_method = request.form.get('verification_method')
-        capa.verification_date = date.today()
-        capa.verified_by_id = current_user.id
-        capa.effectiveness = request.form.get('effectiveness', 'Pending')
-
-        if capa.effectiveness == 'Effective':
-            capa.status = 'closed'
-
+        record.status = 'in_progress'
         db.session.commit()
 
-        logger.info(
-            f"CAPA verified: {capa.ca_number}, effectiveness: {capa.effectiveness}, "
-            f"user: {current_user.username}"
-        )
-        flash(f"CAPA {capa.ca_number} баталгаажлаа", "success")
-        return redirect(url_for('quality.capa_detail', id=capa.id))
+        logger.info(f"CAPA filled: {record.ca_number}, user: {current_user.username}")
+        flash(f"{record.ca_number} filled", "success")
+        return redirect(url_for('quality.capa_detail', id=id))
+
+    @bp.route("/capa/<int:id>/review", methods=["POST"])
+    @login_required
+    @require_quality_edit('quality.capa_list')
+    def capa_review(id):
+        """Хэсэг 2: Хяналт (Техникийн менежер)."""
+        record = CorrectiveAction.query.get_or_404(id)
+        record.completed_on_time = request.form.get('completed_on_time') == '1'
+        record.fully_resolved = request.form.get('fully_resolved') == '1'
+        record.residual_risk_exists = request.form.get('residual_risk_exists') == '1'
+        record.management_change_needed = request.form.get('management_change_needed') == '1'
+        record.control_notes = request.form.get('control_notes', '').strip()
+        record.control_date = date.today()
+        record.technical_manager_id = current_user.id
+        record.status = 'reviewed'
+        db.session.commit()
+
+        logger.info(f"CAPA reviewed: {record.ca_number}, user: {current_user.username}")
+        flash(f"{record.ca_number} reviewed", "success")
+        return redirect(url_for('quality.capa_detail', id=id))

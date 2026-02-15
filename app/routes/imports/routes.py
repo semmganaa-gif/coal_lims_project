@@ -492,7 +492,7 @@ def import_historical_csv():
     batch_size = int(request.form.get("batch_size") or 1000)
 
     if not file or file.filename == "":
-        flash("Файл сонгоогүй байна.", "danger")
+        flash("No file selected.", "danger")
         return redirect(url_for("importer.import_historical_csv"))
 
     raw = file.read()
@@ -516,7 +516,7 @@ def import_historical_csv():
     try:
         raw_header = next(reader)
     except StopIteration:
-        flash("Хоосон файл байна.", "danger")
+        flash("Empty file.", "danger")
         return redirect(url_for("importer.import_historical_csv"))
 
     # BOM, whitespace цэвэрлэе
@@ -543,7 +543,7 @@ def import_historical_csv():
             return redirect(url_for("importer.import_historical_csv"))
     except SQLAlchemyError as db_err:
         db.session.rollback()
-        flash(f"Базад бичих үед алдаа гарлаа: {db_err}", "danger")
+        flash(f"Database write error: {db_err}", "danger")
         return redirect(url_for("importer.import_historical_csv"))
 
     return render_template(

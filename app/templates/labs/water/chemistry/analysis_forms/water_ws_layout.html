@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
-{% block title %}{{ param.name_mn }} - Ажлын талбар{% endblock %}
+{% block title %}{{ param.name_mn }} - Workspace{% endblock %}
 
 {% block content %}
 <style>
@@ -97,22 +97,22 @@
     </div>
     <div class="ws-actions">
       <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Буцах
+        <i class="bi bi-arrow-left me-1"></i>Back
       </a>
       <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#waterQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>Стандарт
+        <i class="bi bi-journal-bookmark me-1"></i>Standard
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>Цаг
+        <i class="bi bi-stopwatch me-1"></i>Timer
       </button>
       <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>Төхөөрөмж
+        <i class="bi bi-tools me-1"></i>Equipment
       </button>
       <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#waterSampleModal">
-        <i class="bi bi-plus-circle me-1"></i>Дээж сонгох
+        <i class="bi bi-plus-circle me-1"></i>Select Samples
       </button>
       <button id="btnSave" class="btn text-white" style="background:#3b82f6;">
-        <i class="bi bi-save me-1"></i>Хадгалах
+        <i class="bi bi-save me-1"></i>Save
       </button>
     </div>
   </div>
@@ -120,9 +120,9 @@
   {# ── QUICK REFERENCE (collapsible) ── #}
   <div class="collapse" id="waterQuickRef">
     <div class="ref-body">
-      <h6 class="mb-2"><i class="bi bi-journal-bookmark me-1" style="color:#3b82f6"></i>Стандартын лавлах</h6>
+      <h6 class="mb-2"><i class="bi bi-journal-bookmark me-1" style="color:#3b82f6"></i>Standard Reference</h6>
       <table class="table table-sm table-bordered mb-0">
-        <thead><tr><th>Параметр</th><th>Нэгж</th><th>MNS хязгаар</th><th>Стандарт</th></tr></thead>
+        <thead><tr><th>Parameter</th><th>Unit</th><th>MNS Limit</th><th>Standard</th></tr></thead>
         <tbody>
           <tr>
             <td>{{ param.name_mn }}</td>
@@ -148,7 +148,7 @@
       <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between"
            style="background:linear-gradient(135deg,#fef3c7,#fffbeb); border-bottom:1px solid #fde68a;">
         <span class="fw-bold" style="font-size:0.9rem; color:#92400e;">
-          <i class="bi bi-stopwatch-fill me-1"></i>Цаг хэмжигч
+          <i class="bi bi-stopwatch-fill me-1"></i>Timer
         </span>
         <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel"></button>
       </div>
@@ -156,7 +156,7 @@
         <div class="d-flex flex-wrap gap-2 mb-3" id="waterTimerPresets"></div>
         <div id="waterTimerList" class="d-flex flex-wrap gap-3"></div>
         <div id="waterTimerEmpty" class="text-muted small text-center py-2">
-          <i class="bi bi-info-circle me-1"></i>Preset товч дарж эсвэл шинэ timer нэмнэ үү.
+          <i class="bi bi-info-circle me-1"></i>Click a preset button or add a new timer.
         </div>
       </div>
     </div>
@@ -179,15 +179,15 @@
     <div class="card-header d-flex align-items-center justify-content-between">
       <h6>
         <i class="bi bi-table me-1" style="color:#3b82f6"></i>
-        {{ param.name_mn }} — шинжилгээний хүснэгт
+        {{ param.name_mn }} — Analysis Table
         <span id="rowCount" class="badge bg-secondary ms-2">0</span>
       </h6>
     </div>
     <div id="waterGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#e0ffe0"></div> MNS хязгаарт нийцсэн</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ffe0e0"></div> MNS хязгаараас давсан</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#e9ecef"></div> Хадгалагдсан (засах боломжгүй)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e0ffe0"></div> Within MNS limit</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffe0e0"></div> Exceeds MNS limit</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9ecef"></div> Saved (not editable)</div>
     </div>
   </div>
 </div>
@@ -197,48 +197,48 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #eff6ff, #f0f9ff);">
-        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#3b82f6"></i>Дээж сонгох</h5>
+        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#3b82f6"></i>Select Samples</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
           <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="Дээжний код хайх...">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="Search sample code...">
           </div>
           <div class="col-4">
             <select id="filterClient" class="form-select form-select-sm">
-              <option value="">Бүх захиалагч</option>
+              <option value="">All Clients</option>
             </select>
           </div>
           <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Цэвэрлэх"><i class="bi bi-x-circle"></i></button>
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear"><i class="bi bi-x-circle"></i></button>
             <span id="filteredCount" class="text-muted small"></span>
           </div>
         </div>
         <div id="sampleListLoading" class="text-center py-4">
           <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 text-muted">Ачаалж байна...</p>
+          <p class="mt-2 text-muted">Loading...</p>
         </div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light sticky-top">
               <tr>
                 <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th>
-                <th>Дээжний код</th>
-                <th>Захиалагч</th>
-                <th>Огноо</th>
+                <th>Sample Code</th>
+                <th>Client</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody id="sampleListBody"></tbody>
           </table>
         </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">Боломжит дээж олдсонгүй</div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">No eligible samples found</div>
       </div>
       <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">0 сонгосон</span>
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Хаах</button>
+        <span id="selectedCount" class="me-auto text-muted small">0 selected</span>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn text-white btn-sm" style="background:#3b82f6;" id="btnConfirmSamples">
-          <i class="bi bi-check-lg me-1"></i>Нэмэх
+          <i class="bi bi-check-lg me-1"></i>Add
         </button>
       </div>
     </div>
@@ -295,7 +295,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Тоног төхөөрөмжийн ашиглалт & засвар</span>
+          <span>Equipment Usage & Maintenance</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -305,13 +305,13 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 18%; min-width:140px;">Лаб дугаар / Нэр</th>
-                <th style="width: 6%; text-align:center;">Бүрэн<br>бүтэн</th>
-                <th style="width: 8%; text-align:center;">Ашиглалт<br>(мин)</th>
-                <th style="width: 14%;">Тэмдэглэл</th>
-                <th style="width: 6%; text-align:center;">Шалгалт</th>
-                <th style="width: 6%; text-align:center;">Засвар</th>
-                <th style="width: 42%;">Шалгалт / Засварын мэдээлэл</th>
+                <th style="width: 18%; min-width:140px;">Lab Code / Name</th>
+                <th style="width: 6%; text-align:center;">Condition<br>OK</th>
+                <th style="width: 8%; text-align:center;">Usage<br>(min)</th>
+                <th style="width: 14%;">Notes</th>
+                <th style="width: 6%; text-align:center;">Check</th>
+                <th style="width: 6%; text-align:center;">Repair</th>
+                <th style="width: 42%;">Check / Repair Details</th>
               </tr>
             </thead>
             <tbody>
@@ -330,11 +330,11 @@
                   <input type="number" class="form-control form-control-sm text-center eq-minutes" placeholder="0" min="0" style="border-color: #cbd5e0;">
                 </td>
                 <td>
-                  <input type="text" class="form-control form-control-sm eq-note" placeholder="Тэмдэглэл..." style="border-color: #cbd5e0;">
+                  <input type="text" class="form-control form-control-sm eq-note" placeholder="Notes..." style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   {% if eq.category in ['furnace', 'balance', 'analysis', 'water'] %}
-                  <button type="button" class="btn btn-outline-success btn-sm calib-btn" onclick="toggleCalibPanel(this)" title="Шалгалт хийх">
+                  <button type="button" class="btn btn-outline-success btn-sm calib-btn" onclick="toggleCalibPanel(this)" title="Run check">
                     <i class="bi bi-thermometer-half"></i>
                   </button>
                   {% else %}
@@ -347,64 +347,64 @@
                 <td class="calib-repair-cell">
                   {% if eq.category == 'furnace' %}
                   <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> Температурын шалгалт</div>
+                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> Temperature Check</div>
                     <div class="calib-input-group">
-                      <label>Тохируулсан:</label>
+                      <label>Set:</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Хэмжсэн:</label>
+                      <label>Measured:</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Зөрүү:</label>
+                      <label>Difference:</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
                   </div>
                   {% elif eq.category == 'balance' %}
                   <div class="calib-panel balance-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> Жингийн шалгалт (туухай)</div>
-                    <div class="mb-2"><small class="text-muted">Стандарт жин → Хэмжсэн утга</small></div>
+                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> Balance Check (weights)</div>
+                    <div class="mb-2"><small class="text-muted">Standard weight -> Measured value</small></div>
                     <div class="calib-weights-list">
                       <div class="calib-weight-row">
-                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">
-                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
+                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
                         <span class="calib-status d-none" style="min-width:50px;"></span>
                       </div>
                     </div>
                     <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> Жин нэмэх
+                      <i class="bi bi-plus"></i> Add Weight
                     </button>
                   </div>
                   {% elif eq.category in ['analysis', 'water'] %}
                   <div class="calib-panel analysis-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-gear"></i> Багажийн шалгалт</div>
+                    <div class="calib-panel-title"><i class="bi bi-gear"></i> Instrument Check</div>
                     <div class="calib-input-group">
-                      <label>Стандарт:</label>
-                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Стандартын нэр">
+                      <label>Standard:</label>
+                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Standard name">
                     </div>
                     <div class="calib-input-group">
-                      <label>Баталгаат:</label>
-                      <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Утга" step="0.001">
+                      <label>Certified:</label>
+                      <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Value" step="0.001">
                     </div>
                     <div class="calib-input-group">
-                      <label>Хэмжсэн:</label>
-                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Утга" step="0.001" oninput="checkAnalysisDiff(this)">
+                      <label>Measured:</label>
+                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Value" step="0.001" oninput="checkAnalysisDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Зөрүү (%):</label>
+                      <label>Diff (%):</label>
                       <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
                   </div>
                   {% endif %}
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Засварын огноо</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1" onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Сэлбэг нэмэх
+                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
                     </button>
                   </div>
                 </td>
@@ -415,17 +415,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>Усны лабын тоног төхөөрөмж бүртгэгдээгүй байна.
+          <i class="bi bi-info-circle me-2"></i>No water lab equipment registered.
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Хаах
+          <i class="bi bi-x-lg me-1"></i>Close
         </button>
         {% if related_equipments %}
         <button type="button" class="btn text-white px-4" style="background:#3b82f6;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Хадгалах
+          <i class="bi bi-save me-1"></i>Save
         </button>
         {% endif %}
       </div>
@@ -499,7 +499,7 @@
       cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' }
     },
     {
-      headerName: 'Дээжний нэр', field: 'sample_code', width: 260, pinned: 'left',
+      headerName: 'Sample Name', field: 'sample_code', width: 260, pinned: 'left',
       cellRenderer: p => {
         let h = '<div style="font-weight:600">' + p.value + '</div>';
         const rej = rejectedInfo[p.data.sample_id];
@@ -522,11 +522,11 @@
   {% block column_defs %}
   // Default: ph/ec simple measurement
   var formColumns = [
-    { headerName: 'Хэмжилт 1', field: 'm1', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Хэмжилт 2', field: 'm2', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Хэмжилт 3', field: 'm3', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Reading 1', field: 'm1', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Reading 2', field: 'm2', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: 'Reading 3', field: 'm3', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     {
-      headerName: 'Дундаж', field: 'average', width: 110,
+      headerName: 'Average', field: 'average', width: 110,
       valueGetter: p => {
         const vals = [p.data.m1, p.data.m2, p.data.m3].filter(v => v != null && !isNaN(v));
         return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
@@ -540,7 +540,7 @@
   {% endblock %}
 
   const notesCol = {
-    headerName: 'Тэмдэглэл', field: 'notes', flex: 1,
+    headerName: 'Notes', field: 'notes', flex: 1,
     editable: p => !p.data.is_saved,
     cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
   };
@@ -629,7 +629,7 @@
 
   document.getElementById('btnSave').addEventListener('click', async function() {
     const items = collectSaveItems();
-    if (!items.length) { showToast('Хадгалах өгөгдөл байхгүй', 'warning'); return; }
+    if (!items.length) { showToast('No data to save', 'warning'); return; }
 
     let ok = 0;
     for (const item of items) {
@@ -645,10 +645,10 @@
     }
     if (ok > 0) {
       draftMgr.purge(items.map(i => i.sample_id));
-      showToast(ok + ' дээжний үр дүн амжилттай хадгалагдлаа!', 'success');
+      showToast(ok + ' sample result(s) saved successfully!', 'success');
       setTimeout(() => location.reload(), 1200);
     } else {
-      showToast('Хадгалахад алдаа гарлаа', 'error');
+      showToast('Error saving data', 'error');
     }
   });
 
@@ -692,7 +692,7 @@
         }
         // Build client filter
         const sel = document.getElementById('filterClient');
-        sel.innerHTML = '<option value="">Бүх захиалагч</option>';
+        sel.innerHTML = '<option value="">All Clients</option>';
         [...new Set(list.map(s => s.client_name).filter(Boolean))].sort().forEach(c => {
           const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
         });
@@ -739,7 +739,7 @@
     document.getElementById('filteredCount').textContent = vis + ' / ' + allSamples.length;
   }
   function updateSelectedCount() {
-    document.getElementById('selectedCount').textContent = modalSelected.size + ' сонгосон';
+    document.getElementById('selectedCount').textContent = modalSelected.size + ' selected';
   }
   function applyFilters() {
     const q = (document.getElementById('sampleSearch').value || '').toLowerCase().trim();
@@ -773,7 +773,7 @@
   });
 
   document.getElementById('btnConfirmSamples')?.addEventListener('click', function() {
-    if (!modalSelected.size) { showToast('Дээж сонгоно уу', 'warning'); return; }
+    if (!modalSelected.size) { showToast('Please select samples', 'warning'); return; }
     const url = new URL(window.location.href);
     const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
     const allIds = [...exist, ...[...modalSelected].filter(x => !exist.includes(x))];
@@ -788,10 +788,10 @@
 (function() {
   const STORAGE_PREFIX = 'tmr_WATER_';
   const PRESETS = [
-    { label: 'BOD5 инкубаци 20°C 5 хоног', seconds: 432000 },
-    { label: 'Хатаах 105°C 2 цаг', seconds: 7200 },
-    { label: 'Шатаах 550°C 1 цаг', seconds: 3600 },
-    { label: 'Титрлэлт 30 мин', seconds: 1800 },
+    { label: 'BOD5 incubation 20°C 5 days', seconds: 432000 },
+    { label: 'Drying 105°C 2 hrs', seconds: 7200 },
+    { label: 'Ignition 550°C 1 hr', seconds: 3600 },
+    { label: 'Titration 30 min', seconds: 1800 },
   ];
   let timers = [], nextId = 1;
 
@@ -890,11 +890,11 @@
     const addBtn = document.createElement('button');
     addBtn.className='btn btn-sm btn-outline-secondary';
     addBtn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
-    addBtn.innerHTML='<i class="bi bi-plus-circle me-1"></i>Шинэ timer';
+    addBtn.innerHTML='<i class="bi bi-plus-circle me-1"></i>New Timer';
     addBtn.onclick=()=>{
-      const name=prompt('Timer нэр:','Custom timer');
+      const name=prompt('Timer name:','Custom timer');
       if(!name)return;
-      const minStr=prompt('Хугацаа (минут):','60');
+      const minStr=prompt('Duration (minutes):','60');
       const mins=parseInt(minStr);
       if(isNaN(mins)||mins<=0)return;
       addTimer(name,mins*60);
@@ -936,7 +936,7 @@ window.checkTempDiff = function(input) {
     diffInput.value = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' °C';
     statusSpan.classList.remove('d-none');
     if (Math.abs(diff) <= 5) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
-    else { statusSpan.textContent = 'Зөрүү!'; statusSpan.className = 'calib-status fail'; }
+    else { statusSpan.textContent = 'Deviation!'; statusSpan.className = 'calib-status fail'; }
   } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
 };
 
@@ -958,8 +958,8 @@ window.addWeightRow = function(btn) {
   const list = btn.closest('.balance-panel').querySelector('.calib-weights-list');
   const row = document.createElement('div');
   row.className = 'calib-weight-row';
-  row.innerHTML = '<input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Стд (g)" step="0.0001" style="flex:1">'
-    +'<input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Хэмжсэн" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">'
+  row.innerHTML = '<input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">'
+    +'<input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">'
     +'<span class="calib-status d-none" style="min-width:50px;"></span>'
     +'<button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest(\'.calib-weight-row\').remove()" style="padding:2px 6px;"><i class="bi bi-x"></i></button>';
   list.appendChild(row);
@@ -976,7 +976,7 @@ window.checkAnalysisDiff = function(input) {
     diffInput.value = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + ' %';
     statusSpan.classList.remove('d-none');
     if (Math.abs(diffPct) <= 2) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
-    else { statusSpan.textContent = 'Зөрүү!'; statusSpan.className = 'calib-status fail'; }
+    else { statusSpan.textContent = 'Deviation!'; statusSpan.className = 'calib-status fail'; }
   } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
 };
 
@@ -984,9 +984,9 @@ window.addSparePart = function(btn) {
   const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
   const row = document.createElement('div');
   row.className = 'input-group input-group-sm mb-1 spare-row';
-  row.innerHTML = '<select class="form-select form-select-sm spare-select" style="flex:3"><option value="">Сэлбэг сонгох...</option></select>'
-    +'<input type="number" class="form-control spare-qty" placeholder="Тоо" min="1" value="1" style="flex:1; max-width:60px">'
-    +'<input type="text" class="form-control spare-user" placeholder="Хэн" style="flex:2">'
+  row.innerHTML = '<select class="form-select form-select-sm spare-select" style="flex:3"><option value="">Select spare part...</option></select>'
+    +'<input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">'
+    +'<input type="text" class="form-control spare-user" placeholder="Used by" style="flex:2">'
     +'<button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest(\'.spare-row\').remove()"><i class="bi bi-x"></i></button>';
   list.appendChild(row);
   const sel = row.querySelector('.spare-select');
@@ -1056,7 +1056,7 @@ window.submitEquipmentUsage = function() {
     }
     if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
   });
-  if (items.length === 0) { alert('Бүртгэх мэдээлэл алга байна.'); return; }
+  if (items.length === 0) { alert('No data to record.'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': eqCsrf },
@@ -1076,12 +1076,12 @@ window.submitEquipmentUsage = function() {
       document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
-      alert('Төхөөрөмжийн ашиглалт амжилттай хадгалагдлаа!');
+      alert('Equipment usage saved successfully!');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('Error: ' + (data.message || 'Unknown error'));
     }
   })
-  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
+  .catch(err => alert('Network error: ' + err.message));
 };
 })();
 </script>

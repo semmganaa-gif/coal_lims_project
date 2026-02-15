@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ param.name_mn }} — Физик шинжилгээ{% endblock %}
+{% block title %}{{ param.name_mn }} — Physical Analysis{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
@@ -24,13 +24,13 @@
   <div class="row g-3">
     <div class="col-md-3">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">Select Sample</h6></div>
         <div class="card-body">
           <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- Дээж сонгоно уу --</option>
+            <option value="">-- Select a sample --</option>
           </select>
           <button class="btn btn-secondary btn-sm w-100" onclick="addSample()">
-            <i class="bi bi-plus-circle me-1"></i>Нэмэх
+            <i class="bi bi-plus-circle me-1"></i>Add
           </button>
         </div>
       </div>
@@ -39,9 +39,9 @@
     <div class="col-md-9">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">{{ param.name_mn }} — Хэмжилт</h6>
+          <h6 class="mb-0">{{ param.name_mn }} — Measurement</h6>
           <button class="btn btn-success btn-sm" onclick="saveAll()">
-            <i class="bi bi-save me-1"></i>Хадгалах
+            <i class="bi bi-save me-1"></i>Save
           </button>
         </div>
         <div class="card-body p-0">
@@ -76,14 +76,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const gridDiv = document.getElementById('physGrid');
   const gridOptions = {
     columnDefs: [
-      { field: 'sample_code', headerName: 'Дээжний код', pinned: 'left', width: 160 },
+      { field: 'sample_code', headerName: 'Sample Code', pinned: 'left', width: 160 },
       { field: 'value', headerName: '{{ param.name_mn }} ({{ param.get("unit", "") }})', editable: true, type: 'numericColumn', width: 180,
         cellStyle: p => {
           if (!mnsMax || !p.value) return {};
           return parseFloat(p.value) > mnsMax ? { backgroundColor: '#ffe0e0' } : { backgroundColor: '#e0ffe0' };
         }
       },
-      { field: 'notes', headerName: 'Тэмдэглэл', editable: true, flex: 1 },
+      { field: 'notes', headerName: 'Notes', editable: true, flex: 1 },
     ],
     rowData: [],
     defaultColDef: { sortable: true, resizable: true },
@@ -108,7 +108,7 @@ function addSample() {
 function saveAll() {
   const rows = [];
   gridApi.forEachNode(n => rows.push(n.data));
-  if (!rows.length) { alert('Өгөгдөл байхгүй'); return; }
+  if (!rows.length) { alert('No data available'); return; }
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   rows.forEach(row => {

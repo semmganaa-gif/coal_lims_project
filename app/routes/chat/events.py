@@ -75,7 +75,7 @@ def handle_disconnect():
 def handle_send_message(data):
     """Мессеж илгээх"""
     if not current_user.is_authenticated:
-        emit('error', {'message': 'Нэвтрэх шаардлагатай'})
+        emit('error', {'message': 'Login required'})
         return
 
     receiver_id = data.get('receiver_id')
@@ -85,7 +85,7 @@ def handle_send_message(data):
     message_type = data.get('message_type', 'text')
 
     if not message_text:
-        emit('error', {'message': 'Мессеж хоосон байна'})
+        emit('error', {'message': 'Message is empty'})
         return
 
     # Validate receiver
@@ -93,7 +93,7 @@ def handle_send_message(data):
     if receiver_id:
         receiver = db.session.get(User, receiver_id)
         if not receiver:
-            emit('error', {'message': 'Хүлээн авагч олдсонгүй'})
+            emit('error', {'message': 'Recipient not found'})
             return
 
     # Validate sample if provided
@@ -136,17 +136,17 @@ def handle_send_message(data):
 def handle_send_file(data):
     """Файл илгээх"""
     if not current_user.is_authenticated:
-        emit('error', {'message': 'Нэвтрэх шаардлагатай'})
+        emit('error', {'message': 'Login required'})
         return
 
     receiver_id = data.get('receiver_id')
     file_url = data.get('file_url')
     file_name = data.get('file_name')
     file_size = data.get('file_size', 0)
-    message_text = data.get('message', file_name or 'Файл')
+    message_text = data.get('message', file_name or 'File')
 
     if not file_url:
-        emit('error', {'message': 'Файл URL шаардлагатай'})
+        emit('error', {'message': 'File URL required'})
         return
 
     # Determine file type
@@ -186,12 +186,12 @@ def handle_delete_message(data):
     msg = db.session.get(ChatMessage, message_id)
 
     if not msg:
-        emit('error', {'message': 'Мессеж олдсонгүй'})
+        emit('error', {'message': 'Message not found'})
         return
 
     # Only sender can delete
     if msg.sender_id != current_user.id:
-        emit('error', {'message': 'Зөвхөн өөрийн мессежийг устгах боломжтой'})
+        emit('error', {'message': 'Can only delete your own messages'})
         return
 
     msg.is_deleted = True
@@ -212,7 +212,7 @@ def handle_broadcast(data):
         return
 
     if current_user.role not in ('senior', 'admin'):
-        emit('error', {'message': 'Зөвхөн ахлах болон админ зарлал илгээх эрхтэй'})
+        emit('error', {'message': 'Only senior and admin can send announcements'})
         return
 
     message_text = data.get('message', '').strip()

@@ -86,16 +86,16 @@ def api_consume():
     purpose = data.get('purpose', 'Засвар')
 
     if not spare_part_id or quantity <= 0:
-        return jsonify({'success': False, 'message': 'spare_part_id болон quantity шаардлагатай'}), 400
+        return jsonify({'success': False, 'message': 'spare_part_id and quantity are required'}), 400
 
     spare_part = SparePart.query.get(spare_part_id)
     if not spare_part:
-        return jsonify({'success': False, 'message': 'Сэлбэг олдсонгүй'}), 404
+        return jsonify({'success': False, 'message': 'Spare part not found'}), 404
 
     if quantity > spare_part.quantity:
         return jsonify({
             'success': False,
-            'message': f'Нөөц хүрэлцэхгүй! Байгаа: {spare_part.quantity} {spare_part.unit}'
+            'message': f'Insufficient stock! Available: {spare_part.quantity} {spare_part.unit}'
         }), 400
 
     try:
@@ -134,7 +134,7 @@ def api_consume():
 
         return jsonify({
             'success': True,
-            'message': f'{quantity} {spare_part.unit} зарцуулагдлаа',
+            'message': f'{quantity} {spare_part.unit} consumed',
             'remaining': spare_part.quantity,
             'status': spare_part.status,
         })
@@ -155,7 +155,7 @@ def api_consume_bulk():
     purpose = data.get('purpose', 'Засвар')
 
     if not items:
-        return jsonify({'success': False, 'message': 'items шаардлагатай'}), 400
+        return jsonify({'success': False, 'message': 'items are required'}), 400
 
     results = []
     errors = []

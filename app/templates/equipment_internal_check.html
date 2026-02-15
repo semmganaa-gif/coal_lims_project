@@ -1,22 +1,22 @@
 {# app/templates/equipment_internal_check.html #}
 {% extends "base.html" %}
-{% block title %}Дотоод шалгалт тохируулга{% endblock %}
+{% block title %}Internal Check & Adjustment{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id устгасан #}
+  {# add_modal_id removed #}
   {% include "partials/equipment_hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-clipboard-check text-primary"></i> Дотоод шалгалт тохируулга</span>
+      <span class="fw-bold"><i class="bi bi-clipboard-check text-primary"></i> Internal Check & Adjustment</span>
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCheckModal"><i class="bi bi-plus-lg"></i> Нэмэх</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Засах</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Устгах</button>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCheckModal"><i class="bi bi-plus-lg"></i> Add</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Edit</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Delete</button>
       {% endif %}
       <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
       <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
@@ -31,7 +31,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Дотоод шалгалт нэмэх</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Internal Check</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='internal_check') }}">
@@ -39,31 +39,31 @@
         <div class="modal-body p-4">
           <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
           <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">№</label><input type="text" id="ic_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Тоног төхөөрөмжийн нэр</label><input type="text" id="ic_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Үйлдвэрлэгчийн нэр</label><input type="text" id="ic_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Марк, дугаар</label><input type="text" id="ic_mark" name="mark" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Лабораторийн дугаар</label><input type="text" id="ic_lab_code" name="lab_code" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label fw-bold small">Тоо хэмжээ</label><input type="text" id="ic_qty" name="qty" class="form-control" value="1"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Ашиглалтад орсон огноо</label><input type="text" id="ic_commissioned_date" name="commissioned_date" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Байршил</label><input type="text" id="ic_location" name="location" class="form-control"></div>
-            <div class="col-12"><label class="form-label fw-bold small">Шалгалт, тохируулгын төрөл</label>
+            <div class="col-md-2"><label class="form-label fw-bold small">No.</label><input type="text" id="ic_no" name="no" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Equipment Name</label><input type="text" id="ic_name" name="name" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Manufacturer</label><input type="text" id="ic_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Model No.</label><input type="text" id="ic_mark" name="mark" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Lab Code</label><input type="text" id="ic_lab_code" name="lab_code" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label fw-bold small">Quantity</label><input type="text" id="ic_qty" name="qty" class="form-control" value="1"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">Commissioned Date</label><input type="text" id="ic_commissioned_date" name="commissioned_date" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Location</label><input type="text" id="ic_location" name="location" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small">Check & Adjustment Type</label>
               <div class="d-flex gap-3 flex-wrap">
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_asz" name="chk_asz" value="true"><label class="form-check-label small" for="ic_chk_asz">АСЗ-р шалгах</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ic_chk_temp">Температур</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_rpm" name="chk_rpm" value="true"><label class="form-check-label small" for="ic_chk_rpm">Эргэлтийн хурд</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_oil" name="chk_oil" value="true"><label class="form-check-label small" for="ic_chk_oil">Тос, тосолгоо</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_clean" name="chk_clean" value="true"><label class="form-check-label small" for="ic_chk_clean">Үзлэг цэвэрлэгээ</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_asz" name="chk_asz" value="true"><label class="form-check-label small" for="ic_chk_asz">CRM Check</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ic_chk_temp">Temperature</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_rpm" name="chk_rpm" value="true"><label class="form-check-label small" for="ic_chk_rpm">RPM / Rotation Speed</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_oil" name="chk_oil" value="true"><label class="form-check-label small" for="ic_chk_oil">Oil / Lubrication</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_clean" name="chk_clean" value="true"><label class="form-check-label small" for="ic_chk_clean">Inspection & Cleaning</label></div>
               </div>
             </div>
-            <div class="col-12"><label class="form-label fw-bold small">Тайлбар</label><input type="text" id="ic_remark" name="remark" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Шалгалт хийсэн огноо</label><input type="text" id="ic_check_date" name="check_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Дараагийн шалгалт огноо</label><input type="text" id="ic_next_check_date" name="next_check_date" class="form-control"></div>
+            <div class="col-12"><label class="form-label fw-bold small">Remarks</label><input type="text" id="ic_remark" name="remark" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Check Date</label><input type="text" id="ic_check_date" name="check_date" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Next Check Date</label><input type="text" id="ic_next_check_date" name="next_check_date" class="form-control"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
         </div>
         </form>
       </div>
@@ -108,23 +108,23 @@ document.addEventListener('DOMContentLoaded', function() {
     columns: [
       {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
       {title:"№", field:"no", width:55, frozen:true},
-      {title:"Тоног төхөөрөмжийн нэр", field:"name", minWidth:180, frozen:true},
-      {title:"Үйлдвэрлэгчийн нэр", field:"manufacturer", minWidth:140},
-      {title:"Марк, дугаар", field:"mark", width:120},
-      {title:"Лабораторийн дугаар", field:"lab_code", width:130},
-      {title:"Тоо хэмжээ", field:"qty", width:90},
-      {title:"Ашиглалтанд орсон огноо", field:"commissioned_date", width:140},
-      {title:"Байршил", field:"location", width:100},
-      {title:"Шалгалт, тохируулгын төрөл", columns:[
-        {title:"АСЗ-р шалгах", field:"chk_asz", width:110, formatter:"tickCross"},
-        {title:"Температур", field:"chk_temp", width:110, formatter:"tickCross"},
-        {title:"Эргэлтийн хурд", field:"chk_rpm", width:120, formatter:"tickCross"},
-        {title:"Тос, тосолгоо", field:"chk_oil", width:120, formatter:"tickCross"},
-        {title:"Үзлэг цэвэрлэгээ", field:"chk_clean", width:130, formatter:"tickCross"},
+      {title:"Equipment Name", field:"name", minWidth:180, frozen:true},
+      {title:"Manufacturer", field:"manufacturer", minWidth:140},
+      {title:"Model No.", field:"mark", width:120},
+      {title:"Lab Code", field:"lab_code", width:130},
+      {title:"Quantity", field:"qty", width:90},
+      {title:"Commissioned Date", field:"commissioned_date", width:140},
+      {title:"Location", field:"location", width:100},
+      {title:"Check & Adjustment Type", columns:[
+        {title:"CRM Check", field:"chk_asz", width:110, formatter:"tickCross"},
+        {title:"Temperature", field:"chk_temp", width:110, formatter:"tickCross"},
+        {title:"RPM / Rotation", field:"chk_rpm", width:120, formatter:"tickCross"},
+        {title:"Oil / Lubrication", field:"chk_oil", width:120, formatter:"tickCross"},
+        {title:"Inspection & Cleaning", field:"chk_clean", width:130, formatter:"tickCross"},
       ]},
-      {title:"Тайлбар", field:"remark", minWidth:140},
-      {title:"Шалгалт тохируулга хийсэн огноо", field:"check_date", width:160},
-      {title:"Дараагийн шалгалт тохируулга хийх огноо", field:"next_check_date", width:170},
+      {title:"Remarks", field:"remark", minWidth:140},
+      {title:"Check Date", field:"check_date", width:160},
+      {title:"Next Check Date", field:"next_check_date", width:170},
     ],
   });
 
@@ -151,20 +151,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (d.id) {
       document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
     }
-    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit';
     new bootstrap.Modal(document.getElementById('addCheckModal')).show();
   };
 
   document.getElementById('addCheckModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='internal_check') }}";
-    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Дотоод шалгалт нэмэх';
+    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Internal Check';
     ['no','name','manufacturer','mark','lab_code','qty','commissioned_date','location','remark','check_date','next_check_date'].forEach(function(f) { document.getElementById('ic_'+f).value=''; });
     ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'].forEach(function(f) { document.getElementById('ic_'+f).checked=false; });
   });
 
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    if (!sel.length || !confirm('Delete ' + sel.length + ' row(s)?')) return;
     var form = document.getElementById('deleteForm');
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
     sel.forEach(function(row) {

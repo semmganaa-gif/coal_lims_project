@@ -288,19 +288,19 @@ def require_license(f):
             error = result.get('error', 'UNKNOWN_ERROR')
 
             if error == 'LICENSE_NOT_FOUND':
-                flash('Лиценз олдсонгүй. Системийн админтай холбогдоно уу.', 'error')
+                flash('License not found. Please contact system administrator.', 'error')
                 return redirect(url_for('license.activate'))
 
             elif error == 'LICENSE_EXPIRED':
-                flash('Лицензийн хугацаа дууссан байна.', 'error')
+                flash('License has expired.', 'error')
                 return redirect(url_for('license.expired'))
 
             elif error in ('HARDWARE_MISMATCH', 'TAMPERING_DETECTED'):
-                flash('Лицензийн алдаа илэрлээ. Системийн админтай холбогдоно уу.', 'error')
+                flash('License error detected. Please contact system administrator.', 'error')
                 return redirect(url_for('license.error'))
 
             else:
-                flash('Лицензийн алдаа. Системийн админтай холбогдоно уу.', 'error')
+                flash('License error. Please contact system administrator.', 'error')
                 return redirect(url_for('license.expired'))
 
         # Анхааруулга
@@ -308,7 +308,7 @@ def require_license(f):
             warning = result['warning']
             if warning.startswith('LICENSE_EXPIRING_SOON:'):
                 days = warning.split(':')[1]
-                flash(f'Анхааруулга: Лицензийн хугацаа {days} хоногийн дараа дуусна!', 'warning')
+                flash(f'Warning: License expires in {days} days!', 'warning')
 
         # License-г g объектод хадгалах
         g.license = result.get('license')

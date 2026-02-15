@@ -1,14 +1,14 @@
 {% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
 
-{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Жингийн арга</span>{% endblock %}
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Gravimetric</span>{% endblock %}
 
 {% block column_defs %}
   var formColumns = [
-    { headerName: 'V дээж, мл', field: 'volume', width: 110, type: 'numericColumn', ...editCol },
-    { headerName: 'm1 (хоосон), г', field: 'm1', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
-    { headerName: 'm2 (дараах), г', field: 'm2', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    { headerName: 'V sample, ml', field: 'volume', width: 110, type: 'numericColumn', ...editCol },
+    { headerName: 'm1 (empty), g', field: 'm1', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    { headerName: 'm2 (after), g', field: 'm2', width: 130, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
     {
-      headerName: 'Үр дүн, мг/л', field: 'result', width: 130,
+      headerName: 'Result, mg/L', field: 'result', width: 130,
       valueGetter: p => {
         const m1 = p.data.m1, m2 = p.data.m2, v = p.data.volume;
         if (m1 == null || m2 == null || !v) return null;

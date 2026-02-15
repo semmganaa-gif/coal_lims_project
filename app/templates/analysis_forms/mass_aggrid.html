@@ -1,41 +1,41 @@
 {# app/templates/analysis_forms/mass_workspace_form.html #}
 <div class="container-fluid p-0">
 
-  <!-- 🧰 Толгой ба үйлдлүүд -->
+  <!-- Header and Actions -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-      <h4 class="mb-1">M — Масс оруулах ажлын талбар</h4>
+      <h4 class="mb-1">M — Mass Entry Workspace</h4>
       <div class="text-muted small">
-        Статус нь <code>new</code> бөгөөд <code>analyses_to_perform</code> дотор <code>"m"</code> байгаа дээжүүд энд харагдана.
+        Samples with status <code>new</code> and <code>"m"</code> in <code>analyses_to_perform</code> are shown here.
       </div>
     </div>
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
-      <!-- Жинтэй холбогдох -->
+      <!-- Connect to Balance -->
       <button id="btnConnectBalance" class="btn btn-outline-primary">
-        <i class="bi bi-usb-plug"></i> Жинтэй холбогдох
+        <i class="bi bi-usb-plug"></i> Connect to Balance
       </button>
-      <span id="balanceStatus" class="badge bg-secondary">Холбогдоогүй</span>
+      <span id="balanceStatus" class="badge bg-secondary">Not Connected</span>
 
       <div class="vr mx-2"></div>
 
       <div class="form-check form-switch me-2">
         <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
-        <label class="form-check-label" for="toggleIncludeReady">Ready болсон дээжийг хамтад нь харах</label>
+        <label class="form-check-label" for="toggleIncludeReady">Include Ready samples</label>
       </div>
 
-      <input id="searchCode" class="form-control" placeholder="Дээжийн кодоор хайх" style="min-width:240px">
+      <input id="searchCode" class="form-control" placeholder="Search by sample code" style="min-width:240px">
 
       <div class="form-check form-switch ms-1">
         <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
-        <label class="form-check-label" for="markReadyToggle">Хадгалахдаа сонгосон дээжийг <strong>Mass Ready</strong> болгох</label>
+        <label class="form-check-label" for="markReadyToggle">Mark selected as <strong>Mass Ready</strong> on save</label>
       </div>
 
       <button id="btnRefresh" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+        <i class="bi bi-arrow-repeat"></i> Refresh
       </button>
       <button id="btnSave" class="btn btn-primary">
-        <i class="bi bi-save"></i> Хадгалах
+        <i class="bi bi-save"></i> Save
       </button>
     </div>
   </div>
@@ -88,15 +88,15 @@
       resizable:false
     },
     { headerName:'ID', field:'id', width:80, pinned:'left', cellClass:'text-muted' },
-    { headerName:'Дээжийн код', field:'sample_code', minWidth:300,
+    { headerName:'Sample Code', field:'sample_code', minWidth:300,
       cellRenderer:p=>`<div class="d-flex flex-column gap-1">
           <span class="fw-semibold text-primary">${p.value || '-'}</span>
           <span class="text-muted small">${readyBadge(!!p.data.mass_ready)}</span>
         </div>` },
-    { headerName:'Захиалагч', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'Төрөл', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'Ирсэн огноо', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
-    { headerName:'Масс (g)', field:'weight', minWidth:160,
+    { headerName:'Client', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'Type', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'Received Date', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
+    { headerName:'Mass (g)', field:'weight', minWidth:160,
       editable:true,
       cellEditor:'agTextCellEditor',
       cellEditorParams:{ useFormatter:true },
@@ -109,10 +109,10 @@
       },
       cellStyle:p => p.data.mass_ready ? { backgroundColor:'#f6f6f6' } : {}
     },
-    { headerName:'Үйлдэл', field:'actions', width:220, pinned:'right',
+    { headerName:'Actions', field:'actions', width:220, pinned:'right',
       cellRenderer:p=>`
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="Жинг хадгалах">
+          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="Save weight">
             <i class="bi bi-arrow-repeat"></i>
           </button>
           <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="Unready">
@@ -152,7 +152,7 @@
       setRowData(data.samples || []);
     }catch(err){
       console.error(err);
-      toast('Өгөгдөл татахад алдаа гарлаа.', 'danger');
+      toast('Error loading data.', 'danger');
       setRowData([]);
     }finally{
       if(gridApi) gridApi.hideOverlay();
@@ -164,7 +164,7 @@
     gridApi.stopEditing();
     const selected = gridApi.getSelectedRows();
     if(!selected.length){
-      toast('Дээж сонгоод, дээр жингээ оруулсны дараа хадгална уу.', 'warning');
+      toast('Please select samples and enter weights before saving.', 'warning');
       return;
     }
     const items = selected.map(row => {
@@ -183,13 +183,13 @@
       });
       const data = await res.json();
       if(!res.ok || data.success === false){
-        toast(data.message || data.error || 'Хадгалах үед алдаа гарлаа.', 'danger');
+        toast(data.message || data.error || 'Error while saving.', 'danger');
         return;
       }
-      toast(data.message || 'Амжилттай хадгаллаа.', 'success');
+      toast(data.message || 'Saved successfully.', 'success');
       fetchEligible();
     }catch(err){
-      console.error(err); toast('????????? ?????.', 'danger');
+      console.error(err); toast('Server error.', 'danger');
     }
   });
 
@@ -205,46 +205,46 @@
 
     if(action === 'update-weight'){
       const w = Number(row.weight);
-      if(!isFinite(w)){ toast('Массын утга буруу байна.', 'warning'); return; }
+      if(!isFinite(w)){ toast('Invalid mass value.', 'warning'); return; }
       try{
         const res = await fetch('/api/mass/update_weight', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
           body: JSON.stringify({ sample_id:Number(id), weight:w })
         });
         const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
-        toast(js.message || 'Жин шинэчлэгдлээ.', 'success');
-      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
+        toast(js.message || 'Weight updated.', 'success');
+      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
       return;
     }
 
     if(action === 'unready'){
-      if(!confirm('Unready горим руу буцаах уу?')) return;
+      if(!confirm('Return to Unready status?')) return;
       try{
         const res = await fetch('/api/mass/unready', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
           body: JSON.stringify({ sample_ids:[Number(id)] })
         });
         const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
         toast(js.message || 'OK', 'success');
         fetchEligible();
-      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
       return;
     }
 
     if(action === 'delete'){
-      if(!confirm('Дээжийг бүр мөсөн устгах уу?')) return;
+      if(!confirm('Permanently delete this sample?')) return;
       try{
         const res = await fetch('/api/mass/delete', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
           body: JSON.stringify({ sample_id:Number(id) })
         });
         const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Алдаа.', 'danger'); return; }
-        toast(js.message || 'Дээж устлаа.', 'success');
+        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
+        toast(js.message || 'Sample deleted.', 'success');
         fetchEligible();
-      }catch(err){ console.error(err); toast('Сүлжээний алдаа.', 'danger'); }
+      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
       return;
     }
   });
@@ -272,39 +272,39 @@
     $balanceStatus.className = `badge bg-${type}`;
   }
 
-  // Жинтэй холбогдох товч
+  // Connect to Balance товч
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      toast('Serial Balance модуль ачаалагдаагүй байна.', 'danger');
+      toast('Serial Balance module not loaded.', 'danger');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      toast('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.', 'warning');
+      toast('Web Serial API not supported. Please use Chrome 89+.', 'warning');
       return;
     }
 
     if (window.labBalance.isConnected) {
       // Салгах
       await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жинтэй холбогдох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect to Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Холбогдоогүй', 'secondary');
+      updateBalanceStatus('Not Connected', 'secondary');
       return;
     }
 
     // Холбогдох
-    updateBalanceStatus('Холбогдож байна...', 'warning');
+    updateBalanceStatus('Connecting...', 'warning');
 
     const connected = await window.labBalance.connect();
 
     if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Холбогдсон';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Connected';
       $btnConnect.classList.remove('btn-outline-primary');
       $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('Холбогдсон', 'success');
-      toast('Жинтэй амжилттай холбогдлоо! Масс баганад Enter дарж жин авна уу.', 'success');
+      updateBalanceStatus('Connected', 'success');
+      toast('Successfully connected to balance! Press Enter in Mass column to read weight.', 'success');
 
       // Grid integration тохируулах
       if (gridApi) {
@@ -313,7 +313,7 @@
         balanceIntegration.weightColumnField = 'weight';
       }
     } else {
-      updateBalanceStatus('Холбогдож чадсангүй', 'danger');
+      updateBalanceStatus('Connection failed', 'danger');
     }
   });
 
@@ -328,17 +328,17 @@
     };
 
     window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Жинтэй холбогдох';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect to Balance';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Холболт салсан', 'secondary');
+      updateBalanceStatus('Disconnected', 'secondary');
     };
   }
 
   // AG-Grid дээр Enter дарахад жин авах
   async function handleWeightCellEnter(params) {
     if (!window.labBalance || !window.labBalance.isConnected) {
-      // Жин холбогдоогүй бол default үйлдэл
+      // Weight холбогдоогүй бол default үйлдэл
       return;
     }
 
@@ -346,14 +346,14 @@
       return;
     }
 
-    // Жин татах
-    updateBalanceStatus('Жин татаж байна...', 'warning');
+    // Weight татах
+    updateBalanceStatus('Reading weight...', 'warning');
     const weight = await window.labBalance.getStableWeight();
 
     if (weight !== null) {
       params.node.setDataValue('weight', weight);
       updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
-      toast(`Жин: ${weight.toFixed(4)} g`, 'success');
+      toast(`Weight: ${weight.toFixed(4)} g`, 'success');
 
       // Дараагийн мөр рүү шилжих
       const nextRowIndex = params.rowIndex + 1;
@@ -365,7 +365,7 @@
         }, 100);
       }
     } else {
-      updateBalanceStatus('Жин авч чадсангүй', 'danger');
+      updateBalanceStatus('Failed to read weight', 'danger');
     }
   }
 

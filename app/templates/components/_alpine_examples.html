@@ -1,23 +1,23 @@
 {#
-  Alpine.js + htmx жишээнүүд
-  Энэ файлыг template-д include хийж ашиглана.
+  Alpine.js + htmx examples
+  Include this file in templates.
 
-  Жишээ: {% include "components/_alpine_examples.html" %}
+  Example: {% include "components/_alpine_examples.html" %}
 #}
 
 {# ============================================================
-   ALPINE.JS ЖИШЭЭНҮҮД
+   ALPINE.JS EXAMPLES
    ============================================================ #}
 
-{# 1. Toggle (jQuery-ийн оронд) #}
-{# Өмнө: <button onclick="$('#menu').toggle()">Toggle</button> #}
+{# 1. Toggle (instead of jQuery) #}
+{# Before: <button onclick="$('#menu').toggle()">Toggle</button> #}
 <div x-data="{ open: false }" class="mb-3">
   <button @click="open = !open" class="btn btn-primary btn-sm">
     <i class="bi" :class="open ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
     Toggle Menu
   </button>
   <div x-show="open" x-transition class="mt-2 p-3 bg-light rounded">
-    Энэ хэсэг нээгдэнэ/хаагдана
+    This section opens/closes
   </div>
 </div>
 
@@ -25,7 +25,7 @@
 <div x-data="{
   open: false,
   search: '',
-  items: ['Нүүрс', 'Хүрэн нүүрс', 'Антрацит', 'Коксжих нүүрс'],
+  items: ['Coal', 'Brown Coal', 'Anthracite', 'Coking Coal'],
   get filtered() {
     return this.items.filter(i => i.toLowerCase().includes(this.search.toLowerCase()))
   }
@@ -36,7 +36,7 @@
     @focus="open = true"
     @click.outside="open = false"
     class="form-control"
-    placeholder="Хайх...">
+    placeholder="Search...">
   <div x-show="open && filtered.length" x-transition class="position-absolute w-100 mt-1 bg-white border rounded shadow-sm" style="z-index: 100;">
     <template x-for="item in filtered" :key="item">
       <div @click="search = item; open = false"
@@ -60,23 +60,23 @@
     <li class="nav-item">
       <a @click.prevent="tab = 'info'"
          :class="{ 'active': tab === 'info' }"
-         class="nav-link" href="#">Мэдээлэл</a>
+         class="nav-link" href="#">Information</a>
     </li>
     <li class="nav-item">
       <a @click.prevent="tab = 'results'"
          :class="{ 'active': tab === 'results' }"
-         class="nav-link" href="#">Үр дүн</a>
+         class="nav-link" href="#">Results</a>
     </li>
   </ul>
   <div class="tab-content p-3 border border-top-0 rounded-bottom">
-    <div x-show="tab === 'info'">Мэдээллийн хэсэг</div>
-    <div x-show="tab === 'results'">Үр дүнгийн хэсэг</div>
+    <div x-show="tab === 'info'">Information section</div>
+    <div x-show="tab === 'results'">Results section</div>
   </div>
 </div>
 
 
 {# ============================================================
-   HTMX ЖИШЭЭНҮҮД
+   HTMX EXAMPLES
    ============================================================ #}
 
 {# 1. Button click → Partial update #}
@@ -85,7 +85,7 @@
           hx-target="#sample-count-result"
           hx-indicator="#loading"
           class="btn btn-info btn-sm">
-    Дээжний тоо авах
+    Get Sample Count
   </button>
   <span id="loading" class="htmx-indicator">
     <span class="spinner-border spinner-border-sm"></span>
@@ -101,7 +101,7 @@
          hx-trigger="keyup changed delay:300ms"
          hx-target="#search-results"
          class="form-control"
-         placeholder="Дээж хайх...">
+         placeholder="Search samples...">
   <div id="search-results" class="mt-2"></div>
 </div>
 
@@ -112,19 +112,19 @@
       class="mb-3">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="input-group" style="width: 300px;">
-    <input type="text" name="note" class="form-control" placeholder="Тэмдэглэл...">
-    <button type="submit" class="btn btn-success">Хадгалах</button>
+    <input type="text" name="note" class="form-control" placeholder="Notes...">
+    <button type="submit" class="btn btn-success">Save</button>
   </div>
   <div id="save-result" class="mt-2 text-success"></div>
 </form>
 
 {# 4. Delete with confirmation #}
 <button hx-delete="/api/sample/123"
-        hx-confirm="Устгахдаа итгэлтэй байна уу?"
+        hx-confirm="Are you sure you want to delete?"
         hx-target="closest .sample-row"
         hx-swap="outerHTML"
         class="btn btn-danger btn-sm">
-  <i class="bi bi-trash"></i> Устгах
+  <i class="bi bi-trash"></i> Delete
 </button>
 
 {# 5. Infinite scroll #}
@@ -138,13 +138,13 @@
 
 
 {# ============================================================
-   ALPINE + HTMX ХОСЛУУЛАХ
+   COMBINING ALPINE + HTMX
    ============================================================ #}
 
 {# Modal with htmx content loading #}
 <div x-data="{ showModal: false }">
   <button @click="showModal = true" class="btn btn-primary btn-sm">
-    Дэлгэрэнгүй харах
+    View Details
   </button>
 
   <div x-show="showModal"
@@ -154,7 +154,7 @@
        style="background: rgba(0,0,0,0.5); z-index: 1050;">
     <div class="bg-white rounded-3 p-4 shadow-lg" style="width: 500px; max-width: 90%;">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Дэлгэрэнгүй</h5>
+        <h5 class="mb-0">Details</h5>
         <button @click="showModal = false" class="btn-close"></button>
       </div>
       <div hx-get="/api/sample_detail/1"

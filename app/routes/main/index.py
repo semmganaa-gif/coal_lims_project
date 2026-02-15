@@ -169,7 +169,7 @@ def register_routes(bp):
         # ---------- Үндсэн submit ----------
         if form.validate_on_submit():
             if current_user.role not in ["prep", "admin"]:
-                flash("Дээж бүртгэх эрх танд байхгүй.", "danger")
+                flash("You do not have permission to register samples.", "danger")
                 return redirect(url_for("main.index"))
 
             raw_submitted_codes = request.form.getlist("sample_codes")
@@ -275,13 +275,13 @@ def register_routes(bp):
                     # Loop-н дундаас алдаа гарвал бүх partial changes-ийг rollback хийнэ
                     db.session.rollback()
                     current_app.logger.error(f"Error during sample registration loop: {e}")
-                    flash(f"Дээж бүртгэх үед алдаа гарлаа: {str(e)}", "danger")
+                    flash(f"Error registering sample: {str(e)}", "danger")
                     # Continue to render template with errors below
 
                 # ✅ Сайжруулсан error handling - давхардлыг арилгасан
                 if count > 0:
                     if not safe_commit(
-                        f"{count} ш дээж амжилттай бүртгэгдлээ!",
+                        f"{count} ш дээж registered successfully.",
                         "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."
                     ):
                         # ✅ Бүх template variable дамжуулах
@@ -299,7 +299,7 @@ def register_routes(bp):
                         )
 
                 if failed_samples:
-                    flash(f'Анхаар: Дараах дээжнүүд бүртгэгдсэнгүй: {", ".join(failed_samples)}', "warning")
+                    flash(f'Warning: The following samples were not registered: {", ".join(failed_samples)}', "warning")
 
                 # ✅ Prometheus metrics: Дээж бүртгэлийг track хийх
                 for _ in range(count):
@@ -311,7 +311,7 @@ def register_routes(bp):
             elif not list_type and client_name == "WTL" and sample_type in ["WTL", "Size", "FL"]:
                 lab_number = form.lab_number.data
                 if not lab_number:
-                    flash("WTL-ийн хувьд Лаб дугаар заавал оруулна уу.", "danger")
+                    flash("Lab number is required for WTL.", "danger")
                 else:
                     all_wtl_names = []
                     if sample_type == "WTL":
@@ -355,7 +355,7 @@ def register_routes(bp):
                     # ✅ Сайжруулсан error handling
                     if count > 0:
                         if not safe_commit(
-                            f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ!",
+                            f"{count} ш {sample_type} дээж registered successfully.",
                             "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."
                         ):
                             # ✅ Бүх template variable дамжуулах
@@ -420,15 +420,15 @@ def register_routes(bp):
                 db.session.add(sample)
                 # ✅ Сайжруулсан error handling
                 safe_commit(
-                    f"Дээж амжилттай бүртгэгдлээ: {final_sample_code}",
-                    f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" нэртэй дээж аль хэдийн бүртгэлтэй байна.'
+                    f"Дээж registered successfully. {final_sample_code}",
+                    f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" sample already registered.байна.'
                 )
                 return redirect(url_for("main.index", active_tab="add-pane"))
 
             # --- 4) WTL – MG/Test (гар аргаар sample_code) ---
             elif not list_type and client_name == "WTL" and sample_type in ["MG", "Test"]:
                 if not form.sample_code.data:
-                    flash("WTL-ийн энэ төрлийн хувьд Sample name заавал оруулна уу.", "danger")
+                    flash("Sample name is required for this WTL type.", "danger")
                 else:
                     final_sample_code = form.sample_code.data
                     sample = Sample(
@@ -452,13 +452,13 @@ def register_routes(bp):
                     db.session.add(sample)
                     # ✅ Сайжруулсан error handling
                     safe_commit(
-                        "Шинэ дээж амжилттай бүртгэгдлээ!",
-                        f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" нэртэй дээж аль хэдийн бүртгэлтэй байна.'
+                        "Шинэ дээж registered successfully.",
+                        f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" sample already registered.байна.'
                     )
                     return redirect(url_for("main.index", active_tab="add-pane"))
 
             else:
-                flash("Форм бүрэн гүйцэд бөглөгдөөгүй эсвэл буруу байна.", "danger")
+                flash("Form is incomplete or contains errors.", "danger")
 
         active_tab = "add-pane" if form.errors else request.args.get("active_tab", "list-pane")
 
@@ -514,7 +514,7 @@ def send_hourly_report():
     """Цагийн тайлан илгээх - зөвхөн senior, admin"""
     # Role шалгалт
     if current_user.role not in ['senior', 'admin']:
-        flash('Та энэ үйлдлийг хийх эрхгүй байна.', 'error')
+        flash('You do not have permission for this action.', 'error')
         return redirect(url_for('main.index'))
 
     try:
@@ -603,7 +603,7 @@ def send_hourly_report():
             if os.path.exists(template_path + ".xlsx"):
                 template_path += ".xlsx"
             else:
-                flash("Загвар файл олдсонгүй!", "danger")
+                flash("Template file not found!", "danger")
                 return redirect(url_for('main.index'))
 
         with open(template_path, "rb") as f:
@@ -857,7 +857,7 @@ def send_hourly_report():
 
         # Хэрэв TO хаяг байхгүй бол алдаа
         if not to_list:
-            flash("Имэйл хүлээн авагч тохируулагдаагүй байна. Тохиргоо хэсгээс оруулна уу.", "warning")
+            flash("Email recipients not configured. Please set them in Settings.", "warning")
             return redirect(url_for('main.index'))
 
         msg = Message(
@@ -873,10 +873,10 @@ def send_hourly_report():
         sent_to = ", ".join(to_list)
         if cc_list:
             sent_to += f" (CC: {', '.join(cc_list)})"
-        flash(f"Амжилттай илгээгдлээ! → {sent_to}", "success")
+        flash(f"Sent successfully! → {sent_to}", "success")
 
     except Exception as e:
         current_app.logger.exception("Error in send_hourly_report")
-        flash(f"Алдаа: {str(e)}", "danger")
+        flash(f"Error: {str(e)}", "danger")
 
     return redirect(url_for('main.index'))

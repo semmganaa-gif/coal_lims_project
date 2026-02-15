@@ -7,22 +7,22 @@
 
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-      <h3 class="mb-1">Бортого тогтмол — шинэ оруулалт (хоосон тодорхойлолт 7.4.1)</h3>
+      <h3 class="mb-1">Bottle Constants — New Entry (Blank Determination 7.4.1)</h3>
       <div class="text-muted small">
-        20&nbsp;°C ±0.5 нөхцөлд, сар бүрийн “хоосон тодорхойлолт”-ын 3 хэмжилт (m₁,m₂,m₃) оруулж дундаж автоматаар тооцно.
+        At 20&nbsp;°C ±0.5 conditions, enter the 3 monthly "blank determination" measurements (m₁,m₂,m₃) and the average will be calculated automatically.
       </div>
     </div>
     <div class="d-flex gap-2">
-      <a class="btn btn-outline-secondary" href="{{ url_for('main.index') }}">Буцах</a>
-      <button id="btnSave" class="btn btn-primary"><i class="bi bi-save"></i> Хадгалах</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('main.index') }}">Back</a>
+      <button id="btnSave" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
     </div>
   </div>
 
   <div class="alert alert-info py-2">
     <ul class="small mb-0">
-      <li>Пикнометрийн бортогоны №-г оруулаад 3 хэмжилтээ бичнэ; дундаж нь шууд тооцогдоно.</li>
-      <li>Температур default 20.0 °C. Хэрэв 20±0.5-оос хазайсан бол анхааруулга гарна (хадгалалтыг хориглохгүй).</li>
-      <li>Идэвхтэй/Шинэ тогтмол гэдэг нь <em>effective_to</em> хоосон мөр (хамгийн сүүлчийн бичилт) юм.</li>
+      <li>Enter the pycnometer bottle number and write your 3 measurements; the average will be calculated automatically.</li>
+      <li>Temperature defaults to 20.0 °C. If it deviates from 20±0.5, a warning will appear (saving is not blocked).</li>
+      <li>Active/New constant means the <em>effective_to</em> field is empty (the most recent record).</li>
     </ul>
   </div>
 
@@ -33,11 +33,11 @@
           <thead class="table-light">
             <tr>
               <th style="width:40px"></th>
-              <th style="min-width:140px">Бортого №</th>
+              <th style="min-width:140px">Bottle No.</th>
               <th style="min-width:120px" class="text-center">m₁</th>
               <th style="min-width:120px" class="text-center">m₂</th>
               <th style="min-width:120px" class="text-center">m₃</th>
-              <th style="min-width:130px" class="text-center">Дундаж</th>
+              <th style="min-width:130px" class="text-center">Average</th>
               <th style="min-width:120px" class="text-center">Темп (°C)</th>
               <th style="min-width:190px">Eff. from</th>
               <th style="min-width:220px">Тэмдэглэл</th>
@@ -57,7 +57,7 @@
 
     <div class="col-12 col-xl-3">
       <div class="card">
-        <div class="card-header py-2"><strong>Идэвхтэй бортогоны жагсаалт</strong></div>
+        <div class="card-header py-2"><strong>Active бортогоны жагсаалт</strong></div>
         <div class="card-body p-2">
           {% if bottles %}
             <ul class="list-group list-group-flush small">
@@ -69,7 +69,7 @@
               {% endfor %}
             </ul>
           {% else %}
-            <div class="text-muted small">Идэвхтэй бортого алга.</div>
+            <div class="text-muted small">Active бортого алга.</div>
           {% endif %}
         </div>
       </div>
@@ -186,13 +186,13 @@
         body: JSON.stringify({rows})
       });
       const data = await res.json();
-      if (!res.ok || data.success === false){ toast(data.message || data.error || 'Алдаа гарлаа', 'danger'); return; }
+      if (!res.ok || data.success === false){ toast(data.message || data.error || 'Error гарлаа', 'danger'); return; }
       const result = data.data || data;
       if (result.errors && result.errors.length){
-        toast(`Амжилттай: ${result.created}. Алдаа: ${result.errors.length}.`, 'warning');
+        toast(`Success: ${result.created}. Error: ${result.errors.length}.`, 'warning');
         console.warn('Ошибки:', result.errors);
       } else {
-        toast(`Амжилттай хадгаллаа (${result.created}).`, 'success');
+        toast(`Success хадгаллаа (${result.created}).`, 'success');
       }
       // талбарыг цэвэрлэе
       $tbody.innerHTML = '';

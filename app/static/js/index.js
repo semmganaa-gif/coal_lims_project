@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'TS': 'Total sulfur (TS)', 'CV': 'Calorific value (CV)', 'FM': 'Free moisture (FM)', 'CSN': 'Crucible swelling num',
         'Gi': 'Caking index (Gi)', 'TRD': 'True relative density', 'P': 'Phosphorus (P)', 'F': 'Fluorine (F)',
         'Cl': 'Chlorine (Cl)', 'X': 'Plastometer X', 'Y': 'Plastometer Y', 'CRI': 'Coke Reactivity',
-        'CSR': 'Coke Strength', 'Solid':'Solid', 'm': 'Масс'
+        'CSR': 'Coke Strength', 'Solid':'Solid', 'm': 'Mass'
     };
 
     function normalizeToBase(code) {
@@ -108,30 +108,30 @@ document.addEventListener('DOMContentLoaded', function() {
             filter: 'agNumberColumnFilter'
         },
         {
-            field: '2', headerName: 'Дээжний код', width: 350, pinned: 'left',
+            field: '2', headerName: 'Sample Code', width: 350, pinned: 'left',
             sortable: true,
             filter: 'agTextColumnFilter'
         },
-        { field: '3', headerName: 'Захиалагч', width: 120, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '4', headerName: 'Төрөл', width: 100, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '5', headerName: 'Төлөв', width: 100, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '11', headerName: 'Жин (кг)', width: 100, filter: 'agNumberColumnFilter' },
-        { field: '6', headerName: 'Хүлээлгэн өгсөн', width: 150, filter: 'agTextColumnFilter' },
-        { field: '7', headerName: 'Бэлтгэсэн', width: 150, filter: 'agTextColumnFilter' },
-        { field: '8', headerName: 'Бэлдсэн огноо', width: 120, filter: 'agDateColumnFilter' },
+        { field: '3', headerName: 'Client', width: 120, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '4', headerName: 'Type', width: 100, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '5', headerName: 'Condition', width: 100, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '11', headerName: 'Weight (kg)', width: 100, filter: 'agNumberColumnFilter' },
+        { field: '6', headerName: 'Submitted by', width: 150, filter: 'agTextColumnFilter' },
+        { field: '7', headerName: 'Prepared by', width: 150, filter: 'agTextColumnFilter' },
+        { field: '8', headerName: 'Prepared date', width: 120, filter: 'agDateColumnFilter' },
         {
-            field: '10', headerName: 'Бүртгэсэн', width: 140,
+            field: '10', headerName: 'Registered', width: 140,
             sortable: true,
             filter: 'agDateColumnFilter'
         },
-        { field: '9', headerName: 'Тайлбар', width: 150, filter: 'agTextColumnFilter' },
+        { field: '9', headerName: 'Comment', width: 150, filter: 'agTextColumnFilter' },
         {
-            field: '14', headerName: 'Хадгалалт', width: 120,
+            field: '14', headerName: 'Storage', width: 120,
             filter: false,
             cellRenderer: params => params.value || ''
         },
         {
-            field: '12', headerName: 'Статус', width: 120,
+            field: '12', headerName: 'Status', width: 120,
             filter: 'agTextColumnFilter',
             cellRenderer: params => {
                 const data = params.value;
@@ -143,9 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return data;
             }
         },
-        { field: '15', headerName: 'Үйлдэл', width: 100, filter: false, cellRenderer: p => p.value },
+        { field: '15', headerName: 'Action', width: 100, filter: false, cellRenderer: p => p.value },
         {
-            field: '13', headerName: 'Даалгавар', flex: 1, minWidth: 200,
+            field: '13', headerName: 'Assignments', flex: 1, minWidth: 200,
             filter: 'agTextColumnFilter',
             autoHeight: true,
             hide: true,
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         animateRows: true,
         getRowId: params => params.data[1],
         domLayout: 'normal',
-        overlayLoadingTemplate: '<span class="ag-overlay-loading-center">Ачаалж байна...</span>',
+        overlayLoadingTemplate: '<span class="ag-overlay-loading-center">Loading...</span>',
     };
 
     const gridDiv = document.querySelector('#myGrid');
@@ -222,8 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const allSelectedNodes = gridOptions.api.getSelectedNodes();
         const selectedNodes = allSelectedNodes.filter(node => node.displayed);
 
-        if (selectedNodes.length === 0) { alert('Устгах дээжээ сонгоно уу!'); return; }
-        if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгахдаа итгэлтэй байна уу?')) return;
+        if (selectedNodes.length === 0) { alert('Please select samples to delete!'); return; }
+        if (!confirm('Are you sure you want to delete the selected ' + selectedNodes.length + ' sample(s)?')) return;
 
         const ids = selectedNodes.map(node => node.data[1]);
         const form = document.getElementById('deleteSelectedForm');

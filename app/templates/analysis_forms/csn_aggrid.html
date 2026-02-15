@@ -88,7 +88,7 @@
       valueFormatter: p => p.value
     },
     {
-      headerName: 'Дээжийн нэр',
+      headerName: 'Sample Name',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -140,7 +140,7 @@
       ...editCol
     },
     {
-      headerName: 'Дундаж',
+      headerName: 'Average',
       field: 'average',
       width: 110,
       valueFormatter: p => {
@@ -170,19 +170,19 @@
       }
     },
     {
-      headerName: 'Үйлдэл',
+      headerName: 'Action',
       width: 90,
       pinned: 'right',
       cellRenderer: p => {
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Хадгалагдсан</span>';
+          return '<span class="text-muted small">Saved</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Дээж хасах">
+                  title="Remove sample">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -236,7 +236,7 @@
         average: avg
       };
     } else {
-      // Шинэ дээж
+      // New дээж
       return {
         ...base,
         v1: null,
@@ -420,7 +420,7 @@
       if (!btn) return;
 
       const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('Дээжийг жагсаалтаас хасах уу?')) return;
+      if (!confirm('Remove this sample from the list?')) return;
 
       const url = new URL(window.location.href);
       let ids = (url.searchParams.get('sample_ids') || '').split(',');
@@ -438,7 +438,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -453,7 +453,7 @@
     const payload = [];
     const incomplete = [];  // ✅ Дутуу дээжүүдийг хадгалах
     const tooFewValues = [];  // ✅ 2-оос бага утгатай дээжүүд
-    const exceededRepeatability = [];  // ✅ Тохирц давсан дээжүүд
+    const exceededRepeatability = [];  // ✅ Tolerance давсан дээжүүд
 
     window.csnGridApi.forEachNode(n => {
       const d = n.data;
@@ -488,10 +488,10 @@
 
       console.log(`📊 Sample ${d.sample_code}: values=${JSON.stringify(values)}, validValues=${JSON.stringify(validValues)}, max=${Math.max(...validValues)}, min=${Math.min(...validValues)}, range=${range}`);
 
-      // ✅ Тохирцын хязгаарыг config-оос авна
+      // ✅ Toleranceын хязгаарыг config-оос авна
       const repeatabilityLimit = getCSNRepeatabilityLimit();
 
-      // ✅ Тохирцын шалгалт: range <= repeatabilityLimit
+      // ✅ Toleranceын шалгалт: range <= repeatabilityLimit
       // Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
       const EPSILON = 1e-6;
       const t_exceeded = (range - repeatabilityLimit) > EPSILON;
@@ -500,7 +500,7 @@
         exceededRepeatability.push(d.sample_code || d.sample_id);
       }
 
-      // ✅ Дундаж тооцоолох
+      // ✅ Average тооцоолох
       const rawAvg = calcAvg(values);
 
       // ✅ CSN: 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
@@ -518,8 +518,8 @@
           v3: d.v3,
           v4: d.v4,
           v5: d.v5,
-          diff: range,  // ✅ Тохирц (max - min)
-          t_exceeded: t_exceeded,  // ✅ Тохирц давсан эсэх
+          diff: range,  // ✅ Tolerance (max - min)
+          t_exceeded: t_exceeded,  // ✅ Tolerance давсан эсэх
           repeatability: {
             average: avg,
             raw_average: rawAvg,
@@ -531,7 +531,7 @@
       });
     });
 
-    // ✅ Тохирцын хязгаарыг alert-д харуулахад ашиглах
+    // ✅ Toleranceын хязгаарыг alert-д харуулахад ашиглах
     const configLimit = getCSNRepeatabilityLimit();
 
     console.log('📊 CSN Collect Summary:', {
@@ -544,38 +544,38 @@
       configLimit: configLimit
     });
 
-    // ✅ Хадгалах боломжтой дээж байхгүй бол
+    // ✅ No saveable samples
     if (payload.length === 0) {
       const reasons = [];
-      if (incomplete.length > 0) reasons.push(`${incomplete.length} дээж утгагүй`);
-      if (tooFewValues.length > 0) reasons.push(`${tooFewValues.length} дээж 2-оос бага утгатай`);
-      alert(`CSN: Хадгалах боломжтой дээж байхгүй!\n\n${reasons.join('\n')}`);
+      if (incomplete.length > 0) reasons.push(`${incomplete.length} samples have no values`);
+      if (tooFewValues.length > 0) reasons.push(`${tooFewValues.length} samples have fewer than 2 values`);
+      alert(`CSN: No samples available to save!\n\n${reasons.join('\n')}`);
       return [];
     }
 
-    // ✅ Дутуу дээжүүдийн талаар мэдэгдэл (гэхдээ бэлэн дээжүүдийг хадгалах боломжтой)
+    // ✅ Warning about incomplete samples (but ready samples can still be saved)
     let warningMessage = '';
     if (tooFewValues.length > 0) {
-      warningMessage += `⚠️ ${tooFewValues.length} дээж 2-оос бага утгатай (хадгалагдахгүй):\n${tooFewValues.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${tooFewValues.length} samples have fewer than 2 values (will not be saved):\n${tooFewValues.join(', ')}\n\n`;
     }
     if (incomplete.length > 0) {
-      warningMessage += `⚠️ ${incomplete.length} дээж утгагүй (хадгалагдахгүй):\n${incomplete.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${incomplete.length} samples have no values (will not be saved):\n${incomplete.join(', ')}\n\n`;
     }
 
-    // ✅ Тохирц давсан дээжүүдийн талаар мэдэгдэл
+    // ✅ Repeatability exceeded warning
     if (exceededRepeatability.length > 0) {
-      warningMessage += `⚠️ ${exceededRepeatability.length} дээж тохирц давсан (зөрүү > ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${exceededRepeatability.length} samples exceeded tolerance (diff > ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
     }
 
-    // ✅ Анхааруулга байвал confirm асуух
+    // ✅ Confirm if there are warnings
     if (warningMessage) {
       const proceed = confirm(
         `${warningMessage}` +
-        `✅ ${payload.length} дээж хадгалахад бэлэн.\n\n` +
-        `Үргэлжлүүлэх үү?`
+        `✅ ${payload.length} samples ready to save.\n\n` +
+        `Continue?`
       );
       if (!proceed) {
-        console.warn('❌ CSN: Хэрэглэгч хадгалалтыг цуцалсан');
+        console.warn('❌ CSN: User cancelled save');
         return [];
       }
     }

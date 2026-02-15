@@ -5,24 +5,24 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>{{ title }}</h1>
-    {{ render_cancel_button(url_for('admin.manage_users'), text='Хэрэглэгчдийн жагсаалт руу буцах', variant='outline-secondary') }}
+    {{ render_cancel_button(url_for('admin.manage_users'), text='Back to User List', variant='outline-secondary') }}
   </div>
 
-  <p class="text-muted">"{{ user.username }}" хэрэглэгчийн мэдээллийг засах хэсэг.</p>
+  <p class="text-muted">Edit user "{{ user.username }}" information.</p>
 
   <div class="row">
     <div class="col-lg-6">
-      {% call render_card(title='Хэрэглэгчийн мэдээлэл засах') %}
+      {% call render_card(title='Edit User Information') %}
         <form action="{{ url_for('admin.edit_user', user_id=user.id) }}" method="post" novalidate>
           {{ form.hidden_tag() }}
 
-          {{ render_field(form.username, placeholder='Хэрэглэгчийн нэр') }}
+          {{ render_field(form.username, placeholder='Username') }}
 
           <div class="mb-3">
             {{ form.password.label(class="form-label fw-bold") }}
-            {{ form.password(class="form-control", placeholder='Шинэ нууц үг') }}
+            {{ form.password(class="form-control", placeholder='New password') }}
             <div class="form-text">
-              Хэрэв нууц үгийг солихгүй бол хоосон орхи.
+              Leave blank if you do not want to change the password.
             </div>
           </div>
 
@@ -32,7 +32,7 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">Зөвшөөрөгдсөн лабораториуд</label>
+            <label class="form-label fw-bold">Allowed Laboratories</label>
             <div class="d-flex flex-wrap gap-3">
               {% for subfield in form.allowed_labs %}
               <div class="form-check">
@@ -41,42 +41,42 @@
               </div>
               {% endfor %}
             </div>
-            <div class="form-text">Хэрэглэгч аль лабораторид нэвтрэх боломжтойг сонгоно уу.</div>
+            <div class="form-text">Select which laboratories this user can access.</div>
           </div>
 
           <hr class="my-3">
-          <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>Email Signature мэдээлэл</p>
+          <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>Email Signature Information</p>
 
           {{ render_field(form.full_name, placeholder='Ж.Баатар') }}
           {{ render_field(form.email, placeholder='baatar@energyresources.mn') }}
           {{ render_field(form.phone, placeholder='99119911') }}
-          {{ render_field(form.position, placeholder='Ахлах химич') }}
+          {{ render_field(form.position, placeholder='Senior Chemist') }}
 
           <div class="d-flex justify-content-between">
             {{ render_cancel_button(url_for('admin.manage_users')) }}
-            {{ render_submit_button(form.submit, text='Хадгалах', icon='bi-check-lg') }}
+            {{ render_submit_button(form.submit, text='Save', icon='bi-check-lg') }}
           </div>
         </form>
       {% endcall %}
     </div>
 
-    <!-- Хажуугийн мэдээллийн панель -->
+    <!-- Side information panel -->
     <div class="col-lg-6 mt-3 mt-lg-0">
-      {% call render_card(title='Хэрэглэгчийн ерөнхий мэдээлэл') %}
+      {% call render_card(title='User General Information') %}
         <p><strong>ID:</strong> {{ user.id }}</p>
-        <p><strong>Нэвтрэх нэр:</strong> {{ user.username }}</p>
-        <p><strong>Одоогийн эрхийн түвшин:</strong> {{ user.role }}</p>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Current Role:</strong> {{ user.role }}</p>
         {% if user.full_name %}
-        <p><strong>Бүтэн нэр:</strong> {{ user.full_name }}</p>
+        <p><strong>Full Name:</strong> {{ user.full_name }}</p>
         {% endif %}
         {% if user.email %}
-        <p><strong>Имэйл:</strong> {{ user.email }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
         {% endif %}
         {% if user.phone %}
-        <p><strong>Утас:</strong> {{ user.phone }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
         {% endif %}
         {% if user.position %}
-        <p><strong>Албан тушаал:</strong> {{ user.position }}</p>
+        <p><strong>Position:</strong> {{ user.position }}</p>
         {% endif %}
       {% endcall %}
     </div>

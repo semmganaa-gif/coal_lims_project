@@ -89,36 +89,36 @@
 
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-primary"></i> Хамаарлын Шинжилгээ</h4>
-    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm px-3">Буцах</a>
+    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-primary"></i> Correlation Analysis</h4>
+    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm px-3">Back</a>
   </div>
 
   <div class="analysis-grid">
     <div class="sidebar-panel">
       <div class="control-group">
-        <label>1. X Тэнхлэг</label>
+        <label>1. X Axis</label>
         <select id="xAxis" class="form-select" onchange="updateAnalysis()">
-          <optgroup label="Үндсэн"><option value="Aad">Ash (Aad)</option><option value="Mad">Moisture (Mad)</option><option value="Mtar">Total Moisture</option></optgroup>
-          <optgroup label="Коксжих"><option value="CSN">CSN</option><option value="Vdaf">Volatile</option><option value="CRC">CRC</option></optgroup>
-          <optgroup label="Бусад"><option value="TRD">Rel. Density</option><option value="St_ad">Sulfur</option></optgroup>
+          <optgroup label="Basic"><option value="Aad">Ash (Aad)</option><option value="Mad">Moisture (Mad)</option><option value="Mtar">Total Moisture</option></optgroup>
+          <optgroup label="Coking"><option value="CSN">CSN</option><option value="Vdaf">Volatile</option><option value="CRC">CRC</option></optgroup>
+          <optgroup label="Other"><option value="TRD">Rel. Density</option><option value="St_ad">Sulfur</option></optgroup>
         </select>
       </div>
       <div class="control-group">
-        <label>2. Y Тэнхлэг</label>
+        <label>2. Y Axis</label>
         <select id="yAxis" class="form-select" onchange="updateAnalysis()">
           <optgroup label="Эрчим хүч"><option value="Qgr_ad">Gross CV</option><option value="Qnet_ar">Net CV</option></optgroup>
           <optgroup label="Физик"><option value="TRD">Rel. Density</option><option value="Gi">G-Index</option><option value="CSN">CSN</option></optgroup>
-          <optgroup label="Бусад"><option value="Aad">Ash (Aad)</option><option value="Vdaf">Volatile</option></optgroup>
+          <optgroup label="Other"><option value="Aad">Ash (Aad)</option><option value="Vdaf">Volatile</option></optgroup>
         </select>
       </div>
 
       <button class="btn btn-primary btn-sm w-100 mb-2" onclick="openStandardsModal()">
-         <i class="bi bi-bookmarks"></i> 📚 Түүхэн Стандарт Сонгох
+         <i class="bi bi-bookmarks"></i> 📚 Түүхэн Standard Сонгох
       </button>
 
       <div class="history-edit-box" id="histBox">
         <div class="hb-title">
-            <span id="selectedStdName">Түүхэн Стандарт</span>
+            <span id="selectedStdName">Түүхэн Standard</span>
         </div>
         <div class="hb-row">
             <label>m</label>
@@ -168,7 +168,7 @@
 <div class="modal-overlay" id="stdModal">
   <div class="modal-box">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold m-0">Түүхэн Стандартын Сан</h5>
+      <h5 class="fw-bold m-0">Түүхэн Standardын Сан</h5>
       <button class="btn-close" onclick="closeStandardsModal()"></button>
     </div>
     <p class="small text-muted">Доорх жагсаалтаас сонгоно уу эсвэл шинээр утга оруулаад хадгална уу.</p>
@@ -176,7 +176,7 @@
     <table class="std-table">
       <thead>
         <tr>
-          <th>Нэр (Төрөл)</th>
+          <th>Name (Төрөл)</th>
           <th>m (Slope)</th>
           <th>c (Intercept)</th>
           <th>Үйлдэл</th>
@@ -190,7 +190,7 @@
         <button class="btn btn-sm btn-success" onclick="saveAllStandards()">
             <i class="bi bi-save"></i> Өөрчлөлтийг Хадгалах
         </button>
-        <button class="btn btn-sm btn-secondary" onclick="closeStandardsModal()">Хаах</button>
+        <button class="btn btn-sm btn-secondary" onclick="closeStandardsModal()">Close</button>
     </div>
   </div>
 </div>
@@ -262,7 +262,7 @@
       const std = standardsList[index];
       document.getElementById('inputM').value = std.m;
       document.getElementById('inputC').value = std.c;
-      document.getElementById('selectedStdName').innerText = std.name + " Стандарт";
+      document.getElementById('selectedStdName').innerText = std.name + " Standard";
       
       // Auto-set active
       currentConfig.m = std.m;
@@ -388,8 +388,8 @@
 
     const datasets = [
       { label: 'Хэвийн', data: points.filter(p => !p.outlier), backgroundColor: '#2563eb', pointRadius: 6, order:2 },
-      { label: 'Зөрүүтэй', data: points.filter(p => p.outlier), backgroundColor: '#ef4444', pointStyle: 'triangle', pointRadius: 9, order:1 },
-      { label: currentConfig.hasConfig ? 'Түүхэн Стандарт' : 'Trend', data: [{x:x1, y:refM*x1+refC}, {x:x2, y:refM*x2+refC}], borderColor: currentConfig.hasConfig?'#16a34a':'#2563eb', borderWidth:3, type:'line', pointRadius:0, order:3 }
+      { label: 'Differenceтэй', data: points.filter(p => p.outlier), backgroundColor: '#ef4444', pointStyle: 'triangle', pointRadius: 9, order:1 },
+      { label: currentConfig.hasConfig ? 'Түүхэн Standard' : 'Trend', data: [{x:x1, y:refM*x1+refC}, {x:x2, y:refM*x2+refC}], borderColor: currentConfig.hasConfig?'#16a34a':'#2563eb', borderWidth:3, type:'line', pointRadius:0, order:3 }
     ];
 
     if (tol > 0) {

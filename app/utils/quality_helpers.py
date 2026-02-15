@@ -41,7 +41,7 @@ def require_quality_edit(redirect_endpoint='quality.index'):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not can_edit_quality():
-                flash("Энэ үйлдэл зөвхөн ахлах/админ эрхтэй.", "danger")
+                flash("This action requires senior/admin privileges.", "danger")
                 return redirect(url_for(redirect_endpoint))
             return f(*args, **kwargs)
         return decorated_function

@@ -553,7 +553,7 @@
 
 <!-- Chat Widget HTML -->
 <div class="chat-widget" id="chatWidget">
-  <button class="chat-toggle-btn" id="chatToggleBtn" title="Чат">
+  <button class="chat-toggle-btn" id="chatToggleBtn" title="Chat">
     <i class="bi bi-chat-dots-fill"></i>
     <span class="badge" id="chatUnreadBadge" style="display: none;">0</span>
   </button>
@@ -562,49 +562,49 @@
     <!-- List View -->
     <div class="chat-list-view" id="chatListView">
       <div class="chat-header">
-        <h5><i class="bi bi-chat-dots me-1"></i>Мессеж</h5>
+        <h5><i class="bi bi-chat-dots me-1"></i>Messages</h5>
         <div class="chat-header-btns">
           {% if current_user.role in ['senior', 'admin'] %}
-          <button class="chat-header-btn" id="chatBroadcastBtn" title="Зарлал илгээх">
+          <button class="chat-header-btn" id="chatBroadcastBtn" title="Send Broadcast">
             <i class="bi bi-megaphone"></i>
           </button>
           {% endif %}
-          <button class="chat-header-btn" id="chatSearchBtn" title="Хайх">
+          <button class="chat-header-btn" id="chatSearchBtn" title="Search">
             <i class="bi bi-search"></i>
           </button>
-          <button class="chat-header-btn" id="chatRefreshBtn" title="Шинэчлэх">
+          <button class="chat-header-btn" id="chatRefreshBtn" title="Refresh">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
-          <button class="chat-header-btn" id="chatCloseBtn" title="Хаах">
+          <button class="chat-header-btn" id="chatCloseBtn" title="Close">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
       </div>
 
       <div class="chat-search" id="chatSearchBox" style="display:none;">
-        <input type="text" id="chatSearchInput" placeholder="Мессеж хайх...">
+        <input type="text" id="chatSearchInput" placeholder="Search messages...">
       </div>
 
       <div class="chat-tabs">
         <button class="chat-tab active" data-tab="contacts">
-          <i class="bi bi-people"></i> Харилцах
+          <i class="bi bi-people"></i> Contacts
         </button>
         <button class="chat-tab" data-tab="broadcasts">
-          <i class="bi bi-megaphone"></i> Зарлал
+          <i class="bi bi-megaphone"></i> Broadcasts
         </button>
       </div>
 
       <div class="chat-contacts" id="chatContacts">
         <div class="chat-empty" id="chatContactsEmpty">
           <i class="bi bi-hourglass-split"></i>
-          <p>Ачаалж байна...</p>
+          <p>Loading...</p>
         </div>
       </div>
 
       <div class="chat-contacts" id="chatBroadcasts" style="display:none;">
         <div class="chat-empty">
           <i class="bi bi-megaphone"></i>
-          <p>Зарлал байхгүй</p>
+          <p>No broadcasts</p>
         </div>
       </div>
     </div>
@@ -616,23 +616,23 @@
         <div class="contact-avatar" id="chatPartnerAvatar">?</div>
         <div style="flex:1">
           <div class="chat-partner-name" id="chatPartnerName">-</div>
-          <div class="chat-partner-status" id="chatPartnerStatus">Онлайн</div>
+          <div class="chat-partner-status" id="chatPartnerStatus">Online</div>
         </div>
-        <button class="chat-header-btn" id="chatMsgSearchBtn" title="Мессеж хайх">
+        <button class="chat-header-btn" id="chatMsgSearchBtn" title="Search messages">
           <i class="bi bi-search"></i>
         </button>
       </div>
 
       <div class="chat-messages" id="chatMessages"></div>
       <div class="typing-indicator" id="typingIndicator">
-        <span id="typingUser">-</span> бичиж байна...
+        <span id="typingUser">-</span> is typing...
       </div>
 
       <div class="chat-input-area">
         <!-- Popups -->
         <div class="chat-popup" id="templatePopup">
           <div class="chat-popup-header">
-            Template мессеж
+            Template Message
             <button class="chat-popup-close" onclick="closePopup('templatePopup')"><i class="bi bi-x"></i></button>
           </div>
           <div id="templateList"></div>
@@ -648,24 +648,24 @@
 
         <div class="chat-popup" id="samplePopup">
           <div class="chat-popup-header">
-            Дээж холбох
+            Link Sample
             <button class="chat-popup-close" onclick="closePopup('samplePopup')"><i class="bi bi-x"></i></button>
           </div>
           <div style="padding:0.5rem">
-            <input type="text" id="sampleSearchInput" placeholder="Дээж хайх..." style="width:100%;padding:0.4rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.8rem;">
+            <input type="text" id="sampleSearchInput" placeholder="Search samples..." style="width:100%;padding:0.4rem;border:1px solid #e2e8f0;border-radius:6px;font-size:0.8rem;">
           </div>
           <div id="sampleList"></div>
         </div>
         <div class="chat-input-tools">
           <button class="chat-tool-btn" id="btnTemplate" title="Template"><i class="bi bi-lightning"></i></button>
           <button class="chat-tool-btn" id="btnEmoji" title="Emoji"><i class="bi bi-emoji-smile"></i></button>
-          <button class="chat-tool-btn" id="btnFile" title="Файл"><i class="bi bi-paperclip"></i></button>
-          <button class="chat-tool-btn" id="btnSample" title="Дээж холбох"><i class="bi bi-box"></i></button>
-          <button class="chat-tool-btn" id="btnUrgent" title="Яаралтай"><i class="bi bi-exclamation-triangle"></i></button>
+          <button class="chat-tool-btn" id="btnFile" title="File"><i class="bi bi-paperclip"></i></button>
+          <button class="chat-tool-btn" id="btnSample" title="Link Sample"><i class="bi bi-box"></i></button>
+          <button class="chat-tool-btn" id="btnUrgent" title="Urgent"><i class="bi bi-exclamation-triangle"></i></button>
           <input type="file" id="fileInput" style="display:none" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx">
         </div>
         <div class="chat-input-row">
-          <textarea class="chat-input" id="chatInput" placeholder="Мессеж бичих..." rows="1"></textarea>
+          <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
           <button class="chat-send-btn" id="chatSendBtn"><i class="bi bi-send-fill"></i></button>
         </div>
         <div id="selectedSample" style="display:none;padding:0.4rem;background:#eff6ff;border-radius:8px;margin-top:0.4rem;font-size:0.8rem;">
@@ -680,15 +680,15 @@
       <div class="chat-view-header">
         <button class="chat-back-btn" id="broadcastBackBtn"><i class="bi bi-arrow-left"></i></button>
         <div style="flex:1">
-          <div class="chat-partner-name"><i class="bi bi-megaphone me-1"></i>Зарлал илгээх</div>
-          <div class="chat-partner-status">Бүх хэрэглэгчид</div>
+          <div class="chat-partner-name"><i class="bi bi-megaphone me-1"></i>Send Broadcast</div>
+          <div class="chat-partner-status">All Users</div>
         </div>
       </div>
       <div style="flex:1;padding:1rem;">
-        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">Энэ зарлал бүх нэвтэрсэн хэрэглэгчид харагдана.</p>
-        <textarea id="broadcastInput" style="width:100%;height:120px;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;font-size:0.9rem;" placeholder="Зарлалын текст..."></textarea>
+        <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">This broadcast will be visible to all logged-in users.</p>
+        <textarea id="broadcastInput" style="width:100%;height:120px;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem;font-size:0.9rem;" placeholder="Broadcast text..."></textarea>
         <button id="sendBroadcastBtn" style="margin-top:0.75rem;width:100%;padding:0.6rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">
-          <i class="bi bi-send me-1"></i>Илгээх
+          <i class="bi bi-send me-1"></i>Send
         </button>
       </div>
     </div>

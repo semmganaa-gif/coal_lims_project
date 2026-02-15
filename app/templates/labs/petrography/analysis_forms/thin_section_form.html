@@ -16,10 +16,10 @@
   <div class="row g-3">
     <div class="col-md-3">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">Дээж сонгох</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">Select Sample</h6></div>
         <div class="card-body">
           <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- Дээж сонгоно уу --</option>
+            <option value="">-- Select a sample --</option>
           </select>
         </div>
       </div>
@@ -28,19 +28,19 @@
     <div class="col-md-9">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">Нимгэн зүсэлтийн тайлбар</h6>
+          <h6 class="mb-0">Thin Section Description</h6>
           <button class="btn btn-success btn-sm" onclick="saveResults()">
-            <i class="bi bi-save me-1"></i>Хадгалах
+            <i class="bi bi-save me-1"></i>Save
           </button>
         </div>
         <div class="card-body">
           <div class="mb-3">
-            <label class="form-label fw-bold">Бүтцийн тодорхойлолт</label>
-            <textarea id="textureDesc" class="form-control" rows="4" placeholder="Бүтэц, ширхэгийн хэлбэр, найрлага..."></textarea>
+            <label class="form-label fw-bold">Texture Description</label>
+            <textarea id="textureDesc" class="form-control" rows="4" placeholder="Texture, grain shape, composition..."></textarea>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">Тодорхойлогдсон эрдсүүд</label>
-            <textarea id="mineralsIdentified" class="form-control" rows="3" placeholder="Эрдсийн нэрс..."></textarea>
+            <label class="form-label fw-bold">Minerals Identified</label>
+            <textarea id="mineralsIdentified" class="form-control" rows="3" placeholder="Mineral names..."></textarea>
           </div>
           <!-- Зураг upload: backend бэлэн болсны дараа идэвхжүүлнэ -->
           <!--
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function saveResults() {
   const sampleId = document.getElementById('sampleSelect').value;
-  if (!sampleId) { alert('Дээж сонгоно уу'); return; }
+  if (!sampleId) { alert('Please select a sample'); return; }
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   fetch("{{ url_for('petrography.save_results') }}", {
@@ -97,7 +97,7 @@ function saveResults() {
     })
   })
   .then(r => r.json())
-  .then(d => { if (d.success) alert('Хадгалагдлаа!'); })
+  .then(d => { if (d.success) alert('Saved successfully!'); })
   .catch(e => console.error(e));
 }
 </script>

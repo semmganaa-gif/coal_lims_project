@@ -29,21 +29,21 @@
   <div class="ws-header">
     <div>
       <h1><i class="bi bi-hand-index me-2"></i>{{ title }}</h1>
-      <p>Арчдасны микробиологийн шинжилгээ — MNS 6410:2018</p>
+      <p>Swab Microbiology Analysis — MNS 6410:2018</p>
     </div>
     <div class="ws-actions">
-      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Буцах</a>
+      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
       <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>Стандарт
+        <i class="bi bi-journal-bookmark me-1"></i>Standard
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>Цаг
+        <i class="bi bi-stopwatch me-1"></i>Timer
       </button>
       <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>Төхөөрөмж
+        <i class="bi bi-tools me-1"></i>Equipment
       </button>
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Дээж сонгох</button>
-      <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Хадгалах</button>
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Select Samples</button>
+      <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Save</button>
     </div>
   </div>
   {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
@@ -51,15 +51,15 @@
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
-      <h6><i class="bi bi-table me-1" style="color:#8b5cf6"></i>Арчдасны микробиологийн хүснэгт <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
+      <h6><i class="bi bi-table me-1" style="color:#8b5cf6"></i>Swab Microbiology Grid <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: MNS 6410:2018 (50см²-д &lt;100)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> E.coli: Илрэхгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Илрэхгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> S.aureus: Илрэхгүй</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Илрээгүй" эсвэл "Илэрсэн" сонгох</em></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: MNS 6410:2018 (per 50cm² &lt;100)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> E.coli: Not Detected</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Not Detected</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> S.aureus: Not Detected</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Not Detected" or "Detected" selection</em></div>
     </div>
   </div>
 </div>
@@ -102,7 +102,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Тоног төхөөрөмжийн ашиглалт & засвар</span>
+          <span>Equipment Usage & Maintenance</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -112,12 +112,12 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 22%; min-width:140px;">Лаб дугаар / Нэр</th>
-                <th style="width: 7%; text-align:center;">Бүрэн<br>бүтэн</th>
-                <th style="width: 10%; text-align:center;">Ашиглалт<br>(мин)</th>
-                <th style="width: 20%;">Тэмдэглэл</th>
-                <th style="width: 7%; text-align:center;">Засвар</th>
-                <th style="width: 34%;">Засварын мэдээлэл</th>
+                <th style="width: 22%; min-width:140px;">Lab Code / Name</th>
+                <th style="width: 7%; text-align:center;">Condi-<br>tion</th>
+                <th style="width: 10%; text-align:center;">Usage<br>(min)</th>
+                <th style="width: 20%;">Notes</th>
+                <th style="width: 7%; text-align:center;">Repair</th>
+                <th style="width: 34%;">Repair Details</th>
               </tr>
             </thead>
             <tbody>
@@ -139,7 +139,7 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Тэмдэглэл..." style="border-color: #cbd5e0;">
+                         placeholder="Notes..." style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
@@ -148,12 +148,12 @@
                 </td>
                 <td class="repair-info-cell">
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Засварын огноо</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Сэлбэг нэмэх
+                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
                     </button>
                   </div>
                 </td>
@@ -164,17 +164,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>Микро лабын тоног төхөөрөмж бүртгэгдээгүй байна.
+          <i class="bi bi-info-circle me-2"></i>No microbiology lab equipment registered.
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Хаах
+          <i class="bi bi-x-lg me-1"></i>Close
         </button>
         {% if related_equipments %}
         <button type="button" class="btn text-white px-4" style="background:#20c997;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Хадгалах
+          <i class="bi bi-save me-1"></i>Save
         </button>
         {% endif %}
       </div>
@@ -182,40 +182,40 @@
   </div>
 </div>
 
-<!-- Дээж сонгох модал -->
+<!-- Sample сонгох модал -->
 <div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #faf5ff, #f5f3ff);">
-        <h5 class="modal-title"><i class="bi bi-hand-index me-2" style="color:#8b5cf6"></i>Дээж сонгох</h5>
+        <h5 class="modal-title"><i class="bi bi-hand-index me-2" style="color:#8b5cf6"></i>Select Samples</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
           <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="🔍 Дээжний код...">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="🔍 Sample code...">
           </div>
           <div class="col-4">
-            <select id="filterClient" class="form-select form-select-sm"><option value="">Бүх захиалагч</option></select>
+            <select id="filterClient" class="form-select form-select-sm"><option value="">All clients</option></select>
           </div>
           <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Шүүлтүүр цэвэрлэх"><i class="bi bi-x-circle"></i></button>
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear filters"><i class="bi bi-x-circle"></i></button>
             <span id="filteredCount" class="text-muted small"></span>
           </div>
         </div>
-        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Ачаалж байна...</p></div>
+        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading...</p></div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
-            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>Дээжний дугаар</th><th>Захиалагч</th><th>Төлөв</th><th>Огноо</th></tr></thead>
+            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>Sample Code</th><th>Client</th><th>Status</th><th>Date</th></tr></thead>
             <tbody id="sampleListBody"></tbody>
           </table>
         </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">Дээж олдсонгүй</div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">No samples found</div>
       </div>
       <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">0 дээж сонгосон</span>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Хаах</button>
-        <button type="button" class="btn text-white" style="background:#8b5cf6;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>Нэмэх</button>
+        <span id="selectedCount" class="me-auto text-muted small">0 samples selected</span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn text-white" style="background:#8b5cf6;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>Add</button>
       </div>
     </div>
   </div>
@@ -259,25 +259,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
       this.select = document.createElement('select');
       this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
-      this.select.innerHTML = '<option value="Илрээгүй">Илрээгүй</option><option value="Илэрсэн">Илэрсэн (тоо оруулах)</option>';
+      this.select.innerHTML = '<option value="Not Detected">Not Detected</option><option value="Detected">Detected (enter count)</option>';
 
       this.numInput = document.createElement('input');
       this.numInput.type = 'number';
       this.numInput.min = '0';
-      this.numInput.placeholder = 'Тоо оруулах...';
+      this.numInput.placeholder = 'Enter count...';
       this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
 
       this.container.appendChild(this.select);
       this.container.appendChild(this.numInput);
 
-      if (this.value && this.value !== 'Илрээгүй') {
-        this.select.value = 'Илэрсэн';
+      if (this.value && this.value !== 'Not Detected') {
+        this.select.value = 'Detected';
         this.numInput.value = this.value;
         this.numInput.style.display = 'block';
       }
 
       this.select.addEventListener('change', () => {
-        if (this.select.value === 'Илэрсэн') {
+        if (this.select.value === 'Detected') {
           this.numInput.style.display = 'block';
           this.numInput.focus();
         } else {
@@ -294,9 +294,9 @@ document.addEventListener('DOMContentLoaded', function() {
     getGui() { return this.container; }
     afterGuiAttached() { this.select.focus(); }
     getValue() {
-      if (this.select.value === 'Илрээгүй') return 'Илрээгүй';
+      if (this.select.value === 'Not Detected') return 'Not Detected';
       const num = parseFloat(this.numInput.value);
-      return isNaN(num) ? 'Илрээгүй' : num;
+      return isNaN(num) ? 'Not Detected' : num;
     }
     isPopup() { return true; }
   }
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cellEditor: PresenceNumberEditor,
     cellEditorParams: { limit },
     cellStyle: p => {
-      if (p.value === 'Илрээгүй') return { color: '#047857', fontWeight: '600' };
+      if (p.value === 'Not Detected') return { color: '#047857', fontWeight: '600' };
       const num = Number(p.value);
       if (!isNaN(num) && limit && num >= limit) return { color: '#dc2626', fontWeight: '600', background: '#fef2f2' };
       return { fontWeight: '500' };
@@ -318,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const presenceCol = (field, headerName) => ({
     field, headerName, minWidth: 110, editable: true, headerClass: 'ag-header-cell-wrap',
     cellEditor: 'agSelectCellEditor',
-    cellEditorParams: { values: ['Илрээгүй', 'Илэрсэн'] },
-    cellStyle: p => ({ color: p.value === 'Илэрсэн' ? '#dc2626' : '#047857', fontWeight: '600' })
+    cellEditorParams: { values: ['Not Detected', 'Detected'] },
+    cellStyle: p => ({ color: p.value === 'Detected' ? '#dc2626' : '#047857', fontWeight: '600' })
   });
 
   function showToast(msg, type) { type=type||'success'; const c={success:'#8b5cf6',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
@@ -327,14 +327,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const columnDefs = [
     { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Сорьцын нэр\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Шинжилгээ эхэлсэн огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    { field: 'end_date', headerName: 'Шинжилгээ дууссан огноо', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    microCol('cfu_swab', 'CFU\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\n50см²-д <100', 100),
-    presenceCol('ecoli_swab', 'E.coli\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
-    presenceCol('salmonella_swab', 'Salmonella spp.\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
-    presenceCol('staphylococcus_swab', 'S.aureus\nMNS 6410:2018\nЗөвшөөрөгдөх хэмжээ\nИлрэхгүй'),
-    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Устгах" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
+    { field: 'sample_code', headerName: 'Sample Name\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+    { field: 'start_date', headerName: 'Analysis Start Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
+    { field: 'end_date', headerName: 'Analysis End Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
+    microCol('cfu_swab', 'CFU\nMNS 6410:2018\nPermissible Limit\nper 50cm² <100', 100),
+    presenceCol('ecoli_swab', 'E.coli\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
+    presenceCol('salmonella_swab', 'Salmonella spp.\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
+    presenceCol('staphylococcus_swab', 'S.aureus\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
+    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Remove" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
   ];
 
   let initialRows = [];
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let allSamples = [];
   function buildClientFilter(samples) {
     const sel = document.getElementById('filterClient');
-    sel.innerHTML = '<option value="">Бүх захиалагч</option>';
+    sel.innerHTML = '<option value="">All clients</option>';
     [...new Set(samples.map(s=>s.client_name).filter(Boolean))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
   }
   function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}?category="+CATEGORY).then(r=>r.json()).then(s=>{allSamples=s;buildClientFilter(s);renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
@@ -365,28 +365,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)});
     if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';document.getElementById('filteredCount').textContent='';return;}
     document.getElementById('sampleListContainer').style.display='';
-    const sm={'new':'Шинэ','in_progress':'Шинжилж байна','analysis':'Шинжилж байна','completed':'Дууссан'};
+    const sm={'new':'New','in_progress':'In Progress','analysis':'In Progress','completed':'Completed'};
     const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'};
     let vc=0;
-    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">нэмэгдсэн</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
-    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' дээж';
+    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">added</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
+    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' samples';
     updateSelectedCount();
   }
-  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' дээж сонгосон';}
-  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' дээж';}
+  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' samples selected';}
+  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' samples';}
   document.getElementById('sampleSearch').addEventListener('input',applyFilters);
   document.getElementById('filterClient').addEventListener('change',applyFilters);
   document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
   document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
   document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
-  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Дээж сонгоно уу','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' дээж нэмэгдлээ');});
+  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Please select samples','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' samples added');});
 
-  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('Хадгалах өгөгдөл байхгүй','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Амжилттай! ('+d.count+' мөр)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Алдаа: '+(d.error||''),'error');}).catch(e=>showToast('Сүлжээний алдаа: '+e.message,'error'));});
+  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('No data to save','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Saved successfully! ('+d.count+' rows)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Error: '+(d.error||''),'error');}).catch(e=>showToast('Network error: '+e.message,'error'));});
   updateRowCount();
 });
 </script>
 
-{# --- Тоног төхөөрөмжийн ашиглалт --- #}
+{# --- Equipmentийн ашиглалт --- #}
 <script>
 let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
@@ -410,10 +410,10 @@ function addSparePart(btn) {
   row.className = 'input-group input-group-sm mb-1 spare-row';
   row.innerHTML = `
     <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">Сэлбэг сонгох...</option>
+      <option value="">Select spare part...</option>
     </select>
-    <input type="number" class="form-control spare-qty" placeholder="Тоо" min="1" value="1" style="flex:1; max-width:60px">
-    <input type="text" class="form-control spare-user" placeholder="Хэн" style="flex:2">
+    <input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">
+    <input type="text" class="form-control spare-user" placeholder="Who" style="flex:2">
     <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.spare-row').remove()">
       <i class="bi bi-x"></i>
     </button>
@@ -458,7 +458,7 @@ function submitEquipmentUsage() {
     }
     if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair) items.push(item);
   });
-  if (items.length === 0) { alert('Бүртгэх мэдээлэл алга байна.'); return; }
+  if (items.length === 0) { alert('No data to record.'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
@@ -472,12 +472,12 @@ function submitEquipmentUsage() {
       document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
-      alert('Төхөөрөмжийн ашиглалт амжилттай хадгалагдлаа!');
+      alert('Equipment usage saved successfully!');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('Error: ' + (data.message || 'Unknown error'));
     }
   })
-  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
+  .catch(err => alert('Network error: ' + err.message));
 }
 </script>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% set is_micro = is_micro_lab | default(false) %}
-{% block title %}{{ 'Микробиологийн' if is_micro else 'Усны' }} дээж бүртгэл{% endblock %}
+{% block title %}{{ 'Microbiology' if is_micro else 'Water' }} Sample Registration{% endblock %}
 
 {% block head %}
 <style>
@@ -127,20 +127,20 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="list-tab" data-bs-toggle="tab"
               data-bs-target="#list-pane" type="button" role="tab">
-        <i class="bi bi-list-ul me-1"></i>Дээжний жагсаалт
+        <i class="bi bi-list-ul me-1"></i>Sample List
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="add-tab" data-bs-toggle="tab"
               data-bs-target="#add-pane" type="button" role="tab">
-        <i class="bi bi-plus-circle me-1"></i>Шинэ дээж
+        <i class="bi bi-plus-circle me-1"></i>New Sample
       </button>
     </li>
   </ul>
 
   <div class="tab-content">
 
-    <!-- ===== TAB 1: Жагсаалт ===== -->
+    <!-- ===== TAB 1: List ===== -->
     <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
       <div class="card border-0 shadow-sm h-100" style="border-radius: 0 12px 12px 12px;">
         <div class="p-2 d-flex align-items-center gap-2 flex-wrap">
@@ -172,7 +172,7 @@
       </div>
     </div>
 
-    <!-- ===== TAB 2: Шинэ дээж ===== -->
+    <!-- ===== TAB 2: New Sample ===== -->
     <div class="tab-pane fade" id="add-pane" role="tabpanel">
       <form action="{{ url_for('microbiology.register_sample') if is_micro else url_for('water.register_sample') }}" method="post" id="water-sample-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -181,11 +181,11 @@
 
         <div class="water-gateway">
 
-          <!-- PHASE 1: Нэгж сонгох -->
+          <!-- PHASE 1: Select Unit -->
           <div class="water-hub-section" id="water-unit-hub">
             <div class="water-hub-header">
-              <h1><i class="bi {{ 'bi-bug-fill' if is_micro else 'bi-droplet-fill' }}"></i> Нэгж сонгох</h1>
-              <p>{{ units|length }} нэгж, {{ total_samples }} дээж</p>
+              <h1><i class="bi {{ 'bi-bug-fill' if is_micro else 'bi-droplet-fill' }}"></i> Select Unit</h1>
+              <p>{{ units|length }} units, {{ total_samples }} samples</p>
             </div>
             <div class="unit-grid">
               {% for key, unit in units.items() %}
@@ -194,13 +194,13 @@
                           --card-shadow: {{ unit.color }}55;">
                 <div class="icon"><i class="bi {{ unit.icon }}"></i></div>
                 <div class="name">{{ unit.name }}</div>
-                <div class="count">{{ unit.samples|length }} дээж</div>
+                <div class="count">{{ unit.samples|length }} samples</div>
               </div>
               {% endfor %}
             </div>
           </div>
 
-          <!-- PHASE 2: Дээж & форм -->
+          <!-- PHASE 2: Sample & Form -->
           <div class="water-workspace" id="water-workspace">
             <div class="ws-header">
               <button type="button" class="btn-back" onclick="goBack()"><i class="bi bi-arrow-left"></i></button>
@@ -208,38 +208,38 @@
               <div class="ms-auto d-flex align-items-center gap-2">
                 <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
                   <input type="checkbox" name="next_batch" value="1" class="form-check-input" style="width:2.5em; height:1.3em;" id="nextBatchCheck">
-                  <span class="fw-bold text-warning" style="font-size:0.82rem;">Шинэ багц</span>
+                  <span class="fw-bold text-warning" style="font-size:0.82rem;">New Batch</span>
                 </label>
                 <button type="submit" class="btn btn-info text-white fw-bold px-4">
-                  <i class="bi bi-check-circle me-1"></i>Бүртгэх
+                  <i class="bi bi-check-circle me-1"></i>Register
                 </button>
               </div>
             </div>
 
-            <!-- Дээжний нэр сонгох -->
+            <!-- Select sample name -->
             <div class="mb-1 d-flex align-items-center gap-2">
-              <label class="form-label small fw-bold mb-0">Дээжний нэр:</label>
-              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">Бүгд</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">Цуцлах</button>
+              <label class="form-label small fw-bold mb-0">Sample Name:</label>
+              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">All</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">Clear</button>
               <span class="text-muted small" id="sample-count-label"></span>
             </div>
             <div class="sample-list" id="sample-list"></div>
 
             <div class="form-grid">
-              <!-- Зүүн: Мэдээлэл -->
+              <!-- Left: Information -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-droplet me-1 text-info"></i>Дээжний мэдээлэл</h6>
+                  <h6><i class="bi bi-droplet me-1 text-info"></i>Sample Information</h6>
                   <div class="mb-2">
-                    <label class="form-label small">Дээж авсан огноо</label>
+                    <label class="form-label small">Sampling Date</label>
                     <input type="date" name="sample_date" class="form-control form-control-sm" required>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label small">Дээж авсан цаг</label>
+                    <label class="form-label small">Sampling Time</label>
                     <div class="d-flex align-items-center gap-2">
                       <input type="time" name="sample_time" id="sample_time" class="form-control form-control-sm" style="max-width:130px;">
                       <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" style="font-size:0.72rem; white-space:nowrap;" onclick="setNowTime()">
-                        <i class="bi bi-clock me-1"></i>Одоо
+                        <i class="bi bi-clock me-1"></i>Now
                       </button>
                       <div class="d-flex gap-1 flex-wrap" id="quickTimeButtons">
                         <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('08:00')">08:00</button>
@@ -251,15 +251,15 @@
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label small">Дээж авсан хүн</label>
+                    <label class="form-label small">Sampled By</label>
                     <input type="text" name="sampled_by" class="form-control form-control-sm">
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-thermometer-half me-1"></i>Талбарын хэмжилт</h6>
+                  <h6><i class="bi bi-thermometer-half me-1"></i>Field Measurements</h6>
                   <div class="row g-2">
                     <div class="col-4">
-                      <label class="form-label small">Темп (°C)</label>
+                      <label class="form-label small">Temp (°C)</label>
                       <input type="number" step="0.1" name="field_temp" class="form-control form-control-sm">
                     </div>
                     <div class="col-4">
@@ -273,7 +273,7 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-box me-1"></i>Эзэлхүүн</h6>
+                  <h6><i class="bi bi-box me-1"></i>Volume</h6>
                   <div class="d-flex flex-wrap gap-2 align-items-center">
                     <label class="form-label small d-flex align-items-center gap-1 mb-0">
                       <input type="checkbox" name="volume_2l" value="1"> 2 л
@@ -283,34 +283,34 @@
                     </label>
                     <span class="mx-2 text-muted">|</span>
                     <label class="form-label small d-flex align-items-center gap-1 mb-0">
-                      <input type="checkbox" name="return_sample" value="1"> Дээж буцаах
+                      <input type="checkbox" name="return_sample" value="1"> Return Sample
                     </label>
                   </div>
                 </div>
                 <div class="form-card">
-                  <h6><i class="bi bi-calendar-check me-1"></i>Хадгалах хугацаа</h6>
+                  <h6><i class="bi bi-calendar-check me-1"></i>Retention Period</h6>
                   <div class="d-flex flex-wrap gap-1">
                     <input type="radio" class="btn-check" name="retention_period" id="ret_1" value="1">
-                    <label class="btn btn-outline-danger btn-sm" for="ret_1">1 хоног</label>
+                    <label class="btn btn-outline-danger btn-sm" for="ret_1">1 day</label>
                     <input type="radio" class="btn-check" name="retention_period" id="ret_3" value="3" checked>
-                    <label class="btn btn-outline-warning btn-sm" for="ret_3">3 хоног</label>
+                    <label class="btn btn-outline-warning btn-sm" for="ret_3">3 days</label>
                     <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7">
-                    <label class="btn btn-outline-success btn-sm" for="ret_7">7 хоног</label>
+                    <label class="btn btn-outline-success btn-sm" for="ret_7">7 days</label>
                   </div>
                   <div class="mt-2">
-                    <label class="form-label small">Тэмдэглэл</label>
-                    <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Өнгө, үнэр..."></textarea>
+                    <label class="form-label small">Notes</label>
+                    <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Color, odor..."></textarea>
                   </div>
                 </div>
               </div>
 
-              <!-- Баруун: Шинжилгээ -->
+              <!-- Right: Analysis -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Унд ахуйн усны шинжилгээ</h6>
+                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Drinking Water Analysis</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_drink">
                     {% for at in water_analyses if 'drinking' in at.categories %}
@@ -322,10 +322,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>Бохир усны шинжилгээ</h6>
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>Wastewater Analysis</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_waste">
                     {% for at in water_analyses if 'wastewater' in at.categories and 'drinking' not in at.categories %}
@@ -337,10 +337,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>Бусад шинжилгээ</h6>
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>Other Analysis</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_other">
                     {% for at in water_analyses if 'other' in at.categories %}
@@ -352,10 +352,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Микробиологи (Ус)</h6>
+                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Microbiology (Water)</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="mc">
                     {% for at in micro_analyses if at.code in ['CFU','ECOLI','SALM'] %}
@@ -367,10 +367,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>Микробиологи (Агаар)</h6>
+                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>Microbiology (Air)</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="mc_air">
                     {% for at in micro_analyses if at.code in ['AIR_CFU','AIR_STAPH'] %}
@@ -382,10 +382,10 @@
                   </div>
                 </div>
                 <div class="form-card">
-                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>Микробиологи (Арчдас)</h6>
+                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>Microbiology (Swab)</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">Бүгд</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">Цуцлах</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">Clear</button>
                   </div>
                   <div class="analysis-check-grid" id="mc_swab">
                     {% for at in micro_analyses if at.code in ['SWAB_CFU','SWAB_ECOLI','SWAB_SALM'] %}
@@ -412,7 +412,7 @@
 const UNITS = {{ units|tojson }};
 let currentUnit = null;
 
-// ============ Tab 2: Шинэ дээж бүртгэл ============
+// ============ Tab 2: New sample registration ============
 function selectUnit(key) {
   currentUnit = key;
   const unit = UNITS[key];
@@ -462,7 +462,7 @@ function updateSampleInputs() {
     container.appendChild(input);
   });
   const label = document.getElementById('sample-count-label');
-  if (label) label.textContent = selected.length > 0 ? `(${selected.length} сонгосон)` : '';
+  if (label) label.textContent = selected.length > 0 ? `(${selected.length} selected)` : '';
 }
 
 function toggleAllSamples(select) {
@@ -483,7 +483,7 @@ function toggleAll(id, checked) {
   document.querySelectorAll(`#${id} input[type="checkbox"]`).forEach(cb => cb.checked = checked);
 }
 
-// ============ Цаг сонгох хялбар товчлуурууд ============
+// ============ Quick time selection buttons ============
 function setNowTime() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, '0');
@@ -494,7 +494,7 @@ function setQuickTime(t) {
   document.getElementById('sample_time').value = t;
 }
 
-// ============ Tab 1: AG Grid жагсаалт ============
+// ============ Tab 1: AG Grid list ============
 let sampleGridApi = null;
 const statusMap = {
   'new': '<span class="badge bg-primary">New</span>',
@@ -625,15 +625,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sampleGridApi) sampleGridApi.exportDataAsCsv({ fileName: 'WaterSamples.csv' });
   });
 
-  // Устгах товч
+  // Delete товч
   document.getElementById('btnDeleteSelected').addEventListener('click', function() {
     if (!sampleGridApi) return;
     const selectedNodes = sampleGridApi.getSelectedNodes();
     if (selectedNodes.length === 0) {
-      alert('Устгах дээжээ сонгоно уу!');
+      alert('Please select samples to delete!');
       return;
     }
-    if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгахдаа итгэлтэй байна уу?')) return;
+    if (!confirm('Are you sure you want to delete ' + selectedNodes.length + ' selected sample(s)?')) return;
 
     const form = document.getElementById('deleteSelectedForm');
     // Хуучин hidden input-уудыг арилгах

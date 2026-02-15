@@ -493,7 +493,7 @@
       </select>
       <button type="submit" class="btn-filter"><i class="bi bi-funnel-fill"></i> Шүүх</button>
       {% if current_user.role in ['senior', 'admin'] %}
-      <button type="button" class="btn-save-plan" id="btnSavePlan"><i class="bi bi-save"></i> Хадгалах</button>
+      <button type="button" class="btn-save-plan" id="btnSavePlan"><i class="bi bi-save"></i> Save</button>
       {% endif %}
     </form>
   </div>
@@ -514,7 +514,7 @@
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-clipboard-check"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Бүртгэл</div>
+            <div class="wl-label">Record</div>
             <div class="wl-value" id="cardRegistration">{{ grand_total.daily_plan }}</div>
             <div class="wl-unit">дээж/өдөр</div>
           </div>
@@ -524,7 +524,7 @@
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-hammer"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Дээж бэлтгэгч {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffPreparers" value="{{ staff_preparers }}" min="1" max="50">{% else %}<span class="badge bg-success">{{ staff_preparers }}</span>{% endif %}</div>
+            <div class="wl-label">Sample бэлтгэгч {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffPreparers" value="{{ staff_preparers }}" min="1" max="50">{% else %}<span class="badge bg-success">{{ staff_preparers }}</span>{% endif %}</div>
             <div class="wl-value" id="cardPreparers">{{ (grand_total.daily_plan / staff_preparers)|round(1) }}</div>
             <div class="wl-unit">дээж/хүн/өдөр</div>
           </div>
@@ -534,7 +534,7 @@
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-eyedropper"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Химич {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffChemists" value="{{ staff_chemists }}" min="1" max="50">{% else %}<span class="badge bg-purple">{{ staff_chemists }}</span>{% endif %}</div>
+            <div class="wl-label">Analyst {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffChemists" value="{{ staff_chemists }}" min="1" max="50">{% else %}<span class="badge bg-purple">{{ staff_chemists }}</span>{% endif %}</div>
             <div class="wl-value" id="cardChemists">{{ ((grand_total.daily_plan * 5) / staff_chemists)|round(1) }}</div>
             <div class="wl-unit">шинжилгээ/хүн/өдөр</div>
           </div>
@@ -548,7 +548,7 @@
     <div class="week-summary-header">
       <div class="week-summary-title"><i class="bi bi-calendar-week"></i> Долоо хоногийн нэгтгэл</div>
       {% if current_user.role in ['senior', 'admin'] %}
-      <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Тохиргоо хадгалах</button>
+      <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Settings хадгалах</button>
       {% endif %}
     </div>
     <div class="week-grid">
@@ -572,7 +572,7 @@
   </div>
 
   <!-- Consignor Cards -->
-  <div class="section-title"><i class="bi bi-building"></i> Нэгжийн төлөвлөгөө</div>
+  <div class="section-title"><i class="bi bi-building"></i> Unitийн төлөвлөгөө</div>
   <div class="consignor-grid">
     {% for client_name, client_info in data.items() %}
     <div class="consignor-card">
@@ -660,12 +660,12 @@
     <!-- Summary Row -->
     <div class="summary-row" id="summaryStats">
       <div class="summary-stat">
-        <div class="stat-label">Нийт төлөвлөгөө</div>
+        <div class="stat-label">Total төлөвлөгөө</div>
         <div class="stat-value" id="totalPlanned">-</div>
         <div class="stat-sub">{{ year }} он</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-label">Нийт гүйцэтгэл</div>
+        <div class="stat-label">Total гүйцэтгэл</div>
         <div class="stat-value" id="totalActual">-</div>
         <div class="stat-sub">бүртгэгдсэн</div>
       </div>
@@ -716,7 +716,7 @@
       <!-- Consignor Chart -->
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-building"></i> Нэгжээр харьцуулалт</div>
+          <div class="stats-card-title"><i class="bi bi-building"></i> Unitээр харьцуулалт</div>
         </div>
         <div class="chart-container">
           <canvas id="consignorChart"></canvas>
@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     try {
-      const response = await fetch('{{ url_for("pdf_reports.api_plan_statistics") }}?' + params);
+      const response = await fetch('{{ url_for("reports.api_plan_statistics") }}?' + params);
       const data = await response.json();
       renderSummary(data);
       renderCharts(data);
@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       try {
-        const response = await fetch('{{ url_for("pdf_reports.api_save_monthly_plan") }}', {
+        const response = await fetch('{{ url_for("reports.api_save_monthly_plan") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year: parseInt(year), month: parseInt(month), plans })
@@ -1060,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function() {
           alert('Төлөвлөгөө хадгалагдлаа!');
           location.reload();
         } else {
-          alert('Алдаа: ' + (result.error || 'Unknown error'));
+          alert('Error: ' + (result.error || 'Unknown error'));
         }
       } catch (err) {
         alert('Сервертэй холбогдож чадсангүй: ' + err.message);
@@ -1089,7 +1089,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const chem = parseInt(staffChem?.value) || 10;
 
       try {
-        const response = await fetch('{{ url_for("pdf_reports.api_save_staff_settings") }}', {
+        const response = await fetch('{{ url_for("reports.api_save_staff_settings") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year: parseInt(year), month: parseInt(month), staff_preparers: prep, staff_chemists: chem })
@@ -1097,10 +1097,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         if (result.success) {
           btnSaveStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> Хадгалсан';
-          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Тохиргоо хадгалах'; }, 1500);
+          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Settings хадгалах'; }, 1500);
         }
       } catch (err) {
-        alert('Алдаа: ' + err.message);
+        alert('Error: ' + err.message);
       }
     });
   }

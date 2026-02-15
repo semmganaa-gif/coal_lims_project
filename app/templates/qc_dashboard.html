@@ -6,7 +6,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{{ title }}</h1>
     <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-      ← Дээжний нэгтгэл рүү буцах
+      ← Sampleний нэгтгэл рүү буцах
     </a>
   </div>
 
@@ -122,8 +122,8 @@
         <div>
           <div><strong>Stream / Family:</strong> {{ stream.family }}</div>
           <div class="qc-small">
-            <span class="me-3"><strong>Нэгж:</strong> {{ stream.unit or "—" }}</span>
-            <span class="me-3"><strong>Огноо:</strong> {{ stream.date or "—" }}</span>
+            <span class="me-3"><strong>Unit:</strong> {{ stream.unit or "—" }}</span>
+            <span class="me-3"><strong>Date:</strong> {{ stream.date or "—" }}</span>
             <span><strong>Цагийн дээж (n):</strong> {{ stream.n_hourly }}</span>
           </div>
         </div>
@@ -144,7 +144,7 @@
             <tr>
               <th rowspan="2" style="min-width: 40px;">#</th>
               <th rowspan="2" style="min-width: 70px;">Мөр</th>
-              <th rowspan="2" style="min-width: 220px;">Дээжний код</th>
+              <th rowspan="2" style="min-width: 220px;">Sampleний код</th>
               {% for code in param_codes %}
                 <th colspan="2" class="text-center">{{ code }}</th>
               {% endfor %}

@@ -6,14 +6,14 @@
   {# --- HEADER --- #}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="fw-bold text-primary mb-0">
-      <i class="bi bi-archive"></i> Дээж хадгалалт & устгал
+      <i class="bi bi-archive"></i> Sample Retention & Disposal
     </h4>
     <div class="d-flex gap-2">
       <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkRetentionModal">
-        <i class="bi bi-calendar-plus"></i> Бүх дээжид хугацаа
+        <i class="bi bi-calendar-plus"></i> Set Retention for All
       </button>
       <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Буцах
+        <i class="bi bi-arrow-left"></i> Back
       </a>
     </div>
   </div>
@@ -24,7 +24,7 @@
       <div class="card border-primary h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-primary fw-bold mb-0">{{ return_samples|length }}</h3>
-          <small class="text-muted">Буцаах дээж</small>
+          <small class="text-muted">Return Samples</small>
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div class="card border-danger h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-danger fw-bold mb-0">{{ expired_samples|length }}</h3>
-          <small class="text-muted">Хугацаа дууссан</small>
+          <small class="text-muted">Expired</small>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
       <div class="card border-warning h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-warning fw-bold mb-0">{{ upcoming_samples|length }}</h3>
-          <small class="text-muted">{{ warning_days }} хоногт</small>
+          <small class="text-muted">Within {{ warning_days }} days</small>
         </div>
       </div>
     </div>
@@ -48,7 +48,7 @@
       <div class="card border-success h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-success fw-bold mb-0">{{ disposed_samples|length }}</h3>
-          <small class="text-muted">Устгагдсан</small>
+          <small class="text-muted">Disposed</small>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
       <div class="card border-secondary h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-secondary fw-bold mb-0">{{ no_retention_samples|length }}</h3>
-          <small class="text-muted">Хугацаагүй</small>
+          <small class="text-muted">No Retention</small>
         </div>
       </div>
     </div>
@@ -66,47 +66,47 @@
   <ul class="nav nav-tabs" id="disposalTabs" role="tablist">
     <li class="nav-item">
       <button class="nav-link active text-primary" id="return-tab" data-bs-toggle="tab" data-bs-target="#return" type="button">
-        <i class="bi bi-arrow-return-left"></i> Буцаах ({{ return_samples|length }})
+        <i class="bi bi-arrow-return-left"></i> Return ({{ return_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-danger" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button">
-        <i class="bi bi-exclamation-triangle-fill"></i> Хугацаа дууссан ({{ expired_samples|length }})
+        <i class="bi bi-exclamation-triangle-fill"></i> Expired ({{ expired_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-warning" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">
-        <i class="bi bi-clock"></i> Удахгүй дуусах ({{ upcoming_samples|length }})
+        <i class="bi bi-clock"></i> Expiring Soon ({{ upcoming_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-success" id="disposed-tab" data-bs-toggle="tab" data-bs-target="#disposed" type="button">
-        <i class="bi bi-check-circle"></i> Устгагдсан ({{ disposed_samples|length }})
+        <i class="bi bi-check-circle"></i> Disposed ({{ disposed_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-secondary" id="nodate-tab" data-bs-toggle="tab" data-bs-target="#nodate" type="button">
-        <i class="bi bi-question-circle"></i> Хугацаагүй ({{ no_retention_samples|length }})
+        <i class="bi bi-question-circle"></i> No Retention ({{ no_retention_samples|length }})
       </button>
     </li>
   </ul>
 
   <div class="tab-content border border-top-0 rounded-bottom p-3 bg-white" id="disposalTabsContent">
 
-    {# --- TAB 0: Буцаах дээж --- #}
+    {# --- TAB 0: Return Samples --- #}
     <div class="tab-pane fade show active" id="return" role="tabpanel">
       {% if return_samples %}
       <form method="POST" action="{{ url_for('main.dispose_samples') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <input type="hidden" name="disposal_method" value="Буцааж өгсөн"/>
+        <input type="hidden" name="disposal_method" value="Returned"/>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllReturn" onchange="toggleAll(this, 'return')">
-            <label class="form-check-label" for="selectAllReturn">Бүгдийг сонгох</label>
+            <label class="form-check-label" for="selectAllReturn">Select All</label>
           </div>
           <button type="submit" class="btn btn-primary btn-sm">
-            <i class="bi bi-box-arrow-up-right"></i> Буцааж өгсөн гэж тэмдэглэх
+            <i class="bi bi-box-arrow-up-right"></i> Mark as Returned
           </button>
         </div>
 
@@ -115,10 +115,10 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Дээжний код</th>
-                <th style="min-width:100px;">Захиалагч</th>
-                <th style="min-width:120px;">Хүлээн авсан</th>
-                <th>Статус</th>
+                <th style="min-width:350px;">Sample Code</th>
+                <th style="min-width:100px;">Client</th>
+                <th style="min-width:120px;">Received</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -138,12 +138,12 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-inbox display-4"></i>
-        <p class="mt-2">Буцаах дээж байхгүй байна.</p>
+        <p class="mt-2">No samples to return.</p>
       </div>
       {% endif %}
     </div>
 
-    {# --- TAB 1: Хугацаа дууссан --- #}
+    {# --- TAB 1: Expired --- #}
     <div class="tab-pane fade" id="expired" role="tabpanel">
       {% if expired_samples %}
       <form method="POST" action="{{ url_for('main.dispose_samples') }}">
@@ -152,18 +152,18 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllExpired" onchange="toggleAll(this, 'expired')">
-            <label class="form-check-label" for="selectAllExpired">Бүгдийг сонгох</label>
+            <label class="form-check-label" for="selectAllExpired">Select All</label>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <select name="disposal_method" class="form-select form-select-sm" style="width: 200px;" required>
-              <option value="">-- Устгасан арга --</option>
-              <option value="Хаягдал руу">Хаягдал руу</option>
-              <option value="Буцааж өгсөн">Буцааж өгсөн</option>
-              <option value="Архивлагдсан">Архивлагдсан</option>
-              <option value="Бусад">Бусад</option>
+              <option value="">-- Disposal Method --</option>
+              <option value="Discarded">Discarded</option>
+              <option value="Returned">Returned</option>
+              <option value="Archived">Archived</option>
+              <option value="Other">Other</option>
             </select>
             <button type="submit" class="btn btn-danger btn-sm">
-              <i class="bi bi-trash"></i> Устгасанд тооцох
+              <i class="bi bi-trash"></i> Mark as Disposed
             </button>
           </div>
         </div>
@@ -173,11 +173,11 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Дээжний код</th>
-                <th style="min-width:100px;">Захиалагч</th>
-                <th style="min-width:120px;">Хүлээн авсан</th>
-                <th style="min-width:130px;">Хадгалах хугацаа</th>
-                <th>Хэтэрсэн хоног</th>
+                <th style="min-width:350px;">Sample Code</th>
+                <th style="min-width:100px;">Client</th>
+                <th style="min-width:120px;">Received</th>
+                <th style="min-width:130px;">Retention Date</th>
+                <th>Days Overdue</th>
               </tr>
             </thead>
             <tbody>
@@ -188,7 +188,7 @@
                 <td>{{ s.client_name or '-' }}</td>
                 <td>{{ s.received_date.strftime('%Y-%m-%d') if s.received_date else '-' }}</td>
                 <td class="text-danger">{{ s.retention_date.strftime('%Y-%m-%d') if s.retention_date else '-' }}</td>
-                <td><span class="badge bg-danger">{{ (today - s.retention_date).days }} хоног</span></td>
+                <td><span class="badge bg-danger">{{ (today - s.retention_date).days }} days</span></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -198,23 +198,23 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-check-circle display-4"></i>
-        <p class="mt-2">Хугацаа дууссан дээж байхгүй байна.</p>
+        <p class="mt-2">No expired samples.</p>
       </div>
       {% endif %}
     </div>
 
-    {# --- TAB 2: Удахгүй дуусах --- #}
+    {# --- TAB 2: Expiring Soon --- #}
     <div class="tab-pane fade" id="upcoming" role="tabpanel">
       {% if upcoming_samples %}
       <div class="table-responsive">
         <table class="table table-sm table-hover text-start">
           <thead class="table-light">
             <tr>
-              <th style="min-width:350px;">Дээжний код</th>
-              <th style="min-width:100px;">Захиалагч</th>
-              <th style="min-width:120px;">Хүлээн авсан</th>
-              <th style="min-width:130px;">Хадгалах хугацаа</th>
-              <th style="min-width:100px;">Үлдсэн хоног</th>
+              <th style="min-width:350px;">Sample Code</th>
+              <th style="min-width:100px;">Client</th>
+              <th style="min-width:120px;">Received</th>
+              <th style="min-width:130px;">Retention Date</th>
+              <th style="min-width:100px;">Days Left</th>
             </tr>
           </thead>
           <tbody>
@@ -224,7 +224,7 @@
               <td>{{ s.client_name or '-' }}</td>
               <td>{{ s.received_date.strftime('%Y-%m-%d') if s.received_date else '-' }}</td>
               <td class="text-warning">{{ s.retention_date.strftime('%Y-%m-%d') if s.retention_date else '-' }}</td>
-              <td><span class="badge bg-warning text-dark">{{ (s.retention_date - today).days }} хоног</span></td>
+              <td><span class="badge bg-warning text-dark">{{ (s.retention_date - today).days }} days</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -233,22 +233,22 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-calendar-check display-4"></i>
-        <p class="mt-2">Удахгүй хугацаа дуусах дээж байхгүй байна.</p>
+        <p class="mt-2">No samples expiring soon.</p>
       </div>
       {% endif %}
     </div>
 
-    {# --- TAB 3: Устгагдсан --- #}
+    {# --- TAB 3: Disposed --- #}
     <div class="tab-pane fade" id="disposed" role="tabpanel">
       {% if disposed_samples %}
       <div class="table-responsive">
         <table class="table table-sm table-hover text-start">
           <thead class="table-light">
             <tr>
-              <th style="min-width:350px;">Дээжний код</th>
-              <th style="min-width:100px;">Захиалагч</th>
-              <th style="min-width:120px;">Устгасан огноо</th>
-              <th>Устгасан арга</th>
+              <th style="min-width:350px;">Sample Code</th>
+              <th style="min-width:100px;">Client</th>
+              <th style="min-width:120px;">Disposal Date</th>
+              <th>Disposal Method</th>
             </tr>
           </thead>
           <tbody>
@@ -266,12 +266,12 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-inbox display-4"></i>
-        <p class="mt-2">Сүүлийн 90 хоногт устгагдсан дээж байхгүй.</p>
+        <p class="mt-2">No samples disposed in the last 90 days.</p>
       </div>
       {% endif %}
     </div>
 
-    {# --- TAB 4: Хугацаа тодорхойгүй --- #}
+    {# --- TAB 4: No Retention Date --- #}
     <div class="tab-pane fade" id="nodate" role="tabpanel">
       {% if no_retention_samples %}
       <form method="POST" action="{{ url_for('main.set_retention_date') }}">
@@ -280,18 +280,18 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllNodate" onchange="toggleAll(this, 'nodate')">
-            <label class="form-check-label" for="selectAllNodate">Бүгдийг сонгох</label>
+            <label class="form-check-label" for="selectAllNodate">Select All</label>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <select name="retention_days" class="form-select form-select-sm" style="width: 180px;">
-              <option value="30">30 хоног</option>
-              <option value="60">60 хоног</option>
-              <option value="90" selected>90 хоног</option>
-              <option value="180">180 хоног</option>
-              <option value="365">1 жил</option>
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90" selected>90 days</option>
+              <option value="180">180 days</option>
+              <option value="365">1 year</option>
             </select>
             <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-calendar-plus"></i> Хугацаа тохируулах
+              <i class="bi bi-calendar-plus"></i> Set Retention
             </button>
           </div>
         </div>
@@ -301,10 +301,10 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Дээжний код</th>
-                <th style="min-width:100px;">Захиалагч</th>
-                <th style="min-width:120px;">Хүлээн авсан</th>
-                <th>Төлөв</th>
+                <th style="min-width:350px;">Sample Code</th>
+                <th style="min-width:100px;">Client</th>
+                <th style="min-width:120px;">Received</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -324,7 +324,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-calendar-check display-4"></i>
-        <p class="mt-2">Хадгалах хугацаа тодорхойгүй дээж байхгүй.</p>
+        <p class="mt-2">No samples without retention date.</p>
       </div>
       {% endif %}
     </div>
@@ -346,36 +346,36 @@ function toggleAll(source, tabName) {
       <form method="POST" action="{{ url_for('main.bulk_set_retention') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Бүх дээжид хугацаа тохируулах</h5>
+          <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Set Retention for All Samples</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-info small">
             <i class="bi bi-info-circle me-1"></i>
-            Хадгалах хугацаа тодорхойгүй бүх дээжид хугацаа тохируулна.
+            Sets retention period for all samples without a defined retention date.
           </div>
           <div class="mb-3">
-            <label class="form-label">Хадгалах хугацаа</label>
+            <label class="form-label">Retention Period</label>
             <select name="retention_days" class="form-select" required>
-              <option value="30">30 хоног</option>
-              <option value="60">60 хоног</option>
-              <option value="90" selected>90 хоног (стандарт)</option>
-              <option value="180">180 хоног</option>
-              <option value="365">1 жил</option>
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+              <option value="90" selected>90 days (standard)</option>
+              <option value="180">180 days</option>
+              <option value="365">1 year</option>
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Эхлэх огноо</label>
+            <label class="form-label">Start Date</label>
             <select name="from_date" class="form-select">
-              <option value="received">Хүлээн авсан огноо</option>
-              <option value="today">Өнөөдөр</option>
+              <option value="received">Received Date</option>
+              <option value="today">Today</option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Болих</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>Тохируулах
+            <i class="bi bi-check-lg me-1"></i>Apply
           </button>
         </div>
       </form>

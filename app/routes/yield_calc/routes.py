@@ -66,12 +66,12 @@ def import_excel():
     """Excel файл импортлох"""
     if request.method == 'POST':
         if 'file' not in request.files:
-            flash('Файл сонгоогүй байна', 'error')
+            flash('No file selected', 'error')
             return redirect(request.url)
 
         file = request.files['file']
         if file.filename == '':
-            flash('Файл сонгоогүй байна', 'error')
+            flash('No file selected', 'error')
             return redirect(request.url)
 
         if file and file.filename.endswith(('.xlsx', '.xls')):
@@ -96,11 +96,11 @@ def import_excel():
 
                 calculate_and_store_yields(test, target_ashes)
 
-                flash(f'Амжилттай импортлолоо: {test.lab_number} - {test.sample_name}', 'success')
+                flash(f'Successfully imported: {test.lab_number} - {test.sample_name}', 'success')
                 return redirect(url_for('yield.test_detail', test_id=test.id))
 
             except Exception as e:
-                flash(f'Импортын алдаа: {str(e)}', 'error')
+                flash(f'Import error: {str(e)}', 'error')
                 return redirect(request.url)
 
             finally:
@@ -231,7 +231,7 @@ def api_calculate_yield():
     size_fraction = data.get('size_fraction', 'ALL')
 
     if not test_id or target_ash is None:
-        return jsonify({'error': 'test_id болон target_ash шаардлагатай'}), 400
+        return jsonify({'error': 'test_id and target_ash are required'}), 400
 
     test = WashabilityTest.query.get_or_404(test_id)
 

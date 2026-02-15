@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>Nonconformity / Nonconforming Work Register</h2>
+            <p class="text-muted mb-0">LAB.10.00.01 | {{ record.record_no }}</p>
+        </div>
+        <div>
+            {% if record.status == 'pending' %}
+                <span class="badge bg-secondary fs-6">Pending</span>
+            {% elif record.status == 'investigating' %}
+                <span class="badge bg-warning text-dark fs-6">Investigating</span>
+            {% elif record.status == 'reviewed' %}
+                <span class="badge bg-primary fs-6">Reviewed</span>
+            {% else %}
+                <span class="badge bg-success fs-6">Closed</span>
+            {% endif %}
+            <a href="{{ url_for('quality.nonconformity_list') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3"><strong>Date:</strong> {{ record.record_date.strftime('%Y-%m-%d') if record.record_date else '-' }}</div>
+        <div class="col-md-3"><strong>No.:</strong> {{ record.record_no }}</div>
+    </div>
+
+    {# ═══ Section 1: Detector ═══ #}
+    <div class="card mb-3">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-person-exclamation me-2"></i>Section filled by the person who detected the nonconformity</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Full name, position</th>
+                    <td>{{ record.detector_name or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Department / Unit</th>
+                    <td>{{ record.detector_department or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Nonconformity details, documented evidence</th>
+                    <td style="white-space: pre-wrap;">{{ record.nc_description or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Proposed action</th>
+                    <td style="white-space: pre-wrap;">{{ record.proposed_action or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature</th>
+                    <td><i class="bi bi-person-check me-1"></i>{{ record.detector_user.username if record.detector_user else '-' }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    {# ═══ Section 2: Responsible Unit ═══ #}
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Section to be filled by the responsible unit</h5>
+        </div>
+        <div class="card-body">
+            {% if record.responsible_user_id %}
+            {# Filled #}
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Responsible unit/department, name, position</th>
+                    <td>{{ record.responsible_unit or '-' }} / {{ record.responsible_person or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Direct cause of nonconformity</th>
+                    <td style="white-space: pre-wrap;">{{ record.direct_cause or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Corrective action, deadline</th>
+                    <td>{{ record.corrective_action or '-' }} {% if record.corrective_deadline %} ({{ record.corrective_deadline.strftime('%Y-%m-%d') }}){% endif %}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Root cause of nonconformity</th>
+                    <td style="white-space: pre-wrap;">{{ record.root_cause or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Corrective action plan, documentation</th>
+                    <td style="white-space: pre-wrap;">{{ record.corrective_plan or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature</th>
+                    <td><i class="bi bi-person-check me-1"></i>{{ record.responsible_user.username if record.responsible_user else '-' }}</td>
+                </tr>
+            </table>
+            {% else %}
+            {# Not filled - form #}
+            <form method="POST" action="{{ url_for('quality.nonconformity_investigate', id=record.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Responsible unit/department <span class="text-danger">*</span></label>
+                        <input type="text" name="responsible_unit" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Name, position</label>
+                        <input type="text" name="responsible_person" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Direct cause of nonconformity</label>
+                    <textarea name="direct_cause" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Corrective action</label>
+                        <input type="text" name="corrective_action" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Deadline</label>
+                        <input type="date" name="corrective_deadline" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Root cause of nonconformity</label>
+                    <textarea name="root_cause" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Corrective action plan, documentation</label>
+                    <textarea name="corrective_plan" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="border-top pt-3 mb-3">
+                    <p class="mb-1"><strong>Signature:</strong></p>
+                    <p class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
+                </div>
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-search me-1"></i>Investigate
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ═══ Section 3: Control ═══ #}
+    {% if record.responsible_user_id %}
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Control Section: Results After Correcting the Direct Cause of Nonconformity</h5>
+        </div>
+        <div class="card-body">
+            {% if record.manager_id %}
+            {# Reviewed #}
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50%">Criteria</th>
+                        <th class="text-center" style="width:25%">Yes</th>
+                        <th class="text-center" style="width:25%">No</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Corrected within the established deadline?</strong></td>
+                        <td class="text-center">
+                            {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Corrective action fully implemented?</strong></td>
+                        <td class="text-center">
+                            {% if record.fully_implemented %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not record.fully_implemented %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Additional remarks</th>
+                    <td style="white-space: pre-wrap;">{{ record.control_notes or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature: Quality/Technical Manager</th>
+                    <td><i class="bi bi-person-check me-1"></i>{{ record.manager.username if record.manager else '-' }}</td>
+                </tr>
+            </table>
+            {% else %}
+            {# Not reviewed - form #}
+            <form method="POST" action="{{ url_for('quality.nonconformity_review', id=record.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50%">Criteria</th>
+                            <th class="text-center" style="width:25%">Yes</th>
+                            <th class="text-center" style="width:25%">No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Corrected within the established deadline?</strong></td>
+                            <td class="text-center"><input type="radio" name="completed_on_time" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="completed_on_time" value="0" class="form-check-input" checked></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Corrective action fully implemented?</strong></td>
+                            <td class="text-center"><input type="radio" name="fully_implemented" value="1" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="fully_implemented" value="0" class="form-check-input" checked></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mb-3">
+                    <label class="form-label">Additional remarks:</label>
+                    <textarea name="control_notes" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="border-top pt-3 mb-3">
+                    <p class="mb-1"><strong>Signature: Quality/Technical Manager</strong></p>
+                    <p class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
+                </div>
+                <button type="submit" class="btn btn-info text-white">
+                    <i class="bi bi-check2-square me-1"></i>Submit Review
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

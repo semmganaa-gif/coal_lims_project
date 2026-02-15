@@ -2,13 +2,13 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="fas fa-award"></i> Шинэ PT бүртгэх</h2>
+    <h2><i class="fas fa-award"></i> New PT Record</h2>
 
     <form method="POST" class="mt-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5>PT Program мэдээлэл</h5>
+                <h5>PT Program Information</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -17,7 +17,7 @@
                             <label>PT Provider *</label>
                             <input type="text" name="pt_provider" class="form-control"
                                    placeholder="ASTM, ISO LEAP, NIST" required>
-                            <small class="form-text text-muted">Жишээ: ASTM D02 Coal PT</small>
+                            <small class="form-text text-muted">Example: ASTM D02 Coal PT</small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -50,7 +50,7 @@
 
         <div class="card mt-3">
             <div class="card-header bg-info text-white">
-                <h5>Шинжилгээний үр дүн</h5>
+                <h5>Analysis Results</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -58,15 +58,15 @@
                         <div class="form-group">
                             <label>Analysis Code *</label>
                             <select name="analysis_code" class="form-control" required>
-                                <option value="">-- Сонгох --</option>
-                                <option value="Aad">Aad - Үнс</option>
-                                <option value="Mad">Mad - Чийг</option>
-                                <option value="Vad">Vad - Дэгдэмхий</option>
-                                <option value="CV">CV - Илчлэг</option>
-                                <option value="TS">TS - Хүхэр</option>
-                                <option value="P">P - Фосфор</option>
-                                <option value="F">F - Фтор</option>
-                                <option value="Cl">Cl - Хлор</option>
+                                <option value="">-- Select --</option>
+                                <option value="Aad">Aad - Ash</option>
+                                <option value="Mad">Mad - Moisture</option>
+                                <option value="Vad">Vad - Volatile Matter</option>
+                                <option value="CV">CV - Calorific Value</option>
+                                <option value="TS">TS - Total Sulfur</option>
+                                <option value="P">P - Phosphorus</option>
+                                <option value="F">F - Fluorine</option>
+                                <option value="Cl">Cl - Chlorine</option>
                             </select>
                         </div>
                     </div>
@@ -84,7 +84,7 @@
                             <label>Our Result *</label>
                             <input type="number" step="0.001" name="our_result"
                                    class="form-control" placeholder="10.25" required>
-                            <small class="form-text text-muted">Бидний хэмжсэн утга</small>
+                            <small class="form-text text-muted">Our measured value</small>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -92,12 +92,12 @@
                             <label>Assigned Value *</label>
                             <input type="number" step="0.001" name="assigned_value"
                                    class="form-control" placeholder="10.30" required>
-                            <small class="form-text text-muted">PT-ийн зөвт утга</small>
+                            <small class="form-text text-muted">PT assigned value</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Uncertainty (σ) *</label>
+                            <label>Uncertainty (sigma) *</label>
                             <input type="number" step="0.001" name="uncertainty"
                                    class="form-control" placeholder="0.15" required>
                             <small class="form-text text-muted">Standard deviation</small>
@@ -106,25 +106,25 @@
                 </div>
 
                 <div class="alert alert-info">
-                    <strong>Z-Score тооцоолох томъёо:</strong><br>
+                    <strong>Z-Score calculation formula:</strong><br>
                     Z = (Our Result - Assigned Value) / Uncertainty<br>
-                    <small>Автомат тооцогдоно</small>
+                    <small>Automatically calculated</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Тэмдэглэл</label>
+                    <label>Notes</label>
                     <textarea name="notes" class="form-control" rows="3"
-                              placeholder="Нэмэлт тайлбар..."></textarea>
+                              placeholder="Additional remarks..."></textarea>
                 </div>
             </div>
         </div>
 
         <div class="mt-3">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> Хадгалах
+                <i class="fas fa-save"></i> Save
             </button>
             <a href="{{ url_for('quality.proficiency_list') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> Болих
+                <i class="fas fa-times"></i> Cancel
             </a>
         </div>
     </form>

@@ -90,7 +90,7 @@ def send_report_email(report, recipients, subject=None, body=None):
     except smtplib.SMTPException as e:
         return False, f"SMTP алдаа: {str(e)}"
     except Exception as e:
-        return False, f"Алдаа: {str(e)}"
+        return False, f"Error: {str(e)}"
 
 
 # -------------------------------------------------
@@ -101,13 +101,13 @@ def send_report_email(report, recipients, subject=None, body=None):
 def send_email(id):
     """Тайлан имэйлээр илгээх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Эрх хүрэхгүй.", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     report = LabReport.query.get_or_404(id)
 
     if report.status not in ['approved', 'sent']:
-        flash("Зөвхөн баталгаажсан тайлан илгээх боломжтой.", "warning")
+        flash("Only approved reports can be sent.", "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     if request.method == "POST":
@@ -115,7 +115,7 @@ def send_email(id):
         recipients = [e.strip() for e in recipients_str.split(',') if e.strip()]
 
         if not recipients:
-            flash("Хүлээн авагчийн имэйл хаяг оруулна уу.", "warning")
+            flash("Please enter recipient email address.", "warning")
             return redirect(url_for("pdf_reports.send_email", id=id))
 
         subject = request.form.get("subject")
@@ -129,10 +129,10 @@ def send_email(id):
             report.email_recipients = recipients_str
             report.status = 'sent'
             db.session.commit()
-            flash("Имэйл амжилттай илгээгдлээ.", "success")
+            flash("Email sent successfully.", "success")
             return redirect(url_for("pdf_reports.report_detail", id=id))
         else:
-            flash(f"Имэйл илгээхэд алдаа: {error}", "danger")
+            flash(f"Email sending error: {error}", "danger")
 
     return render_template(
         "reports/send_email.html",

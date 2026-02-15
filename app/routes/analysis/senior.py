@@ -1,10 +1,10 @@
 # app/routes/analysis/senior.py
 # -*- coding: utf-8 -*-
 """
-Ахлах шинжилгээчийн хяналтын самбартай холбоотой routes:
-  - /ahlah_dashboard - Ахлахын хяналтын самбар
-  - /api/ahlah_data - Dashboard-ын өгөгдөл
-  - /update_result_status/<int:result_id>/<new_status> - Үр дүнг батлах/буцаах
+Senior analyst review dashboard routes:
+  - /ahlah_dashboard - Senior review dashboard
+  - /api/ahlah_data - Dashboard data
+  - /update_result_status/<int:result_id>/<new_status> - Approve/reject results
 """
 
 from flask import request, render_template, jsonify, current_app
@@ -19,7 +19,7 @@ from app import db
 from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
-from app.utils.settings import get_error_reason_labels  # ✅ DB-ээс унших
+from app.utils.settings import get_error_reason_labels  # Read from DB
 from app.utils.normalize import normalize_raw_data
 from app.config.analysis_schema import get_analysis_schema
 from app.utils.audit import log_audit
@@ -28,10 +28,10 @@ from app.utils.notifications import notify_sample_status_change
 
 
 def register_routes(bp):
-    """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
+    """Register routes on the given blueprint"""
 
     # =====================================================================
-    # 1. АХЛАХЫН ХЯНАЛТЫН САМБАР
+    # 1. SENIOR REVIEW DASHBOARD
     # =====================================================================
     @bp.route("/ahlah_dashboard", endpoint="ahlah_dashboard")
     @login_required
@@ -47,14 +47,14 @@ def register_routes(bp):
 
         return render_template(
             "ahlah_dashboard.html",
-            title="Ахлахын хяналт",
-            error_labels=get_error_reason_labels(),  # ✅ DB-ээс унших
+            title="Senior Review",
+            error_labels=get_error_reason_labels(),  # Read from DB
             analysis_schemas=schema_map,
-            use_aggrid=True,  # ✅ Enable AG Grid loading
+            use_aggrid=True,  # Enable AG Grid loading
         )
 
     # =====================================================================
-    # 2. АХЛАХЫН САМБАРЫН ӨГӨГДӨЛ (API)
+    # 2. SENIOR DASHBOARD DATA (API)
     # =====================================================================
     @bp.route("/api/ahlah_data")
     @login_required
@@ -140,20 +140,20 @@ def register_routes(bp):
         return jsonify(processed_results)
 
     # =====================================================================
-    # 3. ҮР ДҮНГ БАТЛАХ/БУЦААХ
+    # 3. APPROVE/REJECT RESULTS
     # =====================================================================
     @bp.route("/update_result_status/<int:result_id>/<new_status>", methods=["POST"])
     @login_required
     def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Эрх хүрэхгүй"}), 403
+            return jsonify({"message": "Insufficient permissions"}), 403
 
         res = AnalysisResult.query.get_or_404(result_id)
         if new_status not in {"approved", "rejected", "pending_review"}:
-            return jsonify({"message": "Буруу статус"}), 400
+            return jsonify({"message": "Invalid status"}), 400
 
         data = request.get_json(silent=True) or request.form.to_dict() or {}
-        # ✅ XSS хамгаалалт
+        # XSS protection
         rejection_comment_raw = data.get("rejection_comment")
         rejection_comment = str(escape(rejection_comment_raw)) if rejection_comment_raw else None
         rejection_category = data.get("rejection_category")
@@ -165,7 +165,7 @@ def register_routes(bp):
             if hasattr(res, "rejection_category"):
                 res.rejection_category = rejection_category
             if hasattr(res, "rejection_comment"):
-                res.rejection_comment = rejection_comment or "Ахлах буцаасан"
+                res.rejection_comment = rejection_comment or "Rejected by senior"
             if hasattr(res, "error_reason"):
                 res.error_reason = rejection_category
         else:
@@ -195,7 +195,7 @@ def register_routes(bp):
             reason=reason_text,
             sample_code_snapshot=Sample.query.get(res.sample_id).sample_code if res.sample_id else None,
         )
-        # ✅ CRITICAL FIX: Hash тооцоолох (ISO 17025 audit integrity)
+        # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
         audit.data_hash = audit.compute_hash()
         db.session.add(audit)
         db.session.commit()
@@ -216,31 +216,31 @@ def register_routes(bp):
         return jsonify({"message": "OK", "status": new_status})
 
     # =====================================================================
-    # 3.5 ОЛОН ҮР ДҮНГ НЭГ ДОРД БАТЛАХ/БУЦААХ (Bulk Operations)
+    # 3.5 BULK APPROVE/REJECT RESULTS
     # =====================================================================
     @bp.route("/bulk_update_status", methods=["POST"])
     @login_required
     def bulk_update_status():
-        """Олон үр дүнг нэг дор approve/reject хийх"""
+        """Bulk approve/reject multiple results"""
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Эрх хүрэхгүй"}), 403
+            return jsonify({"message": "Insufficient permissions"}), 403
 
         data = request.get_json(silent=True) or {}
         result_ids = data.get("result_ids", [])
         new_status = data.get("status")
-        # ✅ XSS хамгаалалт
+        # XSS protection
         rejection_comment_raw = data.get("rejection_comment")
         rejection_comment = str(escape(rejection_comment_raw)) if rejection_comment_raw else None
         rejection_category = data.get("rejection_category")
 
         if not result_ids:
-            return jsonify({"message": "Үр дүн сонгоогүй байна"}), 400
+            return jsonify({"message": "No results selected"}), 400
 
         if new_status not in {"approved", "rejected"}:
-            return jsonify({"message": "Буруу статус"}), 400
+            return jsonify({"message": "Invalid status"}), 400
 
         if new_status == "rejected" and not rejection_category:
-            return jsonify({"message": "Буцаах шалтгаан сонгоно уу"}), 400
+            return jsonify({"message": "Please select a rejection reason"}), 400
 
         success_count = 0
         failed_ids = []
@@ -252,7 +252,7 @@ def register_routes(bp):
                     failed_ids.append(rid)
                     continue
 
-                # Зөвхөн pending_review эсвэл rejected статустай бол засах
+                # Only modify pending_review or rejected status
                 if res.status not in ("pending_review", "rejected"):
                     failed_ids.append(rid)
                     continue
@@ -264,7 +264,7 @@ def register_routes(bp):
                     if hasattr(res, "rejection_category"):
                         res.rejection_category = rejection_category
                     if hasattr(res, "rejection_comment"):
-                        res.rejection_comment = rejection_comment or "Ахлах буцаасан"
+                        res.rejection_comment = rejection_comment or "Rejected by senior"
                     if hasattr(res, "error_reason"):
                         res.error_reason = rejection_category
                 else:
@@ -291,13 +291,13 @@ def register_routes(bp):
                     reason=rejection_comment or ("Bulk Approved" if new_status == "approved" else "Bulk Rejected"),
                     sample_code_snapshot=sample.sample_code if sample else None,
                 )
-                # ✅ CRITICAL FIX: Hash тооцоолох (ISO 17025 audit integrity)
+                # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
                 audit.data_hash = audit.compute_hash()
                 db.session.add(audit)
                 success_count += 1
 
             except Exception as e:
-                current_app.logger.warning(f"bulk_update_status: result_id={rid} алдаа: {e}")
+                current_app.logger.warning(f"bulk_update_status: result_id={rid} error: {e}")
                 failed_ids.append(rid)
                 continue
 
@@ -324,40 +324,40 @@ def register_routes(bp):
                         reason=rejection_comment if new_status == "rejected" else None
                     )
                 except Exception:
-                    pass  # Email алдаа гарсан ч үндсэн үйлдлийг зогсоохгүй
+                    pass  # Don't block main operation if email fails
 
             except Exception as e:
                 db.session.rollback()
-                return jsonify({"message": f"DB алдаа: {str(e)[:100]}"}), 500
+                return jsonify({"message": f"DB error: {str(e)[:100]}"}), 500
 
         return jsonify({
-            "message": f"{success_count} үр дүн амжилттай {new_status} болгогдлоо.",
+            "message": f"{success_count} result(s) successfully set to {new_status}.",
             "success_count": success_count,
             "failed_count": len(failed_ids),
             "failed_ids": failed_ids
         })
 
     # =====================================================================
-    # 4. АХЛАХЫН САМБАРЫН СТАТИСТИК (Химич, Дээж бүртгэл тоо)
+    # 4. SENIOR DASHBOARD STATISTICS (Chemist, Sample registration counts)
     # =====================================================================
     @bp.route("/api/ahlah_stats")
     @login_required
     @analysis_role_required(["senior", "admin"])
     def api_ahlah_stats():
         """
-        Ахлахын самбарт харуулах статистик:
-        - Химич бүрийн өнөөдрийн шинжилгээний тоо
-        - Өнөөдөр бүртгэгдсэн дээжийн тоо
-        - Баталгаажсан/Буцаагдсан тоо
+        Statistics for senior dashboard:
+        - Analysis count per chemist today
+        - Sample registration count today
+        - Approved/Rejected counts
         """
         from sqlalchemy import func, case
 
-        # Ээлжийн эхлэх, дуусах цагийг авах (шөнийн ээлжийг зөв тооцоолно)
+        # Get shift start/end times (handles night shift correctly)
         shift_info = get_shift_info(now_local())
         today_start = shift_info.shift_start
         today_end = shift_info.shift_end
 
-        # 1. Химич бүрийн өнөөдрийн шинжилгээний тоо
+        # 1. Analysis count per chemist today
         chemist_stats = (
             db.session.query(
                 User.username,
@@ -387,7 +387,7 @@ def register_routes(bp):
                 "rejected": row.rejected or 0,
             })
 
-        # 2. Өнөөдөр бүртгэгдсэн дээжийн тоо
+        # 2. Sample registration count today
         today_samples = (
             db.session.query(func.count(Sample.id))
             .filter(Sample.received_date >= today_start)
@@ -395,7 +395,7 @@ def register_routes(bp):
             .scalar() or 0
         )
 
-        # 2a. Дээж бүртгэл - Нэгжээр (client_name)
+        # 2a. Samples by unit (client_name)
         samples_by_unit = (
             db.session.query(
                 Sample.client_name,
@@ -411,11 +411,11 @@ def register_routes(bp):
         unit_list = []
         for row in samples_by_unit:
             unit_list.append({
-                "name": row.client_name or "Тодорхойгүй",
+                "name": row.client_name or "Unknown",
                 "count": row.count,
             })
 
-        # 2b. Дээж бүртгэл - Төрлөөр (sample_type)
+        # 2b. Samples by type (sample_type)
         samples_by_type = (
             db.session.query(
                 Sample.sample_type,
@@ -431,11 +431,11 @@ def register_routes(bp):
         type_list = []
         for row in samples_by_type:
             type_list.append({
-                "name": row.sample_type or "Тодорхойгүй",
+                "name": row.sample_type or "Unknown",
                 "count": row.count,
             })
 
-        # 3. Шинжилгээний төрөл бүрийн тоо (өнөөдөр)
+        # 3. Analysis count by type (today)
         analysis_type_stats = (
             db.session.query(
                 AnalysisType.code,
@@ -464,7 +464,7 @@ def register_routes(bp):
                 "rejected": row.rejected or 0,
             })
 
-        # 4. Нийт тоо (өнөөдөр)
+        # 4. Total counts (today)
         total_today = (
             db.session.query(func.count(AnalysisResult.id))
             .filter(AnalysisResult.updated_at >= today_start)

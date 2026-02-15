@@ -1,11 +1,11 @@
 {# app/templates/equipment_out_of_service.html #}
 {% extends "base.html" %}
-{% block title %}Ашиглалтаас гарсан ТТ бүртгэл{% endblock %}
+{% block title %}Out of Service Equipment Register{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id устгасан #}
+  {# add_modal_id removed #}
   {% include "partials/equipment_hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
@@ -14,9 +14,9 @@
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addOosModal"><i class="bi bi-plus-lg"></i> Нэмэх</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Засах</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Устгах</button>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addOosModal"><i class="bi bi-plus-lg"></i> Add</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Edit</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Delete</button>
       {% endif %}
       <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
       <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
@@ -31,7 +31,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Out of Service нэмэх</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Out of Service</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='out_of_service') }}">
@@ -39,23 +39,23 @@
         <div class="modal-body p-4">
           <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
           <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">Д/д</label><input type="text" id="oos_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Нэр</label><input type="text" id="oos_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Үйлдвэрлэгчийн нэр</label><input type="text" id="oos_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Марк, дугаар</label><input type="text" id="oos_mark" name="mark" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Тоо хэмжээ</label><input type="text" id="oos_qty" name="quantity" class="form-control" value="1"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Ашиглалтад орсон огноо</label><input type="text" id="oos_commissioned_date" name="commissioned_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Гэмтэл</label><input type="text" id="oos_damage" name="damage" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Эвдэрсэн сэлбэг хэрэгсэл</label><input type="text" id="oos_broken_parts" name="broken_parts" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Засварлах боломжтой</label><select id="oos_repairable" name="repairable" class="form-select"><option value=""></option><option>Тийм</option><option>Үгүй</option></select></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">Сэлбэгт ашиглах</label><select id="oos_use_as_spare" name="use_as_spare" class="form-select"><option value=""></option><option>Тийм</option><option>Үгүй</option></select></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Ашиглалтаас хассан огноо</label><input type="text" id="oos_removed_date" name="removed_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">Акталсан огноо</label><input type="text" id="oos_retired_date" name="retired_date" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label fw-bold small">No.</label><input type="text" id="oos_no" name="no" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Name</label><input type="text" id="oos_name" name="name" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">Manufacturer</label><input type="text" id="oos_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Model No.</label><input type="text" id="oos_mark" name="mark" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Quantity</label><input type="text" id="oos_qty" name="quantity" class="form-control" value="1"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Commissioned Date</label><input type="text" id="oos_commissioned_date" name="commissioned_date" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Damage</label><input type="text" id="oos_damage" name="damage" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Broken Parts</label><input type="text" id="oos_broken_parts" name="broken_parts" class="form-control"></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Repairable</label><select id="oos_repairable" name="repairable" class="form-select"><option value=""></option><option>Yes</option><option>No</option></select></div>
+            <div class="col-md-3"><label class="form-label fw-bold small">Use as Spare</label><select id="oos_use_as_spare" name="use_as_spare" class="form-select"><option value=""></option><option>Yes</option><option>No</option></select></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Removed Date</label><input type="text" id="oos_removed_date" name="removed_date" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold small">Retired Date</label><input type="text" id="oos_retired_date" name="retired_date" class="form-control"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
         </div>
         </form>
       </div>
@@ -93,20 +93,20 @@ document.addEventListener('DOMContentLoaded', function() {
     selectable: true,
     columns: [
       {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"Д/д", field:"no", width:55, frozen:true},
-      {title:"Багаж, тоног төхөөрөмжийн нэр", field:"name", minWidth:180, frozen:true},
-      {title:"Үйлдвэрлэгчийн нэр", field:"manufacturer", minWidth:140},
-      {title:"Марк, дугаар", field:"mark", width:120},
-      {title:"Тоо хэмжээ", field:"quantity", width:90},
-      {title:"Ашиглалтад орсон огноо", field:"commissioned_date", width:140},
-      {title:"Гэмтэлийн мэдээлэл", columns:[
-        {title:"Гэмтэл", field:"damage", minWidth:160},
-        {title:"Эвдэрсэн сэлбэг хэрэгслийн бүртгэл", field:"broken_parts", minWidth:180},
-        {title:"Засварлах боломжтой эсэх", field:"repairable", width:140},
-        {title:"Сэлбэг хэрэгсэлд ашиглах эсэх", field:"use_as_spare", width:150},
+      {title:"No.", field:"no", width:55, frozen:true},
+      {title:"Equipment Name", field:"name", minWidth:180, frozen:true},
+      {title:"Manufacturer", field:"manufacturer", minWidth:140},
+      {title:"Model No.", field:"mark", width:120},
+      {title:"Quantity", field:"quantity", width:90},
+      {title:"Commissioned Date", field:"commissioned_date", width:140},
+      {title:"Damage Information", columns:[
+        {title:"Damage", field:"damage", minWidth:160},
+        {title:"Broken Parts Register", field:"broken_parts", minWidth:180},
+        {title:"Repairable", field:"repairable", width:140},
+        {title:"Use as Spare", field:"use_as_spare", width:150},
       ]},
-      {title:"Ашиглалтаас хассан огноо", field:"removed_date", width:150},
-      {title:"Акталсан огноо", field:"retired_date", width:130},
+      {title:"Removed Date", field:"removed_date", width:150},
+      {title:"Retired Date", field:"retired_date", width:130},
     ],
   });
 
@@ -135,13 +135,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (d.id) {
       document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
     }
-    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit';
     new bootstrap.Modal(document.getElementById('addOosModal')).show();
   };
 
   document.getElementById('addOosModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='out_of_service') }}";
-    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Out of Service нэмэх';
+    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Out of Service';
     ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'].forEach(function(f) {
       var el=document.getElementById('oos_'+f); if(el){ if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }
     });
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    if (!sel.length || !confirm('Delete ' + sel.length + ' row(s)?')) return;
     var form = document.getElementById('deleteForm');
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
     sel.forEach(function(row) {

@@ -91,7 +91,7 @@ const TOTAL_MOISTURE_REPEATABILITY_LIMIT = getRepeatabilityLimit('MT') ?? 0.5;
       $diffCell.text(diff.toFixed(2));
       $avgCell.text(avg.toFixed(2));
       if (diff > TOTAL_MOISTURE_REPEATABILITY_LIMIT) {
-        $diffCell.addClass('text-danger fw-bold').attr('title', `Тохирц хэтэрсэн! (Limit: ${TOTAL_MOISTURE_REPEATABILITY_LIMIT})`);
+        $diffCell.addClass('text-danger fw-bold').attr('title', `Tolerance exceeded! (Limit: ${TOTAL_MOISTURE_REPEATABILITY_LIMIT})`);
       } else {
         $diffCell.removeClass('text-danger fw-bold').addClass('text-success').attr('title', `OK (Limit: ${TOTAL_MOISTURE_REPEATABILITY_LIMIT})`);
       }

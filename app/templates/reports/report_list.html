@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Тайлангийн жагсаалт{% endblock %}
+{% block title %}Report List{% endblock %}
 
 {% block content %}
 <div class="container-fluid p-4">
@@ -9,12 +9,12 @@
     <div>
       <h4 class="mb-1">
         <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-        Тайлангийн жагсаалт
+        Report List
       </h4>
-      <p class="text-muted mb-0">Үүсгэсэн PDF тайлангууд</p>
+      <p class="text-muted mb-0">Generated PDF reports</p>
     </div>
     <a href="{{ url_for('pdf_reports.signature_list') }}" class="btn btn-outline-primary">
-      <i class="bi bi-pen me-1"></i> Гарын үсэг, тамга
+      <i class="bi bi-pen me-1"></i> Signatures & Stamps
     </a>
   </div>
 
@@ -23,22 +23,22 @@
     <div class="card-body py-2">
       <form method="GET" class="row g-2 align-items-center">
         <div class="col-auto">
-          <label class="form-label mb-0 small">Лаб:</label>
+          <label class="form-label mb-0 small">Lab:</label>
         </div>
         <div class="col-auto">
           <select name="lab" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="all">Бүгд</option>
+            <option value="all">All</option>
             {% for key, val in lab_types.items() %}
             <option value="{{ key }}" {{ 'selected' if key == lab }}>{{ val }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-auto">
-          <label class="form-label mb-0 small">Төлөв:</label>
+          <label class="form-label mb-0 small">Status:</label>
         </div>
         <div class="col-auto">
           <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-            <option value="all">Бүгд</option>
+            <option value="all">All</option>
             {% for key, val in report_statuses.items() %}
             <option value="{{ key }}" {{ 'selected' if key == status }}>{{ val }}</option>
             {% endfor %}
@@ -56,12 +56,12 @@
         <table class="table table-hover mb-0">
           <thead class="table-light">
             <tr>
-              <th>Дугаар</th>
-              <th>Гарчиг</th>
-              <th>Лаб</th>
-              <th>Огноо</th>
-              <th>Төлөв</th>
-              <th>Үүсгэсэн</th>
+              <th>No.</th>
+              <th>Title</th>
+              <th>Lab</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Created</th>
               <th></th>
             </tr>
           </thead>
@@ -85,13 +85,13 @@
               </td>
               <td>
                 {% if r.status == 'draft' %}
-                <span class="badge bg-secondary">Ноорог</span>
+                <span class="badge bg-secondary">Draft</span>
                 {% elif r.status == 'pending_approval' %}
-                <span class="badge bg-warning text-dark">Хүлээгдэж буй</span>
+                <span class="badge bg-warning text-dark">Pending</span>
                 {% elif r.status == 'approved' %}
-                <span class="badge bg-success">Баталгаажсан</span>
+                <span class="badge bg-success">Approved</span>
                 {% elif r.status == 'sent' %}
-                <span class="badge bg-primary">Илгээсэн</span>
+                <span class="badge bg-primary">Sent</span>
                 {% endif %}
               </td>
               <td class="small text-muted">
@@ -105,20 +105,20 @@
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                       <a class="dropdown-item" href="{{ url_for('pdf_reports.report_detail', id=r.id) }}">
-                        <i class="bi bi-eye me-2"></i>Харах
+                        <i class="bi bi-eye me-2"></i>View
                       </a>
                     </li>
                     {% if r.pdf_path %}
                     <li>
                       <a class="dropdown-item" href="{{ url_for('pdf_reports.download_report', id=r.id) }}">
-                        <i class="bi bi-download me-2"></i>Татах
+                        <i class="bi bi-download me-2"></i>Download
                       </a>
                     </li>
                     {% endif %}
                     {% if r.status == 'approved' %}
                     <li>
                       <a class="dropdown-item" href="{{ url_for('pdf_reports.send_email', id=r.id) }}">
-                        <i class="bi bi-envelope me-2"></i>Илгээх
+                        <i class="bi bi-envelope me-2"></i>Send
                       </a>
                     </li>
                     {% endif %}
@@ -133,8 +133,8 @@
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>Тайлан олдсонгүй</p>
-        <p class="small">Нэгтгэл хуудаснаас тайлан үүсгэнэ үү</p>
+        <p>No reports found</p>
+        <p class="small">Create a report from the summary page</p>
       </div>
       {% endif %}
     </div>

@@ -12,11 +12,11 @@
     <div class="row mb-3">
         <div class="col-md-8">
             <h2><i class="fas fa-award"></i> Proficiency Testing</h2>
-            <p class="text-muted">ISO 17025 - 7.7.2 заалт: Лабораторийн чадамжийн шалгалт</p>
+            <p class="text-muted">ISO 17025 - 7.7.2: Laboratory Proficiency Testing</p>
         </div>
         <div class="col-md-4 text-right">
             <a href="{{ url_for('quality.proficiency_new') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Шинэ PT бүртгэх
+                <i class="fas fa-plus"></i> New PT Record
             </a>
         </div>
     </div>
@@ -26,7 +26,7 @@
         <div class="col-md-3">
             <div class="card bg-info text-white">
                 <div class="card-body">
-                    <h5 class="card-title">Нийт</h5>
+                    <h5 class="card-title">Total</h5>
                     <h2>{{ stats.total }}</h2>
                 </div>
             </div>
@@ -34,7 +34,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h5 class="card-title">✓ Satisfactory</h5>
+                    <h5 class="card-title">Satisfactory</h5>
                     <h2>{{ stats.satisfactory }}</h2>
                 </div>
             </div>
@@ -42,7 +42,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <h5 class="card-title">? Questionable</h5>
+                    <h5 class="card-title">Questionable</h5>
                     <h2>{{ stats.questionable }}</h2>
                 </div>
             </div>
@@ -50,7 +50,7 @@
         <div class="col-md-3">
             <div class="card bg-danger text-white">
                 <div class="card-body">
-                    <h5 class="card-title">✗ Unsatisfactory</h5>
+                    <h5 class="card-title">Unsatisfactory</h5>
                     <h2>{{ stats.unsatisfactory }}</h2>
                 </div>
             </div>
@@ -97,11 +97,11 @@
                         </td>
                         <td>
                             {% if pt.performance == 'satisfactory' %}
-                                <span class="badge bg-success">✓ Сайн</span>
+                                <span class="badge bg-success">Satisfactory</span>
                             {% elif pt.performance == 'questionable' %}
-                                <span class="badge bg-warning text-dark">? Эргэлзээтэй</span>
+                                <span class="badge bg-warning text-dark">Questionable</span>
                             {% elif pt.performance == 'unsatisfactory' %}
-                                <span class="badge bg-danger">✗ Хангалтгүй</span>
+                                <span class="badge bg-danger">Unsatisfactory</span>
                             {% else %}
                                 <span class="badge bg-secondary">-</span>
                             {% endif %}
@@ -118,21 +118,21 @@
     <!-- Z-Score Guide -->
     <div class="card mt-3">
         <div class="card-header">
-            <h5>Z-Score Үнэлгээний шалгуур</h5>
+            <h5>Z-Score Evaluation Criteria</h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
-                    <span class="badge bg-success">✓ Satisfactory</span>
-                    <p><strong>|Z| ≤ 2.0</strong> - Хэвийн үр дүн</p>
+                    <span class="badge bg-success">Satisfactory</span>
+                    <p><strong>|Z| <= 2.0</strong> - Normal result</p>
                 </div>
                 <div class="col-md-4">
-                    <span class="badge bg-warning text-dark">? Questionable</span>
-                    <p><strong>2.0 < |Z| ≤ 3.0</strong> - Анхаарах шаардлагатай</p>
+                    <span class="badge bg-warning text-dark">Questionable</span>
+                    <p><strong>2.0 < |Z| <= 3.0</strong> - Requires attention</p>
                 </div>
                 <div class="col-md-4">
-                    <span class="badge bg-danger">✗ Unsatisfactory</span>
-                    <p><strong>|Z| > 3.0</strong> - Засвар арга хэмжээ шаардлагатай</p>
+                    <span class="badge bg-danger">Unsatisfactory</span>
+                    <p><strong>|Z| > 3.0</strong> - Corrective action required</p>
                 </div>
             </div>
         </div>
@@ -149,7 +149,7 @@ $(document).ready(function() {
             { width: '200px', targets: 0 }
         ],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/mn.json'
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json'
         }
     });
 });

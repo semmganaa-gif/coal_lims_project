@@ -113,12 +113,12 @@
     <div class="stat-card">
       <div class="stat-icon" style="color:#20c997"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#0d9488">{{ total_samples }}</div>
-      <div class="stat-label">Нийт дээж</div>
+      <div class="stat-label">Total дээж</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#14b8a6"><i class="bi bi-plus-circle-fill"></i></div>
       <div class="stat-value" style="color:#047857">{{ new_samples }}</div>
-      <div class="stat-label">Шинэ дээж</div>
+      <div class="stat-label">New дээж</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
@@ -141,7 +141,7 @@
     <a href="{{ url_for('microbiology.register_sample') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
       <div class="nav-card-content">
-        <h3>Дээж бүртгэл</h3>
+        <h3>Sample бүртгэл</h3>
         <p>Усны болон микробиологийн дээж бүртгэх, жагсаалт харах</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
@@ -149,7 +149,7 @@
     <a href="{{ url_for('microbiology.analysis_hub') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Шинжилгээ</h3>
+        <h3>Analysis</h3>
         <p>Ус, Агаар, Арчдас — микробиологийн шинжилгээний ажлын хуудас</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
@@ -165,17 +165,17 @@
     <a href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}" class="nav-card nc-equipment">
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Тоног төхөөрөмж</h3>
+        <h3>Equipment</h3>
         <p>Микробиологийн лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
   </div>
 
-  <!-- Тайлан -->
+  <!-- Report -->
   <div class="section-title">
     <i class="bi bi-graph-up" style="color:#0d9488"></i>
-    Тайлан
+    Report
     <span class="section-badge" style="background:linear-gradient(135deg,#20c997,#0d9488)">Reports</span>
   </div>
   <div class="nav-cards">
@@ -191,7 +191,7 @@
       <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
       <div class="nav-card-content">
         <h3>Consumption</h3>
-        <p>Захиалагч, категори, сараар нэгтгэсэн тайлан</p>
+        <p>Client, категори, сараар нэгтгэсэн тайлан</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

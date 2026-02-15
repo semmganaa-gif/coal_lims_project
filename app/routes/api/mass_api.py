@@ -46,7 +46,7 @@ def register_routes(bp):
 
         if not sample_ids:
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"message": "Дээж сонгогдоогүй"}), 400
+                return jsonify({"message": "No samples selected"}), 400
             return redirect(url_for("api.sample_summary"))
 
         try:
@@ -67,7 +67,7 @@ def register_routes(bp):
         db.session.commit()
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"message": f"{count} дээжийн статус шинэчлэгдлээ."}), 200
+            return jsonify({"message": f"{count} sample status updated."}), 200
 
         return redirect(url_for("api.sample_summary"))
 
@@ -143,7 +143,7 @@ def register_routes(bp):
         mark_ready = bool(data.get("mark_ready", True))
 
         if not items:
-            return api_error("Хадгалах мөр олдсонгүй.")
+            return api_error("No rows to save.")
 
         user_id = getattr(current_user, "id", None)
         now_ts = now_local()
@@ -151,7 +151,7 @@ def register_routes(bp):
         # ✅ N+1 query асуудал засварлах: Бүх sample-г нэг query-гээр авах
         sample_ids = [it.get("sample_id") for it in items if it.get("sample_id")]
         if not sample_ids:
-            return api_error("Хүчинтэй ID олдсонгүй.")
+            return api_error("No valid IDs found.")
 
         # Bulk load: Нэг query-гээр бүх sample-г татна
         samples_map = {s.id: s for s in Sample.query.filter(Sample.id.in_(sample_ids)).all()}
@@ -180,7 +180,7 @@ def register_routes(bp):
             updated.append(sid)
 
         if not updated:
-            return api_error("Мөрүүд хүчинтэй биш байна.")
+            return api_error("Rows are not valid.")
 
         try:
             db.session.commit()
@@ -188,11 +188,11 @@ def register_routes(bp):
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_save: {e}")
-            return api_error("Өгөгдлийн конфликт гарлаа", 409)
+            return api_error("Data conflict occurred", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_save: {e}")
-            return api_error("Өгөгдөл хадгалахад алдаа гарлаа", 500)
+            return api_error("Error saving data", 500)
 
     @bp.route("/mass/update_weight", methods=["POST"])
     @login_required
@@ -206,11 +206,11 @@ def register_routes(bp):
         sid = data.get("sample_id")
         w = data.get("weight")
         if not sid or not isinstance(w, (int, float)):
-            return api_error("Параметр дутуу.")
+            return api_error("Missing parameter.")
 
         s = db.session.get(Sample, sid)
         if not s:
-            return api_error("Дээж олдсонгүй.", 404)
+            return api_error("Sample not found.", 404)
 
         # гр → кг хөрвүүлэлт
         weight_g = float(w)
@@ -220,15 +220,15 @@ def register_routes(bp):
 
         try:
             db.session.commit()
-            return api_success({"sample_id": s.id}, "Жин шинэчлэгдлээ.")
+            return api_success({"sample_id": s.id}, "Weight updated.")
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_update_weight: {e}")
-            return api_error("Өгөгдлийн конфликт гарлаа", 409)
+            return api_error("Data conflict occurred", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_update_weight: {e}")
-            return api_error("Өгөгдөл хадгалахад алдаа гарлаа", 500)
+            return api_error("Error saving data", 500)
 
     @bp.route("/mass/unready", methods=["POST"])
     @login_required
@@ -241,7 +241,7 @@ def register_routes(bp):
         data = request.get_json(silent=True) or {}
         ids = data.get("sample_ids") or []
         if not ids:
-            return api_error("ID ирсэнгүй.")
+            return api_error("No ID provided.")
 
         rows = Sample.query.filter(Sample.id.in_(ids)).all()
         for s in rows:
@@ -256,11 +256,11 @@ def register_routes(bp):
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_unready: {e}")
-            return api_error("Өгөгдлийн конфликт гарлаа", 409)
+            return api_error("Data conflict occurred", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_unready: {e}")
-            return api_error("Өгөгдөл хадгалахад алдаа гарлаа", 500)
+            return api_error("Error saving data", 500)
 
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
@@ -272,27 +272,27 @@ def register_routes(bp):
         Зөвхөн admin/ahlah.
         """
         if not _can_delete_sample():
-            return api_error("Энэ үйлдэлд эрх хүрэхгүй.", 403)
+            return api_error("Access denied for this action.", 403)
 
         data = request.get_json(silent=True) or {}
         sid = data.get("sample_id")
         if not sid:
-            return api_error("ID дутуу.")
+            return api_error("ID missing.")
 
         s = db.session.get(Sample, sid)
         if not s:
-            return api_error("Дээж олдсонгүй.", 404)
+            return api_error("Sample not found.", 404)
 
         db.session.delete(s)
 
         try:
             db.session.commit()
-            return api_success({"deleted_id": sid}, "Дээж устгагдлаа.")
+            return api_success({"deleted_id": sid}, "Sample deleted.")
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_delete: {e}")
-            return api_error("Өгөгдөл устгах боломжгүй (холбоотой бичлэгүүд байна)", 409)
+            return api_error("Cannot delete (related records exist)", 409)
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_delete: {e}")
-            return api_error("Өгөгдөл устгахад алдаа гарлаа", 500)
+            return api_error("Error deleting data", 500)

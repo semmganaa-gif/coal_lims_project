@@ -2,30 +2,30 @@
  * 1) DoD,D?D,-?.O_??D???D3?, renderer (raw_data) - D`OrD?D-D? D?D?D'D~D>D`D?D?
  * =============================== */
 const DEFAULT_PARALLEL_SCHEMA = {
-  title: "Параллел хэмжилт",
+  title: "Parallel Measurements",
   columns: [
     { key: "label", label: "#" },
     { key: "m1", label: "m1", format: "float", precision: 4 },
     { key: "m2", label: "m2", format: "float", precision: 4 },
     { key: "m3", label: "m3", format: "float", precision: 4 },
-    { key: "result", label: "Үр дүн", format: "float", precision: 3 }
+    { key: "result", label: "Result", format: "float", precision: 3 }
   ]
 };
 
 const SUMMARY_FIELDS = [
-  { key: "avg", label: "Дундаж", format: "float", precision: 3 },
-  { key: "diff", label: "Тохирц (T)", format: "float", precision: 3 },
-  { key: "result", label: "Үр дүн", format: "float", precision: 3 },
-  { key: "final_result", label: "Эцсийн үр дүн", format: "float", precision: 3 },
-  { key: "A", label: "A (тавиур+дээж)", format: "float", precision: 3 },
-  { key: "B", label: "B (тавиур)", format: "float", precision: 3 },
-  { key: "C", label: "C (үлдэгдэл)", format: "float", precision: 3 },
-  { key: "weight", label: "Жин", format: "float", precision: 3 },
-  { key: "limit_used", label: "Хязгаар", format: "float", precision: 3 },
-  { key: "limit_mode", label: "Хязгаарын горим" },
-  { key: "t_exceeded", label: "T хэтэрсэн", format: "boolean" },
-  { key: "retest_mode", label: "Дахин шинжлэх горим" },
-  { key: "is_low_avg", label: "Бага үр дүн?", format: "boolean" }
+  { key: "avg", label: "Average", format: "float", precision: 3 },
+  { key: "diff", label: "Tolerance (T)", format: "float", precision: 3 },
+  { key: "result", label: "Result", format: "float", precision: 3 },
+  { key: "final_result", label: "Final Result", format: "float", precision: 3 },
+  { key: "A", label: "A (tray+sample)", format: "float", precision: 3 },
+  { key: "B", label: "B (tray)", format: "float", precision: 3 },
+  { key: "C", label: "C (residue)", format: "float", precision: 3 },
+  { key: "weight", label: "Weight", format: "float", precision: 3 },
+  { key: "limit_used", label: "Limit", format: "float", precision: 3 },
+  { key: "limit_mode", label: "Limit Mode" },
+  { key: "t_exceeded", label: "T Exceeded", format: "boolean" },
+  { key: "retest_mode", label: "Retest Mode" },
+  { key: "is_low_avg", label: "Low Result?", format: "boolean" }
 ];
 
 function escapeHtml(value) {
@@ -179,8 +179,8 @@ function buildSummarySection(raw, rowCtx) {
   }
 
   // Дундаж ба тохирц (хамгийн чухал)
-  append("Дундаж", raw.avg, { format: "float", precision: 3 }, true);
-  append("Тохирц (T)", raw.diff, { format: "float", precision: 3 });
+  append("Average", raw.avg, { format: "float", precision: 3 }, true);
+  append("Tolerance (T)", raw.diff, { format: "float", precision: 3 });
 
   // Бусад SUMMARY_FIELDS (avg, diff-ээс бусад)
   SUMMARY_FIELDS.forEach((cfg) => {
@@ -191,8 +191,8 @@ function buildSummarySection(raw, rowCtx) {
 
   // Row context-оос авах fallback утгууд
   const fallbackFields = [
-    { key: "final_value", label: "Эцсийн үр дүн", format: "float", precision: 3 },
-    { key: "t_value", label: "Тохирц (T)", format: "float", precision: 3 },
+    { key: "final_value", label: "Final Result", format: "float", precision: 3 },
+    { key: "t_value", label: "Tolerance (T)", format: "float", precision: 3 },
   ];
 
   fallbackFields.forEach((cfg) => {
@@ -287,7 +287,7 @@ function ReviewDataRenderer(params) {
   if (!parallels.length && !hasSummary && !hasRaw) {
     const emptySpan = document.createElement('span');
     emptySpan.className = 'text-muted small';
-    emptySpan.textContent = 'Raw data байхгүй';
+    emptySpan.textContent = 'No raw data';
     container.appendChild(emptySpan);
   }
 
@@ -326,8 +326,8 @@ function updateDashboardMetrics(rows) {
   if (refreshEl) {
     const now = new Date();
     refreshEl.textContent =
-      "Сүүлд шинэчилсэн: " +
-      now.toLocaleString("mn-MN", { hour12: false });
+      "Last updated: " +
+      now.toLocaleString("en-US", { hour12: false });
   }
 }
 /* ===============================
@@ -340,7 +340,7 @@ function ActionsRenderer(params) {
 
   const approveBtn = `
     <button type="button" class="btn btn-success btn-sm w-100 mb-1 btn-approve" data-id="${resultId}">
-      <i class="bi bi-check-circle"></i> Зөвшөөрөх
+      <i class="bi bi-check-circle"></i> Approve
     </button>
   `;
 
@@ -348,7 +348,7 @@ function ActionsRenderer(params) {
     <button type="button" class="btn btn-outline-danger btn-sm w-100 btn-open-reject-modal"
       data-bs-toggle="modal" data-bs-target="#rejectModal"
       data-result-id="${resultId}" data-sample-code="${sampleCode}" data-analysis-name="${analysisName}">
-      <i class="bi bi-x-circle"></i> Буцаах
+      <i class="bi bi-x-circle"></i> Reject
     </button>
   `;
   return `<div class="d-flex flex-column gap-1 p-1">${approveBtn}${rejectBtn}</div>`;
@@ -361,7 +361,7 @@ const gridOptions = {
   theme: "legacy",  // AG Grid v34+ - use legacy CSS theme
   columnDefs: [
     {
-      headerName: "Дээж / Шинжилгээ",
+      headerName: "Sample / Analysis",
       cellRenderer: params => {
         const p = params.data;
         const status = p.status;
@@ -379,16 +379,16 @@ const gridOptions = {
 
         if (status === 'rejected' && isGiRetest) {
            badge = `<div class="mt-1"><span class="badge bg-warning text-dark text-wrap text-start" style="line-height:1.3; font-weight:normal;">
-                      <i class="bi bi-arrow-repeat"></i> 3:3 дахин хийх
+                      <i class="bi bi-arrow-repeat"></i> 3:3 Retest
                     </span></div>`;
         } else if (status === 'rejected') {
            // window.ERROR_LABELS нь дээд талд тодорхойлогдсон map
-           const reasonText = window.ERROR_LABELS[errorReason] || errorReason || 'Буцаасан';
+           const reasonText = window.ERROR_LABELS[errorReason] || errorReason || 'Rejected';
            badge = `<div class="mt-1"><span class="badge bg-danger text-wrap text-start" style="line-height:1.3; font-weight:normal;">
                       <i class="bi bi-exclamation-triangle-fill"></i> ${reasonText}
                     </span></div>`;
         } else if (status === 'pending_review') {
-           badge = '<span class="badge bg-warning text-dark ms-1">Хүлээгдэж буй</span>';
+           badge = '<span class="badge bg-warning text-dark ms-1">Pending</span>';
         }
 
         return `<div class="d-flex flex-column py-1">
@@ -405,7 +405,7 @@ const gridOptions = {
       cellStyle: { 'white-space': 'normal' }
     },
     {
-      headerName: "Тооцооны өгөгдөл (Raw Data)",
+      headerName: "Calculation Data (Raw Data)",
       cellRenderer: ReviewDataRenderer,
       autoHeight: true,
       wrapText: true,
@@ -421,14 +421,14 @@ const gridOptions = {
       valueFormatter: p => (p.value != null) ? Number(p.value).toFixed(3) : '-'
     },
     {
-      headerName: "Эцсийн дүн",
+      headerName: "Final Result",
       field: "final_value",
       width: 120,
       cellStyle: {textAlign: 'right', fontWeight: 'bold', color: '#198754', verticalAlign: 'middle', fontSize:'1.1em'},
       valueFormatter: p => (p.value != null) ? Number(p.value).toFixed(3) : '-'
     },
     {
-      headerName: "Хийсэн / Огноо",
+      headerName: "Analyst / Date",
       cellRenderer: p => `
         <div class="small lh-sm py-1">
           <div class="fw-bold"><i class="bi bi-person-circle"></i> ${p.data.user_name}</div>
@@ -438,7 +438,7 @@ const gridOptions = {
       cellStyle: {verticalAlign: 'middle'}
     },
     {
-      headerName: "Үйлдэл",
+      headerName: "Actions",
       cellRenderer: ActionsRenderer,
       width: 140,
       pinned: 'right',
@@ -487,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(error => {
       console.error('Error:', error);
-      gridDiv.innerHTML = '<div class="alert alert-danger m-3">Өгөгдөл ачаалахад алдаа гарлаа.</div>';
+      gridDiv.innerHTML = '<div class="alert alert-danger m-3">Error loading data.</div>';
     });
 
   // Approve Button Listener
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.closest('.btn-approve')) {
         const btn = e.target.closest('.btn-approve');
         const id = btn.dataset.id;
-        if(!confirm("Энэ үр дүнг баталгаажуулах уу?")) return;
+        if(!confirm("Are you sure you want to approve this result?")) return;
 
         const form = document.createElement('form');
         form.method = 'POST';
@@ -529,12 +529,12 @@ $('#reject-form').on('submit', function (e) {
   const comment = $('#rejection_category option:selected').text();
 
   if (!id || !cat) {
-    alert('Буцаах ангилал сонгоно уу.');
+    alert('Please select a rejection category.');
     return;
   }
 
   const $btn = $(this).find('button[type="submit"]');
-  $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Уншиж байна...');
+  $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
 
   $.ajax({
     url: '/api/update_result_status/' + id + '/rejected',
@@ -552,8 +552,8 @@ $('#reject-form').on('submit', function (e) {
       location.reload();
     },
     error: function (xhr) {
-      alert(xhr.responseJSON?.message || 'Алдаа гарлаа');
-      $btn.prop('disabled', false).text('Буцаах');
+      alert(xhr.responseJSON?.message || 'An error occurred');
+      $btn.prop('disabled', false).text('Reject');
     }
   });
 });
@@ -630,7 +630,7 @@ function loadAhlahStats() {
       const refreshEl = document.getElementById('metrics-refresh');
       if (refreshEl) {
         const now = new Date();
-        refreshEl.textContent = 'Шинэчлэгдсэн: ' + now.toLocaleString('mn-MN', { hour12: false });
+        refreshEl.textContent = 'Updated: ' + now.toLocaleString('en-US', { hour12: false });
       }
     })
     .catch(function(err) {
@@ -645,14 +645,14 @@ function renderChemistStats(chemists) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = chemists.length + ' химич';
+    badge.textContent = chemists.length + ' chemists';
   }
 
   if (chemists.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        Өнөөдөр шинжилгээ хийгээгүй
+        No analyses performed today
       </div>
     `;
     return;
@@ -660,7 +660,7 @@ function renderChemistStats(chemists) {
 
   let html = '';
   chemists.forEach(function(c, idx) {
-    // Нэрний эхний 2 үсгийг avatar болгох
+    // Use first 2 characters of name as avatar
     const initials = (c.username || 'XX').substring(0, 2).toUpperCase();
 
     html += `
@@ -670,10 +670,10 @@ function renderChemistStats(chemists) {
           <span>${escapeHtml(c.username)}</span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Нийт">${c.total}</span>
-          <span class="stats-count approved" title="Баталсан">${c.approved}</span>
-          <span class="stats-count pending" title="Хүлээгдэж буй">${c.pending}</span>
-          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${c.rejected}</span>` : ''}
+          <span class="stats-count total" title="Total">${c.total}</span>
+          <span class="stats-count approved" title="Approved">${c.approved}</span>
+          <span class="stats-count pending" title="Pending">${c.pending}</span>
+          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${c.rejected}</span>` : ''}
         </div>
       </div>
     `;
@@ -689,14 +689,14 @@ function renderAnalysisStats(analysisTypes) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = analysisTypes.length + ' төрөл';
+    badge.textContent = analysisTypes.length + ' types';
   }
 
   if (analysisTypes.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        Өнөөдөр шинжилгээ алга
+        No analyses today
       </div>
     `;
     return;
@@ -711,10 +711,10 @@ function renderAnalysisStats(analysisTypes) {
           <span>${escapeHtml(a.name)} <small class="text-muted">(${escapeHtml(a.code)})</small></span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Нийт">${a.total}</span>
-          <span class="stats-count approved" title="Баталсан">${a.approved}</span>
-          <span class="stats-count pending" title="Хүлээгдэж буй">${a.pending}</span>
-          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Буцаагдсан">${a.rejected}</span>` : ''}
+          <span class="stats-count total" title="Total">${a.total}</span>
+          <span class="stats-count approved" title="Approved">${a.approved}</span>
+          <span class="stats-count pending" title="Pending">${a.pending}</span>
+          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${a.rejected}</span>` : ''}
         </div>
       </div>
     `;

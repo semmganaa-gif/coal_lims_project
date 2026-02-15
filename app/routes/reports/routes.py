@@ -425,7 +425,7 @@ def consumption_cell():
         if not (1 <= month <= 12):
             raise ValueError
     except Exception:
-        return jsonify({"success": False, "error": "параметр буруу"}), 400
+        return jsonify({"success": False, "error": "Invalid parameter"}), 400
 
     date_col = _pick_date_col()
 
@@ -891,7 +891,7 @@ def api_save_monthly_plan():
     JSON body: { year, month, plans: { "CHPP|2 hourly|1": 10, ... } }
     """
     if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
+        return jsonify({"error": "Senior access only"}), 403
 
     data = request.get_json()
     year = data.get("year")
@@ -942,7 +942,7 @@ def api_save_staff_settings():
     JSON body: { year, month, staff_preparers, staff_chemists }
     """
     if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
+        return jsonify({"error": "Senior access only"}), 403
 
     data = request.get_json()
     year = data.get("year")

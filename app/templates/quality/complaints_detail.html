@@ -1,172 +1,443 @@
 {% extends "base.html" %}
 
+{% set dept_names = {
+    'CHPP': 'CHPP - Washing Plant', 'UHG-Geo': 'UHG Geology', 'BN-Geo': 'BN Geology',
+    'QC': 'QC - Quality Control', 'Proc': 'Process', 'WTL': 'WTL - BS Lab', 'LAB': 'Laboratory',
+    'uutsb': 'UUTSB', 'negdsen_office': 'Central Office', 'tsagaan_khad': 'Tsagaan Khad',
+    'tsetsii': 'Tsetsii District', 'naymant': 'Naymant Deep Well', 'naimdai': 'Naimdai Valley',
+    'malchdyn_hudag': "Herders' Well", 'hyanalт': 'Monitoring', 'tsf': 'TSF', 'uarp': 'UARP',
+    'shine_camp': 'New Camp', 'gallerey': 'Gallery', 'sbutsb': 'SBUTSB', 'busad': 'Other'
+} %}
 {% block content %}
 <div class="container mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2>{{ complaint.complaint_no }}</h2>
-            <p class="text-muted">{{ complaint.complaint_date.strftime('%Y-%m-%d') }}</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-chat-left-dots me-2"></i>Complaint Register</h2>
+            <p class="text-muted mb-0">LAB.02.00.01 | {{ complaint.complaint_no }}</p>
         </div>
-        <div class="col-md-4 text-right">
-            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary">
-                <i class="fas fa-list"></i> Буцах
+        <div>
+            {% if complaint.status == 'draft' %}
+                <span class="badge bg-secondary fs-6">Draft</span>
+            {% elif complaint.status == 'received' %}
+                <span class="badge bg-warning text-dark fs-6">Received</span>
+            {% elif complaint.status == 'resolved' %}
+                <span class="badge bg-primary fs-6">Resolved</span>
+            {% else %}
+                <span class="badge bg-success fs-6">Closed</span>
+            {% endif %}
+            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left me-1"></i>Back
             </a>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <!-- Client Info -->
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
-                    <h5>Үйлчлүүлэгчийн мэдээлэл</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <th width="200">Компани:</th>
-                            <td><strong>{{ complaint.client_name }}</strong></td>
-                        </tr>
-                        <tr>
-                            <th>Холбоо барих хүн:</th>
-                            <td>{{ complaint.contact_person or '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Имэйл:</th>
-                            <td>{{ complaint.contact_email or '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Утас:</th>
-                            <td>{{ complaint.contact_phone or '-' }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+    <div class="row mb-3">
+        <div class="col-md-3"><strong>Date:</strong> {{ complaint.complaint_date.strftime('%Y-%m-%d') if complaint.complaint_date else '-' }}</div>
+        <div class="col-md-3"><strong>No.:</strong> {{ complaint.complaint_no }}</div>
+    </div>
 
-            <!-- Complaint Details -->
-            <div class="card mb-3">
-                <div class="card-header bg-warning">
-                    <h5>Гомдлын мэдээлэл</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Төрөл:</strong> <span class="badge badge-info">{{ complaint.complaint_type }}</span></p>
-                    {% if complaint.related_sample %}
-                    <p><strong>Холбогдох дээж:</strong>
-                        <a href="{{ url_for('main.edit_sample', sample_id=complaint.related_sample.id) }}">
-                            {{ complaint.related_sample.sample_code }}
-                        </a>
-                    </p>
-                    {% endif %}
-                    <p><strong>Тайлбар:</strong></p>
-                    <p class="border p-3 bg-light">{{ complaint.description }}</p>
-                </div>
-            </div>
-
-            <!-- Investigation & Resolution -->
-            {% if complaint.status in ['resolved', 'closed'] %}
-            <div class="card mb-3">
-                <div class="card-header bg-success text-white">
-                    <h5>Шалгалт ба шийдвэрлэлт</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Шалгасан:</strong> {{ complaint.investigated_by.username if complaint.investigated_by else '-' }}</p>
-                    <p><strong>Шалгалтын дүн:</strong></p>
-                    <p class="border p-3 bg-light">{{ complaint.investigation_findings or '-' }}</p>
-
-                    <p><strong>Шийдвэрлэлт:</strong></p>
-                    <p class="border p-3 bg-light">{{ complaint.resolution or '-' }}</p>
-
-                    <p><strong>Огноо:</strong> {{ complaint.resolution_date.strftime('%Y-%m-%d') if complaint.resolution_date else '-' }}</p>
-                </div>
-            </div>
-            {% else %}
-            <div class="card mb-3">
-                <div class="card-header bg-info text-white">
-                    <h5>Шалгалт хийх</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('quality.complaints_resolve', id=complaint.id) }}">
-                        <div class="form-group">
-                            <label>Шалгалтын дүгнэлт:</label>
-                            <textarea name="investigation_findings" class="form-control" rows="4" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Шийдвэрлэлт:</label>
-                            <textarea name="resolution" class="form-control" rows="4" required></textarea>
-                        </div>
-
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-check"></i> Шийдвэрлэх
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endif %}
+    {# ═══ Related Sample + Analysis Results ═══ #}
+    {% if complaint.related_sample %}
+    <div class="card mb-3">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-box-seam me-2"></i>Related Sample:
+                <strong>{{ complaint.related_sample.sample_code }}</strong>
+                <small class="ms-2">{{ complaint.related_sample.client_name or '' }}</small>
+            </h5>
         </div>
+        <div class="card-body">
+            {% if analysis_results %}
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Analysis</th>
+                        <th>Result</th>
+                        <th>Status</th>
+                        <th>Analyst</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ar in analysis_results %}
+                    <tr class="{% if ar.status == 'rejected' %}table-danger{% elif ar.status == 'approved' %}table-success{% endif %}">
+                        <td>
+                            <strong>{{ ar.analysis_code }}</strong>
+                            {% if ar.analysis_code in reanalysis_codes %}
+                                <span class="badge bg-danger ms-1" title="Re-analysis"><i class="bi bi-arrow-repeat"></i></span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ar.final_result if ar.final_result is not none else '-' }}</td>
+                        <td>
+                            {% if ar.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif ar.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                            {% elif ar.status == 'pending_review' %}
+                                <span class="badge bg-warning text-dark">Under Review</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ ar.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ar.user.username if ar.user else '-' }}</td>
+                        <td>{{ ar.created_at.strftime('%Y-%m-%d') if ar.created_at else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-        <div class="col-md-4">
-            <!-- Status Card -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Төлөв</h5>
-                </div>
-                <div class="card-body text-center">
-                    <h3>
-                        {% if complaint.status == 'received' %}
-                            <span class="badge badge-secondary badge-lg">Хүлээгдэж байна</span>
-                        {% elif complaint.status == 'investigating' %}
-                            <span class="badge badge-warning badge-lg">Шалгаж байна</span>
-                        {% elif complaint.status == 'resolved' %}
-                            <span class="badge badge-primary badge-lg">Шийдэгдсэн</span>
-                        {% else %}
-                            <span class="badge badge-success badge-lg">Хаагдсан</span>
-                        {% endif %}
-                    </h3>
-                </div>
-            </div>
-
-            <!-- CAPA Link -->
-            {% if complaint.capa_created %}
-            <div class="card mb-3">
-                <div class="card-header bg-danger text-white">
-                    <h5>CAPA</h5>
-                </div>
-                <div class="card-body">
-                    <p>Энэ гомдлоор CAPA үүссэн:</p>
-                    {% if complaint.related_capa %}
-                    <a href="{{ url_for('quality.capa_detail', id=complaint.related_capa.id) }}"
-                       class="btn btn-danger btn-block">
-                        {{ complaint.related_capa.ca_number }}
-                    </a>
-                    {% endif %}
-                </div>
+            {# Re-analysis status #}
+            {% if reanalysis_codes %}
+            <div class="mt-3">
+                {% if reanalysis_complete %}
+                    <div class="alert alert-success mb-0 py-2">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Re-analysis completed
+                        <span class="ms-2">
+                            {% for code in reanalysis_codes %}
+                                <span class="badge bg-success">{{ code }}</span>
+                            {% endfor %}
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mb-0 py-2">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Re-analysis not completed
+                        <span class="ms-2">
+                            {% for item in comparison_data %}
+                                {% if item.new_status == 'approved' %}
+                                    <span class="badge bg-success">{{ item.analysis_code }}</span>
+                                {% elif item.new_status == 'pending_review' %}
+                                    <span class="badge bg-warning text-dark">{{ item.analysis_code }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ item.analysis_code }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                {% endif %}
             </div>
             {% endif %}
 
-            <!-- Customer Feedback -->
-            {% if complaint.customer_notified %}
-            <div class="card">
-                <div class="card-header">
-                    <h5>Үйлчлүүлэгч</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Мэдэгдсэн:</strong>
-                        <span class="badge badge-success">✓</span>
-                    </p>
-                    {% if complaint.customer_satisfied is not none %}
-                    <p><strong>Сэтгэл ханамжтай:</strong>
-                        {% if complaint.customer_satisfied %}
-                            <span class="badge badge-success">✓ Тийм</span>
-                        {% else %}
-                            <span class="badge badge-danger">✗ Үгүй</span>
-                        {% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-            </div>
+            {% else %}
+            <p class="text-muted mb-0">No analysis results found</p>
             {% endif %}
         </div>
     </div>
+    {% endif %}
+
+    {# ═══ Section 1: Complainant ═══ #}
+    <div class="card mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Complainant Section</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Full name, position</th>
+                    <td>{{ complaint.complainant_name or complaint.client_name or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Department / Unit</th>
+                    <td>{{ dept_names.get(complaint.complainant_department, complaint.complainant_department) or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Complaint description, remarks, and documented evidence</th>
+                    <td style="white-space: pre-wrap;">{{ complaint.complaint_content or complaint.description or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature</th>
+                    <td>
+                        <i class="bi bi-person-check me-1"></i>
+                        {{ complaint.complainant_user.username if complaint.complainant_user else '-' }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    {# ═══ Section 2: Receiver ═══ #}
+    {% if complaint.status in ['received', 'resolved', 'closed'] %}
+    <div class="card mb-3">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i>Complaint Receiver Section</h5>
+        </div>
+        <div class="card-body">
+            {% if complaint.receiver_name %}
+            {# Filled - display #}
+            <table class="table table-bordered mb-0">
+                <tr>
+                    <th style="width:30%" class="table-light">Full name, position</th>
+                    <td>{{ complaint.receiver_name }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Actions taken in response to the complaint</th>
+                    <td style="white-space: pre-wrap;">{{ complaint.action_taken or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Documented evidence, additional remarks</th>
+                    <td style="white-space: pre-wrap;">{{ complaint.receiver_documentation or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Is the complaint justified?</th>
+                    <td>
+                        {% if complaint.is_justified is not none %}
+                            {% if complaint.is_justified %}
+                                <span class="fw-bold text-decoration-underline text-success">Yes</span> / No
+                            {% else %}
+                                Yes / <span class="fw-bold text-decoration-underline text-danger">No</span>
+                            {% endif %}
+                        {% else %}-{% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th class="table-light">Response provided to the complaint</th>
+                    <td style="white-space: pre-wrap;">{{ complaint.response_detail or '-' }}</td>
+                </tr>
+                <tr>
+                    <th class="table-light">Signature</th>
+                    <td>
+                        <i class="bi bi-person-check me-1"></i>
+                        {{ complaint.receiver_user.username if complaint.receiver_user else '-' }}
+                    </td>
+                </tr>
+            </table>
+
+            {% else %}
+            {# Not filled - show form #}
+            <form method="POST" action="{{ url_for('quality.complaints_receive', id=complaint.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="mb-3">
+                    <label class="form-label">Full name, position <span class="text-danger">*</span></label>
+                    <input type="text" name="receiver_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Actions taken in response to the complaint</label>
+                    <textarea name="action_taken" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Documented evidence, additional remarks</label>
+                    <textarea name="receiver_documentation" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Is the complaint justified? <span class="text-danger">*</span></label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" name="is_justified" value="1" class="form-check-input" id="justified_yes" required>
+                            <label class="form-check-label" for="justified_yes">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" name="is_justified" value="0" class="form-check-input" id="justified_no">
+                            <label class="form-check-label" for="justified_no">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Response provided to the complaint</label>
+                    <textarea name="response_detail" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="border-top pt-3 mb-3">
+                    <p class="mb-1"><strong>Signature:</strong></p>
+                    <p class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
+                </div>
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-check-lg me-1"></i>Receive
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ═══ Section 3: Control ═══ #}
+    {# Section 3 condition: receiver_name filled + (no reanalysis_codes OR reanalysis completed) #}
+    {% set can_show_section3 = complaint.receiver_name and (not reanalysis_codes or reanalysis_complete) %}
+    {% if complaint.receiver_name and reanalysis_codes and not reanalysis_complete %}
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Control Section</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning mb-0">
+                <i class="bi bi-hourglass-split me-2"></i>
+                <strong>Re-analysis not yet completed.</strong>
+                The control section will be activated once all re-analyses are finished.
+                <div class="mt-2">
+                    {% for item in comparison_data %}
+                        {% if item.new_status == 'approved' %}
+                            <span class="badge bg-success">{{ item.analysis_code }} - completed</span>
+                        {% elif item.new_status == 'pending_review' %}
+                            <span class="badge bg-warning text-dark">{{ item.analysis_code }} - under review</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ item.analysis_code }} - pending</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if can_show_section3 %}
+    <div class="card mb-3">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Control Section</h5>
+        </div>
+        <div class="card-body">
+            {# ═══ Comparison Table ═══ #}
+            {% if comparison_data %}
+            <h6 class="fw-bold mb-2"><i class="bi bi-arrow-left-right me-1"></i>Original vs New Results</h6>
+            <table class="table table-sm table-bordered mb-4">
+                <thead class="table-light">
+                    <tr>
+                        <th>Analysis</th>
+                        <th class="text-end">Original Result</th>
+                        <th class="text-end">New Result</th>
+                        <th class="text-end">Difference</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in comparison_data %}
+                    <tr>
+                        <td><strong>{{ item.analysis_code }}</strong></td>
+                        <td class="text-end">{{ item.original_result if item.original_result is not none else '-' }}</td>
+                        <td class="text-end">{{ item.new_result if item.new_result is not none else '-' }}</td>
+                        <td class="text-end">
+                            {% if item.diff is not none %}
+                                {% if item.diff > 0 %}
+                                    <span class="text-danger">+{{ item.diff }}</span>
+                                {% elif item.diff < 0 %}
+                                    <span class="text-primary">{{ item.diff }}</span>
+                                {% else %}
+                                    <span class="text-success">0</span>
+                                {% endif %}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>
+                            {% if item.new_status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                            {% elif item.new_status == 'pending_review' %}
+                                <span class="badge bg-warning text-dark">Under Review</span>
+                            {% else %}
+                                <span class="badge bg-danger">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            <p class="fw-bold mb-3">If the complaint is determined to be justified, register it in the nonconformity log and implement the following measures.</p>
+
+            {% if complaint.quality_manager_id %}
+            {# Filled #}
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:50%">Measure</th>
+                        <th class="text-center" style="width:25%">Yes</th>
+                        <th class="text-center" style="width:25%">No</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Corrective Action</strong></td>
+                        <td class="text-center">
+                            {% if complaint.action_corrective %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not complaint.action_corrective %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Improvement</strong></td>
+                        <td class="text-center">
+                            {% if complaint.action_improvement %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not complaint.action_improvement %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Partial Audit</strong></td>
+                        <td class="text-center">
+                            {% if complaint.action_partial_audit %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if not complaint.action_partial_audit %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="border-top pt-3">
+                <p class="mb-1"><strong>Signature: Quality Manager</strong></p>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-person-check me-1"></i>
+                    {{ complaint.quality_manager.username if complaint.quality_manager else '-' }}
+                </p>
+            </div>
+            {% else %}
+            {# Not filled - form #}
+            <form method="POST" action="{{ url_for('quality.complaints_control', id=complaint.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50%">Measure</th>
+                            <th class="text-center" style="width:25%">Yes</th>
+                            <th class="text-center" style="width:25%">No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Corrective Action</strong></td>
+                            <td class="text-center">
+                                <input type="radio" name="action_corrective" value="1" class="form-check-input">
+                            </td>
+                            <td class="text-center">
+                                <input type="radio" name="action_corrective" value="0" class="form-check-input" checked>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Improvement</strong></td>
+                            <td class="text-center">
+                                <input type="radio" name="action_improvement" value="1" class="form-check-input">
+                            </td>
+                            <td class="text-center">
+                                <input type="radio" name="action_improvement" value="0" class="form-check-input" checked>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Partial Audit</strong></td>
+                            <td class="text-center">
+                                <input type="radio" name="action_partial_audit" value="1" class="form-check-input">
+                            </td>
+                            <td class="text-center">
+                                <input type="radio" name="action_partial_audit" value="0" class="form-check-input" checked>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="border-top pt-3 mb-3">
+                    <p class="mb-1"><strong>Signature: Quality Manager</strong></p>
+                    <p class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+                    </p>
+                </div>
+                <button type="submit" class="btn btn-info text-white">
+                    <i class="bi bi-check2-square me-1"></i>Submit Review
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
 {% endblock %}

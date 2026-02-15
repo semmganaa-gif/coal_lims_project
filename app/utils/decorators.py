@@ -41,11 +41,11 @@ def role_required(*allowed_roles: str) -> Callable:
         @wraps(f)
         def decorated_function(*args: Any, **kwargs: Any) -> Any:
             if not current_user.is_authenticated:
-                flash('Эхлээд нэвтэрнэ үү.', 'warning')
+                flash('Please log in first.', 'warning')
                 return redirect(url_for('auth.login'))
 
             if current_user.role not in allowed_roles:
-                flash(f'Танд энэ хуудсанд нэвтрэх эрх байхгүй. Шаардлагатай эрх: {", ".join(allowed_roles)}', 'danger')
+                flash(f'You do not have access to this page. Required role: {", ".join(allowed_roles)}', 'danger')
                 abort(403)
 
             return f(*args, **kwargs)
@@ -73,11 +73,11 @@ def admin_required(f: Callable) -> Callable:
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
         if not current_user.is_authenticated:
-            flash('Эхлээд нэвтэрнэ үү.', 'warning')
+            flash('Please log in first.', 'warning')
             return redirect(url_for('auth.login'))
 
         if current_user.role != 'admin':
-            flash('Зөвхөн админ хандах боломжтой.', 'danger')
+            flash('Admin access only.', 'danger')
             abort(403)
 
         return f(*args, **kwargs)
@@ -111,7 +111,7 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[
         @wraps(f)
         def decorated_function(*args: Any, **kwargs: Any) -> Any:
             if not current_user.is_authenticated:
-                flash('Эхлээд нэвтэрнэ үү.', 'warning')
+                flash('Please log in first.', 'warning')
                 return redirect(url_for('auth.login'))
 
             # Эрх шалгах
@@ -122,7 +122,7 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[
             if owner_check and owner_check(*args, **kwargs):
                 return f(*args, **kwargs)
 
-            flash('Танд энэ үйлдэл хийх эрх байхгүй.', 'danger')
+            flash('You do not have permission for this action.', 'danger')
             abort(403)
 
         return decorated_function
@@ -142,7 +142,7 @@ def lab_required(lab_key: str) -> Callable:
         @wraps(f)
         def decorated_function(*args: Any, **kwargs: Any) -> Any:
             if not current_user.is_authenticated:
-                flash('Эхлээд нэвтэрнэ үү.', 'warning')
+                flash('Please log in first.', 'warning')
                 return redirect(url_for('auth.login'))
 
             # Admin бүх лабд нэвтрэх боломжтой
@@ -151,7 +151,7 @@ def lab_required(lab_key: str) -> Callable:
 
             user_labs = current_user.allowed_labs or ['coal']
             if lab_key not in user_labs:
-                flash(f'Танд энэ лабораторид нэвтрэх эрх байхгүй.', 'danger')
+                flash(f'You do not have access to this laboratory.', 'danger')
                 return redirect(url_for('main.lab_selector'))
 
             return f(*args, **kwargs)

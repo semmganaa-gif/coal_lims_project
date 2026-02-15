@@ -117,7 +117,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Дээжийн нэр',
+      headerName: 'Sample Name',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -159,7 +159,7 @@
             h += `<div class="reject-badge bg-warning text-dark border border-dark"><i class="bi bi-arrow-repeat"></i> 3:3 дахин хийх</div>`;
           } else {
             h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
-              errorLabels[code] || rej.reason || code || 'Алдаа'
+              errorLabels[code] || rej.reason || code || 'Error'
             }</div>`;
           }
         }
@@ -167,7 +167,7 @@
       }
     },
     {
-      headerName: 'Тигель №',
+      headerName: 'Crucible #',
       field: 'crucible_num',
       width: 90,
       headerClass: 'ag-header-cell-centered',
@@ -213,7 +213,7 @@
       ...editCol
     },
     {
-      headerName: 'Үр дүн',
+      headerName: 'Result',
       field: 'result',
       width: 100,
       valueFormatter: p =>
@@ -226,7 +226,7 @@
       }
     },
     {
-      headerName: 'Тохирц',
+      headerName: 'Tolerance',
       field: 'tolerance',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -258,7 +258,7 @@
       }
     },
     {
-      headerName: 'Дундаж',
+      headerName: 'Average',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -279,7 +279,7 @@
       })
     },
     {
-      headerName: 'Үйлдэл',
+      headerName: 'Action',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -290,14 +290,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Хадгалагдсан</span>';
+          return '<span class="text-muted small">Saved</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Дээж хасах">
+                  title="Remove sample">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -379,7 +379,7 @@
         }
       ];
     } else {
-      // Шинэ дээж
+      // New дээж
       return [
         {
           ...base,
@@ -592,7 +592,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -687,14 +687,14 @@
         const missing = [];
         if (!hasP1) missing.push('Parallel 1');
         if (!hasP2) missing.push('Parallel 2');
-        console.warn(`⚠️ Дээж "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        console.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
         incomplete.push(sampleCode);
       }
     });
 
     // ✅ Summary logging
     if (incomplete.length > 0) {
-      console.log(`📊 Нийт: ${Object.keys(map).length} дээж`);
+      console.log(`📊 Total: ${Object.keys(map).length} дээж`);
       console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
       console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
     } else {
@@ -711,7 +711,7 @@
     const savedSampleIds = savedPayload.map(r => r.sample_id);
     const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
 
-    // ✅ Алдаатай дээжийн мэдээлэл
+    // ✅ Errorтай дээжийн мэдээлэл
     if (failedItems.length > 0) {
       console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
       failedItems.forEach(err => {
@@ -824,7 +824,7 @@
             n.data.is_low_avg = raw.is_low_avg || false;
           }
 
-          // Үр дүнгийн утгуудыг тохируулах
+          // Resultгийн утгуудыг тохируулах
           const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
           if (pData) {
             n.data.crucible_num = pData.num ?? pData.crucible_num ?? pData.tigel_num;

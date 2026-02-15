@@ -801,7 +801,7 @@
     {% if form.errors %}
     <div class="form-error">
       <div class="form-error-title">
-        <i class="bi bi-exclamation-triangle-fill"></i> Алдаа
+        <i class="bi bi-exclamation-triangle-fill"></i> Error
       </div>
       <ul class="form-error-list">
         {% for field_name, errors in form.errors.items() %}
@@ -814,8 +814,8 @@
     <!-- ==================== PHASE 1: UNIT HUB ==================== -->
     <div class="unit-hub" id="unit-hub">
       <div class="hub-header">
-        <h1><i class="bi bi-door-open-fill"></i> Дээж бүртгэл</h1>
-        <p>Нэгжээ сонгоно уу</p>
+        <h1><i class="bi bi-door-open-fill"></i> Sample Registration</h1>
+        <p>Select a unit</p>
       </div>
       <div class="hub-grid">
         {% for subfield in form.client_name %}
@@ -832,14 +832,14 @@
           </div>
           <div class="hub-card-name">{{ subfield.label.text }}</div>
           <div class="hub-card-desc">
-            {% if subfield.data == 'CHPP' %}Баяжуулах үйлдвэр
-            {% elif subfield.data == 'UHG-Geo' %}UHG Геологи
-            {% elif subfield.data == 'BN-Geo' %}BN Геологи
-            {% elif subfield.data == 'QC' %}Чанарын хяналт
-            {% elif subfield.data == 'Proc' %}Процесс
-            {% elif subfield.data == 'WTL' %}БС лаб
-            {% elif subfield.data == 'LAB' %}Лаборатори
-            {% else %}Бусад{% endif %}
+            {% if subfield.data == 'CHPP' %}Coal Handling & Prep Plant
+            {% elif subfield.data == 'UHG-Geo' %}UHG Geology
+            {% elif subfield.data == 'BN-Geo' %}BN Geology
+            {% elif subfield.data == 'QC' %}Quality Control
+            {% elif subfield.data == 'Proc' %}Process
+            {% elif subfield.data == 'WTL' %}Water Lab
+            {% elif subfield.data == 'LAB' %}Laboratory
+            {% else %}Other{% endif %}
           </div>
           {{ subfield(class="", style="display:none;") }}
         </div>
@@ -874,21 +874,21 @@
         <div class="config-panel">
           <div class="panel-header">
             <div class="panel-title">
-              <i class="bi bi-sliders"></i> Тохиргоо
+              <i class="bi bi-sliders"></i> Configuration
             </div>
           </div>
           <div class="config-body">
             <!-- Sample Type -->
             <div class="config-section">
-              <div class="section-label"><i class="bi bi-tag"></i> Дээжний төрөл</div>
+              <div class="section-label"><i class="bi bi-tag"></i> Sample Type</div>
               <div class="type-chips" id="sample-type-container">
-                <span style="color: var(--text-muted); font-size: 0.78rem;">Төрөл ачаалж байна...</span>
+                <span style="color: var(--text-muted); font-size: 0.78rem;">Loading types...</span>
               </div>
             </div>
 
             <!-- Condition -->
             <div class="config-section">
-              <div class="section-label"><i class="bi bi-thermometer-half"></i> Төлөв</div>
+              <div class="section-label"><i class="bi bi-thermometer-half"></i> Condition</div>
               <div class="condition-row">
                 {% for subfield in form.sample_condition %}
                 <div class="condition-toggle">
@@ -906,20 +906,20 @@
             <div class="config-section">
               <div class="config-grid">
                 <div class="config-group">
-                  <label class="config-label">Огноо</label>
+                  <label class="config-label">Date</label>
                   {{ form.sample_date(id="sample_date", class="config-input") }}
                 </div>
                 <div class="config-group">
-                  <label class="config-label">Хүлээлгэн өгсөн</label>
-                  {{ form.delivered_by(class="config-input highlight", placeholder="Нэр") }}
+                  <label class="config-label">Submitted By</label>
+                  {{ form.delivered_by(class="config-input highlight", placeholder="Name") }}
                 </div>
                 <div class="config-group">
-                  <label class="config-label">Бэлтгэсэн огноо</label>
+                  <label class="config-label">Prepared Date</label>
                   {{ form.prepared_date(id="prepared_date", class="config-input") }}
                 </div>
                 <div class="config-group">
-                  <label class="config-label">Бэлтгэсэн</label>
-                  {{ form.prepared_by(id="prepared_by", class="config-input highlight", placeholder="Нэр") }}
+                  <label class="config-label">Prepared By</label>
+                  {{ form.prepared_by(id="prepared_by", class="config-input highlight", placeholder="Name") }}
                 </div>
               </div>
             </div>
@@ -927,29 +927,29 @@
             <!-- Retention & Notes -->
             <div class="config-section">
               <div class="config-grid">
-                <!-- Дээж устгах хугацаа сонгох - 5 товч -->
+                <!-- Sample retention period selection - 5 buttons -->
                 <div class="config-group full">
-                  <label class="config-label">Дээж устгах хугацаа сонгоно уу</label>
+                  <label class="config-label">Select sample retention period</label>
                   <div class="btn-group retention-btn-group" role="group">
                     <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7" checked>
-                    <label class="btn btn-outline-danger btn-sm" for="ret_7">7 хоног</label>
+                    <label class="btn btn-outline-danger btn-sm" for="ret_7">7 days</label>
 
                     <input type="radio" class="btn-check" name="retention_period" id="ret_14" value="14">
-                    <label class="btn btn-outline-danger btn-sm" for="ret_14">14 хоног</label>
+                    <label class="btn btn-outline-danger btn-sm" for="ret_14">14 days</label>
 
                     <input type="radio" class="btn-check" name="retention_period" id="ret_30" value="30">
-                    <label class="btn btn-outline-warning btn-sm" for="ret_30">1 сар</label>
+                    <label class="btn btn-outline-warning btn-sm" for="ret_30">1 month</label>
 
                     <input type="radio" class="btn-check" name="retention_period" id="ret_730" value="730">
-                    <label class="btn btn-outline-success btn-sm" for="ret_730">2 жил</label>
+                    <label class="btn btn-outline-success btn-sm" for="ret_730">2 years</label>
 
                     <input type="radio" class="btn-check" name="retention_period" id="ret_1825" value="1825">
-                    <label class="btn btn-outline-success btn-sm" for="ret_1825">5 жил</label>
+                    <label class="btn btn-outline-success btn-sm" for="ret_1825">5 years</label>
                   </div>
                 </div>
 
                 <div class="config-group full">
-                  {{ form.notes(rows=2, class="notes-input", placeholder="Тэмдэглэл...") }}
+                  {{ form.notes(rows=2, class="notes-input", placeholder="Notes...") }}
                 </div>
               </div>
             </div>
@@ -958,7 +958,7 @@
 
             <!-- CHPP Options -->
             <div id="chpp-options" class="unit-options chpp">
-              <div class="unit-options-title"><i class="bi bi-gear-wide-connected"></i> CHPP тохиргоо</div>
+              <div class="unit-options-title"><i class="bi bi-gear-wide-connected"></i> CHPP Configuration</div>
 
               <div id="chpp-2-hourly-options" class="chpp-subtype" style="display:none;">
                 <div class="config-grid">
@@ -971,7 +971,7 @@
                     <select id="twoh_secondary_product" class="config-input"></select>
                   </div>
                 </div>
-                <div class="section-label" style="margin-top:0.75rem;">Модулиуд</div>
+                <div class="section-label" style="margin-top:0.75rem;">Modules</div>
                 <div class="module-checks">
                   <label class="module-check">{{ form.chpp_2h_mod1(id="chpp_2h_mod1") }}<span class="module-check-label">MOD I</span></label>
                   <label class="module-check">{{ form.chpp_2h_mod2(id="chpp_2h_mod2") }}<span class="module-check-label">MOD II</span></label>
@@ -984,7 +984,7 @@
                   <label class="config-label">Timeslot</label>
                   {{ form.chpp_4h_timeslot(class="config-input", id="chpp_4h_timeslot") }}
                 </div>
-                <div class="section-label" style="margin-top:0.75rem;">Модулиуд</div>
+                <div class="section-label" style="margin-top:0.75rem;">Modules</div>
                 <div class="module-checks">
                   <label class="module-check">{{ form.chpp_4h_mod1(id="chpp_4h_mod1") }}<span class="module-check-label">MOD I</span></label>
                   <label class="module-check">{{ form.chpp_4h_mod2(id="chpp_4h_mod2") }}<span class="module-check-label">MOD II</span></label>
@@ -993,7 +993,7 @@
               </div>
 
               <div id="chpp-12-hourly-options" class="chpp-subtype" style="display:none;">
-                <div class="section-label">Модулиуд</div>
+                <div class="section-label">Modules</div>
                 <div class="module-checks">
                   <label class="module-check">{{ form.chpp_12h_mod1(id="chpp_12h_mod1") }}<span class="module-check-label">MOD I</span></label>
                   <label class="module-check">{{ form.chpp_12h_mod2(id="chpp_12h_mod2") }}<span class="module-check-label">MOD II</span></label>
@@ -1035,32 +1035,32 @@
                 </div>
               </div>
 
-              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> Дээж үүсгэх</button>
+              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> Generate Samples</button>
             </div>
 
             <!-- Multi Gen (UHG/BN/QC/Proc) -->
             <div id="multi-gen-options" class="unit-options multi">
-              <div class="unit-options-title"><i class="bi bi-collection"></i> Дээж үүсгэх</div>
+              <div class="unit-options-title"><i class="bi bi-collection"></i> Generate Samples</div>
               <div class="config-grid">
                 <div class="config-group">
-                  <label class="config-label">Байршил</label>
+                  <label class="config-label">Location</label>
                   {{ form.location(class="config-input", id="location", placeholder="Loc") }}
                 </div>
                 <div class="config-group" id="product-field" style="display:none;">
-                  <label class="config-label">Бүтээгдэхүүн</label>
+                  <label class="config-label">Product</label>
                   {{ form.product(class="config-input", id="product", placeholder="Prod") }}
                 </div>
                 <div class="config-group">
-                  <label class="config-label">Тоо</label>
+                  <label class="config-label">Count</label>
                   {{ form.sample_count(class="config-input", type="number", min="1", id="sample_count", placeholder="1") }}
                 </div>
               </div>
-              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> Дээж үүсгэх</button>
+              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> Generate Samples</button>
             </div>
 
             <!-- WTL -->
             <div id="wtl-options" class="unit-options wtl">
-              <div class="unit-options-title"><i class="bi bi-droplet-half"></i> БС лаб тохиргоо</div>
+              <div class="unit-options-title"><i class="bi bi-droplet-half"></i> Water Lab Configuration</div>
               <div id="wtl-lab-number-field" class="wtl-subtype" style="display:none;">
                 <div class="config-group">
                   <label class="config-label">Lab number</label>
@@ -1079,7 +1079,7 @@
             <div id="lab-options" class="unit-options lab">
               <div class="unit-options-title"><i class="bi bi-eyedropper"></i> LAB</div>
               <p style="color: var(--text-muted); font-size: 0.78rem; margin: 0;">
-                <i class="bi bi-info-circle"></i> Дээжний нэр автоматаар үүснэ
+                <i class="bi bi-info-circle"></i> Sample name will be generated automatically
               </p>
             </div>
 
@@ -1089,19 +1089,19 @@
         <!-- RIGHT: List -->
         <div class="list-panel">
           <div class="panel-header">
-            <div class="panel-title"><i class="bi bi-list-check"></i> Дээжний жагсаалт</div>
-            <span class="panel-badge" id="sample-count-badge">0 дээж</span>
+            <div class="panel-title"><i class="bi bi-list-check"></i> Sample List</div>
+            <span class="panel-badge" id="sample-count-badge">0 samples</span>
           </div>
           <div class="list-header-actions">
             <button type="submit" class="btn-submit" id="submit-btn">
-              <i class="bi bi-check2-circle"></i> Бүртгэх
+              <i class="bi bi-check2-circle"></i> Register
             </button>
           </div>
           <div class="list-body" id="sample-entry-container">
             <div class="sample-list-empty">
               <i class="bi bi-inbox"></i>
-              <h4>Дээж бүртгэгдээгүй</h4>
-              <p>"Дээж үүсгэх" товчийг дарна уу</p>
+              <h4>No samples registered</h4>
+              <p>Click the "Generate Samples" button</p>
             </div>
           </div>
         </div>

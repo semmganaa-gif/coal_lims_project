@@ -1,23 +1,23 @@
 {# app/templates/equipment_measurement_journal.html #}
 {% extends "base.html" %}
 {% from "partials/equipment_shared.html" import lab_purpose_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options %}
-{% block title %}Хэмжих хэрэгслийн бүртгэл{% endblock %}
+{% block title %}Measuring Instruments Register{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id устгасан — admin only #}
+  {# add_modal_id removed - admin only #}
   {% include "partials/equipment_hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-rulers text-info"></i> Хэмжих хэрэгслийн бүртгэл</span>
+      <span class="fw-bold"><i class="bi bi-rulers text-info"></i> Measuring Instruments Register</span>
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMeasModal"><i class="bi bi-plus-lg"></i> Нэмэх</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Засах</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Устгах</button>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMeasModal"><i class="bi bi-plus-lg"></i> Add</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Edit</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Delete</button>
       {% endif %}
       <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
       <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
@@ -33,7 +33,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Хэмжих хэрэгсэл нэмэх</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Measuring Instrument</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='measurement') }}">
@@ -42,7 +42,7 @@
           <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Бүлэг</label>
+              <label class="form-label fw-bold small">Group</label>
               <select id="m_group" name="group" class="form-select">
                 {{ measurement_group_options('') }}
               </select>
@@ -52,90 +52,90 @@
               <input type="text" id="m_no" name="no" class="form-control">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-bold small">Хэмжих хэрэгслийн нэр төрөл, загвар</label>
+              <label class="form-label fw-bold small">Instrument Name / Type / Model</label>
               <input type="text" id="m_name" name="name" class="form-control" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-bold small">Үйлдвэрлэсэн улс, үйлдвэр</label>
+              <label class="form-label fw-bold small">Country / Manufacturer</label>
               <input type="text" id="m_manufacturer" name="manufacturer" class="form-control">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Зориулалт</label>
+              <label class="form-label fw-bold small">Purpose</label>
               <select id="m_purpose" name="purpose" class="form-select">
                 {{ lab_purpose_options('') }}
               </select>
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Тоо хэмжээ</label>
+              <label class="form-label fw-bold small">Quantity</label>
               <input type="text" id="m_qty" name="qty" class="form-control" value="1">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Хэмжих нэгж</label>
+              <label class="form-label fw-bold small">Measurement Unit</label>
               <select id="m_unit" name="unit" class="form-select">
                 {{ measurement_unit_options('') }}
               </select>
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Баталг. хэмжих хязгаар</label>
+              <label class="form-label fw-bold small">Cert. Meas. Range</label>
               <input type="text" id="m_cert_range" name="cert_range" class="form-control">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Баталг. нарийвчлал</label>
+              <label class="form-label fw-bold small">Cert. Accuracy</label>
               <input type="text" id="m_cert_accuracy" name="cert_accuracy" class="form-control">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Шалг. хэмжих хязгаар</label>
+              <label class="form-label fw-bold small">Check Meas. Range</label>
               <input type="text" id="m_chk_range" name="chk_range" class="form-control">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Шалг. нарийвчлал</label>
+              <label class="form-label fw-bold small">Check Accuracy</label>
               <input type="text" id="m_chk_accuracy" name="chk_accuracy" class="form-control">
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Давтамж (Баталг.)</label>
+              <label class="form-label fw-bold small">Frequency (Cert.)</label>
               <select id="m_freq_cert" name="freq_cert" class="form-select">
                 {{ freq_cert_options('') }}
               </select>
             </div>
             <div class="col-md-3">
-              <label class="form-label fw-bold small">Давтамж (Шалг.)</label>
+              <label class="form-label fw-bold small">Frequency (Check)</label>
               <select id="m_freq_check" name="freq_check" class="form-select">
                 {{ freq_check_options('') }}
               </select>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Эталоны төрөл</label>
+              <label class="form-label fw-bold small">Reference Standard Type</label>
               <input type="text" id="m_etalon_type" name="etalon_type" class="form-control">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Эталон баталг. огноо</label>
+              <label class="form-label fw-bold small">Reference Cert. Date</label>
               <input type="text" id="m_etalon_date" name="etalon_date" class="form-control">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Баталгаажуулсан огноо</label>
+              <label class="form-label fw-bold small">Calibration Date</label>
               <input type="text" id="m_cert_date" name="cert_date" class="form-control">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Дараагийн баталг. хугацаа</label>
+              <label class="form-label fw-bold small">Next Calibration</label>
               <input type="text" id="m_next_cert" name="next_cert" class="form-control">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Сертификатын дугаар</label>
+              <label class="form-label fw-bold small">Certificate No.</label>
               <input type="text" id="m_cert_no" name="cert_no" class="form-control">
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-bold small">Хариуцах ажилтан</label>
+              <label class="form-label fw-bold small">Responsible Person</label>
               <input type="text" id="m_responsible" name="responsible" class="form-control">
             </div>
             <div class="col-12">
-              <label class="form-label fw-bold small">Тайлбар</label>
+              <label class="form-label fw-bold small">Remarks</label>
               <input type="text" id="m_remark" name="remark" class="form-control">
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Болих</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Хадгалах</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
         </div>
         </form>
       </div>
@@ -176,34 +176,34 @@ document.addEventListener('DOMContentLoaded', function() {
     columns: [
       {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
       {title:"№", field:"no", width:55, frozen:true},
-      {title:"Хэмжих хэрэгслийн нэр төрөл, загвар", field:"name", minWidth:220, frozen:true},
-      {title:"Үйлдвэрлэсэн улс, үйлдвэр", field:"manufacturer", minWidth:180},
-      {title:"Зориулалт", field:"purpose", width:100},
-      {title:"Тоо хэмжээ", field:"qty", width:80},
-      {title:"Хэмжих нэгж", field:"unit", width:100},
-      {title:"Хэмжих хэрэгслийн хяналтын төрөл", columns:[
-        {title:"Баталгаажуулалт", columns:[
-          {title:"Хэмжих хязгаар", field:"cert_range", width:120},
-          {title:"Нарийвчлал", field:"cert_accuracy", width:110},
+      {title:"Instrument Name / Type / Model", field:"name", minWidth:220, frozen:true},
+      {title:"Country / Manufacturer", field:"manufacturer", minWidth:180},
+      {title:"Purpose", field:"purpose", width:100},
+      {title:"Quantity", field:"qty", width:80},
+      {title:"Measurement Unit", field:"unit", width:100},
+      {title:"Instrument Control Type", columns:[
+        {title:"Calibration", columns:[
+          {title:"Meas. Range", field:"cert_range", width:120},
+          {title:"Accuracy", field:"cert_accuracy", width:110},
         ]},
-        {title:"Шалгалт тохируулга", columns:[
-          {title:"Хэмжих хязгаар", field:"chk_range", width:120},
-          {title:"Нарийвчлал", field:"chk_accuracy", width:110},
+        {title:"Check & Adjustment", columns:[
+          {title:"Meas. Range", field:"chk_range", width:120},
+          {title:"Accuracy", field:"chk_accuracy", width:110},
         ]},
       ]},
-      {title:"Давтамж / Frequency", columns:[
-        {title:"Баталгаажуулалт", field:"freq_cert", width:110},
-        {title:"Шалгалт тохируулга", field:"freq_check", width:120},
+      {title:"Frequency", columns:[
+        {title:"Calibration", field:"freq_cert", width:110},
+        {title:"Check & Adjustment", field:"freq_check", width:120},
       ]},
-      {title:"Эталон / Etalon", columns:[
-        {title:"Эталоны төрөл", field:"etalon_type", minWidth:150},
-        {title:"Баталгаажуулсан огноо", field:"etalon_date", width:130},
+      {title:"Reference Standard", columns:[
+        {title:"Standard Type", field:"etalon_type", minWidth:150},
+        {title:"Cert. Date", field:"etalon_date", width:130},
       ]},
-      {title:"Баталгаажуулалт хийгдсэн огноо", field:"cert_date", width:150},
-      {title:"Дараагийн баталгаажуулалтын хугацаа", field:"next_cert", width:160},
-      {title:"Сертификатын дугаар", field:"cert_no", width:130},
-      {title:"Тайлбар", field:"remark", minWidth:120},
-      {title:"Хариуцах ажилтан, албан тушаал", field:"responsible", minWidth:150},
+      {title:"Calibration Date", field:"cert_date", width:150},
+      {title:"Next Calibration", field:"next_cert", width:160},
+      {title:"Certificate No.", field:"cert_no", width:130},
+      {title:"Remarks", field:"remark", minWidth:120},
+      {title:"Responsible Person / Position", field:"responsible", minWidth:150},
     ],
   });
 
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (d.id) {
       document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
     }
-    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Засах';
+    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit';
     new bootstrap.Modal(document.getElementById('addMeasModal')).show();
   };
 
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('addMeasModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='measurement') }}";
     document.getElementById('edit_item_id').value = '';
-    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Хэмжих хэрэгсэл нэмэх';
+    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Measuring Instrument';
     var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
     fields.forEach(function(f) { var el = document.getElementById('m_' + f); if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; });
   });
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Delete: POST selected IDs
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    if (!sel.length || !confirm('Delete ' + sel.length + ' row(s)?')) return;
     var form = document.getElementById('deleteForm');
     // Remove old hidden inputs
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });

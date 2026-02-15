@@ -32,7 +32,7 @@ def register_routes(bp):
         if form.validate_on_submit():
             user = db.session.scalar(sa.select(User).where(User.username == form.username.data))
             if user is None or not user.check_password(form.password.data):
-                flash("Нэр эсвэл нууц үг буруу байна", "danger")
+                flash("Invalid username or password", "danger")
                 log_audit(action='login_failed', details={'username': form.username.data})
                 return redirect(url_for("main.login"))
             login_user(user, remember=form.remember_me.data)
@@ -82,7 +82,7 @@ def register_routes(bp):
                 }
             )
 
-            flash("Профайл амжилттай хадгалагдлаа!", "success")
+            flash("Profile saved successfully!", "success")
             return redirect(url_for("main.profile"))
 
         # Өмнөх утгуудыг form-д оруулах

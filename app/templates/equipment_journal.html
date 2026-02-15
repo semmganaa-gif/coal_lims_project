@@ -12,13 +12,13 @@
         {{ title }}
       </h4>
       <div class="text-muted small">
-        Нэгдсэн тойм · ашиглалт, арчилгааны товчоон
+        Consolidated overview of usage and maintenance
       </div>
     </div>
 
     <form id="dateFilterForm" class="d-flex flex-wrap align-items-center gap-2 ej-date-form">
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <label class="small text-muted mb-0">Хугацаа:</label>
+        <label class="small text-muted mb-0">Period:</label>
         <div class="input-group input-group-sm ej-date-input">
           <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
           <input type="date" id="startDate" name="start_date"
@@ -35,18 +35,18 @@
       </div>
 
       <div class="btn-group btn-group-sm ms-0 ms-md-2 ej-range-group" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="7">7 days</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">30 days</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">90 days</button>
       </div>
 
       <button type="submit" class="btn btn-primary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+        <i class="bi bi-arrow-repeat"></i> Update
       </button>
       
       <a href="{{ url_for('equipment.equipment_journal') }}"
          class="btn btn-outline-secondary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-grid"></i> Буцах
+        <i class="bi bi-grid"></i> Back
       </a>
     </form>
   </div>
@@ -56,38 +56,38 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="tab-summary" data-bs-toggle="tab"
               data-bs-target="#pane-summary" type="button" role="tab">
-        <i class="bi bi-grid-3x3-gap"></i> Нэгдсэн тойм
+        <i class="bi bi-grid-3x3-gap"></i> Summary
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-monthly" data-bs-toggle="tab"
               data-bs-target="#pane-monthly" type="button" role="tab">
-        <i class="bi bi-calendar3"></i> Сарын нэгтгэл
+        <i class="bi bi-calendar3"></i> Monthly Summary
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-detailed" data-bs-toggle="tab"
               data-bs-target="#pane-detailed" type="button" role="tab">
-        <i class="bi bi-journal-richtext"></i> Дэлгэрэнгүй журнал
+        <i class="bi bi-journal-richtext"></i> Detailed Journal
       </button>
     </li>
   </ul>
 
   <div class="tab-content" id="equipTabContent">
     
-    {# === 1. НЭГДСЭН ТОЙМ TAB === #}
+    {# === 1. SUMMARY TAB === #}
     <div class="tab-pane fade show active" id="pane-summary" role="tabpanel">
       <div class="card shadow-sm border-0 ej-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div class="d-flex align-items-center gap-2">
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-collection"></i> Нэгдсэн статистик
+              <i class="bi bi-collection"></i> Summary Statistics
             </span>
             <div class="d-flex flex-wrap gap-1 ej-status-legend">
-              <span class="badge bg-success-subtle text-success-emphasis small">Хэвийн</span>
-              <span class="badge bg-warning-subtle text-warning-emphasis small">Засварт / Арчилгаа</span>
-              <span class="badge bg-danger-subtle text-danger-emphasis small">Эвдэрсэн</span>
-              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Ашиглалтаас</span>
+              <span class="badge bg-success-subtle text-success-emphasis small">Normal</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis small">Maintenance</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis small">Out of Order</span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Retired</span>
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -96,7 +96,7 @@
             </span>
             <input type="text" id="summaryQuickFilter"
                    class="form-control border-start-0"
-                   placeholder="Нэр, лаб дугаар, байршил...">
+                   placeholder="Name, lab code, location...">
           </div>
         </div>
         <div class="card-body p-0">
@@ -106,27 +106,27 @@
       </div>
     </div>
 
-    {# === 2. САРЫН НЭГТГЭЛ TAB === #}
+    {# === 2. MONTHLY SUMMARY TAB === #}
     <div class="tab-pane fade" id="pane-monthly" role="tabpanel">
       <div class="card shadow-sm border-0 ej-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-calendar-range"></i> Сарын ачаалал & Арчилгаа ({{ start_date.year }})
+              <i class="bi bi-calendar-range"></i> Monthly Usage & Maintenance ({{ start_date.year }})
             </span>
             <div class="small text-muted">
-              Цаг → ашиглалт, Арчилгаа → үйлчилгээний тоо
+              Hours = usage, Maintenance = service count
             </div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <label class="small text-muted d-none d-md-inline mb-0">Мөрийн тоо:</label>
+            <label class="small text-muted d-none d-md-inline mb-0">Rows:</label>
             <select id="monthlyPageSize" class="form-select form-select-sm">
               <option value="25">25</option>
               <option value="50" selected>50</option>
               <option value="100">100</option>
             </select>
             <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
-              <i class="bi bi-download"></i> CSV татах
+              <i class="bi bi-download"></i> Export CSV
             </button>
           </div>
         </div>
@@ -137,16 +137,16 @@
       </div>
     </div>
 
-    {# === 3. ДЭЛГЭРЭНГҮЙ ЖУРНАЛ TAB === #}
+    {# === 3. DETAILED JOURNAL TAB === #}
     <div class="tab-pane fade" id="pane-detailed" role="tabpanel">
       <div class="card shadow-sm border-0 ej-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт (Timeline)
+              <i class="bi bi-list-check"></i> Detailed List (Timeline)
             </span>
             <div class="small text-muted">
-              Ашиглалт, арчилгааны үйлдлүүдийг цаг хугацааны дарааллаар
+              Usage and maintenance actions in chronological order
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -155,7 +155,7 @@
             </span>
             <input type="text" id="detailSearch"
                    class="form-control border-start-0"
-                   placeholder="Төхөөрөмж, лаб.№, гүйцэтгэсэн...">
+                   placeholder="Equipment, lab code, performer...">
           </div>
         </div>
         <div class="card-body p-0">
@@ -172,7 +172,7 @@
 {% block scripts %}
   {{ super() }}
 
-  {# AG Grid (Quartz theme) – нэгээс олон удаа ачаалсан ч асуудалгүй #}
+  {# AG Grid (Quartz theme) #}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
@@ -319,12 +319,12 @@
     }
 
     // ============================================================
-    // 1. SUMMARY GRID (Нэгдсэн тойм)
+    // 1. SUMMARY GRID
     // ============================================================
     const summaryColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Лаб.№',
+        headerName: 'Lab Code',
         pinned: 'left',
         width: 110,
         cellRenderer: p => {
@@ -335,58 +335,58 @@
       },
       {
         field: 'name',
-        headerName: 'Төхөөрөмж',
+        headerName: 'Equipment',
         minWidth: 200,
         flex: 1.6,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'location',
-        headerName: 'Байршил',
+        headerName: 'Location',
         minWidth: 140,
         flex: 1.2
       },
       {
         field: 'room',
-        headerName: 'Өрөө',
+        headerName: 'Room',
         width: 80
       },
       {
         field: 'status',
-        headerName: 'Статус',
+        headerName: 'Status',
         width: 130,
         cellRenderer: p => {
           const s = p.value || 'normal';
           let cls = 'ej-status-normal';
-          let text = 'Хэвийн';
-          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Эвдэрсэн'; }
-          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Засварт'; }
-          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Ашиглалтаас'; }
+          let text = 'Normal';
+          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Out of Order'; }
+          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Maintenance'; }
+          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Retired'; }
           return `<span class="ej-status-badge ${cls}">${text}</span>`;
         }
       },
       {
         field: 'total_usage_hours',
-        headerName: 'Нийт цаг',
+        headerName: 'Total Hours',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value.toFixed(1) : '-'
       },
       {
         field: 'maintenance_count',
-        headerName: 'Арчилгаа',
+        headerName: 'Maintenance',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value : '-'
       },
       {
         field: 'last_usage_end',
-        headerName: 'Сүүлд ашигласан',
+        headerName: 'Last Used',
         minWidth: 160
       },
       {
         field: 'next_calibration_date',
-        headerName: 'Дараагийн баталгаажуулалт',
+        headerName: 'Next Calibration',
         minWidth: 180,
         cellRenderer: p => {
           const v = p.value;
@@ -417,19 +417,19 @@
     };
 
     // ============================================================
-    // 2. MONTHLY GRID (Сарын нэгтгэл)
+    // 2. MONTHLY GRID
     // ============================================================
     const monthlyColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Лаб.№',
+        headerName: 'Lab Code',
         pinned: 'left',
         width: 110,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`
       },
       {
         field: 'name',
-        headerName: 'Төхөөрөмж',
+        headerName: 'Equipment',
         pinned: 'left',
         minWidth: 200,
         flex: 1.6
@@ -438,19 +438,19 @@
 
     for (let i = 1; i <= 12; i++) {
       monthlyColumnDefs.push({
-        headerName: i + '-р сар',
+        headerName: 'Month ' + i,
         marryChildren: true,
         children: [
           {
             field: `usage_${i}`,
-            headerName: 'Цаг',
+            headerName: 'Hours',
             width: 90,
             type: 'numericColumn',
             valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-'
           },
           {
             field: `maint_${i}`,
-            headerName: 'Арчилгаа',
+            headerName: 'Maintenance',
             width: 95,
             type: 'numericColumn',
             valueFormatter: p => p.value ? p.value : '-'
@@ -474,62 +474,62 @@
     };
 
     // ============================================================
-    // 3. DETAILED GRID (Дэлгэрэнгүй журнал)
+    // 3. DETAILED GRID
     // ============================================================
     const detailedColumnDefs = [
       {
         field: 'date',
-        headerName: 'Огноо/Цаг',
+        headerName: 'Date/Time',
         sort: 'desc',
         width: 160,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'lab_code',
-        headerName: 'Лаб.№',
+        headerName: 'Lab Code',
         width: 100,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'equipment',
-        headerName: 'Төхөөрөмж',
+        headerName: 'Equipment',
         minWidth: 190,
         flex: 1.4,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'category',
-        headerName: 'Ангилал',
+        headerName: 'Category',
         width: 120,
         cellRenderer: p => {
           const v = p.value || 'Usage';
           if (v === 'Usage') {
-            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Ашиглалт</span>';
+            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Usage</span>';
           }
-          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Арчилгаа</span>';
+          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Maintenance</span>';
         }
       },
       {
         field: 'type',
-        headerName: 'Төрөл',
+        headerName: 'Type',
         width: 130,
         cellRenderer: p => p.value ? `<span class="ej-type-pill">${p.value}</span>` : ''
       },
       {
         field: 'user',
-        headerName: 'Гүйцэтгэсэн',
+        headerName: 'Performed By',
         width: 130
       },
       {
         field: 'description',
-        headerName: 'Тайлбар',
+        headerName: 'Remarks',
         flex: 1.6,
         minWidth: 220
       },
       {
         field: 'result',
-        headerName: 'Үр дүн',
+        headerName: 'Result',
         width: 110
       }
     ];
@@ -582,7 +582,7 @@
         const start = document.getElementById('startDate').value;
         const end   = document.getElementById('endDate').value;
         
-        // URL-аас category параметр
+        // Category parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('category') || 'all';
 
@@ -635,7 +635,7 @@
         });
       });
 
-      // Detailed Search (input дээрээ дээр нь байгаа)
+      // Detailed Search
       document.getElementById('detailSearch').addEventListener('input', function(e){
          if (!detailedApi) return;
          if (detailedApi.setQuickFilter) detailedApi.setQuickFilter(e.target.value);
@@ -664,7 +664,7 @@
       if (monthlyApi.exportDataAsCsv) {
         monthlyApi.exportDataAsCsv({fileName: 'monthly_equipment_summary.csv'});
       } else {
-        // createGrid API → setGridOption замаар дуудах боломжгүй тул орхино
+        // createGrid API does not support direct CSV export
       }
     }
   </script>

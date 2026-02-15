@@ -411,14 +411,14 @@ def register_sample():
     if request.method == 'POST':
         sample_names = request.form.getlist('sample_codes')
         if not sample_names:
-            flash('Дээжний нэр заавал сонгоно уу.', 'danger')
+            flash('Please select a sample name.', 'danger')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if request.args.get('from') == 'micro' else {})))
 
         from app.labs.water_lab.chemistry.utils import create_water_micro_samples
         try:
             created, skipped, n_analyses = create_water_micro_samples(request.form, current_user.id)
             if created:
-                flash(f'{len(created)} дээж амжилттай бүртгэгдлээ! ({n_analyses} шинжилгээ)', 'success')
+                flash(f'{len(created)} дээж registered successfully. ({n_analyses} шинжилгээ)', 'success')
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
             if request.args.get('from') == 'micro' or request.form.get('from') == 'micro':
@@ -427,7 +427,7 @@ def register_sample():
         except Exception as e:
             db.session.rollback()
             # ✅ XSS сэргийлэлт: exception message escape
-            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+            flash(f'Error: {html_escape(str(e))}', 'danger')
             from_param = request.args.get('from', '')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
@@ -655,7 +655,7 @@ def save_results():
 
     from app.utils.database import safe_commit
     if not safe_commit():
-        return jsonify({'error': 'Үр дүн хадгалахад алдаа гарлаа'}), 500
+        return jsonify({'error': 'Error saving results'}), 500
 
     return jsonify({'success': True, 'id': ar.id})
 
@@ -724,12 +724,12 @@ def edit_sample(sample_id):
     import json as _json
     sample = db.session.get(Sample, sample_id)
     if not sample:
-        flash('Дээж олдсонгүй.', 'danger')
+        flash('Sample not found.', 'danger')
         return redirect(url_for('water.register_sample'))
 
     can_edit = current_user.role in ('admin', 'senior', 'chemist')
     if not can_edit:
-        flash('Дээж засах эрх танд байхгүй.', 'warning')
+        flash('You do not have permission to edit samples.', 'warning')
         return redirect(url_for('water.register_sample'))
 
     analyses_list = WATER_ANALYSIS_TYPES + MICRO_ANALYSIS_TYPES
@@ -747,11 +747,11 @@ def edit_sample(sample_id):
         analyses_changed = set(selected_analyses) != set(current_analyses)
 
         if not new_code:
-            flash('Дээжний код хоосон байх боломжгүй.', 'danger')
+            flash('Sample code cannot be empty.', 'danger')
         elif code_changed and Sample.query.filter(
             Sample.sample_code == new_code, Sample.id != sample_id
         ).first():
-            flash(f'"{new_code}" нэртэй дээж аль хэдийн бүртгэлтэй.', 'danger')
+            flash(f'"{new_code}" sample already registered.', 'danger')
         else:
             try:
                 if code_changed:
@@ -760,14 +760,14 @@ def edit_sample(sample_id):
                     sample.analyses_to_perform = _json.dumps(selected_analyses)
                 if code_changed or analyses_changed:
                     db.session.commit()
-                    flash('Дээжний мэдээлэл шинэчлэгдлээ.', 'success')
+                    flash('Sample information updated.', 'success')
                 else:
-                    flash('Өөрчлөлт хийгдээгүй.', 'info')
+                    flash('No changes were made.', 'info')
                 return redirect(url_for('water.register_sample'))
             except Exception as e:
                 db.session.rollback()
                 # ✅ XSS сэргийлэлт
-                flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+                flash(f'Error: {html_escape(str(e))}', 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -787,11 +787,11 @@ def delete_samples():
 
     sample_ids = request.form.getlist('sample_ids')
     if not sample_ids:
-        flash('Устгах дээжээ сонгоно уу!', 'warning')
+        flash('Please select samples to delete!', 'warning')
         return redirect(request.referrer or url_for('water.register_sample'))
 
     if current_user.role not in ('admin', 'senior', 'chemist'):
-        flash('Дээж устгах эрх танд байхгүй.', 'danger')
+        flash('You do not have permission to delete samples.', 'danger')
         return redirect(request.referrer or url_for('water.register_sample'))
 
     deleted = 0
@@ -818,9 +818,9 @@ def delete_samples():
 
     if deleted:
         db.session.commit()
-        flash(f'{deleted} дээж амжилттай устгагдлаа.', 'success')
+        flash(f'{deleted} samples deleted successfully.', 'success')
     if failed:
-        flash(f'Алдаа: {", ".join(failed)}', 'danger')
+        flash(f'Error: {", ".join(failed)}', 'danger')
 
     return redirect(request.referrer or url_for('water.register_sample'))
 
@@ -1359,7 +1359,7 @@ def add_solution():
 
                     # Хүрэлцэхгүй бол анхааруулга
                     if quantity_to_deduct > chemical.quantity:
-                        flash(f"Анхааруулга: {chemical.name} нөөц ({chemical.quantity} {chemical.unit}) хүрэлцэхгүй байна!", 'warning')
+                        flash(f"Warning: {chemical.name} stock ({chemical.quantity} {chemical.unit}) is insufficient!", 'warning')
 
                     # Хасах
                     chemical.quantity = max(0, chemical.quantity - quantity_to_deduct)
@@ -1397,13 +1397,13 @@ def add_solution():
             db.session.add(solution)
             db.session.commit()
 
-            flash(f"'{solution.solution_name}' амжилттай бүртгэгдлээ.", 'success')
+            flash(f"'{solution.solution_name}' registered successfully.", 'success')
             return redirect(url_for('water.solution_journal'))
 
         except Exception as e:
             db.session.rollback()
             # ✅ XSS сэргийлэлт
-            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+            flash(f'Error: {html_escape(str(e))}', 'danger')
 
     # GET - Химийн бодисын жагсаалт
     chemicals = Chemical.query.filter(
@@ -1468,13 +1468,13 @@ def edit_solution(id):
                 solution.chemical_id = None
 
             db.session.commit()
-            flash('Амжилттай шинэчлэгдлээ.', 'success')
+            flash('Updated successfully.', 'success')
             return redirect(url_for('water.solution_journal'))
 
         except Exception as e:
             db.session.rollback()
             # ✅ XSS сэргийлэлт
-            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+            flash(f'Error: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1499,7 +1499,7 @@ def delete_solution(id):
     from app.models import SolutionPreparation
 
     if current_user.role not in ('senior', 'admin'):
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_journal'))
 
     solution = SolutionPreparation.query.get_or_404(id)
@@ -1508,7 +1508,7 @@ def delete_solution(id):
     db.session.delete(solution)
     db.session.commit()
 
-    flash(f"'{name}' устгагдлаа.", 'warning')
+    flash(f"'{name}' deleted.", 'warning')
     return redirect(url_for('water.solution_journal'))
 
 
@@ -1750,7 +1750,7 @@ def prepare_from_recipe(id):
     except Exception as e:
         db.session.rollback()
         # ✅ XSS сэргийлэлт
-        flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+        flash(f'Error: {html_escape(str(e))}', 'danger')
         return redirect(url_for('water.recipe_detail', id=id))
 
 
@@ -1833,13 +1833,13 @@ def add_recipe():
                     db.session.add(ingredient)
 
             db.session.commit()
-            flash(f"'{recipe.name}' жор амжилттай үүсгэгдлээ.", 'success')
+            flash(f"'{recipe.name}' recipe created successfully.", 'success')
             return redirect(url_for('water.solution_recipes'))
 
         except Exception as e:
             db.session.rollback()
             # ✅ XSS сэргийлэлт
-            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+            flash(f'Error: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1892,13 +1892,13 @@ def edit_recipe(id):
                     db.session.add(ingredient)
 
             db.session.commit()
-            flash('Жор амжилттай шинэчлэгдлээ.', 'success')
+            flash('Recipe updated successfully.', 'success')
             return redirect(url_for('water.solution_recipes'))
 
         except Exception as e:
             db.session.rollback()
             # ✅ XSS сэргийлэлт
-            flash(f'Алдаа: {html_escape(str(e))}', 'danger')
+            flash(f'Error: {html_escape(str(e))}', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1923,7 +1923,7 @@ def delete_recipe(id):
     from app.models import SolutionRecipe
 
     if current_user.role not in ('senior', 'admin'):
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_recipes'))
 
     recipe = SolutionRecipe.query.get_or_404(id)
@@ -1932,5 +1932,5 @@ def delete_recipe(id):
     db.session.delete(recipe)
     db.session.commit()
 
-    flash(f"'{name}' жор устгагдлаа.", 'warning')
+    flash(f"'{name}' recipe deleted.", 'warning')
     return redirect(url_for('water.solution_recipes'))

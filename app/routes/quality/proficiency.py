@@ -48,7 +48,7 @@ def register_routes(bp):
                 uncertainty = float(request.form.get('uncertainty', 0))
             except (ValueError, TypeError) as e:
                 logger.warning(f"PT form validation error: {e}, user: {current_user.username}")
-                flash("Тоон утга буруу байна. Зөв утга оруулна уу.", "danger")
+                flash("Invalid numeric value. Please enter a correct value.", "danger")
                 return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
 
             z_score = (our_result - assigned_value) / uncertainty if uncertainty > 0 else 0
@@ -84,7 +84,7 @@ def register_routes(bp):
             db.session.commit()
 
             logger.info(f"PT created: {pt.pt_program}, Z-score: {z_score:.2f}, user: {current_user.username}")
-            flash(f"PT {pt.pt_program} амжилттай бүртгэгдлээ (Z-score: {z_score:.2f})", "success")
+            flash(f"PT {pt.pt_program} registered successfully.(Z-score: {z_score:.2f})", "success")
             return redirect(url_for('quality.proficiency_list'))
 
         return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")

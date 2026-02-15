@@ -15,7 +15,7 @@
                 <i class="bi bi-upload me-1"></i> Excel Import
             </a>
             <a href="{{ url_for('yield.compare') }}" class="btn btn-outline-primary ms-2">
-                <i class="bi bi-bar-chart me-1"></i> Харьцуулалт
+                <i class="bi bi-bar-chart me-1"></i> Comparison
             </a>
         </div>
     </div>
@@ -25,7 +25,7 @@
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
-                    <h6 class="card-title opacity-75">Нийт тест</h6>
+                    <h6 class="card-title opacity-75">Total Tests</h6>
                     <h2 class="mb-0">{{ tests|length }}</h2>
                 </div>
             </div>
@@ -33,7 +33,7 @@
         <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h6 class="card-title opacity-75">Сүүлийн 30 хоног</h6>
+                    <h6 class="card-title opacity-75">Last 30 Days</h6>
                     <h2 class="mb-0">{{ tests|selectattr('sample_date')|list|length }}</h2>
                 </div>
             </div>
@@ -49,7 +49,7 @@
         <div class="col-md-3">
             <div class="card bg-warning text-dark">
                 <div class="card-body">
-                    <h6 class="card-title opacity-75">LIMS холбоос</h6>
+                    <h6 class="card-title opacity-75">LIMS Link</h6>
                     <h2 class="mb-0">{{ tests|selectattr('source', 'equalto', 'lims')|list|length }}</h2>
                 </div>
             </div>
@@ -62,7 +62,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Washability Tests</h5>
                 <div class="input-group" style="width: 300px;">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Хайх...">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search...">
                     <button class="btn btn-outline-secondary" type="button">
                         <i class="bi bi-search"></i>
                     </button>
@@ -75,10 +75,10 @@
                     <tr>
                         <th>Lab No</th>
                         <th>Sample Name</th>
-                        <th>Огноо</th>
+                        <th>Date</th>
                         <th>Raw Ash %</th>
-                        <th>Эх үүсвэр</th>
-                        <th>Үйлдэл</th>
+                        <th>Source</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -97,7 +97,7 @@
                         </td>
                         <td>
                             <a href="{{ url_for('yield.test_detail', test_id=test.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Харах
+                                <i class="bi bi-eye"></i> View
                             </a>
                         </td>
                     </tr>
@@ -105,7 +105,7 @@
                     <tr>
                         <td colspan="6" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Washability тест байхгүй байна. Excel файл импортлоно уу.
+                            No washability tests found. Please import an Excel file.
                         </td>
                     </tr>
                     {% endfor %}

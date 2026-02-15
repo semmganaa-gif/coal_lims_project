@@ -183,7 +183,7 @@
       cellStyle: { textAlign: 'center', fontWeight: '600', color: '#6c757d', display: 'flex', alignItems: 'center', justifyContent: 'center' }
     },
     {
-      headerName: 'Дээжийн нэр', field: 'sample_code', width: 240, pinned: 'left',
+      headerName: 'Sample Name', field: 'sample_code', width: 240, pinned: 'left',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {
@@ -213,7 +213,7 @@
       cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' }
     },
     {
-      headerName: 'Параллель', field: 'parallel', width: 100,
+      headerName: 'Parallel', field: 'parallel', width: 100,
       cellStyle: p => ({
         textAlign: 'center', fontWeight: '600',
         backgroundColor: p.data.parallel === 1 ? '#e3f2fd' : '#fff3cd'
@@ -221,7 +221,7 @@
       valueFormatter: p => `p${p.value}`
     },
     {
-      headerName: 'X (мм)', field: 'x', width: 140,
+      headerName: 'X (mm)', field: 'x', width: 140,
       editable: p => !p.data.lockX,
       cellEditor: 'agTextCellEditor',
       cellEditorParams: { useFormatter: true },
@@ -230,7 +230,7 @@
       cellStyle: p => p.data.lockX ? { backgroundColor: '#e9ecef', color: '#6c757d' } : {}
     },
     {
-      headerName: 'Y (мм)', field: 'y', width: 140,
+      headerName: 'Y (mm)', field: 'y', width: 140,
       editable: p => !p.data.lockY,
       cellEditor: 'agTextCellEditor',
       cellEditorParams: { useFormatter: true },
@@ -239,7 +239,7 @@
       cellStyle: p => p.data.lockY ? { backgroundColor: '#e9ecef', color: '#6c757d' } : {}
     },
     {
-      headerName: 'X тохирц', field: 'x_diff', width: 130,
+      headerName: 'X Tolerance', field: 'x_diff', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.x_diff != null) ? Number(p.data.x_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
@@ -251,7 +251,7 @@
       }
     },
     {
-      headerName: 'X дундаж', field: 'x_avg', width: 130,
+      headerName: 'X Average', field: 'x_avg', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.x_avg != null) ? Number(p.data.x_avg).toFixed(2) : (p.data.parallel === 1 ? '-' : ''),
@@ -262,7 +262,7 @@
       }
     },
     {
-      headerName: 'Y тохирц', field: 'y_diff', width: 130,
+      headerName: 'Y Tolerance', field: 'y_diff', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.y_diff != null) ? Number(p.data.y_diff).toFixed(3) : (p.data.parallel === 1 ? '-' : ''),
@@ -274,7 +274,7 @@
       }
     },
     {
-      headerName: 'Y дундаж', field: 'y_avg', width: 130,
+      headerName: 'Y Average', field: 'y_avg', width: 130,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.y_avg != null) ? Number(p.data.y_avg).toFixed(2) : (p.data.parallel === 1 ? '-' : ''),
@@ -285,12 +285,12 @@
       }
     },
     {
-      headerName: 'Үйлдэл', width: 90, pinned: 'right',
+      headerName: 'Action', width: 90, pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {
-        if (p.data.lockX || p.data.lockY) return '<span class="text-muted small">Хадгалагдсан</span>';
-        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Дээж хасах"><i class="bi bi-x"></i></button>`;
+        if (p.data.lockX || p.data.lockY) return '<span class="text-muted small">Saved</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Remove sample"><i class="bi bi-x"></i></button>`;
       },
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
     }
@@ -407,7 +407,7 @@
 
   // ========== ACTIONS ==========
   window.removeSample = function(id){
-    if(!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if(!confirm('Remove this sample from the list?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

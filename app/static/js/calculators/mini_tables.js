@@ -36,7 +36,7 @@
         esc(JSON.stringify(rawData || {}, null, 2)) +
         '</pre>';
     } catch (e) {
-      return '<pre style="font-size:0.8em;max-width:480px;margin-bottom:0;">(хоосон)</pre>';
+      return '<pre style="font-size:0.8em;max-width:480px;margin-bottom:0;">(empty)</pre>';
     }
   }
 
@@ -50,11 +50,11 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Тигель №</th>' +
-      '<th>Хоосон тигель (m1)</th>' +
-      '<th>Дээжийн жин (m2)</th>' +
-      '<th>Үнстэй тигель (m3)</th>' +
-      '<th>Үр дүн</th>' +
+      '<th>Crucible #</th>' +
+      '<th>Empty crucible (m1)</th>' +
+      '<th>Sample weight (m2)</th>' +
+      '<th>Crucible with ash (m3)</th>' +
+      '<th>Result</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -87,11 +87,11 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Бюкс №</th>' +
-      '<th>Хоосон бюкс (m1)</th>' +
-      '<th>Дээжтэй бюкс (m2)</th>' +
-      '<th>Хатаасан бюкс (m3)</th>' +
-      '<th>Үр дүн</th>' +
+      '<th>Bottle #</th>' +
+      '<th>Empty bottle (m1)</th>' +
+      '<th>Bottle with sample (m2)</th>' +
+      '<th>Dried bottle (m3)</th>' +
+      '<th>Result</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -124,11 +124,11 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Тигель №</th>' +
-      '<th>Хоосон тигель (m1)</th>' +
-      '<th>Дээжтэй тигель (m2)</th>' +
-      '<th>Үлдэгдэлтэй тигель (m3)</th>' +
-      '<th>Үр дүн</th>' +
+      '<th>Crucible #</th>' +
+      '<th>Empty crucible (m1)</th>' +
+      '<th>Crucible with sample (m2)</th>' +
+      '<th>Crucible with residue (m3)</th>' +
+      '<th>Result</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -161,11 +161,11 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Бокс №</th>' +
-      '<th>m1 (хоосон)</th>' +
-      '<th>m2 (дээжтэй)</th>' +
-      '<th>m3 (хатаасан)</th>' +
-      '<th>Үр дүн</th>' +
+      '<th>Box #</th>' +
+      '<th>m1 (empty)</th>' +
+      '<th>m2 (with sample)</th>' +
+      '<th>m3 (dried)</th>' +
+      '<th>Result</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -227,11 +227,11 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Тигель №</th>' +
+      '<th>Crucible #</th>' +
       '<th>m1</th>' +
       '<th>m2</th>' +
       '<th>m3</th>' +
-      '<th>Үр дүн</th>' +
+      '<th>Result</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -264,10 +264,10 @@
       'style="font-size:0.8em;width:100%;margin:0;">' +
       '<thead class="table-light">' +
       '<tr>' +
-      '<th>Бортого №</th>' +
-      '<th>Нүүрсний масс (m)</th>' +
-      '<th>Бортого + дээж + ус (m1)</th>' +
-      '<th>Үр дүн (TRD)</th>' +
+      '<th>Bottle #</th>' +
+      '<th>Coal mass (m)</th>' +
+      '<th>Bottle + sample + water (m1)</th>' +
+      '<th>Result (TRD)</th>' +
       '</tr></thead><tbody>';
 
     html += '<tr>' +
@@ -309,7 +309,7 @@
       '<thead class="table-light">' +
       '<tr>' +
       '<th></th>' +
-      '<th>Масс (g)</th>' +
+      '<th>Mass (g)</th>' +
       '<th>' + esc(labelPercent) + '</th>' +
       '</tr></thead><tbody>';
 

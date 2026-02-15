@@ -99,7 +99,7 @@ window.calculateAndDisplayForRow = function (sampleId, lockInputs = false) {
     if (diff > MOISTURE_REPEATABILITY_LIMIT) {
       $diffCell.addClass('text-danger fw-bold')
                .removeClass('text-success')
-               .attr('title', `Тохиролц хэтэрсэн! (Limit: ${MOISTURE_REPEATABILITY_LIMIT})`);
+               .attr('title', `Tolerance exceeded! (Limit: ${MOISTURE_REPEATABILITY_LIMIT})`);
     } else {
       $diffCell.removeClass('text-danger fw-bold')
                .addClass('text-success')

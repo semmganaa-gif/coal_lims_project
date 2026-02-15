@@ -1,15 +1,15 @@
 {% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
 
-{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Жингийн арга (Параллель)</span>{% endblock %}
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Жингийн арга (Parallel)</span>{% endblock %}
 
 {% block extra_ref %}
 <div class="mt-2 p-2 bg-light rounded">
-  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>Параллель хэмжилт (Жингийн арга)</h6>
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>Parallel хэмжилт (Жингийн арга)</h6>
   <small class="text-muted">
     <strong>A үр дүн</strong> = (m2_a - m1_a) × 10⁶ / V_a (мг/л)<br>
     <strong>B үр дүн</strong> = (m2_b - m1_b) × 10⁶ / V_b (мг/л)<br>
     <strong>Эцсийн үр дүн</strong> = (A + B) / 2<br>
-    <strong>Параллель зөрүү</strong> = |A - B|
+    <strong>Parallel зөрүү</strong> = |A - B|
   </small>
 </div>
 {% endblock %}
@@ -46,7 +46,7 @@
     },
     // Final
     {
-      headerName: 'Үр дүн', field: 'result', width: 100,
+      headerName: 'Result', field: 'result', width: 100,
       valueGetter: p => {
         let res_a = null, res_b = null;
         if (p.data.m1_a != null && p.data.m2_a != null && p.data.vol_a) {

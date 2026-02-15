@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="bi bi-arrow-up-circle me-2"></i>Improvement Register</h2>
+    <p class="text-muted">LAB.02.00.03 | ISO 17025 - 8.6</p>
+
+    <form method="POST" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Date:</label>
+                <input type="date" name="record_date" class="form-control" value="{{ today }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">No.:</label>
+                <input type="text" class="form-control" value="Auto-generated" disabled>
+            </div>
+        </div>
+
+        {# ═══ Section 1: Employee Section ═══ #}
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-gear me-2"></i>Section to be filled by the implementing employee/unit</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Activity requiring improvement <span class="text-danger">*</span></label>
+                    <textarea name="activity_description" class="form-control" rows="4"
+                              placeholder="Include complaints, management suggestions, and other activities" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Improvement action plan</label>
+                    <textarea name="improvement_plan" class="form-control" rows="4"
+                              placeholder="Detailed plan of action measures to implement"></textarea>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Improvement deadline</label>
+                        <input type="date" name="deadline" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Responsible person</label>
+                        <input type="text" name="responsible_person" class="form-control"
+                               placeholder="Full name, position">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Documentation of improvement, additional remarks</label>
+                    <textarea name="documentation" class="form-control" rows="3"
+                              placeholder="Documented evidence, additional remarks"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-save me-1"></i> Register
+            </button>
+            <a href="{{ url_for('quality.improvement_list') }}" class="btn btn-secondary btn-lg ms-2">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

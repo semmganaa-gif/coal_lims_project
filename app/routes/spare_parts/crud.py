@@ -90,7 +90,7 @@ def get_categories_dict():
 def category_list():
     """Категорийн жагсаалт."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     categories = SparePartCategory.query.order_by(
@@ -108,7 +108,7 @@ def category_list():
 def add_category():
     """Шинэ категори нэмэх."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     if request.method == 'POST':
@@ -116,9 +116,9 @@ def add_category():
         name = request.form.get('name', '').strip()
 
         if not code or not name:
-            flash('Код болон нэр заавал оруулна.', 'warning')
+            flash('Code and name are required.', 'warning')
         elif SparePartCategory.query.filter_by(code=code).first():
-            flash(f"'{code}' код бүртгэлтэй байна.", 'warning')
+            flash(f"Code '{code}' already exists.", 'warning')
         else:
             equipment_id = request.form.get('equipment_id')
             cat = SparePartCategory(
@@ -132,7 +132,7 @@ def add_category():
             )
             db.session.add(cat)
             db.session.commit()
-            flash(f"'{name}' категори нэмэгдлээ.", 'success')
+            flash(f"Category '{name}' added successfully.", 'success')
             return redirect(url_for('spare_parts.category_list'))
 
     equipments = Equipment.query.filter(
@@ -147,7 +147,7 @@ def add_category():
 def edit_category(id):
     """Категори засварлах."""
     if current_user.role not in ['manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     cat = SparePartCategory.query.get_or_404(id)
@@ -162,7 +162,7 @@ def edit_category(id):
         cat.equipment_id = int(equipment_id) if equipment_id else None
 
         db.session.commit()
-        flash('Категори шинэчлэгдлээ.', 'success')
+        flash('Category updated successfully.', 'success')
         return redirect(url_for('spare_parts.category_list'))
 
     equipments = Equipment.query.filter(
@@ -177,7 +177,7 @@ def edit_category(id):
 def delete_category(id):
     """Категори устгах."""
     if current_user.role != 'admin':
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
     cat = SparePartCategory.query.get_or_404(id)
@@ -185,13 +185,13 @@ def delete_category(id):
     # Энэ категорид сэлбэг байгаа эсэх шалгах
     count = SparePart.query.filter_by(category=cat.code).count()
     if count > 0:
-        flash(f"'{cat.name}' категорид {count} сэлбэг бүртгэлтэй. Эхлээд сэлбэгүүдийн категорийг өөрчилнө үү.", 'warning')
+        flash(f"Category '{cat.name}' has {count} spare parts. Please reassign them first.", 'warning')
         return redirect(url_for('spare_parts.category_list'))
 
     name = cat.name
     db.session.delete(cat)
     db.session.commit()
-    flash(f"'{name}' категори устгагдлаа.", 'warning')
+    flash(f"Category '{name}' deleted.", 'warning')
     return redirect(url_for('spare_parts.category_list'))
 
 
@@ -296,7 +296,7 @@ def spare_part_detail(id):
 def add_spare_part():
     """Шинэ сэлбэг нэмэх."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     if request.method == 'POST':
@@ -351,12 +351,12 @@ def add_spare_part():
             )
             db.session.commit()
 
-            flash(f"'{spare_part.name}' амжилттай нэмэгдлээ.", 'success')
+            flash(f"'{spare_part.name}' added successfully.", 'success')
             return redirect(url_for('spare_parts.spare_part_list'))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
 
     # GET
     equipments = Equipment.query.filter(
@@ -379,7 +379,7 @@ def add_spare_part():
 def edit_spare_part(id):
     """Сэлбэг засварлах."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     spare_part = SparePart.query.get_or_404(id)
@@ -448,12 +448,12 @@ def edit_spare_part(id):
             )
 
             db.session.commit()
-            flash('Амжилттай шинэчлэгдлээ.', 'success')
+            flash('Updated successfully.', 'success')
             return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Алдаа: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
 
     # GET
     equipments = Equipment.query.filter(
@@ -476,7 +476,7 @@ def edit_spare_part(id):
 def receive_spare_part(id):
     """Сэлбэг нөөц нэмэх (шинээр ирсэн)."""
     if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     spare_part = SparePart.query.get_or_404(id)
@@ -484,7 +484,7 @@ def receive_spare_part(id):
     try:
         quantity = float(request.form.get('quantity', 0))
         if quantity <= 0:
-            flash('Тоо хэмжээ 0-ээс их байх ёстой.', 'warning')
+            flash('Quantity must be greater than 0.', 'warning')
             return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
         old_quantity = spare_part.quantity
@@ -503,12 +503,12 @@ def receive_spare_part(id):
         )
         db.session.commit()
 
-        flash(f'{quantity} {spare_part.unit} нэмэгдлээ. Нийт: {spare_part.quantity}', 'success')
+        flash(f'{quantity} {spare_part.unit} added. Total: {spare_part.quantity}', 'success')
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error receiving spare part: {e}")
-        flash(f'Алдаа: {str(e)}', 'danger')
+        flash(f'Error: {str(e)}', 'danger')
 
     return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
@@ -522,11 +522,11 @@ def consume_spare_part(id):
     try:
         quantity = float(request.form.get('quantity', 0))
         if quantity <= 0:
-            flash('Тоо хэмжээ 0-ээс их байх ёстой.', 'warning')
+            flash('Quantity must be greater than 0.', 'warning')
             return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
         if quantity > spare_part.quantity:
-            flash(f'Нөөц хүрэлцэхгүй! Байгаа: {spare_part.quantity} {spare_part.unit}', 'danger')
+            flash(f'Insufficient stock! Available: {spare_part.quantity} {spare_part.unit}', 'danger')
             return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
         old_quantity = spare_part.quantity
@@ -562,12 +562,12 @@ def consume_spare_part(id):
         )
         db.session.commit()
 
-        flash(f'{quantity} {spare_part.unit} зарцуулагдлаа. Үлдэгдэл: {spare_part.quantity}', 'success')
+        flash(f'{quantity} {spare_part.unit} consumed. Remaining: {spare_part.quantity}', 'success')
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error consuming spare part: {e}")
-        flash(f'Алдаа: {str(e)}', 'danger')
+        flash(f'Error: {str(e)}', 'danger')
 
     return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
@@ -577,7 +577,7 @@ def consume_spare_part(id):
 def dispose_spare_part(id):
     """Сэлбэг устгах (disposal)."""
     if current_user.role not in ['senior', 'manager', 'admin']:
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
     spare_part = SparePart.query.get_or_404(id)
@@ -598,12 +598,12 @@ def dispose_spare_part(id):
         )
 
         db.session.commit()
-        flash(f"'{spare_part.name}' устгагдлаа.", 'warning')
+        flash(f"'{spare_part.name}' has been disposed.", 'warning')
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error disposing spare part: {e}")
-        flash(f'Алдаа: {str(e)}', 'danger')
+        flash(f'Error: {str(e)}', 'danger')
 
     return redirect(url_for('spare_parts.spare_part_list'))
 
@@ -613,7 +613,7 @@ def dispose_spare_part(id):
 def delete_spare_part(id):
     """Сэлбэг бүрмөсөн устгах (зөвхөн admin)."""
     if current_user.role != 'admin':
-        flash('Эрх хүрэхгүй.', 'danger')
+        flash('Permission denied.', 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
     spare_part = SparePart.query.get_or_404(id)
@@ -622,5 +622,5 @@ def delete_spare_part(id):
     db.session.delete(spare_part)
     db.session.commit()
 
-    flash(f"'{name}' бүрмөсөн устгагдлаа.", 'warning')
+    flash(f"'{name}' permanently deleted.", 'warning')
     return redirect(url_for('spare_parts.spare_part_list'))

@@ -12,13 +12,13 @@
         </div>
         <div>
           <h4 class="chem-hero-title">Химийн бодис</h4>
-          <p class="chem-hero-sub">Бүртгэл, нөөц, хэрэглээний хяналт</p>
+          <p class="chem-hero-sub">Record, нөөц, хэрэглээний хяналт</p>
         </div>
       </div>
       <div class="chem-hero-right">
         <span class="chem-stat">
           <span class="chem-stat-num">{{ stats.total }}</span>
-          <span class="chem-stat-label">Нийт</span>
+          <span class="chem-stat-label">Total</span>
         </span>
         {% if stats.low_stock > 0 %}
         <span class="chem-stat chem-stat-warning">
@@ -34,7 +34,7 @@
         {% endif %}
         {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] %}
         <a href="{{ url_for('chemicals.add_chemical', lab=lab) }}" class="btn chem-btn-add">
-          <i class="bi bi-plus-lg"></i> Шинэ бүртгэл
+          <i class="bi bi-plus-lg"></i> New бүртгэл
         </a>
         {% endif %}
       </div>
@@ -45,7 +45,7 @@
   <div class="chem-tabs">
     <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}"
        class="chem-tab {{ 'chem-tab-active' if view == 'all' }}">
-      <i class="bi bi-grid-3x3-gap"></i> Бүгд
+      <i class="bi bi-grid-3x3-gap"></i> All
     </a>
     <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='low_stock') }}"
        class="chem-tab {{ 'chem-tab-active' if view == 'low_stock' }}">
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     columns: [
       {
-        title: "Нэр",
+        title: "Name",
         field: "name",
         widthGrow: 2,
         minWidth: 150,
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
       { title: "Lot №", field: "lot_number", width: 90 },
       { title: "Зэрэг", field: "grade", width: 65 },
       {
-        title: "Тоо хэмжээ",
+        title: "Quantity",
         field: "quantity",
         width: 95,
         hozAlign: "right",
@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formatter: function(cell) {
           const map = {
             acid: 'Хүчил', base: 'Суурь', solvent: 'Уусгагч',
-            indicator: 'Индикатор', standard: 'Стандарт', media: 'Орчин',
+            indicator: 'Индикатор', standard: 'Standard', media: 'Орчин',
             buffer: 'Буфер', salt: 'Давс', other: 'Бусад'
           };
           return map[cell.getValue()] || cell.getValue();
@@ -402,11 +402,11 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 100,
         formatter: function(cell) {
           const map = {
-            active: '<span class="badge bg-success">Идэвхтэй</span>',
+            active: '<span class="badge bg-success">Active</span>',
             low_stock: '<span class="badge bg-warning">Бага нөөц</span>',
             expired: '<span class="badge bg-danger">Хугацаа дууссан</span>',
             empty: '<span class="badge bg-secondary">Дууссан</span>',
-            disposed: '<span class="badge bg-dark">Устгагдсан</span>'
+            disposed: '<span class="badge bg-dark">Deleted</span>'
           };
           return map[cell.getValue()] || cell.getValue();
         }

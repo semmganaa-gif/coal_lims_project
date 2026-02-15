@@ -4,7 +4,7 @@
 
 {% block extra_ref %}
 <div class="mt-2 p-2 bg-light rounded">
-  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 4424:2005 - Хлорид ион</h6>
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 4424:2005 - Chlorineид ион</h6>
   <small class="text-muted">
     <strong>K</strong> = Vt_теор / Vt_дундаж (засварын коэффициент)<br>
     <strong>Томьёо:</strong> Cl⁻ (мг/л) = (Vd - V0) × K × N × 35.453 × 1000 / V × Шингэрүүлэлт<br>
@@ -29,9 +29,9 @@
   }
 
   var formColumns = [
-    // Засварын коэффициент
+    // Repairын коэффициент
     {
-      headerName: 'Засварын коэффициент',
+      headerName: 'Repairын коэффициент',
       children: [
         { headerName: 'Vt1', field: 'vt1', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
         { headerName: 'Vt2', field: 'vt2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
@@ -46,7 +46,7 @@
         {
           headerName: 'K', field: 'k_coef', width: 110, type: 'numericColumn', ...editCol,
           valueFormatter: p => p.value != null ? p.value.toFixed(6) : '',
-          headerTooltip: 'Засварын коэффициент = Vt_теор / Vt_дундаж'
+          headerTooltip: 'Repairын коэффициент = Vt_теор / Vt_дундаж'
         },
       ]
     },
