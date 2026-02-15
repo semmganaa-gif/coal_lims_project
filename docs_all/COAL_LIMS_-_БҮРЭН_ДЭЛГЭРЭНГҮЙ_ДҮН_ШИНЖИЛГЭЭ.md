@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED** — This document is no longer maintained. See newer audit/documentation files.
+
 # COAL LIMS - БҮРЭН ДЭЛГЭРЭНГҮЙ ДҮН ШИНЖИЛГЭЭ
 
 **Огноо:** 2026-01-10

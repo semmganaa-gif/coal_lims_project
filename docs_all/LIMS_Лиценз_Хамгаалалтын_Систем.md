@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED** — This document is no longer maintained. See newer audit/documentation files.
+
 # LIMS Лиценз Хамгаалалтын Систем
 
 ## Тойм

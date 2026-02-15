@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED** — This document is no longer maintained. See newer audit/documentation files.
+
 # Template Macros - Хэрэглэх заавар
 
 Jinja2 macro-ууд ашиглан HTML template-ын код давхардлыг багасгах.

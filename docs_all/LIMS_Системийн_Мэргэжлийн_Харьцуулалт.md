@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED** — This document is no longer maintained. See newer audit/documentation files.
+
 # LIMS Системийн Мэргэжлийн Харьцуулалт
 
 **Огноо:** 2025-12-17

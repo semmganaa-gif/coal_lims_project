@@ -1,3 +1,5 @@
+> **⚠️ OUTDATED** — This document is no longer maintained. See newer audit/documentation files.
+
 # COAL LIMS - Mobile Responsive UI Implementation
 
 **Огноо:** 2026-01-11

@@ -1,3 +1,5 @@
+> **📝 INCOMPLETE** — This document is a stub and needs further content.
+
 # LIMS - Video Tutorial Scripts
 
 ## Overview
