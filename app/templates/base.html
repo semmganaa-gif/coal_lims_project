@@ -598,6 +598,14 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- SheetJS - Excel export -->
+  <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
+
+  <!-- DataTables (Quality Records pages) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
   <!-- Alpine.js - Lightweight reactive framework -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
@@ -620,6 +628,115 @@
         evt.detail.headers['X-CSRFToken'] = csrfToken;
       }
     });
+  </script>
+
+  <!-- Global Excel export helper -->
+  <script>
+    /**
+     * AG-Grid өгөгдлийг .xlsx файл болгон татах.
+     * @param {object} api - AG-Grid gridApi
+     * @param {string} fileName - Файлын нэр (e.g. 'journal.xlsx')
+     * @param {string} [sheetName] - Sheet нэр
+     */
+    function gridToXlsx(api, fileName, sheetName) {
+      if (!window.XLSX) { alert('XLSX library not loaded'); return; }
+      var displayedCols = null;
+      try { displayedCols = api.getAllDisplayedColumns(); } catch(e) {}
+      var headers = [], data;
+
+      if (displayedCols && displayedCols.length) {
+        // Primary path: use displayed columns + valueGetter/valueFormatter
+        displayedCols.forEach(function(c) {
+          var cd = c.colDef || {};
+          headers.push(cd.headerName || cd.field || '');
+        });
+        data = [headers];
+        api.forEachNodeAfterFilterAndSort(function(node) {
+          var row = [];
+          displayedCols.forEach(function(col) {
+            var val = '';
+            var cd = col.colDef || {};
+            try {
+              if (typeof cd.valueGetter === 'function') {
+                val = cd.valueGetter({ data: node.data, node: node, colDef: cd, column: col, api: api });
+              } else if (cd.field) {
+                val = node.data[cd.field];
+              }
+            } catch(e) {
+              if (cd.field) val = node.data[cd.field];
+            }
+            // Apply valueFormatter for clean numeric display
+            try {
+              if (val != null && val !== '' && typeof cd.valueFormatter === 'function') {
+                val = cd.valueFormatter({ value: val, data: node.data, node: node, colDef: cd });
+              }
+            } catch(e) {}
+            row.push(val != null ? val : '');
+          });
+          data.push(row);
+        });
+      } else {
+        // Fallback: flatten columnDefs (handles column groups)
+        var colDefs = [];
+        try { colDefs = api.getColumnDefs() || []; } catch(e) {}
+        var flat = [];
+        (function walk(defs) {
+          (defs || []).forEach(function(d) {
+            if (d.children) walk(d.children);
+            else flat.push(d);
+          });
+        })(colDefs);
+        flat.forEach(function(d) {
+          headers.push(d.headerName || d.field || '');
+        });
+        data = [headers];
+        api.forEachNodeAfterFilterAndSort(function(node) {
+          var row = flat.map(function(d) {
+            return d.field ? (node.data[d.field] != null ? node.data[d.field] : '') : '';
+          });
+          data.push(row);
+        });
+      }
+
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      var colWidths = headers.map(function(h, i) {
+        var max = (h || '').length;
+        data.forEach(function(r) { var len = String(r[i] || '').length; if (len > max) max = len; });
+        return { wch: Math.min(max + 2, 50) };
+      });
+      ws['!cols'] = colWidths;
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+      XLSX.writeFile(wb, fileName);
+    }
+
+    /**
+     * HTML table-ийг .xlsx файл болгон татах.
+     * @param {string} tableId - Table element ID
+     * @param {string} fileName - Файлын нэр
+     * @param {string} [sheetName] - Sheet нэр
+     */
+    function tableToXlsx(tableId, fileName, sheetName) {
+      if (!window.XLSX) { alert('XLSX library not loaded'); return; }
+      var tbl = document.getElementById(tableId);
+      if (!tbl) { alert('Table not found'); return; }
+      var ws = XLSX.utils.table_to_sheet(tbl);
+      // Auto column widths
+      var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      var colWidths = [];
+      for (var c = range.s.c; c <= range.e.c; c++) {
+        var max = 8;
+        for (var r = range.s.r; r <= range.e.r; r++) {
+          var cell = ws[XLSX.utils.encode_cell({r:r, c:c})];
+          if (cell && cell.v) { var len = String(cell.v).length; if (len > max) max = len; }
+        }
+        colWidths.push({ wch: Math.min(max + 2, 50) });
+      }
+      ws['!cols'] = colWidths;
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+      XLSX.writeFile(wb, fileName);
+    }
   </script>
 
   <!-- Utility scripts -->

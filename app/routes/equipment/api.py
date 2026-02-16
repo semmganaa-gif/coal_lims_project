@@ -102,25 +102,80 @@ def log_usage_bulk():
                             if diff > tolerance:
                                 result = "Fail"
 
-                elif calib_type == "sulfur":
-                    # Хүхэр багаж - 5 стандарт
+                    # Этанол туухайн шалгалт
+                    ethanol = calibration.get("ethanol")
+                    if ethanol:
+                        eth_temp = ethanol.get("temperature")
+                        eth_density = ethanol.get("density")
+                        eth_volume = ethanol.get("volume")
+                        eth_expected = ethanol.get("expected")
+                        eth_measured = ethanol.get("measured")
+                        desc_parts.append("Этанол туухай шалгалт:")
+                        if eth_temp is not None:
+                            desc_parts.append(f"  Температур: {eth_temp}°C")
+                        if eth_density is not None:
+                            desc_parts.append(f"  Нягт: {eth_density} g/mL")
+                        if eth_volume is not None:
+                            desc_parts.append(f"  Эзэлхүүн: {eth_volume} mL")
+                        if eth_expected is not None and eth_measured is not None:
+                            diff = abs(eth_measured - eth_expected)
+                            eth_status = "OK" if diff <= 0.001 else "FAIL"
+                            desc_parts.append(f"  Тооцоолсон: {eth_expected:.4f}g, Хэмжсэн: {eth_measured:.4f}g ({eth_status})")
+                            if diff > 0.001:
+                                result = "Fail"
+
+                elif calib_type in ("sulfur", "xrf_calib"):
+                    # Хүхэр / Фосфор / Фтор / Хлор багаж калибровка
+                    curve_type = calibration.get("curve_type", "linear")
+                    rms_error = calibration.get("rms_error")
                     standards = calibration.get("standards", [])
-                    desc_parts.append("Хүхэр багаж калибровка:")
+                    verifications = calibration.get("verifications", [])
+
+                    calib_label = "XRF калибровка" if calib_type == "xrf_calib" else "Хүхэр багаж калибровка"
+                    desc_parts.append(f"{calib_label} ({curve_type.capitalize()}):")
+                    if rms_error is not None:
+                        desc_parts.append(f"  RMS Error: {rms_error:.4f}")
+
                     for i, std in enumerate(standards, 1):
                         name = std.get("name", f"Стд {i}")
+                        weight = std.get("weight")
+                        moisture = std.get("moisture")
                         cert = std.get("certified")
                         meas = std.get("measured")
+                        parts = [f"{i}. {name}"]
+                        if weight:
+                            parts.append(f"Wt={weight}g")
+                        if moisture:
+                            parts.append(f"M={moisture}%")
                         if cert is not None and meas is not None:
                             diff_pct = abs((meas - cert) / cert * 100) if cert else 0
                             status = "OK" if diff_pct <= 5 else "FAIL"
-                            desc_parts.append(f"  {i}. {name}: Батл={cert}%, Хэмж={meas}% ({status})")
+                            parts.append(f"St,d={meas}%")
+                            parts.append(f"Cert={cert}%")
+                            parts.append(f"({status})")
                             if diff_pct > 5:
                                 result = "Fail"
+                        desc_parts.append("  " + " | ".join(parts))
+
+                    if verifications:
+                        desc_parts.append("Шалгалт:")
+                        for i, v in enumerate(verifications, 1):
+                            name = v.get("name", f"Шалг {i}")
+                            cert = v.get("certified")
+                            meas = v.get("measured")
+                            if cert is not None and meas is not None:
+                                diff_pct = abs((meas - cert) / cert * 100) if cert else 0
+                                status = "OK" if diff_pct <= 5 else "FAIL"
+                                desc_parts.append(f"  {i}. {name}: St,d={meas}%, Cert={cert}% ({status})")
+                                if diff_pct > 5:
+                                    result = "Fail"
 
                 elif calib_type == "calorimeter":
                     # Илчлэг багаж - 5 хэмжилт
                     std_name = calibration.get("standard_name", "Бензой хүчил")
                     cert_val = calibration.get("certified_value", 26454)
+                    prev_cap = calibration.get("prev_heat_capacity")
+                    bomb_cap = calibration.get("bomb_heat_capacity")
                     measurements = calibration.get("measurements", [])
                     if measurements:
                         avg = sum(measurements) / len(measurements)
@@ -131,12 +186,16 @@ def log_usage_bulk():
                             rsd = 0
                         avg_diff = abs(avg - cert_val)
                         desc_parts.append(f"Илчлэг багаж ({std_name}):")
-                        desc_parts.append(f"  Баталгаат: {cert_val} cal/g")
+                        desc_parts.append(f"  Баталгаат: {cert_val} J/g")
                         desc_parts.append(f"  Хэмжилтүүд: {', '.join(str(int(m)) for m in measurements)}")
                         desc_parts.append(f"  Дундаж: {avg:.0f}, RSD: {rsd:.3f}%")
+                        if prev_cap:
+                            desc_parts.append(f"  Өмнөх C: {prev_cap} J/°C")
+                        if bomb_cap:
+                            desc_parts.append(f"  C: {bomb_cap} J/°C")
                         if rsd > 0.1 or avg_diff > 60:
                             result = "Fail"
-                            desc_parts.append(f"  Шалтгаан: {'RSD > 0.1%' if rsd > 0.1 else 'Зөрүү > 60 cal/g'}")
+                            desc_parts.append(f"  Шалтгаан: {'RSD > 0.1%' if rsd > 0.1 else 'Зөрүү > 60 J/g'}")
 
                 elif calib_type == "analysis":
                     std_name = calibration.get("standard_name", "")
@@ -151,13 +210,88 @@ def log_usage_bulk():
                         if abs(diff_pct) > 2:
                             result = "Fail"
 
+                elif calib_type == "csn_crucible":
+                    # Хоосон тигелийн туршилт (CSN)
+                    start_temp = calibration.get("start_temp")
+                    max_current = calibration.get("max_current_sec")
+                    tests = calibration.get("tests", [])
+                    adjustments = calibration.get("adjustments", [])
+                    final_pass = calibration.get("final_pass", False)
+
+                    desc_parts.append("Хоосон тигелийн туршилт (CSN):")
+                    if start_temp:
+                        desc_parts.append(f"  Эхлэх темп: {start_temp}°C")
+                    if max_current:
+                        desc_parts.append(f"  Max гүйдэл: {max_current} сек")
+
+                    for i, t in enumerate(tests, 1):
+                        t1 = t.get("temp_1min", "")
+                        t130 = t.get("temp_1m30", "")
+                        t230 = t.get("temp_2m30", "")
+                        passed = "OK" if t.get("pass") else "FAIL"
+                        desc_parts.append(
+                            f"  T{i}: 1мин={t1}°C, "
+                            f"1:30={t130}°C, "
+                            f"2:30={t230}°C → {passed}"
+                        )
+
+                    for i, a in enumerate(adjustments, 1):
+                        adj_temp = a.get("start_temp", "")
+                        adj_current = a.get("max_current_sec", "")
+                        desc_parts.append(f"  Тохируулга {i}: темп={adj_temp}°C, гүйдэл={adj_current}сек")
+
+                    result = "Pass" if final_pass else "Fail"
+
+                elif calib_type == "drum":
+                    # Барабан калибровка
+                    meas_1min = calibration.get("meas_1min")
+                    meas_5min = calibration.get("meas_5min")
+
+                    if meas_1min is not None or meas_5min is not None:
+                        # Gi барабан — 1мин=50, 5мин=250
+                        initial_rpm = calibration.get("initial_rpm")
+                        target_1 = calibration.get("target_1min", 50)
+                        target_5 = calibration.get("target_5min", 250)
+                        drum_pass = calibration.get("pass", False)
+
+                        desc_parts.append("Барабан калибровка (Gi):")
+                        if initial_rpm is not None:
+                            desc_parts.append(f"  Эхний эргэлт: {initial_rpm}")
+                        if meas_1min is not None:
+                            ok1 = "OK" if meas_1min == target_1 else "FAIL"
+                            desc_parts.append(f"  1 мин: {meas_1min} (зорилт={target_1}) → {ok1}")
+                        if meas_5min is not None:
+                            ok5 = "OK" if meas_5min == target_5 else "FAIL"
+                            desc_parts.append(f"  5 мин: {meas_5min} (зорилт={target_5}) → {ok5}")
+                        result = "Pass" if drum_pass else "Fail"
+                    else:
+                        # Prep drum — before/after format
+                        before_rpm = calibration.get("before")
+                        after_rpm = calibration.get("after")
+                        duration = calibration.get("duration", "")
+                        desc_parts.append("Тээрэм калибровка:")
+                        if duration:
+                            desc_parts.append(f"  Хугацаа: {duration} мин")
+                        if before_rpm is not None and after_rpm is not None:
+                            diff = abs(after_rpm - before_rpm)
+                            desc_parts.append(f"  Өмнө: {before_rpm} RPM, Дараа: {after_rpm} RPM, Зөрүү: {diff}")
+                            result = "Pass" if diff <= 2 else "Fail"
+
                 if desc_parts:
+                    freq = calibration.get("frequency", "daily")
+                    freq_map = {"daily": "Өдөр тутам", "monthly": "Сар болгон", "adjustment": "Тохируулга"}
+                    freq_label = freq_map.get(freq, freq)
+                    desc_parts.insert(0, f"[{freq_label}]")
+
                     action_type_map = {
                         "temperature": "Temperature Check",
                         "sulfur": "Sulfur Calibration",
-                        "calorimeter": "Calorimeter Check",
+                        "calorimeter": "Calorimeter Calibration",
                         "weight": "Balance Check",
-                        "analysis": "Calibration Check"
+                        "analysis": "Calibration Check",
+                        "csn_crucible": "CSN Crucible Test",
+                        "drum": "Drum Calibration",
+                        "xrf_calib": "XRF Calibration",
                     }
                     mlog = MaintenanceLog(
                         equipment_id=eq_id,
@@ -249,11 +383,11 @@ def log_usage_bulk():
                 )
                 db.session.add(mlog)
 
-            if minutes > 0 or note or is_checked:
+            if minutes > 0 or note:
                 end_time = today_date + timedelta(minutes=minutes)
 
                 purpose_text = note
-                if not purpose_text and is_checked:
+                if not purpose_text:
                     purpose_text = "Daily Check / Routine"
 
                 new_usage = UsageLog(
@@ -362,6 +496,7 @@ def api_equipment_journal_detailed():
     start_str = request.args.get("start_date")
     end_str = request.args.get("end_date")
     category = request.args.get("category", "all")
+    equipment_id = request.args.get("equipment_id", type=int)
 
     start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else now_local() - timedelta(days=30)
     end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else now_local()
@@ -370,25 +505,41 @@ def api_equipment_journal_detailed():
     m_logs = db.session.query(MaintenanceLog, Equipment).join(Equipment).filter(
         MaintenanceLog.action_date >= start_dt, MaintenanceLog.action_date <= end_dt
     )
-    m_logs = _filter_equipment_by_category(m_logs, category).all()
-
     u_logs = db.session.query(UsageLog, Equipment).join(Equipment).filter(
         UsageLog.start_time >= start_dt, UsageLog.start_time <= end_dt
     )
-    u_logs = _filter_equipment_by_category(u_logs, category).all()
+
+    if equipment_id:
+        m_logs = m_logs.filter(MaintenanceLog.equipment_id == equipment_id)
+        u_logs = u_logs.filter(UsageLog.equipment_id == equipment_id)
+    else:
+        m_logs = _filter_equipment_by_category(m_logs, category)
+        u_logs = _filter_equipment_by_category(u_logs, category)
+
+    m_logs = m_logs.all()
+    u_logs = u_logs.all()
 
     combined = []
     for log, eq in m_logs:
         combined.append({
             "date": log.action_date.strftime("%Y-%m-%d %H:%M"), "timestamp": log.action_date.timestamp(),
-            "lab_code": eq.lab_code, "equipment": eq.name, "category": "Maintenance", "type": log.action_type,
-            "user": log.performed_by, "description": log.description, "result": log.result or ""
+            "equipment_id": eq.id, "lab_code": eq.lab_code, "equipment": eq.name,
+            "category": "Maintenance", "type": log.action_type,
+            "duration": "", "user": log.performed_by, "user_id": log.performed_by_id,
+            "description": log.description, "result": log.result or "",
+            "log_id": log.id,
+            "has_file": bool(log.file_path),
+            "certificate_no": log.certificate_no or "",
         })
     for log, eq in u_logs:
         combined.append({
             "date": log.start_time.strftime("%Y-%m-%d %H:%M"), "timestamp": log.start_time.timestamp(),
-            "lab_code": eq.lab_code, "equipment": eq.name, "category": "Usage", "type": "Ашиглалт",
-            "user": "-", "description": f"{log.duration_minutes} мин", "result": "Normal"
+            "equipment_id": eq.id, "lab_code": eq.lab_code, "equipment": eq.name,
+            "category": "Usage", "type": "Ашиглалт",
+            "duration": f"{log.duration_minutes} мин" if log.duration_minutes else "",
+            "user": log.used_by or "-", "user_id": log.used_by_id,
+            "description": log.purpose or "", "result": "",
+            "log_id": None, "has_file": False, "certificate_no": "",
         })
 
     combined.sort(key=lambda x: x["timestamp"], reverse=True)
@@ -437,7 +588,7 @@ def api_equipment_monthly_stats():
 
     rows = []
     for eid, info in data_map.items():
-        row = {"lab_code": info["lab_code"], "name": info["name"]}
+        row = {"equipment_id": eid, "lab_code": info["lab_code"], "name": info["name"]}
         for m in range(1, 13):
             row[f"usage_{m}"] = info["months"][m]["usage"]
             row[f"maint_{m}"] = info["months"][m]["maint"]

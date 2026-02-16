@@ -1,4 +1,5 @@
 {# app/templates/analysis_forms/mass_workspace_form.html #}
+{# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 <div class="container-fluid p-0">
 
   <!-- Header and Actions -->
@@ -58,9 +59,12 @@
 </style>
 
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
 <script>
 (() => {
+  'use strict';
+
   const gridEl     = document.getElementById('massGrid');
   const $btnRefresh= document.getElementById('btnRefresh');
   const $btnSave   = document.getElementById('btnSave');
@@ -72,22 +76,21 @@
   let gridApi = null;
   let balanceIntegration = null;
 
+  // ✨ Draft Manager
+  let draftMgr;
+
   const readyBadge = (isReady) => isReady
     ? '<span class="badge text-bg-success mw-badge">Ready</span>'
     : '<span class="badge text-bg-secondary mw-badge">New</span>';
 
+  // --- COLUMN DEFINITIONS ---
   const columnDefs = [
-    {
-      headerName:'',
-      width:55,
+    { headerName:'ID', field:'id', width:100, pinned:'left', cellClass:'text-muted',
+      sort:'asc',
       checkboxSelection:true,
       headerCheckboxSelection:true,
-      headerCheckboxSelectionFilteredOnly:true,
-      pinned:'left',
-      sortable:false,
-      resizable:false
+      headerCheckboxSelectionFilteredOnly:true
     },
-    { headerName:'ID', field:'id', width:80, pinned:'left', cellClass:'text-muted' },
     { headerName:'Sample Code', field:'sample_code', minWidth:300,
       cellRenderer:p=>`<div class="d-flex flex-column gap-1">
           <span class="fw-semibold text-primary">${p.value || '-'}</span>
@@ -126,23 +129,63 @@
     }
   ];
 
-  const gridOptions = {
-    columnDefs,
-    rowData: [],
-    defaultColDef:{ resizable:true, sortable:true, suppressMovable:true },
-    suppressRowTransform:true,
-    rowSelection:{ mode:'multiRow', enableClickSelection:true },
-    rowClassRules:{ 'mw-row-ready': params => !!params.data.mass_ready },
-    getRowId: params => String(params.data.id)
-  };
+  // --- DRAFT MANAGEMENT ---
 
-  function setRowData(rows){
-    if(gridApi){
-      gridApi.setGridOption('rowData', rows);
+  function saveDrafts() {
+    if (!gridApi || !draftMgr) return;
+    const drafts = {};
+    gridApi.forEachNode(n => {
+      if (n.data.weight != null && !n.data.mass_ready) {
+        drafts[String(n.data.id)] = { weight: n.data.weight };
+      }
+    });
+    draftMgr.save(drafts, false);
+  }
+
+  function restoreDrafts() {
+    if (!gridApi || !draftMgr) return;
+    try {
+      const drafts = draftMgr.restore();
+      if (!drafts || Object.keys(drafts).length === 0) return;
+
+      let restored = 0;
+      gridApi.forEachNode(n => {
+        const key = String(n.data.id);
+        if (drafts[key] && drafts[key].weight != null && !n.data.mass_ready) {
+          // Server-ээс ирсэн weight байхгүй бол draft-аас сэргээх
+          if (n.data.weight == null) {
+            n.data.weight = drafts[key].weight;
+            restored++;
+          }
+        }
+      });
+
+      if (restored > 0) {
+        gridApi.refreshCells({ force: true });
+        console.log(`✅ Restored ${restored} draft weights`);
+      }
+    } catch(e) {
+      console.warn('Failed to restore drafts:', e);
     }
   }
 
-  async function fetchEligible(){
+  function onCellValueChanged(params) {
+    if (params.colDef.field === 'weight') {
+      saveDrafts();
+    }
+  }
+
+  // --- DATA FETCH ---
+
+  function setRowData(rows) {
+    if (gridApi) {
+      gridApi.setGridOption('rowData', rows);
+      // Data ачаалагдсаны дараа draft сэргээх
+      setTimeout(restoreDrafts, 100);
+    }
+  }
+
+  async function fetchEligible() {
     const inc = $toggleInc.checked ? '1' : '0';
     const q   = encodeURIComponent($search.value || '');
     if(gridApi) gridApi.showLoadingOverlay();
@@ -158,6 +201,8 @@
       if(gridApi) gridApi.hideOverlay();
     }
   }
+
+  // --- SAVE ---
 
   $btnSave.addEventListener('click', async () => {
     if(!gridApi) return;
@@ -187,11 +232,18 @@
         return;
       }
       toast(data.message || 'Saved successfully.', 'success');
+
+      // ✨ Хадгалагдсан sample-ийн draft устгах
+      const savedIds = items.map(i => String(i.sample_id));
+      if (draftMgr) draftMgr.purge(savedIds);
+
       fetchEligible();
     }catch(err){
       console.error(err); toast('Server error.', 'danger');
     }
   });
+
+  // --- ACTIONS ---
 
   gridEl.addEventListener('click', async (e) => {
     const btn = e.target.closest('.mass-action');
@@ -214,6 +266,8 @@
         const js = await res.json();
         if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
         toast(js.message || 'Weight updated.', 'success');
+        // Draft устгах
+        if (draftMgr) draftMgr.purge([String(id)]);
       }catch(err){ console.error(err); toast('Network error.', 'danger'); }
       return;
     }
@@ -243,6 +297,8 @@
         const js = await res.json();
         if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
         toast(js.message || 'Sample deleted.', 'success');
+        // Draft устгах
+        if (draftMgr) draftMgr.purge([String(id)]);
         fetchEligible();
       }catch(err){ console.error(err); toast('Network error.', 'danger'); }
       return;
@@ -266,13 +322,11 @@
   // ЖИНТЭЙ ХОЛБОГДОХ (Web Serial API)
   // ============================================
 
-  // Жингийн статус шинэчлэх
   function updateBalanceStatus(message, type = 'secondary') {
     $balanceStatus.textContent = message;
     $balanceStatus.className = `badge bg-${type}`;
   }
 
-  // Connect to Balance товч
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
       toast('Serial Balance module not loaded.', 'danger');
@@ -285,7 +339,6 @@
     }
 
     if (window.labBalance.isConnected) {
-      // Салгах
       await window.labBalance.disconnect();
       $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect to Balance';
       $btnConnect.classList.remove('btn-success');
@@ -294,9 +347,7 @@
       return;
     }
 
-    // Холбогдох
     updateBalanceStatus('Connecting...', 'warning');
-
     const connected = await window.labBalance.connect();
 
     if (connected) {
@@ -306,7 +357,6 @@
       updateBalanceStatus('Connected', 'success');
       toast('Successfully connected to balance! Press Enter in Mass column to read weight.', 'success');
 
-      // Grid integration тохируулах
       if (gridApi) {
         balanceIntegration = new BalanceGridIntegration(window.labBalance);
         balanceIntegration.setGridApi(gridApi);
@@ -317,7 +367,6 @@
     }
   });
 
-  // Жингийн callback-ууд
   if (window.labBalance) {
     window.labBalance.onStatusChange = (msg) => {
       console.log('Balance status:', msg);
@@ -335,18 +384,11 @@
     };
   }
 
-  // AG-Grid дээр Enter дарахад жин авах
+  // AG-Grid дээр Enter дарахад жин авах (balance холбогдсон үед)
   async function handleWeightCellEnter(params) {
-    if (!window.labBalance || !window.labBalance.isConnected) {
-      // Weight холбогдоогүй бол default үйлдэл
-      return;
-    }
+    if (!window.labBalance || !window.labBalance.isConnected) return;
+    if (params.column.getColId() !== 'weight') return;
 
-    if (params.column.getColId() !== 'weight') {
-      return;
-    }
-
-    // Weight татах
     updateBalanceStatus('Reading weight...', 'warning');
     const weight = await window.labBalance.getStableWeight();
 
@@ -354,8 +396,8 @@
       params.node.setDataValue('weight', weight);
       updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
       toast(`Weight: ${weight.toFixed(4)} g`, 'success');
+      saveDrafts();
 
-      // Дараагийн мөр рүү шилжих
       const nextRowIndex = params.rowIndex + 1;
       const nextRow = gridApi.getDisplayedRowAtIndex(nextRowIndex);
       if (nextRow) {
@@ -369,7 +411,6 @@
     }
   }
 
-  // Grid-ийн keydown event
   gridEl.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter' && window.labBalance && window.labBalance.isConnected) {
       const focusedCell = gridApi?.getFocusedCell();
@@ -388,11 +429,66 @@
     }
   });
 
+  // --- INIT ---
+
   document.addEventListener('DOMContentLoaded', () => {
-    gridApi = agGrid.createGrid(gridEl, gridOptions);
+    // ✨ Draft Manager
+    if (typeof LIMSDraftManager !== 'undefined') {
+      draftMgr = new LIMSDraftManager('mass');
+      console.log('✅ Mass Draft Manager initialized');
+    } else {
+      console.warn('⚠️ LIMSDraftManager not loaded, using fallback');
+      draftMgr = {
+        save: (data) => localStorage.setItem('draft_inputs_mass', JSON.stringify(data)),
+        restore: () => JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}'),
+        purge: (ids) => {
+          if (!ids || ids.length === 0) {
+            localStorage.removeItem('draft_inputs_mass');
+          } else {
+            const existing = JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}');
+            ids.forEach(id => delete existing[String(id)]);
+            if (Object.keys(existing).length === 0) localStorage.removeItem('draft_inputs_mass');
+            else localStorage.setItem('draft_inputs_mass', JSON.stringify(existing));
+          }
+        }
+      };
+    }
+
+    // ✨ LIMS_AGGRID.createGrid() factory ашиглах
+    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+      gridApi = LIMS_AGGRID.createGrid('#massGrid', columnDefs, [], {
+        onCellValueChanged: onCellValueChanged,
+        rowSelection: { mode: 'multiRow', enableClickSelection: true },
+        rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
+        getRowId: params => String(params.data.id),
+        editableColIds: ['weight'],
+        enterNavigatesVerticallyAfterEdit: true
+      });
+      console.log('✅ Mass Grid initialized with LIMS_AGGRID factory');
+    } else {
+      // Fallback: manual grid
+      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      const gridOptions = {
+        theme: 'legacy',
+        columnDefs,
+        rowData: [],
+        defaultColDef: { resizable: true, sortable: true, suppressMovable: true },
+        suppressRowTransform: true,
+        singleClickEdit: true,
+        stopEditingWhenCellsLoseFocus: true,
+        enterNavigatesVertically: true,
+        enterNavigatesVerticallyAfterEdit: true,
+        onCellValueChanged: onCellValueChanged,
+        rowSelection: { mode: 'multiRow', enableClickSelection: true },
+        rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
+        getRowId: params => String(params.data.id)
+      };
+      gridApi = agGrid.createGrid(gridEl, gridOptions);
+    }
+
     fetchEligible();
 
-    // Grid бэлэн болсны дараа balance integration тохируулах
+    // Balance integration
     if (window.labBalance && window.labBalance.isConnected) {
       balanceIntegration = new BalanceGridIntegration(window.labBalance);
       balanceIntegration.setGridApi(gridApi);
@@ -400,5 +496,3 @@
   });
 })();
 </script>
-
-

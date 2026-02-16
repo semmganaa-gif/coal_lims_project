@@ -16,6 +16,7 @@ from app.utils.datetime import now_local
 from app.utils.audit import log_audit
 from sqlalchemy.exc import IntegrityError
 
+from app.utils.shifts import get_shift_date
 from app.routes.equipment import equipment_bp, MAX_FILE_SIZE, ALLOWED_EXTENSIONS
 
 
@@ -73,9 +74,24 @@ def equipment_list():
 @equipment_bp.route("/equipment/<int:id>")
 @login_required
 def equipment_detail(id):
-    """Төхөөрөмжийн дэлгэрэнгүй мэдээлэл."""
+    """Төхөөрөмжийн дэлгэрэнгүй мэдээлэл + журнал."""
     eq = Equipment.query.get_or_404(id)
-    return render_template("equipment_detail.html", eq=eq)
+    usage_logs = UsageLog.query.filter_by(equipment_id=id).order_by(UsageLog.start_time.desc()).all()
+    return render_template("equipment_detail.html", eq=eq, usage_logs=usage_logs)
+
+
+@equipment_bp.route("/equipment/<int:id>/journal")
+@login_required
+def equipment_journal_page(id):
+    """Тухайн багажийн тусдаа журнал хуудас."""
+    eq = Equipment.query.get_or_404(id)
+    today = get_shift_date()
+    return render_template(
+        "equipment_eq_journal.html",
+        eq=eq,
+        start_date=today - timedelta(days=29),
+        end_date=today,
+    )
 
 
 @equipment_bp.route("/add_equipment", methods=["POST"])
@@ -411,6 +427,7 @@ def add_maintenance_log(id):
     """Засвар үйлчилгээний бүртгэл нэмэх."""
     eq = Equipment.query.get_or_404(id)
     action_type = request.form.get("action_type")
+    next_url = request.form.get("next") or url_for("equipment.equipment_detail", id=id)
 
     action_date_str = request.form.get("action_date")
     action_date = datetime.strptime(action_date_str, "%Y-%m-%d") if action_date_str else now_local()
@@ -425,12 +442,12 @@ def add_maintenance_log(id):
 
             if file_size > MAX_FILE_SIZE:
                 flash(f"File is too large (max {MAX_FILE_SIZE/1024/1024:.0f}MB).", "danger")
-                return redirect(url_for("equipment.equipment_detail", id=id))
+                return redirect(next_url)
 
             filename = secure_filename(file.filename)
             if '.' not in filename:
                 flash("File extension is undefined.", "danger")
-                return redirect(url_for("equipment.equipment_detail", id=id))
+                return redirect(next_url)
 
             ext = filename.rsplit('.', 1)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
@@ -439,7 +456,7 @@ def add_maintenance_log(id):
                     f"Allowed: {', '.join(ALLOWED_EXTENSIONS)}",
                     "danger"
                 )
-                return redirect(url_for("equipment.equipment_detail", id=id))
+                return redirect(next_url)
 
             unique_filename = f"{int(now_local().timestamp())}_{filename}"
             upload_folder = current_app.config.get('UPLOAD_FOLDER')
@@ -452,16 +469,51 @@ def add_maintenance_log(id):
             if not full_save_path.startswith(real_upload):
                 current_app.logger.warning(f"Path traversal attempt in file save: {unique_filename}")
                 flash("Invalid file name.", "danger")
-                return redirect(url_for("equipment.equipment_detail", id=id))
+                return redirect(next_url)
 
             file.save(full_save_path)
             file_filename = unique_filename
 
+    # --- Ашиглалт бүртгэл (UsageLog) ---
+    if action_type == "Usage":
+        try:
+            minutes = int(request.form.get("duration_minutes", 0))
+        except (TypeError, ValueError):
+            minutes = 0
+        usage = UsageLog(
+            equipment_id=eq.id,
+            start_time=action_date,
+            end_time=action_date + timedelta(minutes=minutes),
+            duration_minutes=minutes,
+            used_by=request.form.get("performed_by") or current_user.username,
+            used_by_id=current_user.id,
+            purpose=request.form.get("description"),
+        )
+        db.session.add(usage)
+        try:
+            db.session.commit()
+            log_audit(
+                action='add_usage_log',
+                resource_type='Equipment',
+                resource_id=eq.id,
+                details={
+                    'equipment_name': eq.name,
+                    'duration_minutes': minutes,
+                }
+            )
+            flash("Ашиглалтын бүртгэл хадгалагдлаа.", "success")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Database error in add_usage_log: {e}")
+            flash(f"Алдаа: {str(e)[:100]}", "danger")
+        return redirect(next_url)
+
+    # --- Засвар/Калибровка/Шалгалт (MaintenanceLog) ---
     log = MaintenanceLog(
         equipment_id=eq.id, action_type=action_type, description=request.form.get("description"),
         performed_by=request.form.get("performed_by"), certificate_no=request.form.get("certificate_no"),
         action_date=action_date, file_path=file_filename,
-        performed_by_id=current_user.id  # Дотоод хэрэглэгч
+        performed_by_id=current_user.id
     )
 
     if action_type == "Calibration":
@@ -475,7 +527,6 @@ def add_maintenance_log(id):
     db.session.add(log)
     try:
         db.session.commit()
-        # Audit log
         log_audit(
             action='add_maintenance_log',
             resource_type='Equipment',
@@ -487,12 +538,12 @@ def add_maintenance_log(id):
                 'has_file': file_filename is not None
             }
         )
-        flash("Log entry saved successfully.", "success")
+        flash("Бүртгэл хадгалагдлаа.", "success")
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in add_maintenance_log: {e}")
         flash(f"Error saving log entry: {str(e)[:100]}", "danger")
-    return redirect(url_for("equipment.equipment_detail", id=id))
+    return redirect(next_url)
 
 
 @equipment_bp.route("/download_cert/<int:log_id>")

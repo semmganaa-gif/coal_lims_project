@@ -280,7 +280,7 @@
           <i class="bi bi-search"></i> Filter
         </button>
         <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn">
-          <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+          <i class="bi bi-file-earmark-spreadsheet"></i> Excel
         </button>
       </div>
     </form>
@@ -755,11 +755,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const gridDiv = document.getElementById('auditGrid');
   new agGrid.Grid(gridDiv, gridOptions);
 
-  // CSV Export
+  // Excel Export
   document.getElementById('exportCsvBtn').addEventListener('click', function() {
-    gridOptions.api.exportDataAsCsv({
-      fileName: 'audit_{{ analysis_type.code }}_' + new Date().toISOString().slice(0,10) + '.csv'
-    });
+    gridToXlsx(gridOptions.api, 'audit_{{ analysis_type.code }}_' + new Date().toISOString().slice(0,10) + '.xlsx', 'Audit');
   });
 });
 

@@ -554,9 +554,24 @@ def chemical_journal():
 
     usages = query.order_by(ChemicalUsage.used_at.desc()).limit(500).all()
 
+    rows = []
+    for usage, chemical in usages:
+        rows.append({
+            "date": usage.used_at.strftime("%Y-%m-%d %H:%M") if usage.used_at else "",
+            "chemical": chemical.name,
+            "chemical_id": chemical.id,
+            "formula": chemical.formula or "",
+            "quantity": f"-{usage.quantity_used} {usage.unit or chemical.unit}",
+            "purpose": usage.purpose or "",
+            "analysis": usage.analysis_code or "",
+            "user": usage.used_by.username if usage.used_by else "",
+            "before": round(usage.quantity_before, 2) if usage.quantity_before else None,
+            "after": round(usage.quantity_after, 2) if usage.quantity_after else None,
+        })
+
     return render_template(
         "chemicals/chemical_journal.html",
-        usages=usages,
+        rows_json=rows,
         lab=lab,
         start_date=start_date,
         end_date=end_date,

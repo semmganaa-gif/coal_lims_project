@@ -194,33 +194,46 @@
     </div>
     {% endif %}
 
+    <style>
+      #dashTable { width: 100% !important; table-layout: fixed; }
+      #dashTable th:nth-child(1) { width: 150px; }
+      #dashTable th:nth-child(2) { width: 150px; }
+      #dashTable th:nth-child(3) { width: 130px; }
+      #dashTable th:nth-child(4) { width: 200px; }
+      #dashTable th:nth-child(5) { width: 170px; }
+      #dashTable th:nth-child(6) { width: 180px; }
+    </style>
     {# ═══ Records Table ═══ #}
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
             <h6 class="fw-bold mb-0">Records ({{ total }})</h6>
+            <button class="btn btn-sm btn-outline-success" onclick="tableToXlsx('dashTable','complaints_{{ year }}.xlsx','Records')">
+              <i class="bi bi-download me-1"></i> Excel
+            </button>
         </div>
-        <div class="card-body">
-            <table class="table table-striped table-hover table-sm" id="dashTable">
-                <thead>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm mb-0 w-auto" id="dashTable">
+                <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th>Date</th>
-                        <th>Justified</th>
-                        <th>Analysis</th>
-                        <th>Department</th>
-                        <th>Investigated By</th>
+                        <th style="white-space:nowrap">#</th>
+                        <th style="white-space:nowrap">Date</th>
+                        <th style="white-space:nowrap">Justified</th>
+                        <th style="white-space:nowrap">Analysis</th>
+                        <th style="white-space:nowrap">Department</th>
+                        <th style="white-space:nowrap">Investigated By</th>
                         <th>Remarks</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in complaints %}
                     <tr>
-                        <td>
+                        <td style="white-space:nowrap">
                             <a href="{{ url_for('quality.complaints_detail', id=c.id) }}">
                                 {{ c.complaint_no }}
                             </a>
                         </td>
-                        <td>{{ c.complaint_date.strftime('%Y-%m-%d') if c.complaint_date else '-' }}</td>
+                        <td style="white-space:nowrap">{{ c.complaint_date.strftime('%Y-%m-%d') if c.complaint_date else '-' }}</td>
                         <td>
                             {% if c.is_justified is true %}
                                 <span class="badge bg-success">Yes</span>
@@ -235,13 +248,14 @@
                                 <span class="badge bg-info text-dark">{{ code }}</span>
                             {% endfor %}
                         </td>
-                        <td>{{ c.complainant_department or '-' }}</td>
-                        <td>{{ c.receiver_name or '-' }}</td>
+                        <td style="white-space:nowrap">{{ c.complainant_department or '-' }}</td>
+                        <td style="white-space:nowrap">{{ c.receiver_name or '-' }}</td>
                         <td>{{ (c.complaint_content or c.description or '')[:50] }}{% if (c.complaint_content or c.description or '')|length > 50 %}...{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>
@@ -250,18 +264,29 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Year select
-    $('#yearSelect').on('change', function() {
+    document.getElementById('yearSelect').addEventListener('change', function() {
         window.location.href = '{{ url_for("quality.complaints_dashboard") }}?year=' + this.value;
     });
 
     // DataTable
-    $('#dashTable').DataTable({
-        order: [[1, 'desc']],
-        pageLength: 25,
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json' }
-    });
+    if ($.fn.DataTable) {
+        $('#dashTable').DataTable({
+            order: [[1, 'desc']],
+            pageLength: 25,
+            autoWidth: false,
+            columns: [
+                { width: '150px' },   // #
+                { width: '150px' },   // Date
+                { width: '130px' },   // Justified
+                { width: '200px' },   // Analysis
+                { width: '170px' },   // Department
+                { width: '180px' },   // Investigated By
+                { width: null }       // Remarks (үлдсэн зай)
+            ]
+        });
+    }
 
     const COLORS = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
 
@@ -368,3 +393,4 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
+

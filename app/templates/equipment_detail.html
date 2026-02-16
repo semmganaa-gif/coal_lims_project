@@ -568,15 +568,21 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
             <div class="form-floating-sm">
-              <label>Action Type</label>
-              <select name="action_type" class="form-select">
-                <option value="Daily Check">Daily Check</option>
-                <option value="Maintenance">Maintenance</option>
+              <label>Төрөл</label>
+              <select name="action_type" class="form-select" id="actionTypeSelect">
+                <option value="Usage">Ашиглалт</option>
+                <option value="Daily Check">Өдрийн шалгалт</option>
+                <option value="Maintenance">Засвар үйлчилгээ</option>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">Repair</option>
-                <option value="Calibration">Calibration</option>
+                <option value="Repair">Их засвар</option>
+                <option value="Calibration">Калибровка</option>
                 {% endif %}
               </select>
+            </div>
+
+            <div class="form-floating-sm" id="usageFields">
+              <label>Ашигласан хугацаа (минут)</label>
+              <input type="number" name="duration_minutes" class="form-control" min="1" placeholder="60">
             </div>
 
             <div class="row">
@@ -622,24 +628,27 @@
       <div class="eq-card timeline-section">
         <div class="eq-card-header">
           <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
-          History (Timeline)
-          <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length }}</span>
+          Журнал
+          <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length + (usage_logs|default([])|length) }}</span>
         </div>
         <div class="eq-card-body">
           {# Filters #}
           <div class="timeline-filters">
-            <span class="filter-chip active" data-type="all">All</span>
+            <span class="filter-chip active" data-type="all">Бүгд</span>
+            <span class="filter-chip" data-type="Usage">
+              <i class="bi bi-clock"></i> Ашиглалт
+            </span>
             <span class="filter-chip" data-type="Daily Check">
-              <i class="bi bi-check-square"></i> Check
+              <i class="bi bi-check-square"></i> Шалгалт
             </span>
             <span class="filter-chip" data-type="Maintenance">
-              <i class="bi bi-wrench"></i> Maintenance
+              <i class="bi bi-wrench"></i> Засвар
             </span>
             <span class="filter-chip" data-type="Repair">
-              <i class="bi bi-tools"></i> Repair
+              <i class="bi bi-tools"></i> Их засвар
             </span>
             <span class="filter-chip" data-type="Calibration">
-              <i class="bi bi-award"></i> Calibration
+              <i class="bi bi-award"></i> Калибровка
             </span>
           </div>
 
@@ -649,66 +658,102 @@
             <input type="text" id="timelineSearch" placeholder="Search... (description, performer, certificate)">
           </div>
 
-          {# Timeline list #}
+          {# Timeline list — MaintenanceLog + UsageLog нэгтгэсэн #}
+          {% set ns = namespace(all_items=[]) %}
+          {% for log in eq.logs %}
+            {% set _ = ns.all_items.append({'type': 'maint', 'date': log.action_date, 'obj': log}) %}
+          {% endfor %}
+          {% for ul in usage_logs|default([]) %}
+            {% set _ = ns.all_items.append({'type': 'usage', 'date': ul.start_time, 'obj': ul}) %}
+          {% endfor %}
+
           <div class="timeline-list" id="timelineList">
-            {% for log in eq.logs|sort(attribute='action_date', reverse=true) %}
-            <div class="timeline-item"
-                 data-type="{{ log.action_type }}"
-                 data-search="{{ log.action_date.strftime('%Y-%m-%d') }} {{ log.action_type }} {{ log.performed_by or '' }} {{ log.description or '' }} {{ log.certificate_no or '' }}">
+            {% for item in ns.all_items|sort(attribute='date', reverse=true) %}
+              {% if item.type == 'usage' %}
+                {% set ul = item.obj %}
+                <div class="timeline-item"
+                     data-type="Usage"
+                     data-search="{{ ul.start_time.strftime('%Y-%m-%d') }} Usage Ашиглалт {{ ul.used_by or '' }} {{ ul.purpose or '' }}">
+                  <div class="timeline-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1d4ed8">
+                    <i class="bi bi-clock"></i>
+                  </div>
+                  <div class="timeline-header">
+                    <span class="timeline-type" style="background:rgba(59,130,246,0.12);color:#1d4ed8">Ашиглалт</span>
+                    <span class="timeline-date">
+                      <i class="bi bi-calendar3"></i>
+                      {{ ul.start_time.strftime('%Y-%m-%d %H:%M') }}
+                    </span>
+                  </div>
+                  {% if ul.used_by %}
+                  <div class="timeline-performer">
+                    <i class="bi bi-person-fill" style="color:#3b82f6"></i>
+                    {{ ul.used_by }}
+                  </div>
+                  {% endif %}
+                  <div class="timeline-desc">
+                    <strong>{{ ul.duration_minutes or 0 }} минут</strong>
+                    {% if ul.purpose %} — {{ ul.purpose }}{% endif %}
+                  </div>
+                </div>
 
-              {# Icon #}
-              {% if log.action_type == 'Calibration' %}
-                <div class="timeline-icon icon-calib"><i class="bi bi-award"></i></div>
-              {% elif log.action_type == 'Repair' %}
-                <div class="timeline-icon icon-repair"><i class="bi bi-tools"></i></div>
-              {% elif log.action_type == 'Maintenance' %}
-                <div class="timeline-icon icon-maint"><i class="bi bi-wrench"></i></div>
               {% else %}
-                <div class="timeline-icon icon-check"><i class="bi bi-check-lg"></i></div>
+                {% set log = item.obj %}
+                <div class="timeline-item"
+                     data-type="{{ log.action_type }}"
+                     data-search="{{ log.action_date.strftime('%Y-%m-%d') }} {{ log.action_type }} {{ log.performed_by or '' }} {{ log.description or '' }} {{ log.certificate_no or '' }}">
+
+                  {% if log.action_type == 'Calibration' %}
+                    <div class="timeline-icon icon-calib"><i class="bi bi-award"></i></div>
+                  {% elif log.action_type == 'Repair' %}
+                    <div class="timeline-icon icon-repair"><i class="bi bi-tools"></i></div>
+                  {% elif log.action_type == 'Maintenance' %}
+                    <div class="timeline-icon icon-maint"><i class="bi bi-wrench"></i></div>
+                  {% else %}
+                    <div class="timeline-icon icon-check"><i class="bi bi-check-lg"></i></div>
+                  {% endif %}
+
+                  <div class="timeline-header">
+                    {% if log.action_type == 'Calibration' %}
+                      <span class="timeline-type type-calib">Калибровка</span>
+                    {% elif log.action_type == 'Repair' %}
+                      <span class="timeline-type type-repair">Их засвар</span>
+                    {% elif log.action_type == 'Maintenance' %}
+                      <span class="timeline-type type-maint">Засвар</span>
+                    {% else %}
+                      <span class="timeline-type type-check">Өдрийн шалгалт</span>
+                    {% endif %}
+
+                    <span class="timeline-date">
+                      <i class="bi bi-calendar3"></i>
+                      {{ log.action_date.strftime('%Y-%m-%d') }}
+                    </span>
+                  </div>
+
+                  {% if log.performed_by %}
+                  <div class="timeline-performer">
+                    <i class="bi bi-person-fill" style="color:#6366f1"></i>
+                    {{ log.performed_by }}
+                  </div>
+                  {% endif %}
+
+                  {% if log.description %}
+                  <div class="timeline-desc">{{ log.description }}</div>
+                  {% endif %}
+
+                  {% if log.file_path or log.certificate_no %}
+                  <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
+                     class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
+                    <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
+                    {{ log.certificate_no or 'Файл татах' }}
+                  </a>
+                  {% endif %}
+                </div>
               {% endif %}
-
-              <div class="timeline-header">
-                {# Type badge #}
-                {% if log.action_type == 'Calibration' %}
-                  <span class="timeline-type type-calib">Calibration</span>
-                {% elif log.action_type == 'Repair' %}
-                  <span class="timeline-type type-repair">Repair</span>
-                {% elif log.action_type == 'Maintenance' %}
-                  <span class="timeline-type type-maint">Maintenance</span>
-                {% else %}
-                  <span class="timeline-type type-check">Daily Check</span>
-                {% endif %}
-
-                <span class="timeline-date">
-                  <i class="bi bi-calendar3"></i>
-                  {{ log.action_date.strftime('%Y-%m-%d') }}
-                </span>
-              </div>
-
-              {% if log.performed_by %}
-              <div class="timeline-performer">
-                <i class="bi bi-person-fill" style="color:#6366f1"></i>
-                {{ log.performed_by }}
-              </div>
-              {% endif %}
-
-              {% if log.description %}
-              <div class="timeline-desc">{{ log.description }}</div>
-              {% endif %}
-
-              {% if log.file_path or log.certificate_no %}
-              <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
-                 class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
-                <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
-                {{ log.certificate_no or 'Download File' }}
-              </a>
-              {% endif %}
-            </div>
             {% else %}
             <div class="timeline-empty" id="timelineEmpty">
               <i class="bi bi-clock-history d-block"></i>
-              <h5>No History Found</h5>
-              <p class="mb-0">No records have been registered for this equipment yet.</p>
+              <h5>Бүртгэл байхгүй</h5>
+              <p class="mb-0">Энэ багажид ямар нэг бүртгэл хийгдээгүй байна.</p>
             </div>
             {% endfor %}
           </div>
@@ -918,6 +963,17 @@
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Action type → usage fields toggle
+  const actionSelect = document.getElementById('actionTypeSelect');
+  const usageFields = document.getElementById('usageFields');
+  if (actionSelect && usageFields) {
+    function toggleUsageFields() {
+      usageFields.style.display = actionSelect.value === 'Usage' ? '' : 'none';
+    }
+    actionSelect.addEventListener('change', toggleUsageFields);
+    toggleUsageFields();
+  }
+
   // Timeline filtering
   const filterChips = document.querySelectorAll('.filter-chip');
   const searchInput = document.getElementById('timelineSearch');

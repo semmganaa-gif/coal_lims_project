@@ -12,13 +12,13 @@
         {{ title }}
       </h4>
       <div class="text-muted small">
-        Consolidated overview of usage and maintenance
+        Ашиглалт ба засвар үйлчилгээний нэгдсэн тойм
       </div>
     </div>
 
     <form id="dateFilterForm" class="d-flex flex-wrap align-items-center gap-2 ej-date-form">
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <label class="small text-muted mb-0">Period:</label>
+        <label class="small text-muted mb-0">Хугацаа:</label>
         <div class="input-group input-group-sm ej-date-input">
           <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
           <input type="date" id="startDate" name="start_date"
@@ -35,18 +35,18 @@
       </div>
 
       <div class="btn-group btn-group-sm ms-0 ms-md-2 ej-range-group" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-range="7">7 days</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="30">30 days</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="90">90 days</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
       </div>
 
       <button type="submit" class="btn btn-primary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-arrow-repeat"></i> Update
+        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
       </button>
-      
+
       <a href="{{ url_for('equipment.equipment_journal') }}"
          class="btn btn-outline-secondary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-grid"></i> Back
+        <i class="bi bi-grid"></i> Буцах
       </a>
     </form>
   </div>
@@ -56,19 +56,19 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="tab-summary" data-bs-toggle="tab"
               data-bs-target="#pane-summary" type="button" role="tab">
-        <i class="bi bi-grid-3x3-gap"></i> Summary
+        <i class="bi bi-grid-3x3-gap"></i> Нэгдсэн тойм
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-monthly" data-bs-toggle="tab"
               data-bs-target="#pane-monthly" type="button" role="tab">
-        <i class="bi bi-calendar3"></i> Monthly Summary
+        <i class="bi bi-calendar3"></i> Сарын статистик
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-detailed" data-bs-toggle="tab"
               data-bs-target="#pane-detailed" type="button" role="tab">
-        <i class="bi bi-journal-richtext"></i> Detailed Journal
+        <i class="bi bi-journal-richtext"></i> Дэлгэрэнгүй журнал
       </button>
     </li>
   </ul>
@@ -81,13 +81,13 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div class="d-flex align-items-center gap-2">
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-collection"></i> Summary Statistics
+              <i class="bi bi-collection"></i> Нэгдсэн статистик
             </span>
             <div class="d-flex flex-wrap gap-1 ej-status-legend">
-              <span class="badge bg-success-subtle text-success-emphasis small">Normal</span>
-              <span class="badge bg-warning-subtle text-warning-emphasis small">Maintenance</span>
-              <span class="badge bg-danger-subtle text-danger-emphasis small">Out of Order</span>
-              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Retired</span>
+              <span class="badge bg-success-subtle text-success-emphasis small">Хэвийн</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis small">Засварт</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis small">Эвдэрсэн</span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Ашиглалтаас гарсан</span>
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -96,7 +96,7 @@
             </span>
             <input type="text" id="summaryQuickFilter"
                    class="form-control border-start-0"
-                   placeholder="Name, lab code, location...">
+                   placeholder="Нэр, лаб код, байрлал...">
           </div>
         </div>
         <div class="card-body p-0">
@@ -112,21 +112,21 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-calendar-range"></i> Monthly Usage & Maintenance ({{ start_date.year }})
+              <i class="bi bi-calendar-range"></i> Сарын ашиглалт ба засвар ({{ start_date.year }})
             </span>
             <div class="small text-muted">
-              Hours = usage, Maintenance = service count
+              Цаг = ашиглалт, Засвар = үйлчилгээний тоо
             </div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <label class="small text-muted d-none d-md-inline mb-0">Rows:</label>
+            <label class="small text-muted d-none d-md-inline mb-0">Мөр:</label>
             <select id="monthlyPageSize" class="form-select form-select-sm">
               <option value="25">25</option>
               <option value="50" selected>50</option>
               <option value="100">100</option>
             </select>
             <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
-              <i class="bi bi-download"></i> Export CSV
+              <i class="bi bi-download"></i> CSV татах
             </button>
           </div>
         </div>
@@ -143,10 +143,10 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-list-check"></i> Detailed List (Timeline)
+              <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт
             </span>
             <div class="small text-muted">
-              Usage and maintenance actions in chronological order
+              Ашиглалт ба засвар үйлчилгээг он цагийн дарааллаар
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -155,7 +155,7 @@
             </span>
             <input type="text" id="detailSearch"
                    class="form-control border-start-0"
-                   placeholder="Equipment, lab code, performer...">
+                   placeholder="Багаж, лаб код, хэн хийсэн...">
           </div>
         </div>
         <div class="card-body p-0">
@@ -324,7 +324,7 @@
     const summaryColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Lab Code',
+        headerName: 'Лаб код',
         pinned: 'left',
         width: 110,
         cellRenderer: p => {
@@ -335,58 +335,68 @@
       },
       {
         field: 'name',
-        headerName: 'Equipment',
+        headerName: 'Багаж',
         minWidth: 200,
         flex: 1.6,
-        filter: 'agTextColumnFilter'
+        filter: 'agTextColumnFilter',
+        cellRenderer: p => {
+          if (!p.data || !p.data.equipment_id) return p.value || '-';
+          const a = document.createElement('a');
+          a.href = '/equipment/' + p.data.equipment_id + '/journal';
+          a.textContent = p.value || '-';
+          a.style.cssText = 'color:#4f46e5;font-weight:600;text-decoration:none;';
+          a.addEventListener('mouseenter', () => a.style.textDecoration = 'underline');
+          a.addEventListener('mouseleave', () => a.style.textDecoration = 'none');
+          return a;
+        }
       },
       {
         field: 'location',
-        headerName: 'Location',
+        headerName: 'Байрлал',
         minWidth: 140,
         flex: 1.2
       },
       {
         field: 'room',
-        headerName: 'Room',
+        headerName: 'Өрөө',
         width: 80
       },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: 'Төлөв',
         width: 130,
         cellRenderer: p => {
           const s = p.value || 'normal';
           let cls = 'ej-status-normal';
-          let text = 'Normal';
-          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Out of Order'; }
-          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Maintenance'; }
-          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Retired'; }
+          let text = 'Хэвийн';
+          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Эвдэрсэн'; }
+          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Засварт'; }
+          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Гарсан'; }
           return `<span class="ej-status-badge ${cls}">${text}</span>`;
         }
       },
       {
         field: 'total_usage_hours',
-        headerName: 'Total Hours',
+        headerName: 'Нийт цаг',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value.toFixed(1) : '-'
       },
       {
         field: 'maintenance_count',
-        headerName: 'Maintenance',
+        headerName: 'Засвар',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value : '-'
       },
       {
         field: 'last_usage_end',
-        headerName: 'Last Used',
+        headerName: 'Сүүлд ашигласан',
         minWidth: 160
       },
       {
         field: 'next_calibration_date',
-        headerName: 'Next Calibration',
+        headerName: 'Дараагийн баталгаажуулалт',
         minWidth: 180,
         cellRenderer: p => {
           const v = p.value;
@@ -419,38 +429,51 @@
     // ============================================================
     // 2. MONTHLY GRID
     // ============================================================
+    const MONTH_NAMES = ['', '1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар',
+                          '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
+
     const monthlyColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Lab Code',
+        headerName: 'Лаб код',
         pinned: 'left',
         width: 110,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`
       },
       {
         field: 'name',
-        headerName: 'Equipment',
+        headerName: 'Багаж',
         pinned: 'left',
         minWidth: 200,
-        flex: 1.6
+        flex: 1.6,
+        cellRenderer: p => {
+          if (!p.data || !p.data.equipment_id) return p.value || '-';
+          const a = document.createElement('a');
+          a.href = '/equipment/' + p.data.equipment_id + '/journal';
+          a.textContent = p.value || '-';
+          a.style.cssText = 'color:#4f46e5;font-weight:600;text-decoration:none;';
+          a.addEventListener('mouseenter', () => a.style.textDecoration = 'underline');
+          a.addEventListener('mouseleave', () => a.style.textDecoration = 'none');
+          return a;
+        }
       },
     ];
 
     for (let i = 1; i <= 12; i++) {
       monthlyColumnDefs.push({
-        headerName: 'Month ' + i,
+        headerName: MONTH_NAMES[i],
         marryChildren: true,
         children: [
           {
             field: `usage_${i}`,
-            headerName: 'Hours',
+            headerName: 'Цаг',
             width: 90,
             type: 'numericColumn',
             valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-'
           },
           {
             field: `maint_${i}`,
-            headerName: 'Maintenance',
+            headerName: 'Засвар',
             width: 95,
             type: 'numericColumn',
             valueFormatter: p => p.value ? p.value : '-'
@@ -479,57 +502,67 @@
     const detailedColumnDefs = [
       {
         field: 'date',
-        headerName: 'Date/Time',
+        headerName: 'Огноо',
         sort: 'desc',
         width: 160,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'lab_code',
-        headerName: 'Lab Code',
+        headerName: 'Лаб код',
         width: 100,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'equipment',
-        headerName: 'Equipment',
+        headerName: 'Багаж',
         minWidth: 190,
         flex: 1.4,
-        filter: 'agTextColumnFilter'
+        filter: 'agTextColumnFilter',
+        cellRenderer: p => {
+          if (!p.data || !p.data.equipment_id) return p.value || '-';
+          const a = document.createElement('a');
+          a.href = '/equipment/' + p.data.equipment_id + '/journal';
+          a.textContent = p.value || '-';
+          a.style.cssText = 'color:#4f46e5;font-weight:600;text-decoration:none;';
+          a.addEventListener('mouseenter', () => a.style.textDecoration = 'underline');
+          a.addEventListener('mouseleave', () => a.style.textDecoration = 'none');
+          return a;
+        }
       },
       {
         field: 'category',
-        headerName: 'Category',
+        headerName: 'Ангилал',
         width: 120,
         cellRenderer: p => {
           const v = p.value || 'Usage';
           if (v === 'Usage') {
-            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Usage</span>';
+            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Ашиглалт</span>';
           }
-          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Maintenance</span>';
+          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Засвар</span>';
         }
       },
       {
         field: 'type',
-        headerName: 'Type',
+        headerName: 'Төрөл',
         width: 130,
         cellRenderer: p => p.value ? `<span class="ej-type-pill">${p.value}</span>` : ''
       },
       {
         field: 'user',
-        headerName: 'Performed By',
+        headerName: 'Хэн хийсэн',
         width: 130
       },
       {
         field: 'description',
-        headerName: 'Remarks',
+        headerName: 'Тэмдэглэл',
         flex: 1.6,
         minWidth: 220
       },
       {
         field: 'result',
-        headerName: 'Result',
+        headerName: 'Үр дүн',
         width: 110
       }
     ];
@@ -661,11 +694,7 @@
 
     function exportMonthlyCSV() {
       if (!monthlyApi) return;
-      if (monthlyApi.exportDataAsCsv) {
-        monthlyApi.exportDataAsCsv({fileName: 'monthly_equipment_summary.csv'});
-      } else {
-        // createGrid API does not support direct CSV export
-      }
+      gridToXlsx(monthlyApi, 'monthly_equipment_summary.xlsx', 'Сарын тойм');
     }
   </script>
 {% endblock %}

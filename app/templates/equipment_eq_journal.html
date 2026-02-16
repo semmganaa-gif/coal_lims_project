@@ -1,0 +1,662 @@
+{# app/templates/equipment_eq_journal.html — Тухайн багажийн тусдаа журнал #}
+{% extends "base.html" %}
+{% block title %}{{ eq.name }} — Журнал{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 eq-journal-page">
+
+  {# ===== HEADER ===== #}
+  <div class="eqj-header mb-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <a href="{{ url_for('equipment.equipment_journal') }}" class="eqj-back-btn">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h4 class="fw-bold mb-0 eqj-title">{{ eq.name }}</h4>
+          {% if eq.lab_code %}
+            <span class="eqj-lab-code">{{ eq.lab_code }}</span>
+          {% endif %}
+          {% if eq.status == 'normal' %}
+            <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> Хэвийн</span>
+          {% elif eq.status == 'broken' %}
+            <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> Эвдэрсэн</span>
+          {% elif eq.status == 'maintenance' %}
+            <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> Засварт</span>
+          {% elif eq.status == 'retired' %}
+            <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> Гарсан</span>
+          {% endif %}
+        </div>
+        <div class="eqj-subtitle">
+          {% if eq.manufacturer %}{{ eq.manufacturer }}{% endif %}
+          {% if eq.model %} · {{ eq.model }}{% endif %}
+          {% if eq.serial_number %} · S/N: {{ eq.serial_number }}{% endif %}
+          {% if eq.location %} · <i class="bi bi-geo-alt"></i> {{ eq.location }}{% endif %}
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('equipment.equipment_detail', id=eq.id) }}"
+           class="btn btn-sm btn-outline-secondary eqj-btn-round">
+          <i class="bi bi-info-circle"></i> Дэлгэрэнгүй
+        </a>
+        <button class="btn btn-sm btn-primary eqj-btn-round" data-bs-toggle="collapse" data-bs-target="#addLogForm">
+          <i class="bi bi-plus-lg"></i> Бүртгэл нэмэх
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {# ===== ADD LOG FORM (Collapse) ===== #}
+  <div class="collapse mb-3" id="addLogForm">
+    <div class="eqj-add-card">
+      <div class="eqj-add-header">
+        <i class="bi bi-plus-circle me-2"></i> Шинэ бүртгэл нэмэх
+      </div>
+      <div class="eqj-add-body">
+        <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <input type="hidden" name="next" value="{{ url_for('equipment.equipment_journal_page', id=eq.id) }}"/>
+
+          <div class="row g-2 mb-2">
+            <div class="col-md-2">
+              <label class="eqj-label">Төрөл</label>
+              <select name="action_type" class="form-select form-select-sm" id="jActionType">
+                <option value="Usage">Ашиглалт</option>
+                <option value="Daily Check">Өдрийн шалгалт</option>
+                <option value="Maintenance">Засвар үйлчилгээ</option>
+                {% if current_user.role in ['senior', 'manager', 'admin'] %}
+                <option value="Repair">Их засвар</option>
+                <option value="Calibration">Калибровка</option>
+                {% endif %}
+              </select>
+            </div>
+            <div class="col-md-2" id="jDurationCol">
+              <label class="eqj-label">Хугацаа (мин)</label>
+              <input type="number" name="duration_minutes" class="form-control form-control-sm" min="1" placeholder="60">
+            </div>
+            <div class="col-md-2">
+              <label class="eqj-label">Огноо</label>
+              <input type="date" name="action_date" class="form-control form-control-sm"
+                     value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="col-md-2">
+              <label class="eqj-label">Хэн хийсэн</label>
+              <input type="text" name="performed_by" class="form-control form-control-sm"
+                     value="{{ current_user.username }}">
+            </div>
+            <div class="col-md-2">
+              <label class="eqj-label">Гэрчилгээ №</label>
+              <input type="text" name="certificate_no" class="form-control form-control-sm" placeholder="—">
+            </div>
+            <div class="col-md-2">
+              <label class="eqj-label">Файл</label>
+              <input type="file" name="certificate_file" class="form-control form-control-sm">
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col">
+              <label class="eqj-label">Тэмдэглэл</label>
+              <div class="input-group input-group-sm">
+                <input type="text" name="description" class="form-control" placeholder="Юу хийсэн, тайлбар...">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check2-circle me-1"></i> Хадгалах
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {# ===== DATE FILTER ===== #}
+  <div class="eqj-filter-bar mb-3">
+    <form id="jDateForm" class="d-flex flex-wrap align-items-center gap-2">
+      <label class="small text-muted mb-0 fw-semibold">Хугацаа:</label>
+      <div class="input-group input-group-sm eqj-date-input">
+        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+        <input type="date" id="jStartDate" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') }}">
+      </div>
+      <span class="small text-muted">–</span>
+      <div class="input-group input-group-sm eqj-date-input">
+        <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
+        <input type="date" id="jEndDate" class="form-control" value="{{ end_date.strftime('%Y-%m-%d') }}">
+      </div>
+
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="365">1 жил</button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+      </button>
+    </form>
+  </div>
+
+  {# ===== STAT CARDS ===== #}
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="eqj-stat-card">
+        <div class="eqj-stat-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-clock-history"></i></div>
+        <div>
+          <div class="eqj-stat-value" id="statTotalHours">—</div>
+          <div class="eqj-stat-label">Нийт ашигласан цаг</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="eqj-stat-card">
+        <div class="eqj-stat-icon" style="background:#fef3c7;color:#b45309"><i class="bi bi-tools"></i></div>
+        <div>
+          <div class="eqj-stat-value" id="statMaintCount">—</div>
+          <div class="eqj-stat-label">Засвар үйлчилгээ</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="eqj-stat-card">
+        <div class="eqj-stat-icon" style="background:#dcfce7;color:#15803d"><i class="bi bi-shield-check"></i></div>
+        <div>
+          <div class="eqj-stat-value" id="statLastCalib">
+            {{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '—' }}
+          </div>
+          <div class="eqj-stat-label">Сүүлийн калибровка</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="eqj-stat-card">
+        <div class="eqj-stat-icon" style="background:#f3e8ff;color:#7c3aed"><i class="bi bi-journal-text"></i></div>
+        <div>
+          <div class="eqj-stat-value" id="statTotalLogs">—</div>
+          <div class="eqj-stat-label">Нийт бүртгэл</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ===== AG GRID ===== #}
+  <div class="eqj-grid-card">
+    <div class="eqj-grid-header">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="fw-semibold small text-muted text-uppercase me-2">
+          <i class="bi bi-journal-richtext"></i> Журналын бүртгэлүүд
+        </span>
+        <div class="eqj-filter-pills" id="typePills">
+          <button class="eqj-pill active" data-group="all">Бүгд</button>
+          <button class="eqj-pill" data-group="usage">Ашиглалт</button>
+          <button class="eqj-pill" data-group="check">Шалгалт</button>
+          <button class="eqj-pill" data-group="maint">Засвар</button>
+          <button class="eqj-pill" data-group="repair">Их засвар</button>
+          <button class="eqj-pill" data-group="calib">Калибровка</button>
+        </div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <div class="input-group input-group-sm" style="max-width:240px">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" id="jQuickFilter" class="form-control border-start-0" placeholder="Хайх...">
+        </div>
+        <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
+          <i class="bi bi-download"></i> CSV
+        </button>
+      </div>
+    </div>
+    <div id="journalGrid" class="ag-theme-quartz eqj-grid"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+  <style>
+    .eq-journal-page {
+      --eqj-radius: 1rem;
+    }
+
+    /* Header */
+    .eqj-header {
+      background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(139,92,246,0.04));
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: var(--eqj-radius);
+      padding: 1rem 1.25rem;
+    }
+    .eqj-title {
+      font-size: 1.25rem;
+      color: #1e293b;
+    }
+    .eqj-subtitle {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.15rem;
+    }
+    .eqj-lab-code {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .eqj-status {
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .eqj-status-normal { background: #dcfce7; color: #15803d; }
+    .eqj-status-broken { background: #fee2e2; color: #dc2626; }
+    .eqj-status-maint  { background: #fef3c7; color: #b45309; }
+    .eqj-status-retired { background: #e2e8f0; color: #475569; }
+    .eqj-back-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(148,163,184,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .eqj-back-btn:hover { background: #fff; color: #6366f1; transform: translateX(-2px); }
+    .eqj-btn-round { border-radius: 10px; }
+
+    /* Add Log Form */
+    .eqj-add-card {
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: var(--eqj-radius);
+      overflow: hidden;
+    }
+    .eqj-add-header {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .eqj-add-body {
+      padding: 1rem;
+      background: rgba(249,250,251,0.8);
+    }
+    .eqj-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 0.2rem;
+      display: block;
+    }
+
+    /* Filter bar */
+    .eqj-filter-bar {
+      background: rgba(249,250,251,0.9);
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+    }
+    .eqj-date-input { max-width: 160px; }
+    .eqj-date-input .input-group-text { background: #fff; }
+
+    /* Stat cards */
+    .eqj-stat-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #fff;
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: var(--eqj-radius);
+      padding: 0.9rem 1rem;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+    }
+    .eqj-stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .eqj-stat-value {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .eqj-stat-label {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* Grid card */
+    .eqj-grid-card {
+      background: #fff;
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: var(--eqj-radius);
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+    }
+    .eqj-grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(90deg, #f9fafb 0%, #eff6ff 50%, #f9fafb 100%);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .eqj-grid {
+      width: 100%;
+      height: 58vh;
+      min-height: 380px;
+    }
+
+    /* AG Grid theme */
+    .eq-journal-page .ag-theme-quartz {
+      --ag-border-radius: 0;
+      --ag-header-background-color: #f8fafc;
+      --ag-header-foreground-color: #64748b;
+      --ag-row-hover-color: #f8fafc;
+      --ag-selected-row-background-color: #eff6ff;
+      --ag-font-size: 12px;
+    }
+    .eq-journal-page .ag-header-cell-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: 0.7rem;
+    }
+
+    /* Type chips */
+    .eqj-type-usage   { background:#dbeafe; color:#1d4ed8; }
+    .eqj-type-check   { background:#e0e7ff; color:#4338ca; }
+    .eqj-type-maint   { background:#fef3c7; color:#b45309; }
+    .eqj-type-repair  { background:#fee2e2; color:#dc2626; }
+    .eqj-type-calib   { background:#dcfce7; color:#15803d; }
+    .eqj-type-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .eqj-result-pass { color: #15803d; font-weight: 600; }
+    .eqj-result-fail { color: #dc2626; font-weight: 600; }
+
+    /* Filter pills */
+    .eqj-filter-pills {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .eqj-pill {
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .eqj-pill:hover { background: #f3f4f6; color: #374151; }
+    .eqj-pill.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+  </style>
+
+  <script>
+    var gridApi = null;
+    const EQUIPMENT_ID = {{ eq.id }};
+
+    const TYPE_MAP = {
+      'Ашиглалт':           {cls: 'eqj-type-usage', icon: 'bi-clock'},
+      'Daily Check':        {cls: 'eqj-type-check', icon: 'bi-check-square', label: 'Шалгалт'},
+      'Maintenance':        {cls: 'eqj-type-maint', icon: 'bi-wrench', label: 'Засвар'},
+      'Repair':             {cls: 'eqj-type-repair', icon: 'bi-tools', label: 'Их засвар'},
+      'Calibration':        {cls: 'eqj-type-calib', icon: 'bi-award', label: 'Калибровка'},
+      'Temperature Check':  {cls: 'eqj-type-check', icon: 'bi-thermometer-half', label: 'Темп. шалгалт'},
+      'Balance Check':      {cls: 'eqj-type-check', icon: 'bi-rulers', label: 'Жин шалгалт'},
+      'Calorimeter Calibration': {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Илчлэг калибр.'},
+      'Calorimeter Check':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Илчлэг калибр.'},
+      'Sulfur Calibration': {cls: 'eqj-type-calib', icon: 'bi-droplet', label: 'Хүхэр калибр.'},
+      'Calibration Check':  {cls: 'eqj-type-calib', icon: 'bi-shield-check', label: 'Калибр. шалгалт'},
+      'CSN Crucible Test':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Тигел туршилт'},
+      'Drum Calibration':   {cls: 'eqj-type-calib', icon: 'bi-gear-wide-connected', label: 'Тээрэм калибр.'},
+      'XRF Calibration':    {cls: 'eqj-type-calib', icon: 'bi-rulers', label: 'XRF калибр.'},
+    };
+
+    // Дэд цэсний бүлэг: action_type -> group
+    const GROUP_MAP = {
+      'Ашиглалт':           'usage',
+      'Daily Check':        'check',
+      'Temperature Check':  'check',
+      'Balance Check':      'check',
+      'Maintenance':        'maint',
+      'Repair':             'repair',
+      'Calibration':        'calib',
+      'Calorimeter Calibration': 'calib',
+      'Calorimeter Check':  'calib',
+      'Sulfur Calibration': 'calib',
+      'Calibration Check':  'calib',
+      'CSN Crucible Test':  'calib',
+      'Drum Calibration':   'calib',
+      'XRF Calibration':    'calib',
+    };
+
+    var activeGroup = 'all';
+    var allRows = [];
+
+    const columnDefs = [
+      {
+        field: 'date',
+        headerName: 'Огноо',
+        sort: 'desc',
+        width: 150,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'type',
+        headerName: 'Төрөл',
+        width: 155,
+        cellRenderer: function(p) {
+          const v = p.value || '';
+          const info = TYPE_MAP[v] || {cls: 'eqj-type-check', icon: 'bi-record-circle'};
+          const label = info.label || v;
+          return '<span class="eqj-type-chip ' + info.cls + '"><i class="bi ' + info.icon + '"></i> ' + label + '</span>';
+        },
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'duration',
+        headerName: 'Хугацаа',
+        width: 100,
+        filter: false
+      },
+      {
+        field: 'user',
+        headerName: 'Хэн хийсэн',
+        width: 130,
+        filter: 'agTextColumnFilter'
+      },
+      {
+        field: 'description',
+        headerName: 'Тэмдэглэл',
+        flex: 2,
+        minWidth: 250,
+        filter: 'agTextColumnFilter',
+        autoHeight: true,
+        cellStyle: {'white-space': 'pre-wrap', 'line-height': '1.4', 'padding-top': '6px', 'padding-bottom': '6px'}
+      },
+      {
+        field: 'result',
+        headerName: 'Үр дүн',
+        width: 90,
+        cellRenderer: function(p) {
+          const v = (p.value || '').toLowerCase();
+          if (v === 'pass') return '<span class="eqj-result-pass"><i class="bi bi-check-circle-fill"></i> Pass</span>';
+          if (v === 'fail') return '<span class="eqj-result-fail"><i class="bi bi-x-circle-fill"></i> Fail</span>';
+          return p.value || '';
+        }
+      },
+      {
+        field: 'has_file',
+        headerName: '',
+        width: 50,
+        filter: false,
+        sortable: false,
+        cellRenderer: function(p) {
+          if (!p.value || !p.data.log_id) return '';
+          return '<a href="/download_cert/' + p.data.log_id + '" title="Файл татах" style="color:#6366f1"><i class="bi bi-paperclip"></i></a>';
+        }
+      }
+    ];
+
+    const gridOptions = {
+      columnDefs: columnDefs,
+      defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        minWidth: 60
+      },
+      pagination: true,
+      paginationPageSize: 25,
+      rowHeight: 40,
+      animateRows: true,
+      domLayout: 'normal'
+    };
+
+    function formatDate(d) {
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function applyGroupFilter() {
+      if (activeGroup === 'all') {
+        setGridRows(allRows);
+      } else {
+        setGridRows(allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === activeGroup));
+      }
+      // Pill тоо шинэчлэх
+      document.querySelectorAll('.eqj-pill[data-group]').forEach(btn => {
+        const g = btn.dataset.group;
+        if (g === 'all') {
+          btn.textContent = 'Бүгд (' + allRows.length + ')';
+        } else {
+          const cnt = allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === g).length;
+          const labels = {usage:'Ашиглалт', check:'Шалгалт', maint:'Засвар', repair:'Их засвар', calib:'Калибровка'};
+          btn.textContent = labels[g] + (cnt > 0 ? ' (' + cnt + ')' : '');
+        }
+      });
+    }
+
+    function setGridRows(rows) {
+      if (gridApi.setRowData) gridApi.setRowData(rows);
+      else gridApi.setGridOption('rowData', rows);
+    }
+
+    function loadData() {
+      const start = document.getElementById('jStartDate').value;
+      const end = document.getElementById('jEndDate').value;
+      const url = '/api/equipment/journal_detailed?equipment_id=' + EQUIPMENT_ID + '&start_date=' + start + '&end_date=' + end;
+
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          allRows = data.rows || [];
+          applyGroupFilter();
+
+          // Stat-ууд тооцоолох (бүх мэдээллээр)
+          let totalMinutes = 0;
+          let maintCount = 0;
+          allRows.forEach(r => {
+            if (r.category === 'Usage' && r.duration) {
+              const m = parseInt(r.duration);
+              if (!isNaN(m)) totalMinutes += m;
+            }
+            if (r.category === 'Maintenance') maintCount++;
+          });
+
+          document.getElementById('statTotalHours').textContent = (totalMinutes / 60).toFixed(1) + ' цаг';
+          document.getElementById('statMaintCount').textContent = maintCount;
+          document.getElementById('statTotalLogs').textContent = allRows.length;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Init AG Grid
+      const el = document.querySelector('#journalGrid');
+      if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
+      else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
+
+      // Quick filter
+      document.getElementById('jQuickFilter').addEventListener('input', function() {
+        if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
+        else gridApi.setGridOption('quickFilterText', this.value);
+      });
+
+      // Date form submit
+      document.getElementById('jDateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        loadData();
+      });
+
+      // Quick range buttons
+      document.querySelectorAll('[data-range]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var days = parseInt(this.getAttribute('data-range'));
+          var e = new Date();
+          var s = new Date(); s.setDate(e.getDate() - days);
+          document.getElementById('jStartDate').value = formatDate(s);
+          document.getElementById('jEndDate').value = formatDate(e);
+          loadData();
+        });
+      });
+
+      // Type filter pills
+      document.querySelectorAll('.eqj-pill[data-group]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.eqj-pill').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          activeGroup = this.dataset.group;
+          applyGroupFilter();
+        });
+      });
+
+      // Action type toggle (show/hide duration field)
+      var actionType = document.getElementById('jActionType');
+      var durationCol = document.getElementById('jDurationCol');
+      if (actionType && durationCol) {
+        function toggleDuration() {
+          durationCol.style.display = actionType.value === 'Usage' ? '' : 'none';
+        }
+        actionType.addEventListener('change', toggleDuration);
+        toggleDuration();
+      }
+
+      // Initial load
+      loadData();
+    });
+
+    function exportCSV() {
+      if (!gridApi) return;
+      gridToXlsx(gridApi, '{{ eq.name }}_journal.xlsx', 'Журнал');
+    }
+  </script>
+{% endblock %}

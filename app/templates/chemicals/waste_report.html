@@ -107,28 +107,7 @@
 
 <script>
 function exportToExcel() {
-  const table = document.getElementById('reportTable');
-  if (!table) return;
-
-  let csv = [];
-  const rows = table.querySelectorAll('tr');
-
-  rows.forEach(row => {
-    const cols = row.querySelectorAll('td, th');
-    const rowData = [];
-    cols.forEach(col => {
-      let text = col.innerText.replace(/"/g, '""').trim();
-      rowData.push('"' + text + '"');
-    });
-    csv.push(rowData.join(','));
-  });
-
-  const csvContent = '\uFEFF' + csv.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `waste_report_{{ year }}.csv`;
-  link.click();
+  tableToXlsx('reportTable', 'waste_report_{{ year }}.xlsx', 'Хаягдал');
 }
 </script>
 {% endblock %}

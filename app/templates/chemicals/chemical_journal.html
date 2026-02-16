@@ -1,153 +1,230 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid cj-page">
 
   {# ===== HEADER ===== #}
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
       <h4 class="mb-1">
         <i class="bi bi-journal-text text-info me-2"></i>
         Химийн бодисын журнал
       </h4>
-      <p class="text-muted mb-0">Хэрэглээний бүртгэлийн түүх</p>
+      <p class="text-muted mb-0 small">Хэрэглээний бүртгэлийн түүх</p>
     </div>
-    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
       <i class="bi bi-arrow-left me-1"></i> Жагсаалт руу
     </a>
   </div>
 
   {# ===== FILTERS ===== #}
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-      <form method="GET" class="row g-3 align-items-end">
-        <div class="col-md-2">
-          <label class="form-label">Лаб</label>
-          <select name="lab" class="form-select">
-            <option value="all" {{ 'selected' if lab == 'all' }}>All</option>
-            <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
-            <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
-            <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
-            <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Эхлэх огноо</label>
-          <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Дуусах огноо</label>
-          <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-funnel me-1"></i> Шүүх
-          </button>
-        </div>
-        <div class="col-md-2">
-          <button type="button" class="btn btn-outline-secondary w-100" onclick="exportJournal()">
-            <i class="bi bi-download me-1"></i> Excel
-          </button>
-        </div>
-      </form>
-    </div>
+  <div class="cj-filter-bar mb-3">
+    <form method="GET" class="d-flex flex-wrap align-items-center gap-2">
+      <select name="lab" class="form-select form-select-sm" style="width:130px;">
+        <option value="all" {{ 'selected' if lab == 'all' }}>Бүх лаб</option>
+        <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
+        <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
+        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
+        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
+      </select>
+      <div class="input-group input-group-sm" style="width:150px;">
+        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+        <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+      </div>
+      <span class="text-muted small">–</span>
+      <div class="input-group input-group-sm" style="width:150px;">
+        <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
+        <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-funnel me-1"></i> Шүүх
+      </button>
+    </form>
   </div>
 
-  {# ===== JOURNAL TABLE ===== #}
-  <style>
-    #journalTable { table-layout: fixed; width: 100%; }
-    #journalTable th, #journalTable td { padding: 0.5rem 0.75rem; }
-    #journalTable .col-date { width: 140px; white-space: nowrap; }
-    #journalTable .col-qty { width: 110px; white-space: nowrap; }
-    #journalTable .col-stock { width: 130px; white-space: nowrap; }
-    #journalTable .col-purpose { white-space: normal; }
-  </style>
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-      {% if usages %}
-      <div class="table-responsive">
-        <table class="table table-hover mb-0" id="journalTable">
-          <thead class="table-light">
-            <tr>
-              <th class="col-date">Date</th>
-              <th>Химийн бодис</th>
-              <th>Quantity</th>
-              <th>Зорилго</th>
-              <th>Analysis</th>
-              <th>User</th>
-              <th>Нөөц</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for usage, chemical in usages %}
-            <tr>
-              <td class="small col-date">{{ usage.used_at.strftime('%Y-%m-%d %H:%M') if usage.used_at else '-' }}</td>
-              <td>
-                <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="text-decoration-none">
-                  {{ chemical.name }}
-                </a>
-                {% if chemical.formula %}
-                <small class="text-muted">({{ chemical.formula }})</small>
-                {% endif %}
-              </td>
-              <td class="text-danger fw-medium col-qty">
-                -{{ usage.quantity_used }} {{ usage.unit or chemical.unit }}
-              </td>
-              <td class="small col-purpose">{{ usage.purpose or '-' }}</td>
-              <td class="small">{{ usage.analysis_code or '-' }}</td>
-              <td class="small">{{ usage.used_by.username if usage.used_by else '-' }}</td>
-              <td class="small text-muted col-stock">
-                {{ usage.quantity_before|round(2) if usage.quantity_before else '-' }} →
-                {{ usage.quantity_after|round(2) if usage.quantity_after else '-' }}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  {# ===== AG GRID ===== #}
+  <div class="cj-grid-card">
+    <div class="cj-grid-header">
+      <span class="fw-semibold small text-muted text-uppercase">
+        <i class="bi bi-list-check"></i> Нийт: <span id="cjCount">0</span> бүртгэл
+      </span>
+      <div class="d-flex gap-2 align-items-center">
+        <div class="input-group input-group-sm" style="max-width:220px;">
+          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" id="cjQuickFilter" class="form-control border-start-0" placeholder="Хайх...">
+        </div>
+        <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
+          <i class="bi bi-download"></i> CSV
+        </button>
       </div>
-      <div class="card-footer bg-white border-0 text-muted small">
-        Total {{ usages|length }} бүртгэл
-      </div>
-      {% else %}
-      <div class="text-center py-5 text-muted">
-        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>Хэрэглээний бүртгэл олдсонгүй</p>
-        <p class="small">Date эсвэл лаб сонгоно уу</p>
-      </div>
-      {% endif %}
     </div>
+    <div id="chemJournalGrid" class="ag-theme-quartz cj-grid"></div>
   </div>
-
 </div>
+{% endblock %}
 
-<script>
-function exportJournal() {
-  // Simple CSV export
-  const table = document.getElementById('journalTable');
-  if (!table) {
-    alert('Экспортлох өгөгдөл байхгүй');
-    return;
+{% block scripts %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+<style>
+  .cj-filter-bar {
+    background: #f9fafb;
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+  }
+  .cj-filter-bar .input-group-text { background: #fff; }
+
+  .cj-grid-card {
+    background: #fff;
+    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+  }
+  .cj-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(90deg, #f9fafb 0%, #ecfeff 50%, #f9fafb 100%);
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .cj-grid {
+    width: 100%;
+    height: 62vh;
+    min-height: 400px;
   }
 
-  let csv = [];
-  const rows = table.querySelectorAll('tr');
+  .cj-page .ag-theme-quartz {
+    --ag-border-radius: 0;
+    --ag-header-background-color: #f8fafc;
+    --ag-header-foreground-color: #64748b;
+    --ag-row-hover-color: #f0f9ff;
+    --ag-selected-row-background-color: #e0f2fe;
+    --ag-font-size: 12px;
+  }
+  .cj-page .ag-header-cell-label {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-size: 0.7rem;
+  }
+</style>
 
-  rows.forEach(row => {
-    const cols = row.querySelectorAll('td, th');
-    const rowData = [];
-    cols.forEach(col => {
-      let text = col.innerText.replace(/"/g, '""');
-      rowData.push('"' + text + '"');
-    });
-    csv.push(rowData.join(','));
+<script>
+var gridApi = null;
+const rowData = {{ rows_json|tojson|safe }};
+
+const columnDefs = [
+  {
+    field: 'date',
+    headerName: 'Огноо',
+    width: 200,
+    sort: 'desc',
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'chemical',
+    headerName: 'Химийн бодис',
+    minWidth: 200,
+    flex: 2,
+    filter: 'agTextColumnFilter',
+    cellRenderer: function(p) {
+      if (!p.data) return '';
+      const a = document.createElement('a');
+      a.href = '/chemicals/' + p.data.chemical_id;
+      a.textContent = p.value || '';
+      a.style.cssText = 'color:#0284c7;font-weight:600;text-decoration:none;';
+      a.onmouseenter = function() { a.style.textDecoration='underline'; };
+      a.onmouseleave = function() { a.style.textDecoration='none'; };
+      if (p.data.formula) {
+        const span = document.createElement('span');
+        span.appendChild(a);
+        const small = document.createElement('small');
+        small.textContent = ' (' + p.data.formula + ')';
+        small.style.color = '#94a3b8';
+        span.appendChild(small);
+        return span;
+      }
+      return a;
+    }
+  },
+  {
+    field: 'quantity',
+    headerName: 'Тоо хэмжээ',
+    width: 130,
+    cellStyle: {color: '#dc2626', fontWeight: '600'}
+  },
+  {
+    field: 'purpose',
+    headerName: 'Зорилго',
+    minWidth: 140,
+    flex: 1,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'analysis',
+    headerName: 'Шинжилгээ',
+    width: 110,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'user',
+    headerName: 'Хэрэглэгч',
+    width: 120,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    headerName: 'Нөөц',
+    width: 150,
+    valueGetter: function(p) {
+      if (!p.data) return '';
+      const b = p.data.before;
+      const a = p.data.after;
+      if (b == null && a == null) return '-';
+      return (b != null ? b : '-') + ' → ' + (a != null ? a : '-');
+    },
+    cellStyle: {color: '#64748b', fontSize: '0.8rem'}
+  }
+];
+
+const gridOptions = {
+  columnDefs: columnDefs,
+  rowData: rowData,
+  defaultColDef: {
+    sortable: true,
+    resizable: true,
+    minWidth: 70
+  },
+  pagination: true,
+  paginationPageSize: 50,
+  rowHeight: 38,
+  animateRows: true,
+  domLayout: 'normal'
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  const el = document.querySelector('#chemJournalGrid');
+  if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
+  else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
+
+  document.getElementById('cjCount').textContent = rowData.length;
+
+  document.getElementById('cjQuickFilter').addEventListener('input', function() {
+    if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
+    else gridApi.setGridOption('quickFilterText', this.value);
   });
+});
 
-  const csvContent = '\uFEFF' + csv.join('\n'); // BOM for UTF-8
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `chemical_journal_${new Date().toISOString().split('T')[0]}.csv`;
-  link.click();
+function exportCSV() {
+  if (!gridApi) return;
+  gridToXlsx(gridApi, 'chemical_journal.xlsx', 'Журнал');
 }
 </script>
 {% endblock %}
