@@ -7,7 +7,6 @@ AnalysisResult-аас CM/GBW дээжний үр дүнг татаж Westgard ш
 from flask import render_template, jsonify
 from flask_login import login_required
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
-from sqlalchemy import or_
 import logging
 import statistics
 from datetime import datetime  # ✅ sort хамгаалалт
@@ -51,15 +50,10 @@ def _get_mad_for_sample(sample_id: int):
 
 
 def _get_qc_samples():
-    """CM болон GBW дээжүүдийг олох"""
+    """CM болон GBW дээжүүдийг олох (sample_type яг таарах)"""
     return Sample.query.filter(
         Sample.lab_type == 'coal',
-        or_(
-            Sample.sample_type.ilike('%CM%'),
-            Sample.sample_type.ilike('%GBW%'),
-            Sample.sample_code.ilike('%CM%'),
-            Sample.sample_code.ilike('%GBW%'),
-        )
+        Sample.sample_type.in_(['CM', 'GBW'])
     ).order_by(Sample.id.desc()).all()
 
 
@@ -78,26 +72,36 @@ def _get_qc_results(sample_ids: list, analysis_code: str = None):
     return query.order_by(AnalysisResult.updated_at.desc()).all()
 
 
-def _extract_standard_name(sample_code: str) -> str:
+def _extract_standard_name(sample_code: str, sample_type: str = None) -> str:
     """
     Sample code-оос стандартын нэрийг задлах.
 
     Жишээ:
     - 'GBW11135a_20241213A' -> 'GBW11135a'
-    - 'CM_Batch1_20241213AQ4' -> 'CM_Batch1'
-    - 'Test_20241213A' -> 'Test'
+    - 'CM-2025-Q4_20241213AQ4' -> 'CM-2025-Q4'
+    - 'CM_20241213A' -> идэвхтэй ControlStandard.name (fallback)
     """
     if not sample_code:
         return ''
 
     parts = sample_code.split('_')
+    extracted = sample_code
     if len(parts) >= 2:
         # Сүүлийн хэсэг нь огноо (8 оронтой тоо эхэлдэг)
         for i in range(len(parts) - 1, 0, -1):
             if len(parts[i]) >= 8 and parts[i][:8].isdigit():
-                return '_'.join(parts[:i])
-        return parts[0]
-    return sample_code
+                extracted = '_'.join(parts[:i])
+                break
+        else:
+            extracted = parts[0]
+
+    # "CM" → идэвхтэй ControlStandard нэрээр солих
+    if extracted.upper() == 'CM' and (sample_type or '').upper() == 'CM':
+        active = ControlStandard.query.filter_by(is_active=True).first()
+        if active:
+            return active.name
+
+    return extracted
 
 
 def _get_target_and_tolerance(sample, analysis_code: str):
@@ -108,7 +112,7 @@ def _get_target_and_tolerance(sample, analysis_code: str):
         (target, ucl, lcl, sd) эсвэл (None, None, None, None)
     """
     sample_code = sample.sample_code or ""
-    standard_name = _extract_standard_name(sample_code)
+    standard_name = _extract_standard_name(sample_code, getattr(sample, 'sample_type', None))
 
     if not standard_name:
         return None, None, None, None
@@ -116,15 +120,20 @@ def _get_target_and_tolerance(sample, analysis_code: str):
     # CM эсвэл GBW эсэхийг тодорхойлох
     sample_code_upper = sample_code.upper()
 
+    sample_type = getattr(sample, 'sample_type', '') or ''
     active_std = None
-    if "GBW" in sample_code_upper:
-        active_std = GbwStandard.query.filter_by(name=standard_name).first()
-    elif "CM" in sample_code_upper:
-        active_std = ControlStandard.query.filter_by(name=standard_name).first()
-
-        # Олдохгүй бол: хуучин format (CM_date...) -> сүүлд нэмсэн CM стандартыг авах
-        if not active_std and standard_name.upper() == "CM":
-            active_std = ControlStandard.query.order_by(ControlStandard.id.desc()).first()
+    if sample_type.upper() == 'GBW' or 'GBW' in sample_code_upper:
+        active_std = GbwStandard.query.filter_by(name=standard_name, is_active=True).first()
+        # Fallback: нэрээр олдохгүй бол идэвхтэйг авах
+        if not active_std:
+            active_std = GbwStandard.query.filter_by(name=standard_name).first()
+    elif sample_type.upper() == 'CM' or 'CM' in sample_code_upper:
+        active_std = ControlStandard.query.filter_by(name=standard_name, is_active=True).first()
+        # Fallback: нэрээр олдохгүй бол идэвхтэй CM стандарт авах
+        if not active_std:
+            active_std = ControlStandard.query.filter_by(name=standard_name).first()
+        if not active_std:
+            active_std = ControlStandard.query.filter_by(is_active=True).first()
             if active_std:
                 logger.info(f"CM fallback: '{standard_name}' -> '{active_std.name}'")
 
@@ -240,14 +249,14 @@ def register_routes(bp):
             if not sample:
                 continue
 
-            standard_name = _extract_standard_name(sample.sample_code or "")
+            standard_name = _extract_standard_name(sample.sample_code or "", sample.sample_type)
             if not standard_name:
                 continue
 
-            sample_code_upper = (sample.sample_code or "").upper()
-            if "GBW" in sample_code_upper:
+            st = (sample.sample_type or "").upper()
+            if st == "GBW":
                 qc_type = "GBW"
-            elif "CM" in sample_code_upper:
+            elif st == "CM":
                 qc_type = "CM"
             else:
                 continue
@@ -343,24 +352,30 @@ def register_routes(bp):
         """
         Тодорхой QC төрөл + шинжилгээний дэлгэрэнгүй Westgard мэдээлэл.
         """
+        from flask import request as req
+        standard_name_filter = req.args.get('standard_name')
+
         qc_samples = _get_qc_samples()
         if not qc_samples:
             return jsonify({"error": "QC sample not found"})
 
         filtered_samples = []
         for s in qc_samples:
-            sample_type = (s.sample_type or "").upper()
-            sample_code = (s.sample_code or "").upper()
-
-            if qc_type.upper() == "GBW":
-                if "GBW" in sample_type or "GBW" in sample_code:
-                    filtered_samples.append(s)
-            elif qc_type.upper() == "CM":
-                if "CM" in sample_type or "CM" in sample_code:
-                    filtered_samples.append(s)
+            st = (s.sample_type or "").upper()
+            if qc_type.upper() == "GBW" and st == "GBW":
+                filtered_samples.append(s)
+            elif qc_type.upper() == "CM" and st == "CM":
+                filtered_samples.append(s)
 
         if not filtered_samples:
             return jsonify({"error": f"{qc_type} sample not found"})
+
+        # standard_name-ээр шүүх (өөр стандартын дата холилдохгүй)
+        if standard_name_filter:
+            filtered_samples = [
+                s for s in filtered_samples
+                if _extract_standard_name(s.sample_code or "", s.sample_type) == standard_name_filter
+            ]
 
         sample_ids = [s.id for s in filtered_samples]
         samples_map = {s.id: s for s in filtered_samples}

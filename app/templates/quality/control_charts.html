@@ -516,7 +516,7 @@ async function renderCharts(data) {
     grid.className = 'charts-grid';
 
     // Fixed order (new format)
-    const ORDER = ['Mad', 'Adb,%', 'Vdb,%', 'Stdb,%', 'CVdb,kcal/kg', 'CVdb,MJ/kg', 'TRDdb,g/cm3', 'CSN', 'Gi', 'Pdb,%', 'Fdb,mg/g', 'Cldb,%'];
+    const ORDER = ['Mad', 'Aad', 'Vad', 'St', 'CV', 'TRD', 'CSN', 'Gi', 'P'];
     stdData.analyses.sort((a, b) => {
       const idxA = ORDER.indexOf(a.analysis_code);
       const idxB = ORDER.indexOf(b.analysis_code);
@@ -586,7 +586,7 @@ function createChartCard(standardName, qcType, analysis) {
 
 async function loadMiniChart(standardName, qcType, analysis) {
   try {
-    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
+    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
     const data = await resp.json();
 
     // Store for modal use
@@ -598,17 +598,8 @@ async function loadMiniChart(standardName, qcType, analysis) {
 
     if (!ctx || !data.data_points || data.data_points.length < 1) return;
 
-    // Filter CM samples: new format (CM-2025-Q4_...) and old format (CM_...)
-    let points = data.data_points
-      .filter(p => {
-        const code = (p.sample_code || '').toUpperCase();
-        const stdName = standardName.toUpperCase();
-        if (code.startsWith(stdName)) return true;
-        if (stdName.startsWith('CM-') && code.startsWith('CM_')) return true;
-        return false;
-      });
     // Filter by period
-    points = filterByPeriod(points, currentPeriod);
+    let points = filterByPeriod(data.data_points, currentPeriod);
     const filteredCount = points.length;
     points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-15);
 
@@ -688,7 +679,7 @@ async function loadModalChart(standardName, qcType, analysis) {
   let data = chartsData[key];
 
   if (!data) {
-    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
+    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
     data = await resp.json();
   }
 
@@ -722,17 +713,8 @@ async function loadModalChart(standardName, qcType, analysis) {
     return;
   }
 
-  // Filter CM samples: new format (CM-2025-Q4_...) and old format (CM_...)
-  let points = data.data_points
-    .filter(p => {
-      const code = (p.sample_code || '').toUpperCase();
-      const stdName = standardName.toUpperCase();
-      if (code.startsWith(stdName)) return true;
-      if (stdName.startsWith('CM-') && code.startsWith('CM_')) return true;
-      return false;
-    });
   // Filter by period
-  points = filterByPeriod(points, currentPeriod);
+  let points = filterByPeriod(data.data_points, currentPeriod);
   const filteredCount = points.length;
   points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
 
