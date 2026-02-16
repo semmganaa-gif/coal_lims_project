@@ -572,6 +572,42 @@ def register_routes(bp):
                         final_snapshot = new_res.final_result
 
                     else:
+                        # ============================================================
+                        # ДАВТАН ШИНЖИЛГЭЭНИЙ ЛОГИК:
+                        # Аудит trail-д өмнө нь APPROVED бичлэг байсан бол
+                        # энэ бол давтан шинжилгээ гэж тооцно.
+                        # → final_result = давтан утга (default)
+                        # → raw_data._repeat: анхны + давтан хоёуланг хадгална
+                        # → Аудит хуудас дээр ахлах химич аль утгыг ашиглахаа
+                        #   сонгоно (radio button)
+                        # ============================================================
+                        if new_status == "approved":
+                            # Өмнө нь approved байсан эсэхийг аудит trail-аас шалгах
+                            prev_approved = (
+                                AnalysisResultLog.query
+                                .filter_by(
+                                    sample_id=sample_id,
+                                    analysis_code=analysis_code,
+                                )
+                                .filter(
+                                    AnalysisResultLog.action.in_([
+                                        "CREATED_AUTO_APPROVED",
+                                        "UPDATED_AUTO_APPROVED",
+                                        "APPROVED",
+                                        "BULK_APPROVED",
+                                    ])
+                                )
+                                .first()
+                            )
+                            if prev_approved:
+                                raw_norm["_repeat"] = {
+                                    "original_final_result": prev_approved.final_result_snapshot,
+                                    "repeat_final_result": final_result,
+                                    "original_raw": existing.get_raw_data(),
+                                    "repeated_at": now_local().isoformat(),
+                                    "use_original": False,
+                                }
+
                         existing.final_result = final_result
                         existing.set_raw_data(raw_norm)
                         existing.status = new_status

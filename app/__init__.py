@@ -123,9 +123,6 @@ def create_app(config_class=Config):
     # Чанарын удирдлага (ISO 17025 - Quality Management Systems)
     from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
 
-    # Theoretical Yield тооцоолол (Washability)
-    from app.routes.yield_calc.routes import yield_bp
-
     # Мульти-лаборатори (Петрограф, Усны лаб)
     from app.labs import register_lab
     from app.labs.coal import CoalLab
@@ -164,7 +161,6 @@ def create_app(config_class=Config):
     safe_register_blueprint(pdf_reports_bp)
     safe_register_blueprint(spare_parts_bp)
     safe_register_blueprint(license_bp)
-    safe_register_blueprint(yield_bp)
     safe_register_blueprint(petro_bp)
     safe_register_blueprint(water_lab_bp)  # Parent: /labs/water-lab
     safe_register_blueprint(water_bp)      # Chemistry: /labs/water-lab/chemistry
@@ -182,13 +178,10 @@ def create_app(config_class=Config):
     except Exception:
         pass
 
-    # API blueprint-g CSRF-ees cholooloh
-    csrf.exempt(api_bp)
-    csrf.exempt(petro_bp)
-    csrf.exempt(water_lab_bp)
-    csrf.exempt(water_bp)
-    csrf.exempt(micro_bp)
-    csrf.exempt(chemicals_bp)
+    # CSRF exempt: зөвхөн JSON API blueprint-үүд
+    # HTML form-тэй blueprint-үүдийг exempt хийхгүй (CSRF хамгаалалттай)
+    csrf.exempt(api_bp)       # Pure JSON API - CSRF exempt зөв
+    csrf.exempt(petro_bp)     # Зөвхөн JSON API endpoints (HTML form байхгүй)
 
     # ======================================================
     # Лиценз хамгаалалт - before_request hook

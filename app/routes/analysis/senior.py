@@ -509,3 +509,85 @@ def register_routes(bp):
                 "rejected": rejected_today,
             }
         })
+
+    # =====================================================================
+    # 5. ДАВТАН ШИНЖИЛГЭЭНИЙ ҮР ДҮН СОНГОХ (Аудит хуудаснаас)
+    # =====================================================================
+    @bp.route("/api/select_repeat_result/<int:result_id>", methods=["POST"])
+    @login_required
+    @analysis_role_required(["senior", "admin"])
+    def select_repeat_result(result_id):
+        """
+        Давтан шинжилгээтэй үр дүнд аль утгыг ашиглахаа сонгоно.
+        Body: {"use_original": true/false}
+        - use_original=true  → final_result = анхны утга
+        - use_original=false → final_result = давтан утга (default)
+        """
+        res = AnalysisResult.query.get_or_404(result_id)
+        data = request.get_json(silent=True) or {}
+        use_original = data.get("use_original", False)
+
+        # raw_data-аас _repeat мэдээлэл авах
+        raw = res.get_raw_data()
+        repeat_info = raw.get("_repeat")
+        if not repeat_info:
+            return jsonify({"message": "Давтан шинжилгээний мэдээлэл олдсонгүй"}), 400
+
+        original_val = repeat_info.get("original_final_result")
+        repeat_val = repeat_info.get("repeat_final_result")
+
+        if original_val is None or repeat_val is None:
+            return jsonify({"message": "Анхны/давтан утга олдсонгүй"}), 400
+
+        old_final = res.final_result
+
+        if use_original:
+            res.final_result = original_val
+        else:
+            res.final_result = repeat_val
+
+        # _repeat.use_original flag шинэчлэх
+        repeat_info["use_original"] = use_original
+        raw["_repeat"] = repeat_info
+        res.set_raw_data(raw)
+        res.updated_at = now_local()
+
+        db.session.flush()
+
+        # Audit log
+        sample = Sample.query.get(res.sample_id)
+        choice = "ORIGINAL" if use_original else "REPEAT"
+        audit = AnalysisResultLog(
+            timestamp=now_local(),
+            user_id=current_user.id,
+            sample_id=res.sample_id,
+            analysis_result_id=res.id,
+            analysis_code=res.analysis_code,
+            action=f"SELECT_{choice}",
+            raw_data_snapshot=res.raw_data,
+            final_result_snapshot=res.final_result,
+            reason=f"Senior selected {choice.lower()} result: {old_final} → {res.final_result}",
+            sample_code_snapshot=sample.sample_code if sample else None,
+        )
+        audit.data_hash = audit.compute_hash()
+        db.session.add(audit)
+        db.session.commit()
+
+        log_audit(
+            action=f"select_{choice.lower()}_result",
+            resource_type="AnalysisResult",
+            resource_id=res.id,
+            details={
+                "sample_id": res.sample_id,
+                "analysis_code": res.analysis_code,
+                "old_final": old_final,
+                "new_final": res.final_result,
+                "use_original": use_original,
+            },
+        )
+
+        return jsonify({
+            "message": f"{'Анхны' if use_original else 'Давтан'} үр дүн сонгогдлоо",
+            "final_result": res.final_result,
+            "use_original": use_original,
+        })

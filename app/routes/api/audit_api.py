@@ -12,7 +12,7 @@ from flask import (
     request,
     render_template,
 )
-from flask_login import login_required
+from flask_login import login_required, current_user
 from datetime import datetime
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
@@ -20,7 +20,7 @@ from collections import defaultdict
 import json
 
 from app import db
-from app.models import AnalysisResultLog, AnalysisType, Sample, User
+from app.models import AnalysisResult, AnalysisResultLog, AnalysisType, Sample, User
 from app.config.analysis_schema import get_analysis_schema
 from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS
@@ -187,6 +187,28 @@ def register_routes(bp):
 
         grouped_list.sort(key=lambda x: x["last_timestamp"], reverse=True)
 
+        # Дээж бүрийн одоогийн AnalysisResult дээр _repeat байгаа эсэх
+        for group in grouped_list:
+            sample = group.get("sample")
+            if sample:
+                current_res = (
+                    AnalysisResult.query
+                    .filter_by(sample_id=sample.id, analysis_code=base_code)
+                    .first()
+                )
+                if current_res:
+                    raw = current_res.get_raw_data()
+                    repeat_info = raw.get("_repeat")
+                    if repeat_info:
+                        group["repeat_info"] = {
+                            "result_id": current_res.id,
+                            "original_final_result": repeat_info.get("original_final_result"),
+                            "repeat_final_result": repeat_info.get("repeat_final_result"),
+                            "use_original": repeat_info.get("use_original", False),
+                            "repeated_at": repeat_info.get("repeated_at"),
+                            "current_final_result": current_res.final_result,
+                        }
+
         # Статистик
         stats = {
             "total_samples": len(grouped_list),
@@ -199,6 +221,8 @@ def register_routes(bp):
         # Химичийн жагсаалт (шүүлтүүрт ашиглах)
         all_users = User.query.filter(User.role.in_(["chemist", "senior", "manager", "admin"])).all()
 
+        is_senior = getattr(current_user, "role", "") in ("senior", "admin")
+
         return render_template(
             "audit_log_page.html",
             title=f"Аудит: {analysis_type.name}",
@@ -208,6 +232,7 @@ def register_routes(bp):
             error_labels=ERROR_REASON_LABELS,
             all_users=all_users,
             analysis_schema=get_analysis_schema(base_code),  # ✅ base_code ашиглах
+            is_senior=is_senior,
         )
 
     # -----------------------------------------------------------
@@ -274,7 +299,8 @@ def register_routes(bp):
 
         # Үйлдэл
         if action:
-            query = query.filter(AnalysisResultLog.action.ilike(f"%{action}%"))
+            safe_action = escape_like_pattern(action)
+            query = query.filter(AnalysisResultLog.action.ilike(f"%{safe_action}%", escape='\\'))
 
         results = query.order_by(AnalysisResultLog.timestamp.desc()).limit(limit).all()
 
@@ -328,7 +354,8 @@ def register_routes(bp):
             except ValueError:
                 pass
         if action:
-            query = query.filter(AuditLog.action.ilike(f"%{action}%"))
+            safe_action = escape_like_pattern(action)
+            query = query.filter(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
 
         logs = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
 

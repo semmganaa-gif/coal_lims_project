@@ -213,6 +213,10 @@
 
   /* Mono font for numbers */
   .mono { font-family: 'Consolas', 'Monaco', monospace; }
+
+  /* Repeat selection */
+  .repeat-active { color: #2563eb; font-weight: 600; }
+  .repeat-card.saving { opacity: 0.6; pointer-events: none; }
 </style>
 
 <div class="container-fluid audit-page mt-2">
@@ -281,6 +285,55 @@
       </div>
     </form>
   </div>
+
+  {% if is_senior %}
+  <!-- Давтан шинжилгээний үр дүн сонгох хэсэг (зөвхөн ахлах/админ) -->
+  {% set ns = namespace(repeat_count=0) %}
+  {% for group in grouped_samples %}
+    {% if group.get('repeat_info') %}{% set ns.repeat_count = ns.repeat_count + 1 %}{% endif %}
+  {% endfor %}
+  {% if ns.repeat_count > 0 %}
+  <div class="filter-card" style="border-left: 3px solid #f59e0b; padding: 10px 14px;">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <i class="bi bi-arrow-repeat text-warning"></i>
+      <strong style="font-size: 0.8rem;">Давтан шинжилгээ ({{ ns.repeat_count }})</strong>
+      <span style="font-size: 0.7rem; color: var(--muted);">— Аль үр дүнг ашиглахаа сонгоно уу</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      {% for group in grouped_samples %}
+      {% if group.get('repeat_info') %}
+        {% set ri = group.repeat_info %}
+        {% set sample_code_display = group.get('sample_code_snapshot') or (group.sample.sample_code if group.sample else '?') %}
+        <div class="repeat-card" id="repeat-{{ ri.result_id }}"
+             style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; min-width: 280px; font-size: 0.75rem;">
+          <div style="font-weight: 700; margin-bottom: 6px;">{{ sample_code_display }}</div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                   class="{% if not ri.use_original %}repeat-active{% endif %}">
+              <input type="radio" name="repeat_{{ ri.result_id }}" value="repeat"
+                     {% if not ri.use_original %}checked{% endif %}>
+              <span>Давтан: <strong class="mono">{{ ri.repeat_final_result }}</strong></span>
+            </label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                   class="{% if ri.use_original %}repeat-active{% endif %}">
+              <input type="radio" name="repeat_{{ ri.result_id }}" value="original"
+                     {% if ri.use_original %}checked{% endif %}>
+              <span>Анхны: <strong class="mono">{{ ri.original_final_result }}</strong></span>
+            </label>
+            <button type="button" class="btn btn-sm btn-primary" style="padding: 2px 10px; font-size: 0.7rem;"
+                    onclick="saveRepeatChoice({{ ri.result_id }})">
+              <i class="bi bi-check-lg"></i> Хадгалах
+            </button>
+            <span class="repeat-status" id="repeat-status-{{ ri.result_id }}"
+                  style="font-size: 0.65rem; color: var(--muted);"></span>
+          </div>
+        </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
 
   <!-- AG Grid -->
   <div class="grid-wrap">
@@ -816,5 +869,60 @@ function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) 
     });
   });
 })();
+
+// ========== ДАВТАН ШИНЖИЛГЭЭНИЙ ҮР ДҮН СОНГОХ ==========
+async function saveRepeatChoice(resultId) {
+  const card = document.getElementById(`repeat-${resultId}`);
+  const status = document.getElementById(`repeat-status-${resultId}`);
+  const selected = card.querySelector(`input[name="repeat_${resultId}"]:checked`);
+  if (!selected) return;
+
+  const useOriginal = selected.value === 'original';
+  const btn = card.querySelector('button');
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Хадгалж байна...'; }
+  if (card) card.classList.add('saving');
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const resp = await fetch(`/api/select_repeat_result/${resultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+      },
+      body: JSON.stringify({use_original: useOriginal}),
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      // Амжилттай — карт алга болгох
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        card.remove();
+        // Бүх карт алга болсон бол бүх хэсгийг нуух
+        const container = document.querySelector('.filter-card[style*="border-left: 3px solid #f59e0b"]');
+        if (container && !container.querySelector('.repeat-card')) {
+          container.remove();
+        }
+      }, 300);
+      return;
+    } else {
+      if (status) {
+        status.textContent = data.message || 'Алдаа';
+        status.style.color = '#dc2626';
+      }
+    }
+  } catch (e) {
+    if (status) {
+      status.textContent = 'Сүлжээний алдаа';
+      status.style.color = '#dc2626';
+    }
+  } finally {
+    if (card) card.classList.remove('saving');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Хадгалах'; }
+  }
+}
 </script>
 {% endblock %}
