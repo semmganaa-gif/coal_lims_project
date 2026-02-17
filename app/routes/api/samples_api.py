@@ -270,7 +270,7 @@ def register_routes(bp):
 
         # Error check
         if report_data.error == "SAMPLE_NOT_FOUND":
-            flash("Sample not found.", "danger")
+            flash("Дээж олдсонгүй.", "danger")
             return redirect(url_for("api.sample_summary"))
 
         if report_data.error:
@@ -798,7 +798,7 @@ def register_routes(bp):
                     db.session.rollback()
                     return jsonify({"success": False, "message": str(e)}), 500
 
-            return jsonify({"success": False, "message": "Invalid request"}), 400
+            return jsonify({"success": False, "message": "Буруу хүсэлт"}), 400
         MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE']
         MG_ONLY = ['MG', 'MG_SIZE']
 
@@ -855,6 +855,7 @@ def register_routes(bp):
             elif raw is None:
                 raw = {}
             mg_data[r.sample_id][r.analysis_code] = {
+                "id": r.id,
                 "final_result": r.final_result,
                 "raw_data": raw,
                 "status": r.status,

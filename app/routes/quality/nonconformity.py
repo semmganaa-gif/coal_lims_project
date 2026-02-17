@@ -45,7 +45,7 @@ def register_routes(bp):
             nc_description = request.form.get('nc_description', '').strip()
 
             if not detector_name or not nc_description:
-                flash("Detected-by person and details are required.", "danger")
+                flash("Илрүүлсэн хүн болон дэлгэрэнгүй мэдээлэл шаардлагатай.", "danger")
                 return render_template(
                     'quality/nonconformity_form.html',
                     today=date.today().isoformat(),
@@ -70,7 +70,7 @@ def register_routes(bp):
             db.session.commit()
 
             logger.info(f"NonConformity created: {record_no}, user: {current_user.username}")
-            flash(f"Nonconformity {record_no} registered", "success")
+            flash(f"Үл тохирол {record_no} бүртгэгдлээ", "success")
             return redirect(url_for('quality.nonconformity_list'))
 
         return render_template(
@@ -110,7 +110,7 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"NonConformity investigated: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} under review", "success")
+        flash(f"{record.record_no} хянагдаж байна", "success")
         return redirect(url_for('quality.nonconformity_detail', id=id))
 
     @bp.route("/nonconformity/<int:id>/review", methods=["POST"])
@@ -127,5 +127,5 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"NonConformity reviewed: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} review completed", "success")
+        flash(f"{record.record_no} хяналт дууслаа", "success")
         return redirect(url_for('quality.nonconformity_detail', id=id))

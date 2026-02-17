@@ -132,7 +132,7 @@
                   </a>
                   {% if current_user.role in ['senior', 'admin'] %}
                   <form action="{{ url_for('water.delete_solution', id=s.id) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Delete?')">
+                        onsubmit="return confirm('Устгах уу?')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-outline-danger" title="Delete">
                       <i class="bi bi-trash"></i>

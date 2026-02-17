@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const url = document.getElementById('gbwFormSubmitUrl').value;
             const name = document.getElementById('gbwName').value.trim();
             
-            if(!name) { alert("Please enter a GBW number!"); return; }
+            if(!name) { alert("GBW дугаар оруулна уу!"); return; }
 
             let targets = {};
             let count = 0;
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (count === 0) { alert("Please enter at least one parameter."); return; }
+            if (count === 0) { alert("Дор хаяж нэг параметр оруулна уу."); return; }
 
             const meta = document.querySelector('meta[name="csrf-token"]');
             const token = meta ? meta.getAttribute('content') : '';
@@ -282,11 +282,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return res.json();
             })
             .then(() => { 
-                alert("Success!");
+                alert("Амжилттай!");
                 location.reload();
             })
             .catch(err => {
-                alert("Error: " + err.message);
+                alert("Алдаа: " + err.message);
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
             });
@@ -305,13 +305,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(url, { method: 'POST', headers: { 'X-CSRFToken': token } })
                 .then(res => {
                     if(res.ok) location.reload();
-                    else alert("An error occurred.");
+                    else alert("Алдаа гарлаа.");
                 });
             });
         });
     };
 
-    handleAction('.delete-btn', "Are you sure you want to delete?");
+    handleAction('.delete-btn', "Устгахдаа итгэлтэй байна уу?");
     handleAction('.activate-btn', "Activate this GBW?");
     
     // ✅ Inactive болгох товчны үйлдэл

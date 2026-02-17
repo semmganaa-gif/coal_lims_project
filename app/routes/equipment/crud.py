@@ -99,7 +99,7 @@ def equipment_journal_page(id):
 def add_equipment():
     """Шинэ төхөөрөмж нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Permission denied.", "danger")
+        flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     try:
@@ -107,7 +107,7 @@ def add_equipment():
         if quantity <= 0:
             raise ValueError("Тоо ширхэг эерэг тоо байх ёстой")
     except ValueError as e:
-        flash(f"Invalid quantity: {e}", "error")
+        flash(f"Буруу тоо ширхэг: {e}", "error")
         return redirect(url_for("equipment.equipment_list"))
 
     try:
@@ -115,7 +115,7 @@ def add_equipment():
         if calibration_cycle_days <= 0:
             raise ValueError("Калибрацийн мөчлөг эерэг тоо байх ёстой")
     except ValueError as e:
-        flash(f"Invalid calibration cycle: {e}", "error")
+        flash(f"Буруу калибрацийн мөчлөг: {e}", "error")
         return redirect(url_for("equipment.equipment_list"))
 
     register_type = request.form.get("register_type", "main") or "main"
@@ -189,11 +189,11 @@ def add_equipment():
                 'register_type': register_type
             }
         )
-        flash("Registered successfully.", "success")
+        flash("Амжилттай бүртгэгдлээ.", "success")
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in add_equipment: {e}")
-        flash(f"An error occurred: {str(e)[:100]}", "danger")
+        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
     view = request.form.get("category") or "all"
     return redirect(url_for("equipment.equipment_list", view=view))
 
@@ -203,7 +203,7 @@ def add_equipment():
 def edit_equipment(id):
     """Төхөөрөмжийн мэдээлэл засах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Permission denied.", "danger")
+        flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_detail", id=id))
 
     eq = Equipment.query.get_or_404(id)
@@ -224,7 +224,7 @@ def edit_equipment(id):
                 raise ValueError("Калибрацийн мөчлөг эерэг тоо байх ёстой")
             eq.calibration_cycle_days = cycle_value
         except ValueError as e:
-            flash(f"Invalid calibration cycle: {e}", "error")
+            flash(f"Буруу калибрацийн мөчлөг: {e}", "error")
             return redirect(url_for("equipment.equipment_detail", id=id))
 
     if request.form.get("status"):
@@ -300,15 +300,15 @@ def edit_equipment(id):
                 'category': eq.category
             }
         )
-        flash("Updated successfully.", "success")
+        flash("Амжилттай шинэчлэгдлээ.", "success")
     except IntegrityError as e:
         db.session.rollback()
         current_app.logger.error(f"IntegrityError in edit_equipment: {e}")
-        flash("Data conflict occurred (duplicate value).", "danger")
+        flash("Өгөгдөл зөрчилдлөө (давхардсан утга).", "danger")
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in edit_equipment: {e}")
-        flash(f"An error occurred: {str(e)[:100]}", "danger")
+        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_detail", id=id))
 
 
@@ -319,7 +319,7 @@ def edit_equipment(id):
 def delete_equipment(id):
     """Төхөөрөмж устгах (түүхтэй бол retired болгоно)."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Permission denied.", "danger")
+        flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     eq = Equipment.query.get_or_404(id)
@@ -331,10 +331,10 @@ def delete_equipment(id):
     action = 'retire_equipment' if has_history else 'delete_equipment'
     if has_history:
         eq.status = "retired"
-        flash(f"Equipment '{eq_name}' has history and was moved to 'Retired' status.", "warning")
+        flash(f"'{eq_name}' багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.", "warning")
     else:
         db.session.delete(eq)
-        flash(f"'{eq_name}' deleted.", "success")
+        flash(f"'{eq_name}' устгагдлаа.", "success")
 
     try:
         db.session.commit()
@@ -348,7 +348,7 @@ def delete_equipment(id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in delete_equipment: {e}")
-        flash(f"Delete failed: {str(e)[:100]}", "danger")
+        flash(f"Устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(url_for("equipment.equipment_list"))
 
 
@@ -359,12 +359,12 @@ def delete_equipment(id):
 def bulk_delete():
     """Олон төхөөрөмж нэг дор устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Permission denied.", "danger")
+        flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     ids = request.form.getlist('equipment_ids')
     if not ids:
-        flash("No equipment selected.", "warning")
+        flash("Багаж сонгогдоогүй байна.", "warning")
         return redirect(url_for("equipment.equipment_list"))
 
     deleted_count = 0
@@ -404,14 +404,14 @@ def bulk_delete():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in bulk_delete: {e}")
-        flash(f"Bulk delete failed: {str(e)[:100]}", "danger")
+        flash(f"Олноор устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
     msg = []
     if deleted_count > 0:
-        msg.append(f"{deleted_count} equipment deleted.")
+        msg.append(f"{deleted_count} багаж устгагдлаа.")
     if retired_count > 0:
-        msg.append(f"{retired_count} equipment moved to 'Retired' due to history.")
+        msg.append(f"{retired_count} багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.")
 
     flash(" ".join(msg), "success" if msg else "info")
     return redirect(url_for("equipment.equipment_list"))
@@ -441,19 +441,19 @@ def add_maintenance_log(id):
             file.seek(0)
 
             if file_size > MAX_FILE_SIZE:
-                flash(f"File is too large (max {MAX_FILE_SIZE/1024/1024:.0f}MB).", "danger")
+                flash(f"Файл хэт том байна (дээд хэмжээ {MAX_FILE_SIZE/1024/1024:.0f}MB).", "danger")
                 return redirect(next_url)
 
             filename = secure_filename(file.filename)
             if '.' not in filename:
-                flash("File extension is undefined.", "danger")
+                flash("Файлын өргөтгөл тодорхойгүй байна.", "danger")
                 return redirect(next_url)
 
             ext = filename.rsplit('.', 1)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 flash(
-                    f"File type not allowed (.{ext}). "
-                    f"Allowed: {', '.join(ALLOWED_EXTENSIONS)}",
+                    f"Файлын төрөл зөвшөөрөгдөөгүй (.{ext}). "
+                    f"Зөвшөөрөгдөх: {', '.join(ALLOWED_EXTENSIONS)}",
                     "danger"
                 )
                 return redirect(next_url)
@@ -468,7 +468,7 @@ def add_maintenance_log(id):
             real_upload = os.path.realpath(upload_folder)
             if not full_save_path.startswith(real_upload):
                 current_app.logger.warning(f"Path traversal attempt in file save: {unique_filename}")
-                flash("Invalid file name.", "danger")
+                flash("Буруу файлын нэр.", "danger")
                 return redirect(next_url)
 
             file.save(full_save_path)
@@ -542,7 +542,7 @@ def add_maintenance_log(id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in add_maintenance_log: {e}")
-        flash(f"Error saving log entry: {str(e)[:100]}", "danger")
+        flash(f"Бүртгэл хадгалахад алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(next_url)
 
 
@@ -552,7 +552,7 @@ def download_certificate(log_id):
     """Гэрчилгээний файл татах."""
     log = MaintenanceLog.query.get_or_404(log_id)
     if not log.file_path:
-        flash("File not found.", "warning")
+        flash("Файл олдсонгүй.", "warning")
         return redirect(request.referrer or url_for('equipment.equipment_list'))
 
     upload_folder = os.path.abspath(current_app.config.get('UPLOAD_FOLDER', ''))
@@ -560,14 +560,14 @@ def download_certificate(log_id):
 
     full_path = os.path.join(upload_folder, safe_filename)
     if not os.path.exists(full_path):
-        flash("File not found.", "warning")
+        flash("Файл олдсонгүй.", "warning")
         return redirect(request.referrer or url_for('equipment.equipment_list'))
 
     real_path = os.path.realpath(full_path)
     real_upload = os.path.realpath(upload_folder)
     if not real_path.startswith(real_upload):
         current_app.logger.warning(f"Path traversal attempt: {log.file_path}")
-        flash("Access to file denied.", "danger")
+        flash("Файлд хандах эрхгүй.", "danger")
         return redirect(request.referrer or url_for('equipment.equipment_list'))
 
     return send_from_directory(upload_folder, safe_filename, as_attachment=True)

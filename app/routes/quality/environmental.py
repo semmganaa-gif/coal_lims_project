@@ -42,5 +42,5 @@ def register_routes(bp):
         )
         db.session.add(log)
         db.session.commit()
-        flash(f"Environmental measurement recorded {'✅' if within_limits else '⚠️'}", "success" if within_limits else "warning")
+        flash(f"Орчны хэмжилт бүртгэгдлээ {'✅' if within_limits else '⚠️'}", "success" if within_limits else "warning")
         return redirect(url_for('quality.environmental_list'))

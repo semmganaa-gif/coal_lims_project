@@ -46,7 +46,7 @@ def register_routes(bp):
 
         if not sample_ids:
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"message": "No samples selected"}), 400
+                return jsonify({"message": "Дээж сонгогдоогүй байна"}), 400
             return redirect(url_for("api.sample_summary"))
 
         try:

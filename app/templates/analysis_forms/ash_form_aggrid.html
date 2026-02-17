@@ -507,7 +507,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Remove this sample from the list?')) return;
+    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -788,7 +788,7 @@
   window.submitAshData = function() {
     const payload = window.collectAshGridData();
     if (payload.length === 0) {
-      alert('No data to save!');
+      alert('Хадгалах өгөгдөл байхгүй!');
       return;
     }
 
@@ -805,7 +805,7 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('Saved successfully!');
+        alert('Амжилттай хадгалагдлаа!');
 
         // Draft устгах (зөвхөн хадгалагдсан sample-уудын)
         draftMgr.purge(
@@ -834,12 +834,12 @@
 
         // ⚠️ RELOAD ХИЙХГҮЙ! Бусад дээжүүд алга болохгүй!
       } else {
-        alert('Error: ' + (data.message || 'Unknown error'));
+        alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
       }
     })
     .catch(error => {
       console.error('Submit error:', error);
-      alert('Server error!');
+      alert('Серверийн алдаа!');
     });
   };
 

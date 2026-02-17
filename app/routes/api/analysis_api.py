@@ -224,21 +224,21 @@ def register_routes(bp):
         Зөвхөн senior, admin эрхтэй хэрэглэгч.
         """
         if current_user.role not in ("senior", "admin"):
-            return jsonify({"success": False, "message": "Senior or admin access required"}), 403
+            return jsonify({"success": False, "message": "Ахлах эсвэл админ эрх шаардлагатай"}), 403
 
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"success": False, "message": "No JSON data received"}), 400
+            return jsonify({"success": False, "message": "JSON өгөгдөл хүлээн аваагүй"}), 400
 
         sample_id = data.get("sample_id")
         analysis_code = data.get("analysis_code")
 
         if not sample_id or not analysis_code:
-            return jsonify({"success": False, "message": "sample_id and analysis_code are required"}), 400
+            return jsonify({"success": False, "message": "sample_id болон analysis_code шаардлагатай"}), 400
 
         sample = Sample.query.get(sample_id)
         if not sample:
-            return jsonify({"success": False, "message": "Sample not found"}), 404
+            return jsonify({"success": False, "message": "Дээж олдсонгүй"}), 404
 
         # analyses_to_perform-оос хасах
         import json
@@ -255,7 +255,7 @@ def register_routes(bp):
         analyses = [a for a in analyses if a.lower() not in codes_to_remove]
 
         if len(analyses) == original_count:
-            return jsonify({"success": False, "message": f"{analysis_code} analysis is not assigned"}), 400
+            return jsonify({"success": False, "message": f"{analysis_code} шинжилгээ оноогдоогүй байна"}), 400
 
         sample.analyses_to_perform = json.dumps(analyses)
 
@@ -272,7 +272,7 @@ def register_routes(bp):
 
         return jsonify({
             "success": True,
-            "message": f"Unassigned {analysis_code} analysis from sample {sample.sample_code}",
+            "message": f"{sample.sample_code} дээжээс {analysis_code} шинжилгээг хаслаа",
             "remaining_analyses": analyses
         })
 
@@ -286,13 +286,13 @@ def register_routes(bp):
         data = request.get_json(silent=True)
 
         if data is None:
-            return jsonify({"message": "No JSON data received."}), 400
+            return jsonify({"message": "JSON өгөгдөл хүлээн аваагүй."}), 400
 
         if isinstance(data, dict):
             data = [data]
 
         if not isinstance(data, list) or len(data) == 0:
-            return jsonify({"message": "Must be a JSON array"}), 400
+            return jsonify({"message": "JSON массив байх ёстой"}), 400
 
         # Input validation
         is_valid, validated_items, validation_errors = validate_save_results_batch(data)
@@ -312,12 +312,12 @@ def register_routes(bp):
                     sample_id_raw = item.get("sample_id")
                     sample_id, s_err = validate_sample_id(sample_id_raw)
                     if s_err:
-                        raise ValueError(f"Sample ID Error: {s_err}")
+                        raise ValueError(f"Дээжийн ID алдаа: {s_err}")
 
                     analysis_code_in = item.get("analysis_code")
                     _, c_err = validate_analysis_code(analysis_code_in)
                     if c_err:
-                        raise ValueError(f"Code Error: {c_err}")
+                        raise ValueError(f"Кодын алдаа: {c_err}")
 
                     analysis_code = norm_code(analysis_code_in)
 
@@ -342,7 +342,7 @@ def register_routes(bp):
 
                     sample = db.session.get(Sample, sample_id)
                     if not sample:
-                        raise ValueError(f"Sample {sample_id} not found")
+                        raise ValueError(f"Дээж {sample_id} олдсонгүй")
 
                     # --- 2. Normalization & Calculation ---
                     raw_in = item.get("raw_data") or {}
@@ -538,7 +538,7 @@ def register_routes(bp):
                     # Mad байхгүй бол ахлахын хяналт руу илгээнэ
                     if raw_norm.get("_mad_required") and new_status == "approved":
                         new_status = "pending_review"
-                        status_reason = "Mad required (CM/GBW dry basis check)"
+                        status_reason = "Mad шаардлагатай (CM/GBW хуурай суурийн шалгалт)"
 
                     # ============================================================
 
@@ -553,7 +553,7 @@ def register_routes(bp):
                     # ✅ XSS хамгаалалт: Хэрэглэгчийн оруулсан текстийг escape хийх
                     user_comment = item.get("rejection_comment")
                     safe_comment = str(escape(user_comment)) if user_comment else None
-                    reason = status_reason if status_reason else (safe_comment or "Saved by analyst")
+                    reason = status_reason if status_reason else (safe_comment or "Химичээр хадгалагдсан")
 
                     # Автомат KPI алдаа оноох (QC Failure)
                     auto_error_reason = None
@@ -749,11 +749,11 @@ def register_routes(bp):
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({"message": "Database Commit Error", "error": str(e)}), 500
+            return jsonify({"message": "Мэдээллийн сан хадгалах алдаа", "error": str(e)}), 500
 
         # Response
         response_data = {
-            "message": f"{saved_count} rows saved successfully, {failed_count} errors.",
+            "message": f"{saved_count} мөр амжилттай хадгалагдлаа, {failed_count} алдаа.",
             "results": results_for_response,
             "errors": errors
         }
@@ -767,13 +767,13 @@ def register_routes(bp):
     @login_required
     async def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Access denied"}), 403
+            return jsonify({"message": "Хандах эрхгүй"}), 403
 
         res = AnalysisResult.query.get_or_404(result_id)
         allowed = {"approved", "rejected", "pending_review"}
 
         if new_status not in allowed:
-            return jsonify({"message": "Invalid status"}), 400
+            return jsonify({"message": "Буруу статус"}), 400
 
         if request.is_json:
             data = request.get_json(silent=True) or {}
@@ -793,7 +793,7 @@ def register_routes(bp):
 
         if hasattr(res, "rejection_comment"):
             if new_status == "rejected":
-                res.rejection_comment = rejection_comment if rejection_comment else "Returned by senior"
+                res.rejection_comment = rejection_comment if rejection_comment else "Ахлахаас буцаагдсан"
             elif new_status == "approved":
                 res.rejection_comment = None
 
@@ -804,13 +804,13 @@ def register_routes(bp):
 
         if new_status == "approved":
             action_text = "APPROVED"
-            default_reason = "Approved by senior"
+            default_reason = "Ахлахаас зөвшөөрөгдсөн"
         elif new_status == "rejected":
             action_text = "REJECTED"
-            default_reason = "Returned by senior"
+            default_reason = "Ахлахаас буцаагдсан"
         else:
             action_text = "PENDING_REVIEW"
-            default_reason = "Returned for senior review"
+            default_reason = "Ахлахын хяналтад буцаагдсан"
 
         reason_text = rejection_comment or default_reason
         if action_type:
@@ -834,7 +834,7 @@ def register_routes(bp):
         db.session.commit()
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
-            return jsonify({"message": "OK", "status": new_status})
+            return jsonify({"message": "Амжилттай", "status": new_status})
 
         if "analysis" in current_app.blueprints:
             return redirect(url_for("analysis.ahlah_dashboard"))
@@ -851,19 +851,19 @@ def register_routes(bp):
         Дээжний analyses_to_perform талбарт шинэ код нэмнэ.
         """
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Only senior and admin can order"}), 403
+            return jsonify({"message": "Зөвхөн ахлах болон админ захиалга өгөх боломжтой"}), 403
 
         data = request.get_json(silent=True) or {}
         sample_id = data.get("sample_id")
         analysis_code = data.get("analysis_code")
 
         if not sample_id or not analysis_code:
-            return jsonify({"message": "sample_id and analysis_code are required"}), 400
+            return jsonify({"message": "sample_id болон analysis_code шаардлагатай"}), 400
 
         try:
             sample = Sample.query.get(sample_id)
             if not sample:
-                return jsonify({"message": f"Sample #{sample_id} not found"}), 404
+                return jsonify({"message": f"#{sample_id} дээж олдсонгүй"}), 404
 
             # Одоо байгаа analyses_to_perform-г авах
             current_analyses = sample.analyses_to_perform or []
@@ -881,7 +881,7 @@ def register_routes(bp):
             # Аль хэдийн байгаа эсэхийг шалгах
             existing_codes = [norm_code(c) for c in current_analyses]
             if base_code in existing_codes:
-                return jsonify({"message": f"'{base_code}' analysis is already ordered"}), 400
+                return jsonify({"message": f"'{base_code}' шинжилгээ аль хэдийн захиалагдсан"}), 400
 
             # Шинэ код нэмэх
             current_analyses.append(base_code)
@@ -902,7 +902,7 @@ def register_routes(bp):
             db.session.commit()
 
             return jsonify({
-                "message": f"'{base_code}' analysis ordered successfully",
+                "message": f"'{base_code}' шинжилгээ амжилттай захиалагдлаа",
                 "sample_id": sample_id,
                 "analysis_code": base_code
             })
@@ -910,7 +910,7 @@ def register_routes(bp):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Request analysis error: {e}")
-            return jsonify({"message": f"Error: {str(e)}"}), 500
+            return jsonify({"message": f"Алдаа: {str(e)}"}), 500
 
     # -----------------------------------------------------------
     # 5) Notification Check

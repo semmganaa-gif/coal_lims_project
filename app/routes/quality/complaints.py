@@ -141,7 +141,7 @@ def register_routes(bp):
             complaint_content = request.form.get('complaint_content', '').strip()
 
             if not complainant_name or not complaint_content:
-                flash("Name and content are required.", "danger")
+                flash("Нэр болон агуулга шаардлагатай.", "danger")
                 return render_template(
                     'quality/complaints_form.html',
                     today=date.today().isoformat(),
@@ -238,9 +238,9 @@ def register_routes(bp):
                 f"by: {complainant_name}, user: {current_user.username}"
                 f"{f', {rejected_count} results auto-rejected' if rejected_count else ''}"
             )
-            msg = f"Complaint {complaint_no} registered"
+            msg = f"Гомдол {complaint_no} бүртгэгдлээ"
             if rejected_count:
-                msg += f" | {rejected_count} analyses marked as rejected for re-analysis"
+                msg += f" | {rejected_count} шинжилгээ дахин шинжлүүлэхээр татгалзагдлаа"
             flash(msg, "success")
             return redirect(url_for('quality.complaints_list'))
 
@@ -329,7 +329,7 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"Complaint received: {complaint.complaint_no}, user: {current_user.username}")
-        flash(f"{complaint.complaint_no} received", "success")
+        flash(f"{complaint.complaint_no} хүлээн авагдлаа", "success")
         return redirect(url_for('quality.complaints_detail', id=id))
 
     @bp.route("/complaints/<int:id>/control", methods=["POST"])
@@ -359,14 +359,14 @@ def register_routes(bp):
                 status='pending'
             )
             db.session.add(imp)
-            created_records.append(f"Improvement {imp_number}")
+            created_records.append(f"Сайжруулалт {imp_number}")
 
         db.session.commit()
 
         logger.info(f"Complaint controlled: {complaint.complaint_no}, user: {current_user.username}")
-        msg = f"{complaint.complaint_no} reviewed"
+        msg = f"{complaint.complaint_no} хянагдлаа"
         if created_records:
-            msg += f" | Created: {', '.join(created_records)}"
+            msg += f" | Үүсгэгдсэн: {', '.join(created_records)}"
         flash(msg, "success")
         return redirect(url_for('quality.complaints_detail', id=id))
 

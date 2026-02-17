@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function saveResults() {
   const sampleId = document.getElementById('sampleSelect').value;
-  if (!sampleId) { alert('Please select a sample'); return; }
+  if (!sampleId) { alert('Дээж сонгоно уу'); return; }
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   fetch("{{ url_for('petrography.save_results') }}", {
@@ -97,7 +97,7 @@ function saveResults() {
     })
   })
   .then(r => r.json())
-  .then(d => { if (d.success) alert('Saved successfully!'); })
+  .then(d => { if (d.success) alert('Амжилттай хадгалагдлаа!'); })
   .catch(e => console.error(e));
 }
 </script>

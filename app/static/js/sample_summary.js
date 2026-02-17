@@ -399,7 +399,7 @@ const GridModule = (function() {
   function handleRejectClick(resultId) {
     if (!resultId) return;
 
-    if (!confirm("Are you sure you want to return this result?")) return;
+    if (!confirm("Энэ үр дүнг буцаах уу?")) return;
 
     const updateUrl = (URLS.updateStatus || "/api/update_result_status") + "/" + resultId + "/rejected";
 
@@ -419,11 +419,11 @@ const GridModule = (function() {
       return response.json();
     })
     .then(function() {
-      alert('Result returned successfully.');
+      alert('Үр дүн амжилттай буцаагдлаа.');
       window.location.reload();
     })
     .catch(function(error) {
-      alert('Error: ' + error.message);
+      alert('Алдаа: ' + error.message);
     });
   }
 
@@ -456,11 +456,11 @@ const GridModule = (function() {
       return response.json();
     })
     .then(function(data) {
-      alert(data.message || 'Analysis ordered successfully.');
+      alert(data.message || 'Шинжилгээ амжилттай захиалагдлаа.');
       window.location.reload();
     })
     .catch(function(error) {
-      alert('Error: ' + error.message);
+      alert('Алдаа: ' + error.message);
     });
   }
 
@@ -586,7 +586,7 @@ const GridModule = (function() {
 
   function exportCsv() {
     if (!gridApi) {
-      alert('Grid not initialized.');
+      alert('Хүснэгт ачаалагдаагүй байна.');
       return;
     }
 
@@ -611,7 +611,7 @@ const GridModule = (function() {
     // Grid API шалгах
     const api = gridApi || (gridOptions.api ? gridOptions.api : null);
     if (!api) {
-      alert('Grid not initialized.');
+      alert('Хүснэгт ачаалагдаагүй байна.');
       console.error('copySelected: gridApi is null');
       return;
     }
@@ -636,7 +636,7 @@ const GridModule = (function() {
     }
 
     if (selectedNodes.length === 0) {
-      alert("Please select rows to copy.");
+      alert("Хуулах мөрүүдээ сонгоно уу.");
       return;
     }
 
@@ -695,7 +695,7 @@ const GridModule = (function() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(finalString)
         .then(function() {
-          alert(selectedNodes.length + ' rows copied successfully!');
+          alert(selectedNodes.length + ' мөр амжилттай хуулагдлаа!');
         })
         .catch(function(err) {
           console.warn('Clipboard API failed:', err);
@@ -716,9 +716,9 @@ const GridModule = (function() {
 
     try {
       document.execCommand('copy');
-      alert(count + ' rows copied successfully!');
+      alert(count + ' мөр амжилттай хуулагдлаа!');
     } catch (err) {
-      alert("Copy error occurred.");
+      alert("Хуулахад алдаа гарлаа.");
     }
 
     document.body.removeChild(textArea);
@@ -749,7 +749,7 @@ const GridModule = (function() {
       }
     } catch (e) {
       console.error('Grid initialization error:', e);
-      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">Grid creation error: ' + e.message + '</div>';
+      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">Хүснэгт үүсгэхэд алдаа: ' + e.message + '</div>';
     }
   }
 
@@ -800,12 +800,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const action = this.getAttribute('value') || this.value || 'archive';
 
     if (ids.length === 0) {
-      alert("Please select samples to archive.");
+      alert("Архивлах дээжүүдээ сонгоно уу.");
       return;
     }
 
-    const actionText = action === 'archive' ? 'archive' : 'restore';
-    if (!confirm('Are you sure you want to ' + ids.length + ' ' + actionText + ' selected samples?')) {
+    const actionText = action === 'archive' ? 'архивлах' : 'сэргээх';
+    if (!confirm('Сонгосон ' + ids.length + ' дээжийг ' + actionText + ' уу?')) {
       return;
     }
 
@@ -824,7 +824,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ids = GridModule.getSelectedIds();
     if (ids.length === 0) {
-      alert("Please select samples for report.");
+      alert("Тайлангийн дээжүүдээ сонгоно уу.");
       return;
     }
 
@@ -855,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Тайлан амжилттай үүслээ: ' + data.report_number);
         window.location.href = data.redirect_url;
       } else {
-        alert('Error: ' + (data.error || 'Тодорхойгүй'));
+        alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
       }
     })
     .catch(err => {

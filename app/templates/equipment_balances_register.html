@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm('Delete ' + sel.length + ' row(s)?')) return;
+    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
     var form = document.getElementById('deleteForm');
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
     sel.forEach(function(row) {

@@ -1105,12 +1105,12 @@ function loadResults() {
       updateMetrics(data);
     })
     .catch(err => {
-      console.error('Error loading results:', err);
+      console.error('Үр дүн ачаалахад алдаа:', err);
       document.getElementById('results-container').innerHTML = `
         <div class="empty-state">
           <i class="bi bi-exclamation-triangle"></i>
-          <h5>Error occurred</h5>
-          <p>Failed to load data. Please try again.</p>
+          <h5>Алдаа гарлаа</h5>
+          <p>Өгөгдөл ачаалж чадсангүй. Дахин оролдоно уу.</p>
         </div>
       `;
     });
@@ -1123,8 +1123,8 @@ function renderResults(data) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-inbox"></i>
-        <h5>No results pending review</h5>
-        <p>There are currently no results that require review.</p>
+        <h5>Хянах үр дүн байхгүй</h5>
+        <p>Одоогоор хянах шаардлагатай үр дүн байхгүй байна.</p>
       </div>
     `;
     return;
@@ -1140,7 +1140,7 @@ function renderResults(data) {
   container.querySelectorAll('.btn-approve').forEach(btn => {
     btn.addEventListener('click', function() {
       const id = this.dataset.id;
-      if (confirm('Approve this result?')) {
+      if (confirm('Энэ үр дүнг зөвшөөрөх үү?')) {
         approveResult(id);
       }
     });
@@ -1558,12 +1558,12 @@ function approveResult(id) {
     if (data.message === 'OK') {
       location.reload();
     } else {
-      alert(data.message || 'An error occurred');
+      alert(data.message || 'Алдаа гарлаа');
     }
   })
   .catch(err => {
     console.error(err);
-    alert('An error occurred');
+    alert('Алдаа гарлаа');
   });
 }
 
@@ -1576,13 +1576,13 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
   const catText = document.querySelector('#rejection_category option:checked').textContent;
 
   if (!cat) {
-    alert('Please select a rejection reason');
+    alert('Буцаах шалтгаанаа сонгоно уу');
     return;
   }
 
   const btn = this.querySelector('button[type="submit"]');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Боловсруулж байна...';
 
   fetch('/api/update_result_status/' + id + '/rejected', {
     method: 'POST',
@@ -1599,16 +1599,16 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
       bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
       location.reload();
     } else {
-      alert(data.message || 'An error occurred');
+      alert(data.message || 'Алдаа гарлаа');
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
     }
   })
   .catch(err => {
     console.error(err);
-    alert('An error occurred');
+    alert('Алдаа гарлаа');
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
   });
 });
 
@@ -1700,11 +1700,11 @@ document.getElementById('clear-selection-btn').addEventListener('click', functio
 // Bulk Approve
 document.getElementById('bulk-approve-btn').addEventListener('click', function() {
   if (selectedResultIds.size === 0) return;
-  if (!confirm(`Approve ${selectedResultIds.size} results?`)) return;
+  if (!confirm(`${selectedResultIds.size} үр дүнг зөвшөөрөх үү?`)) return;
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Please wait...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1724,7 +1724,7 @@ document.getElementById('bulk-approve-btn').addEventListener('click', function()
     }
   })
   .catch(err => {
-    alert('Error: ' + err);
+    alert('Алдаа: ' + err);
     btn.disabled = false;
     btn.innerHTML = '<i class="bi bi-check-all"></i> Approve All';
   });
@@ -1741,13 +1741,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
   const comment = document.getElementById('bulk-rejection-comment').value;
 
   if (!category) {
-    alert('Please select a rejection reason');
+    alert('Буцаах шалтгаанаа сонгоно уу');
     return;
   }
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Please wait...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1765,13 +1765,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
     if (data.success_count > 0) location.reload();
     else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
     }
   })
   .catch(err => {
-    alert('Error: ' + err);
+    alert('Алдаа: ' + err);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Reject';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
   });
 });
 </script>

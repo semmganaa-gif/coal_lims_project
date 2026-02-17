@@ -100,7 +100,7 @@ $(function () {
     let timedOut = false;
     const t = setTimeout(() => {
       timedOut = true; setBusy(false);
-      alert('Server did not respond. Please try again.');
+      alert('Сервер хариу өгсөнгүй. Дахин оролдоно уу.');
     }, 12000);
 
     // Get CSRF token from meta tag
@@ -488,7 +488,7 @@ $(function () {
     const sampleId = $btn.data('id');
     const sampleCode = $btn.data('code');
 
-    if (!confirm(`Remove sample "${sampleCode}" from ${analysisCodeRaw} analysis?`)) {
+    if (!confirm(`"${sampleCode}" дээжийг ${analysisCodeRaw} шинжилгээнээс хасах уу?`)) {
       return;
     }
 
@@ -513,12 +513,12 @@ $(function () {
             $count.text(newCount);
           }
         } else {
-          alert(resp.message || 'An error occurred');
+          alert(resp.message || 'Алдаа гарлаа');
           $btn.prop('disabled', false).html('<i class="bi bi-x-lg"></i>');
         }
       },
       error: function(xhr) {
-        const msg = xhr.responseJSON?.message || 'Server connection error';
+        const msg = xhr.responseJSON?.message || 'Сервертэй холбогдож чадсангүй';
         alert(msg);
         $btn.prop('disabled', false).html('<i class="bi bi-x-lg"></i>');
       }
@@ -526,7 +526,7 @@ $(function () {
   });
 
   $('#add-selected-samples-to-worksheet').on('click', function(){
-    if(!modalSelectedOrder.size){ alert("Please select samples."); return; }
+    if(!modalSelectedOrder.size){ alert("Дээжүүдээ сонгоно уу."); return; }
     const url = new URL(window.location.href);
     const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
     const reallyNew = [...modalSelectedOrder].filter(x=>!exist.includes(x));
@@ -577,7 +577,7 @@ $(function () {
     setBusy(true);
     let payload = [];
     const tableId = TABLE_BY_CODE[analysisCodeRaw] || TABLE_BY_CODE[analysisCodeDisplay];
-    if (!tableId) { setBusy(false); alert('Matching table not found'); return; }
+    if (!tableId) { setBusy(false); alert('Тохирох хүснэгт олдсонгүй'); return; }
     const $tbl = $(tableId);
 
     // 1) AG Grid collector (аль alias-ээр бүртгэгдсэн ч бай)
@@ -613,14 +613,14 @@ $(function () {
         });
     }
 
-    if (!payload.length) { setBusy(false); return alert('No new results to save.'); }
+    if (!payload.length) { setBusy(false); return alert('Хадгалах шинэ үр дүн алга.'); }
     postPayload(payload, null, analysisCodeRaw, tableId);
   });
 
   // Remove & Nav
   $(document).on('click','.remove-sample-from-worksheet', function(e){
     e.preventDefault();
-    if(!confirm("Remove this sample?")) return;
+    if(!confirm("Энэ дээжийг хасах уу?")) return;
     const sid = $(this).data('sample-id').toString();
     const url = new URL(window.location.href);
     let ids = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];

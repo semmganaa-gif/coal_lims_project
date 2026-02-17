@@ -47,7 +47,7 @@ def register_routes(bp):
 
         return render_template(
             "ahlah_dashboard.html",
-            title="Senior Review",
+            title="Ахлах хяналт",
             error_labels=get_error_reason_labels(),  # Read from DB
             analysis_schemas=schema_map,
             use_aggrid=True,  # Enable AG Grid loading
@@ -146,11 +146,11 @@ def register_routes(bp):
     @login_required
     def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Insufficient permissions"}), 403
+            return jsonify({"message": "Эрх хүрэлцэхгүй байна"}), 403
 
         res = AnalysisResult.query.get_or_404(result_id)
         if new_status not in {"approved", "rejected", "pending_review"}:
-            return jsonify({"message": "Invalid status"}), 400
+            return jsonify({"message": "Төлөв буруу байна"}), 400
 
         data = request.get_json(silent=True) or request.form.to_dict() or {}
         # XSS protection
@@ -165,7 +165,7 @@ def register_routes(bp):
             if hasattr(res, "rejection_category"):
                 res.rejection_category = rejection_category
             if hasattr(res, "rejection_comment"):
-                res.rejection_comment = rejection_comment or "Rejected by senior"
+                res.rejection_comment = rejection_comment or "Ахлах буцаасан"
             if hasattr(res, "error_reason"):
                 res.error_reason = rejection_category
         else:
@@ -179,7 +179,7 @@ def register_routes(bp):
         db.session.flush()
 
         action_text = new_status.upper()
-        reason_text = rejection_comment or ("Approved" if new_status == "approved" else "Review")
+        reason_text = rejection_comment or ("Зөвшөөрөгдсөн" if new_status == "approved" else "Хянагдаж буй")
 
         audit = AnalysisResultLog(
             timestamp=now_local(),
@@ -223,7 +223,7 @@ def register_routes(bp):
     def bulk_update_status():
         """Bulk approve/reject multiple results"""
         if getattr(current_user, "role", None) not in ("senior", "admin"):
-            return jsonify({"message": "Insufficient permissions"}), 403
+            return jsonify({"message": "Эрх хүрэлцэхгүй байна"}), 403
 
         data = request.get_json(silent=True) or {}
         result_ids = data.get("result_ids", [])
@@ -234,13 +234,13 @@ def register_routes(bp):
         rejection_category = data.get("rejection_category")
 
         if not result_ids:
-            return jsonify({"message": "No results selected"}), 400
+            return jsonify({"message": "Үр дүн сонгогдоогүй байна"}), 400
 
         if new_status not in {"approved", "rejected"}:
-            return jsonify({"message": "Invalid status"}), 400
+            return jsonify({"message": "Төлөв буруу байна"}), 400
 
         if new_status == "rejected" and not rejection_category:
-            return jsonify({"message": "Please select a rejection reason"}), 400
+            return jsonify({"message": "Буцаах шалтгаанаа сонгоно уу"}), 400
 
         success_count = 0
         failed_ids = []
@@ -264,7 +264,7 @@ def register_routes(bp):
                     if hasattr(res, "rejection_category"):
                         res.rejection_category = rejection_category
                     if hasattr(res, "rejection_comment"):
-                        res.rejection_comment = rejection_comment or "Rejected by senior"
+                        res.rejection_comment = rejection_comment or "Ахлах буцаасан"
                     if hasattr(res, "error_reason"):
                         res.error_reason = rejection_category
                 else:
@@ -288,7 +288,7 @@ def register_routes(bp):
                     final_result_snapshot=res.final_result,
                     rejection_category=rejection_category if new_status == "rejected" else None,
                     error_reason=rejection_category if new_status == "rejected" else None,
-                    reason=rejection_comment or ("Bulk Approved" if new_status == "approved" else "Bulk Rejected"),
+                    reason=rejection_comment or ("Бөөнөөр зөвшөөрөгдсөн" if new_status == "approved" else "Бөөнөөр буцаагдсан"),
                     sample_code_snapshot=sample.sample_code if sample else None,
                 )
                 # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
@@ -318,7 +318,7 @@ def register_routes(bp):
                 # Email notification (async-style, don't block)
                 try:
                     notify_sample_status_change(
-                        sample_code=f"Bulk ({success_count} results)",
+                        sample_code=f"Бөөнөөр ({success_count} үр дүн)",
                         new_status=new_status,
                         changed_by=current_user.username,
                         reason=rejection_comment if new_status == "rejected" else None
@@ -328,10 +328,10 @@ def register_routes(bp):
 
             except Exception as e:
                 db.session.rollback()
-                return jsonify({"message": f"DB error: {str(e)[:100]}"}), 500
+                return jsonify({"message": f"Мэдээллийн сангийн алдаа: {str(e)[:100]}"}), 500
 
         return jsonify({
-            "message": f"{success_count} result(s) successfully set to {new_status}.",
+            "message": f"{success_count} үр дүн амжилттай {new_status} төлөвт шилжлээ.",
             "success_count": success_count,
             "failed_count": len(failed_ids),
             "failed_ids": failed_ids
@@ -411,7 +411,7 @@ def register_routes(bp):
         unit_list = []
         for row in samples_by_unit:
             unit_list.append({
-                "name": row.client_name or "Unknown",
+                "name": row.client_name or "Тодорхойгүй",
                 "count": row.count,
             })
 
@@ -431,7 +431,7 @@ def register_routes(bp):
         type_list = []
         for row in samples_by_type:
             type_list.append({
-                "name": row.sample_type or "Unknown",
+                "name": row.sample_type or "Тодорхойгүй",
                 "count": row.count,
             })
 
@@ -566,7 +566,7 @@ def register_routes(bp):
             action=f"SELECT_{choice}",
             raw_data_snapshot=res.raw_data,
             final_result_snapshot=res.final_result,
-            reason=f"Senior selected {choice.lower()} result: {old_final} → {res.final_result}",
+            reason=f"Ахлах {choice.lower()} үр дүнг сонгосон: {old_final} → {res.final_result}",
             sample_code_snapshot=sample.sample_code if sample else None,
         )
         audit.data_hash = audit.compute_hash()

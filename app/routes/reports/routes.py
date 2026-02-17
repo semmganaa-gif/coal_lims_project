@@ -425,7 +425,7 @@ def consumption_cell():
         if not (1 <= month <= 12):
             raise ValueError
     except Exception:
-        return jsonify({"success": False, "error": "Invalid parameter"}), 400
+        return jsonify({"success": False, "error": "Буруу параметр"}), 400
 
     date_col = _pick_date_col()
 
@@ -871,7 +871,7 @@ def api_get_monthly_plan():
     month = request.args.get("month", type=int)
 
     if not year or not month:
-        return jsonify({"error": "year and month required"}), 400
+        return jsonify({"error": "year болон month шаардлагатай"}), 400
 
     plans = M.MonthlyPlan.query.filter_by(year=year, month=month).all()
 
@@ -891,7 +891,7 @@ def api_save_monthly_plan():
     JSON body: { year, month, plans: { "CHPP|2 hourly|1": 10, ... } }
     """
     if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Senior access only"}), 403
+        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
 
     data = request.get_json()
     year = data.get("year")
@@ -899,7 +899,7 @@ def api_save_monthly_plan():
     plans = data.get("plans", {})
 
     if not year or not month:
-        return jsonify({"error": "year and month required"}), 400
+        return jsonify({"error": "year болон month шаардлагатай"}), 400
 
     saved_count = 0
     for key, planned_count in plans.items():
@@ -942,7 +942,7 @@ def api_save_staff_settings():
     JSON body: { year, month, staff_preparers, staff_chemists }
     """
     if current_user.role not in ["senior", "admin"]:
-        return jsonify({"error": "Senior access only"}), 403
+        return jsonify({"error": "Зөвхөн ахлах эрхтэй"}), 403
 
     data = request.get_json()
     year = data.get("year")
@@ -951,7 +951,7 @@ def api_save_staff_settings():
     chemists = data.get("staff_chemists", 10)
 
     if not year or not month:
-        return jsonify({"error": "year and month required"}), 400
+        return jsonify({"error": "year болон month шаардлагатай"}), 400
 
     # Upsert
     existing = M.StaffSettings.query.filter_by(year=year, month=month).first()
@@ -1248,7 +1248,7 @@ def api_weekly_performance():
     month = request.args.get("month", type=int)
 
     if not year or not month:
-        return jsonify({"error": "year and month required"}), 400
+        return jsonify({"error": "year болон month шаардлагатай"}), 400
 
     performance, weeks = _calculate_weekly_performance(year, month)
 
@@ -1279,7 +1279,7 @@ def chemist_report():
     2. Шинжилгээний төрөл бүрээр тоо
     3. Error reason (8 төрөл) - алдааны тоо
     """
-    from app.models import User, AnalysisResult, AnalysisResultLog
+    from app.models import User, AnalysisResult, AnalysisResultLog, UsageLog, MaintenanceLog
     from app.constants import ERROR_REASON_KEYS, ERROR_REASON_LABELS
     from collections import defaultdict
 
@@ -1405,6 +1405,10 @@ def chemist_report():
             'rank_quality': None,
             'quarterly': [0, 0, 0, 0],
             'quarterly_growth': [0, 0, 0],
+            'eq_usage_count': 0,
+            'eq_usage_hours': 0.0,
+            'eq_maint_count': 0,
+            'eq_calib_count': 0,
         }
 
     # Шинжилгээний үр дүнг нэмэх
@@ -1427,6 +1431,10 @@ def chemist_report():
                     'rank_quality': None,
                     'quarterly': [0, 0, 0, 0],
                     'quarterly_growth': [0, 0, 0],
+                    'eq_usage_count': 0,
+                    'eq_usage_hours': 0.0,
+                    'eq_maint_count': 0,
+                    'eq_calib_count': 0,
                 }
             else:
                 continue
@@ -1551,6 +1559,51 @@ def chemist_report():
                 pct = 0
             quarterly_growth.append(round(pct, 1))
         chemist['quarterly_growth'] = quarterly_growth
+
+    # 8) Багаж ашиглалтын статистик (UsageLog + MaintenanceLog)
+    eq_user_ids = list(chemist_data.keys())
+    if eq_user_ids:
+        # UsageLog: ашигласан тоо, нийт минут
+        usage_stats = (
+            db.session.query(
+                UsageLog.used_by_id,
+                func.count(UsageLog.id),
+                func.coalesce(func.sum(UsageLog.duration_minutes), 0),
+            )
+            .filter(
+                UsageLog.used_by_id.in_(eq_user_ids),
+                UsageLog.start_time >= start_dt,
+                UsageLog.start_time < end_dt,
+            )
+            .group_by(UsageLog.used_by_id)
+            .all()
+        )
+        for uid, cnt, mins in usage_stats:
+            if uid in chemist_data:
+                chemist_data[uid]['eq_usage_count'] = cnt
+                chemist_data[uid]['eq_usage_hours'] = round(int(mins) / 60.0, 1)
+
+        # MaintenanceLog: засвар/калибровка тоо
+        maint_stats = (
+            db.session.query(
+                MaintenanceLog.performed_by_id,
+                MaintenanceLog.action_type,
+                func.count(MaintenanceLog.id),
+            )
+            .filter(
+                MaintenanceLog.performed_by_id.in_(eq_user_ids),
+                MaintenanceLog.action_date >= start_dt,
+                MaintenanceLog.action_date < end_dt,
+            )
+            .group_by(MaintenanceLog.performed_by_id, MaintenanceLog.action_type)
+            .all()
+        )
+        for uid, action_type, cnt in maint_stats:
+            if uid in chemist_data:
+                if action_type == 'Calibration':
+                    chemist_data[uid]['eq_calib_count'] += cnt
+                else:
+                    chemist_data[uid]['eq_maint_count'] += cnt
 
     # Шинжилгээний кодуудыг эрэмбэлэх
     sorted_analysis_codes = sorted(all_analysis_codes)

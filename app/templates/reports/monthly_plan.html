@@ -1060,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function() {
           alert('Төлөвлөгөө хадгалагдлаа!');
           location.reload();
         } else {
-          alert('Error: ' + (result.error || 'Unknown error'));
+          alert('Алдаа: ' + (result.error || 'Тодорхойгүй алдаа'));
         }
       } catch (err) {
         alert('Сервертэй холбогдож чадсангүй: ' + err.message);
@@ -1097,10 +1097,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         if (result.success) {
           btnSaveStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> Хадгалсан';
-          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Settings хадгалах'; }, 1500);
+          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Тохиргоо хадгалах'; }, 1500);
         }
       } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Алдаа: ' + err.message);
       }
     });
   }

@@ -62,7 +62,7 @@
 
                 <form class="d-inline" method="post"
                       action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
-                      onsubmit="return confirm('Permanently delete bottle {{ b.serial_no }}? (historical data will also be deleted)');">
+                      onsubmit="return confirm('{{ b.serial_no }} лонхыг бүрмөсөн устгах уу? (түүхэн өгөгдөл бас устгагдана)');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash"></i> Delete

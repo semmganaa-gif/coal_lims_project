@@ -53,7 +53,7 @@ def report_list():
 def signature_list():
     """Гарын үсэг, тамгын жагсаалт."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
     signatures = ReportSignature.query.filter_by(is_active=True).all()
@@ -73,7 +73,7 @@ def signature_list():
 def add_signature():
     """Гарын үсэг/тамга нэмэх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
     if request.method == "POST":
@@ -112,12 +112,12 @@ def add_signature():
 
             db.session.add(sig)
             db.session.commit()
-            flash(f"'{name}' added successfully.", "success")
+            flash(f"'{name}' амжилттай нэмэгдлэн.", "success")
             return redirect(url_for("pdf_reports.signature_list"))
 
         except Exception as e:
             db.session.rollback()
-            flash(f"Error: {str(e)[:100]}", "danger")
+            flash(f"Алдаа: {str(e)[:100]}", "danger")
 
     users = User.query.filter(User.role.in_(['senior', 'manager', 'admin'])).all()
     return render_template(
@@ -134,13 +134,13 @@ def add_signature():
 def delete_signature(id):
     """Гарын үсэг/тамга устгах."""
     if current_user.role not in ["manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
     sig = ReportSignature.query.get_or_404(id)
     sig.is_active = False
     db.session.commit()
-    flash("Deleted.", "warning")
+    flash("Устгагдлаа.", "warning")
     return redirect(url_for("pdf_reports.signature_list"))
 
 
@@ -184,7 +184,7 @@ def report_detail(id):
 def approve_report(id):
     """Тайлан баталгаажуулах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     report = LabReport.query.get_or_404(id)
@@ -211,7 +211,7 @@ def approve_report(id):
     from app.routes.reports.pdf_generator import regenerate_pdf
     regenerate_pdf(report)
 
-    flash("Report approved.", "success")
+    flash("Тайлан зөвшөөрөгдлөө.", "success")
     return redirect(url_for("pdf_reports.report_detail", id=id))
 
 
@@ -225,13 +225,13 @@ def download_report(id):
     report = LabReport.query.get_or_404(id)
 
     if not report.pdf_path:
-        flash("PDF file not found.", "warning")
+        flash("PDF файл олдсонгүй.", "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     pdf_full_path = os.path.join(current_app.root_path, 'static', report.pdf_path)
 
     if not os.path.exists(pdf_full_path):
-        flash("PDF file not found.", "warning")
+        flash("PDF файл олдсонгүй.", "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     return send_file(
@@ -249,7 +249,7 @@ def download_report(id):
 def delete_report(id):
     """Тайлан устгах."""
     if current_user.role not in ["manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
     report = LabReport.query.get_or_404(id)
@@ -262,7 +262,7 @@ def delete_report(id):
 
     db.session.delete(report)
     db.session.commit()
-    flash("Report deleted.", "warning")
+    flash("Тайлан устгагдлаа.", "warning")
     return redirect(url_for("pdf_reports.report_list"))
 
 
@@ -308,7 +308,7 @@ def api_create_report():
         date_to_str = data.get("date_to")
 
         if not lab_type or not sample_ids:
-            return jsonify({"success": False, "error": "lab_type and sample_ids are required"}), 400
+            return jsonify({"success": False, "error": "lab_type болон sample_ids шаардлагатай"}), 400
 
         # Огноо parse
         date_from = None
@@ -341,7 +341,7 @@ def api_create_report():
                 sample_ids, date_from, date_to, current_user.id
             )
         else:
-            return jsonify({"success": False, "error": f"Unknown lab type: {lab_type}"}), 400
+            return jsonify({"success": False, "error": f"Тодорхойгүй лабораторийн төрөл: {lab_type}"}), 400
 
         if error:
             return jsonify({"success": False, "error": error}), 400

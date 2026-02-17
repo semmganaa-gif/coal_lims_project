@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.editSelected = function() {
     var sel = table.getSelectedData();
     if (sel.length === 1 && sel[0].detail_url) window.location.href = sel[0].detail_url;
-    else if (sel.length > 1) alert('Please select only 1 row.');
+    else if (sel.length > 1) alert('Зөвхөн 1 мөр сонгоно уу.');
   };
 
   table.on('rowSelectionChanged', function(data) {
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (bulkBtn) {
     bulkBtn.addEventListener('click', function() {
       var sel = table.getSelectedData();
-      if (!sel.length || !confirm('Delete ' + sel.length + ' equipment item(s)?')) return;
+      if (!sel.length || !confirm(sel.length + ' багаж устгах уу?')) return;
       var form = document.getElementById('bulk-action-form');
       form.querySelectorAll('input[name="equipment_ids"]').forEach(function(el) { el.remove(); });
       sel.forEach(function(row) {
@@ -582,7 +582,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   window.confirmDelete = function(id, name) {
-    if (!confirm('Delete "' + name + '"?')) return;
+    if (!confirm('"' + name + '" устгах уу?')) return;
     var form = document.getElementById('delete-form-single');
     form.action = '/equipment/delete/' + id;
     form.submit();

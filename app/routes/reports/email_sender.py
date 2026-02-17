@@ -101,13 +101,13 @@ def send_report_email(report, recipients, subject=None, body=None):
 def send_email(id):
     """Тайлан имэйлээр илгээх."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     report = LabReport.query.get_or_404(id)
 
     if report.status not in ['approved', 'sent']:
-        flash("Only approved reports can be sent.", "warning")
+        flash("Зөвхөн батлагдсан тайланг илгээх боломжтой.", "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
     if request.method == "POST":
@@ -115,7 +115,7 @@ def send_email(id):
         recipients = [e.strip() for e in recipients_str.split(',') if e.strip()]
 
         if not recipients:
-            flash("Please enter recipient email address.", "warning")
+            flash("Хүлээн авагчийн имэйл хаяг оруулна уу.", "warning")
             return redirect(url_for("pdf_reports.send_email", id=id))
 
         subject = request.form.get("subject")
@@ -129,10 +129,10 @@ def send_email(id):
             report.email_recipients = recipients_str
             report.status = 'sent'
             db.session.commit()
-            flash("Email sent successfully.", "success")
+            flash("Имэйл амжилттай илгээгдлэн.", "success")
             return redirect(url_for("pdf_reports.report_detail", id=id))
         else:
-            flash(f"Email sending error: {error}", "danger")
+            flash(f"Имэйл илгээхэд алдаа: {error}", "danger")
 
     return render_template(
         "reports/send_email.html",

@@ -43,7 +43,7 @@ def register_routes(bp):
         if request.method == "POST":
             activity = request.form.get('activity_description', '').strip()
             if not activity:
-                flash("Please describe the improvement activity.", "danger")
+                flash("Сайжруулалтын үйл ажиллагааг тайлбарлана уу.", "danger")
                 return render_template(
                     'quality/improvement_form.html',
                     today=date.today().isoformat(),
@@ -71,7 +71,7 @@ def register_routes(bp):
             db.session.commit()
 
             logger.info(f"Improvement created: {record_no}, user: {current_user.username}")
-            flash(f"Improvement {record_no} registered", "success")
+            flash(f"Сайжруулалт {record_no} бүртгэгдлээ", "success")
             return redirect(url_for('quality.improvement_list'))
 
         return render_template(
@@ -107,7 +107,7 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"Improvement filled: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} completed", "success")
+        flash(f"{record.record_no} бөглөгдлөө", "success")
         return redirect(url_for('quality.improvement_detail', id=id))
 
     @bp.route("/improvement/<int:id>/review", methods=["POST"])
@@ -125,5 +125,5 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"Improvement reviewed: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} review completed", "success")
+        flash(f"{record.record_no} хяналт дууслаа", "success")
         return redirect(url_for('quality.improvement_detail', id=id))

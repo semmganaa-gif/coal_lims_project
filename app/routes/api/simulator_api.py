@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import Sample, AnalysisResult
+from app.utils.security import escape_like_pattern
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +56,11 @@ def register_routes(bp):
         """
         sample = db.session.get(Sample, sample_id)
         if not sample:
-            return jsonify({"error": "Sample not found"}), 404
+            return jsonify({"error": "Дээж олдсонгүй"}), 404
 
         # Зөвхөн CHPP client-ийн дээж
         if sample.client_name != "CHPP":
-            return jsonify({"error": "Only CHPP samples can be sent"}), 400
+            return jsonify({"error": "Зөвхөн CHPP дээжийг илгээх боломжтой"}), 400
 
         # Approved шинжилгээний үр дүнгүүд авах
         results = AnalysisResult.query.filter_by(
@@ -68,7 +69,7 @@ def register_routes(bp):
         ).all()
 
         if not results:
-            return jsonify({"error": "No approved analysis results found"}), 400
+            return jsonify({"error": "Баталгаажсан шинжилгээний үр дүн олдсонгүй"}), 400
 
         # analyses dict бүрдүүлэх (бүх шинжилгээ)
         analyses = {}
@@ -77,7 +78,7 @@ def register_routes(bp):
                 analyses[r.analysis_code] = r.final_result
 
         if not analyses:
-            return jsonify({"error": "No analysis results to send"}), 400
+            return jsonify({"error": "Илгээх шинжилгээний үр дүн байхгүй"}), 400
 
         # Payload бүрдүүлэх
         payload = {
@@ -105,18 +106,18 @@ def register_routes(bp):
             )
             return jsonify({
                 "success": True,
-                "message": f"Sent to Simulator successfully ({len(analyses)} шинжилгээ)",
+                "message": f"Симулятор руу амжилттай илгээгдлэн ({len(analyses)} шинжилгээ)",
                 "simulator_response": data,
             })
         except requests.ConnectionError:
             logger.error(f"Simulator холболт амжилтгүй: {url}")
-            return jsonify({"error": "Could not connect to Simulator server"}), 502
+            return jsonify({"error": "Симулятор сервертэй холбогдож чадсангүй"}), 502
         except requests.Timeout:
             logger.error(f"Simulator timeout: {url}")
-            return jsonify({"error": "Simulator server response timed out"}), 504
+            return jsonify({"error": "Симулятор серверийн хариу хугацаа хэтэрсэн"}), 504
         except requests.HTTPError as e:
             logger.error(f"Simulator HTTP error: {e.response.status_code} - {e.response.text}")
-            return jsonify({"error": f"Simulator error: {e.response.status_code}"}), 502
+            return jsonify({"error": f"Симулятор алдаа: {e.response.status_code}"}), 502
 
     @bp.route("/send_to_simulator/wtl/<lab_number>", methods=["POST"])
     @login_required
@@ -129,13 +130,14 @@ def register_routes(bp):
         4. POST → SIMULATOR_URL/api/v1/lims/receive/wtl
         """
         # WTL client-ийн дээжүүд lab_number-ээр
+        safe_lab = escape_like_pattern(lab_number)
         samples = Sample.query.filter(
             Sample.client_name == "WTL",
-            Sample.sample_code.like(f"%{lab_number}%"),
+            Sample.sample_code.like(f"%{safe_lab}%", escape='\\'),
         ).all()
 
         if not samples:
-            return jsonify({"error": f"WTL sample not found: {lab_number}"}), 404
+            return jsonify({"error": f"WTL дээж олдсонгүй: {lab_number}"}), 404
 
         # Бүх дээжний approved шинжилгээ шалгах
         fractions = []
@@ -176,11 +178,11 @@ def register_routes(bp):
 
         if unapproved:
             return jsonify({
-                "error": f"Not all samples approved: {', '.join(unapproved[:5])}",
+                "error": f"Бүх дээж баталгаажаагүй: {', '.join(unapproved[:5])}",
             }), 400
 
         if not fractions:
-            return jsonify({"error": "No fractions found to send"}), 400
+            return jsonify({"error": "Илгээх фракц олдсонгүй"}), 400
 
         # Sample date авах
         sample_date = None
@@ -209,18 +211,18 @@ def register_routes(bp):
             )
             return jsonify({
                 "success": True,
-                "message": f"Sent to Simulator successfully ({len(fractions)} fraction)",
+                "message": f"Симулятор руу амжилттай илгээгдлэн ({len(fractions)} фракц)",
                 "simulator_response": data,
             })
         except requests.ConnectionError:
             logger.error(f"Simulator холболт амжилтгүй: {url}")
-            return jsonify({"error": "Could not connect to Simulator server"}), 502
+            return jsonify({"error": "Симулятор сервертэй холбогдож чадсангүй"}), 502
         except requests.Timeout:
             logger.error(f"Simulator timeout: {url}")
-            return jsonify({"error": "Simulator server response timed out"}), 504
+            return jsonify({"error": "Симулятор серверийн хариу хугацаа хэтэрсэн"}), 504
         except requests.HTTPError as e:
             logger.error(f"Simulator HTTP error: {e.response.status_code} - {e.response.text}")
-            return jsonify({"error": f"Simulator error: {e.response.status_code}"}), 502
+            return jsonify({"error": f"Симулятор алдаа: {e.response.status_code}"}), 502
 
 
 def _parse_wtl_sample_code(sample_code: str) -> tuple:

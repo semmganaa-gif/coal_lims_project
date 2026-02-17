@@ -107,12 +107,12 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   // Connect button
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      alert('Serial Balance module is not loaded.');
+      alert('Жингийн модуль ачаалагдаагүй байна.');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      alert('Web Serial API is not supported. Please use Chrome 89+ browser.');
+      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
       return;
     }
 

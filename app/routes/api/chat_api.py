@@ -133,7 +133,7 @@ def register_routes(bp):
     async def get_chat_history(user_id):
         """Хоёр хэрэглэгчийн хоорондын мессежийн түүх"""
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 50, type=int)
+        per_page = min(request.args.get('per_page', 50, type=int), 200)
         search = request.args.get('search', '').strip()
 
         query = ChatMessage.query.filter(
@@ -224,14 +224,14 @@ def register_routes(bp):
     async def upload_chat_file():
         """Файл upload хийх"""
         if 'file' not in request.files:
-            return jsonify({'error': 'File not found'}), 400
+            return jsonify({'error': 'Файл олдсонгүй'}), 400
 
         file = request.files['file']
         if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
+            return jsonify({'error': 'Файл сонгоогүй байна'}), 400
 
         if not allowed_file(file.filename):
-            return jsonify({'error': 'This file type is not allowed'}), 400
+            return jsonify({'error': 'Энэ файлын төрөл зөвшөөрөгдөөгүй'}), 400
 
         # Check file size
         file.seek(0, 2)
@@ -239,18 +239,18 @@ def register_routes(bp):
         file.seek(0)
 
         if file_size > MAX_FILE_SIZE:
-            return jsonify({'error': 'File too large (max 10MB)'}), 400
+            return jsonify({'error': 'Файл хэт том байна (хамгийн ихдээ 10MB)'}), 400
 
         # ✅ ЗАСВАРЛАСАН: Аюулгүй файл нэр үүсгэх
         original_filename = secure_filename(file.filename)
         if not original_filename or '.' not in original_filename:
-            return jsonify({'error': 'Invalid file name'}), 400
+            return jsonify({'error': 'Буруу файлын нэр'}), 400
 
         extension = original_filename.rsplit('.', 1)[1].lower()
 
         # ✅ Magic bytes validation (зураг, PDF)
         if not validate_file_content(file, extension):
-            return jsonify({'error': 'File content does not match extension'}), 400
+            return jsonify({'error': 'Файлын агуулга өргөтгөлтэй таарахгүй байна'}), 400
 
         # ✅ UUID ашиглах (timestamp биш - урьдчилан таах боломжгүй)
         unique_filename = f"{uuid.uuid4().hex}.{extension}"

@@ -254,9 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
           body: JSON.stringify({ year, month, plans })
         });
         const res = await r.json();
-        if (res.success) { alert('Saved!'); location.reload(); }
-        else { alert('Error: ' + (res.error || '')); }
-      } catch(e) { alert('Error: ' + e.message); }
+        if (res.success) { alert('Хадгалагдлаа!'); location.reload(); }
+        else { alert('Алдаа: ' + (res.error || '')); }
+      } catch(e) { alert('Алдаа: ' + e.message); }
     });
   }
 
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
           btnStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> OK';
           setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> Save'; }, 1500);
         }
-      } catch(e) { alert('Error: ' + e.message); }
+      } catch(e) { alert('Алдаа: ' + e.message); }
     });
   }
 });

@@ -573,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(error => {
       console.error('Error:', error);
-      gridDiv.innerHTML = '<div class="alert alert-danger m-3">Error loading data.</div>';
+      gridDiv.innerHTML = '<div class="alert alert-danger m-3">Өгөгдөл ачаалахад алдаа гарлаа.</div>';
     });
 
   // Approve Button Listener
@@ -581,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.closest('.btn-approve')) {
         const btn = e.target.closest('.btn-approve');
         const id = btn.dataset.id;
-        if(!confirm("Are you sure you want to approve this result?")) return;
+        if(!confirm("Энэ үр дүнг зөвшөөрөх үү?")) return;
 
         const form = document.createElement('form');
         form.method = 'POST';
@@ -615,12 +615,12 @@ $('#reject-form').on('submit', function (e) {
   const comment = $('#rejection_category option:selected').text();
 
   if (!id || !cat) {
-    alert('Please select a rejection category.');
+    alert('Буцаах шалтгаанаа сонгоно уу.');
     return;
   }
 
   const $btn = $(this).find('button[type="submit"]');
-  $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+  $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Боловсруулж байна...');
 
   $.ajax({
     url: '/api/update_result_status/' + id + '/rejected',
@@ -638,8 +638,8 @@ $('#reject-form').on('submit', function (e) {
       location.reload();
     },
     error: function (xhr) {
-      alert(xhr.responseJSON?.message || 'An error occurred');
-      $btn.prop('disabled', false).text('Reject');
+      alert(xhr.responseJSON?.message || 'Алдаа гарлаа');
+      $btn.prop('disabled', false).text('Буцаах');
     }
   });
 });

@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const url = document.getElementById('formSubmitUrl').value;
             const name = document.getElementById('stdName').value.trim();
             
-            if(!name) { alert("Please enter a name!"); return; }
+            if(!name) { alert("Нэр оруулна уу!"); return; }
 
             let targets = {};
             let count = 0;
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (count === 0) { alert("Please enter at least one value."); return; }
+            if (count === 0) { alert("Дор хаяж нэг утга оруулна уу."); return; }
 
             // CSRF Token
             const meta = document.querySelector('meta[name="csrf-token"]');
@@ -281,11 +281,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return res.json();
             })
             .then(() => { 
-                alert("Success!");
+                alert("Амжилттай!");
                 location.reload();
             })
             .catch(err => {
-                alert("Error: " + err.message);
+                alert("Алдаа: " + err.message);
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
             });
@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- 4. УСТГАХ (DELETE) ---
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            if(!confirm("Are you sure you want to delete?")) return;
+            if(!confirm("Устгахдаа итгэлтэй байна уу?")) return;
             
             const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
             const meta = document.querySelector('meta[name="csrf-token"]');
@@ -310,17 +310,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 return res.json();
             })
             .then(() => { 
-                alert("Deleted.");
+                alert("Устгагдлаа.");
                 location.reload();
             })
-            .catch(err => { alert("Error: " + err.message); });
+            .catch(err => { alert("Алдаа: " + err.message); });
         });
     });
 
     // --- 5. ИДЭВХЖҮҮЛЭХ (ACTIVATE) ---
     document.querySelectorAll('.activate-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            if(!confirm("Activate this standard?")) return;
+            if(!confirm("Энэ стандартыг идэвхжүүлэх үү?")) return;
             
             const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
             const meta = document.querySelector('meta[name="csrf-token"]');
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(res => {
                 if(res.ok) location.reload();
-                else alert("An error occurred.");
+                else alert("Алдаа гарлаа.");
             });
         });
     });

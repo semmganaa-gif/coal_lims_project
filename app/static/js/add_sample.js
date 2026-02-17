@@ -184,18 +184,46 @@ document.addEventListener('DOMContentLoaded', function() {
     if (c.value === 'WTL') {
       if (!tRadio) return;
       if (['WTL','Size','FL'].includes(tRadio.value)) document.getElementById('wtl-lab-number-field').style.display = 'block';
+      else if (tRadio.value === 'MG') document.getElementById('wtl-mg-field').style.display = 'block';
       else document.getElementById('wtl-other-field').style.display = 'block';
     }
   }
 
+  // ------------------------ 5b. WTL MG PREVIEW ------------------------
+  function updateMgPreview() {
+    const mod = document.getElementById('wtl_module');
+    const sup = document.getElementById('wtl_supplier');
+    const veh = document.getElementById('wtl_vehicle');
+    const preview = document.getElementById('wtl_mg_preview');
+    const dateInput = document.getElementById('sample_date');
+    if (!mod || !preview) return;
+
+    const modVal = mod.value || '';
+    const supVal = (sup ? sup.value : '').trim();
+    const vehVal = (veh ? veh.value : '').trim();
+    const dateVal = dateInput ? dateInput.value.replace(/-/g, '') : '';
+
+    const parts = ['MG', modVal, supVal, dateVal, vehVal].filter(p => p);
+    preview.value = parts.join('_');
+  }
+
+  // Attach MG field listeners
+  ['wtl_module','wtl_supplier','wtl_vehicle'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateMgPreview);
+    if (el) el.addEventListener('change', updateMgPreview);
+  });
+  const mgDateEl = document.getElementById('sample_date');
+  if (mgDateEl) mgDateEl.addEventListener('change', updateMgPreview);
+
   // ------------------------ 6. GENERATE LIST FUNCTION ------------------------
   function generateSampleList() {
     const cRadio = document.querySelector('input[name="client_name"]:checked');
-    if (!cRadio) { showAlert('Please select a unit!'); return; }
+    if (!cRadio) { showAlert('Нэгжээ сонгоно уу!'); return; }
     const cVal = cRadio.value;
 
     const dateVal = document.getElementById('sample_date').value;
-    if (!dateVal) { showAlert('Please select a date!'); return; }
+    if (!dateVal) { showAlert('Огноо сонгоно уу!'); return; }
     const fDate = dateVal.replace(/-/g, '');
 
     let samples = [];
@@ -213,13 +241,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (cVal === 'CHPP') {
       const tRadio = document.querySelector('#sample-type-container input:checked');
-      if (!tRadio) { showAlert('Please select a type!'); return; }
+      if (!tRadio) { showAlert('Төрлөө сонгоно уу!'); return; }
       const tVal = tRadio.value;
 
       if (tVal === '2 hourly') {
         listType = 'chpp_2h'; requiresWeight = true;
         const sc = get2hSC();
-        const pp = twohPrimarySelect.value; if(!pp){showAlert('Please select a CC!');return;}
+        const pp = twohPrimarySelect.value; if(!pp){showAlert('CC сонгоно уу!');return;}
 
         // Group by CC/TC and Modules
         groupedSamples['CC'] = [`${pp}_${fDate}${sc}`];
@@ -258,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (tVal === '12 hourly') {
         listType = 'chpp_12h';
         const cr = document.querySelector('.condition-toggle input:checked');
-        if(!cr){showAlert('Please select a condition!');return;}
+        if(!cr){showAlert('Нөхцөл сонгоно уу!');return;}
         const sc = get12hSC();
         const mods=[];
         if(document.getElementById('chpp_12h_mod1').checked) mods.push('MOD I');
@@ -281,14 +309,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
       } else if (tVal === 'com') {
         listType = 'chpp_com'; requiresWeight = true;
-        const pp = comPrimarySelect.value; if(!pp){showAlert('Please select a CC!');return;}
+        const pp = comPrimarySelect.value; if(!pp){showAlert('CC сонгоно уу!');return;}
         const sfx = getComSuffix();
         const sps = Array.from(comSecondarySelect.selectedOptions).map(o=>o.value).filter(v=>v!=='none');
         const pfs = [];
         if(document.getElementById('com_pf211').checked) pfs.push('PF211');
         if(document.getElementById('com_pf221').checked) pfs.push('PF221');
         if(document.getElementById('com_pf231').checked) pfs.push('PF231');
-        if(!pfs.length){showAlert('Please select a PF!');return;}
+        if(!pfs.length){showAlert('PF сонгоно уу!');return;}
 
         groupedSamples['CC'] = [`${pp}_${fDate}_${sfx}`];
         if(sps.length) {
@@ -304,17 +332,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } else if (['UHG-Geo','BN-Geo','QC','Proc'].includes(cVal)) {
       listType = 'multi_gen'; requiresWeight = true;
-      const tr = document.querySelector('#sample-type-container input:checked'); if(!tr){showAlert('Please select a type!');return;}
+      const tr = document.querySelector('#sample-type-container input:checked'); if(!tr){showAlert('Төрөл сонгоно уу!');return;}
       const loc = document.getElementById('location').value;
       // QC бүх төрөлд байршил заавал биш
-      if(!loc && cVal !== 'QC'){showAlert('Please enter a location!');return;}
-      const cnt = parseInt(document.getElementById('sample_count').value); if(!cnt){showAlert('Please enter a count!');return;}
+      if(!loc && cVal !== 'QC'){showAlert('Байршил оруулна уу!');return;}
+      const cnt = parseInt(document.getElementById('sample_count').value); if(!cnt){showAlert('Тоо ширхэг оруулна уу!');return;}
       const prod = document.getElementById('product') ? document.getElementById('product').value : '';
       for(let i=1; i<=cnt; i++) {
         let sampleCode;
         if(cVal === 'QC' && tr.value === 'Fine'){
           // QC Fine: ECO_20251202_1 формат (байршил хэрэггүй)
-          if(!prod){showAlert('Please enter a product!');return;}
+          if(!prod){showAlert('Бүтээгдэхүүн оруулна уу!');return;}
           sampleCode = `${prod}_${fDate}_${i}`;
         } else if(cVal === 'QC'){
           // QC (Fine-ээс бусад): байршил байвал loc_prod_type, байхгүй бол prod_type
@@ -605,5 +633,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if(twohPrimarySelect) { twohPrimarySelect.addEventListener('change', refresh2hSecondaryOptions); }
   if(comPrimarySelect) { comPrimarySelect.addEventListener('change', refreshComSecondaryOptions); }
+
+  // MG: set sample_code from preview before form submit
+  const sampleForm = document.getElementById('sample-form');
+  if (sampleForm) {
+    sampleForm.addEventListener('submit', function() {
+      const cRadio = document.querySelector('input[name="client_name"]:checked');
+      const tRadio = document.querySelector('#sample-type-container input:checked');
+      if (cRadio && cRadio.value === 'WTL' && tRadio && tRadio.value === 'MG') {
+        const preview = document.getElementById('wtl_mg_preview');
+        const sc = document.getElementById('sample_code');
+        if (preview && sc) sc.value = preview.value;
+      }
+    });
+  }
 
 });

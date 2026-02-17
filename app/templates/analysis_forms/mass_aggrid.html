@@ -273,7 +273,7 @@
     }
 
     if(action === 'unready'){
-      if(!confirm('Return to Unready status?')) return;
+      if(!confirm('Бэлтгэгдээгүй төлөв рүү буцаах уу?')) return;
       try{
         const res = await fetch('/api/mass/unready', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
@@ -288,7 +288,7 @@
     }
 
     if(action === 'delete'){
-      if(!confirm('Permanently delete this sample?')) return;
+      if(!confirm('Энэ дээжийг бүрмөсөн устгах уу?')) return;
       try{
         const res = await fetch('/api/mass/delete', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',

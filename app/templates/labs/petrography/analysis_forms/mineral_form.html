@@ -108,7 +108,7 @@ function addRow() {
 }
 
 function saveResults() {
-  if (!selectedSampleId) { alert('Please select a sample'); return; }
+  if (!selectedSampleId) { alert('Дээж сонгоно уу'); return; }
   const rows = [];
   gridApi.forEachNode(n => rows.push(n.data));
 
@@ -123,7 +123,7 @@ function saveResults() {
     })
   })
   .then(r => r.json())
-  .then(d => { if (d.success) alert('Saved successfully!'); })
+  .then(d => { if (d.success) alert('Амжилттай хадгалагдлаа!'); })
   .catch(e => console.error(e));
 }
 </script>

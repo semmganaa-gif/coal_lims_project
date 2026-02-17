@@ -245,7 +245,7 @@
   });
 
   window.removeSample = function(id) {
-    if (!confirm('Remove this sample from the list?')) return;
+    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

@@ -43,7 +43,7 @@ def register_routes(bp):
         if request.method == "POST":
             desc = request.form.get('issue_description', '').strip()
             if not desc:
-                flash("Non-conformity description is required.", "danger")
+                flash("Үл тохирлын тайлбар шаардлагатай.", "danger")
                 return render_template(
                     'quality/capa_form.html',
                     today=date.today().isoformat(),
@@ -70,7 +70,7 @@ def register_routes(bp):
             db.session.commit()
 
             logger.info(f"CAPA created: {ca_number}, user: {current_user.username}")
-            flash(f"Corrective action {ca_number} registered", "success")
+            flash(f"Залруулах ажиллагаа {ca_number} бүртгэгдлээ", "success")
             return redirect(url_for('quality.capa_list'))
 
         return render_template(
@@ -105,7 +105,7 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"CAPA filled: {record.ca_number}, user: {current_user.username}")
-        flash(f"{record.ca_number} filled", "success")
+        flash(f"{record.ca_number} бөглөгдлөө", "success")
         return redirect(url_for('quality.capa_detail', id=id))
 
     @bp.route("/capa/<int:id>/review", methods=["POST"])
@@ -125,5 +125,5 @@ def register_routes(bp):
         db.session.commit()
 
         logger.info(f"CAPA reviewed: {record.ca_number}, user: {current_user.username}")
-        flash(f"{record.ca_number} reviewed", "success")
+        flash(f"{record.ca_number} хянагдлаа", "success")
         return redirect(url_for('quality.capa_detail', id=id))

@@ -169,7 +169,7 @@ def register_routes(bp):
         # ---------- Үндсэн submit ----------
         if form.validate_on_submit():
             if current_user.role not in ["prep", "admin"]:
-                flash("You do not have permission to register samples.", "danger")
+                flash("Дээж бүртгэх эрхгүй байна.", "danger")
                 return redirect(url_for("main.index"))
 
             raw_submitted_codes = request.form.getlist("sample_codes")
@@ -275,13 +275,13 @@ def register_routes(bp):
                     # Loop-н дундаас алдаа гарвал бүх partial changes-ийг rollback хийнэ
                     db.session.rollback()
                     current_app.logger.error(f"Error during sample registration loop: {e}")
-                    flash(f"Error registering sample: {str(e)}", "danger")
+                    flash(f"Дээж бүртгэхэд алдаа гарлаа: {str(e)}", "danger")
                     # Continue to render template with errors below
 
                 # ✅ Сайжруулсан error handling - давхардлыг арилгасан
                 if count > 0:
                     if not safe_commit(
-                        f"{count} ш дээж registered successfully.",
+                        f"{count} ш дээж амжилттай бүртгэгдлээ.",
                         "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."
                     ):
                         # ✅ Бүх template variable дамжуулах
@@ -299,7 +299,7 @@ def register_routes(bp):
                         )
 
                 if failed_samples:
-                    flash(f'Warning: The following samples were not registered: {", ".join(failed_samples)}', "warning")
+                    flash(f'Анхааруулга: Дараах дээжүүд бүртгэгдсэнгүй: {", ".join(failed_samples)}', "warning")
 
                 # ✅ Prometheus metrics: Дээж бүртгэлийг track хийх
                 for _ in range(count):
@@ -311,7 +311,7 @@ def register_routes(bp):
             elif not list_type and client_name == "WTL" and sample_type in ["WTL", "Size", "FL"]:
                 lab_number = form.lab_number.data
                 if not lab_number:
-                    flash("Lab number is required for WTL.", "danger")
+                    flash("WTL-д лабораторийн дугаар шаардлагатай.", "danger")
                 else:
                     all_wtl_names = []
                     if sample_type == "WTL":
@@ -355,7 +355,7 @@ def register_routes(bp):
                     # ✅ Сайжруулсан error handling
                     if count > 0:
                         if not safe_commit(
-                            f"{count} ш {sample_type} дээж registered successfully.",
+                            f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ.",
                             "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."
                         ):
                             # ✅ Бүх template variable дамжуулах
@@ -420,45 +420,62 @@ def register_routes(bp):
                 db.session.add(sample)
                 # ✅ Сайжруулсан error handling
                 safe_commit(
-                    f"Дээж registered successfully. {final_sample_code}",
-                    f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" sample already registered.байна.'
+                    f"Дээж амжилттай бүртгэгдлээ. {final_sample_code}",
+                    f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" дээж аль хэдийн бүртгэгдсэн байна.'
                 )
                 return redirect(url_for("main.index", active_tab="add-pane"))
 
-            # --- 4) WTL – MG/Test (гар аргаар sample_code) ---
+            # --- 4) WTL – MG (structured) / Test (manual sample_code) ---
             elif not list_type and client_name == "WTL" and sample_type in ["MG", "Test"]:
-                if not form.sample_code.data:
-                    flash("Sample name is required for this WTL type.", "danger")
+                if sample_type == "MG":
+                    # MG: structured code from module/supplier/vehicle
+                    wtl_module = form.wtl_module.data
+                    wtl_supplier = (form.wtl_supplier.data or "").strip()
+                    wtl_vehicle = (form.wtl_vehicle.data or "").strip()
+                    if not wtl_module or not wtl_supplier or not wtl_vehicle:
+                        flash("MG-д Module, Supplier, Vehicle талбарууд шаардлагатай.", "danger")
+                        return redirect(url_for("main.index", active_tab="add-pane"))
+                    formatted_date = sample_date_obj.strftime("%Y%m%d")
+                    final_sample_code = f"MG_{wtl_module}_{wtl_supplier}_{formatted_date}_{wtl_vehicle}"
+                    notes_data = form.notes.data or ""
+                    if wtl_module:
+                        notes_data = f"Module: {wtl_module}; {notes_data}".strip("; ")
                 else:
+                    # Test: manual sample_code
+                    if not form.sample_code.data:
+                        flash("Энэ WTL төрөлд дээжний нэр шаардлагатай.", "danger")
+                        return redirect(url_for("main.index", active_tab="add-pane"))
                     final_sample_code = form.sample_code.data
-                    sample = Sample(
-                        sample_code=final_sample_code,
-                        user_id=current_user.id,
-                        client_name=client_name,
-                        sample_type=sample_type,
-                        sample_condition=form.sample_condition.data,
-                        sample_date=sample_date_obj,
-                        return_sample=form.return_sample.data,
-                        delivered_by=form.delivered_by.data,
-                        prepared_date=form.prepared_date.data,
-                        prepared_by=form.prepared_by.data,
-                        notes=form.notes.data,
-                        analyses_to_perform="[]"
-                    )
+                    notes_data = form.notes.data
 
-                    # ✅ no_autoflush: Query хийхэд sample-г flush хийхгүй байх
-                    with db.session.no_autoflush:
-                        assign_analyses_to_sample(sample)
-                    db.session.add(sample)
-                    # ✅ Сайжруулсан error handling
-                    safe_commit(
-                        "Шинэ дээж registered successfully.",
-                        f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" sample already registered.байна.'
-                    )
-                    return redirect(url_for("main.index", active_tab="add-pane"))
+                sample = Sample(
+                    sample_code=final_sample_code,
+                    user_id=current_user.id,
+                    client_name=client_name,
+                    sample_type=sample_type,
+                    sample_condition=form.sample_condition.data,
+                    sample_date=sample_date_obj,
+                    return_sample=form.return_sample.data,
+                    delivered_by=form.delivered_by.data,
+                    prepared_date=form.prepared_date.data,
+                    prepared_by=form.prepared_by.data,
+                    notes=notes_data,
+                    analyses_to_perform="[]"
+                )
+
+                # ✅ no_autoflush: Query хийхэд sample-г flush хийхгүй байх
+                with db.session.no_autoflush:
+                    assign_analyses_to_sample(sample)
+                db.session.add(sample)
+                # ✅ Сайжруулсан error handling
+                safe_commit(
+                    "Шинэ дээж амжилттай бүртгэгдлээ.",
+                    f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" дээж аль хэдийн бүртгэгдсэн байна.'
+                )
+                return redirect(url_for("main.index", active_tab="add-pane"))
 
             else:
-                flash("Form is incomplete or contains errors.", "danger")
+                flash("Маягт дутуу эсвэл алдаатай байна.", "danger")
 
         active_tab = "add-pane" if form.errors else request.args.get("active_tab", "list-pane")
 
@@ -490,7 +507,7 @@ def register_routes(bp):
         sample_type = data.get("sample_type")
 
         if not all([sample_names, client_name, sample_type]):
-            return jsonify({"error": "Missing data"}), 400
+            return jsonify({"error": "Мэдээлэл дутуу байна"}), 400
 
         results = {}
 
@@ -514,7 +531,7 @@ def send_hourly_report():
     """Цагийн тайлан илгээх - зөвхөн senior, admin"""
     # Role шалгалт
     if current_user.role not in ['senior', 'admin']:
-        flash('You do not have permission for this action.', 'error')
+        flash('Энэ үйлдлийг гүйцэтгэх эрхгүй байна.', 'error')
         return redirect(url_for('main.index'))
 
     try:
@@ -603,7 +620,7 @@ def send_hourly_report():
             if os.path.exists(template_path + ".xlsx"):
                 template_path += ".xlsx"
             else:
-                flash("Template file not found!", "danger")
+                flash("Загвар файл олдсонгүй!", "danger")
                 return redirect(url_for('main.index'))
 
         with open(template_path, "rb") as f:
@@ -857,7 +874,7 @@ def send_hourly_report():
 
         # Хэрэв TO хаяг байхгүй бол алдаа
         if not to_list:
-            flash("Email recipients not configured. Please set them in Settings.", "warning")
+            flash("Имэйл хүлээн авагч тохируулагдаагүй байна. Тохиргооноос тохируулна уу.", "warning")
             return redirect(url_for('main.index'))
 
         msg = Message(
@@ -873,10 +890,10 @@ def send_hourly_report():
         sent_to = ", ".join(to_list)
         if cc_list:
             sent_to += f" (CC: {', '.join(cc_list)})"
-        flash(f"Sent successfully! → {sent_to}", "success")
+        flash(f"Амжилттай илгээгдлээ! → {sent_to}", "success")
 
     except Exception as e:
         current_app.logger.exception("Error in send_hourly_report")
-        flash(f"Error: {str(e)}", "danger")
+        flash(f"Алдаа: {str(e)}", "danger")
 
     return redirect(url_for('main.index'))

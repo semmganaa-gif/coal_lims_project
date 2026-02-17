@@ -222,8 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const allSelectedNodes = gridOptions.api.getSelectedNodes();
         const selectedNodes = allSelectedNodes.filter(node => node.displayed);
 
-        if (selectedNodes.length === 0) { alert('Please select samples to delete!'); return; }
-        if (!confirm('Are you sure you want to delete the selected ' + selectedNodes.length + ' sample(s)?')) return;
+        if (selectedNodes.length === 0) { alert('Устгах дээжүүдийг сонгоно уу!'); return; }
+        if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгах уу?')) return;
 
         const ids = selectedNodes.map(node => node.data[1]);
         const form = document.getElementById('deleteSelectedForm');

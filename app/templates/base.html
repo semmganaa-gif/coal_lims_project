@@ -529,7 +529,7 @@
           <li class="nav-item">
             <a class="nav-link text-success" href="{{ url_for('main.send_hourly_report') }}"
                title="Send Hourly Report"
-               onclick="return confirm('Send hourly report?')">
+               onclick="return confirm('Цагийн тайлан илгээх үү?')">
               <i class="bi bi-envelope-paper-fill"></i>
             </a>
           </li>
@@ -639,7 +639,7 @@
      * @param {string} [sheetName] - Sheet нэр
      */
     function gridToXlsx(api, fileName, sheetName) {
-      if (!window.XLSX) { alert('XLSX library not loaded'); return; }
+      if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
       var displayedCols = null;
       try { displayedCols = api.getAllDisplayedColumns(); } catch(e) {}
       var headers = [], data;
@@ -717,9 +717,9 @@
      * @param {string} [sheetName] - Sheet нэр
      */
     function tableToXlsx(tableId, fileName, sheetName) {
-      if (!window.XLSX) { alert('XLSX library not loaded'); return; }
+      if (!window.XLSX) { alert('XLSX сан ачаалагдаагүй'); return; }
       var tbl = document.getElementById(tableId);
-      if (!tbl) { alert('Table not found'); return; }
+      if (!tbl) { alert('Хүснэгт олдсонгүй'); return; }
       var ws = XLSX.utils.table_to_sheet(tbl);
       // Auto column widths
       var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');

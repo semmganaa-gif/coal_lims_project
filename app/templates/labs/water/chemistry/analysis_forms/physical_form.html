@@ -108,7 +108,7 @@ function addSample() {
 function saveAll() {
   const rows = [];
   gridApi.forEachNode(n => rows.push(n.data));
-  if (!rows.length) { alert('No data available'); return; }
+  if (!rows.length) { alert('Өгөгдөл байхгүй'); return; }
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   rows.forEach(row => {

@@ -166,7 +166,7 @@ def chemical_detail(id):
 def add_chemical():
     """Шинэ химийн бодис нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_list"))
 
     if request.method == "POST":
@@ -234,16 +234,16 @@ def add_chemical():
             )
 
             db.session.commit()
-            flash(f"'{chemical.name}' registered successfully.", "success")
+            flash(f"'{chemical.name}' амжилттай бүртгэгдлээ.", "success")
             return redirect(url_for("chemicals.chemical_detail", id=chemical.id))
 
         except ValueError as e:
             db.session.rollback()
-            flash(f"Invalid value: {e}", "danger")
+            flash(f"Буруу утга: {e}", "danger")
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error adding chemical: {e}")
-            flash(f"Error occurred: {str(e)[:100]}", "danger")
+            flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
 
     lab = request.args.get("lab", "all")
     return render_template(
@@ -267,7 +267,7 @@ def add_chemical():
 def edit_chemical(id):
     """Химийн бодис засварлах."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = Chemical.query.get_or_404(id)
@@ -337,16 +337,16 @@ def edit_chemical(id):
             )
 
             db.session.commit()
-            flash("Updated successfully.", "success")
+            flash("Амжилттай шинэчлэгдлээ.", "success")
             return redirect(url_for("chemicals.chemical_detail", id=id))
 
         except ValueError as e:
             db.session.rollback()
-            flash(f"Invalid value: {e}", "danger")
+            flash(f"Буруу утга: {e}", "danger")
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error editing chemical: {e}")
-            flash(f"Error: {str(e)[:100]}", "danger")
+            flash(f"Алдаа: {str(e)[:100]}", "danger")
 
     return render_template(
         "chemicals/chemical_form.html",
@@ -368,7 +368,7 @@ def edit_chemical(id):
 def receive_chemical(id):
     """Химийн бодисын нөөц нэмэх."""
     if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = Chemical.query.get_or_404(id)
@@ -376,7 +376,7 @@ def receive_chemical(id):
     try:
         quantity_add = float(request.form.get("quantity_add", 0))
         if quantity_add <= 0:
-            flash("Quantity must be positive.", "warning")
+            flash("Тоо хэмжээ эерэг тоо байх ёстой.", "warning")
             return redirect(url_for("chemicals.chemical_detail", id=id))
 
         old_quantity = chemical.quantity
@@ -403,12 +403,12 @@ def receive_chemical(id):
         )
 
         db.session.commit()
-        flash(f"+{quantity_add} {chemical.unit} added.", "success")
+        flash(f"+{quantity_add} {chemical.unit} нэмэгдлээ.", "success")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error receiving chemical: {e}")
-        flash(f"Error: {str(e)[:100]}", "danger")
+        flash(f"Алдаа: {str(e)[:100]}", "danger")
 
     return redirect(url_for("chemicals.chemical_detail", id=id))
 
@@ -426,11 +426,11 @@ def consume_chemical(id):
     try:
         quantity_used = float(request.form.get("quantity_used", 0))
         if quantity_used <= 0:
-            flash("Quantity must be positive.", "warning")
+            flash("Тоо хэмжээ эерэг тоо байх ёстой.", "warning")
             return redirect(url_for("chemicals.chemical_detail", id=id))
 
         if quantity_used > chemical.quantity:
-            flash(f"Consumption quantity ({quantity_used}) exceeds stock ({chemical.quantity}) amount.", "danger")
+            flash(f"Хэрэглээний хэмжээ ({quantity_used}) нөөцийн хэмжээнээс ({chemical.quantity}) хэтэрсэн байна.", "danger")
             return redirect(url_for("chemicals.chemical_detail", id=id))
 
         old_quantity = chemical.quantity
@@ -474,12 +474,12 @@ def consume_chemical(id):
         )
 
         db.session.commit()
-        flash(f"-{quantity_used} {chemical.unit} consumed.", "success")
+        flash(f"-{quantity_used} {chemical.unit} хэрэглэгдлээ.", "success")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error consuming chemical: {e}")
-        flash(f"Error: {str(e)[:100]}", "danger")
+        flash(f"Алдаа: {str(e)[:100]}", "danger")
 
     return redirect(url_for("chemicals.chemical_detail", id=id))
 
@@ -493,7 +493,7 @@ def consume_chemical(id):
 def dispose_chemical(id):
     """Химийн бодис устгах."""
     if current_user.role not in ["senior", "manager", "admin"]:
-        flash("Access denied.", "danger")
+        flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
     chemical = Chemical.query.get_or_404(id)
@@ -514,12 +514,12 @@ def dispose_chemical(id):
         )
 
         db.session.commit()
-        flash(f"'{chemical.name}' deleted.", "warning")
+        flash(f"'{chemical.name}' устгагдлаа.", "warning")
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error disposing chemical: {e}")
-        flash(f"Error: {str(e)[:100]}", "danger")
+        flash(f"Алдаа: {str(e)[:100]}", "danger")
 
     return redirect(url_for("chemicals.chemical_list"))
 

@@ -20,17 +20,17 @@ def activate():
         license_key = request.form.get('license_key', '').strip()
 
         if not license_key:
-            flash('Please enter a license key.', 'error')
+            flash('Лицензийн түлхүүр оруулна уу.', 'error')
             return render_template('license/activate.html', hardware_info=hardware_info)
 
         # Лиценз идэвхжүүлэх
         result = license_manager.activate_license(license_key)
 
         if result['success']:
-            flash('License activated successfully!', 'success')
+            flash('Лиценз амжилттай идэвхжүүлэгдлээ!', 'success')
             return redirect(url_for('main.index'))
         else:
-            flash(f'License activation error: {result["error"]}', 'error')
+            flash(f'Лиценз идэвхжүүлэхэд алдаа: {result["error"]}', 'error')
 
     return render_template('license/activate.html', hardware_info=hardware_info)
 

@@ -630,10 +630,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!sampleGridApi) return;
     const selectedNodes = sampleGridApi.getSelectedNodes();
     if (selectedNodes.length === 0) {
-      alert('Please select samples to delete!');
+      alert('Устгах дээжүүдийг сонгоно уу!');
       return;
     }
-    if (!confirm('Are you sure you want to delete ' + selectedNodes.length + ' selected sample(s)?')) return;
+    if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгах уу?')) return;
 
     const form = document.getElementById('deleteSelectedForm');
     // Хуучин hidden input-уудыг арилгах

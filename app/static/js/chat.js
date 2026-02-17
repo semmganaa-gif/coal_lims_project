@@ -295,7 +295,7 @@
       .catch(err => {
         console.error('Error loading contacts:', err);
         // ✅ XSS сэргийлэлт: err.message escape
-        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Error: ${escapeHtml(err.message || 'Unknown error')}</p>`;
+        contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Алдаа: ${escapeHtml(err.message || 'Тодорхойгүй алдаа')}</p>`;
       });
   }
 
@@ -411,7 +411,7 @@
       })
       .catch(err => {
         console.error('Error loading messages:', err);
-        messagesEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">An error occurred</div>';
+        messagesEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">Алдаа гарлаа</div>';
       });
   }
 
@@ -534,7 +534,7 @@
 
   // Delete message
   function deleteMessage(messageId) {
-    if (!confirm('Delete this message?')) return;
+    if (!confirm('Энэ мессежийг устгах уу?')) return;
     socket.emit('delete_message', { message_id: messageId });
   }
 
@@ -553,7 +553,7 @@
 
     // Check size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('File is too large (max 10MB)');
+      alert('Файл хэт том байна (хамгийн ихдээ 10MB)');
       return;
     }
 
@@ -583,7 +583,7 @@
       })
       .catch(err => {
         console.error('File upload error:', err);
-        alert('File upload error');
+        alert('Файл илгээхэд алдаа гарлаа');
       });
 
     e.target.value = '';
@@ -648,7 +648,7 @@
         const samples = data.samples || [];
 
         if (samples.length === 0) {
-          list.innerHTML = '<div style="padding:0.5rem;color:#94a3b8;text-align:center;">Not found</div>';
+          list.innerHTML = '<div style="padding:0.5rem;color:#94a3b8;text-align:center;">Олдсонгүй</div>';
           return;
         }
 
@@ -687,7 +687,7 @@
         // Display search results
         const messages = data.messages || [];
         if (messages.length === 0) {
-          contactsEmpty.innerHTML = '<i class="bi bi-search"></i><p>Not found</p>';
+          contactsEmpty.innerHTML = '<i class="bi bi-search"></i><p>Олдсонгүй</p>';
           contactsEmpty.style.display = 'flex';
           return;
         }
@@ -727,7 +727,7 @@
       .then(data => {
         const messages = data.messages || [];
         if (messages.length === 0) {
-          alert('Not found');
+          alert('Олдсонгүй');
           return;
         }
         renderMessages(messages);
@@ -754,7 +754,7 @@
     socket.emit('broadcast_message', { message: text });
     input.value = '';
     hideBroadcastView();
-    alert('Announcement sent!');
+    alert('Зарлал илгээгдлээ!');
   }
 
   // Popups

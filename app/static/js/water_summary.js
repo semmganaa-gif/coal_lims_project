@@ -492,7 +492,7 @@ const WaterSummaryGrid = (function() {
       }
     } catch (e) {
       console.error('Grid creation error:', e);
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid creation error: ' + e.message + '</div>';
+      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Хүснэгт үүсгэхэд алдаа: ' + e.message + '</div>';
     }
   }
 
@@ -507,7 +507,7 @@ const WaterSummaryGrid = (function() {
 
   function exportCsv() {
     if (!gridApi) {
-      alert('Grid not initialized.');
+      alert('Хүснэгт ачаалагдаагүй байна.');
       return;
     }
 
@@ -525,13 +525,13 @@ const WaterSummaryGrid = (function() {
 
   function copySelected() {
     if (!gridApi) {
-      alert('Grid not initialized.');
+      alert('Хүснэгт ачаалагдаагүй байна.');
       return;
     }
 
     const nodes = gridApi.getSelectedNodes();
     if (nodes.length === 0) {
-      alert('Please select rows to copy.');
+      alert('Хуулах мөрүүдээ сонгоно уу.');
       return;
     }
 
@@ -559,7 +559,7 @@ const WaterSummaryGrid = (function() {
     // Copy to clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text)
-        .then(function() { alert(nodes.length + ' rows copied!'); })
+        .then(function() { alert(nodes.length + ' мөр хуулагдлаа!'); })
         .catch(function() { fallbackCopy(text, nodes.length); });
     } else {
       fallbackCopy(text, nodes.length);
@@ -575,9 +575,9 @@ const WaterSummaryGrid = (function() {
     ta.select();
     try {
       document.execCommand('copy');
-      alert(count + ' rows copied!');
+      alert(count + ' мөр хуулагдлаа!');
     } catch (e) {
-      alert('Error copying to clipboard.');
+      alert('Хуулахад алдаа гарлаа.');
     }
     document.body.removeChild(ta);
   }
@@ -612,10 +612,10 @@ const WaterSummaryGrid = (function() {
       btnArchive.addEventListener('click', function() {
         const ids = getSelectedIds();
         if (ids.length === 0) {
-          alert('Please select samples to archive.');
+          alert('Архивлах дээжүүдээ сонгоно уу.');
           return;
         }
-        if (!confirm('Are you sure you want to archive ' + ids.length + ' selected samples?')) {
+        if (!confirm('Сонгосон ' + ids.length + ' дээжийг архивлахдаа итгэлтэй байна уу?')) {
           return;
         }
         const form = document.getElementById('archiveForm');
@@ -631,7 +631,7 @@ const WaterSummaryGrid = (function() {
     function createReport(labType, btn, originalHtml) {
       const ids = getSelectedIds();
       if (ids.length === 0) {
-        alert('Please select samples to generate report.');
+        alert('Тайлангийн дээжүүдээ сонгоно уу.');
         return;
       }
 
@@ -669,16 +669,16 @@ const WaterSummaryGrid = (function() {
         btn.innerHTML = originalHtml;
 
         if (data.success) {
-          alert('Report created successfully: ' + data.report_number);
+          alert('Тайлан амжилттай үүслээ: ' + data.report_number);
           window.location.href = data.redirect_url;
         } else {
-          alert('Error: ' + (data.error || 'Unknown'));
+          alert('Алдаа: ' + (data.error || 'Тодорхойгүй'));
         }
       })
       .catch(err => {
         btn.disabled = false;
         btn.innerHTML = originalHtml;
-        alert('Network error: ' + err.message);
+        alert('Сүлжээний алдаа: ' + err.message);
       });
     }
 

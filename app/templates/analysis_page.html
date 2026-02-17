@@ -939,12 +939,12 @@
 
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      alert('Serial Balance module not loaded.');
+      alert('Жингийн модуль ачаалагдаагүй байна.');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      alert('Web Serial API is not supported. Please use Chrome 89+ browser.');
+      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
       return;
     }
 
@@ -1819,7 +1819,7 @@ function submitEquipmentUsage() {
   });
 
   if (items.length === 0) {
-    alert('No data to register.');
+    alert('Бүртгэх өгөгдөл байхгүй.');
     return;
   }
 
@@ -1851,14 +1851,14 @@ function submitEquipmentUsage() {
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
 
-      alert('Equipment usage saved successfully!');
+      alert('Багаж ашиглалт амжилттай хадгалагдлаа!');
     } else {
-      alert('Error: ' + (data.message || 'Unknown error'));
+      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
     }
   })
   .catch(err => {
     console.error('Equipment usage error:', err);
-    alert('Server error!');
+    alert('Серверийн алдаа!');
   });
 }
 </script>

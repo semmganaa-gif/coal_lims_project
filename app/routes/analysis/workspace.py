@@ -141,7 +141,7 @@ def register_routes(bp):
                 AnalysisResult.status == "rejected"
             ).all()
             for r in rejected_results:
-                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Returned by senior"
+                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
                     "reason": reason_val,
                     "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None),
@@ -164,11 +164,11 @@ def register_routes(bp):
 
         return render_template(
             "analysis_page.html",
-            title="WTL MG Analysis",
-            analysis=type("V", (), {"code": "WTL_MG", "name": "WTL MG Analysis"})(),
-            analysis_type=type("V", (), {"code": "WTL_MG", "name": "WTL MG Analysis"})(),
+            title="WTL MG Шинжилгээ",
+            analysis=type("V", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})(),
+            analysis_type=type("V", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})(),
             analysis_code="WTL_MG",
-            analysis_name="WTL MG Analysis",
+            analysis_name="WTL MG Шинжилгээ",
             samples=samples_to_analyze,
             config={"template": "analysis_forms/wtl_mg_aggrid.html", "formula": "wtl_mg_aggrid"},
             mad_results_map={},
@@ -351,7 +351,7 @@ def register_routes(bp):
                 AnalysisResult.status == "rejected"
             ).all()
             for r in rejected_results:
-                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Returned by senior"
+                reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
                     "reason": reason_val,
                     "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None),

@@ -64,7 +64,7 @@ class SerialBalance {
      */
     async connect() {
         if (!this.isSupported()) {
-            this._emitError("Web Serial API is not supported. Please use Chrome 89+.");
+            this._emitError("Web Serial API дэмжигдэхгүй байна. Chrome 89+ хувилбар ашиглана уу.");
             return false;
         }
 

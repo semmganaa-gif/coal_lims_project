@@ -94,7 +94,7 @@
           } else {
             // Default: Анхааруулга харуулах
             alert(
-              'Storage is full! Please clear old draft data.'
+              'Санах ой дүүрсэн! Хуучин ноорог өгөгдлийг устгана уу.'
             );
           }
         } else {

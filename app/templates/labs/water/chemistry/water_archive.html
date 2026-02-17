@@ -389,7 +389,7 @@
   function copySelected() {
     if (!gridApi) return;
     var nodes = gridApi.getSelectedNodes();
-    if (nodes.length === 0) { alert('Please select rows to copy.'); return; }
+    if (nodes.length === 0) { alert('Хуулах мөрүүдийг сонгоно уу.'); return; }
     var columns = gridApi.getAllDisplayedColumns().filter(function(c) { var id = c.getColId(); return id !== '_sel'; });
     var header = columns.map(function(c) { return c.getColDef().headerName || ''; }).join('\t');
     var dataRows = nodes.map(function(n) { return columns.map(function(c) { var v = n.data[c.getColId()]; return v != null ? v : ''; }).join('\t'); }).join('\n');
@@ -445,8 +445,8 @@
     if (btnUnarchive) {
       btnUnarchive.addEventListener('click', function() {
         var ids = getSelectedIds();
-        if (ids.length === 0) { alert('Please select samples to restore.'); return; }
-        if (!confirm('Are you sure you want to restore ' + ids.length + ' selected sample(s)?')) return;
+        if (ids.length === 0) { alert('Сэргээх дээжүүдийг сонгоно уу.'); return; }
+        if (!confirm('Сонгосон ' + ids.length + ' дээжийг сэргээх үү?')) return;
         document.getElementById('unarchiveSampleIds').value = ids.join(',');
         document.getElementById('unarchiveForm').submit();
       });

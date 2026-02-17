@@ -898,7 +898,7 @@ function submitEquipmentUsage() {
     }
     if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
   });
-  if (items.length === 0) { alert('No data to record.'); return; }
+  if (items.length === 0) { alert('Бүртгэх өгөгдөл байхгүй.'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
@@ -919,12 +919,12 @@ function submitEquipmentUsage() {
       document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
-      alert('Equipment usage saved successfully!');
+      alert('Багаж ашиглалт амжилттай хадгалагдлаа!');
     } else {
-      alert('Error: ' + (data.message || 'Unknown error'));
+      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
     }
   })
-  .catch(err => alert('Network error: ' + err.message));
+  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
 }
 </script>
 {% endblock %}
