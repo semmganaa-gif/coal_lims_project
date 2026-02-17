@@ -67,10 +67,10 @@ ANALYSIS_VALUE_RANGES: Dict[str, Tuple[float, float]] = {
     'CRI': (0, 100),            # Coke Reactivity Index 0-100
     'CSR': (0, 100),            # Coke Strength after Reaction 0-100
 
-    # Dilatation
-    'TRD': (1, 4.00),            # Total relative dilatation 1-4.00%
-    'TRD,ad': (1, 4.00),
-    'TRD,d': (1, 4.00),
+    # True Relative Density (coal: 1.1-1.8, MG: up to 8.0)
+    'TRD': (0.5, 8.00),
+    'TRD,ad': (0.5, 8.00),
+    'TRD,d': (0.5, 8.00),
 
     # Solid residue
     'SOLID': (0, 100),          # Solid residue 0-100%
@@ -225,8 +225,8 @@ def validate_analysis_code(value: Any) -> Tuple[Optional[str], Optional[str]]:
     if len(code) < 1:
         return None, "Analysis code хоосон байж болохгүй"
 
-    # Зөвшөөрөгдсөн тэмдэгтүүд (үсэг, тоо, таслал)
-    if not re.match(r'^[A-Za-z0-9,\s]+$', code):
+    # Зөвшөөрөгдсөн тэмдэгтүүд (үсэг, тоо, таслал, доогуур зураас)
+    if not re.match(r'^[A-Za-z0-9,_\s]+$', code):
         return None, "Analysis code зөвхөн үсэг, тоо, таслал агуулна"
 
     return code, None

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .mg-summary-wrap { padding: 12px 16px; }
+  .mg-summary-wrap h1 { font-size: 1.3rem; }
+  .mg-tbl { font-size: 0.82rem; }
+  .mg-tbl th { background: #f8f9fa; vertical-align: middle; text-align: center; white-space: nowrap; }
+  .mg-tbl td { vertical-align: middle; text-align: center; }
+  .mg-tbl .sample-name { text-align: left; font-weight: 600; white-space: nowrap; }
+  .mg-tbl .frac-label { text-align: left; font-size: 0.78rem; color: #555; }
+  .mg-tbl .total-row { background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 600; }
+  .mg-val { font-weight: 600; }
+  .mg-val-muted { color: #999; }
+
+</style>
+
+<div class="mg-summary-wrap">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <h1 class="mb-0"><i class="bi bi-magnet text-primary me-2"></i>{{ title }}</h1>
+      <span class="badge bg-light text-dark">{{ samples|length }} дээж</span>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      {% if current_user.role in ['senior', 'admin'] %}
+      <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
+        <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">Архивлах</span>
+      </button>
+      {% endif %}
+
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-success" id="btnExportMgSummary">
+          <i class="bi bi-file-earmark-excel me-1"></i>Excel
+        </button>
+        <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-arrow-left me-1"></i>Summary
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if not samples %}
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle me-1"></i> MG шинжилгээний үр дүн олдсонгүй.
+  </div>
+  {% else %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover mg-tbl mb-0" id="mgSummaryTable">
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:30px">
+            <input type="checkbox" id="mgCheckAll" class="form-check-input" title="Бүгдийг сонгох">
+          </th>
+          <th rowspan="2" style="width:35px">№</th>
+          <th rowspan="2" style="min-width:160px">Дээж</th>
+          <th rowspan="2" style="width:70px">MT, %</th>
+          <th rowspan="2" style="width:70px">TRD</th>
+          <th colspan="4" style="background:#e0f2fe">Size Distribution</th>
+          <th colspan="4" style="background:#fef3c7">Magnetic Test</th>
+        </tr>
+        <tr>
+          <th style="width:60px;background:#e0f2fe">Init, g</th>
+          <th style="width:100px;background:#e0f2fe">Fraction</th>
+          <th style="width:65px;background:#e0f2fe">Mass, g</th>
+          <th style="width:55px;background:#e0f2fe">%</th>
+          <th style="width:65px;background:#fef3c7">Init, g</th>
+          <th style="width:80px;background:#fef3c7">MG, g</th>
+          <th style="width:90px;background:#fef3c7">Non-MG, g</th>
+          <th style="width:70px;background:#fef3c7">MG, %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set fractions = ['+0.2', '-0.2+0.074', '-0.074+0.053', '-0.053+0.045', '-0.045+0.038', '-0.038'] %}
+        {% set ns = namespace(row_num=0) %}
+        {% for sample in samples %}
+          {% set ns.row_num = ns.row_num + 1 %}
+          {% set data = mg_data.get(sample.id, {}) %}
+          {% set mt = data.get('MT', {}) %}
+          {% set trd = data.get('TRD', {}) %}
+          {% set mg = data.get('MG', {}) %}
+          {% set size = data.get('MG_SIZE', {}) %}
+          {% set size_raw = size.get('raw_data', {}) %}
+          {% set mg_raw = mg.get('raw_data', {}) %}
+          {% set size_fracs = size_raw.get('fractions', []) %}
+          {% set frac_count = fractions|length %}
+
+          {% for frac_label in fractions %}
+            <tr data-sample-id="{{ sample.id }}">
+              {% if loop.first %}
+                <td rowspan="{{ frac_count }}" class="align-middle">
+                  <input type="checkbox" class="form-check-input mg-sample-check" value="{{ sample.id }}">
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle fw-bold">{{ ns.row_num }}</td>
+                <td rowspan="{{ frac_count }}" class="align-middle sample-name">
+                  {{ sample.sample_code or sample.id }}
+
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+                  {% if mt.get('final_result') is not none %}
+                    {{ "%.2f"|format(mt['final_result']) }}
+                  {% else %}<span class="mg-val-muted">-</span>{% endif %}
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+                  {% if trd.get('final_result') is not none %}
+                    {{ "%.3f"|format(trd['final_result']) }}
+                  {% else %}<span class="mg-val-muted">-</span>{% endif %}
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle">
+                  {{ size_raw.get('total_mass', 50) }}
+                </td>
+              {% endif %}
+
+              {% if size_fracs and loop.index0 < size_fracs|length %}
+                {% set f = size_fracs[loop.index0] %}
+                <td class="frac-label">{{ f.get('label', frac_label) }}</td>
+                <td>{% if f.get('m1') is not none %}{{ "%.1f"|format(f['m1']) }}{% else %}-{% endif %}</td>
+                <td>{% if f.get('pct') is not none %}{{ "%.1f"|format(f['pct']) }}{% else %}-{% endif %}</td>
+              {% else %}
+                <td class="frac-label">{{ frac_label }}</td>
+                <td>-</td>
+                <td>-</td>
+              {% endif %}
+
+              {% if loop.first %}
+                <td rowspan="{{ frac_count }}" class="align-middle">
+                  {% if mg_raw.get('sample_mass') is not none %}{{ "%.1f"|format(mg_raw['sample_mass']) }}{% else %}-{% endif %}
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+                  {% if mg_raw.get('mg_mass') is not none %}{{ "%.2f"|format(mg_raw['mg_mass']) }}{% else %}-{% endif %}
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle">
+                  {% if mg_raw.get('nomg_mass') is not none %}{{ "%.2f"|format(mg_raw['nomg_mass']) }}{% else %}-{% endif %}
+                </td>
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val text-success">
+                  {% if mg.get('final_result') is not none %}{{ "%.2f"|format(mg['final_result']) }}{% else %}-{% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+
+          <tr class="total-row">
+            <td colspan="7" class="text-end">Total</td>
+            <td>{{ size_raw.get('total_mass', 50) }}</td>
+            <td>100.0</td>
+            <td colspan="4"></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
+<script>
+(function() {
+  'use strict';
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  // Checkbox: select all
+  const checkAll = document.getElementById('mgCheckAll');
+  const checks = () => document.querySelectorAll('.mg-sample-check');
+  if (checkAll) {
+    checkAll.addEventListener('change', function() {
+      checks().forEach(c => c.checked = this.checked);
+      updateArchiveBtn();
+    });
+  }
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('mg-sample-check')) updateArchiveBtn();
+  });
+
+  function getSelectedIds() {
+    return [...checks()].filter(c => c.checked).map(c => parseInt(c.value));
+  }
+
+  function updateArchiveBtn() {
+    const btn = document.getElementById('btnMgArchive');
+    if (!btn) return;
+    const ids = getSelectedIds();
+    btn.disabled = ids.length === 0;
+    const label = document.getElementById('archiveBtnLabel');
+    if (label) label.textContent = 'Архивлах';
+  }
+
+  // Archive/Unarchive
+  const archiveBtn = document.getElementById('btnMgArchive');
+  if (archiveBtn) {
+    archiveBtn.addEventListener('click', function() {
+      const ids = getSelectedIds();
+      if (!ids.length) return;
+      const action = 'archive';
+      const msg = ids.length + ' дээжийг архивлах уу?';
+      if (!confirm(msg)) return;
+
+      fetch('{{ url_for("api.mg_summary") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: JSON.stringify({ sample_ids: ids, action: action })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) location.reload();
+        else alert(data.message || 'Алдаа гарлаа');
+      })
+      .catch(() => alert('Сервертэй холбогдож чадсангүй'));
+    });
+  }
+
+  // Excel export
+  document.getElementById('btnExportMgSummary')?.addEventListener('click', function() {
+    if (typeof tableToXlsx === 'function') {
+      tableToXlsx('mgSummaryTable', 'MG_Summary');
+    } else {
+      const table = document.getElementById('mgSummaryTable');
+      if (!table) return;
+      const wb = XLSX.utils.table_to_book(table, { sheet: 'MG Summary' });
+      XLSX.writeFile(wb, 'MG_Summary.xlsx');
+    }
+  });
+
+  updateArchiveBtn();
+})();
+</script>
+{% endblock %}

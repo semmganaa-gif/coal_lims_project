@@ -98,18 +98,33 @@ def register_routes(bp):
         if not base_code:
             return jsonify({"samples": []})
 
+        # WTL_MG: search for MG-only codes (MT/TRD are shared)
+        mg_only_codes = ['MG', 'MG_SIZE']
+        is_mg = base_code == 'WTL_MG' or base_code in mg_only_codes
+
         def _query_eligible():
-            existing_ids_subq = (
-                db.session.query(AnalysisResult.sample_id)
-                .filter(AnalysisResult.analysis_code == base_code)
-                .distinct()
-            )
+            if is_mg:
+                existing_ids_subq = (
+                    db.session.query(AnalysisResult.sample_id)
+                    .filter(AnalysisResult.analysis_code.in_(mg_only_codes))
+                    .distinct()
+                )
+            else:
+                existing_ids_subq = (
+                    db.session.query(AnalysisResult.sample_id)
+                    .filter(AnalysisResult.analysis_code == base_code)
+                    .distinct()
+                )
 
             from sqlalchemy import func
             text_lc = func.lower(Sample.analyses_to_perform)
-            terms = [base_code.lower()]
-            for alias_lc in (BASE_TO_ALIASES.get(base_code, []) or []):
-                terms.append(alias_lc)
+
+            if is_mg:
+                terms = [c.lower() for c in mg_only_codes] + ['wtl_mg']
+            else:
+                terms = [base_code.lower()]
+                for alias_lc in (BASE_TO_ALIASES.get(base_code, []) or []):
+                    terms.append(alias_lc)
 
             like_clauses = [text_lc.like(f'%"{t}"%') for t in terms]
 
@@ -332,9 +347,17 @@ def register_routes(bp):
                     # --- 2. Normalization & Calculation ---
                     raw_in = item.get("raw_data") or {}
 
+                    # MG flat formats (no p1/p2 structure) — skip normalization
+                    _mg_flat = (
+                        analysis_code in ('MG', 'MG_SIZE') or
+                        (analysis_code == 'MT' and isinstance(raw_in, dict) and 'p1' not in raw_in)
+                    )
+
                     if analysis_code == "CSN" and isinstance(raw_in, dict):
                         raw_norm = dict(raw_in)
                         raw_norm.update(normalize_raw_data(raw_in, analysis_code))
+                    elif _mg_flat:
+                        raw_norm = dict(raw_in)
                     else:
                         raw_norm = normalize_raw_data(raw_in, analysis_code)
 
@@ -701,6 +724,7 @@ def register_routes(bp):
                         "sample_id": sample_id,
                         "analysis_code": analysis_code,  # ✅ X, Y worksheet removal-д хэрэгтэй
                         "status": new_status,
+                        "final_result": final_result,
                         "raw_data": raw_norm,
                         "success": True,
                         "reason": reason  # ✅ ШИНЭ: Тайлбарыг Frontend рүү буцаана (Badge харуулахад хэрэгтэй)

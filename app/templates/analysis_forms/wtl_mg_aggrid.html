@@ -1,0 +1,1203 @@
+{# WTL MG Analysis — 4 tabs: MT, TRD, MG, MG_SIZE #}
+{# Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
+{% import "analysis/partials/aggrid_macros.html" as aggrid_macros with context %}
+
+{{ aggrid_macros.balance_connection_ui() | safe }}
+
+{# Bootstrap Tabs #}
+<ul class="nav nav-tabs mt-3" id="mgTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="tab-mg-mt" data-bs-toggle="tab" data-bs-target="#pane-mg-mt" type="button">
+      <i class="bi bi-droplet me-1"></i>MG Moisture
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-mg-trd" data-bs-toggle="tab" data-bs-target="#pane-mg-trd" type="button">
+      <i class="bi bi-diamond me-1"></i>MG TRD
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-mg-tube" data-bs-toggle="tab" data-bs-target="#pane-mg-tube" type="button">
+      <i class="bi bi-magnet me-1"></i>MG Tube
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-mg-size" data-bs-toggle="tab" data-bs-target="#pane-mg-size" type="button">
+      <i class="bi bi-grid-3x3 me-1"></i>MG Size
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-mg-summary" data-bs-toggle="tab" data-bs-target="#pane-mg-summary" type="button">
+      <i class="bi bi-table me-1"></i>Summary
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="mgTabContent">
+  <div class="tab-pane fade show active" id="pane-mg-mt" role="tabpanel">
+    {{ aggrid_macros.grid_container('mgMtGrid') | safe }}
+  </div>
+  <div class="tab-pane fade" id="pane-mg-trd" role="tabpanel">
+    {{ aggrid_macros.grid_container('mgTrdGrid') | safe }}
+  </div>
+  <div class="tab-pane fade" id="pane-mg-tube" role="tabpanel">
+    {{ aggrid_macros.grid_container('mgTubeGrid') | safe }}
+  </div>
+  <div class="tab-pane fade" id="pane-mg-size" role="tabpanel">
+    {{ aggrid_macros.grid_container('mgSizeGrid') | safe }}
+  </div>
+  <div class="tab-pane fade" id="pane-mg-summary" role="tabpanel">
+    <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
+      <small class="text-muted">Combined results of all analyses</small>
+      <button type="button" class="btn btn-outline-success btn-sm" id="btnExportMgSummary">
+        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm mb-0" id="mgSummaryTable">
+        <thead class="table-light">
+          <tr>
+            <th rowspan="2" class="align-middle text-center" style="width:40px">№</th>
+            <th rowspan="2" class="align-middle" style="min-width:180px">Sample</th>
+            <th rowspan="2" class="align-middle text-center" style="width:65px">TM, %</th>
+            <th rowspan="2" class="align-middle text-center" style="width:65px">TRD</th>
+            <th colspan="4" class="text-center" style="background:#e0f2fe">Size Distribution</th>
+            <th colspan="4" class="text-center" style="background:#fef3c7">Magnetic Test</th>
+          </tr>
+          <tr>
+            <th class="text-center" style="width:70px;background:#e0f2fe">Init, g</th>
+            <th class="text-center" style="width:110px;background:#e0f2fe">Fraction</th>
+            <th class="text-center" style="width:70px;background:#e0f2fe">Mass, g</th>
+            <th class="text-center" style="width:60px;background:#e0f2fe">%</th>
+            <th class="text-center" style="width:70px;background:#fef3c7">Init, g</th>
+            <th class="text-center" style="width:100px;background:#fef3c7">Magnetic, g</th>
+            <th class="text-center" style="width:110px;background:#fef3c7">Non-mag, g</th>
+            <th class="text-center" style="width:100px;background:#fef3c7">Magnetic, %</th>
+          </tr>
+        </thead>
+        <tbody id="mgSummaryBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // =====================================================================
+  // 1. SHARED CONFIG
+  // =====================================================================
+  const MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE'];
+  const SIZE_FRACTIONS = ['+0.2', '-0.2+0.074', '-0.074+0.053', '-0.053+0.045', '-0.045+0.038', '-0.038'];
+
+  // Backend Data
+  {{ aggrid_macros.dataset_block() | safe }}
+
+  // Per-code existing results: {code: {sample_id: {status, raw_data, final_result}}}
+  const mgResultsMap = {{ mg_results_map | default({}) | tojson | safe }};
+
+  // Draft Managers
+  let draftMgrs = {};
+
+  // Grid APIs
+  const gridApis = {};
+
+  // Bottle cache for TRD
+  const BOTTLE_CACHE = {};
+
+  // =====================================================================
+  // 2. HELPERS
+  // =====================================================================
+
+  const numParser = window.LIMS_AGGRID?.numParser || (p => {
+    const v = parseFloat(p.newValue);
+    return isNaN(v) ? null : v;
+  });
+  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+  const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
+  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+
+  const SAVED_STYLE = { backgroundColor: '#f0fdf4', color: '#166534', fontWeight: '600' };
+  const SAVED_STYLE_LIGHT = { backgroundColor: '#f0fdf4', color: '#166534' };
+
+  const DEFAULT_STYLE = { color: '#212529' };
+
+  function editCol(saved) {
+    return {
+      editable: p => !p.data.is_saved,
+      cellEditor: 'agTextCellEditor',
+      cellEditorParams: { useFormatter: true },
+      valueParser: numParser,
+      valueFormatter: numFmt4,
+      cellStyle: p => p.data.is_saved ? SAVED_STYLE_LIGHT : DEFAULT_STYLE
+    };
+  }
+  const EC = editCol();
+
+  function editColText() {
+    return {
+      editable: p => !p.data.is_saved,
+      cellEditor: 'agTextCellEditor',
+      cellStyle: p => p.data.is_saved ? SAVED_STYLE_LIGHT : DEFAULT_STYLE
+    };
+  }
+
+  function parallelBg(p) {
+    return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
+  }
+
+  function getExisting(code, sampleId) {
+    return (mgResultsMap[code] || {})[String(sampleId)] || (mgResultsMap[code] || {})[sampleId] || null;
+  }
+
+  function initDraftMgr(code) {
+    if (typeof LIMSDraftManager !== 'undefined') {
+      return new LIMSDraftManager(code);
+    }
+    return {
+      save: (data) => localStorage.setItem(`draft_${code}`, JSON.stringify(data)),
+      restore: () => JSON.parse(localStorage.getItem(`draft_${code}`) || '{}'),
+      purge: (ids) => { if (!ids || !ids.length) localStorage.removeItem(`draft_${code}`); }
+    };
+  }
+
+  async function fetchBottle(serial) {
+    const key = (serial || '').trim();
+    if (!key) return null;
+    if (BOTTLE_CACHE[key]) return BOTTLE_CACHE[key];
+    try {
+      const resp = await fetch(`/settings/api/bottle/${encodeURIComponent(key)}/active`);
+      if (!resp.ok) return null;
+      const js = await resp.json();
+      const d = js.data || js;
+      if (js && js.success && typeof d.avg_value === 'number') {
+        BOTTLE_CACHE[key] = { avg_value: d.avg_value };
+        return BOTTLE_CACHE[key];
+      }
+    } catch(e) {
+      console.warn('Bottle fetch failed', e);
+    }
+    return null;
+  }
+
+  // Common action column
+  function colAction() {
+    return {
+      headerName: '',
+      width: 70,
+      pinned: 'right',
+      cellRenderer: p => {
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+      },
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    };
+  }
+
+  // Common afterSave for single-row grids
+  function makeAfterSave(code, apiKey) {
+    return function(savedPayload, failedItems) {
+      const api = gridApis[apiKey];
+      if (!api) return;
+      const savedIds = savedPayload.map(r => r.sample_id);
+      const approvedIds = savedPayload.filter(r => r.status === 'approved').map(r => r.sample_id);
+
+      // Mark saved
+      api.forEachNode(n => {
+        if (savedIds.includes(n.data.sample_id)) {
+          n.data.is_saved = true;
+          const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
+          if (saved) {
+            n.data.final_result = saved.final_result;
+            if (saved.raw_data) Object.assign(n.data, saved.raw_data);
+          }
+        }
+      });
+
+      // Remove approved
+      if (approvedIds.length) {
+        const toRemove = [];
+        api.forEachNode(n => { if (approvedIds.includes(n.data.sample_id)) toRemove.push(n); });
+        if (toRemove.length) api.applyTransaction({ remove: toRemove.map(n => n.data) });
+      }
+
+      // Purge drafts
+      if (draftMgrs[code]) draftMgrs[code].purge(savedIds.map(id => String(id)));
+
+      api.refreshCells({ force: true });
+    };
+  }
+
+  // =====================================================================
+  // 3. TAB 1: MT (Moisture Test — 1 row per sample)
+  // =====================================================================
+  const mtColDefs = [
+    { headerName: '№', field: 'index', width: 50, pinned: 'left',
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold' } },
+    { headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+      cellRenderer: p => {
+        let h = `<div>${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName: 'm1 (crucible)', field: 'm1', width: 120, ...EC },
+    { headerName: 'm2 (sample)', field: 'm2', width: 120, ...EC },
+    { headerName: 'm3 (dried)', field: 'm3', width: 130, ...EC },
+    { headerName: 'Result %', field: 'result', width: 110,
+      valueFormatter: p => p.value != null ? parseFloat(p.value).toFixed(2) : '-',
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE, textAlign: 'center' }
+        : { fontWeight: 'bold', color: p.value != null ? '#0d6efd' : '#999' }
+    },
+    colAction()
+  ];
+
+  function buildMtRowData() {
+    return samples.map((s, idx) => {
+      const ex = getExisting('MT', s.id);
+      const isRejected = ex?.status === 'rejected';
+      const raw = ex?.raw_data || {};
+      return {
+        index: idx + 1,
+        sample_id: s.id,
+        sample_code: s.code,
+        is_saved: ex && !isRejected,
+        m1: raw.m1 ?? null,
+        m2: raw.m2 ?? null,
+        m3: raw.m3 ?? null,
+        result: raw.result ?? ex?.final_result ?? null
+      };
+    });
+  }
+
+  function onMtCellChanged(params) {
+    if (['m1', 'm2', 'm3'].includes(params.colDef.field)) {
+      const d = params.data;
+      const m1 = Number(d.m1), m2 = Number(d.m2), m3 = Number(d.m3);
+      if (isFinite(m1) && isFinite(m2) && isFinite(m3) && m2 > 0) {
+        d.result = ((m1 + m2 - m3) / m2) * 100;
+      } else {
+        d.result = null;
+      }
+      gridApis.mgMt.refreshCells({ rowNodes: [params.node], columns: ['result'] });
+    }
+    // Save draft
+    if (draftMgrs.MT) {
+      const drafts = {};
+      gridApis.mgMt.forEachNode(n => {
+        if (!n.data.is_saved) drafts[n.data.sample_id] = { m1: n.data.m1, m2: n.data.m2, m3: n.data.m3 };
+      });
+      draftMgrs.MT.save(drafts);
+    }
+  }
+
+  // =====================================================================
+  // 4. TAB 2: TRD (True Relative Density — 2 parallels)
+  // =====================================================================
+  const trdColDefs = [
+    {
+      headerName: '№', field: 'index', width: 50, pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold',
+        display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      valueFormatter: p => p.data.parallel === 1 ? p.value : ''
+    },
+    {
+      headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
+      cellRenderer: p => {
+        if (p.data.parallel !== 1) return '';
+        let h = `<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason}</div>`;
+        return h;
+      }
+    },
+    {
+      headerName: 'Pycno#', field: 'bottle_num', width: 100,
+      cellStyle: p => p.data.is_saved
+        ? { textAlign: 'center', ...SAVED_STYLE_LIGHT }
+        : { textAlign: 'center', backgroundColor: parallelBg(p), color: '#212529' },
+      ...editColText(), valueParser: null, valueFormatter: null
+    },
+    {
+      headerName: 'm (15g)', field: 'm', width: 110,
+      cellStyle: p => p.data.is_saved ? SAVED_STYLE_LIGHT : { backgroundColor: parallelBg(p), color: '#212529' },
+      ...EC
+    },
+    {
+      headerName: 'm2 (empty pyc)', field: 'm2', width: 130,
+      editable: false, valueFormatter: numFmt4,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE_LIGHT, textAlign: 'center' }
+        : { backgroundColor: '#f8f9fa', color: '#6c757d', textAlign: 'center' }
+    },
+    {
+      headerName: 'm1 (pyc+smp+water)', field: 'm1', width: 150,
+      cellStyle: p => p.data.is_saved ? SAVED_STYLE_LIGHT : { backgroundColor: parallelBg(p), color: '#212529' },
+      ...EC
+    },
+    {
+      headerName: 'TRD', field: 'result', width: 100,
+      valueFormatter: p => p.value != null ? parseFloat(p.value).toFixed(3) : '-',
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE, textAlign: 'center' }
+        : { backgroundColor: parallelBg(p), color: p.value != null ? '#0d6efd' : '#999' }
+    },
+    {
+      headerName: 'Diff', field: 'tolerance', width: 80,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.is_saved && p.value != null) ? parseFloat(p.value).toFixed(3) : '',
+      cellStyle: p => ({
+        color: p.data.is_saved ? (p.data.t_exceeded ? '#dc3545' : '#166534') : '#6c757d',
+        fontWeight: 'bold',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: p.data.is_saved ? '#f0fdf4' : ''
+      })
+    },
+    {
+      headerName: 'Avg', field: 'average', width: 80,
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      valueFormatter: p => (p.data.parallel === 1 && p.data.is_saved && p.value != null) ? parseFloat(p.value).toFixed(3) : '',
+      cellStyle: p => ({
+        color: p.data.is_saved ? '#166534' : '#ccc',
+        fontWeight: 'bold',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: p.data.is_saved ? '#f0fdf4' : ''
+      })
+    },
+    {
+      headerName: '', width: 70, pinned: 'right',
+      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+      cellRenderer: p => {
+        if (p.data.parallel !== 1) return '';
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+      },
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    }
+  ];
+
+  function buildTrdRowData() {
+    return samples.flatMap((s, idx) => {
+      const ex = getExisting('TRD', s.id);
+      const isRejected = ex?.status === 'rejected';
+      const base = {
+        index: idx + 1, sample_id: s.id, sample_code: s.code,
+        is_saved: ex && !isRejected, is_rejected: isRejected
+      };
+
+      if (ex && ex.raw_data) {
+        const raw = ex.raw_data;
+        const p1 = raw.p1 || {}, p2 = raw.p2 || {};
+        return [
+          { ...base, parallel: 1, bottle_num: p1.num, m: p1.m, m2: p1.m2, m1: p1.m1,
+            result: p1.result, tolerance: raw.diff, average: raw.avg ?? ex.final_result,
+            t_exceeded: raw.t_exceeded ?? false },
+          { ...base, parallel: 2, bottle_num: p2.num, m: p2.m, m2: p2.m2, m1: p2.m1,
+            result: p2.result, tolerance: raw.diff, average: raw.avg ?? ex.final_result,
+            t_exceeded: raw.t_exceeded ?? false }
+        ];
+      }
+      return [
+        { ...base, parallel: 1, bottle_num: null, m: null, m2: null, m1: null,
+          result: null, tolerance: null, average: null, t_exceeded: false },
+        { ...base, parallel: 2, bottle_num: null, m: null, m2: null, m1: null,
+          result: null, tolerance: null, average: null, t_exceeded: false }
+      ];
+    });
+  }
+
+  function computeTrd(m, m2, m1) {
+    const _m = Number(m), _m2 = Number(m2), _m1 = Number(m1);
+    if (!isFinite(_m) || !isFinite(_m2) || !isFinite(_m1)) return null;
+    const denom = _m2 + _m - _m1;
+    if (denom <= 0) return null;
+    const r = _m / denom;
+    return isFinite(r) && r > 0 ? r : null;
+  }
+
+  async function onTrdCellChanged(params) {
+    // Fetch pycnometer weight
+    if (params.colDef.field === 'bottle_num') {
+      const serial = params.data.bottle_num;
+      if (serial && !params.data.m2) {
+        const info = await fetchBottle(serial);
+        if (info && typeof info.avg_value === 'number') {
+          params.data.m2 = info.avg_value;
+          gridApis.mgTrd.refreshCells({ force: true });
+        }
+      }
+    }
+    // Recalc
+    if (['m', 'm1'].includes(params.colDef.field)) {
+      const d = params.data;
+      d.result = computeTrd(d.m, d.m2, d.m1);
+      gridApis.mgTrd.refreshCells({ rowNodes: [params.node], columns: ['result'] });
+    }
+    // Save draft
+    if (draftMgrs.TRD) {
+      const drafts = {};
+      gridApis.mgTrd.forEachNode(n => {
+        if (!n.data.is_saved) {
+          drafts[`${n.data.sample_id}_${n.data.parallel}`] = {
+            p: n.data.bottle_num, m: n.data.m, m1: n.data.m1
+          };
+        }
+      });
+      draftMgrs.TRD.save(drafts);
+    }
+  }
+
+  // =====================================================================
+  // 5. TAB 3: MG (Magnetic Fraction — 1 row per sample)
+  // =====================================================================
+  const tubeColDefs = [
+    { headerName: '№', field: 'index', width: 50, pinned: 'left',
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold' } },
+    { headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+      cellRenderer: p => {
+        let h = `<div>${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName: 'Empty crucible', field: 'empty_crucible', width: 130, ...EC },
+    { headerName: 'Sample (20g)', field: 'sample_mass', width: 120, ...EC },
+    { headerName: 'Dried+crucible', field: 'dried_weight', width: 140, ...EC },
+    { headerName: 'MG (g)', field: 'mg_mass', width: 100,
+      valueFormatter: numFmt4,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE_LIGHT, textAlign: 'center' }
+        : { backgroundColor: '#f0f0f0', color: '#333' }
+    },
+    { headerName: 'NoMG (g)', field: 'nomg_mass', width: 100,
+      valueFormatter: numFmt4,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE_LIGHT, textAlign: 'center' }
+        : { backgroundColor: '#f0f0f0', color: '#333' }
+    },
+    { headerName: 'MG %', field: 'mg_pct', width: 100,
+      valueFormatter: numFmt2,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE, textAlign: 'center' }
+        : { fontWeight: 'bold', color: p.value != null ? '#0d6efd' : '#999' }
+    },
+    colAction()
+  ];
+
+  function buildTubeRowData() {
+    return samples.map((s, idx) => {
+      const ex = getExisting('MG', s.id);
+      const isRejected = ex?.status === 'rejected';
+      const raw = ex?.raw_data || {};
+      return {
+        index: idx + 1, sample_id: s.id, sample_code: s.code,
+        is_saved: ex && !isRejected,
+        empty_crucible: raw.empty_crucible ?? null,
+        sample_mass: raw.sample_mass ?? null,
+        dried_weight: raw.dried_weight ?? null,
+        mg_mass: raw.mg_mass ?? null,
+        nomg_mass: raw.nomg_mass ?? null,
+        mg_pct: raw.mg_pct ?? ex?.final_result ?? null
+      };
+    });
+  }
+
+  function onTubeCellChanged(params) {
+    if (['empty_crucible', 'sample_mass', 'dried_weight'].includes(params.colDef.field)) {
+      const d = params.data;
+      const empty = Number(d.empty_crucible), sample = Number(d.sample_mass), dried = Number(d.dried_weight);
+      if (isFinite(empty) && isFinite(sample) && isFinite(dried) && sample > 0) {
+        d.mg_mass = dried - empty;
+        d.nomg_mass = empty + sample - dried;
+        d.mg_pct = 100 * d.mg_mass / sample;
+      } else {
+        d.mg_mass = null; d.nomg_mass = null; d.mg_pct = null;
+      }
+      gridApis.mgTube.refreshCells({ rowNodes: [params.node], columns: ['mg_mass', 'nomg_mass', 'mg_pct'] });
+    }
+    if (draftMgrs.MG) {
+      const drafts = {};
+      gridApis.mgTube.forEachNode(n => {
+        if (!n.data.is_saved) drafts[n.data.sample_id] = {
+          e: n.data.empty_crucible, s: n.data.sample_mass, d: n.data.dried_weight
+        };
+      });
+      draftMgrs.MG.save(drafts);
+    }
+  }
+
+  // =====================================================================
+  // 6. TAB 4: MG_SIZE (Size Distribution — 6 rows per sample)
+  // =====================================================================
+  const sizeColDefs = [
+    { headerName: '№', field: 'index', width: 50, pinned: 'left',
+      rowSpan: p => p.data.fraction_idx === 0 ? SIZE_FRACTIONS.length : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.fraction_idx === 0 },
+      cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold',
+        display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      valueFormatter: p => p.data.fraction_idx === 0 ? p.value : ''
+    },
+    { headerName: 'Sample', field: 'sample_code', width: 200, pinned: 'left',
+      rowSpan: p => p.data.fraction_idx === 0 ? SIZE_FRACTIONS.length : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.fraction_idx === 0 },
+      cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
+      cellRenderer: p => {
+        if (p.data.fraction_idx !== 0) return '';
+        let h = `<div class="sample-name">${p.value}</div>`;
+        const rej = rejectedInfo[p.data.sample_id];
+        if (rej) h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${errorLabels[rej.reason_code] || rej.reason}</div>`;
+        return h;
+      }
+    },
+    { headerName: 'Fraction', field: 'fraction_label', width: 100,
+      cellStyle: { fontWeight: 'bold', textAlign: 'center', color: '#212529' }
+    },
+    { headerName: 'm2 (empty)', field: 'm2', width: 120, ...EC },
+    { headerName: 'm3 (with sample)', field: 'm3', width: 130, ...EC },
+    { headerName: 'm1 (calculated)', field: 'm1', width: 130,
+      valueFormatter: numFmt4,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE_LIGHT, textAlign: 'center' }
+        : { backgroundColor: '#f0f0f0', color: '#333' }
+    },
+    { headerName: '%', field: 'pct', width: 80,
+      valueFormatter: numFmt2,
+      cellStyle: p => p.data.is_saved
+        ? { ...SAVED_STYLE, textAlign: 'center' }
+        : { fontWeight: 'bold', color: p.value != null ? '#0d6efd' : '#999' }
+    },
+    {
+      headerName: '', width: 70, pinned: 'right',
+      rowSpan: p => p.data.fraction_idx === 0 ? SIZE_FRACTIONS.length : 1,
+      cellClassRules: { 'ag-cell-span': p => p.data.fraction_idx === 0 },
+      cellRenderer: p => {
+        if (p.data.fraction_idx !== 0) return '';
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+      },
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+    }
+  ];
+
+  function buildSizeRowData() {
+    const rows = [];
+    samples.forEach((s, idx) => {
+      const ex = getExisting('MG_SIZE', s.id);
+      const isRejected = ex?.status === 'rejected';
+      const raw = ex?.raw_data || {};
+      const fractions = raw.fractions || [];
+
+      SIZE_FRACTIONS.forEach((label, fi) => {
+        const fr = fractions[fi] || {};
+        rows.push({
+          index: idx + 1,
+          sample_id: s.id,
+          sample_code: s.code,
+          is_saved: ex && !isRejected,
+          fraction_idx: fi,
+          fraction_label: label,
+          m2: fr.m2 ?? null,
+          m3: fr.m3 ?? null,
+          m1: fr.m1 ?? null,
+          pct: fr.pct ?? null,
+          total_mass: raw.total_mass ?? 50
+        });
+      });
+    });
+    return rows;
+  }
+
+  function recalcSizeFractions(sampleId) {
+    if (!gridApis.mgSize) return;
+    const rows = [];
+    gridApis.mgSize.forEachNode(n => {
+      if (n.data.sample_id === sampleId) rows.push(n);
+    });
+    if (!rows.length) return;
+
+    const totalMass = rows[0].data.total_mass || 50;
+
+    // Calculate m1 = m3 - m2 for each fraction
+    let sumM1 = 0;
+    const lastIdx = SIZE_FRACTIONS.length - 1;
+
+    rows.forEach((n, i) => {
+      if (i < lastIdx) {
+        const m2 = Number(n.data.m2), m3 = Number(n.data.m3);
+        if (isFinite(m2) && isFinite(m3)) {
+          n.data.m1 = m3 - m2;
+          sumM1 += n.data.m1;
+        } else {
+          n.data.m1 = null;
+        }
+      }
+    });
+
+    // Last fraction: m1 = totalMass - sum(others)
+    if (rows[lastIdx]) {
+      rows[lastIdx].data.m1 = totalMass - sumM1;
+    }
+
+    // Calculate percentages
+    rows.forEach(n => {
+      if (n.data.m1 != null && totalMass > 0) {
+        n.data.pct = (n.data.m1 / totalMass) * 100;
+      } else {
+        n.data.pct = null;
+      }
+    });
+
+    gridApis.mgSize.refreshCells({
+      rowNodes: rows.map(n => n),
+      columns: ['m1', 'pct']
+    });
+  }
+
+  function onSizeCellChanged(params) {
+    if (['m2', 'm3'].includes(params.colDef.field)) {
+      recalcSizeFractions(params.data.sample_id);
+    }
+    if (draftMgrs.MG_SIZE) {
+      const drafts = {};
+      gridApis.mgSize.forEachNode(n => {
+        if (!n.data.is_saved) {
+          const k = `${n.data.sample_id}_${n.data.fraction_idx}`;
+          drafts[k] = { m2: n.data.m2, m3: n.data.m3 };
+        }
+      });
+      draftMgrs.MG_SIZE.save(drafts);
+    }
+  }
+
+  // =====================================================================
+  // 7. COLLECTORS (for save)
+  // =====================================================================
+
+  function collectAll() {
+    const payload = [];
+
+    // MT
+    if (gridApis.mgMt) {
+      gridApis.mgMt.forEachNode(n => {
+        if (n.data.is_saved) return;
+        const d = n.data;
+        if (d.m1 == null || d.m2 == null || d.m3 == null) return;
+        const m1 = Number(d.m1), m2 = Number(d.m2), m3 = Number(d.m3);
+        if (!isFinite(m1) || !isFinite(m2) || !isFinite(m3) || m2 <= 0) return;
+        const result = ((m1 + m2 - m3) / m2) * 100;
+        payload.push({
+          sample_id: d.sample_id,
+          analysis_code: 'MT',
+          final_result: result,
+          raw_data: { m1: m1, m2: m2, m3: m3, result: result }
+        });
+      });
+    }
+
+    // TRD
+    if (gridApis.mgTrd) {
+      const map = {};
+      gridApis.mgTrd.forEachNode(n => {
+        if (n.data.is_saved) return;
+        if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
+        map[n.data.sample_id][n.data.parallel] = n.data;
+      });
+
+      Object.keys(map).forEach(sid => {
+        const p1 = map[sid][1], p2 = map[sid][2];
+        const has1 = p1 && p1.m != null && p1.m2 != null && p1.m1 != null;
+        const has2 = p2 && p2.m != null && p2.m2 != null && p2.m1 != null;
+        if (!has1 || !has2) return;
+
+        const r1 = computeTrd(p1.m, p1.m2, p1.m1);
+        const r2 = computeTrd(p2.m, p2.m2, p2.m1);
+        if (r1 == null || r2 == null) return;
+
+        const avg = (r1 + r2) / 2;
+        const diff = Math.abs(r1 - r2);
+
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: 'TRD',
+          final_result: avg,
+          raw_data: {
+            diff: diff, avg: avg,
+            p1: { num: p1.bottle_num, m: p1.m, m2: p1.m2, m1: p1.m1, result: r1 },
+            p2: { num: p2.bottle_num, m: p2.m, m2: p2.m2, m1: p2.m1, result: r2 },
+            repeatability: { difference: diff }
+          }
+        });
+      });
+    }
+
+    // MG
+    if (gridApis.mgTube) {
+      gridApis.mgTube.forEachNode(n => {
+        if (n.data.is_saved) return;
+        const d = n.data;
+        if (d.empty_crucible == null || d.sample_mass == null || d.dried_weight == null) return;
+        const empty = Number(d.empty_crucible), sample = Number(d.sample_mass), dried = Number(d.dried_weight);
+        if (!isFinite(empty) || !isFinite(sample) || !isFinite(dried) || sample <= 0) return;
+        const mg_mass = dried - empty;
+        const nomg_mass = empty + sample - dried;
+        const mg_pct = 100 * mg_mass / sample;
+        payload.push({
+          sample_id: d.sample_id,
+          analysis_code: 'MG',
+          final_result: mg_pct,
+          raw_data: {
+            empty_crucible: empty, sample_mass: sample, dried_weight: dried,
+            mg_mass: mg_mass, nomg_mass: nomg_mass, mg_pct: mg_pct
+          }
+        });
+      });
+    }
+
+    // MG_SIZE
+    if (gridApis.mgSize) {
+      const sizeMap = {};
+      gridApis.mgSize.forEachNode(n => {
+        if (n.data.is_saved) return;
+        if (!sizeMap[n.data.sample_id]) sizeMap[n.data.sample_id] = { total_mass: n.data.total_mass || 50, fractions: [] };
+        sizeMap[n.data.sample_id].fractions[n.data.fraction_idx] = {
+          label: n.data.fraction_label,
+          m2: n.data.m2 != null ? Number(n.data.m2) : null,
+          m3: n.data.m3 != null ? Number(n.data.m3) : null,
+          m1: n.data.m1 != null ? Number(n.data.m1) : null,
+          pct: n.data.pct != null ? Number(n.data.pct) : null
+        };
+      });
+
+      Object.keys(sizeMap).forEach(sid => {
+        const data = sizeMap[sid];
+        // Require at least some data
+        const hasData = data.fractions.some(f => f && (f.m2 != null || f.m3 != null));
+        if (!hasData) return;
+        payload.push({
+          sample_id: parseInt(sid),
+          analysis_code: 'MG_SIZE',
+          final_result: null,
+          raw_data: data
+        });
+      });
+    }
+
+    return payload;
+  }
+
+  // =====================================================================
+  // 8. AFTER SAVE
+  // =====================================================================
+  function afterSaveAll(savedPayload, failedItems) {
+    const STORAGE_KEY = 'worksheet_WTL_MG_sample_ids';
+
+    // Update grids: mark saved
+    Object.values(gridApis).forEach(api => {
+      if (!api) return;
+      api.forEachNode(n => {
+        const saved = savedPayload.find(r => r.sample_id === n.data.sample_id && r.analysis_code === getCodeForApi(api));
+        if (saved) {
+          n.data.is_saved = true;
+          if (saved.raw_data) {
+            if (saved.analysis_code === 'TRD' && n.data.parallel != null) {
+              const pData = n.data.parallel === 1 ? saved.raw_data.p1 : saved.raw_data.p2;
+              if (pData) {
+                n.data.result = pData.result;
+              }
+              if (n.data.parallel === 1) {
+                n.data.tolerance = saved.raw_data.diff;
+                n.data.average = saved.raw_data.avg ?? saved.final_result;
+                n.data.t_exceeded = saved.raw_data.t_exceeded ?? false;
+              }
+            }
+          }
+          // Store back into mgResultsMap so data persists on tab switch
+          if (!mgResultsMap[saved.analysis_code]) mgResultsMap[saved.analysis_code] = {};
+          mgResultsMap[saved.analysis_code][saved.sample_id] = {
+            status: saved.status,
+            raw_data: saved.raw_data || {},
+            final_result: saved.final_result
+          };
+        }
+      });
+      api.refreshCells({ force: true });
+    });
+
+    // WTL_MG: Only remove sample when ALL 4 codes are saved for that sample
+    // Check each sample: is every code saved (is_saved) across all grids?
+    const fullyDoneSamples = new Set();
+    samples.forEach(s => {
+      const sid = s.id;
+      let allDone = true;
+      // Check all 4 grids
+      ['mgMt', 'mgTube'].forEach(key => {
+        if (!gridApis[key]) { allDone = false; return; }
+        let found = false;
+        gridApis[key].forEachNode(n => { if (n.data.sample_id === sid && n.data.is_saved) found = true; });
+        if (!found) allDone = false;
+      });
+      // TRD: check parallel 1
+      if (gridApis.mgTrd) {
+        let found = false;
+        gridApis.mgTrd.forEachNode(n => { if (n.data.sample_id === sid && n.data.parallel === 1 && n.data.is_saved) found = true; });
+        if (!found) allDone = false;
+      } else { allDone = false; }
+      // Size: check fraction 0
+      if (gridApis.mgSize) {
+        let found = false;
+        gridApis.mgSize.forEachNode(n => { if (n.data.sample_id === sid && n.data.fraction_idx === 0 && n.data.is_saved) found = true; });
+        if (!found) allDone = false;
+      } else { allDone = false; }
+      if (allDone) fullyDoneSamples.add(sid);
+    });
+
+    // Only remove fully completed samples from localStorage
+    const allSampleIds = samples.map(s => s.id);
+    const remainingIds = allSampleIds.filter(id => !fullyDoneSamples.has(id));
+
+    try {
+      if (remainingIds.length > 0) {
+        localStorage.setItem(STORAGE_KEY, remainingIds.join(','));
+        const url = new URL(window.location.href);
+        url.searchParams.set('sample_ids', remainingIds.join(','));
+        window.history.replaceState({}, '', url.toString());
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('sample_ids');
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch(e) {}
+
+    // Purge drafts for saved codes only
+    const savedIds = [...new Set(savedPayload.map(r => r.sample_id))];
+    MG_CODES.forEach(code => {
+      if (draftMgrs[code]) draftMgrs[code].purge(savedIds.map(id => String(id)));
+    });
+
+    console.log(`WTL_MG: ${savedPayload.length} results saved, ${fullyDoneSamples.size} fully completed`);
+  }
+
+  function getCodeForApi(api) {
+    if (api === gridApis.mgMt) return 'MT';
+    if (api === gridApis.mgTrd) return 'TRD';
+    if (api === gridApis.mgTube) return 'MG';
+    if (api === gridApis.mgSize) return 'MG_SIZE';
+    return '';
+  }
+
+  // =====================================================================
+  // 9. INIT
+  // =====================================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    // Sample IDs persistence
+    const STORAGE_KEY = 'worksheet_WTL_MG_sample_ids';
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlIds = urlParams.get('sample_ids');
+    if (urlIds) {
+      try { localStorage.setItem(STORAGE_KEY, urlIds); } catch(e) {}
+    } else {
+      try {
+        const savedIds = localStorage.getItem(STORAGE_KEY);
+        if (savedIds) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('sample_ids', savedIds);
+          window.history.replaceState({}, '', url.toString());
+          window.location.reload();
+          return;
+        }
+      } catch(e) {}
+    }
+
+    // Init Draft Managers
+    MG_CODES.forEach(code => { draftMgrs[code] = initDraftMgr(code); });
+
+    const factory = typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid;
+
+    // MT Grid
+    if (factory) {
+      gridApis.mgMt = LIMS_AGGRID.createGrid('#mgMtGrid', mtColDefs, buildMtRowData(), {
+        onCellValueChanged: onMtCellChanged,
+        editableColIds: ['m1', 'm2', 'm3']
+      });
+    }
+
+    // TRD Grid
+    if (factory) {
+      gridApis.mgTrd = LIMS_AGGRID.createGrid('#mgTrdGrid', trdColDefs, buildTrdRowData(), {
+        onCellValueChanged: onTrdCellChanged,
+        editableColIds: ['bottle_num', 'm', 'm1']
+      });
+    }
+
+    // MG Grid
+    if (factory) {
+      gridApis.mgTube = LIMS_AGGRID.createGrid('#mgTubeGrid', tubeColDefs, buildTubeRowData(), {
+        onCellValueChanged: onTubeCellChanged,
+        editableColIds: ['empty_crucible', 'sample_mass', 'dried_weight']
+      });
+    }
+
+    // MG_SIZE Grid
+    if (factory) {
+      gridApis.mgSize = LIMS_AGGRID.createGrid('#mgSizeGrid', sizeColDefs, buildSizeRowData(), {
+        onCellValueChanged: onSizeCellChanged,
+        editableColIds: ['m2', 'm3']
+      });
+    }
+
+    // Restore drafts
+    setTimeout(() => {
+      // MT drafts
+      if (gridApis.mgMt && draftMgrs.MT) {
+        try {
+          const d = draftMgrs.MT.restore();
+          gridApis.mgMt.forEachNode(n => {
+            if (!n.data.is_saved && d[n.data.sample_id]) {
+              n.data.m1 = d[n.data.sample_id].m1;
+              n.data.m2 = d[n.data.sample_id].m2;
+              n.data.m3 = d[n.data.sample_id].m3;
+              const m1 = Number(n.data.m1), m2 = Number(n.data.m2), m3 = Number(n.data.m3);
+              if (isFinite(m1) && isFinite(m2) && isFinite(m3) && m2 > 0) {
+                n.data.result = ((m1 + m2 - m3) / m2) * 100;
+              }
+            }
+          });
+          gridApis.mgMt.refreshCells({ force: true });
+        } catch(e) {}
+      }
+
+      // TRD drafts
+      if (gridApis.mgTrd && draftMgrs.TRD) {
+        try {
+          const d = draftMgrs.TRD.restore();
+          gridApis.mgTrd.forEachNode(n => {
+            if (!n.data.is_saved) {
+              const k = `${n.data.sample_id}_${n.data.parallel}`;
+              if (d[k]) {
+                n.data.bottle_num = d[k].p;
+                n.data.m = d[k].m;
+                n.data.m1 = d[k].m1;
+                if (n.data.bottle_num && !n.data.m2) {
+                  fetchBottle(n.data.bottle_num).then(info => {
+                    if (info) { n.data.m2 = info.avg_value; gridApis.mgTrd.refreshCells({ force: true }); }
+                  });
+                }
+                n.data.result = computeTrd(n.data.m, n.data.m2, n.data.m1);
+              }
+            }
+          });
+          gridApis.mgTrd.refreshCells({ force: true });
+        } catch(e) {}
+      }
+
+      // MG drafts
+      if (gridApis.mgTube && draftMgrs.MG) {
+        try {
+          const d = draftMgrs.MG.restore();
+          gridApis.mgTube.forEachNode(n => {
+            if (!n.data.is_saved && d[n.data.sample_id]) {
+              n.data.empty_crucible = d[n.data.sample_id].e;
+              n.data.sample_mass = d[n.data.sample_id].s;
+              n.data.dried_weight = d[n.data.sample_id].d;
+              const e = Number(n.data.empty_crucible), s = Number(n.data.sample_mass), dr = Number(n.data.dried_weight);
+              if (isFinite(e) && isFinite(s) && isFinite(dr) && s > 0) {
+                n.data.mg_mass = dr - e;
+                n.data.nomg_mass = e + s - dr;
+                n.data.mg_pct = 100 * n.data.mg_mass / s;
+              }
+            }
+          });
+          gridApis.mgTube.refreshCells({ force: true });
+        } catch(e) {}
+      }
+
+      // MG_SIZE drafts
+      if (gridApis.mgSize && draftMgrs.MG_SIZE) {
+        try {
+          const d = draftMgrs.MG_SIZE.restore();
+          gridApis.mgSize.forEachNode(n => {
+            if (!n.data.is_saved) {
+              const k = `${n.data.sample_id}_${n.data.fraction_idx}`;
+              if (d[k]) {
+                n.data.m2 = d[k].m2;
+                n.data.m3 = d[k].m3;
+              }
+            }
+          });
+          // Recalculate fractions
+          const sids = [...new Set(samples.map(s => s.id))];
+          sids.forEach(sid => recalcSizeFractions(sid));
+          gridApis.mgSize.refreshCells({ force: true });
+        } catch(e) {}
+      }
+    }, 100);
+
+    // Tab activation: resize grids + refresh summary
+    document.querySelectorAll('#mgTabs button[data-bs-toggle="tab"]').forEach(btn => {
+      btn.addEventListener('shown.bs.tab', (e) => {
+        Object.values(gridApis).forEach(api => {
+          if (api && api.sizeColumnsToFit) {
+            try { api.sizeColumnsToFit(); } catch(ex) {}
+          }
+        });
+        // Refresh summary when its tab is activated
+        if (e.target.id === 'tab-mg-summary') refreshSummary();
+      });
+    });
+
+    // Excel export button
+    const btnExport = document.getElementById('btnExportMgSummary');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => {
+        refreshSummary();
+        if (typeof tableToXlsx === 'function') {
+          tableToXlsx('#mgSummaryTable', 'WTL_MG_Summary');
+        }
+      });
+    }
+
+    console.log('WTL MG Grids initialized');
+  });
+
+  // =====================================================================
+  // 10. SUMMARY TAB
+  // =====================================================================
+  function _f1(v) { return v != null && isFinite(Number(v)) ? parseFloat(v).toFixed(1) : '-'; }
+  function _f2(v) { return v != null && isFinite(Number(v)) ? parseFloat(v).toFixed(2) : '-'; }
+
+  function _smMt(sid) {
+    if (gridApis.mgMt) {
+      let r = null;
+      gridApis.mgMt.forEachNode(n => { if (n.data.sample_id === sid && n.data.result != null) r = n.data.result; });
+      if (r != null) return r;
+    }
+    const ex = getExisting('MT', sid);
+    return ex?.final_result ?? ex?.raw_data?.result ?? null;
+  }
+
+  function _smTrd(sid) {
+    if (gridApis.mgTrd) {
+      let r = null;
+      gridApis.mgTrd.forEachNode(n => {
+        if (n.data.sample_id === sid && n.data.parallel === 1) r = n.data.average ?? n.data.result;
+      });
+      if (r != null) return r;
+    }
+    const ex = getExisting('TRD', sid);
+    return ex?.final_result ?? ex?.raw_data?.avg ?? null;
+  }
+
+  function _smTube(sid) {
+    if (gridApis.mgTube) {
+      let d = null;
+      gridApis.mgTube.forEachNode(n => { if (n.data.sample_id === sid) d = n.data; });
+      if (d && d.sample_mass != null) return { init: d.sample_mass, mg: d.mg_mass, nomg: d.nomg_mass, pct: d.mg_pct };
+    }
+    const ex = getExisting('MG', sid);
+    const raw = ex?.raw_data || {};
+    return { init: raw.sample_mass, mg: raw.mg_mass, nomg: raw.nomg_mass, pct: raw.mg_pct ?? ex?.final_result };
+  }
+
+  function _smSize(sid) {
+    const res = { total: 50, fracs: [] };
+    if (gridApis.mgSize) {
+      let found = false;
+      gridApis.mgSize.forEachNode(n => {
+        if (n.data.sample_id === sid) {
+          res.fracs[n.data.fraction_idx] = { mass: n.data.m1, pct: n.data.pct };
+          res.total = n.data.total_mass || 50;
+          found = true;
+        }
+      });
+      if (found) return res;
+    }
+    const ex = getExisting('MG_SIZE', sid);
+    const raw = ex?.raw_data || {};
+    res.total = raw.total_mass || 50;
+    (raw.fractions || []).forEach((f, i) => { res.fracs[i] = { mass: f?.m1, pct: f?.pct }; });
+    return res;
+  }
+
+  function refreshSummary() {
+    const tbody = document.getElementById('mgSummaryBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const RS = SIZE_FRACTIONS.length;
+
+    samples.forEach((s, idx) => {
+      const tm = _smMt(s.id);
+      const trd = _smTrd(s.id);
+      const tube = _smTube(s.id);
+      const size = _smSize(s.id);
+
+      SIZE_FRACTIONS.forEach((label, fi) => {
+        const tr = document.createElement('tr');
+        const fr = size.fracs[fi] || {};
+        let html = '';
+
+        if (fi === 0) {
+          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${idx + 1}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle fw-semibold">${s.code}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f1(tm)}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f2(trd)}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(size.total)}</td>`;
+        }
+
+        html += `<td class="text-center small">${label}</td>`;
+        html += `<td class="text-center">${_f1(fr.mass)}</td>`;
+        html += `<td class="text-center">${_f1(fr.pct)}</td>`;
+
+        if (fi === 0) {
+          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(tube.init)}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f1(tube.mg)}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(tube.nomg)}</td>`;
+          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold text-success">${_f1(tube.pct)}</td>`;
+        }
+
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+
+      // Total row
+      const totalTr = document.createElement('tr');
+      totalTr.style.cssText = 'background:#f8f9fa;border-top:2px solid #dee2e6';
+      totalTr.innerHTML = `
+        <td colspan="5"></td>
+        <td class="text-end fw-bold small">Total</td>
+        <td class="text-center fw-bold">${_f1(size.total)}</td>
+        <td class="text-center fw-bold">100.0</td>
+        <td colspan="4"></td>
+      `;
+      tbody.appendChild(totalTr);
+    });
+  }
+
+  // =====================================================================
+  // 11. REGISTER LIMS_CALC
+  // =====================================================================
+  window.LIMS_CALC = window.LIMS_CALC || {};
+  window.LIMS_CALC['WTL_MG'] = {
+    collect: collectAll,
+    afterSave: afterSaveAll
+  };
+
+})();
+</script>
+
+{{ aggrid_macros.balance_connection_js() | safe }}

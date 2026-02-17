@@ -370,7 +370,11 @@ def analysis_config():
         return redirect(url_for('admin.analysis_config'))
 
     # 5. Data Fetch for GET
-    analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
+    # MG codes belong to WTL_MG multi-code page — exclude from config matrix
+    MG_EXCLUDE = ['MG', 'MG_SIZE']
+    analysis_types = AnalysisType.query.filter(
+        ~AnalysisType.code.in_(MG_EXCLUDE)
+    ).order_by(AnalysisType.order_num).all()
 
     simple_profiles = AnalysisProfile.query.filter(
         (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),

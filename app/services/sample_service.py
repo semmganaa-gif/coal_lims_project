@@ -183,11 +183,14 @@ def get_samples_with_results(
         >>> print(f"Found {len(samples)} samples with results")
     """
     # Үр дүнтэй дээжүүдийг шүүх subquery
+    # MG дээжийг хасна: Mad, Aad гэх мэт стандарт нүүрсний шинжилгээ байхгүй бол summary-д оруулахгүй
+    WTL_MG_CODES = ['MG', 'MG_SIZE', 'MT', 'TRD']
     exists_q = (
         db.session.query(AnalysisResult.id)
         .filter(
             AnalysisResult.sample_id == Sample.id,
             AnalysisResult.status.in_(["approved", "pending_review"]),
+            ~AnalysisResult.analysis_code.in_(WTL_MG_CODES),
         )
         .exists()
     )

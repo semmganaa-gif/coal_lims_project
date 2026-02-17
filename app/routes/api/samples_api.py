@@ -732,3 +732,89 @@ def register_routes(bp):
             }
             for s in samples
         ])
+
+    # -----------------------------------------------------------
+    # MG SUMMARY (WTL MG нэгтгэл)
+    # -----------------------------------------------------------
+    @bp.route("/mg_summary", methods=["GET", "POST"])
+    @login_required
+    async def mg_summary():
+        """WTL MG шинжилгээний нэгтгэл — бүх MG дээжийн MT, TRD, MG, MG_SIZE үр дүн."""
+
+
+        # POST: Archive/Unarchive
+        if request.method == "POST":
+            data = request.get_json(silent=True) or {}
+            sample_ids = data.get("sample_ids", [])
+            action = data.get("action", "archive")
+            if sample_ids and action in ("archive", "unarchive"):
+                result = archive_samples(sample_ids, archive=(action == "archive"))
+                return jsonify({"success": result.success, "message": result.message})
+            return jsonify({"success": False, "message": "Invalid request"}), 400
+        MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE']
+        MG_ONLY = ['MG', 'MG_SIZE']
+
+        # 1. MG эсвэл MG_SIZE үр дүнтэй дээжүүдийг олох (архивласнаас бусад)
+        q_ids = (
+            db.session.query(AnalysisResult.sample_id)
+            .join(Sample, Sample.id == AnalysisResult.sample_id)
+            .filter(
+                AnalysisResult.analysis_code.in_(MG_ONLY),
+                AnalysisResult.status.in_(["approved", "pending_review"]),
+                Sample.status != "archived",
+            )
+        )
+        sample_ids = [r.sample_id for r in q_ids.distinct().all()]
+
+        if not sample_ids:
+            return render_template(
+                "mg_summary.html",
+                title="MG Summary",
+                samples=[],
+                mg_data={},
+            )
+
+        # 2. Дээж мэдээлэл
+        samples = (
+            Sample.query
+            .filter(Sample.id.in_(sample_ids))
+            .order_by(Sample.received_date.desc())
+            .all()
+        )
+
+        # 3. Бүх MG кодын үр дүн
+        results = (
+            AnalysisResult.query
+            .filter(
+                AnalysisResult.sample_id.in_(sample_ids),
+                AnalysisResult.analysis_code.in_(MG_CODES),
+                AnalysisResult.status.in_(["approved", "pending_review"]),
+            )
+            .all()
+        )
+
+        # {sample_id: {code: {final_result, raw_data, status}}}
+        mg_data = {}
+        for r in results:
+            if r.sample_id not in mg_data:
+                mg_data[r.sample_id] = {}
+            raw = r.raw_data
+            if isinstance(raw, str):
+                try:
+                    raw = json.loads(raw)
+                except (json.JSONDecodeError, TypeError):
+                    raw = {}
+            elif raw is None:
+                raw = {}
+            mg_data[r.sample_id][r.analysis_code] = {
+                "final_result": r.final_result,
+                "raw_data": raw,
+                "status": r.status,
+            }
+
+        return render_template(
+            "mg_summary.html",
+            title="MG Summary",
+            samples=samples,
+            mg_data=mg_data,
+        )

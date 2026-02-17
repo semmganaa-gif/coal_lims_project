@@ -559,6 +559,7 @@ $(function () {
     'SOLID':'#solidGrid','Solid':'#solidGrid','solid':'#solidGrid',
     'X':'#xyGrid','Y':'#xyGrid',
     'CRI':'#cricSrGrid','CSR':'#cricSrGrid',
+    'WTL_MG':'#mgMtGrid','MG':'#mgTubeGrid','MG_SIZE':'#mgSizeGrid',
   };
   const SINGLE_VALUE_CODES = new Set(['FM','SOLID','X','Y','CRI','CSR']);
   function collectSingleRowPayload($row){

@@ -362,6 +362,10 @@
       <i class="bi bi-fire"></i> Physical &amp; Coking
       <span class="tab-count">0</span>
     </div>
+    <div class="cat-tab" data-cat="wtl">
+      <i class="bi bi-funnel"></i> WTL
+      <span class="tab-count">0</span>
+    </div>
   </div>
 
   <!-- No Results Message -->
@@ -377,7 +381,7 @@
     {% set disp_name = a.display_name if a.display_name is defined and a.display_name else a.name %}
     {% set disp_badge = a.display_badge if a.display_badge is defined and a.display_badge else (a.code|fmt_code) %}
 
-    {# Categorize by code - 4 categories (ISO nomenclature from нэршил.xlsx) #}
+    {# Categorize by code #}
     {% set cat = 'tech' %}
     {% if a.code in ['MT', 'Mad', 'Aad', 'Vad', 'FCd', 'FM', 'CV', 'Solid'] %}
       {% set cat = 'tech' %}
@@ -385,6 +389,8 @@
       {% set cat = 'element' %}
     {% elif a.code in ['TRD', 'CSN', 'Gi', 'X', 'Y', 'XY', 'CRI', 'CSR', 'CRICSR', 'PE'] %}
       {% set cat = 'coking' %}
+    {% elif a.code in ['m'] %}
+      {% set cat = 'wtl' %}
     {% endif %}
 
     {# Icon color by category #}
@@ -443,6 +449,31 @@
       <i class="bi bi-arrow-right card-arrow"></i>
     </a>
     {% endfor %}
+
+    {# ===== WTL CARDS ===== #}
+    {# WTL MG — Соронзон шинжилгээ (4 tab дотор нь) #}
+    {% if show_mg_card %}
+    <a href="{{ url_for('analysis.wtl_mg_page') }}"
+       class="analysis-card"
+       data-name="mg magnetic size moisture density"
+       data-code="mg"
+       data-badge="mg"
+       data-cat="wtl">
+      <div class="card-icon icon-amber">
+        <i class="bi bi-magnet"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">MG</div>
+        <div class="card-title">Magnetic Test</div>
+        <div class="card-desc">Moisture, TRD, Magnetic Fraction, Size Distribution</div>
+        <div class="card-role">
+          <i class="bi bi-person-badge"></i> chemist
+        </div>
+      </div>
+      <i class="bi bi-arrow-right card-arrow"></i>
+    </a>
+    {% endif %}
+
   </div>
   {% else %}
   <div class="empty-state">
@@ -523,8 +554,8 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateTabCounts() {
     const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
 
-    // 3 categories (ISO nomenclature)
-    const counts = { tech: 0, element: 0, coking: 0 };
+    // 4 categories
+    const counts = { tech: 0, element: 0, coking: 0, wtl: 0 };
 
     cards.forEach(function(card) {
       const name = card.dataset.name || '';

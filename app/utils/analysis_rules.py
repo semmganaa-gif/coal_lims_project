@@ -55,7 +55,11 @@ SOFT_LIMITS: Dict[str, float] = {
     # --- Бусад ---
     'SOLID': 80.0,      # Solid residue (Vad-тай холбоотой)
     'FM': 60.0,
-    'TRD': 3.00,       # Relative Density хэт өндөр байвал шалгах
+    'TRD': 8.00,       # Relative Density (нүүрс ~1.2-1.8, MG ~3-5+)
+
+    # --- WTL MG ---
+    'MG': 100.0,
+    'MG_SIZE': 100.0,
 }
 # Keep max limits aligned with soft limits by default.
 SOFT_MAX_LIMITS: Dict[str, float] = SOFT_LIMITS.copy()

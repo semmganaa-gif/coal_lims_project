@@ -112,6 +112,10 @@ ANALYSIS_CODE_SUBSCRIPTS = {
     'cri':      ('CRI', ''),         # Coke Reactivity Index
     'csr':      ('CSR', ''),         # Coke Strength after Reaction
     'cricsr':   ('CRI/CSR', ''),
+
+    # --- WTL MG ---
+    'mg':       ('MG', ''),          # MG Magnetic Fraction
+    'mg_size':  ('MG', 'Size'),      # MG Size Distribution
 }
 
 # =====================================================================
@@ -331,6 +335,15 @@ PARAMETER_DEFINITIONS = {
 
     'relative_density_d': {'display_name': 'Харьцангуй нягт (d)', 'aliases': ['TRD,d'], 'type': 'calculated'},
     'relative_density_ar':{'display_name': 'Харьцангуй нягт (ar)', 'aliases': ['TRD,ar'], 'type': 'calculated'},
+
+    # --- WTL MG Analyses ---
+    'mg_magnetic': {
+        'display_name': 'MG Magnetic',
+        'lab_code': 'LAB.MG.01',
+        'standard_method': 'N/A',
+        'aliases': ['MG', 'MG Magnetic', 'Magnetic Fraction'],
+        'type': 'measured'
+    },
 }
 
 
@@ -874,6 +887,8 @@ MASTER_ANALYSIS_TYPES_LIST = [
     {'code': 'Solid', 'name': 'Solid Residue',                'order': 18, 'role': 'prep'},
     {'code': 'm',     'name': 'Mass',                         'order': 19, 'role': 'chemist'},
     {'code': 'PE',    'name': 'Petrography',                  'order': 20, 'role': 'chemist'},
+    {'code': 'MG',      'name': 'MG Magnetic',         'order': 200, 'role': 'chemist'},
+    {'code': 'MG_SIZE', 'name': 'MG Size Distribution','order': 201, 'role': 'chemist'},
 ]
 
 
@@ -943,6 +958,7 @@ CANONICAL_TO_BASE_ANALYSIS = {
     'mass': 'm',
     'free_moisture': 'FM',
     'solid': 'SOLID',
+    'mg_magnetic': 'MG',
 }
 
 # 2. ALIAS_TO_BASE_ANALYSIS (Alias -> Base)
@@ -965,6 +981,7 @@ _manual_pairs = {
     'mt,ar': 'MT', 'mad': 'Mad', 'aad': 'Aad', 'vad': 'Vad', 'st,ad': 'TS',
     'qgr,ad': 'CV', 'cv': 'CV', 'ts': 'TS', 'csn': 'CSN', 'gi': 'Gi',
     'trd': 'TRD', 'y': 'Y', 'x': 'X', 'fm': 'FM', 'solid': 'SOLID',
+    'mg': 'MG', 'mg_size': 'MG_SIZE',
 }
 for k, v in _manual_pairs.items():
     ALIAS_TO_BASE_ANALYSIS[k] = v
@@ -1117,6 +1134,7 @@ SUMMARY_VIEW_COLUMNS = [
     {"code": "CRI", "canonical_base": "coke_reactivity_index"},
     {"code": "CSR", "canonical_base": "coke_strength_after_reaction"},
     {"code": "m", "canonical_base": "mass"},
+    {"code": "MG", "canonical_base": "mg_magnetic"},
 ]
 
 
