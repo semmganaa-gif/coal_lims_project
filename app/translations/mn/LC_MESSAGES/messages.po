@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Coal LIMS 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-17 17:31+0800\n"
-"PO-Revision-Date: 2026-02-17 17:31+0800\n"
+"POT-Creation-Date: 2026-02-17 18:06+0800\n"
+"PO-Revision-Date: 2026-02-17 18:06+0800\n"
 "Last-Translator: \n"
 "Language: mn\n"
 "Language-Team: mn\n"
@@ -21,18 +21,222 @@ msgstr ""
 msgid "Please log in to access this page."
 msgstr "Энэ хуудсанд нэвтрэх шаардлагатай."
 
-#: app/templates/base.html:562
+#: app/templates/base.html
+msgid "Home"
+msgstr "Нүүр"
+
+#: app/templates/base.html
+msgid "Analysis"
+msgstr "Шинжилгээ"
+
+#: app/templates/base.html
+msgid "Maceral (MAC)"
+msgstr "Мацерал (MAC)"
+
+#: app/templates/base.html
+msgid "Vitrinite Reflectance (VR)"
+msgstr "Витринитийн тусгал (VR)"
+
+#: app/templates/base.html
+msgid "Mineral Matter (MM)"
+msgstr "Эрдэс бодис (MM)"
+
+#: app/templates/base.html
+msgid "Thin Section (TS)"
+msgstr "Нимгэн зүсэлт (TS)"
+
+#: app/templates/base.html
+msgid "Modal (MOD)"
+msgstr "Модал (MOD)"
+
+#: app/templates/base.html
+msgid "Equipment"
+msgstr "Тоног төхөөрөмж"
+
+#: app/templates/base.html
+msgid "Spare Parts"
+msgstr "Сэлбэг хэрэгсэл"
+
+#: app/templates/base.html
+msgid "Reagents"
+msgstr "Урвалж бодис"
+
+#: app/templates/base.html
+msgid "Water Lab"
+msgstr "Усны лаб"
+
+#: app/templates/base.html
+msgid "Water Lab Home"
+msgstr "Усны лаб нүүр"
+
+#: app/templates/base.html
+msgid "Chemistry Lab"
+msgstr "Химийн лаб"
+
+#: app/templates/base.html
+msgid "Microbiology"
+msgstr "Микробиологи"
+
+#: app/templates/base.html
+msgid "Sample Registration"
+msgstr "Дээж бүртгэл"
+
+#: app/templates/base.html
+msgid "Summary"
+msgstr "Хураангуй"
+
+#: app/templates/base.html
+msgid "Reports"
+msgstr "Тайлан"
+
+#: app/templates/base.html
+msgid "Dashboard"
+msgstr "Хяналтын самбар"
+
+#: app/templates/base.html
+msgid "Consumption"
+msgstr "Зарцуулалт"
+
+#: app/templates/base.html
+msgid "Monthly Plan"
+msgstr "Сарын төлөвлөгөө"
+
+#: app/templates/base.html
+msgid "Waste"
+msgstr "Хаягдал"
+
+#: app/templates/base.html
+msgid "Solution Preparation"
+msgstr "Уусмал бэлтгэл"
+
+#: app/templates/base.html
+msgid "Solution Recipes"
+msgstr "Уусмалын жор"
+
+#: app/templates/base.html
+msgid "Chemistry"
+msgstr "Хими"
+
+#: app/templates/base.html
+msgid "Records & History"
+msgstr "Бүртгэл & Түүх"
+
+#: app/templates/base.html
+msgid "Journal"
+msgstr "Журнал"
+
+#: app/templates/base.html
+msgid "Records"
+msgstr "Бүртгэл"
+
+#: app/templates/base.html
+msgid "PT Testing"
+msgstr "МЧ тест"
+
+#: app/templates/base.html
+msgid "Environmental"
+msgstr "Орчны нөхцөл"
+
+#: app/templates/base.html
+msgid "Complaints"
+msgstr "Гомдол"
+
+#: app/templates/base.html
+msgid "Improvements"
+msgstr "Сайжруулалт"
+
+#: app/templates/base.html
+msgid "Nonconformities"
+msgstr "Зөрчил"
+
+#: app/templates/base.html
+msgid "Corrective Actions"
+msgstr "Залруулах арга хэмжээ"
+
+#: app/templates/base.html
+msgid "Standards"
+msgstr "Стандартууд"
+
+#: app/templates/base.html
+msgid "CM (Internal)"
+msgstr "CM (Дотоод)"
+
+#: app/templates/base.html
+msgid "GBW (CRM)"
+msgstr "GBW (CRM)"
+
+#: app/templates/base.html
+msgid "Control Charts"
+msgstr "Хяналтын диаграм"
+
+#: app/templates/base.html
+msgid "Senior Review"
+msgstr "Ахлах шалгалт"
+
+#: app/templates/base.html
+msgid "Chemist Report"
+msgstr "Химичийн тайлан"
+
+#: app/templates/base.html
+msgid "Statistics"
+msgstr "Статистик"
+
+#: app/templates/base.html
+msgid "Sample Retention"
+msgstr "Дээж хадгалалт"
+
+#: app/templates/base.html
+msgid "Management"
+msgstr "Удирдлага"
+
+#: app/templates/base.html
+msgid "Users"
+msgstr "Хэрэглэгчид"
+
+#: app/templates/base.html
+msgid "License"
+msgstr "Лиценз"
+
+#: app/templates/base.html
+msgid "Analysis Config"
+msgstr "Шинжилгээний тохиргоо"
+
+#: app/templates/base.html
+msgid "Bottles (TRD)"
+msgstr "Сав (TRD)"
+
+#: app/templates/base.html
+msgid "Report Email"
+msgstr "Тайлан имэйл"
+
+#: app/templates/base.html
+msgid "CSV Import"
+msgstr "CSV оруулах"
+
+#: app/templates/base.html
+msgid "Audit"
+msgstr "Аудит"
+
+#: app/templates/base.html
+msgid "Shift Performance"
+msgstr "Ээлжийн гүйцэтгэл"
+
+#: app/templates/base.html
+msgid "Send Hourly Report"
+msgstr "Цагийн тайлан илгээх"
+
+#: app/templates/base.html
 msgid "Profile"
 msgstr "Профайл"
 
-#: app/templates/base.html:564
+#: app/templates/base.html
 msgid "Change Password"
 msgstr "Нууц үг солих"
 
-#: app/templates/base.html:567
+#: app/templates/base.html
 msgid "Logout"
 msgstr "Гарах"
 
-#: app/templates/base.html:573
+#: app/templates/base.html
 msgid "Login"
 msgstr "Нэвтрэх"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-17 17:31+0800\n"
+"POT-Creation-Date: 2026-02-17 18:06+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,222 @@ msgstr ""
 
 #: app/__init__.py:32
 msgid "Please log in to access this page."
+msgstr ""
+
+#: app/templates/base.html:150 app/templates/base.html:335
+msgid "Home"
+msgstr ""
+
+#: app/templates/base.html:155 app/templates/base.html:210
+#: app/templates/base.html:265 app/templates/base.html:345
+msgid "Analysis"
+msgstr ""
+
+#: app/templates/base.html:159
+msgid "Maceral (MAC)"
+msgstr ""
+
+#: app/templates/base.html:161
+msgid "Vitrinite Reflectance (VR)"
+msgstr ""
+
+#: app/templates/base.html:163
+msgid "Mineral Matter (MM)"
+msgstr ""
+
+#: app/templates/base.html:166
+msgid "Thin Section (TS)"
+msgstr ""
+
+#: app/templates/base.html:168
+msgid "Modal (MOD)"
+msgstr ""
+
+#: app/templates/base.html:173 app/templates/base.html:220
+#: app/templates/base.html:275 app/templates/base.html:352
+msgid "Equipment"
+msgstr ""
+
+#: app/templates/base.html:178 app/templates/base.html:363
+msgid "Spare Parts"
+msgstr ""
+
+#: app/templates/base.html:183 app/templates/base.html:238
+#: app/templates/base.html:293 app/templates/base.html:297
+#: app/templates/base.html:371 app/templates/base.html:375
+msgid "Reagents"
+msgstr ""
+
+#: app/templates/base.html:191 app/templates/base.html:246
+#: app/templates/base.html:312
+msgid "Water Lab"
+msgstr ""
+
+#: app/templates/base.html:195 app/templates/base.html:250
+msgid "Water Lab Home"
+msgstr ""
+
+#: app/templates/base.html:198 app/templates/base.html:253
+msgid "Chemistry Lab"
+msgstr ""
+
+#: app/templates/base.html:200 app/templates/base.html:255
+#: app/templates/base.html:322
+msgid "Microbiology"
+msgstr ""
+
+#: app/templates/base.html:205 app/templates/base.html:260
+#: app/templates/base.html:340
+msgid "Sample Registration"
+msgstr ""
+
+#: app/templates/base.html:215 app/templates/base.html:270
+#: app/templates/base.html:327 app/templates/base.html:444
+msgid "Summary"
+msgstr ""
+
+#: app/templates/base.html:225 app/templates/base.html:280
+#: app/templates/base.html:452
+msgid "Reports"
+msgstr ""
+
+#: app/templates/base.html:229 app/templates/base.html:284
+#: app/templates/base.html:407 app/templates/base.html:456
+msgid "Dashboard"
+msgstr ""
+
+#: app/templates/base.html:231 app/templates/base.html:286
+#: app/templates/base.html:460
+msgid "Consumption"
+msgstr ""
+
+#: app/templates/base.html:233 app/templates/base.html:288
+#: app/templates/base.html:463
+msgid "Monthly Plan"
+msgstr ""
+
+#: app/templates/base.html:299 app/templates/base.html:377
+msgid "Waste"
+msgstr ""
+
+#: app/templates/base.html:302
+msgid "Solution Preparation"
+msgstr ""
+
+#: app/templates/base.html:304
+msgid "Solution Recipes"
+msgstr ""
+
+#: app/templates/base.html:317
+msgid "Chemistry"
+msgstr ""
+
+#: app/templates/base.html:356
+msgid "Records & History"
+msgstr ""
+
+#: app/templates/base.html:359
+msgid "Journal"
+msgstr ""
+
+#: app/templates/base.html:384
+msgid "Records"
+msgstr ""
+
+#: app/templates/base.html:388
+msgid "PT Testing"
+msgstr ""
+
+#: app/templates/base.html:391
+msgid "Environmental"
+msgstr ""
+
+#: app/templates/base.html:394
+msgid "Complaints"
+msgstr ""
+
+#: app/templates/base.html:397
+msgid "Improvements"
+msgstr ""
+
+#: app/templates/base.html:400
+msgid "Nonconformities"
+msgstr ""
+
+#: app/templates/base.html:403
+msgid "Corrective Actions"
+msgstr ""
+
+#: app/templates/base.html:415
+msgid "Standards"
+msgstr ""
+
+#: app/templates/base.html:419
+msgid "CM (Internal)"
+msgstr ""
+
+#: app/templates/base.html:422
+msgid "GBW (CRM)"
+msgstr ""
+
+#: app/templates/base.html:426
+msgid "Control Charts"
+msgstr ""
+
+#: app/templates/base.html:435
+msgid "Senior Review"
+msgstr ""
+
+#: app/templates/base.html:466
+msgid "Chemist Report"
+msgstr ""
+
+#: app/templates/base.html:469
+msgid "Statistics"
+msgstr ""
+
+#: app/templates/base.html:473
+msgid "Sample Retention"
+msgstr ""
+
+#: app/templates/base.html:482
+msgid "Management"
+msgstr ""
+
+#: app/templates/base.html:487
+msgid "Users"
+msgstr ""
+
+#: app/templates/base.html:493
+msgid "License"
+msgstr ""
+
+#: app/templates/base.html:497
+msgid "Analysis Config"
+msgstr ""
+
+#: app/templates/base.html:505
+msgid "Bottles (TRD)"
+msgstr ""
+
+#: app/templates/base.html:508
+msgid "Report Email"
+msgstr ""
+
+#: app/templates/base.html:512
+msgid "CSV Import"
+msgstr ""
+
+#: app/templates/base.html:515
+msgid "Audit"
+msgstr ""
+
+#: app/templates/base.html:518
+msgid "Shift Performance"
+msgstr ""
+
+#: app/templates/base.html:531
+msgid "Send Hourly Report"
 msgstr ""
 
 #: app/templates/base.html:562

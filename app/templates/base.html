@@ -1,6 +1,6 @@
 {# templates/base.html - LIMS Core Template (v12 - Mobile Responsive) #}
 <!doctype html>
-<html lang="en">
+<html lang="{{ get_locale()|string }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -147,40 +147,40 @@
             {# =============== ПЕТРОГРАФ ЛАБ NAVBAR =============== #}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('petrography.petro_hub') }}">
-                <i class="bi bi-gem me-1" style="color:#8b5cf6"></i>Home
+                <i class="bi bi-gem me-1" style="color:#8b5cf6"></i>{{ _('Home') }}
               </a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-microscope me-1" style="color:#8b5cf6"></i>Analysis
+                <i class="bi bi-microscope me-1" style="color:#8b5cf6"></i>{{ _('Analysis') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MAC') }}">
-                  <i class="bi bi-eye me-2" style="color:#8b5cf6"></i>Maceral (MAC)</a></li>
+                  <i class="bi bi-eye me-2" style="color:#8b5cf6"></i>{{ _('Maceral (MAC)') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='VR') }}">
-                  <i class="bi bi-brightness-high me-2" style="color:#8b5cf6"></i>Vitrinite Reflectance (VR)</a></li>
+                  <i class="bi bi-brightness-high me-2" style="color:#8b5cf6"></i>{{ _('Vitrinite Reflectance (VR)') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MM') }}">
-                  <i class="bi bi-diamond me-2" style="color:#8b5cf6"></i>Mineral Matter (MM)</a></li>
+                  <i class="bi bi-diamond me-2" style="color:#8b5cf6"></i>{{ _('Mineral Matter (MM)') }}</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='TS_PETRO') }}">
-                  <i class="bi bi-layers me-2" style="color:#8b5cf6"></i>Thin Section (TS)</a></li>
+                  <i class="bi bi-layers me-2" style="color:#8b5cf6"></i>{{ _('Thin Section (TS)') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('petrography.workspace', code='MOD') }}">
-                  <i class="bi bi-pie-chart me-2" style="color:#8b5cf6"></i>Modal (MOD)</a></li>
+                  <i class="bi bi-pie-chart me-2" style="color:#8b5cf6"></i>{{ _('Modal (MOD)') }}</a></li>
               </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('equipment.equipment_list') }}">
-                <i class="bi bi-tools me-1" style="color:#8b5cf6"></i>Equipment
+                <i class="bi bi-tools me-1" style="color:#8b5cf6"></i>{{ _('Equipment') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('spare_parts.spare_part_list') }}">
-                <i class="bi bi-gear-wide-connected me-1" style="color:#f59e0b"></i>Spare Parts
+                <i class="bi bi-gear-wide-connected me-1" style="color:#f59e0b"></i>{{ _('Spare Parts') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='petrography') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#8b5cf6"></i>Reagents
+                <i class="bi bi-droplet-fill me-1" style="color:#8b5cf6"></i>{{ _('Reagents') }}
               </a>
             </li>
 
@@ -188,54 +188,54 @@
             {# =============== МИКРОБИОЛОГИЙН ЛАБ NAVBAR =============== #}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>Water Lab
+                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>{{ _('Water Lab') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('water_lab.main_hub') }}">
-                  <i class="bi bi-house-door me-2" style="color:#0dcaf0"></i>Water Lab Home</a></li>
+                  <i class="bi bi-house-door me-2" style="color:#0dcaf0"></i>{{ _('Water Lab Home') }}</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.water_hub') }}">
-                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>Chemistry Lab</a></li>
+                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>{{ _('Chemistry Lab') }}</a></li>
                 <li><a class="dropdown-item active" href="{{ url_for('microbiology.micro_hub') }}">
-                  <i class="bi bi-bug me-2" style="color:#20c997"></i>Microbiology</a></li>
+                  <i class="bi bi-bug me-2" style="color:#20c997"></i>{{ _('Microbiology') }}</a></li>
               </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('microbiology.register_sample') }}">
-                <i class="bi bi-plus-circle me-1" style="color:#20c997"></i>Sample Registration
+                <i class="bi bi-plus-circle me-1" style="color:#20c997"></i>{{ _('Sample Registration') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('microbiology.analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1" style="color:#20c997"></i>Analysis
+                <i class="bi bi-clipboard-data me-1" style="color:#20c997"></i>{{ _('Analysis') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_summary', lab='micro') }}">
-                <i class="bi bi-table me-1" style="color:#20c997"></i>Summary
+                <i class="bi bi-table me-1" style="color:#20c997"></i>{{ _('Summary') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}">
-                <i class="bi bi-tools me-1" style="color:#20c997"></i>Equipment
+                <i class="bi bi-tools me-1" style="color:#20c997"></i>{{ _('Equipment') }}
               </a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-graph-up me-1" style="color:#20c997"></i>Reports
+                <i class="bi bi-graph-up me-1" style="color:#20c997"></i>{{ _('Reports') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2" style="color:#20c997"></i>Dashboard</a></li>
+                  <i class="bi bi-speedometer2 me-2" style="color:#20c997"></i>{{ _('Dashboard') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>Consumption</a></li>
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>{{ _('Consumption') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_monthly_plan') }}">
-                  <i class="bi bi-calendar-check me-2" style="color:#14b8a6"></i>Monthly Plan</a></li>
+                  <i class="bi bi-calendar-check me-2" style="color:#14b8a6"></i>{{ _('Monthly Plan') }}</a></li>
               </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('chemicals.chemical_list', lab='microbiology') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>Reagents
+                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>{{ _('Reagents') }}
               </a>
             </li>
 
@@ -243,65 +243,65 @@
             {# =============== УСНЫ ХИМИ ЛАБ NAVBAR =============== #}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>Water Lab
+                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Water Lab') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('water_lab.main_hub') }}">
-                  <i class="bi bi-house-door me-2 text-info"></i>Water Lab Home</a></li>
+                  <i class="bi bi-house-door me-2 text-info"></i>{{ _('Water Lab Home') }}</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item active" href="{{ url_for('water.water_hub') }}">
-                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>Chemistry Lab</a></li>
+                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>{{ _('Chemistry Lab') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_hub') }}">
-                  <i class="bi bi-bug me-2" style="color:#20c997"></i>Microbiology</a></li>
+                  <i class="bi bi-bug me-2" style="color:#20c997"></i>{{ _('Microbiology') }}</a></li>
               </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.register_sample') }}">
-                <i class="bi bi-plus-circle me-1 text-info"></i>Sample Registration
+                <i class="bi bi-plus-circle me-1 text-info"></i>{{ _('Sample Registration') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1 text-info"></i>Analysis
+                <i class="bi bi-clipboard-data me-1 text-info"></i>{{ _('Analysis') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_summary') }}">
-                <i class="bi bi-table me-1 text-info"></i>Summary
+                <i class="bi bi-table me-1 text-info"></i>{{ _('Summary') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}">
-                <i class="bi bi-tools me-1 text-info"></i>Equipment
+                <i class="bi bi-tools me-1 text-info"></i>{{ _('Equipment') }}
               </a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-graph-up me-1 text-info"></i>Reports
+                <i class="bi bi-graph-up me-1 text-info"></i>{{ _('Reports') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('water.water_dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2" style="color:#3b82f6"></i>Dashboard</a></li>
+                  <i class="bi bi-speedometer2 me-2" style="color:#3b82f6"></i>{{ _('Dashboard') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.water_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>Consumption</a></li>
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>{{ _('Consumption') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.water_monthly_plan') }}">
-                  <i class="bi bi-calendar-check me-2" style="color:#15803d"></i>Monthly Plan</a></li>
+                  <i class="bi bi-calendar-check me-2" style="color:#15803d"></i>{{ _('Monthly Plan') }}</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>Reagents
+                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='water') }}">
-                  <i class="bi bi-box-seam me-2 text-info"></i>Reagents</a></li>
+                  <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='water') }}">
-                  <i class="bi bi-trash3 me-2 text-warning"></i>Waste</a></li>
+                  <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.solution_journal') }}">
-                  <i class="bi bi-journal-text me-2" style="color:#0d9488"></i>Solution Preparation</a></li>
+                  <i class="bi bi-journal-text me-2" style="color:#0d9488"></i>{{ _('Solution Preparation') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.solution_recipes') }}">
-                  <i class="bi bi-journal-code me-2" style="color:#6366f1"></i>Solution Recipes</a></li>
+                  <i class="bi bi-journal-code me-2" style="color:#6366f1"></i>{{ _('Solution Recipes') }}</a></li>
               </ul>
             </li>
 
@@ -309,22 +309,22 @@
             {# =============== УСНЫ ЛАБ НҮҮР NAVBAR =============== #}
             <li class="nav-item">
               <a class="nav-link active" href="{{ url_for('water_lab.main_hub') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#0891b2"></i>Water Lab
+                <i class="bi bi-droplet-fill me-1" style="color:#0891b2"></i>{{ _('Water Lab') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_hub') }}">
-                <i class="bi bi-droplet-half me-1 text-info"></i>Chemistry
+                <i class="bi bi-droplet-half me-1 text-info"></i>{{ _('Chemistry') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
-                <i class="bi bi-bug me-1" style="color:#20c997"></i>Microbiology
+                <i class="bi bi-bug me-1" style="color:#20c997"></i>{{ _('Microbiology') }}
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.water_summary') }}">
-                <i class="bi bi-table me-1 text-info"></i>Summary
+                <i class="bi bi-table me-1 text-info"></i>{{ _('Summary') }}
               </a>
             </li>
 
@@ -332,35 +332,35 @@
             {# =============== НҮҮРСНИЙ ЛАБ NAVBAR =============== #}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('main.coal_hub') }}">
-                <i class="bi bi-house-door me-1 text-primary"></i>Home
+                <i class="bi bi-house-door me-1 text-primary"></i>{{ _('Home') }}
               </a>
             </li>
             <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('main.index') }}">
-                <i class="bi bi-box-seam me-1 text-primary"></i>Sample Registration
+                <i class="bi bi-box-seam me-1 text-primary"></i>{{ _('Sample Registration') }}
               </a>
             </li>
             <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('analysis.analysis_hub') }}">
-                <i class="bi bi-clipboard-data me-1 text-success"></i>Analysis
+                <i class="bi bi-clipboard-data me-1 text-success"></i>{{ _('Analysis') }}
               </a>
             </li>
 
             <!-- Equipment -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-tools me-1"></i>Equipment
+                <i class="bi bi-tools me-1"></i>{{ _('Equipment') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_list') }}">
-                  <i class="bi bi-list-ul me-2"></i>Records & History
+                  <i class="bi bi-list-ul me-2"></i>{{ _('Records & History') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('equipment.equipment_journal') }}">
-                  <i class="bi bi-journal-text me-2"></i>Journal
+                  <i class="bi bi-journal-text me-2"></i>{{ _('Journal') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('spare_parts.spare_part_list') }}">
-                  <i class="bi bi-gear-wide-connected me-2 text-warning"></i>Spare Parts
+                  <i class="bi bi-gear-wide-connected me-2 text-warning"></i>{{ _('Spare Parts') }}
                 </a></li>
               </ul>
             </li>
@@ -368,43 +368,43 @@
             <!-- Chemicals -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>Reagents
+                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Reagents') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('chemicals.chemical_list', lab='coal') }}">
-                  <i class="bi bi-box-seam me-2 text-info"></i>Reagents</a></li>
+                  <i class="bi bi-box-seam me-2 text-info"></i>{{ _('Reagents') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('chemicals.waste_list', lab='coal') }}">
-                  <i class="bi bi-trash3 me-2 text-warning"></i>Waste</a></li>
+                  <i class="bi bi-trash3 me-2 text-warning"></i>{{ _('Waste') }}</a></li>
               </ul>
             </li>
 
             <!-- Records -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-clipboard-check me-1"></i>Records
+                <i class="bi bi-clipboard-check me-1"></i>{{ _('Records') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('quality.proficiency_list') }}">
-                  <i class="bi bi-award me-2"></i>PT Testing
+                  <i class="bi bi-award me-2"></i>{{ _('PT Testing') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.environmental_list') }}">
-                  <i class="bi bi-thermometer-half me-2"></i>Environmental
+                  <i class="bi bi-thermometer-half me-2"></i>{{ _('Environmental') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.complaints_list') }}">
-                  <i class="bi bi-chat-left-dots me-2"></i>Complaints
+                  <i class="bi bi-chat-left-dots me-2"></i>{{ _('Complaints') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.improvement_list') }}">
-                  <i class="bi bi-arrow-up-circle me-2"></i>Improvements
+                  <i class="bi bi-arrow-up-circle me-2"></i>{{ _('Improvements') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.nonconformity_list') }}">
-                  <i class="bi bi-exclamation-octagon me-2"></i>Nonconformities
+                  <i class="bi bi-exclamation-octagon me-2"></i>{{ _('Nonconformities') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.capa_list') }}">
-                  <i class="bi bi-tools me-2"></i>Corrective Actions
+                  <i class="bi bi-tools me-2"></i>{{ _('Corrective Actions') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.complaints_dashboard') }}">
-                  <i class="bi bi-pie-chart me-2"></i>Dashboard
+                  <i class="bi bi-pie-chart me-2"></i>{{ _('Dashboard') }}
                 </a></li>
               </ul>
             </li>
@@ -412,18 +412,18 @@
             <!-- Standards -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-award me-1"></i>Standards
+                <i class="bi bi-award me-1"></i>{{ _('Standards') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('admin.manage_standards') }}">
-                  <i class="bi bi-clipboard-data me-2"></i>CM (Internal)
+                  <i class="bi bi-clipboard-data me-2"></i>{{ _('CM (Internal)') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('admin.manage_gbw') }}">
-                  <i class="bi bi-patch-check-fill me-2"></i>GBW (CRM)
+                  <i class="bi bi-patch-check-fill me-2"></i>{{ _('GBW (CRM)') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('quality.control_charts_list') }}">
-                  <i class="bi bi-graph-up me-2"></i>Control Charts
+                  <i class="bi bi-graph-up me-2"></i>{{ _('Control Charts') }}
                 </a></li>
               </ul>
             </li>
@@ -432,7 +432,7 @@
             {% if current_user.role in ['senior', 'admin'] %}
             <li class="nav-item mobile-nav-item">
               <a class="nav-link" href="{{ url_for('analysis.ahlah_dashboard') }}">
-                <i class="bi bi-shield-check me-1 text-warning"></i>Senior Review
+                <i class="bi bi-shield-check me-1 text-warning"></i>{{ _('Senior Review') }}
               </a>
             </li>
             {% endif %}
@@ -441,7 +441,7 @@
             {% if current_user.role in ['senior', 'manager', 'admin'] %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('api.sample_summary') }}">
-                <i class="bi bi-table me-1"></i>Summary
+                <i class="bi bi-table me-1"></i>{{ _('Summary') }}
               </a>
             </li>
             {% endif %}
@@ -449,28 +449,28 @@
             <!-- Reports -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-bar-chart me-1"></i>Reports
+                <i class="bi bi-bar-chart me-1"></i>{{ _('Reports') }}
               </a>
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="{{ url_for('reports.dashboard') }}">
-                  <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                  <i class="bi bi-speedometer2 me-2"></i>{{ _('Dashboard') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.consumption') }}">
-                  <i class="bi bi-table me-2"></i>Consumption
+                  <i class="bi bi-table me-2"></i>{{ _('Consumption') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.monthly_plan') }}">
-                  <i class="bi bi-bar-chart-line me-2"></i>Monthly Plan
+                  <i class="bi bi-bar-chart-line me-2"></i>{{ _('Monthly Plan') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.chemist_report') }}">
-                  <i class="bi bi-person-badge me-2"></i>Chemist Report
+                  <i class="bi bi-person-badge me-2"></i>{{ _('Chemist Report') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">
-                  <i class="bi bi-graph-up me-2"></i>Statistics
+                  <i class="bi bi-graph-up me-2"></i>{{ _('Statistics') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('main.sample_disposal') }}">
-                  <i class="bi bi-archive me-2"></i>Sample Retention
+                  <i class="bi bi-archive me-2"></i>{{ _('Sample Retention') }}
                 </a></li>
               </ul>
             </li>
@@ -479,43 +479,43 @@
             {% if current_user.role in ['senior', 'manager', 'admin'] %}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-gear me-1"></i>Management
+                <i class="bi bi-gear me-1"></i>{{ _('Management') }}
               </a>
               <ul class="dropdown-menu">
                 {% if current_user.role == 'admin' %}
                 <li><a class="dropdown-item" href="{{ url_for('admin.manage_users') }}">
-                  <i class="bi bi-people me-2"></i>Users
+                  <i class="bi bi-people me-2"></i>{{ _('Users') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 {% endif %}
                 {% if current_user.role in ['admin', 'manager'] %}
                 <li><a class="dropdown-item" href="{{ url_for('license.info') }}">
-                  <i class="bi bi-key me-2"></i>License
+                  <i class="bi bi-key me-2"></i>{{ _('License') }}
                 </a></li>
                 {% endif %}
                 <li><a class="dropdown-item" href="{{ url_for('admin.analysis_config_simple') }}">
-                  <i class="bi bi-sliders me-2"></i>Analysis Config
+                  <i class="bi bi-sliders me-2"></i>{{ _('Analysis Config') }}
                 </a></li>
                 {# TEMPORARILY HIDDEN - repeatability limits page
                 <li><a class="dropdown-item" href="{{ url_for('settings.repeatability_limits') }}">
-                  <i class="bi bi-rulers me-2"></i>Repeatability Limits
+                  <i class="bi bi-rulers me-2"></i>{{ _('Repeatability Limits') }}
                 </a></li>
                 #}
                 <li><a class="dropdown-item" href="{{ url_for('settings.bottles_index') }}">
-                  <i class="bi bi-flask me-2"></i>Bottles (TRD)
+                  <i class="bi bi-flask me-2"></i>{{ _('Bottles (TRD)') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('settings.email_recipients') }}">
-                  <i class="bi bi-envelope-at me-2"></i>Report Email
+                  <i class="bi bi-envelope-at me-2"></i>{{ _('Report Email') }}
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('importer.import_historical_csv') }}">
-                  <i class="bi bi-file-earmark-arrow-up me-2"></i>CSV Import
+                  <i class="bi bi-file-earmark-arrow-up me-2"></i>{{ _('CSV Import') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('api.audit_hub') }}">
-                  <i class="bi bi-clock-history me-2"></i>Audit
+                  <i class="bi bi-clock-history me-2"></i>{{ _('Audit') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('analysis.shift_daily') }}">
-                  <i class="bi bi-calendar-day me-2"></i>Shift Performance
+                  <i class="bi bi-calendar-day me-2"></i>{{ _('Shift Performance') }}
                 </a></li>
               </ul>
             </li>
@@ -528,7 +528,7 @@
           {% if current_user.is_authenticated and current_user.role in ['senior', 'admin'] %}
           <li class="nav-item">
             <a class="nav-link text-success" href="{{ url_for('main.send_hourly_report') }}"
-               title="Send Hourly Report"
+               title="{{ _('Send Hourly Report') }}"
                onclick="return confirm('Цагийн тайлан илгээх үү?')">
               <i class="bi bi-envelope-paper-fill"></i>
             </a>
