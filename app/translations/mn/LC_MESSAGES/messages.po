@@ -1,0 +1,38 @@
+# Mongolian translations for Coal LIMS.
+# Copyright (C) 2026 Corelink
+# This file is distributed under the same license as the Coal LIMS project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Coal LIMS 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-17 17:31+0800\n"
+"PO-Revision-Date: 2026-02-17 17:31+0800\n"
+"Last-Translator: \n"
+"Language: mn\n"
+"Language-Team: mn\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: app/__init__.py:32
+msgid "Please log in to access this page."
+msgstr "Энэ хуудсанд нэвтрэх шаардлагатай."
+
+#: app/templates/base.html:562
+msgid "Profile"
+msgstr "Профайл"
+
+#: app/templates/base.html:564
+msgid "Change Password"
+msgstr "Нууц үг солих"
+
+#: app/templates/base.html:567
+msgid "Logout"
+msgstr "Гарах"
+
+#: app/templates/base.html:573
+msgid "Login"
+msgstr "Нэвтрэх"

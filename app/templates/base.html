@@ -536,6 +536,19 @@
           {% endif %}
 
           <li class="nav-item me-2">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Language">
+              <a href="{{ url_for('main.set_language', lang='en') }}"
+                 class="btn {{ 'btn-primary' if get_locale() == 'en' else 'btn-outline-secondary' }} btn-sm">
+                EN
+              </a>
+              <a href="{{ url_for('main.set_language', lang='mn') }}"
+                 class="btn {{ 'btn-primary' if get_locale() == 'mn' else 'btn-outline-secondary' }} btn-sm">
+                MN
+              </a>
+            </div>
+          </li>
+
+          <li class="nav-item me-2">
             <img src="{{ url_for('static', filename='images/corelink.logo.png') }}" alt="Corelink" style="height: 20px; opacity: 0.7;">
           </li>
 
@@ -546,18 +559,18 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
-                <i class="bi bi-person-gear me-2"></i>Profile
+                <i class="bi bi-person-gear me-2"></i>{{ _('Profile') }}
               </a></li>
-              <li><a class="dropdown-item" href="#"><i class="bi bi-key me-2"></i>Change Password</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-key me-2"></i>{{ _('Change Password') }}</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">
-                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
               </a></li>
             </ul>
           </li>
           {% else %}
           <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
+            <a class="nav-link" href="{{ url_for('main.login') }}">{{ _('Login') }}</a>
           </li>
           {% endif %}
         </ul>

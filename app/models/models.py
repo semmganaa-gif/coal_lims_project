@@ -84,6 +84,9 @@ class User(UserMixin, db.Model):
     # Мульти-лаборатори эрх
     allowed_labs = db.Column(db.JSON, default=['coal'])  # ['coal', 'petrography', 'water']
 
+    # Хэлний тохиргоо (i18n)
+    language = db.Column(db.String(5), default='en')  # 'en' or 'mn'
+
     # Хувийн мэдээлэл (Email signature-д ашиглана)
     full_name = db.Column(db.String(100))  # Бүтэн нэр
     email = db.Column(db.String(120))  # Ажлын имэйл

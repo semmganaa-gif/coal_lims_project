@@ -16,6 +16,7 @@ from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 from flask_socketio import SocketIO
+from flask_babel import Babel, lazy_gettext as _l
 import json
 
 # Утилитиудыг дээд талд импортлох
@@ -28,8 +29,9 @@ db = SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'main.login'
-login.login_message = "Please log in to access this page."
+login.login_message = _l("Please log in to access this page.")
 mail = Mail()
+babel = Babel()
 
 # WebSocket - Real-time чат
 socketio = SocketIO()
@@ -69,6 +71,19 @@ def create_app(config_class=Config):
     csrf.init_app(app)
     limiter.init_app(app)
     mail.init_app(app)
+
+    # Flask-Babel (i18n) - locale_selector
+    def get_locale():
+        from flask import session
+        lang = session.get('language')
+        if lang in ('en', 'mn'):
+            return lang
+        from flask_login import current_user
+        if current_user.is_authenticated and getattr(current_user, 'language', None):
+            return current_user.language
+        return 'en'
+
+    babel.init_app(app, locale_selector=get_locale)
 
     # ✅ WebSocket initialization - CORS тохиргоотой
     socketio.init_app(
@@ -319,6 +334,7 @@ def create_app(config_class=Config):
             now_local=now_local,
             LIMS_LIMIT_RULES=load_limit_rules(),
             LAB_TYPES=LAB_TYPES,
+            get_locale=get_locale,
         )
 
     @login.user_loader

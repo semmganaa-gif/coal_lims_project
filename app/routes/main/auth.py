@@ -4,7 +4,7 @@
 Нэвтрэх/Гарах (Authentication) routes
 """
 
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, session
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db, limiter
 from app.forms import LoginForm
@@ -93,3 +93,16 @@ def register_routes(bp):
             form.position.data = current_user.position or ""
 
         return render_template("profile.html", title="Миний профайл", form=form)
+
+    # =====================================================================
+    # 4. ХЭЛ СОЛИХ (Language Toggle)
+    # =====================================================================
+    @bp.route("/set-language/<lang>")
+    def set_language(lang):
+        """Хэлний тохиргоо солих (en/mn)"""
+        if lang in ('en', 'mn'):
+            session['language'] = lang
+            if current_user.is_authenticated:
+                current_user.language = lang
+                db.session.commit()
+        return redirect(request.referrer or url_for('main.index'))

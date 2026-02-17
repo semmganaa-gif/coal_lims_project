@@ -120,3 +120,10 @@ class Config:
     # CHPP SIMULATOR INTEGRATION
     # ========================================================
     SIMULATOR_URL = os.getenv('SIMULATOR_URL', 'http://192.168.1.136:8001')
+
+    # ========================================================
+    # FLASK-BABEL (i18n) CONFIGURATION
+    # ========================================================
+    BABEL_DEFAULT_LOCALE = 'en'
+    BABEL_DEFAULT_TIMEZONE = 'Asia/Ulaanbaatar'
+    LANGUAGES = {'en': 'English', 'mn': 'Монгол'}
