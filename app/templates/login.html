@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login - LIMS</title>
+    <title>{{ _('Login') }} - LIMS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   </head>
@@ -13,14 +13,14 @@
     <div class="container">
       <div class="row justify-content-center align-items-center min-vh-100">
         <div class="col-md-4">
-          {% call render_card(title='Login to System', class_='shadow') %}
+          {% call render_card(title=_('Login to System'), class_='shadow') %}
             <form action="" method="post" novalidate>
               {{ form.hidden_tag() }}
 
-              {{ render_field(form.username, placeholder='Enter username') }}
-              {{ render_field(form.password, placeholder='Enter password') }}
-              {{ render_checkbox(form.remember_me, description='Remember me') }}
-              {{ render_submit_button(form.submit, text='Login', icon='bi-box-arrow-in-right') }}
+              {{ render_field(form.username, placeholder=_('Enter username')) }}
+              {{ render_field(form.password, placeholder=_('Enter password')) }}
+              {{ render_checkbox(form.remember_me, description=_('Remember me')) }}
+              {{ render_submit_button(form.submit, text=_('Login'), icon='bi-box-arrow-in-right') }}
             </form>
           {% endcall %}
         </div>

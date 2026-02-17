@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-02-17 18:06+0800\n"
+"POT-Creation-Date: 2026-02-17 18:24+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,12 +21,213 @@ msgstr ""
 msgid "Please log in to access this page."
 msgstr ""
 
+#: app/templates/add_sample.html:804
+msgid "Error"
+msgstr ""
+
+#: app/templates/add_sample.html:817 app/templates/base.html:205
+#: app/templates/base.html:260 app/templates/base.html:340
+#: app/templates/coal_hub.html:125
+msgid "Sample Registration"
+msgstr ""
+
+#: app/templates/add_sample.html:818
+msgid "Select a unit"
+msgstr ""
+
+#: app/templates/add_sample.html:835
+msgid "Coal Handling & Prep Plant"
+msgstr ""
+
+#: app/templates/add_sample.html:836
+msgid "UHG Geology"
+msgstr ""
+
+#: app/templates/add_sample.html:837
+msgid "BN Geology"
+msgstr ""
+
+#: app/templates/add_sample.html:838
+msgid "Quality Control"
+msgstr ""
+
+#: app/templates/add_sample.html:839
+msgid "Process"
+msgstr ""
+
+#: app/templates/add_sample.html:840
+msgid "Washability Testing Lab"
+msgstr ""
+
+#: app/templates/add_sample.html:841 app/templates/add_sample.html:1080
+msgid "Laboratory"
+msgstr ""
+
+#: app/templates/add_sample.html:842
+msgid "Other"
+msgstr ""
+
+#: app/templates/add_sample.html:877
+msgid "Configuration"
+msgstr ""
+
+#: app/templates/add_sample.html:883
+msgid "Sample Type"
+msgstr ""
+
+#: app/templates/add_sample.html:885
+msgid "Loading types..."
+msgstr ""
+
+#: app/templates/add_sample.html:891
+msgid "Condition"
+msgstr ""
+
+#: app/templates/add_sample.html:909
+msgid "Date"
+msgstr ""
+
+#: app/templates/add_sample.html:913
+msgid "Submitted By"
+msgstr ""
+
+#: app/templates/add_sample.html:914 app/templates/add_sample.html:922
+msgid "Name"
+msgstr ""
+
+#: app/templates/add_sample.html:917
+msgid "Prepared Date"
+msgstr ""
+
+#: app/templates/add_sample.html:921
+msgid "Prepared By"
+msgstr ""
+
+#: app/templates/add_sample.html:932
+msgid "Select sample retention period"
+msgstr ""
+
+#: app/templates/add_sample.html:935
+msgid "7 days"
+msgstr ""
+
+#: app/templates/add_sample.html:938
+msgid "14 days"
+msgstr ""
+
+#: app/templates/add_sample.html:941
+msgid "1 month"
+msgstr ""
+
+#: app/templates/add_sample.html:944
+msgid "2 years"
+msgstr ""
+
+#: app/templates/add_sample.html:947
+msgid "5 years"
+msgstr ""
+
+#: app/templates/add_sample.html:952
+msgid "Notes..."
+msgstr ""
+
+#: app/templates/add_sample.html:961
+msgid "CHPP Configuration"
+msgstr ""
+
+#: app/templates/add_sample.html:966 app/templates/add_sample.html:1022
+msgid "Primary (CC)"
+msgstr ""
+
+#: app/templates/add_sample.html:970 app/templates/add_sample.html:1026
+msgid "Secondary (TC)"
+msgstr ""
+
+#: app/templates/add_sample.html:974 app/templates/add_sample.html:987
+#: app/templates/add_sample.html:996
+msgid "Modules"
+msgstr ""
+
+#: app/templates/add_sample.html:984
+msgid "Timeslot"
+msgstr ""
+
+#: app/templates/add_sample.html:1007
+msgid "Shift"
+msgstr ""
+
+#: app/templates/add_sample.html:1009
+msgid "Day (Dcom)"
+msgstr ""
+
+#: app/templates/add_sample.html:1010
+msgid "Night (Ncom)"
+msgstr ""
+
+#: app/templates/add_sample.html:1014
+msgid "Index"
+msgstr ""
+
+#: app/templates/add_sample.html:1030
+msgid "PF Modules"
+msgstr ""
+
+#: app/templates/add_sample.html:1038 app/templates/add_sample.html:1043
+#: app/templates/add_sample.html:1058
+msgid "Generate Samples"
+msgstr ""
+
+#: app/templates/add_sample.html:1046
+msgid "Location"
+msgstr ""
+
+#: app/templates/add_sample.html:1050
+msgid "Product"
+msgstr ""
+
+#: app/templates/add_sample.html:1054
+msgid "Count"
+msgstr ""
+
+#: app/templates/add_sample.html:1063
+msgid "WTL Configuration"
+msgstr ""
+
+#: app/templates/add_sample.html:1066
+msgid "Lab number"
+msgstr ""
+
+#: app/templates/add_sample.html:1072
+msgid "Sample name"
+msgstr ""
+
+#: app/templates/add_sample.html:1082
+msgid "Sample name will be generated automatically"
+msgstr ""
+
+#: app/templates/add_sample.html:1092 app/templates/index.html:142
+msgid "Sample List"
+msgstr ""
+
+#: app/templates/add_sample.html:1097
+msgid "Register"
+msgstr ""
+
+#: app/templates/add_sample.html:1103
+msgid "No samples registered"
+msgstr ""
+
+#: app/templates/add_sample.html:1104
+msgid "Click the \"Generate Samples\" button"
+msgstr ""
+
 #: app/templates/base.html:150 app/templates/base.html:335
 msgid "Home"
 msgstr ""
 
 #: app/templates/base.html:155 app/templates/base.html:210
 #: app/templates/base.html:265 app/templates/base.html:345
+#: app/templates/coal_hub.html:133
 msgid "Analysis"
 msgstr ""
 
@@ -52,6 +253,7 @@ msgstr ""
 
 #: app/templates/base.html:173 app/templates/base.html:220
 #: app/templates/base.html:275 app/templates/base.html:352
+#: app/templates/coal_hub.html:141
 msgid "Equipment"
 msgstr ""
 
@@ -83,18 +285,13 @@ msgstr ""
 msgid "Microbiology"
 msgstr ""
 
-#: app/templates/base.html:205 app/templates/base.html:260
-#: app/templates/base.html:340
-msgid "Sample Registration"
-msgstr ""
-
 #: app/templates/base.html:215 app/templates/base.html:270
 #: app/templates/base.html:327 app/templates/base.html:444
 msgid "Summary"
 msgstr ""
 
 #: app/templates/base.html:225 app/templates/base.html:280
-#: app/templates/base.html:452
+#: app/templates/base.html:452 app/templates/coal_hub.html:157
 msgid "Reports"
 msgstr ""
 
@@ -125,7 +322,7 @@ msgstr ""
 msgid "Solution Recipes"
 msgstr ""
 
-#: app/templates/base.html:317
+#: app/templates/base.html:317 app/templates/lab_selector.html:113
 msgid "Chemistry"
 msgstr ""
 
@@ -165,7 +362,7 @@ msgstr ""
 msgid "Corrective Actions"
 msgstr ""
 
-#: app/templates/base.html:415
+#: app/templates/base.html:415 app/templates/coal_hub.html:165
 msgid "Standards"
 msgstr ""
 
@@ -249,7 +446,149 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
-#: app/templates/base.html:573
+#: app/templates/base.html:573 app/templates/login.html:6
+#: app/templates/login.html:23
 msgid "Login"
+msgstr ""
+
+#: app/templates/coal_hub.html:3 app/templates/coal_hub.html:89
+#: app/templates/lab_selector.html:85
+msgid "Coal Laboratory"
+msgstr ""
+
+#: app/templates/coal_hub.html:90
+msgid "Coal quality analysis management dashboard"
+msgstr ""
+
+#: app/templates/coal_hub.html:101
+msgid "Total Samples"
+msgstr ""
+
+#: app/templates/coal_hub.html:106
+msgid "New Samples"
+msgstr ""
+
+#: app/templates/coal_hub.html:111
+msgid "In Progress"
+msgstr ""
+
+#: app/templates/coal_hub.html:116
+msgid "Completed"
+msgstr ""
+
+#: app/templates/coal_hub.html:126
+msgid "Register, view list, edit samples"
+msgstr ""
+
+#: app/templates/coal_hub.html:134
+msgid "Analysis workspace, enter results"
+msgstr ""
+
+#: app/templates/coal_hub.html:142
+msgid "Records, maintenance, journal"
+msgstr ""
+
+#: app/templates/coal_hub.html:149
+msgid "Quality Management"
+msgstr ""
+
+#: app/templates/coal_hub.html:150
+msgid "Complaints, PT Testing, environmental"
+msgstr ""
+
+#: app/templates/coal_hub.html:158
+msgid "Dashboard, consumption, monthly plan"
+msgstr ""
+
+#: app/templates/coal_hub.html:166
+msgid "CM, GBW standards, control charts"
+msgstr ""
+
+#: app/templates/index.html:130 app/templates/lab_selector.html:73
+msgid "Hello"
+msgstr ""
+
+#: app/templates/index.html:131
+msgid "Role"
+msgstr ""
+
+#: app/templates/index.html:149
+msgid "New Sample"
+msgstr ""
+
+#: app/templates/index.html:170
+msgid "Start"
+msgstr ""
+
+#: app/templates/index.html:184
+msgid "End"
+msgstr ""
+
+#: app/templates/index.html:200
+msgid "Load"
+msgstr ""
+
+#: app/templates/index.html:204
+msgid "Excel"
+msgstr ""
+
+#: app/templates/index.html:213
+msgid "Delete"
+msgstr ""
+
+#: app/templates/lab_selector.html:6
+msgid "Select Laboratory"
+msgstr ""
+
+#: app/templates/lab_selector.html:73
+msgid "Please select a laboratory."
+msgstr ""
+
+#: app/templates/lab_selector.html:86
+msgid "Proximate, Ultimate, CV, CSN, Gi, TRD..."
+msgstr ""
+
+#: app/templates/lab_selector.html:87
+msgid "19 analyses"
+msgstr ""
+
+#: app/templates/lab_selector.html:98
+msgid "Petrography Laboratory"
+msgstr ""
+
+#: app/templates/lab_selector.html:99
+msgid "Maceral, Vitrinite Ro%, Thin section..."
+msgstr ""
+
+#: app/templates/lab_selector.html:100
+msgid "7 analyses"
+msgstr ""
+
+#: app/templates/lab_selector.html:111
+msgid "Water Laboratory"
+msgstr ""
+
+#: app/templates/lab_selector.html:112
+msgid "Chemistry (pH, EC, metals) + Microbiology (Coliform, E.coli)"
+msgstr ""
+
+#: app/templates/lab_selector.html:114
+msgid "Micro"
+msgstr ""
+
+#: app/templates/login.html:16
+msgid "Login to System"
+msgstr ""
+
+#: app/templates/login.html:20
+msgid "Enter username"
+msgstr ""
+
+#: app/templates/login.html:21
+msgid "Enter password"
+msgstr ""
+
+#: app/templates/login.html:22
+msgid "Remember me"
 msgstr ""
 

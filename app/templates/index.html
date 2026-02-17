@@ -127,8 +127,8 @@
   <!-- Welcome Header -->
   <div class="welcome-header d-flex justify-content-between align-items-center">
     <div>
-      <h2><i class="bi bi-person-circle me-2"></i>Hello, {{ current_user.username }}!</h2>
-      <p>Role: <strong>{{ current_user.role }}</strong></p>
+      <h2><i class="bi bi-person-circle me-2"></i>{{ _('Hello') }}, {{ current_user.username }}!</h2>
+      <p>{{ _('Role') }}: <strong>{{ current_user.role }}</strong></p>
     </div>
     <input type="hidden" id="dateFilterStart">
     <input type="hidden" id="dateFilterEnd">
@@ -139,14 +139,14 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link {% if active_tab == 'list-pane' %}active{% endif %}"
               id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
-        <i class="bi bi-list-ul me-1"></i>Sample List
+        <i class="bi bi-list-ul me-1"></i>{{ _('Sample List') }}
       </button>
     </li>
     {% if current_user.role in ['prep', 'admin', 'senior', 'manager'] %}
     <li class="nav-item" role="presentation">
       <button class="nav-link {% if active_tab == 'add-pane' %}active{% endif %}"
               id="add-tab" data-bs-toggle="tab" data-bs-target="#add-pane" type="button" role="tab">
-        <i class="bi bi-plus-circle me-1"></i>New Sample
+        <i class="bi bi-plus-circle me-1"></i>{{ _('New Sample') }}
       </button>
     </li>
     {% endif %}
@@ -167,7 +167,7 @@
               <div class="calendar-card">
                 <div class="calendar-header">
                   <div>
-                    <div class="calendar-title">Start</div>
+                    <div class="calendar-title">{{ _('Start') }}</div>
                     <div class="calendar-sub" id="startCalLabel">---</div>
                   </div>
                   <div class="calendar-nav">
@@ -181,7 +181,7 @@
               <div class="calendar-card">
                 <div class="calendar-header">
                   <div>
-                    <div class="calendar-title">End</div>
+                    <div class="calendar-title">{{ _('End') }}</div>
                     <div class="calendar-sub" id="endCalLabel">---</div>
                   </div>
                   <div class="calendar-nav">
@@ -197,11 +197,11 @@
             <div class="d-flex flex-column gap-2">
               <div class="btn-group">
                 <button id="btnLoadData" class="action-btn btn btn-primary">
-                  <i class="bi bi-arrow-clockwise"></i>Load
+                  <i class="bi bi-arrow-clockwise"></i>{{ _('Load') }}
                 </button>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
                 <button id="btnExportCsv" class="action-btn btn btn-success">
-                  <i class="bi bi-file-earmark-excel"></i>Excel
+                  <i class="bi bi-file-earmark-excel"></i>{{ _('Excel') }}
                 </button>
                 {% endif %}
               </div>
@@ -210,7 +210,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="sample_ids" id="hidden_delete_ids">
                 <button type="button" id="btnDeleteSelected" class="action-btn btn btn-outline-danger w-100">
-                  <i class="bi bi-trash"></i>Delete
+                  <i class="bi bi-trash"></i>{{ _('Delete') }}
                 </button>
               </form>
             </div>
