@@ -1162,41 +1162,88 @@ function renderResultCard(item, idx) {
 
   // Parallel data
   let parallelHtml = '';
-  const parallels = raw.parallels || [];
-  if (parallels.length === 0) {
-    // p1, p2 бүтцээс шууд авах
-    ['p1', 'p2', 'p3'].forEach(key => {
-      if (raw[key] && typeof raw[key] === 'object') {
-        parallels.push({ label: key.toUpperCase(), ...raw[key] });
-      }
-    });
-  }
+  const code = item.analysis_code || '';
 
-  if (parallels.length > 0) {
+  // MG tube (Соронзон) — empty_crucible, sample_mass, dried_weight
+  if (raw.empty_crucible !== undefined || raw.mg_mass !== undefined) {
     parallelHtml = `
       <table class="parallel-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>m1</th>
-            <th>m2</th>
-            <th>m3</th>
-            <th>Result</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>Хоосон(g)</th><th>Дээж(g)</th><th>Хатаасан(g)</th>
+          <th>MG(g)</th><th>NoMG(g)</th><th>MG%</th>
+        </tr></thead>
+        <tbody><tr>
+          <td>${formatNum(raw.empty_crucible, 2)}</td>
+          <td>${formatNum(raw.sample_mass, 1)}</td>
+          <td>${formatNum(raw.dried_weight, 2)}</td>
+          <td><strong>${formatNum(raw.mg_mass, 2)}</strong></td>
+          <td>${formatNum(raw.nomg_mass, 2)}</td>
+          <td><strong>${formatNum(raw.mg_pct, 2)}</strong></td>
+        </tr></tbody>
+      </table>
+    `;
+  }
+  // MG_SIZE (Ширхэглэл) — fractions массив
+  else if (Array.isArray(raw.fractions) && raw.fractions.length) {
+    parallelHtml = `
+      <table class="parallel-table">
+        <thead><tr>
+          <th>Fraction</th><th>m2(g)</th><th>m3(g)</th><th>g</th><th>%</th>
+        </tr></thead>
         <tbody>
-          ${parallels.map(p => `
+          ${raw.fractions.map(f => `
             <tr>
-              <td class="row-label">${p.label || p.num || '-'}</td>
-              <td>${formatNum(p.m1)}</td>
-              <td>${formatNum(p.m2)}</td>
-              <td>${formatNum(p.m3)}</td>
-              <td><strong>${formatNum(p.result, 3)}</strong></td>
+              <td class="row-label">${f.label || '-'}</td>
+              <td>${formatNum(f.m2, 1)}</td>
+              <td>${formatNum(f.m3, 1)}</td>
+              <td>${formatNum(f.m1, 1)}</td>
+              <td><strong>${formatNum(f.pct, 1)}</strong></td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
+  }
+  // Standard p1/p2/p3 parallel format
+  else {
+    const parallels = raw.parallels || [];
+    if (parallels.length === 0) {
+      ['p1', 'p2', 'p3'].forEach(key => {
+        if (raw[key] && typeof raw[key] === 'object' && Object.keys(raw[key]).length > 0) {
+          parallels.push({ label: key.toUpperCase(), ...raw[key] });
+        }
+      });
+    }
+    // Flat m1/m2/m3 format (MG_MT гэх мэт)
+    if (parallels.length === 0 && (raw.m1 !== undefined || raw.m2 !== undefined || raw.result !== undefined)) {
+      parallels.push({ label: '1', ...raw });
+    }
+
+    if (parallels.length > 0) {
+      // MG_TRD — pycno/m/m2/m1 columns
+      const isMgTrd = code === 'MG_TRD';
+      const headers = isMgTrd
+        ? '<th>#</th><th>Pyc</th><th>m(g)</th><th>m2(g)</th><th>m1(g)</th><th>TRD</th>'
+        : '<th>#</th><th>m1</th><th>m2</th><th>m3</th><th>Result</th>';
+      const rowFn = isMgTrd
+        ? p => `<td class="row-label">${p.label || p.num || '-'}</td>
+                <td>${formatNum(p.pycno, 0)}</td><td>${formatNum(p.m)}</td>
+                <td>${formatNum(p.m2)}</td><td>${formatNum(p.m1)}</td>
+                <td><strong>${formatNum(p.result, 3)}</strong></td>`
+        : p => `<td class="row-label">${p.label || p.num || '-'}</td>
+                <td>${formatNum(p.m1)}</td><td>${formatNum(p.m2)}</td>
+                <td>${formatNum(p.m3)}</td>
+                <td><strong>${formatNum(p.result, 3)}</strong></td>`;
+
+      parallelHtml = `
+        <table class="parallel-table">
+          <thead><tr>${headers}</tr></thead>
+          <tbody>
+            ${parallels.map(p => `<tr>${rowFn(p)}</tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+    }
   }
 
   // Summary values

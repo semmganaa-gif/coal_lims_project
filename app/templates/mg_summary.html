@@ -12,7 +12,14 @@
   .mg-tbl .total-row { background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 600; }
   .mg-val { font-weight: 600; }
   .mg-val-muted { color: #999; }
-
+  .mg-cell { position: relative; }
+  .mg-cell .mg-return {
+    display: none; position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+    border: none; background: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; padding: 0 2px;
+  }
+  .mg-cell:hover .mg-return { display: inline-block; }
+  .mg-cell .mg-return:hover { color: #ef4444; }
+  .mg-pending { background: #fef3c7 !important; }
 </style>
 
 <div class="mg-summary-wrap">
@@ -24,20 +31,6 @@
 
     <div class="d-flex align-items-center gap-2 flex-wrap">
       {% if current_user.role in ['senior', 'admin'] %}
-      <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-warning dropdown-toggle" id="btnMgRepeat" disabled
-                data-bs-toggle="dropdown" title="Давтан шинжилгээ буцаах">
-          <i class="bi bi-arrow-repeat me-1"></i>Давтан
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MT"]'>MT (Чийг)</a></li>
-          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["TRD"]'>TRD (Нягт)</a></li>
-          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MG"]'>MG (Соронзон)</a></li>
-          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MG_SIZE"]'>SIZE (Ширхэглэл)</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MT","TRD","MG","MG_SIZE"]'>Бүгд</a></li>
-        </ul>
-      </div>
       <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
         <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">Архивлах</span>
       </button>
@@ -110,18 +103,27 @@
                   {{ sample.sample_code or sample.id }}
 
                 </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if mt.get('status') == 'pending_review' }}">
                   {% if mt.get('final_result') is not none %}
                     {{ "%.2f"|format(mt['final_result']) }}
+                    {% if current_user.role in ['senior', 'admin'] and mt.get('id') %}
+                    <button class="mg-return" data-rid="{{ mt['id'] }}" title="Буцаах">↩</button>
+                    {% endif %}
                   {% else %}<span class="mg-val-muted">-</span>{% endif %}
                 </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if trd.get('status') == 'pending_review' }}">
                   {% if trd.get('final_result') is not none %}
                     {{ "%.3f"|format(trd['final_result']) }}
+                    {% if current_user.role in ['senior', 'admin'] and trd.get('id') %}
+                    <button class="mg-return" data-rid="{{ trd['id'] }}" title="Буцаах">↩</button>
+                    {% endif %}
                   {% else %}<span class="mg-val-muted">-</span>{% endif %}
                 </td>
-                <td rowspan="{{ frac_count }}" class="align-middle">
+                <td rowspan="{{ frac_count }}" class="align-middle mg-cell{{ ' mg-pending' if size.get('status') == 'pending_review' }}">
                   {{ size_raw.get('total_mass', 50) }}
+                  {% if current_user.role in ['senior', 'admin'] and size.get('id') %}
+                  <button class="mg-return" data-rid="{{ size['id'] }}" title="SIZE буцаах">↩</button>
+                  {% endif %}
                 </td>
               {% endif %}
 
@@ -146,8 +148,13 @@
                 <td rowspan="{{ frac_count }}" class="align-middle">
                   {% if mg_raw.get('nomg_mass') is not none %}{{ "%.2f"|format(mg_raw['nomg_mass']) }}{% else %}-{% endif %}
                 </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val text-success">
-                  {% if mg.get('final_result') is not none %}{{ "%.2f"|format(mg['final_result']) }}{% else %}-{% endif %}
+                <td rowspan="{{ frac_count }}" class="align-middle mg-val text-success mg-cell{{ ' mg-pending' if mg.get('status') == 'pending_review' }}">
+                  {% if mg.get('final_result') is not none %}
+                    {{ "%.2f"|format(mg['final_result']) }}
+                    {% if current_user.role in ['senior', 'admin'] and mg.get('id') %}
+                    <button class="mg-return" data-rid="{{ mg['id'] }}" title="Буцаах">↩</button>
+                    {% endif %}
+                  {% else %}-{% endif %}
                 </td>
               {% endif %}
             </tr>
@@ -195,8 +202,6 @@
     const ids = getSelectedIds();
     const archiveBtn = document.getElementById('btnMgArchive');
     if (archiveBtn) archiveBtn.disabled = ids.length === 0;
-    const repeatBtn = document.getElementById('btnMgRepeat');
-    if (repeatBtn) repeatBtn.disabled = ids.length === 0;
   }
 
   // Archive/Unarchive
@@ -223,28 +228,20 @@
     });
   }
 
-  // Давтан шинжилгээ (repeat/return)
-  document.querySelectorAll('.mg-repeat-code').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      e.preventDefault();
-      const ids = getSelectedIds();
-      if (!ids.length) return;
-      const codes = JSON.parse(this.dataset.codes);
-      const codeStr = codes.join(', ');
-      if (!confirm(ids.length + ' дээжийн ' + codeStr + ' шинжилгээг буцаах уу?')) return;
+  // Per-cell return (↩) button
+  document.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('mg-return')) return;
+    const rid = e.target.dataset.rid;
+    if (!rid) return;
+    if (!confirm('Энэ үр дүнг буцаах уу?')) return;
 
-      fetch('{{ url_for("api.mg_summary") }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-        body: JSON.stringify({ sample_ids: ids, action: 'repeat', codes: codes })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) { alert(data.message); location.reload(); }
-        else alert(data.message || 'Алдаа гарлаа');
-      })
-      .catch(() => alert('Сервертэй холбогдож чадсангүй'));
-    });
+    fetch('/api/update_result_status/' + rid + '/rejected', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }
+    })
+    .then(r => r.json())
+    .then(data => { if (data.message) location.reload(); })
+    .catch(() => alert('Алдаа гарлаа'));
   });
 
   // Excel export

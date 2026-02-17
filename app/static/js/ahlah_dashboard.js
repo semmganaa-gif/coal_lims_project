@@ -119,6 +119,32 @@ function deriveParallels(raw) {
     if (raw.q2 !== undefined) rows.push({ label: 'Q2', result: raw.q2 });
   }
 
+  // 6. MG tube (Соронзон) — empty_crucible, sample_mass, dried_weight
+  if (rows.length === 0 && (raw.empty_crucible !== undefined || raw.mg_mass !== undefined)) {
+    rows.push({
+      label: 'MG',
+      empty_crucible: raw.empty_crucible,
+      sample_mass: raw.sample_mass,
+      dried_weight: raw.dried_weight,
+      mg_mass: raw.mg_mass,
+      nomg_mass: raw.nomg_mass,
+      mg_pct: raw.mg_pct
+    });
+  }
+
+  // 7. MG_SIZE (Ширхэглэл) — fractions массив
+  if (rows.length === 0 && Array.isArray(raw.fractions) && raw.fractions.length) {
+    raw.fractions.forEach(function(f) {
+      rows.push({
+        label: f.label || '',
+        m2: f.m2,
+        m3: f.m3,
+        m1: f.m1,
+        pct: f.pct
+      });
+    });
+  }
+
   return rows;
 }
 
@@ -221,11 +247,71 @@ function buildRawJsonSection(raw) {
   </details>`;
 }
 
+// MG tube, MG_SIZE-д зориулсан тусгай schema
+const MG_PARALLEL_SCHEMAS = {
+  'MG_MT': {
+    title: 'MG Moisture Test',
+    columns: [
+      { key: 'label', label: '#' },
+      { key: 'm1', label: 'Бортого(g)', format: 'float', precision: 4 },
+      { key: 'm2', label: 'Дээж(g)', format: 'float', precision: 4 },
+      { key: 'm3', label: 'Хатаасан(g)', format: 'float', precision: 4 },
+      { key: 'result', label: 'MT%', format: 'float', precision: 2 }
+    ]
+  },
+  'MG_TRD': {
+    title: 'MG True Relative Density',
+    columns: [
+      { key: 'label', label: '#' },
+      { key: 'pycno', label: 'Пикнометр', format: 'float', precision: 0 },
+      { key: 'm', label: 'm(g)', format: 'float', precision: 4 },
+      { key: 'm2', label: 'm2(g)', format: 'float', precision: 4 },
+      { key: 'm1', label: 'm1(g)', format: 'float', precision: 4 },
+      { key: 'result', label: 'TRD', format: 'float', precision: 3 }
+    ]
+  },
+  'MG': {
+    title: 'Magnetic Fraction',
+    columns: [
+      { key: 'label', label: '#' },
+      { key: 'empty_crucible', label: 'Хоосон(g)', format: 'float', precision: 2 },
+      { key: 'sample_mass', label: 'Дээж(g)', format: 'float', precision: 1 },
+      { key: 'dried_weight', label: 'Хатаасан(g)', format: 'float', precision: 2 },
+      { key: 'mg_mass', label: 'MG(g)', format: 'float', precision: 2 },
+      { key: 'nomg_mass', label: 'NoMG(g)', format: 'float', precision: 2 },
+      { key: 'mg_pct', label: 'MG%', format: 'float', precision: 2 }
+    ]
+  },
+  'MG_TUBE': {
+    title: 'Magnetic Fraction',
+    columns: [
+      { key: 'label', label: '#' },
+      { key: 'empty_crucible', label: 'Хоосон(g)', format: 'float', precision: 2 },
+      { key: 'sample_mass', label: 'Дээж(g)', format: 'float', precision: 1 },
+      { key: 'dried_weight', label: 'Хатаасан(g)', format: 'float', precision: 2 },
+      { key: 'mg_mass', label: 'MG(g)', format: 'float', precision: 2 },
+      { key: 'nomg_mass', label: 'NoMG(g)', format: 'float', precision: 2 },
+      { key: 'mg_pct', label: 'MG%', format: 'float', precision: 2 }
+    ]
+  },
+  'MG_SIZE': {
+    title: 'Size Distribution',
+    columns: [
+      { key: 'label', label: 'Fraction' },
+      { key: 'm2', label: 'm2(g)', format: 'float', precision: 1 },
+      { key: 'm3', label: 'm3(g)', format: 'float', precision: 1 },
+      { key: 'm1', label: 'g', format: 'float', precision: 1 },
+      { key: 'pct', label: '%', format: 'float', precision: 1 }
+    ]
+  }
+};
+
 function ReviewDataRenderer(params) {
   const raw = params.data.raw_data || {};
   const rowCtx = params.data || {};
   const code = rowCtx.analysis_code || "";
-  const schema = getParallelSchema(code);
+  const codeUpper = code.toUpperCase();
+  const schema = MG_PARALLEL_SCHEMAS[code] || MG_PARALLEL_SCHEMAS[codeUpper] || getParallelSchema(code);
   const parallels = deriveParallels(raw);
   const summaryBlock = buildSummarySection(raw, rowCtx);
   const hasSummary = Boolean(summaryBlock);

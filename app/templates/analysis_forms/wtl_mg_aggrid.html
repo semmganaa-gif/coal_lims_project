@@ -26,11 +26,6 @@
       <i class="bi bi-grid-3x3 me-1"></i>MG Size
     </button>
   </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="tab-mg-summary" data-bs-toggle="tab" data-bs-target="#pane-mg-summary" type="button">
-      <i class="bi bi-table me-1"></i>Summary
-    </button>
-  </li>
 </ul>
 
 <div class="tab-content" id="mgTabContent">
@@ -45,39 +40,6 @@
   </div>
   <div class="tab-pane fade" id="pane-mg-size" role="tabpanel">
     {{ aggrid_macros.grid_container('mgSizeGrid') | safe }}
-  </div>
-  <div class="tab-pane fade" id="pane-mg-summary" role="tabpanel">
-    <div class="d-flex justify-content-between align-items-center mt-2 mb-2">
-      <small class="text-muted">Combined results of all analyses</small>
-      <button type="button" class="btn btn-outline-success btn-sm" id="btnExportMgSummary">
-        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-      </button>
-    </div>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm mb-0" id="mgSummaryTable">
-        <thead class="table-light">
-          <tr>
-            <th rowspan="2" class="align-middle text-center" style="width:40px">№</th>
-            <th rowspan="2" class="align-middle" style="min-width:180px">Sample</th>
-            <th rowspan="2" class="align-middle text-center" style="width:65px">TM, %</th>
-            <th rowspan="2" class="align-middle text-center" style="width:65px">TRD</th>
-            <th colspan="4" class="text-center" style="background:#e0f2fe">Size Distribution</th>
-            <th colspan="4" class="text-center" style="background:#fef3c7">Magnetic Test</th>
-          </tr>
-          <tr>
-            <th class="text-center" style="width:70px;background:#e0f2fe">Init, g</th>
-            <th class="text-center" style="width:110px;background:#e0f2fe">Fraction</th>
-            <th class="text-center" style="width:70px;background:#e0f2fe">Mass, g</th>
-            <th class="text-center" style="width:60px;background:#e0f2fe">%</th>
-            <th class="text-center" style="width:70px;background:#fef3c7">Init, g</th>
-            <th class="text-center" style="width:100px;background:#fef3c7">Magnetic, g</th>
-            <th class="text-center" style="width:110px;background:#fef3c7">Non-mag, g</th>
-            <th class="text-center" style="width:100px;background:#fef3c7">Magnetic, %</th>
-          </tr>
-        </thead>
-        <tbody id="mgSummaryBody"></tbody>
-      </table>
-    </div>
   </div>
 </div>
 
@@ -1056,140 +1018,14 @@
             try { api.sizeColumnsToFit(); } catch(ex) {}
           }
         });
-        // Refresh summary when its tab is activated
-        if (e.target.id === 'tab-mg-summary') refreshSummary();
       });
     });
-
-    // Excel export button
-    const btnExport = document.getElementById('btnExportMgSummary');
-    if (btnExport) {
-      btnExport.addEventListener('click', () => {
-        refreshSummary();
-        if (typeof tableToXlsx === 'function') {
-          tableToXlsx('#mgSummaryTable', 'WTL_MG_Summary');
-        }
-      });
-    }
 
     console.log('WTL MG Grids initialized');
   });
 
   // =====================================================================
-  // 10. SUMMARY TAB
-  // =====================================================================
-  function _f1(v) { return v != null && isFinite(Number(v)) ? parseFloat(v).toFixed(1) : '-'; }
-  function _f2(v) { return v != null && isFinite(Number(v)) ? parseFloat(v).toFixed(2) : '-'; }
-
-  function _smMt(sid) {
-    if (gridApis.mgMt) {
-      let r = null;
-      gridApis.mgMt.forEachNode(n => { if (n.data.sample_id === sid && n.data.result != null) r = n.data.result; });
-      if (r != null) return r;
-    }
-    const ex = getExisting('MT', sid);
-    return ex?.final_result ?? ex?.raw_data?.result ?? null;
-  }
-
-  function _smTrd(sid) {
-    if (gridApis.mgTrd) {
-      let r = null;
-      gridApis.mgTrd.forEachNode(n => {
-        if (n.data.sample_id === sid && n.data.parallel === 1) r = n.data.average ?? n.data.result;
-      });
-      if (r != null) return r;
-    }
-    const ex = getExisting('TRD', sid);
-    return ex?.final_result ?? ex?.raw_data?.avg ?? null;
-  }
-
-  function _smTube(sid) {
-    if (gridApis.mgTube) {
-      let d = null;
-      gridApis.mgTube.forEachNode(n => { if (n.data.sample_id === sid) d = n.data; });
-      if (d && d.sample_mass != null) return { init: d.sample_mass, mg: d.mg_mass, nomg: d.nomg_mass, pct: d.mg_pct };
-    }
-    const ex = getExisting('MG', sid);
-    const raw = ex?.raw_data || {};
-    return { init: raw.sample_mass, mg: raw.mg_mass, nomg: raw.nomg_mass, pct: raw.mg_pct ?? ex?.final_result };
-  }
-
-  function _smSize(sid) {
-    const res = { total: 50, fracs: [] };
-    if (gridApis.mgSize) {
-      let found = false;
-      gridApis.mgSize.forEachNode(n => {
-        if (n.data.sample_id === sid) {
-          res.fracs[n.data.fraction_idx] = { mass: n.data.m1, pct: n.data.pct };
-          res.total = n.data.total_mass || 50;
-          found = true;
-        }
-      });
-      if (found) return res;
-    }
-    const ex = getExisting('MG_SIZE', sid);
-    const raw = ex?.raw_data || {};
-    res.total = raw.total_mass || 50;
-    (raw.fractions || []).forEach((f, i) => { res.fracs[i] = { mass: f?.m1, pct: f?.pct }; });
-    return res;
-  }
-
-  function refreshSummary() {
-    const tbody = document.getElementById('mgSummaryBody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    const RS = SIZE_FRACTIONS.length;
-
-    samples.forEach((s, idx) => {
-      const tm = _smMt(s.id);
-      const trd = _smTrd(s.id);
-      const tube = _smTube(s.id);
-      const size = _smSize(s.id);
-
-      SIZE_FRACTIONS.forEach((label, fi) => {
-        const tr = document.createElement('tr');
-        const fr = size.fracs[fi] || {};
-        let html = '';
-
-        if (fi === 0) {
-          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${idx + 1}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle fw-semibold">${s.code}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f1(tm)}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f2(trd)}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(size.total)}</td>`;
-        }
-
-        html += `<td class="text-center small">${label}</td>`;
-        html += `<td class="text-center">${_f1(fr.mass)}</td>`;
-        html += `<td class="text-center">${_f1(fr.pct)}</td>`;
-
-        if (fi === 0) {
-          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(tube.init)}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold">${_f1(tube.mg)}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center">${_f1(tube.nomg)}</td>`;
-          html += `<td rowspan="${RS}" class="align-middle text-center fw-bold text-success">${_f1(tube.pct)}</td>`;
-        }
-
-        tr.innerHTML = html;
-        tbody.appendChild(tr);
-      });
-
-      // Total row
-      const totalTr = document.createElement('tr');
-      totalTr.style.cssText = 'background:#f8f9fa;border-top:2px solid #dee2e6';
-      totalTr.innerHTML = `
-        <td colspan="5"></td>
-        <td class="text-end fw-bold small">Total</td>
-        <td class="text-center fw-bold">${_f1(size.total)}</td>
-        <td class="text-center fw-bold">100.0</td>
-        <td colspan="4"></td>
-      `;
-      tbody.appendChild(totalTr);
-    });
-  }
-
-  // =====================================================================
-  // 11. REGISTER LIMS_CALC
+  // 10. REGISTER LIMS_CALC
   // =====================================================================
   window.LIMS_CALC = window.LIMS_CALC || {};
   window.LIMS_CALC['WTL_MG'] = {
