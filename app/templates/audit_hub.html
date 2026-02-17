@@ -470,6 +470,26 @@
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
+
+      <a href="{{ url_for('api.audit_log_page', analysis_code='MG') }}" class="analysis-card">
+        <div class="card-icon icon-pink"><i class="bi bi-magnet"></i></div>
+        <div class="card-content">
+          <div class="card-code">MG</div>
+          <div class="card-title">Magnetic Fraction</div>
+          <div class="card-desc">WTL Magnetic separation test</div>
+        </div>
+        <i class="bi bi-arrow-right card-arrow"></i>
+      </a>
+
+      <a href="{{ url_for('api.audit_log_page', analysis_code='MG_SIZE') }}" class="analysis-card">
+        <div class="card-icon icon-cyan"><i class="bi bi-grid-3x3"></i></div>
+        <div class="card-content">
+          <div class="card-code">MG_SIZE</div>
+          <div class="card-title">Size Distribution</div>
+          <div class="card-desc">WTL particle size distribution</div>
+        </div>
+        <i class="bi bi-arrow-right card-arrow"></i>
+      </a>
     </div>
   </div>
 </div>

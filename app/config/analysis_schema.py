@@ -205,6 +205,78 @@ ANALYSIS_SCHEMAS: dict[str, dict] = {
         ],
         "audit_no_parallel": True,  # SOLID нь p1/p2 биш, дан дээж
     },
+    "MG": {
+        "audit_columns": [
+            {"key": "empty_crucible", "label": "Хоосон(g)", "decimals": 2},
+            {"key": "sample_mass", "label": "Дээж(g)", "decimals": 1},
+            {"key": "dried_weight", "label": "Хатаасан(g)", "decimals": 2},
+        ],
+        "audit_result_columns": [
+            {"key": "mg_mass", "label": "MG(g)", "decimals": 2, "path": "mg_mass"},
+            {"key": "nomg_mass", "label": "NoMG(g)", "decimals": 2, "path": "nomg_mass"},
+            {"key": "mg_pct", "label": "MG%", "decimals": 2, "path": "mg_pct"},
+        ],
+        "audit_no_parallel": True,
+    },
+    "MG_SIZE": {
+        "audit_column_groups": [
+            {
+                "header": "+0.2",
+                "columns": [
+                    {"key": "f0_m2", "label": "m2", "decimals": 1, "path": "fractions.0.m2"},
+                    {"key": "f0_m3", "label": "m3", "decimals": 1, "path": "fractions.0.m3"},
+                    {"key": "f0_m1", "label": "g", "decimals": 1, "path": "fractions.0.m1"},
+                    {"key": "f0_pct", "label": "%", "decimals": 1, "path": "fractions.0.pct"},
+                ],
+            },
+            {
+                "header": "+0.074",
+                "columns": [
+                    {"key": "f1_m2", "label": "m2", "decimals": 1, "path": "fractions.1.m2"},
+                    {"key": "f1_m3", "label": "m3", "decimals": 1, "path": "fractions.1.m3"},
+                    {"key": "f1_m1", "label": "g", "decimals": 1, "path": "fractions.1.m1"},
+                    {"key": "f1_pct", "label": "%", "decimals": 1, "path": "fractions.1.pct"},
+                ],
+            },
+            {
+                "header": "+0.053",
+                "columns": [
+                    {"key": "f2_m2", "label": "m2", "decimals": 1, "path": "fractions.2.m2"},
+                    {"key": "f2_m3", "label": "m3", "decimals": 1, "path": "fractions.2.m3"},
+                    {"key": "f2_m1", "label": "g", "decimals": 1, "path": "fractions.2.m1"},
+                    {"key": "f2_pct", "label": "%", "decimals": 1, "path": "fractions.2.pct"},
+                ],
+            },
+            {
+                "header": "+0.045",
+                "columns": [
+                    {"key": "f3_m2", "label": "m2", "decimals": 1, "path": "fractions.3.m2"},
+                    {"key": "f3_m3", "label": "m3", "decimals": 1, "path": "fractions.3.m3"},
+                    {"key": "f3_m1", "label": "g", "decimals": 1, "path": "fractions.3.m1"},
+                    {"key": "f3_pct", "label": "%", "decimals": 1, "path": "fractions.3.pct"},
+                ],
+            },
+            {
+                "header": "+0.038",
+                "columns": [
+                    {"key": "f4_m2", "label": "m2", "decimals": 1, "path": "fractions.4.m2"},
+                    {"key": "f4_m3", "label": "m3", "decimals": 1, "path": "fractions.4.m3"},
+                    {"key": "f4_m1", "label": "g", "decimals": 1, "path": "fractions.4.m1"},
+                    {"key": "f4_pct", "label": "%", "decimals": 1, "path": "fractions.4.pct"},
+                ],
+            },
+            {
+                "header": "-0.038",
+                "columns": [
+                    {"key": "f5_m2", "label": "m2", "decimals": 1, "path": "fractions.5.m2"},
+                    {"key": "f5_m3", "label": "m3", "decimals": 1, "path": "fractions.5.m3"},
+                    {"key": "f5_m1", "label": "g", "decimals": 1, "path": "fractions.5.m1"},
+                    {"key": "f5_pct", "label": "%", "decimals": 1, "path": "fractions.5.pct"},
+                ],
+            },
+        ],
+        "audit_no_parallel": True,
+    },
 }
 
 
@@ -250,5 +322,9 @@ def get_analysis_schema(analysis_code: str | None) -> dict:
     # Audit no parallel flag (CSN, FM гэх мэт)
     if base.get("audit_no_parallel"):
         merged["audit_no_parallel"] = True
+
+    # Audit column groups (MG_SIZE гэх мэт grouped columns)
+    if base.get("audit_column_groups"):
+        merged["audit_column_groups"] = deepcopy(base["audit_column_groups"])
 
     return merged

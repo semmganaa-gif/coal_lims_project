@@ -742,14 +742,62 @@ def register_routes(bp):
         """WTL MG шинжилгээний нэгтгэл — бүх MG дээжийн MT, TRD, MG, MG_SIZE үр дүн."""
 
 
-        # POST: Archive/Unarchive
+        # POST: Archive/Unarchive/Repeat
         if request.method == "POST":
             data = request.get_json(silent=True) or {}
             sample_ids = data.get("sample_ids", [])
             action = data.get("action", "archive")
+
             if sample_ids and action in ("archive", "unarchive"):
                 result = archive_samples(sample_ids, archive=(action == "archive"))
                 return jsonify({"success": result.success, "message": result.message})
+
+            # Давтан шинжилгээ (return/reject → химич дахин хийнэ)
+            if sample_ids and action == "repeat":
+                if getattr(current_user, "role", None) not in ("senior", "admin"):
+                    return jsonify({"success": False, "message": "Зөвхөн ахлах/админ"}), 403
+                codes = data.get("codes", [])
+                if not codes:
+                    return jsonify({"success": False, "message": "Код сонгоогүй"}), 400
+                try:
+                    count = 0
+                    for sid in sample_ids:
+                        sample = Sample.query.get(sid)
+                        if not sample:
+                            continue
+                        for code in codes:
+                            ar = AnalysisResult.query.filter_by(
+                                sample_id=sid, analysis_code=code
+                            ).first()
+                            if ar and ar.status in ("approved", "pending_review"):
+                                ar.status = "rejected"
+                                ar.updated_at = now_local()
+                                if hasattr(ar, "rejection_comment"):
+                                    ar.rejection_comment = "Returned from MG Summary"
+                                # Audit log (update_result_status-тэй ижил бүтэц)
+                                audit = AnalysisResultLog(
+                                    timestamp=now_local(),
+                                    user_id=current_user.id,
+                                    sample_id=sid,
+                                    analysis_result_id=ar.id,
+                                    analysis_code=code,
+                                    action="REJECTED",
+                                    reason=f"MG Summary-аас '{code}' давтан шинжилгээ буцаасан",
+                                    sample_code_snapshot=sample.sample_code,
+                                    final_result_snapshot=ar.final_result,
+                                    raw_data_snapshot=ar.raw_data,
+                                )
+                                db.session.add(audit)
+                                count += 1
+                    db.session.commit()
+                    return jsonify({
+                        "success": True,
+                        "message": f"{count} шинжилгээг буцаалаа (давтан хийнэ)"
+                    })
+                except Exception as e:
+                    db.session.rollback()
+                    return jsonify({"success": False, "message": str(e)}), 500
+
             return jsonify({"success": False, "message": "Invalid request"}), 400
         MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE']
         MG_ONLY = ['MG', 'MG_SIZE']

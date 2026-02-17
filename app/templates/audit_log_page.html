@@ -350,6 +350,7 @@ const AUDIT_COLUMNS = {{ analysis_schema.get('audit_columns', [])|tojson }};
 const AUDIT_EXTRA_COLUMNS = {{ analysis_schema.get('audit_extra_columns', [])|tojson }};
 const AUDIT_RESULT_COLUMNS = {{ analysis_schema.get('audit_result_columns', [])|tojson }};  // FM-д Wet%, Dry%
 const AUDIT_NO_PARALLEL = {{ analysis_schema.get('audit_no_parallel', False)|tojson }};  // CSN гэх мэт
+const AUDIT_COLUMN_GROUPS = {{ analysis_schema.get('audit_column_groups', [])|tojson }};  // MG_SIZE grouped columns
 
 // Data from Flask - dynamic based on schema
 const AUDIT_DATA = {
@@ -365,6 +366,10 @@ const AUDIT_DATA = {
         {% set rd = attempt.raw_data %}
         {% set p1 = rd.get('p1', {}) %}
         {% set p2 = rd.get('p2', {}) %}
+        {# MG MT гэх мэт flat format: p1 байхгүй бол rd-г p1 болгох #}
+        {% if not p1 and rd.get('m1') is not none and rd.get('result') is not none %}
+          {% set p1 = rd %}
+        {% endif %}
         {
           rowNum: {{ row_num.val }},
           sampleId: {{ sample.id if sample else 'null' }},
@@ -531,7 +536,42 @@ function buildDynamicColumns() {
 
   let dataColumns = [];
 
-  if (AUDIT_NO_PARALLEL) {
+  // Helper: path-аар rawData-аас утга авах (fractions.0.m2 гэх мэт)
+  function getByPath(raw, path) {
+    if (!path) return undefined;
+    const parts = path.split('.');
+    let val = raw;
+    for (const part of parts) {
+      val = val ? val[part] : null;
+    }
+    return val;
+  }
+
+  if (AUDIT_COLUMN_GROUPS && AUDIT_COLUMN_GROUPS.length > 0) {
+    // MG_SIZE гэх мэт - grouped columns with path support
+    const colorCycle = ['p1', 'p2', 'extra', 'p1', 'p2', 'extra', 'p1'];
+    AUDIT_COLUMN_GROUPS.forEach((group, gi) => {
+      const color = colorCycle[gi % colorCycle.length];
+      const children = group.columns.map(col => ({
+        field: `grp_${col.key}`,
+        headerName: col.label,
+        width: col.width || 60,
+        cellClass: `mono col-${color}`,
+        headerClass: `header-${color}`,
+        valueGetter: p => {
+          const raw = p.data.rawData || {};
+          if (col.path) return getByPath(raw, col.path);
+          return raw[col.key];
+        },
+        valueFormatter: p => numFmt(p.value, col.decimals ?? 2)
+      }));
+      dataColumns.push({
+        headerName: group.header,
+        headerClass: `header-${color}`,
+        children: children
+      });
+    });
+  } else if (AUDIT_NO_PARALLEL) {
     // CSN гэх мэт - p1/p2 биш, шууд rawData-аас авах
     const singleCols = AUDIT_COLUMNS.map(col => ({
       field: `data_${col.key}`,

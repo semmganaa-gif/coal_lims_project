@@ -24,6 +24,20 @@
 
     <div class="d-flex align-items-center gap-2 flex-wrap">
       {% if current_user.role in ['senior', 'admin'] %}
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-warning dropdown-toggle" id="btnMgRepeat" disabled
+                data-bs-toggle="dropdown" title="Давтан шинжилгээ буцаах">
+          <i class="bi bi-arrow-repeat me-1"></i>Давтан
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MT"]'>MT (Чийг)</a></li>
+          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["TRD"]'>TRD (Нягт)</a></li>
+          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MG"]'>MG (Соронзон)</a></li>
+          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MG_SIZE"]'>SIZE (Ширхэглэл)</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item mg-repeat-code" href="#" data-codes='["MT","TRD","MG","MG_SIZE"]'>Бүгд</a></li>
+        </ul>
+      </div>
       <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
         <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">Архивлах</span>
       </button>
@@ -166,24 +180,23 @@
   if (checkAll) {
     checkAll.addEventListener('change', function() {
       checks().forEach(c => c.checked = this.checked);
-      updateArchiveBtn();
+      updateActionBtns();
     });
   }
   document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('mg-sample-check')) updateArchiveBtn();
+    if (e.target.classList.contains('mg-sample-check')) updateActionBtns();
   });
 
   function getSelectedIds() {
     return [...checks()].filter(c => c.checked).map(c => parseInt(c.value));
   }
 
-  function updateArchiveBtn() {
-    const btn = document.getElementById('btnMgArchive');
-    if (!btn) return;
+  function updateActionBtns() {
     const ids = getSelectedIds();
-    btn.disabled = ids.length === 0;
-    const label = document.getElementById('archiveBtnLabel');
-    if (label) label.textContent = 'Архивлах';
+    const archiveBtn = document.getElementById('btnMgArchive');
+    if (archiveBtn) archiveBtn.disabled = ids.length === 0;
+    const repeatBtn = document.getElementById('btnMgRepeat');
+    if (repeatBtn) repeatBtn.disabled = ids.length === 0;
   }
 
   // Archive/Unarchive
@@ -210,6 +223,30 @@
     });
   }
 
+  // Давтан шинжилгээ (repeat/return)
+  document.querySelectorAll('.mg-repeat-code').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      const ids = getSelectedIds();
+      if (!ids.length) return;
+      const codes = JSON.parse(this.dataset.codes);
+      const codeStr = codes.join(', ');
+      if (!confirm(ids.length + ' дээжийн ' + codeStr + ' шинжилгээг буцаах уу?')) return;
+
+      fetch('{{ url_for("api.mg_summary") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+        body: JSON.stringify({ sample_ids: ids, action: 'repeat', codes: codes })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { alert(data.message); location.reload(); }
+        else alert(data.message || 'Алдаа гарлаа');
+      })
+      .catch(() => alert('Сервертэй холбогдож чадсангүй'));
+    });
+  });
+
   // Excel export
   document.getElementById('btnExportMgSummary')?.addEventListener('click', function() {
     if (typeof tableToXlsx === 'function') {
@@ -222,7 +259,7 @@
     }
   });
 
-  updateArchiveBtn();
+  updateActionBtns();
 })();
 </script>
 {% endblock %}
