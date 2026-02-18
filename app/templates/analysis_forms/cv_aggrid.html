@@ -11,19 +11,19 @@
 {# CV batch constants input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-4">
-    <label class="form-label">Bomb Heat Capacity (E) <span class="text-danger">*</span></label>
+    <label class="form-label">{{ _("Bomb Heat Capacity (E)") }} <span class="text-danger">*</span></label>
     <input type="number" step="0.01" class="form-control" id="batch_calorific_system" placeholder="9081" required>
-    <div class="form-text">Unit: J/K. Reference: 9081.</div>
+    <div class="form-text">{{ _("Unit: J/K. Reference: 9081.") }}</div>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Fuse Wire Heat (q1) <span class="text-danger">*</span></label>
+    <label class="form-label">{{ _("Fuse Wire Heat (q1)") }} <span class="text-danger">*</span></label>
     <input type="number" step="0.1" class="form-control" id="batch_fuse_correction" placeholder="90.0" required>
-    <div class="form-text">Unit: J. Reference: 90.0.</div>
+    <div class="form-text">{{ _("Unit: J. Reference: 90.0.") }}</div>
   </div>
   <div class="col-md-4">
-    <label class="form-label">Additional Heat (q2) <span class="text-muted">(optional)</span></label>
+    <label class="form-label">{{ _("Additional Heat (q2)") }} <span class="text-muted">({{ _("optional") }})</span></label>
     <input type="number" step="0.1" class="form-control" id="batch_acid_correction" placeholder="0">
-    <div class="form-text">Unit: J. If none, enter 0.</div>
+    <div class="form-text">{{ _("Unit: J. If none, enter 0.") }}</div>
   </div>
 </div>
 
@@ -155,7 +155,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Sample Name',
+      headerName: '{{ _("Sample Name") }}',
       field: 'sample_code',
       width: 250,
       pinned: 'left',
@@ -231,7 +231,7 @@
       }
     },
     {
-      headerName: 'Result',
+      headerName: '{{ _("Result") }}',
       field: 'result',
       width: 120,
       valueFormatter: p =>
@@ -244,7 +244,7 @@
       }
     },
     {
-      headerName: 'Tolerance',
+      headerName: '{{ _("Tolerance") }}',
       field: 'tolerance',
       width: 120,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -276,7 +276,7 @@
       }
     },
     {
-      headerName: 'Average',
+      headerName: '{{ _("Average") }}',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -297,7 +297,7 @@
       })
     },
     {
-      headerName: 'Action',
+      headerName: '{{ _("Action") }}',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -308,14 +308,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Saved</span>';
+          return '<span class="text-muted small">{{ _("Saved") }}</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Remove sample">
+                  title="{{ _("Remove sample") }}">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -659,7 +659,7 @@
       if (!btn) return;
 
       const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+      if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
 
       const url = new URL(window.location.href);
       let ids = (url.searchParams.get('sample_ids') || '').split(',');
@@ -677,7 +677,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -692,12 +692,12 @@
     // ✅ Batch constants шалгах
     const batch = currentBatch();
     if (batch.E == null || batch.E === 0) {
-      alert('⚠️ Please enter Bomb Heat Capacity (E)!');
+      alert('{{ _("Please enter Bomb Heat Capacity (E)!") }}');
       document.getElementById('batch_calorific_system')?.focus();
       return [];
     }
     if (batch.q1 == null) {
-      alert('⚠️ Please enter Fuse Wire Heat (q1)!');
+      alert('{{ _("Please enter Fuse Wire Heat (q1)!") }}');
       document.getElementById('batch_fuse_correction')?.focus();
       return [];
     }

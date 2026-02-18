@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activate License - Coal LIMS</title>
+    <title>{{ _("Activate License") }} - Coal LIMS</title>
     <style>
         * {
             margin: 0;
@@ -169,7 +169,7 @@
         <div class="header">
             <div class="logo">🔐</div>
             <h1>Coal LIMS</h1>
-            <p>Activate License</p>
+            <p>{{ _("Activate License") }}</p>
         </div>
 
         <div class="content">
@@ -187,38 +187,38 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="form-group">
-                    <label for="license_key">License Key</label>
+                    <label for="license_key">{{ _("License Key") }}</label>
                     <textarea id="license_key" name="license_key"
-                              placeholder="Paste your license key here..."
+                              placeholder="{{ _("Paste your license key here...") }}"
                               required></textarea>
                 </div>
 
-                <button type="submit" class="btn">Activate</button>
+                <button type="submit" class="btn">{{ _("Activate") }}</button>
             </form>
 
             <div class="hardware-info">
-                <h3>Your System Information</h3>
+                <h3>{{ _("Your System Information") }}</h3>
                 <div class="hardware-item">
-                    <span class="label">Hardware ID:</span>
+                    <span class="label">{{ _("Hardware ID:") }}</span>
                     <span class="value">
                         {{ hardware_info.short_id }}
                         <button class="copy-btn" onclick="copyToClipboard('{{ hardware_info.short_id }}')">
-                            Copy
+                            {{ _("Copy") }}
                         </button>
                     </span>
                 </div>
                 <div class="hardware-item">
-                    <span class="label">Hostname:</span>
+                    <span class="label">{{ _("Hostname:") }}</span>
                     <span class="value">{{ hardware_info.hostname }}</span>
                 </div>
                 <div class="hardware-item">
-                    <span class="label">OS:</span>
+                    <span class="label">{{ _("OS:") }}</span>
                     <span class="value">{{ hardware_info.os }}</span>
                 </div>
             </div>
 
             <div class="contact-info">
-                <p>Contact us to obtain a license:</p>
+                <p>{{ _("Contact us to obtain a license:") }}</p>
                 <p><a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
             </div>
         </div>
@@ -227,7 +227,7 @@
     <script>
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(function() {
-                alert('Hardware ID хуулагдлаа!');
+                alert('{{ _("Hardware ID copied!") }}');
             });
         }
     </script>

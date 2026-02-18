@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Хог хаягдлын бүртгэл{% endblock %}
+{% block title %}{{ _("Waste Management") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -29,16 +29,16 @@
     <div>
       <h4 class="mb-1">
         <i class="bi bi-trash3 text-warning me-2"></i>
-        Хог хаягдлын бүртгэл
+        {{ _("Waste Management") }}
       </h4>
-      <p class="text-muted mb-0">Химийн хорт болон аюултай хог хаягдлын сарын бүртгэл</p>
+      <p class="text-muted mb-0">{{ _("Monthly record of chemical hazardous waste") }}</p>
     </div>
     <div class="d-flex gap-2">
       <a href="{{ url_for('chemicals.waste_report', year=year, lab=lab) }}" class="btn btn-outline-info">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Report
+        <i class="bi bi-file-earmark-spreadsheet me-1"></i> {{ _("Report") }}
       </a>
       <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> New нэмэх
+        <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
       </a>
     </div>
   </div>
@@ -48,7 +48,7 @@
     <div class="card-body py-2">
       <form method="GET" class="row g-2 align-items-center">
         <div class="col-auto">
-          <label class="form-label mb-0 small">Жил:</label>
+          <label class="form-label mb-0 small">{{ _("Year:") }}</label>
         </div>
         <div class="col-auto">
           <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -58,7 +58,7 @@
           </select>
         </div>
         <div class="col-auto">
-          <label class="form-label mb-0 small">Лаб:</label>
+          <label class="form-label mb-0 small">{{ _("Lab:") }}</label>
         </div>
         <div class="col-auto">
           <select name="lab" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -79,17 +79,17 @@
         <table class="table table-bordered table-hover mb-0 waste-table">
           <thead class="table-light">
             <tr>
-              <th rowspan="2" style="width: 180px;">Хог хаягдлын нэр</th>
-              <th rowspan="2" style="width: 100px;">Сард гарах</th>
-              <th rowspan="2" style="width: 120px;">Хаягдах газар</th>
-              <th colspan="12" class="text-center">Сарын бүртгэл ({{ year }})</th>
-              <th rowspan="2" class="text-center">Total</th>
-              <th rowspan="2" class="text-center">Remaining</th>
+              <th rowspan="2" style="width: 180px;">{{ _("Waste Name") }}</th>
+              <th rowspan="2" style="width: 100px;">{{ _("Monthly Output") }}</th>
+              <th rowspan="2" style="width: 120px;">{{ _("Disposal Location") }}</th>
+              <th colspan="12" class="text-center">{{ _("Monthly Record") }} ({{ year }})</th>
+              <th rowspan="2" class="text-center">{{ _("Total") }}</th>
+              <th rowspan="2" class="text-center">{{ _("Remaining") }}</th>
               <th rowspan="2"></th>
             </tr>
             <tr>
               {% for m in range(1, 13) %}
-              <th class="text-center" style="width: 55px;">{{ m }}-р</th>
+              <th class="text-center" style="width: 55px;">{{ m }}</th>
               {% endfor %}
             </tr>
           </thead>
@@ -102,7 +102,7 @@
                 <small class="text-muted">{{ item.waste.name_en }}</small>
                 {% endif %}
                 {% if item.waste.is_hazardous %}
-                <span class="badge badge-hazard ms-1">Аюултай</span>
+                <span class="badge badge-hazard ms-1">{{ _("Hazardous") }}</span>
                 {% endif %}
               </td>
               <td class="text-center">
@@ -134,14 +134,14 @@
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                       <a class="dropdown-item" href="{{ url_for('chemicals.edit_waste', id=item.waste.id) }}">
-                        <i class="bi bi-pencil me-2"></i>Засах
+                        <i class="bi bi-pencil me-2"></i>{{ _("Edit") }}
                       </a>
                     </li>
                     <li>
                       <form action="{{ url_for('chemicals.delete_waste', id=item.waste.id) }}" method="POST"
-                            onsubmit="return confirm('Устгах уу?')">
+                            onsubmit="return confirm('{{ _("Are you sure you want to delete?") }}')">
                         <button type="submit" class="dropdown-item text-danger">
-                          <i class="bi bi-trash me-2"></i>Устгах
+                          <i class="bi bi-trash me-2"></i>{{ _("Delete") }}
                         </button>
                       </form>
                     </li>
@@ -156,9 +156,9 @@
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>Record олдсонгүй</p>
+        <p>{{ _("No records found") }}</p>
         <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> New нэмэх
+          <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
         </a>
       </div>
       {% endif %}
@@ -182,17 +182,16 @@ function saveRecord(wasteId, year, month, value) {
   .then(r => r.json())
   .then(data => {
     if (data.success) {
-      // Total дүн шинэчлэх
+      // Update total
       updateRowTotal(wasteId);
     } else {
-      alert('Алдаа: ' + data.error);
+      alert("{{ _('Error') }}" + ': ' + data.error);
     }
   })
   .catch(err => console.error(err));
 }
 
 function saveBalance(wasteId, year, value) {
-  // Сүүлийн сарын бүртгэлд хадгалах (12-р сар)
   fetch('{{ url_for("chemicals.save_waste_record") }}', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrfToken },
@@ -206,7 +205,7 @@ function saveBalance(wasteId, year, value) {
   })
   .then(r => r.json())
   .then(data => {
-    if (!data.success) alert('Алдаа: ' + data.error);
+    if (!data.success) alert("{{ _('Error') }}" + ': ' + data.error);
   })
   .catch(err => console.error(err));
 }

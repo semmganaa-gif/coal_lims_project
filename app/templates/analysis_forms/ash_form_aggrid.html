@@ -80,7 +80,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Sample Name',
+      headerName: '{{ _("Sample Name") }}',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -124,7 +124,7 @@
       }
     },
     {
-      headerName: 'Crucible',
+      headerName: '{{ _("Crucible") }}',
       field: 'crucible_num',
       width: 90,
       headerClass: 'ag-header-cell-centered',
@@ -170,7 +170,7 @@
       ...editCol
     },
     {
-      headerName: 'Result %',
+      headerName: '{{ _("Result %%") }}',
       field: 'result',
       width: 100,
       valueFormatter: p =>
@@ -183,7 +183,7 @@
       }
     },
     {
-      headerName: 'Tolerance',
+      headerName: '{{ _("Tolerance") }}',
       field: 'tolerance',
       width: 120,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -215,7 +215,7 @@
       }
     },
     {
-      headerName: 'Average',
+      headerName: '{{ _("Average") }}',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -236,7 +236,7 @@
       })
     },
     {
-      headerName: 'Action',
+      headerName: '{{ _("Action") }}',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -247,14 +247,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Saved</span>';
+          return '<span class="text-muted small">{{ _("Saved") }}</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Remove sample">
+                  title="{{ _("Remove sample") }}">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -507,7 +507,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -788,7 +788,7 @@
   window.submitAshData = function() {
     const payload = window.collectAshGridData();
     if (payload.length === 0) {
-      alert('Хадгалах өгөгдөл байхгүй!');
+      alert('{{ _("No data to save!") }}');
       return;
     }
 
@@ -805,7 +805,7 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('Амжилттай хадгалагдлаа!');
+        alert('{{ _("Saved successfully!") }}');
 
         // Draft устгах (зөвхөн хадгалагдсан sample-уудын)
         draftMgr.purge(
@@ -834,12 +834,12 @@
 
         // ⚠️ RELOAD ХИЙХГҮЙ! Бусад дээжүүд алга болохгүй!
       } else {
-        alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+        alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
       }
     })
     .catch(error => {
       console.error('Submit error:', error);
-      alert('Серверийн алдаа!');
+      alert('{{ _("Server error!") }}');
     });
   };
 

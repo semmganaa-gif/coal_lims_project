@@ -8,12 +8,12 @@
     <div>
       <h4 class="mb-1">
         <i class="bi bi-journal-text text-info me-2"></i>
-        Химийн бодисын журнал
+        {{ _("Chemical Journal") }}
       </h4>
-      <p class="text-muted mb-0 small">Хэрэглээний бүртгэлийн түүх</p>
+      <p class="text-muted mb-0 small">{{ _("Usage record history") }}</p>
     </div>
     <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i> Жагсаалт руу
+      <i class="bi bi-arrow-left me-1"></i> {{ _("Back to List") }}
     </a>
   </div>
 
@@ -21,11 +21,11 @@
   <div class="cj-filter-bar mb-3">
     <form method="GET" class="d-flex flex-wrap align-items-center gap-2">
       <select name="lab" class="form-select form-select-sm" style="width:130px;">
-        <option value="all" {{ 'selected' if lab == 'all' }}>Бүх лаб</option>
-        <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
-        <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
-        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
-        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
+        <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
+        <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
+        <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
+        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
+        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
       </select>
       <div class="input-group input-group-sm" style="width:150px;">
         <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
@@ -37,7 +37,7 @@
         <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
       </div>
       <button type="submit" class="btn btn-primary btn-sm">
-        <i class="bi bi-funnel me-1"></i> Шүүх
+        <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
       </button>
     </form>
   </div>
@@ -46,12 +46,12 @@
   <div class="cj-grid-card">
     <div class="cj-grid-header">
       <span class="fw-semibold small text-muted text-uppercase">
-        <i class="bi bi-list-check"></i> Нийт: <span id="cjCount">0</span> бүртгэл
+        <i class="bi bi-list-check"></i> {{ _("Total") }}: <span id="cjCount">0</span> {{ _("records") }}
       </span>
       <div class="d-flex gap-2 align-items-center">
         <div class="input-group input-group-sm" style="max-width:220px;">
           <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-          <input type="text" id="cjQuickFilter" class="form-control border-start-0" placeholder="Хайх...">
+          <input type="text" id="cjQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
         </div>
         <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
           <i class="bi bi-download"></i> CSV
@@ -124,14 +124,14 @@ const rowData = {{ rows_json|tojson|safe }};
 const columnDefs = [
   {
     field: 'date',
-    headerName: 'Огноо',
+    headerName: "{{ _('Date') }}",
     width: 200,
     sort: 'desc',
     filter: 'agTextColumnFilter'
   },
   {
     field: 'chemical',
-    headerName: 'Химийн бодис',
+    headerName: "{{ _('Chemical') }}",
     minWidth: 200,
     flex: 2,
     filter: 'agTextColumnFilter',
@@ -157,31 +157,31 @@ const columnDefs = [
   },
   {
     field: 'quantity',
-    headerName: 'Тоо хэмжээ',
+    headerName: "{{ _('Quantity') }}",
     width: 130,
     cellStyle: {color: '#dc2626', fontWeight: '600'}
   },
   {
     field: 'purpose',
-    headerName: 'Зорилго',
+    headerName: "{{ _('Purpose') }}",
     minWidth: 140,
     flex: 1,
     filter: 'agTextColumnFilter'
   },
   {
     field: 'analysis',
-    headerName: 'Шинжилгээ',
+    headerName: "{{ _('Analysis') }}",
     width: 110,
     filter: 'agTextColumnFilter'
   },
   {
     field: 'user',
-    headerName: 'Хэрэглэгч',
+    headerName: "{{ _('User') }}",
     width: 120,
     filter: 'agTextColumnFilter'
   },
   {
-    headerName: 'Нөөц',
+    headerName: "{{ _('Stock') }}",
     width: 150,
     valueGetter: function(p) {
       if (!p.data) return '';
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function exportCSV() {
   if (!gridApi) return;
-  gridToXlsx(gridApi, 'chemical_journal.xlsx', 'Журнал');
+  gridToXlsx(gridApi, 'chemical_journal.xlsx', "{{ _('Journal') }}");
 }
 </script>
 {% endblock %}

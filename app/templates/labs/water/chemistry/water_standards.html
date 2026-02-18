@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Water Quality Standards — MNS/WHO{% endblock %}
+{% block title %}{{ _("Water Quality Standards — MNS/WHO") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -136,18 +136,18 @@
 
 <div class="standards-page">
   <div class="page-header">
-    <h1><i class="bi bi-shield-check me-2"></i>Water Quality Standards</h1>
-    <p>Water quality limits according to MNS 4586:2007 and WHO standards</p>
+    <h1><i class="bi bi-shield-check me-2"></i>{{ _("Water Quality Standards") }}</h1>
+    <p>{{ _("Water quality limits according to MNS 4586:2007 and WHO standards") }}</p>
   </div>
 
   <div class="info-banner">
     <i class="bi bi-info-circle-fill"></i>
-    <span><strong>{{ standards | length }}</strong> parameter standard limits are defined. These are used to evaluate water analysis results.</span>
+    <span><strong>{{ standards | length }}</strong> {{ _("parameter standard limits are defined. These are used to evaluate water analysis results.") }}</span>
   </div>
 
   <div class="search-box">
     <i class="bi bi-search text-muted me-2"></i>
-    <input type="text" id="searchInput" placeholder="Search parameter...">
+    <input type="text" id="searchInput" placeholder="{{ _("Search parameter...") }}">
   </div>
 
   <div class="standards-grid" id="standardsGrid">

@@ -39,7 +39,7 @@
     <div class="d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
         <i class="bi bi-journal-text"></i>
-        <strong>Quick Reference</strong>
+        <strong>{{ _("Quick Reference") }}</strong>
         <span class="text-muted">({{ _code_raw|fmt_code }} – {{ name }})</span>
       </div>
       <button class="btn btn-sm btn-outline-secondary"
@@ -56,283 +56,283 @@
       {# ===================== MT - Total Moisture ===================== #}
       {% if code in ['mt'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">M<sub>T,ar</sub>(%) = ((m1 − m2) / m1) &times; 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS ISO 589:2003</dd>
-            <dt>Temperature</dt><dd>105 &ndash; 110 &deg;C (N<sub>2</sub> or air drying)</dd>
-            <dt>Sample size</dt><dd>&ge; 300 g (as received)</dd>
-            <dt>Drying time</dt><dd>2 hours, then check every 30 min until constant mass (loss &lt; 0.1%)</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>1 decimal place</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS ISO 589:2003</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>105 &ndash; 110 &deg;C (N<sub>2</sub> or air drying)</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>&ge; 300 g (as received)</dd>
+            <dt>{{ _("Drying time") }}</dt><dd>{{ _("2 hours, then check every 30 min until constant mass (loss < 0.1%%)") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("1 decimal place") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">&lt; 10%</div><div class="val">0.50</div></div>
             <div class="qr-tol-cell"><div class="range">&ge; 10%</div><div class="val">0.50</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Sample must be sealed immediately after collection. Exposure to air causes moisture loss.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Sample must be sealed immediately after collection. Exposure to air causes moisture loss.") }}</div>
 
       {# ===================== Mad - Moisture (air-dried) ===================== #}
       {% elif code in ['mad','lab.07.03'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">M<sub>ad</sub>(%) = ((m1 + m2 − m3) / m2) &times; 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 212:2015</dd>
-            <dt>Temperature</dt><dd>105 &ndash; 110 &deg;C</dd>
-            <dt>Sample size</dt><dd>1 &plusmn; 0.1 g (&lt; 0.2 mm)</dd>
-            <dt>Crucible</dt><dd>Porcelain or quartz, pre-dried</dd>
-            <dt>Drying time</dt><dd>1 hour, then 30 min intervals until constant mass</dd>
-            <dt>Cooling</dt><dd>Desiccator, 7 &ndash; 10 min</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 212:2015</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>105 &ndash; 110 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>1 &plusmn; 0.1 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Crucible") }}</dt><dd>{{ _("Porcelain or quartz, pre-dried") }}</dd>
+            <dt>{{ _("Drying time") }}</dt><dd>{{ _("1 hour, then 30 min intervals until constant mass") }}</dd>
+            <dt>{{ _("Cooling") }}</dt><dd>{{ _("Desiccator, 7 - 10 min") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-3">
             <div class="qr-tol-cell"><div class="range">&le; 5%</div><div class="val">0.20</div></div>
             <div class="qr-tol-cell"><div class="range">5 &ndash; 10%</div><div class="val">0.30</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 10%</div><div class="val">0.40</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>M<sub>ad</sub> is used by other analyses (V<sub>ad</sub>, TRD, basis conversion). Accurate result is critical.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Mad is used by other analyses (Vad, TRD, basis conversion). Accurate result is critical.") }}</div>
 
       {# ===================== Aad - Ash ===================== #}
       {% elif code in ['aad','ash','lab.07.05'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">A<sub>ad</sub>(%) = ((m3 − m1) / m2) &times; 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 212:2015 (ISO 1171)</dd>
-            <dt>Temperature</dt><dd>815 &plusmn; 10 &deg;C</dd>
-            <dt>Sample size</dt><dd>1 &plusmn; 0.1 g (&lt; 0.2 mm)</dd>
-            <dt>Heating</dt><dd>Ramp: 30 min to 500 &deg;C &rarr; hold 30 min &rarr; ramp to 815 &deg;C &rarr; hold 1 h</dd>
-            <dt>Cooling</dt><dd>Desiccator, &ge; 15 min (until &lt; 50 &deg;C)</dd>
-            <dt>Crucible</dt><dd>Porcelain or quartz, pre-ignited</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 212:2015 (ISO 1171)</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>815 &plusmn; 10 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>1 &plusmn; 0.1 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Heating") }}</dt><dd>{{ _("Ramp: 30 min to 500 C, hold 30 min, ramp to 815 C, hold 1 h") }}</dd>
+            <dt>{{ _("Cooling") }}</dt><dd>{{ _("Desiccator, >= 15 min (until < 50 C)") }}</dd>
+            <dt>{{ _("Crucible") }}</dt><dd>{{ _("Porcelain or quartz, pre-ignited") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-3">
             <div class="qr-tol-cell"><div class="range">&lt; 15%</div><div class="val">0.20</div></div>
             <div class="qr-tol-cell"><div class="range">15 &ndash; 30%</div><div class="val">0.30</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 30%</div><div class="val">0.50</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Do not open furnace door above 300 &deg;C. Slow ramping prevents sample ignition. Max ash content: 90%.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Do not open furnace door above 300 C. Slow ramping prevents sample ignition. Max ash content: 90%%.") }}</div>
 
       {# ===================== Vad - Volatile Matter ===================== #}
       {% elif code in ['vad','lab.07.04'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">V<sub>ad</sub>(%) = ((m1 + m2 − m3) / m2) &times; 100 − M<sub>ad</sub></div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 212:2015 (ISO 562)</dd>
-            <dt>Temperature</dt><dd>900 &plusmn; 10 &deg;C</dd>
-            <dt>Sample size</dt><dd>1 &plusmn; 0.01 g (&lt; 0.2 mm)</dd>
-            <dt>Heating</dt><dd>Exactly 7 min at 900 &deg;C (with lid)</dd>
-            <dt>Cooling</dt><dd>5 min in air &rarr; desiccator &ge; 15 min</dd>
-            <dt>Crucible</dt><dd>Platinum or silica, with tight-fitting lid</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 212:2015 (ISO 562)</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>900 &plusmn; 10 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>1 &plusmn; 0.01 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Heating") }}</dt><dd>{{ _("Exactly 7 min at 900 C (with lid)") }}</dd>
+            <dt>{{ _("Cooling") }}</dt><dd>{{ _("5 min in air, then desiccator >= 15 min") }}</dd>
+            <dt>{{ _("Crucible") }}</dt><dd>{{ _("Platinum or silica, with tight-fitting lid") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-3">
             <div class="qr-tol-cell"><div class="range">&lt; 20%</div><div class="val">0.30</div></div>
             <div class="qr-tol-cell"><div class="range">20 &ndash; 40%</div><div class="val">0.50</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 40%</div><div class="val">0.80</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>7-minute timing is critical. Crucible must be placed in pre-heated furnace hot zone. M<sub>ad</sub> value must be available.</div>
-        <div class="qr-warn"><i class="bi bi-moisture me-1"></i>Prolonged air cooling causes moisture absorption &rarr; inaccurate results. Use desiccator; if unavailable, weigh immediately upon reaching room temperature.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("7-minute timing is critical. Crucible must be placed in pre-heated furnace hot zone. Mad value must be available.") }}</div>
+        <div class="qr-warn"><i class="bi bi-moisture me-1"></i>{{ _("Prolonged air cooling causes moisture absorption leading to inaccurate results. Use desiccator; if unavailable, weigh immediately upon reaching room temperature.") }}</div>
 
       {# ===================== TS - Total Sulfur ===================== #}
       {% elif code in ['st,ad','ts','lab.07.08'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">IR Spectroscopy (Instrument direct reading)</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("IR Spectroscopy (Instrument direct reading)") }}</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS ISO 19579:2014</dd>
-            <dt>Method</dt><dd>High-temperature combustion + IR absorption</dd>
-            <dt>Temperature</dt><dd>&ge; 1350 &deg;C</dd>
-            <dt>Sample size</dt><dd>0.3 &ndash; 0.5 g (&lt; 0.2 mm)</dd>
-            <dt>Calibration</dt><dd>5-point calibration with certified reference materials</dd>
-            <dt>Carrier gas</dt><dd>O<sub>2</sub> (purity &ge; 99.5%)</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS ISO 19579:2014</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("High-temperature combustion + IR absorption") }}</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>&ge; 1350 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>0.3 &ndash; 0.5 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Calibration") }}</dt><dd>{{ _("5-point calibration with certified reference materials") }}</dd>
+            <dt>{{ _("Carrier gas") }}</dt><dd>O<sub>2</sub> ({{ _("purity") }} &ge; 99.5%)</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-3">
             <div class="qr-tol-cell"><div class="range">&lt; 2%</div><div class="val">0.05</div></div>
             <div class="qr-tol-cell"><div class="range">2 &ndash; 5%</div><div class="val">0.10</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 5%</div><div class="val">0.15</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Daily calibration check required. Accelerator (W, V, Fe chips) must be used. Clean combustion tube regularly.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Daily calibration check required. Accelerator (W, V, Fe chips) must be used. Clean combustion tube regularly.") }}</div>
 
       {# ===================== CV - Calorific Value ===================== #}
       {% elif code in ['qgr,ad','cv','lab.07.12','lab.07.13'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">Q<sub>b</sub> = (E &times; &Delta;T &minus; q1 &minus; q2) / m<br>
           Q<sub>gr,ad</sub> = Q<sub>b</sub> &minus; 94.1&times;S &minus; &alpha;&times;Q<sub>b</sub></div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 213:2024 (ISO 1928)</dd>
-            <dt>Method</dt><dd>Adiabatic / Isoperibol bomb calorimetry</dd>
-            <dt>Sample size</dt><dd>0.8 &ndash; 1.2 g (pellet or loose)</dd>
-            <dt>O<sub>2</sub> pressure</dt><dd>3.0 MPa (30 atm), purity &ge; 99.5%</dd>
-            <dt>Calibrant</dt><dd>Benzoic acid (certified value per batch)</dd>
-            <dt>&alpha; correction</dt><dd>&le;16.7 MJ/kg: 0.0010 | 16.7&ndash;25.1: 0.0012 | &gt;25.1: 0.0016</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Unit</dt><dd>kcal/kg (default), MJ/kg, J/g</dd>
-            <dt>Precision</dt><dd>Integer (0 decimal)</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 213:2024 (ISO 1928)</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Adiabatic / Isoperibol bomb calorimetry") }}</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>0.8 &ndash; 1.2 g ({{ _("pellet or loose") }})</dd>
+            <dt>O<sub>2</sub> {{ _("pressure") }}</dt><dd>3.0 MPa (30 atm), {{ _("purity") }} &ge; 99.5%</dd>
+            <dt>{{ _("Calibrant") }}</dt><dd>{{ _("Benzoic acid (certified value per batch)") }}</dd>
+            <dt>&alpha; {{ _("correction") }}</dt><dd>&le;16.7 MJ/kg: 0.0010 | 16.7&ndash;25.1: 0.0012 | &gt;25.1: 0.0016</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Unit") }}</dt><dd>kcal/kg ({{ _("default") }}), MJ/kg, J/g</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("Integer (0 decimal)") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
-            <div class="qr-tol-cell"><div class="range">All ranges</div><div class="val">120 cal/g</div></div>
-            <div class="qr-tol-cell"><div class="range">Calibration RSD</div><div class="val">&lt; 0.1%</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("All ranges") }}</div><div class="val">120 cal/g</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("Calibration RSD") }}</div><div class="val">&lt; 0.1%</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Daily benzoic acid check required (5 measurements, RSD &lt; 0.1%). S<sub>t,ad</sub> value needed for acid/sulfur correction. Do not exceed 3.0 MPa O<sub>2</sub>.</div>
-        <div class="qr-warn"><i class="bi bi-thermometer-half me-1"></i>Room conditions: 20&ndash;25 &deg;C, stable temp (&plusmn;1 &deg;C during test), no drafts, no direct sunlight. Jacket water temp must stabilize before measurement.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Daily benzoic acid check required (5 measurements, RSD < 0.1%%). St,ad value needed for acid/sulfur correction. Do not exceed 3.0 MPa O2.") }}</div>
+        <div class="qr-warn"><i class="bi bi-thermometer-half me-1"></i>{{ _("Room conditions: 20-25 C, stable temp (+/-1 C during test), no drafts, no direct sunlight. Jacket water temp must stabilize before measurement.") }}</div>
 
       {# ===================== CSN - Crucible Swelling Number ===================== #}
       {% elif code in ['csn'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">Visual profile comparison (0 &ndash; 9 scale, step 0.5)</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("Visual profile comparison (0 - 9 scale, step 0.5)") }}</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS ISO 501:2020</dd>
-            <dt>Temperature</dt><dd>820 &plusmn; 5 &deg;C</dd>
-            <dt>Sample size</dt><dd>1.0 &plusmn; 0.01 g (&lt; 0.2 mm)</dd>
-            <dt>Crucible</dt><dd>Standard silica crucible with lid</dd>
-            <dt>Heating</dt><dd>2.5 min in pre-heated furnace</dd>
-            <dt>Evaluation</dt><dd>Compare coke button profile to standard chart (1&ndash;9)</dd>
-            <dt>Parallels</dt><dd>5 determinations (min 2 valid)</dd>
-            <dt>Precision</dt><dd>1 decimal place</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS ISO 501:2020</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>820 &plusmn; 5 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>1.0 &plusmn; 0.01 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Crucible") }}</dt><dd>{{ _("Standard silica crucible with lid") }}</dd>
+            <dt>{{ _("Heating") }}</dt><dd>{{ _("2.5 min in pre-heated furnace") }}</dd>
+            <dt>{{ _("Evaluation") }}</dt><dd>{{ _("Compare coke button profile to standard chart (1-9)") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("5 determinations (min 2 valid)") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("1 decimal place") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-1">
-            <div class="qr-tol-cell"><div class="range">All ranges</div><div class="val">0.50</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("All ranges") }}</div><div class="val">0.50</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>CSN = 0 indicates non-coking coal. Furnace must be at stable 820 &deg;C before inserting.</div>
-        <div class="qr-warn"><i class="bi bi-clipboard-check me-1"></i>Daily empty crucible test required before starting sample analysis.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("CSN = 0 indicates non-coking coal. Furnace must be at stable 820 C before inserting.") }}</div>
+        <div class="qr-warn"><i class="bi bi-clipboard-check me-1"></i>{{ _("Daily empty crucible test required before starting sample analysis.") }}</div>
 
       {# ===================== Gi - Caking Index ===================== #}
       {% elif code in ['gi'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">G<sub>i</sub> = 10 + (30&times;m2 + 70&times;m3) / m1 &nbsp;(5:1 mode)<br>
           G<sub>i</sub> = (30&times;m2 + 70&times;m3) / (5&times;m1) &nbsp;(3:3 retest)</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS ISO 15585:2014</dd>
-            <dt>Temperature</dt><dd>850 &plusmn; 10 &deg;C</dd>
-            <dt>Sample ratio</dt><dd>5:1 (coal : anthracite) default, 3:3 for retest</dd>
-            <dt>Heating</dt><dd>Stage 1: 15 min | Stage 2: 30 sec additional</dd>
-            <dt>Sieve test</dt><dd>Drum sieve 1 mm and 0.5 mm</dd>
-            <dt>Result</dt><dd>Rounded to nearest integer</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS ISO 15585:2014</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>850 &plusmn; 10 &deg;C</dd>
+            <dt>{{ _("Sample ratio") }}</dt><dd>{{ _("5:1 (coal : anthracite) default, 3:3 for retest") }}</dd>
+            <dt>{{ _("Heating") }}</dt><dd>{{ _("Stage 1: 15 min | Stage 2: 30 sec additional") }}</dd>
+            <dt>{{ _("Sieve test") }}</dt><dd>{{ _("Drum sieve 1 mm and 0.5 mm") }}</dd>
+            <dt>{{ _("Result") }}</dt><dd>{{ _("Rounded to nearest integer") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">&le; 18</div><div class="val">1.0</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 18</div><div class="val">3.0</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>If G<sub>i</sub> &lt; 18, retest with 3:3 ratio is mandatory. Anthracite standard must be certified reference.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("If Gi < 18, retest with 3:3 ratio is mandatory. Anthracite standard must be certified reference.") }}</div>
 
       {# ===================== TRD - True Relative Density ===================== #}
       {% elif code in ['trd'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">TRD<sub>ad</sub> = m<sub>d</sub> / (m<sub>d</sub> + m2 &minus; m1) &times; K<sub>t</sub><br>
           m<sub>d</sub> = m &times; (100 &minus; M<sub>ad</sub>) / 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 217:2015 (ISO 1014)</dd>
-            <dt>Method</dt><dd>Pycnometer (density bottle) with boiled water</dd>
-            <dt>Sample size</dt><dd>2 g (&lt; 0.2 mm)</dd>
-            <dt>Water</dt><dd>Freshly boiled distilled water (degassed)</dd>
-            <dt>Temp range</dt><dd>25 &deg;C (K<sub>t</sub> temperature coefficient applied)</dd>
-            <dt>Vacuum</dt><dd>30 min evacuation to remove air from pores</dd>
-            <dt>Depends on</dt><dd>M<sub>ad</sub> result (same sample)</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 217:2015 (ISO 1014)</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Pycnometer (density bottle) with boiled water") }}</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>2 g (&lt; 0.2 mm)</dd>
+            <dt>{{ _("Water") }}</dt><dd>{{ _("Freshly boiled distilled water (degassed)") }}</dd>
+            <dt>{{ _("Temp range") }}</dt><dd>25 &deg;C (K<sub>t</sub> {{ _("temperature coefficient applied") }})</dd>
+            <dt>{{ _("Vacuum") }}</dt><dd>{{ _("30 min evacuation to remove air from pores") }}</dd>
+            <dt>{{ _("Depends on") }}</dt><dd>M<sub>ad</sub> {{ _("result (same sample)") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
-            <div class="qr-tol-cell"><div class="range">All ranges</div><div class="val">0.02</div></div>
-            <div class="qr-tol-cell"><div class="range">Typical range</div><div class="val">1.20 &ndash; 1.80 g/cm&sup3;</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("All ranges") }}</div><div class="val">0.02</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("Typical range") }}</div><div class="val">1.20 &ndash; 1.80 g/cm&sup3;</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>M<sub>ad</sub> result must be available first. Water must be completely degassed (boil 30+ min). Temperature must be recorded for K<sub>t</sub> correction.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Mad result must be available first. Water must be completely degassed (boil 30+ min). Temperature must be recorded for Kt correction.") }}</div>
 
       {# ===================== X, Y - Plastometric Indices ===================== #}
       {% elif code in ['x','y','xy'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">X = max shrinkage (mm), Y = max thickness of plastic layer (mm)</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("X = max shrinkage (mm), Y = max thickness of plastic layer (mm)") }}</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>Sapozhnikov method (GOST 1186 / ISO adaptation)</dd>
-            <dt>Temperature</dt><dd>Heating rate 3 &deg;C/min (250 &rarr; 730 &deg;C)</dd>
-            <dt>Sample size</dt><dd>~100 g (&lt; 1.5 mm)</dd>
-            <dt>Apparatus</dt><dd>Plastometer with dial gauge (0.01 mm)</dd>
-            <dt>Reading</dt><dd>X at maximum contraction, Y at maximum swelling</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>Integer (0 decimal)</dd>
+            <dt>{{ _("Standard") }}</dt><dd>{{ _("Sapozhnikov method (GOST 1186 / ISO adaptation)") }}</dd>
+            <dt>{{ _("Temperature") }}</dt><dd>{{ _("Heating rate 3 C/min (250 to 730 C)") }}</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>~100 g (&lt; 1.5 mm)</dd>
+            <dt>{{ _("Apparatus") }}</dt><dd>{{ _("Plastometer with dial gauge (0.01 mm)") }}</dd>
+            <dt>{{ _("Reading") }}</dt><dd>{{ _("X at maximum contraction, Y at maximum swelling") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("Integer (0 decimal)") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">X &le; 20</div><div class="val">1.0 mm</div></div>
             <div class="qr-tol-cell"><div class="range">X &gt; 20</div><div class="val">2.0 mm</div></div>
@@ -342,185 +342,185 @@
             <div class="qr-tol-cell"><div class="range">Y &gt; 20</div><div class="val">2.0 mm</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Heating rate must be strictly 3 &deg;C/min. Dial gauge must be calibrated before each batch.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Heating rate must be strictly 3 C/min. Dial gauge must be calibrated before each batch.") }}</div>
 
       {# ===================== CRI / CSR ===================== #}
       {% elif code in ['cri','csr','cricsr'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formulas</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formulas") }}</div>
           <div class="qr-formula">CRI(%) = (m1 &minus; m2) / m1 &times; 100<br>
           CSR(%) = m3 / m2 &times; 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>ISO 18894 (NST method)</dd>
-            <dt>CRI Temp</dt><dd>1100 &plusmn; 5 &deg;C, CO<sub>2</sub> flow 2 h</dd>
-            <dt>CSR Test</dt><dd>I-drum: 600 revolutions at 20 rpm</dd>
-            <dt>Sample</dt><dd>200 g coke (19&ndash;22.4 mm fraction)</dd>
-            <dt>CO<sub>2</sub> flow</dt><dd>5 L/min, purity &ge; 99.5%</dd>
-            <dt>Sieve</dt><dd>CSR = % remaining on 9.5 mm sieve after drum</dd>
-            <dt>Precision</dt><dd>Integer (0 decimal)</dd>
+            <dt>{{ _("Standard") }}</dt><dd>ISO 18894 (NST method)</dd>
+            <dt>{{ _("CRI Temp") }}</dt><dd>1100 &plusmn; 5 &deg;C, CO<sub>2</sub> {{ _("flow 2 h") }}</dd>
+            <dt>{{ _("CSR Test") }}</dt><dd>{{ _("I-drum: 600 revolutions at 20 rpm") }}</dd>
+            <dt>{{ _("Sample") }}</dt><dd>200 g {{ _("coke") }} (19&ndash;22.4 mm {{ _("fraction") }})</dd>
+            <dt>CO<sub>2</sub> {{ _("flow") }}</dt><dd>5 L/min, {{ _("purity") }} &ge; 99.5%</dd>
+            <dt>{{ _("Sieve") }}</dt><dd>{{ _("CSR = %% remaining on 9.5 mm sieve after drum") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("Integer (0 decimal)") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">CRI</div><div class="val">&plusmn; 2.2</div></div>
             <div class="qr-tol-cell"><div class="range">CSR</div><div class="val">&plusmn; 2.5</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>CRI &gt; 40% or CSR &lt; 50% indicates poor coke quality. Test takes ~6 hours total. Gas flow must be constant.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("CRI > 40%% or CSR < 50%% indicates poor coke quality. Test takes ~6 hours total. Gas flow must be constant.") }}</div>
 
       {# ===================== P - Phosphorus ===================== #}
       {% elif code in ['p','p,ad'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">EDXRF Spectrometry (direct measurement)<br>
-          <span style="font-size:0.75rem;">Instrument: Rigaku NEX QC+ (SDD detector, 50 kV)</span></div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("EDXRF Spectrometry (direct measurement)") }}<br>
+          <span style="font-size:0.75rem;">{{ _("Instrument") }}: Rigaku NEX QC+ (SDD detector, 50 kV)</span></div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS 7057:2024 (XRF method)</dd>
-            <dt>Method</dt><dd>Energy-dispersive X-ray fluorescence</dd>
-            <dt>Sample prep</dt><dd>Pressed pellet (4 &ndash; 5 g, 300 kN / 40 sec)</dd>
-            <dt>Calibration</dt><dd>Multi-element certified reference materials</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>3 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS 7057:2024 (XRF method)</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Energy-dispersive X-ray fluorescence") }}</dd>
+            <dt>{{ _("Sample prep") }}</dt><dd>{{ _("Pressed pellet (4 - 5 g, 300 kN / 40 sec)") }}</dd>
+            <dt>{{ _("Calibration") }}</dt><dd>{{ _("Multi-element certified reference materials") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("3 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">&le; 0.2%</div><div class="val">0.007</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 0.2%</div><div class="val">0.010</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>P &gt; 0.05% is critical for steelmaking. Use 4 &mu;m polypropylene film, wrinkle-free. Pellet surface must be smooth, no cracks.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("P > 0.05%% is critical for steelmaking. Use 4 um polypropylene film, wrinkle-free. Pellet surface must be smooth, no cracks.") }}</div>
 
       {# ===================== F - Fluorine ===================== #}
       {% elif code in ['f','f,ad'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">Combustion hydrolysis + Ion-selective electrode (ISE)<br>
-          <span style="font-size:0.75rem;">Instrument: 5E-FL2350 (CKIC)</span></div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("Combustion hydrolysis + Ion-selective electrode (ISE)") }}<br>
+          <span style="font-size:0.75rem;">{{ _("Instrument") }}: 5E-FL2350 (CKIC)</span></div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 4633:2024 (ISO 11724)</dd>
-            <dt>Furnace</dt><dd>1100 &deg;C</dd>
-            <dt>O<sub>2</sub> flow</dt><dd>500 ml/min (purity &ge; 99.5%)</dd>
-            <dt>Vapor</dt><dd>2 ml/min</dd>
-            <dt>Condenser</dt><dd>20 &deg;C</dd>
-            <dt>Sample size</dt><dd>0.5 g (&lt; 0.2 mm), covered with silica sand</dd>
-            <dt>Analysis time</dt><dd>~45 min per test</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>3 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 4633:2024 (ISO 11724)</dd>
+            <dt>{{ _("Furnace") }}</dt><dd>1100 &deg;C</dd>
+            <dt>O<sub>2</sub> {{ _("flow") }}</dt><dd>500 ml/min ({{ _("purity") }} &ge; 99.5%)</dd>
+            <dt>{{ _("Vapor") }}</dt><dd>2 ml/min</dd>
+            <dt>{{ _("Condenser") }}</dt><dd>20 &deg;C</dd>
+            <dt>{{ _("Sample size") }}</dt><dd>0.5 g (&lt; 0.2 mm), {{ _("covered with silica sand") }}</dd>
+            <dt>{{ _("Analysis time") }}</dt><dd>{{ _("~45 min per test") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("3 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
             <div class="qr-tol-cell"><div class="range">&le; 150 ppm</div><div class="val">15 ppm</div></div>
             <div class="qr-tol-cell"><div class="range">&gt; 150 ppm</div><div class="val">10%</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Daily startup: 3 blank titrations + 2 empty crucible pretreatment. Recalibrate after every 10 duplicate analyses. Check electrode, pure water level, and O<sub>2</sub> flow before use.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Daily startup: 3 blank titrations + 2 empty crucible pretreatment. Recalibrate after every 10 duplicate analyses. Check electrode, pure water level, and O2 flow before use.") }}</div>
 
       {# ===================== Cl - Chlorine ===================== #}
       {% elif code in ['cl','cl,ad'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Method</div>
-          <div class="qr-formula">EDXRF Spectrometry (direct measurement)<br>
-          <span style="font-size:0.75rem;">Instrument: Rigaku NEX QC+ (SDD detector, 50 kV)</span></div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Method") }}</div>
+          <div class="qr-formula">{{ _("EDXRF Spectrometry (direct measurement)") }}<br>
+          <span style="font-size:0.75rem;">{{ _("Instrument") }}: Rigaku NEX QC+ (SDD detector, 50 kV)</span></div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS 7057:2024 (XRF method)</dd>
-            <dt>Method</dt><dd>Energy-dispersive X-ray fluorescence</dd>
-            <dt>Sample prep</dt><dd>Pressed pellet (4 &ndash; 5 g, 300 kN / 40 sec)</dd>
-            <dt>Calibration</dt><dd>Multi-element certified reference materials</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>3 decimal places</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS 7057:2024 (XRF method)</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Energy-dispersive X-ray fluorescence") }}</dd>
+            <dt>{{ _("Sample prep") }}</dt><dd>{{ _("Pressed pellet (4 - 5 g, 300 kN / 40 sec)") }}</dd>
+            <dt>{{ _("Calibration") }}</dt><dd>{{ _("Multi-element certified reference materials") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("3 decimal places") }}</dd>
           </dl>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-rulers me-1"></i>Tolerance Limit (T)</div>
+          <div class="qr-label"><i class="bi bi-rulers me-1"></i>{{ _("Tolerance Limit (T)") }}</div>
           <div class="qr-tol-grid cols-2">
-            <div class="qr-tol-cell"><div class="range">All ranges</div><div class="val">10%</div></div>
-            <div class="qr-tol-cell"><div class="range">Max</div><div class="val">600 ppm</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("All ranges") }}</div><div class="val">10%</div></div>
+            <div class="qr-tol-cell"><div class="range">{{ _("Max") }}</div><div class="val">600 ppm</div></div>
           </div>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Use 4 &mu;m polypropylene film, wrinkle-free. Pellet surface must be smooth, no cracks.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Use 4 um polypropylene film, wrinkle-free. Pellet surface must be smooth, no cracks.") }}</div>
 
       {# ===================== FM - Free Moisture ===================== #}
       {% elif code in ['fm'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">FM(%) = ((W<sub>b</sub> &minus; W<sub>a</sub>) / (W<sub>a</sub> &minus; W<sub>t</sub>)) &times; 100</div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Standard</dt><dd>MNS GB/T 474:2015</dd>
-            <dt>Method</dt><dd>Air-drying at ambient temperature until equilibrium</dd>
-            <dt>W<sub>t</sub></dt><dd>Tray weight</dd>
-            <dt>W<sub>b</sub></dt><dd>Wet sample + tray weight</dd>
-            <dt>W<sub>a</sub></dt><dd>Air-dried sample + tray weight</dd>
-            <dt>Precision</dt><dd>1 decimal place</dd>
+            <dt>{{ _("Standard") }}</dt><dd>MNS GB/T 474:2015</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Air-drying at ambient temperature until equilibrium") }}</dd>
+            <dt>W<sub>t</sub></dt><dd>{{ _("Tray weight") }}</dd>
+            <dt>W<sub>b</sub></dt><dd>{{ _("Wet sample + tray weight") }}</dd>
+            <dt>W<sub>a</sub></dt><dd>{{ _("Air-dried sample + tray weight") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("1 decimal place") }}</dd>
           </dl>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Single determination (no parallel). Sample spread evenly on tray. Max: 60%.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Single determination (no parallel). Sample spread evenly on tray. Max: 60%%.") }}</div>
 
       {# ===================== Solid - Solid Content (Wash Plant) ===================== #}
       {% elif code in ['solid'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-calculator me-1"></i>Formula</div>
+          <div class="qr-label"><i class="bi bi-calculator me-1"></i>{{ _("Formula") }}</div>
           <div class="qr-formula">Solid(%) = C &times; 100 / (A &minus; B)</div>
           <div class="qr-formula mt-1" style="font-size:0.75rem;">
-            A = wet sample + container, B = container, C = dried residue
+            A = {{ _("wet sample + container") }}, B = {{ _("container") }}, C = {{ _("dried residue") }}
           </div>
         </div>
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-gear me-1"></i>Conditions</div>
+          <div class="qr-label"><i class="bi bi-gear me-1"></i>{{ _("Conditions") }}</div>
           <dl class="qr-conditions">
-            <dt>Purpose</dt><dd>Solid content in slurry / liquid samples from coal washing plant</dd>
-            <dt>Method</dt><dd>Gravimetric &mdash; drying and weighing</dd>
-            <dt>Sample</dt><dd>Slurry or liquid from beneficiation process</dd>
-            <dt>Drying</dt><dd>105 &ndash; 110 &deg;C until constant mass</dd>
-            <dt>Parallels</dt><dd>2 required</dd>
-            <dt>Precision</dt><dd>2 decimal places</dd>
+            <dt>{{ _("Purpose") }}</dt><dd>{{ _("Solid content in slurry / liquid samples from coal washing plant") }}</dd>
+            <dt>{{ _("Method") }}</dt><dd>{{ _("Gravimetric - drying and weighing") }}</dd>
+            <dt>{{ _("Sample") }}</dt><dd>{{ _("Slurry or liquid from beneficiation process") }}</dd>
+            <dt>{{ _("Drying") }}</dt><dd>105 &ndash; 110 &deg;C {{ _("until constant mass") }}</dd>
+            <dt>{{ _("Parallels") }}</dt><dd>{{ _("2 required") }}</dd>
+            <dt>{{ _("Precision") }}</dt><dd>{{ _("2 decimal places") }}</dd>
           </dl>
         </div>
-        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>Sample must be well-mixed before taking portion. Settling occurs quickly &mdash; take subsample immediately after shaking.</div>
+        <div class="qr-warn"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Sample must be well-mixed before taking portion. Settling occurs quickly - take subsample immediately after shaking.") }}</div>
 
       {# ===================== m - Sample Registration (Mass Gate) ===================== #}
       {% elif code in ['m'] %}
         <div class="qr-section">
-          <div class="qr-label"><i class="bi bi-info-circle me-1"></i>Purpose</div>
-          <div class="qr-formula">Sample weight registration &mdash; records the as-received mass and marks the sample as ready for other analyses.</div>
+          <div class="qr-label"><i class="bi bi-info-circle me-1"></i>{{ _("Purpose") }}</div>
+          <div class="qr-formula">{{ _("Sample weight registration - records the as-received mass and marks the sample as ready for other analyses.") }}</div>
         </div>
         <div class="qr-section">
           <dl class="qr-conditions">
-            <dt>Input</dt><dd>Weight in grams (stored as kg)</dd>
-            <dt>Gate</dt><dd>Most analyses require mass to be recorded first</dd>
-            <dt>Exceptions</dt><dd>X, Y, CRI, CSR &mdash; no mass gate required</dd>
+            <dt>{{ _("Input") }}</dt><dd>{{ _("Weight in grams (stored as kg)") }}</dd>
+            <dt>{{ _("Gate") }}</dt><dd>{{ _("Most analyses require mass to be recorded first") }}</dd>
+            <dt>{{ _("Exceptions") }}</dt><dd>X, Y, CRI, CSR &mdash; {{ _("no mass gate required") }}</dd>
           </dl>
         </div>
 
       {# ===================== Default ===================== #}
       {% else %}
         <div class="qr-section">
-          <div class="text-muted">Reference information for this analysis will be added.</div>
+          <div class="text-muted">{{ _("Reference information for this analysis will be added.") }}</div>
         </div>
       {% endif %}
 
       {# ===================== SOP / MNS Documents ===================== #}
       <hr class="my-2">
-      <div class="mb-1"><i class="bi bi-file-earmark-pdf me-1"></i><strong>Related Documents</strong></div>
+      <div class="mb-1"><i class="bi bi-file-earmark-pdf me-1"></i><strong>{{ _("Related Documents") }}</strong></div>
       <div class="d-flex flex-column gap-1">
 
       {# -- Ash -- #}
@@ -598,7 +598,7 @@
       {# -- X, Y -- #}
       {% elif code in ['x','y','xy'] %}
         <a href="{{ url_for('settings.view_standard_file', filename='14. Битумжсан нүүрсний пластометрийн үзүүлэлтийг тодорхойлох арга.pdf') }}" target="_blank" class="text-decoration-none small">
-          <i class="bi bi-file-pdf text-danger me-1"></i>Plastometric Standard
+          <i class="bi bi-file-pdf text-danger me-1"></i>{{ _("Plastometric Standard") }}
         </a>
         <a href="{{ url_for('settings.view_standard_file', filename='LAB.07.14 Нүүрсний Пластометрийн үзүүлэлт тодорхойлох арга.docx') }}" target="_blank" class="text-decoration-none small">
           <i class="bi bi-file-word text-primary me-1"></i>LAB.07.14 SOP
@@ -647,7 +647,7 @@
         </a>
 
       {% else %}
-        <div class="text-muted small">No documents registered.</div>
+        <div class="text-muted small">{{ _("No documents registered.") }}</div>
       {% endif %}
 
       {# ISO 17025 - always show #}
@@ -661,7 +661,7 @@
 
       <hr class="my-2">
       <div class="text-muted" style="font-size: 0.72rem;">
-        <i class="bi bi-info-circle me-1"></i>Tolerance (T) is checked automatically after saving. Results exceeding T are flagged for review.
+        <i class="bi bi-info-circle me-1"></i>{{ _("Tolerance (T) is checked automatically after saving. Results exceeding T are flagged for review.") }}
       </div>
     </div>
   </div>

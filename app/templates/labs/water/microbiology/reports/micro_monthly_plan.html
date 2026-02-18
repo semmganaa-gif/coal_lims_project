@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Micro Monthly Plan{% endblock %}
+{% block title %}{{ _("Micro Monthly Plan") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -97,8 +97,8 @@
 <div class="micro-plan">
   <div class="plan-header">
     <div>
-      <h4><i class="bi bi-calendar3-week me-2"></i>Micro Monthly Plan</h4>
-      <p class="subtitle">{{ month_name }} {{ year }} — Weekly plan vs performance</p>
+      <h4><i class="bi bi-calendar3-week me-2"></i>{{ _("Micro Monthly Plan") }}</h4>
+      <p class="subtitle">{{ month_name }} {{ year }} — {{ _("Weekly plan vs performance") }}</p>
     </div>
     <form method="get" class="filter-row">
       <select name="year" id="selYear">
@@ -113,9 +113,9 @@
         </option>
         {% endfor %}
       </select>
-      <button type="submit" class="btn-micro"><i class="bi bi-funnel-fill"></i> Filter</button>
+      <button type="submit" class="btn-micro"><i class="bi bi-funnel-fill"></i> {{ _("Filter") }}</button>
       {% if current_user.role in ['senior','admin'] %}
-      <button type="button" class="btn-save" id="btnSave"><i class="bi bi-save"></i> Save</button>
+      <button type="button" class="btn-save" id="btnSave"><i class="bi bi-save"></i> {{ _("Save") }}</button>
       {% endif %}
       <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px">
         <i class="bi bi-arrow-left"></i>
@@ -126,29 +126,29 @@
   <!-- Staff settings -->
   {% if current_user.role in ['senior','admin'] %}
   <div class="staff-row">
-    <label>Microbiologist:</label>
+    <label>{{ _("Microbiologist") }}:</label>
     <input type="number" id="staffMicro" value="{{ staff_count }}" min="1" max="50">
-    <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Save</button>
+    <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> {{ _("Save") }}</button>
   </div>
   {% endif %}
 
   <!-- Week Summary -->
   <div class="week-summary">
-    <h6 style="font-weight:700;color:#0f172a;margin-bottom:0.75rem"><i class="bi bi-calendar-week me-2" style="color:#20c997"></i>Weekly Summary</h6>
+    <h6 style="font-weight:700;color:#0f172a;margin-bottom:0.75rem"><i class="bi bi-calendar-week me-2" style="color:#20c997"></i>{{ _("Weekly Summary") }}</h6>
     <div class="week-grid">
       {% for w in weeks %}
       <div class="week-item">
         <div class="wk-label">W{{ w.week }}</div>
         <div class="wk-dates">{{ w.start.day }}-{{ w.end.day }}</div>
         <div class="wk-plan">{{ week_totals[w.week].plan }}</div>
-        <div class="wk-perf">{{ week_totals[w.week].perf }} perf</div>
+        <div class="wk-perf">{{ week_totals[w.week].perf }} {{ _("perf") }}</div>
       </div>
       {% endfor %}
       <div class="week-item total-col">
-        <div class="wk-label">TOTAL</div>
+        <div class="wk-label">{{ _("TOTAL") }}</div>
         <div class="wk-dates">{{ month_name }}</div>
         <div class="wk-plan">{{ grand_total.plan }}</div>
-        <div class="wk-perf">{{ grand_total.perf }} perf</div>
+        <div class="wk-perf">{{ grand_total.perf }} {{ _("perf") }}</div>
       </div>
     </div>
   </div>
@@ -159,7 +159,7 @@
     <div class="plan-card-header">
       <h6><i class="bi bi-layers me-2"></i>{{ cat_code }}</h6>
       <span style="font-size:0.8rem;color:#64748b">
-        Plan: {{ cat_info.total.plan }} / Perf: {{ cat_info.total.perf }}
+        {{ _("Plan") }}: {{ cat_info.total.plan }} / {{ _("Perf") }}: {{ cat_info.total.perf }}
         {% if cat_info.total.plan > 0 %}
         ({{ "%.0f"|format(cat_info.pct) }}%)
         {% endif %}
@@ -169,11 +169,11 @@
       <table class="plan-table">
         <thead>
           <tr>
-            <th>Category</th>
+            <th>{{ _("Category") }}</th>
             {% for w in weeks %}
             <th>W{{ w.week }}<br><span style="font-size:0.6rem;color:#94a3b8">{{ w.start.day }}-{{ w.end.day }}</span></th>
             {% endfor %}
-            <th>Total</th>
+            <th>{{ _("Total") }}</th>
             <th>%</th>
           </tr>
         </thead>
@@ -207,7 +207,7 @@
 
   <!-- Bar chart -->
   <div class="chart-card">
-    <h6><i class="bi bi-bar-chart me-2" style="color:#20c997"></i>Plan vs Actual (weekly)</h6>
+    <h6><i class="bi bi-bar-chart me-2" style="color:#20c997"></i>{{ _("Plan vs Actual (weekly)") }}</h6>
     <canvas id="planChart" height="100"></canvas>
   </div>
 </div>
@@ -228,8 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
     data: {
       labels: weekLabels,
       datasets: [
-        { label: 'Plan', data: planData, backgroundColor: 'rgba(32,201,151,0.6)', borderColor: '#20c997', borderWidth: 1 },
-        { label: 'Actual', data: perfData, backgroundColor: 'rgba(13,148,136,0.6)', borderColor: '#0d9488', borderWidth: 1 }
+        { label: '{{ _("Plan") }}', data: planData, backgroundColor: 'rgba(32,201,151,0.6)', borderColor: '#20c997', borderWidth: 1 },
+        { label: '{{ _("Actual") }}', data: perfData, backgroundColor: 'rgba(13,148,136,0.6)', borderColor: '#0d9488', borderWidth: 1 }
       ]
     },
     options: {
@@ -254,9 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
           body: JSON.stringify({ year, month, plans })
         });
         const res = await r.json();
-        if (res.success) { alert('Хадгалагдлаа!'); location.reload(); }
-        else { alert('Алдаа: ' + (res.error || '')); }
-      } catch(e) { alert('Алдаа: ' + e.message); }
+        if (res.success) { alert('{{ _("Saved successfully!") }}'); location.reload(); }
+        else { alert('{{ _("Error") }}: ' + (res.error || '')); }
+      } catch(e) { alert('{{ _("Error") }}: ' + e.message); }
     });
   }
 
@@ -274,9 +274,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const res = await r.json();
         if (res.success) {
           btnStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> OK';
-          setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> Save'; }, 1500);
+          setTimeout(() => { btnStaff.innerHTML = '<i class="bi bi-check-lg"></i> {{ _("Save") }}'; }, 1500);
         }
-      } catch(e) { alert('Алдаа: ' + e.message); }
+      } catch(e) { alert('{{ _("Error") }}: ' + e.message); }
     });
   }
 });

@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return baseName.replace(`(${baseCode})`, `(${ali})`);
     }
 
+    const T = (typeof LIMS_I18N !== 'undefined') ? LIMS_I18N : {};
     const columnDefs = [
         {
             headerName: '', field: 'sel',
@@ -108,44 +109,44 @@ document.addEventListener('DOMContentLoaded', function() {
             filter: 'agNumberColumnFilter'
         },
         {
-            field: '2', headerName: 'Sample Code', width: 350, pinned: 'left',
+            field: '2', headerName: T.sampleCode || 'Sample Code', width: 350, pinned: 'left',
             sortable: true,
             filter: 'agTextColumnFilter'
         },
-        { field: '3', headerName: 'Client', width: 120, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '4', headerName: 'Type', width: 100, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '5', headerName: 'Condition', width: 100, sortable: true, filter: 'agTextColumnFilter' },
-        { field: '11', headerName: 'Weight (kg)', width: 100, filter: 'agNumberColumnFilter' },
-        { field: '6', headerName: 'Submitted by', width: 150, filter: 'agTextColumnFilter' },
-        { field: '7', headerName: 'Prepared by', width: 150, filter: 'agTextColumnFilter' },
-        { field: '8', headerName: 'Prepared date', width: 120, filter: 'agDateColumnFilter' },
+        { field: '3', headerName: T.client || 'Client', width: 120, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '4', headerName: T.type || 'Type', width: 100, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '5', headerName: T.condition || 'Condition', width: 100, sortable: true, filter: 'agTextColumnFilter' },
+        { field: '11', headerName: T.weightKg || 'Weight (kg)', width: 100, filter: 'agNumberColumnFilter' },
+        { field: '6', headerName: T.submittedBy || 'Submitted by', width: 150, filter: 'agTextColumnFilter' },
+        { field: '7', headerName: T.preparedBy || 'Prepared by', width: 150, filter: 'agTextColumnFilter' },
+        { field: '8', headerName: T.preparedDate || 'Prepared date', width: 120, filter: 'agDateColumnFilter' },
         {
-            field: '10', headerName: 'Registered', width: 140,
+            field: '10', headerName: T.registered || 'Registered', width: 140,
             sortable: true,
             filter: 'agDateColumnFilter'
         },
-        { field: '9', headerName: 'Comment', width: 150, filter: 'agTextColumnFilter' },
+        { field: '9', headerName: T.comment || 'Comment', width: 150, filter: 'agTextColumnFilter' },
         {
-            field: '14', headerName: 'Storage', width: 120,
+            field: '14', headerName: T.storage || 'Storage', width: 120,
             filter: false,
             cellRenderer: params => params.value || ''
         },
         {
-            field: '12', headerName: 'Status', width: 120,
+            field: '12', headerName: T.status || 'Status', width: 120,
             filter: 'agTextColumnFilter',
             cellRenderer: params => {
                 const data = params.value;
-                if (data === 'approved') return '<span class="badge bg-success">Approved</span>';
-                if (data === 'rejected') return '<span class="badge bg-danger">Rejected</span>';
-                if (data === 'pending_review') return '<span class="badge bg-warning text-dark">Review</span>';
-                if (data === 'new') return '<span class="badge bg-info text-dark">New</span>';
-                if (data === 'archived') return '<span class="badge bg-secondary">Archived</span>';
+                if (data === 'approved') return `<span class="badge bg-success">${T.approved || 'Approved'}</span>`;
+                if (data === 'rejected') return `<span class="badge bg-danger">${T.rejected || 'Rejected'}</span>`;
+                if (data === 'pending_review') return `<span class="badge bg-warning text-dark">${T.review || 'Review'}</span>`;
+                if (data === 'new') return `<span class="badge bg-info text-dark">${T.new_status || 'New'}</span>`;
+                if (data === 'archived') return `<span class="badge bg-secondary">${T.archived || 'Archived'}</span>`;
                 return data;
             }
         },
-        { field: '15', headerName: 'Action', width: 100, filter: false, cellRenderer: p => p.value },
+        { field: '15', headerName: T.action || 'Action', width: 100, filter: false, cellRenderer: p => p.value },
         {
-            field: '13', headerName: 'Assignments', flex: 1, minWidth: 200,
+            field: '13', headerName: T.assignments || 'Assignments', flex: 1, minWidth: 200,
             filter: 'agTextColumnFilter',
             autoHeight: true,
             hide: true,
@@ -176,7 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
             sortable: true,
             filter: true,
             floatingFilter: true,
-            menuTabs: ['filterMenuTab'],
+            floatingFilterComponentParams: { suppressFilterButton: true },
+            menuTabs: [],
         },
         rowSelection: 'multiple',
         animateRows: true,

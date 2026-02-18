@@ -4,34 +4,34 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2><i class="bi bi-arrow-up-circle me-2"></i>Improvement Register</h2>
+            <h2><i class="bi bi-arrow-up-circle me-2"></i>{{ _("Improvement Register") }}</h2>
             <p class="text-muted mb-0">LAB.02.00.03 | {{ record.record_no }}</p>
         </div>
         <div>
             {% if record.status == 'pending' %}
-                <span class="badge bg-secondary fs-6">Pending</span>
+                <span class="badge bg-secondary fs-6">{{ _("Pending") }}</span>
             {% elif record.status == 'in_progress' %}
-                <span class="badge bg-warning text-dark fs-6">In Progress</span>
+                <span class="badge bg-warning text-dark fs-6">{{ _("In Progress") }}</span>
             {% elif record.status == 'reviewed' %}
-                <span class="badge bg-primary fs-6">Reviewed</span>
+                <span class="badge bg-primary fs-6">{{ _("Reviewed") }}</span>
             {% else %}
-                <span class="badge bg-success fs-6">Closed</span>
+                <span class="badge bg-success fs-6">{{ _("Closed") }}</span>
             {% endif %}
             <a href="{{ url_for('quality.improvement_list') }}" class="btn btn-outline-secondary ms-2">
-                <i class="bi bi-arrow-left me-1"></i>Back
+                <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
             </a>
         </div>
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-3"><strong>Date:</strong> {{ record.record_date.strftime('%Y-%m-%d') if record.record_date else '-' }}</div>
-        <div class="col-md-3"><strong>No.:</strong> {{ record.record_no }}</div>
+        <div class="col-md-3"><strong>{{ _("Date:") }}</strong> {{ record.record_date.strftime('%Y-%m-%d') if record.record_date else '-' }}</div>
+        <div class="col-md-3"><strong>{{ _("No.:") }}</strong> {{ record.record_no }}</div>
     </div>
 
     {# ═══ Section 1: Employee Section ═══ #}
     <div class="card mb-3">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-person-gear me-2"></i>Section to be filled by the implementing employee/unit</h5>
+            <h5 class="mb-0"><i class="bi bi-person-gear me-2"></i>{{ _("Section to be filled by the implementing employee/unit") }}</h5>
         </div>
         <div class="card-body">
             {% if record.status == 'pending' and not record.improvement_plan %}
@@ -39,11 +39,11 @@
             <form method="POST" action="{{ url_for('quality.improvement_fill', id=record.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Activity requiring improvement</label>
+                    <label class="form-label fw-bold">{{ _("Activity requiring improvement") }}</label>
                     <textarea name="activity_description" class="form-control" rows="4">{{ record.activity_description or '' }}</textarea>
                     {% if record.source_complaint %}
                     <small class="text-muted">
-                        <i class="bi bi-link-45deg me-1"></i>Source:
+                        <i class="bi bi-link-45deg me-1"></i>{{ _("Source:") }}
                         <a href="{{ url_for('quality.complaints_detail', id=record.source_complaint_id) }}">
                             {{ record.source_complaint.complaint_no }}
                         </a>
@@ -51,40 +51,40 @@
                     {% endif %}
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Improvement action plan <span class="text-danger">*</span></label>
+                    <label class="form-label fw-bold">{{ _("Improvement action plan") }} <span class="text-danger">*</span></label>
                     <textarea name="improvement_plan" class="form-control" rows="4"
-                              placeholder="Detailed plan of action measures to implement" required></textarea>
+                              placeholder="{{ _("Detailed plan of action measures to implement") }}" required></textarea>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Improvement deadline</label>
+                        <label class="form-label fw-bold">{{ _("Improvement deadline") }}</label>
                         <input type="date" name="deadline" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Responsible person</label>
+                        <label class="form-label fw-bold">{{ _("Responsible person") }}</label>
                         <input type="text" name="responsible_person" class="form-control"
-                               placeholder="Full name, position">
+                               placeholder="{{ _("Full name, position") }}">
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Documentation of improvement, additional remarks</label>
+                    <label class="form-label fw-bold">{{ _("Documentation of improvement, additional remarks") }}</label>
                     <textarea name="documentation" class="form-control" rows="3"
-                              placeholder="Documented evidence, additional remarks"></textarea>
+                              placeholder="{{ _("Documented evidence, additional remarks") }}"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save me-1"></i>Save
+                    <i class="bi bi-save me-1"></i>{{ _("Save") }}
                 </button>
             </form>
             {% else %}
             {# Filled - read-only #}
             <table class="table table-bordered mb-0">
                 <tr>
-                    <th style="width:30%" class="table-light">Activity requiring improvement</th>
+                    <th style="width:30%" class="table-light">{{ _("Activity requiring improvement") }}</th>
                     <td style="white-space: pre-wrap;">
                         {{ record.activity_description or '-' }}
                         {% if record.source_complaint %}
                         <br><small class="text-muted">
-                            <i class="bi bi-link-45deg me-1"></i>Source:
+                            <i class="bi bi-link-45deg me-1"></i>{{ _("Source:") }}
                             <a href="{{ url_for('quality.complaints_detail', id=record.source_complaint_id) }}">
                                 {{ record.source_complaint.complaint_no }}
                             </a>
@@ -93,19 +93,19 @@
                     </td>
                 </tr>
                 <tr>
-                    <th class="table-light">Improvement action plan</th>
+                    <th class="table-light">{{ _("Improvement action plan") }}</th>
                     <td style="white-space: pre-wrap;">{{ record.improvement_plan or '-' }}</td>
                 </tr>
                 <tr>
-                    <th class="table-light">Improvement deadline</th>
+                    <th class="table-light">{{ _("Improvement deadline") }}</th>
                     <td>{{ record.deadline.strftime('%Y-%m-%d') if record.deadline else '-' }}</td>
                 </tr>
                 <tr>
-                    <th class="table-light">Responsible person</th>
+                    <th class="table-light">{{ _("Responsible person") }}</th>
                     <td>{{ record.responsible_person or '-' }}</td>
                 </tr>
                 <tr>
-                    <th class="table-light">Documentation, additional remarks</th>
+                    <th class="table-light">{{ _("Documentation, additional remarks") }}</th>
                     <td style="white-space: pre-wrap;">{{ record.documentation or '-' }}</td>
                 </tr>
             </table>
@@ -116,7 +116,7 @@
     {# ═══ Section 2: Control ═══ #}
     <div class="card mb-3">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Control Section: Results After Improvement Implementation</h5>
+            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section: Results After Improvement Implementation") }}</h5>
         </div>
         <div class="card-body">
             {% if record.technical_manager_id %}
@@ -124,43 +124,43 @@
             <table class="table table-bordered">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:50%">Criteria</th>
-                        <th class="text-center" style="width:25%">Yes</th>
-                        <th class="text-center" style="width:25%">No</th>
+                        <th style="width:50%">{{ _("Criteria") }}</th>
+                        <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
+                        <th class="text-center" style="width:25%">{{ _("No") }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Improved within the established deadline?</strong></td>
+                        <td><strong>{{ _("Improved within the established deadline?") }}</strong></td>
                         <td class="text-center">
-                            {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                            {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
                         </td>
                         <td class="text-center">
-                            {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                            {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
                         </td>
                     </tr>
                     <tr>
-                        <td><strong>Improvement fully implemented?</strong></td>
+                        <td><strong>{{ _("Improvement fully implemented?") }}</strong></td>
                         <td class="text-center">
-                            {% if record.fully_implemented %}<span class="text-success fw-bold text-decoration-underline">Yes</span>{% endif %}
+                            {% if record.fully_implemented %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
                         </td>
                         <td class="text-center">
-                            {% if not record.fully_implemented %}<span class="text-danger fw-bold text-decoration-underline">No</span>{% endif %}
+                            {% if not record.fully_implemented %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
                         </td>
                     </tr>
                 </tbody>
             </table>
             <table class="table table-bordered mb-0">
                 <tr>
-                    <th style="width:30%" class="table-light">Additional remarks</th>
+                    <th style="width:30%" class="table-light">{{ _("Additional remarks") }}</th>
                     <td style="white-space: pre-wrap;">{{ record.control_notes or '-' }}</td>
                 </tr>
                 <tr>
-                    <th class="table-light">Date</th>
+                    <th class="table-light">{{ _("Date") }}</th>
                     <td>{{ record.control_date.strftime('%Y-%m-%d') if record.control_date else '-' }}</td>
                 </tr>
                 <tr>
-                    <th class="table-light">Signature: Technical Manager</th>
+                    <th class="table-light">{{ _("Signature: Technical Manager") }}</th>
                     <td><i class="bi bi-person-check me-1"></i>{{ record.technical_manager.username if record.technical_manager else '-' }}</td>
                 </tr>
             </table>
@@ -171,36 +171,36 @@
                 <table class="table table-bordered">
                     <thead class="table-light">
                         <tr>
-                            <th style="width:50%">Criteria</th>
-                            <th class="text-center" style="width:25%">Yes</th>
-                            <th class="text-center" style="width:25%">No</th>
+                            <th style="width:50%">{{ _("Criteria") }}</th>
+                            <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
+                            <th class="text-center" style="width:25%">{{ _("No") }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Improved within the established deadline?</strong></td>
+                            <td><strong>{{ _("Improved within the established deadline?") }}</strong></td>
                             <td class="text-center"><input type="radio" name="completed_on_time" value="1" class="form-check-input"></td>
                             <td class="text-center"><input type="radio" name="completed_on_time" value="0" class="form-check-input" checked></td>
                         </tr>
                         <tr>
-                            <td><strong>Improvement fully implemented?</strong></td>
+                            <td><strong>{{ _("Improvement fully implemented?") }}</strong></td>
                             <td class="text-center"><input type="radio" name="fully_implemented" value="1" class="form-check-input"></td>
                             <td class="text-center"><input type="radio" name="fully_implemented" value="0" class="form-check-input" checked></td>
                         </tr>
                     </tbody>
                 </table>
                 <div class="mb-3">
-                    <label class="form-label">Additional remarks:</label>
+                    <label class="form-label">{{ _("Additional remarks:") }}</label>
                     <textarea name="control_notes" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="border-top pt-3 mb-3">
-                    <p class="mb-1"><strong>Signature: Technical Manager</strong></p>
+                    <p class="mb-1"><strong>{{ _("Signature: Technical Manager") }}</strong></p>
                     <p class="text-muted">
                         <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
                     </p>
                 </div>
                 <button type="submit" class="btn btn-info text-white">
-                    <i class="bi bi-check2-square me-1"></i>Submit Review
+                    <i class="bi bi-check2-square me-1"></i>{{ _("Submit Review") }}
                 </button>
             </form>
             {% endif %}

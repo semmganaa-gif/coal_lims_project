@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% set is_micro = is_micro_lab | default(false) %}
-{% block title %}{{ 'Microbiology' if is_micro else 'Water' }} Sample Registration{% endblock %}
+{% block title %}{{ _("Microbiology") if is_micro else _("Water") }} {{ _("Sample Registration") }}{% endblock %}
 
 {% block head %}
 <style>
@@ -127,13 +127,13 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="list-tab" data-bs-toggle="tab"
               data-bs-target="#list-pane" type="button" role="tab">
-        <i class="bi bi-list-ul me-1"></i>Sample List
+        <i class="bi bi-list-ul me-1"></i>{{ _("Sample List") }}
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="add-tab" data-bs-toggle="tab"
               data-bs-target="#add-pane" type="button" role="tab">
-        <i class="bi bi-plus-circle me-1"></i>New Sample
+        <i class="bi bi-plus-circle me-1"></i>{{ _("New Sample") }}
       </button>
     </li>
   </ul>
@@ -144,26 +144,26 @@
     <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
       <div class="card border-0 shadow-sm h-100" style="border-radius: 0 12px 12px 12px;">
         <div class="p-2 d-flex align-items-center gap-2 flex-wrap">
-          <label class="small fw-bold mb-0">From:</label>
+          <label class="small fw-bold mb-0">{{ _("From") }}:</label>
           <input type="date" id="dateFrom" class="form-control form-control-sm" style="width:130px;">
-          <label class="small fw-bold mb-0">To:</label>
+          <label class="small fw-bold mb-0">{{ _("To") }}:</label>
           <input type="date" id="dateTo" class="form-control form-control-sm" style="width:130px;">
           <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshSampleGrid()">
-            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+            <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
           </button>
           <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearDateFilter()">
-            All
+            {{ _("All") }}
           </button>
           <span class="badge bg-info" id="grid-count">0</span>
-          <span class="text-muted small">samples</span>
+          <span class="text-muted small">{{ _("samples") }}</span>
           <div class="ms-auto d-flex gap-2">
             <button type="button" class="btn btn-sm btn-outline-success" id="btnExportCsv">
-              <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i>{{ _("Export CSV") }}
             </button>
             <form id="deleteSelectedForm" action="{{ url_for('microbiology.delete_samples') if is_micro else url_for('water.delete_samples') }}" method="post" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="button" id="btnDeleteSelected" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash me-1"></i>Delete
+                <i class="bi bi-trash me-1"></i>{{ _("Delete") }}
               </button>
             </form>
           </div>
@@ -184,7 +184,7 @@
           <!-- PHASE 1: Select Unit -->
           <div class="water-hub-section" id="water-unit-hub">
             <div class="water-hub-header">
-              <h1><i class="bi {{ 'bi-bug-fill' if is_micro else 'bi-droplet-fill' }}"></i> Select Unit</h1>
+              <h1><i class="bi {{ 'bi-bug-fill' if is_micro else 'bi-droplet-fill' }}"></i> {{ _("Select Unit") }}</h1>
               <p>{{ units|length }} units, {{ total_samples }} samples</p>
             </div>
             <div class="unit-grid">
@@ -194,7 +194,7 @@
                           --card-shadow: {{ unit.color }}55;">
                 <div class="icon"><i class="bi {{ unit.icon }}"></i></div>
                 <div class="name">{{ unit.name }}</div>
-                <div class="count">{{ unit.samples|length }} samples</div>
+                <div class="count">{{ unit.samples|length }} {{ _("samples") }}</div>
               </div>
               {% endfor %}
             </div>
@@ -208,19 +208,19 @@
               <div class="ms-auto d-flex align-items-center gap-2">
                 <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
                   <input type="checkbox" name="next_batch" value="1" class="form-check-input" style="width:2.5em; height:1.3em;" id="nextBatchCheck">
-                  <span class="fw-bold text-warning" style="font-size:0.82rem;">New Batch</span>
+                  <span class="fw-bold text-warning" style="font-size:0.82rem;">{{ _("New Batch") }}</span>
                 </label>
                 <button type="submit" class="btn btn-info text-white fw-bold px-4">
-                  <i class="bi bi-check-circle me-1"></i>Register
+                  <i class="bi bi-check-circle me-1"></i>{{ _("Register") }}
                 </button>
               </div>
             </div>
 
             <!-- Select sample name -->
             <div class="mb-1 d-flex align-items-center gap-2">
-              <label class="form-label small fw-bold mb-0">Sample Name:</label>
-              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">All</button>
-              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">Clear</button>
+              <label class="form-label small fw-bold mb-0">{{ _("Sample Name") }}:</label>
+              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">{{ _("All") }}</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">{{ _("Clear") }}</button>
               <span class="text-muted small" id="sample-count-label"></span>
             </div>
             <div class="sample-list" id="sample-list"></div>
@@ -229,17 +229,17 @@
               <!-- Left: Information -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-droplet me-1 text-info"></i>Sample Information</h6>
+                  <h6><i class="bi bi-droplet me-1 text-info"></i>{{ _("Sample Information") }}</h6>
                   <div class="mb-2">
-                    <label class="form-label small">Sampling Date</label>
+                    <label class="form-label small">{{ _("Sampling Date") }}</label>
                     <input type="date" name="sample_date" class="form-control form-control-sm" required>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label small">Sampling Time</label>
+                    <label class="form-label small">{{ _("Sampling Time") }}</label>
                     <div class="d-flex align-items-center gap-2">
                       <input type="time" name="sample_time" id="sample_time" class="form-control form-control-sm" style="max-width:130px;">
                       <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" style="font-size:0.72rem; white-space:nowrap;" onclick="setNowTime()">
-                        <i class="bi bi-clock me-1"></i>Now
+                        <i class="bi bi-clock me-1"></i>{{ _("Now") }}
                       </button>
                       <div class="d-flex gap-1 flex-wrap" id="quickTimeButtons">
                         <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-1" style="font-size:0.68rem;" onclick="setQuickTime('08:00')">08:00</button>
@@ -251,12 +251,12 @@
                     </div>
                   </div>
                   <div class="mb-2">
-                    <label class="form-label small">Sampled By</label>
+                    <label class="form-label small">{{ _("Sampled By") }}</label>
                     <input type="text" name="sampled_by" class="form-control form-control-sm">
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-thermometer-half me-1"></i>Field Measurements</h6>
+                  <h6><i class="bi bi-thermometer-half me-1"></i>{{ _("Field Measurements") }}</h6>
                   <div class="row g-2">
                     <div class="col-4">
                       <label class="form-label small">Temp (°C)</label>
@@ -273,7 +273,7 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-box me-1"></i>Volume</h6>
+                  <h6><i class="bi bi-box me-1"></i>{{ _("Volume") }}</h6>
                   <div class="d-flex flex-wrap gap-2 align-items-center">
                     <label class="form-label small d-flex align-items-center gap-1 mb-0">
                       <input type="checkbox" name="volume_2l" value="1"> 2 л
@@ -283,23 +283,23 @@
                     </label>
                     <span class="mx-2 text-muted">|</span>
                     <label class="form-label small d-flex align-items-center gap-1 mb-0">
-                      <input type="checkbox" name="return_sample" value="1"> Return Sample
+                      <input type="checkbox" name="return_sample" value="1"> {{ _("Return Sample") }}
                     </label>
                   </div>
                 </div>
                 <div class="form-card">
-                  <h6><i class="bi bi-calendar-check me-1"></i>Retention Period</h6>
+                  <h6><i class="bi bi-calendar-check me-1"></i>{{ _("Retention Period") }}</h6>
                   <div class="d-flex flex-wrap gap-1">
                     <input type="radio" class="btn-check" name="retention_period" id="ret_1" value="1">
-                    <label class="btn btn-outline-danger btn-sm" for="ret_1">1 day</label>
+                    <label class="btn btn-outline-danger btn-sm" for="ret_1">{{ _("1 day") }}</label>
                     <input type="radio" class="btn-check" name="retention_period" id="ret_3" value="3" checked>
-                    <label class="btn btn-outline-warning btn-sm" for="ret_3">3 days</label>
+                    <label class="btn btn-outline-warning btn-sm" for="ret_3">{{ _("3 days") }}</label>
                     <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7">
-                    <label class="btn btn-outline-success btn-sm" for="ret_7">7 days</label>
+                    <label class="btn btn-outline-success btn-sm" for="ret_7">{{ _("7 days") }}</label>
                   </div>
                   <div class="mt-2">
-                    <label class="form-label small">Notes</label>
-                    <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="Color, odor..."></textarea>
+                    <label class="form-label small">{{ _("Notes") }}</label>
+                    <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="{{ _("Color, odor...") }}"></textarea>
                   </div>
                 </div>
               </div>
@@ -307,10 +307,10 @@
               <!-- Right: Analysis -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>Drinking Water Analysis</h6>
+                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>{{ _("Drinking Water Analysis") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_drink">
                     {% for at in water_analyses if 'drinking' in at.categories %}
@@ -322,10 +322,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>Wastewater Analysis</h6>
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>{{ _("Wastewater Analysis") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_waste">
                     {% for at in water_analyses if 'wastewater' in at.categories and 'drinking' not in at.categories %}
@@ -337,10 +337,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>Other Analysis</h6>
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>{{ _("Other Analysis") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_other">
                     {% for at in water_analyses if 'other' in at.categories %}
@@ -352,10 +352,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>Microbiology (Water)</h6>
+                  <h6><i class="bi bi-bug me-1" style="color:#20c997"></i>{{ _("Microbiology (Water)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="mc">
                     {% for at in micro_analyses if at.code in ['CFU','ECOLI','SALM'] %}
@@ -367,10 +367,10 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>Microbiology (Air)</h6>
+                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>{{ _("Microbiology (Air)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="mc_air">
                     {% for at in micro_analyses if at.code in ['AIR_CFU','AIR_STAPH'] %}
@@ -382,10 +382,10 @@
                   </div>
                 </div>
                 <div class="form-card">
-                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>Microbiology (Swab)</h6>
+                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>{{ _("Microbiology (Swab)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">Clear</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="mc_swab">
                     {% for at in micro_analyses if at.code in ['SWAB_CFU','SWAB_ECOLI','SWAB_SALM'] %}
@@ -497,10 +497,10 @@ function setQuickTime(t) {
 // ============ Tab 1: AG Grid list ============
 let sampleGridApi = null;
 const statusMap = {
-  'new': '<span class="badge bg-primary">New</span>',
-  'in_progress': '<span class="badge bg-warning text-dark">In Progress</span>',
-  'completed': '<span class="badge bg-success">Completed</span>',
-  'approved': '<span class="badge bg-info">Approved</span>',
+  'new': '<span class="badge bg-primary">{{ _("New") }}</span>',
+  'in_progress': '<span class="badge bg-warning text-dark">{{ _("In Progress") }}</span>',
+  'completed': '<span class="badge bg-success">{{ _("Completed") }}</span>',
+  'approved': '<span class="badge bg-info">{{ _("Approved") }}</span>',
 };
 
 const sampleColDefs = [
@@ -576,7 +576,8 @@ function loadSampleGrid() {
       sortable: true,
       filter: true,
       floatingFilter: true,
-      menuTabs: ['filterMenuTab'],
+      menuTabs: [],
+      floatingFilterComponentParams: { suppressFilterButton: true },
     },
     animateRows: true,
     rowSelection: 'multiple',

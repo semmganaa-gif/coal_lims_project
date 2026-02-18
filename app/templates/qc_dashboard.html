@@ -6,16 +6,16 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{{ title }}</h1>
     <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-      ← Back to Sample Summary
+      {{ _("← Back to Sample Summary") }}
     </a>
   </div>
 
   <div class="alert alert-info small">
-    <strong>Тайлбар:</strong>
+    <strong>{{ _("Note:") }}</strong>
     <ul class="mb-0">
-      <li>Цагийн дээжүүд (D1–D6, N1–N6) байгаа хэмжээгээрээ дундаж (Hourly Avg) бодогддог – заавал 6 ширхэг байх шаардлагагүй.</li>
-      <li>Composite (Dcom / Ncom) үр дүнг Hourly Avg-тай харьцуулж, tolerance-аас хэтэрвэл композитын нүд улаанаар тэмдэглэгдэнэ.</li>
-      <li>Name/Class QC (Vdaf, Aad, CSN, Gi) specification-оос зөрвөл Average болон Composite-ийн нүд доогуур улаан зураас гарна.</li>
+      <li>{{ _("Hourly samples (D1–D6, N1–N6) are averaged as available (Hourly Avg) – not all 6 are required.") }}</li>
+      <li>{{ _("Composite (Dcom / Ncom) results are compared with Hourly Avg; cells exceeding tolerance are highlighted red.") }}</li>
+      <li>{{ _("Name/Class QC (Vdaf, Aad, CSN, Gi) specification violations are shown as red underlines on Average and Composite cells.") }}</li>
     </ul>
   </div>
 
@@ -54,16 +54,15 @@
     }
   </style>
 
-  {# --- 🆕 Name/Class мастер spec хүснэгт (толгой хэсэгт) --- #}
+  {# --- Name/Class master spec table (header section) --- #}
   {% if name_class_master_specs %}
     <div class="card qc-card mb-3">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <div>
-            <div class="qc-spec-title">Name/Class QC – мастер specification</div>
+            <div class="qc-spec-title">{{ _("Name/Class QC – master specification") }}</div>
             <div class="qc-small">
-              2009 оноос хойших датаас гаргасан тогтмол утгууд. Доорх мөрнөөс нэгийг
-              сонговол QC хүснэгтийн Hourly Avg / Composite нь түүнтэй харьцуулж өнгө авна.
+              {{ _("Fixed values derived from data since 2009. Select a row below to compare QC table Hourly Avg / Composite values.") }}
             </div>
           </div>
         </div>
@@ -72,8 +71,8 @@
           <table class="table table-sm table-bordered align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th style="width: 40px;" class="text-center">Use</th>
-                <th>Name / Class</th>
+                <th style="width: 40px;" class="text-center">{{ _("Use") }}</th>
+                <th>{{ _("Name / Class") }}</th>
                 <th class="text-end">Mad</th>
                 <th class="text-end">Aad</th>
                 <th class="text-end">Vad</th>
@@ -112,7 +111,7 @@
 
   {% if streams|length == 0 %}
     <div class="alert alert-warning">
-      QC-д харуулах stream олдсонгүй.
+      {{ _("No streams found for QC display.") }}
     </div>
   {% endif %}
 
@@ -120,16 +119,16 @@
     <div class="card qc-card mb-4">
       <div class="card-header py-2 d-flex justify-content-between align-items-center">
         <div>
-          <div><strong>Stream / Family:</strong> {{ stream.family }}</div>
+          <div><strong>{{ _("Stream / Family:") }}</strong> {{ stream.family }}</div>
           <div class="qc-small">
-            <span class="me-3"><strong>Unit:</strong> {{ stream.unit or "—" }}</span>
-            <span class="me-3"><strong>Date:</strong> {{ stream.date or "—" }}</span>
-            <span><strong>Цагийн дээж (n):</strong> {{ stream.n_hourly }}</span>
+            <span class="me-3"><strong>{{ _("Unit:") }}</strong> {{ stream.unit or "—" }}</span>
+            <span class="me-3"><strong>{{ _("Date:") }}</strong> {{ stream.date or "—" }}</span>
+            <span><strong>{{ _("Hourly samples (n):") }}</strong> {{ stream.n_hourly }}</span>
           </div>
         </div>
         {% if stream.comp_row.sample %}
           <div class="qc-small text-end">
-            <div><strong>Composite дээж:</strong>
+            <div><strong>{{ _("Composite sample:") }}</strong>
               <a href="{{ url_for('api.sample_report', sample_id=stream.comp_row.sample.id) }}">
                 {{ stream.comp_row.sample.sample_code }}
               </a>
@@ -143,25 +142,25 @@
           <thead class="table-light">
             <tr>
               <th rowspan="2" style="min-width: 40px;">#</th>
-              <th rowspan="2" style="min-width: 70px;">Мөр</th>
-              <th rowspan="2" style="min-width: 220px;">Sample Code</th>
+              <th rowspan="2" style="min-width: 70px;">{{ _("Row") }}</th>
+              <th rowspan="2" style="min-width: 220px;">{{ _("Sample Code") }}</th>
               {% for code in param_codes %}
                 <th colspan="2" class="text-center">{{ code }}</th>
               {% endfor %}
             </tr>
             <tr>
               {% for code in param_codes %}
-                <th class="text-end">Value</th>
+                <th class="text-end">{{ _("Value") }}</th>
                 <th class="text-end">Δ</th>
               {% endfor %}
             </tr>
           </thead>
           <tbody>
-            {# --- 1. Цагийн дээжүүд --- #}
+            {# --- 1. Hourly samples --- #}
             {% for row in stream.hourly_rows %}
               <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ row.slot or "Hourly" }}</td>
+                <td>{{ row.slot or _("Hourly") }}</td>
                 <td>
                   <a href="{{ url_for('api.sample_report', sample_id=row.sample.id) }}">
                     {{ row.sample.sample_code }}
@@ -183,7 +182,7 @@
 
             {# --- 2. Hourly Average --- #}
             <tr class="qc-row-avg">
-              <td colspan="3"><strong>Hourly Avg</strong></td>
+              <td colspan="3"><strong>{{ _("Hourly Avg") }}</strong></td>
               {% for code in param_codes %}
                 {% set v_avg = stream.avg_row["values"].get(code) %}
                 {% set spec_bad = stream.avg_row["spec_flags"].get(code) %}
@@ -200,7 +199,7 @@
 
             {# --- 3. Composite --- #}
             <tr class="qc-row-comp">
-              <td colspan="3"><strong>Composite</strong></td>
+              <td colspan="3"><strong>{{ _("Composite") }}</strong></td>
               {% for code in param_codes %}
                 {% set v_comp = stream.comp_row["values"].get(code) %}
                 {% set d = stream.comp_row["delta"].get(code) %}
@@ -239,7 +238,6 @@
 
 {% block scripts %}
 <script>
-  // Name/Class мастер spec сонгох үед spec_key query param-ыг шинэчилнэ.
   function qcSelectSpec(key) {
     const url = new URL(window.location.href);
     if (key) {

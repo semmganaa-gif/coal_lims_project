@@ -1,6 +1,6 @@
 {# ============================================================
-   ӨДРИЙГ ЭХЛЭХ — Morning Start Panel
-   Бүх лабораторийн hub хуудсанд include хийнэ:
+   MORNING START PANEL
+   Include in all lab hub pages:
    {% include 'partials/_morning_start.html' %}
    ============================================================ #}
 <style>
@@ -143,7 +143,7 @@
   <div class="morning-title">
     <div class="sunrise-icon"><i class="bi bi-sunrise"></i></div>
     <div>
-      <span id="morningGreeting">Start the Day</span>
+      <span id="morningGreeting">{{ _("Start the Day") }}</span>
       <div style="font-size:0.72rem; font-weight:500; color:#64748b;" id="morningDate"></div>
     </div>
     <span style="margin-left:auto; font-size:0.7rem; color:#94a3b8; font-weight:600;" id="morningTime"></span>
@@ -152,82 +152,82 @@
   <div class="morning-grid">
     <!-- 1. SLAM Book -->
     <div class="slam-card">
-      <h4><i class="bi bi-shield-exclamation"></i> SLAM — Safety Assessment</h4>
+      <h4><i class="bi bi-shield-exclamation"></i> {{ _("SLAM - Safety Assessment") }}</h4>
       <ul class="slam-list" id="slamList">
         <li data-slam="S" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamS"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#ef4444">S</div>
           <div>
-            <div class="slam-text">Stop</div>
-            <div class="slam-sub">Carefully observe your work environment</div>
+            <div class="slam-text">{{ _("Stop") }}</div>
+            <div class="slam-sub">{{ _("Carefully observe your work environment") }}</div>
           </div>
         </li>
         <li data-slam="L" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamL"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#f59e0b">L</div>
           <div>
-            <div class="slam-text">Look</div>
-            <div class="slam-sub">Check for any hazards or risks</div>
+            <div class="slam-text">{{ _("Look") }}</div>
+            <div class="slam-sub">{{ _("Check for any hazards or risks") }}</div>
           </div>
         </li>
         <li data-slam="A" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamA"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#3b82f6">A</div>
           <div>
-            <div class="slam-text">Assess</div>
-            <div class="slam-sub">Evaluate risk level and check safety measures</div>
+            <div class="slam-text">{{ _("Assess") }}</div>
+            <div class="slam-sub">{{ _("Evaluate risk level and check safety measures") }}</div>
           </div>
         </li>
         <li data-slam="M" onclick="toggleSlam(this)">
           <div class="slam-check" id="slamM"><i class="bi bi-check-lg" style="display:none"></i></div>
           <div class="slam-letter" style="background:#16a34a">M</div>
           <div>
-            <div class="slam-text">Manage</div>
-            <div class="slam-sub">Take necessary measures and begin work</div>
+            <div class="slam-text">{{ _("Manage") }}</div>
+            <div class="slam-sub">{{ _("Take necessary measures and begin work") }}</div>
           </div>
         </li>
       </ul>
       <div class="slam-progress"><div class="slam-progress-bar" id="slamProgress" style="width:0%"></div></div>
     </div>
 
-    <!-- 2. Equipment Төхөөрөмж -->
+    <!-- 2. Equipment -->
     <div class="equip-card">
-      <h4><i class="bi bi-tools"></i> Equipment Alerts</h4>
+      <h4><i class="bi bi-tools"></i> {{ _("Equipment Alerts") }}</h4>
       <div class="equip-alert-list" id="equipAlerts">
         <div class="text-center py-3" style="color:#94a3b8; font-size:0.8rem;">
-          <i class="bi bi-arrow-repeat spin"></i> Loading...
+          <i class="bi bi-arrow-repeat spin"></i> {{ _("Loading...") }}
         </div>
       </div>
     </div>
 
-    <!-- 3. Өнөөдрийн ажил -->
+    <!-- 3. Today's work -->
     <div class="tasks-card">
-      <h4><i class="bi bi-list-check"></i> Today's Samples & Tasks</h4>
+      <h4><i class="bi bi-list-check"></i> {{ _("Today's Samples & Tasks") }}</h4>
       <div class="task-stat-row">
         <div class="task-stat-box">
           <div class="num" style="color:#0891b2" id="statTodayReceived">-</div>
-          <div class="lbl">Received Today</div>
+          <div class="lbl">{{ _("Received Today") }}</div>
         </div>
         <div class="task-stat-box">
           <div class="num" style="color:#2563eb" id="statNew">-</div>
-          <div class="lbl">Pending</div>
+          <div class="lbl">{{ _("Pending") }}</div>
         </div>
         <div class="task-stat-box">
           <div class="num" style="color:#d97706" id="statInProgress">-</div>
-          <div class="lbl">In Progress</div>
+          <div class="lbl">{{ _("In Progress") }}</div>
         </div>
       </div>
     </div>
 
-    <!-- 4. Сануулга -->
+    <!-- 4. Reminders -->
     <div class="reminder-card">
-      <h4><i class="bi bi-bell"></i> Daily Reminders</h4>
+      <h4><i class="bi bi-bell"></i> {{ _("Daily Reminders") }}</h4>
       <ul class="reminder-list">
-        <li><i class="bi bi-check-circle-fill"></i> Personal Protective Equipment (PPE) worn</li>
-        <li><i class="bi bi-check-circle-fill"></i> Workplace cleaning completed</li>
-        <li><i class="bi bi-check-circle-fill"></i> Check reagent expiration dates</li>
-        <li><i class="bi bi-check-circle-fill"></i> Zero-calibrate measuring instruments</li>
-        <li><i class="bi bi-check-circle-fill"></i> Record environmental temperature and humidity</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ _("Personal Protective Equipment (PPE) worn") }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ _("Workplace cleaning completed") }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ _("Check reagent expiration dates") }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ _("Zero-calibrate measuring instruments") }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ _("Record environmental temperature and humidity") }}</li>
       </ul>
     </div>
   </div>
@@ -235,24 +235,38 @@
 
 <script>
 (function() {
+  const I18N_MORNING = {
+    goodMorning: '{{ _("Good Morning!") }}',
+    goodAfternoon: '{{ _("Good Afternoon!") }}',
+    goodEvening: '{{ _("Good Evening!") }}',
+    days: '{{ _("days") }}',
+    overdue: '{{ _("overdue") }}',
+    calibrationDueSoon: '{{ _("calibration due soon") }}',
+    outOfOrder: '{{ _("Out of Order") }}',
+    underMaintenance: '{{ _("Under Maintenance") }}',
+    sparePartsRequired: '{{ _("Spare Parts Required") }}',
+    allEquipmentOk: '{{ _("All equipment is in normal condition") }}',
+    failedToLoad: '{{ _("Failed to load data") }}'
+  };
+
   // --- Date & greeting ---
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? 'Good Morning!' : hour < 17 ? 'Good Afternoon!' : 'Good Evening!';
+  const greeting = hour < 12 ? I18N_MORNING.goodMorning : hour < 17 ? I18N_MORNING.goodAfternoon : I18N_MORNING.goodEvening;
   document.getElementById('morningGreeting').textContent = greeting;
   document.getElementById('morningDate').textContent =
     now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
   document.getElementById('morningTime').textContent =
     now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
 
-  // --- Detect lab type from URL (SLAM key-д хэрэгтэй тул эхэнд тодорхойлно) ---
+  // --- Detect lab type from URL ---
   const path = window.location.pathname;
   let labType = 'coal';
   if (path.startsWith('/labs/water-lab/microbiology')) labType = 'micro';
   else if (path.startsWith('/labs/water-lab/chemistry') || path.startsWith('/labs/water-lab')) labType = 'water';
   else if (path.startsWith('/labs/petrography')) labType = 'petro';
 
-  // --- SLAM localStorage (өдөр бүр reset) ---
+  // --- SLAM localStorage (reset daily) ---
   const slamKey = 'slam_' + labType + '_' + now.toISOString().slice(0,10);
   let slamState = JSON.parse(localStorage.getItem(slamKey) || '{}');
 
@@ -298,30 +312,30 @@
       if (data.calibration_overdue && data.calibration_overdue.length) {
         data.calibration_overdue.forEach(e => {
           html += `<div class="equip-alert-item overdue">
-            <span class="badge-sm" style="background:#dc2626">${e.days_overdue} days</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>overdue</em>
+            <span class="badge-sm" style="background:#dc2626">${e.days_overdue} ${I18N_MORNING.days}</span>
+            <strong>${e.lab_code}</strong> ${e.name} — <em>${I18N_MORNING.overdue}</em>
           </div>`;
         });
       }
       if (data.calibration_due && data.calibration_due.length) {
         data.calibration_due.forEach(e => {
           html += `<div class="equip-alert-item due-soon">
-            <span class="badge-sm" style="background:#d97706">${e.days_left} days</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>calibration due soon</em>
+            <span class="badge-sm" style="background:#d97706">${e.days_left} ${I18N_MORNING.days}</span>
+            <strong>${e.lab_code}</strong> ${e.name} — <em>${I18N_MORNING.calibrationDueSoon}</em>
           </div>`;
         });
       }
       if (data.broken_equipment && data.broken_equipment.length) {
-        const statusMn = { broken: 'Out of Order', maintenance: 'Under Maintenance', needs_spare: 'Spare Parts Required' };
+        const statusMap = { broken: I18N_MORNING.outOfOrder, maintenance: I18N_MORNING.underMaintenance, needs_spare: I18N_MORNING.sparePartsRequired };
         data.broken_equipment.forEach(e => {
           html += `<div class="equip-alert-item broken">
             <span class="badge-sm" style="background:#b91c1c"><i class="bi bi-exclamation-triangle"></i></span>
-            <strong>${e.lab_code}</strong> ${e.name} — ${statusMn[e.status] || e.status}
+            <strong>${e.lab_code}</strong> ${e.name} — ${statusMap[e.status] || e.status}
           </div>`;
         });
       }
       if (!html) {
-        html = '<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> All equipment is in normal condition</div>';
+        html = `<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> ${I18N_MORNING.allEquipmentOk}</div>`;
       }
       el.innerHTML = html;
 
@@ -334,7 +348,7 @@
     })
     .catch(() => {
       document.getElementById('equipAlerts').innerHTML =
-        '<div class="text-center py-2" style="color:#94a3b8; font-size:0.8rem;">Failed to load data</div>';
+        `<div class="text-center py-2" style="color:#94a3b8; font-size:0.8rem;">${I18N_MORNING.failedToLoad}</div>`;
     });
 })();
 </script>

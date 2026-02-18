@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
+{% block title %}{{ _("My Profile") }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -18,13 +18,13 @@
                 </div>
             </div>
 
-            <!-- Профайл мэдээлэл -->
+            <!-- Profile information -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Email Signature Information</h5>
-                    <small class="text-muted">Your information will be included when sending reports</small>
+                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>{{ _("Email Signature Information") }}</h5>
+                    <small class="text-muted">{{ _("Your information will be included when sending reports") }}</small>
                     <div class="mt-2">
-                        <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>Latin characters only</span>
+                        <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>{{ _("Latin characters only") }}</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -33,11 +33,11 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Username</label>
+                                <label class="form-label">{{ _("Username") }}</label>
                                 <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Role</label>
+                                <label class="form-label">{{ _("Role") }}</label>
                                 <input type="text" class="form-control" value="{{ current_user.role|title }}" disabled>
                             </div>
                         </div>
@@ -47,37 +47,37 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="full_name" class="form-label">
-                                    <i class="bi bi-person me-1"></i>Full Name (Latin) <span class="text-danger">*</span>
+                                    <i class="bi bi-person me-1"></i>{{ _("Full Name (Latin)") }} <span class="text-danger">*</span>
                                 </label>
-                                {{ form.full_name(class="form-control", placeholder="e.g. GANTULGA Ulziibuyan") }}
-                                <small class="text-muted">Displayed in email signature</small>
+                                {{ form.full_name(class="form-control", placeholder=_("e.g. GANTULGA Ulziibuyan")) }}
+                                <small class="text-muted">{{ _("Displayed in email signature") }}</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="position" class="form-label">
-                                    <i class="bi bi-briefcase me-1"></i>Position (Latin)
+                                    <i class="bi bi-briefcase me-1"></i>{{ _("Position (Latin)") }}
                                 </label>
-                                {{ form.position(class="form-control", placeholder="e.g. Senior Chemist, Laboratory") }}
+                                {{ form.position(class="form-control", placeholder=_("e.g. Senior Chemist, Laboratory")) }}
                             </div>
                         </div>
 
                         <div class="row g-3 mt-2">
                             <div class="col-md-6">
                                 <label for="email" class="form-label">
-                                    <i class="bi bi-envelope me-1"></i>Work Email <span class="text-danger">*</span>
+                                    <i class="bi bi-envelope me-1"></i>{{ _("Work Email") }} <span class="text-danger">*</span>
                                 </label>
-                                {{ form.email(class="form-control", placeholder="e.g. gantulga.u@mmc.mn") }}
+                                {{ form.email(class="form-control", placeholder=_("e.g. gantulga.u@mmc.mn")) }}
                             </div>
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">
-                                    <i class="bi bi-telephone me-1"></i>Phone Number
+                                    <i class="bi bi-telephone me-1"></i>{{ _("Phone Number") }}
                                 </label>
-                                {{ form.phone(class="form-control", placeholder="e.g. 80872013") }}
+                                {{ form.phone(class="form-control", placeholder=_("e.g. 80872013")) }}
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-end mt-4">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg me-1"></i>Save
+                                <i class="bi bi-check-lg me-1"></i>{{ _("Save") }}
                             </button>
                         </div>
                     </form>
@@ -87,7 +87,7 @@
             <!-- Email Signature Preview -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Signature Preview</h5>
+                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>{{ _("Signature Preview") }}</h5>
                 </div>
                 <div class="card-body" id="signaturePreview">
                     <div style="font-family: Arial, sans-serif; font-size: 12px; color: #333;">

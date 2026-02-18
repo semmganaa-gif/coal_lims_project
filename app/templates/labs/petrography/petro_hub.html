@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Petrography Laboratory{% endblock %}
+{% block title %}{{ _("Petrography Laboratory") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -104,8 +104,8 @@
 
 <div class="petro-dash">
   <div class="dash-header">
-    <h1><i class="bi bi-gem me-2"></i>Petrography Laboratory</h1>
-    <p>Maceral, vitrinite reflectance, mineral matter, and thin section analysis</p>
+    <h1><i class="bi bi-gem me-2"></i>{{ _("Petrography Laboratory") }}</h1>
+    <p>{{ _("Maceral, vitrinite reflectance, mineral matter, and thin section analysis") }}</p>
   </div>
 
   <!-- Morning start -->
@@ -116,29 +116,29 @@
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-box-arrow-in-right"></i></div>
       <div class="stat-value" style="color:#b45309">{{ pending_pe }}</div>
-      <div class="stat-label">PE Samples (Pending)</div>
+      <div class="stat-label">{{ _("PE Samples (Pending)") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#8b5cf6"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#6d28d9">{{ total_petro }}</div>
-      <div class="stat-label">Total Samples</div>
+      <div class="stat-label">{{ _("Total Samples") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value" style="color:#1d4ed8">{{ in_progress }}</div>
-      <div class="stat-label">In Progress</div>
+      <div class="stat-label">{{ _("In Progress") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#22c55e"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-value" style="color:#15803d">{{ completed }}</div>
-      <div class="stat-label">Completed</div>
+      <div class="stat-label">{{ _("Completed") }}</div>
     </div>
   </div>
 
   <!-- Analysis types -->
   <div class="section-title">
     <i class="bi bi-microscope" style="color:#8b5cf6"></i>
-    Analysis Worksheets
+    {{ _("Analysis Worksheets") }}
   </div>
   <div class="analysis-grid">
     {% for at in analysis_types %}
@@ -152,22 +152,22 @@
   <!-- Navigation cards -->
   <div class="section-title">
     <i class="bi bi-grid" style="color:#8b5cf6"></i>
-    Main Menu
+    {{ _("Main Menu") }}
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('petrography.petro_data') }}" class="nav-card" onclick="event.preventDefault();" id="btnShowSamples">
       <div class="nav-card-icon purple"><i class="bi bi-list-ul"></i></div>
       <div class="nav-card-content">
-        <h3>Sample List</h3>
-        <p>Samples submitted for petrographic analysis</p>
+        <h3>{{ _("Sample List") }}</h3>
+        <p>{{ _("Samples submitted for petrographic analysis") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('equipment.equipment_list') }}" class="nav-card">
       <div class="nav-card-icon blue"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Equipment</h3>
-        <p>Microscopes, preparation tools and instruments</p>
+        <h3>{{ _("Equipment") }}</h3>
+        <p>{{ _("Microscopes, preparation tools and instruments") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -176,7 +176,7 @@
   <!-- Recent samples (AG Grid) -->
   <div style="background:rgba(255,255,255,0.8); border-radius:20px; padding:1.25rem; margin-top:1rem; border:1px solid rgba(148,163,184,0.15); display:none;" id="samplesPanel">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-1" style="color:#8b5cf6"></i>Recent Samples</h6>
+      <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-1" style="color:#8b5cf6"></i>{{ _("Recent Samples") }}</h6>
       <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('samplesPanel').style.display='none'">
         <i class="bi bi-x-lg"></i>
       </button>
@@ -198,10 +198,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let gridReady = false;
   const gridOptions = {
     columnDefs: [
-      { field: 'sample_code', headerName: 'Sample Code', flex: 1.5 },
-      { field: 'client_name', headerName: 'Client', flex: 1 },
-      { field: 'status', headerName: 'Status', flex: 0.8 },
-      { field: 'sample_date', headerName: 'Date', flex: 1 },
+      { field: 'sample_code', headerName: '{{ _("Sample Code") }}', flex: 1.5 },
+      { field: 'client_name', headerName: '{{ _("Client") }}', flex: 1 },
+      { field: 'status', headerName: '{{ _("Status") }}', flex: 0.8 },
+      { field: 'sample_date', headerName: '{{ _("Date") }}', flex: 1 },
     ],
     rowData: [],
     defaultColDef: { sortable: true, filter: true, resizable: true },

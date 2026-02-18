@@ -1,6 +1,6 @@
 {# app/templates/equipment_hub.html #}
 {% extends "base.html" %}
-{% block title %}Equipment Journal{% endblock %}
+{% block title %}{{ _("Equipment Journal") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4 equipment-hub-page">
@@ -12,22 +12,22 @@
         <span class="hub-title-icon">
           <i class="bi bi-kanban-fill"></i>
         </span>
-        Тоног төхөөрөмжийн журнал
+        {{ _("Equipment Journal") }}
       </h3>
       <div class="text-muted small">
-        Бүлгээр харах — ашиглалт ба засвар үйлчилгээний нэгдсэн бүртгэл
+        {{ _("Group view — unified register of usage and maintenance") }}
       </div>
     </div>
 
     <div class="d-flex flex-wrap align-items-center gap-2 hub-legend">
       <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis small">
-        <i class="bi bi-clipboard-data"></i> Ашиглалт
+        <i class="bi bi-clipboard-data"></i> {{ _("Usage") }}
       </span>
       <span class="badge rounded-pill bg-success-subtle text-success-emphasis small">
-        <i class="bi bi-tools"></i> Засвар
+        <i class="bi bi-tools"></i> {{ _("Maintenance") }}
       </span>
       <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis small">
-        <i class="bi bi-clock-history"></i> Журнал
+        <i class="bi bi-clock-history"></i> {{ _("Journal") }}
       </span>
     </div>
   </div>
@@ -37,14 +37,14 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
       <div class="d-flex flex-wrap gap-2 align-items-center">
         <span class="hub-chip hub-chip-soft">
-          <i class="bi bi-check2-circle"></i> Ашиглалт ба засварын нэгдсэн бүртгэл
+          <i class="bi bi-check2-circle"></i> {{ _("Unified register of usage and maintenance") }}
         </span>
         <span class="hub-chip hub-chip-soft">
-          <i class="bi bi-diagram-3"></i> Бүлэг тус бүрийн журнал
+          <i class="bi bi-diagram-3"></i> {{ _("Journal for each group") }}
         </span>
       </div>
       <div class="small text-muted">
-        Журнал нээж <span class="fw-semibold">Огноо шүүлтүүр</span>, <span class="fw-semibold">CSV татах</span>, <span class="fw-semibold">AG Grid</span> ашиглана.
+        {{ _("Open journal to use") }} <span class="fw-semibold">{{ _("Date filter") }}</span>, <span class="fw-semibold">{{ _("CSV download") }}</span>, <span class="fw-semibold">{{ _("AG Grid") }}</span>.
       </div>
     </div>
   </div>
@@ -63,7 +63,7 @@
               </span>
             </div>
             <span class="badge rounded-pill bg-{{ color }}-subtle text-{{ color }}-emphasis small">
-              Журнал
+              {{ _("Journal") }}
             </span>
           </div>
 
@@ -77,14 +77,14 @@
           </p>
           {% else %}
           <p class="card-text text-muted small mb-3">
-            Энэ бүлгийн ашиглалт ба засвар үйлчилгээний түүхийг хянах.
+            {{ _("View usage and maintenance history for this group.") }}
           </p>
           {% endif %}
 
           <div class="mt-auto d-flex justify-content-between align-items-center">
             <a href="{{ url_for('equipment.equipment_journal_grid', category=code) }}"
                class="stretched-link text-decoration-none fw-semibold hub-open-link">
-              Нээх
+              {{ _("Open") }}
               <i class="bi bi-arrow-right-short"></i>
             </a>
           </div>
@@ -94,67 +94,67 @@
     {% endmacro %}
 
     {{ eq_card(
-      "1. Шатаах зуух",
+      _("1. Furnace"),
       "bi-fire",
       "danger",
       "furnace",
-      "Шаталт, илчлэг, үнслэгтэй холбоотой зуухны багажуудын журнал."
+      _("Journal for combustion, calorific, and ash-related furnace equipment.")
     ) }}
 
     {{ eq_card(
-      "2. Дээж бэлтгэл",
+      _("2. Sample Preparation"),
       "bi-hammer",
       "warning",
       "prep",
-      "Бутлах, шигших, холих зэрэг дээж бэлтгэлийн багажууд."
+      _("Equipment for crushing, sieving, mixing and other sample preparation.")
     ) }}
 
     {{ eq_card(
-      "3. Шинжилгээний багаж",
+      _("3. Analysis Instruments"),
       "bi-clipboard-data",
       "primary",
       "analysis",
-      "Нүүрсний чанарын бүх үзүүлэлтийг хэмжих үндсэн шинжилгээний багажууд."
+      _("Core analysis instruments for all coal quality parameters.")
     ) }}
 
     {{ eq_card(
-      "4. Усны лаб",
+      _("4. Water Lab"),
       "bi-droplet",
       "info",
       "water",
-      "Усны чанарын шинжилгээний багажууд (pH, дамжуулалт, ион метр г.м.)."
+      _("Water quality analysis equipment (pH, conductivity, ion meter, etc.).")
     ) }}
 
     {{ eq_card(
-      "5. Микробиологи лаб",
+      _("5. Microbiology Lab"),
       "bi-bug",
       "success",
       "micro",
-      "Инкубатор, хөргөгч зэрэг микробиологийн тусгай багажууд."
+      _("Specialized microbiology equipment such as incubators, refrigerators.")
     ) }}
 
     {{ eq_card(
-      "6. БС лаб",
+      _("6. WTL Lab"),
       "bi-layers",
       "dark",
       "wtl",
-      "Барилгын материалын лабораторийн тоног төхөөрөмж."
+      _("Construction materials laboratory equipment.")
     ) }}
 
     {{ eq_card(
-      "7. Жин",
+      _("7. Balance"),
       "bi-rulers",
       "primary",
       "balance",
-      "Аналитик болон техникийн жингийн тусгай журнал."
+      _("Dedicated journal for analytical and technical balances.")
     ) }}
 
     {{ eq_card(
-      "8. Бусад",
+      _("8. Other"),
       "bi-box-seam",
       "secondary",
       "other",
-      "Туслах тоног төхөөрөмж болон бусад тусгай багажууд."
+      _("Auxiliary equipment and other specialized instruments.")
     ) }}
 
     {# View All #}
@@ -167,13 +167,13 @@
               <i class="bi bi-list-ul fs-2"></i>
             </span>
           </div>
-          <h5 class="fw-bold mb-1 text-dark">Бүх бүртгэл</h5>
+          <h5 class="fw-bold mb-1 text-dark">{{ _("All Records") }}</h5>
           <p class="text-muted small mb-3">
-            Бүх бүлгийн журналыг нэгтгэсэн харагдац.
+            {{ _("Consolidated view of all group journals.") }}
           </p>
           <a href="{{ url_for('equipment.equipment_journal_grid', category='all') }}"
              class="stretched-link text-decoration-none fw-semibold hub-open-link">
-            Нээх
+            {{ _("Open") }}
             <i class="bi bi-arrow-right-circle"></i>
           </a>
         </div>

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Report - {{ report.report_number }}{% endblock %}
+{% block title %}{{ _("Report") }} - {{ report.report_number }}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 900px;">
@@ -15,7 +15,7 @@
         <p class="text-muted mb-0">{{ report.title }}</p>
       </div>
       <a href="{{ url_for('pdf_reports.report_list') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i> Back
+        <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
       </a>
     </div>
 
@@ -24,32 +24,32 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-3">
-            <div class="text-muted small">Status</div>
+            <div class="text-muted small">{{ _("Status") }}</div>
             <div>
               {% if report.status == 'draft' %}
-              <span class="badge bg-secondary fs-6">Draft</span>
+              <span class="badge bg-secondary fs-6">{{ _("Draft") }}</span>
               {% elif report.status == 'pending_approval' %}
-              <span class="badge bg-warning text-dark fs-6">Pending</span>
+              <span class="badge bg-warning text-dark fs-6">{{ _("Pending") }}</span>
               {% elif report.status == 'approved' %}
-              <span class="badge bg-success fs-6">Approved</span>
+              <span class="badge bg-success fs-6">{{ _("Approved") }}</span>
               {% elif report.status == 'sent' %}
-              <span class="badge bg-primary fs-6">Sent</span>
+              <span class="badge bg-primary fs-6">{{ _("Sent") }}</span>
               {% endif %}
             </div>
           </div>
           <div class="col-md-3">
-            <div class="text-muted small">Lab</div>
+            <div class="text-muted small">{{ _("Lab") }}</div>
             <div class="fw-medium">{{ lab_types.get(report.lab_type, report.lab_type) }}</div>
           </div>
           <div class="col-md-3">
-            <div class="text-muted small">Date</div>
+            <div class="text-muted small">{{ _("Date") }}</div>
             <div>
               {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '-' }}
               {% if report.date_to %} - {{ report.date_to.strftime('%Y-%m-%d') }}{% endif %}
             </div>
           </div>
           <div class="col-md-3">
-            <div class="text-muted small">Sample Count</div>
+            <div class="text-muted small">{{ _("Sample Count") }}</div>
             <div class="fw-medium">{{ report.sample_ids|length if report.sample_ids else 0 }}</div>
           </div>
         </div>
@@ -59,35 +59,35 @@
     {# Actions #}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0">Actions</h6>
+        <h6 class="mb-0">{{ _("Actions") }}</h6>
       </div>
       <div class="card-body">
         <div class="d-flex flex-wrap gap-2">
           {% if report.pdf_path %}
           <a href="{{ url_for('pdf_reports.download_report', id=report.id) }}" class="btn btn-outline-primary">
-            <i class="bi bi-download me-1"></i> Download PDF
+            <i class="bi bi-download me-1"></i> {{ _("Download PDF") }}
           </a>
           <a href="{{ url_for('static', filename=report.pdf_path) }}" target="_blank" class="btn btn-outline-info">
-            <i class="bi bi-eye me-1"></i> Preview
+            <i class="bi bi-eye me-1"></i> {{ _("Preview") }}
           </a>
           {% endif %}
 
           {% if report.status in ['draft', 'pending_approval'] and current_user.role in ['senior', 'manager', 'admin'] %}
           <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
-            <i class="bi bi-check-lg me-1"></i> Approve
+            <i class="bi bi-check-lg me-1"></i> {{ _("Approve") }}
           </button>
           {% endif %}
 
           {% if report.status == 'approved' and current_user.role in ['senior', 'manager', 'admin'] %}
           <a href="{{ url_for('pdf_reports.send_email', id=report.id) }}" class="btn btn-primary">
-            <i class="bi bi-envelope me-1"></i> Send Email
+            <i class="bi bi-envelope me-1"></i> {{ _("Send Email") }}
           </a>
           {% endif %}
 
           {% if report.status == 'sent' %}
           <span class="badge bg-success align-self-center">
             <i class="bi bi-check-circle me-1"></i>
-            Sent: {{ report.email_sent_at.strftime('%Y-%m-%d %H:%M') if report.email_sent_at else '' }}
+            {{ _("Sent") }}: {{ report.email_sent_at.strftime('%Y-%m-%d %H:%M') if report.email_sent_at else '' }}
           </span>
           {% endif %}
         </div>
@@ -98,20 +98,20 @@
     {% if report.status in ['approved', 'sent'] %}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0">Approval</h6>
+        <h6 class="mb-0">{{ _("Approval") }}</h6>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-4">
-            <div class="text-muted small">Analyst</div>
+            <div class="text-muted small">{{ _("Analyst") }}</div>
             <div class="fw-medium">{{ report.analyst_signature.name if report.analyst_signature else '-' }}</div>
           </div>
           <div class="col-md-4">
-            <div class="text-muted small">Manager</div>
+            <div class="text-muted small">{{ _("Manager") }}</div>
             <div class="fw-medium">{{ report.manager_signature.name if report.manager_signature else '-' }}</div>
           </div>
           <div class="col-md-4">
-            <div class="text-muted small">Approved By</div>
+            <div class="text-muted small">{{ _("Approved By") }}</div>
             <div>
               {{ report.approved_by.username if report.approved_by else '-' }}
               {% if report.approved_at %}
@@ -128,16 +128,16 @@
     {% if report.email_sent %}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0">Sent Email</h6>
+        <h6 class="mb-0">{{ _("Sent Email") }}</h6>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-8">
-            <div class="text-muted small">Recipients</div>
+            <div class="text-muted small">{{ _("Recipients") }}</div>
             <div>{{ report.email_recipients or '-' }}</div>
           </div>
           <div class="col-md-4">
-            <div class="text-muted small">Sent Date</div>
+            <div class="text-muted small">{{ _("Sent Date") }}</div>
             <div>{{ report.email_sent_at.strftime('%Y-%m-%d %H:%M') if report.email_sent_at else '-' }}</div>
           </div>
         </div>
@@ -149,9 +149,9 @@
     {% if current_user.role in ['manager', 'admin'] %}
     <div class="text-end">
       <form action="{{ url_for('pdf_reports.delete_report', id=report.id) }}" method="POST"
-            onsubmit="return confirm('Энэ тайланг устгах уу?')" class="d-inline">
+            onsubmit="return confirm('{{ _("Delete this report?") }}')" class="d-inline">
         <button type="submit" class="btn btn-outline-danger btn-sm">
-          <i class="bi bi-trash me-1"></i> Delete
+          <i class="bi bi-trash me-1"></i> {{ _("Delete") }}
         </button>
       </form>
     </div>
@@ -164,17 +164,17 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Approve Report</h5>
+        <h5 class="modal-title">{{ _("Approve Report") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ url_for('pdf_reports.approve_report', id=report.id) }}" method="POST">
         <div class="modal-body">
-          <p>Select signature and stamp:</p>
+          <p>{{ _("Select signature and stamp") }}:</p>
 
           <div class="mb-3">
-            <label class="form-label">Analyst Signature</label>
+            <label class="form-label">{{ _("Analyst Signature") }}</label>
             <select name="analyst_signature_id" class="form-select">
-              <option value="">-- Select --</option>
+              <option value="">-- {{ _("Select") }} --</option>
               {% for sig in signatures %}
               <option value="{{ sig.id }}">{{ sig.name }} ({{ sig.position or '' }})</option>
               {% endfor %}
@@ -182,9 +182,9 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Manager Signature</label>
+            <label class="form-label">{{ _("Manager Signature") }}</label>
             <select name="manager_signature_id" class="form-select">
-              <option value="">-- Select --</option>
+              <option value="">-- {{ _("Select") }} --</option>
               {% for sig in signatures %}
               <option value="{{ sig.id }}">{{ sig.name }} ({{ sig.position or '' }})</option>
               {% endfor %}
@@ -192,9 +192,9 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label">Stamp</label>
+            <label class="form-label">{{ _("Stamp") }}</label>
             <select name="stamp_id" class="form-select">
-              <option value="">-- Select --</option>
+              <option value="">-- {{ _("Select") }} --</option>
               {% for st in stamps %}
               <option value="{{ st.id }}">{{ st.name }}</option>
               {% endfor %}
@@ -202,9 +202,9 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
           <button type="submit" class="btn btn-success">
-            <i class="bi bi-check-lg me-1"></i> Approve
+            <i class="bi bi-check-lg me-1"></i> {{ _("Approve") }}
           </button>
         </div>
       </form>

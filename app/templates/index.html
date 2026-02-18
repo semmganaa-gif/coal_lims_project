@@ -236,7 +236,30 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
-<script>window.LIMS_ACTIVE_TAB = '{{ active_tab | default("list-pane") }}';</script>
+<script>
+window.LIMS_ACTIVE_TAB = '{{ active_tab | default("list-pane") }}';
+window.LIMS_I18N = {
+  sampleCode: "{{ _('Sample Code') }}",
+  client: "{{ _('Client') }}",
+  type: "{{ _('Type') }}",
+  condition: "{{ _('Condition') }}",
+  weightKg: "{{ _('Weight (kg)') }}",
+  submittedBy: "{{ _('Submitted By') }}",
+  preparedBy: "{{ _('Prepared By') }}",
+  preparedDate: "{{ _('Prepared Date') }}",
+  registered: "{{ _('Registered') }}",
+  comment: "{{ _('Comment') }}",
+  storage: "{{ _('Storage') }}",
+  status: "{{ _('Status') }}",
+  action: "{{ _('Action') }}",
+  assignments: "{{ _('Assignments') }}",
+  approved: "{{ _('Approved') }}",
+  rejected: "{{ _('Rejected') }}",
+  review: "{{ _('Review') }}",
+  new_status: "{{ _('New') }}",
+  archived: "{{ _('Archived') }}"
+};
+</script>
 <script src="{{ url_for('static', filename='js/calendar-module.js') }}"></script>
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 {% endblock %}

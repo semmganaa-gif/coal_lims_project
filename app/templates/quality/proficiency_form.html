@@ -2,29 +2,29 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="fas fa-award"></i> New PT Record</h2>
+    <h2><i class="fas fa-award"></i> {{ _("New PT Record") }}</h2>
 
     <form method="POST" class="mt-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5>PT Program Information</h5>
+                <h5>{{ _("PT Program Information") }}</h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>PT Provider *</label>
+                            <label>{{ _("PT Provider") }} *</label>
                             <input type="text" name="pt_provider" class="form-control"
-                                   placeholder="ASTM, ISO LEAP, NIST" required>
-                            <small class="form-text text-muted">Example: ASTM D02 Coal PT</small>
+                                   placeholder="{{ _("ASTM, ISO LEAP, NIST") }}" required>
+                            <small class="form-text text-muted">{{ _("Example: ASTM D02 Coal PT") }}</small>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>PT Program *</label>
+                            <label>{{ _("PT Program") }} *</label>
                             <input type="text" name="pt_program" class="form-control"
-                                   placeholder="Coal PT-2025" required>
+                                   placeholder="{{ _("Coal PT-2025") }}" required>
                         </div>
                     </div>
                 </div>
@@ -32,14 +32,14 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Round Number</label>
+                            <label>{{ _("Round Number") }}</label>
                             <input type="text" name="round_number" class="form-control"
-                                   placeholder="Round 1-2025">
+                                   placeholder="{{ _("Round 1-2025") }}">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>PT Sample Code</label>
+                            <label>{{ _("PT Sample Code") }}</label>
                             <input type="text" name="sample_code" class="form-control"
                                    placeholder="PT-2025-001">
                         </div>
@@ -50,29 +50,29 @@
 
         <div class="card mt-3">
             <div class="card-header bg-info text-white">
-                <h5>Analysis Results</h5>
+                <h5>{{ _("Analysis Results") }}</h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Analysis Code *</label>
+                            <label>{{ _("Analysis Code") }} *</label>
                             <select name="analysis_code" class="form-control" required>
-                                <option value="">-- Select --</option>
-                                <option value="Aad">Aad - Ash</option>
-                                <option value="Mad">Mad - Moisture</option>
-                                <option value="Vad">Vad - Volatile Matter</option>
-                                <option value="CV">CV - Calorific Value</option>
-                                <option value="TS">TS - Total Sulfur</option>
-                                <option value="P">P - Phosphorus</option>
-                                <option value="F">F - Fluorine</option>
-                                <option value="Cl">Cl - Chlorine</option>
+                                <option value="">-- {{ _("Select") }} --</option>
+                                <option value="Aad">Aad - {{ _("Ash") }}</option>
+                                <option value="Mad">Mad - {{ _("Moisture") }}</option>
+                                <option value="Vad">Vad - {{ _("Volatile Matter") }}</option>
+                                <option value="CV">CV - {{ _("Calorific Value") }}</option>
+                                <option value="TS">TS - {{ _("Total Sulfur") }}</option>
+                                <option value="P">P - {{ _("Phosphorus") }}</option>
+                                <option value="F">F - {{ _("Fluorine") }}</option>
+                                <option value="Cl">Cl - {{ _("Chlorine") }}</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Test Date *</label>
+                            <label>{{ _("Test Date") }} *</label>
                             <input type="date" name="test_date" class="form-control" required>
                         </div>
                     </div>
@@ -81,50 +81,50 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Our Result *</label>
+                            <label>{{ _("Our Result") }} *</label>
                             <input type="number" step="0.001" name="our_result"
                                    class="form-control" placeholder="10.25" required>
-                            <small class="form-text text-muted">Our measured value</small>
+                            <small class="form-text text-muted">{{ _("Our measured value") }}</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Assigned Value *</label>
+                            <label>{{ _("Assigned Value") }} *</label>
                             <input type="number" step="0.001" name="assigned_value"
                                    class="form-control" placeholder="10.30" required>
-                            <small class="form-text text-muted">PT assigned value</small>
+                            <small class="form-text text-muted">{{ _("PT assigned value") }}</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Uncertainty (sigma) *</label>
+                            <label>{{ _("Uncertainty (sigma)") }} *</label>
                             <input type="number" step="0.001" name="uncertainty"
                                    class="form-control" placeholder="0.15" required>
-                            <small class="form-text text-muted">Standard deviation</small>
+                            <small class="form-text text-muted">{{ _("Standard deviation") }}</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="alert alert-info">
-                    <strong>Z-Score calculation formula:</strong><br>
-                    Z = (Our Result - Assigned Value) / Uncertainty<br>
-                    <small>Automatically calculated</small>
+                    <strong>{{ _("Z-Score calculation formula:") }}</strong><br>
+                    Z = ({{ _("Our Result") }} - {{ _("Assigned Value") }}) / {{ _("Uncertainty") }}<br>
+                    <small>{{ _("Automatically calculated") }}</small>
                 </div>
 
                 <div class="form-group">
-                    <label>Notes</label>
+                    <label>{{ _("Notes") }}</label>
                     <textarea name="notes" class="form-control" rows="3"
-                              placeholder="Additional remarks..."></textarea>
+                              placeholder="{{ _("Additional remarks...") }}"></textarea>
                 </div>
             </div>
         </div>
 
         <div class="mt-3">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> Save
+                <i class="fas fa-save"></i> {{ _("Save") }}
             </button>
             <a href="{{ url_for('quality.proficiency_list') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> Cancel
+                <i class="fas fa-times"></i> {{ _("Cancel") }}
             </a>
         </div>
     </form>

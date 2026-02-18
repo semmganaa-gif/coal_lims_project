@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Гарын үсэг, тамга{% endblock %}
+{% block title %}{{ _("Signatures & Stamps") }}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 900px;">
@@ -10,16 +10,16 @@
       <div>
         <h4 class="mb-1">
           <i class="bi bi-pen text-primary me-2"></i>
-          Гарын үсэг, тамга
+          {{ _("Signatures & Stamps") }}
         </h4>
-        <p class="text-muted mb-0">PDF тайланд хэрэглэх гарын үсэг, тамганы зураг</p>
+        <p class="text-muted mb-0">{{ _("Signature and stamp images for PDF reports") }}</p>
       </div>
       <div class="d-flex gap-2">
         <a href="{{ url_for('pdf_reports.report_list') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left me-1"></i> Буцах
+          <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
         </a>
         <a href="{{ url_for('pdf_reports.add_signature') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> Нэмэх
+          <i class="bi bi-plus-lg me-1"></i> {{ _("Add") }}
         </a>
       </div>
     </div>
@@ -27,7 +27,7 @@
     {# Signatures #}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header bg-white">
-        <h6 class="mb-0"><i class="bi bi-pen me-2"></i>Гарын үсэг</h6>
+        <h6 class="mb-0"><i class="bi bi-pen me-2"></i>{{ _("Signatures") }}</h6>
       </div>
       <div class="card-body">
         {% if signatures %}
@@ -47,7 +47,7 @@
               <div class="text-muted small">{{ sig.position or '-' }}</div>
               <div class="mt-2">
                 <form action="{{ url_for('pdf_reports.delete_signature', id=sig.id) }}" method="POST"
-                      class="d-inline" onsubmit="return confirm('Устгах уу?')">
+                      class="d-inline" onsubmit="return confirm('{{ _("Delete?") }}')">
                   <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash"></i>
                   </button>
@@ -58,7 +58,7 @@
           {% endfor %}
         </div>
         {% else %}
-        <p class="text-muted mb-0">Гарын үсэг бүртгэгдээгүй байна</p>
+        <p class="text-muted mb-0">{{ _("No signatures registered") }}</p>
         {% endif %}
       </div>
     </div>
@@ -66,7 +66,7 @@
     {# Stamps #}
     <div class="card border-0 shadow-sm">
       <div class="card-header bg-white">
-        <h6 class="mb-0"><i class="bi bi-stamp me-2"></i>Тамга</h6>
+        <h6 class="mb-0"><i class="bi bi-stamp me-2"></i>{{ _("Stamps") }}</h6>
       </div>
       <div class="card-body">
         {% if stamps %}
@@ -85,7 +85,7 @@
               <div class="fw-medium">{{ stamp.name }}</div>
               <div class="mt-2">
                 <form action="{{ url_for('pdf_reports.delete_signature', id=stamp.id) }}" method="POST"
-                      class="d-inline" onsubmit="return confirm('Устгах уу?')">
+                      class="d-inline" onsubmit="return confirm('{{ _("Delete?") }}')">
                   <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash"></i>
                   </button>
@@ -96,7 +96,7 @@
           {% endfor %}
         </div>
         {% else %}
-        <p class="text-muted mb-0">Тамга бүртгэгдээгүй байна</p>
+        <p class="text-muted mb-0">{{ _("No stamps registered") }}</p>
         {% endif %}
       </div>
     </div>

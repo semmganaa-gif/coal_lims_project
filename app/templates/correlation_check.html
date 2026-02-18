@@ -3,8 +3,8 @@
 {% block content %}
 <style>
   :root {
-    --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb; 
-    --success: #16a34a; --danger: #dc2626; --text-main: #1e293b; 
+    --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb;
+    --success: #16a34a; --danger: #dc2626; --text-main: #1e293b;
     --border: #e2e8f0; --radius: 12px;
   }
   body { background: var(--bg); min-height: 100vh; font-family: system-ui, -apple-system, sans-serif; }
@@ -21,7 +21,7 @@
     display: flex; flex-direction: column; gap: 18px; height: 100%; overflow-y: auto;
     border: 1px solid var(--border);
   }
-  
+
   .control-group label {
     font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
     color: #64748b; font-weight: 700; margin-bottom: 5px; display: block;
@@ -29,23 +29,23 @@
   .form-select, .form-control {
     border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 0.9rem;
   }
-  
+
   /* History Edit Box */
   .history-edit-box {
     background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 15px;
     border-left: 4px solid var(--success);
   }
   .hb-title {
-    font-size: 0.8rem; color: #15803d; font-weight: 800; text-transform: uppercase; 
+    font-size: 0.8rem; color: #15803d; font-weight: 800; text-transform: uppercase;
     margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
   }
   .hb-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .hb-row label { margin-bottom: 0; width: 30px; font-weight: bold; color: #14532d; }
-  .hb-input { 
-    width: 100%; border: 1px solid #86efac; border-radius: 6px; padding: 4px 8px; 
+  .hb-input {
+    width: 100%; border: 1px solid #86efac; border-radius: 6px; padding: 4px 8px;
     font-family: monospace; font-weight: bold; color: #14532d; text-align: right;
   }
-  
+
   /* Modal Styles */
   .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -89,36 +89,36 @@
 
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-primary"></i> Correlation Analysis</h4>
-    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm px-3">Back</a>
+    <h4 class="fw-bold text-dark mb-0"><i class="bi bi-activity text-primary"></i> {{ _("Correlation Analysis") }}</h4>
+    <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm px-3">{{ _("Back") }}</a>
   </div>
 
   <div class="analysis-grid">
     <div class="sidebar-panel">
       <div class="control-group">
-        <label>1. X Axis</label>
+        <label>{{ _("1. X Axis") }}</label>
         <select id="xAxis" class="form-select" onchange="updateAnalysis()">
-          <optgroup label="Basic"><option value="Aad">Ash (Aad)</option><option value="Mad">Moisture (Mad)</option><option value="Mtar">Total Moisture</option></optgroup>
-          <optgroup label="Coking"><option value="CSN">CSN</option><option value="Vdaf">Volatile</option><option value="CRC">CRC</option></optgroup>
-          <optgroup label="Other"><option value="TRD">Rel. Density</option><option value="St_ad">Sulfur</option></optgroup>
+          <optgroup label="{{ _("Basic") }}"><option value="Aad">{{ _("Ash") }} (Aad)</option><option value="Mad">{{ _("Moisture") }} (Mad)</option><option value="Mtar">{{ _("Total Moisture") }}</option></optgroup>
+          <optgroup label="{{ _("Coking") }}"><option value="CSN">CSN</option><option value="Vdaf">{{ _("Volatile") }}</option><option value="CRC">CRC</option></optgroup>
+          <optgroup label="{{ _("Other") }}"><option value="TRD">{{ _("Rel. Density") }}</option><option value="St_ad">{{ _("Sulfur") }}</option></optgroup>
         </select>
       </div>
       <div class="control-group">
-        <label>2. Y Axis</label>
+        <label>{{ _("2. Y Axis") }}</label>
         <select id="yAxis" class="form-select" onchange="updateAnalysis()">
-          <optgroup label="Эрчим хүч"><option value="Qgr_ad">Gross CV</option><option value="Qnet_ar">Net CV</option></optgroup>
-          <optgroup label="Физик"><option value="TRD">Rel. Density</option><option value="Gi">G-Index</option><option value="CSN">CSN</option></optgroup>
-          <optgroup label="Other"><option value="Aad">Ash (Aad)</option><option value="Vdaf">Volatile</option></optgroup>
+          <optgroup label="{{ _("Energy") }}"><option value="Qgr_ad">{{ _("Gross CV") }}</option><option value="Qnet_ar">{{ _("Net CV") }}</option></optgroup>
+          <optgroup label="{{ _("Physical") }}"><option value="TRD">{{ _("Rel. Density") }}</option><option value="Gi">G-Index</option><option value="CSN">CSN</option></optgroup>
+          <optgroup label="{{ _("Other") }}"><option value="Aad">{{ _("Ash") }} (Aad)</option><option value="Vdaf">{{ _("Volatile") }}</option></optgroup>
         </select>
       </div>
 
       <button class="btn btn-primary btn-sm w-100 mb-2" onclick="openStandardsModal()">
-         <i class="bi bi-bookmarks"></i> 📚 Түүхэн Standard Сонгох
+         <i class="bi bi-bookmarks"></i> {{ _("Select Historical Standard") }}
       </button>
 
       <div class="history-edit-box" id="histBox">
         <div class="hb-title">
-            <span id="selectedStdName">Түүхэн Standard</span>
+            <span id="selectedStdName">{{ _("Historical Standard") }}</span>
         </div>
         <div class="hb-row">
             <label>m</label>
@@ -132,13 +132,13 @@
       </div>
 
       <div class="control-group">
-        <label>3. Tolerance</label>
+        <label>{{ _("3. Tolerance") }}</label>
         <input type="number" id="tolerance" class="form-control" value="150" step="0.1" oninput="manualUpdate()">
       </div>
 
       <div class="mt-auto p-2 bg-light rounded border small">
-        <div>Current Eq: <span class="font-monospace text-primary" id="currEq">-</span></div>
-        <div>R² Score: <span class="font-monospace text-success" id="currR2">-</span></div>
+        <div>{{ _("Current Eq:") }} <span class="font-monospace text-primary" id="currEq">-</span></div>
+        <div>{{ _("R² Score:") }} <span class="font-monospace text-success" id="currR2">-</span></div>
       </div>
     </div>
 
@@ -148,14 +148,14 @@
             <canvas id="scatterChart"></canvas>
         </div>
         <div id="msgOverlay" class="position-absolute top-50 start-50 translate-middle text-center text-muted" style="display:none;">
-           <p class="fw-bold">Өгөгдөл хангалтгүй</p>
+           <p class="fw-bold">{{ _("Insufficient data") }}</p>
         </div>
       </div>
       <div class="table-container">
         <div style="overflow-y: auto; height: 100%;">
           <table class="data-table" id="resTable">
             <thead>
-              <tr><th>Sample</th><th>X</th><th>Y (Act)</th><th class="text-primary">Y (Pred)</th><th class="text-success">Y (Hist)</th><th>Diff</th><th>Status</th></tr>
+              <tr><th>{{ _("Sample") }}</th><th>X</th><th>{{ _("Y (Act)") }}</th><th class="text-primary">{{ _("Y (Pred)") }}</th><th class="text-success">{{ _("Y (Hist)") }}</th><th>{{ _("Diff") }}</th><th>{{ _("Status") }}</th></tr>
             </thead>
             <tbody></tbody>
           </table>
@@ -168,29 +168,29 @@
 <div class="modal-overlay" id="stdModal">
   <div class="modal-box">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold m-0">Historical Standard Database</h5>
+      <h5 class="fw-bold m-0">{{ _("Historical Standard Database") }}</h5>
       <button class="btn-close" onclick="closeStandardsModal()"></button>
     </div>
-    <p class="small text-muted">Доорх жагсаалтаас сонгоно уу эсвэл шинээр утга оруулаад хадгална уу.</p>
-    
+    <p class="small text-muted">{{ _("Select from the list below or enter new values and save.") }}</p>
+
     <table class="std-table">
       <thead>
         <tr>
-          <th>Name (Төрөл)</th>
-          <th>m (Slope)</th>
-          <th>c (Intercept)</th>
-          <th>Үйлдэл</th>
+          <th>{{ _("Name (Type)") }}</th>
+          <th>{{ _("m (Slope)") }}</th>
+          <th>{{ _("c (Intercept)") }}</th>
+          <th>{{ _("Action") }}</th>
         </tr>
       </thead>
       <tbody id="stdTableBody">
         </tbody>
     </table>
-    
+
     <div class="mt-3 text-end">
         <button class="btn btn-sm btn-success" onclick="saveAllStandards()">
-            <i class="bi bi-save"></i> Өөрчлөлтийг Хадгалах
+            <i class="bi bi-save"></i> {{ _("Save Changes") }}
         </button>
-        <button class="btn btn-sm btn-secondary" onclick="closeStandardsModal()">Close</button>
+        <button class="btn btn-sm btn-secondary" onclick="closeStandardsModal()">{{ _("Close") }}</button>
     </div>
   </div>
 </div>
@@ -201,7 +201,6 @@
   const rawData = {{ data_list | tojson }};
   let chartInstance = null;
 
-  // 🛑 PRESET STANDARDS (Анхны утгууд)
   const DEFAULT_STANDARDS = [
     { name: "Stock", m: -85.0, c: 8200 },
     { name: "TR", m: -90.5, c: 8150 },
@@ -216,7 +215,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadStandards();
-    updateAnalysis(); 
+    updateAnalysis();
   });
 
   // --- MODAL & STANDARDS LOGIC ---
@@ -225,7 +224,7 @@
     if (saved) {
         standardsList = JSON.parse(saved);
     } else {
-        standardsList = JSON.parse(JSON.stringify(DEFAULT_STANDARDS)); // Deep copy
+        standardsList = JSON.parse(JSON.stringify(DEFAULT_STANDARDS));
     }
     renderStandardsTable();
   }
@@ -233,7 +232,7 @@
   function renderStandardsTable() {
     const tbody = document.getElementById('stdTableBody');
     tbody.innerHTML = "";
-    
+
     standardsList.forEach((std, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -241,7 +240,7 @@
            <td><input type="number" class="std-input" value="${std.m}" step="0.0001" onchange="updateStd(${index}, 'm', this.value)"></td>
            <td><input type="number" class="std-input" value="${std.c}" step="0.01" onchange="updateStd(${index}, 'c', this.value)"></td>
            <td>
-             <button class="btn btn-sm btn-outline-primary" onclick="applyStandard(${index})">Ашиглах</button>
+             <button class="btn btn-sm btn-outline-primary" onclick="applyStandard(${index})">${"{{ _("Apply") }}"}</button>
            </td>
         `;
         tbody.appendChild(tr);
@@ -255,7 +254,7 @@
 
   function saveAllStandards() {
       localStorage.setItem('lims_standards_list', JSON.stringify(standardsList));
-      alert("Жагсаалт хадгалагдлаа.");
+      alert("{{ _("List saved.") }}");
   }
 
   function applyStandard(index) {
@@ -263,12 +262,11 @@
       document.getElementById('inputM').value = std.m;
       document.getElementById('inputC').value = std.c;
       document.getElementById('selectedStdName').innerText = std.name + " Standard";
-      
-      // Auto-set active
+
       currentConfig.m = std.m;
       currentConfig.c = std.c;
       currentConfig.hasConfig = true;
-      
+
       closeStandardsModal();
       updateAnalysis();
   }
@@ -286,9 +284,9 @@
         currentConfig.m = mVal;
         currentConfig.c = cVal;
         currentConfig.hasConfig = true;
-        document.getElementById('selectedStdName').innerText = "Гараар тохируулсан";
+        document.getElementById('selectedStdName').innerText = "{{ _("Manually configured") }}";
     } else {
-        currentConfig.hasConfig = false; 
+        currentConfig.hasConfig = false;
     }
     currentConfig.tol = !isNaN(tolVal) ? tolVal : 0;
     updateAnalysis();
@@ -301,7 +299,7 @@
       const limit = parseFloat(document.getElementById('tolerance').value) || 0;
 
       // Filter Data
-      const cleanData = rawData.filter(d => 
+      const cleanData = rawData.filter(d =>
         d[xKey] !== null && d[xKey] !== undefined && d[xKey] !== "" &&
         d[yKey] !== null && d[yKey] !== undefined && d[yKey] !== ""
       );
@@ -325,7 +323,7 @@
         if (denom !== 0) {
           currM = (n * sumXY - sumX * sumY) / denom;
           currC = (sumY - currM * sumX) / n;
-          
+
           const yMean = sumY / n;
           let ssTot=0, ssRes=0;
           cleanData.forEach(d => {
@@ -383,13 +381,13 @@
     if (chartInstance) chartInstance.destroy();
 
     const range = (maxX - minX) || 1;
-    const pad = range * 0.2; 
+    const pad = range * 0.2;
     const x1 = minX - pad; const x2 = maxX + pad;
 
     const datasets = [
-      { label: 'Хэвийн', data: points.filter(p => !p.outlier), backgroundColor: '#2563eb', pointRadius: 6, order:2 },
-      { label: 'Outlier', data: points.filter(p => p.outlier), backgroundColor: '#ef4444', pointStyle: 'triangle', pointRadius: 9, order:1 },
-      { label: currentConfig.hasConfig ? 'Түүхэн Standard' : 'Trend', data: [{x:x1, y:refM*x1+refC}, {x:x2, y:refM*x2+refC}], borderColor: currentConfig.hasConfig?'#16a34a':'#2563eb', borderWidth:3, type:'line', pointRadius:0, order:3 }
+      { label: "{{ _("Normal") }}", data: points.filter(p => !p.outlier), backgroundColor: '#2563eb', pointRadius: 6, order:2 },
+      { label: "{{ _("Outlier") }}", data: points.filter(p => p.outlier), backgroundColor: '#ef4444', pointStyle: 'triangle', pointRadius: 9, order:1 },
+      { label: currentConfig.hasConfig ? "{{ _("Historical Standard") }}" : "{{ _("Trend") }}", data: [{x:x1, y:refM*x1+refC}, {x:x2, y:refM*x2+refC}], borderColor: currentConfig.hasConfig?'#16a34a':'#2563eb', borderWidth:3, type:'line', pointRadius:0, order:3 }
     ];
 
     if (tol > 0) {

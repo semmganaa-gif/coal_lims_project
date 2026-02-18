@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>License Error - Coal LIMS</title>
+    <title>{{ _("License Error") }} - Coal LIMS</title>
     <style>
         * {
             margin: 0;
@@ -111,40 +111,40 @@
     <div class="container">
         <div class="header">
             <div class="icon">⚠️</div>
-            <h1>License Error Detected</h1>
-            <p>The system is currently unavailable</p>
+            <h1>{{ _("License Error Detected") }}</h1>
+            <p>{{ _("The system is currently unavailable") }}</p>
         </div>
 
         <div class="content">
             <div class="error-box">
-                <h3>What happened?</h3>
+                <h3>{{ _("What happened?") }}</h3>
                 <p>
-                    Your license has become invalid on this computer.
-                    This can occur due to several reasons.
+                    {{ _("Your license has become invalid on this computer.") }}
+                    {{ _("This can occur due to several reasons.") }}
                 </p>
             </div>
 
             <div class="reasons">
-                <h4>Possible reasons:</h4>
+                <h4>{{ _("Possible reasons:") }}</h4>
                 <ul>
-                    <li>The license was transferred to another computer</li>
-                    <li>Computer hardware has been changed</li>
-                    <li>The system was copied without authorization</li>
-                    <li>The license file is corrupted</li>
+                    <li>{{ _("The license was transferred to another computer") }}</li>
+                    <li>{{ _("Computer hardware has been changed") }}</li>
+                    <li>{{ _("The system was copied without authorization") }}</li>
+                    <li>{{ _("The license file is corrupted") }}</li>
                 </ul>
             </div>
 
             <div class="hardware-id">
-                <strong>Current Hardware ID:</strong><br>
+                <strong>{{ _("Current Hardware ID:") }}</strong><br>
                 {{ hardware_id }}
             </div>
 
             <div class="contact-info">
-                <p><strong>To resolve this issue:</strong></p>
-                <p>📧 Contact <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
-                <p>📞 80872013</p>
+                <p><strong>{{ _("To resolve this issue:") }}</strong></p>
+                <p>{{ _("Contact") }} <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
+                <p>80872013</p>
                 <p style="margin-top: 16px; font-size: 12px;">
-                    Please send the Hardware ID to the email address above
+                    {{ _("Please send the Hardware ID to the email address above") }}
                 </p>
             </div>
         </div>

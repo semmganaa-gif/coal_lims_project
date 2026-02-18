@@ -88,7 +88,7 @@
       valueFormatter: p => p.value
     },
     {
-      headerName: 'Sample Name',
+      headerName: '{{ _("Sample Name") }}',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -140,7 +140,7 @@
       ...editCol
     },
     {
-      headerName: 'Average',
+      headerName: '{{ _("Average") }}',
       field: 'average',
       width: 110,
       valueFormatter: p => {
@@ -170,19 +170,19 @@
       }
     },
     {
-      headerName: 'Action',
+      headerName: '{{ _("Action") }}',
       width: 90,
       pinned: 'right',
       cellRenderer: p => {
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Saved</span>';
+          return '<span class="text-muted small">{{ _("Saved") }}</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Remove sample">
+                  title="{{ _("Remove sample") }}">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -420,7 +420,7 @@
       if (!btn) return;
 
       const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+      if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
 
       const url = new URL(window.location.href);
       let ids = (url.searchParams.get('sample_ids') || '').split(',');
@@ -438,7 +438,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);
@@ -547,32 +547,32 @@
     // ✅ No saveable samples
     if (payload.length === 0) {
       const reasons = [];
-      if (incomplete.length > 0) reasons.push(`${incomplete.length} samples have no values`);
-      if (tooFewValues.length > 0) reasons.push(`${tooFewValues.length} samples have fewer than 2 values`);
-      alert(`CSN: No samples available to save!\n\n${reasons.join('\n')}`);
+      if (incomplete.length > 0) reasons.push(`${incomplete.length} {{ _("samples have no values") }}`);
+      if (tooFewValues.length > 0) reasons.push(`${tooFewValues.length} {{ _("samples have fewer than 2 values") }}`);
+      alert(`{{ _("CSN: No samples available to save!") }}\n\n${reasons.join('\n')}`);
       return [];
     }
 
     // ✅ Warning about incomplete samples (but ready samples can still be saved)
     let warningMessage = '';
     if (tooFewValues.length > 0) {
-      warningMessage += `⚠️ ${tooFewValues.length} samples have fewer than 2 values (will not be saved):\n${tooFewValues.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${tooFewValues.length} {{ _("samples have fewer than 2 values (will not be saved)") }}:\n${tooFewValues.join(', ')}\n\n`;
     }
     if (incomplete.length > 0) {
-      warningMessage += `⚠️ ${incomplete.length} samples have no values (will not be saved):\n${incomplete.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${incomplete.length} {{ _("samples have no values (will not be saved)") }}:\n${incomplete.join(', ')}\n\n`;
     }
 
     // ✅ Repeatability exceeded warning
     if (exceededRepeatability.length > 0) {
-      warningMessage += `⚠️ ${exceededRepeatability.length} samples exceeded tolerance (diff > ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
+      warningMessage += `⚠️ ${exceededRepeatability.length} {{ _("samples exceeded tolerance") }} (diff > ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
     }
 
     // ✅ Confirm if there are warnings
     if (warningMessage) {
       const proceed = confirm(
         `${warningMessage}` +
-        `✅ ${payload.length} samples ready to save.\n\n` +
-        `Continue?`
+        `✅ ${payload.length} {{ _("samples ready to save.") }}\n\n` +
+        `{{ _("Continue?") }}`
       );
       if (!proceed) {
         console.warn('❌ CSN: User cancelled save');

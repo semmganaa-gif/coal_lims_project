@@ -2,10 +2,9 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h3 class="mb-3"><i class="fas fa-bell"></i> Email Мэдэгдлийн Settings</h3>
+    <h3 class="mb-3"><i class="fas fa-bell"></i> {{ _("Email Notification Settings") }}</h3>
     <p class="text-muted">
-        Notification авах хүмүүсийн email хаягийг таслалаар тусгаарлаж оруулна уу.
-        Хоосон орхивол admin/senior хэрэглэгчид рүү илгээнэ.
+        {{ _("Enter email addresses separated by commas for each notification type. If left empty, notifications will be sent to admin/senior users.") }}
     </p>
 
     <form method="post">
@@ -20,13 +19,13 @@
                     </div>
                     <div class="card-body">
                         <p class="text-muted small mb-2">{{ nt.desc }}</p>
-                        <label class="form-label">Email хаягууд:</label>
+                        <label class="form-label">{{ _("Email addresses:") }}</label>
                         <textarea
                             name="{{ nt.key }}_recipients"
                             class="form-control"
                             rows="3"
                             placeholder="user1@mmc.mn, user2@mmc.mn">{{ current_settings.get(nt.key, '') }}</textarea>
-                        <small class="text-muted">Олон хаяг бол таслалаар тусгаарлана</small>
+                        <small class="text-muted">{{ _("Separate multiple addresses with commas") }}</small>
                     </div>
                 </div>
             </div>
@@ -35,24 +34,24 @@
 
         <div class="d-flex mt-3">
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save me-1"></i> Хадгалах
+                <i class="fas fa-save me-1"></i> {{ _("Save") }}
             </button>
             <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">
-                Буцах
+                {{ _("Back") }}
             </a>
         </div>
     </form>
 
     <div class="card mt-4">
         <div class="card-header">
-            <i class="fas fa-info-circle me-2"></i> Information
+            <i class="fas fa-info-circle me-2"></i> {{ _("Information") }}
         </div>
         <div class="card-body">
-            <h6>Мэдэгдлийн төрлүүд:</h6>
+            <h6>{{ _("Notification types:") }}</h6>
             <ul class="mb-0">
-                <li><strong>QC Alert:</strong> Westgard дүрэм (1:3s, 2:2s, R:4s, 4:1s, 10x) зөрчигдсөн үед</li>
-                <li><strong>Sample Status:</strong> When sample results are approved/rejected</li>
-                <li><strong>Equipment:</strong> When equipment calibration is due soon (within 30 days)</li>
+                <li><strong>{{ _("QC Alert:") }}</strong> {{ _("When Westgard rules (1:3s, 2:2s, R:4s, 4:1s, 10x) are violated") }}</li>
+                <li><strong>{{ _("Sample Status:") }}</strong> {{ _("When sample results are approved/rejected") }}</li>
+                <li><strong>{{ _("Equipment:") }}</strong> {{ _("When equipment calibration is due soon (within 30 days)") }}</li>
             </ul>
         </div>
     </div>

@@ -8,26 +8,26 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2><i class="bi bi-arrow-up-circle me-2"></i>Improvement Register</h2>
+            <h2><i class="bi bi-arrow-up-circle me-2"></i>{{ _("Improvement Register") }}</h2>
             <p class="text-muted mb-0">LAB.02.00.03 | ISO 17025 - 8.6</p>
         </div>
         <a href="{{ url_for('quality.improvement_new') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i>New Record
+            <i class="bi bi-plus-circle me-1"></i>{{ _("New Record") }}
         </a>
     </div>
 
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card bg-info text-white"><div class="card-body py-2"><h6>Total</h6><h3>{{ stats.total }}</h3></div></div>
+            <div class="card bg-info text-white"><div class="card-body py-2"><h6>{{ _("Total") }}</h6><h3>{{ stats.total }}</h3></div></div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-dark"><div class="card-body py-2"><h6>Pending</h6><h3>{{ stats.pending }}</h3></div></div>
+            <div class="card bg-warning text-dark"><div class="card-body py-2"><h6>{{ _("Pending") }}</h6><h3>{{ stats.pending }}</h3></div></div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-primary text-white"><div class="card-body py-2"><h6>Reviewed</h6><h3>{{ stats.reviewed }}</h3></div></div>
+            <div class="card bg-primary text-white"><div class="card-body py-2"><h6>{{ _("Reviewed") }}</h6><h3>{{ stats.reviewed }}</h3></div></div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success text-white"><div class="card-body py-2"><h6>Closed</h6><h3>{{ stats.closed }}</h3></div></div>
+            <div class="card bg-success text-white"><div class="card-body py-2"><h6>{{ _("Closed") }}</h6><h3>{{ stats.closed }}</h3></div></div>
         </div>
     </div>
 
@@ -47,14 +47,14 @@
             <table class="table table-striped table-hover" id="improvementTable">
                 <thead>
                     <tr>
-                        <th>No.</th>
-                        <th>Date</th>
-                        <th>Activity to Improve</th>
-                        <th>Responsible</th>
-                        <th>Deadline</th>
-                        <th>Reviewed</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th>{{ _("No.") }}</th>
+                        <th>{{ _("Date") }}</th>
+                        <th>{{ _("Activity to Improve") }}</th>
+                        <th>{{ _("Responsible") }}</th>
+                        <th>{{ _("Deadline") }}</th>
+                        <th>{{ _("Reviewed") }}</th>
+                        <th>{{ _("Status") }}</th>
+                        <th>{{ _("Action") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,21 +68,21 @@
                         <td>
                             {% if r.fully_implemented is not none %}
                                 {% if r.fully_implemented %}
-                                    <span class="badge bg-success">Fully</span>
+                                    <span class="badge bg-success">{{ _("Fully") }}</span>
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Partially</span>
+                                    <span class="badge bg-warning text-dark">{{ _("Partially") }}</span>
                                 {% endif %}
                             {% else %}-{% endif %}
                         </td>
                         <td>
                             {% if r.status == 'pending' %}
-                                <span class="badge bg-secondary">Pending</span>
+                                <span class="badge bg-secondary">{{ _("Pending") }}</span>
                             {% elif r.status == 'in_progress' %}
-                                <span class="badge bg-warning text-dark">In Progress</span>
+                                <span class="badge bg-warning text-dark">{{ _("In Progress") }}</span>
                             {% elif r.status == 'reviewed' %}
-                                <span class="badge bg-primary">Reviewed</span>
+                                <span class="badge bg-primary">{{ _("Reviewed") }}</span>
                             {% else %}
-                                <span class="badge bg-success">Closed</span>
+                                <span class="badge bg-success">{{ _("Closed") }}</span>
                             {% endif %}
                         </td>
                         <td>

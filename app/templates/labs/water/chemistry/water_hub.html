@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Chemistry Lab — Dashboard{% endblock %}
+{% block title %}{{ _("Chemistry Lab — Dashboard") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -99,8 +99,8 @@
 
 <div class="water-dash">
   <div class="dash-header">
-    <h1><i class="bi bi-droplet-half me-2"></i>Chemistry Lab</h1>
-    <p>Water physico-chemical analysis management dashboard</p>
+    <h1><i class="bi bi-droplet-half me-2"></i>{{ _("Chemistry Lab") }}</h1>
+    <p>{{ _("Water physico-chemical analysis management dashboard") }}</p>
   </div>
 
   <!-- Morning start -->
@@ -111,60 +111,60 @@
     <div class="stat-card">
       <div class="stat-icon" style="color:#0dcaf0"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#0891b2">{{ total_samples }}</div>
-      <div class="stat-label">Total Samples</div>
+      <div class="stat-label">{{ _("Total Samples") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-plus-circle-fill"></i></div>
       <div class="stat-value" style="color:#1d4ed8">{{ new_samples }}</div>
-      <div class="stat-label">New Samples</div>
+      <div class="stat-label">{{ _("New Samples") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="stat-label">In Progress</div>
+      <div class="stat-label">{{ _("In Progress") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#20c997"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-value" style="color:#047857">{{ completed }}</div>
-      <div class="stat-label">Completed</div>
+      <div class="stat-label">{{ _("Completed") }}</div>
     </div>
   </div>
 
   <!-- Main Menu -->
   <div class="section-title">
     <i class="bi bi-clipboard-data" style="color:#0dcaf0"></i>
-    Main Menu
+    {{ _("Main Menu") }}
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('water.register_sample') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
       <div class="nav-card-content">
-        <h3>Sample Registration</h3>
-        <p>Register water and microbiology samples, view list</p>
+        <h3>{{ _("Sample Registration") }}</h3>
+        <p>{{ _("Register water and microbiology samples, view list") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Analysis</h3>
-        <p>{{ water_analysis_count }} types of water quality analysis</p>
+        <h3>{{ _("Analysis") }}</h3>
+        <p>{{ water_analysis_count }} {{ _("types of water quality analysis") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_summary') }}" class="nav-card nc-summary">
       <div class="nav-card-icon"><i class="bi bi-table"></i></div>
       <div class="nav-card-content">
-        <h3>Summary</h3>
-        <p>Water chemistry + microbiology — combined results summary</p>
+        <h3>{{ _("Summary") }}</h3>
+        <p>{{ _("Water chemistry + microbiology — combined results summary") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}" class="nav-card nc-equipment">
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Equipment</h3>
-        <p>Chemistry lab equipment usage and maintenance journal</p>
+        <h3>{{ _("Equipment") }}</h3>
+        <p>{{ _("Chemistry lab equipment usage and maintenance journal") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -173,31 +173,31 @@
   <!-- Reports -->
   <div class="section-title">
     <i class="bi bi-graph-up" style="color:#0891b2"></i>
-    Reports
-    <span class="section-badge" style="background:linear-gradient(135deg,#0dcaf0,#0891b2)">Reports</span>
+    {{ _("Reports") }}
+    <span class="section-badge" style="background:linear-gradient(135deg,#0dcaf0,#0891b2)">{{ _("Reports") }}</span>
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('water.water_dashboard') }}" class="nav-card nc-dashboard">
       <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
       <div class="nav-card-content">
-        <h3>Dashboard</h3>
-        <p>KPI, monthly trends, category distribution</p>
+        <h3>{{ _("Dashboard") }}</h3>
+        <p>{{ _("KPI, monthly trends, category distribution") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_consumption') }}" class="nav-card nc-consumption">
       <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
       <div class="nav-card-content">
-        <h3>Consumption</h3>
-        <p>Reports summarized by client, category, and month</p>
+        <h3>{{ _("Consumption") }}</h3>
+        <p>{{ _("Reports summarized by client, category, and month") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_monthly_plan') }}" class="nav-card nc-monthly">
       <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
       <div class="nav-card-content">
-        <h3>Monthly Plan</h3>
-        <p>Weekly plan and execution</p>
+        <h3>{{ _("Monthly Plan") }}</h3>
+        <p>{{ _("Weekly plan and execution") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

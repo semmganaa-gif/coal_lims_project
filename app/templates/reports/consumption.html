@@ -314,14 +314,14 @@
   <div class="report-header">
     <div class="report-header-content">
       <h4><i class="bi bi-journal-bookmark"></i> {{ title }}</h4>
-      <p class="subtitle">Detailed sample records - grouped by unit</p>
+      <p class="subtitle">{{ _("Detailed sample records - grouped by unit") }}</p>
     </div>
     <div class="report-header-actions">
       <div class="view-toggle">
-        <button class="active" id="viewCards" title="Card view">
+        <button class="active" id="viewCards" title="{{ _("Card view") }}">
           <i class="bi bi-grid-3x3-gap"></i>
         </button>
-        <button id="viewList" title="List view">
+        <button id="viewList" title="{{ _("List view") }}">
           <i class="bi bi-list-ul"></i>
         </button>
       </div>
@@ -343,11 +343,11 @@
   <!-- KPI Row -->
   <div class="report-kpi-row">
     <div class="report-kpi-card total">
-      <div class="kpi-label">Total Units</div>
+      <div class="kpi-label">{{ _("Total Units") }}</div>
       <div class="kpi-value">{{ data|length }}</div>
     </div>
     <div class="report-kpi-card success">
-      <div class="kpi-label">Total Samples (Year)</div>
+      <div class="kpi-label">{{ _("Total Samples (Year)") }}</div>
       <div class="kpi-value">{{ grand_samples.values()|sum }}</div>
     </div>
   </div>
@@ -371,18 +371,18 @@
             </div>
             <div class="unit-card-title">
               <h5>{{ unit }}</h5>
-              <small>{{ subs|length }} types</small>
+              <small>{{ subs|length }} {{ _("types") }}</small>
             </div>
           </div>
           <div class="unit-card-body">
             <div class="unit-stats">
               <div class="unit-stat">
                 <div class="unit-stat-value">{{ ns.total_samples }}</div>
-                <div class="unit-stat-label">Samples</div>
+                <div class="unit-stat-label">{{ _("Samples") }}</div>
               </div>
               <div class="unit-stat">
                 <div class="unit-stat-value">{{ ns.total_analyses }}</div>
-                <div class="unit-stat-label">Analyses</div>
+                <div class="unit-stat-label">{{ _("Analyses") }}</div>
               </div>
             </div>
           </div>
@@ -407,7 +407,7 @@
         <div class="detail-header">
           <h5><i class="bi bi-building me-2"></i>{{ unit }}</h5>
           <button class="btn-close-detail">
-            <i class="bi bi-x-lg me-1"></i> Close
+            <i class="bi bi-x-lg me-1"></i> {{ _("Close") }}
           </button>
         </div>
         <div class="tables-grid">
@@ -417,15 +417,15 @@
                 <thead>
                   <tr>
                     <th class="left">{{ s.stype }}</th>
-                    {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                    {% for m in [_("Jan"),_("Feb"),_("Mar"),_("Apr"),_("May"),_("Jun"),_("Jul"),_("Aug"),_("Sep"),_("Oct"),_("Nov"),_("Dec")] %}
                       <th>{{ m }}</th>
                     {% endfor %}
-                    <th class="sum">Total</th>
+                    <th class="sum">{{ _("Total") }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td class="cap">Sample Count</td>
+                    <td class="cap">{{ _("Sample Count") }}</td>
                     {% for m in range(1,13) %}
                       <td class="cell-click cell-samples"
                           data-kind="samples" data-unit="{{ unit }}"
@@ -463,7 +463,7 @@
       <div class="report-card mb-3">
         <div class="card-header">
           <strong><i class="bi bi-building me-2"></i>{{ unit }}</strong>
-          <span class="badge bg-primary">{{ subs|length }} types</span>
+          <span class="badge bg-primary">{{ subs|length }} {{ _("types") }}</span>
         </div>
         <div class="card-body p-2">
           <div class="tables-grid">
@@ -473,15 +473,15 @@
                   <thead>
                     <tr>
                       <th class="left">{{ s.stype }}</th>
-                      {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+                      {% for m in [_("Jan"),_("Feb"),_("Mar"),_("Apr"),_("May"),_("Jun"),_("Jul"),_("Aug"),_("Sep"),_("Oct"),_("Nov"),_("Dec")] %}
                         <th>{{ m }}</th>
                       {% endfor %}
-                      <th class="sum">Total</th>
+                      <th class="sum">{{ _("Total") }}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td class="cap">Sample Count</td>
+                      <td class="cap">{{ _("Sample Count") }}</td>
                       {% for m in range(1,13) %}
                         <td class="cell-click cell-samples"
                             data-kind="samples" data-unit="{{ unit }}"
@@ -519,23 +519,23 @@
   <!-- Grand Total -->
   <div class="report-card">
     <div class="card-header">
-      <strong><i class="bi bi-calculator"></i> Grand Total (All Units)</strong>
+      <strong><i class="bi bi-calculator"></i> {{ _("Grand Total (All Units)") }}</strong>
     </div>
     <div class="card-body p-0">
       <div class="grand-wrap">
         <table class="reg-table">
           <thead>
             <tr>
-              <th class="left">Name</th>
-              {% for m in ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] %}
+              <th class="left">{{ _("Name") }}</th>
+              {% for m in [_("Jan"),_("Feb"),_("Mar"),_("Apr"),_("May"),_("Jun"),_("Jul"),_("Aug"),_("Sep"),_("Oct"),_("Nov"),_("Dec")] %}
                 <th>{{ m }}</th>
               {% endfor %}
-              <th class="sum">Total</th>
+              <th class="sum">{{ _("Total") }}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="cap">Sample Count</td>
+              <td class="cap">{{ _("Sample Count") }}</td>
               {% for m in range(1,13) %}
                 <td>{{ grand_samples[m] }}</td>
               {% endfor %}
@@ -563,7 +563,7 @@
     <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
       <div class="modal-header" style="background: linear-gradient(135deg, #f0f9ff, #ecfeff); border-bottom: 2px solid #e0f2fe;">
         <h5 class="modal-title" style="color: #0369a1; font-weight: 700;">
-          <i class="bi bi-list-ul me-2"></i>Details
+          <i class="bi bi-list-ul me-2"></i>{{ _("Details") }}
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -573,12 +573,12 @@
           <table class="table table-sm table-bordered" style="font-size: 0.85rem;">
             <thead class="table-light">
               <tr>
-                <th>Sample ID</th>
-                <th>Code</th>
-                <th>Sample Name</th>
-                <th>Internal Code</th>
-                <th>Date</th>
-                <th>Report</th>
+                <th>{{ _("Sample ID") }}</th>
+                <th>{{ _("Code") }}</th>
+                <th>{{ _("Sample Name") }}</th>
+                <th>{{ _("Internal Code") }}</th>
+                <th>{{ _("Date") }}</th>
+                <th>{{ _("Report") }}</th>
               </tr>
             </thead>
             <tbody id="cellRows"></tbody>
@@ -586,7 +586,7 @@
         </div>
       </div>
       <div class="modal-footer" style="background: #f8fafc;">
-        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _("Close") }}</button>
       </div>
     </div>
   </div>
@@ -673,9 +673,9 @@
     const qs = new URLSearchParams(params).toString();
     const url = `/reports/consumption_cell?${qs}`;
 
-    body.innerHTML = '<tr><td colspan="6" class="text-center py-3">Loading...</td></tr>';
-    info.textContent = `Unit: ${params.unit} · Type: ${params.stype} · Month: ${params.month} · ` +
-      (params.kind === 'samples' ? 'Sample Count' : ('Code: ' + params.code));
+    body.innerHTML = '<tr><td colspan="6" class="text-center py-3">{{ _("Loading...") }}</td></tr>';
+    info.textContent = `{{ _("Unit") }}: ${params.unit} · {{ _("Type") }}: ${params.stype} · {{ _("Month") }}: ${params.month} · ` +
+      (params.kind === 'samples' ? '{{ _("Sample Count") }}' : ('{{ _("Code") }}: ' + params.code));
 
     modal.show();
 
@@ -683,11 +683,11 @@
       const r = await fetch(url);
       const j = await r.json();
       if (!j.ok) {
-        body.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${j.message || 'unknown'}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="text-center text-danger">{{ _("Error") }}: ${j.message || '{{ _("unknown") }}'}</td></tr>`;
         return;
       }
       if (j.items.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Empty</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{{ _("Empty") }}</td></tr>';
         return;
       }
 
@@ -701,11 +701,11 @@
           <td>${displayName}</td>
           <td>${internalCode}</td>
           <td>${dt}</td>
-          <td><a class="btn btn-sm btn-outline-primary" href="${it.report_url}" target="_blank">Report</a></td>
+          <td><a class="btn btn-sm btn-outline-primary" href="${it.report_url}" target="_blank">{{ _("Report") }}</a></td>
         </tr>`;
       }).join('');
     } catch(e) {
-      body.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Network error</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" class="text-center text-danger">{{ _("Network error") }}</td></tr>';
     }
   }
 

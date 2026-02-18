@@ -349,19 +349,19 @@
           <i class="bi bi-rulers"></i>
         </div>
         <div>
-          <h1 class="qc-title">Norm Limit</h1>
-          <div class="qc-subtitle">Sample vs Норм (target ± band) • {{ sample_rows|length }} дээж</div>
+          <h1 class="qc-title">{{ _("Norm Limit") }}</h1>
+          <div class="qc-subtitle">{{ _("Sample vs Norm (target +/- band)") }} • {{ sample_rows|length }} {{ _("samples") }}</div>
         </div>
       </div>
       <div class="qc-actions">
         <button onclick="resetToDefaults()" class="btn btn-outline-danger btn-sm">
-          <i class="bi bi-arrow-counterclockwise"></i> Reset
+          <i class="bi bi-arrow-counterclockwise"></i> {{ _("Reset") }}
         </button>
         <a href="{{ url_for('analysis.qc_composite_check', ids=raw_ids) }}" class="btn btn-warning btn-sm">
-          <i class="bi bi-clipboard2-check"></i> Composite
+          <i class="bi bi-clipboard2-check"></i> {{ _("Composite") }}
         </a>
         <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Нэгтгэл
+          <i class="bi bi-arrow-left"></i> {{ _("Summary") }}
         </a>
       </div>
     </div>
@@ -374,7 +374,7 @@
         <!-- Spec Type Selector -->
         <div class="spec-selector-card">
           <div class="spec-selector-title">
-            <i class="bi bi-collection"></i> Бүтээгдэхүүн сонгох
+            <i class="bi bi-collection"></i> {{ _("Select product") }}
           </div>
           <select id="specSelector" class="spec-dropdown" onchange="onSpecChange()">
             {% if name_class_master_specs %}
@@ -389,7 +389,7 @@
         <div class="spec-editor-card">
           <div class="spec-editor-title">
             <i class="bi bi-pencil-square"></i>
-            <span id="editorTitle">Spec утгууд</span>
+            <span id="editorTitle">{{ _("Spec values") }}</span>
           </div>
           <div class="spec-inputs-grid" id="specInputsContainer">
             {% for code in param_codes %}
@@ -406,7 +406,7 @@
         <!-- Tolerance Bands Config -->
         <div class="tolerance-card">
           <div class="tolerance-title">
-            <i class="bi bi-sliders"></i> Tolerance Bands (±)
+            <i class="bi bi-sliders"></i> {{ _("Tolerance Bands (+/-)") }}
           </div>
           <div class="tolerance-inputs-grid">
             {% for code in param_codes %}
@@ -427,12 +427,12 @@
         <div class="results-header">
           <div class="results-title">
             <i class="bi bi-table"></i>
-            Sampleүүдийн үр дүн
+            {{ _("Sample results") }}
           </div>
           <div class="legend">
             <div class="legend-item">
               <div class="legend-box fail"></div>
-              <span>Spec-ээс гадуур</span>
+              <span>{{ _("Out of spec") }}</span>
             </div>
           </div>
         </div>
@@ -441,7 +441,7 @@
             <thead>
               <tr>
                 <th style="width:35px">#</th>
-                <th style="text-align:left; padding-left:0.75rem; min-width:120px;">Sample</th>
+                <th style="text-align:left; padding-left:0.75rem; min-width:120px;">{{ _("Sample") }}</th>
                 {% for code in param_codes %}
                 <th>{{ code }}</th>
                 {% endfor %}
@@ -476,7 +476,6 @@
 </div>
 
 <script>
-// Server-ийн анхны утгууд
 const SERVER_BANDS = {{ tolerance_bands | default({}) | tojson | safe }};
 const DEFAULT_BANDS = {"Mad": 0.2, "Aad": 2.0, "Vdaf": 3.0, "Qnet,ar": 200, "CSN": 1.0, "Gi": 5.0};
 const MASTER_SPECS = {{ name_class_master_specs | default({}) | tojson | safe }};
@@ -488,13 +487,11 @@ document.addEventListener('DOMContentLoaded', () => {
   runCheck();
 });
 
-// Dropdown өөрчлөгдөхөд
 function onSpecChange() {
   loadSpecValues();
   runCheck();
 }
 
-// Сонгосон spec-ийн утгуудыг editor-т ачаалах
 function loadSpecValues() {
   const specKey = document.getElementById('specSelector').value;
   document.getElementById('editorTitle').textContent = specKey;
@@ -514,7 +511,6 @@ function loadSpecValues() {
   });
 }
 
-// Spec утга өөрчлөгдөхөд хадгалах
 function handleSpecInput(input) {
   const specKey = document.getElementById('specSelector').value;
   const param = input.dataset.param;
@@ -522,14 +518,12 @@ function handleSpecInput(input) {
   runCheck();
 }
 
-// Tolerance band утгууд хадгалах
 function handleToleranceInput(input) {
   const param = input.dataset.param;
   localStorage.setItem(`lims_qc_band_${param}`, input.value);
   runCheck();
 }
 
-// Tolerance band утгуудыг сэргээх
 function restoreTolerances() {
   document.querySelectorAll('.tolerance-input').forEach(input => {
     const param = input.dataset.param;
@@ -538,7 +532,6 @@ function restoreTolerances() {
   });
 }
 
-// UI-аас tolerance band авах
 function getToleranceBand(param) {
   const input = document.querySelector(`.tolerance-input[data-param="${param}"]`);
   if (input && input.value.trim()) {
@@ -548,7 +541,7 @@ function getToleranceBand(param) {
 }
 
 function resetToDefaults() {
-  if (confirm("Бүх өөрчлөлтийг устгаж анхны утга руу буцах уу?")) {
+  if (confirm("{{ _("Delete all changes and reset to default values?") }}")) {
     Object.keys(localStorage).filter(k => k.startsWith('lims_qc_')).forEach(k => localStorage.removeItem(k));
     location.reload();
   }
@@ -557,7 +550,6 @@ function resetToDefaults() {
 function runCheck() {
   const limits = {};
 
-  // Editor дээрх утгуудаас авах
   document.querySelectorAll('.spec-input').forEach(input => {
     const param = input.dataset.param;
     if (input.value.trim()) {

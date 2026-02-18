@@ -278,17 +278,17 @@
           <i class="bi bi-clipboard2-check"></i>
         </div>
         <div>
-          <h1 class="qc-title">Composite Check</h1>
-          <div class="qc-subtitle">COM vs Hourly дундаж харьцуулалт</div>
+          <h1 class="qc-title">{{ _("Composite Check") }}</h1>
+          <div class="qc-subtitle">{{ _("COM vs Hourly average comparison") }}</div>
         </div>
       </div>
 
       <div class="qc-actions">
         <a href="{{ url_for('analysis.qc_norm_limit', ids=raw_ids) }}" class="btn btn-danger btn-sm">
-          <i class="bi bi-rulers"></i> Norm Limit
+          <i class="bi bi-rulers"></i> {{ _("Norm Limit") }}
         </a>
         <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Нэгтгэл
+          <i class="bi bi-arrow-left"></i> {{ _("Summary") }}
         </a>
       </div>
     </div>
@@ -296,7 +296,7 @@
     {% if streams|length == 0 %}
       <div class="empty-state">
         <i class="bi bi-inbox"></i>
-        <h3>QC шалгах stream олдсонгүй</h3>
+        <h3>{{ _("No streams found for QC check") }}</h3>
       </div>
     {% endif %}
 
@@ -331,8 +331,8 @@
           <thead>
             <tr>
               <th style="width:35px">#</th>
-              <th style="width:60px">Slot</th>
-              <th style="text-align:left; padding-left:1rem; min-width:140px;">Sample</th>
+              <th style="width:60px">{{ _("Slot") }}</th>
+              <th style="text-align:left; padding-left:1rem; min-width:140px;">{{ _("Sample") }}</th>
               {% for code in param_codes %}
               <th colspan="2" class="param-header">{{ code }}</th>
               {% endfor %}
@@ -342,7 +342,7 @@
               <th></th>
               <th></th>
               {% for code in param_codes %}
-              <th style="font-size:0.6rem; color:#94a3b8;">Val</th>
+              <th style="font-size:0.6rem; color:#94a3b8;">{{ _("Val") }}</th>
               <th style="font-size:0.6rem; color:#94a3b8;">Δ</th>
               {% endfor %}
             </tr>
@@ -369,7 +369,7 @@
             {# Hourly Average #}
             <tr class="row-avg">
               <td colspan="3" style="text-align:right; padding-right:1rem;">
-                <span class="label-avg">HOURLY AVG</span>
+                <span class="label-avg">{{ _("HOURLY AVG") }}</span>
               </td>
               {% for code in param_codes %}
                 {% set v_avg = stream.avg_row["values"].get(code) %}
@@ -381,7 +381,7 @@
             {# Composite #}
             <tr class="row-comp">
               <td colspan="2" style="text-align:center;">
-                <span class="label-comp">COMPOSITE</span>
+                <span class="label-comp">{{ _("COMPOSITE") }}</span>
               </td>
               <td class="cell-code">
                 {% if stream.comp_row.sample %}

@@ -11,12 +11,12 @@
 <div class="container-fluid mt-4">
     <div class="row mb-3">
         <div class="col-md-8">
-            <h2><i class="fas fa-thermometer-half"></i> Environmental Conditions Monitoring</h2>
-            <p class="text-muted">ISO 17025 - 6.3.3: Temperature, Humidity Records</p>
+            <h2><i class="fas fa-thermometer-half"></i> {{ _("Environmental Conditions Monitoring") }}</h2>
+            <p class="text-muted">ISO 17025 - 6.3.3: {{ _("Temperature, Humidity Records") }}</p>
         </div>
         <div class="col-md-4 text-right">
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEnvModal">
-                <i class="bi bi-plus-lg"></i> Add Measurement
+                <i class="bi bi-plus-lg"></i> {{ _("Add Measurement") }}
             </button>
         </div>
     </div>
@@ -27,15 +27,15 @@
             <table class="table table-striped" id="envTable">
                 <thead>
                     <tr>
-                        <th>Date/Time</th>
-                        <th>Location</th>
-                        <th>Temperature (C)</th>
-                        <th>Humidity (%)</th>
-                        <th>Limit (T)</th>
-                        <th>Limit (RH)</th>
-                        <th>Status</th>
-                        <th>Recorded By</th>
-                        <th>Notes</th>
+                        <th>{{ _("Date/Time") }}</th>
+                        <th>{{ _("Location") }}</th>
+                        <th>{{ _("Temperature (C)") }}</th>
+                        <th>{{ _("Humidity (%%)") }}</th>
+                        <th>{{ _("Limit (T)") }}</th>
+                        <th>{{ _("Limit (RH)") }}</th>
+                        <th>{{ _("Status") }}</th>
+                        <th>{{ _("Recorded By") }}</th>
+                        <th>{{ _("Notes") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,9 +63,9 @@
                         </td>
                         <td>
                             {% if log.within_limits %}
-                                <span class="badge bg-success">Normal</span>
+                                <span class="badge bg-success">{{ _("Normal") }}</span>
                             {% else %}
-                                <span class="badge bg-danger">Out of Range</span>
+                                <span class="badge bg-danger">{{ _("Out of Range") }}</span>
                             {% endif %}
                         </td>
                         <td>{{ log.recorded_by.username if log.recorded_by else '-' }}</td>
@@ -85,48 +85,48 @@
             <form method="POST" action="{{ url_for('quality.environmental_add') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Add Environmental Measurement</h5>
+                    <h5 class="modal-title">{{ _("Add Environmental Measurement") }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Location *</label>
+                        <label>{{ _("Location") }} *</label>
                         <select name="location" class="form-control" required>
-                            <option value="Sample Storage">Sample Storage Room</option>
-                            <option value="Analysis Room">Analysis Room</option>
-                            <option value="Furnace Room">Furnace Room</option>
-                            <option value="Balance Room">Balance Room</option>
-                            <option value="Preparation Room">Preparation Room</option>
+                            <option value="Sample Storage">{{ _("Sample Storage Room") }}</option>
+                            <option value="Analysis Room">{{ _("Analysis Room") }}</option>
+                            <option value="Furnace Room">{{ _("Furnace Room") }}</option>
+                            <option value="Balance Room">{{ _("Balance Room") }}</option>
+                            <option value="Preparation Room">{{ _("Preparation Room") }}</option>
                         </select>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Temperature (C) *</label>
+                                <label>{{ _("Temperature (C)") }} *</label>
                                 <input type="number" step="0.1" name="temperature" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Humidity (%) *</label>
+                                <label>{{ _("Humidity (%%)") }} *</label>
                                 <input type="number" step="0.1" name="humidity" class="form-control" required>
                             </div>
                         </div>
                     </div>
 
                     <hr>
-                    <h6>Normal Limits:</h6>
+                    <h6>{{ _("Normal Limits:") }}</h6>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>T Min (C)</label>
+                                <label>{{ _("T Min (C)") }}</label>
                                 <input type="number" step="0.1" name="temp_min" class="form-control" value="15">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>T Max (C)</label>
+                                <label>{{ _("T Max (C)") }}</label>
                                 <input type="number" step="0.1" name="temp_max" class="form-control" value="30">
                             </div>
                         </div>
@@ -135,26 +135,26 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>RH Min (%)</label>
+                                <label>{{ _("RH Min (%%)") }}</label>
                                 <input type="number" step="0.1" name="humidity_min" class="form-control" value="20">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>RH Max (%)</label>
+                                <label>{{ _("RH Max (%%)") }}</label>
                                 <input type="number" step="0.1" name="humidity_max" class="form-control" value="70">
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Notes</label>
+                        <label>{{ _("Notes") }}</label>
                         <textarea name="notes" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
                 </div>
             </form>
         </div>

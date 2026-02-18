@@ -26,13 +26,13 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div class="d-flex align-items-center gap-2 flex-wrap">
       <h1 class="mb-0"><i class="bi bi-magnet text-primary me-2"></i>{{ title }}</h1>
-      <span class="badge bg-light text-dark">{{ samples|length }} дээж</span>
+      <span class="badge bg-light text-dark">{{ samples|length }} {{ _("samples") }}</span>
     </div>
 
     <div class="d-flex align-items-center gap-2 flex-wrap">
       {% if current_user.role in ['senior', 'admin'] %}
       <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
-        <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">Архивлах</span>
+        <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">{{ _("Archive") }}</span>
       </button>
       {% endif %}
 
@@ -41,7 +41,7 @@
           <i class="bi bi-file-earmark-excel me-1"></i>Excel
         </button>
         <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-primary">
-          <i class="bi bi-arrow-left me-1"></i>Summary
+          <i class="bi bi-arrow-left me-1"></i>{{ _("Summary") }}
         </a>
       </div>
     </div>
@@ -49,7 +49,7 @@
 
   {% if not samples %}
   <div class="alert alert-info">
-    <i class="bi bi-info-circle me-1"></i> MG шинжилгээний үр дүн олдсонгүй.
+    <i class="bi bi-info-circle me-1"></i> {{ _("No MG analysis results found.") }}
   </div>
   {% else %}
   <div class="table-responsive">
@@ -57,24 +57,24 @@
       <thead>
         <tr>
           <th rowspan="2" style="width:30px">
-            <input type="checkbox" id="mgCheckAll" class="form-check-input" title="Бүгдийг сонгох">
+            <input type="checkbox" id="mgCheckAll" class="form-check-input" title="{{ _("Select all") }}">
           </th>
-          <th rowspan="2" style="width:35px">№</th>
-          <th rowspan="2" style="min-width:160px">Дээж</th>
+          <th rowspan="2" style="width:35px">No.</th>
+          <th rowspan="2" style="min-width:160px">{{ _("Sample") }}</th>
           <th rowspan="2" style="width:70px">MT, %</th>
           <th rowspan="2" style="width:70px">TRD</th>
-          <th colspan="4" style="background:#e0f2fe">Size Distribution</th>
-          <th colspan="4" style="background:#fef3c7">Magnetic Test</th>
+          <th colspan="4" style="background:#e0f2fe">{{ _("Size Distribution") }}</th>
+          <th colspan="4" style="background:#fef3c7">{{ _("Magnetic Test") }}</th>
         </tr>
         <tr>
-          <th style="width:60px;background:#e0f2fe">Init, g</th>
-          <th style="width:100px;background:#e0f2fe">Fraction</th>
-          <th style="width:65px;background:#e0f2fe">Mass, g</th>
+          <th style="width:60px;background:#e0f2fe">{{ _("Init, g") }}</th>
+          <th style="width:100px;background:#e0f2fe">{{ _("Fraction") }}</th>
+          <th style="width:65px;background:#e0f2fe">{{ _("Mass, g") }}</th>
           <th style="width:55px;background:#e0f2fe">%</th>
-          <th style="width:65px;background:#fef3c7">Init, g</th>
-          <th style="width:80px;background:#fef3c7">MG, g</th>
-          <th style="width:90px;background:#fef3c7">Non-MG, g</th>
-          <th style="width:70px;background:#fef3c7">MG, %</th>
+          <th style="width:65px;background:#fef3c7">{{ _("Init, g") }}</th>
+          <th style="width:80px;background:#fef3c7">{{ _("MG, g") }}</th>
+          <th style="width:90px;background:#fef3c7">{{ _("Non-MG, g") }}</th>
+          <th style="width:70px;background:#fef3c7">{{ _("MG, %%") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -107,7 +107,7 @@
                   {% if mt.get('final_result') is not none %}
                     {{ "%.2f"|format(mt['final_result']) }}
                     {% if current_user.role in ['senior', 'admin'] and mt.get('id') %}
-                    <button class="mg-return" data-rid="{{ mt['id'] }}" title="Буцаах">↩</button>
+                    <button class="mg-return" data-rid="{{ mt['id'] }}" title="{{ _("Return") }}">↩</button>
                     {% endif %}
                   {% else %}<span class="mg-val-muted">-</span>{% endif %}
                 </td>
@@ -115,14 +115,14 @@
                   {% if trd.get('final_result') is not none %}
                     {{ "%.3f"|format(trd['final_result']) }}
                     {% if current_user.role in ['senior', 'admin'] and trd.get('id') %}
-                    <button class="mg-return" data-rid="{{ trd['id'] }}" title="Буцаах">↩</button>
+                    <button class="mg-return" data-rid="{{ trd['id'] }}" title="{{ _("Return") }}">↩</button>
                     {% endif %}
                   {% else %}<span class="mg-val-muted">-</span>{% endif %}
                 </td>
                 <td rowspan="{{ frac_count }}" class="align-middle mg-cell{{ ' mg-pending' if size.get('status') == 'pending_review' }}">
                   {{ size_raw.get('total_mass', 50) }}
                   {% if current_user.role in ['senior', 'admin'] and size.get('id') %}
-                  <button class="mg-return" data-rid="{{ size['id'] }}" title="SIZE буцаах">↩</button>
+                  <button class="mg-return" data-rid="{{ size['id'] }}" title="{{ _("Return SIZE") }}">↩</button>
                   {% endif %}
                 </td>
               {% endif %}
@@ -152,7 +152,7 @@
                   {% if mg.get('final_result') is not none %}
                     {{ "%.2f"|format(mg['final_result']) }}
                     {% if current_user.role in ['senior', 'admin'] and mg.get('id') %}
-                    <button class="mg-return" data-rid="{{ mg['id'] }}" title="Буцаах">↩</button>
+                    <button class="mg-return" data-rid="{{ mg['id'] }}" title="{{ _("Return") }}">↩</button>
                     {% endif %}
                   {% else %}-{% endif %}
                 </td>
@@ -161,7 +161,7 @@
           {% endfor %}
 
           <tr class="total-row">
-            <td colspan="7" class="text-end">Total</td>
+            <td colspan="7" class="text-end">{{ _("Total") }}</td>
             <td>{{ size_raw.get('total_mass', 50) }}</td>
             <td>100.0</td>
             <td colspan="4"></td>
@@ -211,7 +211,7 @@
       const ids = getSelectedIds();
       if (!ids.length) return;
       const action = 'archive';
-      const msg = ids.length + ' дээжийг архивлах уу?';
+      const msg = ids.length + " {{ _('samples to archive?') }}";
       if (!confirm(msg)) return;
 
       fetch('{{ url_for("api.mg_summary") }}', {
@@ -222,18 +222,18 @@
       .then(r => r.json())
       .then(data => {
         if (data.success) location.reload();
-        else alert(data.message || 'Алдаа гарлаа');
+        else alert(data.message || "{{ _('An error occurred') }}");
       })
-      .catch(() => alert('Сервертэй холбогдож чадсангүй'));
+      .catch(() => alert("{{ _('Could not connect to server') }}"));
     });
   }
 
-  // Per-cell return (↩) button
+  // Per-cell return button
   document.addEventListener('click', function(e) {
     if (!e.target.classList.contains('mg-return')) return;
     const rid = e.target.dataset.rid;
     if (!rid) return;
-    if (!confirm('Энэ үр дүнг буцаах уу?')) return;
+    if (!confirm("{{ _('Return this result?') }}")) return;
 
     fetch('/api/update_result_status/' + rid + '/rejected', {
       method: 'POST',
@@ -241,7 +241,7 @@
     })
     .then(r => r.json())
     .then(data => { if (data.message) location.reload(); })
-    .catch(() => alert('Алдаа гарлаа'));
+    .catch(() => alert("{{ _('An error occurred') }}"));
   });
 
   // Excel export

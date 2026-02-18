@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Хог хаягдлын тайлан - {{ year }}{% endblock %}
+{% block title %}{{ _("Waste Report") }} - {{ year }}{% endblock %}
 
 {% block content %}
 <style>
@@ -22,27 +22,27 @@
     <div>
       <h4 class="mb-1">
         <i class="bi bi-file-earmark-spreadsheet text-info me-2"></i>
-        Хог хаягдлын тайлан
+        {{ _("Waste Report") }}
       </h4>
-      <p class="text-muted mb-0">{{ year }} оны жилийн тайлан</p>
+      <p class="text-muted mb-0">{{ _("Annual report for year %(year)s", year=year) }}</p>
     </div>
     <div class="d-flex gap-2">
       <button onclick="window.print()" class="btn btn-outline-secondary">
-        <i class="bi bi-printer me-1"></i> Хэвлэх
+        <i class="bi bi-printer me-1"></i> {{ _("Print") }}
       </button>
       <button onclick="exportToExcel()" class="btn btn-success">
         <i class="bi bi-file-earmark-excel me-1"></i> Excel
       </button>
       <a href="{{ url_for('chemicals.waste_list', year=year, lab=lab) }}" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left me-1"></i> Буцах
+        <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
       </a>
     </div>
   </div>
 
   {# Report Title (for print) #}
   <div class="text-center mb-4">
-    <h5 class="fw-bold">Химийн хорт болон аюултай бодисын сав, баглаа боодлын тайлан</h5>
-    <p class="text-muted">{{ year }} он</p>
+    <h5 class="fw-bold">{{ _("Chemical Hazardous Waste Packaging Report") }}</h5>
+    <p class="text-muted">{{ year }}</p>
   </div>
 
   {# Table #}
@@ -52,13 +52,13 @@
         <table class="table table-bordered mb-0 report-table" id="reportTable">
           <thead class="table-light">
             <tr>
-              <th rowspan="2" class="text-center align-middle">№</th>
-              <th rowspan="2" class="name-cell align-middle">Хог хаягдлын нэр (MN)</th>
-              <th rowspan="2" class="name-cell align-middle">Waste name (EN)</th>
-              <th rowspan="2" class="text-center align-middle">Сард гарах</th>
-              <th rowspan="2" class="align-middle">Хаягдах газар</th>
-              <th colspan="12" class="text-center">Сарын хэмжээ</th>
-              <th rowspan="2" class="text-center align-middle">Total</th>
+              <th rowspan="2" class="text-center align-middle">{{ _("No.") }}</th>
+              <th rowspan="2" class="name-cell align-middle">{{ _("Waste Name (MN)") }}</th>
+              <th rowspan="2" class="name-cell align-middle">{{ _("Waste Name (EN)") }}</th>
+              <th rowspan="2" class="text-center align-middle">{{ _("Monthly Output") }}</th>
+              <th rowspan="2" class="align-middle">{{ _("Disposal Location") }}</th>
+              <th colspan="12" class="text-center">{{ _("Monthly Amount") }}</th>
+              <th rowspan="2" class="text-center align-middle">{{ _("Total") }}</th>
             </tr>
             <tr>
               <th class="text-center">1</th>
@@ -101,13 +101,13 @@
 
   {# Footer #}
   <div class="mt-4 text-muted small">
-    <p>Report гаргасан: {{ now().strftime('%Y-%m-%d %H:%M') if now is defined else '' }}</p>
+    <p>{{ _("Report generated") }}: {{ now().strftime('%Y-%m-%d %H:%M') if now is defined else '' }}</p>
   </div>
 </div>
 
 <script>
 function exportToExcel() {
-  tableToXlsx('reportTable', 'waste_report_{{ year }}.xlsx', 'Хаягдал');
+  tableToXlsx('reportTable', 'waste_report_{{ year }}.xlsx', "{{ _('Waste') }}");
 }
 </script>
 {% endblock %}

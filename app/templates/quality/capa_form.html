@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="bi bi-tools me-2"></i>Corrective Action Register</h2>
+    <h2><i class="bi bi-tools me-2"></i>{{ _("Corrective Action Register") }}</h2>
     <p class="text-muted">LAB.02.00.04 | ISO 17025 - 8.7</p>
 
     <form method="POST" class="mt-3">
@@ -10,46 +10,46 @@
 
         <div class="card mt-3">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Corrective Action Implementer Section</h5>
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Corrective Action Implementer Section") }}</h5>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Date:</label>
+                        <label class="form-label fw-bold">{{ _("Date:") }}</label>
                         <input type="date" name="issue_date" class="form-control" value="{{ today }}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">No.:</label>
-                        <input type="text" class="form-control" value="Auto-generated" disabled>
+                        <label class="form-label fw-bold">{{ _("No.:") }}</label>
+                        <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Nonconformity description <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ _("Nonconformity description") }} <span class="text-danger">*</span></label>
                     <textarea name="issue_description" class="form-control" rows="4"
-                              placeholder="Detailed description of the nonconformity..." required></textarea>
+                              placeholder="{{ _("Detailed description of the nonconformity...") }}" required></textarea>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Corrective action / Plan</label>
+                    <label class="form-label">{{ _("Corrective action / Plan") }}</label>
                     <textarea name="corrective_action" class="form-control" rows="3"
-                              placeholder="Action measures, plan..."></textarea>
+                              placeholder="{{ _("Action measures, plan...") }}"></textarea>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Deadline</label>
+                        <label class="form-label">{{ _("Deadline") }}</label>
                         <input type="date" name="target_date" class="form-control">
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Documented evidence, additional remarks</label>
+                    <label class="form-label">{{ _("Documented evidence, additional remarks") }}</label>
                     <textarea name="notes" class="form-control" rows="2"></textarea>
                 </div>
 
                 <div class="border-top pt-3">
-                    <p class="mb-1"><strong>Signature:</strong></p>
+                    <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
                     <p class="text-muted mb-0">
                         <i class="bi bi-person-check me-1"></i>{{ current_user.username }}
                         ({{ current_user.role }})
@@ -60,10 +60,10 @@
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-save me-1"></i> Register
+                <i class="bi bi-save me-1"></i> {{ _("Register") }}
             </button>
             <a href="{{ url_for('quality.capa_list') }}" class="btn btn-secondary btn-lg ms-2">
-                <i class="bi bi-x-lg me-1"></i> Cancel
+                <i class="bi bi-x-lg me-1"></i> {{ _("Cancel") }}
             </a>
         </div>
     </form>

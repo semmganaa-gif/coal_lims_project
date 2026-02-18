@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}License Information - Coal LIMS{% endblock %}
+{% block title %}{{ _("License Information") }} - Coal LIMS{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,7 +9,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
-                        <i class="fas fa-key me-2"></i>License Information
+                        <i class="fas fa-key me-2"></i>{{ _("License Information") }}
                     </h5>
                 </div>
                 <div class="card-body">
@@ -17,26 +17,26 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="text-muted mb-3">General Information</h6>
+                                    <h6 class="text-muted mb-3">{{ _("General Information") }}</h6>
                                     <table class="table table-sm table-borderless mb-0">
                                         <tr>
-                                            <td class="text-muted" width="40%">Company:</td>
+                                            <td class="text-muted" width="40%">{{ _("Company:") }}</td>
                                             <td><strong>{{ license.company_name }}</strong></td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Company Code:</td>
+                                            <td class="text-muted">{{ _("Company Code:") }}</td>
                                             <td>{{ license.company_code or '-' }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Status:</td>
+                                            <td class="text-muted">{{ _("Status:") }}</td>
                                             <td>
                                                 {% if license.is_valid %}
-                                                    <span class="badge bg-success">Valid</span>
+                                                    <span class="badge bg-success">{{ _("Valid") }}</span>
                                                 {% else %}
-                                                    <span class="badge bg-danger">Invalid</span>
+                                                    <span class="badge bg-danger">{{ _("Invalid") }}</span>
                                                 {% endif %}
                                                 {% if license.is_trial %}
-                                                    <span class="badge bg-warning text-dark">Trial</span>
+                                                    <span class="badge bg-warning text-dark">{{ _("Trial") }}</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -45,27 +45,27 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="text-muted mb-3">Duration</h6>
+                                    <h6 class="text-muted mb-3">{{ _("Duration") }}</h6>
                                     <table class="table table-sm table-borderless mb-0">
                                         <tr>
-                                            <td class="text-muted" width="40%">Issued:</td>
+                                            <td class="text-muted" width="40%">{{ _("Issued:") }}</td>
                                             <td>{{ license.issued_date.strftime('%Y-%m-%d') }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Expires:</td>
+                                            <td class="text-muted">{{ _("Expires:") }}</td>
                                             <td>
                                                 <strong>{{ license.expiry_date.strftime('%Y-%m-%d') }}</strong>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Remaining:</td>
+                                            <td class="text-muted">{{ _("Remaining:") }}</td>
                                             <td>
                                                 {% if license.days_remaining > 30 %}
-                                                    <span class="text-success">{{ license.days_remaining }} days</span>
+                                                    <span class="text-success">{{ license.days_remaining }} {{ _("days") }}</span>
                                                 {% elif license.days_remaining > 0 %}
-                                                    <span class="text-warning">{{ license.days_remaining }} days</span>
+                                                    <span class="text-warning">{{ license.days_remaining }} {{ _("days") }}</span>
                                                 {% else %}
-                                                    <span class="text-danger">Expired</span>
+                                                    <span class="text-danger">{{ _("Expired") }}</span>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -77,29 +77,29 @@
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="text-muted mb-3">Limits</h6>
+                                    <h6 class="text-muted mb-3">{{ _("Limits") }}</h6>
                                     <table class="table table-sm table-borderless mb-0">
                                         <tr>
-                                            <td class="text-muted" width="50%">Max Users:</td>
-                                            <td>up to {{ license.max_users }}</td>
+                                            <td class="text-muted" width="50%">{{ _("Max Users:") }}</td>
+                                            <td>{{ _("up to") }} {{ license.max_users }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Monthly Samples:</td>
-                                            <td>up to {{ license.max_samples_per_month }}</td>
+                                            <td class="text-muted">{{ _("Monthly Samples:") }}</td>
+                                            <td>{{ _("up to") }} {{ license.max_samples_per_month }}</td>
                                         </tr>
                                     </table>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-3 h-100">
-                                    <h6 class="text-muted mb-3">Technical Information</h6>
+                                    <h6 class="text-muted mb-3">{{ _("Technical Information") }}</h6>
                                     <table class="table table-sm table-borderless mb-0">
                                         <tr>
-                                            <td class="text-muted" width="50%">Check Count:</td>
+                                            <td class="text-muted" width="50%">{{ _("Check Count:") }}</td>
                                             <td>{{ license.check_count }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted">Last Check:</td>
+                                            <td class="text-muted">{{ _("Last Check:") }}</td>
                                             <td>
                                                 {% if license.last_check %}
                                                     {{ license.last_check.strftime('%Y-%m-%d %H:%M') }}
@@ -116,32 +116,32 @@
                         {% if license.is_expiring_soon %}
                             <div class="alert alert-warning">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Warning:</strong> The license will expire in {{ license.days_remaining }} days. Please renew in time.
+                                <strong>{{ _("Warning:") }}</strong> {{ _("The license will expire in %(days)s days. Please renew in time.", days=license.days_remaining) }}
                             </div>
                         {% endif %}
                     {% else %}
                         <div class="alert alert-danger">
                             <i class="fas fa-times-circle me-2"></i>
-                            License not found.
-                            <a href="{{ url_for('license.activate') }}" class="alert-link">Activate License</a>
+                            {{ _("License not found.") }}
+                            <a href="{{ url_for('license.activate') }}" class="alert-link">{{ _("Activate License") }}</a>
                         </div>
                     {% endif %}
 
                     <hr>
 
-                    <h6 class="text-muted mb-3">System Hardware Information</h6>
+                    <h6 class="text-muted mb-3">{{ _("System Hardware Information") }}</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered">
                             <tr>
-                                <td class="text-muted" width="30%">Hardware ID:</td>
+                                <td class="text-muted" width="30%">{{ _("Hardware ID:") }}</td>
                                 <td><code>{{ hardware_info.short_id }}</code></td>
                             </tr>
                             <tr>
-                                <td class="text-muted">Hostname:</td>
+                                <td class="text-muted">{{ _("Hostname:") }}</td>
                                 <td>{{ hardware_info.hostname }}</td>
                             </tr>
                             <tr>
-                                <td class="text-muted">OS:</td>
+                                <td class="text-muted">{{ _("OS:") }}</td>
                                 <td>{{ hardware_info.os }} {{ hardware_info.os_version }}</td>
                             </tr>
                         </table>

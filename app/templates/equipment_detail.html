@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "partials/equipment_shared.html" import lab_purpose_options, category_options, register_type_options, status_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options, status_badge, category_labels %}
 
-{% block title %}{{ eq.name }} — Equipment{% endblock %}
+{% block title %}{{ eq.name }} — {{ _("Equipment") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -378,7 +378,7 @@
 
 <div class="eq-page">
   {# ================= HEADER ================= #}
-  {% set category_label = category_labels[eq.category] | default('Other') %}
+  {% set category_label = category_labels[eq.category] | default(_('Other')) %}
 
   <div class="eq-header">
     <div class="eq-header-left">
@@ -397,20 +397,20 @@
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
       {% if eq.status == 'normal' %}
-        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> Normal</span>
+        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
       {% elif eq.status == 'broken' %}
-        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> Out of Order</span>
+        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Order") }}</span>
       {% elif eq.status == 'maintenance' %}
-        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> Under Maintenance</span>
+        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> {{ _("Under Maintenance") }}</span>
       {% elif eq.status == 'needs_spare' %}
-        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> Spare Parts Required</span>
+        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> {{ _("Spare Parts Required") }}</span>
       {% elif eq.status == 'retired' %}
-        <span class="status-pill status-retired"><i class="bi bi-archive"></i> Retired</span>
+        <span class="status-pill status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
       {% endif %}
 
       {% if current_user.role in ['senior', 'manager', 'admin'] %}
         <button class="btn btn-sm btn-outline-secondary" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#editEqModal">
-          <i class="bi bi-pencil"></i> Edit
+          <i class="bi bi-pencil"></i> {{ _("Edit") }}
         </button>
       {% endif %}
     </div>
@@ -423,35 +423,35 @@
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-info-circle" style="color:#6366f1"></i>
-          Basic Information
+          {{ _("Basic Information") }}
         </div>
         <div class="eq-card-body">
           <div class="info-row">
-            <span class="info-label">Manufacturer</span>
+            <span class="info-label">{{ _("Manufacturer") }}</span>
             <span class="info-value">{{ eq.manufacturer or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Model</span>
+            <span class="info-label">{{ _("Model") }}</span>
             <span class="info-value">{{ eq.model or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Serial No.</span>
+            <span class="info-label">{{ _("Serial No.") }}</span>
             <span class="info-value font-monospace" style="font-size:0.8rem">{{ eq.serial_number or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Location</span>
+            <span class="info-label">{{ _("Location") }}</span>
             <span class="info-value">
               {{ eq.location or '-' }}
               {% if eq.room_number %}<span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>{% endif %}
             </span>
           </div>
           <div class="info-row">
-            <span class="info-label">Quantity</span>
+            <span class="info-label">{{ _("Quantity") }}</span>
             <span class="info-value">{{ eq.quantity or 1 }}</span>
           </div>
           {% if eq.related_analysis %}
           <div class="info-row">
-            <span class="info-label">Related Analysis</span>
+            <span class="info-label">{{ _("Related Analysis") }}</span>
             <span class="info-value">
               <span class="badge bg-primary-subtle text-primary-emphasis">{{ eq.related_analysis }}</span>
             </span>
@@ -464,19 +464,19 @@
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-shield-check" style="color:#22c55e"></i>
-          Calibration
+          {{ _("Calibration") }}
         </div>
         <div class="eq-card-body">
           <div class="info-row">
-            <span class="info-label">Last Calibrated</span>
+            <span class="info-label">{{ _("Last Calibrated") }}</span>
             <span class="info-value">{{ eq.calibration_date or '-' }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Cycle</span>
-            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} days</span>
+            <span class="info-label">{{ _("Cycle") }}</span>
+            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} {{ _("days") }}</span>
           </div>
           <div class="info-row">
-            <span class="info-label">Next Due</span>
+            <span class="info-label">{{ _("Next Due") }}</span>
             <span class="info-value">
               {% if eq.next_calibration_date %}
                 {{ eq.next_calibration_date }}
@@ -487,7 +487,7 @@
           </div>
           {% if eq.calibration_note %}
           <div class="info-row">
-            <span class="info-label">Notes</span>
+            <span class="info-label">{{ _("Notes") }}</span>
             <span class="info-value" style="max-width:180px">{{ eq.calibration_note }}</span>
           </div>
           {% endif %}
@@ -498,17 +498,17 @@
             {% if days_left < 0 %}
               <div class="cal-alert cal-danger">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                Expired {{ -days_left }} days ago!
+                {{ _("Expired %(days)s days ago!", days=-days_left) }}
               </div>
             {% elif days_left <= 7 %}
               <div class="cal-alert cal-warn">
                 <i class="bi bi-clock-fill"></i>
-                Expires in {{ days_left }} days
+                {{ _("Expires in %(days)s days", days=days_left) }}
               </div>
             {% elif days_left <= 30 %}
               <div class="cal-alert cal-ok">
                 <i class="bi bi-check-circle-fill"></i>
-                {{ days_left }} days remaining
+                {{ _("%(days)s days remaining", days=days_left) }}
               </div>
             {% endif %}
           {% endif %}
@@ -520,36 +520,36 @@
       <div class="eq-card mb-4">
         <div class="eq-card-header">
           <i class="bi bi-building" style="color:#f59e0b"></i>
-          Additional Information
+          {{ _("Additional Information") }}
         </div>
         <div class="eq-card-body">
           {% if eq.manufactured_info %}
           <div class="info-row">
-            <span class="info-label">Manufactured</span>
+            <span class="info-label">{{ _("Manufactured") }}</span>
             <span class="info-value">{{ eq.manufactured_info }}</span>
           </div>
           {% endif %}
           {% if eq.commissioned_info %}
           <div class="info-row">
-            <span class="info-label">Commissioned</span>
+            <span class="info-label">{{ _("Commissioned") }}</span>
             <span class="info-value">{{ eq.commissioned_info }}</span>
           </div>
           {% endif %}
           {% if eq.initial_price %}
           <div class="info-row">
-            <span class="info-label">Initial Price</span>
+            <span class="info-label">{{ _("Initial Price") }}</span>
             <span class="info-value">{{ "{:,.0f}".format(eq.initial_price) }}₮</span>
           </div>
           {% endif %}
           {% if eq.residual_price %}
           <div class="info-row">
-            <span class="info-label">Residual Price</span>
+            <span class="info-label">{{ _("Residual Price") }}</span>
             <span class="info-value">{{ "{:,.0f}".format(eq.residual_price) }}₮</span>
           </div>
           {% endif %}
           {% if eq.remark %}
           <div style="margin-top:0.75rem; padding:0.75rem; background:rgba(0,0,0,0.02); border-radius:10px;">
-            <div class="info-label" style="margin-bottom:0.25rem">Remarks</div>
+            <div class="info-label" style="margin-bottom:0.25rem">{{ _("Remarks") }}</div>
             <div style="font-size:0.8rem; color:var(--text-primary)">{{ eq.remark }}</div>
           </div>
           {% endif %}
@@ -561,62 +561,62 @@
       <div class="eq-card add-form-card">
         <div class="eq-card-header">
           <i class="bi bi-plus-circle"></i>
-          Add Log / Maintenance
+          {{ _("Add Log / Maintenance") }}
         </div>
         <div class="eq-card-body">
           <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
             <div class="form-floating-sm">
-              <label>Төрөл</label>
+              <label>{{ _("Type") }}</label>
               <select name="action_type" class="form-select" id="actionTypeSelect">
-                <option value="Usage">Ашиглалт</option>
-                <option value="Daily Check">Өдрийн шалгалт</option>
-                <option value="Maintenance">Засвар үйлчилгээ</option>
+                <option value="Usage">{{ _("Usage") }}</option>
+                <option value="Daily Check">{{ _("Daily Check") }}</option>
+                <option value="Maintenance">{{ _("Maintenance") }}</option>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">Их засвар</option>
-                <option value="Calibration">Калибровка</option>
+                <option value="Repair">{{ _("Major Repair") }}</option>
+                <option value="Calibration">{{ _("Calibration") }}</option>
                 {% endif %}
               </select>
             </div>
 
             <div class="form-floating-sm" id="usageFields">
-              <label>Ашигласан хугацаа (минут)</label>
+              <label>{{ _("Usage Duration (minutes)") }}</label>
               <input type="number" name="duration_minutes" class="form-control" min="1" placeholder="60">
             </div>
 
             <div class="row">
               <div class="col-6">
                 <div class="form-floating-sm">
-                  <label>Date</label>
+                  <label>{{ _("Date") }}</label>
                   <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
                 </div>
               </div>
               <div class="col-6">
                 <div class="form-floating-sm">
-                  <label>Performed By</label>
+                  <label>{{ _("Performed By") }}</label>
                   <input type="text" name="performed_by" class="form-control" value="{{ current_user.username }}">
                 </div>
               </div>
             </div>
 
             <div class="form-floating-sm">
-              <label>Certificate No.</label>
-              <input type="text" name="certificate_no" class="form-control" placeholder="Certificate number">
+              <label>{{ _("Certificate No.") }}</label>
+              <input type="text" name="certificate_no" class="form-control" placeholder="{{ _("Certificate number") }}">
             </div>
 
             <div class="form-floating-sm">
-              <label>Certificate / File</label>
+              <label>{{ _("Certificate / File") }}</label>
               <input type="file" name="certificate_file" class="form-control">
             </div>
 
             <div class="form-floating-sm">
-              <label>Description / Result</label>
-              <textarea name="description" class="form-control" rows="2" placeholder="Description of work performed..."></textarea>
+              <label>{{ _("Description / Result") }}</label>
+              <textarea name="description" class="form-control" rows="2" placeholder="{{ _("Description of work performed...") }}"></textarea>
             </div>
 
             <button type="submit" class="btn-submit">
-              <i class="bi bi-check2-circle me-1"></i> Save
+              <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
             </button>
           </form>
         </div>
@@ -628,37 +628,37 @@
       <div class="eq-card timeline-section">
         <div class="eq-card-header">
           <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
-          Журнал
+          {{ _("Journal") }}
           <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length + (usage_logs|default([])|length) }}</span>
         </div>
         <div class="eq-card-body">
           {# Filters #}
           <div class="timeline-filters">
-            <span class="filter-chip active" data-type="all">Бүгд</span>
+            <span class="filter-chip active" data-type="all">{{ _("All") }}</span>
             <span class="filter-chip" data-type="Usage">
-              <i class="bi bi-clock"></i> Ашиглалт
+              <i class="bi bi-clock"></i> {{ _("Usage") }}
             </span>
             <span class="filter-chip" data-type="Daily Check">
-              <i class="bi bi-check-square"></i> Шалгалт
+              <i class="bi bi-check-square"></i> {{ _("Check") }}
             </span>
             <span class="filter-chip" data-type="Maintenance">
-              <i class="bi bi-wrench"></i> Засвар
+              <i class="bi bi-wrench"></i> {{ _("Maintenance") }}
             </span>
             <span class="filter-chip" data-type="Repair">
-              <i class="bi bi-tools"></i> Их засвар
+              <i class="bi bi-tools"></i> {{ _("Major Repair") }}
             </span>
             <span class="filter-chip" data-type="Calibration">
-              <i class="bi bi-award"></i> Калибровка
+              <i class="bi bi-award"></i> {{ _("Calibration") }}
             </span>
           </div>
 
           {# Search #}
           <div class="timeline-search">
             <i class="bi bi-search"></i>
-            <input type="text" id="timelineSearch" placeholder="Search... (description, performer, certificate)">
+            <input type="text" id="timelineSearch" placeholder="{{ _("Search... (description, performer, certificate)") }}">
           </div>
 
-          {# Timeline list — MaintenanceLog + UsageLog нэгтгэсэн #}
+          {# Timeline list #}
           {% set ns = namespace(all_items=[]) %}
           {% for log in eq.logs %}
             {% set _ = ns.all_items.append({'type': 'maint', 'date': log.action_date, 'obj': log}) %}
@@ -673,12 +673,12 @@
                 {% set ul = item.obj %}
                 <div class="timeline-item"
                      data-type="Usage"
-                     data-search="{{ ul.start_time.strftime('%Y-%m-%d') }} Usage Ашиглалт {{ ul.used_by or '' }} {{ ul.purpose or '' }}">
+                     data-search="{{ ul.start_time.strftime('%Y-%m-%d') }} Usage {{ ul.used_by or '' }} {{ ul.purpose or '' }}">
                   <div class="timeline-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1d4ed8">
                     <i class="bi bi-clock"></i>
                   </div>
                   <div class="timeline-header">
-                    <span class="timeline-type" style="background:rgba(59,130,246,0.12);color:#1d4ed8">Ашиглалт</span>
+                    <span class="timeline-type" style="background:rgba(59,130,246,0.12);color:#1d4ed8">{{ _("Usage") }}</span>
                     <span class="timeline-date">
                       <i class="bi bi-calendar3"></i>
                       {{ ul.start_time.strftime('%Y-%m-%d %H:%M') }}
@@ -691,7 +691,7 @@
                   </div>
                   {% endif %}
                   <div class="timeline-desc">
-                    <strong>{{ ul.duration_minutes or 0 }} минут</strong>
+                    <strong>{{ ul.duration_minutes or 0 }} {{ _("minutes") }}</strong>
                     {% if ul.purpose %} — {{ ul.purpose }}{% endif %}
                   </div>
                 </div>
@@ -714,13 +714,13 @@
 
                   <div class="timeline-header">
                     {% if log.action_type == 'Calibration' %}
-                      <span class="timeline-type type-calib">Калибровка</span>
+                      <span class="timeline-type type-calib">{{ _("Calibration") }}</span>
                     {% elif log.action_type == 'Repair' %}
-                      <span class="timeline-type type-repair">Их засвар</span>
+                      <span class="timeline-type type-repair">{{ _("Major Repair") }}</span>
                     {% elif log.action_type == 'Maintenance' %}
-                      <span class="timeline-type type-maint">Засвар</span>
+                      <span class="timeline-type type-maint">{{ _("Maintenance") }}</span>
                     {% else %}
-                      <span class="timeline-type type-check">Өдрийн шалгалт</span>
+                      <span class="timeline-type type-check">{{ _("Daily Check") }}</span>
                     {% endif %}
 
                     <span class="timeline-date">
@@ -744,7 +744,7 @@
                   <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
                      class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
                     <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
-                    {{ log.certificate_no or 'Файл татах' }}
+                    {{ log.certificate_no or _('Download file') }}
                   </a>
                   {% endif %}
                 </div>
@@ -752,8 +752,8 @@
             {% else %}
             <div class="timeline-empty" id="timelineEmpty">
               <i class="bi bi-clock-history d-block"></i>
-              <h5>Бүртгэл байхгүй</h5>
-              <p class="mb-0">Энэ багажид ямар нэг бүртгэл хийгдээгүй байна.</p>
+              <h5>{{ _("No records") }}</h5>
+              <p class="mb-0">{{ _("No records have been made for this equipment.") }}</p>
             </div>
             {% endfor %}
           </div>
@@ -771,25 +771,25 @@
       <div class="modal-content" style="border-radius:20px; overflow:hidden;">
         <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;">
           <h5 class="modal-title fw-bold">
-            <i class="bi bi-pencil-square me-2"></i>Edit Equipment
+            <i class="bi bi-pencil-square me-2"></i>{{ _("Edit Equipment") }}
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
           <div class="mb-3">
-            <label class="fw-bold small">Name</label>
+            <label class="fw-bold small">{{ _("Name") }}</label>
             <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
           </div>
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Category</label>
+              <label class="fw-bold small">{{ _("Category") }}</label>
               <select name="category" class="form-select">
                 {{ category_options(eq.category or 'other') }}
               </select>
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Register Type</label>
+              <label class="fw-bold small">{{ _("Register Type") }}</label>
               <select name="register_type" class="form-select">
                 {{ register_type_options(eq.register_type or '') }}
               </select>
@@ -798,45 +798,45 @@
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Manufacturer</label>
+              <label class="fw-bold small">{{ _("Manufacturer") }}</label>
               <input type="text" name="manufacturer" class="form-control" value="{{ eq.manufacturer or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Model</label>
+              <label class="fw-bold small">{{ _("Model") }}</label>
               <input type="text" name="model" class="form-control" value="{{ eq.model or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Serial No.</label>
+              <label class="fw-bold small">{{ _("Serial No.") }}</label>
               <input type="text" name="serial" class="form-control" value="{{ eq.serial_number or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Lab Code</label>
+              <label class="fw-bold small">{{ _("Lab Code") }}</label>
               <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Location</label>
+              <label class="fw-bold small">{{ _("Location") }}</label>
               <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Room No.</label>
+              <label class="fw-bold small">{{ _("Room No.") }}</label>
               <input type="text" name="room" class="form-control" value="{{ eq.room_number or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Quantity</label>
+              <label class="fw-bold small">{{ _("Quantity") }}</label>
               <input type="number" name="quantity" class="form-control" value="{{ eq.quantity or 1 }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Cycle (days)</label>
+              <label class="fw-bold small">{{ _("Cycle (days)") }}</label>
               <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
             </div>
             <div class="col-4 mb-3">
-              <label class="fw-bold small">Status</label>
+              <label class="fw-bold small">{{ _("Status") }}</label>
               <select name="status" class="form-select">
                 {{ status_options(eq.status or 'normal') }}
               </select>
@@ -844,12 +844,12 @@
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small text-primary">Related Analysis</label>
-            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="e.g. Aad,Mad">
+            <label class="fw-bold small text-primary">{{ _("Related Analysis") }}</label>
+            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="{{ _("e.g. Aad,Mad") }}">
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Check & Adjustment Notes</label>
+            <label class="fw-bold small">{{ _("Check & Adjustment Notes") }}</label>
             <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
           </div>
 
@@ -857,22 +857,22 @@
           <div class="row">
             <div class="col-6 mb-3">
               <label class="fw-bold small text-success">
-                <i class="bi bi-calendar-check me-1"></i>Last Calibrated
+                <i class="bi bi-calendar-check me-1"></i>{{ _("Last Calibrated") }}
               </label>
               <input type="date" name="calibration_date" id="editCalibDate" class="form-control"
                      value="{{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '' }}">
-              <div class="form-text small">Next due date will be calculated automatically</div>
+              <div class="form-text small">{{ _("Next due date will be calculated automatically") }}</div>
             </div>
             <div class="col-6 mb-3">
               <label class="fw-bold small text-danger">
-                <i class="bi bi-calendar-event me-1"></i>Next Due
+                <i class="bi bi-calendar-event me-1"></i>{{ _("Next Due") }}
                 <span class="badge bg-secondary-subtle text-secondary ms-1" id="calcBadge" style="display:none">auto</span>
               </label>
               <input type="date" name="next_calibration_date" id="editNextCalibDate" class="form-control"
                      value="{{ eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else '' }}">
               <div class="form-text small">
                 <a href="#" id="calcNextDateBtn" class="text-decoration-none">
-                  <i class="bi bi-calculator"></i> Calculate from cycle
+                  <i class="bi bi-calculator"></i> {{ _("Calculate from cycle") }}
                 </a>
               </div>
             </div>
@@ -882,28 +882,28 @@
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Manufactured Date</label>
+              <label class="fw-bold small">{{ _("Manufactured Date") }}</label>
               <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}">
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Commissioned Date</label>
+              <label class="fw-bold small">{{ _("Commissioned Date") }}</label>
               <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}">
             </div>
           </div>
 
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Initial Price</label>
+              <label class="fw-bold small">{{ _("Initial Price") }}</label>
               <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
             </div>
             <div class="col-6 mb-3">
-              <label class="fw-bold small">Residual Price</label>
+              <label class="fw-bold small">{{ _("Residual Price") }}</label>
               <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="fw-bold small">Remarks</label>
+            <label class="fw-bold small">{{ _("Remarks") }}</label>
             <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
           </div>
 
@@ -911,47 +911,47 @@
           {% set ed = eq.extra_data or {} %}
 
           <div class="edit-reg-fields edit-reg-measurement" style="display:{% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>Measuring Instrument Details</h6>
+            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>{{ _("Measuring Instrument Details") }}</h6>
             <div class="row g-2">
               <div class="col-md-4">
-                <label class="fw-bold small">Group</label>
+                <label class="fw-bold small">{{ _("Group") }}</label>
                 <select name="group" class="form-select form-select-sm">{{ measurement_group_options(ed.get('group', '')) }}</select>
               </div>
-              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
               <div class="col-md-3">
-                <label class="fw-bold small">Purpose</label>
+                <label class="fw-bold small">{{ _("Purpose") }}</label>
                 <select name="purpose" class="form-select form-select-sm">{{ lab_purpose_options(ed.get('purpose', '')) }}</select>
               </div>
               <div class="col-md-3">
-                <label class="fw-bold small">Measurement Unit</label>
+                <label class="fw-bold small">{{ _("Measurement Unit") }}</label>
                 <select name="unit" class="form-select form-select-sm">{{ measurement_unit_options(ed.get('unit', '')) }}</select>
               </div>
             </div>
           </div>
 
           <div class="edit-reg-fields edit-reg-glassware" style="display:{% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>Glassware Details</h6>
+            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>{{ _("Glassware Details") }}</h6>
             <div class="row g-2">
-              <div class="col-md-3"><label class="fw-bold small">Group</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
-              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Volume (mL)</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Certificate No.</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">{{ _("Group") }}</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">{{ _("Volume (mL)") }}</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
             </div>
           </div>
 
           <div class="edit-reg-fields edit-reg-internal_check" style="display:{% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>Internal Check Details</h6>
+            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>{{ _("Internal Check Details") }}</h6>
             <div class="row g-2">
-              <div class="col-md-2"><label class="fw-bold small">No.</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">Model No.</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Commissioned Date</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">Check Date</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
+              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+              <div class="col-md-4"><label class="fw-bold small">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
+              <div class="col-md-3"><label class="fw-bold small">{{ _("Check Date") }}</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">{{ _("Save") }}</button>
         </div>
       </div>
     </form>
@@ -963,7 +963,7 @@
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Action type → usage fields toggle
+  // Action type -> usage fields toggle
   const actionSelect = document.getElementById('actionTypeSelect');
   const usageFields = document.getElementById('usageFields');
   if (actionSelect && usageFields) {
@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', function() {
       nextCalibDateInput.value = nextDate;
       if (calcBadge) {
         calcBadge.style.display = '';
-        calcBadge.textContent = `+${cycleDays} days`;
+        calcBadge.textContent = `+${cycleDays} {{ _("days") }}`;
       }
     }
   }

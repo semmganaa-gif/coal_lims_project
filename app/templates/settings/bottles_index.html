@@ -3,36 +3,36 @@
 <div class="container-fluid">
 
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Bottle Constants — List</h3>
+    <h3 class="mb-0">{{ _("Bottle Constants — List") }}</h3>
 
     {% if can_create %}
       <div class="btn-group">
         <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
-          <i class="bi bi-plus-circle"></i> New Constant
+          <i class="bi bi-plus-circle"></i> {{ _("New Constant") }}
         </a>
         <a class="btn btn-outline-primary" href="{{ url_for('settings.bottles_constants_bulk') }}">
-          <i class="bi bi-grid-3x3"></i> Bulk Entry
+          <i class="bi bi-grid-3x3"></i> {{ _("Bulk Entry") }}
         </a>
       </div>
     {% endif %}
   </div>
 
   <p class="text-muted small">
-    Chemist: view only. Senior/Admin: can add new constants.
+    {{ _("Chemist: view only. Senior/Admin: can add new constants.") }}
   </p>
 
   <div class="table-responsive">
     <table class="table table-sm align-middle">
       <thead>
         <tr>
-          <th style="width:140px;">Bottle No.</th>
-          <th style="width:120px;">Active</th>
-          <th>Last Average (m₂)</th>
-          <th style="width:110px;">Temp. (°C)</th>
-          <th style="width:210px;">Settings Valid Date</th>
-          <th style="width:170px;">Created Date</th>
+          <th style="width:140px;">{{ _("Bottle No.") }}</th>
+          <th style="width:120px;">{{ _("Active") }}</th>
+          <th>{{ _("Last Average (m₂)") }}</th>
+          <th style="width:110px;">{{ _("Temp. (°C)") }}</th>
+          <th style="width:210px;">{{ _("Settings Valid Date") }}</th>
+          <th style="width:170px;">{{ _("Created Date") }}</th>
           {% if can_edit_delete %}
-            <th style="width:160px;" class="text-end">Actions</th>
+            <th style="width:160px;" class="text-end">{{ _("Actions") }}</th>
           {% endif %}
         </tr>
       </thead>
@@ -43,9 +43,9 @@
             <td>{{ b.serial_no }}</td>
             <td>
               {% if b.is_active %}
-                <span class="badge bg-success">Active</span>
+                <span class="badge bg-success">{{ _("Active") }}</span>
               {% else %}
-                <span class="badge bg-secondary">Inactive</span>
+                <span class="badge bg-secondary">{{ _("Inactive") }}</span>
               {% endif %}
             </td>
             <td>{{ ('%.5f' % last.avg_value) if last else '—' }}</td>
@@ -57,15 +57,15 @@
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-secondary"
                    href="{{ url_for('settings.bottle_edit', bottle_id=b.id) }}">
-                  <i class="bi bi-pencil-square"></i> Edit
+                  <i class="bi bi-pencil-square"></i> {{ _("Edit") }}
                 </a>
 
                 <form class="d-inline" method="post"
                       action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
-                      onsubmit="return confirm('{{ b.serial_no }} лонхыг бүрмөсөн устгах уу? (түүхэн өгөгдөл бас устгагдана)');">
+                      onsubmit="return confirm('{{ _("Are you sure you want to permanently delete bottle %(serial)s? (historical data will also be deleted)", serial=b.serial_no) }}');">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-trash"></i> Delete
+                    <i class="bi bi-trash"></i> {{ _("Delete") }}
                   </button>
                 </form>
               </td>

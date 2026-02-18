@@ -29,21 +29,21 @@
   <div class="ws-header">
     <div>
       <h1><i class="bi bi-wind me-2"></i>{{ title }}</h1>
-      <p>Air Microbiology Analysis — MNS 5484:2005</p>
+      <p>{{ _("Air Microbiology Analysis") }} — MNS 5484:2005</p>
     </div>
     <div class="ws-actions">
-      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}</a>
       <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>Standard
+        <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>Timer
+        <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
       </button>
       <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>Equipment
+        <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
       </button>
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Select Samples</button>
-      <button id="btnSave" class="btn text-white" style="background:#6366f1;"><i class="bi bi-save me-1"></i>Save</button>
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}</button>
+      <button id="btnSave" class="btn text-white" style="background:#6366f1;"><i class="bi bi-save me-1"></i>{{ _("Save") }}</button>
     </div>
   </div>
   {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
@@ -51,18 +51,18 @@
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
-      <h6><i class="bi bi-table me-1" style="color:#6366f1"></i>Air Microbiology Grid <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
+      <h6><i class="bi bi-table me-1" style="color:#6366f1"></i>{{ _("Air Microbiology Grid") }} <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#c7d2fe"></div> Bacterial Count: MNS 5484:2005 (per 1m³ &lt;3000)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> S.aureus: MNS 5484:2005 (per 1m³ &lt;50)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Not Detected" or "Detected" → enter count</em></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c7d2fe"></div> {{ _("Bacterial Count: MNS 5484:2005 (per 1m3 <3000)") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> {{ _("S.aureus: MNS 5484:2005 (per 1m3 <50)") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>{{ _("\"Not Detected\" or \"Detected\" - enter count") }}</em></div>
     </div>
   </div>
 </div>
 
-{# --- ТОНОГ ТӨХӨӨРӨМЖИЙН MODAL --- #}
+{# --- EQUIPMENT MODAL --- #}
 <style>
   #equipmentModal .modal-header {
     background: linear-gradient(135deg, #065f46 0%, #047857 100%);
@@ -100,7 +100,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Equipment Usage & Maintenance</span>
+          <span>{{ _("Equipment Usage & Maintenance") }}</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -110,12 +110,12 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 22%; min-width:140px;">Lab Code / Name</th>
-                <th style="width: 7%; text-align:center;">Condi-<br>tion</th>
-                <th style="width: 10%; text-align:center;">Usage<br>(min)</th>
-                <th style="width: 20%;">Notes</th>
-                <th style="width: 7%; text-align:center;">Repair</th>
-                <th style="width: 34%;">Repair Details</th>
+                <th style="width: 22%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
+                <th style="width: 7%; text-align:center;">{{ _("Condition") }}</th>
+                <th style="width: 10%; text-align:center;">{{ _("Usage (min)") }}</th>
+                <th style="width: 20%;">{{ _("Notes") }}</th>
+                <th style="width: 7%; text-align:center;">{{ _("Repair") }}</th>
+                <th style="width: 34%;">{{ _("Repair Details") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -137,7 +137,7 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Notes..." style="border-color: #cbd5e0;">
+                         placeholder="{{ _('Notes...') }}" style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
@@ -146,12 +146,12 @@
                 </td>
                 <td class="repair-info-cell">
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
+                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
                     </button>
                   </div>
                 </td>
@@ -162,17 +162,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>No microbiology lab equipment registered.
+          <i class="bi bi-info-circle me-2"></i>{{ _("No microbiology lab equipment registered.") }}
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Close
+          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
         </button>
         {% if related_equipments %}
         <button type="button" class="btn text-white px-4" style="background:#20c997;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Save
+          <i class="bi bi-save me-1"></i>{{ _("Save") }}
         </button>
         {% endif %}
       </div>
@@ -180,40 +180,40 @@
   </div>
 </div>
 
-<!-- Sample сонгох модал -->
+<!-- Sample selection modal -->
 <div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #eef2ff, #f0f9ff);">
-        <h5 class="modal-title"><i class="bi bi-wind me-2" style="color:#6366f1"></i>Select Samples</h5>
+        <h5 class="modal-title"><i class="bi bi-wind me-2" style="color:#6366f1"></i>{{ _("Select Samples") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
           <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="🔍 Sample code...">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _('Sample code...') }}">
           </div>
           <div class="col-4">
-            <select id="filterClient" class="form-select form-select-sm"><option value="">All clients</option></select>
+            <select id="filterClient" class="form-select form-select-sm"><option value="">{{ _("All clients") }}</option></select>
           </div>
           <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear filters"><i class="bi bi-x-circle"></i></button>
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _('Clear filters') }}"><i class="bi bi-x-circle"></i></button>
             <span id="filteredCount" class="text-muted small"></span>
           </div>
         </div>
-        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading...</p></div>
+        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">{{ _("Loading...") }}</p></div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
-            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>Sample Code</th><th>Client</th><th>Status</th><th>Date</th></tr></thead>
+            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>{{ _("Sample Code") }}</th><th>{{ _("Client") }}</th><th>{{ _("Status") }}</th><th>{{ _("Date") }}</th></tr></thead>
             <tbody id="sampleListBody"></tbody>
           </table>
         </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">No samples found</div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">{{ _("No samples found") }}</div>
       </div>
       <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">0 samples selected</span>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn text-white" style="background:#6366f1;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>Add</button>
+        <span id="selectedCount" class="me-auto text-muted small">0 {{ _("samples selected") }}</span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+        <button type="button" class="btn text-white" style="background:#6366f1;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}</button>
       </div>
     </div>
   </div>
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let rowSeq = 0;
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  // "Илрээгүй"/"Илэрсэн" сонгоод, "Илэрсэн" бол тоо оруулах Cell Editor
+  // "Not Detected"/"Detected" select, if "Detected" then enter count
   class PresenceNumberEditor {
     init(params) {
       this.params = params;
@@ -258,13 +258,13 @@ document.addEventListener('DOMContentLoaded', function() {
       // Select dropdown
       this.select = document.createElement('select');
       this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
-      this.select.innerHTML = '<option value="Not Detected">Not Detected</option><option value="Detected">Detected (enter count)</option>';
+      this.select.innerHTML = '<option value="Not Detected">' + '{{ _("Not Detected") }}' + '</option><option value="Detected">' + '{{ _("Detected (enter count)") }}' + '</option>';
 
       // Number input (hidden initially)
       this.numInput = document.createElement('input');
       this.numInput.type = 'number';
       this.numInput.min = '0';
-      this.numInput.placeholder = 'Enter count...';
+      this.numInput.placeholder = '{{ _("Enter count...") }}';
       this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
 
       this.container.appendChild(this.select);
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
     isPopup() { return true; }
   }
 
-  // Микро баганы тохиргоо
+  // Micro column config
   const microCol = (field, headerName, limit) => ({
     field, headerName, minWidth: 120, editable: true, headerClass: 'ag-header-cell-wrap',
     cellEditor: PresenceNumberEditor,
@@ -320,13 +320,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
 
   const columnDefs = [
-    { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Sample Name\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Analysis Start Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    { field: 'end_date', headerName: 'Analysis End Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    microCol('cfu_air', 'Bacterial Count\nMNS 5484:2005\nPermissible Limit\nper 1m³ <3000', 3000),
-    microCol('staphylococcus', 'S.aureus\nMNS 5484:2005\nPermissible Limit\nper 1m³ <50', 50),
-    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Remove" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
+    { field: 'seq', headerName: '{{ _("No.") }}', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
+    { field: 'sample_code', headerName: '{{ _("Sample Name") }}', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+    { field: 'start_date', headerName: '{{ _("Analysis Start Date") }}', minWidth: 140, editable: true, cellEditor: DateCellEditor },
+    { field: 'end_date', headerName: '{{ _("Analysis End Date") }}', minWidth: 140, editable: true, cellEditor: DateCellEditor },
+    microCol('cfu_air', '{{ _("Bacterial Count") }}\nMNS 5484:2005\n{{ _("Permissible Limit") }}\nper 1m³ <3000', 3000),
+    microCol('staphylococcus', 'S.aureus\nMNS 5484:2005\n{{ _("Permissible Limit") }}\nper 1m³ <50', 50),
+    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="{{ _("Remove") }}" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
   ];
 
   let initialRows = [];
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let allSamples = [];
   function buildClientFilter(samples) {
     const sel = document.getElementById('filterClient');
-    sel.innerHTML = '<option value="">All clients</option>';
+    sel.innerHTML = '<option value="">' + '{{ _("All clients") }}' + '</option>';
     [...new Set(samples.map(s=>s.client_name).filter(Boolean))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
   }
   function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}?category="+CATEGORY).then(r=>r.json()).then(s=>{allSamples=s;buildClientFilter(s);renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
@@ -358,28 +358,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)});
     if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';document.getElementById('filteredCount').textContent='';return;}
     document.getElementById('sampleListContainer').style.display='';
-    const sm={'new':'New','in_progress':'In Progress','analysis':'In Progress','completed':'Completed'};
+    const sm={'new':'{{ _("New") }}','in_progress':'{{ _("In Progress") }}','analysis':'{{ _("In Progress") }}','completed':'{{ _("Completed") }}'};
     const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'};
     let vc=0;
-    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">added</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
-    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' samples';
+    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${s.sample_code}" ${a?'disabled':''}></td><td class="fw-semibold">${s.sample_code}${a?' <span class="badge bg-secondary">' + '{{ _("added") }}' + '</span>':''}</td><td class="text-muted small">${s.client_name||'-'}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${sm[s.status]||s.status}</span></td><td class="text-muted small">${s.sample_date||'-'}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
+    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';
     updateSelectedCount();
   }
-  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' samples selected';}
-  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' samples';}
+  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' {{ _("samples selected") }}';}
+  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';}
   document.getElementById('sampleSearch').addEventListener('input',applyFilters);
   document.getElementById('filterClient').addEventListener('change',applyFilters);
   document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
   document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
   document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
-  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Please select samples','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' samples added');});
+  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('{{ _("Please select samples") }}','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' {{ _("samples added") }}');});
 
-  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('No data to save','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Saved successfully! ('+d.count+' rows)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Error: '+(d.error||''),'error');}).catch(e=>showToast('Network error: '+e.message,'error'));});
+  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('{{ _("No data to save") }}','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('{{ _("Saved successfully!") }} ('+d.count+' {{ _("rows") }})');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('{{ _("Error") }}: '+(d.error||''),'error');}).catch(e=>showToast('{{ _("Network error") }}: '+e.message,'error'));});
   updateRowCount();
 });
 </script>
 
-{# --- Equipmentийн ашиглалт --- #}
+{# --- Equipment usage --- #}
 <script>
 let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
@@ -403,10 +403,10 @@ function addSparePart(btn) {
   row.className = 'input-group input-group-sm mb-1 spare-row';
   row.innerHTML = `
     <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">Select spare part...</option>
+      <option value="">${'{{ _("Select spare part...") }}'}</option>
     </select>
-    <input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">
-    <input type="text" class="form-control spare-user" placeholder="Who" style="flex:2">
+    <input type="number" class="form-control spare-qty" placeholder="${'{{ _("Qty") }}'}" min="1" value="1" style="flex:1; max-width:60px">
+    <input type="text" class="form-control spare-user" placeholder="${'{{ _("Who") }}'}" style="flex:2">
     <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.spare-row').remove()">
       <i class="bi bi-x"></i>
     </button>
@@ -451,7 +451,7 @@ function submitEquipmentUsage() {
     }
     if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair) items.push(item);
   });
-  if (items.length === 0) { alert('Бүртгэх өгөгдөл байхгүй.'); return; }
+  if (items.length === 0) { alert('{{ _("No data to record.") }}'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
@@ -465,12 +465,12 @@ function submitEquipmentUsage() {
       document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
-      alert('Багаж ашиглалт амжилттай хадгалагдлаа!');
+      alert('{{ _("Equipment usage saved successfully!") }}');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
     }
   })
-  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
+  .catch(err => alert('{{ _("Network error") }}: ' + err.message));
 }
 </script>
 {% endblock %}

@@ -65,26 +65,26 @@
   <div class="ws-header">
     <div>
       <h1><i class="bi bi-bug-fill me-2"></i>{{ title }}</h1>
-      <p>Water Microbiology Analysis — MNS ISO 6222, 9308-1, 19250</p>
+      <p>{{ _("Water Microbiology Analysis") }} — MNS ISO 6222, 9308-1, 19250</p>
     </div>
     <div class="ws-actions">
       <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back
+        <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
       </a>
       <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>Standard
+        <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>Timer
+        <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
       </button>
       <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>Equipment
+        <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
       </button>
       <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-        <i class="bi bi-plus-circle me-1"></i>Select Samples
+        <i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}
       </button>
       <button id="btnSave" class="btn text-white" style="background:#20c997;">
-        <i class="bi bi-save me-1"></i>Save
+        <i class="bi bi-save me-1"></i>{{ _("Save") }}
       </button>
     </div>
   </div>
@@ -96,16 +96,16 @@
     <div class="card-header d-flex align-items-center justify-content-between">
       <h6>
         <i class="bi bi-table me-1" style="color:#20c997"></i>
-        Water Microbiology Analysis Grid
+        {{ _("Water Microbiology Analysis Grid") }}
         <span id="rowCount" class="badge bg-secondary ms-2">0</span>
       </h6>
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> CFU Average = (22°C + 37°C) / 2 auto</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#20c997"></div> CFU: per 1mL &lt;100</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> E.coli: Not detected per 100mL</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> Salmonella: Not detected per 25mL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> {{ _("CFU Average = (22°C + 37°C) / 2 auto") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#20c997"></div> {{ _("CFU: per 1mL <100") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> {{ _("E.coli: Not detected per 100mL") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> {{ _("Salmonella: Not detected per 25mL") }}</div>
     </div>
   </div>
 </div>
@@ -171,7 +171,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Equipment Usage & Maintenance</span>
+          <span>{{ _("Equipment Usage & Maintenance") }}</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -181,13 +181,13 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 18%; min-width:140px;">Lab Code / Name</th>
-                <th style="width: 6%; text-align:center;">Condi-<br>tion</th>
-                <th style="width: 8%; text-align:center;">Usage<br>(min)</th>
-                <th style="width: 14%;">Notes</th>
-                <th style="width: 6%; text-align:center;">Check</th>
-                <th style="width: 6%; text-align:center;">Repair</th>
-                <th style="width: 42%;">Check / Repair Details</th>
+                <th style="width: 18%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Condition") }}</th>
+                <th style="width: 8%; text-align:center;">{{ _("Usage") }}<br>(min)</th>
+                <th style="width: 14%;">{{ _("Notes") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Check") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Repair") }}</th>
+                <th style="width: 42%;">{{ _("Check / Repair Details") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -209,12 +209,12 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Notes..." style="border-color: #cbd5e0;">
+                         placeholder="{{ _("Notes...") }}" style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   {% if eq.category in ['furnace', 'balance', 'analysis', 'micro'] %}
                   <button type="button" class="btn btn-outline-success btn-sm calib-btn"
-                          onclick="toggleCalibPanel(this)" title="Run check">
+                          onclick="toggleCalibPanel(this)" title="{{ _("Run check") }}">
                     <i class="bi bi-thermometer-half"></i>
                   </button>
                   {% else %}
@@ -230,25 +230,25 @@
                   {# Calibration Panel - Category based #}
                   {% if eq.category == 'furnace' %}
                   <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> Temperature Check</div>
+                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}</div>
                     <div class="calib-input-group">
-                      <label>Set:</label>
+                      <label>{{ _("Set:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Measured:</label>
+                      <label>{{ _("Measured:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Difference:</label>
+                      <label>{{ _("Difference:") }}</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
                   </div>
                   {% elif eq.category == 'balance' %}
                   <div class="calib-panel balance-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> Weight Check (tare)</div>
-                    <div class="mb-2"><small class="text-muted">Standard weight → Measured value</small></div>
+                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> {{ _("Weight Check (tare)") }}</div>
+                    <div class="mb-2"><small class="text-muted">{{ _("Standard weight → Measured value") }}</small></div>
                     <div class="calib-weights-list">
                       <div class="calib-weight-row">
                         <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
@@ -257,26 +257,26 @@
                       </div>
                     </div>
                     <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> Add Weight
+                      <i class="bi bi-plus"></i> {{ _("Add Weight") }}
                     </button>
                   </div>
                   {% elif eq.category in ['analysis', 'micro'] %}
                   <div class="calib-panel analysis-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-gear"></i> Instrument Check</div>
+                    <div class="calib-panel-title"><i class="bi bi-gear"></i> {{ _("Instrument Check") }}</div>
                     <div class="calib-input-group">
-                      <label>Standard:</label>
-                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Standard name">
+                      <label>{{ _("Standard:") }}</label>
+                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard name") }}">
                     </div>
                     <div class="calib-input-group">
-                      <label>Certified:</label>
+                      <label>{{ _("Certified:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Value" step="0.001">
                     </div>
                     <div class="calib-input-group">
-                      <label>Measured:</label>
-                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Value" step="0.001" oninput="checkAnalysisDiff(this)">
+                      <label>{{ _("Measured:") }}</label>
+                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001" oninput="checkAnalysisDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Difference (%):</label>
+                      <label>{{ _("Difference (%%):") }}</label>
                       <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
@@ -284,12 +284,12 @@
                   {% endif %}
                   {# Repair Panel #}
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
+                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
                     </button>
                   </div>
                 </td>
@@ -300,17 +300,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>No microbiology lab equipment registered.
+          <i class="bi bi-info-circle me-2"></i>{{ _("No microbiology lab equipment registered.") }}
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Close
+          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
         </button>
         {% if related_equipments %}
         <button type="button" class="btn text-white px-4" style="background:#20c997;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Save
+          <i class="bi bi-save me-1"></i>{{ _("Save") }}
         </button>
         {% endif %}
       </div>
@@ -323,7 +323,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #ecfdf5, #f0fdfa);">
-        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#20c997"></i>Select Samples</h5>
+        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#20c997"></i>{{ _("Select Samples") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -331,15 +331,15 @@
         <div class="row g-2 mb-3">
           <div class="col-5">
             <input type="text" id="sampleSearch" class="form-control form-control-sm"
-                   placeholder="🔍 Sample code...">
+                   placeholder="{{ _("Sample code...") }}">
           </div>
           <div class="col-4">
             <select id="filterClient" class="form-select form-select-sm">
-              <option value="">All clients</option>
+              <option value="">{{ _("All clients") }}</option>
             </select>
           </div>
           <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear filters">
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _("Clear filters") }}">
               <i class="bi bi-x-circle"></i>
             </button>
             <span id="filteredCount" class="text-muted small"></span>
@@ -347,31 +347,31 @@
         </div>
         <div id="sampleListLoading" class="text-center py-4">
           <div class="spinner-border text-success" role="status"></div>
-          <p class="mt-2 text-muted">Loading...</p>
+          <p class="mt-2 text-muted">{{ _("Loading...") }}</p>
         </div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
             <thead class="table-light sticky-top">
               <tr>
                 <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th>
-                <th>Sample Code</th>
-                <th>Client</th>
-                <th>Status</th>
-                <th>Date</th>
+                <th>{{ _("Sample Code") }}</th>
+                <th>{{ _("Client") }}</th>
+                <th>{{ _("Status") }}</th>
+                <th>{{ _("Date") }}</th>
               </tr>
             </thead>
             <tbody id="sampleListBody"></tbody>
           </table>
         </div>
         <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">
-          No samples found
+          {{ _("No samples found") }}
         </div>
       </div>
       <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">0 samples selected</span>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <span id="selectedCount" class="me-auto text-muted small">{{ _("0 samples selected") }}</span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
         <button type="button" class="btn text-white" style="background:#20c997;" id="btnAddSelected">
-          <i class="bi bi-plus-circle me-1"></i>Add
+          <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
         </button>
       </div>
     </div>
@@ -439,9 +439,9 @@ document.addEventListener('DOMContentLoaded', function() {
     { field: 'sample_code', headerName: 'Sample Name\nSample Name', minWidth: 160, editable: false,
       cellStyle: { fontWeight: '600' },
       headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Analysis Start Date', minWidth: 140, editable: true,
+    { field: 'start_date', headerName: '{{ _("Analysis Start Date") }}', minWidth: 140, editable: true,
       cellEditor: DateCellEditor },
-    { field: 'end_date', headerName: 'Analysis End Date', minWidth: 140, editable: true,
+    { field: 'end_date', headerName: '{{ _("Analysis End Date") }}', minWidth: 140, editable: true,
       cellEditor: DateCellEditor },
     {
       headerName: 'CFU\n/MNS ISO 6222:1998/\nper 1mL ≤100',
@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         numCol('cfu_22', '22°C'),
         numCol('cfu_37', '37°C'),
         {
-          field: 'cfu_avg', headerName: 'Average', minWidth: 90,
+          field: 'cfu_avg', headerName: '{{ _("Average") }}', minWidth: 90,
           editable: false, type: 'numericColumn',
           valueGetter: p => {
             const v22 = Number(p.data.cfu_22);
@@ -470,27 +470,27 @@ document.addEventListener('DOMContentLoaded', function() {
       minWidth: 160, editable: true,
       headerClass: 'ag-header-cell-wrap',
       cellEditor: 'agSelectCellEditor',
-      cellEditorParams: { values: ['Not Detected', 'Detected'] },
+      cellEditorParams: { values: ['{{ _("Not Detected") }}', '{{ _("Detected") }}'] },
       cellStyle: p => ({
-        color: p.value === 'Detected' ? '#dc2626' : '#047857',
+        color: p.value === '{{ _("Detected") }}' ? '#dc2626' : '#047857',
         fontWeight: '600',
       }),
     },
     {
-      field: 'salmonella', headerName: 'Salmonella.spp\n/MNS ISO 19250:2017/\nper 25mL Not Detected',
+      field: 'salmonella', headerName: 'Salmonella.spp\n/MNS ISO 19250:2017/\nper 25mL {{ _("Not Detected") }}',
       minWidth: 160, editable: true,
       headerClass: 'ag-header-cell-wrap',
       cellEditor: 'agSelectCellEditor',
-      cellEditorParams: { values: ['Not Detected', 'Detected'] },
+      cellEditorParams: { values: ['{{ _("Not Detected") }}', '{{ _("Detected") }}'] },
       cellStyle: p => ({
-        color: p.value === 'Detected' ? '#dc2626' : '#047857',
+        color: p.value === '{{ _("Detected") }}' ? '#dc2626' : '#047857',
         fontWeight: '600',
       }),
     },
     {
       headerName: '', maxWidth: 50, editable: false, sortable: false,
       cellRenderer: p => {
-        return '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Remove" onclick="window._removeMicroRow(' + p.node.rowIndex + ')"><i class="bi bi-x"></i></button>';
+        return '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="{{ _("Remove") }}" onclick="window._removeMicroRow(' + p.node.rowIndex + ')"><i class="bi bi-x"></i></button>';
       },
       cellStyle: { textAlign: 'center', padding: '4px' },
     },
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function buildClientFilter(samples) {
     const sel = document.getElementById('filterClient');
-    sel.innerHTML = '<option value="">All clients</option>';
+    sel.innerHTML = '<option value="">{{ _("All clients") }}</option>';
     const clients = [...new Set(samples.map(s => s.client_name).filter(Boolean))].sort();
     clients.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
   }
@@ -576,7 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('sampleListContainer').style.display = '';
 
-    const statusMap = { 'new': 'New', 'in_progress': 'In Progress', 'analysis': 'In Progress', 'completed': 'Completed' };
+    const statusMap = { 'new': '{{ _("New") }}', 'in_progress': '{{ _("In Progress") }}', 'analysis': '{{ _("In Progress") }}', 'completed': '{{ _("Completed") }}' };
     const statusColors = { 'new': 'primary', 'in_progress': 'warning', 'analysis': 'warning', 'completed': 'success' };
 
     let visibleCount = 0;
@@ -603,13 +603,13 @@ document.addEventListener('DOMContentLoaded', function() {
       visibleCount++;
     });
 
-    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' samples';
+    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' {{ _("samples") }}';
     updateSelectedCount();
   }
 
   function updateSelectedCount() {
     const count = document.querySelectorAll('.sample-check:checked').length;
-    document.getElementById('selectedCount').textContent = count + ' samples selected';
+    document.getElementById('selectedCount').textContent = count + ' {{ _("samples selected") }}';
   }
 
   function applyFilters() {
@@ -624,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (matchCode && matchClient) { tr.style.display = ''; visibleCount++; }
       else { tr.style.display = 'none'; }
     });
-    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' samples';
+    document.getElementById('filteredCount').textContent = visibleCount + ' / ' + allSamples.length + ' {{ _("samples") }}';
   }
 
   document.getElementById('sampleSearch').addEventListener('input', applyFilters);
@@ -652,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnAddSelected').addEventListener('click', function() {
     const checked = document.querySelectorAll('.sample-check:checked');
     if (checked.length === 0) {
-      showToast('Please select samples', 'warning');
+      showToast('{{ _("Please select samples") }}', 'warning');
       return;
     }
 
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));
     if (modal) modal.hide();
-    showToast(newRows.length + ' samples added', 'success');
+    showToast(newRows.length + ' {{ _("samples added") }}', 'success');
   });
 
   // ============ Save ============
@@ -692,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (rows.length === 0) {
-      showToast('No data to save.', 'warning');
+      showToast('{{ _("No data to save.") }}', 'warning');
       return;
     }
 
@@ -707,19 +707,19 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(r => r.json())
     .then(data => {
       if (data.success) {
-        showToast('Saved successfully! (' + data.count + ' rows)', 'success');
+        showToast('{{ _("Saved successfully!") }} (' + data.count + ' {{ _("rows") }})', 'success');
         if (data.errors && data.errors.length > 0)
-          showToast('Warning: ' + data.errors.join(', '), 'warning');
+          showToast('{{ _("Warning:") }} ' + data.errors.join(', '), 'warning');
         // Grid цэвэрлэх + draft устгах
         grid.setGridOption('rowData', []);
         rowSeq = 0;
         draftMgr.purge();
         updateRowCount();
       } else {
-        showToast('Error: ' + (data.error || 'Unknown'), 'error');
+        showToast('{{ _("Error:") }} ' + (data.error || '{{ _("Unknown") }}'), 'error');
       }
     })
-    .catch(err => showToast('Network error: ' + err.message, 'error'));
+    .catch(err => showToast('{{ _("Network error:") }} ' + err.message, 'error'));
   });
 
   // Initial row count
@@ -821,7 +821,7 @@ function addSparePart(btn) {
   row.className = 'input-group input-group-sm mb-1 spare-row';
   row.innerHTML = `
     <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">Select spare part...</option>
+      <option value="">{{ _("Select spare part...") }}</option>
     </select>
     <input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">
     <input type="text" class="form-control spare-user" placeholder="Who" style="flex:2">
@@ -898,7 +898,7 @@ function submitEquipmentUsage() {
     }
     if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
   });
-  if (items.length === 0) { alert('Бүртгэх өгөгдөл байхгүй.'); return; }
+  if (items.length === 0) { alert('{{ _("No data to register.") }}'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
@@ -919,12 +919,12 @@ function submitEquipmentUsage() {
       document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
-      alert('Багаж ашиглалт амжилттай хадгалагдлаа!');
+      alert('{{ _("Equipment usage saved successfully!") }}');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('{{ _("Error:") }} ' + (data.message || '{{ _("Unknown error") }}'));
     }
   })
-  .catch(err => alert('Сүлжээний алдаа: ' + err.message));
+  .catch(err => alert('{{ _("Network error:") }} ' + err.message));
 }
 </script>
 {% endblock %}

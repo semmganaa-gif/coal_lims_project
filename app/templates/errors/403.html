@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}403 - Access Denied{% endblock %}
+{% block title %}403 - {{ _("Access Denied") }}{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -12,37 +12,37 @@
                         <i class="bi bi-shield-lock text-danger" style="font-size: 5rem;"></i>
                     </div>
                     <h1 class="display-4 fw-bold text-danger">403</h1>
-                    <h2 class="h4 mb-4">Access Denied</h2>
+                    <h2 class="h4 mb-4">{{ _("Access Denied") }}</h2>
                     <p class="text-muted mb-4">
-                        Sorry, you do not have permission to access this page.
-                        Special privileges are required to access this function.
+                        {{ _("Sorry, you do not have permission to access this page.") }}
+                        {{ _("Special privileges are required to access this function.") }}
                     </p>
 
                     <div class="alert alert-light border">
                         <p class="mb-0 small">
-                            <strong>Possible reasons:</strong>
+                            <strong>{{ _("Possible reasons:") }}</strong>
                         </p>
                         <ul class="text-start mb-0 mt-2 small">
-                            <li>Your role does not have sufficient privileges for this action</li>
-                            <li>You are not logged in or your session has expired</li>
-                            <li>This section is restricted to specific roles only</li>
+                            <li>{{ _("Your role does not have sufficient privileges for this action") }}</li>
+                            <li>{{ _("You are not logged in or your session has expired") }}</li>
+                            <li>{{ _("This section is restricted to specific roles only") }}</li>
                         </ul>
                     </div>
 
                     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
                         {% if current_user.is_authenticated %}
                             <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-house-door me-2"></i>Return to Home Page
+                                <i class="bi bi-house-door me-2"></i>{{ _("Return to Home Page") }}
                             </a>
                             <button onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Go Back
+                                <i class="bi bi-arrow-left me-2"></i>{{ _("Go Back") }}
                             </button>
                         {% else %}
                             <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Log In
+                                <i class="bi bi-box-arrow-in-right me-2"></i>{{ _("Log In") }}
                             </a>
                             <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="bi bi-house-door me-2"></i>Home Page
+                                <i class="bi bi-house-door me-2"></i>{{ _("Home Page") }}
                             </a>
                         {% endif %}
                     </div>
@@ -51,8 +51,8 @@
 
             <div class="text-center mt-4">
                 <p class="text-muted small">
-                    If you believe you should have access,
-                    please contact the <a href="mailto:admin@energyresources.mn">administrator</a>.
+                    {{ _("If you believe you should have access, please contact the") }}
+                    <a href="mailto:admin@energyresources.mn">{{ _("administrator") }}</a>.
                 </p>
             </div>
         </div>

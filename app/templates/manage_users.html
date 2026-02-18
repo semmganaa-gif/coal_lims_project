@@ -7,14 +7,14 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>{{ title }}</h1>
     </div>
-    <p class="text-muted">Section for adding, editing, and deleting system users.</p>
+    <p class="text-muted">{{ _("Section for adding, editing, and deleting system users.") }}</p>
 
     <div class="row">
         <!-- User list section -->
         <div class="col-lg-8">
-            {% call render_card(title='Registered Users') %}
+            {% call render_card(title=_('Registered Users')) %}
                 {% call data_table(id='users-table', striped=true, hover=true) %}
-                    {{ render_table_header(['ID', 'Username', 'Role', 'Laboratories'], actions=true) }}
+                    {{ render_table_header([_('ID'), _('Username'), _('Role'), _('Laboratories')], actions=true) }}
                     <tbody>
                         {% for user in users %}
                         <tr>
@@ -24,7 +24,7 @@
                                 {{ render_status_badge(user.role, label=user.role, variant_map={'admin': 'danger', 'analyst': 'info', 'viewer': 'secondary'}) }}
                             </td>
                             <td>
-                                {% set lab_names = {'coal': 'Coal', 'petrography': 'Petro', 'water': 'Water', 'microbiology': 'Micro'} %}
+                                {% set lab_names = {'coal': _('Coal'), 'petrography': _('Petro'), 'water': _('Water'), 'microbiology': _('Micro')} %}
                                 {% for lab in (user.allowed_labs or ['coal']) %}
                                 <span class="badge bg-secondary me-1">{{ lab_names.get(lab, lab) }}</span>
                                 {% endfor %}
@@ -34,7 +34,7 @@
                                     {{ render_action_buttons(
                                         edit_url=url_for('admin.edit_user', user_id=user.id),
                                         delete_url=url_for('admin.delete_user', user_id=user.id),
-                                        delete_confirm='Are you sure you want to delete user ' + user.username + '?'
+                                        delete_confirm=_('Are you sure you want to delete user ') + user.username + '?'
                                     ) }}
                                 {% else %}
                                     {{ render_action_buttons(edit_url=url_for('admin.edit_user', user_id=user.id)) }}
@@ -49,12 +49,12 @@
 
         <!-- Add new user section -->
         <div class="col-lg-4">
-            {% call render_card(title='Add New User') %}
+            {% call render_card(title=_('Add New User')) %}
                 <form action="{{ url_for('admin.manage_users') }}" method="post" novalidate>
                     {{ form.hidden_tag() }}
 
-                    {{ render_field(form.username, placeholder='Username') }}
-                    {{ render_field(form.password, placeholder='Password') }}
+                    {{ render_field(form.username, placeholder=_('Username')) }}
+                    {{ render_field(form.password, placeholder=_('Password')) }}
 
                     <div class="mb-3">
                         {{ form.role.label(class="form-label fw-bold") }}
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Laboratories</label>
+                        <label class="form-label fw-bold">{{ _("Laboratories") }}</label>
                         <div class="d-flex flex-wrap gap-2">
                             {% for subfield in form.allowed_labs %}
                             <div class="form-check">
@@ -74,14 +74,14 @@
                     </div>
 
                     <hr class="my-3">
-                    <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>Email Signature (Optional)</p>
+                    <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>{{ _("Email Signature (Optional)") }}</p>
 
-                    {{ render_field(form.full_name, placeholder='Ж.Баатар') }}
+                    {{ render_field(form.full_name, placeholder=_('Full Name')) }}
                     {{ render_field(form.email, placeholder='baatar@energyresources.mn') }}
                     {{ render_field(form.phone, placeholder='99119911') }}
-                    {{ render_field(form.position, placeholder='Senior Chemist') }}
+                    {{ render_field(form.position, placeholder=_('Senior Chemist')) }}
 
-                    {{ render_submit_button(form.submit, text='Add User', icon='bi-person-plus') }}
+                    {{ render_submit_button(form.submit, text=_('Add User'), icon='bi-person-plus') }}
                 </form>
             {% endcall %}
         </div>

@@ -227,15 +227,15 @@
         <h5><i class="bi bi-table me-1"></i>{{ title }} <small class="text-muted">({{ analysis_type.code }})</small></h5>
       </div>
       <div class="stats-row">
-        <div class="stat-item">Total: <span class="num">{{ stats.total_samples }}</span></div>
-        <div class="stat-item warning">Retried: <span class="num text-warning">{{ stats.with_retries }}</span></div>
-        <div class="stat-item">Approved: <span class="num text-success">{{ stats.approved }}</span></div>
-        <div class="stat-item">Pending: <span class="num text-primary">{{ stats.pending }}</span></div>
-        <div class="stat-item">Rejected: <span class="num text-danger">{{ stats.rejected }}</span></div>
+        <div class="stat-item">{{ _("Total:") }} <span class="num">{{ stats.total_samples }}</span></div>
+        <div class="stat-item warning">{{ _("Retried:") }} <span class="num text-warning">{{ stats.with_retries }}</span></div>
+        <div class="stat-item">{{ _("Approved:") }} <span class="num text-success">{{ stats.approved }}</span></div>
+        <div class="stat-item">{{ _("Pending:") }} <span class="num text-primary">{{ stats.pending }}</span></div>
+        <div class="stat-item">{{ _("Rejected:") }} <span class="num text-danger">{{ stats.rejected }}</span></div>
       </div>
     </div>
     <a href="{{ url_for('api.audit_hub') }}" class="btn btn-sm btn-outline-secondary py-1">
-      <i class="bi bi-arrow-left"></i> Back
+      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
     </a>
   </div>
 
@@ -246,7 +246,7 @@
       <div class="calendar-card" data-type="start">
         <div class="calendar-header">
           <div>
-            <div class="calendar-title">Start Date</div>
+            <div class="calendar-title">{{ _("Start Date") }}</div>
             <div class="calendar-sub" id="startCalLabel">---</div>
           </div>
           <div class="calendar-nav">
@@ -261,7 +261,7 @@
       <div class="calendar-card" data-type="end">
         <div class="calendar-header">
           <div>
-            <div class="calendar-title">End Date</div>
+            <div class="calendar-title">{{ _("End Date") }}</div>
             <div class="calendar-sub" id="endCalLabel">---</div>
           </div>
           <div class="calendar-nav">
@@ -277,17 +277,17 @@
 
       <div class="d-flex flex-column gap-2 ms-auto">
         <button type="submit" class="btn btn-primary btn-sm">
-          <i class="bi bi-search"></i> Filter
+          <i class="bi bi-search"></i> {{ _("Filter") }}
         </button>
         <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn">
-          <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+          <i class="bi bi-file-earmark-spreadsheet"></i> {{ _("Excel") }}
         </button>
       </div>
     </form>
   </div>
 
   {% if is_senior %}
-  <!-- Давтан шинжилгээний үр дүн сонгох хэсэг (зөвхөн ахлах/админ) -->
+  <!-- Repeat analysis result selection (senior/admin only) -->
   {% set ns = namespace(repeat_count=0) %}
   {% for group in grouped_samples %}
     {% if group.get('repeat_info') %}{% set ns.repeat_count = ns.repeat_count + 1 %}{% endif %}
@@ -296,8 +296,8 @@
   <div class="filter-card" style="border-left: 3px solid #f59e0b; padding: 10px 14px;">
     <div class="d-flex align-items-center gap-2 mb-2">
       <i class="bi bi-arrow-repeat text-warning"></i>
-      <strong style="font-size: 0.8rem;">Давтан шинжилгээ ({{ ns.repeat_count }})</strong>
-      <span style="font-size: 0.7rem; color: var(--muted);">— Аль үр дүнг ашиглахаа сонгоно уу</span>
+      <strong style="font-size: 0.8rem;">{{ _("Repeat Analysis") }} ({{ ns.repeat_count }})</strong>
+      <span style="font-size: 0.7rem; color: var(--muted);">— {{ _("Select which result to use") }}</span>
     </div>
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
       {% for group in grouped_samples %}
@@ -312,17 +312,17 @@
                    class="{% if not ri.use_original %}repeat-active{% endif %}">
               <input type="radio" name="repeat_{{ ri.result_id }}" value="repeat"
                      {% if not ri.use_original %}checked{% endif %}>
-              <span>Давтан: <strong class="mono">{{ ri.repeat_final_result }}</strong></span>
+              <span>{{ _("Repeat:") }} <strong class="mono">{{ ri.repeat_final_result }}</strong></span>
             </label>
             <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"
                    class="{% if ri.use_original %}repeat-active{% endif %}">
               <input type="radio" name="repeat_{{ ri.result_id }}" value="original"
                      {% if ri.use_original %}checked{% endif %}>
-              <span>Анхны: <strong class="mono">{{ ri.original_final_result }}</strong></span>
+              <span>{{ _("Original:") }} <strong class="mono">{{ ri.original_final_result }}</strong></span>
             </label>
             <button type="button" class="btn btn-sm btn-primary" style="padding: 2px 10px; font-size: 0.7rem;"
                     onclick="saveRepeatChoice({{ ri.result_id }})">
-              <i class="bi bi-check-lg"></i> Хадгалах
+              <i class="bi bi-check-lg"></i> {{ _("Save") }}
             </button>
             <span class="repeat-status" id="repeat-status-{{ ri.result_id }}"
                   style="font-size: 0.65rem; color: var(--muted);"></span>
@@ -348,9 +348,9 @@
 // Schema-based audit columns config
 const AUDIT_COLUMNS = {{ analysis_schema.get('audit_columns', [])|tojson }};
 const AUDIT_EXTRA_COLUMNS = {{ analysis_schema.get('audit_extra_columns', [])|tojson }};
-const AUDIT_RESULT_COLUMNS = {{ analysis_schema.get('audit_result_columns', [])|tojson }};  // FM-д Wet%, Dry%
-const AUDIT_NO_PARALLEL = {{ analysis_schema.get('audit_no_parallel', False)|tojson }};  // CSN гэх мэт
-const AUDIT_COLUMN_GROUPS = {{ analysis_schema.get('audit_column_groups', [])|tojson }};  // MG_SIZE grouped columns
+const AUDIT_RESULT_COLUMNS = {{ analysis_schema.get('audit_result_columns', [])|tojson }};
+const AUDIT_NO_PARALLEL = {{ analysis_schema.get('audit_no_parallel', False)|tojson }};
+const AUDIT_COLUMN_GROUPS = {{ analysis_schema.get('audit_column_groups', [])|tojson }};
 
 // Data from Flask - dynamic based on schema
 const AUDIT_DATA = {
@@ -366,7 +366,7 @@ const AUDIT_DATA = {
         {% set rd = attempt.raw_data %}
         {% set p1 = rd.get('p1', {}) %}
         {% set p2 = rd.get('p2', {}) %}
-        {# MG MT гэх мэт flat format: p1 байхгүй бол rd-г p1 болгох #}
+        {# MG MT etc flat format: if no p1, use rd as p1 #}
         {% if not p1 and rd.get('m1') is not none and rd.get('result') is not none %}
           {% set p1 = rd %}
         {% endif %}
@@ -383,7 +383,6 @@ const AUDIT_DATA = {
           user: {{ attempt.user.username|tojson }},
           shift: {{ attempt.shift_team|tojson }},
           shiftType: {{ attempt.shift_type|tojson }},
-          // ✅ Hash баталгаажуулалт (бичлэг өөрчлөгдсөн эсэх)
           hashValid: {{ 'true' if attempt.hash_valid == True else ('false' if attempt.hash_valid == False else 'null') }},
           // Dynamic p1/p2 data from raw_data
           p1: {{ p1|tojson }},
@@ -469,7 +468,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'sampleCode',
-      headerName: 'Sample',
+      headerName: '{{ _("Sample") }}',
       width: 150,
       pinned: 'left',
       cellRenderer: sampleRenderer,
@@ -478,14 +477,14 @@ function buildDynamicColumns() {
     },
     {
       field: 'attemptNum',
-      headerName: 'Attempt',
+      headerName: '{{ _("Attempt") }}',
       width: 60,
       valueGetter: p => `${p.data.attemptNum}/${p.data.totalAttempts}`,
       filter: false
     },
     {
       field: 'date',
-      headerName: 'Date',
+      headerName: '{{ _("Date") }}',
       width: 70,
       cellClass: 'mono',
       filter: 'agTextColumnFilter',
@@ -493,7 +492,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'time',
-      headerName: 'Time',
+      headerName: '{{ _("Time") }}',
       width: 55,
       cellClass: 'mono',
       filter: 'agTextColumnFilter',
@@ -501,14 +500,14 @@ function buildDynamicColumns() {
     },
     {
       field: 'user',
-      headerName: 'Chemist',
+      headerName: '{{ _("Chemist") }}',
       width: 80,
       filter: 'agTextColumnFilter',
       floatingFilter: true
     },
     {
       field: 'shift',
-      headerName: 'Shift',
+      headerName: '{{ _("Shift") }}',
       width: 55,
       filter: 'agTextColumnFilter',
       floatingFilter: true,
@@ -516,27 +515,23 @@ function buildDynamicColumns() {
         values: ['A', 'B', 'C']
       }
     },
-    // ✅ Hash баталгаа (бичлэг өөрчлөгдсөн эсэх шалгах)
     {
       field: 'hashValid',
-      headerName: '🔒',
+      headerName: '{{ _("Integrity") }}',
       width: 45,
       cellRenderer: p => {
-        if (p.value === true) return '<span style="color: #16a34a" title="Verified - not modified">✓</span>';
-        if (p.value === false) return '<span style="color: #dc2626" title="WARNING: Record modified!">⚠</span>';
-        return '<span style="color: #9ca3af" title="Legacy record (no hash)">-</span>';
+        if (p.value === true) return '<span style="color: #16a34a" title="{{ _("Verified - not modified") }}">&#10003;</span>';
+        if (p.value === false) return '<span style="color: #dc2626" title="{{ _("WARNING: Record modified!") }}">&#9888;</span>';
+        return '<span style="color: #9ca3af" title="{{ _("Legacy record (no hash)") }}">-</span>';
       },
       filter: false
     }
   ];
 
   // Build data columns from schema
-  // If AUDIT_NO_PARALLEL (like CSN), get values from rawData directly
-  // Otherwise, get from p1/p2
-
   let dataColumns = [];
 
-  // Helper: path-аар rawData-аас утга авах (fractions.0.m2 гэх мэт)
+  // Helper: get value by path from rawData (e.g. fractions.0.m2)
   function getByPath(raw, path) {
     if (!path) return undefined;
     const parts = path.split('.');
@@ -548,7 +543,7 @@ function buildDynamicColumns() {
   }
 
   if (AUDIT_COLUMN_GROUPS && AUDIT_COLUMN_GROUPS.length > 0) {
-    // MG_SIZE гэх мэт - grouped columns with path support
+    // MG_SIZE etc - grouped columns with path support
     const colorCycle = ['p1', 'p2', 'extra', 'p1', 'p2', 'extra', 'p1'];
     AUDIT_COLUMN_GROUPS.forEach((group, gi) => {
       const color = colorCycle[gi % colorCycle.length];
@@ -572,7 +567,7 @@ function buildDynamicColumns() {
       });
     });
   } else if (AUDIT_NO_PARALLEL) {
-    // CSN гэх мэт - p1/p2 биш, шууд rawData-аас авах
+    // CSN etc - not p1/p2, get directly from rawData
     const singleCols = AUDIT_COLUMNS.map(col => ({
       field: `data_${col.key}`,
       headerName: col.label,
@@ -587,16 +582,15 @@ function buildDynamicColumns() {
     }));
 
     dataColumns.push({
-      headerName: 'Measurements',
+      headerName: '{{ _("Measurements") }}',
       headerClass: 'header-p1',
       children: singleCols
     });
   } else {
-    // Standard p1/p2 parallel бүтэц
-    // Helper: key-ийн утгыг олох (fallback дэмжсэн)
+    // Standard p1/p2 parallel structure
+    // Helper: get value by key with fallback
     const getVal = (obj, key) => {
       if (!obj) return null;
-      // Шууд key байвал буцаах
       if (obj[key] !== undefined) return obj[key];
       // Fallback: num -> bottle_num, crucible_num
       if (key === 'num') {
@@ -637,15 +631,15 @@ function buildDynamicColumns() {
     );
   }
 
-  // Summary columns - AUDIT_NO_PARALLEL байхад тохирц/дундаж нуух
+  // Summary columns
   const summaryCols = [];
 
-  // Tolerance/дундаж зөвхөн parallel шинжилгээнд харуулах
+  // Tolerance/average only for parallel analyses
   if (!AUDIT_NO_PARALLEL) {
     summaryCols.push(
       {
         field: 'diff',
-        headerName: 'Diff',
+        headerName: '{{ _("Diff") }}',
         width: 70,
         cellRenderer: diffRenderer,
         cellClass: 'mono col-diff',
@@ -653,7 +647,7 @@ function buildDynamicColumns() {
       },
       {
         field: 'avg',
-        headerName: 'Average',
+        headerName: '{{ _("Average") }}',
         width: 70,
         cellClass: 'mono col-avg',
         headerClass: 'header-avg',
@@ -662,10 +656,9 @@ function buildDynamicColumns() {
     );
   }
 
-  // Тооцоолсон үр дүн баганууд (FM-д Wet%, Dry%; CSN-д avg, range гэх мэт)
+  // Calculated result columns (FM: Wet%, Dry%; CSN: avg, range etc.)
   if (AUDIT_RESULT_COLUMNS && AUDIT_RESULT_COLUMNS.length > 0) {
     AUDIT_RESULT_COLUMNS.forEach(col => {
-      // Parse path like "repeatability.range" or direct key like "avg"
       const pathParts = col.path ? col.path.split('.') : [col.key];
       summaryCols.push({
         field: `result_${col.key}`,
@@ -675,12 +668,10 @@ function buildDynamicColumns() {
         headerClass: 'header-avg',
         valueGetter: p => {
           const raw = p.data.rawData || {};
-          // Path дагуу утга хайх (жнь: "repeatability.range" -> raw.repeatability.range)
           let val = raw;
           for (const part of pathParts) {
             val = val ? val[part] : null;
           }
-          // Fallback: шууд key-ээр хайх
           if (val === null || val === undefined) {
             val = raw[col.key];
           }
@@ -691,11 +682,11 @@ function buildDynamicColumns() {
     });
   }
 
-  // Статус, шалтгаан - бүх шинжилгээнд харуулах
+  // Status, reason - show for all analyses
   summaryCols.push(
     {
       field: 'action',
-      headerName: 'Status',
+      headerName: '{{ _("Status") }}',
       width: 65,
       cellRenderer: statusRenderer,
       filter: 'agTextColumnFilter',
@@ -712,7 +703,7 @@ function buildDynamicColumns() {
     },
     {
       field: 'reason',
-      headerName: 'Reason',
+      headerName: '{{ _("Reason") }}',
       flex: 1,
       minWidth: 200,
       filter: 'agTextColumnFilter',
@@ -724,7 +715,6 @@ function buildDynamicColumns() {
 
   // Build extra columns (constants like E, q1, q2 for CV)
   const extraCols = AUDIT_EXTRA_COLUMNS.map(col => {
-    // Parse path like "batch.E" or "s_used"
     const pathParts = col.path.split('.');
     return {
       field: `extra_${col.key}`,
@@ -734,12 +724,10 @@ function buildDynamicColumns() {
       headerClass: 'header-extra',
       valueGetter: p => {
         const raw = p.data.rawData || {};
-        // Path дагуу утга хайх (жнь: "batch.E" -> raw.batch.E)
         let val = raw;
         for (const part of pathParts) {
           val = val ? val[part] : null;
         }
-        // Fallback: rawData дотор шууд key-ээр хайх
         if (val === null || val === undefined) {
           val = raw[col.key];
         }
@@ -758,7 +746,7 @@ function buildDynamicColumns() {
   // Add extra columns group if exists
   if (extraCols.length > 0) {
     cols.push({
-      headerName: 'Constants',
+      headerName: '{{ _("Constants") }}',
       headerClass: 'header-extra',
       children: extraCols
     });
@@ -780,7 +768,8 @@ const gridOptions = {
   defaultColDef: {
     sortable: true,
     resizable: true,
-    filter: true
+    filter: true,
+    floatingFilterComponentParams: { suppressFilterButton: true }
   },
   getRowClass: getRowClass,
   animateRows: true,
@@ -908,7 +897,7 @@ function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) 
   });
 })();
 
-// ========== ДАВТАН ШИНЖИЛГЭЭНИЙ ҮР ДҮН СОНГОХ ==========
+// ========== REPEAT ANALYSIS RESULT SELECTION ==========
 async function saveRepeatChoice(resultId) {
   const card = document.getElementById(`repeat-${resultId}`);
   const status = document.getElementById(`repeat-status-${resultId}`);
@@ -918,7 +907,7 @@ async function saveRepeatChoice(resultId) {
   const useOriginal = selected.value === 'original';
   const btn = card.querySelector('button');
 
-  if (btn) { btn.disabled = true; btn.textContent = 'Хадгалж байна...'; }
+  if (btn) { btn.disabled = true; btn.textContent = '{{ _("Saving...") }}'; }
   if (card) card.classList.add('saving');
 
   try {
@@ -933,13 +922,11 @@ async function saveRepeatChoice(resultId) {
     });
     const data = await resp.json();
     if (resp.ok) {
-      // Амжилттай — карт алга болгох
       card.style.transition = 'opacity 0.3s, transform 0.3s';
       card.style.opacity = '0';
       card.style.transform = 'scale(0.95)';
       setTimeout(() => {
         card.remove();
-        // Бүх карт алга болсон бол бүх хэсгийг нуух
         const container = document.querySelector('.filter-card[style*="border-left: 3px solid #f59e0b"]');
         if (container && !container.querySelector('.repeat-card')) {
           container.remove();
@@ -948,18 +935,18 @@ async function saveRepeatChoice(resultId) {
       return;
     } else {
       if (status) {
-        status.textContent = data.message || 'Алдаа';
+        status.textContent = data.message || '{{ _("Error") }}';
         status.style.color = '#dc2626';
       }
     }
   } catch (e) {
     if (status) {
-      status.textContent = 'Сүлжээний алдаа';
+      status.textContent = '{{ _("Network error") }}';
       status.style.color = '#dc2626';
     }
   } finally {
     if (card) card.classList.remove('saving');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Хадгалах'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> {{ _("Save") }}'; }
   }
 }
 </script>

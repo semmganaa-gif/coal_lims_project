@@ -144,7 +144,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       cellStyle:{ textAlign:'center', color:'#6c757d', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center' }
     },
     {
-      headerName:'Sample Name', field:'sample_code', width:280, pinned:'left',
+      headerName:'{{ _("Sample Name") }}', field:'sample_code', width:280, pinned:'left',
       cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
       cellRenderer:p=>{
         let html = `<div class="sample-name">${p.value}</div>`;
@@ -159,7 +159,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     {
       headerName:'p1',
       children:[
-        { headerName:'Weight (g)', field:'p1_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
+        { headerName:'{{ _("Weight (g)") }}', field:'p1_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
           cellStyle:p=>{
             const base = editNumericCol.cellStyle(p);
             return p.data.is_saved ? base : { backgroundColor:'#e3f2fd' };
@@ -176,7 +176,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
     {
       headerName:'p2',
       children:[
-        { headerName:'Weight (g)', field:'p2_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
+        { headerName:'{{ _("Weight (g)") }}', field:'p2_weight', width:140, ...editNumericCol, valueFormatter:numFmt4,
           cellStyle:p=>{
             const base = editNumericCol.cellStyle(p);
             return p.data.is_saved ? base : { backgroundColor:'#fff3e0' };
@@ -191,7 +191,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       ]
     },
     {
-      headerName:'Tolerance', field:'diff', width:120,
+      headerName:'{{ _("Tolerance") }}', field:'diff', width:120,
       valueFormatter:p=> {
         // Зөвхөн хадгалагдсан үр дүнг харуулна
         if(p.data.is_saved && p.value != null) {
@@ -210,7 +210,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       }
     },
     {
-      headerName:'Average', field:'avg', width:120,
+      headerName:'{{ _("Average") }}', field:'avg', width:120,
       valueFormatter:p=> {
         // Зөвхөн хадгалагдсан үр дүнг харуулна
         if(p.data.is_saved && p.value != null) {
@@ -226,10 +226,10 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       }
     },
     {
-      headerName:'Action', width:90, pinned:'right',
+      headerName:'{{ _("Action") }}', width:90, pinned:'right',
       cellRenderer:p=> {
-        if (p.data.is_saved) return '<span class="text-muted small">Saved</span>';
-        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="Remove sample"><i class="bi bi-x"></i></button>`;
+        if (p.data.is_saved) return '<span class="text-muted small">{{ _("Saved") }}</span>';
+        return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet" data-sample-id="${p.data.sample_id}" title="{{ _("Remove sample") }}"><i class="bi bi-x"></i></button>`;
       },
       cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' }
     }
@@ -356,7 +356,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
 
   // ========== ACTIONS ==========
   window.removeSample = function(id){
-    if(!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if(!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>License Expired - Coal LIMS</title>
+    <title>{{ _("License Expired") }} - Coal LIMS</title>
     <style>
         * {
             margin: 0;
@@ -109,32 +109,32 @@
     <div class="container">
         <div class="header">
             <div class="icon">⏰</div>
-            <h1>License Expired</h1>
-            <p>Please renew your license to continue using the Coal LIMS system</p>
+            <h1>{{ _("License Expired") }}</h1>
+            <p>{{ _("Please renew your license to continue using the Coal LIMS system") }}</p>
         </div>
 
         <div class="content">
             <div class="info-box">
                 {% if license %}
-                    <p><strong>Company:</strong> {{ license.company_name }}</p>
-                    <p><strong>Expiry Date:</strong> {{ license.expiry_date.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>{{ _("Company:") }}</strong> {{ license.company_name }}</p>
+                    <p><strong>{{ _("Expiry Date:") }}</strong> {{ license.expiry_date.strftime('%Y-%m-%d') }}</p>
                 {% else %}
-                    <p>License not found.</p>
+                    <p>{{ _("License not found.") }}</p>
                 {% endif %}
             </div>
 
             <a href="{{ url_for('license.activate') }}" class="btn">
-                Activate New License
+                {{ _("Activate New License") }}
             </a>
 
             <div class="hardware-id">
-                <strong>Hardware ID:</strong> {{ hardware_id }}
+                <strong>{{ _("Hardware ID:") }}</strong> {{ hardware_id }}
             </div>
 
             <div class="contact-info">
-                <p>Contact us to renew your license:</p>
-                <p>📧 <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
-                <p>📞 80872013</p>
+                <p>{{ _("Contact us to renew your license:") }}</p>
+                <p><a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
+                <p>80872013</p>
             </div>
         </div>
     </div>

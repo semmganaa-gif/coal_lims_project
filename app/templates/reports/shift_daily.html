@@ -1,6 +1,6 @@
 {# templates/reports/shift_daily.html #}
 {% extends "base.html" %}
-{% block title %}Ээлжийн гүйцэтгэл (Daily){% endblock %}
+{% block title %}{{ _("Shift Performance (Daily)") }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
@@ -9,12 +9,12 @@
   <!-- Header -->
   <div class="report-header">
     <div class="report-header-content">
-      <h4><i class="bi bi-calendar-check"></i> Ээлжийн гүйцэтгэл (Daily)</h4>
-      <p class="subtitle">Өдөр тутмын шинжилгээний урсгал, гүйцэтгэл болон алдааны статистикийг ээлжээр шүүж харах</p>
+      <h4><i class="bi bi-calendar-check"></i> {{ _("Shift Performance (Daily)") }}</h4>
+      <p class="subtitle">{{ _("Daily analysis flow, performance and error statistics filtered by shift") }}</p>
     </div>
     <div class="report-header-actions">
       <a href="{{ url_for('reports.monthly_plan') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-bar-chart-line"></i> Monthly Plan
+        <i class="bi bi-bar-chart-line"></i> {{ _("Monthly Plan") }}
       </a>
     </div>
   </div>
@@ -22,7 +22,7 @@
   <!-- Filter Card -->
   <div class="report-filter-card">
     <div class="card-header">
-      <strong>Шүүлтүүр</strong>
+      <strong>{{ _("Filter") }}</strong>
     </div>
     <form method="get" class="row g-2 align-items-end">
       <div class="col-md-2">
@@ -60,15 +60,15 @@
       </div>
       <div class="col-md-2 mt-2">
         {{ form.analysis_code.label(class="form-label") }}
-        {{ form.analysis_code(class="form-control form-control-sm", placeholder="Код") }}
+        {{ form.analysis_code(class="form-control form-control-sm", placeholder=_("Code")) }}
       </div>
       <div class="col-md-2 mt-2">
         {{ form.user_name.label(class="form-label") }}
-        {{ form.user_name(class="form-control form-control-sm", placeholder="Name") }}
+        {{ form.user_name(class="form-control form-control-sm", placeholder=_("Name")) }}
       </div>
       <div class="col-md-2 mt-2 d-grid align-self-end">
         <button type="submit" class="btn btn-primary btn-sm">
-          <i class="bi bi-funnel-fill"></i> Шүүх
+          <i class="bi bi-funnel-fill"></i> {{ _("Filter") }}
         </button>
       </div>
     </form>
@@ -77,12 +77,12 @@
   <!-- KPI Cards -->
   <div class="report-kpi-row">
     <div class="report-kpi-card total">
-      <div class="kpi-label">Total тоо ({{ form.kpi_target.data }})</div>
+      <div class="kpi-label">{{ _("Total count") }} ({{ form.kpi_target.data }})</div>
       <div class="kpi-value">{{ total_count }}</div>
     </div>
     {% if error_stats %}
     <div class="report-kpi-card error">
-      <div class="kpi-label">Total алдааны тохиолдол</div>
+      <div class="kpi-label">{{ _("Total error cases") }}</div>
       <div class="kpi-value">{{ error_stats.total or 0 }}</div>
     </div>
     {% endif %}
@@ -94,18 +94,18 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-clipboard-data"></i> Analysis Performance</strong>
+          <strong><i class="bi bi-clipboard-data"></i> {{ _("Analysis Performance") }}</strong>
         </div>
         <div class="card-body p-0">
           <div class="report-table-wrap">
             <table class="report-table">
               <thead>
                 <tr>
-                  <th>Ээлж</th>
-                  <th>Total</th>
-                  <th>Хувь</th>
-                  <th><i class="bi bi-sun-fill text-warning"></i> Өдөр</th>
-                  <th><i class="bi bi-moon-stars-fill text-primary"></i> Шөнө</th>
+                  <th>{{ _("Shift") }}</th>
+                  <th>{{ _("Total") }}</th>
+                  <th>{{ _("Percent") }}</th>
+                  <th><i class="bi bi-sun-fill text-warning"></i> {{ _("Day") }}</th>
+                  <th><i class="bi bi-moon-stars-fill text-primary"></i> {{ _("Night") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,14 +151,14 @@
                 {% else %}
                   <tr>
                     <td colspan="5" class="text-center text-muted py-4">
-                      <i class="bi bi-inbox"></i> Information алга
+                      <i class="bi bi-inbox"></i> {{ _("No data available") }}
                     </td>
                   </tr>
                 {% endif %}
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="text-left fw-bold">Total</td>
+                  <td class="text-left fw-bold">{{ _("Total") }}</td>
                   <td class="fw-bold">{{ total_count }}</td>
                   <td class="fw-bold">100%</td>
                   <td colspan="2"></td>
@@ -170,19 +170,19 @@
           <!-- Sample Performance -->
           {% if shift_summary %}
           <div class="card-body border-top pt-3">
-            <h6 class="mb-2"><i class="bi bi-box-seam"></i> Sample Performance</h6>
+            <h6 class="mb-2"><i class="bi bi-box-seam"></i> {{ _("Sample Performance") }}</h6>
             <table class="report-table table-sm">
               <thead>
                 <tr>
-                  <th rowspan="2" class="align-middle">Ээлж</th>
-                  <th colspan="3" class="text-center border-start"><i class="bi bi-inbox-fill text-success"></i> Received</th>
-                  <th colspan="3" class="text-center border-start"><i class="bi bi-check2-circle text-info"></i> Бэлтгэсэн</th>
+                  <th rowspan="2" class="align-middle">{{ _("Shift") }}</th>
+                  <th colspan="3" class="text-center border-start"><i class="bi bi-inbox-fill text-success"></i> {{ _("Received") }}</th>
+                  <th colspan="3" class="text-center border-start"><i class="bi bi-check2-circle text-info"></i> {{ _("Prepared") }}</th>
                 </tr>
                 <tr class="small">
-                  <th class="text-center border-start">Total</th>
+                  <th class="text-center border-start">{{ _("Total") }}</th>
                   <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
                   <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
-                  <th class="text-center border-start">Total</th>
+                  <th class="text-center border-start">{{ _("Total") }}</th>
                   <th class="text-center"><i class="bi bi-sun-fill text-warning"></i></th>
                   <th class="text-center"><i class="bi bi-moon-stars-fill text-primary"></i></th>
                 </tr>
@@ -212,7 +212,7 @@
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="fw-bold">Total</td>
+                  <td class="fw-bold">{{ _("Total") }}</td>
                   <td class="text-center border-start fw-bold">{{ recv_total }}</td>
                   <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_day') }}</td>
                   <td class="text-center fw-bold">{{ shift_summary|sum(attribute='received_night') }}</td>
@@ -232,7 +232,7 @@
     <div class="col-md-6">
       <div class="report-card h-100">
         <div class="card-header">
-          <strong><i class="bi bi-exclamation-triangle"></i> Error Reasons</strong>
+          <strong><i class="bi bi-exclamation-triangle"></i> {{ _("Error Reasons") }}</strong>
           <span class="badge bg-danger">{{ error_stats.total if error_stats else 0 }}</span>
         </div>
         <div class="card-body">
@@ -243,7 +243,7 @@
             {% else %}
               <div class="report-empty" style="padding: 2rem;">
                 <i class="bi bi-check-circle"></i>
-                <p class="mb-0">No error records</p>
+                <p class="mb-0">{{ _("No error records") }}</p>
               </div>
             {% endif %}
           </div>
@@ -253,9 +253,9 @@
             <table class="report-table">
               <thead>
                 <tr>
-                  <th class="text-left">Шалтгаан</th>
-                  <th>Тоо</th>
-                  <th>Хувь</th>
+                  <th class="text-left">{{ _("Reason") }}</th>
+                  <th>{{ _("Count") }}</th>
+                  <th>{{ _("Percent") }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -274,7 +274,7 @@
                   {% if error_stats.get("other") %}
                     {% set other_cnt = error_stats.get("other", 0) %}
                     <tr>
-                      <td class="text-left text-muted">Тодорхойгүй / Хуучин код</td>
+                      <td class="text-left text-muted">{{ _("Unknown / Old code") }}</td>
                       <td>{{ other_cnt }}</td>
                       <td>{{ "%.1f"|format(other_cnt / total * 100) }}%</td>
                     </tr>
@@ -282,14 +282,14 @@
                 {% else %}
                   <tr>
                     <td colspan="3" class="text-center text-muted py-3">
-                      No error reason logs found
+                      {{ _("No error reason logs found") }}
                     </td>
                   </tr>
                 {% endif %}
               </tbody>
               <tfoot>
                 <tr class="sum-row">
-                  <td class="text-left fw-bold">Total</td>
+                  <td class="text-left fw-bold">{{ _("Total") }}</td>
                   <td class="fw-bold">{{ error_stats.total if error_stats else 0 }}</td>
                   <td class="fw-bold">100%</td>
                 </tr>
@@ -318,10 +318,10 @@
       const orderedCodes = Object.keys(labelsMap);
       if (stats['other'] > 0) {
         orderedCodes.push('other');
-        labelsMap['other'] = 'Тодорхойгүй';
+        labelsMap['other'] = '{{ _("Unknown") }}';
       }
 
-      // Тоогоор эрэмбэлэх (их → бага)
+      // Sort by count (high to low)
       const sorted = orderedCodes
         .filter(code => stats[code] > 0)
         .sort((a, b) => stats[b] - stats[a]);
@@ -336,7 +336,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Тоо',
+            label: '{{ _("Count") }}',
             data: data,
             borderWidth: 0,
             borderRadius: 6,
@@ -364,7 +364,7 @@
               cornerRadius: 8,
               callbacks: {
                 label: function(ctx) {
-                  return ' Тоо: ' + ctx.parsed.x;
+                  return ' {{ _("Count") }}: ' + ctx.parsed.x;
                 }
               }
             }

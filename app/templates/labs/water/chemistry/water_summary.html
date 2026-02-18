@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Water Analysis Summary{% endblock %}
+{% block title %}{{ _("Water Analysis Summary") }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/water_summary.css') }}">
@@ -10,49 +10,49 @@
   <div class="ws-header">
     <div class="ws-header-top">
       <div class="ws-header-left">
-        <h1><i class="bi bi-droplet-half"></i> Water Analysis Summary</h1>
+        <h1><i class="bi bi-droplet-half"></i> {{ _("Water Analysis Summary") }}</h1>
         <span class="badge bg-primary" id="rowCount">0</span>
       </div>
 
       <div class="ws-header-actions">
         <!-- Export buttons -->
         <div class="btn-group">
-          <button id="btnExportCsv" class="btn btn-sm btn-success" title="Download CSV">
+          <button id="btnExportCsv" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
             <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
           </button>
-          <button id="btnCopy" class="btn btn-sm btn-outline-success" title="Copy selected">
-            <i class="bi bi-clipboard-check me-1"></i>Copy
+          <button id="btnCopy" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
+            <i class="bi bi-clipboard-check me-1"></i>{{ _("Copy") }}
           </button>
         </div>
 
         {% if current_user.role in ['senior', 'admin', 'manager'] %}
         <!-- Report buttons -->
         <div class="btn-group">
-          <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="Water chemistry report">
-            <i class="bi bi-file-earmark-pdf me-1"></i>Chemistry
+          <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="{{ _("Water chemistry report") }}">
+            <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Chemistry") }}
           </button>
-          <button type="button" id="btnReportMicro" class="btn btn-sm btn-warning" title="Microbiology report">
-            <i class="bi bi-file-earmark-pdf me-1"></i>Micro
+          <button type="button" id="btnReportMicro" class="btn btn-sm btn-warning" title="{{ _("Microbiology report") }}">
+            <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Micro") }}
           </button>
         </div>
         <!-- Archive button -->
-        <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="Archive selected">
-          <i class="bi bi-archive-fill me-1"></i>Archive
+        <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="{{ _("Archive selected") }}">
+          <i class="bi bi-archive-fill me-1"></i>{{ _("Archive") }}
         </button>
         {% endif %}
 
         <!-- Archive link -->
-        <a href="{{ url_for('water.water_archive', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="Archive">
-          <i class="bi bi-archive me-1"></i>Archive
+        <a href="{{ url_for('water.water_archive', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive") }}">
+          <i class="bi bi-archive me-1"></i>{{ _("Archive") }}
         </a>
 
         <!-- Refresh & Back buttons -->
-        <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="Refresh">
+        <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="{{ _("Refresh") }}">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
         {% set from_micro = request.args.get('lab') == 'micro' %}
-        <a href="{{ url_for('microbiology.analysis_hub') if from_micro else url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="Back">
-          <i class="bi bi-arrow-left me-1"></i>Back
+        <a href="{{ url_for('microbiology.analysis_hub') if from_micro else url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Back") }}">
+          <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
         </a>
       </div>
     </div>
@@ -135,15 +135,15 @@
         </div>
         <div class="ws-std-item micro" title="MNS ISO 9308-1:1998">
           <span class="std-name"><em>E.coli</em></span>
-          <span class="std-limit">Not Detected</span>
+          <span class="std-limit">{{ _("Not Detected") }}</span>
         </div>
         <div class="ws-std-item micro" title="MNS ISO 19250:2017">
           <span class="std-name"><em>Salmonella</em></span>
-          <span class="std-limit">Not Detected</span>
+          <span class="std-limit">{{ _("Not Detected") }}</span>
         </div>
         <div class="ws-std-item micro" title="MNS 5484/6410">
           <span class="std-name"><em>S.aureus</em></span>
-          <span class="std-limit">Not Detected</span>
+          <span class="std-limit">{{ _("Not Detected") }}</span>
         </div>
         <div class="ws-std-item micro" title="MNS 5484:2005">
           <span class="std-name">Bacteria</span>
@@ -165,11 +165,11 @@
     <div class="ws-grid-card">
       <div class="card-header">
         <h6>
-          <i class="bi bi-table" style="color:#3b82f6"></i> Laboratory Test Results Sheet
+          <i class="bi bi-table" style="color:#3b82f6"></i> {{ _("Laboratory Test Results Sheet") }}
         </h6>
         <div class="ws-stats">
           <span class="badge bg-light text-muted" title="Click Chemistry/Micro header to expand">
-            <i class="bi bi-arrows-angle-expand me-1"></i>Click header to expand
+            <i class="bi bi-arrows-angle-expand me-1"></i>{{ _("Click header to expand") }}
           </span>
         </div>
       </div>

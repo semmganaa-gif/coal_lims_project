@@ -803,11 +803,11 @@
   <div class="page-header">
     <div class="header-content">
       <h4><i class="bi bi-shield-lock-fill me-2"></i>{{ title }}</h4>
-      <div class="subtitle">Review and approve results saved by chemists</div>
+      <div class="subtitle">{{ _("Review and approve results saved by chemists") }}</div>
     </div>
     <div class="live-indicator">
       <span class="live-dot"></span>
-      <span id="metrics-refresh">Updated: -</span>
+      <span id="metrics-refresh">{{ _("Updated") }}: -</span>
     </div>
   </div>
 
@@ -820,7 +820,7 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-stack"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Total</div>
+              <div class="metric-label">{{ _("Total") }}</div>
               <div class="metric-value" id="metric-total">0</div>
             </div>
           </div>
@@ -830,7 +830,7 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Pending</div>
+              <div class="metric-label">{{ _("Pending") }}</div>
               <div class="metric-value" id="metric-pending">0</div>
             </div>
           </div>
@@ -840,13 +840,13 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-exclamation-octagon"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Rejected</div>
+              <div class="metric-label">{{ _("Rejected") }}</div>
               <div class="metric-value" id="metric-rejected">0</div>
             </div>
           </div>
           <div class="metric-sub">
-            <span class="kpi-badge red" id="kpi-shift-total">0</span> shift
-            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> 14 days
+            <span class="kpi-badge red" id="kpi-shift-total">0</span> {{ _("shift") }}
+            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> {{ _("14 days") }}
           </div>
         </div>
 
@@ -854,7 +854,7 @@
           <div class="metric-card-inner">
             <div class="metric-icon-wrap"><i class="bi bi-patch-check-fill"></i></div>
             <div class="metric-content">
-              <div class="metric-label">Approved</div>
+              <div class="metric-label">{{ _("Approved") }}</div>
               <div class="metric-value" id="metric-approved">0</div>
             </div>
           </div>
@@ -866,12 +866,12 @@
         <div class="metric-card-inner">
           <div class="metric-icon-wrap"><i class="bi bi-building"></i></div>
           <div class="metric-content">
-            <div class="metric-label">Samples (Unit)</div>
+            <div class="metric-label">{{ _("Samples (Unit)") }}</div>
             <div class="metric-value" id="samples-total-badge">0</div>
           </div>
         </div>
         <div class="metric-expand" id="sidebar-samples-unit">
-          <div class="metric-expand-item">Loading...</div>
+          <div class="metric-expand-item">{{ _("Loading...") }}</div>
         </div>
       </div>
 
@@ -880,12 +880,12 @@
         <div class="metric-card-inner">
           <div class="metric-icon-wrap"><i class="bi bi-box-seam"></i></div>
           <div class="metric-content">
-            <div class="metric-label">Samples (Type)</div>
+            <div class="metric-label">{{ _("Samples (Type)") }}</div>
             <div class="metric-value" id="samples-type-badge">0</div>
           </div>
         </div>
         <div class="metric-expand" id="sidebar-samples-type">
-          <div class="metric-expand-item">Loading...</div>
+          <div class="metric-expand-item">{{ _("Loading...") }}</div>
         </div>
       </div>
     </div>
@@ -898,14 +898,14 @@
     <div class="stats-panel">
       <div class="stats-panel-header">
         <div class="stats-panel-title">
-          <i class="bi bi-people-fill"></i> Chemist Analysis
+          <i class="bi bi-people-fill"></i> {{ _("Chemist Analysis") }}
         </div>
-        <div class="stats-panel-badge" id="chemist-total-badge">0 chemists</div>
+        <div class="stats-panel-badge" id="chemist-total-badge">0 {{ _("chemists") }}</div>
       </div>
       <div class="stats-list" id="chemist-stats-list">
         <div class="stats-empty">
           <i class="bi bi-hourglass"></i>
-          Loading...
+          {{ _("Loading...") }}
         </div>
       </div>
     </div>
@@ -914,14 +914,14 @@
     <div class="stats-panel">
       <div class="stats-panel-header">
         <div class="stats-panel-title">
-          <i class="bi bi-clipboard-data-fill"></i> Analysis Type
+          <i class="bi bi-clipboard-data-fill"></i> {{ _("Analysis Type") }}
         </div>
-        <div class="stats-panel-badge" id="analysis-total-badge">0 types</div>
+        <div class="stats-panel-badge" id="analysis-total-badge">0 {{ _("types") }}</div>
       </div>
       <div class="stats-list" id="analysis-stats-list">
         <div class="stats-empty">
           <i class="bi bi-hourglass"></i>
-          Loading...
+          {{ _("Loading...") }}
         </div>
       </div>
     </div>
@@ -931,31 +931,31 @@
   <div class="filter-card">
     <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}" class="filter-row">
       <div class="filter-group">
-        <label><i class="bi bi-calendar-event me-1"></i>Start Date</label>
+        <label><i class="bi bi-calendar-event me-1"></i>{{ _("Start Date") }}</label>
         <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-calendar-check me-1"></i>End Date</label>
+        <label><i class="bi bi-calendar-check me-1"></i>{{ _("End Date") }}</label>
         <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-search me-1"></i>Sample Name</label>
-        <input type="text" name="sample_name" placeholder="Search..." value="{{ request.args.get('sample_name','') }}">
+        <label><i class="bi bi-search me-1"></i>{{ _("Sample Name") }}</label>
+        <input type="text" name="sample_name" placeholder="{{ _("Search...") }}" value="{{ request.args.get('sample_name','') }}">
       </div>
       <div class="filter-group">
-        <label><i class="bi bi-funnel me-1"></i>Status</label>
+        <label><i class="bi bi-funnel me-1"></i>{{ _("Status") }}</label>
         <select name="status">
-          <option value="">All</option>
-          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>Pending</option>
-          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>Rejected</option>
+          <option value="">{{ _("All") }}</option>
+          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>{{ _("Pending") }}</option>
+          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>{{ _("Rejected") }}</option>
         </select>
       </div>
       <div class="filter-actions">
         <button type="submit" class="btn-filter primary">
-          <i class="bi bi-search"></i> Filter
+          <i class="bi bi-search"></i> {{ _("Filter") }}
         </button>
         <a href="{{ url_for('analysis.ahlah_dashboard') }}" class="btn-filter secondary">
-          <i class="bi bi-arrow-counterclockwise"></i> Clear
+          <i class="bi bi-arrow-counterclockwise"></i> {{ _("Clear") }}
         </a>
       </div>
     </form>
@@ -965,17 +965,17 @@
   <div id="bulk-toolbar" class="bulk-toolbar" style="display: none;">
     <div class="bulk-info">
       <input type="checkbox" id="select-all-results" class="form-check-input me-2">
-      <span id="selected-count">0</span> selected
+      <span id="selected-count">0</span> {{ _("selected") }}
     </div>
     <div class="bulk-actions">
       <button type="button" class="btn btn-success btn-sm" id="bulk-approve-btn">
-        <i class="bi bi-check-all"></i> Approve All
+        <i class="bi bi-check-all"></i> {{ _("Approve All") }}
       </button>
       <button type="button" class="btn btn-danger btn-sm" id="bulk-reject-btn" data-bs-toggle="modal" data-bs-target="#bulkRejectModal">
-        <i class="bi bi-x-lg"></i> Reject All
+        <i class="bi bi-x-lg"></i> {{ _("Reject All") }}
       </button>
       <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection-btn">
-        <i class="bi bi-x-circle"></i> Cancel
+        <i class="bi bi-x-circle"></i> {{ _("Cancel") }}
       </button>
     </div>
   </div>
@@ -984,7 +984,7 @@
   <div id="results-container" class="results-container">
     <div class="loading-spinner">
       <i class="bi bi-arrow-repeat"></i>
-      <p class="mt-3 text-muted">Loading...</p>
+      <p class="mt-3 text-muted">{{ _("Loading...") }}</p>
     </div>
   </div>
 
@@ -996,7 +996,7 @@
         <div class="modal-content premium">
           <div class="modal-header premium">
             <h5 class="modal-title" id="rejectModalLabel">
-              <i class="bi bi-x-octagon-fill me-2"></i>Reject Result
+              <i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Result") }}
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -1008,25 +1008,25 @@
             <input type="hidden" id="reject-result-id" name="result_id" value="">
             <div class="mb-3">
               <label class="form-label fw-bold">
-                <i class="bi bi-tag me-1"></i>Rejection Reason (KPI Code) <span class="text-danger">*</span>
+                <i class="bi bi-tag me-1"></i>{{ _("Rejection Reason (KPI Code)") }} <span class="text-danger">*</span>
               </label>
               <select name="rejection_category" id="rejection_category" class="form-select" required style="border-radius: 12px; padding: 12px;">
-                <option value="">-- Select --</option>
-                <option value="sample_prep">1. Sample preparation error</option>
-                <option value="measurement">2. Analysis execution error</option>
-                <option value="qc_fail">3. QC / Standard sample deviation</option>
-                <option value="equipment">4. Equipment / Environmental condition</option>
-                <option value="data_entry">5. Data entry / Calculation error</option>
-                <option value="method">6. Method violation (SOP)</option>
-                <option value="sample_mixup">7. Sample mix-up / Wrong sample</option>
-                <option value="customer_complaint">8. Complaint / Control analysis</option>
+                <option value="">-- {{ _("Select") }} --</option>
+                <option value="sample_prep">{{ _("1. Sample preparation error") }}</option>
+                <option value="measurement">{{ _("2. Analysis execution error") }}</option>
+                <option value="qc_fail">{{ _("3. QC / Standard sample deviation") }}</option>
+                <option value="equipment">{{ _("4. Equipment / Environmental condition") }}</option>
+                <option value="data_entry">{{ _("5. Data entry / Calculation error") }}</option>
+                <option value="method">{{ _("6. Method violation (SOP)") }}</option>
+                <option value="sample_mixup">{{ _("7. Sample mix-up / Wrong sample") }}</option>
+                <option value="customer_complaint">{{ _("8. Complaint / Control analysis") }}</option>
               </select>
             </div>
           </div>
           <div class="modal-footer premium">
-            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">{{ _("Cancel") }}</button>
             <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626);">
-              <i class="bi bi-x-circle me-1"></i> Reject
+              <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
             </button>
           </div>
         </div>
@@ -1039,32 +1039,32 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content premium">
         <div class="modal-header premium">
-          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>Reject Multiple Results</h5>
+          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Multiple Results") }}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body premium">
           <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <span id="bulk-reject-count">0</span> results will be rejected.
+            <span id="bulk-reject-count">0</span> {{ _("results will be rejected.") }}
           </div>
           <div class="mb-3">
-            <label class="form-label fw-bold">Rejection Reason</label>
+            <label class="form-label fw-bold">{{ _("Rejection Reason") }}</label>
             <select id="bulk-rejection-category" class="form-select" required>
-              <option value="">-- Select --</option>
+              <option value="">-- {{ _("Select") }} --</option>
               {% for key, label in error_labels.items() %}
               <option value="{{ key }}">{{ label }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Additional Remarks</label>
-            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="Additional remarks..."></textarea>
+            <label class="form-label">{{ _("Additional Remarks") }}</label>
+            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="{{ _("Additional remarks...") }}"></textarea>
           </div>
         </div>
         <div class="modal-footer premium">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
           <button type="button" class="btn btn-danger" id="confirm-bulk-reject-btn">
-            <i class="bi bi-x-circle me-1"></i> Reject
+            <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
           </button>
         </div>
       </div>
@@ -1085,6 +1085,47 @@
 <!-- Config -->
 <script>
   window.ERROR_LABELS = {{ error_labels | tojson | safe }};
+</script>
+
+<script>
+  /* i18n translation strings for JS */
+  const I18N = {
+    updated: "{{ _('Updated') }}",
+    errorOccurred: "{{ _('An error occurred') }}",
+    couldNotLoadData: "{{ _('Could not load data. Please try again.') }}",
+    noResultsToReview: "{{ _('No results to review') }}",
+    noResultsCurrently: "{{ _('There are currently no results that need review.') }}",
+    rejected: "{{ _('Rejected') }}",
+    pending: "{{ _('Pending') }}",
+    parallelMeasurements: "{{ _('Parallel Measurements') }}",
+    average: "{{ _('Average') }}",
+    toleranceT: "{{ _('Tolerance (T)') }}",
+    finalResult: "{{ _('Final Result') }}",
+    approve: "{{ _('Approve') }}",
+    reject: "{{ _('Reject') }}",
+    approveThisResult: "{{ _('Approve this result?') }}",
+    noSamplesRegisteredToday: "{{ _('No samples registered today') }}",
+    chemists: "{{ _('chemists') }}",
+    types: "{{ _('types') }}",
+    samples: "{{ _('samples') }}",
+    noAnalysesPerformedToday: "{{ _('No analyses performed today') }}",
+    noAnalysesToday: "{{ _('No analyses today') }}",
+    total: "{{ _('Total') }}",
+    approved: "{{ _('Approved') }}",
+    pendingTitle: "{{ _('Pending') }}",
+    rejectedTitle: "{{ _('Rejected') }}",
+    selectRejectionReason: "{{ _('Please select a rejection reason') }}",
+    processing: "{{ _('Processing...') }}",
+    pleaseWait: "{{ _('Please wait...') }}",
+    approveAll: "{{ _('Approve All') }}",
+    approveResultsConfirm: "{{ _('Approve selected results?') }}",
+    error: "{{ _('Error') }}",
+    emptyWeight: "{{ _('Empty(g)') }}",
+    sampleWeight: "{{ _('Sample(g)') }}",
+    driedWeight: "{{ _('Dried(g)') }}",
+    fraction: "{{ _('Fraction') }}",
+    result: "{{ _('Result') }}",
+  };
 </script>
 
 <script>
@@ -1109,8 +1150,8 @@ function loadResults() {
       document.getElementById('results-container').innerHTML = `
         <div class="empty-state">
           <i class="bi bi-exclamation-triangle"></i>
-          <h5>Алдаа гарлаа</h5>
-          <p>Өгөгдөл ачаалж чадсангүй. Дахин оролдоно уу.</p>
+          <h5>${I18N.errorOccurred}</h5>
+          <p>${I18N.couldNotLoadData}</p>
         </div>
       `;
     });
@@ -1123,8 +1164,8 @@ function renderResults(data) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-inbox"></i>
-        <h5>Хянах үр дүн байхгүй</h5>
-        <p>Одоогоор хянах шаардлагатай үр дүн байхгүй байна.</p>
+        <h5>${I18N.noResultsToReview}</h5>
+        <p>${I18N.noResultsCurrently}</p>
       </div>
     `;
     return;
@@ -1140,7 +1181,7 @@ function renderResults(data) {
   container.querySelectorAll('.btn-approve').forEach(btn => {
     btn.addEventListener('click', function() {
       const id = this.dataset.id;
-      if (confirm('Энэ үр дүнг зөвшөөрөх үү?')) {
+      if (confirm(I18N.approveThisResult)) {
         approveResult(id);
       }
     });
@@ -1157,7 +1198,7 @@ function renderResults(data) {
 
 function renderResultCard(item, idx) {
   const statusClass = item.status === 'rejected' ? 'rejected' : 'pending';
-  const statusText = item.status === 'rejected' ? 'Rejected' : 'Pending';
+  const statusText = item.status === 'rejected' ? I18N.rejected : I18N.pending;
   const raw = item.raw_data || {};
 
   // Parallel data
@@ -1169,7 +1210,7 @@ function renderResultCard(item, idx) {
     parallelHtml = `
       <table class="parallel-table">
         <thead><tr>
-          <th>Хоосон(g)</th><th>Дээж(g)</th><th>Хатаасан(g)</th>
+          <th>${I18N.emptyWeight}</th><th>${I18N.sampleWeight}</th><th>${I18N.driedWeight}</th>
           <th>MG(g)</th><th>NoMG(g)</th><th>MG%</th>
         </tr></thead>
         <tbody><tr>
@@ -1188,7 +1229,7 @@ function renderResultCard(item, idx) {
     parallelHtml = `
       <table class="parallel-table">
         <thead><tr>
-          <th>Fraction</th><th>m2(g)</th><th>m3(g)</th><th>g</th><th>%</th>
+          <th>${I18N.fraction}</th><th>m2(g)</th><th>m3(g)</th><th>g</th><th>%</th>
         </tr></thead>
         <tbody>
           ${raw.fractions.map(f => `
@@ -1224,7 +1265,7 @@ function renderResultCard(item, idx) {
       const isMgTrd = code === 'MG_TRD';
       const headers = isMgTrd
         ? '<th>#</th><th>Pyc</th><th>m(g)</th><th>m2(g)</th><th>m1(g)</th><th>TRD</th>'
-        : '<th>#</th><th>m1</th><th>m2</th><th>m3</th><th>Result</th>';
+        : '<th>#</th><th>m1</th><th>m2</th><th>m3</th><th>' + I18N.result + '</th>';
       const rowFn = isMgTrd
         ? p => `<td class="row-label">${p.label || p.num || '-'}</td>
                 <td>${formatNum(p.pycno, 0)}</td><td>${formatNum(p.m)}</td>
@@ -1279,7 +1320,7 @@ function renderResultCard(item, idx) {
         ${parallelHtml ? `
           <div class="raw-data-section">
             <div class="raw-data-title">
-              <i class="bi bi-table"></i> Parallel Measurements
+              <i class="bi bi-table"></i> ${I18N.parallelMeasurements}
             </div>
             ${parallelHtml}
           </div>
@@ -1288,19 +1329,19 @@ function renderResultCard(item, idx) {
         <div class="summary-row">
           ${avg !== undefined && avg !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Average</div>
+              <div class="summary-item-label">${I18N.average}</div>
               <div class="summary-item-value avg">${formatNum(avg, 3)}</div>
             </div>
           ` : ''}
           ${diff !== undefined && diff !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Tolerance (T)</div>
+              <div class="summary-item-label">${I18N.toleranceT}</div>
               <div class="summary-item-value diff">${formatNum(diff, 4)}</div>
             </div>
           ` : ''}
           ${finalVal !== undefined && finalVal !== null ? `
             <div class="summary-item">
-              <div class="summary-item-label">Final Result</div>
+              <div class="summary-item-label">${I18N.finalResult}</div>
               <div class="summary-item-value final">${formatNum(finalVal, 3)}</div>
             </div>
           ` : ''}
@@ -1317,14 +1358,14 @@ function renderResultCard(item, idx) {
 
           <div class="result-actions">
             <button type="button" class="btn-action approve btn-approve" data-id="${item.result_id}">
-              <i class="bi bi-check-lg"></i> Approve
+              <i class="bi bi-check-lg"></i> ${I18N.approve}
             </button>
             <button type="button" class="btn-action reject btn-reject"
               data-id="${item.result_id}"
               data-sample-code="${escapeHtml(item.sample_code)}"
               data-analysis-name="${escapeHtml(item.analysis_name)}"
               data-bs-toggle="modal" data-bs-target="#rejectModal">
-              <i class="bi bi-x-lg"></i> Reject
+              <i class="bi bi-x-lg"></i> ${I18N.reject}
             </button>
           </div>
         </div>
@@ -1360,7 +1401,7 @@ function updateMetrics(data) {
 
   const now = new Date();
   document.getElementById('metrics-refresh').textContent =
-    'Updated: ' + now.toLocaleString('en-US', { hour12: false });
+    I18N.updated + ': ' + now.toLocaleString('en-US', { hour12: false });
 }
 
 function loadKpiSummary() {
@@ -1395,7 +1436,7 @@ function loadAhlahStats() {
 
       // Sample бүртгэл - нийт тоо
       const samplesBadge = document.getElementById('samples-total-badge');
-      if (samplesBadge) samplesBadge.textContent = (data.samples_today || 0) + ' samples';
+      if (samplesBadge) samplesBadge.textContent = (data.samples_today || 0) + ' ' + I18N.samples;
 
       // Sample бүртгэл - Unitээр
       renderSamplesByUnit(data.samples_by_unit || []);
@@ -1423,7 +1464,7 @@ function renderSamplesByUnit(units) {
 
   if (container) {
     if (units.length === 0) {
-      container.innerHTML = '<div class="metric-expand-empty">No samples registered today</div>';
+      container.innerHTML = '<div class="metric-expand-empty">' + I18N.noSamplesRegisteredToday + '</div>';
     } else {
       let html = '';
       units.forEach(function(u) {
@@ -1449,7 +1490,7 @@ function renderSamplesByType(types) {
 
   if (container) {
     if (types.length === 0) {
-      container.innerHTML = '<div class="metric-expand-empty">No samples registered today</div>';
+      container.innerHTML = '<div class="metric-expand-empty">' + I18N.noSamplesRegisteredToday + '</div>';
     } else {
       let html = '';
       types.forEach(function(t) {
@@ -1472,14 +1513,14 @@ function renderChemistStats(chemists) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = chemists.length + ' chemists';
+    badge.textContent = chemists.length + ' ' + I18N.chemists;
   }
 
   if (chemists.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        No analyses performed today
+        ${I18N.noAnalysesPerformedToday}
       </div>
     `;
     return;
@@ -1495,10 +1536,10 @@ function renderChemistStats(chemists) {
           <span>${escapeHtml(c.username)}</span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Total">${c.total}</span>
-          <span class="stats-count approved" title="Approved">${c.approved}</span>
-          <span class="stats-count pending" title="Pending">${c.pending}</span>
-          ${c.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${c.rejected}</span>` : ''}
+          <span class="stats-count total" title="${I18N.total}">${c.total}</span>
+          <span class="stats-count approved" title="${I18N.approved}">${c.approved}</span>
+          <span class="stats-count pending" title="${I18N.pendingTitle}">${c.pending}</span>
+          ${c.rejected > 0 ? `<span class="stats-count rejected" title="${I18N.rejectedTitle}">${c.rejected}</span>` : ''}
         </div>
       </div>
     `;
@@ -1514,14 +1555,14 @@ function renderAnalysisStats(analysisTypes) {
   if (!container) return;
 
   if (badge) {
-    badge.textContent = analysisTypes.length + ' types';
+    badge.textContent = analysisTypes.length + ' ' + I18N.types;
   }
 
   if (analysisTypes.length === 0) {
     container.innerHTML = `
       <div class="stats-empty">
         <i class="bi bi-inbox"></i>
-        No analyses today
+        ${I18N.noAnalysesToday}
       </div>
     `;
     return;
@@ -1536,10 +1577,10 @@ function renderAnalysisStats(analysisTypes) {
           <span>${escapeHtml(a.name)} <small class="text-muted">(${escapeHtml(a.code)})</small></span>
         </div>
         <div class="stats-item-counts">
-          <span class="stats-count total" title="Total">${a.total}</span>
-          <span class="stats-count approved" title="Approved">${a.approved}</span>
-          <span class="stats-count pending" title="Pending">${a.pending}</span>
-          ${a.rejected > 0 ? `<span class="stats-count rejected" title="Rejected">${a.rejected}</span>` : ''}
+          <span class="stats-count total" title="${I18N.total}">${a.total}</span>
+          <span class="stats-count approved" title="${I18N.approved}">${a.approved}</span>
+          <span class="stats-count pending" title="${I18N.pendingTitle}">${a.pending}</span>
+          ${a.rejected > 0 ? `<span class="stats-count rejected" title="${I18N.rejectedTitle}">${a.rejected}</span>` : ''}
         </div>
       </div>
     `;
@@ -1558,12 +1599,12 @@ function approveResult(id) {
     if (data.message === 'OK') {
       location.reload();
     } else {
-      alert(data.message || 'Алдаа гарлаа');
+      alert(data.message || I18N.errorOccurred);
     }
   })
   .catch(err => {
     console.error(err);
-    alert('Алдаа гарлаа');
+    alert(I18N.errorOccurred);
   });
 }
 
@@ -1576,13 +1617,13 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
   const catText = document.querySelector('#rejection_category option:checked').textContent;
 
   if (!cat) {
-    alert('Буцаах шалтгаанаа сонгоно уу');
+    alert(I18N.selectRejectionReason);
     return;
   }
 
   const btn = this.querySelector('button[type="submit"]');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Боловсруулж байна...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + I18N.processing;
 
   fetch('/api/update_result_status/' + id + '/rejected', {
     method: 'POST',
@@ -1599,20 +1640,20 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
       bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
       location.reload();
     } else {
-      alert(data.message || 'Алдаа гарлаа');
+      alert(data.message || I18N.errorOccurred);
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> ' + I18N.reject;
     }
   })
   .catch(err => {
     console.error(err);
-    alert('Алдаа гарлаа');
+    alert(I18N.errorOccurred);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> ' + I18N.reject;
   });
 });
 
-// Ээлжийн огноог default-ээр тохируулах
+// Set default shift date
 (function() {
   const startDate = document.querySelector('input[name="start_date"]');
   const endDate = document.querySelector('input[name="end_date"]');
@@ -1700,11 +1741,11 @@ document.getElementById('clear-selection-btn').addEventListener('click', functio
 // Bulk Approve
 document.getElementById('bulk-approve-btn').addEventListener('click', function() {
   if (selectedResultIds.size === 0) return;
-  if (!confirm(`${selectedResultIds.size} үр дүнг зөвшөөрөх үү?`)) return;
+  if (!confirm(selectedResultIds.size + ' - ' + I18N.approveResultsConfirm)) return;
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + I18N.pleaseWait;
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1720,13 +1761,13 @@ document.getElementById('bulk-approve-btn').addEventListener('click', function()
     if (data.success_count > 0) location.reload();
     else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-check-all"></i> Approve All';
+      btn.innerHTML = '<i class="bi bi-check-all"></i> ' + I18N.approveAll;
     }
   })
   .catch(err => {
-    alert('Алдаа: ' + err);
+    alert(I18N.error + ': ' + err);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-check-all"></i> Approve All';
+    btn.innerHTML = '<i class="bi bi-check-all"></i> ' + I18N.approveAll;
   });
 });
 
@@ -1741,13 +1782,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
   const comment = document.getElementById('bulk-rejection-comment').value;
 
   if (!category) {
-    alert('Буцаах шалтгаанаа сонгоно уу');
+    alert(I18N.selectRejectionReason);
     return;
   }
 
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Түр хүлээнэ үү...';
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> ' + I18N.pleaseWait;
 
   fetch('/bulk_update_status', {
     method: 'POST',
@@ -1765,13 +1806,13 @@ document.getElementById('confirm-bulk-reject-btn').addEventListener('click', fun
     if (data.success_count > 0) location.reload();
     else {
       btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+      btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> ' + I18N.reject;
     }
   })
   .catch(err => {
-    alert('Алдаа: ' + err);
+    alert(I18N.error + ': ' + err);
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Буцаах';
+    btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> ' + I18N.reject;
   });
 });
 </script>

@@ -145,10 +145,10 @@
           {% endif %}
         </td>
         <td style="width: 70%; text-align: center;">
-          <div class="header-title">USNY SHINJILGEENII LABORATORI</div>
+          <div class="header-title">{{ _("Water Analysis Laboratory") }}</div>
           <div class="header-address">
-            Omnogovi aimag, Tsogttsetii sum, "Ukhaa Khudeg" nuursni uurkhai<br>
-            E-mail: laboratory@mmc.mn
+            {{ _("Umnugovi province, Tsogttsetsii soum, Ukhaa Khudeg coal mine") }}<br>
+            {{ _("Email") }}: laboratory@mmc.mn
           </div>
         </td>
         <td style="width: 15%; text-align: right;">
@@ -161,20 +161,20 @@
   </div>
 
   <!-- Report Title -->
-  <div class="report-title">SORILTYN TAILAN</div>
-  <div class="report-number">No: {{ report.report_number }}</div>
+  <div class="report-title">{{ _("Test Report") }}</div>
+  <div class="report-number">{{ _("No") }}: {{ report.report_number }}</div>
 
   <!-- Meta info -->
-  <div class="meta-row">Khevlesen ognoo: {{ now.strftime('%Y.%m.%d') }}</div>
-  <div class="meta-row">Khuudasny dugaar: 1/1</div>
+  <div class="meta-row">{{ _("Print date") }}: {{ now.strftime('%Y.%m.%d') }}</div>
+  <div class="meta-row">{{ _("Page number") }}: 1/1</div>
 
   <!-- Info table -->
   <table class="info-table">
     <tr>
-      <th>Lab ID</th>
-      <th>Technical Standard</th>
-      <th>Sample Type</th>
-      <th>Sampling Method</th>
+      <th>{{ _("Lab ID") }}</th>
+      <th>{{ _("Technical Standard") }}</th>
+      <th>{{ _("Sample Type") }}</th>
+      <th>{{ _("Sampling Method") }}</th>
     </tr>
     <tr>
       <td>
@@ -185,43 +185,43 @@
         {% endif %}
       </td>
       <td>MNS 0900:2018</td>
-      <td>Drinking water</td>
+      <td>{{ _("Drinking water") }}</td>
       <td>MNS ISO 5667-5:2001</td>
     </tr>
   </table>
 
   <!-- Sample list -->
   <div class="sample-list">
-    <strong>Sample names:</strong>
+    <strong>{{ _("Sample names") }}:</strong>
     {% for item in results_data %}
     <p>{{ loop.index }}. {{ item.sample.micro_lab_id or item.sample.chem_lab_id or loop.index }} {{ item.sample.sample_code }}</p>
     {% endfor %}
   </div>
 
-  <p style="font-size: 9pt;"><strong>Sampled by:</strong> Water supply technician</p>
+  <p style="font-size: 9pt;"><strong>{{ _("Sampled by") }}:</strong> {{ _("Water supply technician") }}</p>
 
   <!-- Sample info -->
   <table class="sample-info-table">
     <tr>
-      <td><strong>Sample volume</strong><br>0.5L each</td>
-      <td><strong>Sampling date</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
-      <td><strong>Analysis date</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
+      <td><strong>{{ _("Sample volume") }}</strong><br>{{ _("0.5L each") }}</td>
+      <td><strong>{{ _("Sampling date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+      <td><strong>{{ _("Analysis date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
     </tr>
   </table>
 
   <!-- Results -->
-  <div class="results-label">Analysis results:</div>
+  <div class="results-label">{{ _("Analysis results") }}:</div>
   <table class="results-table">
     <thead>
       <tr>
-        <th rowspan="2" style="width: 5%;">No</th>
-        <th colspan="2">Analysis</th>
-        <th rowspan="2" style="width: 12%;">Limit</th>
-        <th colspan="{{ results_data|length }}">Sample ID</th>
+        <th rowspan="2" style="width: 5%;">{{ _("No") }}</th>
+        <th colspan="2">{{ _("Analysis") }}</th>
+        <th rowspan="2" style="width: 12%;">{{ _("Limit") }}</th>
+        <th colspan="{{ results_data|length }}">{{ _("Sample ID") }}</th>
       </tr>
       <tr>
-        <th style="width: 18%;">Parameter</th>
-        <th style="width: 12%;">Method</th>
+        <th style="width: 18%;">{{ _("Parameter") }}</th>
+        <th style="width: 12%;">{{ _("Method") }}</th>
         {% for item in results_data %}
         <th>{{ item.sample.micro_lab_id or loop.index }}</th>
         {% endfor %}
@@ -231,7 +231,7 @@
       <!-- Row 1: CFU -->
       <tr>
         <td>1.</td>
-        <td class="left">Total bacteria count</td>
+        <td class="left">{{ _("Total bacteria count") }}</td>
         <td>MNS ISO 6222:1998</td>
         <td>&lt;100/1mL</td>
         {% for item in results_data %}
@@ -240,9 +240,9 @@
             {% set raw = micro.raw_data %}
             {% if raw is mapping %}
               {% set cfu = raw.get('cfu_avg') or raw.get('cfu_37') or raw.get('cfu_22') %}
-              <td>{{ cfu if cfu else 'ND' }}</td>
+              <td>{{ cfu if cfu else _('ND') }}</td>
             {% else %}
-              <td>ND</td>
+              <td>{{ _("ND") }}</td>
             {% endif %}
           {% else %}
             <td>-</td>
@@ -254,16 +254,16 @@
         <td>2.</td>
         <td class="left">E.coli</td>
         <td>MNS ISO 9308-1:1998</td>
-        <td>ND/100mL</td>
+        <td>{{ _("ND") }}/100mL</td>
         {% for item in results_data %}
           {% set micro = item.results.get('MICRO_WATER') %}
           {% if micro and micro.raw_data %}
             {% set raw = micro.raw_data %}
             {% if raw is mapping %}
               {% set val = raw.get('ecoli') %}
-              <td>{{ 'Detected' if val and val not in ['0', 0, '-', 'ND'] else 'ND' }}</td>
+              <td>{{ _('Detected') if val and val not in ['0', 0, '-', 'ND'] else _('ND') }}</td>
             {% else %}
-              <td>ND</td>
+              <td>{{ _("ND") }}</td>
             {% endif %}
           {% else %}
             <td>-</td>
@@ -275,16 +275,16 @@
         <td>3.</td>
         <td class="left">Salmonella spp.</td>
         <td>MNS ISO 19250:2017</td>
-        <td>ND/25mL</td>
+        <td>{{ _("ND") }}/25mL</td>
         {% for item in results_data %}
           {% set micro = item.results.get('MICRO_WATER') %}
           {% if micro and micro.raw_data %}
             {% set raw = micro.raw_data %}
             {% if raw is mapping %}
               {% set val = raw.get('salmonella') %}
-              <td>{{ 'Detected' if val and val not in ['0', 0, '-', 'ND'] else 'ND' }}</td>
+              <td>{{ _('Detected') if val and val not in ['0', 0, '-', 'ND'] else _('ND') }}</td>
             {% else %}
-              <td>ND</td>
+              <td>{{ _("ND") }}</td>
             {% endif %}
           {% else %}
             <td>-</td>
@@ -294,12 +294,12 @@
     </tbody>
   </table>
 
-  <div class="footer-note">This test result is valid only for the tested sample.</div>
+  <div class="footer-note">{{ _("This test result is valid only for the tested sample.") }}</div>
 
   <!-- Signatures -->
   <div class="signature-section">
     <div class="signature-row">
-      <strong>Analyzed by:</strong> Microbiologist
+      <strong>{{ _("Analyzed by") }}:</strong> {{ _("Microbiologist") }}
       <span style="float: right;">
         {% if report.analyst_signature and report.analyst_signature.image_path %}
         <img src="{{ url_for('static', filename=report.analyst_signature.image_path) }}" class="signature-img">
@@ -308,7 +308,7 @@
       </span>
     </div>
     <div class="signature-row">
-      <strong>Approved by:</strong> Senior Manager
+      <strong>{{ _("Approved by") }}:</strong> {{ _("Senior Manager") }}
       <span style="float: right;">
         {% if report.manager_signature and report.manager_signature.image_path %}
         <img src="{{ url_for('static', filename=report.manager_signature.image_path) }}" class="signature-img">
@@ -326,7 +326,7 @@
   </div>
 
   <div class="watermark">
-    Unauthorized copying is prohibited.
+    {{ _("Unauthorized copying is prohibited.") }}
   </div>
 </body>
 </html>

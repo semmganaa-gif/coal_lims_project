@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Water Lab{% endblock %}
+{% block title %}{{ _("Water Lab") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -93,27 +93,27 @@
 
 <div class="water-lab-main">
   <div class="main-header">
-    <h1><i class="bi bi-droplet-fill me-2"></i>Water Lab</h1>
-    <p>Unified center for water quality chemistry and microbiology analysis</p>
+    <h1><i class="bi bi-droplet-fill me-2"></i>{{ _("Water Lab") }}</h1>
+    <p>{{ _("Unified center for water quality chemistry and microbiology analysis") }}</p>
   </div>
 
   <!-- Total statistics -->
   <div class="stat-row">
     <div class="stat-box">
       <div class="value" style="color:#0891b2">{{ total_samples }}</div>
-      <div class="label">Total Samples</div>
+      <div class="label">{{ _("Total Samples") }}</div>
     </div>
     <div class="stat-box">
       <div class="value" style="color:#1d4ed8">{{ new_samples }}</div>
-      <div class="label">New</div>
+      <div class="label">{{ _("New") }}</div>
     </div>
     <div class="stat-box">
       <div class="value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="label">In Progress</div>
+      <div class="label">{{ _("In Progress") }}</div>
     </div>
     <div class="stat-box">
       <div class="value" style="color:#047857">{{ completed }}</div>
-      <div class="label">Completed</div>
+      <div class="label">{{ _("Completed") }}</div>
     </div>
   </div>
 
@@ -122,10 +122,10 @@
     <!-- Chemistry Lab -->
     <a href="{{ url_for('water.water_hub') }}" class="sub-lab-card card-chemistry">
       <div class="card-icon"><i class="bi bi-droplet-half"></i></div>
-      <h3>Chemistry Lab</h3>
-      <p>Water physico-chemical analysis: pH, EC, TDS, heavy metals, anion/cation, BOD/COD, etc.</p>
+      <h3>{{ _("Chemistry Lab") }}</h3>
+      <p>{{ _("Water physico-chemical analysis: pH, EC, TDS, heavy metals, anion/cation, BOD/COD, etc.") }}</p>
       <div class="badge-row">
-        <span class="badge" style="background:#0dcaf0">{{ water_analysis_count }} analyses</span>
+        <span class="badge" style="background:#0dcaf0">{{ water_analysis_count }} {{ _("analyses") }}</span>
         <span class="badge" style="background:#06b6d4">ICP-MS</span>
         <span class="badge" style="background:#0891b2">IC</span>
       </div>
@@ -135,10 +135,10 @@
     <!-- Microbiology Lab -->
     <a href="{{ url_for('microbiology.micro_hub') }}" class="sub-lab-card card-micro">
       <div class="card-icon"><i class="bi bi-bug"></i></div>
-      <h3>Microbiology Lab</h3>
-      <p>Water microbiology, air monitoring, surface swabs: Coliform, E.coli, HPC, Salmonella</p>
+      <h3>{{ _("Microbiology Lab") }}</h3>
+      <p>{{ _("Water microbiology, air monitoring, surface swabs: Coliform, E.coli, HPC, Salmonella") }}</p>
       <div class="badge-row">
-        <span class="badge" style="background:#20c997">{{ micro_analysis_count }} analyses</span>
+        <span class="badge" style="background:#20c997">{{ micro_analysis_count }} {{ _("analyses") }}</span>
         <span class="badge" style="background:#14b8a6">Water</span>
         <span class="badge" style="background:#0d9488">Air</span>
       </div>

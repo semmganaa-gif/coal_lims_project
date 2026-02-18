@@ -3,55 +3,55 @@
 
 {# ==================== LAB PURPOSE OPTIONS ==================== #}
 {% macro lab_purpose_options(selected='') %}
-<option value="">-- Select --</option>
-<option {% if selected == 'Central Lab' %}selected{% endif %}>Central Lab</option>
-<option {% if selected == 'Coal Lab' %}selected{% endif %}>Coal Lab</option>
-<option {% if selected == 'Water Lab' %}selected{% endif %}>Water Lab</option>
-<option {% if selected == 'Micro Lab' %}selected{% endif %}>Micro Lab</option>
-<option {% if selected == 'WTL Lab' %}selected{% endif %}>WTL Lab</option>
+<option value="">-- {{ _("Select") }} --</option>
+<option {% if selected == 'Central Lab' %}selected{% endif %}>{{ _("Central Lab") }}</option>
+<option {% if selected == 'Coal Lab' %}selected{% endif %}>{{ _("Coal Lab") }}</option>
+<option {% if selected == 'Water Lab' %}selected{% endif %}>{{ _("Water Lab") }}</option>
+<option {% if selected == 'Micro Lab' %}selected{% endif %}>{{ _("Micro Lab") }}</option>
+<option {% if selected == 'WTL Lab' %}selected{% endif %}>{{ _("WTL Lab") }}</option>
 {% endmacro %}
 
 {# ==================== CATEGORY OPTIONS ==================== #}
 {% macro category_options(selected='other') %}
-<option value="other"    {% if selected == 'other' %}selected{% endif %}>8. Other (Default)</option>
-<option value="furnace"  {% if selected == 'furnace' %}selected{% endif %}>1. Furnace</option>
-<option value="prep"     {% if selected == 'prep' %}selected{% endif %}>2. Sample Preparation</option>
-<option value="analysis" {% if selected == 'analysis' %}selected{% endif %}>3. Analysis Instruments</option>
-<option value="water"    {% if selected == 'water' %}selected{% endif %}>4. Water Lab</option>
-<option value="micro"    {% if selected == 'micro' %}selected{% endif %}>5. Microbiology Lab</option>
-<option value="wtl"      {% if selected == 'wtl' %}selected{% endif %}>6. WTL Lab</option>
-<option value="balance"  {% if selected == 'balance' %}selected{% endif %}>7. Balance</option>
+<option value="other"    {% if selected == 'other' %}selected{% endif %}>{{ _("8. Other (Default)") }}</option>
+<option value="furnace"  {% if selected == 'furnace' %}selected{% endif %}>{{ _("1. Furnace") }}</option>
+<option value="prep"     {% if selected == 'prep' %}selected{% endif %}>{{ _("2. Sample Preparation") }}</option>
+<option value="analysis" {% if selected == 'analysis' %}selected{% endif %}>{{ _("3. Analysis Instruments") }}</option>
+<option value="water"    {% if selected == 'water' %}selected{% endif %}>{{ _("4. Water Lab") }}</option>
+<option value="micro"    {% if selected == 'micro' %}selected{% endif %}>{{ _("5. Microbiology Lab") }}</option>
+<option value="wtl"      {% if selected == 'wtl' %}selected{% endif %}>{{ _("6. WTL Lab") }}</option>
+<option value="balance"  {% if selected == 'balance' %}selected{% endif %}>{{ _("7. Balance") }}</option>
 {% endmacro %}
 
 {# ==================== REGISTER TYPE OPTIONS ==================== #}
 {% macro register_type_options(selected='') %}
-<option value="">-- Not Selected --</option>
-<option value="measurement"     {% if selected == 'measurement' %}selected{% endif %}>Measuring Instrument</option>
-<option value="glassware"       {% if selected == 'glassware' %}selected{% endif %}>Glassware</option>
-<option value="internal_check"  {% if selected == 'internal_check' %}selected{% endif %}>Internal Check</option>
+<option value="">-- {{ _("Not Selected") }} --</option>
+<option value="measurement"     {% if selected == 'measurement' %}selected{% endif %}>{{ _("Measuring Instrument") }}</option>
+<option value="glassware"       {% if selected == 'glassware' %}selected{% endif %}>{{ _("Glassware") }}</option>
+<option value="internal_check"  {% if selected == 'internal_check' %}selected{% endif %}>{{ _("Internal Check") }}</option>
 {% endmacro %}
 
 {# ==================== STATUS OPTIONS ==================== #}
 {% macro status_options(selected='normal') %}
-<option value="normal"      {% if selected == 'normal' %}selected{% endif %}>Normal</option>
-<option value="broken"      {% if selected == 'broken' %}selected{% endif %}>Out of Order</option>
-<option value="needs_spare" {% if selected == 'needs_spare' %}selected{% endif %}>Spare Parts Required</option>
-<option value="maintenance" {% if selected == 'maintenance' %}selected{% endif %}>Under Maintenance</option>
-<option value="retired"     {% if selected == 'retired' %}selected{% endif %}>Decommissioned</option>
+<option value="normal"      {% if selected == 'normal' %}selected{% endif %}>{{ _("Normal") }}</option>
+<option value="broken"      {% if selected == 'broken' %}selected{% endif %}>{{ _("Out of Order") }}</option>
+<option value="needs_spare" {% if selected == 'needs_spare' %}selected{% endif %}>{{ _("Spare Parts Required") }}</option>
+<option value="maintenance" {% if selected == 'maintenance' %}selected{% endif %}>{{ _("Under Maintenance") }}</option>
+<option value="retired"     {% if selected == 'retired' %}selected{% endif %}>{{ _("Decommissioned") }}</option>
 {% endmacro %}
 
 {# ==================== MEASUREMENT GROUP OPTIONS ==================== #}
 {% macro measurement_group_options(selected='') %}
-<option {% if selected == '1. Physical-Chemical Measurement' or not selected %}selected{% endif %}>1. Physical-Chemical Measurement</option>
-<option {% if selected == '2. Thermal & Pressure Measurement' %}selected{% endif %}>2. Thermal & Pressure Measurement</option>
-<option {% if selected == '3. Gas & Liquid Flow Measurement' %}selected{% endif %}>3. Gas & Liquid Flow Measurement</option>
-<option {% if selected == '4. Weight Measurement' %}selected{% endif %}>4. Weight Measurement</option>
-<option {% if selected == '5. Density Measurement' %}selected{% endif %}>5. Density Measurement</option>
+<option {% if selected == '1. Physical-Chemical Measurement' or not selected %}selected{% endif %}>{{ _("1. Physical-Chemical Measurement") }}</option>
+<option {% if selected == '2. Thermal & Pressure Measurement' %}selected{% endif %}>{{ _("2. Thermal & Pressure Measurement") }}</option>
+<option {% if selected == '3. Gas & Liquid Flow Measurement' %}selected{% endif %}>{{ _("3. Gas & Liquid Flow Measurement") }}</option>
+<option {% if selected == '4. Weight Measurement' %}selected{% endif %}>{{ _("4. Weight Measurement") }}</option>
+<option {% if selected == '5. Density Measurement' %}selected{% endif %}>{{ _("5. Density Measurement") }}</option>
 {% endmacro %}
 
 {# ==================== MEASUREMENT UNIT OPTIONS ==================== #}
 {% macro measurement_unit_options(selected='') %}
-<option value="">-- Select --</option>
+<option value="">-- {{ _("Select") }} --</option>
 {% for u in ['nm', 'μS/cm', 'g', 'kg', 'mg', 'J', '°C', 'mPa', '%', 'ppm', '%/ppm', 'g/cm3', 'mL', 'L'] %}
 <option {% if selected == u %}selected{% endif %}>{{ u }}</option>
 {% endfor %}
@@ -59,14 +59,14 @@
 
 {# ==================== FREQUENCY OPTIONS ==================== #}
 {% macro freq_cert_options(selected='') %}
-<option value="">-- Select --</option>
+<option value="">-- {{ _("Select") }} --</option>
 {% for f in ['6 months', '1 year', '2 years', '3 years'] %}
 <option {% if selected == f %}selected{% endif %}>{{ f }}</option>
 {% endfor %}
 {% endmacro %}
 
 {% macro freq_check_options(selected='') %}
-<option value="">-- Select --</option>
+<option value="">-- {{ _("Select") }} --</option>
 {% for f in ['Daily', '7 days', '1 month', '3 months', '6 months', '1 year'] %}
 <option {% if selected == f %}selected{% endif %}>{{ f }}</option>
 {% endfor %}
@@ -75,44 +75,44 @@
 {# ==================== CATEGORY LABELS ==================== #}
 {# Use: {% set cat_label = category_labels[eq.category] | default('8. Other') %} #}
 {% set category_labels = {
-  'furnace': '1. Furnace',
-  'prep': '2. Sample Preparation',
-  'analysis': '3. Analysis Instruments',
-  'water': '4. Water Lab',
-  'micro': '5. Microbiology Lab',
-  'wtl': '6. WTL Lab',
-  'balance': '7. Balance',
-  'other': '8. Other'
+  'furnace': _('1. Furnace'),
+  'prep': _('2. Sample Preparation'),
+  'analysis': _('3. Analysis Instruments'),
+  'water': _('4. Water Lab'),
+  'micro': _('5. Microbiology Lab'),
+  'wtl': _('6. WTL Lab'),
+  'balance': _('7. Balance'),
+  'other': _('8. Other')
 } %}
 
 {# ==================== STATUS BADGE MACRO ==================== #}
 {% macro status_badge(status) %}
 {% if status == 'broken' %}
-  <span class="badge rounded-pill eq-status-broken">Out of Order</span>
+  <span class="badge rounded-pill eq-status-broken">{{ _("Out of Order") }}</span>
 {% elif status == 'needs_spare' %}
-  <span class="badge rounded-pill eq-status-spare">Spare Parts Required</span>
+  <span class="badge rounded-pill eq-status-spare">{{ _("Spare Parts Required") }}</span>
 {% elif status == 'maintenance' %}
-  <span class="badge rounded-pill eq-status-maint">Under Maintenance</span>
+  <span class="badge rounded-pill eq-status-maint">{{ _("Under Maintenance") }}</span>
 {% elif status == 'retired' %}
-  <span class="badge rounded-pill eq-status-retired">Decommissioned</span>
+  <span class="badge rounded-pill eq-status-retired">{{ _("Decommissioned") }}</span>
 {% else %}
-  <span class="badge rounded-pill eq-status-normal">Normal</span>
+  <span class="badge rounded-pill eq-status-normal">{{ _("Normal") }}</span>
 {% endif %}
 {% endmacro %}
 
 {# ==================== VIEW & REGISTER TABS DATA ==================== #}
 {% set view_items = [
-  ('all', 'All Equipment', 'bi-grid-3x3-gap'),
-  ('coal', 'Coal', 'bi-fire'),
-  ('water', 'Water', 'bi-droplet'),
-  ('micro', 'Micro', 'bi-bug'),
+  ('all', _('All Equipment'), 'bi-grid-3x3-gap'),
+  ('coal', _('Coal'), 'bi-fire'),
+  ('water', _('Water'), 'bi-droplet'),
+  ('micro', _('Micro'), 'bi-bug'),
 ] %}
 
 {% set register_items = [
-  ('measurement', 'Measuring Instruments Register', 'bi-rulers'),
-  ('glassware', 'Glassware Register', 'bi-cup-straw'),
-  ('internal_check', 'Internal Check & Adjustment', 'bi-clipboard-check'),
-  ('new_equipment', 'New Equipment Register', 'bi-box-arrow-in-right'),
-  ('out_of_service', 'Out of Service', 'bi-x-circle'),
-  ('balances_register', 'Balance', 'bi-speedometer'),
+  ('measurement', _('Measuring Instruments Register'), 'bi-rulers'),
+  ('glassware', _('Glassware Register'), 'bi-cup-straw'),
+  ('internal_check', _('Internal Check & Adjustment'), 'bi-clipboard-check'),
+  ('new_equipment', _('New Equipment Register'), 'bi-box-arrow-in-right'),
+  ('out_of_service', _('Out of Service'), 'bi-x-circle'),
+  ('balances_register', _('Balance'), 'bi-speedometer'),
 ] %}

@@ -35,28 +35,28 @@
       {# Desktop товчнууд (mobile дээр нуух) #}
       <div class="d-none d-md-flex gap-2">
         <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> Back
+          <i class="bi bi-arrow-left"></i> {{ _("Back") }}
         </a>
-        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="Equipment">
-          <i class="bi bi-tools"></i> Equipment
+        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="{{ _("Equipment") }}">
+          <i class="bi bi-tools"></i> {{ _("Equipment") }}
         </button>
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}Sample (M){% else %}Sample{% endif %}
+          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}{{ _("Sample (M)") }}{% else %}{{ _("Sample") }}{% endif %}
         </button>
         {% if not is_mass_page %}
         <button class="btn btn-success btn-sm" id="save-analysis-results" data-action="save-results">
-          <i class="bi bi-check-lg"></i> Save
+          <i class="bi bi-check-lg"></i> {{ _("Save") }}
         </button>
         {% endif %}
       </div>
       {# Mobile: Sample + Save buttons #}
       <div class="d-md-none d-flex gap-2">
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> Sample
+          <i class="bi bi-plus-circle"></i> {{ _("Sample") }}
         </button>
         {% if not is_mass_page %}
         <button class="btn btn-success btn-sm" id="save-analysis-results-mobile" data-action="save-results">
-          <i class="bi bi-check-lg"></i> Save
+          <i class="bi bi-check-lg"></i> {{ _("Save") }}
         </button>
         {% endif %}
       </div>
@@ -86,7 +86,7 @@
                 {% include config.template %}
             </div>
           {% else %}
-            <div class="alert alert-warning m-3">Template not found.</div>
+            <div class="alert alert-warning m-3">{{ _("Template not found.") }}</div>
           {% endif %}
         </div>
       </div>
@@ -98,13 +98,13 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Select Samples</h5>
+        <h5 class="modal-title">{{ _("Select Samples") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body"><p class="text-center">Loading...</p></div>
+      <div class="modal-body"><p class="text-center">{{ _("Loading...") }}</p></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">Add</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">{{ _("Add") }}</button>
       </div>
     </div>
   </div>
@@ -276,7 +276,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Equipment Usage & Repair</span>
+          <span>{{ _("Equipment Usage & Repair") }}</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -286,13 +286,13 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 18%; min-width:140px;">Lab Code / Name</th>
-                <th style="width: 6%; text-align:center;">Condition<br>OK</th>
-                <th style="width: 8%; text-align:center;">Usage<br>(min)</th>
-                <th style="width: 14%;">Notes</th>
-                <th style="width: 6%; text-align:center;">Calibration</th>
-                <th style="width: 6%; text-align:center;">Repair</th>
-                <th style="width: 42%;">Calibration / Repair Details</th>
+                <th style="width: 18%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Condition") }}<br>OK</th>
+                <th style="width: 8%; text-align:center;">{{ _("Usage") }}<br>({{ _("min") }})</th>
+                <th style="width: 14%;">{{ _("Notes") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Calibration") }}</th>
+                <th style="width: 6%; text-align:center;">{{ _("Repair") }}</th>
+                <th style="width: 42%;">{{ _("Calibration / Repair Details") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -314,12 +314,12 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Notes..." style="border-color: #cbd5e0;">
+                         placeholder="{{ _("Notes...") }}" style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   {% if eq.category in ['furnace', 'balance', 'analysis', 'prep', 'dryer'] or 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
                   <button type="button" class="btn btn-outline-success btn-sm calib-btn"
-                          onclick="toggleCalibPanel(this)" title="Run Calibration">
+                          onclick="toggleCalibPanel(this)" title="{{ _("Run Calibration") }}">
                     <i class="bi bi-thermometer-half"></i>
                   </button>
                   {% else %}
@@ -336,18 +336,18 @@
                   {% if eq.category == 'furnace' %}
                   <div class="calib-panel furnace-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-sun"></i> Temperature Check
+                      <i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}
                     </div>
                     <div class="calib-input-group">
-                      <label>Set Temp:</label>
+                      <label>{{ _("Set Temp:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Measured:</label>
+                      <label>{{ _("Measured:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Diff:</label>
+                      <label>{{ _("Diff:") }}</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
@@ -355,18 +355,18 @@
                   {% elif eq.category == 'dryer' %}
                   <div class="calib-panel furnace-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-half"></i> Хатаах шүүгээ — Temperature Check
+                      <i class="bi bi-thermometer-half"></i> {{ _("Drying Cabinet — Temperature Check") }}
                     </div>
                     <div class="calib-input-group">
-                      <label>Set Temp:</label>
+                      <label>{{ _("Set Temp:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" value="105" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Measured:</label>
+                      <label>{{ _("Measured:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Diff:</label>
+                      <label>{{ _("Diff:") }}</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
@@ -374,18 +374,18 @@
                   {% elif 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
                   <div class="calib-panel furnace-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-half"></i> Термостат — Temperature Check
+                      <i class="bi bi-thermometer-half"></i> {{ _("Thermostat — Temperature Check") }}
                     </div>
                     <div class="calib-input-group">
-                      <label>Set Temp:</label>
+                      <label>{{ _("Set Temp:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
                     </div>
                     <div class="calib-input-group">
-                      <label>Measured:</label>
+                      <label>{{ _("Measured:") }}</label>
                       <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
                     </div>
                     <div class="calib-input-group">
-                      <label>Diff:</label>
+                      <label>{{ _("Diff:") }}</label>
                       <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
                       <span class="calib-status d-none"></span>
                     </div>
@@ -393,50 +393,50 @@
                   {% elif eq.category == 'balance' %}
                   <div class="calib-panel balance-panel d-none">
                     <div class="calib-panel-title">
-                      <i class="bi bi-speedometer2"></i> Balance Check (Weights)
+                      <i class="bi bi-speedometer2"></i> {{ _("Balance Check (Weights)") }}
                     </div>
                     <div class="mb-2">
-                      <small class="text-muted">Standard Weight -> Measured Value</small>
+                      <small class="text-muted">{{ _("Standard Weight -> Measured Value") }}</small>
                     </div>
                     <div class="calib-weights-list">
                       <div class="calib-weight-row">
-                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
-                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="{{ _("Std (g)") }}" step="0.0001" style="flex:1">
+                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
                         <span class="calib-status d-none" style="min-width:50px;"></span>
                       </div>
                     </div>
                     <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> Add Weight
+                      <i class="bi bi-plus"></i> {{ _("Add Weight") }}
                     </button>
                     <hr class="my-2" style="border-color:#dee2e6;">
                     <div class="calib-panel-title" style="font-size:0.82rem;">
-                      <i class="bi bi-droplet"></i> Этанол туухайн шалгалт
+                      <i class="bi bi-droplet"></i> {{ _("Ethanol Pycnometer Test") }}
                     </div>
                     <div class="d-flex gap-2 flex-wrap align-items-end mb-1">
                       <div class="calib-input-group" style="flex:0 0 75px;">
-                        <label>Темп (°C):</label>
+                        <label>{{ _("Temp (°C):") }}</label>
                         <input type="number" class="form-control form-control-sm ethanol-temp" placeholder="20" step="0.1" value="20" oninput="calcEthanol(this)">
                       </div>
                       <div class="calib-input-group" style="flex:0 0 90px;">
-                        <label>Нягт (g/mL):</label>
+                        <label>{{ _("Density (g/mL):") }}</label>
                         <input type="number" class="form-control form-control-sm ethanol-density" placeholder="0.7893" step="0.0001" value="0.7893" oninput="calcEthanol(this)">
                       </div>
                       <div class="calib-input-group" style="flex:0 0 85px;">
-                        <label>Эзэлхүүн (mL):</label>
+                        <label>{{ _("Volume (mL):") }}</label>
                         <input type="number" class="form-control form-control-sm ethanol-volume" placeholder="mL" step="0.01" oninput="calcEthanol(this)">
                       </div>
                     </div>
                     <div class="d-flex gap-2 flex-wrap align-items-end">
                       <div class="calib-input-group" style="flex:0 0 100px;">
-                        <label>Тооцоолсон (g):</label>
+                        <label>{{ _("Calculated (g):") }}</label>
                         <input type="text" class="form-control form-control-sm ethanol-expected" readonly style="background:#f7fafc;">
                       </div>
                       <div class="calib-input-group" style="flex:0 0 100px;">
-                        <label>Хэмжсэн (g):</label>
+                        <label>{{ _("Measured (g):") }}</label>
                         <input type="number" class="form-control form-control-sm ethanol-measured" placeholder="g" step="0.0001" oninput="calcEthanol(this)">
                       </div>
                       <div class="calib-input-group" style="flex:0 0 70px;">
-                        <label>Зөрүү:</label>
+                        <label>{{ _("Difference:") }}</label>
                         <input type="text" class="form-control form-control-sm ethanol-diff" readonly style="background:#f7fafc;">
                       </div>
                       <span class="ethanol-status d-none" style="min-width:50px;"></span>
@@ -445,24 +445,24 @@
                   {% elif eq.category == 'prep' %}
                   <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
                     <div class="calib-panel-title">
-                      <i class="bi bi-arrow-repeat"></i> Drum Calibration
+                      <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration") }}
                     </div>
-                    <div class="mb-2"><small class="text-muted">Эргэлтийн тоо — өмнөх ба дараах</small></div>
+                    <div class="mb-2"><small class="text-muted">{{ _("Revolution count — before and after") }}</small></div>
                     <div class="d-flex gap-3 align-items-end flex-wrap">
                       <div class="calib-input-group">
-                        <label>Duration:</label>
+                        <label>{{ _("Duration:") }}</label>
                         <input type="text" class="form-control form-control-sm drum-duration" placeholder="min" style="width:60px;">
                       </div>
                       <div class="calib-input-group">
-                        <label>Before:</label>
+                        <label>{{ _("Before:") }}</label>
                         <input type="number" class="form-control form-control-sm drum-before" placeholder="RPM" step="1" style="width:70px;" oninput="checkDrumDiff(this)">
                       </div>
                       <div class="calib-input-group">
-                        <label>After:</label>
+                        <label>{{ _("After:") }}</label>
                         <input type="number" class="form-control form-control-sm drum-after" placeholder="RPM" step="1" style="width:70px;" oninput="checkDrumDiff(this)">
                       </div>
                       <div class="calib-input-group">
-                        <label>Diff:</label>
+                        <label>{{ _("Diff:") }}</label>
                         <input type="text" class="form-control form-control-sm drum-diff" readonly style="width:55px; background:#f7fafc;">
                       </div>
                       <span class="calib-status d-none"></span>
@@ -473,22 +473,22 @@
                     {% if 'хүхэр' in (eq.name|lower) or 'sulfur' in (eq.name|lower) or 's-144' in (eq.name|lower) or '5e-irs' in (eq.name|lower) %}
                     <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="sulfur">
                       <div class="calib-panel-title">
-                        <i class="bi bi-droplet-half"></i> Хүхэр багаж калибровка
+                        <i class="bi bi-droplet-half"></i> {{ _("Sulfur Analyzer Calibration") }}
                       </div>
 
                       {# Curve type + Ээлж #}
                       <div class="d-flex gap-3 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
                         <div class="calib-input-group">
-                          <label>Curve type:</label>
+                          <label>{{ _("Curve type:") }}</label>
                           <select class="form-select form-select-sm sulfur-curve-type" style="width:130px;">
-                            <option value="single">Single</option>
-                            <option value="linear">Linear</option>
-                            <option value="quadratic">Quadratic</option>
-                            <option value="cubic">Cubic</option>
+                            <option value="single">{{ _("Single") }}</option>
+                            <option value="linear">{{ _("Linear") }}</option>
+                            <option value="quadratic">{{ _("Quadratic") }}</option>
+                            <option value="cubic">{{ _("Cubic") }}</option>
                           </select>
                         </div>
                         <div class="calib-input-group">
-                          <label>RMS Error:</label>
+                          <label>{{ _("RMS Error:") }}</label>
                           <input type="text" class="form-control form-control-sm sulfur-rms" readonly
                                  style="width:90px; background:#f7fafc; font-weight:700;">
                         </div>
@@ -496,7 +496,7 @@
 
                       {# 1. Калибровкийн стандартууд #}
                       <div class="mb-1">
-                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>Калибровка</small>
+                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
                       </div>
                       <div style="display:flex; gap:4px; margin-bottom:2px; padding:0 0 0 22px;">
                         <small class="text-muted" style="flex:1.5">Std ID</small>
@@ -520,12 +520,12 @@
                         {% endfor %}
                       </div>
                       <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="addSulfurStdRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> Стандарт нэмэх
+                        <i class="bi bi-plus"></i> {{ _("Add Standard") }}
                       </button>
 
                       {# 2. Калибровкийн дараах шалгалт #}
                       <div class="mb-1">
-                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>Шалгалт (калибровкийн дараа)</small>
+                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
                       </div>
                       <div class="sulfur-check-list">
                         {% for i in range(1, 4) %}
@@ -541,7 +541,7 @@
                         {% endfor %}
                       </div>
                       <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="addSulfurCheckRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> Шалгалт нэмэх
+                        <i class="bi bi-plus"></i> {{ _("Add Verification") }}
                       </button>
 
                       {# Нийт үр дүн #}
@@ -553,29 +553,29 @@
                       <div class="calib-panel-title">
                         <i class="bi bi-rulers"></i>
                         {% if 'фосфор' in (eq.name|lower) or 'phosph' in (eq.name|lower) %}
-                          Фосфор (P) калибровка
+                          {{ _("Phosphorus (P) Calibration") }}
                         {% elif 'фтор' in (eq.name|lower) or 'fluor' in (eq.name|lower) %}
-                          Фтор (F) калибровка
+                          {{ _("Fluorine (F) Calibration") }}
                         {% elif 'хлор' in (eq.name|lower) or 'chlor' in (eq.name|lower) %}
-                          Хлор (Cl) калибровка
+                          {{ _("Chlorine (Cl) Calibration") }}
                         {% else %}
-                          {{ eq.name }} калибровка
+                          {{ eq.name }} {{ _("Calibration") }}
                         {% endif %}
                       </div>
 
                       {# Curve type + RMS #}
                       <div class="d-flex gap-3 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
                         <div class="calib-input-group">
-                          <label>Curve type:</label>
+                          <label>{{ _("Curve type:") }}</label>
                           <select class="form-select form-select-sm sulfur-curve-type" style="width:130px;">
-                            <option value="single">Single</option>
-                            <option value="linear">Linear</option>
-                            <option value="quadratic">Quadratic</option>
-                            <option value="cubic">Cubic</option>
+                            <option value="single">{{ _("Single") }}</option>
+                            <option value="linear">{{ _("Linear") }}</option>
+                            <option value="quadratic">{{ _("Quadratic") }}</option>
+                            <option value="cubic">{{ _("Cubic") }}</option>
                           </select>
                         </div>
                         <div class="calib-input-group">
-                          <label>RMS Error:</label>
+                          <label>{{ _("RMS Error:") }}</label>
                           <input type="text" class="form-control form-control-sm sulfur-rms" readonly
                                  style="width:90px; background:#f7fafc; font-weight:700;">
                         </div>
@@ -583,13 +583,13 @@
 
                       {# 1. Калибровкийн стандартууд #}
                       <div class="mb-1">
-                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>Калибровка</small>
+                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
                       </div>
                       <div style="display:flex; gap:4px; margin-bottom:2px; padding:0 0 0 22px;">
                         <small class="text-muted" style="flex:1.5">Std ID</small>
                         <small class="text-muted" style="flex:1">Weight,g</small>
                         <small class="text-muted" style="flex:0.7">M,%</small>
-                        <small class="text-muted" style="flex:0.8">Хэмжсэн%</small>
+                        <small class="text-muted" style="flex:0.8">{{ _("Measured%%") }}</small>
                         <small class="text-muted" style="flex:0.8">Cert %</small>
                         <small style="min-width:45px;"></small>
                       </div>
@@ -607,12 +607,12 @@
                         {% endfor %}
                       </div>
                       <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="addSulfurStdRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> Стандарт нэмэх
+                        <i class="bi bi-plus"></i> {{ _("Add Standard") }}
                       </button>
 
                       {# 2. Калибровкийн дараах шалгалт #}
                       <div class="mb-1">
-                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>Шалгалт (калибровкийн дараа)</small>
+                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
                       </div>
                       <div class="sulfur-check-list">
                         {% for i in range(1, 4) %}
@@ -628,7 +628,7 @@
                         {% endfor %}
                       </div>
                       <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="addSulfurCheckRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> Шалгалт нэмэх
+                        <i class="bi bi-plus"></i> {{ _("Add Verification") }}
                       </button>
 
                       <div class="sulfur-final-status mt-1" style="font-size:0.8rem; font-weight:600; text-align:center;"></div>
@@ -637,29 +637,29 @@
                     {% elif 'илчлэг' in (eq.name|lower) or 'calorimeter' in (eq.name|lower) or 'c2000' in (eq.name|lower) or 'c5000' in (eq.name|lower) or 'c6000' in (eq.name|lower) %}
                     <div class="calib-panel analysis-panel calorimeter-panel d-none" data-calib-type="calorimeter">
                       <div class="calib-panel-title">
-                        <i class="bi bi-fire"></i> Calorimeter Calibration
+                        <i class="bi bi-fire"></i> {{ _("Calorimeter Calibration") }}
                       </div>
                       <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                         <div class="calib-input-group">
-                          <label>Бомб:</label>
+                          <label>{{ _("Vessel:") }}</label>
                           <select class="form-select form-select-sm cal-vessel" style="width:100px;">
-                            <option value="1">Бомб-1</option>
-                            <option value="2">Бомб-2</option>
-                            <option value="3">Бомб-3</option>
-                            <option value="4">Бомб-4</option>
-                            <option value="5">Бомб-5</option>
+                            <option value="1">{{ _("Vessel") }}-1</option>
+                            <option value="2">{{ _("Vessel") }}-2</option>
+                            <option value="3">{{ _("Vessel") }}-3</option>
+                            <option value="4">{{ _("Vessel") }}-4</option>
+                            <option value="5">{{ _("Vessel") }}-5</option>
                           </select>
                         </div>
                         <div class="calib-input-group">
-                          <label>Standard:</label>
+                          <label>{{ _("Standard:") }}</label>
                           <input type="text" class="form-control form-control-sm cal-std-name" value="Benzoic Acid" style="width:100px;">
                         </div>
                         <div class="calib-input-group">
-                          <label>Cert (J/g):</label>
+                          <label>{{ _("Cert (J/g):") }}</label>
                           <input type="number" class="form-control form-control-sm cal-cert-val" value="26460" step="1" style="width:75px;">
                         </div>
                       </div>
-                      <div class="mb-1"><small class="text-muted">5 measurements:</small></div>
+                      <div class="mb-1"><small class="text-muted">{{ _("5 measurements:") }}</small></div>
                       <div class="cal-measurements mb-2" style="display:flex; gap:4px; flex-wrap:wrap;">
                         {% for i in range(1, 6) %}
                         <div style="text-align:center;">
@@ -675,10 +675,10 @@
                         <input type="text" class="form-control form-control-sm cal-rsd" readonly style="width:55px; background:#f7fafc;">
                         <span style="font-size:0.75rem;">Max err:</span>
                         <input type="text" class="form-control form-control-sm cal-max-err" readonly style="width:55px; background:#f7fafc;">
-                        <span style="font-size:0.75rem;">Өмнөх C:</span>
-                        <input type="number" class="form-control form-control-sm cal-prev-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="Өмнөх бомбны дулаан багтаамж">
+                        <span style="font-size:0.75rem;">{{ _("Prev C:") }}</span>
+                        <input type="number" class="form-control form-control-sm cal-prev-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="{{ _("Previous bomb heat capacity") }}">
                         <span style="font-size:0.75rem;">C:</span>
-                        <input type="number" class="form-control form-control-sm cal-bomb-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="Бомбны дулаан багтаамж">
+                        <input type="number" class="form-control form-control-sm cal-bomb-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="{{ _("Bomb heat capacity") }}">
                         <span class="calib-status d-none"></span>
                       </div>
                     </div>
@@ -686,25 +686,25 @@
                     {% elif 'хөөлт' in (eq.name|lower) or 'csn' in (eq.name|lower) or 'swelling' in (eq.name|lower) or 'csi' in (eq.name|lower) %}
                     <div class="calib-panel analysis-panel csn-panel d-none" data-calib-type="csn_crucible">
                       <div class="calib-panel-title">
-                        <i class="bi bi-clipboard-check"></i> Хоосон тигелийн туршилт
+                        <i class="bi bi-clipboard-check"></i> {{ _("Empty Crucible Test") }}
                       </div>
-                      <div class="mb-2"><small class="text-muted">MNS ISO 501 — Зуухны температурын профайл шалгах</small></div>
+                      <div class="mb-2"><small class="text-muted">{{ _("MNS ISO 501 — Furnace temperature profile check") }}</small></div>
 
                       {# Тохиргоо #}
                       <div class="d-flex gap-2 mb-2 align-items-end flex-wrap csn-settings-row" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
                         <div>
-                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">Эхлэх темп. °C</div>
+                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">{{ _("Start Temp. °C") }}</div>
                           <input type="number" class="form-control form-control-sm csn-start-temp" placeholder="°C" step="1" style="width:70px;">
                         </div>
                         <div>
-                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">Max гүйдэл (сек)</div>
+                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">{{ _("Max current (sec)") }}</div>
                           <input type="number" class="form-control form-control-sm csn-max-current" placeholder="sec" step="1" style="width:70px;">
                         </div>
                       </div>
 
                       {# Туршилтын мөрүүд #}
                       <div style="font-size:0.65rem; color:#94a3b8; display:flex; gap:4px; padding:0 0 2px 22px;">
-                        <span style="flex:1; text-align:center;">1 мин</span>
+                        <span style="flex:1; text-align:center;">{{ _("1 min") }}</span>
                         <span style="flex:1; text-align:center;">1:30 <b style="color:#64748b;">(800±10)</b></span>
                         <span style="flex:1; text-align:center;">2:30 <b style="color:#64748b;">(820±5)</b></span>
                         <span style="flex:0.7; text-align:center;"></span>
@@ -722,7 +722,7 @@
                       {# Тохируулга хийсэн бол дахин туршилт нэмэх #}
                       <div class="d-flex gap-2 mt-2">
                         <button type="button" class="btn btn-outline-warning btn-sm flex-fill" onclick="addCsnRetest(this)">
-                          <i class="bi bi-arrow-repeat"></i> Тохируулга + Дахин туршилт
+                          <i class="bi bi-arrow-repeat"></i> {{ _("Adjustment + Retest") }}
                         </button>
                       </div>
 
@@ -734,14 +734,14 @@
                     {% elif 'барабан' in (eq.name|lower) or 'drum' in (eq.name|lower) or 'roga' in (eq.name|lower) %}
                     <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
                       <div class="calib-panel-title">
-                        <i class="bi bi-arrow-repeat"></i> Барабан калибровка (Gi)
+                        <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration (Gi)") }}
                       </div>
-                      <div class="mb-2"><small class="text-muted">Эхний эргэлт → 1 мин: 50, 5 мин: 250 байх ёстой</small></div>
+                      <div class="mb-2"><small class="text-muted">{{ _("Initial revolution: 1 min: 50, 5 min: 250 required") }}</small></div>
 
                       {# Эхний эргэлт #}
                       <div class="d-flex gap-2 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
                         <div class="calib-input-group">
-                          <label>Эхний эргэлт:</label>
+                          <label>{{ _("Initial RPM:") }}</label>
                           <input type="number" class="form-control form-control-sm drum-initial" placeholder="RPM" step="1" style="width:80px;">
                         </div>
                       </div>
@@ -750,21 +750,21 @@
                       <table class="table table-sm table-borderless mb-2" style="font-size:0.78rem;">
                         <thead>
                           <tr style="border-bottom:1px solid #e2e8f0;">
-                            <th style="width:80px;">Хугацаа</th>
-                            <th style="width:90px;">Зорилт</th>
-                            <th style="width:90px;">Хэмжсэн</th>
-                            <th style="width:60px;">Үр дүн</th>
+                            <th style="width:80px;">{{ _("Duration") }}</th>
+                            <th style="width:90px;">{{ _("Target") }}</th>
+                            <th style="width:90px;">{{ _("Measured") }}</th>
+                            <th style="width:60px;">{{ _("Result") }}</th>
                           </tr>
                         </thead>
                         <tbody class="drum-test-body">
                           <tr class="drum-test-row">
-                            <td><span class="fw-semibold">1 мин</span></td>
+                            <td><span class="fw-semibold">{{ _("1 min") }}</span></td>
                             <td><span class="text-muted">50</span></td>
                             <td><input type="number" class="form-control form-control-sm drum-meas-1min" placeholder="RPM" step="1" style="width:80px;" oninput="checkDrumRow(this)"></td>
                             <td><span class="drum-status-1min"></span></td>
                           </tr>
                           <tr class="drum-test-row">
-                            <td><span class="fw-semibold">5 мин</span></td>
+                            <td><span class="fw-semibold">{{ _("5 min") }}</span></td>
                             <td><span class="text-muted">250</span></td>
                             <td><input type="number" class="form-control form-control-sm drum-meas-5min" placeholder="RPM" step="1" style="width:80px;" oninput="checkDrumRow(this)"></td>
                             <td><span class="drum-status-5min"></span></td>
@@ -779,22 +779,22 @@
                     {% else %}
                     <div class="calib-panel analysis-panel d-none" data-calib-type="general">
                       <div class="calib-panel-title">
-                        <i class="bi bi-gear"></i> Instrument Calibration
+                        <i class="bi bi-gear"></i> {{ _("Instrument Calibration") }}
                       </div>
                       <div class="calib-input-group">
-                        <label>Standard:</label>
-                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="Standard Name">
+                        <label>{{ _("Standard:") }}</label>
+                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard Name") }}">
                       </div>
                       <div class="calib-input-group">
-                        <label>Certified:</label>
-                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="Value" step="0.001">
+                        <label>{{ _("Certified:") }}</label>
+                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="{{ _("Value") }}" step="0.001">
                       </div>
                       <div class="calib-input-group">
-                        <label>Measured:</label>
-                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="Value" step="0.001" oninput="checkAnalysisDiff(this)">
+                        <label>{{ _("Measured:") }}</label>
+                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001" oninput="checkAnalysisDiff(this)">
                       </div>
                       <div class="calib-input-group">
-                        <label>Diff (%):</label>
+                        <label>{{ _("Diff (%%):") }}</label>
                         <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
                         <span class="calib-status d-none"></span>
                       </div>
@@ -803,12 +803,12 @@
                   {% endif %}
                   {# Repair Panel #}
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
+                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
                     </button>
                   </div>
                 </td>
@@ -819,17 +819,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>No equipment associated with this analysis.
+          <i class="bi bi-info-circle me-2"></i>{{ _("No equipment associated with this analysis.") }}
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Close
+          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
         </button>
         {% if related_equipments %}
         <button type="button" class="btn btn-success px-4" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Save
+          <i class="bi bi-save me-1"></i>{{ _("Save") }}
         </button>
         {% endif %}
       </div>
@@ -939,43 +939,43 @@
 
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      alert('Жингийн модуль ачаалагдаагүй байна.');
+      alert('{{ _("Balance module not loaded.") }}');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      alert('Web Serial API дэмжигдэхгүй байна. Chrome 89+ хөтөч ашиглана уу.');
+      alert('{{ _("Web Serial API is not supported. Please use Chrome 89+.") }}');
       return;
     }
 
     if (window.labBalance.isConnected) {
       await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect Balance") }}';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Not Connected', 'secondary');
+      updateBalanceStatus('{{ _("Not Connected") }}', 'secondary');
       return;
     }
 
-    updateBalanceStatus('Connecting...', 'warning');
+    updateBalanceStatus('{{ _("Connecting...") }}', 'warning');
     const connected = await window.labBalance.connect();
 
     if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Connected';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> {{ _("Connected") }}';
       $btnConnect.classList.remove('btn-outline-primary');
       $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('Connected', 'success');
+      updateBalanceStatus('{{ _("Connected") }}', 'success');
     } else {
-      updateBalanceStatus('Error', 'danger');
+      updateBalanceStatus('{{ _("Error") }}', 'danger');
     }
   });
 
   if (window.labBalance) {
     window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect Balance';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect Balance") }}';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Disconnected', 'secondary');
+      updateBalanceStatus('{{ _("Disconnected") }}', 'secondary');
     };
   }
 
@@ -1005,7 +1005,7 @@
       e.preventDefault();
       e.stopPropagation();
 
-      updateBalanceStatus('Fetching weight...', 'warning');
+      updateBalanceStatus('{{ _("Fetching weight...") }}', 'warning');
       const weight = await window.labBalance.getStableWeight();
 
       if (weight !== null) {
@@ -1026,7 +1026,7 @@
           }
         }
       } else {
-        updateBalanceStatus('Failed to get weight', 'danger');
+        updateBalanceStatus('{{ _("Failed to get weight") }}', 'danger');
       }
       break;
     }
@@ -1062,10 +1062,10 @@ function addSparePart(btn) {
   row.className = 'input-group input-group-sm mb-1 spare-row';
   row.innerHTML = `
     <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">Select spare part...</option>
+      <option value="">{{ _("Select spare part...") }}</option>
     </select>
-    <input type="number" class="form-control spare-qty" placeholder="Qty" min="1" value="1" style="flex:1; max-width:60px">
-    <input type="text" class="form-control spare-user" placeholder="Who" style="flex:2">
+    <input type="number" class="form-control spare-qty" placeholder="{{ _("Qty") }}" min="1" value="1" style="flex:1; max-width:60px">
+    <input type="text" class="form-control spare-user" placeholder="{{ _("Who") }}" style="flex:2">
     <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.spare-row').remove()">
       <i class="bi bi-x"></i>
     </button>
@@ -1100,7 +1100,7 @@ function toggleCalibPanel(btn) {
         const sel = document.createElement('select');
         sel.className = 'form-select form-select-sm calib-freq';
         sel.style.cssText = 'width:auto; margin-left:auto; font-size:0.68rem; padding:1px 24px 1px 6px; height:22px; border-radius:6px; -webkit-appearance:none; -moz-appearance:none; appearance:none; background-size:10px;';
-        sel.innerHTML = '<option value="daily">Өдөр тутам</option><option value="monthly">Сар болгон</option><option value="adjustment">Тохируулга</option>';
+        sel.innerHTML = '<option value="daily">{{ _("Daily") }}</option><option value="monthly">{{ _("Monthly") }}</option><option value="adjustment">{{ _("Adjustment") }}</option>';
         title.appendChild(sel);
       }
     }
@@ -1164,8 +1164,8 @@ function addWeightRow(btn) {
   const row = document.createElement('div');
   row.className = 'calib-weight-row';
   row.innerHTML = `
-    <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="Std (g)" step="0.0001" style="flex:1">
-    <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="Measured" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
+    <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="{{ _("Std (g)") }}" step="0.0001" style="flex:1">
+    <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
     <span class="calib-status d-none" style="min-width:50px;"></span>
     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.calib-weight-row').remove()" style="padding:2px 6px;">
       <i class="bi bi-x"></i>
@@ -1260,12 +1260,12 @@ function updateCsnFinalStatus(panel) {
     finalDiv.classList.remove('d-none');
     finalDiv.style.background = '#dcfce7';
     finalDiv.style.color = '#15803d';
-    finalDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Калибровка дууссан — шинжилгээ эхлэх боломжтой';
+    finalDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>{{ _("Calibration complete — ready for analysis") }}';
   } else if (hasFail) {
     finalDiv.classList.remove('d-none');
     finalDiv.style.background = '#fef3c7';
     finalDiv.style.color = '#b45309';
-    finalDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Тохируулга хийж дахин туршилт хийнэ үү';
+    finalDiv.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>{{ _("Please adjust and retest") }}';
   } else {
     finalDiv.classList.add('d-none');
   }
@@ -1283,13 +1283,13 @@ function addCsnRetest(btn) {
   adjDiv.style.cssText = 'display:flex; gap:4px; align-items:center; padding:4px 8px; background:#fefce8; border-radius:6px; border:1px dashed #fde047;';
   adjDiv.innerHTML = `
     <span style="font-size:0.65rem; color:#a16207; min-width:18px;"><i class="bi bi-wrench"></i></span>
-    <div style="font-size:0.65rem; color:#a16207; font-weight:600; min-width:55px;">Тохируулга:</div>
+    <div style="font-size:0.65rem; color:#a16207; font-weight:600; min-width:55px;">{{ _("Adjustment:") }}</div>
     <div style="display:flex; gap:3px; align-items:center; flex:1;">
-      <span style="font-size:0.6rem; color:#92400e;">Темп:</span>
+      <span style="font-size:0.6rem; color:#92400e;">{{ _("Temp:") }}</span>
       <input type="number" class="form-control form-control-sm csn-adj-temp" placeholder="°C" step="1" style="width:60px; font-size:0.75rem;">
     </div>
     <div style="display:flex; gap:3px; align-items:center; flex:1;">
-      <span style="font-size:0.6rem; color:#92400e;">Гүйдэл:</span>
+      <span style="font-size:0.6rem; color:#92400e;">{{ _("Current:") }}</span>
       <input type="number" class="form-control form-control-sm csn-adj-current" placeholder="sec" step="1" style="width:60px; font-size:0.75rem;">
     </div>
   `;
@@ -1340,9 +1340,9 @@ function checkDrumRow(input) {
   if (meas1 > 0 && meas5 > 0) {
     const allOk = (meas1 === 50 && meas5 === 250);
     if (allOk) {
-      finalEl.innerHTML = '<span style="color:#15803d; background:#dcfce7; padding:4px 12px; border-radius:8px;"><i class="bi bi-check-circle-fill me-1"></i>Калибровка дууссан</span>';
+      finalEl.innerHTML = '<span style="color:#15803d; background:#dcfce7; padding:4px 12px; border-radius:8px;"><i class="bi bi-check-circle-fill me-1"></i>{{ _("Calibration complete") }}</span>';
     } else {
-      finalEl.innerHTML = '<span style="color:#b45309; background:#fef3c7; padding:4px 12px; border-radius:8px;"><i class="bi bi-exclamation-triangle-fill me-1"></i>Тохируулга хийнэ үү</span>';
+      finalEl.innerHTML = '<span style="color:#b45309; background:#fef3c7; padding:4px 12px; border-radius:8px;"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ _("Please adjust") }}</span>';
     }
   } else { finalEl.innerHTML = ''; }
 }
@@ -1520,9 +1520,9 @@ function updateSulfurFinalStatus(panel) {
 
   if (hasData) {
     if (allPass) {
-      finalEl.innerHTML = '<span style="color:#15803d; background:#dcfce7; padding:4px 12px; border-radius:8px;"><i class="bi bi-check-circle-fill me-1"></i>Калибровка баталгаажсан</span>';
+      finalEl.innerHTML = '<span style="color:#15803d; background:#dcfce7; padding:4px 12px; border-radius:8px;"><i class="bi bi-check-circle-fill me-1"></i>{{ _("Calibration verified") }}</span>';
     } else {
-      finalEl.innerHTML = '<span style="color:#dc2626; background:#fee2e2; padding:4px 12px; border-radius:8px;"><i class="bi bi-x-circle-fill me-1"></i>Шалгалт давсангүй — дахин калибровка</span>';
+      finalEl.innerHTML = '<span style="color:#dc2626; background:#fee2e2; padding:4px 12px; border-radius:8px;"><i class="bi bi-x-circle-fill me-1"></i>{{ _("Verification failed — recalibrate") }}</span>';
     }
   } else {
     finalEl.innerHTML = '';
@@ -1819,7 +1819,7 @@ function submitEquipmentUsage() {
   });
 
   if (items.length === 0) {
-    alert('Бүртгэх өгөгдөл байхгүй.');
+    alert('{{ _("No data to save.") }}');
     return;
   }
 
@@ -1851,14 +1851,14 @@ function submitEquipmentUsage() {
       const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
       if (modal) modal.hide();
 
-      alert('Багаж ашиглалт амжилттай хадгалагдлаа!');
+      alert('{{ _("Equipment usage saved successfully!") }}');
     } else {
-      alert('Алдаа: ' + (data.message || 'Тодорхойгүй алдаа'));
+      alert('{{ _("Error:") }} ' + (data.message || '{{ _("Unknown error") }}'));
     }
   })
   .catch(err => {
     console.error('Equipment usage error:', err);
-    alert('Серверийн алдаа!');
+    alert('{{ _("Server error!") }}');
   });
 }
 </script>

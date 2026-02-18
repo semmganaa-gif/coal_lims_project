@@ -112,28 +112,28 @@
 <body>
   <!-- Header -->
   <div class="header">
-    <div class="header-title">НҮҮРСНИЙ ШИНЖИЛГЭЭНИЙ ЛАБОРАТОРИ</div>
+    <div class="header-title">{{ _("Coal Analysis Laboratory") }}</div>
     <div class="header-address">
-      Өмнөговь аймаг, Цогтцэций сум, "Ухаа Худаг" нүүрсний уурхай<br>
-      И-мэйл хаяг: laboratory@mmc.mn
+      {{ _("Umnugovi province, Tsogttsetsii soum, Ukhaa Khudeg coal mine") }}<br>
+      {{ _("Email") }}: laboratory@mmc.mn
     </div>
   </div>
 
   <!-- Report Title -->
-  <div class="report-title">СОРИЛТЫН ТАЙЛАН</div>
-  <div class="report-number">№: {{ report.report_number }}</div>
+  <div class="report-title">{{ _("Test Report") }}</div>
+  <div class="report-number">{{ _("No") }}: {{ report.report_number }}</div>
 
   <!-- Meta info -->
-  <div class="meta-row">Хэвлэсэн огноо: {{ now.strftime('%Y.%m.%d') }}</div>
-  <div class="meta-row">Хуудасны дугаар: 1/1</div>
+  <div class="meta-row">{{ _("Print date") }}: {{ now.strftime('%Y.%m.%d') }}</div>
+  <div class="meta-row">{{ _("Page number") }}: 1/1</div>
 
   <!-- Info table -->
   <table class="info-table">
     <tr>
-      <th>Laboratory No.</th>
-      <th>Техникийн шаардлага</th>
-      <th>Сорьцын тодорхойлолт</th>
-      <th>Сорьц авсан аргачлал</th>
+      <th>{{ _("Laboratory No.") }}</th>
+      <th>{{ _("Technical Standard") }}</th>
+      <th>{{ _("Sample Description") }}</th>
+      <th>{{ _("Sampling Method") }}</th>
     </tr>
     <tr>
       <td>
@@ -142,7 +142,7 @@
         {% endif %}
       </td>
       <td>ISO 17025</td>
-      <td>Нүүрсний дээж</td>
+      <td>{{ _("Coal sample") }}</td>
       <td>ISO 18283</td>
     </tr>
   </table>
@@ -150,20 +150,20 @@
   <!-- Sample info -->
   <table class="sample-info-table">
     <tr>
-      <td><strong>Number of Samples</strong><br>{{ samples|length }} ш</td>
-      <td><strong>Sample авсан огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
-      <td><strong>Шинжилсэн огноо</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
+      <td><strong>{{ _("Number of Samples") }}</strong><br>{{ samples|length }} {{ _("pcs") }}</td>
+      <td><strong>{{ _("Sampling date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+      <td><strong>{{ _("Analysis date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
     </tr>
   </table>
 
   <!-- Results -->
-  <div class="results-label">Analysis Results:</div>
+  <div class="results-label">{{ _("Analysis Results") }}:</div>
   <table class="results-table">
     <thead>
       <tr>
-        <th>№</th>
-        <th>Sample No.</th>
-        <th>Sample Name</th>
+        <th>{{ _("No") }}</th>
+        <th>{{ _("Sample No.") }}</th>
+        <th>{{ _("Sample Name") }}</th>
         <th>Mad,%</th>
         <th>Adb,%</th>
         <th>Vdb,%</th>
@@ -189,14 +189,14 @@
     </tbody>
   </table>
 
-  <div class="footer-note">Энэхүү сорилтын дүн нь тухайн сорьцын хувьд хүчинтэй.</div>
+  <div class="footer-note">{{ _("This test result is valid only for the tested sample.") }}</div>
 
   <!-- Signatures -->
   <div class="signature-section">
     <table style="width: 100%;">
       <tr>
         <td style="width: 60%;">
-          <strong>Analysis гүйцэтгэсэн:</strong> Analyst
+          <strong>{{ _("Analyzed by") }}:</strong> {{ _("Analyst") }}
         </td>
         <td style="width: 40%; text-align: right;">
           {% if report.analyst_signature and report.analyst_signature.image_path %}
@@ -207,7 +207,7 @@
       </tr>
       <tr>
         <td>
-          <strong>Хянаж баталгаажуулсан:</strong> Senior менежер
+          <strong>{{ _("Approved by") }}:</strong> {{ _("Senior Manager") }}
         </td>
         <td style="text-align: right;">
           {% if report.manager_signature and report.manager_signature.image_path %}
@@ -228,7 +228,7 @@
   {% endif %}
 
   <div class="watermark">
-    Сорилтын лабораторийн зөвшөөрөлгүй хуулбарлахыг хориглоно.
+    {{ _("Unauthorized copying of this test report is prohibited.") }}
   </div>
 </body>
 </html>

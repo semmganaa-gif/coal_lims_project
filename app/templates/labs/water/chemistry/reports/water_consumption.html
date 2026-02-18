@@ -71,7 +71,7 @@
   <div class="cons-header">
     <div>
       <h4><i class="bi bi-journal-bookmark me-2"></i>{{ title }}</h4>
-      <p class="subtitle">Client, категори, сараар нэгтгэсэн</p>
+      <p class="subtitle">{{ _("Aggregated by client, category, month") }}</p>
     </div>
     <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
       <form method="get" style="display:flex;gap:0.5rem;align-items:center">
@@ -85,7 +85,7 @@
         <i class="bi bi-file-earmark-spreadsheet"></i> CSV
       </button>
       <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px">
-        <i class="bi bi-arrow-left"></i> Буцах
+        <i class="bi bi-arrow-left"></i> {{ _("Back") }}
       </a>
     </div>
   </div>
@@ -94,11 +94,11 @@
   <div class="kpi-row">
     <div class="kpi-mini">
       <div class="val">{{ data|length }}</div>
-      <div class="lbl">Total захиалагч</div>
+      <div class="lbl">{{ _("Total Clients") }}</div>
     </div>
     <div class="kpi-mini">
       <div class="val">{{ grand_samples.values()|sum }}</div>
-      <div class="lbl">Total дээж (жил)</div>
+      <div class="lbl">{{ _("Total Samples (Year)") }}</div>
     </div>
   </div>
 
@@ -107,7 +107,7 @@
   <div class="unit-section">
     <div class="unit-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
       <h5><i class="bi bi-building me-2"></i>{{ unit }}</h5>
-      <span class="badge">{{ subs|length }} категори</span>
+      <span class="badge">{{ subs|length }} {{ _("categories") }}</span>
     </div>
     <div class="unit-body">
       {% for s in subs %}
@@ -118,12 +118,12 @@
             {% for m in ["1-р","2-р","3-р","4-р","5-р","6-р","7-р","8-р","9-р","10-р","11-р","12-р"] %}
             <th>{{ m }}</th>
             {% endfor %}
-            <th class="sum">Total</th>
+            <th class="sum">{{ _("Total") }}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="cap">Sample</td>
+            <td class="cap">{{ _("Sample") }}</td>
             {% for m in range(1,13) %}
             <td class="cell-click" data-kind="samples" data-unit="{{ unit }}" data-stype="{{ s.stype }}" data-month="{{ m }}">
               {{ s.sample_cnt[m] }}
@@ -154,16 +154,16 @@
     <table class="reg-table">
       <thead>
         <tr>
-          <th class="left">Grand Total</th>
+          <th class="left">{{ _("Grand Total") }}</th>
           {% for m in ["1-р","2-р","3-р","4-р","5-р","6-р","7-р","8-р","9-р","10-р","11-р","12-р"] %}
           <th>{{ m }}</th>
           {% endfor %}
-          <th class="sum">Total</th>
+          <th class="sum">{{ _("Total") }}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="cap">Sample</td>
+          <td class="cap">{{ _("Sample") }}</td>
           {% for m in range(1,13) %}
           <td>{{ grand_samples[m] }}</td>
           {% endfor %}
@@ -188,7 +188,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content" style="border-radius:16px;overflow:hidden">
       <div class="modal-header" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-bottom:2px solid #bfdbfe">
-        <h5 class="modal-title" style="color:#1e40af;font-weight:700"><i class="bi bi-list-ul me-2"></i>Дэлгэрэнгүй</h5>
+        <h5 class="modal-title" style="color:#1e40af;font-weight:700"><i class="bi bi-list-ul me-2"></i>{{ _("Details") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -196,14 +196,14 @@
         <div class="table-responsive">
           <table class="table table-sm table-bordered" style="font-size:0.85rem">
             <thead class="table-light">
-              <tr><th>ID</th><th>Код</th><th>Sample</th><th>Date</th></tr>
+              <tr><th>ID</th><th>{{ _("Code") }}</th><th>{{ _("Sample") }}</th><th>{{ _("Date") }}</th></tr>
             </thead>
             <tbody id="cellRows"></tbody>
           </table>
         </div>
       </div>
       <div class="modal-footer" style="background:#f8fafc">
-        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _("Close") }}</button>
       </div>
     </div>
   </div>
@@ -239,7 +239,7 @@
 
   async function openDetails(params) {
     const qs = new URLSearchParams(params).toString();
-    body.innerHTML = '<tr><td colspan="4" class="text-center py-3">Түр хүлээнэ үү...</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="text-center py-3">{{ _("Please wait...") }}</td></tr>';
     info.textContent = `${params.unit} / ${params.stype} / ${params.month}-р сар`;
     modal.show();
 
@@ -247,7 +247,7 @@
       const r = await fetch(`{{ url_for('water.api_consumption_cell') }}?${qs}`);
       const j = await r.json();
       if (!j.ok || j.items.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Хоосон</td></tr>';
+        body.innerHTML = '<tr><td colspan="4" class="text-center text-muted">{{ _("Empty") }}</td></tr>';
         return;
       }
       body.innerHTML = j.items.map(it => `<tr>

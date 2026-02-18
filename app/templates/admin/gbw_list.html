@@ -4,13 +4,13 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h3><i class="bi bi-award text-success"></i> GBW Standard (CRM)</h3>
-            <p class="text-muted small mb-0">Manage Certified Reference Material (CRM) values</p>
+            <h3><i class="bi bi-award text-success"></i> {{ _("GBW Standard (CRM)") }}</h3>
+            <p class="text-muted small mb-0">{{ _("Manage Certified Reference Material (CRM) values") }}</p>
         </div>
         {% if current_user.role in ['senior', 'admin'] %}
         <button class="btn btn-success" id="openGbwAddBtn"
                 data-create-url="{{ url_for('admin.create_gbw') }}">
-            <i class="bi bi-plus-lg"></i> Register New GBW
+            <i class="bi bi-plus-lg"></i> {{ _("Register New GBW") }}
         </button>
         {% endif %}
     </div>
@@ -21,11 +21,11 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3" style="min-width: 220px;">GBW Number (Batch No)</th>
-                            <th style="min-width: 120px;">Registration Date</th>
-                            <th style="min-width: 80px;">Status</th>
-                            <th style="min-width: 100px;">Parameters</th>
-                            <th class="text-end pe-3" style="min-width: 160px;">Actions</th>
+                            <th class="ps-3" style="min-width: 220px;">{{ _("GBW Number (Batch No)") }}</th>
+                            <th style="min-width: 120px;">{{ _("Registration Date") }}</th>
+                            <th style="min-width: 80px;">{{ _("Status") }}</th>
+                            <th style="min-width: 100px;">{{ _("Parameters") }}</th>
+                            <th class="text-end pe-3" style="min-width: 160px;">{{ _("Actions") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,63 +34,63 @@
                             <td class="ps-3" style="white-space: nowrap;">
                                 <strong>{{ gbw.name }}</strong>
                                 {% if gbw.is_active %}
-                                    <i class="bi bi-check-circle-fill text-success ms-1" title="In Use"></i>
+                                    <i class="bi bi-check-circle-fill text-success ms-1" title="{{ _('In Use') }}"></i>
                                 {% endif %}
                             </td>
                             <td style="white-space: nowrap;">{{ gbw.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 {% if gbw.is_active %}
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success">{{ _("Active") }}</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-secondary">{{ _("Inactive") }}</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ gbw.targets | length }} parameters</small>
+                                <small class="text-muted">{{ gbw.targets | length }} {{ _("parameters") }}</small>
                             </td>
                             <td class="text-end pe-3">
                                 <div class="btn-group">
-                                    {# --- ИДЭВХЖҮҮЛЭХ / ИДЭВХГҮЙ БОЛГОХ (Senior/Admin) --- #}
+                                    {# --- ACTIVATE / DEACTIVATE (Senior/Admin) --- #}
                                     {% if current_user.role in ['senior', 'admin'] %}
                                         {% if gbw.is_active %}
                                         <button class="btn btn-sm btn-outline-secondary deactivate-btn"
                                                 data-url="{{ url_for('admin.deactivate_gbw', id=gbw.id) }}"
-                                                title="Deactivate">
+                                                title="{{ _('Deactivate') }}">
                                             <i class="bi bi-stop-fill"></i>
                                         </button>
                                         {% else %}
                                         <button class="btn btn-sm btn-outline-success activate-btn"
                                                 data-url="{{ url_for('admin.activate_gbw', id=gbw.id) }}"
-                                                title="Activate">
+                                                title="{{ _('Activate') }}">
                                             <i class="bi bi-play-fill"></i>
                                         </button>
                                         {% endif %}
                                     {% endif %}
 
-                                    {# --- ХАРАХ (Allэд) --- #}
+                                    {# --- VIEW (All) --- #}
                                     <button class="btn btn-sm btn-outline-info view-btn"
                                             data-name="{{ gbw.name }}"
-                                            data-targets='{{ gbw.targets | tojson }}' title="View">
+                                            data-targets='{{ gbw.targets | tojson }}' title="{{ _('View') }}">
                                         <i class="bi bi-eye"></i>
                                     </button>
 
-                                    {# --- ЗАСАХ (Senior/Admin) --- #}
+                                    {# --- EDIT (Senior/Admin) --- #}
                                     {% if current_user.role in ['senior', 'admin'] %}
                                     <button class="btn btn-sm btn-outline-warning edit-btn"
                                             data-id="{{ gbw.id }}"
                                             data-name="{{ gbw.name }}"
                                             data-targets='{{ gbw.targets | tojson }}'
                                             data-update-url="{{ url_for('admin.update_gbw', id=gbw.id) }}"
-                                            title="Edit">
+                                            title="{{ _('Edit') }}">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     {% endif %}
 
-                                    {# --- УСТГАХ (Senior/Admin, Зөвхөн идэвхгүй үед) --- #}
+                                    {# --- DELETE (Senior/Admin, only when inactive) --- #}
                                     {% if current_user.role in ['senior', 'admin'] and not gbw.is_active %}
                                     <button class="btn btn-sm btn-outline-danger delete-btn"
                                             data-url="{{ url_for('admin.delete_gbw', id=gbw.id) }}"
-                                            title="Delete">
+                                            title="{{ _('Delete') }}">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     {% endif %}
@@ -99,7 +99,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No registered GBW standards found.</td>
+                            <td colspan="5" class="text-center py-4 text-muted">{{ _("No registered GBW standards found.") }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -113,53 +113,53 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-light">
-                <h5 class="modal-title" id="gbwModalTitle">Register GBW Standard</h5>
+                <h5 class="modal-title" id="gbwModalTitle">{{ _("Register GBW Standard") }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="gbwFormSubmitUrl">
 
                 <div class="alert alert-warning py-2 small">
-                    <i class="bi bi-exclamation-triangle"></i> 
-                    <strong>Note:</strong> Please enter the <b>Dry Basis</b> values from the GBW standard certificate.
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>{{ _("Note") }}:</strong> {{ _("Please enter the Dry Basis values from the GBW standard certificate.") }}
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">GBW Number (Batch No)</label>
-                    <input type="text" id="gbwName" class="form-control" placeholder="Example: GBW 11123k">
+                    <label class="form-label fw-bold">{{ _("GBW Number (Batch No)") }}</label>
+                    <input type="text" id="gbwName" class="form-control" placeholder="{{ _('Example: GBW 11123k') }}">
                 </div>
 
-                <h6 class="border-bottom pb-2 mb-3">Certificate Values</h6>
+                <h6 class="border-bottom pb-2 mb-3">{{ _("Certificate Values") }}</h6>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle" id="gbwParamsTable">
                         <thead class="table-light text-center">
                             <tr>
-                                <th style="width: 35%; min-width: 140px;">Analysis</th>
-                                <th style="width: 32%">Cert. Value</th>
-                                <th style="width: 33%">Unc (±)</th>
+                                <th style="width: 35%; min-width: 140px;">{{ _("Analysis") }}</th>
+                                <th style="width: 32%">{{ _("Cert. Value") }}</th>
+                                <th style="width: 33%">{{ _("Unc (±)") }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% set params = [
-                                ('Mad', 'Moisture'),
-                                ('Adb,%', 'Ash (db)'),
-                                ('Vdb,%', 'Volatile (db)'),
-                                ('Stdb,%', 'Sulfur (db)'),
-                                ('CVdb,MJ/kg', 'Calorific Value (db, MJ)'),
-                                ('TRDdb,g/cm3', 'Density (db)'),
-                                ('CSN', 'CSN'),
-                                ('Gi', 'Gray-King'),
-                                ('Pdb,%', 'Phosphorus (db)'),
-                                ('Fdb,mg/g', 'Fluorine (db)'),
-                                ('Cldb,%', 'Chlorine (db)')
+                                ('Mad', _('Moisture')),
+                                ('Adb,%', _('Ash (db)')),
+                                ('Vdb,%', _('Volatile (db)')),
+                                ('Stdb,%', _('Sulfur (db)')),
+                                ('CVdb,MJ/kg', _('Calorific Value (db, MJ)')),
+                                ('TRDdb,g/cm3', _('Density (db)')),
+                                ('CSN', _('CSN')),
+                                ('Gi', _('Gray-King')),
+                                ('Pdb,%', _('Phosphorus (db)')),
+                                ('Fdb,mg/g', _('Fluorine (db)')),
+                                ('Cldb,%', _('Chlorine (db)'))
                             ] %}
                             {% for code, label in params %}
                             <tr data-code="{{ code }}">
                                 <td class="fw-bold bg-light text-center">
                                     {{ code }}<div class="small text-muted fw-normal" style="font-size: 0.7rem;">{{ label }}</div>
                                 </td>
-                                <td><input type="number" step="any" class="form-control form-control-sm val-input text-center" placeholder="Value"></td>
-                                <td><input type="number" step="any" class="form-control form-control-sm unc-input text-center" placeholder="Unc (±)"></td>
+                                <td><input type="number" step="any" class="form-control form-control-sm val-input text-center" placeholder="{{ _('Value') }}"></td>
+                                <td><input type="number" step="any" class="form-control form-control-sm unc-input text-center" placeholder="{{ _('Unc (±)') }}"></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -167,8 +167,8 @@
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveGbwBtn"><i class="bi bi-save"></i> Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+                <button type="button" class="btn btn-primary" id="saveGbwBtn"><i class="bi bi-save"></i> {{ _("Save") }}</button>
             </div>
         </div>
     </div>
@@ -178,12 +178,12 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="viewGbwTitle">Details</h5>
+                <h5 class="modal-title" id="viewGbwTitle">{{ _("Details") }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <table class="table table-striped table-sm" id="viewGbwTable">
-                    <thead><tr><th style="min-width: 130px;">Analysis</th><th>Cert. Value</th><th>Unc (±)</th></tr></thead>
+                    <thead><tr><th style="min-width: 130px;">{{ _("Analysis") }}</th><th>{{ _("Cert. Value") }}</th><th>{{ _("Unc (±)") }}</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -195,29 +195,29 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
+
     const gbwModalEl = document.getElementById('gbwModal');
     const viewGbwModalEl = document.getElementById('viewGbwModal');
-    
+
     if (!window.bootstrap) return;
     const gbwModal = new bootstrap.Modal(gbwModalEl);
     const viewGbwModal = new bootstrap.Modal(viewGbwModalEl);
 
-    // --- 1. ШИНЭЭР НЭМЭХ ---
+    // --- 1. CREATE NEW ---
     const openAddBtn = document.getElementById('openGbwAddBtn');
     if (openAddBtn) {
         openAddBtn.addEventListener('click', function() {
             const createUrl = this.getAttribute('data-create-url');
             document.getElementById('gbwFormSubmitUrl').value = createUrl;
             document.getElementById('gbwName').value = '';
-            document.getElementById('gbwModalTitle').textContent = 'Register New GBW';
-            
+            document.getElementById('gbwModalTitle').textContent = '{{ _("Register New GBW") }}';
+
             document.querySelectorAll('#gbwParamsTable input').forEach(inp => inp.value = '');
             gbwModal.show();
         });
     }
 
-    // --- 2. ЗАСАХ (EDIT) ---
+    // --- 2. EDIT ---
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const name = this.getAttribute('data-name');
@@ -226,14 +226,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             document.getElementById('gbwFormSubmitUrl').value = updateUrl;
             document.getElementById('gbwName').value = name;
-            document.getElementById('gbwModalTitle').textContent = 'Edit GBW Information';
-            
+            document.getElementById('gbwModalTitle').textContent = '{{ _("Edit GBW Information") }}';
+
             document.querySelectorAll('#gbwParamsTable input').forEach(inp => inp.value = '');
 
             for (const [code, val] of Object.entries(targets)) {
                 const row = document.querySelector(`#gbwParamsTable tr[data-code="${code}"]`);
                 if (row) {
-                    row.querySelector('.val-input').value = val.mean; 
+                    row.querySelector('.val-input').value = val.mean;
                     row.querySelector('.unc-input').value = val.sd;
                 }
             }
@@ -241,18 +241,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- 3. ХАДГАЛАХ (SAVE) ---
+    // --- 3. SAVE ---
     const saveBtn = document.getElementById('saveGbwBtn');
     if (saveBtn) {
         saveBtn.addEventListener('click', function() {
             const url = document.getElementById('gbwFormSubmitUrl').value;
             const name = document.getElementById('gbwName').value.trim();
-            
-            if(!name) { alert("GBW дугаар оруулна уу!"); return; }
+
+            if(!name) { alert("{{ _('Please enter a GBW number.') }}"); return; }
 
             let targets = {};
             let count = 0;
-            
+
             document.querySelectorAll('#gbwParamsTable tbody tr').forEach(row => {
                 const code = row.getAttribute('data-code');
                 const valInput = row.querySelector('.val-input').value;
@@ -264,13 +264,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (count === 0) { alert("Дор хаяж нэг параметр оруулна уу."); return; }
+            if (count === 0) { alert("{{ _('Please enter at least one parameter.') }}"); return; }
 
             const meta = document.querySelector('meta[name="csrf-token"]');
             const token = meta ? meta.getAttribute('content') : '';
 
             saveBtn.disabled = true;
-            saveBtn.innerHTML = 'Saving...';
+            saveBtn.innerHTML = '{{ _("Saving...") }}';
 
             fetch(url, {
                 method: 'POST',
@@ -281,19 +281,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!res.ok) return res.json().then(e => { throw new Error(e.message || 'Server Error'); });
                 return res.json();
             })
-            .then(() => { 
-                alert("Амжилттай!");
+            .then(() => {
+                alert("{{ _('Successfully saved!') }}");
                 location.reload();
             })
             .catch(err => {
-                alert("Алдаа: " + err.message);
+                alert("{{ _('Error') }}: " + err.message);
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
+                saveBtn.innerHTML = '<i class="bi bi-save"></i> {{ _("Save") }}';
             });
         });
     }
 
-    // --- 4. ҮЙЛДЛИЙН ТОВЧЛУУРУУД (Action Handlers) ---
+    // --- 4. ACTION BUTTONS ---
     const handleAction = (btnClass, promptMsg) => {
         document.querySelectorAll(btnClass).forEach(btn => {
             btn.addEventListener('click', function() {
@@ -305,20 +305,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(url, { method: 'POST', headers: { 'X-CSRFToken': token } })
                 .then(res => {
                     if(res.ok) location.reload();
-                    else alert("Алдаа гарлаа.");
+                    else alert("{{ _('An error occurred.') }}");
                 });
             });
         });
     };
 
-    handleAction('.delete-btn', "Устгахдаа итгэлтэй байна уу?");
-    handleAction('.activate-btn', "Activate this GBW?");
-    
-    // ✅ Inactive болгох товчны үйлдэл
-    handleAction('.deactivate-btn', "Deactivate this GBW standard?");
+    handleAction('.delete-btn', "{{ _('Are you sure you want to delete?') }}");
+    handleAction('.activate-btn', "{{ _('Activate this GBW?') }}");
+    handleAction('.deactivate-btn', "{{ _('Deactivate this GBW standard?') }}");
 
-    // --- 6. ХАРАХ (VIEW) ---
-    // Constant дараалал (GBW: CV нь MJ нэгжтэй)
+    // --- 6. VIEW ---
     const GBW_PARAM_ORDER = ['Mad', 'Adb,%', 'Vdb,%', 'Stdb,%', 'CVdb,MJ/kg', 'TRDdb,g/cm3', 'CSN', 'Gi', 'Pdb,%', 'Fdb,mg/g', 'Cldb,%'];
 
     document.querySelectorAll('.view-btn').forEach(btn => {
@@ -328,7 +325,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = document.querySelector('#viewGbwTable tbody');
             tbody.innerHTML = '';
 
-            // Дарааллаар эрэмбэлэх
             const sortedKeys = Object.keys(data).sort((a, b) => {
                 const idxA = GBW_PARAM_ORDER.indexOf(a);
                 const idxB = GBW_PARAM_ORDER.indexOf(b);

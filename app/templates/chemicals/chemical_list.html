@@ -11,30 +11,30 @@
           <i class="bi bi-droplet-fill"></i>
         </div>
         <div>
-          <h4 class="chem-hero-title">Химийн бодис</h4>
-          <p class="chem-hero-sub">Record, нөөц, хэрэглээний хяналт</p>
+          <h4 class="chem-hero-title">{{ _("Chemicals") }}</h4>
+          <p class="chem-hero-sub">{{ _("Inventory, stock and usage control") }}</p>
         </div>
       </div>
       <div class="chem-hero-right">
         <span class="chem-stat">
           <span class="chem-stat-num">{{ stats.total }}</span>
-          <span class="chem-stat-label">Total</span>
+          <span class="chem-stat-label">{{ _("Total") }}</span>
         </span>
         {% if stats.low_stock > 0 %}
         <span class="chem-stat chem-stat-warning">
           <span class="chem-stat-num">{{ stats.low_stock }}</span>
-          <span class="chem-stat-label">Бага нөөц</span>
+          <span class="chem-stat-label">{{ _("Low Stock") }}</span>
         </span>
         {% endif %}
         {% if stats.expired > 0 %}
         <span class="chem-stat chem-stat-danger">
           <span class="chem-stat-num">{{ stats.expired }}</span>
-          <span class="chem-stat-label">Хугацаа дууссан</span>
+          <span class="chem-stat-label">{{ _("Expired") }}</span>
         </span>
         {% endif %}
         {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] %}
         <a href="{{ url_for('chemicals.add_chemical', lab=lab) }}" class="btn chem-btn-add">
-          <i class="bi bi-plus-lg"></i> New бүртгэл
+          <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
         </a>
         {% endif %}
       </div>
@@ -45,20 +45,20 @@
   <div class="chem-tabs">
     <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}"
        class="chem-tab {{ 'chem-tab-active' if view == 'all' }}">
-      <i class="bi bi-grid-3x3-gap"></i> All
+      <i class="bi bi-grid-3x3-gap"></i> {{ _("All") }}
     </a>
     <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='low_stock') }}"
        class="chem-tab {{ 'chem-tab-active' if view == 'low_stock' }}">
-      <i class="bi bi-exclamation-triangle"></i> Бага нөөц
+      <i class="bi bi-exclamation-triangle"></i> {{ _("Low Stock") }}
     </a>
     <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='expiring') }}"
        class="chem-tab {{ 'chem-tab-active' if view == 'expiring' }}">
-      <i class="bi bi-clock-history"></i> Хугацаа дуусах
+      <i class="bi bi-clock-history"></i> {{ _("Expiring") }}
     </a>
     <span class="chem-tab-divider"></span>
     <a href="{{ url_for('chemicals.chemical_journal', lab=lab) }}"
        class="chem-tab chem-tab-journal">
-      <i class="bi bi-journal-text"></i> Журнал
+      <i class="bi bi-journal-text"></i> {{ _("Journal") }}
     </a>
   </div>
 
@@ -67,23 +67,23 @@
     <div class="chem-toolbar-left">
       <div class="chem-search">
         <i class="bi bi-search"></i>
-        <input type="text" id="chemQuickFilter" placeholder="Хайх...">
+        <input type="text" id="chemQuickFilter" placeholder="{{ _("Search...") }}">
       </div>
       <select id="labFilter" class="chem-select" onchange="filterByLab(this.value)">
-        <option value="all" {{ 'selected' if lab == 'all' }}>Бүх лаб</option>
-        <option value="coal" {{ 'selected' if lab == 'coal' }}>Нүүрс</option>
-        <option value="water" {{ 'selected' if lab == 'water' }}>Ус</option>
-        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>Микробиологи</option>
-        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>Петрограф</option>
+        <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
+        <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
+        <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
+        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
+        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
       </select>
       <select id="categoryFilter" class="chem-select">
-        <option value="">Бүх ангилал</option>
+        <option value="">{{ _("All Categories") }}</option>
         {% for code, label in categories %}
         <option value="{{ code }}" {{ 'selected' if category == code }}>{{ label }}</option>
         {% endfor %}
       </select>
       <select id="statusFilter" class="chem-select">
-        <option value="">Бүх төлөв</option>
+        <option value="">{{ _("All Status") }}</option>
         {% for code, label in status_types %}
         <option value="{{ code }}" {{ 'selected' if status == code }}>{{ label }}</option>
         {% endfor %}
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
     height: "calc(100vh - 380px)",
     minHeight: 400,
     pagination: false,
-    placeholder: "Химийн бодис олдсонгүй",
+    placeholder: "{{ _('No chemicals found') }}",
     rowFormatter: function(row) {
       const data = row.getData();
       if (data.status === 'low_stock') {
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     columns: [
       {
-        title: "Name",
+        title: "{{ _('Name') }}",
         field: "name",
         widthGrow: 2,
         minWidth: 150,
@@ -348,13 +348,13 @@ document.addEventListener('DOMContentLoaded', function() {
           return `<a href="/chemicals/${data.id}" class="text-decoration-none fw-semibold">${data.name}</a>`;
         }
       },
-      { title: "Томъёо", field: "formula", width: 90 },
+      { title: "{{ _('Formula') }}", field: "formula", width: 90 },
       { title: "CAS", field: "cas_number", width: 100 },
-      { title: "Үйлдвэрлэгч", field: "manufacturer", widthGrow: 1, minWidth: 100 },
-      { title: "Lot №", field: "lot_number", width: 90 },
-      { title: "Зэрэг", field: "grade", width: 65 },
+      { title: "{{ _('Manufacturer') }}", field: "manufacturer", widthGrow: 1, minWidth: 100 },
+      { title: "{{ _('Lot No.') }}", field: "lot_number", width: 90 },
+      { title: "{{ _('Grade') }}", field: "grade", width: 65 },
       {
-        title: "Quantity",
+        title: "{{ _('Quantity') }}",
         field: "quantity",
         width: 95,
         hozAlign: "right",
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       },
       {
-        title: "Дуусах огноо",
+        title: "{{ _('Expiry Date') }}",
         field: "expiry_date",
         width: 105,
         formatter: function(cell) {
@@ -382,31 +382,31 @@ document.addEventListener('DOMContentLoaded', function() {
           return `<span class="${cls}">${val}</span>`;
         }
       },
-      { title: "Байршил", field: "storage_location", widthGrow: 1, minWidth: 100 },
+      { title: "{{ _('Location') }}", field: "storage_location", widthGrow: 1, minWidth: 100 },
       {
-        title: "Ангилал",
+        title: "{{ _('Category') }}",
         field: "category",
         width: 90,
         formatter: function(cell) {
           const map = {
-            acid: 'Хүчил', base: 'Суурь', solvent: 'Уусгагч',
-            indicator: 'Индикатор', standard: 'Standard', media: 'Орчин',
-            buffer: 'Буфер', salt: 'Давс', other: 'Бусад'
+            acid: "{{ _('Acid') }}", base: "{{ _('Base') }}", solvent: "{{ _('Solvent') }}",
+            indicator: "{{ _('Indicator') }}", standard: "{{ _('Standard') }}", media: "{{ _('Media') }}",
+            buffer: "{{ _('Buffer') }}", salt: "{{ _('Salt') }}", other: "{{ _('Other') }}"
           };
           return map[cell.getValue()] || cell.getValue();
         }
       },
       {
-        title: "Төлөв",
+        title: "{{ _('Status') }}",
         field: "status",
         width: 100,
         formatter: function(cell) {
           const map = {
-            active: '<span class="badge bg-success">Active</span>',
-            low_stock: '<span class="badge bg-warning">Бага нөөц</span>',
-            expired: '<span class="badge bg-danger">Хугацаа дууссан</span>',
-            empty: '<span class="badge bg-secondary">Дууссан</span>',
-            disposed: '<span class="badge bg-dark">Deleted</span>'
+            active: '<span class="badge bg-success">{{ _("Active") }}</span>',
+            low_stock: '<span class="badge bg-warning">{{ _("Low Stock") }}</span>',
+            expired: '<span class="badge bg-danger">{{ _("Expired") }}</span>',
+            empty: '<span class="badge bg-secondary">{{ _("Empty") }}</span>',
+            disposed: '<span class="badge bg-dark">{{ _("Disposed") }}</span>'
           };
           return map[cell.getValue()] || cell.getValue();
         }
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formatter: function(cell) {
           const id = cell.getRow().getData().id;
           return `
-            <a href="/chemicals/${id}" class="btn btn-sm btn-outline-primary" title="Дэлгэрэнгүй">
+            <a href="/chemicals/${id}" class="btn btn-sm btn-outline-primary" title="{{ _('Details') }}">
               <i class="bi bi-eye"></i>
             </a>
           `;

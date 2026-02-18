@@ -6,7 +6,7 @@
   {# ===== BACK BUTTON ===== #}
   <div class="mb-3">
     <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> Буцах
+      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
     </a>
   </div>
 
@@ -17,7 +17,7 @@
              style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
           <h5 class="mb-0">
             <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
-            {{ 'Жор засварлах' if mode == 'edit' else 'New жор нэмэх' }}
+            {{ _('Edit Recipe') if mode == 'edit' else _('Add New Recipe') }}
           </h5>
         </div>
 
@@ -27,53 +27,53 @@
 
             {# === Үндсэн мэдээлэл === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-info-circle me-2"></i>Үндсэн мэдээлэл
+              <i class="bi bi-info-circle me-2"></i>{{ _("Basic Information") }}
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="form-label">Уусмалын нэр <span class="text-danger">*</span></label>
+                <label class="form-label">{{ _("Solution Name") }} <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" required
                        value="{{ recipe.name if recipe else '' }}"
-                       placeholder="Ж: Трилон Б 0.05N, HCl 0.1N">
+                       placeholder="{{ _('e.g.: Trilon B 0.05N, HCl 0.1N') }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Concentration</label>
+                <label class="form-label">{{ _("Concentration") }}</label>
                 <input type="number" name="concentration" class="form-control" step="0.0001"
                        value="{{ recipe.concentration if recipe else '' }}"
-                       placeholder="Ж: 0.05">
+                       placeholder="{{ _('e.g.: 0.05') }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Unit</label>
+                <label class="form-label">{{ _("Unit") }}</label>
                 <select name="concentration_unit" class="form-select">
-                  <option value="N" {{ 'selected' if recipe and recipe.concentration_unit == 'N' }}>N (норм)</option>
-                  <option value="mol/L" {{ 'selected' if recipe and recipe.concentration_unit == 'mol/L' }}>мол/л (M)</option>
+                  <option value="N" {{ 'selected' if recipe and recipe.concentration_unit == 'N' }}>{{ _("N (normal)") }}</option>
+                  <option value="mol/L" {{ 'selected' if recipe and recipe.concentration_unit == 'mol/L' }}>{{ _("mol/L (M)") }}</option>
                   <option value="%" {{ 'selected' if recipe and recipe.concentration_unit == '%' }}>%</option>
-                  <option value="mg/L" {{ 'selected' if recipe and recipe.concentration_unit == 'mg/L' }}>мг/л</option>
+                  <option value="mg/L" {{ 'selected' if recipe and recipe.concentration_unit == 'mg/L' }}>{{ _("mg/L") }}</option>
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Standard эзэлхүүн (мл)</label>
+                <label class="form-label">{{ _("Standard Volume (mL)") }}</label>
                 <input type="number" name="standard_volume_ml" class="form-control" step="0.1"
                        value="{{ recipe.standard_volume_ml if recipe else 1000 }}"
                        placeholder="1000">
-                <small class="text-muted">Орц бодисын хэмжээ энэ эзэлхүүнд тооцоологдоно</small>
+                <small class="text-muted">{{ _("Ingredient amounts are calculated for this volume") }}</small>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Категори</label>
+                <label class="form-label">{{ _("Category") }}</label>
                 <select name="category" class="form-select">
-                  <option value="">-- Сонгох --</option>
-                  <option value="titrant" {{ 'selected' if recipe and recipe.category == 'titrant' }}>Титрант</option>
-                  <option value="buffer" {{ 'selected' if recipe and recipe.category == 'buffer' }}>Буфер</option>
-                  <option value="indicator" {{ 'selected' if recipe and recipe.category == 'indicator' }}>Индикатор</option>
-                  <option value="standard" {{ 'selected' if recipe and recipe.category == 'standard' }}>Standard</option>
-                  <option value="reagent" {{ 'selected' if recipe and recipe.category == 'reagent' }}>Урвалж</option>
+                  <option value="">-- {{ _("Select") }} --</option>
+                  <option value="titrant" {{ 'selected' if recipe and recipe.category == 'titrant' }}>{{ _("Titrant") }}</option>
+                  <option value="buffer" {{ 'selected' if recipe and recipe.category == 'buffer' }}>{{ _("Buffer") }}</option>
+                  <option value="indicator" {{ 'selected' if recipe and recipe.category == 'indicator' }}>{{ _("Indicator") }}</option>
+                  <option value="standard" {{ 'selected' if recipe and recipe.category == 'standard' }}>{{ _("Standard") }}</option>
+                  <option value="reagent" {{ 'selected' if recipe and recipe.category == 'reagent' }}>{{ _("Reagent") }}</option>
                 </select>
               </div>
             </div>
 
             {# === Орц бодис === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-list-check me-2"></i>Орц бодис
+              <i class="bi bi-list-check me-2"></i>{{ _("Ingredients") }}
             </h6>
             <div id="ingredientsContainer">
               {% if recipe and recipe.ingredients.count() > 0 %}
@@ -81,7 +81,7 @@
                 <div class="row g-2 mb-2 ingredient-row">
                   <div class="col-md-6">
                     <select name="chemical_id[]" class="form-select form-select-sm">
-                      <option value="">-- Химийн бодис --</option>
+                      <option value="">-- {{ _("Chemical") }} --</option>
                       {% for c in chemicals %}
                       <option value="{{ c.id }}" {{ 'selected' if ing.chemical_id == c.id }}>
                         {{ c.name }} ({{ c.quantity }} {{ c.unit }})
@@ -91,13 +91,13 @@
                   </div>
                   <div class="col-md-3">
                     <input type="number" name="amount[]" class="form-control form-control-sm"
-                           step="0.0001" placeholder="Хэмжээ" value="{{ ing.amount }}">
+                           step="0.0001" placeholder="{{ _('Amount') }}" value="{{ ing.amount }}">
                   </div>
                   <div class="col-md-2">
                     <select name="ingredient_unit[]" class="form-select form-select-sm">
-                      <option value="g" {{ 'selected' if ing.unit == 'g' }}>г</option>
-                      <option value="mg" {{ 'selected' if ing.unit == 'mg' }}>мг</option>
-                      <option value="mL" {{ 'selected' if ing.unit == 'mL' }}>мл</option>
+                      <option value="g" {{ 'selected' if ing.unit == 'g' }}>{{ _("g") }}</option>
+                      <option value="mg" {{ 'selected' if ing.unit == 'mg' }}>{{ _("mg") }}</option>
+                      <option value="mL" {{ 'selected' if ing.unit == 'mL' }}>{{ _("mL") }}</option>
                     </select>
                   </div>
                   <div class="col-md-1">
@@ -111,7 +111,7 @@
               <div class="row g-2 mb-2 ingredient-row">
                 <div class="col-md-6">
                   <select name="chemical_id[]" class="form-select form-select-sm">
-                    <option value="">-- Химийн бодис --</option>
+                    <option value="">-- {{ _("Chemical") }} --</option>
                     {% for c in chemicals %}
                     <option value="{{ c.id }}">{{ c.name }} ({{ c.quantity }} {{ c.unit }})</option>
                     {% endfor %}
@@ -119,13 +119,13 @@
                 </div>
                 <div class="col-md-3">
                   <input type="number" name="amount[]" class="form-control form-control-sm"
-                         step="0.0001" placeholder="Хэмжээ">
+                         step="0.0001" placeholder="{{ _('Amount') }}">
                 </div>
                 <div class="col-md-2">
                   <select name="ingredient_unit[]" class="form-select form-select-sm">
-                    <option value="g">г</option>
-                    <option value="mg">мг</option>
-                    <option value="mL">мл</option>
+                    <option value="g">{{ _("g") }}</option>
+                    <option value="mg">{{ _("mg") }}</option>
+                    <option value="mL">{{ _("mL") }}</option>
                   </select>
                 </div>
                 <div class="col-md-1">
@@ -137,18 +137,18 @@
               {% endif %}
             </div>
             <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addIngredient()">
-              <i class="bi bi-plus me-1"></i>Chemical нэмэх
+              <i class="bi bi-plus me-1"></i>{{ _("Add Chemical") }}
             </button>
 
             {# === Уусмал бэлдэх явц === #}
             <h6 class="text-primary mb-3 border-bottom pb-2 mt-4">
-              <i class="bi bi-journal-text me-2"></i>Уусмал бэлдэх явц / заалт
+              <i class="bi bi-journal-text me-2"></i>{{ _("Preparation Procedure / Instructions") }}
             </h6>
             <div class="row g-3">
               <div class="col-12">
                 <textarea name="preparation_notes" class="form-control" rows="6"
                           placeholder="1. ...&#10;2. ...&#10;3. ...">{{ recipe.preparation_notes if recipe else '' }}</textarea>
-                <small class="text-muted">Уусмал бэлдэх дэлгэрэнгүй дараалал, заавар, тэмдэглэл</small>
+                <small class="text-muted">{{ _("Detailed preparation steps, instructions, notes") }}</small>
               </div>
             </div>
 
@@ -156,11 +156,11 @@
 
           <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
             <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary">
-              Болих
+              {{ _("Cancel") }}
             </a>
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-check-lg me-1"></i>
-              {{ 'Хадгалах' if mode == 'edit' else 'Үүсгэх' }}
+              {{ _('Save') if mode == 'edit' else _('Create') }}
             </button>
           </div>
         </form>
@@ -170,9 +170,9 @@
 </div>
 
 <script>
-// Химийн бодис options (for dynamic rows)
+// Chemical options (for dynamic rows)
 const chemicalOptions = `
-  <option value="">-- Химийн бодис --</option>
+  <option value="">-- {{ _("Chemical") }} --</option>
   {% for c in chemicals %}
   <option value="{{ c.id }}">{{ c.name }} ({{ c.quantity }} {{ c.unit }})</option>
   {% endfor %}
@@ -190,13 +190,13 @@ function addIngredient() {
     </div>
     <div class="col-md-3">
       <input type="number" name="amount[]" class="form-control form-control-sm"
-             step="0.0001" placeholder="Хэмжээ">
+             step="0.0001" placeholder="{{ _('Amount') }}">
     </div>
     <div class="col-md-2">
       <select name="ingredient_unit[]" class="form-select form-select-sm">
-        <option value="g">г</option>
-        <option value="mg">мг</option>
-        <option value="mL">мл</option>
+        <option value="g">{{ _("g") }}</option>
+        <option value="mg">{{ _("mg") }}</option>
+        <option value="mL">{{ _("mL") }}</option>
       </select>
     </div>
     <div class="col-md-1">
@@ -211,7 +211,7 @@ function addIngredient() {
 function removeIngredient(btn) {
   const row = btn.closest('.ingredient-row');
   const container = document.getElementById('ingredientsContainer');
-  // Хамгийн багадаа 1 мөр байх ёстой
+  // Keep at least 1 row
   if (container.querySelectorAll('.ingredient-row').length > 1) {
     row.remove();
   }

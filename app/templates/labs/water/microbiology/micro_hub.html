@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Микробиологийн лаборатори{% endblock %}
+{% block title %}{{ _("Microbiology Laboratory") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -101,8 +101,8 @@
 
 <div class="micro-hub">
   <div class="hub-header">
-    <h1><i class="bi bi-bug-fill me-2"></i>Микробиологийн лаборатори</h1>
-    <p>Усны микробиологи, агаарын хяналт, гадаргуугийн хяналт</p>
+    <h1><i class="bi bi-bug-fill me-2"></i>{{ _("Microbiology Laboratory") }}</h1>
+    <p>{{ _("Water microbiology, air monitoring, surface monitoring") }}</p>
   </div>
 
   <!-- Өдрийг эхлэх -->
@@ -113,60 +113,60 @@
     <div class="stat-card">
       <div class="stat-icon" style="color:#20c997"><i class="bi bi-inbox-fill"></i></div>
       <div class="stat-value" style="color:#0d9488">{{ total_samples }}</div>
-      <div class="stat-label">Total дээж</div>
+      <div class="stat-label">{{ _("Total Samples") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#14b8a6"><i class="bi bi-plus-circle-fill"></i></div>
       <div class="stat-value" style="color:#047857">{{ new_samples }}</div>
-      <div class="stat-label">New дээж</div>
+      <div class="stat-label">{{ _("New Samples") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="stat-label">Шинжилж байна</div>
+      <div class="stat-label">{{ _("In Progress") }}</div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="color:#10b981"><i class="bi bi-check-circle-fill"></i></div>
       <div class="stat-value" style="color:#059669">{{ completed }}</div>
-      <div class="stat-label">Дууссан</div>
+      <div class="stat-label">{{ _("Completed") }}</div>
     </div>
   </div>
 
   <!-- Үндсэн цэс -->
   <div class="section-title">
     <i class="bi bi-clipboard-data" style="color:#20c997"></i>
-    Үндсэн цэс
+    {{ _("Main Menu") }}
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('microbiology.register_sample') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
       <div class="nav-card-content">
-        <h3>Sample бүртгэл</h3>
-        <p>Усны болон микробиологийн дээж бүртгэх, жагсаалт харах</p>
+        <h3>{{ _("Sample Registration") }}</h3>
+        <p>{{ _("Register water and microbiology samples, view list") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('microbiology.analysis_hub') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
       <div class="nav-card-content">
-        <h3>Analysis</h3>
-        <p>Ус, Агаар, Арчдас — микробиологийн шинжилгээний ажлын хуудас</p>
+        <h3>{{ _("Analysis") }}</h3>
+        <p>{{ _("Water, Air, Swab — microbiology analysis worksheets") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('water.water_summary', lab='micro') }}" class="nav-card nc-surface">
       <div class="nav-card-icon"><i class="bi bi-table"></i></div>
       <div class="nav-card-content">
-        <h3>Нэгтгэл</h3>
-        <p>Усны хими + микробиологи — нэгдсэн үр дүнгийн нэгтгэл</p>
+        <h3>{{ _("Summary") }}</h3>
+        <p>{{ _("Water chemistry + microbiology — combined results summary") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('equipment.equipment_journal_grid', category='micro', from_lab='micro') }}" class="nav-card nc-equipment">
       <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
       <div class="nav-card-content">
-        <h3>Equipment</h3>
-        <p>Микробиологийн лабын тоног төхөөрөмжийн ашиглалт, арчилгааны журнал</p>
+        <h3>{{ _("Equipment") }}</h3>
+        <p>{{ _("Microbiology lab equipment usage and maintenance journal") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
@@ -175,31 +175,31 @@
   <!-- Report -->
   <div class="section-title">
     <i class="bi bi-graph-up" style="color:#0d9488"></i>
-    Report
-    <span class="section-badge" style="background:linear-gradient(135deg,#20c997,#0d9488)">Reports</span>
+    {{ _("Reports") }}
+    <span class="section-badge" style="background:linear-gradient(135deg,#20c997,#0d9488)">{{ _("Reports") }}</span>
   </div>
   <div class="nav-cards">
     <a href="{{ url_for('microbiology.micro_dashboard') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
       <div class="nav-card-content">
-        <h3>Dashboard</h3>
-        <p>KPI, сарын тренд, категори хуваарилалт, pass/fail</p>
+        <h3>{{ _("Dashboard") }}</h3>
+        <p>{{ _("KPI, monthly trend, category distribution, pass/fail") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('microbiology.micro_consumption') }}" class="nav-card nc-register">
       <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
       <div class="nav-card-content">
-        <h3>Consumption</h3>
-        <p>Client, категори, сараар нэгтгэсэн тайлан</p>
+        <h3>{{ _("Consumption") }}</h3>
+        <p>{{ _("Report summarized by client, category, and month") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>
     <a href="{{ url_for('microbiology.micro_monthly_plan') }}" class="nav-card nc-surface">
       <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
       <div class="nav-card-content">
-        <h3>Monthly Plan</h3>
-        <p>Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+        <h3>{{ _("Monthly Plan") }}</h3>
+        <p>{{ _("Weekly plan and performance") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

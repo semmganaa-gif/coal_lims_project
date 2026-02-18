@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ param.name_mn }} - Maceral Analysis{% endblock %}
+{% block title %}{{ param.name_mn }} - {{ _("Maceral Analysis") }}{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
@@ -22,13 +22,13 @@
     <!-- Select sample -->
     <div class="col-md-3">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">Select Sample</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
         <div class="card-body">
           <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- Select a sample --</option>
+            <option value="">-- {{ _("Select a sample") }} --</option>
           </select>
           <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
-            <i class="bi bi-plus-circle me-1"></i>Add
+            <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
           </button>
         </div>
       </div>
@@ -38,9 +38,9 @@
     <div class="col-md-9">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">Maceral Composition (%)</h6>
+          <h6 class="mb-0">{{ _("Maceral Composition (%%)") }}</h6>
           <button class="btn btn-success btn-sm" onclick="saveResults()">
-            <i class="bi bi-save me-1"></i>Save
+            <i class="bi bi-save me-1"></i>{{ _("Save") }}
           </button>
         </div>
         <div class="card-body p-0">
@@ -82,12 +82,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const gridDiv = document.getElementById('maceralGrid');
   const gridOptions = {
     columnDefs: [
-      { field: 'sample_code', headerName: 'Sample Code', pinned: 'left', width: 160 },
-      { field: 'vitrinite', headerName: 'Vitrinite %', editable: true, type: 'numericColumn', width: 130 },
-      { field: 'inertinite', headerName: 'Inertinite %', editable: true, type: 'numericColumn', width: 130 },
-      { field: 'liptinite', headerName: 'Liptinite %', editable: true, type: 'numericColumn', width: 130 },
-      { field: 'mineral_matter', headerName: 'Mineral Matter %', editable: true, type: 'numericColumn', width: 140 },
-      { field: 'total', headerName: 'Total %', width: 100,
+      { field: 'sample_code', headerName: '{{ _("Sample Code") }}', pinned: 'left', width: 160 },
+      { field: 'vitrinite', headerName: '{{ _("Vitrinite %%") }}', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'inertinite', headerName: '{{ _("Inertinite %%") }}', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'liptinite', headerName: '{{ _("Liptinite %%") }}', editable: true, type: 'numericColumn', width: 130 },
+      { field: 'mineral_matter', headerName: '{{ _("Mineral Matter %%") }}', editable: true, type: 'numericColumn', width: 140 },
+      { field: 'total', headerName: '{{ _("Total %%") }}', width: 100,
         valueGetter: p => {
           if (!p.data) return '';
           const v = (parseFloat(p.data.vitrinite)||0) + (parseFloat(p.data.inertinite)||0) +
@@ -125,7 +125,7 @@ function loadSample() {
 function saveResults() {
   const rows = [];
   gridApi.forEachNode(n => rows.push(n.data));
-  if (!rows.length) { alert('Өгөгдөл байхгүй'); return; }
+  if (!rows.length) { alert('{{ _("No data available") }}'); return; }
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
   rows.forEach(row => {
@@ -147,7 +147,7 @@ function saveResults() {
     .then(d => { if (d.success) console.log('Saved:', d.id); })
     .catch(e => console.error(e));
   });
-  alert('Амжилттай хадгалагдлаа!');
+  alert('{{ _("Saved successfully!") }}');
 }
 </script>
 {% endblock %}

@@ -4,13 +4,13 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h3><i class="bi bi-clipboard-data text-primary"></i> Internal Control Standard (CM)</h3>
-            <p class="text-muted small mb-0">Manage Internal Control Sample values for laboratory quality control</p>
+            <h3><i class="bi bi-clipboard-data text-primary"></i> {{ _("Internal Control Standard (CM)") }}</h3>
+            <p class="text-muted small mb-0">{{ _("Manage Internal Control Sample values for laboratory quality control") }}</p>
         </div>
         {% if current_user.role in ['senior', 'admin'] %}
         <button class="btn btn-primary" id="openAddBtn"
                 data-create-url="{{ url_for('admin.create_standard') }}">
-            <i class="bi bi-plus-lg"></i> Create New Standard
+            <i class="bi bi-plus-lg"></i> {{ _("Create New Standard") }}
         </button>
         {% endif %}
     </div>
@@ -21,11 +21,11 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3" style="min-width: 220px;">Name (Batch Name)</th>
-                            <th style="min-width: 100px;">Created</th>
-                            <th style="min-width: 80px;">Status</th>
-                            <th style="min-width: 100px;">Parameters</th>
-                            <th class="text-end pe-3" style="min-width: 140px;">Actions</th>
+                            <th class="ps-3" style="min-width: 220px;">{{ _("Name (Batch Name)") }}</th>
+                            <th style="min-width: 100px;">{{ _("Created") }}</th>
+                            <th style="min-width: 80px;">{{ _("Status") }}</th>
+                            <th style="min-width: 100px;">{{ _("Parameters") }}</th>
+                            <th class="text-end pe-3" style="min-width: 140px;">{{ _("Actions") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,33 +34,33 @@
                             <td class="ps-3" style="white-space: nowrap;">
                                 <strong>{{ std.name }}</strong>
                                 {% if std.is_active %}
-                                    <i class="bi bi-check-circle-fill text-success ms-1" title="Active"></i>
+                                    <i class="bi bi-check-circle-fill text-success ms-1" title="{{ _('Active') }}"></i>
                                 {% endif %}
                             </td>
                             <td style="white-space: nowrap;">{{ std.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
                                 {% if std.is_active %}
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success">{{ _("Active") }}</span>
                                 {% else %}
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-secondary">{{ _("Inactive") }}</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <small class="text-muted">{{ std.targets | length }} parameters</small>
+                                <small class="text-muted">{{ std.targets | length }} {{ _("parameters") }}</small>
                             </td>
                             <td class="text-end pe-3">
                                 <div class="btn-group">
                                     {% if current_user.role in ['senior', 'admin'] and not std.is_active %}
                                     <button class="btn btn-sm btn-outline-success activate-btn"
                                             data-url="{{ url_for('admin.activate_standard', id=std.id) }}"
-                                            title="Activate">
+                                            title="{{ _('Activate') }}">
                                         <i class="bi bi-play-fill"></i>
                                     </button>
                                     {% endif %}
 
                                     <button class="btn btn-sm btn-outline-info view-btn"
                                             data-name="{{ std.name }}"
-                                            data-targets='{{ std.targets | tojson }}' title="View">
+                                            data-targets='{{ std.targets | tojson }}' title="{{ _('View') }}">
                                         <i class="bi bi-eye"></i>
                                     </button>
 
@@ -70,7 +70,7 @@
                                             data-name="{{ std.name }}"
                                             data-targets='{{ std.targets | tojson }}'
                                             data-update-url="{{ url_for('admin.update_standard', id=std.id) }}"
-                                            title="Edit">
+                                            title="{{ _('Edit') }}">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     {% endif %}
@@ -78,7 +78,7 @@
                                     {% if current_user.role in ['senior', 'admin'] and not std.is_active %}
                                     <button class="btn btn-sm btn-outline-danger delete-btn"
                                             data-url="{{ url_for('admin.delete_standard', id=std.id) }}"
-                                            title="Delete">
+                                            title="{{ _('Delete') }}">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                     {% endif %}
@@ -87,7 +87,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No registered standards found.</td>
+                            <td colspan="5" class="text-center py-4 text-muted">{{ _("No registered standards found.") }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -101,45 +101,45 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-light">
-                <h5 class="modal-title" id="modalTitle">Register New Standard</h5>
+                <h5 class="modal-title" id="modalTitle">{{ _("Register New Standard") }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="formSubmitUrl">
 
                 <div class="alert alert-info py-2 small">
-                    <i class="bi bi-info-circle"></i> 
-                    <strong>Note:</strong> It is recommended to enter dry basis values such as Adb, Vdb, CVdb.
+                    <i class="bi bi-info-circle"></i>
+                    <strong>{{ _("Note") }}:</strong> {{ _("It is recommended to enter dry basis values such as Adb, Vdb, CVdb.") }}
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Standard Name</label>
-                    <input type="text" id="stdName" class="form-control" placeholder="Example: CM-2025-Q4">
+                    <label class="form-label fw-bold">{{ _("Standard Name") }}</label>
+                    <input type="text" id="stdName" class="form-control" placeholder="{{ _('Example: CM-2025-Q4') }}">
                 </div>
 
-                <h6 class="border-bottom pb-2 mb-3">Parameter Values (Mean & SD)</h6>
+                <h6 class="border-bottom pb-2 mb-3">{{ _("Parameter Values (Mean & SD)") }}</h6>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm align-middle" id="paramsTable">
                         <thead class="table-light text-center">
                             <tr>
-                                <th style="width: 35%; min-width: 140px;">Analysis</th>
-                                <th style="width: 32%">Mean</th>
-                                <th style="width: 33%">SD</th>
+                                <th style="width: 35%; min-width: 140px;">{{ _("Analysis") }}</th>
+                                <th style="width: 32%">{{ _("Mean") }}</th>
+                                <th style="width: 33%">{{ _("SD") }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% set params = [
-                                ('Mad', 'Moisture'),
-                                ('Adb,%', 'Ash (db)'),
-                                ('Vdb,%', 'Volatile (db)'),
-                                ('Stdb,%', 'Sulfur (db)'),
-                                ('CVdb,kcal/kg', 'Calorific Value (db)'),
-                                ('TRDdb,g/cm3', 'Density (db)'),
-                                ('CSN', 'CSN'),
-                                ('Gi', 'Gray-King'),
-                                ('Pdb,%', 'Phosphorus (db)'),
-                                ('Fdb,mg/g', 'Fluorine (db)'),
-                                ('Cldb,%', 'Chlorine (db)')
+                                ('Mad', _('Moisture')),
+                                ('Adb,%', _('Ash (db)')),
+                                ('Vdb,%', _('Volatile (db)')),
+                                ('Stdb,%', _('Sulfur (db)')),
+                                ('CVdb,kcal/kg', _('Calorific Value (db)')),
+                                ('TRDdb,g/cm3', _('Density (db)')),
+                                ('CSN', _('CSN')),
+                                ('Gi', _('Gray-King')),
+                                ('Pdb,%', _('Phosphorus (db)')),
+                                ('Fdb,mg/g', _('Fluorine (db)')),
+                                ('Cldb,%', _('Chlorine (db)'))
                             ] %}
                             {% for code, label in params %}
                             <tr data-code="{{ code }}">
@@ -155,8 +155,8 @@
                 </div>
             </div>
             <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveStdBtn"><i class="bi bi-save"></i> Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+                <button type="button" class="btn btn-primary" id="saveStdBtn"><i class="bi bi-save"></i> {{ _("Save") }}</button>
             </div>
         </div>
     </div>
@@ -166,12 +166,12 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="viewModalTitle">Details</h5>
+                <h5 class="modal-title" id="viewModalTitle">{{ _("Details") }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <table class="table table-striped table-sm" id="viewTable">
-                    <thead><tr><th style="min-width: 130px;">Analysis</th><th>Mean</th><th>SD</th></tr></thead>
+                    <thead><tr><th style="min-width: 130px;">{{ _("Analysis") }}</th><th>{{ _("Mean") }}</th><th>{{ _("SD") }}</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -183,11 +183,11 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
+
     // Bootstrap Modals Initialization
     const stdModalEl = document.getElementById('standardModal');
     const viewModalEl = document.getElementById('viewStandardModal');
-    
+
     // Safety check for Bootstrap
     if (!window.bootstrap) {
         console.error("Bootstrap JS not loaded");
@@ -196,35 +196,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const standardModal = new bootstrap.Modal(stdModalEl);
     const viewModal = new bootstrap.Modal(viewModalEl);
 
-    // --- 1. ШИНЭЭР НЭМЭХ ---
+    // --- 1. CREATE NEW ---
     const openAddBtn = document.getElementById('openAddBtn');
     if (openAddBtn) {
         openAddBtn.addEventListener('click', function() {
-            // URL-ийг button-аас авах
             const createUrl = this.getAttribute('data-create-url');
-            
+
             document.getElementById('formSubmitUrl').value = createUrl;
             document.getElementById('stdName').value = '';
-            document.getElementById('modalTitle').textContent = 'Register New Standard';
-            
+            document.getElementById('modalTitle').textContent = '{{ _("Register New Standard") }}';
+
             // Clear Inputs
             document.querySelectorAll('#paramsTable input').forEach(inp => inp.value = '');
-            
+
             standardModal.show();
         });
     }
 
-    // --- 2. ЗАСАХ (EDIT) ---
+    // --- 2. EDIT ---
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const name = this.getAttribute('data-name');
             const targets = JSON.parse(this.getAttribute('data-targets'));
-            const updateUrl = this.getAttribute('data-update-url'); // ✅ URL-ийг товчноос шууд авах
+            const updateUrl = this.getAttribute('data-update-url');
 
             document.getElementById('formSubmitUrl').value = updateUrl;
             document.getElementById('stdName').value = name;
-            document.getElementById('modalTitle').textContent = 'Edit Standard';
-            
+            document.getElementById('modalTitle').textContent = '{{ _("Edit Standard") }}';
+
             document.querySelectorAll('#paramsTable input').forEach(inp => inp.value = '');
 
             for (const [code, val] of Object.entries(targets)) {
@@ -238,18 +237,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- 3. ХАДГАЛАХ (SAVE) ---
+    // --- 3. SAVE ---
     const saveBtn = document.getElementById('saveStdBtn');
     if (saveBtn) {
         saveBtn.addEventListener('click', function() {
             const url = document.getElementById('formSubmitUrl').value;
             const name = document.getElementById('stdName').value.trim();
-            
-            if(!name) { alert("Нэр оруулна уу!"); return; }
+
+            if(!name) { alert("{{ _('Please enter a name.') }}"); return; }
 
             let targets = {};
             let count = 0;
-            
+
             document.querySelectorAll('#paramsTable tbody tr').forEach(row => {
                 const code = row.getAttribute('data-code');
                 const meanVal = row.querySelector('.mean-input').value;
@@ -261,16 +260,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (count === 0) { alert("Дор хаяж нэг утга оруулна уу."); return; }
+            if (count === 0) { alert("{{ _('Please enter at least one value.') }}"); return; }
 
             // CSRF Token
             const meta = document.querySelector('meta[name="csrf-token"]');
             const token = meta ? meta.getAttribute('content') : '';
 
             saveBtn.disabled = true;
-            saveBtn.innerHTML = 'Saving...';
+            saveBtn.innerHTML = '{{ _("Saving...") }}';
 
-            // ✅ URL-ийг шууд ашиглана (Jinja template-ээс аль хэдийн зөв ирсэн)
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': token },
@@ -280,24 +278,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!res.ok) return res.json().then(e => { throw new Error(e.message || 'Server Error'); });
                 return res.json();
             })
-            .then(() => { 
-                alert("Амжилттай!");
+            .then(() => {
+                alert("{{ _('Successfully saved!') }}");
                 location.reload();
             })
             .catch(err => {
-                alert("Алдаа: " + err.message);
+                alert("{{ _('Error') }}: " + err.message);
                 saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
+                saveBtn.innerHTML = '<i class="bi bi-save"></i> {{ _("Save") }}';
             });
         });
     }
 
-    // --- 4. УСТГАХ (DELETE) ---
+    // --- 4. DELETE ---
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            if(!confirm("Устгахдаа итгэлтэй байна уу?")) return;
-            
-            const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
+            if(!confirm("{{ _('Are you sure you want to delete?') }}")) return;
+
+            const url = this.getAttribute('data-url');
             const meta = document.querySelector('meta[name="csrf-token"]');
             const token = meta ? meta.getAttribute('content') : '';
 
@@ -309,36 +307,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!res.ok) return res.json().then(e => { throw new Error(e.message || 'Server Error'); });
                 return res.json();
             })
-            .then(() => { 
-                alert("Устгагдлаа.");
+            .then(() => {
+                alert("{{ _('Successfully deleted.') }}");
                 location.reload();
             })
-            .catch(err => { alert("Алдаа: " + err.message); });
+            .catch(err => { alert("{{ _('Error') }}: " + err.message); });
         });
     });
 
-    // --- 5. ИДЭВХЖҮҮЛЭХ (ACTIVATE) ---
+    // --- 5. ACTIVATE ---
     document.querySelectorAll('.activate-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            if(!confirm("Энэ стандартыг идэвхжүүлэх үү?")) return;
-            
-            const url = this.getAttribute('data-url'); // ✅ URL-ийг товчноос авах
+            if(!confirm("{{ _('Activate this standard?') }}")) return;
+
+            const url = this.getAttribute('data-url');
             const meta = document.querySelector('meta[name="csrf-token"]');
             const token = meta ? meta.getAttribute('content') : '';
-            
+
             fetch(url, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': token }
             })
             .then(res => {
                 if(res.ok) location.reload();
-                else alert("Алдаа гарлаа.");
+                else alert("{{ _('An error occurred.') }}");
             });
         });
     });
 
-    // --- 6. ХАРАХ ---
-    // Constant дараалал
+    // --- 6. VIEW ---
     const PARAM_ORDER = ['Mad', 'Adb,%', 'Vdb,%', 'Stdb,%', 'CVdb,kcal/kg', 'TRDdb,g/cm3', 'CSN', 'Gi', 'Pdb,%', 'Fdb,mg/g', 'Cldb,%'];
 
     document.querySelectorAll('.view-btn').forEach(btn => {
@@ -348,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const tbody = document.querySelector('#viewTable tbody');
             tbody.innerHTML = '';
 
-            // Дарааллаар эрэмбэлэх
             const sortedKeys = Object.keys(data).sort((a, b) => {
                 const idxA = PARAM_ORDER.indexOf(a);
                 const idxB = PARAM_ORDER.indexOf(b);

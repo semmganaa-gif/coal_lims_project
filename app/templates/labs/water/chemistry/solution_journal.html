@@ -11,22 +11,22 @@
           <i class="bi bi-droplet-half"></i>
         </div>
         <div>
-          <h4 class="mb-0 text-white">Solution Preparation Journal</h4>
-          <small class="text-white-50">Water Chemistry Laboratory</small>
+          <h4 class="mb-0 text-white">{{ _("Solution Preparation Journal") }}</h4>
+          <small class="text-white-50">{{ _("Water Chemistry Laboratory") }}</small>
         </div>
       </div>
       <div class="d-flex align-items-center gap-3">
         <div class="text-center text-white">
           <div class="fs-4 fw-bold">{{ stats.total }}</div>
-          <small class="text-white-50">Total</small>
+          <small class="text-white-50">{{ _("Total") }}</small>
         </div>
         <div class="text-center text-white">
           <div class="fs-4 fw-bold text-success">{{ stats.active }}</div>
-          <small class="text-white-50">Active</small>
+          <small class="text-white-50">{{ _("Active") }}</small>
         </div>
         {% if current_user.role in ['chemist', 'senior', 'admin'] %}
         <a href="{{ url_for('water.add_solution') }}" class="btn btn-light">
-          <i class="bi bi-plus-lg me-1"></i> New Solution
+          <i class="bi bi-plus-lg me-1"></i> {{ _("New Solution") }}
         </a>
         {% endif %}
       </div>
@@ -38,30 +38,30 @@
     <div class="card-body">
       <form method="GET" class="row g-3 align-items-end">
         <div class="col-md-2">
-          <label class="form-label small text-muted">Start Date</label>
+          <label class="form-label small text-muted">{{ _("Start Date") }}</label>
           <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
         </div>
         <div class="col-md-2">
-          <label class="form-label small text-muted">End Date</label>
+          <label class="form-label small text-muted">{{ _("End Date") }}</label>
           <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
         </div>
         <div class="col-md-2">
-          <label class="form-label small text-muted">Status</label>
+          <label class="form-label small text-muted">{{ _("Status") }}</label>
           <select name="status" class="form-select">
-            <option value="all">All</option>
-            <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
-            <option value="expired" {{ 'selected' if status == 'expired' }}>Expired</option>
-            <option value="empty" {{ 'selected' if status == 'empty' }}>Empty</option>
+            <option value="all">{{ _("All") }}</option>
+            <option value="active" {{ 'selected' if status == 'active' }}>{{ _("Active") }}</option>
+            <option value="expired" {{ 'selected' if status == 'expired' }}>{{ _("Expired") }}</option>
+            <option value="empty" {{ 'selected' if status == 'empty' }}>{{ _("Empty") }}</option>
           </select>
         </div>
         <div class="col-md-2">
           <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-funnel me-1"></i> Filter
+            <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
           </button>
         </div>
         <div class="col-md-2">
           <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary w-100">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            <i class="bi bi-arrow-counterclockwise me-1"></i> {{ _("Reset") }}
           </a>
         </div>
       </form>
@@ -76,17 +76,17 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th style="width: 50px;">No.</th>
-              <th>Solution Name</th>
-              <th class="text-center">Concentration</th>
-              <th class="text-center">Volume (mL)</th>
-              <th class="text-center">Used (mg)</th>
-              <th class="text-center">Date</th>
+              <th style="width: 50px;">{{ _("No.") }}</th>
+              <th>{{ _("Solution Name") }}</th>
+              <th class="text-center">{{ _("Concentration") }}</th>
+              <th class="text-center">{{ _("Volume (mL)") }}</th>
+              <th class="text-center">{{ _("Used (mg)") }}</th>
+              <th class="text-center">{{ _("Date") }}</th>
               <th class="text-center">V1</th>
               <th class="text-center">V2</th>
-              <th class="text-center">Vд</th>
-              <th class="text-center">Titer Coef</th>
-              <th class="text-center">Status</th>
+              <th class="text-center">{{ _("V avg") }}</th>
+              <th class="text-center">{{ _("Titer Coef") }}</th>
+              <th class="text-center">{{ _("Status") }}</th>
               <th style="width: 100px;"></th>
             </tr>
           </thead>
@@ -118,23 +118,23 @@
               </td>
               <td class="text-center">
                 {% if s.status == 'active' %}
-                <span class="badge bg-success">Active</span>
+                <span class="badge bg-success">{{ _("Active") }}</span>
                 {% elif s.status == 'expired' %}
-                <span class="badge bg-danger">Expired</span>
+                <span class="badge bg-danger">{{ _("Expired") }}</span>
                 {% elif s.status == 'empty' %}
-                <span class="badge bg-secondary">Empty</span>
+                <span class="badge bg-secondary">{{ _("Empty") }}</span>
                 {% endif %}
               </td>
               <td class="text-end">
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('water.edit_solution', id=s.id) }}" class="btn btn-outline-primary" title="Edit">
+                  <a href="{{ url_for('water.edit_solution', id=s.id) }}" class="btn btn-outline-primary" title="{{ _('Edit') }}">
                     <i class="bi bi-pencil"></i>
                   </a>
                   {% if current_user.role in ['senior', 'admin'] %}
                   <form action="{{ url_for('water.delete_solution', id=s.id) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Устгах уу?')">
+                        onsubmit="return confirm('{{ _("Are you sure you want to delete?") }}')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                    <button type="submit" class="btn btn-outline-danger" title="{{ _('Delete') }}">
                       <i class="bi bi-trash"></i>
                     </button>
                   </form>
@@ -155,14 +155,14 @@
         </table>
       </div>
       <div class="card-footer bg-white border-0 text-muted small">
-        Total {{ solutions|length }} records
+        {{ _("Total") }} {{ solutions|length }} {{ _("records") }}
       </div>
       {% else %}
       <div class="text-center py-5 text-muted">
         <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>No records found</p>
+        <p>{{ _("No records found") }}</p>
         <a href="{{ url_for('water.add_solution') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> Register New Solution
+          <i class="bi bi-plus-lg me-1"></i> {{ _("Register New Solution") }}
         </a>
       </div>
       {% endif %}

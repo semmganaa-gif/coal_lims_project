@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Микробиологийн шинжилгээ{% endblock %}
+{% block title %}{{ _("Microbiology Analysis") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -66,15 +66,15 @@
 
 <div class="micro-hub">
   <div class="hub-header">
-    <h1><i class="bi bi-clipboard-data me-2"></i>Микробиологийн шинжилгээ</h1>
-    <p>Select analysis type</p>
+    <h1><i class="bi bi-clipboard-data me-2"></i>{{ _("Microbiology Analysis") }}</h1>
+    <p>{{ _("Select analysis type") }}</p>
   </div>
 
   <div class="nav-cards">
     <a href="{{ url_for('microbiology.workspace', code='water') }}" class="nav-card nc-water">
       <div class="nav-card-icon"><i class="bi bi-droplet"></i></div>
       <div class="nav-card-content">
-        <h3>Ус (Water)</h3>
+        <h3>{{ _("Water") }}</h3>
         <p>CFU (22°С, 37°С), E.coli, Salmonella — MNS ISO 6222, 9308-1, 19250</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
@@ -82,7 +82,7 @@
     <a href="{{ url_for('microbiology.workspace', code='air') }}" class="nav-card nc-air">
       <div class="nav-card-icon"><i class="bi bi-wind"></i></div>
       <div class="nav-card-content">
-        <h3>Агаар (Air)</h3>
+        <h3>{{ _("Air") }}</h3>
         <p>CFU, Staphylococcus, Mold/Fungi — MNS 5484:2005</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
@@ -90,7 +90,7 @@
     <a href="{{ url_for('microbiology.workspace', code='swab') }}" class="nav-card nc-swab">
       <div class="nav-card-icon"><i class="bi bi-hand-index"></i></div>
       <div class="nav-card-content">
-        <h3>Арчдас (Swab)</h3>
+        <h3>{{ _("Swab") }}</h3>
         <p>CFU, Salmonella, E.coli, Staphylococcus — MNS 6410:2018</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>

@@ -119,28 +119,28 @@
 <body>
   <!-- Header -->
   <div class="header">
-    <div class="header-title">USNY SHINJILGEENII LABORATORI</div>
+    <div class="header-title">{{ _("Water Analysis Laboratory") }}</div>
     <div class="header-address">
-      Omnogovi aimag, Tsogttsetii sum, "Ukhaa Khudeg" nuursni uurkhai<br>
-      E-mail: laboratory@mmc.mn
+      {{ _("Umnugovi province, Tsogttsetsii soum, Ukhaa Khudeg coal mine") }}<br>
+      {{ _("Email") }}: laboratory@mmc.mn
     </div>
   </div>
 
   <!-- Report Title -->
-  <div class="report-title">SORILTYN TAILAN</div>
-  <div class="report-number">No: {{ report.report_number }}</div>
+  <div class="report-title">{{ _("Test Report") }}</div>
+  <div class="report-number">{{ _("No") }}: {{ report.report_number }}</div>
 
   <!-- Meta info -->
-  <div class="meta-row">Khevlesen ognoo: {{ now.strftime('%Y.%m.%d') }}</div>
-  <div class="meta-row">Khuudasny dugaar: 1/1</div>
+  <div class="meta-row">{{ _("Print date") }}: {{ now.strftime('%Y.%m.%d') }}</div>
+  <div class="meta-row">{{ _("Page number") }}: 1/1</div>
 
   <!-- Info table -->
   <table class="info-table">
     <tr>
-      <th>Lab ID</th>
-      <th>Technical Standard</th>
-      <th>Sample Type</th>
-      <th>Sampling Method</th>
+      <th>{{ _("Lab ID") }}</th>
+      <th>{{ _("Technical Standard") }}</th>
+      <th>{{ _("Sample Type") }}</th>
+      <th>{{ _("Sampling Method") }}</th>
     </tr>
     <tr>
       <td>
@@ -149,39 +149,39 @@
         {% endif %}
       </td>
       <td>MNS 4586:2007</td>
-      <td>Drinking water</td>
+      <td>{{ _("Drinking water") }}</td>
       <td>MNS ISO 5667-5:2001</td>
     </tr>
   </table>
 
   <!-- Sample list -->
   <div class="sample-list">
-    <strong>Sample names:</strong>
+    <strong>{{ _("Sample names") }}:</strong>
     {% for item in results_data %}
     <p>{{ loop.index }}. {{ item.sample.chem_lab_id or '' }} {{ item.sample.sample_code }}</p>
     {% endfor %}
   </div>
 
-  <p><strong>Sampled by:</strong> Water Supply Technician</p>
+  <p><strong>{{ _("Sampled by") }}:</strong> {{ _("Water Supply Technician") }}</p>
 
   <!-- Sample info -->
   <table class="sample-info-table">
     <tr>
-      <td><strong>Sample volume</strong><br>1L each</td>
-      <td><strong>Sampling date</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
-      <td><strong>Analysis date</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
+      <td><strong>{{ _("Sample volume") }}</strong><br>{{ _("1L each") }}</td>
+      <td><strong>{{ _("Sampling date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+      <td><strong>{{ _("Analysis date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
     </tr>
   </table>
 
   <!-- Results -->
-  <div class="results-label">Analysis Results:</div>
+  <div class="results-label">{{ _("Analysis Results") }}:</div>
   <table class="results-table">
     <thead>
       <tr>
-        <th>No</th>
-        <th>Parameter</th>
-        <th>Unit</th>
-        <th>MNS Limit</th>
+        <th>{{ _("No") }}</th>
+        <th>{{ _("Parameter") }}</th>
+        <th>{{ _("Unit") }}</th>
+        <th>{{ _("MNS Limit") }}</th>
         {% for item in results_data %}
         <th>{{ item.sample.chem_lab_id or loop.index }}</th>
         {% endfor %}
@@ -215,14 +215,14 @@
     </tbody>
   </table>
 
-  <div class="footer-note">This test result is valid only for the tested sample.</div>
+  <div class="footer-note">{{ _("This test result is valid only for the tested sample.") }}</div>
 
   <!-- Signatures -->
   <div class="signature-section">
     <table style="width: 100%;">
       <tr>
         <td style="width: 60%;">
-          <strong>Analyzed by:</strong> Chemist
+          <strong>{{ _("Analyzed by") }}:</strong> {{ _("Chemist") }}
         </td>
         <td style="width: 40%; text-align: right;">
           {% if report.analyst_signature and report.analyst_signature.image_path %}
@@ -233,7 +233,7 @@
       </tr>
       <tr>
         <td>
-          <strong>Approved by:</strong> Quality Manager
+          <strong>{{ _("Approved by") }}:</strong> {{ _("Quality Manager") }}
         </td>
         <td style="text-align: right;">
           {% if report.manager_signature and report.manager_signature.image_path %}
@@ -254,7 +254,7 @@
   {% endif %}
 
   <div class="watermark">
-    Unauthorized copying is prohibited.
+    {{ _("Unauthorized copying is prohibited.") }}
   </div>
 </body>
 </html>

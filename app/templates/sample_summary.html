@@ -4,67 +4,66 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sample_summary.css') }}">
 
 <div class="page-wrap">
-  <!-- Цэгцэлсэн Header -->
   <div class="summary-header">
     <div class="header-left">
       <h1><i class="bi bi-table text-primary"></i> {{ title }}</h1>
-      <span class="badge bg-light text-dark">{{ samples|length }} дээж</span>
+      <span class="badge bg-light text-dark">{{ samples|length }} {{ _("samples") }}</span>
     </div>
 
     <div class="header-actions">
       {% if current_user.role in ['senior', 'admin'] %}
       <div class="btn-group">
-        <button type="button" id="qcCompositeBtn" class="btn btn-sm btn-outline-warning" title="Composite vs Hourly дундаж харьцуулалт">
-          <i class="bi bi-clipboard2-check"></i> Composite
+        <button type="button" id="qcCompositeBtn" class="btn btn-sm btn-outline-warning" title="{{ _("Composite vs Hourly average comparison") }}">
+          <i class="bi bi-clipboard2-check"></i> {{ _("Composite") }}
         </button>
-        <button type="button" id="qcNormBtn" class="btn btn-sm btn-outline-danger" title="Норм хязгаар шалгах">
-          <i class="bi bi-rulers"></i> Norm Limit
+        <button type="button" id="qcNormBtn" class="btn btn-sm btn-outline-danger" title="{{ _("Norm limit check") }}">
+          <i class="bi bi-rulers"></i> {{ _("Norm Limit") }}
         </button>
-        <button type="button" id="correlationBtn" class="btn btn-sm btn-outline-info" title="Хамаарлын шинжилгээ">
-          <i class="bi bi-graph-up"></i> Correlation
+        <button type="button" id="correlationBtn" class="btn btn-sm btn-outline-info" title="{{ _("Correlation analysis") }}">
+          <i class="bi bi-graph-up"></i> {{ _("Correlation") }}
         </button>
       </div>
 
       <div class="btn-group">
-        <button id="exportCsvBtn" class="btn btn-sm btn-success" title="CSV татах">
+        <button id="exportCsvBtn" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
           <i class="bi bi-file-earmark-spreadsheet"></i> CSV
         </button>
-        <button type="button" id="copySelectedBtn" class="btn btn-sm btn-outline-success" title="Сонгосоныг хуулах">
-          <i class="bi bi-clipboard-check"></i> Хуулах
+        <button type="button" id="copySelectedBtn" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
+          <i class="bi bi-clipboard-check"></i> {{ _("Copy") }}
         </button>
       </div>
 
       <div class="btn-group">
-        <a href="{{ url_for('api.mg_summary') }}" class="btn btn-sm btn-outline-dark" title="MG Magnetic нэгтгэл">
+        <a href="{{ url_for('api.mg_summary') }}" class="btn btn-sm btn-outline-dark" title="{{ _("MG Magnetic summary") }}">
           <i class="bi bi-magnet"></i> MG
         </a>
-        <a href="{{ url_for('api.audit_hub') }}" class="btn btn-sm btn-outline-primary" title="Аудит">
-          <i class="bi bi-clock-history"></i> Аудит
+        <a href="{{ url_for('api.audit_hub') }}" class="btn btn-sm btn-outline-primary" title="{{ _("Audit") }}">
+          <i class="bi bi-clock-history"></i> {{ _("Audit") }}
         </a>
-        <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="Архив Төв">
-          <i class="bi bi-archive"></i> Архив
+        <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive Center") }}">
+          <i class="bi bi-archive"></i> {{ _("Archive") }}
         </a>
       </div>
 
-      <button type="button" id="reportBtn" class="btn btn-sm btn-danger" title="Сонгосоноос тайлан үүсгэх">
-        <i class="bi bi-file-earmark-pdf"></i> Report
+      <button type="button" id="reportBtn" class="btn btn-sm btn-danger" title="{{ _("Generate report from selected") }}">
+        <i class="bi bi-file-earmark-pdf"></i> {{ _("Report") }}
       </button>
 
-      <button type="button" id="archiveBtn" class="btn btn-sm btn-info text-white" value="archive" title="Сонгосоныг архивлах">
-        <i class="bi bi-archive-fill"></i> Архивлах
+      <button type="button" id="archiveBtn" class="btn btn-sm btn-info text-white" value="archive" title="{{ _("Archive selected") }}">
+        <i class="bi bi-archive-fill"></i> {{ _("Archive") }}
       </button>
 
-      <button type="button" id="simulatorSendBtn" class="btn btn-sm btn-warning" title="Сонгосон дээжүүдийг CHPP Simulator руу илгээх">
-        <i class="bi bi-cpu"></i> Simulator
+      <button type="button" id="simulatorSendBtn" class="btn btn-sm btn-warning" title="{{ _("Send selected samples to CHPP Simulator") }}">
+        <i class="bi bi-cpu"></i> {{ _("Simulator") }}
       </button>
       {% elif current_user.role == 'manager' %}
       {# Manager зөвхөн Архив товч харна #}
-      <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="Архив Төв">
-        <i class="bi bi-archive"></i> Архив
+      <a href="{{ url_for('api.archive_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive Center") }}">
+        <i class="bi bi-archive"></i> {{ _("Archive") }}
       </a>
       {% endif %}
 
-      <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-secondary" title="Шинэчлэх">
+      <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Refresh") }}">
         <i class="bi bi-arrow-clockwise"></i>
       </a>
     </div>
@@ -93,6 +92,13 @@
 
 <script>
   const LIMS_CONFIG = {
+    i18n: {
+      sampleName: "{{ _('Sample Name') }}",
+      unit: "{{ _('Unit') }}",
+      type: "{{ _('Type') }}",
+      registered: "{{ _('Registered') }}",
+      analyzed: "{{ _('Analyzed') }}"
+    },
     urls: {
       auditHub: "{{ url_for('api.audit_hub') }}",
       qcComposite: "{{ url_for('analysis.qc_composite_check') }}",

@@ -201,8 +201,8 @@
 <div class="audit-hub">
   <!-- Header -->
   <div class="hub-header">
-    <h1><i class="bi bi-shield-check me-2"></i>Audit Center</h1>
-    <p>Review and verify analysis history records</p>
+    <h1><i class="bi bi-shield-check me-2"></i>{{ _("Audit Center") }}</h1>
+    <p>{{ _("Review and verify analysis history records") }}</p>
 
     <!-- Quick Search -->
     <div class="mt-3">
@@ -210,15 +210,15 @@
         <div class="col-md-6">
           <div class="input-group">
             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input type="text" id="auditSearchInput" class="form-control" placeholder="Search by sample code, chemist name...">
-            <button class="btn btn-primary" type="button" onclick="searchAudit()">Search</button>
+            <input type="text" id="auditSearchInput" class="form-control" placeholder="{{ _("Search by sample code, chemist name...") }}">
+            <button class="btn btn-primary" type="button" onclick="searchAudit()">{{ _("Search") }}</button>
             {% if current_user.role in ['senior', 'manager', 'admin'] %}
             <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
               <i class="bi bi-download"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
               <li><a class="dropdown-item" href="{{ url_for('api.export_audit') }}?limit=1000">
-                <i class="bi bi-file-earmark-excel me-2"></i>Excel (Last 1000)
+                <i class="bi bi-file-earmark-excel me-2"></i>{{ _("Excel (Last 1000)") }}
               </a></li>
             </ul>
             {% endif %}
@@ -232,9 +232,9 @@
   <div id="searchResults" class="mb-4" style="display: none;">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-search me-2"></i>Search Results</span>
+        <span><i class="bi bi-search me-2"></i>{{ _("Search Results") }}</span>
         <button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()">
-          <i class="bi bi-x"></i> Close
+          <i class="bi bi-x"></i> {{ _("Close") }}
         </button>
       </div>
       <div class="card-body">
@@ -242,12 +242,12 @@
           <table class="table table-sm table-hover" id="searchResultsTable">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Sample</th>
-                <th>Analysis</th>
-                <th>Action</th>
-                <th>Chemist</th>
-                <th>Result</th>
+                <th>{{ _("Date") }}</th>
+                <th>{{ _("Sample") }}</th>
+                <th>{{ _("Analysis") }}</th>
+                <th>{{ _("Action") }}</th>
+                <th>{{ _("Chemist") }}</th>
+                <th>{{ _("Result") }}</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -257,31 +257,31 @@
     </div>
   </div>
 
-  <!-- Category Tabs - 4 ангилал -->
+  <!-- Category Tabs -->
   <div class="category-tabs">
     <div class="cat-tab active" data-cat="tech">
-      <i class="bi bi-speedometer2 me-1"></i>Proximate Analysis
+      <i class="bi bi-speedometer2 me-1"></i>{{ _("Proximate Analysis") }}
     </div>
     <div class="cat-tab" data-cat="element">
-      <i class="bi bi-diagram-3 me-1"></i>Ultimate Analysis
+      <i class="bi bi-diagram-3 me-1"></i>{{ _("Ultimate Analysis") }}
     </div>
     <div class="cat-tab" data-cat="coking">
-      <i class="bi bi-fire me-1"></i>Coking Properties
+      <i class="bi bi-fire me-1"></i>{{ _("Coking Properties") }}
     </div>
     <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots me-1"></i>Other
+      <i class="bi bi-three-dots me-1"></i>{{ _("Other") }}
     </div>
   </div>
 
-  <!-- Техникийн анализ: MT, Mad, Aad, Vad, CV -->
+  <!-- Proximate Analysis: MT, Mad, Aad, Vad, CV -->
   <div class="category-section active" id="cat-tech">
     <div class="cards-grid">
       <a href="{{ url_for('api.audit_log_page', analysis_code='MT') }}" class="analysis-card">
         <div class="card-icon icon-blue"><i class="bi bi-droplet-half"></i></div>
         <div class="card-content">
           <div class="card-code">MT</div>
-          <div class="card-title">Total Moisture</div>
-          <div class="card-desc">Total Moisture - Coal total moisture content</div>
+          <div class="card-title">{{ _("Total Moisture") }}</div>
+          <div class="card-desc">{{ _("Total Moisture - Coal total moisture content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -290,8 +290,8 @@
         <div class="card-icon icon-cyan"><i class="bi bi-moisture"></i></div>
         <div class="card-content">
           <div class="card-code">Mad</div>
-          <div class="card-title">Analytical Moisture</div>
-          <div class="card-desc">Moisture (air-dried) - Air-dried moisture content</div>
+          <div class="card-title">{{ _("Analytical Moisture") }}</div>
+          <div class="card-desc">{{ _("Moisture (air-dried) - Air-dried moisture content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -300,8 +300,8 @@
         <div class="card-icon icon-orange"><i class="bi bi-fire"></i></div>
         <div class="card-content">
           <div class="card-code">Aad</div>
-          <div class="card-title">Ash Content</div>
-          <div class="card-desc">Ash content - Residue after combustion</div>
+          <div class="card-title">{{ _("Ash Content") }}</div>
+          <div class="card-desc">{{ _("Ash content - Residue after combustion") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -310,8 +310,8 @@
         <div class="card-icon icon-purple"><i class="bi bi-wind"></i></div>
         <div class="card-content">
           <div class="card-code">Vad</div>
-          <div class="card-title">Volatile Matter</div>
-          <div class="card-desc">Volatile Matter - Gas released upon heating</div>
+          <div class="card-title">{{ _("Volatile Matter") }}</div>
+          <div class="card-desc">{{ _("Volatile Matter - Gas released upon heating") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -320,23 +320,23 @@
         <div class="card-icon icon-pink"><i class="bi bi-thermometer-high"></i></div>
         <div class="card-content">
           <div class="card-code">CV / Qgr,ad</div>
-          <div class="card-title">Calorific Value</div>
-          <div class="card-desc">Calorific Value - Heat energy (MJ/kg)</div>
+          <div class="card-title">{{ _("Calorific Value") }}</div>
+          <div class="card-desc">{{ _("Calorific Value - Heat energy (MJ/kg)") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
     </div>
   </div>
 
-  <!-- Элементийн анализ: TS, P, F, Cl -->
+  <!-- Ultimate Analysis: TS, P, F, Cl -->
   <div class="category-section" id="cat-element">
     <div class="cards-grid">
       <a href="{{ url_for('api.audit_log_page', analysis_code='TS') }}" class="analysis-card">
         <div class="card-icon icon-red"><i class="bi bi-radioactive"></i></div>
         <div class="card-content">
           <div class="card-code">TS / St,ad</div>
-          <div class="card-title">Total Sulfur</div>
-          <div class="card-desc">Total Sulfur - Sulfur content</div>
+          <div class="card-title">{{ _("Total Sulfur") }}</div>
+          <div class="card-desc">{{ _("Total Sulfur - Sulfur content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -345,8 +345,8 @@
         <div class="card-icon icon-orange"><i class="bi bi-lightbulb"></i></div>
         <div class="card-content">
           <div class="card-code">P</div>
-          <div class="card-title">Phosphorus</div>
-          <div class="card-desc">Phosphorus content</div>
+          <div class="card-title">{{ _("Phosphorus") }}</div>
+          <div class="card-desc">{{ _("Phosphorus content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -355,8 +355,8 @@
         <div class="card-icon icon-cyan"><i class="bi bi-brightness-high"></i></div>
         <div class="card-content">
           <div class="card-code">F</div>
-          <div class="card-title">Fluorine</div>
-          <div class="card-desc">Fluorine content</div>
+          <div class="card-title">{{ _("Fluorine") }}</div>
+          <div class="card-desc">{{ _("Fluorine content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -365,23 +365,23 @@
         <div class="card-icon icon-green"><i class="bi bi-virus"></i></div>
         <div class="card-content">
           <div class="card-code">Cl</div>
-          <div class="card-title">Chlorine</div>
-          <div class="card-desc">Chlorine content</div>
+          <div class="card-title">{{ _("Chlorine") }}</div>
+          <div class="card-desc">{{ _("Chlorine content") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
     </div>
   </div>
 
-  <!-- Коксжих чанар: CSN, Gi, X, Y, CRI, CSR -->
+  <!-- Coking Properties: CSN, Gi, X, Y, CRI, CSR -->
   <div class="category-section" id="cat-coking">
     <div class="cards-grid">
       <a href="{{ url_for('api.audit_log_page', analysis_code='CSN') }}" class="analysis-card">
         <div class="card-icon icon-purple"><i class="bi bi-bar-chart-fill"></i></div>
         <div class="card-content">
           <div class="card-code">CSN</div>
-          <div class="card-title">Swelling Number</div>
-          <div class="card-desc">Crucible Swelling Number</div>
+          <div class="card-title">{{ _("Swelling Number") }}</div>
+          <div class="card-desc">{{ _("Crucible Swelling Number") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -390,8 +390,8 @@
         <div class="card-icon icon-green"><i class="bi bi-layers"></i></div>
         <div class="card-content">
           <div class="card-code">Gi / GI</div>
-          <div class="card-title">Caking Index</div>
-          <div class="card-desc">Gray-King Caking Index</div>
+          <div class="card-title">{{ _("Caking Index") }}</div>
+          <div class="card-desc">{{ _("Gray-King Caking Index") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -400,8 +400,8 @@
         <div class="card-icon icon-orange"><i class="bi bi-arrows-expand"></i></div>
         <div class="card-content">
           <div class="card-code">X</div>
-          <div class="card-title">Plasticity - X</div>
-          <div class="card-desc">Plasticity X value</div>
+          <div class="card-title">{{ _("Plasticity - X") }}</div>
+          <div class="card-desc">{{ _("Plasticity X value") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -410,8 +410,8 @@
         <div class="card-icon icon-cyan"><i class="bi bi-arrows-angle-expand"></i></div>
         <div class="card-content">
           <div class="card-code">Y</div>
-          <div class="card-title">Plasticity - Y</div>
-          <div class="card-desc">Plasticity Y value</div>
+          <div class="card-title">{{ _("Plasticity - Y") }}</div>
+          <div class="card-desc">{{ _("Plasticity Y value") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -420,8 +420,8 @@
         <div class="card-icon icon-red"><i class="bi bi-arrow-down-circle"></i></div>
         <div class="card-content">
           <div class="card-code">CRI</div>
-          <div class="card-title">Reactivity Index</div>
-          <div class="card-desc">Coke Reactivity Index</div>
+          <div class="card-title">{{ _("Reactivity Index") }}</div>
+          <div class="card-desc">{{ _("Coke Reactivity Index") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -430,23 +430,23 @@
         <div class="card-icon icon-green"><i class="bi bi-shield-check"></i></div>
         <div class="card-content">
           <div class="card-code">CSR</div>
-          <div class="card-title">Strength Index</div>
-          <div class="card-desc">Coke Strength after Reaction</div>
+          <div class="card-title">{{ _("Strength Index") }}</div>
+          <div class="card-desc">{{ _("Coke Strength after Reaction") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
     </div>
   </div>
 
-  <!-- Бусад: FM, TRD, Solid -->
+  <!-- Other: FM, TRD, Solid -->
   <div class="category-section" id="cat-other">
     <div class="cards-grid">
       <a href="{{ url_for('api.audit_log_page', analysis_code='FM') }}" class="analysis-card">
         <div class="card-icon icon-blue"><i class="bi bi-droplet"></i></div>
         <div class="card-content">
           <div class="card-code">FM</div>
-          <div class="card-title">Free Moisture</div>
-          <div class="card-desc">Free Moisture - Surface moisture</div>
+          <div class="card-title">{{ _("Free Moisture") }}</div>
+          <div class="card-desc">{{ _("Free Moisture - Surface moisture") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -455,8 +455,8 @@
         <div class="card-icon icon-indigo"><i class="bi bi-box"></i></div>
         <div class="card-content">
           <div class="card-code">TRD</div>
-          <div class="card-title">True Relative Density</div>
-          <div class="card-desc">True Relative Density</div>
+          <div class="card-title">{{ _("True Relative Density") }}</div>
+          <div class="card-desc">{{ _("True Relative Density") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -465,8 +465,8 @@
         <div class="card-icon icon-purple"><i class="bi bi-gem"></i></div>
         <div class="card-content">
           <div class="card-code">SOLID</div>
-          <div class="card-title">Solid Residue</div>
-          <div class="card-desc">Solid residue determination</div>
+          <div class="card-title">{{ _("Solid Residue") }}</div>
+          <div class="card-desc">{{ _("Solid residue determination") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -475,8 +475,8 @@
         <div class="card-icon icon-pink"><i class="bi bi-magnet"></i></div>
         <div class="card-content">
           <div class="card-code">MG</div>
-          <div class="card-title">Magnetic Fraction</div>
-          <div class="card-desc">WTL Magnetic separation test</div>
+          <div class="card-title">{{ _("Magnetic Fraction") }}</div>
+          <div class="card-desc">{{ _("WTL Magnetic separation test") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -485,8 +485,8 @@
         <div class="card-icon icon-cyan"><i class="bi bi-grid-3x3"></i></div>
         <div class="card-content">
           <div class="card-code">MG_SIZE</div>
-          <div class="card-title">Size Distribution</div>
-          <div class="card-desc">WTL particle size distribution</div>
+          <div class="card-title">{{ _("Size Distribution") }}</div>
+          <div class="card-desc">{{ _("WTL particle size distribution") }}</div>
         </div>
         <i class="bi bi-arrow-right card-arrow"></i>
       </a>
@@ -525,14 +525,14 @@ function searchAudit() {
   const resultsDiv = document.getElementById('searchResults');
   const tbody = document.querySelector('#searchResultsTable tbody');
 
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div> Searching...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div> {{ _("Searching...") }}</td></tr>';
   resultsDiv.style.display = 'block';
 
   fetch(`/api/audit_search?q=${encodeURIComponent(q)}&limit=100`)
     .then(res => res.json())
     .then(data => {
       if (data.results.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No results found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{{ _("No results found") }}</td></tr>';
         return;
       }
 
@@ -552,7 +552,7 @@ function searchAudit() {
       }).join('');
     })
     .catch(err => {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">An error occurred</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">{{ _("An error occurred") }}</td></tr>';
       console.error(err);
     });
 }

@@ -9,18 +9,18 @@
         <i class="bi bi-cpu"></i>
       </div>
       <div>
-        <h4 class="eq-hero-title">Equipment</h4>
-        <p class="eq-hero-sub">Records, Calibration, Maintenance</p>
+        <h4 class="eq-hero-title">{{ _("Equipment") }}</h4>
+        <p class="eq-hero-sub">{{ _("Records, Calibration, Maintenance") }}</p>
       </div>
     </div>
     <div class="eq-hero-right">
       <span class="eq-stat">
         <span class="eq-stat-num" id="eqTotalCount">0</span>
-        <span class="eq-stat-label">Total</span>
+        <span class="eq-stat-label">{{ _("Total") }}</span>
       </span>
       {% if add_modal_id is defined and add_modal_id %}
       <button class="btn eq-btn-add" data-bs-toggle="modal" data-bs-target="#{{ add_modal_id }}">
-        <i class="bi bi-plus-lg"></i> New Record
+        <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
       </button>
       {% endif %}
     </div>

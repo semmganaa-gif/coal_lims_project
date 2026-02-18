@@ -87,6 +87,7 @@ const GridModule = (function() {
   const tableData = Array.isArray(CONFIG.samplesData) ? CONFIG.samplesData : [];
   const dynamicCols = Array.isArray(CONFIG.analysisTypes) ? CONFIG.analysisTypes : [];
   const URLS = (CONFIG.urls && typeof CONFIG.urls === 'object') ? CONFIG.urls : {};
+  const I18N = (CONFIG.i18n && typeof CONFIG.i18n === 'object') ? CONFIG.i18n : {};
 
   // Grid instance reference
   let gridApi = null;
@@ -268,7 +269,7 @@ const GridModule = (function() {
       },
       // Sample name
       {
-        headerName: 'Sample Name',
+        headerName: I18N.sampleName || 'Sample Name',
         field: 'name',
         cellRenderer: sampleNameRenderer,
         minWidth: 200, width: 220,
@@ -284,7 +285,7 @@ const GridModule = (function() {
       },
       // Client name
       {
-        headerName: 'Unit',
+        headerName: I18N.unit || 'Unit',
         field: 'client_name',
         minWidth: 100, width: 120,
         sortable: true,
@@ -295,7 +296,7 @@ const GridModule = (function() {
       },
       // Sample type
       {
-        headerName: 'Type',
+        headerName: I18N.type || 'Type',
         field: 'sample_type',
         minWidth: 100, width: 120,
         sortable: true,
@@ -335,7 +336,7 @@ const GridModule = (function() {
 
     // Огнооны багануудыг хамгийн сүүлд нэмэх
     cols.push({
-      headerName: 'Registered',
+      headerName: I18N.registered || 'Registered',
       field: 'received_date',
       minWidth: 120, width: 130,
       sortable: true,
@@ -351,7 +352,7 @@ const GridModule = (function() {
     });
 
     cols.push({
-      headerName: 'Analyzed',
+      headerName: I18N.analyzed || 'Analyzed',
       field: 'analysis_date',
       minWidth: 120, width: 130,
       sortable: true,
@@ -473,7 +474,8 @@ const GridModule = (function() {
       resizable: true,
       sortable: true,
       filter: true,
-      suppressHeaderMenuButton: true
+      suppressHeaderMenuButton: true,
+      floatingFilterComponentParams: { suppressFilterButton: true }
     },
     rowHeight: 28,
     headerHeight: 26,

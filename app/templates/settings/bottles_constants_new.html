@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h3 class="mb-0">Bottle Constant — Add New</h3>
+  <h3 class="mb-0">{{ _("Bottle Constant — Add New") }}</h3>
   <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left"></i> Жагсаалт руу
+    <i class="bi bi-arrow-left"></i> {{ _("Back to List") }}
   </a>
 </div>
 
@@ -12,56 +12,56 @@
   <div class="card-body">
     <div class="row g-3">
 
-      <!-- Bottleо № -->
+      <!-- Bottle № -->
       <div class="col-md-4">
-        <label class="form-label">Bottle No. (serial_no) <span class="text-danger">*</span></label>
-        <input name="serial_no" class="form-control" placeholder="Ж: PY-001" required>
-        <div class="form-text">Зөвхөн дугаараа оруулна. Сонгох үед идэвхтэй тогтмол автоматаар татагдана.</div>
+        <label class="form-label">{{ _("Bottle No. (serial_no)") }} <span class="text-danger">*</span></label>
+        <input name="serial_no" class="form-control" placeholder="{{ _("e.g. PY-001") }}" required>
+        <div class="form-text">{{ _("Enter only the number. The active constant will be fetched automatically when selected.") }}</div>
       </div>
 
       <!-- Temperature -->
       <div class="col-md-2">
-        <label class="form-label">Temperature (°C)</label>
+        <label class="form-label">{{ _("Temperature (°C)") }}</label>
         <input name="temperature_c" class="form-control" value="20.0" type="number" step="0.1">
       </div>
 
-      <!-- Туршилтууд -->
+      <!-- Trials -->
       <div class="col-12"><hr class="my-1"></div>
 
       <div class="col-md-3">
-        <label class="form-label">Туршилт 1 (g) <span class="text-danger">*</span></label>
+        <label class="form-label">{{ _("Trial 1 (g)") }} <span class="text-danger">*</span></label>
         <input id="t1" name="trial_1" class="form-control" type="number" step="0.0001" required>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Туршилт 2 (g) <span class="text-danger">*</span></label>
+        <label class="form-label">{{ _("Trial 2 (g)") }} <span class="text-danger">*</span></label>
         <input id="t2" name="trial_2" class="form-control" type="number" step="0.0001" required>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Туршилт 3 (g) <span class="text-muted">(шаардлагатай үед)</span></label>
+        <label class="form-label">{{ _("Trial 3 (g)") }} <span class="text-muted">({{ _("if needed") }})</span></label>
         <input id="t3" name="trial_3" class="form-control" type="number" step="0.0001" required>
-        <div id="t3Help" class="form-text text-muted">|t1 - t2| > 0.0015 үед энэ талбар идэвхжиж заавал болно.</div>
+        <div id="t3Help" class="form-text text-muted">{{ _("This field becomes required when |t1 - t2| > 0.0015.") }}</div>
       </div>
 
       <!-- Preview -->
       <div class="col-md-3">
-        <label class="form-label">Tolerance /T/</label>
+        <label class="form-label">{{ _("Tolerance /T/") }}</label>
         <div class="form-control bg-light" id="tolStatus">—</div>
-        <div class="form-text">Босго: 0.0015 g</div>
+        <div class="form-text">{{ _("Threshold: 0.0015 g") }}</div>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Average m₂ (урьдчилсан)</label>
+        <label class="form-label">{{ _("Average m₂ (preliminary)") }}</label>
         <div class="form-control bg-light" id="avgPreview">—</div>
       </div>
 
       <div class="col-12">
-        <label class="form-label">Тайлбар</label>
-        <textarea name="remarks" class="form-control" rows="2" placeholder="Сарын тогтмолжуулалт..."></textarea>
+        <label class="form-label">{{ _("Remarks") }}</label>
+        <textarea name="remarks" class="form-control" rows="2" placeholder="{{ _("Monthly constant determination...") }}"></textarea>
       </div>
     </div>
   </div>
   <div class="card-footer d-flex justify-content-end">
     <button class="btn btn-primary">
-      <i class="bi bi-check2"></i> Хадгалах
+      <i class="bi bi-check2"></i> {{ _("Save") }}
     </button>
   </div>
 </form>
@@ -89,7 +89,7 @@
       $t3.disabled = true; $t3.required = false;
       $avg.textContent = ((t1+t2)/2).toFixed(5);
     }else{
-      $tol.innerHTML = `Хэтэрсэн: ${d12.toFixed(5)} (> ${TOL}) — 3 дахь туршилт оруулна уу`;
+      $tol.innerHTML = `{{ _("Exceeded") }}: ${d12.toFixed(5)} (> ${TOL}) — {{ _("enter 3rd trial") }}`;
       $t3.disabled = false; $t3.required = true;
 
       if (t3!=null){
@@ -98,7 +98,7 @@
         let used = '1-2', best = d12, avg = (t1+t2)/2;
         if (d13 < best){ best = d13; used = '1-3'; avg = (t1+t3)/2; }
         if (d23 < best){ best = d23; used = '2-3'; avg = (t2+t3)/2; }
-        $tol.innerHTML += `<br>Одоогийн хамгийн ойр хос: ${used} (Δ=${best.toFixed(5)})`;
+        $tol.innerHTML += `<br>{{ _("Closest pair") }}: ${used} (Δ=${best.toFixed(5)})`;
         if (best <= TOL) $avg.textContent = avg.toFixed(5);
       }
     }

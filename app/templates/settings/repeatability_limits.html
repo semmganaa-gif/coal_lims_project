@@ -2,8 +2,8 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h3 class="mb-3">Repeatability (T) лимитүүд</h3>
-  <p class="text-muted">Admin зөвшөөрлөөр хүснэгт дээрээс лимитүүдийг засварлаад хадгална. Save дармагц front/back шинэ утга ашиглана.</p>
+  <h3 class="mb-3">{{ _("Repeatability (T) Limits") }}</h3>
+  <p class="text-muted">{{ _("Edit the limits from the table with Admin permission and save. Once saved, front/back will use the new values.") }}</p>
 
   <form method="post" id="limitsForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -11,13 +11,13 @@
       <table class="table table-sm table-bordered align-middle">
         <thead class="table-light">
           <tr>
-            <th>Код</th>
-            <th>Standard</th>
-            <th>Таарц</th>
-            <th>Single limit</th>
-            <th>Single mode</th>
-            <th>Агуулгын хэмжээ (band)</th>
-            <th>T лимит (band)</th>
+            <th>{{ _("Code") }}</th>
+            <th>{{ _("Standard") }}</th>
+            <th>{{ _("Concordance") }}</th>
+            <th>{{ _("Single limit") }}</th>
+            <th>{{ _("Single mode") }}</th>
+            <th>{{ _("Content range (band)") }}</th>
+            <th>{{ _("T limit (band)") }}</th>
           </tr>
         </thead>
         <tbody>
@@ -78,8 +78,8 @@
     </div>
     <input type="hidden" name="limits_json" id="limits_json">
     <div class="d-flex">
-      <button type="submit" class="btn btn-primary">Save</button>
-      <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">Back</a>
+      <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+      <a href="{{ url_for('settings.bottles_index') }}" class="btn btn-outline-secondary ms-2">{{ _("Back") }}</a>
     </div>
   </form>
 </div>

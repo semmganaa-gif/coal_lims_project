@@ -1,6 +1,6 @@
 {# app/templates/equipment_eq_journal.html — Тухайн багажийн тусдаа журнал #}
 {% extends "base.html" %}
-{% block title %}{{ eq.name }} — Журнал{% endblock %}
+{% block title %}{{ eq.name }} — {{ _("Journal") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-3 eq-journal-page">
@@ -18,13 +18,13 @@
             <span class="eqj-lab-code">{{ eq.lab_code }}</span>
           {% endif %}
           {% if eq.status == 'normal' %}
-            <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> Хэвийн</span>
+            <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
           {% elif eq.status == 'broken' %}
-            <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> Эвдэрсэн</span>
+            <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Broken") }}</span>
           {% elif eq.status == 'maintenance' %}
-            <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> Засварт</span>
+            <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> {{ _("Maintenance") }}</span>
           {% elif eq.status == 'retired' %}
-            <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> Гарсан</span>
+            <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
           {% endif %}
         </div>
         <div class="eqj-subtitle">
@@ -38,10 +38,10 @@
       <div class="d-flex gap-2">
         <a href="{{ url_for('equipment.equipment_detail', id=eq.id) }}"
            class="btn btn-sm btn-outline-secondary eqj-btn-round">
-          <i class="bi bi-info-circle"></i> Дэлгэрэнгүй
+          <i class="bi bi-info-circle"></i> {{ _("Details") }}
         </a>
         <button class="btn btn-sm btn-primary eqj-btn-round" data-bs-toggle="collapse" data-bs-target="#addLogForm">
-          <i class="bi bi-plus-lg"></i> Бүртгэл нэмэх
+          <i class="bi bi-plus-lg"></i> {{ _("Add Record") }}
         </button>
       </div>
     </div>
@@ -51,7 +51,7 @@
   <div class="collapse mb-3" id="addLogForm">
     <div class="eqj-add-card">
       <div class="eqj-add-header">
-        <i class="bi bi-plus-circle me-2"></i> Шинэ бүртгэл нэмэх
+        <i class="bi bi-plus-circle me-2"></i> {{ _("Add New Record") }}
       </div>
       <div class="eqj-add-body">
         <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
@@ -60,48 +60,48 @@
 
           <div class="row g-2 mb-2">
             <div class="col-md-2">
-              <label class="eqj-label">Төрөл</label>
+              <label class="eqj-label">{{ _("Type") }}</label>
               <select name="action_type" class="form-select form-select-sm" id="jActionType">
-                <option value="Usage">Ашиглалт</option>
-                <option value="Daily Check">Өдрийн шалгалт</option>
-                <option value="Maintenance">Засвар үйлчилгээ</option>
+                <option value="Usage">{{ _("Usage") }}</option>
+                <option value="Daily Check">{{ _("Daily Check") }}</option>
+                <option value="Maintenance">{{ _("Maintenance") }}</option>
                 {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">Их засвар</option>
-                <option value="Calibration">Калибровка</option>
+                <option value="Repair">{{ _("Major Repair") }}</option>
+                <option value="Calibration">{{ _("Calibration") }}</option>
                 {% endif %}
               </select>
             </div>
             <div class="col-md-2" id="jDurationCol">
-              <label class="eqj-label">Хугацаа (мин)</label>
+              <label class="eqj-label">{{ _("Duration (min)") }}</label>
               <input type="number" name="duration_minutes" class="form-control form-control-sm" min="1" placeholder="60">
             </div>
             <div class="col-md-2">
-              <label class="eqj-label">Огноо</label>
+              <label class="eqj-label">{{ _("Date") }}</label>
               <input type="date" name="action_date" class="form-control form-control-sm"
                      value="{{ now_local().strftime('%Y-%m-%d') }}" required>
             </div>
             <div class="col-md-2">
-              <label class="eqj-label">Хэн хийсэн</label>
+              <label class="eqj-label">{{ _("Performed By") }}</label>
               <input type="text" name="performed_by" class="form-control form-control-sm"
                      value="{{ current_user.username }}">
             </div>
             <div class="col-md-2">
-              <label class="eqj-label">Гэрчилгээ №</label>
+              <label class="eqj-label">{{ _("Certificate No.") }}</label>
               <input type="text" name="certificate_no" class="form-control form-control-sm" placeholder="—">
             </div>
             <div class="col-md-2">
-              <label class="eqj-label">Файл</label>
+              <label class="eqj-label">{{ _("File") }}</label>
               <input type="file" name="certificate_file" class="form-control form-control-sm">
             </div>
           </div>
 
           <div class="row g-2">
             <div class="col">
-              <label class="eqj-label">Тэмдэглэл</label>
+              <label class="eqj-label">{{ _("Notes") }}</label>
               <div class="input-group input-group-sm">
-                <input type="text" name="description" class="form-control" placeholder="Юу хийсэн, тайлбар...">
+                <input type="text" name="description" class="form-control" placeholder="{{ _("Description of work performed...") }}">
                 <button type="submit" class="btn btn-primary">
-                  <i class="bi bi-check2-circle me-1"></i> Хадгалах
+                  <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
                 </button>
               </div>
             </div>
@@ -114,7 +114,7 @@
   {# ===== DATE FILTER ===== #}
   <div class="eqj-filter-bar mb-3">
     <form id="jDateForm" class="d-flex flex-wrap align-items-center gap-2">
-      <label class="small text-muted mb-0 fw-semibold">Хугацаа:</label>
+      <label class="small text-muted mb-0 fw-semibold">{{ _("Period:") }}</label>
       <div class="input-group input-group-sm eqj-date-input">
         <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
         <input type="date" id="jStartDate" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') }}">
@@ -126,14 +126,14 @@
       </div>
 
       <div class="btn-group btn-group-sm" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="365">1 жил</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="7">{{ _("7 days") }}</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">{{ _("30 days") }}</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">{{ _("90 days") }}</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="365">{{ _("1 year") }}</button>
       </div>
 
       <button type="submit" class="btn btn-primary btn-sm">
-        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+        <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
       </button>
     </form>
   </div>
@@ -145,7 +145,7 @@
         <div class="eqj-stat-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-clock-history"></i></div>
         <div>
           <div class="eqj-stat-value" id="statTotalHours">—</div>
-          <div class="eqj-stat-label">Нийт ашигласан цаг</div>
+          <div class="eqj-stat-label">{{ _("Total Usage Hours") }}</div>
         </div>
       </div>
     </div>
@@ -154,7 +154,7 @@
         <div class="eqj-stat-icon" style="background:#fef3c7;color:#b45309"><i class="bi bi-tools"></i></div>
         <div>
           <div class="eqj-stat-value" id="statMaintCount">—</div>
-          <div class="eqj-stat-label">Засвар үйлчилгээ</div>
+          <div class="eqj-stat-label">{{ _("Maintenance") }}</div>
         </div>
       </div>
     </div>
@@ -165,7 +165,7 @@
           <div class="eqj-stat-value" id="statLastCalib">
             {{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '—' }}
           </div>
-          <div class="eqj-stat-label">Сүүлийн калибровка</div>
+          <div class="eqj-stat-label">{{ _("Last Calibration") }}</div>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@
         <div class="eqj-stat-icon" style="background:#f3e8ff;color:#7c3aed"><i class="bi bi-journal-text"></i></div>
         <div>
           <div class="eqj-stat-value" id="statTotalLogs">—</div>
-          <div class="eqj-stat-label">Нийт бүртгэл</div>
+          <div class="eqj-stat-label">{{ _("Total Records") }}</div>
         </div>
       </div>
     </div>
@@ -185,21 +185,21 @@
     <div class="eqj-grid-header">
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <span class="fw-semibold small text-muted text-uppercase me-2">
-          <i class="bi bi-journal-richtext"></i> Журналын бүртгэлүүд
+          <i class="bi bi-journal-richtext"></i> {{ _("Journal Records") }}
         </span>
         <div class="eqj-filter-pills" id="typePills">
-          <button class="eqj-pill active" data-group="all">Бүгд</button>
-          <button class="eqj-pill" data-group="usage">Ашиглалт</button>
-          <button class="eqj-pill" data-group="check">Шалгалт</button>
-          <button class="eqj-pill" data-group="maint">Засвар</button>
-          <button class="eqj-pill" data-group="repair">Их засвар</button>
-          <button class="eqj-pill" data-group="calib">Калибровка</button>
+          <button class="eqj-pill active" data-group="all">{{ _("All") }}</button>
+          <button class="eqj-pill" data-group="usage">{{ _("Usage") }}</button>
+          <button class="eqj-pill" data-group="check">{{ _("Check") }}</button>
+          <button class="eqj-pill" data-group="maint">{{ _("Maintenance") }}</button>
+          <button class="eqj-pill" data-group="repair">{{ _("Major Repair") }}</button>
+          <button class="eqj-pill" data-group="calib">{{ _("Calibration") }}</button>
         </div>
       </div>
       <div class="d-flex gap-2 align-items-center">
         <div class="input-group input-group-sm" style="max-width:240px">
           <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-          <input type="text" id="jQuickFilter" class="form-control border-start-0" placeholder="Хайх...">
+          <input type="text" id="jQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
         </div>
         <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
           <i class="bi bi-download"></i> CSV
@@ -427,19 +427,19 @@
 
     const TYPE_MAP = {
       'Ашиглалт':           {cls: 'eqj-type-usage', icon: 'bi-clock'},
-      'Daily Check':        {cls: 'eqj-type-check', icon: 'bi-check-square', label: 'Шалгалт'},
-      'Maintenance':        {cls: 'eqj-type-maint', icon: 'bi-wrench', label: 'Засвар'},
-      'Repair':             {cls: 'eqj-type-repair', icon: 'bi-tools', label: 'Их засвар'},
-      'Calibration':        {cls: 'eqj-type-calib', icon: 'bi-award', label: 'Калибровка'},
-      'Temperature Check':  {cls: 'eqj-type-check', icon: 'bi-thermometer-half', label: 'Темп. шалгалт'},
-      'Balance Check':      {cls: 'eqj-type-check', icon: 'bi-rulers', label: 'Жин шалгалт'},
-      'Calorimeter Calibration': {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Илчлэг калибр.'},
-      'Calorimeter Check':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Илчлэг калибр.'},
-      'Sulfur Calibration': {cls: 'eqj-type-calib', icon: 'bi-droplet', label: 'Хүхэр калибр.'},
-      'Calibration Check':  {cls: 'eqj-type-calib', icon: 'bi-shield-check', label: 'Калибр. шалгалт'},
-      'CSN Crucible Test':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: 'Тигел туршилт'},
-      'Drum Calibration':   {cls: 'eqj-type-calib', icon: 'bi-gear-wide-connected', label: 'Тээрэм калибр.'},
-      'XRF Calibration':    {cls: 'eqj-type-calib', icon: 'bi-rulers', label: 'XRF калибр.'},
+      'Daily Check':        {cls: 'eqj-type-check', icon: 'bi-check-square', label: '{{ _("Daily Check") }}'},
+      'Maintenance':        {cls: 'eqj-type-maint', icon: 'bi-wrench', label: '{{ _("Maintenance") }}'},
+      'Repair':             {cls: 'eqj-type-repair', icon: 'bi-tools', label: '{{ _("Major Repair") }}'},
+      'Calibration':        {cls: 'eqj-type-calib', icon: 'bi-award', label: '{{ _("Calibration") }}'},
+      'Temperature Check':  {cls: 'eqj-type-check', icon: 'bi-thermometer-half', label: '{{ _("Temp. Check") }}'},
+      'Balance Check':      {cls: 'eqj-type-check', icon: 'bi-rulers', label: '{{ _("Balance Check") }}'},
+      'Calorimeter Calibration': {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
+      'Calorimeter Check':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
+      'Sulfur Calibration': {cls: 'eqj-type-calib', icon: 'bi-droplet', label: '{{ _("Sulfur Calib.") }}'},
+      'Calibration Check':  {cls: 'eqj-type-calib', icon: 'bi-shield-check', label: '{{ _("Calib. Check") }}'},
+      'CSN Crucible Test':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Crucible Test") }}'},
+      'Drum Calibration':   {cls: 'eqj-type-calib', icon: 'bi-gear-wide-connected', label: '{{ _("Drum Calib.") }}'},
+      'XRF Calibration':    {cls: 'eqj-type-calib', icon: 'bi-rulers', label: '{{ _("XRF Calib.") }}'},
     };
 
     // Дэд цэсний бүлэг: action_type -> group
@@ -466,14 +466,14 @@
     const columnDefs = [
       {
         field: 'date',
-        headerName: 'Огноо',
+        headerName: '{{ _("Date") }}',
         sort: 'desc',
         width: 150,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'type',
-        headerName: 'Төрөл',
+        headerName: '{{ _("Type") }}',
         width: 155,
         cellRenderer: function(p) {
           const v = p.value || '';
@@ -485,19 +485,19 @@
       },
       {
         field: 'duration',
-        headerName: 'Хугацаа',
+        headerName: '{{ _("Duration") }}',
         width: 100,
         filter: false
       },
       {
         field: 'user',
-        headerName: 'Хэн хийсэн',
+        headerName: '{{ _("Performed By") }}',
         width: 130,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'description',
-        headerName: 'Тэмдэглэл',
+        headerName: '{{ _("Notes") }}',
         flex: 2,
         minWidth: 250,
         filter: 'agTextColumnFilter',
@@ -506,7 +506,7 @@
       },
       {
         field: 'result',
-        headerName: 'Үр дүн',
+        headerName: '{{ _("Result") }}',
         width: 90,
         cellRenderer: function(p) {
           const v = (p.value || '').toLowerCase();
@@ -523,7 +523,7 @@
         sortable: false,
         cellRenderer: function(p) {
           if (!p.value || !p.data.log_id) return '';
-          return '<a href="/download_cert/' + p.data.log_id + '" title="Файл татах" style="color:#6366f1"><i class="bi bi-paperclip"></i></a>';
+          return '<a href="/download_cert/' + p.data.log_id + '" title="{{ _("Download file") }}" style="color:#6366f1"><i class="bi bi-paperclip"></i></a>';
         }
       }
     ];
@@ -557,10 +557,10 @@
       document.querySelectorAll('.eqj-pill[data-group]').forEach(btn => {
         const g = btn.dataset.group;
         if (g === 'all') {
-          btn.textContent = 'Бүгд (' + allRows.length + ')';
+          btn.textContent = '{{ _("All") }} (' + allRows.length + ')';
         } else {
           const cnt = allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === g).length;
-          const labels = {usage:'Ашиглалт', check:'Шалгалт', maint:'Засвар', repair:'Их засвар', calib:'Калибровка'};
+          const labels = {usage:'{{ _("Usage") }}', check:'{{ _("Check") }}', maint:'{{ _("Maintenance") }}', repair:'{{ _("Major Repair") }}', calib:'{{ _("Calibration") }}'};
           btn.textContent = labels[g] + (cnt > 0 ? ' (' + cnt + ')' : '');
         }
       });
@@ -593,7 +593,7 @@
             if (r.category === 'Maintenance') maintCount++;
           });
 
-          document.getElementById('statTotalHours').textContent = (totalMinutes / 60).toFixed(1) + ' цаг';
+          document.getElementById('statTotalHours').textContent = (totalMinutes / 60).toFixed(1) + ' {{ _("hrs") }}';
           document.getElementById('statMaintCount').textContent = maintCount;
           document.getElementById('statTotalLogs').textContent = allRows.length;
         });

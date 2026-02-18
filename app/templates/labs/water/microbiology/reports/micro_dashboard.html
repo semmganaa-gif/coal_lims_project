@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Микро Dashboard{% endblock %}
+{% block title %}{{ _("Microbiology Dashboard") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -58,11 +58,11 @@
 <div class="micro-dash">
   <div class="dash-header">
     <div>
-      <h4><i class="bi bi-speedometer2 me-2"></i>Микро Dashboard</h4>
-      <p class="subtitle">{{ month }}-р сар, {{ year }} он</p>
+      <h4><i class="bi bi-speedometer2 me-2"></i>{{ _("Microbiology Dashboard") }}</h4>
+      <p class="subtitle">{{ month }}-р сар, {{ year }} {{ _("year") }}</p>
     </div>
     <a href="{{ url_for('microbiology.micro_hub') }}" class="btn btn-sm btn-outline-secondary">
-      <i class="bi bi-arrow-left me-1"></i>Буцах
+      <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
     </a>
   </div>
 
@@ -71,9 +71,9 @@
     <div class="kpi-card">
       <div class="d-flex">
         <div>
-          <h6>Sample (энэ сар)</h6>
+          <h6>{{ _("Samples (this month)") }}</h6>
           <h2 style="color:#0d9488">{{ "{:,}".format(samples_month) }}</h2>
-          <small>Жилд: {{ "{:,}".format(samples_year) }}</small>
+          <small>{{ _("Year total") }}: {{ "{:,}".format(samples_year) }}</small>
         </div>
         <div class="kpi-icon" style="background:linear-gradient(135deg,#ccfbf1,#99f6e4);color:#0d9488">
           <i class="bi bi-droplet-fill"></i>
@@ -83,9 +83,9 @@
     <div class="kpi-card">
       <div class="d-flex">
         <div>
-          <h6>Analysis (энэ сар)</h6>
+          <h6>{{ _("Analyses (this month)") }}</h6>
           <h2 style="color:#059669">{{ "{:,}".format(analyses_month) }}</h2>
-          <small>Жилд: {{ "{:,}".format(analyses_year) }}</small>
+          <small>{{ _("Year total") }}: {{ "{:,}".format(analyses_year) }}</small>
         </div>
         <div class="kpi-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669">
           <i class="bi bi-clipboard-check-fill"></i>
@@ -95,9 +95,9 @@
     <div class="kpi-card">
       <div class="d-flex">
         <div>
-          <h6>Категори</h6>
+          <h6>{{ _("Categories") }}</h6>
           <h2 style="color:#20c997">{{ category_counts|length }}</h2>
-          <small>Water / Air / Swab</small>
+          <small>{{ _("Water / Air / Swab") }}</small>
         </div>
         <div class="kpi-icon" style="background:linear-gradient(135deg,#ccfbf1,#a7f3d0);color:#14b8a6">
           <i class="bi bi-pie-chart-fill"></i>
@@ -107,9 +107,9 @@
     <div class="kpi-card">
       <div class="d-flex">
         <div>
-          <h6>Pass rate</h6>
+          <h6>{{ _("Pass rate") }}</h6>
           <h2 style="color:{% if pass_rate >= 90 %}#059669{% else %}#dc2626{% endif %}">{{ "%.0f"|format(pass_rate) }}%</h2>
-          <small>{{ pass_count }} pass / {{ fail_count }} fail</small>
+          <small>{{ pass_count }} {{ _("pass") }} / {{ fail_count }} {{ _("fail") }}</small>
         </div>
         <div class="kpi-icon" style="background:linear-gradient(135deg,#d1fae5,#bbf7d0);color:#15803d">
           <i class="bi bi-shield-check"></i>
@@ -121,27 +121,27 @@
   <!-- Charts -->
   <div class="chart-row">
     <div class="chart-card">
-      <h6><i class="bi bi-graph-up me-2" style="color:#20c997"></i>Сүүлийн 6 сарын шинжилгээ</h6>
+      <h6><i class="bi bi-graph-up me-2" style="color:#20c997"></i>{{ _("Last 6 months analyses") }}</h6>
       <canvas id="trendChart" height="120"></canvas>
     </div>
     <div class="chart-card">
-      <h6><i class="bi bi-pie-chart me-2" style="color:#14b8a6"></i>Категориар</h6>
+      <h6><i class="bi bi-pie-chart me-2" style="color:#14b8a6"></i>{{ _("By Category") }}</h6>
       <canvas id="categoryChart" height="200"></canvas>
     </div>
   </div>
 
   <!-- Quick Links -->
   <div class="chart-card">
-    <h6><i class="bi bi-link-45deg me-2" style="color:#20c997"></i>Reports</h6>
+    <h6><i class="bi bi-link-45deg me-2" style="color:#20c997"></i>{{ _("Reports") }}</h6>
     <div class="quick-links">
       <a href="{{ url_for('microbiology.micro_consumption') }}">
-        <i class="bi bi-journal-bookmark" style="color:#0d9488;font-size:1.2rem"></i> Consumption
+        <i class="bi bi-journal-bookmark" style="color:#0d9488;font-size:1.2rem"></i> {{ _("Consumption") }}
       </a>
       <a href="{{ url_for('microbiology.micro_monthly_plan') }}">
-        <i class="bi bi-calendar-check" style="color:#20c997;font-size:1.2rem"></i> Monthly Plan
+        <i class="bi bi-calendar-check" style="color:#20c997;font-size:1.2rem"></i> {{ _("Monthly Plan") }}
       </a>
       <a href="{{ url_for('microbiology.micro_hub') }}">
-        <i class="bi bi-house" style="color:#64748b;font-size:1.2rem"></i> Micro Hub
+        <i class="bi bi-house" style="color:#64748b;font-size:1.2rem"></i> {{ _("Micro Hub") }}
       </a>
     </div>
   </div>
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
     data: {
       labels: trendLabels,
       datasets: [{
-        label: 'Analysis',
+        label: '{{ _("Analysis") }}',
         data: trendData,
         borderColor: '#20c997',
         backgroundColor: 'rgba(32,201,151,0.1)',

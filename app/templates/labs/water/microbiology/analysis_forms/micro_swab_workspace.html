@@ -29,21 +29,21 @@
   <div class="ws-header">
     <div>
       <h1><i class="bi bi-hand-index me-2"></i>{{ title }}</h1>
-      <p>Swab Microbiology Analysis — MNS 6410:2018</p>
+      <p>{{ _("Swab Microbiology Analysis") }} — MNS 6410:2018</p>
     </div>
     <div class="ws-actions">
-      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}</a>
       <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>Standard
+        <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>Timer
+        <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
       </button>
       <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>Equipment
+        <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
       </button>
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>Select Samples</button>
-      <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>Save</button>
+      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}</button>
+      <button id="btnSave" class="btn text-white" style="background:#8b5cf6;"><i class="bi bi-save me-1"></i>{{ _("Save") }}</button>
     </div>
   </div>
   {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
@@ -51,15 +51,15 @@
 
   <div class="grid-card">
     <div class="card-header d-flex align-items-center justify-content-between">
-      <h6><i class="bi bi-table me-1" style="color:#8b5cf6"></i>Swab Microbiology Grid <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
+      <h6><i class="bi bi-table me-1" style="color:#8b5cf6"></i>{{ _("Swab Microbiology Grid") }} <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
     </div>
     <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> CFU: MNS 6410:2018 (per 50cm² &lt;100)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> E.coli: Not Detected</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> Salmonella: Not Detected</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> S.aureus: Not Detected</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>"Not Detected" or "Detected" selection</em></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9d5ff"></div> {{ _("CFU: MNS 6410:2018 (per 50cm2 <100)") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d1fae5"></div> {{ _("E.coli: Not Detected") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> {{ _("Salmonella: Not Detected") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fef3c7"></div> {{ _("S.aureus: Not Detected") }}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>{{ _("\"Not Detected\" or \"Detected\" selection") }}</em></div>
     </div>
   </div>
 </div>
@@ -102,7 +102,7 @@
       <div class="modal-header py-3">
         <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
           <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>Equipment Usage & Maintenance</span>
+          <span>{{ _("Equipment Usage & Maintenance") }}</span>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -112,12 +112,12 @@
           <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
             <thead>
               <tr>
-                <th style="width: 22%; min-width:140px;">Lab Code / Name</th>
-                <th style="width: 7%; text-align:center;">Condi-<br>tion</th>
-                <th style="width: 10%; text-align:center;">Usage<br>(min)</th>
-                <th style="width: 20%;">Notes</th>
-                <th style="width: 7%; text-align:center;">Repair</th>
-                <th style="width: 34%;">Repair Details</th>
+                <th style="width: 22%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
+                <th style="width: 7%; text-align:center;">{{ _("Condition") }}</th>
+                <th style="width: 10%; text-align:center;">{{ _("Usage") }}<br>(min)</th>
+                <th style="width: 20%;">{{ _("Notes") }}</th>
+                <th style="width: 7%; text-align:center;">{{ _("Repair") }}</th>
+                <th style="width: 34%;">{{ _("Repair Details") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -139,7 +139,7 @@
                 </td>
                 <td>
                   <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="Notes..." style="border-color: #cbd5e0;">
+                         placeholder="{{ _("Notes...") }}" style="border-color: #cbd5e0;">
                 </td>
                 <td class="text-center">
                   <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
@@ -148,12 +148,12 @@
                 </td>
                 <td class="repair-info-cell">
                   <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>Repair Date</div>
+                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
                     <input type="date" class="form-control form-control-sm mb-2 repair-date">
                     <div class="spare-parts-list"></div>
                     <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
                             onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>Add Spare Part
+                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
                     </button>
                   </div>
                 </td>
@@ -164,17 +164,17 @@
         </div>
         {% else %}
         <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>No microbiology lab equipment registered.
+          <i class="bi bi-info-circle me-2"></i>{{ _("No microbiology lab equipment registered.") }}
         </div>
         {% endif %}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>Close
+          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
         </button>
         {% if related_equipments %}
         <button type="button" class="btn text-white px-4" style="background:#20c997;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>Save
+          <i class="bi bi-save me-1"></i>{{ _("Save") }}
         </button>
         {% endif %}
       </div>
@@ -187,30 +187,30 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #faf5ff, #f5f3ff);">
-        <h5 class="modal-title"><i class="bi bi-hand-index me-2" style="color:#8b5cf6"></i>Select Samples</h5>
+        <h5 class="modal-title"><i class="bi bi-hand-index me-2" style="color:#8b5cf6"></i>{{ _("Select Samples") }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div class="row g-2 mb-3">
           <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="🔍 Sample code...">
+            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _("Sample code...") }}">
           </div>
           <div class="col-4">
-            <select id="filterClient" class="form-select form-select-sm"><option value="">All clients</option></select>
+            <select id="filterClient" class="form-select form-select-sm"><option value="">{{ _("All clients") }}</option></select>
           </div>
           <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear filters"><i class="bi bi-x-circle"></i></button>
+            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _("Clear filters") }}"><i class="bi bi-x-circle"></i></button>
             <span id="filteredCount" class="text-muted small"></span>
           </div>
         </div>
-        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading...</p></div>
+        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">{{ _("Loading...") }}</p></div>
         <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
           <table class="table table-sm table-hover mb-0">
-            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>Sample Code</th><th>Client</th><th>Status</th><th>Date</th></tr></thead>
+            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>{{ _("Sample Code") }}</th><th>{{ _("Client") }}</th><th>{{ _("Status") }}</th><th>{{ _("Date") }}</th></tr></thead>
             <tbody id="sampleListBody"></tbody>
           </table>
         </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">No samples found</div>
+        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">{{ _("No samples found") }}</div>
       </div>
       <div class="modal-footer">
         <span id="selectedCount" class="me-auto text-muted small">0 samples selected</span>

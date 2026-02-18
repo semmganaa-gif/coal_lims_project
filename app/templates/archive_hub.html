@@ -278,12 +278,12 @@
   <div class="archive-header">
     <div>
       <h1><i class="bi bi-archive-fill text-primary"></i> {{ title }}</h1>
-      <small class="text-muted">Archived samples management</small>
+      <small class="text-muted">{{ _("Archived samples management") }}</small>
     </div>
 
     <div class="archive-stats">
       <div class="stat-item">
-        <div class="label">Total</div>
+        <div class="label">{{ _("Total") }}</div>
         <div class="value">{{ "{:,}".format(total_archived) }}</div>
       </div>
       {% for client, count in client_totals.items() %}
@@ -296,7 +296,7 @@
 
     <div class="d-flex gap-2">
       <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-arrow-left"></i> Back to Summary
+        <i class="bi bi-arrow-left"></i> {{ _("Back to Summary") }}
       </a>
     </div>
   </div>
@@ -306,7 +306,7 @@
     <!-- Tree Panel -->
     <div class="tree-panel">
       <div class="tree-header">
-        <i class="bi bi-diagram-3"></i> Structure
+        <i class="bi bi-diagram-3"></i> {{ _("Structure") }}
       </div>
       <div class="tree-content">
         {% if tree_data %}
@@ -358,7 +358,7 @@
         {% else %}
           <div class="empty-state" style="padding: 2rem 1rem;">
             <i class="bi bi-inbox"></i>
-            <p>Archive is empty</p>
+            <p>{{ _("Archive is empty") }}</p>
           </div>
         {% endif %}
       </div>
@@ -372,7 +372,7 @@
           <i class="bi bi-building me-1"></i> {{ selected_client }} &middot; {{ selected_type }}
           {% if selected_year %} &middot; {{ selected_year }}{% endif %}
           {% if selected_month %} &middot; {{ month_names[selected_month] }}{% endif %}
-          <span class="text-muted ms-2">({{ samples|length }} samples)</span>
+          <span class="text-muted ms-2">({{ samples|length }} {{ _("samples") }})</span>
         </div>
         <div class="grid-actions">
           <button type="button" id="exportCsvBtn" class="btn btn-sm btn-success">
@@ -383,7 +383,7 @@
             <input type="hidden" name="action" value="unarchive">
             <input type="hidden" name="sample_ids" id="selectedSampleIds">
             <button type="submit" class="btn btn-sm btn-warning" id="unarchiveBtn" disabled>
-              <i class="bi bi-box-arrow-up"></i> Restore
+              <i class="bi bi-box-arrow-up"></i> {{ _("Restore") }}
             </button>
           </form>
         </div>
@@ -394,8 +394,8 @@
       {% else %}
       <div class="empty-state">
         <i class="bi bi-hand-index"></i>
-        <h3>Select a group</h3>
-        <p>Select unit, type, year, month from the tree on the left</p>
+        <h3>{{ _("Select a group") }}</h3>
+        <p>{{ _("Select unit, type, year, month from the tree on the left") }}</p>
       </div>
       {% endif %}
     </div>
@@ -429,7 +429,7 @@ function selectNode(client, type, year, month) {
 // AG Grid setup
 const resultsMap = {{ results_map|tojson|safe }};
 
-// Number formatter (нэг газраас дуудах)
+// Number formatter
 function formatNumber(params) {
   if (params.value === null || params.value === undefined) return '';
   return Number(params.value).toFixed(2);
@@ -459,9 +459,9 @@ const columnDefs = [
     pinned: 'left',
     suppressMenu: true,
   },
-  { field: 'sample_code', headerName: 'Sample Code', width: 170, pinned: 'left', filter: 'agTextColumnFilter', floatingFilter: true },
-  { field: 'sample_condition', headerName: 'Status', width: 80 },
-  { field: 'received_date', headerName: 'Date', width: 100 },
+  { field: 'sample_code', headerName: '{{ _("Sample Code") }}', width: 170, pinned: 'left', filter: 'agTextColumnFilter', floatingFilter: true },
+  { field: 'sample_condition', headerName: '{{ _("Status") }}', width: 80 },
+  { field: 'received_date', headerName: '{{ _("Date") }}', width: 100 },
   {% for at in analysis_types %}
   { field: '{{ at.code }}', headerName: '{{ at.code }}', width: 70, type: 'numericColumn', valueFormatter: formatNumber },
   {% endfor %}
@@ -478,6 +478,7 @@ const gridOptions = {
     sortable: true,
     filter: true,
     resizable: true,
+    floatingFilterComponentParams: { suppressFilterButton: true },
   },
   onSelectionChanged: function() {
     const selectedRows = gridOptions.api.getSelectedRows();

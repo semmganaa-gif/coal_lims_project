@@ -6,14 +6,14 @@
   {# --- HEADER --- #}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="fw-bold text-primary mb-0">
-      <i class="bi bi-archive"></i> Sample Retention & Disposal
+      <i class="bi bi-archive"></i> {{ _("Sample Retention & Disposal") }}
     </h4>
     <div class="d-flex gap-2">
       <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkRetentionModal">
-        <i class="bi bi-calendar-plus"></i> Set Retention for All
+        <i class="bi bi-calendar-plus"></i> {{ _("Set Retention for All") }}
       </button>
       <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> {{ _("Back") }}
       </a>
     </div>
   </div>
@@ -24,7 +24,7 @@
       <div class="card border-primary h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-primary fw-bold mb-0">{{ return_samples|length }}</h3>
-          <small class="text-muted">Return Samples</small>
+          <small class="text-muted">{{ _("Return Samples") }}</small>
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div class="card border-danger h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-danger fw-bold mb-0">{{ expired_samples|length }}</h3>
-          <small class="text-muted">Expired</small>
+          <small class="text-muted">{{ _("Expired") }}</small>
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
       <div class="card border-warning h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-warning fw-bold mb-0">{{ upcoming_samples|length }}</h3>
-          <small class="text-muted">Within {{ warning_days }} days</small>
+          <small class="text-muted">{{ _("Within %(days)s days", days=warning_days) }}</small>
         </div>
       </div>
     </div>
@@ -48,7 +48,7 @@
       <div class="card border-success h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-success fw-bold mb-0">{{ disposed_samples|length }}</h3>
-          <small class="text-muted">Disposed</small>
+          <small class="text-muted">{{ _("Disposed") }}</small>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
       <div class="card border-secondary h-100">
         <div class="card-body text-center py-2">
           <h3 class="text-secondary fw-bold mb-0">{{ no_retention_samples|length }}</h3>
-          <small class="text-muted">No Retention</small>
+          <small class="text-muted">{{ _("No Retention") }}</small>
         </div>
       </div>
     </div>
@@ -66,27 +66,27 @@
   <ul class="nav nav-tabs" id="disposalTabs" role="tablist">
     <li class="nav-item">
       <button class="nav-link active text-primary" id="return-tab" data-bs-toggle="tab" data-bs-target="#return" type="button">
-        <i class="bi bi-arrow-return-left"></i> Return ({{ return_samples|length }})
+        <i class="bi bi-arrow-return-left"></i> {{ _("Return") }} ({{ return_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-danger" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button">
-        <i class="bi bi-exclamation-triangle-fill"></i> Expired ({{ expired_samples|length }})
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ _("Expired") }} ({{ expired_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-warning" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">
-        <i class="bi bi-clock"></i> Expiring Soon ({{ upcoming_samples|length }})
+        <i class="bi bi-clock"></i> {{ _("Expiring Soon") }} ({{ upcoming_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-success" id="disposed-tab" data-bs-toggle="tab" data-bs-target="#disposed" type="button">
-        <i class="bi bi-check-circle"></i> Disposed ({{ disposed_samples|length }})
+        <i class="bi bi-check-circle"></i> {{ _("Disposed") }} ({{ disposed_samples|length }})
       </button>
     </li>
     <li class="nav-item">
       <button class="nav-link text-secondary" id="nodate-tab" data-bs-toggle="tab" data-bs-target="#nodate" type="button">
-        <i class="bi bi-question-circle"></i> No Retention ({{ no_retention_samples|length }})
+        <i class="bi bi-question-circle"></i> {{ _("No Retention") }} ({{ no_retention_samples|length }})
       </button>
     </li>
   </ul>
@@ -103,10 +103,10 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllReturn" onchange="toggleAll(this, 'return')">
-            <label class="form-check-label" for="selectAllReturn">Select All</label>
+            <label class="form-check-label" for="selectAllReturn">{{ _("Select All") }}</label>
           </div>
           <button type="submit" class="btn btn-primary btn-sm">
-            <i class="bi bi-box-arrow-up-right"></i> Mark as Returned
+            <i class="bi bi-box-arrow-up-right"></i> {{ _("Mark as Returned") }}
           </button>
         </div>
 
@@ -115,10 +115,10 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Sample Code</th>
-                <th style="min-width:100px;">Client</th>
-                <th style="min-width:120px;">Received</th>
-                <th>Status</th>
+                <th style="min-width:350px;">{{ _("Sample Code") }}</th>
+                <th style="min-width:100px;">{{ _("Client") }}</th>
+                <th style="min-width:120px;">{{ _("Received") }}</th>
+                <th>{{ _("Status") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -138,7 +138,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-inbox display-4"></i>
-        <p class="mt-2">No samples to return.</p>
+        <p class="mt-2">{{ _("No samples to return.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -152,18 +152,18 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllExpired" onchange="toggleAll(this, 'expired')">
-            <label class="form-check-label" for="selectAllExpired">Select All</label>
+            <label class="form-check-label" for="selectAllExpired">{{ _("Select All") }}</label>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <select name="disposal_method" class="form-select form-select-sm" style="width: 200px;" required>
-              <option value="">-- Disposal Method --</option>
-              <option value="Discarded">Discarded</option>
-              <option value="Returned">Returned</option>
-              <option value="Archived">Archived</option>
-              <option value="Other">Other</option>
+              <option value="">{{ _("-- Disposal Method --") }}</option>
+              <option value="Discarded">{{ _("Discarded") }}</option>
+              <option value="Returned">{{ _("Returned") }}</option>
+              <option value="Archived">{{ _("Archived") }}</option>
+              <option value="Other">{{ _("Other") }}</option>
             </select>
             <button type="submit" class="btn btn-danger btn-sm">
-              <i class="bi bi-trash"></i> Mark as Disposed
+              <i class="bi bi-trash"></i> {{ _("Mark as Disposed") }}
             </button>
           </div>
         </div>
@@ -173,11 +173,11 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Sample Code</th>
-                <th style="min-width:100px;">Client</th>
-                <th style="min-width:120px;">Received</th>
-                <th style="min-width:130px;">Retention Date</th>
-                <th>Days Overdue</th>
+                <th style="min-width:350px;">{{ _("Sample Code") }}</th>
+                <th style="min-width:100px;">{{ _("Client") }}</th>
+                <th style="min-width:120px;">{{ _("Received") }}</th>
+                <th style="min-width:130px;">{{ _("Retention Date") }}</th>
+                <th>{{ _("Days Overdue") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -188,7 +188,7 @@
                 <td>{{ s.client_name or '-' }}</td>
                 <td>{{ s.received_date.strftime('%Y-%m-%d') if s.received_date else '-' }}</td>
                 <td class="text-danger">{{ s.retention_date.strftime('%Y-%m-%d') if s.retention_date else '-' }}</td>
-                <td><span class="badge bg-danger">{{ (today - s.retention_date).days }} days</span></td>
+                <td><span class="badge bg-danger">{{ (today - s.retention_date).days }} {{ _("days") }}</span></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -198,7 +198,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-check-circle display-4"></i>
-        <p class="mt-2">No expired samples.</p>
+        <p class="mt-2">{{ _("No expired samples.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -210,11 +210,11 @@
         <table class="table table-sm table-hover text-start">
           <thead class="table-light">
             <tr>
-              <th style="min-width:350px;">Sample Code</th>
-              <th style="min-width:100px;">Client</th>
-              <th style="min-width:120px;">Received</th>
-              <th style="min-width:130px;">Retention Date</th>
-              <th style="min-width:100px;">Days Left</th>
+              <th style="min-width:350px;">{{ _("Sample Code") }}</th>
+              <th style="min-width:100px;">{{ _("Client") }}</th>
+              <th style="min-width:120px;">{{ _("Received") }}</th>
+              <th style="min-width:130px;">{{ _("Retention Date") }}</th>
+              <th style="min-width:100px;">{{ _("Days Left") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -224,7 +224,7 @@
               <td>{{ s.client_name or '-' }}</td>
               <td>{{ s.received_date.strftime('%Y-%m-%d') if s.received_date else '-' }}</td>
               <td class="text-warning">{{ s.retention_date.strftime('%Y-%m-%d') if s.retention_date else '-' }}</td>
-              <td><span class="badge bg-warning text-dark">{{ (s.retention_date - today).days }} days</span></td>
+              <td><span class="badge bg-warning text-dark">{{ (s.retention_date - today).days }} {{ _("days") }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -233,7 +233,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-calendar-check display-4"></i>
-        <p class="mt-2">No samples expiring soon.</p>
+        <p class="mt-2">{{ _("No samples expiring soon.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -245,10 +245,10 @@
         <table class="table table-sm table-hover text-start">
           <thead class="table-light">
             <tr>
-              <th style="min-width:350px;">Sample Code</th>
-              <th style="min-width:100px;">Client</th>
-              <th style="min-width:120px;">Disposal Date</th>
-              <th>Disposal Method</th>
+              <th style="min-width:350px;">{{ _("Sample Code") }}</th>
+              <th style="min-width:100px;">{{ _("Client") }}</th>
+              <th style="min-width:120px;">{{ _("Disposal Date") }}</th>
+              <th>{{ _("Disposal Method") }}</th>
             </tr>
           </thead>
           <tbody>
@@ -266,7 +266,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-inbox display-4"></i>
-        <p class="mt-2">No samples disposed in the last 90 days.</p>
+        <p class="mt-2">{{ _("No samples disposed in the last 90 days.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -280,18 +280,18 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="selectAllNodate" onchange="toggleAll(this, 'nodate')">
-            <label class="form-check-label" for="selectAllNodate">Select All</label>
+            <label class="form-check-label" for="selectAllNodate">{{ _("Select All") }}</label>
           </div>
           <div class="d-flex gap-2 align-items-center">
             <select name="retention_days" class="form-select form-select-sm" style="width: 180px;">
-              <option value="30">30 days</option>
-              <option value="60">60 days</option>
-              <option value="90" selected>90 days</option>
-              <option value="180">180 days</option>
-              <option value="365">1 year</option>
+              <option value="30">{{ _("30 days") }}</option>
+              <option value="60">{{ _("60 days") }}</option>
+              <option value="90" selected>{{ _("90 days") }}</option>
+              <option value="180">{{ _("180 days") }}</option>
+              <option value="365">{{ _("1 year") }}</option>
             </select>
             <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-calendar-plus"></i> Set Retention
+              <i class="bi bi-calendar-plus"></i> {{ _("Set Retention") }}
             </button>
           </div>
         </div>
@@ -301,10 +301,10 @@
             <thead class="table-light">
               <tr>
                 <th width="40"></th>
-                <th style="min-width:350px;">Sample Code</th>
-                <th style="min-width:100px;">Client</th>
-                <th style="min-width:120px;">Received</th>
-                <th>Status</th>
+                <th style="min-width:350px;">{{ _("Sample Code") }}</th>
+                <th style="min-width:100px;">{{ _("Client") }}</th>
+                <th style="min-width:120px;">{{ _("Received") }}</th>
+                <th>{{ _("Status") }}</th>
               </tr>
             </thead>
             <tbody>
@@ -324,7 +324,7 @@
       {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-calendar-check display-4"></i>
-        <p class="mt-2">No samples without retention date.</p>
+        <p class="mt-2">{{ _("No samples without retention date.") }}</p>
       </div>
       {% endif %}
     </div>
@@ -346,36 +346,36 @@ function toggleAll(source, tabName) {
       <form method="POST" action="{{ url_for('main.bulk_set_retention') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Set Retention for All Samples</h5>
+          <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>{{ _("Set Retention for All Samples") }}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="alert alert-info small">
             <i class="bi bi-info-circle me-1"></i>
-            Sets retention period for all samples without a defined retention date.
+            {{ _("Sets retention period for all samples without a defined retention date.") }}
           </div>
           <div class="mb-3">
-            <label class="form-label">Retention Period</label>
+            <label class="form-label">{{ _("Retention Period") }}</label>
             <select name="retention_days" class="form-select" required>
-              <option value="30">30 days</option>
-              <option value="60">60 days</option>
-              <option value="90" selected>90 days (standard)</option>
-              <option value="180">180 days</option>
-              <option value="365">1 year</option>
+              <option value="30">{{ _("30 days") }}</option>
+              <option value="60">{{ _("60 days") }}</option>
+              <option value="90" selected>{{ _("90 days (standard)") }}</option>
+              <option value="180">{{ _("180 days") }}</option>
+              <option value="365">{{ _("1 year") }}</option>
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Start Date</label>
+            <label class="form-label">{{ _("Start Date") }}</label>
             <select name="from_date" class="form-select">
-              <option value="received">Received Date</option>
-              <option value="today">Today</option>
+              <option value="received">{{ _("Received Date") }}</option>
+              <option value="today">{{ _("Today") }}</option>
             </select>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>Apply
+            <i class="bi bi-check-lg me-1"></i>{{ _("Apply") }}
           </button>
         </div>
       </form>

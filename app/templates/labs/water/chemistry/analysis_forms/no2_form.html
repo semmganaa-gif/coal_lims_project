@@ -1,32 +1,32 @@
 {% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
 
-{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">Спектрофотометр</span>{% endblock %}
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">{{ _("Spectrophotometer") }}</span>{% endblock %}
 
 {% block extra_ref %}
 <div class="mt-2 p-2 bg-light rounded">
-  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>Тооцооллын томьёо</h6>
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>{{ _("Calculation Formula") }}</h6>
   <small class="text-muted">
-    <strong>Багажны уншилт:</strong> NO₂-N (азот хэлбэрээр)<br>
-    <strong>NO₂-N (мг/л)</strong> = Average × Шингэрүүлэлт<br>
-    <strong>NO₂⁻ (мг/л)</strong> = NO₂-N × 3.286 (46.005 ÷ 14.007)<br>
-    <span class="text-info">MNS хязгаар NO₂⁻ ион дээр хэрэглэгдэнэ</span>
+    <strong>{{ _("Instrument reading") }}:</strong> NO₂-N ({{ _("nitrogen form") }})<br>
+    <strong>NO₂-N (mg/L)</strong> = {{ _("Average") }} × {{ _("Dilution") }}<br>
+    <strong>NO₂⁻ (mg/L)</strong> = NO₂-N × 3.286 (46.005 ÷ 14.007)<br>
+    <span class="text-info">{{ _("MNS limit applies to NO2- ion") }}</span>
   </small>
 </div>
 {% endblock %}
 
 {% block column_defs %}
-  // NO2 conversion factor: NO2/N = 46.005/14.007 = 3.286 (N → Ion руу шилжүүлэх)
+  // NO2 conversion factor: NO2/N = 46.005/14.007 = 3.286 (N -> Ion conversion)
   const N_TO_NO2 = 3.286;
 
   var formColumns = [
-    { headerName: 'Шингэрүүлэлт', field: 'dilution', width: 110, type: 'numericColumn',
+    { headerName: '{{ _("Dilution") }}', field: 'dilution', width: 110, type: 'numericColumn',
       ...editCol, valueFormatter: p => p.value != null ? p.value : '1' },
     { headerName: 'Abs 1', field: 'abs1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     { headerName: 'Abs 2', field: 'abs2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Result 1', field: 'r1', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: 'Result 2', field: 'r2', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: '{{ _("Result 1") }}', field: 'r1', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: '{{ _("Result 2") }}', field: 'r2', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     {
-      headerName: 'Average', field: 'avg_raw', width: 90,
+      headerName: '{{ _("Average") }}', field: 'avg_raw', width: 90,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         if (r1 != null && r2 != null) return (r1 + r2) / 2;
@@ -38,7 +38,7 @@
       cellStyle: { color: '#6c757d' }
     },
     {
-      headerName: 'NO₂-N мг/л', field: 'no2_n', width: 110,
+      headerName: 'NO₂-N mg/L', field: 'no2_n', width: 110,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2, dil = p.data.dilution || 1;
         let avg = null;
@@ -51,7 +51,7 @@
       cellStyle: { color: '#6c757d' }
     },
     {
-      headerName: 'NO₂⁻ мг/л', field: 'no2_ion', width: 110,
+      headerName: 'NO₂⁻ mg/L', field: 'no2_ion', width: 110,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2, dil = p.data.dilution || 1;
         let avg = null;
@@ -65,14 +65,14 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
     {
-      headerName: 'Difference', field: 'diff', width: 80,
+      headerName: '{{ _("Difference") }}', field: 'diff', width: 80,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;
       },
       valueFormatter: fmt3
     },
-    { headerName: 'Control', field: 'control', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+    { headerName: '{{ _("Control") }}', field: 'control', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
   ];
   var editableFields = ['dilution', 'abs1', 'abs2', 'r1', 'r2', 'control', 'notes'];
   var computedCols = ['avg_raw', 'no2_n', 'no2_ion', 'diff'];
@@ -103,8 +103,8 @@
       else if (d.r1 != null) avg = d.r1;
       else if (d.r2 != null) avg = d.r2;
 
-      const no2_n = avg != null ? avg * dil : null;           // Азот хэлбэр (багажнаас)
-      const no2_ion = no2_n != null ? no2_n * N_TO_NO2 : null; // Ион хэлбэр (тайлагнах)
+      const no2_n = avg != null ? avg * dil : null;           // Nitrogen form (from instrument)
+      const no2_ion = no2_n != null ? no2_n * N_TO_NO2 : null; // Ion form (for reporting)
 
       items.push({
         sample_id: d.sample_id,
@@ -116,8 +116,8 @@
           r2: d.r2,
           avg_raw: avg,
           no2_n: no2_n,
-          no2_ion: no2_ion,    // Эцсийн үр дүн (NO2- ион)
-          result: no2_ion,     // final_result-д хадгалагдана
+          no2_ion: no2_ion,    // Final result (NO2- ion)
+          result: no2_ion,     // Saved to final_result
           control: d.control,
           notes: d.notes
         }

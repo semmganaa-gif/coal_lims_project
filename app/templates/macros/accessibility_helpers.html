@@ -102,7 +102,7 @@
     error_text='',
     classes='form-select',
     include_blank=true,
-    blank_text='-- Select --'
+    blank_text=_('-- Select --')
 ) %}
 {% set field_name = name if name else field_id %}
 {% set describedby_ids = [] %}
@@ -355,11 +355,11 @@
   Accessible submit button with loading state support
 #}
 {% macro render_accessible_submit(
-    text='Save',
+    text=_('Save'),
     button_id='submit-button',
     classes='btn btn-primary',
     icon='check-circle',
-    loading_text='Saving...'
+    loading_text=_('Saving...')
 ) %}
 <button
   type="submit"
@@ -412,7 +412,7 @@
 {#
   Skip link for keyboard navigation
 #}
-{% macro render_skip_link(target_id='main-content', text='Skip to main content') %}
+{% macro render_skip_link(target_id='main-content', text=_('Skip to main content')) %}
 <a href="#{{ target_id }}" class="skip-link visually-hidden-focusable">
   {{ text }}
 </a>

@@ -230,23 +230,23 @@
 <div class="qc-page">
   <div class="qc-header">
     <div>
-      <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>QC Control Charts</h1>
-      <div class="qc-subtitle">ISO 17025 - Levey-Jennings | Click a card to view details</div>
+      <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>{{ _("QC Control Charts") }}</h1>
+      <div class="qc-subtitle">{{ _("ISO 17025 - Levey-Jennings | Click a card to view details") }}</div>
     </div>
     <div class="d-flex align-items-center gap-2">
       <!-- Period filter -->
       <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn active" data-period="1">Today</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="7">7 Days</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="30">1 Month</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="90">Quarter</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="all">All</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn active" data-period="1">{{ _("Today") }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="7">{{ _("7 Days") }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="30">{{ _("1 Month") }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="90">{{ _("Quarter") }}</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="all">{{ _("All") }}</button>
       </div>
       <div class="btn-group" role="group">
-        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()" title="Collapse All">
+        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()" title="{{ _("Collapse All") }}">
           <i class="bi bi-arrows-collapse"></i>
         </button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()" title="Expand All">
+        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()" title="{{ _("Expand All") }}">
           <i class="bi bi-arrows-expand"></i>
         </button>
       </div>
@@ -260,37 +260,37 @@
   <div class="stats-summary" id="statsSummary">
     <div class="stat-item stat-total">
       <div class="stat-info">
-        <div class="stat-label">TOTAL</div>
+        <div class="stat-label">{{ _("TOTAL") }}</div>
         <div class="stat-value" id="statTotal">0</div>
       </div>
     </div>
     <div class="stat-item stat-pass">
       <div class="stat-info">
-        <div class="stat-label">OK</div>
+        <div class="stat-label">{{ _("OK") }}</div>
         <div class="stat-value" id="statPass">0</div>
       </div>
     </div>
     <div class="stat-item stat-warning">
       <div class="stat-info">
-        <div class="stat-label">WARNING</div>
+        <div class="stat-label">{{ _("WARNING") }}</div>
         <div class="stat-value" id="statWarning">0</div>
       </div>
     </div>
     <div class="stat-item stat-reject">
       <div class="stat-info">
-        <div class="stat-label">EXCEEDED</div>
+        <div class="stat-label">{{ _("EXCEEDED") }}</div>
         <div class="stat-value" id="statReject">0</div>
       </div>
     </div>
     <div class="stat-item stat-repeat">
       <div class="stat-info">
-        <div class="stat-label">REPEAT</div>
+        <div class="stat-label">{{ _("REPEAT") }}</div>
         <div class="stat-value" id="statRepeat">0</div>
       </div>
     </div>
     <div class="stat-item stat-declined">
       <div class="stat-info">
-        <div class="stat-label">DECLINED</div>
+        <div class="stat-label">{{ _("DECLINED") }}</div>
         <div class="stat-value" id="statDeclined">0</div>
       </div>
     </div>
@@ -299,7 +299,7 @@
   <div id="chartsContainer">
     <div class="loading-state">
       <div class="spinner-border text-primary mb-3"></div>
-      <div class="text-muted">Loading...</div>
+      <div class="text-muted">{{ _("Loading...") }}</div>
     </div>
   </div>
 </div>
@@ -318,19 +318,19 @@
       <div class="modal-body">
         <div class="modal-stats-grid">
           <div class="modal-stat-card">
-            <div class="modal-stat-label">Target</div>
+            <div class="modal-stat-label">{{ _("Target") }}</div>
             <div class="modal-stat-value target" id="modalTarget">-</div>
           </div>
           <div class="modal-stat-card">
-            <div class="modal-stat-label">SD (±)</div>
+            <div class="modal-stat-label">{{ _("SD") }} (+/-)</div>
             <div class="modal-stat-value sd" id="modalSD">-</div>
           </div>
           <div class="modal-stat-card">
-            <div class="modal-stat-label">Latest Value</div>
+            <div class="modal-stat-label">{{ _("Latest Value") }}</div>
             <div class="modal-stat-value" id="modalLatest">-</div>
           </div>
           <div class="modal-stat-card">
-            <div class="modal-stat-label">Measurement Count</div>
+            <div class="modal-stat-label">{{ _("Measurement Count") }}</div>
             <div class="modal-stat-value count" id="modalCount">-</div>
           </div>
         </div>
@@ -340,14 +340,14 @@
         </div>
 
         <div class="modal-legend">
-          <div class="legend-item"><div class="legend-line target"></div>Target</div>
-          <div class="legend-item"><div class="legend-line sd1"></div>±1SD</div>
-          <div class="legend-item"><div class="legend-line sd2"></div>±2SD (Warning)</div>
-          <div class="legend-item"><div class="legend-line sd3"></div>±3SD (Reject)</div>
+          <div class="legend-item"><div class="legend-line target"></div>{{ _("Target") }}</div>
+          <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
+          <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD ({{ _("Warning") }})</div>
+          <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD ({{ _("Reject") }})</div>
         </div>
 
         <div id="modalViolations" class="violations-section" style="display:none;">
-          <div class="violations-title"><i class="bi bi-exclamation-triangle me-1"></i>Westgard Violations</div>
+          <div class="violations-title"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Westgard Violations") }}</div>
           <div id="violationsList"></div>
         </div>
       </div>
@@ -361,6 +361,23 @@ let modalChart = null;
 let chartsData = {};
 let allQcData = null;
 let currentPeriod = 1; // Default: Today
+
+const I18N = {
+  noQcSamples: '{{ _("No CM/GBW sample results found") }}',
+  registerQc: '{{ _("Please register QC samples and enter results") }}',
+  crm: '{{ _("CRM") }}',
+  controlMaterial: '{{ _("Control Material") }}',
+  analyses: '{{ _("analyses") }}',
+  noData: '{{ _("No data") }}',
+  viewDetails: '{{ _("View Details") }}',
+  violation: '{{ _("violation(s)") }}',
+  notEnoughData: '{{ _("Not enough data") }}',
+  target: '{{ _("Target") }}',
+  sd: '{{ _("SD") }}',
+  latest: '{{ _("Latest") }}',
+  count: '{{ _("Count") }}',
+  date: '{{ _("Date") }}'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   loadAllCharts();
@@ -456,8 +473,8 @@ async function renderCharts(data) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i>
-        <h5 class="mt-3">No CM/GBW sample results found</h5>
-        <p class="text-muted">Please register QC samples and enter results</p>
+        <h5 class="mt-3">${I18N.noQcSamples}</h5>
+        <p class="text-muted">${I18N.registerQc}</p>
       </div>`;
     updateStats([]);
     return;
@@ -497,10 +514,10 @@ async function renderCharts(data) {
       <div class="standard-title">
         <i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>
         ${standardName}
-        <small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'Control Material'}</small>
+        <small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? I18N.crm : I18N.controlMaterial}</small>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <span class="standard-badge">${stdData.analyses.length} analyses</span>
+        <span class="standard-badge">${stdData.analyses.length} ${I18N.analyses}</span>
         <i class="bi bi-chevron-up collapse-icon"></i>
       </div>
     `;
@@ -567,17 +584,17 @@ function createChartCard(standardName, qcType, analysis) {
       ${statusBadge}
     </div>
     <div class="card-stats">
-      <div><span class="label">Target:</span> <span class="value">${analysis.target || '-'}</span></div>
-      <div><span class="label">SD:</span> <span class="value">${analysis.sd || '-'}</span></div>
-      <div><span class="label">Latest:</span> <span class="value">${analysis.latest_value || '-'}</span></div>
-      <div><span class="label">Count:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
+      <div><span class="label">${I18N.target}:</span> <span class="value">${analysis.target || '-'}</span></div>
+      <div><span class="label">${I18N.sd}:</span> <span class="value">${analysis.sd || '-'}</span></div>
+      <div><span class="label">${I18N.latest}:</span> <span class="value">${analysis.latest_value || '-'}</span></div>
+      <div><span class="label">${I18N.count}:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
     </div>
     <div class="card-chart-container">
-      ${noData ? '<div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> No data</div>' : `<canvas id="${canvasId}"></canvas>`}
+      ${noData ? `<div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> ${I18N.noData}</div>` : `<canvas id="${canvasId}"></canvas>`}
     </div>
     <div class="card-footer">
-      <span><i class="bi bi-zoom-in me-1"></i>View Details</span>
-      ${analysis.rules_violated?.length ? `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ${analysis.rules_violated.length} violation(s)</span>` : ''}
+      <span><i class="bi bi-zoom-in me-1"></i>${I18N.viewDetails}</span>
+      ${analysis.rules_violated?.length ? `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ${analysis.rules_violated.length} ${I18N.violation}</span>` : ''}
     </div>
   `;
 
@@ -661,7 +678,7 @@ async function openChartModal(standardName, qcType, analysis) {
 
   // Set stats
   document.getElementById('modalTarget').textContent = analysis.target || '-';
-  document.getElementById('modalSD').textContent = analysis.sd ? `±${analysis.sd}` : '-';
+  document.getElementById('modalSD').textContent = analysis.sd ? `+/-${analysis.sd}` : '-';
   document.getElementById('modalLatest').textContent = analysis.latest_value || '-';
   document.getElementById('modalCount').textContent = analysis.count || '-';
 
@@ -709,7 +726,7 @@ async function loadModalChart(standardName, qcType, analysis) {
   }
 
   if (!data.data_points || data.data_points.length < 1) {
-    ctx.parentElement.innerHTML = '<div class="text-center text-muted py-5">Not enough data</div>';
+    ctx.parentElement.innerHTML = `<div class="text-center text-muted py-5">${I18N.notEnoughData}</div>`;
     return;
   }
 
@@ -780,7 +797,7 @@ async function loadModalChart(standardName, qcType, analysis) {
           title: { display: true, text: analysis.analysis_code + ' %', font: { weight: 'bold' } }
         },
         x: {
-          title: { display: true, text: 'Date' }
+          title: { display: true, text: I18N.date }
         }
       }
     }

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Water Analysis Center{% endblock %}
+{% block title %}{{ _("Water Analysis Center") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -130,39 +130,39 @@
 <div class="water-hub">
   <div class="hub-header">
     <div class="hub-header-content">
-      <h1><i class="bi bi-clipboard-data me-2"></i>Water Analysis Center</h1>
+      <h1><i class="bi bi-clipboard-data me-2"></i>{{ _("Water Analysis Center") }}</h1>
       <p>{{ analysis_types|length }} water quality analyses ({{ sample_count }} samples)</p>
     </div>
     <div class="hub-header-actions">
       <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-primary" style="border-radius:12px;font-weight:600;">
-        <i class="bi bi-table me-1"></i>Summary
+        <i class="bi bi-table me-1"></i>{{ _("Summary") }}
       </a>
       <div class="hub-search">
         <i class="bi bi-search"></i>
-        <input type="text" id="analysis-search" placeholder="Search... (pH, Iron, SO4)">
+        <input type="text" id="analysis-search" placeholder="{{ _("Search... (pH, Iron, SO4)") }}">
       </div>
     </div>
   </div>
 
   <div class="category-tabs">
     <div class="cat-tab active" data-cat="drinking">
-      <i class="bi bi-cup-straw"></i> Drinking
+      <i class="bi bi-cup-straw"></i> {{ _("Drinking") }}
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="wastewater">
-      <i class="bi bi-water"></i> Wastewater
+      <i class="bi bi-water"></i> {{ _("Wastewater") }}
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots"></i> Other
+      <i class="bi bi-three-dots"></i> {{ _("Other") }}
       <span class="tab-count">0</span>
     </div>
   </div>
 
   <div class="no-results" id="no-results">
     <i class="bi bi-search"></i>
-    <h4>No results found</h4>
-    <p>Please try a different search term</p>
+    <h4>{{ _("No results found") }}</h4>
+    <p>{{ _("Please try a different search term") }}</p>
   </div>
 
   <div class="cards-grid" id="analysis-list">

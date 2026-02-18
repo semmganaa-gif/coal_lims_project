@@ -8,22 +8,22 @@
 <ul class="nav nav-tabs mt-3" id="mgTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <button class="nav-link active" id="tab-mg-mt" data-bs-toggle="tab" data-bs-target="#pane-mg-mt" type="button">
-      <i class="bi bi-droplet me-1"></i>MG Moisture
+      <i class="bi bi-droplet me-1"></i>{{ _("MG Moisture") }}
     </button>
   </li>
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="tab-mg-trd" data-bs-toggle="tab" data-bs-target="#pane-mg-trd" type="button">
-      <i class="bi bi-diamond me-1"></i>MG TRD
+      <i class="bi bi-diamond me-1"></i>{{ _("MG TRD") }}
     </button>
   </li>
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="tab-mg-tube" data-bs-toggle="tab" data-bs-target="#pane-mg-tube" type="button">
-      <i class="bi bi-magnet me-1"></i>MG Tube
+      <i class="bi bi-magnet me-1"></i>{{ _("MG Tube") }}
     </button>
   </li>
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="tab-mg-size" data-bs-toggle="tab" data-bs-target="#pane-mg-size" type="button">
-      <i class="bi bi-grid-3x3 me-1"></i>MG Size
+      <i class="bi bi-grid-3x3 me-1"></i>{{ _("MG Size") }}
     </button>
   </li>
 </ul>
@@ -150,9 +150,9 @@
       width: 70,
       pinned: 'right',
       cellRenderer: p => {
-        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ _("Saved") }}</span>';
         return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
-                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+                  data-sample-id="${p.data.sample_id}" title="{{ _("Remove") }}"><i class="bi bi-x"></i></button>`;
       },
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
     };
@@ -198,7 +198,7 @@
   const mtColDefs = [
     { headerName: '№', field: 'index', width: 50, pinned: 'left',
       cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold' } },
-    { headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+    { headerName: '{{ _("Sample") }}', field: 'sample_code', width: 250, pinned: 'left',
       cellRenderer: p => {
         let h = `<div>${p.value}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
@@ -209,7 +209,7 @@
     { headerName: 'm1 (crucible)', field: 'm1', width: 120, ...EC },
     { headerName: 'm2 (sample)', field: 'm2', width: 120, ...EC },
     { headerName: 'm3 (dried)', field: 'm3', width: 130, ...EC },
-    { headerName: 'Result %', field: 'result', width: 110,
+    { headerName: '{{ _("Result %%") }}', field: 'result', width: 110,
       valueFormatter: p => p.value != null ? parseFloat(p.value).toFixed(2) : '-',
       cellStyle: p => p.data.is_saved
         ? { ...SAVED_STYLE, textAlign: 'center' }
@@ -270,7 +270,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+      headerName: '{{ _("Sample") }}', field: 'sample_code', width: 250, pinned: 'left',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
@@ -314,7 +314,7 @@
         : { backgroundColor: parallelBg(p), color: p.value != null ? '#0d6efd' : '#999' }
     },
     {
-      headerName: 'Diff', field: 'tolerance', width: 80,
+      headerName: '{{ _("Diff") }}', field: 'tolerance', width: 80,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.is_saved && p.value != null) ? parseFloat(p.value).toFixed(3) : '',
@@ -326,7 +326,7 @@
       })
     },
     {
-      headerName: 'Avg', field: 'average', width: 80,
+      headerName: '{{ _("Avg") }}', field: 'average', width: 80,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       valueFormatter: p => (p.data.parallel === 1 && p.data.is_saved && p.value != null) ? parseFloat(p.value).toFixed(3) : '',
@@ -343,9 +343,9 @@
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
-        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ _("Saved") }}</span>';
         return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
-                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+                  data-sample-id="${p.data.sample_id}" title="{{ _("Remove") }}"><i class="bi bi-x"></i></button>`;
       },
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
     }
@@ -428,7 +428,7 @@
   const tubeColDefs = [
     { headerName: '№', field: 'index', width: 50, pinned: 'left',
       cellStyle: { textAlign: 'center', color: '#6c757d', fontWeight: 'bold' } },
-    { headerName: 'Sample', field: 'sample_code', width: 250, pinned: 'left',
+    { headerName: '{{ _("Sample") }}', field: 'sample_code', width: 250, pinned: 'left',
       cellRenderer: p => {
         let h = `<div>${p.value}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
@@ -436,7 +436,7 @@
         return h;
       }
     },
-    { headerName: 'Empty crucible', field: 'empty_crucible', width: 130, ...EC },
+    { headerName: '{{ _("Empty crucible") }}', field: 'empty_crucible', width: 130, ...EC },
     { headerName: 'Sample (20g)', field: 'sample_mass', width: 120, ...EC },
     { headerName: 'Dried+crucible', field: 'dried_weight', width: 140, ...EC },
     { headerName: 'MG (g)', field: 'mg_mass', width: 100,
@@ -513,7 +513,7 @@
         display: 'flex', alignItems: 'center', justifyContent: 'center' },
       valueFormatter: p => p.data.fraction_idx === 0 ? p.value : ''
     },
-    { headerName: 'Sample', field: 'sample_code', width: 200, pinned: 'left',
+    { headerName: '{{ _("Sample") }}', field: 'sample_code', width: 200, pinned: 'left',
       rowSpan: p => p.data.fraction_idx === 0 ? SIZE_FRACTIONS.length : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.fraction_idx === 0 },
       cellStyle: { display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.2' },
@@ -525,7 +525,7 @@
         return h;
       }
     },
-    { headerName: 'Fraction', field: 'fraction_label', width: 100,
+    { headerName: '{{ _("Fraction") }}', field: 'fraction_label', width: 100,
       cellStyle: { fontWeight: 'bold', textAlign: 'center', color: '#212529' }
     },
     { headerName: 'm2 (empty)', field: 'm2', width: 120, ...EC },
@@ -548,9 +548,9 @@
       cellClassRules: { 'ag-cell-span': p => p.data.fraction_idx === 0 },
       cellRenderer: p => {
         if (p.data.fraction_idx !== 0) return '';
-        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>Saved</span>';
+        if (p.data.is_saved) return '<span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i>{{ _("Saved") }}</span>';
         return `<button type="button" class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
-                  data-sample-id="${p.data.sample_id}" title="Remove"><i class="bi bi-x"></i></button>`;
+                  data-sample-id="${p.data.sample_id}" title="{{ _("Remove") }}"><i class="bi bi-x"></i></button>`;
       },
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
     }

@@ -5,38 +5,38 @@
   <!-- Header and Actions -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-      <h4 class="mb-1">M — Mass Entry Workspace</h4>
+      <h4 class="mb-1">{{ _("M — Mass Entry Workspace") }}</h4>
       <div class="text-muted small">
-        Samples with status <code>new</code> and <code>"m"</code> in <code>analyses_to_perform</code> are shown here.
+        {{ _("Samples with status new and \"m\" in analyses_to_perform are shown here.") }}
       </div>
     </div>
 
     <div class="d-flex flex-wrap gap-2 align-items-center">
       <!-- Connect to Balance -->
       <button id="btnConnectBalance" class="btn btn-outline-primary">
-        <i class="bi bi-usb-plug"></i> Connect to Balance
+        <i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}
       </button>
-      <span id="balanceStatus" class="badge bg-secondary">Not Connected</span>
+      <span id="balanceStatus" class="badge bg-secondary">{{ _("Not Connected") }}</span>
 
       <div class="vr mx-2"></div>
 
       <div class="form-check form-switch me-2">
         <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
-        <label class="form-check-label" for="toggleIncludeReady">Include Ready samples</label>
+        <label class="form-check-label" for="toggleIncludeReady">{{ _("Include Ready samples") }}</label>
       </div>
 
-      <input id="searchCode" class="form-control" placeholder="Search by sample code" style="min-width:240px">
+      <input id="searchCode" class="form-control" placeholder="{{ _("Search by sample code") }}" style="min-width:240px">
 
       <div class="form-check form-switch ms-1">
         <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
-        <label class="form-check-label" for="markReadyToggle">Mark selected as <strong>Mass Ready</strong> on save</label>
+        <label class="form-check-label" for="markReadyToggle">{{ _("Mark selected as") }} <strong>{{ _("Mass Ready") }}</strong> {{ _("on save") }}</label>
       </div>
 
       <button id="btnRefresh" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-repeat"></i> Refresh
+        <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
       </button>
       <button id="btnSave" class="btn btn-primary">
-        <i class="bi bi-save"></i> Save
+        <i class="bi bi-save"></i> {{ _("Save") }}
       </button>
     </div>
   </div>
@@ -80,8 +80,8 @@
   let draftMgr;
 
   const readyBadge = (isReady) => isReady
-    ? '<span class="badge text-bg-success mw-badge">Ready</span>'
-    : '<span class="badge text-bg-secondary mw-badge">New</span>';
+    ? '<span class="badge text-bg-success mw-badge">{{ _("Ready") }}</span>'
+    : '<span class="badge text-bg-secondary mw-badge">{{ _("New") }}</span>';
 
   // --- COLUMN DEFINITIONS ---
   const columnDefs = [
@@ -91,15 +91,15 @@
       headerCheckboxSelection:true,
       headerCheckboxSelectionFilteredOnly:true
     },
-    { headerName:'Sample Code', field:'sample_code', minWidth:300,
+    { headerName:'{{ _("Sample Code") }}', field:'sample_code', minWidth:300,
       cellRenderer:p=>`<div class="d-flex flex-column gap-1">
           <span class="fw-semibold text-primary">${p.value || '-'}</span>
           <span class="text-muted small">${readyBadge(!!p.data.mass_ready)}</span>
         </div>` },
-    { headerName:'Client', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'Type', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'Received Date', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
-    { headerName:'Mass (g)', field:'weight', minWidth:160,
+    { headerName:'{{ _("Client") }}', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'{{ _("Type") }}', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
+    { headerName:'{{ _("Received Date") }}', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
+    { headerName:'{{ _("Mass (g)") }}', field:'weight', minWidth:160,
       editable:true,
       cellEditor:'agTextCellEditor',
       cellEditorParams:{ useFormatter:true },
@@ -112,16 +112,16 @@
       },
       cellStyle:p => p.data.mass_ready ? { backgroundColor:'#f6f6f6' } : {}
     },
-    { headerName:'Actions', field:'actions', width:220, pinned:'right',
+    { headerName:'{{ _("Actions") }}', field:'actions', width:220, pinned:'right',
       cellRenderer:p=>`
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="Save weight">
+          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="{{ _("Save weight") }}">
             <i class="bi bi-arrow-repeat"></i>
           </button>
-          <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="Unready">
+          <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="{{ _("Unready") }}">
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
-          <button class="btn btn-outline-danger mass-action" data-action="delete" data-id="${p.data.id}" title="Delete">
+          <button class="btn btn-outline-danger mass-action" data-action="delete" data-id="${p.data.id}" title="{{ _("Delete") }}">
             <i class="bi bi-trash"></i>
           </button>
         </div>`,
@@ -195,7 +195,7 @@
       setRowData(data.samples || []);
     }catch(err){
       console.error(err);
-      toast('Error loading data.', 'danger');
+      toast('{{ _("Error loading data.") }}', 'danger');
       setRowData([]);
     }finally{
       if(gridApi) gridApi.hideOverlay();
@@ -209,7 +209,7 @@
     gridApi.stopEditing();
     const selected = gridApi.getSelectedRows();
     if(!selected.length){
-      toast('Please select samples and enter weights before saving.', 'warning');
+      toast('{{ _("Please select samples and enter weights before saving.") }}', 'warning');
       return;
     }
     const items = selected.map(row => {
@@ -273,7 +273,7 @@
     }
 
     if(action === 'unready'){
-      if(!confirm('Бэлтгэгдээгүй төлөв рүү буцаах уу?')) return;
+      if(!confirm('{{ _("Revert to unprepared status?") }}')) return;
       try{
         const res = await fetch('/api/mass/unready', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
@@ -288,7 +288,7 @@
     }
 
     if(action === 'delete'){
-      if(!confirm('Энэ дээжийг бүрмөсөн устгах уу?')) return;
+      if(!confirm('{{ _("Permanently delete this sample?") }}')) return;
       try{
         const res = await fetch('/api/mass/delete', {
           method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
@@ -329,33 +329,33 @@
 
   $btnConnect.addEventListener('click', async () => {
     if (!window.labBalance) {
-      toast('Serial Balance module not loaded.', 'danger');
+      toast('{{ _("Serial Balance module not loaded.") }}', 'danger');
       return;
     }
 
     if (!window.labBalance.isSupported()) {
-      toast('Web Serial API not supported. Please use Chrome 89+.', 'warning');
+      toast('{{ _("Web Serial API not supported. Please use Chrome 89+.") }}', 'warning');
       return;
     }
 
     if (window.labBalance.isConnected) {
       await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect to Balance';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Not Connected', 'secondary');
+      updateBalanceStatus('{{ _("Not Connected") }}', 'secondary');
       return;
     }
 
-    updateBalanceStatus('Connecting...', 'warning');
+    updateBalanceStatus('{{ _("Connecting...") }}', 'warning');
     const connected = await window.labBalance.connect();
 
     if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> Connected';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> {{ _("Connected") }}';
       $btnConnect.classList.remove('btn-outline-primary');
       $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('Connected', 'success');
-      toast('Successfully connected to balance! Press Enter in Mass column to read weight.', 'success');
+      updateBalanceStatus('{{ _("Connected") }}', 'success');
+      toast('{{ _("Successfully connected to balance! Press Enter in Mass column to read weight.") }}', 'success');
 
       if (gridApi) {
         balanceIntegration = new BalanceGridIntegration(window.labBalance);
@@ -363,7 +363,7 @@
         balanceIntegration.weightColumnField = 'weight';
       }
     } else {
-      updateBalanceStatus('Connection failed', 'danger');
+      updateBalanceStatus('{{ _("Connection failed") }}', 'danger');
     }
   });
 
@@ -377,10 +377,10 @@
     };
 
     window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> Connect to Balance';
+      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
       $btnConnect.classList.remove('btn-success');
       $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('Disconnected', 'secondary');
+      updateBalanceStatus('{{ _("Disconnected") }}', 'secondary');
     };
   }
 
@@ -389,7 +389,7 @@
     if (!window.labBalance || !window.labBalance.isConnected) return;
     if (params.column.getColId() !== 'weight') return;
 
-    updateBalanceStatus('Reading weight...', 'warning');
+    updateBalanceStatus('{{ _("Reading weight...") }}', 'warning');
     const weight = await window.labBalance.getStableWeight();
 
     if (weight !== null) {
@@ -407,7 +407,7 @@
         }, 100);
       }
     } else {
-      updateBalanceStatus('Failed to read weight', 'danger');
+      updateBalanceStatus('{{ _("Failed to read weight") }}', 'danger');
     }
   }
 

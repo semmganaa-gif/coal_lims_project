@@ -11,14 +11,14 @@
 {# ✨ TRD-specific input fields #}
 <div class="row g-3 mb-3">
   <div class="col-md-6">
-    <label class="form-label">Temperature (°C)</label>
+    <label class="form-label">{{ _("Temperature") }} (°C)</label>
     <input type="number" step="0.1" class="form-control" id="trd-temp-c" value="20.0">
-    <div class="form-text">Kt: Interpolated for 6–35°C.</div>
+    <div class="form-text">{{ _("Kt: Interpolated for 6-35°C.") }}</div>
   </div>
   <div class="col-md-6">
-    <label class="form-label">Tolerance Limit (T)</label>
+    <label class="form-label">{{ _("Tolerance Limit") }} (T)</label>
     <input type="number" step="0.001" class="form-control" id="trd-tol" value="0.02">
-    <div class="form-text">TRD limit, default 0.02.</div>
+    <div class="form-text">{{ _("TRD limit, default 0.02.") }}</div>
   </div>
 </div>
 
@@ -160,7 +160,7 @@
       valueFormatter: p => p.data.parallel === 1 ? p.value : ''
     },
     {
-      headerName: 'Sample Name',
+      headerName: '{{ _("Sample Name") }}',
       field: 'sample_code',
       width: 300,
       pinned: 'left',
@@ -202,13 +202,13 @@
         }
         // ✅ Mad байхгүй үед анхааруулга
         if (p.data.mad_used == null && !p.data.is_saved) {
-          h += `<div class="text-danger small"><i class="bi bi-exclamation-circle"></i> Mad утга алга!</div>`;
+          h += `<div class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ _("Mad value missing!") }}</div>`;
         }
         return h;
       }
     },
     {
-      headerName: 'Bottle #',
+      headerName: '{{ _("Bottle #") }}',
       field: 'bottle_num',
       width: 120,
       headerClass: 'ag-header-cell-centered',
@@ -256,7 +256,7 @@
       ...editCol
     },
     {
-      headerName: 'Result (TRD)',
+      headerName: '{{ _("Result (TRD)") }}',
       field: 'result',
       width: 130,
       valueFormatter: p =>
@@ -269,7 +269,7 @@
       }
     },
     {
-      headerName: 'Tolerance',
+      headerName: '{{ _("Tolerance") }}',
       field: 'tolerance',
       width: 120,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -301,7 +301,7 @@
       }
     },
     {
-      headerName: 'Average',
+      headerName: '{{ _("Average") }}',
       field: 'average',
       width: 90,
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -322,7 +322,7 @@
       })
     },
     {
-      headerName: 'Action',
+      headerName: '{{ _("Action") }}',
       width: 90,
       pinned: 'right',
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
@@ -333,14 +333,14 @@
 
         // Hide button if sample is already saved (locked)
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Saved</span>';
+          return '<span class="text-muted small">{{ _("Saved") }}</span>';
         }
 
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Remove sample">
+                  title="{{ _("Remove sample") }}">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -640,7 +640,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

@@ -7,11 +7,11 @@
   <div class="mb-3">
     {% if chemical %}
     <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> Back
+      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
     </a>
     {% else %}
     <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> Back
+      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
     </a>
     {% endif %}
   </div>
@@ -22,7 +22,7 @@
         <div class="card-header bg-gradient text-white py-3" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
           <h5 class="mb-0">
             <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
-            {{ 'Edit Chemical' if mode == 'edit' else 'Add New Chemical' }}
+            {{ _('Edit Chemical') if mode == 'edit' else _('Add New Chemical') }}
           </h5>
         </div>
 
@@ -30,31 +30,31 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="card-body p-4">
 
-            {# === Үндсэн мэдээлэл === #}
+            {# === Basic Information === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-info-circle me-2"></i>Basic Information
+              <i class="bi bi-info-circle me-2"></i>{{ _("Basic Information") }}
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <label class="form-label">{{ _("Name") }} <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" required
                        value="{{ chemical.name if chemical else '' }}"
-                       placeholder="e.g. Hydrochloric Acid">
+                       placeholder="{{ _("e.g. Hydrochloric Acid") }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Formula</label>
+                <label class="form-label">{{ _("Formula") }}</label>
                 <input type="text" name="formula" class="form-control"
                        value="{{ chemical.formula if chemical else '' }}"
-                       placeholder="Ж: HCl">
+                       placeholder="{{ _("e.g. HCl") }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">CAS дугаар</label>
+                <label class="form-label">{{ _("CAS Number") }}</label>
                 <input type="text" name="cas_number" class="form-control"
                        value="{{ chemical.cas_number if chemical else '' }}"
-                       placeholder="Ж: 7647-01-0">
+                       placeholder="{{ _("e.g. 7647-01-0") }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Ангилал</label>
+                <label class="form-label">{{ _("Category") }}</label>
                 <select name="category" class="form-select">
                   {% for code, label in categories %}
                   <option value="{{ code }}" {{ 'selected' if chemical and chemical.category == code }}>{{ label }}</option>
@@ -62,56 +62,56 @@
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Лаб</label>
+                <label class="form-label">{{ _("Lab") }}</label>
                 <select name="lab_type" class="form-select">
-                  <option value="all" {{ 'selected' if (not chemical) or chemical.lab_type == 'all' }}>Бүх лаб</option>
-                  <option value="coal" {{ 'selected' if chemical and chemical.lab_type == 'coal' }}>Нүүрс</option>
-                  <option value="water" {{ 'selected' if chemical and chemical.lab_type == 'water' }}>Ус</option>
-                  <option value="microbiology" {{ 'selected' if chemical and chemical.lab_type == 'microbiology' }}>Микробиологи</option>
-                  <option value="petrography" {{ 'selected' if chemical and chemical.lab_type == 'petrography' }}>Петрограф</option>
+                  <option value="all" {{ 'selected' if (not chemical) or chemical.lab_type == 'all' }}>{{ _("All Labs") }}</option>
+                  <option value="coal" {{ 'selected' if chemical and chemical.lab_type == 'coal' }}>{{ _("Coal") }}</option>
+                  <option value="water" {{ 'selected' if chemical and chemical.lab_type == 'water' }}>{{ _("Water") }}</option>
+                  <option value="microbiology" {{ 'selected' if chemical and chemical.lab_type == 'microbiology' }}>{{ _("Microbiology") }}</option>
+                  <option value="petrography" {{ 'selected' if chemical and chemical.lab_type == 'petrography' }}>{{ _("Petrography") }}</option>
                 </select>
               </div>
               <div class="col-md-4">
-                <label class="form-label">Зэрэг (Grade)</label>
+                <label class="form-label">{{ _("Grade") }}</label>
                 <input type="text" name="grade" class="form-control"
                        value="{{ chemical.grade if chemical else '' }}"
-                       placeholder="Ж: AR, CP, HPLC, ACS">
+                       placeholder="{{ _("e.g. AR, CP, HPLC, ACS") }}">
               </div>
             </div>
 
-            {# === Нийлүүлэлт === #}
+            {# === Supply Information === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-truck me-2"></i>Нийлүүлэлтийн мэдээлэл
+              <i class="bi bi-truck me-2"></i>{{ _("Supply Information") }}
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-4">
-                <label class="form-label">Үйлдвэрлэгч</label>
+                <label class="form-label">{{ _("Manufacturer") }}</label>
                 <input type="text" name="manufacturer" class="form-control"
                        value="{{ chemical.manufacturer if chemical else '' }}"
-                       placeholder="Ж: Merck, Sigma-Aldrich">
+                       placeholder="{{ _("e.g. Merck, Sigma-Aldrich") }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Supplier</label>
+                <label class="form-label">{{ _("Supplier") }}</label>
                 <input type="text" name="supplier" class="form-control"
                        value="{{ chemical.supplier if chemical else '' }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Каталогийн №</label>
+                <label class="form-label">{{ _("Catalog No.") }}</label>
                 <input type="text" name="catalog_number" class="form-control"
                        value="{{ chemical.catalog_number if chemical else '' }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Lot/Batch №</label>
+                <label class="form-label">{{ _("Lot/Batch No.") }}</label>
                 <input type="text" name="lot_number" class="form-control"
                        value="{{ chemical.lot_number if chemical else '' }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Received огноо</label>
+                <label class="form-label">{{ _("Received Date") }}</label>
                 <input type="date" name="received_date" class="form-control"
                        value="{{ chemical.received_date.strftime('%Y-%m-%d') if chemical and chemical.received_date else '' }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Expiry Date</label>
+                <label class="form-label">{{ _("Expiry Date") }}</label>
                 <input type="date" name="expiry_date" class="form-control"
                        value="{{ chemical.expiry_date.strftime('%Y-%m-%d') if chemical and chemical.expiry_date else '' }}">
               </div>
@@ -119,17 +119,17 @@
 
             {# === Quantity === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-box me-2"></i>Quantity
+              <i class="bi bi-box me-2"></i>{{ _("Quantity") }}
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-3">
-                <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                <label class="form-label">{{ _("Quantity") }} <span class="text-danger">*</span></label>
                 <input type="number" name="quantity" class="form-control" required
                        step="0.01" min="0"
                        value="{{ chemical.quantity if chemical else 0 }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Unit</label>
+                <label class="form-label">{{ _("Unit") }}</label>
                 <select name="unit" class="form-select">
                   {% for u in units %}
                   <option value="{{ u }}" {{ 'selected' if chemical and chemical.unit == u }}>{{ u }}</option>
@@ -137,52 +137,52 @@
                 </select>
               </div>
               <div class="col-md-3">
-                <label class="form-label">Дахин захиалах түвшин</label>
+                <label class="form-label">{{ _("Reorder Level") }}</label>
                 <input type="number" name="reorder_level" class="form-control"
                        step="0.01" min="0"
                        value="{{ chemical.reorder_level if chemical and chemical.reorder_level else '' }}"
-                       placeholder="Бага болоход анхааруулна">
+                       placeholder="{{ _("Alert when low") }}">
               </div>
               <div class="col-md-3">
-                <label class="form-label">Нээсэн огноо</label>
+                <label class="form-label">{{ _("Opened Date") }}</label>
                 <input type="date" name="opened_date" class="form-control"
                        value="{{ chemical.opened_date.strftime('%Y-%m-%d') if chemical and chemical.opened_date else '' }}">
               </div>
             </div>
 
-            {# === Хадгалалт === #}
+            {# === Storage & Safety === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-archive me-2"></i>Хадгалалт & Аюулгүй байдал
+              <i class="bi bi-archive me-2"></i>{{ _("Storage & Safety") }}
             </h6>
             <div class="row g-3 mb-4">
               <div class="col-md-4">
-                <label class="form-label">Байршил</label>
+                <label class="form-label">{{ _("Location") }}</label>
                 <input type="text" name="storage_location" class="form-control"
                        value="{{ chemical.storage_location if chemical else '' }}"
-                       placeholder="Ж: Шүүгээ A, Тавиур 3">
+                       placeholder="{{ _("e.g. Cabinet A, Shelf 3") }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Storage Condition</label>
+                <label class="form-label">{{ _("Storage Condition") }}</label>
                 <input type="text" name="storage_conditions" class="form-control"
                        value="{{ chemical.storage_conditions if chemical else '' }}"
-                       placeholder="Ж: 2-8°C, харанхуй газар">
+                       placeholder="{{ _("e.g. 2-8C, dark place") }}">
               </div>
               <div class="col-md-4">
-                <label class="form-label">Аюулын ангилал</label>
+                <label class="form-label">{{ _("Hazard Class") }}</label>
                 <input type="text" name="hazard_class" class="form-control"
                        value="{{ chemical.hazard_class if chemical else '' }}"
-                       placeholder="Ж: Corrosive, Flammable">
+                       placeholder="{{ _("e.g. Corrosive, Flammable") }}">
               </div>
             </div>
 
-            {# === Тэмдэглэл === #}
+            {# === Notes === #}
             <h6 class="text-primary mb-3 border-bottom pb-2">
-              <i class="bi bi-chat-left-text me-2"></i>Тэмдэглэл
+              <i class="bi bi-chat-left-text me-2"></i>{{ _("Notes") }}
             </h6>
             <div class="row g-3">
               <div class="col-12">
                 <textarea name="notes" class="form-control" rows="3"
-                          placeholder="Нэмэлт тэмдэглэл...">{{ chemical.notes if chemical else '' }}</textarea>
+                          placeholder="{{ _("Additional notes...") }}">{{ chemical.notes if chemical else '' }}</textarea>
               </div>
             </div>
 
@@ -191,16 +191,16 @@
           <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
             {% if chemical %}
             <a href="{{ url_for('chemicals.chemical_detail', id=chemical.id) }}" class="btn btn-outline-secondary">
-              Болих
+              {{ _("Cancel") }}
             </a>
             {% else %}
             <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary">
-              Болих
+              {{ _("Cancel") }}
             </a>
             {% endif %}
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-check-lg me-1"></i>
-              {{ 'Хадгалах' if mode == 'edit' else 'Бүртгэх' }}
+              {{ _('Save') if mode == 'edit' else _('Register') }}
             </button>
           </div>
         </form>

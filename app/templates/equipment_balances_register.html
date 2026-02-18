@@ -1,6 +1,6 @@
 {# app/templates/equipment_balances_register.html #}
 {% extends "base.html" %}
-{% block title %}Balance Register{% endblock %}
+{% block title %}{{ _("Balance Register") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
@@ -10,13 +10,13 @@
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-speedometer text-success"></i> Balance Register</span>
+      <span class="fw-bold"><i class="bi bi-speedometer text-success"></i> {{ _("Balance Register") }}</span>
     </div>
     <div class="eq-toolbar-right">
       {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addBalanceModal"><i class="bi bi-plus-lg"></i> Add</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> Edit</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> Delete</button>
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addBalanceModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
       {% endif %}
       <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
       <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
@@ -31,7 +31,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Balance</h5>
+          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='balances_register') }}">
@@ -39,20 +39,20 @@
         <div class="modal-body p-4">
           <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
           <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">No.</label><input type="text" id="bl_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Name</label><input type="text" id="bl_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">Manufacturer</label><input type="text" id="bl_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Model</label><input type="text" id="bl_model_name" name="model" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Serial No.</label><input type="text" id="bl_serial_no" name="serial_number" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Measurement Range</label><input type="text" id="bl_range" name="range" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Lab Code</label><input type="text" id="bl_lab_code" name="lab_code" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Purpose</label><input type="text" id="bl_purpose" name="purpose" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">Location</label><input type="text" id="bl_location" name="location" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="bl_no" name="no" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="bl_name" name="name" class="form-control"></div>
+            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="bl_manufacturer" name="manufacturer" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Model") }}</label><input type="text" id="bl_model_name" name="model" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Serial No.") }}</label><input type="text" id="bl_serial_no" name="serial_number" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Measurement Range") }}</label><input type="text" id="bl_range" name="range" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Lab Code") }}</label><input type="text" id="bl_lab_code" name="lab_code" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Purpose") }}</label><input type="text" id="bl_purpose" name="purpose" class="form-control"></div>
+            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Location") }}</label><input type="text" id="bl_location" name="location" class="form-control"></div>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
         </div>
         </form>
       </div>
@@ -91,14 +91,14 @@ document.addEventListener('DOMContentLoaded', function() {
     columns: [
       {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
       {title:"№", field:"no", width:55, frozen:true, headerFilter:"input"},
-      {title:"Name", field:"name", minWidth:160, frozen:true},
-      {title:"Manufacturer", field:"manufacturer", minWidth:140, headerFilter:"input"},
-      {title:"Model", field:"model", width:120, headerFilter:"input"},
-      {title:"Serial No.", field:"serial_number", minWidth:130, headerFilter:"input"},
-      {title:"Measurement Range", field:"range", minWidth:140, headerFilter:"input"},
-      {title:"Lab Code", field:"lab_code", width:110, headerFilter:"input"},
-      {title:"Purpose", field:"purpose", minWidth:140, headerFilter:"input"},
-      {title:"Location", field:"location", minWidth:120, headerFilter:"input"},
+      {title:'{{ _("Name") }}', field:"name", minWidth:160, frozen:true},
+      {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140, headerFilter:"input"},
+      {title:'{{ _("Model") }}', field:"model", width:120, headerFilter:"input"},
+      {title:'{{ _("Serial No.") }}', field:"serial_number", minWidth:130, headerFilter:"input"},
+      {title:'{{ _("Measurement Range") }}', field:"range", minWidth:140, headerFilter:"input"},
+      {title:'{{ _("Lab Code") }}', field:"lab_code", width:110, headerFilter:"input"},
+      {title:'{{ _("Purpose") }}', field:"purpose", minWidth:140, headerFilter:"input"},
+      {title:'{{ _("Location") }}', field:"location", minWidth:120, headerFilter:"input"},
     ],
   });
 
@@ -127,19 +127,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (d.id) {
       document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
     }
-    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit';
+    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
     new bootstrap.Modal(document.getElementById('addBalanceModal')).show();
   };
 
   document.getElementById('addBalanceModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='balances_register') }}";
-    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Balance';
+    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}';
     ['no','name','manufacturer','model_name','serial_no','range','lab_code','purpose','location'].forEach(function(f) { var el=document.getElementById('bl_'+f); if(el) el.value=''; });
   });
 
   window.deleteSelectedRows = function() {
     var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' мөр устгах уу?')) return;
+    if (!sel.length || !confirm(sel.length + ' {{ _("rows will be deleted. Continue?") }}')) return;
     var form = document.getElementById('deleteForm');
     form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
     sel.forEach(function(row) {

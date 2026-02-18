@@ -12,13 +12,13 @@
         {{ title }}
       </h4>
       <div class="text-muted small">
-        Ашиглалт ба засвар үйлчилгээний нэгдсэн тойм
+        {{ _("Unified overview of usage and maintenance") }}
       </div>
     </div>
 
     <form id="dateFilterForm" class="d-flex flex-wrap align-items-center gap-2 ej-date-form">
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <label class="small text-muted mb-0">Хугацаа:</label>
+        <label class="small text-muted mb-0">{{ _("Period:") }}</label>
         <div class="input-group input-group-sm ej-date-input">
           <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
           <input type="date" id="startDate" name="start_date"
@@ -35,18 +35,18 @@
       </div>
 
       <div class="btn-group btn-group-sm ms-0 ms-md-2 ej-range-group" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-range="7">7 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="30">30 хоног</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="90">90 хоног</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="7">{{ _("7 days") }}</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="30">{{ _("30 days") }}</button>
+        <button type="button" class="btn btn-outline-secondary" data-range="90">{{ _("90 days") }}</button>
       </div>
 
       <button type="submit" class="btn btn-primary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-arrow-repeat"></i> Шинэчлэх
+        <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
       </button>
 
       <a href="{{ url_for('equipment.equipment_journal') }}"
          class="btn btn-outline-secondary btn-sm ms-0 ms-md-2">
-        <i class="bi bi-grid"></i> Буцах
+        <i class="bi bi-grid"></i> {{ _("Back") }}
       </a>
     </form>
   </div>
@@ -56,38 +56,38 @@
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="tab-summary" data-bs-toggle="tab"
               data-bs-target="#pane-summary" type="button" role="tab">
-        <i class="bi bi-grid-3x3-gap"></i> Нэгдсэн тойм
+        <i class="bi bi-grid-3x3-gap"></i> {{ _("Summary") }}
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-monthly" data-bs-toggle="tab"
               data-bs-target="#pane-monthly" type="button" role="tab">
-        <i class="bi bi-calendar3"></i> Сарын статистик
+        <i class="bi bi-calendar3"></i> {{ _("Monthly Statistics") }}
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-detailed" data-bs-toggle="tab"
               data-bs-target="#pane-detailed" type="button" role="tab">
-        <i class="bi bi-journal-richtext"></i> Дэлгэрэнгүй журнал
+        <i class="bi bi-journal-richtext"></i> {{ _("Detailed Journal") }}
       </button>
     </li>
   </ul>
 
   <div class="tab-content" id="equipTabContent">
-    
+
     {# === 1. SUMMARY TAB === #}
     <div class="tab-pane fade show active" id="pane-summary" role="tabpanel">
       <div class="card shadow-sm border-0 ej-card">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div class="d-flex align-items-center gap-2">
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-collection"></i> Нэгдсэн статистик
+              <i class="bi bi-collection"></i> {{ _("Summary Statistics") }}
             </span>
             <div class="d-flex flex-wrap gap-1 ej-status-legend">
-              <span class="badge bg-success-subtle text-success-emphasis small">Хэвийн</span>
-              <span class="badge bg-warning-subtle text-warning-emphasis small">Засварт</span>
-              <span class="badge bg-danger-subtle text-danger-emphasis small">Эвдэрсэн</span>
-              <span class="badge bg-secondary-subtle text-secondary-emphasis small">Ашиглалтаас гарсан</span>
+              <span class="badge bg-success-subtle text-success-emphasis small">{{ _("Normal") }}</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis small">{{ _("Under Maintenance") }}</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis small">{{ _("Out of Order") }}</span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis small">{{ _("Decommissioned") }}</span>
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -96,7 +96,7 @@
             </span>
             <input type="text" id="summaryQuickFilter"
                    class="form-control border-start-0"
-                   placeholder="Нэр, лаб код, байрлал...">
+                   placeholder="{{ _("Name, lab code, location...") }}">
           </div>
         </div>
         <div class="card-body p-0">
@@ -112,21 +112,21 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-calendar-range"></i> Сарын ашиглалт ба засвар ({{ start_date.year }})
+              <i class="bi bi-calendar-range"></i> {{ _("Monthly usage and maintenance") }} ({{ start_date.year }})
             </span>
             <div class="small text-muted">
-              Цаг = ашиглалт, Засвар = үйлчилгээний тоо
+              {{ _("Hours = usage, Maintenance = service count") }}
             </div>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <label class="small text-muted d-none d-md-inline mb-0">Мөр:</label>
+            <label class="small text-muted d-none d-md-inline mb-0">{{ _("Rows:") }}</label>
             <select id="monthlyPageSize" class="form-select form-select-sm">
               <option value="25">25</option>
               <option value="50" selected>50</option>
               <option value="100">100</option>
             </select>
             <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
-              <i class="bi bi-download"></i> CSV татах
+              <i class="bi bi-download"></i> {{ _("Download CSV") }}
             </button>
           </div>
         </div>
@@ -143,10 +143,10 @@
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 ej-card-header">
           <div>
             <span class="fw-semibold small text-muted text-uppercase">
-              <i class="bi bi-list-check"></i> Дэлгэрэнгүй жагсаалт
+              <i class="bi bi-list-check"></i> {{ _("Detailed List") }}
             </span>
             <div class="small text-muted">
-              Ашиглалт ба засвар үйлчилгээг он цагийн дарааллаар
+              {{ _("Usage and maintenance in chronological order") }}
             </div>
           </div>
           <div class="input-group input-group-sm ej-quick-search">
@@ -155,7 +155,7 @@
             </span>
             <input type="text" id="detailSearch"
                    class="form-control border-start-0"
-                   placeholder="Багаж, лаб код, хэн хийсэн...">
+                   placeholder="{{ _("Equipment, lab code, performer...") }}">
           </div>
         </div>
         <div class="card-body p-0">
@@ -324,7 +324,7 @@
     const summaryColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Лаб код',
+        headerName: '{{ _("Lab Code") }}',
         pinned: 'left',
         width: 110,
         cellRenderer: p => {
@@ -335,7 +335,7 @@
       },
       {
         field: 'name',
-        headerName: 'Багаж',
+        headerName: '{{ _("Equipment") }}',
         minWidth: 200,
         flex: 1.6,
         filter: 'agTextColumnFilter',
@@ -352,51 +352,51 @@
       },
       {
         field: 'location',
-        headerName: 'Байрлал',
+        headerName: '{{ _("Location") }}',
         minWidth: 140,
         flex: 1.2
       },
       {
         field: 'room',
-        headerName: 'Өрөө',
+        headerName: '{{ _("Room") }}',
         width: 80
       },
       {
         field: 'status',
-        headerName: 'Төлөв',
+        headerName: '{{ _("Status") }}',
         width: 130,
         cellRenderer: p => {
           const s = p.value || 'normal';
           let cls = 'ej-status-normal';
-          let text = 'Хэвийн';
-          if (s === 'broken')       { cls = 'ej-status-broken';   text = 'Эвдэрсэн'; }
-          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = 'Засварт'; }
-          else if (s === 'retired') { cls = 'ej-status-retired';  text = 'Гарсан'; }
+          let text = '{{ _("Normal") }}';
+          if (s === 'broken')       { cls = 'ej-status-broken';   text = '{{ _("Out of Order") }}'; }
+          else if (s === 'maintenance') { cls = 'ej-status-maint';    text = '{{ _("Under Maintenance") }}'; }
+          else if (s === 'retired') { cls = 'ej-status-retired';  text = '{{ _("Decommissioned") }}'; }
           return `<span class="ej-status-badge ${cls}">${text}</span>`;
         }
       },
       {
         field: 'total_usage_hours',
-        headerName: 'Нийт цаг',
+        headerName: '{{ _("Total Hours") }}',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value.toFixed(1) : '-'
       },
       {
         field: 'maintenance_count',
-        headerName: 'Засвар',
+        headerName: '{{ _("Maintenance") }}',
         width: 110,
         type: 'numericColumn',
         valueFormatter: p => p.value ? p.value : '-'
       },
       {
         field: 'last_usage_end',
-        headerName: 'Сүүлд ашигласан',
+        headerName: '{{ _("Last Used") }}',
         minWidth: 160
       },
       {
         field: 'next_calibration_date',
-        headerName: 'Дараагийн баталгаажуулалт',
+        headerName: '{{ _("Next Calibration") }}',
         minWidth: 180,
         cellRenderer: p => {
           const v = p.value;
@@ -429,20 +429,20 @@
     // ============================================================
     // 2. MONTHLY GRID
     // ============================================================
-    const MONTH_NAMES = ['', '1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар',
-                          '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
+    const MONTH_NAMES = ['', '{{ _("Jan") }}', '{{ _("Feb") }}', '{{ _("Mar") }}', '{{ _("Apr") }}', '{{ _("May") }}', '{{ _("Jun") }}',
+                          '{{ _("Jul") }}', '{{ _("Aug") }}', '{{ _("Sep") }}', '{{ _("Oct") }}', '{{ _("Nov") }}', '{{ _("Dec") }}'];
 
     const monthlyColumnDefs = [
       {
         field: 'lab_code',
-        headerName: 'Лаб код',
+        headerName: '{{ _("Lab Code") }}',
         pinned: 'left',
         width: 110,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`
       },
       {
         field: 'name',
-        headerName: 'Багаж',
+        headerName: '{{ _("Equipment") }}',
         pinned: 'left',
         minWidth: 200,
         flex: 1.6,
@@ -466,14 +466,14 @@
         children: [
           {
             field: `usage_${i}`,
-            headerName: 'Цаг',
+            headerName: '{{ _("Hours") }}',
             width: 90,
             type: 'numericColumn',
             valueFormatter: p => p.value ? (p.value/60).toFixed(1) : '-'
           },
           {
             field: `maint_${i}`,
-            headerName: 'Засвар',
+            headerName: '{{ _("Maint.") }}',
             width: 95,
             type: 'numericColumn',
             valueFormatter: p => p.value ? p.value : '-'
@@ -502,21 +502,21 @@
     const detailedColumnDefs = [
       {
         field: 'date',
-        headerName: 'Огноо',
+        headerName: '{{ _("Date") }}',
         sort: 'desc',
         width: 160,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'lab_code',
-        headerName: 'Лаб код',
+        headerName: '{{ _("Lab Code") }}',
         width: 100,
         cellRenderer: p => `<span class="ej-lab-code">${p.value || '-'}</span>`,
         filter: 'agTextColumnFilter'
       },
       {
         field: 'equipment',
-        headerName: 'Багаж',
+        headerName: '{{ _("Equipment") }}',
         minWidth: 190,
         flex: 1.4,
         filter: 'agTextColumnFilter',
@@ -533,36 +533,36 @@
       },
       {
         field: 'category',
-        headerName: 'Ангилал',
+        headerName: '{{ _("Category") }}',
         width: 120,
         cellRenderer: p => {
           const v = p.value || 'Usage';
           if (v === 'Usage') {
-            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> Ашиглалт</span>';
+            return '<span class="ej-chip ej-chip-usage"><i class="bi bi-play-circle"></i> {{ _("Usage") }}</span>';
           }
-          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> Засвар</span>';
+          return '<span class="ej-chip ej-chip-maint"><i class="bi bi-tools"></i> {{ _("Maintenance") }}</span>';
         }
       },
       {
         field: 'type',
-        headerName: 'Төрөл',
+        headerName: '{{ _("Type") }}',
         width: 130,
         cellRenderer: p => p.value ? `<span class="ej-type-pill">${p.value}</span>` : ''
       },
       {
         field: 'user',
-        headerName: 'Хэн хийсэн',
+        headerName: '{{ _("Performed By") }}',
         width: 130
       },
       {
         field: 'description',
-        headerName: 'Тэмдэглэл',
+        headerName: '{{ _("Notes") }}',
         flex: 1.6,
         minWidth: 220
       },
       {
         field: 'result',
-        headerName: 'Үр дүн',
+        headerName: '{{ _("Result") }}',
         width: 110
       }
     ];
@@ -614,7 +614,7 @@
       function loadAllData() {
         const start = document.getElementById('startDate').value;
         const end   = document.getElementById('endDate').value;
-        
+
         // Category parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         const category = urlParams.get('category') || 'all';
@@ -638,7 +638,7 @@
             if (detailedApi.setRowData) detailedApi.setRowData(rows);
             else detailedApi.setGridOption('rowData', rows);
           });
-          
+
         // C. Load Monthly
         const year = start.split('-')[0];
         fetch(`/api/equipment/monthly_stats?year=${year}&category=${category}`)
@@ -694,7 +694,7 @@
 
     function exportMonthlyCSV() {
       if (!monthlyApi) return;
-      gridToXlsx(monthlyApi, 'monthly_equipment_summary.xlsx', 'Сарын тойм');
+      gridToXlsx(monthlyApi, 'monthly_equipment_summary.xlsx', '{{ _("Monthly Summary") }}');
     }
   </script>
 {% endblock %}

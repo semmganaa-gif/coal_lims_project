@@ -21,13 +21,13 @@
   <div class="row g-3">
     <div class="col-md-3">
       <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">Select Sample</h6></div>
+        <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
         <div class="card-body">
           <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- Select a sample --</option>
+            <option value="">-- {{ _("Select a sample") }} --</option>
           </select>
           <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
-            <i class="bi bi-plus-circle me-1"></i>Add
+            <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
           </button>
         </div>
       </div>
@@ -36,13 +36,13 @@
     <div class="col-md-9">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">Mineral Identification</h6>
+          <h6 class="mb-0">{{ _("Mineral Identification") }}</h6>
           <div>
             <button class="btn btn-outline-primary btn-sm me-1" onclick="addRow()">
-              <i class="bi bi-plus me-1"></i>Add Row
+              <i class="bi bi-plus me-1"></i>{{ _("Add Row") }}
             </button>
             <button class="btn btn-success btn-sm" onclick="saveResults()">
-              <i class="bi bi-save me-1"></i>Save
+              <i class="bi bi-save me-1"></i>{{ _("Save") }}
             </button>
           </div>
         </div>
@@ -84,9 +84,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const gridDiv = document.getElementById('mineralGrid');
   const gridOptions = {
     columnDefs: [
-      { field: 'mineral_name', headerName: 'Mineral Name', editable: true, flex: 2 },
+      { field: 'mineral_name', headerName: '{{ _("Mineral Name") }}', editable: true, flex: 2 },
       { field: 'percentage', headerName: '%', editable: true, type: 'numericColumn', width: 100 },
-      { field: 'description', headerName: 'Description', editable: true, flex: 2 },
+      { field: 'description', headerName: '{{ _("Description") }}', editable: true, flex: 2 },
     ],
     rowData: [
       { mineral_name: '', percentage: '', description: '' },
@@ -108,7 +108,7 @@ function addRow() {
 }
 
 function saveResults() {
-  if (!selectedSampleId) { alert('Дээж сонгоно уу'); return; }
+  if (!selectedSampleId) { alert('{{ _("Please select a sample") }}'); return; }
   const rows = [];
   gridApi.forEachNode(n => rows.push(n.data));
 
@@ -123,7 +123,7 @@ function saveResults() {
     })
   })
   .then(r => r.json())
-  .then(d => { if (d.success) alert('Амжилттай хадгалагдлаа!'); })
+  .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
   .catch(e => console.error(e));
 }
 </script>

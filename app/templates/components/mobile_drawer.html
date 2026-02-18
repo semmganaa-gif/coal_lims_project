@@ -56,7 +56,7 @@
     <div class="tw-mobile-card" x-data="{ expanded: true }">
       <button @click="expanded = !expanded"
               class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-info-circle tw-mr-2 tw-text-er-blue"></i>Quick Reference</span>
+        <span><i class="bi bi-info-circle tw-mr-2 tw-text-er-blue"></i>{{ _("Quick Reference") }}</span>
         <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       </button>
       <div x-show="expanded" x-collapse class="tw-mt-3">
@@ -70,7 +70,7 @@
     <div class="tw-mobile-card" x-data="{ expanded: true }">
       <button @click="expanded = !expanded"
               class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-stopwatch tw-mr-2 tw-text-er-orange"></i>Timer</span>
+        <span><i class="bi bi-stopwatch tw-mr-2 tw-text-er-orange"></i>{{ _("Timer") }}</span>
         <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
       </button>
       <div x-show="expanded" x-collapse class="tw-mt-3">
@@ -83,23 +83,23 @@
     {# Navigation Links #}
     <div class="tw-mobile-card">
       <div class="tw-font-semibold tw-text-gray-700 tw-mb-3">
-        <i class="bi bi-grid tw-mr-2 tw-text-er-blue"></i>Analysis
+        <i class="bi bi-grid tw-mr-2 tw-text-er-blue"></i>{{ _("Analysis") }}
       </div>
       <nav class="tw-space-y-1">
         <a href="{{ url_for('analysis.analysis_hub') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-house"></i>
-          <span>Analysis Hub</span>
+          <span>{{ _("Analysis Hub") }}</span>
         </a>
         <a href="{{ url_for('main.index') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-box"></i>
-          <span>Samples</span>
+          <span>{{ _("Samples") }}</span>
         </a>
         <a href="{{ url_for('quality.complaints_list') }}"
            class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
           <i class="bi bi-check-circle"></i>
-          <span>Quality</span>
+          <span>{{ _("Quality") }}</span>
         </a>
       </nav>
     </div>
@@ -112,11 +112,11 @@
     <div class="tw-flex tw-items-center tw-justify-between tw-text-sm">
       <div class="tw-text-gray-500">
         <i class="bi bi-person-circle tw-mr-1"></i>
-        {{ current_user.name if current_user.is_authenticated else 'Guest' }}
+        {{ current_user.name if current_user.is_authenticated else _('Guest') }}
       </div>
       <a href="{{ url_for('main.logout') }}"
          class="tw-text-red-500 hover:tw-text-red-600 tw-transition">
-        <i class="bi bi-box-arrow-right"></i> Logout
+        <i class="bi bi-box-arrow-right"></i> {{ _("Logout") }}
       </a>
     </div>
     <div class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">

@@ -2,9 +2,9 @@
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Edit Bottle</h3>
+    <h3 class="mb-0">{{ _("Edit Bottle") }}</h3>
     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('settings.bottles_index') }}">
-      ← Жагсаалт руу
+      ← {{ _("Back to List") }}
     </a>
   </div>
 
@@ -12,29 +12,29 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <div class="row g-3">
       <div class="col-md-6">
-        <label class="form-label">Bottle No. (serial_no)</label>
+        <label class="form-label">{{ _("Bottle No. (serial_no)") }}</label>
         <input type="text" name="serial_no" class="form-control" value="{{ bottle.serial_no }}" required>
       </div>
       <div class="col-md-6">
-        <label class="form-label">Төлөв</label>
+        <label class="form-label">{{ _("Status") }}</label>
         <select name="is_active" class="form-select">
-          <option value="1" {% if bottle.is_active %}selected{% endif %}>Active</option>
-          <option value="0" {% if not bottle.is_active %}selected{% endif %}>Inactive</option>
+          <option value="1" {% if bottle.is_active %}selected{% endif %}>{{ _("Active") }}</option>
+          <option value="0" {% if not bottle.is_active %}selected{% endif %}>{{ _("Inactive") }}</option>
         </select>
       </div>
     </div>
 
     <div class="mt-4 d-flex justify-content-end gap-2">
-      <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">Cancel</a>
-      <button class="btn btn-primary" type="submit">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('settings.bottles_index') }}">{{ _("Cancel") }}</a>
+      <button class="btn btn-primary" type="submit">{{ _("Save") }}</button>
     </div>
   </form>
 
   <div class="alert alert-info mt-3">
-    <div class="fw-semibold mb-1">Санамж:</div>
+    <div class="fw-semibold mb-1">{{ _("Note:") }}</div>
     <ul class="mb-0">
-      <li>Сарын “хоосон тодорхойлолт”-ын шинэчилсэн m₂-г оруулахдаа <em>“New тогтмол оруулах”</em> хэсгээр шинэ мөр нэмж хадгална. Өмнөх түүх хадгалагдана.</li>
-      <li>Хэрэв бортого эвдэрч ашиглагдахгүй бол жагсаалтаас “Устгах” товчыг ашиглаж бүртгэлээс гаргана (түүх хамт устахыг анхаар).</li>
+      <li>{{ _("To enter a new monthly blank determination m₂ value, add a new row via the 'New Constant' section. Previous history will be preserved.") }}</li>
+      <li>{{ _("If a bottle is broken and no longer in use, click 'Delete' from the list to remove it from the registry (note: history will also be deleted).") }}</li>
     </ul>
   </div>
 </div>

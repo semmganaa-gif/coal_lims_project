@@ -168,6 +168,7 @@
     suppressMovable: true,
     wrapHeaderText: true,
     autoHeaderHeight: true,
+    floatingFilterComponentParams: { suppressFilterButton: true },
   };
 
   const baseGridOptions = {

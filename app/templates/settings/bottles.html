@@ -2,22 +2,22 @@
 {% block content %}
 <div class="container-fluid mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Bottle Constants</h3>
+    <h3 class="mb-0">{{ _("Bottle Constants") }}</h3>
     <a class="btn btn-outline-primary" href="{{ url_for('settings.new_bottle_constant') }}">
-      <i class="bi bi-plus-circle"></i> Хоосон тодорхойлолт (шинэ)
+      <i class="bi bi-plus-circle"></i> {{ _("New Blank Determination") }}
     </a>
   </div>
 
   <div class="alert alert-info small">
-    7.4.1–7.4.8: 20 ± 0.5 °C, 3 хэмжилт, тохирц ≤ <code>0.0015 g</code>.
+    7.4.1–7.4.8: 20 ± 0.5 °C, {{ _("3 measurements, concordance") }} ≤ <code>0.0015 g</code>.
   </div>
 
   <div class="table-responsive">
     <table class="table table-sm align-middle">
       <thead class="table-light">
         <tr>
-          <th>#</th><th>Bottle No.</th><th>Label</th>
-          <th>Идэвхитэй тогтмол</th><th>T (°C)</th><th>Хүчинтэй</th><th></th>
+          <th>#</th><th>{{ _("Bottle No.") }}</th><th>{{ _("Label") }}</th>
+          <th>{{ _("Active Constant") }}</th><th>{{ _("T (°C)") }}</th><th>{{ _("Effective Date") }}</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -31,7 +31,7 @@
             {% if ac %}
               <span class="badge text-bg-success">K = {{ '%.5f'|format(ac.avg_value) }}</span>
             {% else %}
-              <span class="badge text-bg-secondary">No Constant</span>
+              <span class="badge text-bg-secondary">{{ _("No Constant") }}</span>
             {% endif %}
           </td>
           <td>{{ ac.temperature_c if ac else '' }}</td>
@@ -40,7 +40,7 @@
             {% if ac and not ac.approved_at %}
             <form method="post" action="{{ url_for('settings.approve_bottle_constant', const_id=ac.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-              <button class="btn btn-sm btn-success">Батлах</button>
+              <button class="btn btn-sm btn-success">{{ _("Approve") }}</button>
             </form>
             {% endif %}
           </td>
@@ -51,4 +51,3 @@
   </div>
 </div>
 {% endblock %}
-

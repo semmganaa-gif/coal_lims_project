@@ -1,7 +1,7 @@
 {# templates/reports/monthly_plan.html - Monthly Plan #}
 {% extends "base.html" %}
 
-{% block title %}Monthly Plan{% endblock %}
+{% block title %}{{ _("Monthly Plan") }}{% endblock %}
 
 {% block content %}
 <style>
@@ -475,8 +475,8 @@
   <!-- Header -->
   <div class="plan-header">
     <div>
-      <h4><i class="bi bi-calendar3-week"></i> Monthly Plan</h4>
-      <p class="subtitle">{{ month_name }} {{ year }} - Долоо хоног бүрийн төлөвлөгөө ба гүйцэтгэл</p>
+      <h4><i class="bi bi-calendar3-week"></i> {{ _("Monthly Plan") }}</h4>
+      <p class="subtitle">{{ month_name }} {{ year }} - {{ _("Weekly plan and performance") }}</p>
     </div>
     <form method="get" class="filter-inline">
       <select name="year" id="selectYear">
@@ -491,32 +491,32 @@
           </option>
         {% endfor %}
       </select>
-      <button type="submit" class="btn-filter"><i class="bi bi-funnel-fill"></i> Шүүх</button>
+      <button type="submit" class="btn-filter"><i class="bi bi-funnel-fill"></i> {{ _("Filter") }}</button>
       {% if current_user.role in ['senior', 'admin'] %}
-      <button type="button" class="btn-save-plan" id="btnSavePlan"><i class="bi bi-save"></i> Save</button>
+      <button type="button" class="btn-save-plan" id="btnSavePlan"><i class="bi bi-save"></i> {{ _("Save") }}</button>
       {% endif %}
     </form>
   </div>
 
   <!-- Tab Navigation -->
   <div class="plan-tabs">
-    <div class="plan-tab active" data-tab="plan"><i class="bi bi-calendar3-week"></i> Төлөвлөгөө</div>
-    <div class="plan-tab" data-tab="stats"><i class="bi bi-graph-up"></i> Статистик</div>
+    <div class="plan-tab active" data-tab="plan"><i class="bi bi-calendar3-week"></i> {{ _("Plan") }}</div>
+    <div class="plan-tab" data-tab="stats"><i class="bi bi-graph-up"></i> {{ _("Statistics") }}</div>
   </div>
 
   <!-- ===== PLAN TAB CONTENT ===== -->
   <div id="planContent" class="tab-content active">
   <!-- Workload Cards -->
   <div class="workload-section">
-    <div class="section-title"><i class="bi bi-speedometer2"></i> Өдрийн ачаалал / Норм</div>
+    <div class="section-title"><i class="bi bi-speedometer2"></i> {{ _("Daily Workload / Norm") }}</div>
     <div class="workload-cards">
       <div class="wl-card blue">
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-clipboard-check"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Record</div>
+            <div class="wl-label">{{ _("Record") }}</div>
             <div class="wl-value" id="cardRegistration">{{ grand_total.daily_plan }}</div>
-            <div class="wl-unit">дээж/өдөр</div>
+            <div class="wl-unit">{{ _("samples/day") }}</div>
           </div>
         </div>
       </div>
@@ -524,9 +524,9 @@
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-hammer"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Sample бэлтгэгч {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffPreparers" value="{{ staff_preparers }}" min="1" max="50">{% else %}<span class="badge bg-success">{{ staff_preparers }}</span>{% endif %}</div>
+            <div class="wl-label">{{ _("Sample Preparer") }} {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffPreparers" value="{{ staff_preparers }}" min="1" max="50">{% else %}<span class="badge bg-success">{{ staff_preparers }}</span>{% endif %}</div>
             <div class="wl-value" id="cardPreparers">{{ (grand_total.daily_plan / staff_preparers)|round(1) }}</div>
-            <div class="wl-unit">дээж/хүн/өдөр</div>
+            <div class="wl-unit">{{ _("samples/person/day") }}</div>
           </div>
         </div>
       </div>
@@ -534,9 +534,9 @@
         <div class="wl-card-inner">
           <div class="wl-icon"><i class="bi bi-eyedropper"></i></div>
           <div class="wl-info">
-            <div class="wl-label">Analyst {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffChemists" value="{{ staff_chemists }}" min="1" max="50">{% else %}<span class="badge bg-purple">{{ staff_chemists }}</span>{% endif %}</div>
+            <div class="wl-label">{{ _("Analyst") }} {% if current_user.role in ['senior', 'admin'] %}<input type="number" class="wl-staff-input" id="staffChemists" value="{{ staff_chemists }}" min="1" max="50">{% else %}<span class="badge bg-purple">{{ staff_chemists }}</span>{% endif %}</div>
             <div class="wl-value" id="cardChemists">{{ ((grand_total.daily_plan * 5) / staff_chemists)|round(1) }}</div>
-            <div class="wl-unit">шинжилгээ/хүн/өдөр</div>
+            <div class="wl-unit">{{ _("analyses/person/day") }}</div>
           </div>
         </div>
       </div>
@@ -546,39 +546,39 @@
   <!-- Week Summary -->
   <div class="week-summary">
     <div class="week-summary-header">
-      <div class="week-summary-title"><i class="bi bi-calendar-week"></i> Долоо хоногийн нэгтгэл</div>
+      <div class="week-summary-title"><i class="bi bi-calendar-week"></i> {{ _("Weekly Summary") }}</div>
       {% if current_user.role in ['senior', 'admin'] %}
-      <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> Settings хадгалах</button>
+      <button type="button" class="btn btn-sm btn-outline-success" id="btnSaveStaff"><i class="bi bi-check-lg"></i> {{ _("Save Settings") }}</button>
       {% endif %}
     </div>
     <div class="week-grid">
       {% for w in weeks %}
       <div class="week-item">
-        <div class="week-label">{{ ['', 'I', 'II', 'III', 'IV', 'V'][w.week] }} week</div>
+        <div class="week-label">{{ ['', 'I', 'II', 'III', 'IV', 'V'][w.week] }} {{ _("week") }}</div>
         <div class="week-dates">/{{ w.start.day }}-{{ w.end.day }}/</div>
         <div class="week-plan">{{ week_totals[w.week].plan }}</div>
-        <div class="week-perf">{{ week_totals[w.week].perf }} perf</div>
-        <div class="week-daily">{{ week_totals[w.week].daily_plan }}/өдөр</div>
+        <div class="week-perf">{{ week_totals[w.week].perf }} {{ _("perf") }}</div>
+        <div class="week-daily">{{ week_totals[w.week].daily_plan }}/{{ _("day") }}</div>
       </div>
       {% endfor %}
       <div class="week-item total-col">
-        <div class="week-label">TOTAL</div>
+        <div class="week-label">{{ _("TOTAL") }}</div>
         <div class="week-dates">{{ month_name }}</div>
         <div class="week-plan">{{ grand_total.plan }}</div>
-        <div class="week-perf">{{ grand_total.perf }} perf</div>
-        <div class="week-daily">{{ grand_total.daily_plan }}/өдөр</div>
+        <div class="week-perf">{{ grand_total.perf }} {{ _("perf") }}</div>
+        <div class="week-daily">{{ grand_total.daily_plan }}/{{ _("day") }}</div>
       </div>
     </div>
   </div>
 
   <!-- Consignor Cards -->
-  <div class="section-title"><i class="bi bi-building"></i> Plan by Unit</div>
+  <div class="section-title"><i class="bi bi-building"></i> {{ _("Plan by Unit") }}</div>
   <div class="consignor-grid">
     {% for client_name, client_info in data.items() %}
     <div class="consignor-card">
       <div class="consignor-header" onclick="this.parentElement.querySelector('.consignor-body').classList.toggle('d-none')">
         <div class="consignor-name"><i class="bi bi-box-seam"></i> {{ client_name }}</div>
-        <div class="consignor-badge">{{ client_info.total.plan }} plan / {{ client_info.total.perf }} perf</div>
+        <div class="consignor-badge">{{ client_info.total.plan }} {{ _("plan") }} / {{ client_info.total.perf }} {{ _("perf") }}</div>
       </div>
       <div class="consignor-body">
         {% for sample_type, row_data in client_info.types.items() %}
@@ -608,7 +608,7 @@
         {% endfor %}
       </div>
       <div class="consignor-footer">
-        <span>{{ client_name }} Total</span>
+        <span>{{ client_name }} {{ _("Total") }}</span>
         <span>{{ client_info.total.plan }} / {{ client_info.total.perf }} ({% if client_info.total.plan > 0 %}{{ "%.0f"|format(client_info.pct) }}%{% else %}-{% endif %})</span>
       </div>
     </div>
@@ -621,7 +621,7 @@
     <!-- Date Range Filter -->
     <div class="stats-filter">
       <div class="filter-group">
-        <label>Эхлэх:</label>
+        <label>{{ _("From") }}:</label>
         <select id="statsFromYear" class="filter-select">
           {% for y in range(year - 5, year + 1) %}
           <option value="{{ y }}" {% if y == year - 1 %}selected{% endif %}>{{ y }}</option>
@@ -635,7 +635,7 @@
       </div>
       <div class="filter-separator">—</div>
       <div class="filter-group">
-        <label>Дуусах:</label>
+        <label>{{ _("To") }}:</label>
         <select id="statsToYear" class="filter-select">
           {% for y in range(year - 5, year + 1) %}
           <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
@@ -648,11 +648,11 @@
         </select>
       </div>
       <button type="button" class="btn-stats-filter" id="btnApplyStats">
-        <i class="bi bi-funnel-fill"></i> Шүүх
+        <i class="bi bi-funnel-fill"></i> {{ _("Filter") }}
       </button>
       <div class="quick-filters">
-        <button type="button" class="quick-btn" data-range="1y">1 жил</button>
-        <button type="button" class="quick-btn" data-range="2y">2 жил</button>
+        <button type="button" class="quick-btn" data-range="1y">{{ _("1 Year") }}</button>
+        <button type="button" class="quick-btn" data-range="2y">{{ _("2 Years") }}</button>
         <button type="button" class="quick-btn" data-range="ytd">YTD</button>
       </div>
     </div>
@@ -660,24 +660,24 @@
     <!-- Summary Row -->
     <div class="summary-row" id="summaryStats">
       <div class="summary-stat">
-        <div class="stat-label">Total төлөвлөгөө</div>
+        <div class="stat-label">{{ _("Total Plan") }}</div>
         <div class="stat-value" id="totalPlanned">-</div>
-        <div class="stat-sub">{{ year }} он</div>
+        <div class="stat-sub">{{ year }}</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-label">Total гүйцэтгэл</div>
+        <div class="stat-label">{{ _("Total Performance") }}</div>
         <div class="stat-value" id="totalActual">-</div>
-        <div class="stat-sub">бүртгэгдсэн</div>
+        <div class="stat-sub">{{ _("recorded") }}</div>
       </div>
       <div class="summary-stat highlight">
-        <div class="stat-label">Биелэлт</div>
+        <div class="stat-label">{{ _("Fulfillment") }}</div>
         <div class="stat-value" id="totalPct">-</div>
         <div class="stat-sub">%</div>
       </div>
       <div class="summary-stat">
-        <div class="stat-label">Өдрийн дундаж</div>
+        <div class="stat-label">{{ _("Daily Average") }}</div>
         <div class="stat-value" id="dailyAvg">-</div>
-        <div class="stat-sub">дээж/өдөр</div>
+        <div class="stat-sub">{{ _("samples/day") }}</div>
       </div>
     </div>
 
@@ -686,7 +686,7 @@
       <!-- Yearly Chart -->
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-calendar"></i> Жилээр харьцуулалт</div>
+          <div class="stats-card-title"><i class="bi bi-calendar"></i> {{ _("Yearly Comparison") }}</div>
         </div>
         <div class="chart-container">
           <canvas id="yearlyChart"></canvas>
@@ -696,7 +696,7 @@
       <!-- Monthly Chart -->
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-calendar-month"></i> Сараар харьцуулалт</div>
+          <div class="stats-card-title"><i class="bi bi-calendar-month"></i> {{ _("Monthly Comparison") }}</div>
         </div>
         <div class="chart-container">
           <canvas id="monthlyChart"></canvas>
@@ -706,7 +706,7 @@
       <!-- Weekly Chart -->
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-calendar-week"></i> Долоо хоногоор ({{ year }})</div>
+          <div class="stats-card-title"><i class="bi bi-calendar-week"></i> {{ _("Weekly") }} ({{ year }})</div>
         </div>
         <div class="chart-container">
           <canvas id="weeklyChart"></canvas>
@@ -716,7 +716,7 @@
       <!-- Consignor Chart -->
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-building"></i> Comparison by Unit</div>
+          <div class="stats-card-title"><i class="bi bi-building"></i> {{ _("Comparison by Unit") }}</div>
         </div>
         <div class="chart-container">
           <canvas id="consignorChart"></canvas>
@@ -728,7 +728,7 @@
     <div class="stats-grid" style="margin-top: 1.25rem;">
       <div class="stats-card">
         <div class="stats-card-header">
-          <div class="stats-card-title"><i class="bi bi-percent"></i> Гүйцэтгэлийн хувь (сараар)</div>
+          <div class="stats-card-title"><i class="bi bi-percent"></i> {{ _("Performance %% (Monthly)") }}</div>
         </div>
         <div class="chart-container">
           <canvas id="pctChart"></canvas>
@@ -879,17 +879,17 @@ document.addEventListener('DOMContentLoaded', function() {
       chartInstances.yearly = new Chart(document.getElementById('yearlyChart'), {
         type: 'bar',
         data: {
-          labels: data.yearly.map(y => y.year + ' он'),
+          labels: data.yearly.map(y => y.year),
           datasets: [
             {
-              label: 'Төлөвлөгөө',
+              label: '{{ _("Plan") }}',
               data: data.yearly.map(y => y.planned),
               backgroundColor: 'rgba(59, 130, 246, 0.7)',
               borderColor: 'rgba(59, 130, 246, 1)',
               borderWidth: 1
             },
             {
-              label: 'Гүйцэтгэл',
+              label: '{{ _("Performance") }}',
               data: data.yearly.map(y => y.actual),
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
               borderColor: 'rgba(34, 197, 94, 1)',
@@ -912,7 +912,7 @@ document.addEventListener('DOMContentLoaded', function() {
           labels: data.monthly.map(m => m.year + '/' + m.month_name),
           datasets: [
             {
-              label: 'Төлөвлөгөө',
+              label: '{{ _("Plan") }}',
               data: data.monthly.map(m => m.planned),
               borderColor: 'rgba(59, 130, 246, 1)',
               backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -920,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function() {
               tension: 0.3
             },
             {
-              label: 'Гүйцэтгэл',
+              label: '{{ _("Performance") }}',
               data: data.monthly.map(m => m.actual),
               borderColor: 'rgba(34, 197, 94, 1)',
               backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -944,14 +944,14 @@ document.addEventListener('DOMContentLoaded', function() {
           labels: data.weekly.map(w => w.label),
           datasets: [
             {
-              label: 'Төлөвлөгөө',
+              label: '{{ _("Plan") }}',
               data: data.weekly.map(w => w.planned),
               backgroundColor: 'rgba(139, 92, 246, 0.6)',
               borderColor: 'rgba(139, 92, 246, 1)',
               borderWidth: 1
             },
             {
-              label: 'Гүйцэтгэл',
+              label: '{{ _("Performance") }}',
               data: data.weekly.map(w => w.actual),
               backgroundColor: 'rgba(245, 158, 11, 0.6)',
               borderColor: 'rgba(245, 158, 11, 1)',
@@ -974,12 +974,12 @@ document.addEventListener('DOMContentLoaded', function() {
           labels: data.consignor.map(c => c.client),
           datasets: [
             {
-              label: 'Төлөвлөгөө',
+              label: '{{ _("Plan") }}',
               data: data.consignor.map(c => c.planned),
               backgroundColor: 'rgba(59, 130, 246, 0.7)'
             },
             {
-              label: 'Гүйцэтгэл',
+              label: '{{ _("Performance") }}',
               data: data.consignor.map(c => c.actual),
               backgroundColor: 'rgba(34, 197, 94, 0.7)'
             }
@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
           labels: data.monthly.map(m => m.year + '/' + m.month_name),
           datasets: [{
-            label: 'Гүйцэтгэлийн %',
+            label: '{{ _("Performance %%") }}',
             data: data.monthly.map(m => m.pct),
             borderColor: 'rgba(139, 92, 246, 1)',
             backgroundColor: 'rgba(139, 92, 246, 0.2)',
@@ -1057,13 +1057,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         const result = await response.json();
         if (result.success) {
-          alert('Төлөвлөгөө хадгалагдлаа!');
+          alert('{{ _("Plan saved successfully!") }}');
           location.reload();
         } else {
-          alert('Алдаа: ' + (result.error || 'Тодорхойгүй алдаа'));
+          alert('{{ _("Error") }}: ' + (result.error || '{{ _("Unknown error") }}'));
         }
       } catch (err) {
-        alert('Сервертэй холбогдож чадсангүй: ' + err.message);
+        alert('{{ _("Could not connect to server") }}: ' + err.message);
       }
     });
   }
@@ -1096,11 +1096,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         const result = await response.json();
         if (result.success) {
-          btnSaveStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> Хадгалсан';
-          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> Тохиргоо хадгалах'; }, 1500);
+          btnSaveStaff.innerHTML = '<i class="bi bi-check-circle-fill"></i> {{ _("Saved") }}';
+          setTimeout(() => { btnSaveStaff.innerHTML = '<i class="bi bi-check-lg"></i> {{ _("Save Settings") }}'; }, 1500);
         }
       } catch (err) {
-        alert('Алдаа: ' + err.message);
+        alert('{{ _("Error") }}: ' + err.message);
       }
     });
   }

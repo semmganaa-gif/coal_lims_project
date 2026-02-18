@@ -5,24 +5,24 @@
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>{{ title }}</h1>
-    {{ render_cancel_button(url_for('admin.manage_users'), text='Back to User List', variant='outline-secondary') }}
+    {{ render_cancel_button(url_for('admin.manage_users'), text=_('Back to User List'), variant='outline-secondary') }}
   </div>
 
-  <p class="text-muted">Edit user "{{ user.username }}" information.</p>
+  <p class="text-muted">{{ _("Edit user \"%(username)s\" information.", username=user.username) }}</p>
 
   <div class="row">
     <div class="col-lg-6">
-      {% call render_card(title='Edit User Information') %}
+      {% call render_card(title=_('Edit User Information')) %}
         <form action="{{ url_for('admin.edit_user', user_id=user.id) }}" method="post" novalidate>
           {{ form.hidden_tag() }}
 
-          {{ render_field(form.username, placeholder='Username') }}
+          {{ render_field(form.username, placeholder=_('Username')) }}
 
           <div class="mb-3">
             {{ form.password.label(class="form-label fw-bold") }}
-            {{ form.password(class="form-control", placeholder='New password') }}
+            {{ form.password(class="form-control", placeholder=_('New password')) }}
             <div class="form-text">
-              Leave blank if you do not want to change the password.
+              {{ _("Leave blank if you do not want to change the password.") }}
             </div>
           </div>
 
@@ -32,7 +32,7 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-bold">Allowed Laboratories</label>
+            <label class="form-label fw-bold">{{ _("Allowed Laboratories") }}</label>
             <div class="d-flex flex-wrap gap-3">
               {% for subfield in form.allowed_labs %}
               <div class="form-check">
@@ -41,20 +41,20 @@
               </div>
               {% endfor %}
             </div>
-            <div class="form-text">Select which laboratories this user can access.</div>
+            <div class="form-text">{{ _("Select which laboratories this user can access.") }}</div>
           </div>
 
           <hr class="my-3">
-          <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>Email Signature Information</p>
+          <p class="text-muted small mb-2"><i class="bi bi-envelope me-1"></i>{{ _("Email Signature Information") }}</p>
 
-          {{ render_field(form.full_name, placeholder='Ж.Баатар') }}
+          {{ render_field(form.full_name, placeholder=_('Full Name')) }}
           {{ render_field(form.email, placeholder='baatar@energyresources.mn') }}
           {{ render_field(form.phone, placeholder='99119911') }}
-          {{ render_field(form.position, placeholder='Senior Chemist') }}
+          {{ render_field(form.position, placeholder=_('Senior Chemist')) }}
 
           <div class="d-flex justify-content-between">
             {{ render_cancel_button(url_for('admin.manage_users')) }}
-            {{ render_submit_button(form.submit, text='Save', icon='bi-check-lg') }}
+            {{ render_submit_button(form.submit, text=_('Save'), icon='bi-check-lg') }}
           </div>
         </form>
       {% endcall %}
@@ -62,21 +62,21 @@
 
     <!-- Side information panel -->
     <div class="col-lg-6 mt-3 mt-lg-0">
-      {% call render_card(title='User General Information') %}
-        <p><strong>ID:</strong> {{ user.id }}</p>
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Current Role:</strong> {{ user.role }}</p>
+      {% call render_card(title=_('User General Information')) %}
+        <p><strong>{{ _("ID") }}:</strong> {{ user.id }}</p>
+        <p><strong>{{ _("Username") }}:</strong> {{ user.username }}</p>
+        <p><strong>{{ _("Current Role") }}:</strong> {{ user.role }}</p>
         {% if user.full_name %}
-        <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+        <p><strong>{{ _("Full Name") }}:</strong> {{ user.full_name }}</p>
         {% endif %}
         {% if user.email %}
-        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>{{ _("Email") }}:</strong> {{ user.email }}</p>
         {% endif %}
         {% if user.phone %}
-        <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <p><strong>{{ _("Phone") }}:</strong> {{ user.phone }}</p>
         {% endif %}
         {% if user.position %}
-        <p><strong>Position:</strong> {{ user.position }}</p>
+        <p><strong>{{ _("Position") }}:</strong> {{ user.position }}</p>
         {% endif %}
       {% endcall %}
     </div>

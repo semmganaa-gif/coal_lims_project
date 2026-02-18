@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="bi bi-chat-left-dots me-2"></i>Complaint Register</h2>
+    <h2><i class="bi bi-chat-left-dots me-2"></i>{{ _("Complaint Register") }}</h2>
     <p class="text-muted">LAB.02.00.01 | ISO 17025 - 7.9</p>
 
     <form method="POST" class="mt-3">
@@ -13,33 +13,33 @@
 
         <div class="row mb-2">
             <div class="col-md-6">
-                <label class="form-label fw-bold">Date:</label>
+                <label class="form-label fw-bold">{{ _("Date:") }}</label>
                 <input type="date" name="complaint_date" class="form-control"
                        value="{{ today }}" required>
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold">No.:</label>
-                <input type="text" class="form-control" value="Auto-generated" disabled>
+                <label class="form-label fw-bold">{{ _("No.:") }}</label>
+                <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
             </div>
         </div>
 
         {# ═══ Related Sample ═══ #}
         <div class="card mt-3">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Related Sample</h5>
+                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>{{ _("Related Sample") }}</h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label">Search sample code</label>
+                        <label class="form-label">{{ _("Search sample code") }}</label>
                         <input type="text" id="sampleSearch" class="form-control"
-                               placeholder="Enter sample code... (2+ characters)" autocomplete="off">
+                               placeholder="{{ _("Enter sample code... (2+ characters)") }}" autocomplete="off">
                         <div id="sampleResults" class="border rounded mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Selected sample</label>
+                        <label class="form-label">{{ _("Selected sample") }}</label>
                         <div id="selectedSample" class="border rounded p-2 bg-light" style="min-height:38px;">
-                            <span class="text-muted">Not selected</span>
+                            <span class="text-muted">{{ _("Not selected") }}</span>
                         </div>
                     </div>
                 </div>
@@ -49,33 +49,33 @@
         {# ═══ Re-analysis Selection ═══ #}
         <div class="card mt-3" id="reanalysisCard" style="display:none;">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>Request Re-analysis</h5>
+                <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>{{ _("Request Re-analysis") }}</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-2">Select analyses for re-analysis. Only <strong>approved</strong> results can be selected.</p>
+                <p class="text-muted mb-2">{{ _("Select analyses for re-analysis. Only") }} <strong>{{ _("approved") }}</strong> {{ _("results can be selected.") }}</p>
                 <div id="analysisLoading" class="text-center py-3" style="display:none;">
-                    <div class="spinner-border spinner-border-sm text-primary"></div> Loading...
+                    <div class="spinner-border spinner-border-sm text-primary"></div> {{ _("Loading...") }}
                 </div>
                 <table class="table table-sm table-bordered mb-0" id="analysisTable" style="display:none;">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center" style="width:40px;">
-                                <input type="checkbox" id="selectAllAnalysis" class="form-check-input" title="Select all">
+                                <input type="checkbox" id="selectAllAnalysis" class="form-check-input" title="{{ _("Select all") }}">
                             </th>
-                            <th>Analysis</th>
-                            <th>Result</th>
-                            <th>Status</th>
-                            <th>Analyst</th>
-                            <th>Date</th>
+                            <th>{{ _("Analysis") }}</th>
+                            <th>{{ _("Result") }}</th>
+                            <th>{{ _("Status") }}</th>
+                            <th>{{ _("Analyst") }}</th>
+                            <th>{{ _("Date") }}</th>
                         </tr>
                     </thead>
                     <tbody id="analysisBody"></tbody>
                 </table>
                 <div id="noAnalysisMsg" class="text-muted" style="display:none;">
-                    No analysis results found
+                    {{ _("No analysis results found") }}
                 </div>
                 <div class="mt-2" id="selectedInfo" style="display:none;">
-                    <span class="badge bg-danger" id="selectedBadge">0 selected</span>
+                    <span class="badge bg-danger" id="selectedBadge">{{ _("0 selected") }}</span>
                 </div>
             </div>
         </div>
@@ -83,58 +83,58 @@
         {# ═══ Section 1: Complainant ═══ #}
         <div class="card mt-3">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Complainant Section</h5>
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Complainant Section") }}</h5>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Full name, position <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
                         <input type="text" name="complainant_name" class="form-control"
-                               placeholder="E.g.: B.Bold, Analyst" required>
+                               placeholder="{{ _("E.g.: B.Bold, Analyst") }}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Department / Unit</label>
+                        <label class="form-label">{{ _("Department / Unit") }}</label>
                         <select name="complainant_department" class="form-select">
-                            <option value="">-- Select --</option>
-                            <optgroup label="Coal Laboratory">
-                                <option value="CHPP">CHPP - Washing Plant</option>
-                                <option value="UHG-Geo">UHG Geology</option>
-                                <option value="BN-Geo">BN Geology</option>
-                                <option value="QC">QC - Quality Control</option>
-                                <option value="Proc">Process</option>
-                                <option value="WTL">WTL - BS Lab</option>
-                                <option value="LAB">Laboratory</option>
+                            <option value="">-- {{ _("Select") }} --</option>
+                            <optgroup label="{{ _("Coal Laboratory") }}">
+                                <option value="CHPP">{{ _("CHPP - Washing Plant") }}</option>
+                                <option value="UHG-Geo">{{ _("UHG Geology") }}</option>
+                                <option value="BN-Geo">{{ _("BN Geology") }}</option>
+                                <option value="QC">{{ _("QC - Quality Control") }}</option>
+                                <option value="Proc">{{ _("Process") }}</option>
+                                <option value="WTL">{{ _("WTL - BS Lab") }}</option>
+                                <option value="LAB">{{ _("Laboratory") }}</option>
                             </optgroup>
-                            <optgroup label="Water Laboratory">
-                                <option value="uutsb">UUTSB</option>
-                                <option value="negdsen_office">Central Office</option>
-                                <option value="tsagaan_khad">Tsagaan Khad</option>
-                                <option value="tsetsii">Tsetsii District</option>
-                                <option value="naymant">Naymant Deep Well</option>
-                                <option value="naimdai">Naimdai Valley</option>
-                                <option value="malchdyn_hudag">Herders' Well</option>
+                            <optgroup label="{{ _("Water Laboratory") }}">
+                                <option value="uutsb">{{ _("UUTSB") }}</option>
+                                <option value="negdsen_office">{{ _("Central Office") }}</option>
+                                <option value="tsagaan_khad">{{ _("Tsagaan Khad") }}</option>
+                                <option value="tsetsii">{{ _("Tsetsii District") }}</option>
+                                <option value="naymant">{{ _("Naymant Deep Well") }}</option>
+                                <option value="naimdai">{{ _("Naimdai Valley") }}</option>
+                                <option value="malchdyn_hudag">{{ _("Herders' Well") }}</option>
                             </optgroup>
-                            <optgroup label="Other">
-                                <option value="hyanalт">Monitoring</option>
-                                <option value="tsf">TSF</option>
-                                <option value="uarp">UARP</option>
-                                <option value="shine_camp">New Camp</option>
-                                <option value="gallerey">Gallery</option>
-                                <option value="sbutsb">SBUTSB</option>
-                                <option value="busad">Other</option>
+                            <optgroup label="{{ _("Other") }}">
+                                <option value="hyanalт">{{ _("Monitoring") }}</option>
+                                <option value="tsf">{{ _("TSF") }}</option>
+                                <option value="uarp">{{ _("UARP") }}</option>
+                                <option value="shine_camp">{{ _("New Camp") }}</option>
+                                <option value="gallerey">{{ _("Gallery") }}</option>
+                                <option value="sbutsb">{{ _("SBUTSB") }}</option>
+                                <option value="busad">{{ _("Other") }}</option>
                             </optgroup>
                         </select>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Complaint description, remarks, and documented evidence <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ _("Complaint description, remarks, and documented evidence") }} <span class="text-danger">*</span></label>
                     <textarea name="complaint_content" class="form-control" rows="5"
-                              placeholder="Detailed description of the complaint..." required></textarea>
+                              placeholder="{{ _("Detailed description of the complaint...") }}" required></textarea>
                 </div>
 
                 <div class="border-top pt-3">
-                    <p class="mb-1"><strong>Signature:</strong></p>
+                    <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
                     <p class="text-muted mb-0">
                         <i class="bi bi-person-check me-1"></i>{{ current_user.username }}
                         ({{ current_user.role }})
@@ -145,10 +145,10 @@
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-save me-1"></i> Register
+                <i class="bi bi-save me-1"></i> {{ _("Register") }}
             </button>
             <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary btn-lg ms-2">
-                <i class="bi bi-x-lg me-1"></i> Cancel
+                <i class="bi bi-x-lg me-1"></i> {{ _("Cancel") }}
             </a>
         </div>
     </form>
@@ -169,7 +169,7 @@ $(document).ready(function() {
         searchTimer = setTimeout(function() {
             $.getJSON('/api/search_samples_json', {q: q}, function(data) {
                 if (!data.length) {
-                    $('#sampleResults').html('<div class="p-2 text-muted">Not found</div>').show();
+                    $('#sampleResults').html('<div class="p-2 text-muted">{{ _("Not found") }}</div>').show();
                     return;
                 }
                 let html = '';
@@ -205,7 +205,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.clear-sample', function() {
         $('#related_sample_id').val('');
-        $('#selectedSample').html('<span class="text-muted">Not selected</span>');
+        $('#selectedSample').html('<span class="text-muted">{{ _("Not selected") }}</span>');
         $('#reanalysisCard').hide();
         $('#reanalysis_codes').val('');
         $('#original_results_snapshot').val('');
@@ -226,10 +226,10 @@ $(document).ready(function() {
                 return;
             }
             const statusMap = {
-                'approved': '<span class="badge bg-success">Approved</span>',
-                'rejected': '<span class="badge bg-danger">Rejected</span>',
-                'pending_review': '<span class="badge bg-warning text-dark">Under Review</span>',
-                'draft': '<span class="badge bg-secondary">Draft</span>'
+                'approved': '<span class="badge bg-success">{{ _("Approved") }}</span>',
+                'rejected': '<span class="badge bg-danger">{{ _("Rejected") }}</span>',
+                'pending_review': '<span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>',
+                'draft': '<span class="badge bg-secondary">{{ _("Draft") }}</span>'
             };
             let html = '';
             resp.data.forEach(function(r) {
@@ -285,7 +285,7 @@ $(document).ready(function() {
         });
         $('#reanalysis_codes').val(codes.length ? JSON.stringify(codes) : '');
         $('#original_results_snapshot').val(Object.keys(snapshot).length ? JSON.stringify(snapshot) : '');
-        $('#selectedBadge').text(codes.length + ' selected');
+        $('#selectedBadge').text(codes.length + ' {{ _("selected") }}');
     }
 
     $(document).on('click', function(e) {

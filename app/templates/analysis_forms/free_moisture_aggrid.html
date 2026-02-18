@@ -106,7 +106,7 @@
       }
     },
     {
-      headerName: 'Sample',
+      headerName: '{{ _("Sample") }}',
       field: 'sample_code',
       width: 260,
       pinned: 'left',
@@ -128,28 +128,28 @@
       }
     },
     {
-      headerName: 'Tray (g)',
+      headerName: '{{ _("Tray (g)") }}',
       field: 'tray',
       width: 130,
       ...editCol,
       valueFormatter: numFmt4
     },
     {
-      headerName: 'Tray + wet sample (g)',
+      headerName: '{{ _("Tray + wet sample (g)") }}',
       field: 'before',
       width: 170,
       ...editCol,
       valueFormatter: numFmt4
     },
     {
-      headerName: 'Tray + dry sample (g)',
+      headerName: '{{ _("Tray + dry sample (g)") }}',
       field: 'after',
       width: 170,
       ...editCol,
       valueFormatter: numFmt4
     },
     {
-      headerName: 'Loss (g)',
+      headerName: '{{ _("Loss (g)") }}',
       field: 'savedLoss',
       width: 120,
       valueFormatter: p =>
@@ -175,7 +175,7 @@
       }
     },
     {
-      headerName: 'Free moisture %',
+      headerName: '{{ _("Free moisture %%") }}',
       field: 'savedFmWet',
       width: 150,
       valueFormatter: p =>
@@ -199,7 +199,7 @@
       }
     },
     {
-      headerName: 'Dry basis % (info)',
+      headerName: '{{ _("Dry basis %% (info)") }}',
       field: 'savedFmDry',
       width: 150,
       valueFormatter: p =>
@@ -224,18 +224,18 @@
       }
     },
     {
-      headerName: 'Action',
+      headerName: '{{ _("Action") }}',
       width: 90,
       pinned: 'right',
       cellRenderer: p => {
         if (p.data.is_saved) {
-          return '<span class="text-muted small">Saved</span>';
+          return '<span class="text-muted small">{{ _("Saved") }}</span>';
         }
         return `
           <button type="button"
                   class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
                   data-sample-id="${p.data.sample_id}"
-                  title="Remove sample">
+                  title="{{ _("Remove sample") }}">
             <i class="bi bi-x"></i>
           </button>
         `;
@@ -432,7 +432,7 @@
   // --- 7. ACTIONS ---
 
   window.removeSample = function(id) {
-    if (!confirm('Энэ дээжийг жагсаалтаас хасах уу?')) return;
+    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
     const url = new URL(window.location.href);
     let ids = (url.searchParams.get('sample_ids') || '').split(',');
     ids = ids.filter(x => x.trim() && parseInt(x) !== id);

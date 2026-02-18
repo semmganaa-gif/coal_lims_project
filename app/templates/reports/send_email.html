@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Report илгээх - {{ report.report_number }}{% endblock %}
+{% block title %}{{ _("Send Report") }} - {{ report.report_number }}{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 700px;">
@@ -8,57 +8,57 @@
     <div class="card-header bg-white border-0 py-3">
       <h5 class="mb-0">
         <i class="bi bi-envelope text-primary me-2"></i>
-        Report имэйлээр илгээх
+        {{ _("Send Report by Email") }}
       </h5>
     </div>
     <div class="card-body">
       <div class="alert alert-info mb-4">
-        <strong>Report:</strong> {{ report.report_number }} - {{ report.title }}
+        <strong>{{ _("Report") }}:</strong> {{ report.report_number }} - {{ report.title }}
       </div>
 
       <form method="POST">
         <div class="mb-3">
-          <label class="form-label">Хүлээн авагчийн имэйл <span class="text-danger">*</span></label>
+          <label class="form-label">{{ _("Recipient email") }} <span class="text-danger">*</span></label>
           <input type="text" name="recipients" class="form-control" required
                  placeholder="email1@example.com, email2@example.com"
                  value="{{ report.email_recipients or '' }}">
-          <div class="form-text">Олон хаяг бол таслалаар тусгаарлана</div>
+          <div class="form-text">{{ _("Separate multiple addresses with commas") }}</div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Гарчиг</label>
+          <label class="form-label">{{ _("Subject") }}</label>
           <input type="text" name="subject" class="form-control"
-                 value="Сорилтын тайлан - {{ report.report_number }}"
-                 placeholder="Email subject">
+                 value="{{ _("Test Report") }} - {{ report.report_number }}"
+                 placeholder="{{ _("Email subject") }}">
         </div>
 
         <div class="mb-4">
-          <label class="form-label">Агуулга</label>
-          <textarea name="body" class="form-control" rows="8" placeholder="Email body...">Dear Sir/Madam,
+          <label class="form-label">{{ _("Body") }}</label>
+          <textarea name="body" class="form-control" rows="8" placeholder="{{ _("Email body") }}...">Dear Sir/Madam,
 
 Please find attached the test report "{{ report.title }}".
 
 Report No.: {{ report.report_number }}
 Date: {{ report.date_from.strftime('%Y-%m-%d') if report.date_from else '' }} - {{ report.date_to.strftime('%Y-%m-%d') if report.date_to else '' }}
 
-Асуулт байвал бидэнтэй холбоо барина уу.
+If you have any questions, please contact us.
 
-Хүндэтгэсэн,
-Усны шинжилгээний лаборатори
-И-мэйл: laboratory@mmc.mn</textarea>
+Regards,
+Water Analysis Laboratory
+Email: laboratory@mmc.mn</textarea>
         </div>
 
         <div class="alert alert-warning">
           <i class="bi bi-exclamation-triangle me-2"></i>
-          <strong>Warning:</strong> PDF файл хавсаргагдана.
+          <strong>{{ _("Warning") }}:</strong> {{ _("PDF file will be attached.") }}
         </div>
 
         <div class="d-flex justify-content-between">
           <a href="{{ url_for('pdf_reports.report_detail', id=report.id) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Буцах
+            <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
           </a>
           <button type="submit" class="btn btn-primary">
-            <i class="bi bi-send me-1"></i> Илгээх
+            <i class="bi bi-send me-1"></i> {{ _("Send") }}
           </button>
         </div>
       </form>
