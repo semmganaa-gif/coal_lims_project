@@ -1,7 +1,7 @@
 /* sample_summary.css - Цэгцэлсэн хувилбар */
 
 :root {
-  --bg: radial-gradient(circle at top, #0f172a 0%, #0f172a 35%, #e2e8f0 36%, #f8fafc 100%);
+  --bg: #f8fafc;
   --surface-solid: #ffffff;
   --muted: #64748b;
   --text: #0f172a;

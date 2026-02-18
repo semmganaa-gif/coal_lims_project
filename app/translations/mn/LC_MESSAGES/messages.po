@@ -1197,7 +1197,7 @@ msgstr "Техникийн шинжилгээ"
 
 #: app/templates/analysis_hub.html:358
 msgid "Elemental & Trace Analysis"
-msgstr "Элемент ба мөрийн шинжилгээ"
+msgstr "Элемент ба хортой хольцын шинжилгээ"
 
 #: app/templates/analysis_hub.html:362
 msgid "Physical & Coking"
@@ -1300,7 +1300,7 @@ msgstr "Буцах"
 #: app/templates/spare_parts/spare_part_form.html:57
 #: app/templates/spare_parts/spare_part_list.html:162
 msgid "Equipment"
-msgstr "Тоног төхөөрөмж"
+msgstr "Төхөөрөмж"
 
 #: app/templates/analysis_page.html:44
 msgid "Sample (M)"
@@ -2413,7 +2413,7 @@ msgstr "Сэлбэг хэрэгсэл"
 #: app/templates/base.html:293 app/templates/base.html:297
 #: app/templates/base.html:371 app/templates/base.html:375
 msgid "Reagents"
-msgstr "Урвалж бодис"
+msgstr "Урвалж"
 
 #: app/templates/base.html:191 app/templates/base.html:246
 #: app/templates/base.html:312 app/templates/equipment_list.html:411
@@ -2454,7 +2454,7 @@ msgstr "Микробиологи"
 #: app/templates/mg_summary.html:44 app/templates/qc_composite_check.html:291
 #: app/templates/qc_norm_limit.html:364
 msgid "Summary"
-msgstr "Хураангуй"
+msgstr "Нэгтгэл"
 
 #: app/templates/base.html:225 app/templates/base.html:280
 #: app/templates/base.html:452 app/templates/coal_hub.html:157
@@ -2484,7 +2484,11 @@ msgstr "Хяналтын самбар"
 #: app/templates/labs/water/microbiology/reports/micro_dashboard.html:138
 #: app/templates/reports/dashboard.html:133
 msgid "Consumption"
-msgstr "Зарцуулалт"
+msgstr "Шинжилгээний нэгтгэл"
+
+#: app/templates/base.html app/templates/reports/dashboard.html
+msgid "Analysis Summary"
+msgstr "Шинжилгээний нэгтгэл"
 
 #: app/templates/base.html:233 app/templates/base.html:288
 #: app/templates/base.html:463
@@ -2562,7 +2566,7 @@ msgstr "Залруулах арга хэмжээ"
 
 #: app/templates/base.html:415 app/templates/coal_hub.html:165
 msgid "Standards"
-msgstr "Стандартууд"
+msgstr "Стандарт"
 
 #: app/templates/base.html:419
 msgid "CM (Internal)"
@@ -2578,7 +2582,7 @@ msgstr "Хяналтын диаграм"
 
 #: app/templates/base.html:435
 msgid "Senior Review"
-msgstr "Ахлах шалгалт"
+msgstr "Ахлах"
 
 #: app/templates/base.html:466 app/templates/reports/dashboard.html:143
 msgid "Chemist Report"

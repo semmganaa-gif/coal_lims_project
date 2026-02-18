@@ -228,7 +228,7 @@
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_dashboard') }}">
                   <i class="bi bi-speedometer2 me-2" style="color:#20c997"></i>{{ _('Dashboard') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>{{ _('Consumption') }}</a></li>
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0d9488"></i>{{ _('Analysis Summary') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_monthly_plan') }}">
                   <i class="bi bi-calendar-check me-2" style="color:#14b8a6"></i>{{ _('Monthly Plan') }}</a></li>
               </ul>
@@ -283,7 +283,7 @@
                 <li><a class="dropdown-item" href="{{ url_for('water.water_dashboard') }}">
                   <i class="bi bi-speedometer2 me-2" style="color:#3b82f6"></i>{{ _('Dashboard') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.water_consumption') }}">
-                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>{{ _('Consumption') }}</a></li>
+                  <i class="bi bi-journal-bookmark me-2" style="color:#0284c7"></i>{{ _('Analysis Summary') }}</a></li>
                 <li><a class="dropdown-item" href="{{ url_for('water.water_monthly_plan') }}">
                   <i class="bi bi-calendar-check me-2" style="color:#15803d"></i>{{ _('Monthly Plan') }}</a></li>
               </ul>
@@ -457,7 +457,7 @@
                 </a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.consumption') }}">
-                  <i class="bi bi-table me-2"></i>{{ _('Consumption') }}
+                  <i class="bi bi-table me-2"></i>{{ _('Analysis Summary') }}
                 </a></li>
                 <li><a class="dropdown-item" href="{{ url_for('reports.monthly_plan') }}">
                   <i class="bi bi-bar-chart-line me-2"></i>{{ _('Monthly Plan') }}
@@ -548,9 +548,6 @@
             </div>
           </li>
 
-          <li class="nav-item me-2">
-            <img src="{{ url_for('static', filename='images/corelink.logo.png') }}" alt="Corelink" style="height: 20px; opacity: 0.7;">
-          </li>
 
           {% if current_user.is_authenticated %}
           <li class="nav-item dropdown">
