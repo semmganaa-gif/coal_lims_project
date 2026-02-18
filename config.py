@@ -119,7 +119,7 @@ class Config:
     # ========================================================
     # CHPP SIMULATOR INTEGRATION
     # ========================================================
-    SIMULATOR_URL = os.getenv('SIMULATOR_URL', 'http://192.168.1.136:8001')
+    SIMULATOR_URL = os.getenv('SIMULATOR_URL', 'http://localhost:8001')
 
     # ========================================================
     # FLASK-BABEL (i18n) CONFIGURATION

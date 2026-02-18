@@ -3,7 +3,7 @@
 """
 CHPP Simulator руу мэдээлэл илгээх API endpoints:
   - /send_to_simulator/chpp/<sample_id>  → Feed quality илгээх
-  - /send_to_simulator/wtl/<lab_number>  → WTL washability илгээх
+  - /send_to_simulator/wtl/<lab_number>  → WTL бүх дээжийг илгээх
 """
 
 import logging
@@ -24,15 +24,12 @@ _ALL_ANALYSIS_CODES = {
     "X", "Y", "CRI", "CSR", "FM", "SOLID", "m", "PE",
 }
 
-# WTL size class нэрнүүд (sample_code parse хийхэд)
-_WTL_SIZE_CLASSES = ["+16.0", "16.0-8.0", "8.0-4.0", "4.0-2.0", "2.0-0.5"]
-
-# WTL density labels
+# WTL density labels (бодит DB формат)
 _WTL_DENSITIES = {
-    "F1.300": 1.300, "F1.350": 1.350, "F1.400": 1.400, "F1.450": 1.450,
-    "F1.500": 1.500, "F1.550": 1.550, "F1.600": 1.600, "F1.650": 1.650,
-    "F1.700": 1.700, "F1.750": 1.750, "F1.800": 1.800, "F1.900": 1.900,
-    "F2.000": 2.000, "Sink": 2.200,
+    "_F1.300": 1.300, "_F1.325": 1.325, "_F1.350": 1.350, "_F1.375": 1.375,
+    "_F1.400": 1.400, "_F1.425": 1.425, "_F1.450": 1.450,
+    "_F1.50": 1.500, "_F1.60": 1.600, "_F1.70": 1.700,
+    "_F1.80": 1.800, "_F2.0": 2.000, "_F2.2": 2.200, "_S2.2": 2.200,
 }
 
 
@@ -41,225 +38,244 @@ def _get_simulator_url():
     return current_app.config.get("SIMULATOR_URL", "http://localhost:8000")
 
 
+def _get_approved_results(sample_id):
+    """Дээжний approved шинжилгээний үр дүнг dict-ээр буцаах."""
+    results = AnalysisResult.query.filter_by(
+        sample_id=sample_id,
+        status="approved",
+    ).all()
+    return {r.analysis_code: r.final_result for r in results if r.final_result is not None}
+
+
+def _classify_wtl_sample(sample_code):
+    """WTL sample_code-г ангилах.
+
+    Returns:
+        (category, size_class, density) tuple
+        category: 'fraction' | 'dry_screen' | 'wet_screen' | 'composite'
+    """
+    parts = sample_code.split("/")
+
+    # Фракц: "26_01_/+16.0/_F1.300" (3 part)
+    if len(parts) == 3:
+        size_class = parts[1]       # "+16.0"
+        density_part = parts[2]     # "_F1.300"
+        density = _WTL_DENSITIES.get(density_part)
+        return "fraction", size_class, density
+
+    # DRY/WET шигшүүр: "26_01_DRY_/+16.0" (2 part)
+    if len(parts) == 2:
+        lab_prefix = parts[0]       # "26_01_DRY_" or "26_01_WET_"
+        size_class = parts[1]       # "+16.0"
+        if "DRY" in lab_prefix.upper():
+            return "dry_screen", size_class, None
+        elif "WET" in lab_prefix.upper():
+            return "wet_screen", size_class, None
+
+    # 1 part: "26_01_C1", "26_01_COMP", "26_01_INITIAL", "26_01_T1"
+    if len(parts) == 1:
+        suffix = parts[0].rsplit("_", 1)[-1].upper()  # C1, COMP, INITIAL, T1
+        # C1-C4, T1-T2 → flotation
+        if suffix.startswith("C") and suffix[1:].isdigit():
+            return "flotation", None, None
+        if suffix.startswith("T") and suffix[1:].isdigit():
+            return "flotation", None, None
+        return "composite", None, None
+
+    return "unknown", None, None
+
+
+def _send_to_simulator(url, payload, timeout=15):
+    """Simulator руу POST илгээх, алдаа handle хийх."""
+    try:
+        resp = requests.post(url, json=payload, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json(), None
+    except requests.ConnectionError:
+        logger.error(f"Simulator холболт амжилтгүй: {url}")
+        return None, "Симулятор сервертэй холбогдож чадсангүй"
+    except requests.Timeout:
+        logger.error(f"Simulator timeout: {url}")
+        return None, "Симулятор серверийн хариу хугацаа хэтэрсэн"
+    except requests.HTTPError as e:
+        logger.error(f"Simulator HTTP error: {e.response.status_code} - {e.response.text}")
+        return None, f"Симулятор алдаа: {e.response.status_code}"
+
+
 def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх."""
 
     @bp.route("/send_to_simulator/chpp/<int:sample_id>", methods=["POST"])
     @login_required
     def send_chpp_to_simulator(sample_id):
-        """Баталсан CHPP дээжний үр дүнг Simulator руу илгээх.
-
-        1. Sample + approved AnalysisResult-ууд авах
-        2. analyses dict бүрдүүлэх: {code: value}
-        3. POST → SIMULATOR_URL/api/v1/lims/receive/chpp
-        4. Амжилттай бол хариу буцаах
-        """
+        """Баталсан CHPP дээжний үр дүнг Simulator руу илгээх."""
         sample = db.session.get(Sample, sample_id)
         if not sample:
             return jsonify({"error": "Дээж олдсонгүй"}), 404
 
-        # Зөвхөн CHPP client-ийн дээж
         if sample.client_name != "CHPP":
             return jsonify({"error": "Зөвхөн CHPP дээжийг илгээх боломжтой"}), 400
 
-        # Approved шинжилгээний үр дүнгүүд авах
-        results = AnalysisResult.query.filter_by(
-            sample_id=sample_id,
-            status="approved",
-        ).all()
-
-        if not results:
-            return jsonify({"error": "Баталгаажсан шинжилгээний үр дүн олдсонгүй"}), 400
-
-        # analyses dict бүрдүүлэх (бүх шинжилгээ)
-        analyses = {}
-        for r in results:
-            if r.analysis_code in _ALL_ANALYSIS_CODES and r.final_result is not None:
-                analyses[r.analysis_code] = r.final_result
+        result_map = _get_approved_results(sample_id)
+        analyses = {k: v for k, v in result_map.items() if k in _ALL_ANALYSIS_CODES}
 
         if not analyses:
-            return jsonify({"error": "Илгээх шинжилгээний үр дүн байхгүй"}), 400
+            return jsonify({"error": "Баталгаажсан шинжилгээний үр дүн олдсонгүй"}), 400
 
-        # Payload бүрдүүлэх
         payload = {
             "source": "lims",
             "client_name": "CHPP",
-            "samples": [
-                {
-                    "sample_code": sample.sample_code,
-                    "sample_type": (sample.sample_type or "").replace(" ", "_").lower(),
-                    "module_name": None,  # TODO: sample-аас module тодорхойлох
-                    "analyses": analyses,
-                }
-            ],
+            "samples": [{
+                "sample_code": sample.sample_code,
+                "sample_type": (sample.sample_type or "").replace(" ", "_").lower(),
+                "module_name": None,
+                "analyses": analyses,
+            }],
         }
 
-        # Simulator руу илгээх
         url = f"{_get_simulator_url()}/api/v1/lims/receive/chpp"
-        try:
-            resp = requests.post(url, json=payload, timeout=10)
-            resp.raise_for_status()
-            data = resp.json()
-            logger.info(
-                f"CHPP data sent to simulator: sample={sample.sample_code}, "
-                f"user={current_user.username}, response={data.get('status')}"
-            )
-            return jsonify({
-                "success": True,
-                "message": f"Симулятор руу амжилттай илгээгдлэн ({len(analyses)} шинжилгээ)",
-                "simulator_response": data,
-            })
-        except requests.ConnectionError:
-            logger.error(f"Simulator холболт амжилтгүй: {url}")
-            return jsonify({"error": "Симулятор сервертэй холбогдож чадсангүй"}), 502
-        except requests.Timeout:
-            logger.error(f"Simulator timeout: {url}")
-            return jsonify({"error": "Симулятор серверийн хариу хугацаа хэтэрсэн"}), 504
-        except requests.HTTPError as e:
-            logger.error(f"Simulator HTTP error: {e.response.status_code} - {e.response.text}")
-            return jsonify({"error": f"Симулятор алдаа: {e.response.status_code}"}), 502
+        data, err = _send_to_simulator(url, payload, timeout=10)
+        if err:
+            return jsonify({"error": err}), 502
+
+        logger.info(
+            f"CHPP data sent: sample={sample.sample_code}, "
+            f"user={current_user.username}, analyses={len(analyses)}"
+        )
+        return jsonify({
+            "success": True,
+            "message": f"Симулятор руу амжилттай илгээгдлэн ({len(analyses)} шинжилгээ)",
+            "simulator_response": data,
+        })
 
     @bp.route("/send_to_simulator/wtl/<lab_number>", methods=["POST"])
     @login_required
     def send_wtl_to_simulator(lab_number):
-        """WTL washability бүх fraction-ийг Simulator руу илгээх.
+        """WTL бүх дээжийг Simulator руу илгээх.
 
-        1. lab_number-ээр WTL samples бүгдийг авах (70 ширхэг)
-        2. sample_code parse → size_class + density
-        3. AnalysisResult-аас mass, ash, sulfur, vm авах
-        4. POST → SIMULATOR_URL/api/v1/lims/receive/wtl
+        Дээжүүдийг ангилж:
+        - fraction → washability fractions (float-sink)
+        - dry_screen → хуурай шигшүүрийн хуваарилалт
+        - wet_screen → нойтон шигшүүрийн хуваарилалт
+        - composite → нэгдсэн/эхлэл дээжний чанар
         """
-        # WTL client-ийн дээжүүд lab_number-ээр
         safe_lab = escape_like_pattern(lab_number)
         samples = Sample.query.filter(
             Sample.client_name == "WTL",
-            Sample.sample_code.like(f"%{safe_lab}%", escape='\\'),
+            Sample.sample_code.like(f"{safe_lab}%", escape='\\'),
         ).all()
 
         if not samples:
             return jsonify({"error": f"WTL дээж олдсонгүй: {lab_number}"}), 404
 
-        # Бүх дээжний approved шинжилгээ шалгах
         fractions = []
-        unapproved = []
+        dry_screen = []
+        wet_screen = []
+        composites = []
+        flotation = []
+        skipped = []
 
         for sample in samples:
-            results = AnalysisResult.query.filter_by(
-                sample_id=sample.id,
-                status="approved",
-            ).all()
+            result_map = _get_approved_results(sample.id)
+            # Масс: Sample.weight (kg) — mass workspace-аас хадгалагдсан
+            mass_kg = sample.weight or 0
 
-            # Шинжилгээний үр дүнгээс fraction бүрдүүлэх
-            result_map = {}
-            for r in results:
-                if r.final_result is not None:
-                    result_map[r.analysis_code] = r.final_result
+            category, size_class, density = _classify_wtl_sample(sample.sample_code)
 
-            # Бүх шинжилгээ approved биш бол тэмдэглэх
-            all_results = AnalysisResult.query.filter_by(sample_id=sample.id).all()
-            if any(r.status != "approved" for r in all_results):
-                unapproved.append(sample.sample_code)
-                continue
+            if category == "fraction":
+                if density is None:
+                    skipped.append(sample.sample_code)
+                    continue
+                fractions.append({
+                    "size_class": size_class,
+                    "density": density,
+                    "mass_pct": mass_kg,  # Simulator нормализ хийнэ
+                    "ash_pct": result_map.get("Aad", 0),
+                    "sulfur_pct": result_map.get("TS", 0),
+                    "vm_pct": result_map.get("Vad", 0),
+                })
 
-            # sample_code-оос size_class, density parse
-            size_class, density = _parse_wtl_sample_code(sample.sample_code)
-            if size_class is None or density is None:
-                logger.warning(f"WTL sample_code parse алдаа: {sample.sample_code}")
-                continue
+            elif category == "dry_screen":
+                dry_screen.append({
+                    "size_class": size_class,
+                    "mass_pct": mass_kg,  # Дараа нормализ хийгдэнэ
+                    "ash_pct": result_map.get("Aad", 0),
+                    "moisture_pct": result_map.get("MT", result_map.get("Mad", 0)),
+                })
 
-            fractions.append({
-                "size_class": size_class,
-                "density": density,
-                "mass_pct": result_map.get("mass_pct", result_map.get("Mass", 0)),
-                "ash_pct": result_map.get("Aad", 0),
-                "sulfur_pct": result_map.get("TS", 0),
-                "vm_pct": result_map.get("Vad", 0),
-            })
+            elif category == "wet_screen":
+                wet_screen.append({
+                    "size_class": size_class,
+                    "mass_pct": mass_kg,  # Дараа нормализ хийгдэнэ
+                    "ash_pct": result_map.get("Aad", 0),
+                    "moisture_pct": result_map.get("MT", result_map.get("Mad", 0)),
+                })
 
-        if unapproved:
-            return jsonify({
-                "error": f"Бүх дээж баталгаажаагүй: {', '.join(unapproved[:5])}",
-            }), 400
+            elif category == "flotation":
+                analyses = {k: v for k, v in result_map.items() if k in _ALL_ANALYSIS_CODES}
+                if analyses or mass_kg > 0:
+                    flotation.append({
+                        "sample_code": sample.sample_code,
+                        "category": "flotation",
+                        "analyses": analyses,
+                    })
 
-        if not fractions:
-            return jsonify({"error": "Илгээх фракц олдсонгүй"}), 400
+            elif category == "composite":
+                analyses = {k: v for k, v in result_map.items() if k in _ALL_ANALYSIS_CODES}
+                if analyses or mass_kg > 0:
+                    composites.append({
+                        "sample_code": sample.sample_code,
+                        "category": "composite",
+                        "analyses": analyses,
+                    })
 
-        # Sample date авах
+        all_composites = composites + flotation
+        total_items = len(fractions) + len(dry_screen) + len(wet_screen) + len(all_composites)
+        if total_items == 0:
+            return jsonify({"error": "Илгээх өгөгдөл олдсонгүй"}), 400
+
+        # Sample date
         sample_date = None
         if samples and samples[0].sample_date:
             sample_date = str(samples[0].sample_date)
 
-        # Payload
         payload = {
             "source": "lims",
             "client_name": "WTL",
             "lab_number": lab_number,
             "sample_date": sample_date,
             "fractions": fractions,
+            "dry_screen": dry_screen,
+            "wet_screen": wet_screen,
+            "composites": all_composites,
         }
 
-        # Simulator руу илгээх
         url = f"{_get_simulator_url()}/api/v1/lims/receive/wtl"
-        try:
-            resp = requests.post(url, json=payload, timeout=15)
-            resp.raise_for_status()
-            data = resp.json()
-            logger.info(
-                f"WTL data sent to simulator: lab={lab_number}, "
-                f"fractions={len(fractions)}, user={current_user.username}, "
-                f"washability_set_id={data.get('washability_set_id')}"
-            )
-            return jsonify({
-                "success": True,
-                "message": f"Симулятор руу амжилттай илгээгдлэн ({len(fractions)} фракц)",
-                "simulator_response": data,
-            })
-        except requests.ConnectionError:
-            logger.error(f"Simulator холболт амжилтгүй: {url}")
-            return jsonify({"error": "Симулятор сервертэй холбогдож чадсангүй"}), 502
-        except requests.Timeout:
-            logger.error(f"Simulator timeout: {url}")
-            return jsonify({"error": "Симулятор серверийн хариу хугацаа хэтэрсэн"}), 504
-        except requests.HTTPError as e:
-            logger.error(f"Simulator HTTP error: {e.response.status_code} - {e.response.text}")
-            return jsonify({"error": f"Симулятор алдаа: {e.response.status_code}"}), 502
+        data, err = _send_to_simulator(url, payload)
+        if err:
+            return jsonify({"error": err}), 502
 
+        logger.info(
+            f"WTL data sent: lab={lab_number}, fractions={len(fractions)}, "
+            f"dry={len(dry_screen)}, wet={len(wet_screen)}, "
+            f"composites={len(composites)}, flotation={len(flotation)}, "
+            f"user={current_user.username}"
+        )
 
-def _parse_wtl_sample_code(sample_code: str) -> tuple:
-    """WTL sample_code-оос size_class болон density задлах.
+        msg_parts = []
+        if fractions:
+            msg_parts.append(f"{len(fractions)} фракц")
+        if dry_screen:
+            msg_parts.append(f"{len(dry_screen)} хуурай шигшүүр")
+        if wet_screen:
+            msg_parts.append(f"{len(wet_screen)} нойтон шигшүүр")
+        if composites:
+            msg_parts.append(f"{len(composites)} нэгдсэн дээж")
+        if flotation:
+            msg_parts.append(f"{len(flotation)} флотаци")
 
-    Жишээ sample_code формат: "BN-112/+16.0/F1.300"
-    → size_class="+16.0", density=1.300
-
-    Returns:
-        (size_class, density) tuple, эсвэл (None, None) хэрэв parse амжилтгүй
-    """
-    parts = sample_code.split("/")
-    if len(parts) < 3:
-        return None, None
-
-    size_part = parts[1]  # "+16.0" or "+8.0" etc.
-    density_part = parts[2]  # "F1.300" or "Sink"
-
-    # Size class тодорхойлох
-    size_class = None
-    for sc in _WTL_SIZE_CLASSES:
-        # "+16.0" → "+16.0", "+8.0" → "16.0-8.0" гэх мэт
-        if size_part in sc or sc.startswith(size_part.lstrip("+")):
-            size_class = sc
-            break
-    # Шууд тохирвол
-    if size_class is None and size_part in _WTL_SIZE_CLASSES:
-        size_class = size_part
-    # "+" prefix-тэй бол тохируулах
-    if size_class is None:
-        stripped = size_part.lstrip("+")
-        for sc in _WTL_SIZE_CLASSES:
-            if sc.startswith(f"+{stripped}") or sc.startswith(stripped):
-                size_class = sc
-                break
-
-    # Density тодорхойлох
-    density = _WTL_DENSITIES.get(density_part)
-
-    return size_class, density
+        return jsonify({
+            "success": True,
+            "message": f"Симулятор руу амжилттай илгээгдлэн ({', '.join(msg_parts)})",
+            "simulator_response": data,
+        })

@@ -26,9 +26,28 @@ from sqlalchemy.exc import IntegrityError
 from app.utils.security import escape_like_pattern
 
 from app import db, limiter
-from app.models import Sample
+from app.models import Sample, AnalysisResult
 from app.utils.datetime import now_local
 from .helpers import _has_m_task_sql, _can_delete_sample, api_success, api_error
+
+
+def _upsert_mass_result(sample_id, weight_g, user_id=None):
+    """AnalysisResult(code='m') үүсгэх/шинэчлэх — sample summary-д харагдана."""
+    ar = AnalysisResult.query.filter_by(
+        sample_id=sample_id, analysis_code="m"
+    ).first()
+    if ar is None:
+        ar = AnalysisResult(
+            sample_id=sample_id,
+            analysis_code="m",
+            final_result=weight_g,
+            status="approved",
+            performed_by_id=user_id,
+        )
+        db.session.add(ar)
+    else:
+        ar.final_result = weight_g
+        ar.status = "approved"
 
 
 def register_routes(bp):
@@ -169,6 +188,8 @@ def register_routes(bp):
             if sid in weight_map and isinstance(weight_map[sid], (int, float)):
                 weight_g = float(weight_map[sid])
                 s.weight = round(weight_g / 1000, 3)  # гр → кг
+                # AnalysisResult(code="m") — sample summary-д харуулах
+                _upsert_mass_result(sid, weight_g, user_id)
 
             # mass_ready тэмдэглэх эсэх
             if mark_ready:
@@ -216,6 +237,8 @@ def register_routes(bp):
         weight_g = float(w)
         s.weight = round(weight_g / 1000, 3)  # гр → кг
         s.received_date = s.received_date or now_local()  # хоосон байсан тохиолдолд
+        # AnalysisResult(code="m") — sample summary-д харуулах
+        _upsert_mass_result(sid, weight_g, getattr(current_user, "id", None))
         db.session.add(s)
 
         try:
