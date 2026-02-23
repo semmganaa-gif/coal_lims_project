@@ -144,7 +144,7 @@ def register_routes(bp):
                 reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
                     "reason": reason_val,
-                    "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None),
+                    "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None) or getattr(r, "rejection_comment", None),
                     "rejected_at": r.updated_at.strftime("%Y-%m-%d %H:%M") if r.updated_at else "",
                 }
 
@@ -354,7 +354,7 @@ def register_routes(bp):
                 reason_val = getattr(r, "rejection_comment", None) or getattr(r, "reason", None) or "Ахлахаас буцаагдсан"
                 rejected_samples_info[r.sample_id] = {
                     "reason": reason_val,
-                    "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None),
+                    "reason_code": getattr(r, "rejection_category", None) or getattr(r, "error_reason", None) or getattr(r, "rejection_comment", None),
                     "rejected_at": r.updated_at.strftime("%Y-%m-%d %H:%M") if r.updated_at else "",
                 }
 
