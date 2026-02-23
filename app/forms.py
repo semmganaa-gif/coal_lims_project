@@ -284,6 +284,15 @@ class AddSampleForm(FlaskForm):
         ],
     )
 
+    # --- WTL MG ---
+    wtl_module = SelectField(
+        "Module",
+        choices=[("MODI", "MOD I"), ("MODII", "MOD II"), ("MODIII", "MOD III")],
+        validators=[Optional()],
+    )
+    wtl_supplier = StringField("Supplier", validators=[Optional()])
+    wtl_vehicle = StringField("Vehicle Number", validators=[Optional()])
+
     # Manual sample_code for WTL (MG/Test) and other cases
     sample_code = StringField("Sample name", validators=[Optional()])
 

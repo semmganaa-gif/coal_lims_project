@@ -87,7 +87,7 @@ SORT_PRIORITY: dict[str, dict[str, int]] = {
 # БАЙГАЛИЙН ЭРЭМБЭ
 # =============================================================================
 
-def natural_sort_key(s: Any) -> List[Union[int, str]]:
+def natural_sort_key(s: Any) -> List[Tuple]:
     """
     Текст доторх тоог тоо гэж таньж эрэмбэлнэ.
 
@@ -101,16 +101,18 @@ def natural_sort_key(s: Any) -> List[Union[int, str]]:
         Эрэмбэлэх түлхүүр (тоо болон текст)
     """
     if s is None:
-        return [""]
+        return [(1, "", 0)]
 
     text = str(s).strip()
     if not text:
-        return [""]
+        return [(1, "", 0)]
 
+    # Tuple wrapping ensures int vs str never compared directly:
+    # (0, '', int_val) for numbers, (1, str_val, 0) for text
     return [
-        int(part) if part.isdigit() else part.lower()
+        (0, '', int(part)) if part.isdigit() else (1, part.lower(), 0)
         for part in re.split(r'(\d+)', text)
-        if part  # Хоосон string-ийг алгасах
+        if part
     ]
 
 
@@ -134,11 +136,11 @@ def custom_sample_sort_key(code: Optional[str]) -> Tuple[int, int, List[Union[in
     """
     # Edge case: None эсвэл хоосон
     if not code:
-        return (99, 0, [""])
+        return (99, 0, [(1, "", 0)])
 
     code_str = str(code).strip()
     if not code_str:
-        return (99, 0, [""])
+        return (99, 0, [(1, "", 0)])
 
     # 1. CHPP 2H - O(1) exact match эхлээд шалгах
     if code_str in CHPP_2H_INDEX:

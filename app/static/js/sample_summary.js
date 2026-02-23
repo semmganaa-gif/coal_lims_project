@@ -978,12 +978,20 @@ document.addEventListener('DOMContentLoaded', function() {
       );
     });
 
-    // Send WTL samples by lab_number
+    // Send WTL samples by lab_number (бүх дээж)
+    // Lab number: sample_code-ийн эхний хэсэг ("26_01_" гэх мэт)
+    // "26_01_/+16.0/_F1.300" → "26_01_"
+    // "26_01_DRY_/+16.0" → "26_01_" (DRY_/WET_ хассан)
+    // "26_01_C1" → "26_01_"
     var wtlLabNumbers = {};
     wtlSamples.forEach(function(sample) {
       var code = sample.sample_code || '';
-      var labNumber = code.split('/')[0] || code;
-      wtlLabNumbers[labNumber] = sample;
+      // Lab number олох: DRY_, WET_, C1-C3, T1-T2, COMP, INITIAL хассан prefix
+      var labNumber = code.replace(/(?:DRY_|WET_|COMP|INITIAL|C\d|T\d).*$/, '');
+      // "/" тэмдэгтийн өмнөх хэсэг
+      var slashIdx = labNumber.indexOf('/');
+      if (slashIdx > 0) labNumber = labNumber.substring(0, slashIdx);
+      if (labNumber) wtlLabNumbers[labNumber] = sample;
     });
 
     Object.keys(wtlLabNumbers).forEach(function(labNumber) {
@@ -1009,13 +1017,29 @@ document.addEventListener('DOMContentLoaded', function() {
       var successes = results.filter(function(r) { return r.result && r.result.success; });
       var failures = results.filter(function(r) { return r.error || (r.result && r.result.error); });
 
-      var resultMsg = 'Simulator илгээлт:\n';
-      resultMsg += '  Амжилттай: ' + successes.length + '\n';
+      var resultMsg = 'Simulator илгээлт:\n\n';
+
+      successes.forEach(function(s) {
+        resultMsg += '✓ ' + s.sample + ': ';
+        // Simulator response message харуулах
+        var simResp = s.result.simulator_response;
+        if (simResp && simResp.detail) {
+          var parts = [];
+          if (simResp.detail.fractions) parts.push(simResp.detail.fractions + ' фракц');
+          if (simResp.detail.dry_screen) parts.push(simResp.detail.dry_screen + ' хуурай шигшүүр');
+          if (simResp.detail.wet_screen) parts.push(simResp.detail.wet_screen + ' нойтон шигшүүр');
+          if (simResp.detail.composites) parts.push(simResp.detail.composites + ' нэгдсэн');
+          resultMsg += parts.join(', ') + '\n';
+        } else {
+          resultMsg += (s.result.message || 'Амжилттай') + '\n';
+        }
+      });
+
       if (failures.length > 0) {
-        resultMsg += '  Алдаатай: ' + failures.length + '\n\n';
+        resultMsg += '\nАлдаатай: ' + failures.length + '\n';
         failures.forEach(function(f) {
           var errMsg = f.error || (f.result && f.result.error) || 'Тодорхойгүй';
-          resultMsg += '  ' + f.sample + ': ' + errMsg + '\n';
+          resultMsg += '✗ ' + f.sample + ': ' + errMsg + '\n';
         });
       }
       alert(resultMsg);
