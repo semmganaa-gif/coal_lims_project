@@ -331,7 +331,8 @@
     };
 
     // Gi-specific: Get retest mode
-    const mode = existing?.raw_data?.retest_mode || (retestModes[String(sample.id)] ? '3_3' : '5_1');
+    // retestModes (backend rejected → GI_RETEST_3_3) нь raw_data.retest_mode-ээс давуу эрхтэй
+    const mode = retestModes[String(sample.id)] ? '3_3' : (existing?.raw_data?.retest_mode || '5_1');
 
     if (existing) {
       // Хадгалагдсан үр дүн байна
@@ -624,7 +625,7 @@
       const hasP2 = p2 && p2.m1 != null && p2.m2 != null && p2.m3 != null;
 
       if (hasP1 && hasP2) {
-        const mode = p1.retest_mode || (retestModes[String(sid)] ? '3_3' : '5_1');
+        const mode = retestModes[String(sid)] ? '3_3' : (p1.retest_mode || '5_1');
         const res1 = computeResult(p1.m1, p1.m2, p1.m3, mode);
         const res2 = computeResult(p2.m1, p2.m2, p2.m3, mode);
 

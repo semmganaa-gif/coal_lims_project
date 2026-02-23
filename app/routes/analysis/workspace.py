@@ -457,10 +457,25 @@ def register_routes(bp):
         })
 
         gi_retest_modes = {}
-        if base_code == "Gi":
+        if base_code == "Gi" and samples_to_analyze:
+            # 1. Rejected samples with GI_RETEST_3_3 reason
             for sample_id, info in rejected_samples_info.items():
                 if info.get("reason_code") == "GI_RETEST_3_3":
                     gi_retest_modes[sample_id] = True
+
+            # 2. Өмнө нь 3:3 горимд орсон дээжүүдийг шалгах
+            #    (ахлахаас буцаагдсан ч 3:3 горим хадгалагдана)
+            if samples_to_analyze:
+                s_ids = [s.id for s in samples_to_analyze if s.id not in gi_retest_modes]
+                if s_ids:
+                    prev_gi = AnalysisResult.query.filter(
+                        AnalysisResult.sample_id.in_(s_ids),
+                        AnalysisResult.analysis_code == "Gi"
+                    ).all()
+                    for r in prev_gi:
+                        rd = r.get_raw_data() if hasattr(r, 'get_raw_data') else {}
+                        if rd.get("retest_mode") == "3_3" or rd.get("is_low_avg") is True:
+                            gi_retest_modes[r.sample_id] = True
 
         related_equipments = []
         try:
