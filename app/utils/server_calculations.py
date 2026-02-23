@@ -246,11 +246,15 @@ def calc_total_moisture_mt(raw_data: Dict) -> Optional[float]:
     """
     Нийт Чийг (MT) тооцоолол
 
-    Formula: MT% = ((m1 - m2) / m1) * 100
+    Formula: MT% = ((m2 - m3) / (m2 - m1)) * 100
     MG format: Result% = ((m1 + m2 - m3) / m2) * 100
 
+    m1 = тигелийн жин (crucible)
+    m2 = тигел + нойтон дээж (crucible + wet sample)
+    m3 = тигел + хатаасан дээж (crucible + dried sample)
+
     Args:
-        raw_data: {"p1": {"m1": ..., "m2": ...}, "p2": {...}}
+        raw_data: {"p1": {"m1": ..., "m2": ..., "m3": ...}, "p2": {...}}
                   OR MG format: {"m1": crucible, "m2": sample, "m3": dried}
 
     Returns:
@@ -262,21 +266,27 @@ def calc_total_moisture_mt(raw_data: Dict) -> Optional[float]:
 
     m1_p1 = _get_from_dict(raw_data, "p1", "m1")
     m2_p1 = _get_from_dict(raw_data, "p1", "m2")
+    m3_p1 = _get_from_dict(raw_data, "p1", "m3")
 
     m1_p2 = _get_from_dict(raw_data, "p2", "m1")
     m2_p2 = _get_from_dict(raw_data, "p2", "m2")
+    m3_p2 = _get_from_dict(raw_data, "p2", "m3")
 
     results = []
 
-    if all(x is not None and x > 0 for x in [m1_p1, m2_p1]):
-        res1 = ((m1_p1 - m2_p1) / m1_p1) * 100
-        if res1 >= 0:
-            results.append(res1)
+    if all(x is not None and x > 0 for x in [m1_p1, m2_p1, m3_p1]):
+        sample_mass = m2_p1 - m1_p1
+        if sample_mass > 0:
+            res1 = ((m2_p1 - m3_p1) / sample_mass) * 100
+            if res1 >= 0:
+                results.append(res1)
 
-    if all(x is not None and x > 0 for x in [m1_p2, m2_p2]):
-        res2 = ((m1_p2 - m2_p2) / m1_p2) * 100
-        if res2 >= 0:
-            results.append(res2)
+    if all(x is not None and x > 0 for x in [m1_p2, m2_p2, m3_p2]):
+        sample_mass = m2_p2 - m1_p2
+        if sample_mass > 0:
+            res2 = ((m2_p2 - m3_p2) / sample_mass) * 100
+            if res2 >= 0:
+                results.append(res2)
 
     if not results:
         return None
@@ -569,7 +579,7 @@ def calc_gray_king_gi(raw_data: Dict) -> Optional[float]:
         numerator = 30 * m2 + 70 * m3
 
         # Check mode
-        is_33_mode = mode and ("3:3" in str(mode) or "retest" in str(mode).lower())
+        is_33_mode = mode and ("3:3" in str(mode) or "3_3" in str(mode) or "retest" in str(mode).lower())
 
         if is_33_mode:
             # 3:3 mode (retest)
@@ -580,19 +590,22 @@ def calc_gray_king_gi(raw_data: Dict) -> Optional[float]:
 
         return round(gi) if isfinite(gi) else None
 
+    # Top-level mode (frontend sends retest_mode at raw_data level)
+    top_mode = raw_data.get("retest_mode") or raw_data.get("mode")
+
     # Parallel 1
     p1 = raw_data.get("p1") or {}
     m1_p1 = _safe_float(p1.get("m1"))
     m2_p1 = _safe_float(p1.get("m2"))
     m3_p1 = _safe_float(p1.get("m3"))
-    mode_p1 = p1.get("mode") or p1.get("retest_mode")
+    mode_p1 = p1.get("mode") or p1.get("retest_mode") or top_mode
 
     # Parallel 2
     p2 = raw_data.get("p2") or {}
     m1_p2 = _safe_float(p2.get("m1"))
     m2_p2 = _safe_float(p2.get("m2"))
     m3_p2 = _safe_float(p2.get("m3"))
-    mode_p2 = p2.get("mode") or p2.get("retest_mode")
+    mode_p2 = p2.get("mode") or p2.get("retest_mode") or top_mode
 
     results = []
 

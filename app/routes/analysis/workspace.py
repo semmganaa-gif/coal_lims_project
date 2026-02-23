@@ -459,7 +459,7 @@ def register_routes(bp):
         gi_retest_modes = {}
         if base_code == "Gi":
             for sample_id, info in rejected_samples_info.items():
-                if info.get("reason") == "GI_RETEST_3_3":
+                if info.get("reason_code") == "GI_RETEST_3_3":
                     gi_retest_modes[sample_id] = True
 
         related_equipments = []
