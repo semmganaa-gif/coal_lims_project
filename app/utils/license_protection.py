@@ -8,8 +8,11 @@ License Protection - LIMS системийн лиценз хамгаалалт
 4. Лиценз файл шифрлэх/тайлах
 """
 import hashlib
+import hmac
 import json
+import os
 import base64
+import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import redirect, url_for, flash, request, g
@@ -20,12 +23,31 @@ from app.utils.hardware_fingerprint import generate_hardware_id, generate_short_
 logger = logging.getLogger(__name__)
 
 # =====================================================
-# НУУЦ ТҮЛХҮҮРҮҮД - Эдгээрийг ӨӨРЧЛӨХ хэрэгтэй!
+# НУУЦ ТҮЛХҮҮРҮҮД - ENV эсвэл auto-generated
 # =====================================================
-# Та эдгээр утгыг өөрийн санамсаргүй утгаар солих ёстой
-LICENSE_SECRET_KEY = "ТАНЫ_НУУЦ_ТҮЛХҮҮР_ЭНД_32_ТЭМДЭГТ"  # 32+ тэмдэгт
+_INSTANCE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..', 'instance')
+
+
+def _load_or_generate_key(env_var: str, filename: str, length: int = 48) -> str:
+    """ENV-ээс уншиж, байхгүй бол instance/ файлд auto-generate хийнэ."""
+    val = os.getenv(env_var)
+    if val:
+        return val
+    key_path = os.path.join(_INSTANCE_DIR, filename)
+    if os.path.exists(key_path):
+        with open(key_path, 'r', encoding='utf-8') as f:
+            return f.read().strip()
+    os.makedirs(_INSTANCE_DIR, exist_ok=True)
+    key = secrets.token_urlsafe(length)
+    with open(key_path, 'w', encoding='utf-8') as f:
+        f.write(key)
+    logger.info(f"Generated new {env_var} → instance/{filename}")
+    return key
+
+
+LICENSE_SECRET_KEY = _load_or_generate_key('LICENSE_SECRET_KEY', 'license_secret_key')
 LICENSE_SALT = "COAL_LIMS_2024_LICENSE_SALT_V1"
-SIGNATURE_KEY = "ТАНЫ_ГАРЫН_ҮСГИЙН_ТҮЛХҮҮР_ЭНД"
+SIGNATURE_KEY = _load_or_generate_key('LICENSE_SIGNATURE_KEY', 'license_signature_key')
 
 
 def _hash_data(data: str) -> str:
@@ -42,9 +64,9 @@ def _create_signature(data: dict) -> str:
 
 
 def _verify_signature(data: dict, signature: str) -> bool:
-    """Гарын үсэг шалгах"""
+    """Гарын үсэг шалгах (timing-safe comparison)"""
     expected = _create_signature(data)
-    return expected == signature
+    return hmac.compare_digest(expected, signature)
 
 
 class LicenseManager:
