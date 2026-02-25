@@ -150,7 +150,7 @@
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="wastewater">
-      <i class="bi bi-water"></i> {{ _("Wastewater") }}
+      <i class="bi bi-water"></i> {{ _("Domestic") }}
       <span class="tab-count">0</span>
     </div>
     <div class="cat-tab" data-cat="other">
@@ -181,6 +181,7 @@
     {% elif at.code in ['FE_W','MN_W','CU_W','ZN_W'] %}{% set ic = 'icon-orange' %}{% set ii = 'bi-shield-exclamation' %}
     {% elif at.code in ['PB_W','AS_W','CD_W','CR_W','HG_W'] %}{% set ic = 'icon-red' %}{% set ii = 'bi-exclamation-triangle' %}
     {% elif at.code in ['BOD','COD','DO_W'] %}{% set ic = 'icon-teal' %}{% set ii = 'bi-water' %}
+    {% elif at.code == 'ODOR' %}{% set ic = 'icon-orange' %}{% set ii = 'bi-wind' %}
     {% endif %}
 
     <a href="{{ url_for('water.workspace', code=at.code) }}"

@@ -98,7 +98,7 @@ const WaterSummaryGrid = (function() {
     if (!params.data) return '-';
     const name = escapeHtml(params.value || params.data.sample_name || '-');
     const code = escapeHtml(params.data.sample_code || '');
-    return `<span class="ws-sample-link" title="${code}">${name}</span>`;
+    return '<span class="ws-sample-link" title="' + code + '">' + name + '</span>';
   }
 
   /* -------- RETEST CELL RENDERERS -------- */

@@ -65,7 +65,7 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
     {
-      headerName: '{{ _("Difference") }}', field: 'diff', width: 70,
+      headerName: '{{ _("Difference") }}', field: 'diff', width: 85,
       valueGetter: p => {
         const r1 = p.data.r1, r2 = p.data.r2;
         return (r1 != null && r2 != null) ? Math.abs(r1 - r2) : null;

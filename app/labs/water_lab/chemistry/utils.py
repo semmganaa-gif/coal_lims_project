@@ -206,6 +206,15 @@ def create_water_micro_samples(form, user_id):
     # sample_code-д micro lab_id ашиглах (хуучин формат хадгалах)
     needs_lab_id = lab_type in ('microbiology', 'water & micro')
 
+    # Ахуйн ус: Оролт/Гаралт хос үүсгэх
+    wastewater_only = {
+        a['code'] for a in WATER_ANALYSIS_TYPES
+        if 'wastewater' in a.get('categories', [])
+        and 'drinking' not in a.get('categories', [])
+    }
+    has_wastewater = any(a in wastewater_only for a in analyses)
+    suffixes = [' (Оролт)', ' (Гаралт)'] if has_wastewater else ['']
+
     created = []
     skipped = []
     for sample_name in sample_names:
@@ -213,50 +222,53 @@ def create_water_micro_samples(form, user_id):
         if not sample_name:
             continue
 
-        # Micro lab_id
-        cur_micro_lab_id = None
-        if needs_micro_id:
-            micro_seq += 1
-            cur_micro_lab_id = f"{micro_day_num:02d}_{micro_seq:02d}"
+        for suffix in suffixes:
+            actual_name = sample_name + suffix
 
-        # Chem lab_id
-        cur_chem_lab_id = None
-        if needs_chem_id:
-            chem_seq += 1
-            cur_chem_lab_id = f"{chem_batch}_{chem_seq:02d}"
+            # Micro lab_id
+            cur_micro_lab_id = None
+            if needs_micro_id:
+                micro_seq += 1
+                cur_micro_lab_id = f"{micro_day_num:02d}_{micro_seq:02d}"
 
-        # sample_code (хуучин формат хадгалах)
-        if needs_lab_id:
-            lab_id = cur_micro_lab_id
-            sample_code = f"{lab_id}_{sample_name}_{sample_date.isoformat()}"
-        else:
-            sample_code = f"{sample_name}_{sample_date.isoformat()}"
+            # Chem lab_id
+            cur_chem_lab_id = None
+            if needs_chem_id:
+                chem_seq += 1
+                cur_chem_lab_id = f"{chem_batch}_{chem_seq:02d}"
 
-        existing = Sample.query.filter_by(sample_code=sample_code).first()
-        if existing:
-            skipped.append(sample_name)
-            continue
+            # sample_code
+            if needs_lab_id:
+                lab_id = cur_micro_lab_id
+                sample_code = f"{lab_id}_{actual_name}_{sample_date.isoformat()}"
+            else:
+                sample_code = f"{actual_name}_{sample_date.isoformat()}"
 
-        sample = Sample(
-            lab_type=lab_type,
-            sample_code=sample_code,
-            user_id=user_id,
-            client_name=source_type,
-            sample_type=lab_type,
-            sample_date=sample_date,
-            sampling_location=form.get('sampling_location', ''),
-            sampled_by=form.get('sampled_by', ''),
-            notes=form.get('notes', ''),
-            analyses_to_perform=json.dumps(analyses, ensure_ascii=False),
-            weight=weight,
-            return_sample=return_sample,
-            retention_date=retention_date,
-            status='new',
-            chem_lab_id=cur_chem_lab_id,
-            micro_lab_id=cur_micro_lab_id,
-        )
-        db.session.add(sample)
-        created.append(sample_name)
+            existing = Sample.query.filter_by(sample_code=sample_code).first()
+            if existing:
+                skipped.append(actual_name)
+                continue
+
+            sample = Sample(
+                lab_type=lab_type,
+                sample_code=sample_code,
+                user_id=user_id,
+                client_name=source_type,
+                sample_type=lab_type,
+                sample_date=sample_date,
+                sampling_location=form.get('sampling_location', ''),
+                sampled_by=form.get('sampled_by', ''),
+                notes=form.get('notes', ''),
+                analyses_to_perform=json.dumps(analyses, ensure_ascii=False),
+                weight=weight,
+                return_sample=return_sample,
+                retention_date=retention_date,
+                status='new',
+                chem_lab_id=cur_chem_lab_id,
+                micro_lab_id=cur_micro_lab_id,
+            )
+            db.session.add(sample)
+            created.append(actual_name)
 
     if not safe_commit():
         raise RuntimeError('Дээж хадгалахад алдаа гарлаа')

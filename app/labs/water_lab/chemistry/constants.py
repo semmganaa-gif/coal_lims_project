@@ -45,6 +45,13 @@ PHYSICAL_PARAMS = {
         'mns_limit': None,
         'standard': '',
     },
+    'ODOR': {
+        'name': 'Odor',
+        'name_mn': 'Үнэр',
+        'unit': 'балл',
+        'mns_limit': (None, 2),
+        'standard': 'MNS 4586:2007',
+    },
 }
 
 # Хими шинжилгээ
@@ -245,26 +252,31 @@ CHEMICAL_PARAMS = {
 
 # Бүх усны шинжилгээний төрлүүд
 WATER_ANALYSIS_TYPES = [
-    # ─── Унд ахуйн (12) + Бохир ус (12) — олон категорид хамаарч болно ───
-    {'code': 'HARD', 'name': 'Ерөнхий хатуулаг', 'order': 1, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'TDS', 'name': 'Хуурай үлдэгдэл (Умбуур)', 'order': 2, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    # ─── Ундны ус (9) ───
+    # COLOR, EC, PH, F_W, CL_FREE, HARD, NH4, NO2, FE_W
+    # ─── Ахуйн ус (11) ───
+    # ODOR, EC, PH, TDS, CL_W, CL_FREE, NH4, NO2, PO4, FE_W, BOD
+    # ─── Давхар (6): EC, PH, CL_FREE, NH4, NO2, FE_W ───
+    {'code': 'ODOR', 'name': 'Үнэр (балл)', 'order': 0, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'HARD', 'name': 'Ерөнхий хатуулаг', 'order': 1, 'role': 'chemist', 'categories': ['drinking']},
+    {'code': 'TDS', 'name': 'Хуурай үлдэгдэл (Умбуур)', 'order': 2, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'NH4', 'name': 'Аммонийн ион (NH₄⁺)', 'order': 3, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
     {'code': 'NO2', 'name': 'Нитритийн ион (NO₂⁻)', 'order': 4, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'NO3', 'name': 'Нитратын ион (NO₃⁻)', 'order': 5, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'NO3', 'name': 'Нитратын ион (NO₃⁻)', 'order': 5, 'role': 'chemist', 'categories': ['other']},
     {'code': 'FE_W', 'name': 'Төмрийн ион (Fe)', 'order': 6, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
     {'code': 'COLOR', 'name': 'Өнгө', 'order': 7, 'role': 'chemist', 'categories': ['drinking']},
     {'code': 'EC', 'name': 'ЦДЧ (EC)', 'order': 8, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'DS', 'name': 'Ууссан давс', 'order': 9, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'DS', 'name': 'Ууссан давс', 'order': 9, 'role': 'chemist', 'categories': ['other']},
     {'code': 'F_W', 'name': 'Фторид (F⁻)', 'order': 10, 'role': 'chemist', 'categories': ['drinking']},
     {'code': 'CL_FREE', 'name': 'Чөлөөт үлдэгдэл хлор', 'order': 11, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
     {'code': 'PH', 'name': 'Усны орчин (pH)', 'order': 12, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'PO4', 'name': 'Фосфат ион (PO₄³⁻)', 'order': 14, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 15, 'role': 'chemist', 'categories': ['wastewater']},
-    # ─── Лагийн шинжилгээ ───
-    {'code': 'SLUDGE_VOL', 'name': 'Лагийн эзлэхүүн (SV)', 'order': 16, 'role': 'chemist', 'categories': ['wastewater']},
-    {'code': 'SLUDGE_DOSE', 'name': 'Лагийн тун (SD)', 'order': 17, 'role': 'chemist', 'categories': ['wastewater']},
-    {'code': 'SLUDGE_INDEX', 'name': 'Лагийн индекс (SI)', 'order': 18, 'role': 'chemist', 'categories': ['wastewater']},
+    # ─── Лагийн шинжилгээ (бусад) ───
+    {'code': 'SLUDGE_VOL', 'name': 'Лагийн эзлэхүүн (SV)', 'order': 16, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE_DOSE', 'name': 'Лагийн тун (SD)', 'order': 17, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE_INDEX', 'name': 'Лагийн индекс (SI)', 'order': 18, 'role': 'chemist', 'categories': ['other']},
     # ─── Бусад ───
     {'code': 'DUST', 'name': 'Тоос', 'order': 20, 'role': 'chemist', 'categories': ['other']},
     {'code': 'SLUDGE', 'name': 'Лаг', 'order': 21, 'role': 'chemist', 'categories': ['archive']},

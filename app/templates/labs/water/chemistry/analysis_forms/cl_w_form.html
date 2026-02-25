@@ -6,7 +6,7 @@
 <div class="mt-2 p-2 bg-light rounded">
   <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 4424:2005 - Chloride Ion</h6>
   <small class="text-muted">
-    <strong>K</strong> = {{ _("Vt_theoretical / Vt_average (correction coefficient)") }}<br>
+    <strong>K</strong> = 10 / Vtd {{ _("(correction coefficient, Vtd = avg of Vt1, Vt2)") }}<br>
     <strong>{{ _("Formula") }}:</strong> Cl⁻ (mg/L) = (Vd - V0) × K × N × 35.453 × 1000 / V × {{ _("Dilution") }}<br>
     <span class="text-info">{{ _("MNS limit") }}: ≤1000 mg/L</span>
   </small>
@@ -16,11 +16,24 @@
 {% block column_defs %}
   const CL_MASS = 35.453;
 
+  function calcVtd(d) {
+    const vt1 = d.vt1, vt2 = d.vt2;
+    if (vt1 != null && vt2 != null) return (vt1 + vt2) / 2;
+    return vt1 || vt2 || null;
+  }
+
+  function calcK(d) {
+    const vtd = calcVtd(d);
+    if (!vtd || vtd === 0) return null;
+    return 10 / vtd;
+  }
+
   function calcChloride(d) {
     const v1 = d.v1, v2 = d.v2, v0 = d.v0 || 0;
     if (v1 == null && v2 == null) return null;
     const vd = (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2);
-    const K = d.k_coef || 1;
+    const K = calcK(d);
+    if (K == null) return null;
     const N = d.n_agno3 || 0.1;
     const V = d.v_sample || 50;
     const dil = d.dilution || 1;
@@ -37,16 +50,29 @@
         { headerName: 'Vt2', field: 'vt2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
         {
           headerName: 'Vtd', field: 'vtd', width: 85,
-          valueGetter: p => {
-            const vt1 = p.data.vt1, vt2 = p.data.vt2;
-            return (vt1 != null && vt2 != null) ? (vt1 + vt2) / 2 : (vt1 || vt2 || null);
-          },
+          valueGetter: p => calcVtd(p.data),
           valueFormatter: fmt2
         },
         {
-          headerName: 'K', field: 'k_coef', width: 110, type: 'numericColumn', ...editCol,
-          valueFormatter: p => p.value != null ? p.value.toFixed(6) : '',
-          headerTooltip: '{{ _("Correction Coefficient") }} = Vt_theoretical / Vt_average'
+          headerName: 'Δ', field: 'vt_diff', width: 85,
+          valueGetter: p => {
+            const vt1 = p.data.vt1, vt2 = p.data.vt2;
+            if (vt1 == null || vt2 == null) return null;
+            return Math.abs(vt1 - vt2);
+          },
+          valueFormatter: fmt2,
+          cellStyle: p => {
+            if (p.value == null) return {};
+            return p.value > 0.1 ? { color: '#dc2626', fontWeight: '700' } : { color: '#059669' };
+          },
+          headerTooltip: '|Vt1 − Vt2|'
+        },
+        {
+          headerName: 'K', field: 'k_coef', width: 100,
+          valueGetter: p => calcK(p.data),
+          valueFormatter: p => p.value != null ? p.value.toFixed(4) : '',
+          cellStyle: { fontWeight: '600', color: '#7c3aed' },
+          headerTooltip: '{{ _("Correction Coefficient") }} K = 10 / Vtd'
         },
       ]
     },
@@ -84,8 +110,8 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
   ];
-  var editableFields = ['vt1', 'vt2', 'k_coef', 'n_agno3', 'v_sample', 'v0', 'v1', 'v2', 'dilution', 'notes'];
-  var computedCols = ['vtd', 'vd', 'result'];
+  var editableFields = ['vt1', 'vt2', 'n_agno3', 'v_sample', 'v0', 'v1', 'v2', 'dilution', 'notes'];
+  var computedCols = ['vtd', 'vt_diff', 'k_coef', 'vd', 'result'];
 {% endblock %}
 
 {% block row_builder %}
@@ -97,7 +123,6 @@
       is_saved: ex && ex.status !== 'rejected',
       vt1: raw.vt1 ?? null,
       vt2: raw.vt2 ?? null,
-      k_coef: raw.k_coef ?? 1,
       n_agno3: raw.n_agno3 ?? 0.1,
       v_sample: raw.v_sample ?? 50,
       v0: raw.v0 ?? null,
@@ -115,7 +140,8 @@
     window.waterGridApi.forEachNode(n => {
       if (n.data.is_saved) return;
       const d = n.data;
-      const vtd = (d.vt1 != null && d.vt2 != null) ? (d.vt1 + d.vt2) / 2 : (d.vt1 || d.vt2 || null);
+      const vtd = calcVtd(d);
+      const k = calcK(d);
       const vd = (d.v1 != null && d.v2 != null) ? (d.v1 + d.v2) / 2 : (d.v1 || d.v2 || null);
       const result = calcChloride(d);
       items.push({
@@ -124,7 +150,7 @@
           vt1: d.vt1,
           vt2: d.vt2,
           vtd: vtd,
-          k_coef: d.k_coef,
+          k_coef: k,
           n_agno3: d.n_agno3,
           v_sample: d.v_sample,
           v0: d.v0,

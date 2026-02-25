@@ -15,64 +15,77 @@
 {% endblock %}
 
 {% block column_defs %}
+  function calcDeltaM(m1, m2) {
+    if (m1 == null || m2 == null) return null;
+    return m2 - m1;
+  }
+  function calcTDS(m1, m2, v) {
+    if (m1 == null || m2 == null || !v) return null;
+    return ((m2 - m1) * 1000000) / v;
+  }
+
   var formColumns = [
     // A series
-    { headerName: 'V_a mL', field: 'vol_a', width: 80, type: 'numericColumn', ...editCol },
-    { headerName: 'm1_a g', field: 'm1_a', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
-    { headerName: 'm2_a g', field: 'm2_a', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
     {
-      headerName: 'A mg/L', field: 'result_a', width: 90,
-      valueGetter: p => {
-        const m1 = p.data.m1_a, m2 = p.data.m2_a, v = p.data.vol_a;
-        if (m1 == null || m2 == null || !v) return null;
-        return ((m2 - m1) * 1000000) / v;
-      },
-      valueFormatter: fmt1,
-      cellStyle: { color: '#0d6efd', fontWeight: '600' }
+      headerName: 'A {{ _("series") }}',
+      children: [
+        { headerName: 'V_a mL', field: 'vol_a', width: 80, type: 'numericColumn', ...editCol },
+        { headerName: 'm1_a g', field: 'm1_a', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+        { headerName: 'm2_a g', field: 'm2_a', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+        {
+          headerName: 'Δm_a g', field: 'delta_m_a', width: 85,
+          valueGetter: p => calcDeltaM(p.data.m1_a, p.data.m2_a),
+          valueFormatter: fmt4,
+          cellStyle: { color: '#7c3aed', fontWeight: '600' },
+          headerTooltip: 'm2_a − m1_a'
+        },
+        {
+          headerName: 'A mg/L', field: 'result_a', width: 90,
+          valueGetter: p => calcTDS(p.data.m1_a, p.data.m2_a, p.data.vol_a),
+          valueFormatter: fmt1,
+          cellStyle: { color: '#0d6efd', fontWeight: '600' }
+        },
+      ]
     },
     // B series
-    { headerName: 'V_b mL', field: 'vol_b', width: 80, type: 'numericColumn', ...editCol },
-    { headerName: 'm1_b g', field: 'm1_b', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
-    { headerName: 'm2_b g', field: 'm2_b', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
     {
-      headerName: 'B mg/L', field: 'result_b', width: 90,
-      valueGetter: p => {
-        const m1 = p.data.m1_b, m2 = p.data.m2_b, v = p.data.vol_b;
-        if (m1 == null || m2 == null || !v) return null;
-        return ((m2 - m1) * 1000000) / v;
-      },
-      valueFormatter: fmt1,
-      cellStyle: { color: '#198754', fontWeight: '600' }
+      headerName: 'B {{ _("series") }}',
+      children: [
+        { headerName: 'V_b mL', field: 'vol_b', width: 80, type: 'numericColumn', ...editCol },
+        { headerName: 'm1_b g', field: 'm1_b', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+        { headerName: 'm2_b g', field: 'm2_b', width: 95, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+        {
+          headerName: 'Δm_b g', field: 'delta_m_b', width: 85,
+          valueGetter: p => calcDeltaM(p.data.m1_b, p.data.m2_b),
+          valueFormatter: fmt4,
+          cellStyle: { color: '#7c3aed', fontWeight: '600' },
+          headerTooltip: 'm2_b − m1_b'
+        },
+        {
+          headerName: 'B mg/L', field: 'result_b', width: 90,
+          valueGetter: p => calcTDS(p.data.m1_b, p.data.m2_b, p.data.vol_b),
+          valueFormatter: fmt1,
+          cellStyle: { color: '#198754', fontWeight: '600' }
+        },
+      ]
     },
     // Final
     {
       headerName: '{{ _("Result") }}', field: 'result', width: 100,
       valueGetter: p => {
-        let res_a = null, res_b = null;
-        if (p.data.m1_a != null && p.data.m2_a != null && p.data.vol_a) {
-          res_a = ((p.data.m2_a - p.data.m1_a) * 1000000) / p.data.vol_a;
-        }
-        if (p.data.m1_b != null && p.data.m2_b != null && p.data.vol_b) {
-          res_b = ((p.data.m2_b - p.data.m1_b) * 1000000) / p.data.vol_b;
-        }
+        const res_a = calcTDS(p.data.m1_a, p.data.m2_a, p.data.vol_a);
+        const res_b = calcTDS(p.data.m1_b, p.data.m2_b, p.data.vol_b);
         if (res_a != null && res_b != null) return (res_a + res_b) / 2;
-        if (res_a != null) return res_a;
-        if (res_b != null) return res_b;
-        return null;
+        return res_a ?? res_b ?? null;
       },
       valueFormatter: fmt1,
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
     {
-      headerName: '{{ _("A-B difference") }}', field: 'parallel_diff', width: 90,
+      headerName: '{{ _("A-B diff") }}', field: 'parallel_diff', width: 90,
       valueGetter: p => {
-        let res_a = null, res_b = null;
-        if (p.data.m1_a != null && p.data.m2_a != null && p.data.vol_a) {
-          res_a = ((p.data.m2_a - p.data.m1_a) * 1000000) / p.data.vol_a;
-        }
-        if (p.data.m1_b != null && p.data.m2_b != null && p.data.vol_b) {
-          res_b = ((p.data.m2_b - p.data.m1_b) * 1000000) / p.data.vol_b;
-        }
+        const res_a = calcTDS(p.data.m1_a, p.data.m2_a, p.data.vol_a);
+        const res_b = calcTDS(p.data.m1_b, p.data.m2_b, p.data.vol_b);
         return (res_a != null && res_b != null) ? Math.abs(res_a - res_b) : null;
       },
       valueFormatter: fmt1,
@@ -83,7 +96,7 @@
     },
   ];
   var editableFields = ['vol_a', 'm1_a', 'm2_a', 'vol_b', 'm1_b', 'm2_b', 'notes'];
-  var computedCols = ['result_a', 'result_b', 'result', 'parallel_diff'];
+  var computedCols = ['delta_m_a', 'result_a', 'delta_m_b', 'result_b', 'result', 'parallel_diff'];
 {% endblock %}
 
 {% block row_builder %}
@@ -107,24 +120,18 @@
       if (n.data.is_saved) return;
       const d = n.data;
 
-      let res_a = null, res_b = null;
-      if (d.m1_a != null && d.m2_a != null && d.vol_a) {
-        res_a = ((d.m2_a - d.m1_a) * 1000000) / d.vol_a;
-      }
-      if (d.m1_b != null && d.m2_b != null && d.vol_b) {
-        res_b = ((d.m2_b - d.m1_b) * 1000000) / d.vol_b;
-      }
-
-      let result = null;
-      if (res_a != null && res_b != null) result = (res_a + res_b) / 2;
-      else if (res_a != null) result = res_a;
-      else if (res_b != null) result = res_b;
+      const res_a = calcTDS(d.m1_a, d.m2_a, d.vol_a);
+      const res_b = calcTDS(d.m1_b, d.m2_b, d.vol_b);
+      const result = (res_a != null && res_b != null) ? (res_a + res_b) / 2
+                   : (res_a ?? res_b ?? null);
 
       items.push({
         sample_id: d.sample_id,
         raw_data: {
-          vol_a: d.vol_a, m1_a: d.m1_a, m2_a: d.m2_a, result_a: res_a,
-          vol_b: d.vol_b, m1_b: d.m1_b, m2_b: d.m2_b, result_b: res_b,
+          vol_a: d.vol_a, m1_a: d.m1_a, m2_a: d.m2_a,
+          delta_m_a: calcDeltaM(d.m1_a, d.m2_a), result_a: res_a,
+          vol_b: d.vol_b, m1_b: d.m1_b, m2_b: d.m2_b,
+          delta_m_b: calcDeltaM(d.m1_b, d.m2_b), result_b: res_b,
           result: result,
           notes: d.notes
         }

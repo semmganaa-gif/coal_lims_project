@@ -1,10 +1,13 @@
 # app/labs/water_lab/chemistry/routes.py
 """Усны хими лабораторийн routes."""
 
+import logging
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.models import Sample, AnalysisResult, Equipment
+
+logger = logging.getLogger(__name__)
 from sqlalchemy import or_
 from app.labs.water_lab.chemistry.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
@@ -14,7 +17,6 @@ from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
 from app.utils.converters import to_float
 from app.utils.security import escape_like_pattern
-from markupsafe import escape as html_escape
 
 water_bp = Blueprint(
     'water',
@@ -373,8 +375,8 @@ def register_sample():
             return redirect(url_for('water.register_sample'))
         except Exception as e:
             db.session.rollback()
-            # ✅ XSS сэргийлэлт: exception message escape
-            flash(f'Error: {html_escape(str(e))}', 'danger')
+            logger.exception('register_sample error')
+            flash('Дээж бүртгэхэд алдаа гарлаа.', 'danger')
             from_param = request.args.get('from', '')
             return redirect(url_for('water.register_sample', **({'from': 'micro'} if from_param == 'micro' else {})))
 
@@ -400,7 +402,7 @@ def workspace(code):
     code_upper = code.upper()
     param = ALL_WATER_PARAMS.get(code_upper)
     if not param:
-        return jsonify({'error': f'Unknown analysis code: {code}'}), 404
+        return jsonify({'success': False, 'message': 'Unknown analysis code'}), 404
 
     # ── Огнооны шүүлтүүр (default: 7 хоног) ──
     days_param = request.args.get('days', '7')
@@ -471,21 +473,23 @@ def workspace(code):
     samples_to_analyze = []
 
     # A: Одоо байгаа үр дүнтэй дээжүүд (огнооны шүүлтүүрээр)
-    existing_q = AnalysisResult.query.filter(
-        AnalysisResult.user_id == current_user.id,
-        AnalysisResult.analysis_code == code_upper,
-        ~AnalysisResult.sample_id.in_(approved_ids) if approved_ids else True
-    )
-    if date_cutoff:
-        existing_q = existing_q.join(Sample).filter(
-            Sample.received_date >= date_cutoff
+    # ✅ H-1 fix: N+1 query → joinedload
+    existing_q = (
+        db.session.query(AnalysisResult, Sample)
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .filter(
+            AnalysisResult.user_id == current_user.id,
+            AnalysisResult.analysis_code == code_upper,
         )
-    for r in existing_q.all():
-        if r.sample_id not in seen:
-            s = db.session.get(Sample, r.sample_id)
-            if s:
-                samples_to_analyze.append(s)
-                seen.add(r.sample_id)
+    )
+    if approved_ids:
+        existing_q = existing_q.filter(~AnalysisResult.sample_id.in_(approved_ids))
+    if date_cutoff:
+        existing_q = existing_q.filter(Sample.received_date >= date_cutoff)
+    for r, s in existing_q.all():
+        if s.id not in seen:
+            samples_to_analyze.append(s)
+            seen.add(s.id)
 
     # B: Шинэ сонгосон
     if new_ids:
@@ -584,13 +588,16 @@ def retest_result(result_id):
     if not result:
         return jsonify({'success': False, 'message': 'Үр дүн олдсонгүй'}), 404
 
-    # Аудит бичлэг (result устахаас ӨМНӨ)
+    # ✅ H-8 fix: Delete хийхээс өмнө утгуудыг хадгалах
+    analysis_code_snapshot = result.analysis_code
     sample = db.session.get(Sample, result.sample_id)
+
+    # Аудит бичлэг (result устахаас ӨМНӨ)
     log = AnalysisResultLog(
         user_id=current_user.id,
         sample_id=result.sample_id,
         analysis_result_id=result.id,
-        analysis_code=result.analysis_code,
+        analysis_code=analysis_code_snapshot,
         action='RETEST_DELETED',
         raw_data_snapshot=result.raw_data,
         final_result_snapshot=result.final_result,
@@ -608,7 +615,7 @@ def retest_result(result_id):
 
     return jsonify({
         'success': True,
-        'message': f'{result.analysis_code} үр дүн устгагдлаа. Дахин оруулна уу.'
+        'message': f'{analysis_code_snapshot} үр дүн устгагдлаа. Дахин оруулна уу.'
     })
 
 
@@ -653,7 +660,7 @@ def save_results():
     """Үр дүн хадгалах."""
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        return jsonify({'success': False, 'message': 'No data provided'}), 400
 
     sample_id = data.get('sample_id')
     analysis_code = data.get('analysis_code')
@@ -661,7 +668,7 @@ def save_results():
 
     sample = db.session.get(Sample, sample_id)
     if not sample:
-        return jsonify({'error': 'Sample not found'}), 404
+        return jsonify({'success': False, 'message': 'Sample not found'}), 404
 
     import json
 
@@ -670,18 +677,42 @@ def save_results():
         results.get('result') or results.get('value') or results.get('average')
     )
 
-    ar = AnalysisResult(
+    # ✅ C-2 fix: Давхардал шалгах — UPSERT логик
+    ar = AnalysisResult.query.filter_by(
         sample_id=sample_id,
         analysis_code=analysis_code,
-        raw_data=json.dumps(results, ensure_ascii=False),
-        final_result=final_val,
-        user_id=current_user.id,
-    )
-    db.session.add(ar)
+    ).filter(
+        AnalysisResult.status.in_(['pending_review', 'rejected'])
+    ).first()
+
+    if ar:
+        # Одоо байгаа pending/rejected үр дүнг шинэчлэх
+        ar.raw_data = json.dumps(results, ensure_ascii=False)
+        ar.final_result = final_val
+        ar.user_id = current_user.id
+        ar.status = 'pending_review'
+    else:
+        # Approved үр дүн байгаа эсэх шалгах
+        approved = AnalysisResult.query.filter_by(
+            sample_id=sample_id,
+            analysis_code=analysis_code,
+            status='approved'
+        ).first()
+        if approved:
+            return jsonify({'success': False, 'message': 'This analysis is already approved. Use retest to re-enter.'}), 409
+
+        ar = AnalysisResult(
+            sample_id=sample_id,
+            analysis_code=analysis_code,
+            raw_data=json.dumps(results, ensure_ascii=False),
+            final_result=final_val,
+            user_id=current_user.id,
+        )
+        db.session.add(ar)
 
     from app.utils.database import safe_commit
     if not safe_commit():
-        return jsonify({'error': 'Error saving results'}), 500
+        return jsonify({'success': False, 'message': 'Error saving results'}), 500
 
     return jsonify({'success': True, 'id': ar.id})
 
@@ -792,8 +823,8 @@ def edit_sample(sample_id):
                 return redirect(url_for('water.register_sample'))
             except Exception as e:
                 db.session.rollback()
-                # ✅ XSS сэргийлэлт
-                flash(f'Error: {html_escape(str(e))}', 'danger')
+                logger.exception('edit_sample error: sample_id=%s', sample_id)
+                flash('Дээж засахад алдаа гарлаа.', 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -831,6 +862,18 @@ def delete_samples():
             if current_user.role in ('senior', 'chemist') and sample.status != 'new':
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
+
+            # ✅ C-3 fix: Approved үр дүнтэй дээжийг хамгаалах
+            approved_count = AnalysisResult.query.filter_by(
+                sample_id=sample.id, status='approved'
+            ).count()
+            if approved_count > 0 and current_user.role != 'admin':
+                failed.append(f'{sample.sample_code} (Батлагдсан үр дүнтэй)')
+                continue
+
+            # Холбогдох AnalysisResult-уудыг эхлээд устгах (orphan сэргийлэлт)
+            AnalysisResult.query.filter_by(sample_id=sample.id).delete()
+
             log_audit(
                 action='sample_deleted',
                 resource_type='Sample',
@@ -840,11 +883,15 @@ def delete_samples():
             db.session.delete(sample)
             deleted += 1
         except Exception as e:
-            failed.append(f'ID={sid} ({e})')
+            logger.exception('delete_samples error: sid=%s', sid)
+            failed.append(f'ID={sid}')
 
     if deleted:
-        db.session.commit()
-        flash(f'{deleted} samples deleted successfully.', 'success')
+        from app.utils.database import safe_commit
+        if not safe_commit():
+            flash('DB error during delete.', 'danger')
+        else:
+            flash(f'{deleted} samples deleted successfully.', 'success')
     if failed:
         flash(f'Error: {", ".join(failed)}', 'danger')
 
@@ -878,7 +925,7 @@ def api_standards():
 def water_dashboard():
     """Усны хими Dashboard - KPI, тренд."""
     from datetime import datetime
-    from sqlalchemy import extract
+    from sqlalchemy import extract, func, case
 
     now = datetime.now()
     year = now.year
@@ -890,53 +937,52 @@ def water_dashboard():
     year_end = datetime(year + 1, 1, 1)
 
     _WATER_LAB_TYPES = ['water', 'water & micro']
+    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
 
-    # Дээжний тоо
-    samples_month = Sample.query.filter(
-        Sample.lab_type.in_(_WATER_LAB_TYPES),
-        Sample.received_date >= month_start.date(),
-        Sample.received_date < month_end.date()
-    ).count()
-
-    samples_year = Sample.query.filter(
+    # -- 1) Дээж тоо: сар + жил нэг query (conditional count) --
+    _s_base = Sample.query.filter(
         Sample.lab_type.in_(_WATER_LAB_TYPES),
         Sample.received_date >= year_start.date(),
         Sample.received_date < year_end.date()
-    ).count()
+    )
+    row = _s_base.with_entities(
+        func.count().label('year_cnt'),
+        func.count(case(
+            (Sample.received_date >= month_start.date(), Sample.id),
+            else_=None
+        )).label('month_cnt')
+    ).first()
+    samples_year = row.year_cnt if row else 0
+    samples_month = row.month_cnt if row else 0
 
-    # Шинжилгээний тоо
-    active_chem_codes = [a['code'] for a in WATER_ANALYSIS_TYPES if 'archive' not in a.get('categories', [])]
-
-    analyses_month = AnalysisResult.query.join(
-        Sample, Sample.id == AnalysisResult.sample_id
-    ).filter(
-        Sample.lab_type.in_(_WATER_LAB_TYPES),
-        AnalysisResult.analysis_code.in_(active_chem_codes),
-        AnalysisResult.created_at >= month_start,
-        AnalysisResult.created_at < month_end
-    ).count()
-
-    analyses_year = AnalysisResult.query.join(
+    # -- 2) Шинжилгээ тоо: сар + жил нэг query --
+    _a_base = AnalysisResult.query.join(
         Sample, Sample.id == AnalysisResult.sample_id
     ).filter(
         Sample.lab_type.in_(_WATER_LAB_TYPES),
         AnalysisResult.analysis_code.in_(active_chem_codes),
         AnalysisResult.created_at >= year_start,
         AnalysisResult.created_at < year_end
-    ).count()
+    )
+    row2 = _a_base.with_entities(
+        func.count().label('year_cnt'),
+        func.count(case(
+            (AnalysisResult.created_at >= month_start, AnalysisResult.id),
+            else_=None
+        )).label('month_cnt')
+    ).first()
+    analyses_year = row2.year_cnt if row2 else 0
+    analyses_month = row2.month_cnt if row2 else 0
 
-    # Категори тоо
-    cat_counts = []
-    cat_labels = {'Унд ахуй': 'Унд ахуй', 'Бохир ус': 'Бохир ус', 'Лаг': 'Лаг'}
-    for unit_name in WATER_UNITS:
-        cnt = Sample.query.filter(
-            Sample.lab_type.in_(_WATER_LAB_TYPES),
-            Sample.client_name == unit_name,
-            Sample.received_date >= year_start.date(),
-            Sample.received_date < year_end.date()
-        ).count()
-        if cnt > 0:
-            cat_counts.append({'label': unit_name, 'count': cnt})
+    # -- 3) Категори тоо: GROUP BY нэг query --
+    cat_rows = db.session.query(
+        Sample.client_name, func.count()
+    ).filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        Sample.received_date >= year_start.date(),
+        Sample.received_date < year_end.date()
+    ).group_by(Sample.client_name).all()
+    cat_counts = [{'label': name, 'count': cnt} for name, cnt in cat_rows if cnt > 0]
 
     # Pass/Fail тоолох (pH, MNS limit шалгалт)
     pass_count = 0
@@ -967,7 +1013,29 @@ def water_dashboard():
     total_checked = pass_count + fail_count
     pass_rate = (pass_count / total_checked * 100) if total_checked > 0 else 100
 
-    # Сүүлийн 6 сарын тренд
+    # -- 5) Сүүлийн 6 сарын тренд: нэг GROUP BY query --
+    # 6 сарын эхлэх цэг
+    trend_m = month - 5
+    trend_y = year
+    if trend_m <= 0:
+        trend_m += 12
+        trend_y -= 1
+    trend_start = datetime(trend_y, trend_m, 1)
+
+    trend_rows = db.session.query(
+        extract('year', AnalysisResult.created_at).label('yr'),
+        extract('month', AnalysisResult.created_at).label('mn'),
+        func.count()
+    ).join(
+        Sample, Sample.id == AnalysisResult.sample_id
+    ).filter(
+        Sample.lab_type.in_(_WATER_LAB_TYPES),
+        AnalysisResult.analysis_code.in_(active_chem_codes),
+        AnalysisResult.created_at >= trend_start,
+        AnalysisResult.created_at < month_end
+    ).group_by('yr', 'mn').all()
+
+    trend_map = {(int(r.yr), int(r.mn)): r[2] for r in trend_rows}
     monthly_stats = []
     for i in range(5, -1, -1):
         m = month - i
@@ -975,17 +1043,11 @@ def water_dashboard():
         if m <= 0:
             m += 12
             y -= 1
-        m_start = datetime(y, m, 1)
-        m_end = datetime(y, m + 1, 1) if m < 12 else datetime(y + 1, 1, 1)
-        cnt = AnalysisResult.query.join(
-            Sample, Sample.id == AnalysisResult.sample_id
-        ).filter(
-            Sample.lab_type.in_(_WATER_LAB_TYPES),
-            AnalysisResult.analysis_code.in_(active_chem_codes),
-            AnalysisResult.created_at >= m_start,
-            AnalysisResult.created_at < m_end
-        ).count()
-        monthly_stats.append({'month': m, 'year': y, 'label': f'{m}-р сар', 'count': cnt})
+        monthly_stats.append({
+            'month': m, 'year': y,
+            'label': f'{m}-р сар',
+            'count': trend_map.get((y, m), 0)
+        })
 
     return render_template(
         'labs/water/chemistry/reports/water_dashboard.html',
@@ -1015,6 +1077,8 @@ def water_consumption():
     now = datetime.now()
     try:
         year = int(request.args.get('year', now.year))
+        if not (2000 <= year <= 2100):
+            raise ValueError
     except (ValueError, TypeError):
         year = now.year
 
@@ -1106,13 +1170,18 @@ def api_consumption_cell():
     from datetime import datetime
     from sqlalchemy import extract
 
+    # ✅ H-7 fix: Input validation нэмэх
     try:
         year = int(request.args.get('year'))
         month = int(request.args.get('month'))
-        unit = request.args.get('unit', '')
-        stype = request.args.get('stype', '')
-        kind = request.args.get('kind', 'samples')
-        code = request.args.get('code', '')
+        if not (1 <= month <= 12) or not (2000 <= year <= 2100):
+            raise ValueError('Invalid year/month range')
+        unit = request.args.get('unit', '').strip()
+        stype = request.args.get('stype', '').strip()
+        kind = request.args.get('kind', 'samples').strip()
+        code = request.args.get('code', '').strip()
+        if kind not in ('samples', 'code'):
+            kind = 'samples'
     except (ValueError, TypeError):
         return jsonify({'success': False, 'data': {'items': []}})
 
@@ -1171,6 +1240,8 @@ def water_monthly_plan():
     try:
         year = int(request.args.get('year', now.year))
         month = int(request.args.get('month', now.month))
+        if not (2000 <= year <= 2100) or not (1 <= month <= 12):
+            raise ValueError
     except (ValueError, TypeError):
         year, month = now.year, now.month
 
@@ -1283,13 +1354,20 @@ def solution_journal():
 
     query = SolutionPreparation.query
 
+    # ✅ H-3 fix: Огнооны parsing exception handling
     if start_date:
-        start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
-        query = query.filter(SolutionPreparation.prepared_date >= start_dt)
+        try:
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
+            query = query.filter(SolutionPreparation.prepared_date >= start_dt)
+        except (ValueError, TypeError):
+            start_date = None
 
     if end_date:
-        end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-        query = query.filter(SolutionPreparation.prepared_date <= end_dt)
+        try:
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
+            query = query.filter(SolutionPreparation.prepared_date <= end_dt)
+        except (ValueError, TypeError):
+            end_date = None
 
     if status and status != 'all':
         query = query.filter(SolutionPreparation.status == status)
@@ -1428,8 +1506,8 @@ def add_solution():
 
         except Exception as e:
             db.session.rollback()
-            # ✅ XSS сэргийлэлт
-            flash(f'Error: {html_escape(str(e))}', 'danger')
+            logger.exception('add_solution error')
+            flash('Уусмал нэмэхэд алдаа гарлаа.', 'danger')
 
     # GET - Химийн бодисын жагсаалт
     chemicals = Chemical.query.filter(
@@ -1499,8 +1577,8 @@ def edit_solution(id):
 
         except Exception as e:
             db.session.rollback()
-            # ✅ XSS сэргийлэлт
-            flash(f'Error: {html_escape(str(e))}', 'danger')
+            logger.exception('edit_solution error: id=%s', id)
+            flash('Уусмал засахад алдаа гарлаа.', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1522,7 +1600,8 @@ def edit_solution(id):
 @lab_required('water')
 def delete_solution(id):
     """Уусмал устгах."""
-    from app.models import SolutionPreparation
+    from app.models import SolutionPreparation, Chemical, ChemicalLog
+    from app.utils.database import safe_commit
 
     if current_user.role not in ('senior', 'admin'):
         flash('Access denied.', 'danger')
@@ -1531,8 +1610,38 @@ def delete_solution(id):
     solution = SolutionPreparation.query.get_or_404(id)
     name = solution.solution_name
 
+    # ✅ H-6 fix: Химийн бодисын зарцуулалтыг буцааж нэмэх
+    if solution.chemical_id and solution.chemical_used_mg:
+        chemical = db.session.get(Chemical, solution.chemical_id)
+        if chemical:
+            quantity_to_return = solution.chemical_used_mg
+            if chemical.unit == 'g':
+                quantity_to_return = solution.chemical_used_mg / 1000
+            elif chemical.unit == 'kg':
+                quantity_to_return = solution.chemical_used_mg / 1000000
+
+            old_quantity = chemical.quantity
+            chemical.quantity += quantity_to_return
+            new_quantity = chemical.quantity
+
+            # Аудит бичлэг
+            log = ChemicalLog(
+                chemical_id=chemical.id,
+                user_id=current_user.id,
+                action='returned',
+                quantity_change=quantity_to_return,
+                quantity_before=old_quantity,
+                quantity_after=new_quantity,
+                details=f"Уусмал устгагдсан тул буцаав: {name}"
+            )
+            log.data_hash = log.compute_hash()
+            db.session.add(log)
+            chemical.update_status()
+
     db.session.delete(solution)
-    db.session.commit()
+    if not safe_commit():
+        flash('DB error.', 'danger')
+        return redirect(url_for('water.solution_journal'))
 
     flash(f"'{name}' deleted.", 'warning')
     return redirect(url_for('water.solution_journal'))
@@ -1775,8 +1884,8 @@ def prepare_from_recipe(id):
 
     except Exception as e:
         db.session.rollback()
-        # ✅ XSS сэргийлэлт
-        flash(f'Error: {html_escape(str(e))}', 'danger')
+        logger.exception('prepare_from_recipe error: id=%s', id)
+        flash('Уусмал найруулахад алдаа гарлаа.', 'danger')
         return redirect(url_for('water.recipe_detail', id=id))
 
 
@@ -1864,8 +1973,8 @@ def add_recipe():
 
         except Exception as e:
             db.session.rollback()
-            # ✅ XSS сэргийлэлт
-            flash(f'Error: {html_escape(str(e))}', 'danger')
+            logger.exception('add_recipe error')
+            flash('Жор нэмэхэд алдаа гарлаа.', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(
@@ -1923,8 +2032,8 @@ def edit_recipe(id):
 
         except Exception as e:
             db.session.rollback()
-            # ✅ XSS сэргийлэлт
-            flash(f'Error: {html_escape(str(e))}', 'danger')
+            logger.exception('edit_recipe error: id=%s', id)
+            flash('Жор засахад алдаа гарлаа.', 'danger')
 
     # GET
     chemicals = Chemical.query.filter(

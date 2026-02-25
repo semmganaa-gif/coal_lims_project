@@ -237,7 +237,8 @@
         new agGrid.Grid(gridDiv, gridOptions);
       }
     } catch (e) {
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid error: ' + e.message + '</div>';
+      var _esc = function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Grid error: ' + _esc(e.message) + '</div>';
     }
 
     // Tab handlers

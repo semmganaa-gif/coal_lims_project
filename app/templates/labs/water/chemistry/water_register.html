@@ -322,13 +322,13 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>{{ _("Wastewater Analysis") }}</h6>
+                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>{{ _("Domestic Water Analysis") }}</h6>
                   <div class="mb-2">
                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">{{ _("All") }}</button>
                     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_waste">
-                    {% for at in water_analyses if 'wastewater' in at.categories and 'drinking' not in at.categories %}
+                    {% for at in water_analyses if 'wastewater' in at.categories %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -343,7 +343,7 @@
                     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">{{ _("Clear") }}</button>
                   </div>
                   <div class="analysis-check-grid" id="wc_other">
-                    {% for at in water_analyses if 'other' in at.categories %}
+                    {% for at in water_analyses if 'other' in at.categories and 'drinking' not in at.categories and 'wastewater' not in at.categories %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -436,6 +436,14 @@ function selectUnit(key) {
       updateSampleInputs();
     };
     list.appendChild(chip);
+  });
+  // Давхар checkbox sync (EC, PH г.м. 2 хэсэгт байвал)
+  document.querySelectorAll('input[name="analyses"]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      document.querySelectorAll(`input[name="analyses"][value="${this.value}"]`).forEach(other => {
+        if (other !== this) other.checked = this.checked;
+      });
+    });
   });
   // auto_analyses байвал шинжилгээг автомат чеклэх
   if (unit.auto_analyses && unit.auto_analyses.length) {

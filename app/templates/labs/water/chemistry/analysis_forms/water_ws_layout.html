@@ -24,6 +24,7 @@
   .ws-header .ws-meta { color: #64748b; font-size: 0.85rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+  .ws-day-filter { font-size: 0.75rem !important; padding: 0.2rem 0.6rem !important; border-radius: 8px !important; }
 
   .grid-card {
     background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
@@ -42,12 +43,16 @@
     --ag-row-hover-color: #eff6ff;
     --ag-header-foreground-color: #0f172a;
     --ag-border-color: #e2e8f0;
-    --ag-font-size: 14px;
+    --ag-font-size: 12.5px;
+    --ag-cell-horizontal-padding: 4px;
+    --ag-row-height: 34px;
+    --ag-header-height: 34px;
     --ag-font-family: "Noto Sans", sans-serif;
   }
-  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.75rem; }
   .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
   .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+  .ag-theme-alpine .ag-header-group-cell { font-size: 0.72rem; font-weight: 600; }
 
   .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0; padding: 0.75rem 1.25rem; }
   .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
@@ -96,6 +101,14 @@
       </div>
     </div>
     <div class="ws-actions">
+      {# ── Огнооны шүүлтүүр ── #}
+      <div class="btn-group" id="dayFilterGroup">
+        {% set days = filter_days|default(7) %}
+        <button class="btn btn-sm {{ 'btn-primary' if days == 7 else 'btn-outline-primary' }} ws-day-filter" data-days="7">7{{ _("d") }}</button>
+        <button class="btn btn-sm {{ 'btn-primary' if days == 14 else 'btn-outline-primary' }} ws-day-filter" data-days="14">14{{ _("d") }}</button>
+        <button class="btn btn-sm {{ 'btn-primary' if days == 30 else 'btn-outline-primary' }} ws-day-filter" data-days="30">30{{ _("d") }}</button>
+        <button class="btn btn-sm {{ 'btn-primary' if days == 0 else 'btn-outline-primary' }} ws-day-filter" data-days="0">{{ _("All") }}</button>
+      </div>
       <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
       </a>
@@ -439,9 +452,19 @@
 (function() {
   'use strict';
 
+  // ============ DAY FILTER ============
+  document.querySelectorAll('.ws-day-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var days = this.dataset.days;
+      var url = new URL(window.location.href);
+      url.searchParams.set('days', days);
+      window.location.href = url.toString();
+    });
+  });
+
   // ============ CONSTANTS ============
   const ANALYSIS_CODE = {{ analysis_code | tojson }};
-  const ELIGIBLE_URL = {{ url_for('water.eligible_samples', code=analysis_code) | tojson }};
+  const ELIGIBLE_URL = {{ url_for('water.eligible_samples', code=analysis_code) | tojson }} + '?days=' + (new URLSearchParams(window.location.search).get('days') || '7');
   const SAVE_URL = {{ url_for('water.save_results') | tojson }};
   const mnsLimit = {{ param.get('mns_limit', 'null') | tojson }};
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -499,11 +522,12 @@
       cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' }
     },
     {
-      headerName: '{{ _("Sample Name") }}', field: 'sample_code', width: 260, pinned: 'left',
+      headerName: '{{ _("Sample Name") }}', field: 'sample_code', width: 300, minWidth: 200, pinned: 'left', resizable: true,
       cellRenderer: p => {
-        let h = '<div style="font-weight:600">' + p.value + '</div>';
+        const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        let h = '<div style="font-weight:600">' + _esc(p.value) + '</div>';
         const rej = rejectedInfo[p.data.sample_id];
-        if (rej) h += '<div style="font-size:0.7rem;color:#dc3545"><i class="bi bi-exclamation-triangle"></i> ' + rej.reason + '</div>';
+        if (rej) h += '<div style="font-size:0.7rem;color:#dc3545"><i class="bi bi-exclamation-triangle"></i> ' + _esc(rej.reason) + '</div>';
         return h;
       }
     }

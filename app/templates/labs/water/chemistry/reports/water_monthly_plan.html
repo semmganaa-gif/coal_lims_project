@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         const res = await r.json();
         if (res.success) { alert('{{ _("Saved successfully!") }}'); location.reload(); }
-        else { alert('{{ _("Error") }}: ' + (res.error || '')); }
+        else { alert('{{ _("Error") }}: ' + (res.message || res.error || '')); }
       } catch(e) { alert('{{ _("Error") }}: ' + e.message); }
     });
   }
