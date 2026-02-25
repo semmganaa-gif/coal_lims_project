@@ -37,10 +37,8 @@ def _secret_key():
     if os.path.exists(key_path):
         with open(key_path, "r", encoding="utf-8") as f:
             return f.read().strip()
-    key = secrets.token_urlsafe(48)
-    with open(key_path, "w", encoding="utf-8") as f:
-        f.write(key)
-    return key
+    # 3) Файл байхгүй бол runtime-д л ашиглах түр түлхүүр буцаана (import үед бичихгүй)
+    return secrets.token_urlsafe(48)
 
 class Config:
     TIMEZONE = _tz()
@@ -105,6 +103,11 @@ class Config:
     # Production-д зөвхөн өөрийн домэйнээс холболт зөвшөөрнө
     # Development-д бүх origin-ээс зөвшөөрнө (ngrok, localhost гэх мэт)
     SOCKETIO_CORS_ORIGINS = os.getenv('SOCKETIO_CORS_ORIGINS', '*' if ENV == 'development' else None)
+
+    # ========================================================
+    # 🔒 RATE LIMIT STORAGE (Redis гэх мэт)
+    # ========================================================
+    RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
 
     # ========================================================
     # 🔒 SECURITY LOGGING CONFIGURATION

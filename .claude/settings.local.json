@@ -157,7 +157,14 @@
       "Bash(npm run build:*)",
       "Bash(xargs:*)",
       "Bash(for id in 20 21 22 23 24 25)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(cmd.exe /c \"start cmd /k python run.py\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(# Test with correct URLs curl -s -o /dev/null -w \"\"Dashboard: %{http_code}\\\\n\"\" http://localhost:5000/labs/water-lab/chemistry/reports/dashboard curl -s -o /dev/null -w \"\"Standards API: %{http_code}\\\\n\"\" http://localhost:5000/labs/water-lab/chemistry/api/standards curl -s -o /dev/null -w \"\"Consumption: %{http_code}\\\\n\"\" http://localhost:5000/labs/water-lab/chemistry/reports/consumption curl -s -w \"\"Save API \\(no auth\\): %{http_code}\\\\n\"\" -X POST -H \"\"Content-Type: application/json\"\" -d ''{}'' http://localhost:5000/labs/water-lab/chemistry/api/save_results)",
+      "Bash(node:*)",
+      "Bash(npm --version:*)",
+      "Bash(npm i:*)",
+      "Bash(codex:*)"
     ],
     "deny": [],
     "ask": []

@@ -45,7 +45,7 @@ csrf = CSRFProtect()
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["10000 per day", "500 per hour"],  # LIMS production хязгаар
-    storage_uri="memory://"
+    storage_uri=None
 )
 
 
@@ -69,6 +69,9 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     login.init_app(app)
     csrf.init_app(app)
+    # Limiter storage (Redis гэх мэт). Default: memory://
+    app.config.setdefault("RATELIMIT_STORAGE_URI", "memory://")
+    limiter.storage_uri = app.config["RATELIMIT_STORAGE_URI"]
     limiter.init_app(app)
     mail.init_app(app)
 

@@ -63,28 +63,35 @@
   }
 
   // Цэвэршилт % = (БХХ_оролт - БХХ_гаралт) / БХХ_оролт × 100
-  // Гаралт/Оролт keyword matching (жинхэнэ дээжний нэрсийн загвар)
-  var _OUTLET_KW = ['гаралтын', 'цэвэршүүлсэн', 'гаралт'];
-  var _INLET_KW  = ['боловсруулагдах', 'түүхий'];
+  // Станц нэрээр matching: "УУЦБ-ийн 6м3/ц гаралтын ус (Гаралт)_2026-02-25"
+  //   → station = "УУЦБ-ийн 6м3/ц гаралтын ус", direction = "Гаралт"
 
-  function _isOutlet(code) {
+  // Станц нэр + чиглэл задлах
+  function _parseStation(code) {
+    // "Нэр (Оролт)_2026-02-25" эсвэл "Нэр (Гаралт)_2026-02-25"
+    var m = (code || '').match(/^(.+?)\s*\((Оролт|Гаралт)\)/i);
+    if (m) return { station: m[1].trim(), dir: m[2].toLowerCase() };
+    // Fallback: marker байхгүй бол keyword-р тодорхойлох
     var lc = (code || '').toLowerCase();
-    return _OUTLET_KW.some(function(kw) { return lc.includes(kw); });
-  }
-  function _isInlet(code) {
-    var lc = (code || '').toLowerCase();
-    return _INLET_KW.some(function(kw) { return lc.includes(kw); });
+    var base = code.replace(/_\d{4}-\d{2}-\d{2}$/, '').trim();
+    if (['цэвэршүүлсэн', 'гаралт'].some(function(kw) { return lc.includes(kw); }))
+      return { station: base, dir: 'гаралт' };
+    if (['боловсруулагдах', 'түүхий'].some(function(kw) { return lc.includes(kw); }))
+      return { station: base, dir: 'оролт' };
+    return null;
   }
 
   function calcPurification(p) {
-    if (!_isOutlet(p.data.sample_code)) return null;
+    var outInfo = _parseStation(p.data.sample_code);
+    if (!outInfo || outInfo.dir !== 'гаралт') return null;
     var bodOut = calcBOD5(p.data);
     if (bodOut == null) return null;
-    // Grid-ээс оролтын дээжийг хайх
+    // Ижил станцын оролтын дээжийг хайх
     var bodIn = null;
     p.api.forEachNode(function(n) {
       if (bodIn != null) return;
-      if (_isInlet(n.data.sample_code)) {
+      var inInfo = _parseStation(n.data.sample_code);
+      if (inInfo && inInfo.dir === 'оролт' && inInfo.station === outInfo.station) {
         var b = calcBOD5(n.data);
         if (b != null) bodIn = b;
       }
@@ -199,13 +206,15 @@
       const c2 = calcDO(d, 5);
       const c3 = calcC3(d);
       const bod5 = calcBOD5(d);
-      // Цэвэршилт %-г динамикаар тооцоолох (keyword matching)
+      // Цэвэршилт %-г динамикаар тооцоолох (станц matching)
       let purif = null;
-      if (_isOutlet(d.sample_code) && bod5 != null) {
+      const outInfo = _parseStation(d.sample_code);
+      if (outInfo && outInfo.dir === 'гаралт' && bod5 != null) {
         let bodIn = null;
         api.forEachNode(nd => {
           if (bodIn != null) return;
-          if (_isInlet(nd.data.sample_code)) {
+          const inInfo = _parseStation(nd.data.sample_code);
+          if (inInfo && inInfo.dir === 'оролт' && inInfo.station === outInfo.station) {
             const b = calcBOD5(nd.data);
             if (b != null) bodIn = b;
           }

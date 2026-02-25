@@ -37,11 +37,9 @@ def _load_or_generate_key(env_var: str, filename: str, length: int = 48) -> str:
     if os.path.exists(key_path):
         with open(key_path, 'r', encoding='utf-8') as f:
             return f.read().strip()
-    os.makedirs(_INSTANCE_DIR, exist_ok=True)
+    # Файл байхгүй үед import дээр бичихгүй — runtime-д түр түлхүүр ашиглана
     key = secrets.token_urlsafe(length)
-    with open(key_path, 'w', encoding='utf-8') as f:
-        f.write(key)
-    logger.info(f"Generated new {env_var} → instance/{filename}")
+    logger.warning(f"{env_var} not found; using ephemeral key (not persisted).")
     return key
 
 

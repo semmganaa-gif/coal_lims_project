@@ -7,11 +7,28 @@ ISO 17025 дагуу өгөгдөл экспорт хийх функцүүд.
 """
 
 import logging
+import json
 from io import BytesIO
 from typing import List, Dict, Any
 from flask import send_file
 
 logger = logging.getLogger(__name__)
+
+_FORMULA_PREFIXES = ("=", "+", "-", "@")
+
+
+def _sanitize_excel_value(value: Any) -> Any:
+    """
+    Excel formula injection хамгаалалт.
+    String утга =, +, -, @-оор эхэлбэл өмнө нь single-quote нэмнэ.
+    """
+    if value is None:
+        return value
+    if isinstance(value, str):
+        if value.startswith(_FORMULA_PREFIXES):
+            return "'" + value
+        return value
+    return value
 
 
 def export_to_excel(
@@ -40,7 +57,7 @@ def export_to_excel(
     for row in data:
         df_row = {}
         for col in columns:
-            df_row[col['label']] = row.get(col['key'], '')
+            df_row[col['label']] = _sanitize_excel_value(row.get(col['key'], ''))
         df_data.append(df_row)
 
     # Workbook үүсгэх
@@ -70,7 +87,7 @@ def export_to_excel(
     # Өгөгдөл бичих
     for row_idx, row in enumerate(data, 2):
         for col_idx, col in enumerate(columns, 1):
-            value = row.get(col['key'], '')
+            value = _sanitize_excel_value(row.get(col['key'], ''))
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             cell.border = thin_border
 
@@ -109,6 +126,35 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
         {"key": "status", "label": "Статус"},
         {"key": "delivered_by", "label": "Хүлээлгэж өгсөн"},
     ]
+    if _include_results:
+        columns.append({"key": "analysis_results", "label": "Шинжилгээний үр дүн"})
+
+    results_map = {}
+    if _include_results and samples:
+        try:
+            from app import db
+            from app.models import AnalysisResult
+
+            sample_ids = [s.id for s in samples]
+            rows = (
+                db.session.query(
+                    AnalysisResult.sample_id,
+                    AnalysisResult.analysis_code,
+                    AnalysisResult.final_result,
+                    AnalysisResult.status,
+                )
+                .filter(
+                    AnalysisResult.sample_id.in_(sample_ids),
+                    AnalysisResult.status.in_(["approved", "pending_review"]),
+                )
+                .all()
+            )
+            for sid, code, value, status in rows:
+                if sid not in results_map:
+                    results_map[sid] = {}
+                results_map[sid][code] = {"value": value, "status": status}
+        except Exception as e:
+            logger.error(f"Failed to build results map for export: {e}")
 
     data = []
     for s in samples:
@@ -122,6 +168,9 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
             "status": s.status,
             "delivered_by": s.delivered_by or '',
         }
+        if _include_results:
+            results = results_map.get(s.id, {})
+            row["analysis_results"] = json.dumps(results, ensure_ascii=False)
         data.append(row)
 
     return export_to_excel(data, columns, "samples_export.xlsx", "Samples")

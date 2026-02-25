@@ -173,7 +173,7 @@ class AnalysisResultRepository:
         ).all()
 
     @staticmethod
-    def update_status(result_ids: list[int], new_status: str) -> int:
+    def update_status(result_ids: list[int], new_status: str, commit: bool = True) -> int:
         """
         Олон үр дүнгийн статус шинэчлэх.
 
@@ -191,7 +191,8 @@ class AnalysisResultRepository:
             .filter(AnalysisResult.id.in_(result_ids))
             .update({AnalysisResult.status: new_status}, synchronize_session=False)
         )
-        db.session.commit()
+        if commit:
+            db.session.commit()
         return count
 
     # =========================================================================
@@ -291,7 +292,7 @@ class AnalysisResultRepository:
     # =========================================================================
 
     @staticmethod
-    def save(result: AnalysisResult) -> AnalysisResult:
+    def save(result: AnalysisResult, commit: bool = True) -> AnalysisResult:
         """
         Үр дүн хадгалах.
 
@@ -302,11 +303,12 @@ class AnalysisResultRepository:
             Хадгалагдсан AnalysisResult
         """
         db.session.add(result)
-        db.session.commit()
+        if commit:
+            db.session.commit()
         return result
 
     @staticmethod
-    def delete(result: AnalysisResult) -> bool:
+    def delete(result: AnalysisResult, commit: bool = True) -> bool:
         """
         Үр дүн устгах.
 
@@ -317,5 +319,6 @@ class AnalysisResultRepository:
             True бол амжилттай
         """
         db.session.delete(result)
-        db.session.commit()
+        if commit:
+            db.session.commit()
         return True

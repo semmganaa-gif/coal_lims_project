@@ -3,57 +3,18 @@
 """
 Coal LIMS Models Package.
 
-Re-exports all models from models.py for backward compatibility.
-Ирээдүйд энэ файлуудыг тусдаа модуль болгон задалж болно.
-
-Usage:
-    from app.models import User, Sample, AnalysisResult
+Re-exports all models from split modules for backward compatibility.
 """
 
-# Re-export everything from models.py
-from app.models.models import (
-    # Constants
-    FLOAT_EPSILON,
-
-    # Mixins
-    HashableMixin,
-
-    # User
-    User,
-
-    # Sample
-    Sample,
-    SampleCalculations,
-
-    # Analysis
-    AnalysisResult,
-    AnalysisType,
-    AnalysisProfile,
-    AnalysisResultLog,
-
-    # Equipment
-    Equipment,
-    MaintenanceLog,
-    UsageLog,
-
-    # Spare Parts
-    SparePartCategory,
-    SparePart,
-    SparePartUsage,
-    SparePartLog,
-
-    # Chemicals
-    Chemical,
-    ChemicalUsage,
-    ChemicalLog,
-    ChemicalWaste,
-    ChemicalWasteRecord,
-
-    # Quality (ISO 17025)
-    Bottle,
-    BottleConstant,
-    ControlStandard,
-    GbwStandard,
+from app.models.mixins import FLOAT_EPSILON, HashableMixin
+from app.models.core import User, Sample
+from app.models.analysis import AnalysisResult, AnalysisType, AnalysisProfile, SampleCalculations
+from app.models.analysis_audit import AnalysisResultLog
+from app.models.spare_parts import SparePartCategory, SparePart, SparePartUsage, SparePartLog
+from app.models.quality import Bottle, BottleConstant
+from app.models.settings import SystemSetting
+from app.models.quality_standards import ControlStandard, GbwStandard, AuditLog
+from app.models.quality_records import (
     CorrectiveAction,
     ProficiencyTest,
     EnvironmentalLog,
@@ -61,40 +22,15 @@ from app.models.models import (
     CustomerComplaint,
     ImprovementRecord,
     NonConformityRecord,
-
-    # Planning
-    MonthlyPlan,
-    StaffSettings,
-
-    # Chat
-    ChatMessage,
-    UserOnlineStatus,
-
-    # Audit
-    AuditLog,
-
-    # Settings
-    SystemSetting,
-
-    # License
-    SystemLicense,
-    LicenseLog,
-
-    # Washability (Theoretical Yield)
-    WashabilityTest,
-    WashabilityFraction,
-    TheoreticalYield,
-    PlantYield,
-
-    # Reports
-    ReportSignature,
-    LabReport,
-
-    # Solutions
-    SolutionPreparation,
-    SolutionRecipe,
-    SolutionRecipeIngredient,
 )
+from app.models.planning import MonthlyPlan, StaffSettings
+from app.models.chat import ChatMessage, UserOnlineStatus
+from app.models.license import SystemLicense, LicenseLog
+from app.models.washability import WashabilityTest, WashabilityFraction, TheoreticalYield, PlantYield
+from app.models.reports import ReportSignature, LabReport
+from app.models.solutions import SolutionPreparation, SolutionRecipe, SolutionRecipeIngredient
+from app.models.equipment import Equipment, MaintenanceLog, UsageLog
+from app.models.chemicals import Chemical, ChemicalUsage, ChemicalLog, ChemicalWaste, ChemicalWasteRecord
 
 __all__ = [
     # Constants

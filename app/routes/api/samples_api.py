@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 import json
 
 from sqlalchemy.orm import joinedload
+from markupsafe import escape
 from app import db, limiter
 from app.models import Sample, AnalysisResult, AnalysisResultLog
 from app.utils.datetime import now_local
@@ -199,18 +200,18 @@ def register_routes(bp):
                 [
                     f'<input type="checkbox" class="sample-checkbox" value="{s.id}">',  # 0
                     s.id,  # 1
-                    s.sample_code or "",  # 2
-                    s.client_name or "",  # 3
-                    s.sample_type or "",  # 4
-                    sample_condition_val or "",  # 5  SAMPLE CONDITION
-                    s.delivered_by or "",  # 6
-                    s.prepared_by or "",  # 7
-                    s.prepared_date.strftime("%Y-%m-%d") if s.prepared_date else "",  # 8
-                    s.notes or "",  # 9
+                    escape(s.sample_code or ""),  # 2
+                    escape(s.client_name or ""),  # 3
+                    escape(s.sample_type or ""),  # 4
+                    escape(sample_condition_val or ""),  # 5  SAMPLE CONDITION
+                    escape(s.delivered_by or ""),  # 6
+                    escape(s.prepared_by or ""),  # 7
+                    escape(s.prepared_date.strftime("%Y-%m-%d") if s.prepared_date else ""),  # 8
+                    escape(s.notes or ""),  # 9
                     s.received_date.strftime("%Y-%m-%d %H:%M") if s.received_date else "",  # 10
                     s.weight or "",  # 11
-                    workflow_status,  # 12 AGGREGATED STATUS
-                    analyses_txt,  # 13
+                    escape(workflow_status),  # 12 AGGREGATED STATUS
+                    escape(analyses_txt),  # 13
                     retention_html,  # 14 RETENTION DATE
                     action_html,  # 15
                 ]
@@ -580,6 +581,7 @@ def register_routes(bp):
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         limit = min(int(request.args.get('limit', 1000)), 5000)
+        include_results = request.args.get('include_results', 'false').lower() in ('1', 'true', 'yes')
 
         query = Sample.query.filter(Sample.lab_type == 'coal')
 
@@ -603,7 +605,7 @@ def register_routes(bp):
 
         samples = query.order_by(Sample.received_date.desc()).limit(limit).all()
 
-        excel_data = create_sample_export(samples)
+        excel_data = create_sample_export(samples, _include_results=include_results)
         filename = f"samples_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)

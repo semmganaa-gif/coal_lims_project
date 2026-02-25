@@ -1,0 +1,3 @@
+"""
+License routes package.
+"""
