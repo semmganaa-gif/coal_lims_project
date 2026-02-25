@@ -15,6 +15,19 @@
       </div>
 
       <div class="ws-header-actions">
+        <!-- Date filter -->
+        <div class="ws-filters">
+          <input type="date" id="dateFrom" class="form-control form-control-sm" title="{{ _('From') }}">
+          <span class="text-muted">—</span>
+          <input type="date" id="dateTo" class="form-control form-control-sm" title="{{ _('To') }}">
+          <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary ws-date-preset active" data-days="7">7{{ _("d") }}</button>
+            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="14">14{{ _("d") }}</button>
+            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="30">30{{ _("d") }}</button>
+            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="0">{{ _("All") }}</button>
+          </div>
+        </div>
+        <div class="vr mx-1" style="height:24px;opacity:0.2"></div>
         <!-- Export buttons -->
         <div class="btn-group">
           <button id="btnExportCsv" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
@@ -190,8 +203,10 @@
   // Config for WaterSummaryGrid
   const WATER_SUMMARY_CONFIG = {
     urls: {
-      summaryData: "{{ url_for('water.summary_data') }}"
-    }
+      summaryData: "{{ url_for('water.summary_data') }}",
+      retest: "{{ url_for('water.retest_result', result_id=0) }}".replace('/0', '')
+    },
+    csrfToken: "{{ csrf_token() }}"
   };
 </script>
 

@@ -33,6 +33,10 @@ const WaterSummaryGrid = (function() {
   // Column state storage
   var COL_STATE_KEY = 'water_summary_col_state_v2';
 
+  // Date filter state
+  var dateFrom = null;
+  var dateTo = null;
+
   // Data holders
   var chemParams = [];
   var microFields = [];
@@ -95,6 +99,81 @@ const WaterSummaryGrid = (function() {
     const name = escapeHtml(params.value || params.data.sample_name || '-');
     const code = escapeHtml(params.data.sample_code || '');
     return `<span class="ws-sample-link" title="${code}">${name}</span>`;
+  }
+
+  /* -------- RETEST CELL RENDERERS -------- */
+
+  /**
+   * Химийн баганын cellRenderer — утга + давтах товч (hover дээр харагдана)
+   */
+  function chemResultRenderer(params) {
+    if (params.value == null || params.value === '') return '';
+    var field = params.colDef.field;
+    var text = escapeHtml(formatValue(field, params.value));
+    var rid = params.data && params.data._result_ids ? params.data._result_ids[field] : null;
+    if (!rid) return text;
+    return '<span class="ws-result-cell">'
+      + '<span class="ws-result-value">' + text + '</span>'
+      + '<button class="ws-retest-btn" data-rid="' + rid + '" title="Давтах">&#x21BB;</button>'
+      + '</span>';
+  }
+
+  /**
+   * Микро баганын cellRenderer — утга + давтах товч
+   * detect баганд (ecoli, salmonella) тусгай format
+   */
+  function microResultRenderer(isDetect, isInt) {
+    return function(params) {
+      if (params.value == null || params.value === '') return '';
+      var text;
+      if (isDetect) {
+        var s = String(params.value).trim().toLowerCase();
+        if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') text = 'Not Detected';
+        else if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) text = 'Detected';
+        else text = escapeHtml(params.value);
+      } else {
+        var val = String(params.value).replace(',', '.');
+        var n = parseFloat(val);
+        if (isNaN(n)) text = escapeHtml(params.value);
+        else text = isInt ? Math.round(n).toString() : formatValue('', n);
+      }
+
+      var rid = params.data ? params.data._micro_result_id : null;
+      if (!rid) return text;
+      return '<span class="ws-result-cell">'
+        + '<span class="ws-result-value">' + text + '</span>'
+        + '<button class="ws-retest-btn" data-rid="' + rid + '" data-micro="1" title="Давтах (бүх микро устана)">&#x21BB;</button>'
+        + '</span>';
+    };
+  }
+
+  /* -------- RETEST HANDLER -------- */
+
+  function handleRetestClick(resultId, isMicro) {
+    var msg = isMicro
+      ? 'Микробиологийн бүх үр дүнг устгаж дахин оруулах уу?\n(CFU, E.coli, Salmonella бүгд устна)'
+      : 'Энэ үр дүнг устгаж дахин шинжилгээ хийх үү?';
+    if (!confirm(msg)) return;
+
+    var url = (URLS.retest || '/labs/water-lab/chemistry/api/retest') + '/' + resultId;
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CONFIG.csrfToken || ''
+      }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        refreshData();
+      } else {
+        alert('Алдаа: ' + (data.message || 'Тодорхойгүй'));
+      }
+    })
+    .catch(function(err) {
+      alert('Сүлжээний алдаа: ' + err.message);
+    });
   }
 
   /* -------- BUILD COLUMN DEFINITIONS -------- */
@@ -192,9 +271,7 @@ const WaterSummaryGrid = (function() {
         floatingFilter: false,
         type: 'numericColumn',
         headerClass: 'chem-header',
-        valueFormatter: (function(code) {
-          return function(params) { return formatValue(code, params.value); };
-        })(p.code),
+        cellRenderer: chemResultRenderer,
         cellClassRules: (function(limit) {
           return {
             'cell-over-limit': function(params) { return isOverLimit(limit, params.value); },
@@ -236,22 +313,7 @@ const WaterSummaryGrid = (function() {
         filter: false,
         floatingFilter: false,
         headerClass: headerClass,
-        valueFormatter: isDetect ? function(params) {
-          if (params.value == null || params.value === '') return '';
-          var s = String(params.value).trim().toLowerCase();
-          if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') return 'Not Detected';
-          if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) return 'Detected';
-          return params.value;
-        } : (function(isInt) {
-          return function(params) {
-            if (params.value == null || params.value === '') return '';
-            // Таслал/цэгийг боловсруулах
-            var val = String(params.value).replace(',', '.');
-            var n = parseFloat(val);
-            if (isNaN(n)) return params.value;
-            return isInt ? Math.round(n).toString() : formatValue('', n);
-          };
-        })(mc.integer),
+        cellRenderer: microResultRenderer(isDetect, !!mc.integer),
         cellClassRules: isDetect ? {
           'cell-detect-fail': function(params) { return isDetectFail(params.value); },
           'cell-detect-pass': function(params) { return isDetectPass(params.value); },
@@ -305,6 +367,17 @@ const WaterSummaryGrid = (function() {
         gridApi = params.api;
         setTimeout(restoreColumnState, 100);
       },
+      onCellClicked: function(params) {
+        // Давтах товч detect
+        if (params.event && params.event.target) {
+          var btn = params.event.target.closest('.ws-retest-btn');
+          if (btn) {
+            var rid = btn.getAttribute('data-rid');
+            var isMicro = btn.getAttribute('data-micro') === '1';
+            if (rid) handleRetestClick(rid, isMicro);
+          }
+        }
+      },
       onFirstDataRendered: function(params) {
         // Баганын өргөнийг контентоор автомат тохируулах
         autoSizeColumns();
@@ -325,7 +398,11 @@ const WaterSummaryGrid = (function() {
   /* -------- DATA LOADING -------- */
 
   function loadData(callback) {
-    const url = URLS.summaryData || '/labs/water/api/summary_data';
+    var url = URLS.summaryData || '/labs/water/api/summary_data';
+    var params = [];
+    if (dateFrom) params.push('date_from=' + encodeURIComponent(dateFrom));
+    if (dateTo) params.push('date_to=' + encodeURIComponent(dateTo));
+    if (params.length) url += '?' + params.join('&');
 
     fetch(url)
       .then(function(r) { return r.json(); })
@@ -409,7 +486,9 @@ const WaterSummaryGrid = (function() {
     gridApi.exportDataAsCsv({
       fileName: 'water_summary_' + today + '.csv',
       processCellCallback: function(params) {
-        return params.value != null ? params.value : '';
+        // cellRenderer HTML-г export-д оруулахгүй, зөвхөн raw value
+        var v = params.value;
+        return v != null ? v : '';
       },
       processHeaderCallback: function(params) {
         return (params.column.getColDef().headerName || '').replace(/\n/g, ' ');
@@ -477,6 +556,41 @@ const WaterSummaryGrid = (function() {
   }
 
   /* -------- PUBLIC API -------- */
+
+  /** Огноог YYYY-MM-DD string болгох */
+  function toDateStr(d) {
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + mm + '-' + dd;
+  }
+
+  /** Preset товчнуудын active toggle */
+  function setActivePreset(days) {
+    var btns = document.querySelectorAll('.ws-date-preset');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('active', Number(btns[i].dataset.days) === days);
+    }
+  }
+
+  /** Огнооны filter-г тохируулж data дахин ачаалах */
+  function applyDatePreset(days) {
+    var elFrom = document.getElementById('dateFrom');
+    var elTo = document.getElementById('dateTo');
+    if (days > 0) {
+      var now = new Date();
+      dateTo = toDateStr(now);
+      var from = new Date(now);
+      from.setDate(from.getDate() - days);
+      dateFrom = toDateStr(from);
+    } else {
+      dateFrom = null;
+      dateTo = null;
+    }
+    if (elFrom) elFrom.value = dateFrom || '';
+    if (elTo) elTo.value = dateTo || '';
+    setActivePreset(days);
+    refreshData();
+  }
 
   function init() {
     const btnExportCsv = document.getElementById('btnExportCsv');
@@ -592,8 +706,36 @@ const WaterSummaryGrid = (function() {
       });
     }
 
-    // Initial load
-    refreshData();
+    // ── Date filter ──
+    var elDateFrom = document.getElementById('dateFrom');
+    var elDateTo = document.getElementById('dateTo');
+
+    // Preset товчнууд
+    var presetBtns = document.querySelectorAll('.ws-date-preset');
+    for (var pi = 0; pi < presetBtns.length; pi++) {
+      presetBtns[pi].addEventListener('click', function() {
+        applyDatePreset(Number(this.dataset.days));
+      });
+    }
+
+    // Гар огноо сонголт
+    if (elDateFrom) {
+      elDateFrom.addEventListener('change', function() {
+        dateFrom = this.value || null;
+        setActivePreset(-1); // clear preset highlight
+        refreshData();
+      });
+    }
+    if (elDateTo) {
+      elDateTo.addEventListener('change', function() {
+        dateTo = this.value || null;
+        setActivePreset(-1);
+        refreshData();
+      });
+    }
+
+    // Initial load — default 7 хоног
+    applyDatePreset(7);
   }
 
   function refreshData() {

@@ -56,6 +56,11 @@ def _build_water_rows(samples, include_lab_type=False):
     micro_map = {}
     air_map = {}
     swab_map = {}
+    # result ID maps (давтах товчинд хэрэглэнэ)
+    chem_id_map = {}   # sample_id → {code → result_id}
+    micro_id_map = {}  # sample_id → result_id
+    air_id_map = {}    # sample_id → result_id
+    swab_id_map = {}   # sample_id → result_id
     for r in results:
         try:
             raw = _json.loads(r.raw_data) if isinstance(r.raw_data, str) else (r.raw_data or {})
@@ -64,15 +69,21 @@ def _build_water_rows(samples, include_lab_type=False):
 
         if r.analysis_code == 'MICRO_WATER':
             micro_map[r.sample_id] = raw
+            micro_id_map[r.sample_id] = r.id
         elif r.analysis_code == 'MICRO_AIR':
             air_map[r.sample_id] = raw
+            air_id_map[r.sample_id] = r.id
         elif r.analysis_code == 'MICRO_SWAB':
             swab_map[r.sample_id] = raw
+            swab_id_map[r.sample_id] = r.id
         else:
             if r.sample_id not in chem_map:
                 chem_map[r.sample_id] = {}
+            if r.sample_id not in chem_id_map:
+                chem_id_map[r.sample_id] = {}
             val = raw.get('value') or raw.get('result') or raw.get('average') or r.final_result
             chem_map[r.sample_id][r.analysis_code] = val
+            chem_id_map[r.sample_id][r.analysis_code] = r.id
 
     rows = []
     for s in samples:
@@ -97,6 +108,12 @@ def _build_water_rows(samples, include_lab_type=False):
         }
         if include_lab_type:
             row['lab_type'] = s.lab_type or ''
+
+        # Result ID-ууд (давтах товчинд)
+        row['_result_ids'] = chem_id_map.get(s.id, {})
+        row['_micro_result_id'] = micro_id_map.get(s.id)
+        row['_air_result_id'] = air_id_map.get(s.id)
+        row['_swab_result_id'] = swab_id_map.get(s.id)
 
         # Хими
         cres = chem_map.get(s.id, {})
@@ -378,10 +395,22 @@ def register_sample():
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
     import json as _json
+    from datetime import datetime as _dt, timedelta as _td
+
     code_upper = code.upper()
     param = ALL_WATER_PARAMS.get(code_upper)
     if not param:
         return jsonify({'error': f'Unknown analysis code: {code}'}), 404
+
+    # ── Огнооны шүүлтүүр (default: 7 хоног) ──
+    days_param = request.args.get('days', '7')
+    try:
+        filter_days = int(days_param)
+    except (ValueError, TypeError):
+        filter_days = 7
+    date_cutoff = None
+    if filter_days > 0:
+        date_cutoff = (_dt.now() - _td(days=filter_days)).date()
 
     form_templates = {
         # Шууд хэмжилт
@@ -393,8 +422,9 @@ def workspace(code):
         'DS': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'TURB': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'DUST': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'ODOR': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'SLUDGE': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
-        'BOD': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
+        'BOD': 'labs/water/chemistry/analysis_forms/bod_form.html',
         'COD': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'DO_W': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
         'CA': 'labs/water/chemistry/analysis_forms/ph_ec_form.html',
@@ -440,13 +470,17 @@ def workspace(code):
     seen = set()
     samples_to_analyze = []
 
-    # A: Одоо байгаа үр дүнтэй дээжүүд
-    existing_results_q = AnalysisResult.query.filter(
+    # A: Одоо байгаа үр дүнтэй дээжүүд (огнооны шүүлтүүрээр)
+    existing_q = AnalysisResult.query.filter(
         AnalysisResult.user_id == current_user.id,
         AnalysisResult.analysis_code == code_upper,
         ~AnalysisResult.sample_id.in_(approved_ids) if approved_ids else True
-    ).all()
-    for r in existing_results_q:
+    )
+    if date_cutoff:
+        existing_q = existing_q.join(Sample).filter(
+            Sample.received_date >= date_cutoff
+        )
+    for r in existing_q.all():
         if r.sample_id not in seen:
             s = db.session.get(Sample, r.sample_id)
             if s:
@@ -532,20 +566,75 @@ def workspace(code):
         rejected_samples_info=rejected_samples_info,
         error_labels={},
         related_equipments=related_equipments,
+        filter_days=filter_days,
     )
 
 
 # ============ API endpoints ============
+
+@water_bp.route('/api/retest/<int:result_id>', methods=['POST'])
+@login_required
+@lab_required('water')
+def retest_result(result_id):
+    """Давтах шинжилгээ — хуучин үр дүнг устгаж аудит бичлэг үүсгэнэ."""
+    from app.models import AnalysisResultLog
+    from app.utils.database import safe_commit
+
+    result = db.session.get(AnalysisResult, result_id)
+    if not result:
+        return jsonify({'success': False, 'message': 'Үр дүн олдсонгүй'}), 404
+
+    # Аудит бичлэг (result устахаас ӨМНӨ)
+    sample = db.session.get(Sample, result.sample_id)
+    log = AnalysisResultLog(
+        user_id=current_user.id,
+        sample_id=result.sample_id,
+        analysis_result_id=result.id,
+        analysis_code=result.analysis_code,
+        action='RETEST_DELETED',
+        raw_data_snapshot=result.raw_data,
+        final_result_snapshot=result.final_result,
+        sample_code_snapshot=sample.sample_code if sample else None,
+        reason=f'Давтах шинжилгээ ({current_user.username})',
+    )
+    log.data_hash = log.compute_hash()
+    db.session.add(log)
+
+    # Үр дүн устгах
+    db.session.delete(result)
+
+    if not safe_commit():
+        return jsonify({'success': False, 'message': 'DB алдаа'}), 500
+
+    return jsonify({
+        'success': True,
+        'message': f'{result.analysis_code} үр дүн устгагдлаа. Дахин оруулна уу.'
+    })
+
 
 @water_bp.route('/api/eligible/<code>')
 @login_required
 @lab_required('water')
 def eligible_samples(code):
     """Боломжит дээж (усны химийн шинжилгээнд)."""
-    samples = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'water & micro']),  # microbiology хасагдсан
+    from datetime import datetime as _dt, timedelta as _td
+
+    q = Sample.query.filter(
+        Sample.lab_type.in_(['water', 'water & micro']),
         Sample.status.in_(['new', 'in_progress'])
-    ).all()
+    )
+
+    # Огнооны шүүлтүүр (workspace-тэй sync)
+    days_param = request.args.get('days', '7')
+    try:
+        filter_days = int(days_param)
+    except (ValueError, TypeError):
+        filter_days = 7
+    if filter_days > 0:
+        cutoff = (_dt.now() - _td(days=filter_days)).date()
+        q = q.filter(Sample.received_date >= cutoff)
+
+    samples = q.order_by(Sample.received_date.desc()).all()
     result = []
     for s in samples:
         result.append({
@@ -575,10 +664,17 @@ def save_results():
         return jsonify({'error': 'Sample not found'}), 404
 
     import json
+
+    # final_result: raw_data-аас тоон үр дүн авах
+    final_val = to_float(
+        results.get('result') or results.get('value') or results.get('average')
+    )
+
     ar = AnalysisResult(
         sample_id=sample_id,
         analysis_code=analysis_code,
         raw_data=json.dumps(results, ensure_ascii=False),
+        final_result=final_val,
         user_id=current_user.id,
     )
     db.session.add(ar)

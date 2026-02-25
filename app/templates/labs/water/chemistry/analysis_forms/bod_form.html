@@ -1,0 +1,232 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">{{ _("Winkler Titration") }} (5 day)</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS — BOD₅ (БХХ5)</h6>
+  <small class="text-muted">
+    <strong>c</strong> = 199.2 / V (Na₂S₂O₃)<br>
+    <strong>K</strong> = 8 × c / 100<br>
+    <strong>C</strong> = K × Vt<sub>avg</sub> (mg/L)<br>
+    <strong>C₃</strong> = C₁ − C₂<br>
+    <strong>БХХ5</strong> = (C₃ − C₃<sub>хоосон</sub>) × V₁/V₂
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  function calcConc(v) {
+    if (v == null || v === 0) return null;
+    return 199.2 / v;
+  }
+
+  function calcK(v_titer) {
+    const c = calcConc(v_titer);
+    if (c == null) return null;
+    return 8 * c / 100;
+  }
+
+  function calcVtAvg(vt1, vt2) {
+    if (vt1 != null && vt2 != null) return (vt1 + vt2) / 2;
+    return vt1 ?? vt2 ?? null;
+  }
+
+  function calcDO(d, day) {
+    const v_titer = day === 0 ? d.v_titer_0 : d.v_titer_5;
+    const vt1 = day === 0 ? d.vt1_0 : d.vt1_5;
+    const vt2 = day === 0 ? d.vt2_0 : d.vt2_5;
+    const k = calcK(v_titer);
+    const vt_avg = calcVtAvg(vt1, vt2);
+    if (k == null || vt_avg == null) return null;
+    return k * vt_avg;
+  }
+
+  function calcC3(d) {
+    const c1 = calcDO(d, 0);
+    const c2 = calcDO(d, 5);
+    if (c1 == null || c2 == null) return null;
+    return c1 - c2;
+  }
+
+  function calcDilution(d) {
+    const v1 = d.v1_dil, v2 = d.v2_sample;
+    if (v1 == null || v2 == null || v2 === 0) return 1;
+    return v1 / v2;
+  }
+
+  function calcBOD5(d) {
+    const c3 = calcC3(d);
+    if (c3 == null) return null;
+    const blank = d.c3_blank || 0;
+    return (c3 - blank) * calcDilution(d);
+  }
+
+  // Цэвэршилт % = (БХХ_оролт - БХХ_гаралт) / БХХ_оролт × 100
+  // Гаралт/Оролт keyword matching (жинхэнэ дээжний нэрсийн загвар)
+  var _OUTLET_KW = ['гаралтын', 'цэвэршүүлсэн', 'гаралт'];
+  var _INLET_KW  = ['боловсруулагдах', 'түүхий'];
+
+  function _isOutlet(code) {
+    var lc = (code || '').toLowerCase();
+    return _OUTLET_KW.some(function(kw) { return lc.includes(kw); });
+  }
+  function _isInlet(code) {
+    var lc = (code || '').toLowerCase();
+    return _INLET_KW.some(function(kw) { return lc.includes(kw); });
+  }
+
+  function calcPurification(p) {
+    if (!_isOutlet(p.data.sample_code)) return null;
+    var bodOut = calcBOD5(p.data);
+    if (bodOut == null) return null;
+    // Grid-ээс оролтын дээжийг хайх
+    var bodIn = null;
+    p.api.forEachNode(function(n) {
+      if (bodIn != null) return;
+      if (_isInlet(n.data.sample_code)) {
+        var b = calcBOD5(n.data);
+        if (b != null) bodIn = b;
+      }
+    });
+    if (bodIn == null || bodIn === 0) return null;
+    return ((bodIn - bodOut) / bodIn) * 100;
+  }
+
+  var formColumns = [
+    // ── Шингэрүүлэлт ──
+    {
+      headerName: '{{ _("Dilution") }}',
+      children: [
+        { headerName: 'V₁ (мл)', field: 'v1_dil', width: 78, type: 'numericColumn', ...editCol,
+          headerTooltip: '{{ _("Total volume, mL") }}' },
+        { headerName: 'V₂ (мл)', field: 'v2_sample', width: 78, type: 'numericColumn', ...editCol,
+          headerTooltip: '{{ _("Sample volume, mL") }}' },
+      ]
+    },
+    // ── 0-р өдөр (C₁) ──
+    {
+      headerName: '{{ _("Day 0") }} (C₁)',
+      children: [
+        { headerName: 'V титр', field: 'v_titer_0', width: 78, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+          headerTooltip: 'Na₂S₂O₃ {{ _("titer, mL") }}' },
+        { headerName: 'Vt₁', field: 'vt1_0', width: 70, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'Vt₂', field: 'vt2_0', width: 70, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        {
+          headerName: 'C₁', field: 'c1_do', width: 82,
+          valueGetter: p => calcDO(p.data, 0),
+          valueFormatter: fmt3,
+          cellStyle: { fontWeight: 'bold', color: '#0d6efd' },
+          headerTooltip: 'K × Vt_avg (mg/L)'
+        },
+      ]
+    },
+    // ── 5-р өдөр (C₂) ──
+    {
+      headerName: '{{ _("Day 5") }} (C₂)',
+      children: [
+        { headerName: 'V титр', field: 'v_titer_5', width: 78, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
+          headerTooltip: 'Na₂S₂O₃ {{ _("titer, mL") }}' },
+        { headerName: 'Vt₁', field: 'vt1_5', width: 70, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'Vt₂', field: 'vt2_5', width: 70, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        {
+          headerName: 'C₂', field: 'c2_do', width: 82,
+          valueGetter: p => calcDO(p.data, 5),
+          valueFormatter: fmt3,
+          cellStyle: { fontWeight: 'bold', color: '#198754' },
+          headerTooltip: 'K × Vt_avg (mg/L)'
+        },
+      ]
+    },
+    // ── Үр дүн ──
+    { headerName: 'C₃ хоос', field: 'c3_blank', width: 78, type: 'numericColumn', ...editCol,
+      valueFormatter: fmt2,
+      cellStyle: { color: '#6b7280', fontStyle: 'italic' },
+      headerTooltip: '{{ _("Blank C₃ correction") }}'
+    },
+    {
+      headerName: 'БХХ5', field: 'result', width: 88,
+      valueGetter: p => calcBOD5(p.data),
+      valueFormatter: fmt1,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) }),
+      headerTooltip: '(C₃ − C₃_хоос) × V₁/V₂'
+    },
+    { headerName: 'Цэвэр %', field: 'purification', width: 82,
+      valueGetter: p => calcPurification(p),
+      valueFormatter: fmt1,
+      cellStyle: p => {
+        if (p.value != null) return { fontWeight: '600', color: p.value >= 50 ? '#059669' : '#dc2626' };
+        return {};
+      },
+      headerTooltip: '(БХХ_оролт − БХХ_гаралт) / БХХ_оролт × 100'
+    },
+  ];
+
+  var editableFields = ['v1_dil', 'v2_sample', 'v_titer_0', 'vt1_0', 'vt2_0', 'v_titer_5', 'vt1_5', 'vt2_5', 'c3_blank', 'notes'];
+  var computedCols = ['c1_do', 'c2_do', 'result', 'purification'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id];
+    const raw = ex?.raw_data || {};
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: ex && ex.status !== 'rejected',
+      v1_dil: raw.v1_dil ?? null,
+      v2_sample: raw.v2_sample ?? null,
+      v_titer_0: raw.v_titer_0 ?? null,
+      vt1_0: raw.vt1_0 ?? null,
+      vt2_0: raw.vt2_0 ?? null,
+      v_titer_5: raw.v_titer_5 ?? null,
+      vt1_5: raw.vt1_5 ?? null,
+      vt2_5: raw.vt2_5 ?? null,
+      c3_blank: raw.c3_blank ?? null,
+      purification: raw.purification ?? null,
+      notes: raw.notes || ''
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function collectSaveItems() {
+    const api = window.waterGridApi;
+    const items = [];
+    api.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const c1 = calcDO(d, 0);
+      const c2 = calcDO(d, 5);
+      const c3 = calcC3(d);
+      const bod5 = calcBOD5(d);
+      // Цэвэршилт %-г динамикаар тооцоолох (keyword matching)
+      let purif = null;
+      if (_isOutlet(d.sample_code) && bod5 != null) {
+        let bodIn = null;
+        api.forEachNode(nd => {
+          if (bodIn != null) return;
+          if (_isInlet(nd.data.sample_code)) {
+            const b = calcBOD5(nd.data);
+            if (b != null) bodIn = b;
+          }
+        });
+        if (bodIn != null && bodIn !== 0) purif = ((bodIn - bod5) / bodIn) * 100;
+      }
+      items.push({
+        sample_id: d.sample_id,
+        raw_data: {
+          v1_dil: d.v1_dil, v2_sample: d.v2_sample,
+          v_titer_0: d.v_titer_0, vt1_0: d.vt1_0, vt2_0: d.vt2_0,
+          c1_do: c1,
+          v_titer_5: d.v_titer_5, vt1_5: d.vt1_5, vt2_5: d.vt2_5,
+          c2_do: c2,
+          c3: c3, c3_blank: d.c3_blank,
+          result: bod5,
+          purification: purif,
+          notes: d.notes
+        }
+      });
+    });
+    return items;
+  }
+{% endblock %}
