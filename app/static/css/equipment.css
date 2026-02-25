@@ -418,6 +418,14 @@
   z-index: -1;
 }
 
+/* ==================== LAPTOP RESPONSIVE ==================== */
+@media (max-height: 900px) {
+  .eq-grid-wrapper {
+    height: calc(100vh - 230px);
+    min-height: 350px;
+  }
+}
+
 /* ==================== PRINT STYLES ==================== */
 @media print {
   .btn, .navbar, footer { display: none !important; }

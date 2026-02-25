@@ -413,7 +413,31 @@ body { background: var(--ws-bg); background-attachment: fixed; }
 .ws-stat-item.chem { color: var(--ws-primary); }
 .ws-stat-item.micro { color: var(--ws-secondary); }
 
-/* Responsive */
+/* Responsive — Laptop */
+@media (max-height: 900px) {
+  .ws-page-wrap {
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .ws-header {
+    padding: 0.6rem 1rem;
+    gap: 0.5rem;
+  }
+  .ws-header-left h1 {
+    font-size: 1rem;
+  }
+  .ws-standards-row {
+    padding: 0.3rem 0.5rem;
+  }
+  .ws-grid-card .card-header {
+    padding: 0.4rem 0.75rem;
+  }
+  .ag-theme-alpine {
+    --ag-row-height: 26px;
+    --ag-header-height: 28px;
+  }
+}
+
 @media (max-width: 992px) {
   .ws-header-top {
     flex-direction: column;

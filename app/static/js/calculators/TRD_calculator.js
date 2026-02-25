@@ -127,7 +127,6 @@
 
     // --- Глобал утгуудыг авах ---
     const kt = ktFromTemp(TEMP_INPUT()?.value ?? 20.0);
-    const tol = Number(TOL_INPUT()?.value ?? 0.02);
     const mad = Number(MAD_BY_SAMPLE[sampleId]);
 
     if (isNaN(mad)) {
@@ -157,8 +156,21 @@
     // --- Тооцоолол ---
     const r1 = calcTRD(p1_m, p1_m1, p1_m2, mad, kt);
     const r2 = calcTRD(p2_m, p2_m1, p2_m2, mad, kt);
-    
+
     let avg = null, diff = null;
+
+    // Урьдчилсан дундаж → тохирцын зөрүүг сонгох (TRD >= 4.0 бол 0.04)
+    let prelimAvg = null;
+    if (r1 != null && r2 != null) prelimAvg = (r1 + r2) / 2.0;
+    else if (r1 != null) prelimAvg = r1;
+
+    const tol = (typeof getRepeatabilityLimit === 'function' && prelimAvg != null)
+      ? (getRepeatabilityLimit('TRD', prelimAvg) ?? 0.02)
+      : 0.02;
+
+    // Tolerance input-г шинэчлэх (мэдээллийн зориулалтаар)
+    const tolInput = TOL_INPUT();
+    if (tolInput) tolInput.value = tol;
 
     if (r1 != null && r2 != null) {
       diff = Math.abs(r1 - r2);

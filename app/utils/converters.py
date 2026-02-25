@@ -24,7 +24,10 @@ def to_float(v: Any) -> Optional[float]:
     if v is None:
         return None
     if isinstance(v, (int, float)):
-        return float(v)
+        f = float(v)
+        if f != f or f == float('inf') or f == float('-inf'):  # NaN / Infinity
+            return None
+        return f
     if isinstance(v, str):
         s = v.strip().replace(" ", "").replace("\u00A0", "")
         if not s or s.lower() in ("null", "none", "na", "n/a", "-"):

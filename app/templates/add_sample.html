@@ -381,6 +381,11 @@
     background: linear-gradient(135deg, #fffbeb, #fef3c7);
     border-color: #fde68a;
   }
+  .config-row {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .config-row .config-group { flex: 1; }
 
   /* Unit Options */
   .unit-options {
@@ -1065,6 +1070,26 @@
                 <div class="config-group">
                   <label class="config-label">{{ _('Lab number') }}</label>
                   {{ form.lab_number(class="config-input", id="lab_number", placeholder="Lab #") }}
+                </div>
+              </div>
+              <div id="wtl-mg-field" class="wtl-subtype" style="display:none;">
+                <div class="config-row">
+                  <div class="config-group">
+                    <label class="config-label">{{ _('Module') }}</label>
+                    {{ form.wtl_module(class="config-input", id="wtl_module") }}
+                  </div>
+                  <div class="config-group">
+                    <label class="config-label">{{ _('Supplier') }}</label>
+                    {{ form.wtl_supplier(class="config-input", id="wtl_supplier", placeholder="Supplier") }}
+                  </div>
+                  <div class="config-group">
+                    <label class="config-label">{{ _('Vehicle No.') }}</label>
+                    {{ form.wtl_vehicle(class="config-input", id="wtl_vehicle", placeholder="Vehicle #") }}
+                  </div>
+                </div>
+                <div class="config-group" style="margin-top: 0.5rem;">
+                  <label class="config-label">{{ _('Preview') }}</label>
+                  <input type="text" id="wtl_mg_preview" class="config-input" readonly style="background:#f1f5f9; color:#475569;">
                 </div>
               </div>
               <div id="wtl-other-field" class="wtl-subtype" style="display:none;">

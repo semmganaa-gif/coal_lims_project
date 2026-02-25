@@ -17,8 +17,8 @@
   </div>
   <div class="col-md-6">
     <label class="form-label">{{ _("Tolerance Limit") }} (T)</label>
-    <input type="number" step="0.001" class="form-control" id="trd-tol" value="0.02">
-    <div class="form-text">{{ _("TRD limit, default 0.02.") }}</div>
+    <input type="number" step="0.001" class="form-control bg-light" id="trd-tol" value="0.02" readonly>
+    <div class="form-text">{{ _("Auto: 0.02 (TRD &lt; 4), 0.04 (TRD &ge; 4)") }}</div>
   </div>
 </div>
 
@@ -41,7 +41,7 @@
   let draftMgr;
 
   // ✨ TRD-specific constants
-  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['TRD'])) || { single:{ limit:0.02, mode:'abs' } };
+  const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS[ANALY_CODE] || window.LIMS_LIMITS['TRD'])) || { bands:[{upper:4.0,limit:0.02,mode:'abs'},{upper:Infinity,limit:0.04,mode:'abs'}] };
   const BOTTLE_CACHE = {};
 
   // --- 2. HELPERS ---
@@ -681,7 +681,6 @@
           return;
         }
         const kt = ktFromTemp(parseFloat(document.getElementById('trd-temp-c')?.value || 20));
-        const tol = parseFloat(document.getElementById('trd-tol')?.value || '');
 
         const res1 = computeResult(p1.m, p1.m1, p1.m2, mad, kt);
         const res2 = computeResult(p2.m, p2.m1, p2.m2, mad, kt);
@@ -695,8 +694,10 @@
         const avg = (res1 + res2) / 2;
         const diff = Math.abs(res1 - res2);
 
-        const lim = LIMIT_RULE.single || { limit: 0.02, mode: 'abs' };
-        const thr = isFinite(tol) ? tol : (lim.mode === 'percent' && avg != null ? Math.abs(avg * lim.limit) : lim.limit);
+        // Тохирцын зөрүүг avg-ээс хамааруулан сонгох (TRD >= 4.0 → 0.04)
+        const thr = (typeof getRepeatabilityLimit === 'function')
+          ? (getRepeatabilityLimit('TRD', avg) ?? 0.02)
+          : (avg >= 4.0 ? 0.04 : 0.02);
         const reviewFlag = (diff != null && thr != null) ? Math.abs(diff) > thr : false;
 
         // ✅ Backend expectation: top-level diff/avg болон repeatability object
@@ -730,7 +731,7 @@
             temp_c: parseFloat(document.getElementById('trd-temp-c')?.value || 20),
             kt_used: kt,
             limit_used: thr,
-            limit_mode: lim.mode || 'abs',
+            limit_mode: 'abs',
 
             // ✅ Repeatability (backend тооцоолол хийж, limit шалгаж, t_exceeded тогтооно)
             repeatability: {

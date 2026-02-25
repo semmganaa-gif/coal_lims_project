@@ -304,7 +304,7 @@
       this.eGui.style.alignItems = 'center';
       const label = document.createElement('span');
       label.classList.add('ag-header-cell-text');
-      label.innerHTML = params.displayName;
+      label.textContent = params.displayName;
       this.eGui.appendChild(label);
       if (params.enableSorting) {
         this.eGui.style.cursor = 'pointer';

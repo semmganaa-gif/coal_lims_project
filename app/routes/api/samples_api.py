@@ -249,6 +249,10 @@ def register_routes(bp):
         samples = get_samples_with_results(exclude_archived=True, sort_by="full")
         summary_data = build_sample_summary_data(samples)
 
+        from app.config.display_precision import DECIMAL_PLACES, DEFAULT_DECIMAL_PLACES
+        precision_map = {code: dp for code, dp in DECIMAL_PLACES.items()}
+        precision_map["_default"] = DEFAULT_DECIMAL_PLACES
+
         return render_template(
             "sample_summary.html",
             title="Sample Summary",
@@ -256,6 +260,7 @@ def register_routes(bp):
             analysis_types=summary_data["analysis_types"],
             results_map=summary_data["results_map"],
             analysis_dates_map=summary_data["analysis_dates_map"],
+            precision_map=precision_map,
         )
 
     # -----------------------------------------------------------
@@ -347,7 +352,8 @@ def register_routes(bp):
         selected_year = request.args.get("year", type=int)
         selected_month = request.args.get("month", type=int)
 
-        # 1. Statistics for all archived samples (Client -> Type -> Year -> Month)
+        # 1. Statistics for archived COAL samples (Client -> Type -> Year -> Month)
+        #    Усны дээж тусдаа архивтай (water_archive)
         archive_stats = (
             db.session.query(
                 Sample.client_name,
@@ -356,7 +362,7 @@ def register_routes(bp):
                 extract("month", Sample.received_date).label("month"),
                 func.count(Sample.id).label("count"),
             )
-            .filter(Sample.status == "archived")
+            .filter(Sample.status == "archived", Sample.lab_type == "coal")
             .group_by(
                 Sample.client_name,
                 Sample.sample_type,
@@ -395,6 +401,7 @@ def register_routes(bp):
         if selected_client and selected_type:
             query = db.session.query(Sample).filter(
                 Sample.status == "archived",
+                Sample.lab_type == "coal",
                 Sample.client_name == selected_client,
                 Sample.sample_type == selected_type,
             )

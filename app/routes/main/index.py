@@ -330,9 +330,9 @@ def register_routes(bp):
                         final_sample_code = f"{lab_number}_{name}"
 
                         sample = Sample(
+                            client_name=client_name,
                             sample_code=final_sample_code,
                             user_id=current_user.id,
-                            client_name=client_name,
                             sample_type=sample_type,
                             sample_condition=form.sample_condition.data,
                             sample_date=sample_date_obj,
@@ -449,9 +449,9 @@ def register_routes(bp):
                     notes_data = form.notes.data
 
                 sample = Sample(
+                    client_name=client_name,
                     sample_code=final_sample_code,
                     user_id=current_user.id,
-                    client_name=client_name,
                     sample_type=sample_type,
                     sample_condition=form.sample_condition.data,
                     sample_date=sample_date_obj,

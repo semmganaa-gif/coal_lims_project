@@ -60,7 +60,7 @@ ANALYSIS_VALUE_RANGES: Dict[str, Tuple[float, float]] = {
     'Cl,d': (0.0, 600.0),
 
     # Caking indices
-    'CSN': (0.0, 9.6),          # Crucible swelling number 0-9.6
+    'CSN': (0.0, 9.0),          # Crucible swelling number 0-9 (0.5 increment, тусдаа шалгагдана)
     'Gi': (0, 110),             # Gray-King index 0-110
     'Y': (0, 50),               # Roga index Y
     'X': (0, 30),               # Roga index X
@@ -147,6 +147,10 @@ def validate_analysis_result(
             f"Үр дүн {min_val}-{max_val} хооронд байх ёстой "
             f"(одоо: {float_value})"
         )
+
+    # CSN: 0.5 increment шалгалт (MNS ISO 501: 0, 0.5, 1.0, ..., 9.0)
+    if analysis_code == 'CSN' and (float_value * 2) % 1 != 0:
+        return None, "CSN 0.5-ийн алхамтай байх ёстой (0, 0.5, 1.0, ..., 9.0)"
 
     return float_value, None
 

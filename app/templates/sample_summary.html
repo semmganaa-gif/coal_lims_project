@@ -25,8 +25,11 @@
       </div>
 
       <div class="btn-group">
-        <button id="exportCsvBtn" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
-          <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+        <button id="exportXlsxBtn" class="btn btn-sm btn-success" title="{{ _("Download Excel") }}">
+          <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+        </button>
+        <button id="exportCsvBtn" class="btn btn-sm btn-outline-success" title="{{ _("Download CSV") }}">
+          <i class="bi bi-filetype-csv"></i> CSV
         </button>
         <button type="button" id="copySelectedBtn" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
           <i class="bi bi-clipboard-check"></i> {{ _("Copy") }}
@@ -85,7 +88,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
@@ -109,6 +111,7 @@
       simulatorSendChpp: "/api/send_to_simulator/chpp",
       simulatorSendWtl: "/api/send_to_simulator/wtl"
     },
+    precisionMap: {{ precision_map | tojson }},
     analysisTypes: [
       {% for at in analysis_types %}
       { code: "{{ at.code }}", header: "{{ at.code|fmt_code }}" },
@@ -134,6 +137,7 @@
   };
 </script>
 
+<script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calendar-module.js') }}"></script>
 <script src="{{ url_for('static', filename='js/sample_summary.js') }}"></script>
 {% endblock %}

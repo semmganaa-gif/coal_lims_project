@@ -283,6 +283,10 @@ def register_routes(bp):
     @login_required
     @limiter.limit("100 per minute")
     async def save_results():
+        # Role check: зөвхөн chemist, senior, admin хадгалах эрхтэй
+        if getattr(current_user, "role", None) not in ("chemist", "senior", "admin"):
+            return jsonify({"success": False, "message": "Шинжилгээний үр дүн хадгалах эрхгүй"}), 403
+
         data = request.get_json(silent=True)
 
         if data is None:
@@ -346,6 +350,8 @@ def register_routes(bp):
 
                     # --- 2. Normalization & Calculation ---
                     raw_in = item.get("raw_data") or {}
+                    if not isinstance(raw_in, dict):
+                        raise ValueError("raw_data нь dict байх ёстой")
 
                     # MG flat formats (no p1/p2 structure) — skip normalization
                     _mg_flat = (
@@ -545,7 +551,9 @@ def register_routes(bp):
                     # --- 4. DB Operations ---
                     existing = (
                         AnalysisResult.query.filter_by(sample_id=sample_id, analysis_code=analysis_code)
-                        .order_by(AnalysisResult.id.desc()).first()
+                        .order_by(AnalysisResult.id.desc())
+                        .with_for_update()
+                        .first()
                     )
 
                     action = ""
@@ -749,7 +757,8 @@ def register_routes(bp):
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({"message": "Мэдээллийн сан хадгалах алдаа", "error": str(e)}), 500
+            current_app.logger.error(f"DB save error: {e}", exc_info=True)
+            return jsonify({"message": "Мэдээллийн сан хадгалах алдаа"}), 500
 
         # Response
         response_data = {

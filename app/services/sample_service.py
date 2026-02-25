@@ -263,8 +263,8 @@ def build_sample_summary_data(samples: list[Sample]) -> dict[str, Any]:
                 raw_canonical_data, PARAMETER_DEFINITIONS
             )
         except Exception as e:
-            logger.warning(f"Calculation error for sample {sample_id}: {e}")
-            all_calculated_data = raw_canonical_data
+            logger.error(f"Calculation error for sample {sample_id}: {e}", exc_info=True)
+            all_calculated_data = {**raw_canonical_data, "_calc_error": True}
 
         # Template-д зориулж alias руу буцаах
         final_data_for_template = _map_to_template_codes(all_calculated_data)

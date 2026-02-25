@@ -446,7 +446,7 @@ msgstr "Хүлээгдэж буй"
 #: app/templates/quality/complaints_detail.html:75
 #: app/templates/quality/complaints_form.html:230
 msgid "Rejected"
-msgstr "Татгалзсан"
+msgstr "Буцаагдсан"
 
 #: app/templates/ahlah_dashboard.html:848
 msgid "shift"
@@ -681,7 +681,7 @@ msgstr "Бүгдийг батлах"
 
 #: app/templates/ahlah_dashboard.html:975
 msgid "Reject All"
-msgstr "Бүгдийг татгалзах"
+msgstr "Бүгдийг буцаах"
 
 #: app/templates/ahlah_dashboard.html:978
 #: app/templates/ahlah_dashboard.html:1027
@@ -721,11 +721,11 @@ msgstr "Цуцлах"
 
 #: app/templates/ahlah_dashboard.html:999
 msgid "Reject Result"
-msgstr "Үр дүн татгалзах"
+msgstr "Үр дүн буцаах"
 
 #: app/templates/ahlah_dashboard.html:1011
 msgid "Rejection Reason (KPI Code)"
-msgstr "Татгалзах шалтгаан (KPI код)"
+msgstr "Буцаах шалтгаан (KPI код)"
 
 #: app/templates/ahlah_dashboard.html:1014
 #: app/templates/ahlah_dashboard.html:1053
@@ -787,19 +787,19 @@ msgstr "8. Гомдол / Хяналтын шинжилгээ"
 #: app/templates/ahlah_dashboard.html:1105
 #: app/templates/quality/control_charts.html:346
 msgid "Reject"
-msgstr "Татгалзах"
+msgstr "Буцаах"
 
 #: app/templates/ahlah_dashboard.html:1042
 msgid "Reject Multiple Results"
-msgstr "Олон үр дүнг татгалзах"
+msgstr "Олон үр дүнг буцаах"
 
 #: app/templates/ahlah_dashboard.html:1048
 msgid "results will be rejected."
-msgstr "үр дүнг татгалзана."
+msgstr "үр дүнг буцаана."
 
 #: app/templates/ahlah_dashboard.html:1051
 msgid "Rejection Reason"
-msgstr "Татгалзах шалтгаан"
+msgstr "Буцаах шалтгаан"
 
 #: app/templates/ahlah_dashboard.html:1060
 msgid "Additional Remarks"
@@ -908,7 +908,7 @@ msgstr "Өнөөдөр шинжилгээ байхгүй"
 
 #: app/templates/ahlah_dashboard.html:1117
 msgid "Please select a rejection reason"
-msgstr "Татгалзах шалтгаан сонгоно уу"
+msgstr "Буцаах шалтгаан сонгоно уу"
 
 #: app/templates/ahlah_dashboard.html:1118
 msgid "Processing..."
@@ -2102,11 +2102,11 @@ msgstr "Химич"
 
 #: app/templates/audit_hub.html:263
 msgid "Proximate Analysis"
-msgstr "Ойролцоо шинжилгээ"
+msgstr "Техникийн шинжилгээ"
 
 #: app/templates/audit_hub.html:266
 msgid "Ultimate Analysis"
-msgstr "Элементийн шинжилгээ"
+msgstr "Элементийн бүрэн шинжилгээ"
 
 #: app/templates/audit_hub.html:269
 msgid "Coking Properties"
@@ -2192,35 +2192,35 @@ msgstr "Хлорын агуулга"
 
 #: app/templates/audit_hub.html:383
 msgid "Swelling Number"
-msgstr "Хөөлтийн тоо"
+msgstr "Хөөлтийн индекс"
 
 #: app/templates/audit_hub.html:384
 msgid "Crucible Swelling Number"
-msgstr "Тигелийн хөөлтийн тоо"
+msgstr "Тигелийн хөөлтийн индекс"
 
 #: app/templates/audit_hub.html:393
 msgid "Caking Index"
-msgstr "Наалдамхай индекс"
+msgstr "Коксжилтын индекс"
 
 #: app/templates/audit_hub.html:394
 msgid "Gray-King Caking Index"
-msgstr "Грэй-Кинг наалдамхай индекс"
+msgstr "Грэй-Кинг коксжилтын индекс"
 
 #: app/templates/audit_hub.html:403
 msgid "Plasticity - X"
-msgstr "Хуванцарлаг - X"
+msgstr "Уян налархайн тоо - X"
 
 #: app/templates/audit_hub.html:404
 msgid "Plasticity X value"
-msgstr "Хуванцарлаг X утга"
+msgstr "Уян налархайн тоо X утга"
 
 #: app/templates/audit_hub.html:413
 msgid "Plasticity - Y"
-msgstr "Хуванцарлаг - Y"
+msgstr "Уян налархайн тоо - Y"
 
 #: app/templates/audit_hub.html:414
 msgid "Plasticity Y value"
-msgstr "Хуванцарлаг Y утга"
+msgstr "Уян налархайн тоо Y утга"
 
 #: app/templates/audit_hub.html:423
 msgid "Reactivity Index"
@@ -2296,7 +2296,7 @@ msgstr "Хүлээгдэж буй:"
 
 #: app/templates/audit_log_page.html:234
 msgid "Rejected:"
-msgstr "Татгалзсан:"
+msgstr "Буцаасан:"
 
 #: app/templates/audit_log_page.html:283 app/templates/index.html:204
 #: app/templates/quality/complaints_dashboard.html:211
@@ -2484,7 +2484,7 @@ msgstr "Хяналтын самбар"
 #: app/templates/labs/water/microbiology/reports/micro_dashboard.html:138
 #: app/templates/reports/dashboard.html:133
 msgid "Consumption"
-msgstr "Шинжилгээний нэгтгэл"
+msgstr "Зарцуулалт"
 
 #: app/templates/base.html app/templates/reports/dashboard.html
 msgid "Analysis Summary"
@@ -2981,7 +2981,7 @@ msgstr "ID"
 
 #: app/templates/edit_user.html:68
 msgid "Current Role"
-msgstr "Одоогийн дүр"
+msgstr "Одоогийн эрх"
 
 #: app/templates/edit_user.html:73 app/templates/report.html:116
 #: app/templates/reports/pdf/coal_report.html:118
@@ -5007,7 +5007,7 @@ msgstr "Тигелийн хөөлтийн тоо"
 
 #: app/templates/report.html:178
 msgid "Caking index"
-msgstr "Наалдамхай индекс"
+msgstr "Коксжилтын индекс"
 
 #: app/templates/report.html:179
 msgid "True relative density"
@@ -6791,11 +6791,11 @@ msgstr "MG Чийг"
 
 #: app/templates/analysis_forms/wtl_mg_aggrid.html:16
 msgid "MG TRD"
-msgstr "MG ЖЖН"
+msgstr "MG TRD"
 
 #: app/templates/analysis_forms/wtl_mg_aggrid.html:21
 msgid "MG Tube"
-msgstr "MG Хоолой"
+msgstr "MG Tube"
 
 #: app/templates/analysis_forms/wtl_mg_aggrid.html:26
 msgid "MG Size"
@@ -10397,7 +10397,7 @@ msgstr "ДАВТАХ"
 
 #: app/templates/quality/control_charts.html:293
 msgid "DECLINED"
-msgstr "ТАТГАЛЗСАН"
+msgstr "ЗӨВШӨӨРӨГДӨӨГҮЙ"
 
 #: app/templates/quality/control_charts.html:329
 msgid "Latest Value"
@@ -11959,7 +11959,7 @@ msgstr "Дээжийн төлөв:"
 
 #: app/templates/settings/notification_settings.html:53
 msgid "When sample results are approved/rejected"
-msgstr "Дээжийн үр дүн батлагдсан/татгалзсан үед"
+msgstr "Дээжийн үр дүн батлагдсан/буцаагдсан үед"
 
 #: app/templates/settings/notification_settings.html:54
 msgid "Equipment:"

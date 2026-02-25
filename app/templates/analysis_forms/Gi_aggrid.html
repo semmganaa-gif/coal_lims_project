@@ -27,7 +27,7 @@
   let draftMgr;
 
   // ✨ Gi-specific constants
-  const MIN_AVG_THRESHOLD = 18; // <18 бол 3:3 дахин хийх нөхцөл
+  const MIN_AVG_THRESHOLD = (window.LIMS_LIMITS && window.LIMS_LIMITS['Gi'] && window.LIMS_LIMITS['Gi'].threshold) || 18;
   const LIMIT_RULE = (window.LIMS_LIMITS && (window.LIMS_LIMITS['Gi'] || window.LIMS_LIMITS[ANALY_CODE])) || { single: { limit:2, mode:'abs' } };
 
   // --- 2. HELPERS ---
@@ -343,7 +343,7 @@
       const r2 = p2.result;
       const diff = existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference;
       const avg = existing.raw_data?.avg ?? existing.final_result;
-      const isLowAvg = existing.raw_data?.is_low_avg || (mode === '5_1' && avg != null && avg < MIN_AVG_THRESHOLD);
+      const isLowAvg = existing.raw_data?.is_low_avg || (mode === '5_1' && avg != null && Math.round(avg) < MIN_AVG_THRESHOLD);
 
       return [
         {
@@ -640,7 +640,7 @@
 
         const lim = effectiveLimit(avg);
         const thr = (lim.mode === 'percent' && avg != null) ? Math.abs(avg * lim.limit) : lim.limit;
-        const isLowAvg = (mode === '5_1' && avg < MIN_AVG_THRESHOLD);
+        const isLowAvg = (mode === '5_1' && Math.round(avg) < MIN_AVG_THRESHOLD);
         const reviewFlag = (diff != null && thr != null && Math.abs(diff) > thr);
 
         // ✅ Backend expectation: top-level diff/avg болон repeatability object

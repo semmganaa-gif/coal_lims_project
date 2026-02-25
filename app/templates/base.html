@@ -536,16 +536,12 @@
           {% endif %}
 
           <li class="nav-item me-2">
-            <div class="btn-group btn-group-sm" role="group" aria-label="Language">
-              <a href="{{ url_for('main.set_language', lang='en') }}"
-                 class="btn {{ 'btn-primary' if get_locale()|string == 'en' else 'btn-outline-secondary' }} btn-sm">
-                EN
-              </a>
-              <a href="{{ url_for('main.set_language', lang='mn') }}"
-                 class="btn {{ 'btn-primary' if get_locale()|string == 'mn' else 'btn-outline-secondary' }} btn-sm">
-                MN
-              </a>
-            </div>
+            {% set cur_lang = get_locale()|string %}
+            {% set next_lang = 'mn' if cur_lang == 'en' else 'en' %}
+            <a href="{{ url_for('main.set_language', lang=next_lang) }}"
+               class="btn btn-outline-secondary btn-sm" title="{{ _('Switch language') }}">
+              {{ cur_lang|upper }}
+            </a>
           </li>
 
 

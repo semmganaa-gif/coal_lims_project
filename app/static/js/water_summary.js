@@ -1,6 +1,7 @@
 /**
  * water_summary.js - Усны шинжилгээний нэгтгэл
  * AG Grid v29+ дэмжлэгтэй
+ * Depends on: water_utils.js (WATER_UTILS global)
  */
 
 /* ========================================
@@ -10,97 +11,31 @@
 const WaterSummaryGrid = (function() {
   'use strict';
 
+  // Shared utils from water_utils.js
+  var U = window.WATER_UTILS || {};
+  var formatValue = U.formatValue || function(c,v){ return v == null ? '' : String(v); };
+  var formatLimit = U.formatLimit || function(l){ return ''; };
+  var escapeHtml = U.escapeHtml || function(s){ return String(s || ''); };
+  var isOverLimit = U.isOverLimit || function(){ return false; };
+  var isWithinLimit = U.isWithinLimit || function(){ return false; };
+  var isDetectFail = U.isDetectFail || function(){ return false; };
+  var isDetectPass = U.isDetectPass || function(){ return false; };
+  var WATER_CHEM_COLUMNS = U.WATER_CHEM_COLUMNS || [];
+  var MICRO_COLUMNS = U.MICRO_COLUMNS || [];
+
   // Config from HTML
-  const CONFIG = (typeof WATER_SUMMARY_CONFIG !== 'undefined') ? WATER_SUMMARY_CONFIG : {};
-  const URLS = CONFIG.urls || {};
+  var CONFIG = (typeof WATER_SUMMARY_CONFIG !== 'undefined') ? WATER_SUMMARY_CONFIG : {};
+  var URLS = CONFIG.urls || {};
 
   // Grid instance
-  let gridApi = null;
+  var gridApi = null;
 
   // Column state storage
-  const COL_STATE_KEY = 'water_summary_col_state_v2';
+  var COL_STATE_KEY = 'water_summary_col_state_v2';
 
   // Data holders
-  let chemParams = [];
-  let microFields = [];
-
-  /* -------- UTILITY FUNCTIONS -------- */
-
-  function safeNumber(val) {
-    if (val === null || val === undefined || val === '' || val === 'null') return null;
-    const str = String(val).replace(',', '').trim();
-    const num = parseFloat(str);
-    return isNaN(num) ? null : num;
-  }
-
-  function formatValue(code, val) {
-    if (val == null || val === '') return '';
-    const n = parseFloat(val);
-    if (isNaN(n)) return String(val);
-    if (Math.abs(n) < 0.01 && n !== 0) return n.toExponential(2);
-    if (n === Math.floor(n)) return n.toString();
-    return n.toFixed(n < 1 ? 3 : 2);
-  }
-
-  function formatLimit(limit) {
-    if (!limit) return '';
-    if (Array.isArray(limit)) {
-      const lo = limit[0], hi = limit[1];
-      if (lo !== null && hi !== null) return lo + '—' + hi;
-      if (hi !== null) return '\u2264' + hi;
-      if (lo !== null) return '\u2265' + lo;
-    }
-    return String(limit);
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  /* -------- LIMIT CHECK FUNCTIONS -------- */
-
-  function isOverLimit(limit, value) {
-    if (!limit || value == null) return false;
-    const n = parseFloat(value);
-    if (isNaN(n)) return false;
-    if (Array.isArray(limit)) {
-      const lo = limit[0], hi = limit[1];
-      return (lo !== null && n < lo) || (hi !== null && n > hi);
-    }
-    return false;
-  }
-
-  function isWithinLimit(limit, value) {
-    if (!limit || value == null) return false;
-    const n = parseFloat(value);
-    if (isNaN(n)) return false;
-    if (Array.isArray(limit)) {
-      const lo = limit[0], hi = limit[1];
-      return !((lo !== null && n < lo) || (hi !== null && n > hi));
-    }
-    return false;
-  }
-
-  function isDetectFail(value) {
-    if (value == null || value === '') return false;
-    const s = String(value).trim().toLowerCase();
-    if (['илрэсэн', 'илэрсэн', 'detected', '+'].includes(s)) return true;
-    const n = parseFloat(value);
-    return !isNaN(n) && n > 0;
-  }
-
-  function isDetectPass(value) {
-    if (value == null || value === '') return false;
-    const s = String(value).trim().toLowerCase();
-    if (['илрээгүй', 'not detected', '-', '0'].includes(s)) return true;
-    const n = parseFloat(value);
-    return !isNaN(n) && n === 0;
-  }
+  var chemParams = [];
+  var microFields = [];
 
   /* -------- AUTO SIZE COLUMNS -------- */
 
@@ -161,51 +96,6 @@ const WaterSummaryGrid = (function() {
     const code = escapeHtml(params.data.sample_code || '');
     return `<span class="ws-sample-link" title="${code}">${name}</span>`;
   }
-
-  /* -------- FIXED COLUMN ORDER & MNS LIMITS -------- */
-
-  // Усны химийн баганууд - олон улсын нэршил, богино код
-  // Унд ахуйн + Бохир усны параметрүүд нэгтгэсэн
-  // primary: true = үргэлж харагдана, false = зөвхөн group дэлгэсэн үед
-  const WATER_CHEM_COLUMNS = [
-    // Унд ахуйн ус - үндсэн 5 багана үргэлж харагдана
-    { code: 'COLOR', name: 'Color', shortName: 'Color', unit: '°', mns_limit: [null, 20], primary: true },
-    { code: 'EC', name: 'Electrical Conductivity', shortName: 'EC', unit: 'µS/cm', mns_limit: [null, 1000], primary: true },
-    { code: 'PH', name: 'pH', shortName: 'pH', unit: '', mns_limit: [6.5, 8.5], primary: true },
-    { code: 'F_W', name: 'Fluoride', shortName: 'F⁻', unit: 'mg/L', mns_limit: [0.7, 1.5], primary: true },
-    { code: 'CL_FREE', name: 'Free Chlorine', shortName: 'Cl₂', unit: 'mg/L', mns_limit: [0.2, 0.3], primary: true },
-    // Дэлгэсэн үед харагдах баганууд
-    { code: 'HARD', name: 'Total Hardness', shortName: 'Hard', unit: 'meq/L', mns_limit: [null, 7] },
-    { code: 'NH4', name: 'Ammonium Ion', shortName: 'NH₄⁺', unit: 'mg/L', mns_limit: [null, 1.5] },
-    { code: 'NO2', name: 'Nitrite Ion', shortName: 'NO₂⁻', unit: 'mg/L', mns_limit: [null, 1] },
-    { code: 'FE_W', name: 'Iron', shortName: 'Fe', unit: 'mg/L', mns_limit: [null, 0.3] },
-    // Бохир ус (давхардаагүй)
-    { code: 'TDS', name: 'Total Dissolved Solids', shortName: 'TDS', unit: 'mg/L', mns_limit: [null, 400] },
-    { code: 'CL_W', name: 'Chloride', shortName: 'Cl⁻', unit: 'mg/L', mns_limit: [null, 350] },
-    { code: 'PO4', name: 'Phosphate Ion', shortName: 'PO₄³⁻', unit: 'mg/L', mns_limit: [null, 5] },
-    { code: 'BOD', name: 'Biochemical Oxygen Demand', shortName: 'BOD', unit: 'mg/L', mns_limit: [null, 20] },
-    // Лагийн шинжилгээ
-    { code: 'SLUDGE_VOL', name: 'Sludge Volume', shortName: 'SV', unit: 'mL', mns_limit: [70, 80] },
-    { code: 'SLUDGE_DOSE', name: 'Sludge Dose', shortName: 'SD', unit: 'g/L', mns_limit: [2, 4] },
-    { code: 'SLUDGE_INDEX', name: 'Sludge Index', shortName: 'SI', unit: 'mL/g', mns_limit: [80, 150] }
-  ];
-
-  // Микробиологийн баганууд - Ус, Агаар, Арчдас нэгтгэсэн
-  const MICRO_COLUMNS = [
-    // CFU (ус: 22°C, 37°C)
-    { code: 'cfu_22', headerName: 'CFU 22°C', headerTooltip: 'MNS ISO 6222:1998 / per 1 mL ≤100', mns_limit: [null, 100], integer: true },
-    { code: 'cfu_37', headerName: 'CFU 37°C', headerTooltip: 'MNS ISO 6222:1998 / per 1 mL ≤100', mns_limit: [null, 100], integer: true },
-    // CFU Дундаж (ус + арчдас нэгтгэсэн)
-    { code: 'cfu_avg', headerName: 'CFU Avg', headerTooltip: 'Water: MNS ISO 6222 ≤100 / Swab: MNS 6410 <100', mns_limit: [null, 100], integer: true },
-    // E.coli (ус + арчдас)
-    { code: 'ecoli', headerName: 'E.coli', headerTooltip: 'Water: MNS ISO 9308-1 / Swab: MNS 6410:2018', detect: true, italic: true },
-    // Salmonella (ус + арчдас)
-    { code: 'salmonella', headerName: 'Salmonella', headerTooltip: 'Water: MNS ISO 19250 / Swab: MNS 6410:2018', detect: true, italic: true },
-    // S.aureus (агаар + арчдас)
-    { code: 'staph', headerName: 'S.aureus', headerTooltip: 'Air: MNS 5484 / Swab: MNS 6410:2018', detect: true, italic: true },
-    // Агаарын бактерийн тоо
-    { code: 'air_cfu', headerName: 'Bacteria Count', headerTooltip: 'MNS 5484:2005 / per 1m³ <3000', mns_limit: [null, 3000], integer: true }
-  ];
 
   /* -------- BUILD COLUMN DEFINITIONS -------- */
 
@@ -442,6 +332,8 @@ const WaterSummaryGrid = (function() {
       .then(function(data) {
         chemParams = data.chem_params || [];
         microFields = data.micro_fields || [];
+        // MNS limit-ийг серверээс merge хийх
+        if (U.mergeMnsLimits) U.mergeMnsLimits(chemParams);
         if (callback) callback(null, data);
       })
       .catch(function(err) {
@@ -493,7 +385,8 @@ const WaterSummaryGrid = (function() {
       }
     } catch (e) {
       console.error('Grid creation error:', e);
-      gridDiv.innerHTML = '<div style="padding:40px;text-align:center;color:#dc3545;">Хүснэгт үүсгэхэд алдаа: ' + e.message + '</div>';
+      gridDiv.textContent = 'Хүснэгт үүсгэхэд алдаа: ' + e.message;
+      gridDiv.style.cssText = 'padding:40px;text-align:center;color:#dc3545;';
     }
   }
 

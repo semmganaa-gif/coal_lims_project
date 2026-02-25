@@ -24,7 +24,7 @@ JavaScript-ийг өөрчилж хуурамч утга илгээж болох
 
 import logging
 from typing import Tuple, Optional, Dict, Any, List
-from math import isfinite
+from math import isfinite, floor
 
 # Security logger
 security_logger = logging.getLogger('security')
@@ -261,7 +261,8 @@ def calc_total_moisture_mt(raw_data: Dict) -> Optional[float]:
         Average MT% or None
     """
     # MG format detection: flat m1/m2/m3 without p1/p2
-    if 'm3' in raw_data and 'p1' not in raw_data:
+    is_flat = all(k in raw_data for k in ['m1', 'm2', 'm3']) and 'p1' not in raw_data
+    if is_flat:
         return calc_mg_mt(raw_data)
 
     m1_p1 = _get_from_dict(raw_data, "p1", "m1")
@@ -468,7 +469,7 @@ def calc_calorific_value_cv(raw_data: Dict, unit: str = "cal/g") -> Optional[flo
     S_CORR_FACTOR = 94.1
 
     def get_alpha(qb_jg: float) -> float:
-        """Get temperature-dependent alpha coefficient."""
+        """Get alpha coefficient per MNS ISO 1928 (discrete values)."""
         qb_mjkg = qb_jg / 1000.0
         if qb_mjkg <= 16.70:
             return 0.0010
@@ -483,7 +484,7 @@ def calc_calorific_value_cv(raw_data: Dict, unit: str = "cal/g") -> Optional[flo
             return None
         if not all(isfinite(x) for x in [m, dt, e, q1]):
             return None
-        if m == 0:
+        if abs(m) < 1e-10:
             return None
 
         s_val = s if (s is not None and isfinite(s)) else 0
@@ -588,7 +589,7 @@ def calc_gray_king_gi(raw_data: Dict) -> Optional[float]:
             # 5:1 mode (default)
             gi = 10 + (numerator / m1)
 
-        return round(gi) if isfinite(gi) else None
+        return gi if isfinite(gi) else None
 
     # Top-level mode (frontend sends retest_mode at raw_data level)
     top_mode = raw_data.get("retest_mode") or raw_data.get("mode")
@@ -622,8 +623,11 @@ def calc_gray_king_gi(raw_data: Dict) -> Optional[float]:
     if not results:
         return None
 
-    # Return average (already rounded)
-    return sum(results) / len(results)
+    # ASTM: дундажилсаны ДАРАА round хийх
+    # floor(x + 0.5) = half-up rounding (JS Math.round-тай ижил)
+    # Python round() banker's rounding: round(18.5)=18, but JS Math.round(18.5)=19
+    avg = sum(results) / len(results)
+    return int(floor(avg + 0.5))
 
 
 def calc_free_moisture_fm(raw_data: Dict) -> Optional[float]:
@@ -654,7 +658,7 @@ def calc_free_moisture_fm(raw_data: Dict) -> Optional[float]:
         numerator = wb - wa
         denominator = wa - wt
 
-        if denominator == 0:
+        if abs(denominator) < 1e-10:
             return None
 
         fm = (numerator / denominator) * 100
@@ -717,7 +721,7 @@ def calc_solid(raw_data: Dict) -> Optional[float]:
 
         denominator = a - b
 
-        if denominator == 0:
+        if abs(denominator) < 1e-10:
             return None
 
         solid = (c * 100) / denominator
@@ -800,18 +804,28 @@ def calc_trd(raw_data: Dict) -> Optional[float]:
     }
 
     def get_kt(temp: Optional[float]) -> Optional[float]:
-        """Get kt coefficient from temperature (with interpolation)."""
+        """Get kt coefficient from temperature (linear interpolation)."""
         if temp is None or not isfinite(temp):
             return None
 
-        # Round to nearest integer
-        temp_int = round(temp)
-
         # Check bounds
-        if temp_int < 6 or temp_int > 35:
+        if temp < 6.0 or temp > 35.0:
             return None
 
-        return KT_TABLE.get(temp_int)
+        # Linear interpolation between table values
+        t_low = int(temp)
+        t_high = t_low + 1
+
+        if t_low == temp or t_high > 35:
+            return KT_TABLE.get(t_low)
+
+        kt_low = KT_TABLE.get(t_low)
+        kt_high = KT_TABLE.get(t_high)
+        if kt_low is None or kt_high is None:
+            return None
+
+        frac = temp - t_low
+        return kt_low + (kt_high - kt_low) * frac
 
     def calc_single_trd(m, m1, m2, temp, mad) -> Optional[float]:
         """Calculate TRD for single parallel."""
@@ -836,7 +850,7 @@ def calc_trd(raw_data: Dict) -> Optional[float]:
         # Step 2: Calculate TRD
         denominator = md + m2 - m1
 
-        if denominator == 0:
+        if abs(denominator) < 1e-10:
             return None
 
         trd = (md / denominator) * kt

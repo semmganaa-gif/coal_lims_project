@@ -12,7 +12,7 @@
   // ---------- ТОХИРГОО ----------
   const ANALYSIS_CODE = 'Gi';                  // Зөвхөн 'Gi'
   const TABLE_SEL = '#Gi-analysis-table';
-  const MIN_AVG_THRESHOLD = 18;                // 18-аас бага бол 5:1 горимд хүчингүй гэж үзнэ
+  const MIN_AVG_THRESHOLD = (window.LIMS_LIMITS && window.LIMS_LIMITS['Gi'] && window.LIMS_LIMITS['Gi'].threshold) || 18;
   const REPEATABILITY_LIMIT = getRepeatabilityLimit('Gi') ?? 2;               // T (жишээ давтагдах чадварын хязгаар)
 
   // Python-оос ирэх: жишээ нь { "120": true, "121": false }
@@ -113,7 +113,7 @@
     if (avg === null) {
       refs.calc.innerHTML = '-';
       saveable = false;
-    } else if (mode === '5_1' && avg < MIN_AVG_THRESHOLD) {
+    } else if (mode === '5_1' && Math.round(avg) < MIN_AVG_THRESHOLD) {
       // 5:1 горимд 18-аас бага бол 3:3-аар дахин шинжилнэ
       refs.calc.innerHTML = `<span class="text-danger fw-bold">Average &lt; ${MIN_AVG_THRESHOLD}.<br>Re-test with 3:3 ratio.</span>`;
       is_low_avg = true;

@@ -8,6 +8,7 @@ Rules.py нь "Soft Limit" (Анхааруулга/Pending) шалгана.
 """
 
 from typing import Optional, Tuple, Dict, Any
+from app.config.repeatability import LIMIT_RULES
 
 # ============================================================================
 # 1. SOFT LIMITS (УЯН ХАТАН ХЯЗГААР - MAX VALUE)
@@ -96,7 +97,7 @@ def determine_result_status(
             - rejection_comment: Тайлбар
     """
 
-    if raw_data is None:
+    if not isinstance(raw_data, dict):
         raw_data = {}
 
     # ========================================================================
@@ -137,10 +138,17 @@ def determine_result_status(
     # 2. BUSINESS LOGIC RULES (Тусгай дүрмүүд - Жирийн дээжинд)
     # ========================================================================
 
-    # ДҮРЭМ: Gi (Gray-King) индекс
-    # Хэрэв Gi-ийн дундаж хэт бага (is_low_avg) байвал шууд REJECT
+    # ДҮРЭМ: Gi (Caking Index)
+    # 5:1 горимд дундаж < 18 бол 3:3-аар дахин хийлгэнэ
     if analysis_code == 'Gi':
-        if raw_data.get("is_low_avg", False):
+        is_low = raw_data.get("is_low_avg", False)
+        retest_mode = raw_data.get("retest_mode")
+        # Frontend is_low_avg flag + 5:1 горимд л reject (3:3 горимд reject хийхгүй)
+        if is_low and retest_mode != "3_3":
+            return "rejected", "GI_RETEST_3_3"
+        # Сервер давхар шалгалт: retest_mode тодорхой "5_1" + value < threshold бол reject
+        gi_threshold = LIMIT_RULES.get('Gi', {}).get('threshold', 18)
+        if value is not None and value < gi_threshold and retest_mode == "5_1":
             return "rejected", "GI_RETEST_3_3"
 
     # ДҮРЭМ: CSN (Crucible Swelling Number) - MNS ISO 501
@@ -161,13 +169,9 @@ def determine_result_status(
                 p2_val = float(p2_csn)
                 csn_diff = abs(p1_val - p2_val)
 
-                # MNS ISO 501: 2 дээжийн зөрүү 1-ээс их байвал давтах
-                if csn_diff > 1.0:
-                    return "pending_review", f"CSN parallel зөрүү хэтэрсэн ({csn_diff} > 1.0)"
-
-                # Хэрэв зөрүү нь яг 1 бол анхааруулга
-                if csn_diff == 1.0:
-                    return "pending_review", f"CSN parallel зөрүү хязгаарт ({csn_diff} = 1.0)"
+                # MNS ISO 501: 2 дээжийн зөрүү 1-ээс их эсвэл тэнцүү байвал давтах
+                if csn_diff >= 1.0:
+                    return "pending_review", f"CSN parallel зөрүү хэтэрсэн ({csn_diff} >= 1.0)"
 
             except (ValueError, TypeError):
                 pass  # Тоо биш бол алгасна

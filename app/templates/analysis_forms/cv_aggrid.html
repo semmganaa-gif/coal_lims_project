@@ -745,6 +745,13 @@
           return;
         }
 
+        // Сөрөг CV — оролтын алдаа (dT бага эсвэл q1 хэт их)
+        if (res1 < 0 || res2 < 0) {
+          console.warn(`⚠️ Sample ${p1.sample_code || sid}: сөрөг CV (${res1?.toFixed(2)}, ${res2?.toFixed(2)}) — оролтыг шалгана уу`);
+          incomplete.push(`${p1.sample_code || sid} (CV < 0)`);
+          return;
+        }
+
         const avg = (res1 + res2) / 2;
         const diff = Math.abs(res1 - res2);
 

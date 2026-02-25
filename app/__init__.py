@@ -406,7 +406,7 @@ def create_app(config_class=Config):
         # Note: 'unsafe-inline' шаардлагатай - Flask templates inline script/style ашигладаг
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
             "img-src 'self' data: blob:; "
@@ -414,6 +414,10 @@ def create_app(config_class=Config):
             "frame-ancestors 'self';"
         )
         response.headers['Content-Security-Policy'] = csp
+
+        # Permissions-Policy: камер, микрофон, GPS зэрэг API хязгаарлах
+        response.headers['Permissions-Policy'] = 'microphone=(), camera=(), geolocation=()'
+        response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
 
         # ✅ ШИНЭ: HTTPS-д шилжүүлэх (Production-д)
         if not app.debug:

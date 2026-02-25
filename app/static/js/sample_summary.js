@@ -95,12 +95,11 @@ const GridModule = (function() {
   // Column state storage key
   const COL_STATE_KEY = 'sample_summary_col_state_v3';
 
-  // Precision map for formatting
-  const PRECISION_MAP = {
-    'MT': 1, 'CSN': 1, 'Gi': 0, 'X': 0, 'Y': 0,
-    'Qgr,ad': 0, 'Qgr,ar': 0, 'Qnet,ar': 0,
-    'P': 3, 'P,d': 3, 'F': 3, 'F,d': 3, 'Cl': 3, 'Cl,d': 3
-  };
+  // Precision map — backend display_precision.py-ээс ирнэ
+  const PRECISION_MAP = (CONFIG.precisionMap && typeof CONFIG.precisionMap === 'object')
+    ? CONFIG.precisionMap
+    : {};
+  const DEFAULT_PRECISION = PRECISION_MAP._default || 2;
 
   /* -------- UTILITY FUNCTIONS -------- */
 
@@ -114,7 +113,7 @@ const GridModule = (function() {
   function formatByCode(code, raw) {
     const num = safeNumber(raw);
     if (num === null) return '';
-    const dp = PRECISION_MAP.hasOwnProperty(code) ? PRECISION_MAP[code] : 2;
+    const dp = PRECISION_MAP.hasOwnProperty(code) ? PRECISION_MAP[code] : DEFAULT_PRECISION;
     return num.toFixed(dp);
   }
 
@@ -148,7 +147,8 @@ const GridModule = (function() {
   }
 
   function resultValueRenderer(params) {
-    const data = params.value;
+    // valueGetter нь тоон утга гаргадаг, гэхдээ cellRenderer-д raw data хэрэгтэй
+    const data = params.data ? params.data[params.colDef.field] : null;
     const code = params.colDef.field;
     const sampleId = params.data ? params.data.id : null;
 
@@ -314,6 +314,13 @@ const GridModule = (function() {
         headerComponent: HtmlHeaderComponent,
         field: col.code,
         cellRenderer: resultValueRenderer,
+        // Object {value, status, id} -аас тоон утгыг гаргаж авах (filter, sort)
+        valueGetter: function(params) {
+          const raw = params.data ? params.data[col.code] : null;
+          if (raw == null || raw === '' || raw === 'null') return null;
+          if (typeof raw === 'object') return safeNumber(raw.value);
+          return safeNumber(raw);
+        },
         flex: 1,
         minWidth: 70,
         sortable: true,
@@ -323,12 +330,7 @@ const GridModule = (function() {
         cellStyle: { textAlign: 'left' },
         cellClassRules: {
           'highlight-cell': function(params) {
-            const v = params.value;
-            if (v == null || v === '') return false;
-            if (typeof v === 'object') {
-              return (v.value != null && String(v.value).trim() !== '');
-            }
-            return String(v).trim() !== '';
+            return params.value != null;
           }
         }
       });
@@ -586,6 +588,18 @@ const GridModule = (function() {
     });
   }
 
+  function exportXlsx() {
+    if (!gridApi) {
+      alert('Хүснэгт ачаалагдаагүй байна.');
+      return;
+    }
+    if (typeof gridToXlsx === 'function') {
+      gridToXlsx(gridApi, 'sample_summary.xlsx', 'Summary');
+    } else {
+      alert('Excel export боломжгүй (SheetJS ачаалагдаагүй).');
+    }
+  }
+
   function exportCsv() {
     if (!gridApi) {
       alert('Хүснэгт ачаалагдаагүй байна.');
@@ -751,7 +765,8 @@ const GridModule = (function() {
       }
     } catch (e) {
       console.error('Grid initialization error:', e);
-      gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">Хүснэгт үүсгэхэд алдаа: ' + e.message + '</div>';
+      gridDiv.textContent = 'Хүснэгт үүсгэхэд алдаа: ' + e.message;
+      gridDiv.style.cssText = 'padding:20px;color:#dc3545;';
     }
   }
 
@@ -759,6 +774,7 @@ const GridModule = (function() {
     init: init,
     getApi: getApi,
     getSelectedIds: getSelectedIds,
+    exportXlsx: exportXlsx,
     exportCsv: exportCsv,
     copySelected: copySelected,
     URLS: URLS
@@ -865,6 +881,11 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Тайлан';
       alert('Сүлжээний алдаа: ' + err.message);
     });
+  });
+
+  // Export Excel button
+  safeAddListener('exportXlsxBtn', 'click', function() {
+    GridModule.exportXlsx();
   });
 
   // Export CSV button

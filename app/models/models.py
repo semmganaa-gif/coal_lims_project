@@ -333,6 +333,7 @@ class Sample(db.Model):
         """
         Sample code-г нормализаци хийх.
         - Нүүрс/Петрограф: Latin үсэг, тоо, тусгай тэмдэгт (uppercase)
+        - WTL: Latin mixed case зөвшөөрнө (Dry, Wet гэх мэт)
         - Ус/Микробиологи: Кирилл + Latin + тоо + тусгай тэмдэгт (хэвээр)
         """
         if value is None:
@@ -349,6 +350,16 @@ class Sample(db.Model):
                 invalid_chars = re.findall(r'[^\w\u0400-\u04FF\s/.,+\-\"""()³]', value)
                 raise ValueError(
                     f"Дээжний нэрэнд зөвшөөрөгдөөгүй тэмдэгт: {', '.join(set(invalid_chars))}"
+                )
+            return value
+
+        # WTL → mixed case хэвээр хадгална (Dry, Wet гэх мэт)
+        if getattr(self, 'client_name', None) == 'WTL':
+            if not re.match(r'^[A-Za-z0-9_\-/.,+ ]+$', value):
+                invalid_chars = re.findall(r'[^A-Za-z0-9_\-/.,+ ]', value)
+                raise ValueError(
+                    f"Дээжний код зөвхөн Latin үсэг агуулах ёстой. "
+                    f"Буруу тэмдэгт: {', '.join(set(invalid_chars))}"
                 )
             return value
 
@@ -453,7 +464,8 @@ class AnalysisResult(db.Model):
         "AnalysisResultLog",
         back_populates="result",
         lazy="dynamic",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge",
+        passive_deletes=True,
         order_by="desc(AnalysisResultLog.timestamp)",
     )
 
@@ -750,21 +762,21 @@ class Equipment(db.Model):
     # Timestamps (audit trail)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
 
     # Холбоосууд
     created_by = db.relationship('User', foreign_keys=[created_by_id])
     logs = db.relationship(
         'MaintenanceLog',
         backref='equipment',
-        lazy=True,
+        lazy='dynamic',
         cascade='all, delete-orphan',
         order_by="desc(MaintenanceLog.action_date)"
     )
     usages = db.relationship(
         'UsageLog',
         backref='equipment',
-        lazy=True,
+        lazy='dynamic',
         cascade='all, delete-orphan'
     )
 
@@ -890,7 +902,7 @@ class SparePartCategory(db.Model):
     created_at = db.Column(db.DateTime, default=now_mn)
 
     # Equipment холбоос (optional)
-    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'))
+    equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'), index=True)
     equipment = db.relationship('Equipment', foreign_keys=[equipment_id])
 
     def __repr__(self):
@@ -967,7 +979,7 @@ class SparePart(db.Model):
 
     # Аудит
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])
@@ -1012,7 +1024,7 @@ class SparePartUsage(db.Model):
 
     # Хаана ашигласан
     equipment_id = db.Column(db.Integer, db.ForeignKey('equipment.id', ondelete='SET NULL'), index=True)
-    maintenance_log_id = db.Column(db.Integer, db.ForeignKey('maintenance_logs.id', ondelete='SET NULL'))
+    maintenance_log_id = db.Column(db.Integer, db.ForeignKey('maintenance_logs.id', ondelete='SET NULL'), index=True)
 
     # Зарцуулалт
     quantity_used = db.Column(db.Float, nullable=False)
@@ -1372,7 +1384,7 @@ class AnalysisResultLog(HashableMixin, db.Model):
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
 
     # ✅ ШИНЭ: Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй)
-    original_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    original_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, index=True)
     original_user = db.relationship("User", foreign_keys=[original_user_id])
 
     # ✅ ШИНЭ: Анхны хадгалсан цаг (хэзээ ч өөрчлөгдөхгүй)
@@ -1679,7 +1691,7 @@ class GbwStandard(db.Model):
     name = db.Column(db.String(50), nullable=False) # GBW Дугаар (Batch No)
     targets = db.Column(db.JSON, nullable=False)    # { 'Mad': {'mean': 1.2, 'sd': 0.1}, ... }
     is_active = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_mn)
 
     def __repr__(self):
         return f'<GBW {self.name}>'
@@ -1760,14 +1772,14 @@ class CorrectiveAction(db.Model):
     # Арга хэмжээ
     corrective_action = db.Column(db.Text)  # Засах үйлдэл
     preventive_action = db.Column(db.Text)  # Урьдчилан сэргийлэх
-    responsible_person_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    responsible_person_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     target_date = db.Column(db.Date)
     completion_date = db.Column(db.Date)
 
     # Баталгаажуулалт (хуучин - хэрэглэгдэхгүй ч DB-д үлдэнэ)
     verification_method = db.Column(db.Text)
     verification_date = db.Column(db.Date)
-    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    verified_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     effectiveness = db.Column(db.String(20))
 
     # ═══ Хэсэг 2: Хяналт (Техникийн менежер) - LAB.02.00.04 ═══
@@ -1777,7 +1789,7 @@ class CorrectiveAction(db.Model):
     management_change_needed = db.Column(db.Boolean)         # Удирдлагын тогтолцооны өөрчлөлт шаардлагатай эсэх
     control_notes = db.Column(db.Text)
     control_date = db.Column(db.Date)
-    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='open', index=True)  # open, in_progress, reviewed, closed
@@ -1832,7 +1844,7 @@ class ProficiencyTest(db.Model):
     notes = db.Column(db.Text)
 
     # Хэн шинжилсэн
-    tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     tested_by = db.relationship('User', backref='pt_tests')
 
     def __repr__(self):
@@ -1872,7 +1884,7 @@ class EnvironmentalLog(db.Model):
     within_limits = db.Column(db.Boolean, default=True)
 
     # Бүртгэсэн хүн
-    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     recorded_by = db.relationship('User', backref='env_logs')
 
     notes = db.Column(db.Text)
@@ -1912,7 +1924,7 @@ class QCControlChart(db.Model):
     in_control = db.Column(db.Boolean, default=True)  # UCL/LCL дотор уу?
 
     # Operator
-    operator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    operator_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     operator = db.relationship('User', backref='qc_measurements')
 
     # Тэмдэглэл
@@ -1942,7 +1954,7 @@ class CustomerComplaint(db.Model):
     complainant_name = db.Column(db.String(200))          # Овог, нэр, албан тушаал
     complainant_department = db.Column(db.String(200))     # Хэсэг, нэгж
     complaint_content = db.Column(db.Text)                 # Агуулга, тайлбар, баримт
-    complainant_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Гарын үсэг
+    complainant_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)  # Гарын үсэг
 
     # ═══ Хэсэг 2: Хүлээн авагч ═══
     receiver_name = db.Column(db.String(200))              # Овог, нэр, албан тушаал
@@ -1950,13 +1962,13 @@ class CustomerComplaint(db.Model):
     receiver_documentation = db.Column(db.Text)            # Баримтжуулсан материал
     is_justified = db.Column(db.Boolean)                   # Үндэслэлтэй эсэх
     response_detail = db.Column(db.Text)                   # Хариу өгсөн байдал
-    receiver_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # Гарын үсэг
+    receiver_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)  # Гарын үсэг
 
     # ═══ Хэсэг 3: Хяналт (Чанарын менежер) ═══
     action_corrective = db.Column(db.Boolean, default=False)       # Залруулах
     action_improvement = db.Column(db.Boolean, default=False)      # Сайжруулах
     action_partial_audit = db.Column(db.Boolean, default=False)    # Хэсэгчилсэн аудит
-    quality_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    quality_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # ═══ Дахин шинжилгээ ═══
     reanalysis_codes = db.Column(db.Text)               # JSON list: ["Mad", "Aad"]
@@ -1969,15 +1981,15 @@ class CustomerComplaint(db.Model):
     contact_phone = db.Column(db.String(50))
     complaint_type = db.Column(db.String(100))
     description = db.Column(db.Text)
-    related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"))
-    investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    related_sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), index=True)
+    investigated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     investigation_findings = db.Column(db.Text)
     resolution = db.Column(db.Text)
     resolution_date = db.Column(db.Date)
     customer_notified = db.Column(db.Boolean, default=False)
     customer_satisfied = db.Column(db.Boolean)
     capa_created = db.Column(db.Boolean, default=False)
-    capa_id = db.Column(db.Integer, db.ForeignKey('corrective_action.id'))
+    capa_id = db.Column(db.Integer, db.ForeignKey('corrective_action.id'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='draft', index=True)
@@ -2035,17 +2047,17 @@ class ImprovementRecord(db.Model):
     deadline = db.Column(db.Date)                          # Хугацаа
     responsible_person = db.Column(db.String(200))         # Хариуцах ажилтан
     documentation = db.Column(db.Text)                     # Баримтжуулалт, нэмэлт тайлбар
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Эх үүсвэр (санал гомдлоос автомат үүссэн бол)
-    source_complaint_id = db.Column(db.Integer, db.ForeignKey('customer_complaint.id'))
+    source_complaint_id = db.Column(db.Integer, db.ForeignKey('customer_complaint.id'), index=True)
 
     # ═══ Хэсэг 2: Хяналт (Техникийн менежер) ═══
     completed_on_time = db.Column(db.Boolean)              # Тогтсон хугацаанд сайжруулсан эсэх
     fully_implemented = db.Column(db.Boolean)              # Бүрэн хэрэгжсэн эсэх
     control_notes = db.Column(db.Text)                     # Нэмэлт тайлбар
     control_date = db.Column(db.Date)                      # Огноо
-    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    technical_manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='pending', index=True)
@@ -2077,7 +2089,7 @@ class NonConformityRecord(db.Model):
     detector_department = db.Column(db.String(200))        # Хэсэг, нэгж
     nc_description = db.Column(db.Text)                    # Мэдээлэл, баримт
     proposed_action = db.Column(db.Text)                   # Авах арга хэмжээний санал
-    detector_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    detector_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # ═══ Хэсэг 2: Хариуцсан нэгж ═══
     responsible_unit = db.Column(db.String(200))           # Хариуцах нэгж/хэсэг
@@ -2087,13 +2099,13 @@ class NonConformityRecord(db.Model):
     corrective_deadline = db.Column(db.Date)               # Хугацаа
     root_cause = db.Column(db.Text)                        # Суурь шалтгаан
     corrective_plan = db.Column(db.Text)                   # Төлөвлөгөө, баримтжуулалт
-    responsible_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    responsible_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # ═══ Хэсэг 3: Хяналт ═══
     completed_on_time = db.Column(db.Boolean)              # Тогтсон хугацаанд залруулсан эсэх
     fully_implemented = db.Column(db.Boolean)              # Бүрэн хэрэгжсэн эсэх
     control_notes = db.Column(db.Text)                     # Нэмэлт тайлбар
-    manager_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    manager_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Төлөв
     status = db.Column(db.String(20), default='pending', index=True)
@@ -2146,7 +2158,7 @@ class MonthlyPlan(db.Model):
     planned_count = db.Column(db.Integer, default=0)
 
     # Audit
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
@@ -2212,7 +2224,7 @@ class ChatMessage(db.Model):
     is_urgent = db.Column(db.Boolean, default=False)
 
     # Дээж/Шинжилгээ холбох
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), nullable=True)
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete="SET NULL"), nullable=True, index=True)
 
     # Устгах (soft delete)
     is_deleted = db.Column(db.Boolean, default=False)
@@ -2304,7 +2316,7 @@ class SystemLicense(db.Model):
     company_code = db.Column(db.String(50))
 
     # Хугацаа
-    issued_date = db.Column(db.DateTime, default=datetime.utcnow)
+    issued_date = db.Column(db.DateTime, default=now_mn)
     expiry_date = db.Column(db.DateTime, nullable=False)
 
     # Хязгаарлалт
@@ -2325,8 +2337,8 @@ class SystemLicense(db.Model):
     tampering_detected = db.Column(db.Boolean, default=False)
     tampering_details = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_mn)
+    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
     @property
     def is_valid(self):
@@ -2361,14 +2373,14 @@ class LicenseLog(db.Model):
     __tablename__ = 'license_log'
 
     id = db.Column(db.Integer, primary_key=True)
-    license_id = db.Column(db.Integer, db.ForeignKey('system_license.id'))
+    license_id = db.Column(db.Integer, db.ForeignKey('system_license.id'), index=True)
 
     event_type = db.Column(db.String(50))
     event_details = db.Column(db.Text)
     hardware_id = db.Column(db.String(128))
     ip_address = db.Column(db.String(50))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_mn)
 
     license = db.relationship('SystemLicense', backref='logs')
 
@@ -2408,7 +2420,7 @@ class WashabilityTest(db.Model):
     raw_trd = db.Column(db.Float)  # TRD
 
     # LIMS холбоос (хэрвээ WTL нэгжээс ирсэн бол)
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete='SET NULL'))
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete='SET NULL'), index=True)
     sample = db.relationship('Sample', backref='washability_tests')
 
     # Импорт мэдээлэл
@@ -2416,7 +2428,7 @@ class WashabilityTest(db.Model):
     excel_filename = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     created_by = db.relationship('User', backref='washability_tests')
 
     # Relationships
@@ -2537,7 +2549,7 @@ class PlantYield(db.Model):
     product_ash = db.Column(db.Float)  # Гаралтын үнслэг
 
     # Washability тесттэй холбох (хэрвээ байвал)
-    washability_test_id = db.Column(db.Integer, db.ForeignKey('washability_test.id', ondelete='SET NULL'))
+    washability_test_id = db.Column(db.Integer, db.ForeignKey('washability_test.id', ondelete='SET NULL'), index=True)
     washability_test = db.relationship('WashabilityTest', backref='plant_yields')
 
     # Харьцуулалт
@@ -2729,7 +2741,7 @@ class ChemicalUsage(db.Model):
     unit = db.Column(db.String(20))
 
     # Шинжилгээтэй холбох (optional)
-    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete='SET NULL'))
+    sample_id = db.Column(db.Integer, db.ForeignKey('sample.id', ondelete='SET NULL'), index=True)
     analysis_code = db.Column(db.String(50))
 
     # Зорилго, тайлбар
@@ -2886,7 +2898,7 @@ class ChemicalWaste(db.Model):
     notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])
@@ -2932,7 +2944,7 @@ class ChemicalWasteRecord(db.Model):
 
     # Бүртгэсэн
     recorded_at = db.Column(db.DateTime, default=now_mn)
-    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    recorded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Relationships
     waste = db.relationship('ChemicalWaste', back_populates='records')
@@ -2973,7 +2985,7 @@ class ReportSignature(db.Model):
     name = db.Column(db.String(100), nullable=False)
     signature_type = db.Column(db.String(20), nullable=False)  # 'signature', 'stamp'
     image_path = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     lab_type = db.Column(db.String(30), default='all')
     is_active = db.Column(db.Boolean, default=True)
     position = db.Column(db.String(100))  # Албан тушаал
@@ -3050,12 +3062,12 @@ class LabReport(db.Model):
     pdf_path = db.Column(db.String(255))
 
     # Гарын үсэг, тамга
-    analyst_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
-    manager_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
-    stamp_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'))
+    analyst_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'), index=True)
+    manager_signature_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'), index=True)
+    stamp_id = db.Column(db.Integer, db.ForeignKey('report_signature.id'), index=True)
 
     # Баталгаажуулалт
-    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     approved_at = db.Column(db.DateTime)
 
     # Имэйл
@@ -3065,7 +3077,7 @@ class LabReport(db.Model):
 
     # Мета
     notes = db.Column(db.Text)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
@@ -3138,7 +3150,7 @@ class SolutionPreparation(db.Model):
 
     # Зарцуулсан бодис
     chemical_used_mg = db.Column(db.Float)                  # Зарцуулсан бодис (мг)
-    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'))
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'), index=True)
 
     # Жортой холбоос (шинэ)
     recipe_id = db.Column(db.Integer, db.ForeignKey('solution_recipe.id', ondelete='SET NULL'), index=True)
@@ -3214,7 +3226,7 @@ class SolutionRecipe(db.Model):
     # Төлөв
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=now_mn)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     # Relationships
     created_by = db.relationship('User', foreign_keys=[created_by_id])
@@ -3262,8 +3274,8 @@ class SolutionRecipeIngredient(db.Model):
     __tablename__ = 'solution_recipe_ingredient'
 
     id = db.Column(db.Integer, primary_key=True)
-    recipe_id = db.Column(db.Integer, db.ForeignKey('solution_recipe.id', ondelete='CASCADE'), nullable=False)
-    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'))
+    recipe_id = db.Column(db.Integer, db.ForeignKey('solution_recipe.id', ondelete='CASCADE'), nullable=False, index=True)
+    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id', ondelete='SET NULL'), index=True)
     amount = db.Column(db.Float, nullable=False)  # Стандарт эзэлхүүнд орох хэмжээ
     unit = db.Column(db.String(20), default='g')  # g, mg, mL
 

@@ -42,9 +42,12 @@ def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Error savin
         flash(error_msg, "danger")
         return False
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception as rb_err:
+            logger.critical(f"Rollback failed: {rb_err}")
         logger.error(f"{error_msg}: {e}")
-        flash(f"{error_msg}: {str(e)[:100]}", "danger")
+        flash(error_msg, "danger")
         return False
 
 
@@ -72,9 +75,12 @@ def safe_delete(obj: Any, success_msg: Optional[str] = None, error_msg: str = "Ð
             flash(success_msg, "success")
         return True
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception as rb_err:
+            logger.critical(f"Rollback failed: {rb_err}")
         logger.error(f"{error_msg}: {e}")
-        flash(f"{error_msg}: {str(e)[:100]}", "danger")
+        flash(error_msg, "danger")
         return False
 
 
@@ -113,7 +119,10 @@ def safe_add(
         flash(error_msg, "danger")
         return False
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception as rb_err:
+            logger.critical(f"Rollback failed: {rb_err}")
         logger.error(f"{error_msg}: {e}")
-        flash(f"{error_msg}: {str(e)[:100]}", "danger")
+        flash(error_msg, "danger")
         return False

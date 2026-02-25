@@ -376,8 +376,25 @@ input[type=number]{ -moz-appearance:textfield }
 }
 
 /* ========================================
-   MOBILE RESPONSIVE STYLES
+   RESPONSIVE STYLES
    ======================================== */
+
+/* --- LAPTOP (height ≤ 900px) --- */
+@media (max-height: 900px) {
+  .sticky-controls {
+    padding: 0.5rem 1rem;
+  }
+  .sticky-controls.scrolled {
+    padding: 0.375rem 1rem;
+  }
+  .sticky-controls + .row,
+  .sticky-controls ~ .row {
+    margin-top: 0.75rem !important;
+  }
+  .analysis-table-2row thead tr:nth-child(1) th {
+    height: 36px;
+  }
+}
 
 /* --- MOBILE: Extra Small (< 576px) --- */
 @media (max-width: 576px) {

@@ -167,8 +167,25 @@
 }
 
 /* ========================================================================
-   11. RESPONSIVE DESIGN - Mobile Optimization (Enhanced)
+   11. RESPONSIVE DESIGN
    ======================================================================== */
+
+/* --- LAPTOP (height ≤ 900px) --- */
+@media (max-height: 900px) {
+  .ag-theme-alpine {
+    --ag-font-size: 13px;
+  }
+
+  .ag-grid-container {
+    height: 70vh;
+    min-height: 300px;
+    margin-top: 10px;
+  }
+
+  .ag-theme-alpine .ag-root-wrapper {
+    border-radius: 10px;
+  }
+}
 
 /* --- TABLET (max-width: 768px) --- */
 @media (max-width: 768px) {
