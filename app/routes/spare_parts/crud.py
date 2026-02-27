@@ -6,6 +6,7 @@ import uuid
 from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy import func, case
 from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategory, Equipment
 from datetime import datetime, date
@@ -244,11 +245,16 @@ def spare_part_list():
             'equipment_name': sp.equipment.name if sp.equipment else None,
         })
 
-    # Stats (disposed-г тооцохгүй)
+    # P-H3: Нэг query-гээр stats авах (3 COUNT → 1 query)
+    stats_row = db.session.query(
+        func.count(case((SparePart.status != 'disposed', SparePart.id))).label('total'),
+        func.count(case((SparePart.status == 'low_stock', SparePart.id))).label('low_stock'),
+        func.count(case((SparePart.status == 'out_of_stock', SparePart.id))).label('out_of_stock'),
+    ).one()
     stats = {
-        'total': SparePart.query.filter(SparePart.status != 'disposed').count(),
-        'low_stock': SparePart.query.filter(SparePart.status == 'low_stock').count(),
-        'out_of_stock': SparePart.query.filter(SparePart.status == 'out_of_stock').count(),
+        'total': stats_row.total,
+        'low_stock': stats_row.low_stock,
+        'out_of_stock': stats_row.out_of_stock,
     }
 
     return render_template(

@@ -2,6 +2,7 @@
 """Сэлбэг хэрэгслийн routes - нөөцийн удирдлага."""
 
 from flask import Blueprint
+from app import limiter
 
 spare_parts_bp = Blueprint(
     "spare_parts",
@@ -9,6 +10,9 @@ spare_parts_bp = Blueprint(
     url_prefix="/spare_parts",
     template_folder="../../templates/spare_parts"
 )
+
+# A-H2: Blueprint-level rate limit (бүх endpoint-д хамаарна)
+limiter.limit("200 per minute")(spare_parts_bp)
 
 # Constants - Тоног төхөөрөмжөөр категори
 CATEGORIES = [

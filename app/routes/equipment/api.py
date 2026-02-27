@@ -8,7 +8,7 @@ from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import func
 
-from app import db
+from app import db, limiter
 from app.models import Equipment, MaintenanceLog, UsageLog, SparePart, SparePartUsage, SparePartLog
 from app.routes.equipment import equipment_bp
 from app.routes.api.helpers import api_success, api_error
@@ -30,6 +30,7 @@ def _filter_equipment_by_category(query, category):
 
 @equipment_bp.route("/api/log_usage_bulk", methods=["POST"])
 @login_required
+@limiter.limit("10 per minute")
 def log_usage_bulk():
     """
     Frontend-ээс ирсэн олон төхөөрөмжийн бүртгэлийг хүлээж авч хадгална.
@@ -54,6 +55,10 @@ def log_usage_bulk():
 
         if not items:
             return api_error("No data provided")
+
+        # A-H4: Bulk array size cap
+        if len(items) > 100:
+            return api_error("Нэг удаад 100-аас их бүртгэл оруулах боломжгүй")
 
         count = 0
         today_date = now_local()

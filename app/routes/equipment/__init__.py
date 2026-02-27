@@ -8,8 +8,12 @@
 """
 
 from flask import Blueprint
+from app import limiter
 
 equipment_bp = Blueprint("equipment", __name__)
+
+# A-H2: Blueprint-level rate limit (бүх endpoint-д хамаарна)
+limiter.limit("200 per minute")(equipment_bp)
 
 # Файл байршуулахын хязгаарлалт
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB

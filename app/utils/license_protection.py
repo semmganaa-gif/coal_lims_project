@@ -19,7 +19,12 @@ from flask import redirect, url_for, flash, request, g
 import logging
 
 from app.utils.hardware_fingerprint import generate_hardware_id, generate_short_hardware_id
-from app.utils.datetime import now_local as now_mn
+from app.utils.datetime import now_local as _now_mn_raw
+
+
+def now_mn():
+    """Naive datetime буцаана (DB-д хадгалсан expiry_date-тэй зэрэгцүүлэхэд)."""
+    return _now_mn_raw().replace(tzinfo=None)
 
 logger = logging.getLogger(__name__)
 

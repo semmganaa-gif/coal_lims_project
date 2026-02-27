@@ -4,7 +4,12 @@ License models.
 """
 
 from app import db
-from app.utils.datetime import now_local as now_mn
+from app.utils.datetime import now_local as _now_mn_raw
+
+
+def _safe_now():
+    """Naive datetime буцаана (DB-д хадгалсан expiry_date-тэй зэрэгцүүлэхэд)."""
+    return _now_mn_raw().replace(tzinfo=None)
 
 class SystemLicense(db.Model):
     """
@@ -19,7 +24,7 @@ class SystemLicense(db.Model):
     company_code = db.Column(db.String(50))
 
     # Хугацаа
-    issued_date = db.Column(db.DateTime, default=now_mn)
+    issued_date = db.Column(db.DateTime, default=_safe_now)
     expiry_date = db.Column(db.DateTime, nullable=False)
 
     # Хязгаарлалт
@@ -40,8 +45,8 @@ class SystemLicense(db.Model):
     tampering_detected = db.Column(db.Boolean, default=False)
     tampering_details = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=now_mn)
-    updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
+    created_at = db.Column(db.DateTime, default=_safe_now)
+    updated_at = db.Column(db.DateTime, default=_safe_now, onupdate=_safe_now)
 
     @property
     def is_valid(self):
@@ -50,16 +55,16 @@ class SystemLicense(db.Model):
             return False
         if self.tampering_detected:
             return False
-        if now_mn() > self.expiry_date:
+        if _safe_now() > self.expiry_date:
             return False
         return True
 
     @property
     def days_remaining(self):
         """Үлдсэн хоног"""
-        if now_mn() > self.expiry_date:
+        if _safe_now() > self.expiry_date:
             return 0
-        delta = self.expiry_date - now_mn()
+        delta = self.expiry_date - _safe_now()
         return max(0, delta.days)
 
     @property
@@ -83,7 +88,7 @@ class LicenseLog(db.Model):
     hardware_id = db.Column(db.String(128))
     ip_address = db.Column(db.String(50))
 
-    created_at = db.Column(db.DateTime, default=now_mn)
+    created_at = db.Column(db.DateTime, default=_safe_now)
 
     license = db.relationship('SystemLicense', backref='logs')
 

@@ -6,9 +6,9 @@ from datetime import datetime, date, timedelta
 
 from flask import request, jsonify, current_app
 from flask_login import login_required, current_user
-from sqlalchemy import func
+from sqlalchemy import func, case
 
-from app import db
+from app import db, limiter
 from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.routes.chemicals import chemicals_bp
 from app.routes.api.helpers import api_success, api_error
@@ -162,6 +162,7 @@ def api_expiring():
 
 @chemicals_bp.route("/api/consume", methods=["POST"])
 @login_required
+@limiter.limit("30 per minute")
 def api_consume():
     """Химийн бодисын хэрэглээ бүртгэх API."""
     try:
@@ -240,7 +241,7 @@ def api_consume():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"API consume error: {e}")
-        return api_error(str(e), status_code=500)
+        return api_error("Chemical consumption failed", status_code=500)
 
 
 # -------------------------------------------------
@@ -306,13 +307,23 @@ def api_stats():
             (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
         )
 
-    total = base_query.count()
-    low_stock = base_query.filter(Chemical.status == 'low_stock').count()
-    expired = base_query.filter(Chemical.status == 'expired').count()
-    expiring = base_query.filter(
-        Chemical.expiry_date <= warning_date,
-        Chemical.expiry_date > today
-    ).count()
+    # P-H3: Нэг query-гээр бүх статистик авах (4 COUNT → 1 query)
+    stats_q = db.session.query(
+        func.count(Chemical.id).label('total'),
+        func.count(case((Chemical.status == 'low_stock', Chemical.id))).label('low_stock'),
+        func.count(case((Chemical.status == 'expired', Chemical.id))).label('expired'),
+        func.count(case((
+            (Chemical.expiry_date <= warning_date) & (Chemical.expiry_date > today),
+            Chemical.id
+        ))).label('expiring'),
+    ).filter(Chemical.status != 'disposed')
+
+    if lab and lab != "all":
+        stats_q = stats_q.filter(
+            (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
+        )
+
+    row = stats_q.one()
 
     # Категориор
     by_category = db.session.query(
@@ -330,10 +341,10 @@ def api_stats():
     by_category = by_category.group_by(Chemical.category).all()
 
     return jsonify({
-        "total": total,
-        "low_stock": low_stock,
-        "expired": expired,
-        "expiring": expiring,
+        "total": row.total,
+        "low_stock": row.low_stock,
+        "expired": row.expired,
+        "expiring": row.expiring,
         "by_category": {cat: cnt for cat, cnt in by_category}
     })
 
@@ -394,6 +405,7 @@ def api_usage_history():
 
 @chemicals_bp.route("/api/consume_bulk", methods=["POST"])
 @login_required
+@limiter.limit("10 per minute")
 def api_consume_bulk():
     """Олон химийн бодис нэг дор хэрэглээ бүртгэх."""
     try:
@@ -405,6 +417,10 @@ def api_consume_bulk():
 
         if not items:
             return api_error("No items provided")
+
+        # A-H4: Bulk array size cap
+        if len(items) > 100:
+            return api_error("Нэг удаад 100-аас ихийг зарцуулах боломжгүй")
 
         count = 0
         errors = []
@@ -481,4 +497,4 @@ def api_consume_bulk():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Bulk consume error: {e}")
-        return api_error(str(e), status_code=500)
+        return api_error("Bulk consumption failed", status_code=500)

@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 from flask import jsonify, request
 from flask_login import login_required, current_user
-from sqlalchemy import func
+from sqlalchemy import func, case
 
-from app import db
+from app import db, limiter
 from app.models import SparePart, SparePartUsage, SparePartLog, Equipment
 from app.routes.spare_parts import spare_parts_bp
 from app.utils.security import escape_like_pattern
@@ -63,21 +63,27 @@ def api_low_stock():
 @login_required
 def api_stats():
     """Статистик API."""
-    stats = {
-        'total': SparePart.query.count(),
-        'active': SparePart.query.filter_by(status='active').count(),
-        'low_stock': SparePart.query.filter_by(status='low_stock').count(),
-        'out_of_stock': SparePart.query.filter_by(status='out_of_stock').count(),
-        'total_value': db.session.query(
-            func.sum(SparePart.quantity * SparePart.unit_price)
-        ).scalar() or 0,
-    }
+    # P-H3: Нэг query-гээр бүх статистик авах (4 COUNT + SUM → 1 query)
+    row = db.session.query(
+        func.count(SparePart.id).label('total'),
+        func.count(case((SparePart.status == 'active', SparePart.id))).label('active'),
+        func.count(case((SparePart.status == 'low_stock', SparePart.id))).label('low_stock'),
+        func.count(case((SparePart.status == 'out_of_stock', SparePart.id))).label('out_of_stock'),
+        func.coalesce(func.sum(SparePart.quantity * SparePart.unit_price), 0).label('total_value'),
+    ).one()
 
-    return jsonify(stats)
+    return jsonify({
+        'total': row.total,
+        'active': row.active,
+        'low_stock': row.low_stock,
+        'out_of_stock': row.out_of_stock,
+        'total_value': float(row.total_value),
+    })
 
 
 @spare_parts_bp.route('/api/consume', methods=['POST'])
 @login_required
+@limiter.limit("30 per minute")
 def api_consume():
     """Сэлбэг зарцуулах API - тоног төхөөрөмжийн засварт ашиглах."""
     data = request.get_json()
@@ -156,6 +162,7 @@ def api_consume():
 
 @spare_parts_bp.route('/api/consume_bulk', methods=['POST'])
 @login_required
+@limiter.limit("10 per minute")
 def api_consume_bulk():
     """Олон сэлбэг нэг дор зарцуулах API."""
     data = request.get_json()
@@ -166,6 +173,10 @@ def api_consume_bulk():
 
     if not items:
         return jsonify({'success': False, 'message': 'items are required'}), 400
+
+    # A-H4: Bulk array size cap
+    if len(items) > 100:
+        return jsonify({'success': False, 'message': 'Нэг удаад 100-аас ихийг зарцуулах боломжгүй'}), 400
 
     results = []
     errors = []

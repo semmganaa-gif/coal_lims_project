@@ -355,6 +355,14 @@ def register_routes(bp):
                     if not sample:
                         raise ValueError(f"Дээж {sample_id} олдсонгүй")
 
+                    # B-C6: Lab type validation — coal API нь зөвхөн coal/petrography дээжинд
+                    if sample.lab_type and sample.lab_type not in ('coal', 'petrography'):
+                        raise ValueError(f"Энэ дээж {sample.lab_type} лабынх — нүүрсний API-аар хадгалах боломжгүй")
+
+                    # B-M4: Archived/completed sample дээр шинэ шинжилгээ хориглох
+                    if sample.status in ('archived', 'completed'):
+                        raise ValueError(f"Энэ дээж '{sample.status}' төлөвтэй — шинэ шинжилгээ хадгалах боломжгүй")
+
                     # --- 2. Normalization & Calculation ---
                     raw_in = item.get("raw_data") or {}
                     if not isinstance(raw_in, dict):

@@ -892,6 +892,10 @@ def save_results():
     if not sample:
         return jsonify({'success': False, 'message': 'Sample not found'}), 404
 
+    # B-M4: Archived/completed дээж дээр шинэ шинжилгээ хориглох
+    if sample.status in ('archived', 'completed'):
+        return jsonify({'success': False, 'message': f"Энэ дээж '{sample.status}' төлөвтэй — шинэ шинжилгээ хадгалах боломжгүй"}), 400
+
     import json
 
     # final_result: raw_data-аас тоон үр дүн авах

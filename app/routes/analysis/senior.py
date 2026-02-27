@@ -98,7 +98,7 @@ def register_routes(bp):
             safe_name = escape_like_pattern(sample_name)
             q = q.filter(Sample.sample_code.ilike(f"%{safe_name}%"))
 
-        results_to_review = q.order_by(AnalysisResult.updated_at.desc()).all()
+        results_to_review = q.order_by(AnalysisResult.updated_at.desc()).limit(500).all()
 
         processed_results = []
         for result, sample, user, analysis_type in results_to_review:
@@ -251,6 +251,10 @@ def register_routes(bp):
         if not result_ids:
             return jsonify({"message": "Үр дүн сонгогдоогүй байна"}), 400
 
+        # A-H4: Bulk array size cap
+        if len(result_ids) > 200:
+            return jsonify({"message": "Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй"}), 400
+
         if new_status not in {"approved", "rejected"}:
             return jsonify({"message": "Төлөв буруу байна"}), 400
 
@@ -260,9 +264,31 @@ def register_routes(bp):
         success_count = 0
         failed_ids = []
 
-        for rid in result_ids:
+        # P-C1 fix: Batch-load бүх AnalysisResult нэг query-гээр (N+1 устгах)
+        try:
+            int_ids = [int(rid) for rid in result_ids]
+        except (ValueError, TypeError):
+            return jsonify({"message": "ID буруу байна"}), 400
+
+        results_map = {
+            r.id: r for r in
+            AnalysisResult.query.filter(
+                AnalysisResult.id.in_(int_ids)
+            ).with_for_update().all()
+        }
+
+        # Batch-load холбогдох Sample-ууд (N+1 устгах)
+        sample_ids = {r.sample_id for r in results_map.values()}
+        samples_map = {
+            s.id: s for s in
+            Sample.query.filter(Sample.id.in_(sample_ids)).all()
+        } if sample_ids else {}
+
+        now_ts = now_local()
+
+        for rid in int_ids:
             try:
-                res = AnalysisResult.query.filter_by(id=int(rid)).with_for_update().first()
+                res = results_map.get(rid)
                 if not res:
                     failed_ids.append(rid)
                     continue
@@ -273,7 +299,7 @@ def register_routes(bp):
                     continue
 
                 res.status = new_status
-                res.updated_at = now_local()
+                res.updated_at = now_ts
 
                 if new_status == "rejected":
                     if hasattr(res, "rejection_category"):
@@ -290,10 +316,10 @@ def register_routes(bp):
                     if hasattr(res, "error_reason"):
                         res.error_reason = None
 
-                # Audit log
-                sample = Sample.query.get(res.sample_id)
+                # Audit log (sample from pre-loaded map)
+                sample = samples_map.get(res.sample_id)
                 audit = AnalysisResultLog(
-                    timestamp=now_local(),
+                    timestamp=now_ts,
                     user_id=current_user.id,
                     sample_id=res.sample_id,
                     analysis_result_id=res.id,
