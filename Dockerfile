@@ -1,6 +1,6 @@
 # =============================================================================
 # COAL LIMS - Production Dockerfile
-# Multi-stage build for optimized image size
+# Multi-stage build: dependencies → compile → production
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -27,7 +27,27 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir gunicorn redis
 
 # -----------------------------------------------------------------------------
-# Stage 2: Production - Minimal runtime image
+# Stage 2: Compiler - Compile .py → .pyc, remove source
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS compiler
+
+WORKDIR /app
+
+# Copy application source code
+COPY . .
+
+# Compile all Python files to bytecode (.pyc)
+# Then remove .py source files (keep only compiled .pyc)
+# Keep: run.py (gunicorn entry), config.py (needs to be readable for debugging)
+# Keep: migrations/ (Alembic needs .py files to run)
+RUN python -m compileall -b -q app/ && \
+    find app/ -name "*.py" -type f -delete && \
+    python -m compileall -b -q run.py config.py && \
+    rm -rf __pycache__ && \
+    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# -----------------------------------------------------------------------------
+# Stage 3: Production - Minimal runtime image
 # -----------------------------------------------------------------------------
 FROM python:3.11-slim AS production
 
@@ -52,8 +72,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Create non-root user for security
 RUN groupadd -r lims && useradd -r -g lims lims
 
-# Copy application code
-COPY --chown=lims:lims . .
+# Copy compiled application from compiler stage
+COPY --from=compiler --chown=lims:lims /app .
 
 # Create necessary directories
 RUN mkdir -p instance logs backups app/static/uploads && \
@@ -75,7 +95,7 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Run gunicorn with optimized settings
+# Run gunicorn
 CMD ["gunicorn", \
     "--worker-class", "gthread", \
     "--workers", "4", \

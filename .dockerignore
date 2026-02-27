@@ -1,0 +1,58 @@
+# ============================================================================
+# Coal LIMS - Docker Build Ignore
+# Docker image-д ОРОХГҮЙ файлууд
+# ============================================================================
+
+# Git
+.git
+.gitignore
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+instance/
+ssl/
+
+# Development files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov/
+tests/
+_tmp_*
+
+# Documentation (production-д шаардлагагүй)
+docs_all/
+SOP/
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker configs (image дотор шаардлагагүй)
+docker-compose*.yml
+Dockerfile
+.dockerignore
+nginx.conf
+backup.sh
+
+# Claude/AI session files
+.claude/
+
+# Monitoring configs
+monitoring/
+prometheus/
+grafana/
