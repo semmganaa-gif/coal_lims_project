@@ -1,7 +1,10 @@
 # app/routes/spare_parts/api.py
 """Сэлбэг хэрэгслийн API routes."""
 
+import logging
 from datetime import date
+
+logger = logging.getLogger(__name__)
 
 from flask import jsonify, request
 from flask_login import login_required, current_user
@@ -141,7 +144,8 @@ def api_consume():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        logger.error(f"Spare part consume error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Сэлбэг зарцуулахад алдаа гарлаа'}), 500
 
 
 @spare_parts_bp.route('/api/consume_bulk', methods=['POST'])
@@ -221,7 +225,8 @@ def api_consume_bulk():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        logger.error(f"Spare part bulk consume error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Олноор зарцуулахад алдаа гарлаа'}), 500
 
 
 @spare_parts_bp.route('/api/search')

@@ -13,12 +13,13 @@ import json
 import os
 import base64
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import wraps
 from flask import redirect, url_for, flash, request, g
 import logging
 
 from app.utils.hardware_fingerprint import generate_hardware_id, generate_short_hardware_id
+from app.utils.datetime import now_local as now_mn
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +50,22 @@ SIGNATURE_KEY = _load_or_generate_key('LICENSE_SIGNATURE_KEY', 'license_signatur
 
 
 def _hash_data(data: str) -> str:
-    """Өгөгдлийг hash хийх"""
-    combined = f"{data}{LICENSE_SALT}{LICENSE_SECRET_KEY}"
-    return hashlib.sha256(combined.encode()).hexdigest()
+    """Өгөгдлийг HMAC hash хийх"""
+    return hmac.new(
+        LICENSE_SECRET_KEY.encode(),
+        (data + LICENSE_SALT).encode(),
+        hashlib.sha256
+    ).hexdigest()
 
 
 def _create_signature(data: dict) -> str:
-    """Лицензийн гарын үсэг үүсгэх"""
-    # Чухал талбаруудыг нэгтгэх
-    sign_data = f"{data.get('company', '')}{data.get('expiry', '')}{data.get('hardware_id', '')}{SIGNATURE_KEY}"
-    return hashlib.sha256(sign_data.encode()).hexdigest()[:32]
+    """Лицензийн HMAC гарын үсэг үүсгэх"""
+    sign_data = f"{data.get('company', '')}|{data.get('expiry', '')}|{data.get('hardware_id', '')}"
+    return hmac.new(
+        SIGNATURE_KEY.encode(),
+        sign_data.encode(),
+        hashlib.sha256
+    ).hexdigest()
 
 
 def _verify_signature(data: dict, signature: str) -> bool:
@@ -75,6 +82,9 @@ class LicenseManager:
         self._license_cache = None
         self._last_check = None
         self._check_interval = timedelta(hours=1)  # 1 цаг тутамд шалгах
+        self._last_valid_result = None
+        self._last_validate_time = None
+        self._validate_cache_interval = timedelta(minutes=5)  # 5 мин кэш
 
     def init_app(self, app):
         self.app = app
@@ -85,7 +95,7 @@ class LicenseManager:
         from app import db
 
         # Cache шалгах
-        now = datetime.utcnow()
+        now = now_mn()
         if self._license_cache and self._last_check:
             if now - self._last_check < self._check_interval:
                 try:
@@ -106,6 +116,13 @@ class LicenseManager:
         Returns: {'valid': bool, 'error': str, 'license': obj, 'warning': str}
         """
         from app import db
+
+        # Cached valid result-г буцаах (5 мин дотор DB бичихгүй)
+        now = now_mn()
+        if (self._last_valid_result and self._last_validate_time
+                and now - self._last_validate_time < self._validate_cache_interval
+                and self._last_valid_result.get('valid')):
+            return self._last_valid_result
 
         result = {
             'valid': False,
@@ -135,15 +152,19 @@ class LicenseManager:
             return result
 
         # 4. Хугацаа шалгах
-        if datetime.utcnow() > license_obj.expiry_date:
+        if now_mn() > license_obj.expiry_date:
             result['error'] = 'LICENSE_EXPIRED'
             self._log_event(license_obj, 'expired', 'License has expired')
             return result
 
         # 5. Hardware ID шалгах
         current_hw_id = generate_hardware_id()
+        current_short = generate_short_hardware_id()
         if license_obj.hardware_id:
-            if license_obj.hardware_id != current_hw_id:
+            # Support both full and short IDs in stored/allowed values
+            stored_id = (license_obj.hardware_id or "").strip().lower()
+            stored_short = stored_id[:16]
+            if stored_id != current_hw_id.lower() and stored_short != current_short.lower():
                 # Allowed list шалгах
                 allowed_ids = []
                 if license_obj.allowed_hardware_ids:
@@ -152,32 +173,45 @@ class LicenseManager:
                     except (json.JSONDecodeError, TypeError):
                         pass
 
-                if current_hw_id not in allowed_ids:
+                allowed_norm = [str(x).strip().lower() for x in allowed_ids if x]
+                allowed_ok = (
+                    current_hw_id.lower() in allowed_norm
+                    or current_short.lower() in allowed_norm
+                )
+
+                if not allowed_ok:
                     # Tampering илэрсэн!
                     license_obj.tampering_detected = True
                     license_obj.tampering_details = json.dumps({
                         'type': 'hardware_mismatch',
-                        'expected': license_obj.hardware_id[:16],
-                        'found': current_hw_id[:16],
-                        'detected_at': datetime.utcnow().isoformat()
+                        'expected': stored_short,
+                        'found': current_short,
+                        'detected_at': now_mn().isoformat()
                     })
                     db.session.commit()
 
                     result['error'] = 'HARDWARE_MISMATCH'
                     self._log_event(license_obj, 'hardware_mismatch',
-                                    f'Expected: {license_obj.hardware_id[:16]}, Found: {current_hw_id[:16]}')
+                                    f'Expected: {stored_short}, Found: {current_short}')
                     return result
 
-        # 6. Шалгалтын тоо нэмэх
-        license_obj.last_check = datetime.utcnow()
-        license_obj.check_count = (license_obj.check_count or 0) + 1
-        db.session.commit()
+        # 6. Шалгалтын тоо нэмэх (1 цаг тутамд л DB бичнэ)
+        if (not self._last_validate_time
+                or now - self._last_validate_time >= self._check_interval):
+            license_obj.last_check = now
+            license_obj.check_count = (license_obj.check_count or 0) + 1
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
         # 7. Анхааруулга
         if license_obj.days_remaining <= 30:
             result['warning'] = f'LICENSE_EXPIRING_SOON:{license_obj.days_remaining}'
 
         result['valid'] = True
+        self._last_valid_result = result
+        self._last_validate_time = now
         return result
 
     def _log_event(self, license_obj, event_type: str, details: str):
@@ -215,7 +249,7 @@ class LicenseManager:
 
         # Хугацаа шалгах
         expiry = datetime.fromisoformat(license_data['expiry'])
-        if expiry < datetime.utcnow():
+        if expiry < now_mn():
             return {'success': False, 'error': 'License has already expired'}
 
         # Hardware ID шалгах (хэрвээ заасан бол)
@@ -232,7 +266,7 @@ class LicenseManager:
             license_key=license_key[:64],  # Богиносгох
             company_name=license_data.get('company', 'Unknown'),
             company_code=license_data.get('company_code', ''),
-            issued_date=datetime.fromisoformat(license_data.get('issued', datetime.utcnow().isoformat())),
+            issued_date=datetime.fromisoformat(license_data.get('issued', now_mn().isoformat())),
             expiry_date=expiry,
             max_users=license_data.get('max_users', 10),
             max_samples_per_month=license_data.get('max_samples', 10000),
@@ -268,7 +302,7 @@ class LicenseManager:
             'company': company,
             'company_code': kwargs.get('company_code', ''),
             'expiry': expiry_date,
-            'issued': datetime.utcnow().isoformat(),
+            'issued': now_mn().isoformat(),
             'hardware_id': hardware_id,
             'max_users': kwargs.get('max_users', 10),
             'max_samples': kwargs.get('max_samples', 10000),
@@ -289,6 +323,8 @@ class LicenseManager:
         """Cache цэвэрлэх"""
         self._license_cache = None
         self._last_check = None
+        self._last_valid_result = None
+        self._last_validate_time = None
 
 
 # Глобал instance
@@ -350,9 +386,13 @@ def check_license_middleware():
         'license.expired',
         'license.error',
         'license.info',
+        'license.check',
+        'license.hardware_id',
         'static',
+        'main.login',
+        'main.logout',
         'auth.login',
-        'auth.logout'
+        'auth.logout',
     ]
 
     if request.endpoint in skip_endpoints:

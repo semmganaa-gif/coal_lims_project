@@ -50,16 +50,16 @@ class SystemLicense(db.Model):
             return False
         if self.tampering_detected:
             return False
-        if datetime.utcnow() > self.expiry_date:
+        if now_mn() > self.expiry_date:
             return False
         return True
 
     @property
     def days_remaining(self):
         """Үлдсэн хоног"""
-        if datetime.utcnow() > self.expiry_date:
+        if now_mn() > self.expiry_date:
             return 0
-        delta = self.expiry_date - datetime.utcnow()
+        delta = self.expiry_date - now_mn()
         return max(0, delta.days)
 
     @property

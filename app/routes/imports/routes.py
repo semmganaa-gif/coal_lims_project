@@ -25,7 +25,7 @@ from typing import Dict, Any, Optional, Tuple, List
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 
 logger = logging.getLogger(__name__)
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -484,12 +484,18 @@ def _import_long(
 @import_bp.route("/historical_csv", methods=["GET", "POST"])
 @login_required
 def import_historical_csv():
+    if current_user.role != 'admin':
+        flash('Зөвхөн админ CSV импорт хийх боломжтой.', 'danger')
+        return redirect(url_for('main.index'))
     if request.method == "GET":
         return render_template("admin/import_historical.html", title="Түүхэн CSV импорт")
 
     file = request.files.get("file")
     dry_run = request.form.get("dry_run") == "on"
-    batch_size = int(request.form.get("batch_size") or 1000)
+    try:
+        batch_size = min(int(request.form.get("batch_size") or 1000), 5000)
+    except (ValueError, TypeError):
+        batch_size = 1000
 
     if not file or file.filename == "":
         flash("Файл сонгогдоогүй байна.", "danger")
@@ -543,7 +549,8 @@ def import_historical_csv():
             return redirect(url_for("importer.import_historical_csv"))
     except SQLAlchemyError as db_err:
         db.session.rollback()
-        flash(f"Мэдээллийн сан бичих алдаа: {db_err}", "danger")
+        logger.error(f"CSV import DB error: {db_err}", exc_info=True)
+        flash("Мэдээллийн сан бичих алдаа гарлаа.", "danger")
         return redirect(url_for("importer.import_historical_csv"))
 
     return render_template(

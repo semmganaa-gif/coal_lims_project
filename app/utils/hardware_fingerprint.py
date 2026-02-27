@@ -142,12 +142,3 @@ def verify_hardware_id(stored_id, tolerance=1):
     # Хэрвээ яг таарахгүй бол, зөвхөн хатуу шалгалт хийх
     # VM эсвэл hardware солигдсон үед
     return False
-
-
-# Test
-if __name__ == '__main__':
-    print("Hardware Information:")
-    print("-" * 50)
-    info = get_hardware_info()
-    for key, value in info.items():
-        print(f"{key}: {value}")

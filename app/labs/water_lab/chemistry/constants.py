@@ -38,6 +38,13 @@ PHYSICAL_PARAMS = {
         'mns_limit': (None, 15),
         'standard': 'MNS 4586:2007',
     },
+    'COLOR_TEMP': {
+        'name': 'Color/Temp',
+        'name_mn': 'Өнгө/Градус',
+        'unit': '',
+        'mns_limit': None,
+        'standard': 'MNS 4586:2007',
+    },
     'TEMP': {
         'name': 'Temperature',
         'name_mn': 'Температур',
@@ -164,6 +171,12 @@ CHEMICAL_PARAMS = {
         'unit': 'mg/L',
         'mns_limit': None,
     },
+    'BOD_PUR': {
+        'name': 'BOD Purification',
+        'name_mn': 'БХХ5 цэвэршилт',
+        'unit': '%',
+        'mns_limit': None,
+    },
     'COD': {
         'name': 'COD',
         'name_mn': 'ХХХ',
@@ -260,23 +273,25 @@ WATER_ANALYSIS_TYPES = [
     {'code': 'ODOR', 'name': 'Үнэр (балл)', 'order': 0, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'HARD', 'name': 'Ерөнхий хатуулаг', 'order': 1, 'role': 'chemist', 'categories': ['drinking']},
     {'code': 'TDS', 'name': 'Хуурай үлдэгдэл (Умбуур)', 'order': 2, 'role': 'chemist', 'categories': ['wastewater']},
-    {'code': 'NH4', 'name': 'Аммонийн ион (NH₄⁺)', 'order': 3, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'NO2', 'name': 'Нитритийн ион (NO₂⁻)', 'order': 4, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'NH4', 'name': 'Аммонийн ион (NH₄⁺)', 'order': 3, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'NO2', 'name': 'Нитритийн ион (NO₂⁻)', 'order': 4, 'role': 'chemist', 'categories': ['other']},
     {'code': 'NO3', 'name': 'Нитратын ион (NO₃⁻)', 'order': 5, 'role': 'chemist', 'categories': ['other']},
-    {'code': 'FE_W', 'name': 'Төмрийн ион (Fe)', 'order': 6, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'COLOR', 'name': 'Өнгө', 'order': 7, 'role': 'chemist', 'categories': ['drinking']},
-    {'code': 'EC', 'name': 'ЦДЧ (EC)', 'order': 8, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'FE_W', 'name': 'Төмрийн ион (Fe)', 'order': 6, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'COLOR', 'name': 'Өнгө', 'order': 7, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'COLOR_TEMP', 'name': 'Өнгө/Градус', 'order': 7, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'EC', 'name': 'ЦДЧ (EC)', 'order': 8, 'role': 'chemist', 'categories': ['other']},
     {'code': 'DS', 'name': 'Ууссан давс', 'order': 9, 'role': 'chemist', 'categories': ['other']},
-    {'code': 'F_W', 'name': 'Фторид (F⁻)', 'order': 10, 'role': 'chemist', 'categories': ['drinking']},
-    {'code': 'CL_FREE', 'name': 'Чөлөөт үлдэгдэл хлор', 'order': 11, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
-    {'code': 'PH', 'name': 'Усны орчин (pH)', 'order': 12, 'role': 'chemist', 'categories': ['drinking', 'wastewater']},
+    {'code': 'F_W', 'name': 'Фторид (F⁻)', 'order': 10, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'CL_FREE', 'name': 'Чөлөөт үлдэгдэл хлор', 'order': 11, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'PH', 'name': 'Усны орчин (pH)', 'order': 12, 'role': 'chemist', 'categories': ['other']},
     {'code': 'CL_W', 'name': 'Хлорид (Cl⁻)', 'order': 13, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'PO4', 'name': 'Фосфат ион (PO₄³⁻)', 'order': 14, 'role': 'chemist', 'categories': ['wastewater']},
     {'code': 'BOD', 'name': 'БХХ5 (BOD5)', 'order': 15, 'role': 'chemist', 'categories': ['wastewater']},
+    {'code': 'BOD_PUR', 'name': 'БХХ5 цэвэршилт (%)', 'order': 16, 'role': 'chemist', 'categories': ['summary_only']},
     # ─── Лагийн шинжилгээ (бусад) ───
-    {'code': 'SLUDGE_VOL', 'name': 'Лагийн эзлэхүүн (SV)', 'order': 16, 'role': 'chemist', 'categories': ['other']},
-    {'code': 'SLUDGE_DOSE', 'name': 'Лагийн тун (SD)', 'order': 17, 'role': 'chemist', 'categories': ['other']},
-    {'code': 'SLUDGE_INDEX', 'name': 'Лагийн индекс (SI)', 'order': 18, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE_VOL', 'name': 'Лагийн эзлэхүүн (SV)', 'order': 17, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE_DOSE', 'name': 'Лагийн тун (SD)', 'order': 18, 'role': 'chemist', 'categories': ['other']},
+    {'code': 'SLUDGE_INDEX', 'name': 'Лагийн индекс (SI)', 'order': 19, 'role': 'chemist', 'categories': ['other']},
     # ─── Бусад ───
     {'code': 'DUST', 'name': 'Тоос', 'order': 20, 'role': 'chemist', 'categories': ['other']},
     {'code': 'SLUDGE', 'name': 'Лаг', 'order': 21, 'role': 'chemist', 'categories': ['archive']},
@@ -303,6 +318,9 @@ WATER_ANALYSIS_TYPES = [
 
 # Бүх параметр нэгтгэл
 ALL_WATER_PARAMS = {**PHYSICAL_PARAMS, **CHEMICAL_PARAMS}
+
+# M-9: Зөвшөөрөгдсөн analysis_code set (whitelist validation)
+VALID_WATER_ANALYSIS_CODES = frozenset(ALL_WATER_PARAMS.keys())
 
 
 # =====================================================================
@@ -522,6 +540,23 @@ WATER_UNITS = {
 ALL_WATER_SAMPLE_NAMES = []
 for unit_data in WATER_UNITS.values():
     ALL_WATER_SAMPLE_NAMES.extend(unit_data['samples'])
+
+
+# ── Shared defaults (L-3 fix: magic numbers) ──
+DEFAULT_FILTER_DAYS = 7
+MAX_QUERY_LIMIT = 500
+
+
+def parse_display_name(sample_code):
+    """sample_code-оос display name гаргах (M-5 fix: shared regex helper)."""
+    import re
+    m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', sample_code)
+    if m:
+        return m.group(2)
+    m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', sample_code)
+    if m2:
+        return m2.group(1)
+    return sample_code
 
 
 def get_mns_standards() -> dict:

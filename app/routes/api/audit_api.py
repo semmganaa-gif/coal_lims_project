@@ -13,6 +13,7 @@ from flask import (
     render_template,
 )
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from datetime import datetime
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
@@ -338,7 +339,7 @@ def register_routes(bp):
         action = request.args.get('action')
         limit = min(int(request.args.get('limit', 1000)), 5000)
 
-        query = AuditLog.query
+        query = AuditLog.query.options(joinedload(AuditLog.user))
 
         if start_date:
             try:

@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 """Химийн хог хаягдлын бүртгэл."""
 
+import logging
 from flask import render_template, request, redirect, url_for, flash, jsonify
+
+logger = logging.getLogger(__name__)
 from flask_login import login_required, current_user
 from app import db
 from app.models import ChemicalWaste, ChemicalWasteRecord
@@ -242,7 +245,8 @@ def save_waste_record():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 400
+        logger.error(f"Waste record save error: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500
 
 
 # -------------------------------------------------

@@ -8,10 +8,12 @@ WebSocket чат events - Flask-SocketIO
 from flask import request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
+from markupsafe import escape as _esc
 from app import socketio, db
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.utils.datetime import now_local as now_mn
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ def handle_send_message(data):
         return
 
     receiver_id = data.get('receiver_id')
-    message_text = data.get('message', '').strip()
+    message_text = str(_esc(data.get('message', '').strip()))
     is_urgent = data.get('is_urgent', False)
     sample_id = data.get('sample_id')
     message_type = data.get('message_type', 'text')
@@ -140,14 +142,22 @@ def handle_send_file(data):
         return
 
     receiver_id = data.get('receiver_id')
-    file_url = data.get('file_url')
-    file_name = data.get('file_name')
+    file_url = data.get('file_url', '')
+    file_name = data.get('file_name', '')
     file_size = data.get('file_size', 0)
-    message_text = data.get('message', file_name or 'File')
 
     if not file_url:
         emit('error', {'message': 'File URL required'})
         return
+
+    # M-8: Validate file_url — only allow internal upload paths
+    if not re.match(r'^/static/uploads/[\w.\-/]+$', file_url):
+        emit('error', {'message': 'Invalid file URL'})
+        return
+
+    # Sanitize file_name
+    file_name = str(_esc(file_name)) if file_name else ''
+    message_text = str(_esc(data.get('message', file_name or 'File')))
 
     # Determine file type
     ext = file_name.lower().split('.')[-1] if file_name else ''
@@ -215,7 +225,7 @@ def handle_broadcast(data):
         emit('error', {'message': 'Only senior and admin can send announcements'})
         return
 
-    message_text = data.get('message', '').strip()
+    message_text = str(_esc(data.get('message', '').strip()))
     if not message_text:
         return
 

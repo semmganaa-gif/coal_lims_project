@@ -602,6 +602,9 @@
     editableColIds: editableFields,
     onCellValueChanged: function(params) {
       params.api.refreshCells({ rowNodes: [params.node], columns: computedCols });
+      if (window._waterOnCellChange) {
+        window._waterOnCellChange(params, computedCols);
+      }
       saveDrafts();
     },
     onFirstDataRendered: function() { updateRowCount(); },
@@ -657,12 +660,15 @@
 
     let ok = 0;
     for (const item of items) {
+      const code = item.analysis_code || ANALYSIS_CODE;
+      const results = item.results || item.raw_data;
       try {
         const r = await fetch(SAVE_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-          body: JSON.stringify({ sample_id: item.sample_id, analysis_code: ANALYSIS_CODE, results: item.raw_data })
+          body: JSON.stringify({ sample_id: item.sample_id, analysis_code: code, results: results })
         });
+        if (!r.ok) { console.error('HTTP error', r.status); continue; }
         const res = await r.json();
         if (res.success) ok++;
       } catch(e) { console.error(e); }
@@ -730,10 +736,11 @@
           tr.dataset.code = (s.sample_code || '').toLowerCase();
           tr.dataset.client = (s.client_name || '').toLowerCase();
           if (inGrid) tr.style.opacity = '0.5';
+          const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
           tr.innerHTML = '<td><input type="checkbox" class="form-check-input ws-chk" value="' + s.id + '"' + (inGrid ? ' disabled' : '') + '></td>'
-            + '<td>' + s.sample_code + '</td>'
-            + '<td class="text-muted small">' + (s.client_name || '-') + '</td>'
-            + '<td class="text-muted small">' + (s.sample_date || '-') + '</td>';
+            + '<td>' + _e(s.sample_code) + '</td>'
+            + '<td class="text-muted small">' + _e(s.client_name || '-') + '</td>'
+            + '<td class="text-muted small">' + _e(s.sample_date || '-') + '</td>';
           tr.addEventListener('click', function(e) {
             if (e.target.tagName === 'INPUT') return;
             const c = this.querySelector('.ws-chk');
@@ -1083,7 +1090,7 @@ window.submitEquipmentUsage = function() {
   if (items.length === 0) { alert('{{ _("No data to register.") }}'); return; }
   fetch('/api/log_usage_bulk', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': eqCsrf },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': eqCsrf },
     body: JSON.stringify({ items: items })
   })
   .then(r => r.json())

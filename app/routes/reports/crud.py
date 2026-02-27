@@ -3,14 +3,26 @@
 """Тайлангийн CRUD үйлдлүүд."""
 
 import os
+import uuid
 from flask import (
     render_template, request, redirect, url_for,
     flash, jsonify, send_file, current_app
 )
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from app import db
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
 from datetime import datetime, date
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+IMAGE_MAGIC_BYTES = {
+    b'\x89PNG': 'png',
+    b'\xff\xd8\xff': 'jpg',
+    b'GIF87a': 'gif',
+    b'GIF89a': 'gif',
+    b'RIFF': 'webp',
+}
+MAX_SIGNATURE_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
 
 
@@ -88,15 +100,37 @@ def add_signature():
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
+                    # Extension whitelist шалгах
+                    raw_name = secure_filename(file.filename)
+                    ext = raw_name.rsplit('.', 1)[-1].lower() if '.' in raw_name else ''
+                    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+                        flash(f"Зөвшөөрөгдөөгүй файлын төрөл: .{ext}. Зөвхөн {', '.join(ALLOWED_IMAGE_EXTENSIONS)}", "danger")
+                        return redirect(url_for("pdf_reports.signature_list"))
+
+                    # Файлын хэмжээ шалгах
+                    file.seek(0, 2)
+                    file_size = file.tell()
+                    file.seek(0)
+                    if file_size > MAX_SIGNATURE_FILE_SIZE:
+                        flash("Файлын хэмжээ хэт их (max 5MB).", "danger")
+                        return redirect(url_for("pdf_reports.signature_list"))
+
+                    # Magic bytes шалгах
+                    header_bytes = file.read(8)
+                    file.seek(0)
+                    valid_magic = any(header_bytes.startswith(magic) for magic in IMAGE_MAGIC_BYTES)
+                    if not valid_magic:
+                        flash("Файлын агуулга зургийн формат биш байна.", "danger")
+                        return redirect(url_for("pdf_reports.signature_list"))
+
                     # Хадгалах folder
                     upload_folder = os.path.join(
                         current_app.root_path, 'static', 'uploads', 'signatures'
                     )
                     os.makedirs(upload_folder, exist_ok=True)
 
-                    # Файлын нэр
-                    ext = file.filename.rsplit('.', 1)[-1].lower()
-                    filename = f"{sig_type}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+                    # UUID filename
+                    filename = f"{sig_type}_{uuid.uuid4().hex}.{ext}"
                     filepath = os.path.join(upload_folder, filename)
                     file.save(filepath)
                     image_path = f"uploads/signatures/{filename}"
@@ -228,7 +262,11 @@ def download_report(id):
         flash("PDF файл олдсонгүй.", "warning")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
-    pdf_full_path = os.path.join(current_app.root_path, 'static', report.pdf_path)
+    pdf_full_path = os.path.realpath(os.path.join(current_app.root_path, 'static', report.pdf_path))
+    safe_dir = os.path.realpath(os.path.join(current_app.root_path, 'static'))
+    if not pdf_full_path.startswith(safe_dir):
+        flash("Зөвшөөрөгдөөгүй файлын зам.", "danger")
+        return redirect(url_for("pdf_reports.report_detail", id=id))
 
     if not os.path.exists(pdf_full_path):
         flash("PDF файл олдсонгүй.", "warning")
@@ -354,5 +392,5 @@ def api_create_report():
         })
 
     except Exception as e:
-        current_app.logger.error(f"Error creating report: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        current_app.logger.error(f"Error creating report: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Тайлан үүсгэхэд алдаа гарлаа."}), 500

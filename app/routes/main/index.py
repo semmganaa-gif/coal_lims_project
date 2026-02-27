@@ -275,7 +275,7 @@ def register_routes(bp):
                     # Loop-н дундаас алдаа гарвал бүх partial changes-ийг rollback хийнэ
                     db.session.rollback()
                     current_app.logger.error(f"Error during sample registration loop: {e}")
-                    flash(f"Дээж бүртгэхэд алдаа гарлаа: {str(e)}", "danger")
+                    flash("Дээж бүртгэхэд алдаа гарлаа.", "danger")
                     # Continue to render template with errors below
 
                 # ✅ Сайжруулсан error handling - давхардлыг арилгасан
@@ -894,6 +894,6 @@ def send_hourly_report():
 
     except Exception as e:
         current_app.logger.exception("Error in send_hourly_report")
-        flash(f"Алдаа: {str(e)}", "danger")
+        flash("Имэйл илгээхэд алдаа гарлаа.", "danger")
 
     return redirect(url_for('main.index'))

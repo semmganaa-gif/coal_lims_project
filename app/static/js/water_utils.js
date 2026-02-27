@@ -40,7 +40,8 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /* ======== LIMIT CHECK FUNCTIONS ======== */
@@ -88,7 +89,7 @@
   // Усны химийн баганууд — mns_limit серверээс ирнэ (mergeMnsLimits)
   // primary: true = үргэлж харагдана
   var WATER_CHEM_COLUMNS = [
-    { code: 'COLOR', name: 'Color', shortName: 'Color', unit: '°', mns_limit: null, primary: true },
+    { code: 'COLOR_TEMP', name: 'Color/Temp', shortName: 'Color/°C', unit: '', mns_limit: null, primary: true },
     { code: 'EC', name: 'Electrical Conductivity', shortName: 'EC', unit: 'µS/cm', mns_limit: null, primary: true },
     { code: 'PH', name: 'pH', shortName: 'pH', unit: '', mns_limit: null, primary: true },
     { code: 'F_W', name: 'Fluoride', shortName: 'F⁻', unit: 'mg/L', mns_limit: null, primary: true },
@@ -101,6 +102,7 @@
     { code: 'CL_W', name: 'Chloride', shortName: 'Cl⁻', unit: 'mg/L', mns_limit: null },
     { code: 'PO4', name: 'Phosphate Ion', shortName: 'PO₄³⁻', unit: 'mg/L', mns_limit: null },
     { code: 'BOD', name: 'Biochemical Oxygen Demand', shortName: 'BOD', unit: 'mg/L', mns_limit: null },
+    { code: 'BOD_PUR', name: 'BOD Purification', shortName: 'BOD %', unit: '%', mns_limit: null },
     { code: 'SLUDGE_VOL', name: 'Sludge Volume', shortName: 'SV', unit: 'mL', mns_limit: null },
     { code: 'SLUDGE_DOSE', name: 'Sludge Dose', shortName: 'SD', unit: 'g/L', mns_limit: null },
     { code: 'SLUDGE_INDEX', name: 'Sludge Index', shortName: 'SI', unit: 'mL/g', mns_limit: null }

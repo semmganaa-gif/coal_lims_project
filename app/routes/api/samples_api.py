@@ -622,7 +622,10 @@ def register_routes(bp):
         end_date = request.args.get('end_date')
         limit = min(int(request.args.get('limit', 1000)), 5000)
 
-        query = AnalysisResult.query
+        query = AnalysisResult.query.options(
+            joinedload(AnalysisResult.sample),
+            joinedload(AnalysisResult.user),
+        )
 
         if status:
             query = query.filter(AnalysisResult.status == status)
@@ -683,8 +686,8 @@ def register_routes(bp):
         for s in samples:
             html += f'''
             <a href="/sample/{s.id}" class="list-group-item list-group-item-action py-2">
-                <strong>{s.sample_code}</strong>
-                <small class="text-muted ms-2">{s.client_name or ""}</small>
+                <strong>{escape(s.sample_code or "")}</strong>
+                <small class="text-muted ms-2">{escape(s.client_name or "")}</small>
             </a>'''
         html += '</div>'
         return html
@@ -805,7 +808,8 @@ def register_routes(bp):
                     })
                 except Exception as e:
                     db.session.rollback()
-                    return jsonify({"success": False, "message": str(e)}), 500
+                    logging.getLogger(__name__).error(f"MG repeat error: {e}", exc_info=True)
+                    return jsonify({"success": False, "message": "Давтан шинжилгээ буцаахад алдаа гарлаа"}), 500
 
             return jsonify({"success": False, "message": "Буруу хүсэлт"}), 400
         MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE']

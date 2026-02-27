@@ -20,6 +20,10 @@
   /**
    * Draft Manager Class
    */
+  // Production-д console.log гаргахгүй (debug mode-д л харуулна)
+  var _debugMode = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  function _log() { if (_debugMode) console.log.apply(console, arguments); }
+
   class LIMSDraftManager {
     /**
      * Constructor
@@ -65,22 +69,20 @@
 
         const jsonData = JSON.stringify(toSave);
 
-        // Size шалгалт (5MB max - localStorage limit ойролцоо)
+        // Size шалгалт — hard limit 2MB
         const sizeInBytes = new Blob([jsonData]).size;
-        const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+        const MAX_DRAFT_BYTES = 2 * 1024 * 1024; // 2MB
 
-        if (sizeInBytes > 4.5 * 1024 * 1024) { // 4.5MB warning
-          console.warn(
-            `LIMSDraftManager: Draft size is large (${sizeInMB}MB). ` +
-            `Consider cleaning old drafts.`
+        if (sizeInBytes > MAX_DRAFT_BYTES) {
+          console.error(
+            'LIMSDraftManager: Draft size exceeds 2MB limit (' +
+            (sizeInBytes / (1024 * 1024)).toFixed(2) + 'MB). ' +
+            'Please clear old drafts.'
           );
+          return false;
         }
 
         localStorage.setItem(this.key, jsonData);
-
-        console.log(
-          `✅ Draft saved: ${this.analysisCode} (${sizeInMB}MB, ${Object.keys(toSave).filter(k => k !== '_meta').length} samples)`
-        );
 
         return true;
 
@@ -116,7 +118,7 @@
         const jsonData = localStorage.getItem(this.key);
 
         if (!jsonData) {
-          if (!silent) console.log(`ℹ️ No draft found for ${this.analysisCode}`);
+          if (!silent) _log(`No draft found for ${this.analysisCode}`);
           return {};
         }
 
@@ -126,9 +128,7 @@
         const meta = data._meta || null;
         const sampleCount = Object.keys(data).filter(k => k !== '_meta').length;
 
-        if (!silent) console.log(
-          `✅ Draft restored: ${this.analysisCode} (${sampleCount} samples)`
-        );
+        if (!silent) _log(`Draft restored: ${this.analysisCode} (${sampleCount} samples)`);
 
         // includeMeta=false бол _meta-г ХАСАЖ буцаах (ӨГӨГДЛИЙГ ӨӨРЧЛӨХГҮЙ)
         if (!includeMeta) {
@@ -178,7 +178,7 @@
         if (!sampleIds || sampleIds.length === 0) {
           // Бүх draft устгах
           localStorage.removeItem(this.key);
-          console.log(`🗑️ All drafts purged: ${this.analysisCode}`);
+          _log(`All drafts purged: ${this.analysisCode}`);
           return true;
         }
 
@@ -202,11 +202,9 @@
             this.save(existing, false); // merge=false, шинээр хадгалах
           }
 
-          console.log(
-            `🗑️ Drafts purged: ${this.analysisCode} (${purgedCount} samples)`
-          );
+          _log(`Drafts purged: ${this.analysisCode} (${purgedCount} samples)`);
         } else {
-          console.log(`ℹ️ No matching drafts to purge: ${this.analysisCode}`);
+          _log(`No matching drafts to purge: ${this.analysisCode}`);
         }
 
         return true;
@@ -333,9 +331,9 @@
     const removed = [];
     const kept = [];
 
-    console.group('🧹 LIMS Draft Cleanup');
-    console.log('Max age:', maxAgeDays, 'days');
-    console.log('Dry run:', dryRun);
+    _log('LIMS Draft Cleanup');
+    _log('Max age:', maxAgeDays, 'days');
+    _log('Dry run:', dryRun);
 
     // localStorage.length нь loop дотор өөрчлөгдөж болно тул key-үүдийг эхлээд авах
     const keys = [];
@@ -366,25 +364,25 @@
 
           if (ageMs > maxAgeMs) {
             shouldRemove = true;
-            console.log(`🗓️ Old draft: ${key} (${ageInDays} days old, ${sizeInKB}KB)`);
+            _log(`Old draft: ${key} (${ageInDays} days old, ${sizeInKB}KB)`);
           }
         } else {
           // Хуучин format (timestamp байхгүй) - анхааруулах
-          console.warn(`⚠️ Draft without timestamp: ${key} (${sizeInKB}KB) - will be updated on next save`);
+          _log(`Draft without timestamp: ${key} (${sizeInKB}KB) - will be updated on next save`);
         }
 
         // 100KB-аас ихийг анхааруулах
         if (sizeInBytes > 100 * 1024) {
-          console.warn(`📦 Large draft: ${key} (${sizeInKB}KB)`);
+          _log(`Large draft: ${key} (${sizeInKB}KB)`);
         }
 
         if (shouldRemove) {
           if (!dryRun) {
             localStorage.removeItem(key);
             removed.push({ key, ageInDays, sizeInKB });
-            console.log(`✅ Removed: ${key}`);
+            _log(`Removed: ${key}`);
           } else {
-            console.log(`[DRY RUN] Would remove: ${key}`);
+            _log(`[DRY RUN] Would remove: ${key}`);
           }
         } else {
           kept.push({ key, ageInDays, sizeInKB });
@@ -396,19 +394,16 @@
         if (!dryRun) {
           localStorage.removeItem(key);
           removed.push({ key, error: 'corrupt' });
-          console.log(`✅ Removed corrupt draft: ${key}`);
+          _log(`Removed corrupt draft: ${key}`);
         }
       }
     });
 
-    console.log('---');
-    console.log('Removed:', removed.length);
-    console.log('Kept:', kept.length);
-    console.groupEnd();
+    _log('Removed:', removed.length, 'Kept:', kept.length);
 
     return { removed, kept };
   };
 
-  console.log('✅ LIMS Draft Manager loaded');
+  _log('LIMS Draft Manager loaded');
 
 })(window);

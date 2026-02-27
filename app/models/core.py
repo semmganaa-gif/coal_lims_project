@@ -4,6 +4,7 @@ User and sample models.
 """
 
 from flask_login import UserMixin
+from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from app.utils.datetime import now_local as now_mn
 import re
@@ -89,7 +90,7 @@ class User(UserMixin, db.Model):
         Нууц үгний бодлого шалгах.
 
         Шаардлага:
-            - Хамгийн багадаа 8 тэмдэгт
+            - Хамгийн багадаа 10 тэмдэгт
             - Том үсэг (A-Z)
             - Жижиг үсэг (a-z)
             - Тоо (0-9)
@@ -111,8 +112,8 @@ class User(UserMixin, db.Model):
             Static method учраас object үүсгэхгүйгээр дуудаж болно.
         """
         errors = []
-        if len(password) < 8:
-            errors.append("хамгийн багадаа 8 тэмдэгт байх ёстой")
+        if len(password) < 10:
+            errors.append("хамгийн багадаа 10 тэмдэгт байх ёстой")
         if not any(c.isupper() for c in password):
             errors.append("том үсэг агуулах ёстой")
         if not any(c.islower() for c in password):
@@ -261,7 +262,7 @@ class Sample(db.Model):
     results = db.relationship(
         "AnalysisResult",
         backref="sample",
-        lazy="dynamic",
+        lazy="select",
         cascade="all, delete-orphan",
     )
 

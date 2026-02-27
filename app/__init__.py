@@ -199,7 +199,7 @@ def create_app(config_class=Config):
     # CSRF exempt: зөвхөн JSON API blueprint-үүд
     # HTML form-тэй blueprint-үүдийг exempt хийхгүй (CSRF хамгаалалттай)
     csrf.exempt(api_bp)       # Pure JSON API - CSRF exempt зөв
-    csrf.exempt(petro_bp)     # Зөвхөн JSON API endpoints (HTML form байхгүй)
+    # petro_bp CSRF exempt устгасан — template-ууд X-CSRFToken илгээдэг
 
     # ======================================================
     # Лиценз хамгаалалт - before_request hook

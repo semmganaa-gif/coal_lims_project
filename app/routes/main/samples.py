@@ -69,7 +69,8 @@ def register_routes(bp):
                     return redirect(url_for("main.index"))
                 except Exception as e:
                     db.session.rollback()
-                    flash(f"Хадгалахад алдаа гарлаа: {e}", "danger")
+                    current_app.logger.error(f"Sample save error: {e}", exc_info=True)
+                    flash("Хадгалахад алдаа гарлаа.", "danger")
 
         return render_template(
             "edit_sample.html",

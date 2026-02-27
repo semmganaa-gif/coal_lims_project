@@ -918,8 +918,8 @@ def register_routes(bp):
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Request analysis error: {e}")
-            return jsonify({"message": f"Алдаа: {str(e)}"}), 500
+            current_app.logger.error(f"Request analysis error: {e}", exc_info=True)
+            return jsonify({"message": "Мэдээллийн сангийн алдаа гарлаа"}), 500
 
     # -----------------------------------------------------------
     # 5) Notification Check
@@ -970,5 +970,5 @@ def register_routes(bp):
             })
 
         except Exception as e:
-            current_app.logger.error(f"Notification Check Error: {e}")
-            return jsonify({"ready_count": 0, "error": str(e)}), 500
+            current_app.logger.error(f"Notification Check Error: {e}", exc_info=True)
+            return jsonify({"ready_count": 0, "error": "Шалгахад алдаа гарлаа"}), 500

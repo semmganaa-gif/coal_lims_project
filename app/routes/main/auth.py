@@ -105,4 +105,7 @@ def register_routes(bp):
             if current_user.is_authenticated:
                 current_user.language = lang
                 db.session.commit()
-        return redirect(request.referrer or url_for('main.index'))
+        referrer = request.referrer
+        if not referrer or not is_safe_url(referrer):
+            referrer = url_for('main.index')
+        return redirect(referrer)

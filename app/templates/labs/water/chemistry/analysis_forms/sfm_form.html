@@ -1,0 +1,195 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">SFM</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>{{ _("Calculation Formula") }}</h6>
+  <small class="text-muted">
+    NH4: {{ _("Result") }} = Cav × {{ _("Dilution") }} × 0.777<br>
+    NO2: {{ _("Result") }} = Cav × {{ _("Dilution") }} × 3.286<br>
+    PO4: {{ _("Result") }} = Cav × {{ _("Dilution") }} × 3.06
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  const LIMITS = {{ sfm_limits | tojson }};
+  const FACTORS = { NH4: 0.777, NO2: 3.286, PO4: 3.06, FE_W: 1 };
+
+  function avgPair(a, b) {
+    if (a != null && b != null) return (a + b) / 2;
+    if (a != null) return a;
+    if (b != null) return b;
+    return null;
+  }
+
+  function calcCav(c1, c2, cav) {
+    const avg = avgPair(c1, c2);
+    return avg != null ? avg : (cav ?? null);
+  }
+
+  function calcResult(c1, c2, cav, dil, factor) {
+    const c = calcCav(c1, c2, cav);
+    if (c == null) return null;
+    const d = (dil == null ? 1 : dil);
+    return c * d * factor;
+  }
+
+  function limitStyle(code, val) {
+    if (val == null || isNaN(val)) return {};
+    const lim = LIMITS[code];
+    if (!lim) return {};
+    if (Array.isArray(lim)) {
+      const min = lim[0], max = lim[1];
+      if (min != null && val < min) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      if (max != null && val > max) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+    }
+    if (val > lim) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+    return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+  }
+
+  const editNH4 = { ...editCol, editable: p => !p.data._lock_nh4 };
+  const editNO2 = { ...editCol, editable: p => !p.data._lock_no2 };
+  const editPO4 = { ...editCol, editable: p => !p.data._lock_po4 };
+  const editFE = { ...editCol, editable: p => !p.data._lock_fe };
+
+  function colGroup(title, prefix, factorKey, editCfg, code, resultLabel) {
+    return {
+      headerName: title,
+      children: [
+        { headerName: 'C1', field: `${prefix}_c1`, width: 60, type: 'numericColumn', ...editCfg, valueFormatter: fmt3 },
+        { headerName: 'C2', field: `${prefix}_c2`, width: 60, type: 'numericColumn', ...editCfg, valueFormatter: fmt3 },
+        {
+          headerName: 'Cav', field: `${prefix}_cav`, width: 60,
+          valueGetter: p => calcCav(p.data[`${prefix}_c1`], p.data[`${prefix}_c2`], p.data[`${prefix}_cav`]),
+          valueFormatter: fmt3,
+          cellStyle: { fontWeight: '600', color: '#0d6efd' }
+        },
+        { headerName: 'DF', field: `${prefix}_dil`, width: 55, type: 'numericColumn', ...editCfg },
+        {
+          headerName: resultLabel, field: `${prefix}_res`, width: 75,
+          valueGetter: p => calcResult(
+            p.data[`${prefix}_c1`],
+            p.data[`${prefix}_c2`],
+            p.data[`${prefix}_cav`],
+            p.data[`${prefix}_dil`],
+            FACTORS[factorKey]
+          ),
+          valueFormatter: fmt2,
+          cellStyle: p => ({ fontWeight: 'bold', ...limitStyle(code, p.value) })
+        },
+      ]
+    };
+  }
+
+  var formColumns = [
+    colGroup('Аммонийн азот', 'nh4', 'NH4', editNH4, 'NH4', 'мгN/л'),
+    colGroup('Нитритийн ион', 'no2', 'NO2', editNO2, 'NO2', 'мгNO2/л'),
+    colGroup('Фосфатын ион', 'po4', 'PO4', editPO4, 'PO4', 'мгPO4/л'),
+    colGroup('Төмөр', 'fe', 'FE_W', editFE, 'FE_W', 'мгFe/л')
+  ];
+
+  var editableFields = [
+    'nh4_c1','nh4_c2','nh4_cav','nh4_dil',
+    'no2_c1','no2_c2','no2_cav','no2_dil',
+    'po4_c1','po4_c2','po4_cav','po4_dil',
+    'fe_c1','fe_c2','fe_cav','fe_dil',
+    'notes'
+  ];
+  var computedCols = ['nh4_cav','nh4_res','no2_cav','no2_res','po4_cav','po4_res','fe_cav','fe_res'];
+
+  window._waterOnCellChange = function(params, cols) {
+    const f = params.colDef.field;
+    if (!f) return;
+    const watched = [
+      'nh4_c1','nh4_c2','nh4_cav','nh4_dil',
+      'no2_c1','no2_c2','no2_cav','no2_dil',
+      'po4_c1','po4_c2','po4_cav','po4_dil',
+      'fe_c1','fe_c2','fe_cav','fe_dil'
+    ];
+    if (!watched.includes(f)) return;
+    params.api.refreshCells({ columns: cols, force: true });
+  };
+{% endblock %}
+
+{% block row_builder %}
+  function pickValues(raw) {
+    const c1 = raw?.c1 ?? raw?.m1 ?? raw?.r1 ?? raw?.value ?? raw?.result ?? raw?.average ?? null;
+    const c2 = raw?.c2 ?? raw?.m2 ?? raw?.r2 ?? null;
+    const cav = raw?.cav ?? raw?.average ?? null;
+    const dil = raw?.dilution ?? 1;
+    return { c1, c2, cav, dil };
+  }
+
+  const rowData = samples.map((s, idx) => {
+    const ex = existingResults[s.id] || {};
+    const nh4 = pickValues(ex.NH4?.raw_data || {});
+    const no2 = pickValues(ex.NO2?.raw_data || {});
+    const po4 = pickValues(ex.PO4?.raw_data || {});
+    const lockNh4 = ex.NH4?.status && ex.NH4.status !== 'rejected';
+    const lockNo2 = ex.NO2?.status && ex.NO2.status !== 'rejected';
+    const lockPo4 = ex.PO4?.status && ex.PO4.status !== 'rejected';
+    const fe = pickValues(ex.FE_W?.raw_data || {});
+    const lockFe = ex.FE_W?.status && ex.FE_W.status !== 'rejected';
+
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: false, notes: '',
+      nh4_c1: nh4.c1, nh4_c2: nh4.c2, nh4_cav: nh4.cav, nh4_dil: nh4.dil,
+      no2_c1: no2.c1, no2_c2: no2.c2, no2_cav: no2.cav, no2_dil: no2.dil,
+      po4_c1: po4.c1, po4_c2: po4.c2, po4_cav: po4.cav, po4_dil: po4.dil,
+      fe_c1: fe.c1, fe_c2: fe.c2, fe_cav: fe.cav, fe_dil: fe.dil,
+      _lock_nh4: lockNh4, _lock_no2: lockNo2, _lock_po4: lockPo4, _lock_fe: lockFe,
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function buildItem(code, d, prefix, factor) {
+    const c1 = d[`${prefix}_c1`];
+    const c2 = d[`${prefix}_c2`];
+    const cav = calcCav(c1, c2, d[`${prefix}_cav`]);
+    if (cav == null) return null;
+    const dil = d[`${prefix}_dil`] ?? 1;
+    const rawRes = calcResult(c1, c2, cav, dil, factor);
+    const res = (rawRes == null) ? null : Math.round(rawRes * 100) / 100;
+    return {
+      sample_id: d.sample_id,
+      analysis_code: code,
+      results: {
+        c1: c1,
+        c2: c2,
+        cav: cav,
+        dilution: dil,
+        factor: factor,
+        result: res
+      }
+    };
+  }
+
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      const d = n.data;
+      if (!d._lock_nh4) {
+        const item = buildItem('NH4', d, 'nh4', FACTORS.NH4);
+        if (item) items.push(item);
+      }
+      if (!d._lock_no2) {
+        const item = buildItem('NO2', d, 'no2', FACTORS.NO2);
+        if (item) items.push(item);
+      }
+      if (!d._lock_po4) {
+        const item = buildItem('PO4', d, 'po4', FACTORS.PO4);
+        if (item) items.push(item);
+      }
+      if (!d._lock_fe) {
+        const item = buildItem('FE_W', d, 'fe', FACTORS.FE_W);
+        if (item) items.push(item);
+      }
+    });
+    return items;
+  }
+{% endblock %}

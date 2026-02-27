@@ -70,6 +70,15 @@ class Config:
     SESSION_COOKIE_SECURE = ENV != "development"
     SESSION_COOKIE_HTTPONLY = True  # JavaScript-ээс хандахгүй байх
 
+    # Session хугацаа: 8 цаг (ажлын өдөр)
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
+
+    # Flask-Login Remember Me cookie аюулгүй байдал
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SECURE = ENV != "development"
+    REMEMBER_COOKIE_DURATION = timedelta(days=7)
+
     # ✅ CSRF хамгаалалт - ИДЭВХЖҮҮЛСЭН
     WTF_CSRF_ENABLED = True  # Production-д заавал идэвхтэй байх
     WTF_CSRF_TIME_LIMIT = 3600  # Токен 1 цагийн дараа дуусна (секундээр)

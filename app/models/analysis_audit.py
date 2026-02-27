@@ -62,7 +62,7 @@ class AnalysisResultLog(HashableMixin, db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=now_mn, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
-    user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="dynamic"))
+    user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="select"))
 
     # ✅ SET NULL: Sample устахад log үлдэнэ
     sample_id = db.Column(

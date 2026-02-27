@@ -3,6 +3,8 @@
 Quality control models.
 """
 
+from typing import Optional
+
 from app import db
 from app.utils.datetime import now_local as now_mn
 
@@ -46,7 +48,7 @@ class Bottle(db.Model):
     constants = db.relationship(
         "BottleConstant",
         backref="bottle",
-        lazy="dynamic",
+        lazy="select",
         cascade="all, delete-orphan",
     )
 
@@ -135,9 +137,7 @@ class BottleConstant(db.Model):
         Returns:
             bool: Идэвхтэй бол True, үгүй бол False.
         """
-        from datetime import datetime as _dt
-
-        ref = ref or _dt.utcnow()
+        ref = ref or now_mn()
         if self.effective_to is not None and ref >= self.effective_to:
             return False
         return self.effective_from <= ref and self.approved_at is not None

@@ -3,6 +3,9 @@
 Analysis models.
 """
 
+import json
+from typing import Any, Dict, List, Optional
+
 from app import db
 from app.utils.datetime import now_local as now_mn
 from app.models.mixins import FLOAT_EPSILON
@@ -89,7 +92,7 @@ class AnalysisResult(db.Model):
     logs = db.relationship(
         "AnalysisResultLog",
         back_populates="result",
-        lazy="dynamic",
+        lazy="select",
         cascade="save-update, merge",
         passive_deletes=True,
         order_by="desc(AnalysisResultLog.timestamp)",

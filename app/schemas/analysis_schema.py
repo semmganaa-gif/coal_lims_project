@@ -82,16 +82,13 @@ class AnalysisResultSchema(Schema):
 
     @validates("analysis_code")
     def validate_analysis_code(self, value, **kwargs):
-        """Шинжилгээний код validation"""
+        """Шинжилгээний код validation — whitelist regex"""
         if not value or not value.strip():
             raise ValidationError("Шинжилгээний код хоосон байж болохгүй")
 
-        # SQL injection хамгаалалт
-        dangerous_chars = [";", "--", "/*", "*/", "DROP", "DELETE"]
-        value_lower = value.lower()
-        for char in dangerous_chars:
-            if char.lower() in value_lower:
-                raise ValidationError("Шинжилгээний код буруу тэмдэгт агуулж байна")
+        import re
+        if not re.match(r'^[A-Za-z0-9_]+$', value.strip()):
+            raise ValidationError("Шинжилгээний код зөвхөн үсэг, тоо, доогуур зураас агуулна")
 
         return value
 

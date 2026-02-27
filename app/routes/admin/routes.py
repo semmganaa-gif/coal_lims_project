@@ -7,12 +7,15 @@
 хяналтын стандартууд болон GBW стандартуудын удирдлагыг хариуцна.
 """
 
+import logging
 from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, AnalysisType, AnalysisProfile, SystemSetting
 import sqlalchemy as sa
 from functools import wraps
+
+logger = logging.getLogger(__name__)
 import json
 
 # Forms болон Constants импорт
@@ -83,7 +86,8 @@ def _seed_analysis_types():
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            flash(f'Шинжилгээний төрөл үүсгэх/шинэчлэх алдаа: {e}', 'danger')
+            logger.error(f'Analysis type save error: {e}', exc_info=True)
+            flash('Шинжилгээний төрөл үүсгэх/шинэчлэх алдаа гарлаа.', 'danger')
 
 
 # ==============================================================================
@@ -114,8 +118,8 @@ def manage_users():
             user.position = form.position.data or None
             try:
                 user.set_password(form.password.data)
-            except ValueError as e:
-                flash(str(e), 'danger')
+            except ValueError:
+                flash('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).', 'danger')
                 users = User.query.order_by(User.id).all()
                 return render_template('manage_users.html', title='Хэрэглэгчийн удирдлага', users=users, form=form)
             db.session.add(user)
@@ -182,8 +186,8 @@ def edit_user(user_id):
         if form.password.data:
             try:
                 user_to_edit.set_password(form.password.data)
-            except ValueError as e:
-                flash(str(e), 'danger')
+            except ValueError:
+                flash('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).', 'danger')
                 return render_template('edit_user.html',
                                        title='Хэрэглэгч засах',
                                        form=form,

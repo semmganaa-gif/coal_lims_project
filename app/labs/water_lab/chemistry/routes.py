@@ -1,22 +1,29 @@
 # app/labs/water_lab/chemistry/routes.py
 """Усны хими лабораторийн routes."""
 
+import json as _json
 import logging
+import re
+from datetime import datetime as _dt, timedelta as _td
+
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
+from sqlalchemy import or_
+
 from app import db
 from app.models import Sample, AnalysisResult, Equipment
-
-logger = logging.getLogger(__name__)
-from sqlalchemy import or_
 from app.labs.water_lab.chemistry.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
-    ALL_WATER_SAMPLE_NAMES, get_mns_standards
+    ALL_WATER_SAMPLE_NAMES, get_mns_standards,
+    DEFAULT_FILTER_DAYS, MAX_QUERY_LIMIT,
+    parse_display_name as _parse_display_name,
 )
 from app.labs.water_lab.microbiology.constants import MICRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
 from app.utils.converters import to_float
-from app.utils.security import escape_like_pattern
+from app.utils.security import escape_like_pattern, is_safe_url
+
+logger = logging.getLogger(__name__)
 
 water_bp = Blueprint(
     'water',
@@ -25,15 +32,25 @@ water_bp = Blueprint(
 )
 
 
+def _parse_filter_days(default=DEFAULT_FILTER_DAYS):
+    """Request args-аас days параметр авч date_cutoff буцаах."""
+    days_param = request.args.get('days', str(default))
+    try:
+        filter_days = int(days_param)
+    except (ValueError, TypeError):
+        filter_days = default
+    date_cutoff = None
+    if filter_days > 0:
+        date_cutoff = (_dt.now() - _td(days=filter_days)).date()
+    return filter_days, date_cutoff
+
+
 def _build_water_rows(samples, include_lab_type=False):
     """Дээжүүдийн хими + микро үр дүнг rows болгон цуглуулах (archive/summary дундын helper).
 
     Returns:
         (rows, active_chem_codes)
     """
-    import re
-    import json as _json
-
     if not samples:
         return [], []
 
@@ -86,17 +103,15 @@ def _build_water_rows(samples, include_lab_type=False):
             val = raw.get('value') or raw.get('result') or raw.get('average') or r.final_result
             chem_map[r.sample_id][r.analysis_code] = val
             chem_id_map[r.sample_id][r.analysis_code] = r.id
+            if r.analysis_code == 'BOD':
+                pur = raw.get('purification')
+                if pur is not None:
+                    chem_map[r.sample_id]['BOD_PUR'] = pur
+                    chem_id_map[r.sample_id]['BOD_PUR'] = r.id
 
     rows = []
     for s in samples:
-        display_name = s.sample_code
-        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-        if m:
-            display_name = m.group(2)
-        else:
-            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-            if m2:
-                display_name = m2.group(1)
+        display_name = _parse_display_name(s.sample_code)
 
         row = {
             'sample_id': s.id,
@@ -141,11 +156,11 @@ def _build_water_rows(samples, include_lab_type=False):
         # Арчдасны микро (MICRO_SWAB)
         sres = swab_map.get(s.id, {})
         # CFU дундаж - ус эсвэл арчдасаас авах (нэгтгэсэн)
-        row['cfu_avg'] = cfu_avg or sres.get('cfu_swab')
+        row['cfu_avg'] = cfu_avg if cfu_avg is not None else sres.get('cfu_swab')
         # E.coli, Salmonella, S.aureus - ус эсвэл арчдасаас авах (нэгтгэсэн)
-        row['ecoli'] = mres.get('ecoli') or sres.get('ecoli_swab')
-        row['salmonella'] = mres.get('salmonella') or sres.get('salmonella_swab')
-        row['staph'] = ares.get('staphylococcus') or sres.get('staphylococcus_swab')
+        row['ecoli'] = mres.get('ecoli') if mres.get('ecoli') is not None else sres.get('ecoli_swab')
+        row['salmonella'] = mres.get('salmonella') if mres.get('salmonella') is not None else sres.get('salmonella_swab')
+        row['staph'] = ares.get('staphylococcus') if ares.get('staphylococcus') is not None else sres.get('staphylococcus_swab')
 
         rows.append(row)
 
@@ -164,6 +179,138 @@ def _build_chem_params(active_chem_codes):
             'mns_limit': p.get('mns_limit'),
         })
     return chem_params
+
+
+def _build_multi_workspace(codes, template, title, analysis_code,
+                           param, extra_ctx=None, equipment_patterns=None):
+    """C-1 fix: Олон workspace-ийн давхардсан логикийг нэгтгэсэн helper.
+
+    Args:
+        codes: шинжилгээний кодуудын list (e.g. ['NH4', 'NO2', ...])
+        template: render хийх template path
+        title: хуудасны гарчиг
+        analysis_code: workspace analysis_code (e.g. 'SFT')
+        param: {'name_mn': ..., 'unit': ..., 'mns_limit': ..., 'standard': ...}
+        extra_ctx: нэмэлт template context dict
+        equipment_patterns: Equipment.related_analysis ILIKE patterns (list of str)
+    """
+    filter_days, date_cutoff = _parse_filter_days()
+
+    newly_selected_ids_str = request.args.get('sample_ids', '')
+    new_ids = [int(x) for x in newly_selected_ids_str.split(',') if x.isdigit()]
+
+    seen = set()
+    samples_to_analyze = []
+
+    # A: Одоо байгаа үр дүнтэй дээжүүд (pending/rejected)
+    existing_q = (
+        db.session.query(AnalysisResult, Sample)
+        .join(Sample, Sample.id == AnalysisResult.sample_id)
+        .filter(
+            AnalysisResult.user_id == current_user.id,
+            AnalysisResult.analysis_code.in_(codes),
+            AnalysisResult.status.in_(['pending_review', 'rejected']),
+        )
+    )
+    if date_cutoff:
+        existing_q = existing_q.filter(Sample.received_date >= date_cutoff)
+    for r, s in existing_q.all():
+        if s.id not in seen:
+            samples_to_analyze.append(s)
+            seen.add(s.id)
+
+    # B: Шинэ сонгосон
+    if new_ids:
+        new_samples = Sample.query.filter(Sample.id.in_(new_ids)).all()
+        smap = {s.id: s for s in new_samples}
+        for sid in new_ids:
+            if sid not in seen and sid in smap:
+                samples_to_analyze.append(smap[sid])
+                seen.add(sid)
+
+    # Existing results map
+    existing_results_map = {}
+    rejected_samples_info = {}
+    if samples_to_analyze:
+        sample_ids = [s.id for s in samples_to_analyze]
+        results = AnalysisResult.query.filter(
+            AnalysisResult.sample_id.in_(sample_ids),
+            AnalysisResult.analysis_code.in_(codes),
+            AnalysisResult.status.in_(['pending_review', 'rejected', 'approved'])
+        ).all()
+        for r in results:
+            raw = r.raw_data
+            if isinstance(raw, str):
+                try:
+                    raw = _json.loads(raw)
+                except (ValueError, TypeError):
+                    raw = {}
+            elif raw is None:
+                raw = {}
+
+            if r.status == 'rejected':
+                reason = getattr(r, 'rejection_comment', None) or 'Ахлах буцаасан'
+                reason_code = getattr(r, 'rejection_category', None) or getattr(r, 'error_reason', None)
+                rejected_samples_info.setdefault(r.sample_id, {})[r.analysis_code] = {
+                    'reason': reason,
+                    'reason_code': reason_code,
+                }
+                if reason_code != 'data_entry':
+                    raw = {}
+
+            existing_results_map.setdefault(r.sample_id, {})[r.analysis_code] = {
+                'status': r.status,
+                'raw_data': raw,
+                'final_result': r.final_result,
+            }
+
+    # H-6 fix: Equipment query — silent except → logger.debug
+    related_equipments = []
+    try:
+        eq_filters = [Equipment.category == 'water']
+        if equipment_patterns:
+            for pat in equipment_patterns:
+                safe_pat = escape_like_pattern(pat)
+                eq_filters.append(
+                    Equipment.related_analysis.ilike(f'%{safe_pat}%', escape='\\')
+                )
+        related_equipments = (
+            Equipment.query
+            .filter(
+                or_(*eq_filters),
+                or_(Equipment.status.is_(None), Equipment.status != 'retired')
+            )
+            .order_by(Equipment.name.asc())
+            .all()
+        )
+    except Exception:
+        logger.debug('Equipment query failed for codes=%s', codes, exc_info=True)
+
+    limits = {code: ALL_WATER_PARAMS.get(code, {}).get('mns_limit') for code in codes}
+
+    ctx = {
+        'title': title,
+        'analysis_code': analysis_code,
+        'param': param,
+        'use_aggrid': True,
+        'samples': samples_to_analyze,
+        'aggrid_samples': samples_to_analyze,
+        'existing_results_map': existing_results_map,
+        'rejected_samples_info': rejected_samples_info,
+        'error_labels': {},
+        'related_equipments': related_equipments,
+        'filter_days': filter_days,
+    }
+    if extra_ctx:
+        ctx.update(extra_ctx)
+
+    # Limits-ийг analysis_code-оор нэрлэнэ
+    limits_key = analysis_code.lower() + '_limits'
+    if analysis_code == 'SFT_PHYS' or analysis_code == 'SFT_PHYS_WW':
+        limits_key = 'phys_limits'
+    ctx[limits_key] = limits
+
+    return render_template(template, **ctx)
 
 
 @water_bp.route('/')
@@ -274,19 +421,19 @@ def archive_data():
 
     samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
 
-    # Тоо тоолох
-    water_count = Sample.query.filter(
-        Sample.lab_type == 'water',
+    # M-1 fix: 3 query → 1 conditional count query
+    from sqlalchemy import func, case
+    count_row = db.session.query(
+        func.count(case((Sample.lab_type == 'water', Sample.id))).label('water'),
+        func.count(case((Sample.lab_type == 'microbiology', Sample.id))).label('micro'),
+        func.count(case((Sample.lab_type == 'water & micro', Sample.id))).label('combined'),
+    ).filter(
+        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
         Sample.status == 'archived'
-    ).count()
-    micro_count = Sample.query.filter(
-        Sample.lab_type == 'microbiology',
-        Sample.status == 'archived'
-    ).count()
-    combined_count = Sample.query.filter(
-        Sample.lab_type == 'water & micro',
-        Sample.status == 'archived'
-    ).count()
+    ).first()
+    water_count = count_row.water if count_row else 0
+    micro_count = count_row.micro if count_row else 0
+    combined_count = count_row.combined if count_row else 0
     total_archived = water_count + micro_count + combined_count
 
     if not samples:
@@ -396,23 +543,17 @@ def register_sample():
 @lab_required('water')
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
-    import json as _json
-    from datetime import datetime as _dt, timedelta as _td
-
     code_upper = code.upper()
+    if code_upper == 'SFT':
+        return sft_workspace()
+    if code_upper == 'SFT_PHYS':
+        return sft_physical_workspace()
     param = ALL_WATER_PARAMS.get(code_upper)
     if not param:
         return jsonify({'success': False, 'message': 'Unknown analysis code'}), 404
 
-    # ── Огнооны шүүлтүүр (default: 7 хоног) ──
-    days_param = request.args.get('days', '7')
-    try:
-        filter_days = int(days_param)
-    except (ValueError, TypeError):
-        filter_days = 7
-    date_cutoff = None
-    if filter_days > 0:
-        date_cutoff = (_dt.now() - _td(days=filter_days)).date()
+    # ── Огнооны шүүлтүүр ──
+    filter_days, date_cutoff = _parse_filter_days()
 
     form_templates = {
         # Шууд хэмжилт
@@ -556,7 +697,7 @@ def workspace(code):
             .all()
         )
     except Exception:
-        pass
+        logger.debug('Equipment query failed for code=%s', code_upper, exc_info=True)
 
     return render_template(
         template,
@@ -571,6 +712,81 @@ def workspace(code):
         error_labels={},
         related_equipments=related_equipments,
         filter_days=filter_days,
+    )
+
+
+@water_bp.route('/workspace/sft-phys')
+@login_required
+@lab_required('water')
+def sft_physical_workspace():
+    """Физик нэгтгэсэн ажлын талбар (COLOR/TEMP/EC/PH/F_W/CL_FREE)."""
+    return _build_multi_workspace(
+        codes=['COLOR_TEMP', 'EC', 'PH', 'F_W', 'CL_FREE'],
+        template='labs/water/chemistry/analysis_forms/sft_physical_form.html',
+        title='Физик (нэгтгэсэн) - Ажлын талбар',
+        analysis_code='SFT_PHYS',
+        param={'name_mn': 'Физик (нэгтгэсэн)', 'unit': '', 'mns_limit': None, 'standard': 'MNS 4586:2007'},
+        equipment_patterns=['COLOR_TEMP', 'EC', 'PH', 'F_W', 'CL_FREE'],
+    )
+
+
+@water_bp.route('/workspace/phys-ww')
+@login_required
+@lab_required('water')
+def phys_wastewater_workspace():
+    """Ахуйн бохир ус — PHYS нэгтгэсэн ажлын талбар (ундны PHYS-тэй адил)."""
+    return _build_multi_workspace(
+        codes=['COLOR_TEMP', 'EC', 'PH', 'F_W', 'CL_FREE'],
+        template='labs/water/chemistry/analysis_forms/sft_physical_form.html',
+        title='Физик (Ахуйн бохир ус) - Ажлын талбар',
+        analysis_code='SFT_PHYS_WW',
+        param={'name_mn': 'Физик (Ахуйн бохир ус)', 'unit': '', 'mns_limit': None, 'standard': 'MNS 4586:2007'},
+        equipment_patterns=['COLOR_TEMP', 'EC', 'PH', 'F_W', 'CL_FREE'],
+    )
+
+
+@water_bp.route('/workspace/sft')
+@login_required
+@lab_required('water')
+def sft_workspace():
+    """СФТ нэгтгэсэн ажлын талбар (NH4/NO2/NO3/FE_W)."""
+    return _build_multi_workspace(
+        codes=['NH4', 'NO2', 'NO3', 'FE_W'],
+        template='labs/water/chemistry/analysis_forms/sft_form.html',
+        title='СФТ - Ажлын талбар',
+        analysis_code='SFT',
+        param={'name_mn': 'СФТ', 'unit': 'mg/L', 'mns_limit': None, 'standard': 'MNS 4586:2007'},
+        equipment_patterns=['NH4', 'NO2', 'NO3', 'FE_W'],
+    )
+
+
+@water_bp.route('/workspace/sfm')
+@login_required
+@lab_required('water')
+def sfm_workspace():
+    """СФМ нэгтгэсэн ажлын талбар (NH4/NO2/PO4/FE_W)."""
+    return _build_multi_workspace(
+        codes=['NH4', 'NO2', 'PO4', 'FE_W'],
+        template='labs/water/chemistry/analysis_forms/sfm_form.html',
+        title='СФМ - Ажлын талбар',
+        analysis_code='SFM',
+        param={'name_mn': 'СФМ', 'unit': 'mg/L', 'mns_limit': None, 'standard': 'MNS 4586:2007'},
+        equipment_patterns=['NH4', 'NO2', 'PO4', 'FE_W'],
+    )
+
+
+@water_bp.route('/workspace/sludge')
+@login_required
+@lab_required('water')
+def sludge_workspace():
+    """Лагийн нэгтгэсэн ажлын талбар (SV/SD/SI)."""
+    return _build_multi_workspace(
+        codes=['SLUDGE_VOL', 'SLUDGE_DOSE', 'SLUDGE_INDEX'],
+        template='labs/water/chemistry/analysis_forms/sludge_form.html',
+        title='Лаг - Ажлын талбар',
+        analysis_code='SLUDGE',
+        param={'name_mn': 'Лаг', 'unit': '', 'mns_limit': None, 'standard': 'MNS 4586:2007'},
+        equipment_patterns=['SLUDGE'],
     )
 
 
@@ -663,8 +879,13 @@ def save_results():
         return jsonify({'success': False, 'message': 'No data provided'}), 400
 
     sample_id = data.get('sample_id')
-    analysis_code = data.get('analysis_code')
+    analysis_code = data.get('analysis_code', '')
     results = data.get('results', {})
+
+    # M-9: analysis_code whitelist validation
+    from app.labs.water_lab.chemistry.constants import VALID_WATER_ANALYSIS_CODES
+    if not analysis_code or analysis_code not in VALID_WATER_ANALYSIS_CODES:
+        return jsonify({'success': False, 'message': 'Invalid analysis code'}), 400
 
     sample = db.session.get(Sample, sample_id)
     if not sample:
@@ -732,20 +953,11 @@ def water_data():
         q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
     if date_to:
         q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
-    samples = q.order_by(Sample.id.desc()).limit(500).all()
+    samples = q.order_by(Sample.id.desc()).limit(MAX_QUERY_LIMIT).all()
 
-    import re
     result = []
     for idx, s in enumerate(reversed(samples), 1):
-        # display_name: sample_code-оос огноо, lab_id хассан нэр
-        display_name = s.sample_code
-        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-        if m:
-            display_name = m.group(2)
-        else:
-            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-            if m2:
-                display_name = m2.group(1)
+        display_name = _parse_display_name(s.sample_code)
 
         # Нэгжийн нэр
         unit_info = WATER_UNITS.get(s.client_name)
@@ -845,11 +1057,11 @@ def delete_samples():
     sample_ids = request.form.getlist('sample_ids')
     if not sample_ids:
         flash('Please select samples to delete!', 'warning')
-        return redirect(request.referrer or url_for('water.register_sample'))
+        return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
     if current_user.role not in ('admin', 'senior', 'chemist'):
         flash('You do not have permission to delete samples.', 'danger')
-        return redirect(request.referrer or url_for('water.register_sample'))
+        return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
     deleted = 0
     failed = []
@@ -895,7 +1107,7 @@ def delete_samples():
     if failed:
         flash(f'Error: {", ".join(failed)}', 'danger')
 
-    return redirect(request.referrer or url_for('water.register_sample'))
+    return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
 
 @water_bp.route('/standards')
@@ -1690,21 +1902,41 @@ def solution_recipes():
     """Уусмалын жорын жагсаалт - карт хэлбэрээр."""
     from app.models import SolutionRecipe, SolutionPreparation
 
+    from sqlalchemy import func
+
     recipes = SolutionRecipe.query.filter_by(
         lab_type='water', is_active=True
     ).order_by(SolutionRecipe.name).all()
 
-    # Recipe бүрийн сүүлийн бэлдэлтийн мэдээлэл
-    recipe_stats = {}
-    for recipe in recipes:
-        last_prep = SolutionPreparation.query.filter_by(
-            recipe_id=recipe.id
-        ).order_by(SolutionPreparation.prepared_date.desc()).first()
-        prep_count = SolutionPreparation.query.filter_by(recipe_id=recipe.id).count()
-        recipe_stats[recipe.id] = {
-            'last_prep': last_prep,
-            'prep_count': prep_count,
-        }
+    # Recipe бүрийн статистик — нэг query-р авах
+    recipe_ids = [r.id for r in recipes]
+    recipe_stats = {rid: {'last_prep': None, 'prep_count': 0} for rid in recipe_ids}
+
+    if recipe_ids:
+        count_rows = db.session.query(
+            SolutionPreparation.recipe_id,
+            func.count(SolutionPreparation.id),
+            func.max(SolutionPreparation.prepared_date),
+        ).filter(
+            SolutionPreparation.recipe_id.in_(recipe_ids)
+        ).group_by(SolutionPreparation.recipe_id).all()
+
+        max_dates = {}
+        for rid, cnt, max_date in count_rows:
+            recipe_stats[rid]['prep_count'] = cnt
+            max_dates[rid] = max_date
+
+        # Сүүлийн бэлдэлтүүдийг нэг query-р авах
+        if max_dates:
+            from sqlalchemy import and_, tuple_
+            last_preps = SolutionPreparation.query.filter(
+                SolutionPreparation.recipe_id.in_(list(max_dates.keys()))
+            ).order_by(SolutionPreparation.prepared_date.desc()).all()
+            seen = set()
+            for p in last_preps:
+                if p.recipe_id not in seen:
+                    recipe_stats[p.recipe_id]['last_prep'] = p
+                    seen.add(p.recipe_id)
 
     return render_template(
         'labs/water/chemistry/solution_recipes.html',

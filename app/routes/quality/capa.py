@@ -91,6 +91,7 @@ def register_routes(bp):
 
     @bp.route("/capa/<int:id>/fill", methods=["POST"])
     @login_required
+    @require_quality_edit('quality.capa_list')
     def capa_fill(id):
         """Хэсэг 1: Хэрэгжүүлэгч бөглөх."""
         record = CorrectiveAction.query.get_or_404(id)
