@@ -175,31 +175,26 @@
   $btnDel.addEventListener('click', () => {
     [...$tbody.querySelectorAll('.rowchk:checked')].forEach(chk => chk.closest('tr').remove());
   });
-  $btnSave.addEventListener('click', async () => {
+  FormGuards.guardButton($btnSave, async () => {
     const rows = collect();
     if (!rows.length){ toast('{{ _("No rows to save.") }}', 'warning'); return; }
-    try{
-      const res = await fetch('{{ url_for("settings.bottles_constants_bulk_save") }}', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        credentials: 'same-origin',
-        body: JSON.stringify({rows})
-      });
-      const data = await res.json();
-      if (!res.ok || data.success === false){ toast(data.message || data.error || '{{ _("An error occurred") }}', 'danger'); return; }
-      const result = data.data || data;
-      if (result.errors && result.errors.length){
-        toast(`{{ _("Success") }}: ${result.created}. {{ _("Errors") }}: ${result.errors.length}.`, 'warning');
-        console.warn('Errors:', result.errors);
-      } else {
-        toast(`{{ _("Saved successfully") }} (${result.created}).`, 'success');
-      }
-      $tbody.innerHTML = '';
-      addRow();
-    }catch(e){
-      console.error(e);
-      toast('{{ _("Network/server error.") }}', 'danger');
+    const res = await fetch('{{ url_for("settings.bottles_constants_bulk_save") }}', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({rows})
+    });
+    const data = await res.json();
+    if (!res.ok || data.success === false){ toast(data.message || data.error || '{{ _("An error occurred") }}', 'danger'); return; }
+    const result = data.data || data;
+    if (result.errors && result.errors.length){
+      toast(`{{ _("Success") }}: ${result.created}. {{ _("Errors") }}: ${result.errors.length}.`, 'warning');
+      console.warn('Errors:', result.errors);
+    } else {
+      toast(`{{ _("Saved successfully") }} (${result.created}).`, 'success');
     }
+    $tbody.innerHTML = '';
+    addRow();
   });
 
   // start with one row

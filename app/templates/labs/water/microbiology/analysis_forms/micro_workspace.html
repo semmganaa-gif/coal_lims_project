@@ -684,8 +684,8 @@ document.addEventListener('DOMContentLoaded', function() {
     showToast(newRows.length + ' {{ _("samples added") }}', 'success');
   });
 
-  // ============ Save ============
-  document.getElementById('btnSave').addEventListener('click', function() {
+  // ============ Save (M-8: double-submit guard) ============
+  FormGuards.guardById('btnSave', async function() {
     const rows = [];
     grid.forEachNode(node => {
       if (node.data.sample_code) rows.push(node.data);
@@ -699,27 +699,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const headers = { 'Content-Type': 'application/json' };
     if (csrfToken) headers['X-CSRFToken'] = csrfToken;
 
-    fetch("{{ url_for('microbiology.save_batch') }}", {
+    const r = await fetch("{{ url_for('microbiology.save_batch') }}", {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({ category: 'MICRO_WATER', rows: rows }),
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        showToast('{{ _("Saved successfully!") }} (' + data.count + ' {{ _("rows") }})', 'success');
-        if (data.errors && data.errors.length > 0)
-          showToast('{{ _("Warning:") }} ' + data.errors.join(', '), 'warning');
-        // Grid цэвэрлэх + draft устгах
-        grid.setGridOption('rowData', []);
-        rowSeq = 0;
-        draftMgr.purge();
-        updateRowCount();
-      } else {
-        showToast('{{ _("Error:") }} ' + (data.error || '{{ _("Unknown") }}'), 'error');
-      }
-    })
-    .catch(err => showToast('{{ _("Network error:") }} ' + err.message, 'error'));
+    });
+    const data = await r.json();
+    if (data.success) {
+      showToast('{{ _("Saved successfully!") }} (' + data.count + ' {{ _("rows") }})', 'success');
+      if (data.errors && data.errors.length > 0)
+        showToast('{{ _("Warning:") }} ' + data.errors.join(', '), 'warning');
+      FormGuards.markClean();
+      grid.setGridOption('rowData', []);
+      rowSeq = 0;
+      draftMgr.purge();
+      updateRowCount();
+    } else {
+      showToast('{{ _("Error:") }} ' + (data.error || '{{ _("Unknown") }}'), 'error');
+    }
   });
 
   // Initial row count

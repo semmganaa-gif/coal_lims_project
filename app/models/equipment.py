@@ -64,6 +64,11 @@ class Equipment(db.Model):
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
 
+    # H-9: Composite indexes
+    __table_args__ = (
+        db.Index('ix_equipment_category_status', 'category', 'status'),
+    )
+
     # Холбоосууд
     created_by = db.relationship('User', foreign_keys=[created_by_id])
     logs = db.relationship(

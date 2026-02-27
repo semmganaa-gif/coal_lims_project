@@ -8,8 +8,11 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 import json
+import logging
 from datetime import date, timedelta
 from app.utils.audit import log_audit
+
+logger = logging.getLogger(__name__)
 
 
 def register_routes(bp):
@@ -125,8 +128,13 @@ def register_routes(bp):
                 failed_samples.append(f"ID={sample_id_str} (Алдаа: {e})")
 
         if deleted_count > 0:
-            db.session.commit()
-            flash(f"{deleted_count} дээж амжилттай устгагдлаа.", "success")
+            try:
+                db.session.commit()
+                flash(f"{deleted_count} дээж амжилттай устгагдлаа.", "success")
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Bulk delete commit error: {e}")
+                flash("Устгах үед алдаа гарлаа. Дахин оролдоно уу.", "danger")
         if failed_samples:
             flash(f'Алдаа: Дараах дээжүүд устгагдсангүй: {", ".join(failed_samples)}', "danger")
 

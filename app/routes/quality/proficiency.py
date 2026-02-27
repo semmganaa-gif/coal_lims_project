@@ -10,6 +10,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import ProficiencyTest
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
@@ -81,7 +82,8 @@ def register_routes(bp):
             )
 
             db.session.add(pt)
-            db.session.commit()
+            if not safe_commit(None, "PT хадгалахад алдаа гарлаа"):
+                return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
 
             logger.info(f"PT created: {pt.pt_program}, Z-score: {z_score:.2f}, user: {current_user.username}")
             flash(f"PT {pt.pt_program} амжилттай бүртгэгдлээ. (Z-score: {z_score:.2f})", "success")

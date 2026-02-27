@@ -694,7 +694,7 @@ def register_routes(bp):
 
     @bp.route("/sample_analysis_results/<int:sample_id>")
     @login_required
-    def sample_analysis_results(sample_id):
+    async def sample_analysis_results(sample_id):
         """Return all analysis results for a sample as JSON (used in complaints)."""
         results = AnalysisResult.query.filter_by(
             sample_id=sample_id
@@ -717,7 +717,7 @@ def register_routes(bp):
 
     @bp.route("/search_samples_json", methods=["GET"])
     @login_required
-    def search_samples_json():
+    async def search_samples_json():
         """JSON: Search samples (used in complaints, registrations, etc.)."""
         from app.utils.security import escape_like_pattern
 

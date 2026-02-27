@@ -62,6 +62,8 @@ class Config:
         "pool_recycle": 300,      # 5 мин-д нэг холболт шинэчлэх (idle timeout)
         "pool_pre_ping": True,    # Query-н өмнө холболт амьд эсэх шалгах
         "pool_timeout": 15,       # Холболт хүлээх хугацаа (секунд)
+        # M-3: Statement timeout — 30 секундээс удаан query-г зогсооно
+        "connect_args": {"options": "-c statement_timeout=30000"},
     }
 
     # ✅ САЙЖРУУЛСАН: Cookie аюулгүй байдал
@@ -81,7 +83,7 @@ class Config:
 
     # ✅ CSRF хамгаалалт - ИДЭВХЖҮҮЛСЭН
     WTF_CSRF_ENABLED = True  # Production-д заавал идэвхтэй байх
-    WTF_CSRF_TIME_LIMIT = 3600  # Токен 1 цагийн дараа дуусна (секундээр)
+    WTF_CSRF_TIME_LIMIT = 1800  # H-5: Токен 30 минутын дараа дуусна (секундээр)
     WTF_CSRF_SSL_STRICT = ENV != "development"  # Production-д HTTPS шаардах
 
     # Session тохиргоо (SECRET_KEY дээр тодорхойлогдсон)
@@ -112,6 +114,13 @@ class Config:
     # Production-д зөвхөн өөрийн домэйнээс холболт зөвшөөрнө
     # Development-д бүх origin-ээс зөвшөөрнө (ngrok, localhost гэх мэт)
     SOCKETIO_CORS_ORIGINS = os.getenv('SOCKETIO_CORS_ORIGINS', '*' if ENV == 'development' else None)
+
+    # C-9: Multi-worker WebSocket sync — Redis message queue
+    # Production: SOCKETIO_MESSAGE_QUEUE=redis://localhost:6379
+    SOCKETIO_MESSAGE_QUEUE = os.getenv('SOCKETIO_MESSAGE_QUEUE', None)
+    # Production: SOCKETIO_ASYNC_MODE=gevent (requires gevent package)
+    # Development: threading (default)
+    SOCKETIO_ASYNC_MODE = os.getenv('SOCKETIO_ASYNC_MODE', 'gevent' if ENV != 'development' else 'threading')
 
     # ========================================================
     # 🔒 RATE LIMIT STORAGE

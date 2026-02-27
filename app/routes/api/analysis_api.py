@@ -17,7 +17,8 @@ from flask import (
     redirect,
 )
 from flask_login import login_required, current_user
-from sqlalchemy import or_, not_, exc
+from sqlalchemy import or_, not_
+from sqlalchemy.orm.exc import StaleDataError
 from markupsafe import escape
 import json
 
@@ -756,7 +757,7 @@ def register_routes(bp):
                         status=res.get("status", "completed")
                     )
 
-        except exc.StaleDataError:
+        except StaleDataError:
             # CH-3: Optimistic locking — concurrent edit detected
             db.session.rollback()
             current_app.logger.warning("StaleDataError: concurrent edit detected")

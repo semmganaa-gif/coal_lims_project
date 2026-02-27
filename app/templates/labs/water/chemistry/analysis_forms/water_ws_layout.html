@@ -601,6 +601,7 @@
   window.waterGridApi = LIMS_AGGRID.createGrid('#waterGrid', columnDefs, rowData, {
     editableColIds: editableFields,
     onCellValueChanged: function(params) {
+      FormGuards.markDirty();
       params.api.refreshCells({ rowNodes: [params.node], columns: computedCols });
       if (window._waterOnCellChange) {
         window._waterOnCellChange(params, computedCols);
@@ -654,7 +655,8 @@
   }
   {% endblock %}
 
-  document.getElementById('btnSave').addEventListener('click', async function() {
+  // M-7/M-8: FormGuards — beforeunload + double-submit
+  FormGuards.guardById('btnSave', async function() {
     const items = collectSaveItems();
     if (!items.length) { showToast('{{ _("No data to save") }}', 'warning'); return; }
 
@@ -677,6 +679,7 @@
     if (ok > 0) {
       // CH-2: Зөвхөн амжилттай хадгалсан items-ийн draft устгана
       draftMgr.purge(savedIds);
+      FormGuards.markClean();
       showToast(ok + ' {{ _("sample result(s) saved successfully!") }}', 'success');
       if (ok < items.length) {
         showToast((items.length - ok) + ' {{ _("sample(s) failed — draft kept") }}', 'warning');

@@ -170,6 +170,7 @@
   }
 
   function onCellValueChanged(params) {
+    FormGuards.markDirty();
     if (params.colDef.field === 'weight') {
       saveDrafts();
     }
@@ -204,7 +205,8 @@
 
   // --- SAVE ---
 
-  $btnSave.addEventListener('click', async () => {
+  // M-7/M-8: FormGuards double-submit protection
+  FormGuards.guardButton($btnSave, async () => {
     if(!gridApi) return;
     gridApi.stopEditing();
     const selected = gridApi.getSelectedRows();
@@ -231,9 +233,10 @@
         toast(data.message || data.error || 'Error while saving.', 'danger');
         return;
       }
+      FormGuards.markClean();
       toast(data.message || 'Saved successfully.', 'success');
 
-      // ✨ Хадгалагдсан sample-ийн draft устгах
+      // Хадгалагдсан sample-ийн draft устгах
       const savedIds = items.map(i => String(i.sample_id));
       if (draftMgr) draftMgr.purge(savedIds);
 

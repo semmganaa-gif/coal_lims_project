@@ -4,6 +4,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import EnvironmentalLog
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import require_quality_edit
 
 
@@ -41,6 +42,9 @@ def register_routes(bp):
             notes=request.form.get('notes')
         )
         db.session.add(log)
-        db.session.commit()
-        flash(f"Орчны хэмжилт бүртгэгдлээ {'✅' if within_limits else '⚠️'}", "success" if within_limits else "warning")
+        if safe_commit(None, "Орчны хэмжилт хадгалахад алдаа гарлаа"):
+            if within_limits:
+                flash("Орчны хэмжилт бүртгэгдлээ", "success")
+            else:
+                flash("Орчны хэмжилт бүртгэгдлээ — хязгаараас гадуур байна", "warning")
         return redirect(url_for('quality.environmental_list'))

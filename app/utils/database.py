@@ -7,7 +7,8 @@
 import logging
 from typing import Optional, Any, List, Union
 from flask import flash
-from sqlalchemy.exc import IntegrityError, StaleDataError
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 from app import db
 
 logger = logging.getLogger(__name__)

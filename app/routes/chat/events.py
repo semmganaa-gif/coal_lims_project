@@ -119,7 +119,13 @@ def handle_send_message(data):
         sent_at=now_mn()
     )
     db.session.add(msg)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Message save error: {e}")
+        emit('error', {'message': 'Message save failed'})
+        return
 
     message_data = msg.to_dict()
 
@@ -180,7 +186,13 @@ def handle_send_file(data):
         sent_at=now_mn()
     )
     db.session.add(msg)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"File message save error: {e}")
+        emit('error', {'message': 'File save failed'})
+        return
 
     message_data = msg.to_dict()
 
@@ -210,7 +222,12 @@ def handle_delete_message(data):
     msg.is_deleted = True
     msg.deleted_at = now_mn()
     msg.message = "Мессеж устгагдсан"
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Delete message error: {e}")
+        return
 
     # Notify both parties
     emit('message_deleted', {'message_id': message_id})
@@ -241,7 +258,13 @@ def handle_broadcast(data):
         sent_at=now_mn()
     )
     db.session.add(msg)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Broadcast save error: {e}")
+        emit('error', {'message': 'Broadcast save failed'})
+        return
 
     message_data = msg.to_dict()
 
@@ -261,31 +284,35 @@ def handle_mark_read(data):
     message_id = data.get('message_id')
     sender_id = data.get('sender_id')
 
-    if message_id:
-        msg = db.session.get(ChatMessage, message_id)
-        if msg and msg.receiver_id == current_user.id and not msg.read_at:
-            msg.read_at = now_mn()
+    try:
+        if message_id:
+            msg = db.session.get(ChatMessage, message_id)
+            if msg and msg.receiver_id == current_user.id and not msg.read_at:
+                msg.read_at = now_mn()
+                db.session.commit()
+                emit('message_read', {
+                    'message_id': message_id,
+                    'read_at': msg.read_at.isoformat()
+                }, room=get_user_room(msg.sender_id))
+
+        elif sender_id:
+            unread = ChatMessage.query.filter(
+                ChatMessage.sender_id == sender_id,
+                ChatMessage.receiver_id == current_user.id,
+                ChatMessage.read_at.is_(None)
+            ).all()
+
+            for msg in unread:
+                msg.read_at = now_mn()
             db.session.commit()
-            emit('message_read', {
-                'message_id': message_id,
-                'read_at': msg.read_at.isoformat()
-            }, room=get_user_room(msg.sender_id))
 
-    elif sender_id:
-        unread = ChatMessage.query.filter(
-            ChatMessage.sender_id == sender_id,
-            ChatMessage.receiver_id == current_user.id,
-            ChatMessage.read_at.is_(None)
-        ).all()
-
-        for msg in unread:
-            msg.read_at = now_mn()
-        db.session.commit()
-
-        emit('messages_read', {
-            'reader_id': current_user.id,
-            'count': len(unread)
-        }, room=get_user_room(sender_id))
+            emit('messages_read', {
+                'reader_id': current_user.id,
+                'count': len(unread)
+            }, room=get_user_room(sender_id))
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Mark read error: {e}")
 
 
 @socketio.on('typing')

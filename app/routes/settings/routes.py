@@ -10,6 +10,7 @@ import os
 import re
 
 from app import db
+from app.utils.database import safe_commit
 from app.utils.repeatability_loader import load_limit_rules, clear_cache
 from app.models import Bottle, BottleConstant, SystemSetting  # моделууд models.py дотор байгаа хувилбар
 from app.utils.datetime import now_local as now_mn  # ✅ Монгол цагийн функц
@@ -158,9 +159,12 @@ def bottles_constants_new():
             effective_from=now_mn(),
         )
         db.session.add(const)
-        db.session.commit()
+        if not safe_commit(
+            f"Хадгалагдлаа. Дундаж m₂ = {avg_value:.5f} (ашигласан хос: {used_pair})",
+            "Тогтмол хадгалахад алдаа гарлаа"
+        ):
+            return redirect(url_for("settings.bottles_constants_new"))
 
-        flash(f"Хадгалагдлаа. Дундаж m₂ = {avg_value:.5f} (ашигласан хос: {used_pair})", "success")
         return redirect(url_for("settings.bottles_index"))
 
     # GET
@@ -269,7 +273,8 @@ def bottles_constants_bulk_save():
         db.session.add(const)
         created += 1
 
-    db.session.commit()
+    if not safe_commit():
+        return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500
     return jsonify({"success": True, "data": {"created": created, "errors": errors}})
 
 
@@ -302,8 +307,8 @@ def bottle_edit(bottle_id: int):
         bottle.serial_no = serial_no
         bottle.is_active = is_active
         db.session.add(bottle)
-        db.session.commit()
-        flash("Бортогоны мэдээлэл шинэчлэгдлээ.", "success")
+        if not safe_commit("Бортогоны мэдээлэл шинэчлэгдлээ.", "Бортого засахад алдаа гарлаа"):
+            return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
         return redirect(url_for("settings.bottles_index"))
 
     # GET
@@ -326,8 +331,7 @@ def bottle_delete(bottle_id: int):
     bottle = Bottle.query.get_or_404(bottle_id)
     serial = bottle.serial_no
     db.session.delete(bottle)  # cascade → constants устна
-    db.session.commit()
-    flash(f"Бортого {serial} бүртгэлээс устгагдлаа.", "success")
+    safe_commit(f"Бортого {serial} бүртгэлээс устгагдлаа.", "Бортого устгахад алдаа гарлаа")
     return redirect(url_for("settings.bottles_index"))
 
 
@@ -430,10 +434,9 @@ def repeatability_limits():
             setting = SystemSetting(category="repeatability", key="limits")
             db.session.add(setting)
         setting.value = json.dumps(parsed, ensure_ascii=False)
-        db.session.commit()
-        clear_cache()
-        flash("Лимитүүд амжилттай хадгалагдлаа.", "success")
-        current_rules = parsed
+        if safe_commit("Лимитүүд амжилттай хадгалагдлаа.", "Лимит хадгалахад алдаа гарлаа"):
+            clear_cache()
+            current_rules = parsed
 
     pretty = json.dumps(current_rules, ensure_ascii=False, indent=2)
     return render_template(
@@ -487,8 +490,7 @@ def notification_settings():
 
             setting.value = recipients
 
-        db.session.commit()
-        flash("Мэдэгдлийн тохиргоо хадгалагдлаа.", "success")
+        safe_commit("Мэдэгдлийн тохиргоо хадгалагдлаа.", "Мэдэгдлийн тохиргоо хадгалахад алдаа гарлаа")
 
         # Reload
         for nt in notification_types:
@@ -548,11 +550,9 @@ def email_recipients():
         cc_setting.value = new_cc
         cc_setting.is_active = True
 
-        db.session.commit()
-        flash("Имэйл хаягууд хадгалагдлаа.", "success")
-
-        current_to = new_to
-        current_cc = new_cc
+        if safe_commit("Имэйл хаягууд хадгалагдлаа.", "Имэйл хаяг хадгалахад алдаа гарлаа"):
+            current_to = new_to
+            current_cc = new_cc
 
     return render_template(
         "settings/email_recipients.html",

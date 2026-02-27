@@ -257,6 +257,10 @@ class Sample(db.Model):
             "'naimdain','maiga','sum','uurhaichin','gallerey','sbutsb')",
             name="ck_sample_client_name",
         ),
+        # H-9: Composite indexes — dashboard болон workspace query-уудыг хурдасгах
+        db.Index('ix_sample_lab_type_status', 'lab_type', 'status'),
+        db.Index('ix_sample_received_date_lab_type', 'received_date', 'lab_type'),
+        db.Index('ix_sample_client_name_sample_type', 'client_name', 'sample_type'),
     )
 
     results = db.relationship(

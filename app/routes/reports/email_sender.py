@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from app import db
 from app.models import LabReport
+from app.utils.database import safe_commit
 from app.routes.reports import pdf_reports_bp
 
 
@@ -128,8 +129,7 @@ def send_email(id):
             report.email_sent_at = datetime.now()
             report.email_recipients = recipients_str
             report.status = 'sent'
-            db.session.commit()
-            flash("Имэйл амжилттай илгээгдлэн.", "success")
+            safe_commit("Имэйл амжилттай илгээгдлэн.", "Имэйл статус хадгалахад алдаа гарлаа")
             return redirect(url_for("pdf_reports.report_detail", id=id))
         else:
             flash(f"Имэйл илгээхэд алдаа: {error}", "danger")

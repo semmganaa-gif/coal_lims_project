@@ -94,12 +94,21 @@ def create_app(config_class=Config):
 
     babel.init_app(app, locale_selector=get_locale)
 
-    # ✅ WebSocket initialization - CORS тохиргоотой
+    # ✅ C-9: WebSocket initialization — gevent + Redis message queue (multi-worker)
+    _mq = app.config.get('SOCKETIO_MESSAGE_QUEUE')
+    # Production: gevent (multi-worker), Development: threading (gevent суугаагүй бол)
+    _async_mode = app.config.get('SOCKETIO_ASYNC_MODE', 'threading')
     socketio.init_app(
         app,
         cors_allowed_origins=app.config.get('SOCKETIO_CORS_ORIGINS', None),
-        async_mode='threading'
+        async_mode=_async_mode,
+        message_queue=_mq,
     )
+    if not _mq and not app.debug:
+        app.logger.warning(
+            "SocketIO: message_queue тохируулаагүй — multi-worker WebSocket sync ажиллахгүй. "
+            "SOCKETIO_MESSAGE_QUEUE=redis://localhost:6379 тохируулна уу."
+        )
 
     # Register SocketIO events
     with app.app_context():
