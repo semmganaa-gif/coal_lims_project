@@ -899,13 +899,13 @@ def save_results():
         results.get('result') or results.get('value') or results.get('average')
     )
 
-    # ✅ C-2 fix: Давхардал шалгах — UPSERT логик
+    # ✅ C-2 fix: Давхардал шалгах — UPSERT логик (with_for_update lock)
     ar = AnalysisResult.query.filter_by(
         sample_id=sample_id,
         analysis_code=analysis_code,
     ).filter(
         AnalysisResult.status.in_(['pending_review', 'rejected'])
-    ).first()
+    ).with_for_update().first()
 
     if ar:
         # Одоо байгаа pending/rejected үр дүнг шинэчлэх
@@ -919,7 +919,7 @@ def save_results():
             sample_id=sample_id,
             analysis_code=analysis_code,
             status='approved'
-        ).first()
+        ).with_for_update().first()
         if approved:
             return jsonify({'success': False, 'message': 'This analysis is already approved. Use retest to re-enter.'}), 409
 

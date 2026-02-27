@@ -22,6 +22,7 @@ from flask import (
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.utils.security import escape_like_pattern
 
@@ -35,7 +36,7 @@ def _upsert_mass_result(sample_id, weight_g, user_id=None):
     """AnalysisResult(code='m') үүсгэх/шинэчлэх — sample summary-д харагдана."""
     ar = AnalysisResult.query.filter_by(
         sample_id=sample_id, analysis_code="m"
-    ).first()
+    ).with_for_update().first()
     if ar is None:
         ar = AnalysisResult(
             sample_id=sample_id,
@@ -179,8 +180,9 @@ def register_routes(bp):
         if not sample_ids:
             return api_error("No valid IDs found.")
 
-        # Bulk load: Нэг query-гээр бүх sample-г татна
-        samples_map = {s.id: s for s in Sample.query.filter(Sample.id.in_(sample_ids)).all()}
+        # Bulk load + row lock: Нэг query-гээр бүх sample-г татна
+        samples_map = {s.id: s for s in
+                       Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()}
 
         # Items-ийг map-аар давтаж шинэчилнэ
         weight_map = {it.get("sample_id"): it.get("weight") for it in items if "weight" in it}
@@ -213,6 +215,9 @@ def register_routes(bp):
         try:
             db.session.commit()
             return api_success({"updated_ids": updated}, f"{len(updated)} дээж шинэчлэгдлээ.")
+        except StaleDataError:
+            db.session.rollback()
+            return api_error("Data was modified by another user. Please refresh and try again.", 409)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_save: {e}")
@@ -236,7 +241,7 @@ def register_routes(bp):
         if not sid or not isinstance(w, (int, float)):
             return api_error("Missing parameter.")
 
-        s = db.session.get(Sample, sid)
+        s = db.session.query(Sample).filter_by(id=sid).with_for_update().first()
         if not s:
             return api_error("Sample not found.", 404)
 
@@ -251,6 +256,9 @@ def register_routes(bp):
         try:
             db.session.commit()
             return api_success({"sample_id": s.id}, "Weight updated.")
+        except StaleDataError:
+            db.session.rollback()
+            return api_error("Data was modified by another user. Please refresh and try again.", 409)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_update_weight: {e}")
@@ -273,7 +281,7 @@ def register_routes(bp):
         if not ids:
             return api_error("No ID provided.")
 
-        rows = Sample.query.filter(Sample.id.in_(ids)).all()
+        rows = Sample.query.filter(Sample.id.in_(ids)).with_for_update().all()
         for s in rows:
             s.mass_ready = False
             s.mass_ready_at = None
@@ -283,6 +291,9 @@ def register_routes(bp):
         try:
             db.session.commit()
             return api_success(None, f"{len(rows)} дээжийг Unready болголоо.")
+        except StaleDataError:
+            db.session.rollback()
+            return api_error("Data was modified by another user. Please refresh and try again.", 409)
         except IntegrityError as e:
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_unready: {e}")

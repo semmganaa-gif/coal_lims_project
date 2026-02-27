@@ -15,6 +15,8 @@ from datetime import datetime
 from app.utils.shifts import get_shift_info
 import json
 
+from sqlalchemy.orm.exc import StaleDataError
+
 from app import db, cache
 from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
 from app.utils.datetime import now_local
@@ -148,9 +150,13 @@ def register_routes(bp):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Эрх хүрэлцэхгүй байна"}), 403
 
-        res = AnalysisResult.query.get_or_404(result_id)
         if new_status not in {"approved", "rejected", "pending_review"}:
             return jsonify({"message": "Төлөв буруу байна"}), 400
+
+        # Row lock to prevent lost update
+        res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
+        if not res:
+            return jsonify({"message": "Үр дүн олдсонгүй"}), 404
 
         data = request.get_json(silent=True) or request.form.to_dict() or {}
         # XSS protection
@@ -198,7 +204,12 @@ def register_routes(bp):
         # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
         audit.data_hash = audit.compute_hash()
         db.session.add(audit)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except StaleDataError:
+            db.session.rollback()
+            return jsonify({"message": "Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."}), 409
 
         # Invalidate cached stats after status change
         cache.delete('kpi_summary_ahlah')
@@ -251,7 +262,7 @@ def register_routes(bp):
 
         for rid in result_ids:
             try:
-                res = AnalysisResult.query.get(int(rid))
+                res = AnalysisResult.query.filter_by(id=int(rid)).with_for_update().first()
                 if not res:
                     failed_ids.append(rid)
                     continue
@@ -308,31 +319,34 @@ def register_routes(bp):
         if success_count > 0:
             try:
                 db.session.commit()
-                log_audit(
-                    action=f'bulk_result_{new_status}',
-                    resource_type='AnalysisResult',
-                    resource_id=None,
-                    details={
-                        'count': success_count,
-                        'status': new_status,
-                        'rejection_category': rejection_category
-                    }
-                )
-
-                # Email notification (async-style, don't block)
-                try:
-                    notify_sample_status_change(
-                        sample_code=f"Бөөнөөр ({success_count} үр дүн)",
-                        new_status=new_status,
-                        changed_by=current_user.username,
-                        reason=rejection_comment if new_status == "rejected" else None
-                    )
-                except Exception:
-                    pass  # Don't block main operation if email fails
-
+            except StaleDataError:
+                db.session.rollback()
+                return jsonify({"message": "Зарим үр дүнг өөр хэрэглэгч өөрчилсөн байна. Refresh хийнэ үү."}), 409
             except Exception as e:
                 db.session.rollback()
-                return jsonify({"message": f"Мэдээллийн сангийн алдаа: {str(e)[:100]}"}), 500
+                return jsonify({"message": "Мэдээллийн сангийн алдаа"}), 500
+
+            log_audit(
+                action=f'bulk_result_{new_status}',
+                resource_type='AnalysisResult',
+                resource_id=None,
+                details={
+                    'count': success_count,
+                    'status': new_status,
+                    'rejection_category': rejection_category
+                }
+            )
+
+            # Email notification (don't block)
+            try:
+                notify_sample_status_change(
+                    sample_code=f"Бөөнөөр ({success_count} үр дүн)",
+                    new_status=new_status,
+                    changed_by=current_user.username,
+                    reason=rejection_comment if new_status == "rejected" else None
+                )
+            except Exception:
+                pass  # Don't block main operation if email fails
 
         return jsonify({
             "message": f"{success_count} үр дүн амжилттай {new_status} төлөвт шилжлээ.",
@@ -528,7 +542,10 @@ def register_routes(bp):
         - use_original=true  → final_result = анхны утга
         - use_original=false → final_result = давтан утга (default)
         """
-        res = AnalysisResult.query.get_or_404(result_id)
+        res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
+        if not res:
+            return jsonify({"message": "Үр дүн олдсонгүй"}), 404
+
         data = request.get_json(silent=True) or {}
         use_original = data.get("use_original", False)
 
@@ -576,7 +593,12 @@ def register_routes(bp):
         )
         audit.data_hash = audit.compute_hash()
         db.session.add(audit)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except StaleDataError:
+            db.session.rollback()
+            return jsonify({"message": "Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."}), 409
 
         log_audit(
             action=f"select_{choice.lower()}_result",
