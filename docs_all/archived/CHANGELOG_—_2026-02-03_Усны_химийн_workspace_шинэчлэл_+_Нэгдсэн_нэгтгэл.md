@@ -68,7 +68,7 @@
 
 - **Баганууд:** dilution, abs1, abs2, r1, r2, average (× dilution factor), diff, control
 - **Тооцоолол:**
-  - `r1`, `r2` — калибрацийн муруйгаас тооцоолно (TODO: calibration curve)
+  - `r1`, `r2` — калибрацийн муруй тохируулсан бол abs1/abs2-оос тооцоолно, үгүй бол гараар оруулна
   - `average` = (r1 + r2) / 2 × dilution
   - `diff` = |r1 - r2| / average × 100%
   - `control` — зөвшөөрөгдөх хэлбэлзэл шалгах

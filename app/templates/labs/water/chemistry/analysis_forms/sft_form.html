@@ -1,0 +1,243 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">SFT</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>{{ _("Calculation Formula") }}</h6>
+  <small class="text-muted">
+    NH4, NO2, NO3, Fe = {{ _("Average") }}(M1, M2)
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  const LIMITS = {{ sft_limits | tojson }};
+  function avgPair(a, b) {
+    if (a != null && b != null) return (a + b) / 2;
+    if (a != null) return a;
+    if (b != null) return b;
+    return null;
+  }
+  function getPairRow(data) {
+    const pair = window._sftPairMap?.[data.sample_id];
+    if (!pair) return null;
+    return data.row_type === 'M1' ? pair.M2 : pair.M1;
+  }
+  function avgFromRows(data, field) {
+    const other = getPairRow(data);
+    if (!other) return null;
+    return avgPair(data[field], other[field]);
+  }
+  function feDilution(data) {
+    const other = getPairRow(data);
+    const d1 = data.fe_dil;
+    const d2 = other ? other.fe_dil : null;
+    return d1 ?? d2 ?? 1;
+  }
+  function feResult(data) {
+    const avg = avgFromRows(data, 'fe_m');
+    if (avg == null) return null;
+    const dil = feDilution(data);
+    return avg * (dil || 1);
+  }
+  function limitStyle(code, val) {
+    if (val == null || isNaN(val)) return {};
+    const lim = LIMITS[code];
+    if (!lim) return {};
+    if (Array.isArray(lim)) {
+      const min = lim[0], max = lim[1];
+      if (min != null && val < min) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      if (max != null && val > max) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+    }
+    if (val > lim) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+    return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+  }
+  function spanIfM1(p) {
+    return p.data.row_type === 'M1' ? 2 : 1;
+  }
+  function avgRowStyle(code, p) {
+    if (p.data.row_type === 'M2') return { display: 'none' };
+    return limitStyle(code, p.value);
+  }
+
+  // Merge base sample name column (avoid duplicate)
+  if (baseCols && baseCols[1]) {
+    baseCols[1].rowSpan = spanIfM1;
+    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : {});
+  }
+
+  const editNH4 = { ...editCol, editable: p => !p.data._lock_nh4 };
+  const editNO2 = { ...editCol, editable: p => !p.data._lock_no2 };
+  const editNO3 = { ...editCol, editable: p => !p.data._lock_no3 };
+  const editFE = { ...editCol, editable: p => !p.data._lock_fe };
+
+  var formColumns = [
+    { headerName: 'M', field: 'row_type', width: 70 },
+    {
+      headerName: 'NH4', children: [
+        { headerName: 'M', field: 'nh4_m', width: 90, type: 'numericColumn', ...editNH4, valueFormatter: fmt3 },
+        {
+          headerName: '{{ _("Average") }}', field: 'nh4_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'nh4_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('NH4', p)
+        },
+      ]
+    },
+    {
+      headerName: 'NO2', children: [
+        { headerName: 'M', field: 'no2_m', width: 90, type: 'numericColumn', ...editNO2, valueFormatter: fmt3 },
+        {
+          headerName: '{{ _("Average") }}', field: 'no2_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'no2_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('NO2', p)
+        },
+      ]
+    },
+    {
+      headerName: 'NO3', children: [
+        { headerName: 'M', field: 'no3_m', width: 90, type: 'numericColumn', ...editNO3, valueFormatter: fmt3 },
+        {
+          headerName: '{{ _("Average") }}', field: 'no3_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'no3_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('NO3', p)
+        },
+      ]
+    },
+    {
+      headerName: 'Fe', children: [
+        { headerName: 'M', field: 'fe_m', width: 90, type: 'numericColumn', ...editFE, valueFormatter: fmt3 },
+        {
+          headerName: '{{ _("Average") }}', field: 'fe_avg', width: 100,
+          valueGetter: p => feResult(p.data),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('FE_W', p)
+        },
+        { headerName: '{{ _("Dilution") }}', field: 'fe_dil', width: 100, type: 'numericColumn',
+          ...editFE, valueFormatter: fmt3, editable: p => !p.data._lock_fe && p.data.row_type === 'M1' },
+      ]
+    }
+  ];
+
+  var editableFields = [
+    'nh4_m', 'no2_m', 'no3_m', 'fe_m', 'fe_dil',
+    'notes'
+  ];
+  var computedCols = ['nh4_avg', 'no2_avg', 'no3_avg', 'fe_avg'];
+
+  // Refresh averages on both rows when any M value changes
+  window._waterOnCellChange = function(params, cols) {
+    const f = params.colDef.field;
+    if (!f || !['nh4_m', 'no2_m', 'no3_m', 'fe_m', 'fe_dil'].includes(f)) return;
+    params.api.refreshCells({ columns: cols, force: true });
+  };
+{% endblock %}
+
+{% block row_builder %}
+  function pickPair(raw) {
+    const m1 = raw?.m1 ?? raw?.r1 ?? raw?.value ?? raw?.result ?? raw?.average ?? null;
+    const m2 = raw?.m2 ?? raw?.r2 ?? null;
+    return [m1, m2];
+  }
+
+  const rowData = [];
+  samples.forEach((s, idx) => {
+    const ex = existingResults[s.id] || {};
+
+    const nh4 = ex.NH4 || {};
+    const no2 = ex.NO2 || {};
+    const no3 = ex.NO3 || {};
+    const fe = ex.FE_W || {};
+
+    const nh4pair = pickPair(nh4.raw_data || {});
+    const no2pair = pickPair(no2.raw_data || {});
+    const no3pair = pickPair(no3.raw_data || {});
+    const fepair = pickPair(fe.raw_data || {});
+    const feDil = (fe.raw_data || {}).dilution ?? null;
+
+    const lockNh4 = nh4.status && nh4.status !== 'rejected';
+    const lockNo2 = no2.status && no2.status !== 'rejected';
+    const lockNo3 = no3.status && no3.status !== 'rejected';
+    const lockFe = fe.status && fe.status !== 'rejected';
+
+    rowData.push({
+      index: idx * 2 + 1, sample_id: s.id, sample_code: s.code,
+      row_type: 'M1', notes: '', is_saved: false,
+      nh4_m: nh4pair[0], no2_m: no2pair[0], no3_m: no3pair[0], fe_m: fepair[0], fe_dil: feDil,
+      _lock_nh4: lockNh4, _lock_no2: lockNo2, _lock_no3: lockNo3, _lock_fe: lockFe,
+    });
+    rowData.push({
+      index: idx * 2 + 2, sample_id: s.id, sample_code: s.code,
+      row_type: 'M2', notes: '', is_saved: false,
+      nh4_m: nh4pair[1], no2_m: no2pair[1], no3_m: no3pair[1], fe_m: fepair[1], fe_dil: feDil,
+      _lock_nh4: lockNh4, _lock_no2: lockNo2, _lock_no3: lockNo3, _lock_fe: lockFe,
+    });
+  });
+
+  // Pair map for fast avg lookup
+  window._sftPairMap = {};
+  rowData.forEach(r => {
+    if (!window._sftPairMap[r.sample_id]) window._sftPairMap[r.sample_id] = {};
+    window._sftPairMap[r.sample_id][r.row_type] = r;
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function buildItem(code, d, m1, m2, extra, resultOverride) {
+    const avg = avgPair(m1, m2);
+    if (avg == null) return null;
+    return {
+      sample_id: d.sample_id,
+      analysis_code: code,
+      results: {
+        m1: m1,
+        m2: m2,
+        average: avg,
+        result: resultOverride ?? avg,
+        ...extra
+      }
+    };
+  }
+
+  function collectSaveItems() {
+    const items = [];
+    const bySample = {};
+    window.waterGridApi.forEachNode(n => {
+      const d = n.data;
+      if (!bySample[d.sample_id]) bySample[d.sample_id] = {};
+      bySample[d.sample_id][d.row_type] = d;
+    });
+    Object.values(bySample).forEach(pair => {
+      const m1 = pair.M1, m2 = pair.M2;
+      if (!m1 || !m2) return;
+      if (!m1._lock_nh4) {
+        const item = buildItem('NH4', m1, m1.nh4_m, m2.nh4_m, {});
+        if (item) items.push(item);
+      }
+      if (!m1._lock_no2) {
+        const item = buildItem('NO2', m1, m1.no2_m, m2.no2_m, {});
+        if (item) items.push(item);
+      }
+      if (!m1._lock_no3) {
+        const item = buildItem('NO3', m1, m1.no3_m, m2.no3_m, {});
+        if (item) items.push(item);
+      }
+      if (!m1._lock_fe) {
+        const dil = m1.fe_dil ?? m2.fe_dil ?? 1;
+        const avg = avgPair(m1.fe_m, m2.fe_m);
+        const res = avg != null ? avg * (dil || 1) : null;
+        const item = buildItem('FE_W', m1, m1.fe_m, m2.fe_m, { dilution: dil }, res);
+        if (item) items.push(item);
+      }
+    });
+    return items;
+  }
+{% endblock %}

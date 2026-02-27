@@ -1,0 +1,136 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">SLUDGE</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>{{ _("Calculation Formula") }}</h6>
+  <small class="text-muted">
+    {{ _("Sludge Dose") }} (g/L) = (m1 − m0) × 1000 / V<br>
+    {{ _("Sludge Index") }} (mL/g) = (Vsludge × 1000 / V) / {{ _("Sludge Dose") }}
+  </small>
+</div>
+{% endblock %}
+
+{% block column_defs %}
+  function calcDelta(m0, m1) {
+    if (m0 == null || m1 == null) return null;
+    return m1 - m0;
+  }
+  function calcDose(m0, m1, v) {
+    if (m0 == null || m1 == null || !v) return null;
+    return (m1 - m0) * 1000 / v;
+  }
+  function calcIndex(vsl, v) {
+    if (vsl == null || !v) return null;
+    return vsl * 1000 / v;
+  }
+  function calcSVI(vsl, v, dose) {
+    if (vsl == null || !v || dose == null || dose === 0) return null;
+    const sv_ml_l = vsl * 1000 / v;
+    return sv_ml_l / dose;
+  }
+
+  var formColumns = [
+    { headerName: 'Сорьцын эзлэхүүн', field: 'v_sample', width: 90, type: 'numericColumn', ...editCol },
+    { headerName: 'Лагийн эзлэхүүн', field: 'v_sludge', width: 90, type: 'numericColumn', ...editCol },
+    { headerName: 'Шаазан тигелийн жин', field: 'm0', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    { headerName: 'Лагтай тигелийн жин', field: 'm1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt4 },
+    {
+      headerName: 'Лагийн тунгийн жин', field: 'delta_m', width: 85,
+      valueGetter: p => calcDelta(p.data.m0, p.data.m1),
+      valueFormatter: fmt4,
+      cellStyle: { color: '#7c3aed', fontWeight: '600' }
+    },
+    {
+      headerName: 'Лагийн тун г/л', field: 'dose', width: 85,
+      valueGetter: p => calcDose(p.data.m0, p.data.m1, p.data.v_sample),
+      valueFormatter: fmt2,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    },
+    {
+      headerName: 'Лагийн индекс мл/г', field: 'svi', width: 90,
+      valueGetter: p => calcSVI(p.data.v_sludge, p.data.v_sample, calcDose(p.data.m0, p.data.m1, p.data.v_sample)),
+      valueFormatter: fmt2,
+      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+    },
+    { headerName: 'Идэвхт лагийн шинж чанар', field: 'active_quality', width: 140, ...editCol,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: { values: ['Саарал', 'Хүрэн', 'Хар', 'Шар', 'Ногоон', 'Тодорхойгүй'] }
+    },
+    { headerName: 'Эгэл биетний шинж чанар', field: 'proto_quality', width: 140, ...editCol,
+      cellEditor: 'agSelectCellEditor',
+      cellEditorParams: { values: ['Сайн', 'Дунд', 'Муу', 'Илрээгүй', 'Тодорхойгүй'] }
+    },
+  ];
+
+  var editableFields = ['v_sample', 'v_sludge', 'm0', 'm1', 'active_quality', 'proto_quality', 'notes'];
+  var computedCols = ['delta_m', 'dose', 'svi'];
+{% endblock %}
+
+{% block row_builder %}
+  const rowData = samples.map((s, idx) => {
+    const exVol = existingResults[s.id]?.SLUDGE_VOL;
+    const exDose = existingResults[s.id]?.SLUDGE_DOSE;
+    const exIdx = existingResults[s.id]?.SLUDGE_INDEX;
+    const raw = (exVol?.raw_data || exDose?.raw_data || exIdx?.raw_data || {});
+
+    const lockVol = exVol?.status && exVol.status !== 'rejected';
+    const lockDose = exDose?.status && exDose.status !== 'rejected';
+    const lockIdx = exIdx?.status && exIdx.status !== 'rejected';
+    const isSaved = lockVol || lockDose || lockIdx;
+
+    return {
+      index: idx + 1, sample_id: s.id, sample_code: s.code,
+      is_saved: isSaved,
+      v_sample: raw.v_sample ?? 100,
+      v_sludge: raw.v_sludge ?? null,
+      m0: raw.m0 ?? null,
+      m1: raw.m1 ?? null,
+      active_quality: raw.active_quality || '',
+      proto_quality: raw.proto_quality || '',
+      // analyst removed
+    };
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function buildItem(code, d, resultVal, extra) {
+    if (resultVal == null) return null;
+    return {
+      sample_id: d.sample_id,
+      analysis_code: code,
+      results: {
+        v_sample: d.v_sample,
+        v_sludge: d.v_sludge,
+        m0: d.m0,
+        m1: d.m1,
+        delta_m: calcDelta(d.m0, d.m1),
+        dose: calcDose(d.m0, d.m1, d.v_sample),
+        svi: calcSVI(d.v_sludge, d.v_sample, calcDose(d.m0, d.m1, d.v_sample)),
+        active_quality: d.active_quality || '',
+        proto_quality: d.proto_quality || '',
+        result: resultVal,
+        ...extra
+      }
+    };
+  }
+
+  function collectSaveItems() {
+    const items = [];
+    window.waterGridApi.forEachNode(n => {
+      if (n.data.is_saved) return;
+      const d = n.data;
+      const dose = calcDose(d.m0, d.m1, d.v_sample);
+      const svi = calcSVI(d.v_sludge, d.v_sample, dose);
+      const vol = d.v_sludge;
+      const itemVol = buildItem('SLUDGE_VOL', d, vol, {});
+      const itemDose = buildItem('SLUDGE_DOSE', d, dose, {});
+      const itemIdx = buildItem('SLUDGE_INDEX', d, svi, {});
+      if (itemVol) items.push(itemVol);
+      if (itemDose) items.push(itemDose);
+      if (itemIdx) items.push(itemIdx);
+    });
+    return items;
+  }
+{% endblock %}

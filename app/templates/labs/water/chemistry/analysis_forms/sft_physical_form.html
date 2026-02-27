@@ -1,0 +1,250 @@
+{% extends "labs/water/chemistry/analysis_forms/water_ws_layout.html" %}
+
+{% block method_badge %}<span class="badge bg-secondary bg-opacity-50">PHYS</span>{% endblock %}
+
+{% block extra_ref %}
+<div class="mt-2 p-2 bg-light rounded">
+  <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>{{ _("Calculation Formula") }}</h6>
+  <small class="text-muted">
+    Өнгө/Градус, EC, pH, Фторид, Үлдэгдэл хлор = {{ _("Average") }}(M1, M2)
+  </small>
+</div>
+<style>
+  .sft-group,
+  .sft-group-cell {
+    border-right: 1px solid #cbd5e1 !important;
+  }
+</style>
+{% endblock %}
+
+{% block column_defs %}
+  const LIMITS = {{ phys_limits | tojson }};
+  function avgPair(a, b) {
+    if (a != null && b != null) return (a + b) / 2;
+    if (a != null) return a;
+    if (b != null) return b;
+    return null;
+  }
+  function getPairRow(data) {
+    const pair = window._physPairMap?.[data.sample_id];
+    if (!pair) return null;
+    return data.row_type === 'M1' ? pair.M2 : pair.M1;
+  }
+  function avgFromRows(data, field) {
+    const other = getPairRow(data);
+    if (!other) return null;
+    return avgPair(data[field], other[field]);
+  }
+  function limitStyle(code, val) {
+    if (val == null || isNaN(val)) return {};
+    const lim = LIMITS[code];
+    if (!lim) return {};
+    if (Array.isArray(lim)) {
+      const min = lim[0], max = lim[1];
+      if (min != null && val < min) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      if (max != null && val > max) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+      return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+    }
+    if (val > lim) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+    return { backgroundColor: '#e0ffe0', fontWeight: 'bold' };
+  }
+  function spanIfM1(p) { return p.data.row_type === 'M1' ? 2 : 1; }
+  function avgRowStyle(code, p) {
+    if (p.data.row_type === 'M2') return { display: 'none' };
+    return limitStyle(code, p.value);
+  }
+
+  // Merge base sample name column (avoid duplicate)
+  if (baseCols && baseCols[1]) {
+    baseCols[1].rowSpan = spanIfM1;
+    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : {});
+  }
+
+  const editColorTemp = { ...editCol, editable: p => !p.data._lock_color_temp };
+  const editEC = { ...editCol, editable: p => !p.data._lock_ec };
+  const editPH = { ...editCol, editable: p => !p.data._lock_ph };
+  const editF = { ...editCol, editable: p => !p.data._lock_f };
+  const editCL = { ...editCol, editable: p => !p.data._lock_cl };
+
+  const groupHeaderClass = 'sft-group';
+  const groupCellClass = 'sft-group-cell';
+
+  var formColumns = [
+    { headerName: 'M', field: 'row_type', width: 70 },
+    {
+      headerName: 'Өнгө/Градус (°C)', headerClass: groupHeaderClass, children: [
+        { headerName: 'M', field: 'color_temp_m', width: 110, type: 'numericColumn', ...editColorTemp, valueFormatter: fmt3, cellClass: groupCellClass },
+        {
+          headerName: '{{ _("Average") }}', field: 'color_temp_avg', width: 110,
+          valueGetter: p => avgFromRows(p.data, 'color_temp_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('COLOR_TEMP', p),
+          cellClass: groupCellClass
+        },
+      ]
+    },
+    {
+      headerName: 'EC (µS/cm)', headerClass: groupHeaderClass, children: [
+        { headerName: 'M', field: 'ec_m', width: 90, type: 'numericColumn', ...editEC, valueFormatter: fmt3, cellClass: groupCellClass },
+        {
+          headerName: '{{ _("Average") }}', field: 'ec_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'ec_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('EC', p),
+          cellClass: groupCellClass
+        },
+      ]
+    },
+    {
+      headerName: 'pH', headerClass: groupHeaderClass, children: [
+        { headerName: 'M', field: 'ph_m', width: 90, type: 'numericColumn', ...editPH, valueFormatter: fmt3, cellClass: groupCellClass },
+        {
+          headerName: '{{ _("Average") }}', field: 'ph_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'ph_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('PH', p),
+          cellClass: groupCellClass
+        },
+      ]
+    },
+    {
+      headerName: 'Фторид', headerClass: groupHeaderClass, children: [
+        { headerName: 'M', field: 'f_m', width: 90, type: 'numericColumn', ...editF, valueFormatter: fmt3, cellClass: groupCellClass },
+        {
+          headerName: '{{ _("Average") }}', field: 'f_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'f_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('F_W', p),
+          cellClass: groupCellClass
+        },
+      ]
+    },
+    {
+      headerName: 'Үлдэгдэл хлор', headerClass: groupHeaderClass, children: [
+        { headerName: 'M', field: 'clfree_m', width: 90, type: 'numericColumn', ...editCL, valueFormatter: fmt3, cellClass: groupCellClass },
+        {
+          headerName: '{{ _("Average") }}', field: 'clfree_avg', width: 100,
+          valueGetter: p => avgFromRows(p.data, 'clfree_m'),
+          valueFormatter: fmt3,
+          rowSpan: spanIfM1,
+          cellStyle: p => avgRowStyle('CL_FREE', p),
+          cellClass: groupCellClass
+        },
+      ]
+    }
+  ];
+
+  var editableFields = ['color_temp_m','ec_m','ph_m','f_m','clfree_m','notes'];
+  var computedCols = ['color_temp_avg','ec_avg','ph_avg','f_avg','clfree_avg'];
+
+  window._waterOnCellChange = function(params, cols) {
+    const f = params.colDef.field;
+    if (!f || !['color_temp_m','ec_m','ph_m','f_m','clfree_m'].includes(f)) return;
+    params.api.refreshCells({ columns: cols, force: true });
+  };
+{% endblock %}
+
+{% block row_builder %}
+  function pickPair(raw) {
+    const m1 = raw?.m1 ?? raw?.r1 ?? raw?.value ?? raw?.result ?? raw?.average ?? null;
+    const m2 = raw?.m2 ?? raw?.r2 ?? null;
+    return [m1, m2];
+  }
+
+  const rowData = [];
+  samples.forEach((s, idx) => {
+    const ex = existingResults[s.id] || {};
+
+    const colorTemp = ex.COLOR_TEMP || {};
+    const ec = ex.EC || {};
+    const ph = ex.PH || {};
+    const f = ex.F_W || {};
+    const clfree = ex.CL_FREE || {};
+
+    const colorTempPair = pickPair(colorTemp.raw_data || {});
+    const ecPair = pickPair(ec.raw_data || {});
+    const phPair = pickPair(ph.raw_data || {});
+    const fPair = pickPair(f.raw_data || {});
+    const clPair = pickPair(clfree.raw_data || {});
+
+    const lockColorTemp = colorTemp.status && colorTemp.status !== 'rejected';
+    const lockEC = ec.status && ec.status !== 'rejected';
+    const lockPH = ph.status && ph.status !== 'rejected';
+    const lockF = f.status && f.status !== 'rejected';
+    const lockCL = clfree.status && clfree.status !== 'rejected';
+
+    rowData.push({
+      index: idx * 2 + 1, sample_id: s.id, sample_code: s.code,
+      row_type: 'M1', notes: '', is_saved: false,
+      color_temp_m: colorTempPair[0], ec_m: ecPair[0], ph_m: phPair[0], f_m: fPair[0], clfree_m: clPair[0],
+      _lock_color_temp: lockColorTemp,
+      _lock_ec: lockEC,
+      _lock_ph: lockPH,
+      _lock_f: lockF,
+      _lock_cl: lockCL,
+    });
+    rowData.push({
+      index: idx * 2 + 2, sample_id: s.id, sample_code: s.code,
+      row_type: 'M2', notes: '', is_saved: false,
+      color_temp_m: colorTempPair[1], ec_m: ecPair[1], ph_m: phPair[1], f_m: fPair[1], clfree_m: clPair[1],
+      _lock_color_temp: lockColorTemp,
+      _lock_ec: lockEC,
+      _lock_ph: lockPH,
+      _lock_f: lockF,
+      _lock_cl: lockCL,
+    });
+  });
+
+  window._physPairMap = {};
+  rowData.forEach(r => {
+    if (!window._physPairMap[r.sample_id]) window._physPairMap[r.sample_id] = {};
+    window._physPairMap[r.sample_id][r.row_type] = r;
+  });
+{% endblock %}
+
+{% block save_collector %}
+  function buildItem(code, d, m1, m2) {
+    const avg = avgPair(m1, m2);
+    if (avg == null) return null;
+    return {
+      sample_id: d.sample_id,
+      analysis_code: code,
+      results: {
+        m1: m1,
+        m2: m2,
+        average: avg,
+        result: avg,
+        value: avg
+      }
+    };
+  }
+
+  function collectSaveItems() {
+    const items = [];
+    const bySample = {};
+    window.waterGridApi.forEachNode(n => {
+      const d = n.data;
+      if (!bySample[d.sample_id]) bySample[d.sample_id] = {};
+      bySample[d.sample_id][d.row_type] = d;
+    });
+    Object.values(bySample).forEach(pair => {
+      const m1 = pair.M1, m2 = pair.M2;
+      if (!m1 || !m2) return;
+      const colorTempItem = !m1._lock_color_temp ? buildItem('COLOR_TEMP', m1, m1.color_temp_m, m2.color_temp_m) : null;
+      const ecItem = !m1._lock_ec ? buildItem('EC', m1, m1.ec_m, m2.ec_m) : null;
+      const phItem = !m1._lock_ph ? buildItem('PH', m1, m1.ph_m, m2.ph_m) : null;
+      const fItem = !m1._lock_f ? buildItem('F_W', m1, m1.f_m, m2.f_m) : null;
+      const clItem = !m1._lock_cl ? buildItem('CL_FREE', m1, m1.clfree_m, m2.clfree_m) : null;
+      if (colorTempItem) items.push(colorTempItem);
+      if (ecItem) items.push(ecItem);
+      if (phItem) items.push(phItem);
+      if (fItem) items.push(fItem);
+      if (clItem) items.push(clItem);
+    });
+    return items;
+  }
+{% endblock %}
