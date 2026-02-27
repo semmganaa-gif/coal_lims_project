@@ -49,6 +49,9 @@ Dockerfile
 nginx.conf
 backup.sh
 
+# Scripts (dev/setup only, contains hardcoded passwords)
+scripts/
+
 # Claude/AI session files
 .claude/
 
