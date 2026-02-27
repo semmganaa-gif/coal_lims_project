@@ -18,6 +18,9 @@ from datetime import datetime
 from app import db
 from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
+import logging
+_logger = logging.getLogger(__name__)
+
 # Font registration for Cyrillic support
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -111,7 +114,12 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        _logger.error(f"Microbiology report commit error: {e}")
+        return None, "Микробиологийн тайлан хадгалахад алдаа гарлаа."
 
     return report, None
 
@@ -164,7 +172,12 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        _logger.error(f"Water report commit error: {e}")
+        return None, "Усны тайлан хадгалахад алдаа гарлаа."
 
     return report, None
 
@@ -217,7 +230,12 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
     pdf_path = generate_pdf_file(report, samples, results_data)
     report.pdf_path = pdf_path
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        _logger.error(f"Coal report commit error: {e}")
+        return None, "Нүүрсний тайлан хадгалахад алдаа гарлаа."
 
     return report, None
 
@@ -318,4 +336,8 @@ def regenerate_pdf(report):
     create_pdf_from_html(html_content, filepath)
 
     report.pdf_path = f"uploads/reports/{filename}"
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        _logger.error(f"Regenerate PDF commit error: {e}")

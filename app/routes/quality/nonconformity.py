@@ -5,6 +5,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import NonConformityRecord
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
@@ -67,10 +68,13 @@ def register_routes(bp):
                 status='pending'
             )
             db.session.add(record)
-            db.session.commit()
+            if not safe_commit(
+                f"Үл тохирол {record_no} бүртгэгдлээ",
+                "Үл тохирол хадгалахад алдаа гарлаа"
+            ):
+                return redirect(url_for('quality.nonconformity_list'))
 
             logger.info(f"NonConformity created: {record_no}, user: {current_user.username}")
-            flash(f"Үл тохирол {record_no} бүртгэгдлээ", "success")
             return redirect(url_for('quality.nonconformity_list'))
 
         return render_template(
@@ -107,10 +111,13 @@ def register_routes(bp):
         record.corrective_plan = request.form.get('corrective_plan', '').strip()
         record.responsible_user_id = current_user.id
         record.status = 'investigating'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.record_no} хянагдаж байна",
+            "Үл тохирол хянахад алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.nonconformity_detail', id=id))
 
         logger.info(f"NonConformity investigated: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} хянагдаж байна", "success")
         return redirect(url_for('quality.nonconformity_detail', id=id))
 
     @bp.route("/nonconformity/<int:id>/review", methods=["POST"])
@@ -124,8 +131,11 @@ def register_routes(bp):
         record.control_notes = request.form.get('control_notes', '').strip()
         record.manager_id = current_user.id
         record.status = 'reviewed'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.record_no} хяналт дууслаа",
+            "Үл тохирол хянахад алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.nonconformity_detail', id=id))
 
         logger.info(f"NonConformity reviewed: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} хяналт дууслаа", "success")
         return redirect(url_for('quality.nonconformity_detail', id=id))

@@ -11,7 +11,7 @@ from sqlalchemy import func
 from datetime import datetime, time, timedelta
 from collections import defaultdict
 
-from app import db
+from app import db, cache
 from app.models import Sample, AnalysisResultLog, User
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
@@ -286,6 +286,7 @@ def register_routes(bp):
 
     @bp.route("/api/kpi_summary_for_ahlah", methods=["GET"])
     @login_required
+    @cache.cached(timeout=60, key_prefix='kpi_summary_ahlah')
     def kpi_summary_for_ahlah():
         """
         Ахлахын хяналтын хуудасны дээр харагдах "COUNT" маягийн KPI:

@@ -163,7 +163,12 @@ def register_routes(bp):
 
         for msg in unread_from_user:
             msg.read_at = now_mn()
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Mark messages read commit error: {e}")
 
         return jsonify({
             'messages': [m.to_dict() for m in reversed(messages.items)],

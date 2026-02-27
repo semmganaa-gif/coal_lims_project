@@ -225,7 +225,12 @@ def api_consume():
         log.data_hash = log.compute_hash()
         db.session.add(log)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"API consume commit error: {e}")
+            return api_error("Хэрэглээ хадгалахад алдаа гарлаа", status_code=500)
 
         return api_success({
             "new_quantity": new_quantity,
@@ -461,7 +466,12 @@ def api_consume_bulk():
             db.session.add(log)
             count += 1
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Bulk consume commit error: {e}")
+            return api_error("Багц хэрэглээ хадгалахад алдаа гарлаа", status_code=500)
 
         return api_success({
             "count": count,

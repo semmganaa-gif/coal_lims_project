@@ -5,6 +5,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import CorrectiveAction
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
@@ -67,10 +68,13 @@ def register_routes(bp):
                 status='open'
             )
             db.session.add(record)
-            db.session.commit()
+            if not safe_commit(
+                f"Залруулах ажиллагаа {ca_number} бүртгэгдлээ",
+                "CAPA хадгалахад алдаа гарлаа"
+            ):
+                return redirect(url_for('quality.capa_list'))
 
             logger.info(f"CAPA created: {ca_number}, user: {current_user.username}")
-            flash(f"Залруулах ажиллагаа {ca_number} бүртгэгдлээ", "success")
             return redirect(url_for('quality.capa_list'))
 
         return render_template(
@@ -103,10 +107,13 @@ def register_routes(bp):
         record.target_date = target_str if target_str else None
 
         record.status = 'in_progress'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.ca_number} бөглөгдлөө",
+            "CAPA бөглөхөд алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.capa_detail', id=id))
 
         logger.info(f"CAPA filled: {record.ca_number}, user: {current_user.username}")
-        flash(f"{record.ca_number} бөглөгдлөө", "success")
         return redirect(url_for('quality.capa_detail', id=id))
 
     @bp.route("/capa/<int:id>/review", methods=["POST"])
@@ -123,8 +130,11 @@ def register_routes(bp):
         record.control_date = date.today()
         record.technical_manager_id = current_user.id
         record.status = 'reviewed'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.ca_number} хянагдлаа",
+            "CAPA хянахад алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.capa_detail', id=id))
 
         logger.info(f"CAPA reviewed: {record.ca_number}, user: {current_user.username}")
-        flash(f"{record.ca_number} хянагдлаа", "success")
         return redirect(url_for('quality.capa_detail', id=id))

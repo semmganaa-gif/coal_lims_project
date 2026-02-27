@@ -17,6 +17,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 from flask_socketio import SocketIO
 from flask_babel import Babel, lazy_gettext as _l
+from flask_caching import Cache
 import json
 
 # Утилитиудыг дээд талд импортлох
@@ -32,6 +33,7 @@ login.login_view = 'main.login'
 login.login_message = _l("Please log in to access this page.")
 mail = Mail()
 babel = Babel()
+cache = Cache()
 
 # WebSocket - Real-time чат
 socketio = SocketIO()
@@ -80,6 +82,7 @@ def create_app(config_class=Config):
             "RATELIMIT_STORAGE_URI=redis://localhost:6379"
         )
     mail.init_app(app)
+    cache.init_app(app)
 
     # Flask-Babel (i18n) - locale_selector
     def get_locale():

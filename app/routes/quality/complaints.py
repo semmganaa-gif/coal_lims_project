@@ -5,6 +5,7 @@ from flask import render_template, flash, redirect, url_for, request, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult, AnalysisResultLog
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
@@ -231,17 +232,18 @@ def register_routes(bp):
                         db.session.add(log)
                         rejected_count += 1
 
-            db.session.commit()
+            success_msg = f"Гомдол {complaint_no} бүртгэгдлээ"
+            if rejected_count:
+                success_msg += f" | {rejected_count} шинжилгээ дахин шинжлүүлэхээр татгалзагдлаа"
+
+            if not safe_commit(success_msg, "Гомдол хадгалахад алдаа гарлаа"):
+                return redirect(url_for('quality.complaints_list'))
 
             logger.info(
                 f"Complaint created: {complaint_no}, "
                 f"by: {complainant_name}, user: {current_user.username}"
                 f"{f', {rejected_count} results auto-rejected' if rejected_count else ''}"
             )
-            msg = f"Гомдол {complaint_no} бүртгэгдлээ"
-            if rejected_count:
-                msg += f" | {rejected_count} шинжилгээ дахин шинжлүүлэхээр татгалзагдлаа"
-            flash(msg, "success")
             return redirect(url_for('quality.complaints_list'))
 
         return render_template(
@@ -326,10 +328,13 @@ def register_routes(bp):
         complaint.response_detail = request.form.get('response_detail', '').strip()
         complaint.receiver_user_id = current_user.id
         complaint.status = 'received'
-        db.session.commit()
+        if not safe_commit(
+            f"{complaint.complaint_no} хүлээн авагдлаа",
+            "Гомдол хүлээн авахад алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.complaints_detail', id=id))
 
         logger.info(f"Complaint received: {complaint.complaint_no}, user: {current_user.username}")
-        flash(f"{complaint.complaint_no} хүлээн авагдлаа", "success")
         return redirect(url_for('quality.complaints_detail', id=id))
 
     @bp.route("/complaints/<int:id>/control", methods=["POST"])
@@ -361,12 +366,13 @@ def register_routes(bp):
             db.session.add(imp)
             created_records.append(f"Сайжруулалт {imp_number}")
 
-        db.session.commit()
+        success_msg = f"{complaint.complaint_no} хянагдлаа"
+        if created_records:
+            success_msg += f" | Үүсгэгдсэн: {', '.join(created_records)}"
+
+        if not safe_commit(success_msg, "Гомдол хянахад алдаа гарлаа"):
+            return redirect(url_for('quality.complaints_detail', id=id))
 
         logger.info(f"Complaint controlled: {complaint.complaint_no}, user: {current_user.username}")
-        msg = f"{complaint.complaint_no} хянагдлаа"
-        if created_records:
-            msg += f" | Үүсгэгдсэн: {', '.join(created_records)}"
-        flash(msg, "success")
         return redirect(url_for('quality.complaints_detail', id=id))
 

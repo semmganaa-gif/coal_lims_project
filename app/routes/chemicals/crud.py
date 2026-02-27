@@ -13,6 +13,7 @@ from datetime import datetime, date, timedelta
 from app.utils.datetime import now_local
 from sqlalchemy.exc import IntegrityError
 
+from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp, LAB_TYPES, CATEGORIES, UNITS, STATUS_TYPES
 
 
@@ -233,9 +234,11 @@ def add_chemical():
                 details=f"Шинээр бүртгэв: {chemical.name}"
             )
 
-            db.session.commit()
-            flash(f"'{chemical.name}' амжилттай бүртгэгдлээ.", "success")
-            return redirect(url_for("chemicals.chemical_detail", id=chemical.id))
+            if safe_commit(
+                success_msg=f"'{chemical.name}' амжилттай бүртгэгдлээ.",
+                error_msg="Химийн бодис бүртгэхэд алдаа гарлаа"
+            ):
+                return redirect(url_for("chemicals.chemical_detail", id=chemical.id))
 
         except ValueError as e:
             db.session.rollback()
@@ -336,9 +339,11 @@ def edit_chemical(id):
                 details="Мэдээлэл шинэчлэв"
             )
 
-            db.session.commit()
-            flash("Амжилттай шинэчлэгдлээ.", "success")
-            return redirect(url_for("chemicals.chemical_detail", id=id))
+            if safe_commit(
+                success_msg="Амжилттай шинэчлэгдлээ.",
+                error_msg="Химийн бодис шинэчлэхэд алдаа гарлаа"
+            ):
+                return redirect(url_for("chemicals.chemical_detail", id=id))
 
         except ValueError as e:
             db.session.rollback()
@@ -402,8 +407,10 @@ def receive_chemical(id):
             details=f"Нөөц нэмэв: +{quantity_add} {chemical.unit}"
         )
 
-        db.session.commit()
-        flash(f"+{quantity_add} {chemical.unit} нэмэгдлээ.", "success")
+        safe_commit(
+            success_msg=f"+{quantity_add} {chemical.unit} нэмэгдлээ.",
+            error_msg="Нөөц нэмэхэд алдаа гарлаа"
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -473,8 +480,10 @@ def consume_chemical(id):
             details=f"Хэрэглэв: -{quantity_used} {chemical.unit}, {request.form.get('purpose', '')}"
         )
 
-        db.session.commit()
-        flash(f"-{quantity_used} {chemical.unit} хэрэглэгдлээ.", "success")
+        safe_commit(
+            success_msg=f"-{quantity_used} {chemical.unit} хэрэглэгдлээ.",
+            error_msg="Хэрэглээ бүртгэхэд алдаа гарлаа"
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -513,8 +522,10 @@ def dispose_chemical(id):
             details=f"Устгав: {reason}"
         )
 
-        db.session.commit()
-        flash(f"'{chemical.name}' устгагдлаа.", "warning")
+        safe_commit(
+            success_msg=f"'{chemical.name}' устгагдлаа.",
+            error_msg="Устгахад алдаа гарлаа"
+        )
 
     except Exception as e:
         db.session.rollback()

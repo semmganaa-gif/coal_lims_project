@@ -11,6 +11,7 @@ import json
 import logging
 from datetime import date, timedelta
 from app.utils.audit import log_audit
+from app.utils.database import safe_commit
 
 logger = logging.getLogger(__name__)
 
@@ -332,21 +333,20 @@ def register_routes(bp):
         today = date.today()
         updated_count = 0
 
-        try:
-            for s in samples:
-                if from_date_type == "received" and s.received_date:
-                    base_date = s.received_date
-                else:
-                    base_date = today
+        for s in samples:
+            if from_date_type == "received" and s.received_date:
+                base_date = s.received_date
+            else:
+                base_date = today
 
-                s.retention_date = base_date + timedelta(days=retention_days)
-                updated_count += 1
+            s.retention_date = base_date + timedelta(days=retention_days)
+            updated_count += 1
 
-            db.session.commit()
-            flash(f"{updated_count} дээжинд хадгалах хугацаа тохируулагдлаа.", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
+        if updated_count > 0:
+            safe_commit(
+                f"{updated_count} дээжинд хадгалах хугацаа тохируулагдлаа.",
+                "Хадгалах хугацаа тохируулахад алдаа гарлаа"
+            )
 
         return redirect(url_for("main.sample_disposal"))
 

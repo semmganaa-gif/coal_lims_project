@@ -1234,7 +1234,7 @@ function renderResultCard(item, idx) {
         <tbody>
           ${raw.fractions.map(f => `
             <tr>
-              <td class="row-label">${f.label || '-'}</td>
+              <td class="row-label">${escapeHtml(f.label) || '-'}</td>
               <td>${formatNum(f.m2, 1)}</td>
               <td>${formatNum(f.m3, 1)}</td>
               <td>${formatNum(f.m1, 1)}</td>
@@ -1267,11 +1267,11 @@ function renderResultCard(item, idx) {
         ? '<th>#</th><th>Pyc</th><th>m(g)</th><th>m2(g)</th><th>m1(g)</th><th>TRD</th>'
         : '<th>#</th><th>m1</th><th>m2</th><th>m3</th><th>' + I18N.result + '</th>';
       const rowFn = isMgTrd
-        ? p => `<td class="row-label">${p.label || p.num || '-'}</td>
+        ? p => `<td class="row-label">${escapeHtml(p.label || p.num) || '-'}</td>
                 <td>${formatNum(p.pycno, 0)}</td><td>${formatNum(p.m)}</td>
                 <td>${formatNum(p.m2)}</td><td>${formatNum(p.m1)}</td>
                 <td><strong>${formatNum(p.result, 3)}</strong></td>`
-        : p => `<td class="row-label">${p.label || p.num || '-'}</td>
+        : p => `<td class="row-label">${escapeHtml(p.label || p.num) || '-'}</td>
                 <td>${formatNum(p.m1)}</td><td>${formatNum(p.m2)}</td>
                 <td>${formatNum(p.m3)}</td>
                 <td><strong>${formatNum(p.result, 3)}</strong></td>`;
@@ -1299,7 +1299,7 @@ function renderResultCard(item, idx) {
   let errorBadge = '';
   if (item.status === 'rejected' && item.error_reason) {
     const errorText = window.ERROR_LABELS[item.error_reason] || item.error_reason;
-    errorBadge = `<div class="mt-2"><span class="badge bg-danger">${errorText}</span></div>`;
+    errorBadge = `<div class="mt-2"><span class="badge bg-danger">${escapeHtml(errorText)}</span></div>`;
   }
 
   return `
@@ -1377,7 +1377,7 @@ function renderResultCard(item, idx) {
 function formatNum(val, precision = 4) {
   if (val === undefined || val === null || val === '') return '-';
   const num = Number(val);
-  if (isNaN(num)) return val;
+  if (isNaN(num)) return escapeHtml(val);
   return num.toFixed(precision);
 }
 

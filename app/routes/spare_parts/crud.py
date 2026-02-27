@@ -11,6 +11,7 @@ from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategor
 from datetime import datetime, date
 from app.routes.spare_parts import spare_parts_bp, UNITS, STATUS_TYPES
 from app.utils.converters import to_float
+from app.utils.database import safe_commit
 
 
 # Зураг upload тохиргоо
@@ -131,9 +132,8 @@ def add_category():
                 equipment_id=int(equipment_id) if equipment_id else None,
             )
             db.session.add(cat)
-            db.session.commit()
-            flash(f"'{name}' ангилал амжилттай нэмэгдлээ.", 'success')
-            return redirect(url_for('spare_parts.category_list'))
+            if safe_commit(f"'{name}' ангилал амжилттай нэмэгдлээ.", "Ангилал нэмэхэд алдаа гарлаа"):
+                return redirect(url_for('spare_parts.category_list'))
 
     equipments = Equipment.query.filter(
         Equipment.status != 'retired'
@@ -161,9 +161,8 @@ def edit_category(id):
         equipment_id = request.form.get('equipment_id')
         cat.equipment_id = int(equipment_id) if equipment_id else None
 
-        db.session.commit()
-        flash('Ангилал амжилттай шинэчлэгдлээ.', 'success')
-        return redirect(url_for('spare_parts.category_list'))
+        if safe_commit('Ангилал амжилттай шинэчлэгдлээ.', 'Ангилал шинэчлэхэд алдаа гарлаа'):
+            return redirect(url_for('spare_parts.category_list'))
 
     equipments = Equipment.query.filter(
         Equipment.status != 'retired'
@@ -190,8 +189,7 @@ def delete_category(id):
 
     name = cat.name
     db.session.delete(cat)
-    db.session.commit()
-    flash(f"'{name}' ангилал устгагдлаа.", 'warning')
+    safe_commit(f"'{name}' ангилал устгагдлаа.", "Ангилал устгахад алдаа гарлаа")
     return redirect(url_for('spare_parts.category_list'))
 
 
@@ -349,10 +347,8 @@ def add_spare_part():
                 quantity_after=spare_part.quantity,
                 details=f"Шинээр үүсгэв: {spare_part.name}"
             )
-            db.session.commit()
-
-            flash(f"'{spare_part.name}' амжилттай нэмэгдлээ.", 'success')
-            return redirect(url_for('spare_parts.spare_part_list'))
+            if safe_commit(f"'{spare_part.name}' амжилттай нэмэгдлээ.", "Сэлбэг нэмэхэд алдаа гарлаа"):
+                return redirect(url_for('spare_parts.spare_part_list'))
 
         except Exception as e:
             db.session.rollback()
@@ -448,9 +444,8 @@ def edit_spare_part(id):
                 details="Мэдээлэл шинэчлэв"
             )
 
-            db.session.commit()
-            flash('Амжилттай шинэчлэгдлээ.', 'success')
-            return redirect(url_for('spare_parts.spare_part_detail', id=id))
+            if safe_commit('Амжилттай шинэчлэгдлээ.', 'Сэлбэг шинэчлэхэд алдаа гарлаа'):
+                return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
         except Exception as e:
             db.session.rollback()
@@ -503,9 +498,10 @@ def receive_spare_part(id):
             quantity_after=spare_part.quantity,
             details=request.form.get('notes', 'Шинээр ирсэн')
         )
-        db.session.commit()
-
-        flash(f'{quantity} {spare_part.unit} нэмэгдлээ. Нийт: {spare_part.quantity}', 'success')
+        safe_commit(
+            f'{quantity} {spare_part.unit} нэмэгдлээ. Нийт: {spare_part.quantity}',
+            'Нөөц нэмэхэд алдаа гарлаа'
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -562,9 +558,10 @@ def consume_spare_part(id):
             quantity_after=spare_part.quantity,
             details=f"Зарцуулав: {request.form.get('purpose', '-')}"
         )
-        db.session.commit()
-
-        flash(f'{quantity} {spare_part.unit} зарцуулагдлаа. Үлдэгдэл: {spare_part.quantity}', 'success')
+        safe_commit(
+            f'{quantity} {spare_part.unit} зарцуулагдлаа. Үлдэгдэл: {spare_part.quantity}',
+            'Сэлбэг зарцуулахад алдаа гарлаа'
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -599,8 +596,7 @@ def dispose_spare_part(id):
             details=f"Устгав: {reason}"
         )
 
-        db.session.commit()
-        flash(f"'{spare_part.name}' устгагдлаа.", 'warning')
+        safe_commit(f"'{spare_part.name}' устгагдлаа.", 'Сэлбэг устгахад алдаа гарлаа')
 
     except Exception as e:
         db.session.rollback()
@@ -622,7 +618,5 @@ def delete_spare_part(id):
     name = spare_part.name
 
     db.session.delete(spare_part)
-    db.session.commit()
-
-    flash(f"'{name}' бүрмөсөн устгагдлаа.", 'warning')
+    safe_commit(f"'{name}' бүрмөсөн устгагдлаа.", "Сэлбэг устгахад алдаа гарлаа")
     return redirect(url_for('spare_parts.spare_part_list'))

@@ -11,6 +11,7 @@ from app import db
 from app.models import ChemicalWaste, ChemicalWasteRecord
 from datetime import datetime
 
+from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp
 
 # Хаягдах арга
@@ -123,9 +124,11 @@ def add_waste():
             )
 
             db.session.add(waste)
-            db.session.commit()
-            flash(f"'{waste.name_mn}' амжилттай нэмэгдлээ.", "success")
-            return redirect(url_for("chemicals.waste_list"))
+            if safe_commit(
+                success_msg=f"'{waste.name_mn}' амжилттай нэмэгдлээ.",
+                error_msg="Хог хаягдал нэмэхэд алдаа гарлаа"
+            ):
+                return redirect(url_for("chemicals.waste_list"))
 
         except Exception as e:
             db.session.rollback()
@@ -167,9 +170,11 @@ def edit_waste(id):
             waste.lab_type = request.form.get("lab_type", "all")
             waste.notes = request.form.get("notes")
 
-            db.session.commit()
-            flash("Амжилттай шинэчлэгдлээ.", "success")
-            return redirect(url_for("chemicals.waste_list"))
+            if safe_commit(
+                success_msg="Амжилттай шинэчлэгдлээ.",
+                error_msg="Хог хаягдал шинэчлэхэд алдаа гарлаа"
+            ):
+                return redirect(url_for("chemicals.waste_list"))
 
         except Exception as e:
             db.session.rollback()
@@ -198,8 +203,10 @@ def delete_waste(id):
 
     waste = ChemicalWaste.query.get_or_404(id)
     waste.is_active = False
-    db.session.commit()
-    flash(f"'{waste.name_mn}' устгагдлаа.", "warning")
+    safe_commit(
+        success_msg=f"'{waste.name_mn}' устгагдлаа.",
+        error_msg="Хог хаягдал устгахад алдаа гарлаа"
+    )
     return redirect(url_for("chemicals.waste_list"))
 
 
@@ -240,7 +247,13 @@ def save_waste_record():
             )
             db.session.add(record)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Waste record commit error: {e}", exc_info=True)
+            return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500
+
         return jsonify({"success": True, "message": "Хадгалагдлаа"})
 
     except Exception as e:

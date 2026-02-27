@@ -130,6 +130,14 @@ class Config:
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
 
     # ========================================================
+    # FLASK-CACHING CONFIGURATION
+    # ========================================================
+    # H-12: Development: SimpleCache, Production: Redis
+    # CACHE_REDIS_URL=redis://localhost:6379/1
+    CACHE_TYPE = os.getenv('CACHE_TYPE', 'SimpleCache')
+    CACHE_DEFAULT_TIMEOUT = int(os.getenv('CACHE_DEFAULT_TIMEOUT', 300))
+
+    # ========================================================
     # 🔒 SECURITY LOGGING CONFIGURATION
     # ========================================================
     # Серверийн тооцоололын зөрүү, тамперинг оролдлого, security events

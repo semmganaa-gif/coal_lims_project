@@ -341,7 +341,12 @@ def _import_chpp_wide(
 
             batch_count += 1
             if not dry_run and batch_count >= batch_size:
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"CHPP wide batch commit error at row {total}: {e}")
+                    errors.append(f"Batch commit алдаа (мөр ~{total}): {e}")
                 batch_count = 0
 
         except Exception as e:
@@ -351,7 +356,12 @@ def _import_chpp_wide(
     if dry_run:
         db.session.rollback()
     else:
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"CHPP wide final commit error: {e}")
+            errors.append(f"Эцсийн commit алдаа: {e}")
 
     summary = {
         "Нийт мөр": total,
@@ -446,7 +456,12 @@ def _import_long(
 
                 batch_count += 1
                 if not dry_run and batch_count >= batch_size:
-                    db.session.commit()
+                    try:
+                        db.session.commit()
+                    except Exception as e:
+                        db.session.rollback()
+                        logger.error(f"Long format batch commit error at row {total}: {e}")
+                        errors.append(f"Batch commit алдаа (мөр ~{total}): {e}")
                     batch_count = 0
 
             except Exception as e:
@@ -456,7 +471,12 @@ def _import_long(
         if dry_run:
             db.session.rollback()
         else:
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Long format final commit error: {e}")
+                errors.append(f"Эцсийн commit алдаа: {e}")
 
     except SQLAlchemyError:
         db.session.rollback()

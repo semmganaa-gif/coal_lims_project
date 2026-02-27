@@ -404,7 +404,12 @@ def log_usage_bulk():
             elif is_repair:
                 count += 1
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Bulk usage log commit error: {e}")
+            return api_error("Хадгалахад алдаа гарлаа", status_code=500)
 
         # Audit log
         if count > 0:
@@ -420,7 +425,7 @@ def log_usage_bulk():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Bulk Usage Log Error: {e}")
-        return api_error(str(e), status_code=500)
+        return api_error("Бүртгэл хадгалахад алдаа гарлаа", status_code=500)
 
 
 # -------------------------------------------------

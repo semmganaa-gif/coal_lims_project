@@ -17,7 +17,7 @@ Reports:
 from datetime import datetime, timedelta
 from collections import defaultdict, OrderedDict
 
-from flask import Blueprint, render_template, request, abort, jsonify, url_for
+from flask import Blueprint, render_template, request, abort, jsonify, url_for, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 
@@ -930,7 +930,12 @@ def api_save_monthly_plan():
 
         saved_count += 1
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Monthly plan save error: {e}")
+        return jsonify({"success": False, "error": "Төлөвлөгөө хадгалахад алдаа гарлаа."}), 500
     return jsonify({"success": True, "saved": saved_count})
 
 
@@ -967,7 +972,12 @@ def api_save_staff_settings():
         )
         db.session.add(new_settings)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Staff settings save error: {e}")
+        return jsonify({"success": False, "error": "Ажилтны тохиргоо хадгалахад алдаа гарлаа."}), 500
     return jsonify({"success": True})
 
 

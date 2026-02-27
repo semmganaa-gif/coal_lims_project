@@ -63,7 +63,7 @@ function formatValue(value, cfg) {
     const digits = typeof cfg.precision === "number" ? cfg.precision : 2;
     const num = Number(value);
     if (Number.isFinite(num)) return num.toFixed(digits);
-    return value;
+    return escapeHtml(value);
   }
   if (format === "boolean") {
     return value ? "Yes" : "No";

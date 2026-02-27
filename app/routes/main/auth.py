@@ -12,6 +12,7 @@ import sqlalchemy as sa
 
 from app.utils.security import is_safe_url
 from app.utils.audit import log_audit
+from app.utils.database import safe_commit
 
 
 def register_routes(bp):
@@ -71,18 +72,17 @@ def register_routes(bp):
             current_user.email = form.email.data
             current_user.phone = form.phone.data
             current_user.position = form.position.data
-            db.session.commit()
 
-            log_audit(
-                action='profile_updated',
-                details={
-                    'full_name': form.full_name.data,
-                    'email': form.email.data,
-                    'position': form.position.data
-                }
-            )
+            if safe_commit("Профайл амжилттай хадгалагдлаа!", "Профайл хадгалахад алдаа гарлаа"):
+                log_audit(
+                    action='profile_updated',
+                    details={
+                        'full_name': form.full_name.data,
+                        'email': form.email.data,
+                        'position': form.position.data
+                    }
+                )
 
-            flash("Профайл амжилттай хадгалагдлаа!", "success")
             return redirect(url_for("main.profile"))
 
         # Өмнөх утгуудыг form-д оруулах
@@ -104,7 +104,7 @@ def register_routes(bp):
             session['language'] = lang
             if current_user.is_authenticated:
                 current_user.language = lang
-                db.session.commit()
+                safe_commit()
         referrer = request.referrer
         if not referrer or not is_safe_url(referrer):
             referrer = url_for('main.index')

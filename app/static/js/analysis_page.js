@@ -394,6 +394,10 @@ $(function () {
           $(this).prop('checked', checked).trigger('change');
         });
       });
+    })
+    .fail(function(xhr) {
+      body.html('<div class="alert alert-danger m-3">Failed to load samples. Please try again.</div>');
+      console.error('eligible_samples error:', xhr.status, xhr.statusText);
     });
   });
 

@@ -656,7 +656,7 @@ def send_hourly_report():
                 db.session.add(SystemSetting(category='report_config', key=last_update_key, value=today_str))
             else:
                 setting_last.value = today_str
-            db.session.commit()
+            safe_commit(error_msg="Тайлангийн тоолуур хадгалахад алдаа гарлаа")
 
         display_count = current_count if current_count > 0 else 1
 

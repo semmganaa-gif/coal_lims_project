@@ -133,7 +133,13 @@ def api_consume():
         )
         log.data_hash = log.compute_hash()
         db.session.add(log)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Spare part consume commit error: {e}", exc_info=True)
+            return jsonify({'success': False, 'message': 'Сэлбэг зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
             'success': True,
@@ -215,7 +221,12 @@ def api_consume_bulk():
                 'remaining': spare_part.quantity,
             })
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Spare part bulk consume commit error: {e}", exc_info=True)
+            return jsonify({'success': False, 'message': 'Олноор зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
             'success': True,

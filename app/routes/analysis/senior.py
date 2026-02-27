@@ -15,7 +15,7 @@ from datetime import datetime
 from app.utils.shifts import get_shift_info
 import json
 
-from app import db
+from app import db, cache
 from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
@@ -200,6 +200,10 @@ def register_routes(bp):
         db.session.add(audit)
         db.session.commit()
 
+        # Invalidate cached stats after status change
+        cache.delete('kpi_summary_ahlah')
+        cache.delete('ahlah_stats')
+
         # ISO 17025 compliance audit log
         log_audit(
             action=f'result_{new_status}',
@@ -343,6 +347,7 @@ def register_routes(bp):
     @bp.route("/api/ahlah_stats")
     @login_required
     @analysis_role_required(["senior", "admin"])
+    @cache.cached(timeout=30, key_prefix='ahlah_stats')
     def api_ahlah_stats():
         """
         Statistics for senior dashboard:

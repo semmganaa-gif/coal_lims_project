@@ -83,7 +83,14 @@ def register_routes(bp):
                 s.status = "new"
                 count += 1
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Update sample status commit error: {e}")
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"message": "Хадгалахад алдаа гарлаа"}), 500
+            return redirect(url_for("api.sample_summary"))
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return jsonify({"message": f"{count} sample status updated."}), 200

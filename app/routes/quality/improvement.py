@@ -5,6 +5,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import ImprovementRecord
+from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
@@ -68,10 +69,13 @@ def register_routes(bp):
                 status='pending'
             )
             db.session.add(record)
-            db.session.commit()
+            if not safe_commit(
+                f"Сайжруулалт {record_no} бүртгэгдлээ",
+                "Сайжруулалт хадгалахад алдаа гарлаа"
+            ):
+                return redirect(url_for('quality.improvement_list'))
 
             logger.info(f"Improvement created: {record_no}, user: {current_user.username}")
-            flash(f"Сайжруулалт {record_no} бүртгэгдлээ", "success")
             return redirect(url_for('quality.improvement_list'))
 
         return render_template(
@@ -104,10 +108,13 @@ def register_routes(bp):
         record.deadline = deadline_str if deadline_str else None
 
         record.status = 'in_progress'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.record_no} бөглөгдлөө",
+            "Сайжруулалт бөглөхөд алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.improvement_detail', id=id))
 
         logger.info(f"Improvement filled: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} бөглөгдлөө", "success")
         return redirect(url_for('quality.improvement_detail', id=id))
 
     @bp.route("/improvement/<int:id>/review", methods=["POST"])
@@ -122,8 +129,11 @@ def register_routes(bp):
         record.control_date = date.today()
         record.technical_manager_id = current_user.id
         record.status = 'reviewed'
-        db.session.commit()
+        if not safe_commit(
+            f"{record.record_no} хяналт дууслаа",
+            "Сайжруулалт хянахад алдаа гарлаа"
+        ):
+            return redirect(url_for('quality.improvement_detail', id=id))
 
         logger.info(f"Improvement reviewed: {record.record_no}, user: {current_user.username}")
-        flash(f"{record.record_no} хяналт дууслаа", "success")
         return redirect(url_for('quality.improvement_detail', id=id))

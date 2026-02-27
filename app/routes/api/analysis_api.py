@@ -269,7 +269,12 @@ def register_routes(bp):
             details=f"Дээж {sample.sample_code}-аас {analysis_code} шинжилгээг хассан"
         )
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Unassign analysis commit error: {e}")
+            return jsonify({"success": False, "message": "Хадгалахад алдаа гарлаа"}), 500
 
         return jsonify({
             "success": True,

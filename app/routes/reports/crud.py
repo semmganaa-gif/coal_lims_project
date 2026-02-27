@@ -23,6 +23,7 @@ IMAGE_MAGIC_BYTES = {
     b'RIFF': 'webp',
 }
 MAX_SIGNATURE_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+from app.utils.database import safe_commit
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
 
 
@@ -145,8 +146,8 @@ def add_signature():
             )
 
             db.session.add(sig)
-            db.session.commit()
-            flash(f"'{name}' амжилттай нэмэгдлэн.", "success")
+            if not safe_commit(f"'{name}' амжилттай нэмэгдлэн.", "Гарын үсэг нэмэхэд алдаа гарлаа."):
+                return redirect(url_for("pdf_reports.signature_list"))
             return redirect(url_for("pdf_reports.signature_list"))
 
         except Exception as e:
@@ -173,8 +174,7 @@ def delete_signature(id):
 
     sig = ReportSignature.query.get_or_404(id)
     sig.is_active = False
-    db.session.commit()
-    flash("Устгагдлаа.", "warning")
+    safe_commit("Устгагдлаа.", "Устгахад алдаа гарлаа.")
     return redirect(url_for("pdf_reports.signature_list"))
 
 
@@ -239,13 +239,13 @@ def approve_report(id):
     report.approved_by_id = current_user.id
     report.approved_at = datetime.now()
 
-    db.session.commit()
+    if not safe_commit("Тайлан зөвшөөрөгдлөө.", "Тайлан баталгаажуулахад алдаа гарлаа."):
+        return redirect(url_for("pdf_reports.report_detail", id=id))
 
     # PDF дахин үүсгэх (гарын үсэгтэй)
     from app.routes.reports.pdf_generator import regenerate_pdf
     regenerate_pdf(report)
 
-    flash("Тайлан зөвшөөрөгдлөө.", "success")
     return redirect(url_for("pdf_reports.report_detail", id=id))
 
 
@@ -299,8 +299,7 @@ def delete_report(id):
             os.remove(pdf_full_path)
 
     db.session.delete(report)
-    db.session.commit()
-    flash("Тайлан устгагдлаа.", "warning")
+    safe_commit("Тайлан устгагдлаа.", "Тайлан устгахад алдаа гарлаа.")
     return redirect(url_for("pdf_reports.report_list"))
 
 
