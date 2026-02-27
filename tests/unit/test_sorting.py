@@ -16,68 +16,68 @@ class TestNaturalSortKey:
         assert callable(natural_sort_key)
 
     def test_none_returns_empty_list(self):
-        """None returns list with empty string"""
+        """None returns list with sentinel tuple"""
         from app.utils.sorting import natural_sort_key
-        assert natural_sort_key(None) == [""]
+        assert natural_sort_key(None) == [(1, "", 0)]
 
     def test_empty_string_returns_empty_list(self):
-        """Empty string returns list with empty string"""
+        """Empty string returns list with sentinel tuple"""
         from app.utils.sorting import natural_sort_key
-        assert natural_sort_key("") == [""]
+        assert natural_sort_key("") == [(1, "", 0)]
 
     def test_whitespace_only_returns_empty_list(self):
-        """Whitespace only returns list with empty string"""
+        """Whitespace only returns list with sentinel tuple"""
         from app.utils.sorting import natural_sort_key
-        assert natural_sort_key("   ") == [""]
+        assert natural_sort_key("   ") == [(1, "", 0)]
 
     def test_simple_string(self):
         """Simple string without numbers"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("abc")
-        assert result == ["abc"]
+        assert result == [(1, "abc", 0)]
 
     def test_simple_number(self):
         """String with only number"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("123")
-        assert result == [123]
+        assert result == [(0, "", 123)]
 
     def test_string_with_number(self):
         """String with number embedded"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("N10")
-        assert result == ["n", 10]
+        assert result == [(1, "n", 0), (0, "", 10)]
 
     def test_lowercase_conversion(self):
         """Text is converted to lowercase"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("ABC")
-        assert result == ["abc"]
+        assert result == [(1, "abc", 0)]
 
     def test_multiple_numbers(self):
         """String with multiple numbers"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("A1B2C3")
-        assert result == ["a", 1, "b", 2, "c", 3]
+        assert result == [(1, "a", 0), (0, "", 1), (1, "b", 0), (0, "", 2), (1, "c", 0), (0, "", 3)]
 
     def test_leading_zeros_number(self):
         """Leading zeros in number"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key("N007")
-        assert result == ["n", 7]
+        assert result == [(1, "n", 0), (0, "", 7)]
 
     def test_integer_input(self):
         """Integer input is converted"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key(123)
-        assert result == [123]
+        assert result == [(0, "", 123)]
 
     def test_float_input(self):
         """Float input - decimal point separates"""
         from app.utils.sorting import natural_sort_key
         result = natural_sort_key(12.5)
-        # "12.5" splits into ["12", ".", "5"]
-        assert 12 in result
+        # "12.5" splits into [(0,'',12), (1,'.',0), (0,'',5)]
+        assert (0, "", 12) in result
 
     def test_sorts_correctly(self):
         """Natural sort key works for sorting"""
@@ -118,7 +118,7 @@ class TestCustomSampleSortKey:
         result = custom_sample_sort_key(None)
         assert result[0] == 99
         assert result[1] == 0
-        assert result[2] == [""]
+        assert result[2] == [(1, "", 0)]
 
     def test_empty_string_returns_high_priority(self):
         """Empty string returns tuple with 99 priority"""
@@ -758,7 +758,7 @@ class TestEdgeCases:
         assert result[0] == 2  # Falls to "other" category
 
     def test_sort_samples_mixed_types(self):
-        """Sort samples with mixed attribute types raises TypeError"""
+        """Sort samples with mixed attribute types works with tuple keys"""
         from app.utils.sorting import sort_samples
 
         s1 = MagicMock()
@@ -770,9 +770,9 @@ class TestEdgeCases:
         s2.name = None
 
         samples = [s1, s2]
-        # Python can't compare int < str, so TypeError is expected
-        with pytest.raises(TypeError):
-            sort_samples(samples)
+        # Tuple-based keys prevent int vs str comparison errors
+        result = sort_samples(samples)
+        assert len(result) == 2
 
     def test_get_priority_case_sensitive(self):
         """Client names are case sensitive"""

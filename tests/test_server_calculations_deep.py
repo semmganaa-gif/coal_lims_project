@@ -255,9 +255,9 @@ class TestVerifyAndRecalculate:
 class TestConstants:
     """Tests for module constants."""
 
-    def test_epsilon_exists(self, app):
-        """Test EPSILON constant exists."""
+    def test_calc_mismatch_abs_threshold_exists(self, app):
+        """Test CALC_MISMATCH_ABS_THRESHOLD constant exists."""
         with app.app_context():
-            from app.utils.server_calculations import EPSILON
-            assert isinstance(EPSILON, (int, float))
-            assert EPSILON > 0
+            from app.utils.server_calculations import CALC_MISMATCH_ABS_THRESHOLD
+            assert isinstance(CALC_MISMATCH_ABS_THRESHOLD, (int, float))
+            assert CALC_MISMATCH_ABS_THRESHOLD > 0

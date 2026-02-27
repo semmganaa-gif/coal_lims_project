@@ -165,10 +165,10 @@ class TestCalcTotalMoistureMt:
         from app.utils.server_calculations import calc_total_moisture_mt
 
         raw_data = {
-            "p1": {"m1": 100.0, "m2": 85.0},
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 185.0},
         }
         result = calc_total_moisture_mt(raw_data)
-        # MT = ((100 - 85) / 100) * 100 = 15%
+        # MT = ((m2 - m3) / (m2 - m1)) * 100 = ((200-185)/(200-100))*100 = 15%
         assert result is not None
         assert abs(result - 15.0) < 0.1
 
@@ -423,10 +423,11 @@ class TestCalcTrd:
         assert result is not None
 
     def test_calc_trd_out_of_temp_range(self):
-        """Temperature out of range"""
+        """Temperature out of range returns None (coal TRD with mad_used/temp_c)"""
         from app.utils.server_calculations import calc_trd
 
         raw_data = {
+            "mad_used": 5.0, "temp_c": 50,
             "p1": {"m": 1.0, "m1": 100.0, "m2": 100.5, "temp": 50, "mad": 5.0}
         }
         result = calc_trd(raw_data)
@@ -573,7 +574,7 @@ class TestBulkVerifyResults:
 class TestConstants:
     """Constants tests"""
 
-    def test_epsilon(self):
-        """EPSILON constant"""
-        from app.utils.server_calculations import EPSILON
-        assert EPSILON == 0.01
+    def test_calc_mismatch_abs_threshold(self):
+        """CALC_MISMATCH_ABS_THRESHOLD constant"""
+        from app.utils.server_calculations import CALC_MISMATCH_ABS_THRESHOLD
+        assert CALC_MISMATCH_ABS_THRESHOLD == 0.01

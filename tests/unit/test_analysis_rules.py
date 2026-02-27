@@ -273,7 +273,7 @@ class TestDetermineResultStatus:
         """TRD high"""
         from app.utils.analysis_rules import determine_result_status
 
-        status, comment = determine_result_status('TRD', 4.0)
+        status, comment = determine_result_status('TRD', 8.5)
         assert status == 'pending_review'
 
     def test_determine_result_status_qnet_ar_low(self):

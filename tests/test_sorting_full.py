@@ -11,29 +11,29 @@ class TestNaturalSortKey:
     def test_simple_strings(self, app):
         with app.app_context():
             from app.utils.sorting import natural_sort_key
-            assert natural_sort_key('abc') == ['abc']
-            assert natural_sort_key('ABC') == ['abc']
+            assert natural_sort_key('abc') == [(1, 'abc', 0)]
+            assert natural_sort_key('ABC') == [(1, 'abc', 0)]
 
     def test_strings_with_numbers(self, app):
         with app.app_context():
             from app.utils.sorting import natural_sort_key
             result = natural_sort_key('N10')
-            assert result == ['n', 10]
+            assert result == [(1, 'n', 0), (0, '', 10)]
 
     def test_none_value(self, app):
         with app.app_context():
             from app.utils.sorting import natural_sort_key
-            assert natural_sort_key(None) == ['']
+            assert natural_sort_key(None) == [(1, '', 0)]
 
     def test_empty_string(self, app):
         with app.app_context():
             from app.utils.sorting import natural_sort_key
-            assert natural_sort_key('') == ['']
+            assert natural_sort_key('') == [(1, '', 0)]
 
     def test_numeric_string(self, app):
         with app.app_context():
             from app.utils.sorting import natural_sort_key
-            assert natural_sort_key('123') == [123]
+            assert natural_sort_key('123') == [(0, '', 123)]
 
     def test_natural_order(self, app):
         with app.app_context():
@@ -49,13 +49,13 @@ class TestCustomSampleSortKey:
         with app.app_context():
             from app.utils.sorting import custom_sample_sort_key
             result = custom_sample_sort_key(None)
-            assert result == (99, 0, [''])
+            assert result == (99, 0, [(1, '', 0)])
 
     def test_empty_code(self, app):
         with app.app_context():
             from app.utils.sorting import custom_sample_sort_key
             result = custom_sample_sort_key('')
-            assert result == (99, 0, [''])
+            assert result == (99, 0, [(1, '', 0)])
 
     def test_chpp_2h_exact_match(self, app):
         with app.app_context():

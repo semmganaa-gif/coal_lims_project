@@ -178,11 +178,12 @@ class TestCalcTotalMoistureMt:
         with app.app_context():
             from app.utils.server_calculations import calc_total_moisture_mt
             raw_data = {
-                'p1': {'m1': 100.0, 'm2': 85.0},
-                'p2': {'m1': 100.0, 'm2': 86.0}
+                'p1': {'m1': 100.0, 'm2': 200.0, 'm3': 185.0},
+                'p2': {'m1': 100.0, 'm2': 200.0, 'm3': 186.0}
             }
             result = calc_total_moisture_mt(raw_data)
             assert result is not None
+            # p1: (200-185)/(200-100)*100=15%, p2: (200-186)/(200-100)*100=14%
             assert abs(result - 14.5) < 0.5  # Expected ~14.5% moisture
 
     def test_missing_data_returns_none(self, app):
@@ -339,12 +340,12 @@ class TestCalcTrd:
             assert result is not None
 
     def test_invalid_temperature_returns_none(self, app):
-        """Test invalid temperature returns None."""
+        """Test invalid temperature returns None (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
-                'p1': {'m': 1.0, 'm1': 50.0, 'm2': 50.3, 'temp': 50.0},  # temp > 35
-                'mad': 5.0
+                'mad_used': 5.0, 'temp_c': 50.0,
+                'p1': {'m': 1.0, 'm1': 50.0, 'm2': 50.3, 'temp': 50.0, 'mad': 5.0},
             }
             result = calc_trd(raw_data)
             assert result is None

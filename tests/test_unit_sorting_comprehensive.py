@@ -19,35 +19,35 @@ class TestNaturalSortKey:
 
     def test_none_returns_empty_list(self):
         result = natural_sort_key(None)
-        assert result == [""]
+        assert result == [(1, "", 0)]
 
     def test_empty_string_returns_empty_list(self):
         result = natural_sort_key("")
-        assert result == [""]
+        assert result == [(1, "", 0)]
 
     def test_whitespace_only_returns_empty_list(self):
         result = natural_sort_key("   ")
-        assert result == [""]
+        assert result == [(1, "", 0)]
 
     def test_simple_text(self):
         result = natural_sort_key("abc")
-        assert result == ["abc"]
+        assert result == [(1, "abc", 0)]
 
     def test_simple_number(self):
         result = natural_sort_key("123")
-        assert result == [123]
+        assert result == [(0, "", 123)]
 
     def test_mixed_text_number(self):
         result = natural_sort_key("abc123")
-        assert result == ["abc", 123]
+        assert result == [(1, "abc", 0), (0, "", 123)]
 
     def test_number_text_number(self):
         result = natural_sort_key("12abc34")
-        assert result == [12, "abc", 34]
+        assert result == [(0, "", 12), (1, "abc", 0), (0, "", 34)]
 
     def test_case_insensitive(self):
         result = natural_sort_key("ABC")
-        assert result == ["abc"]
+        assert result == [(1, "abc", 0)]
 
 
 class TestCustomSampleSortKey:
@@ -55,15 +55,15 @@ class TestCustomSampleSortKey:
 
     def test_none_returns_default(self):
         result = custom_sample_sort_key(None)
-        assert result == (99, 0, [""])
+        assert result == (99, 0, [(1, "", 0)])
 
     def test_empty_string_returns_default(self):
         result = custom_sample_sort_key("")
-        assert result == (99, 0, [""])
+        assert result == (99, 0, [(1, "", 0)])
 
     def test_whitespace_returns_default(self):
         result = custom_sample_sort_key("   ")
-        assert result == (99, 0, [""])
+        assert result == (99, 0, [(1, "", 0)])
 
     def test_chpp_2h_code(self):
         """CHPP 2H codes should have group 0"""

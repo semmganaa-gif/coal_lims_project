@@ -232,10 +232,10 @@ class TestCalcTotalMoistureMt:
         """Valid p1 only"""
         from app.utils.server_calculations import calc_total_moisture_mt
         raw = {
-            "p1": {"m1": 100.0, "m2": 90.0}
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 190.0}
         }
         result = calc_total_moisture_mt(raw)
-        # (100 - 90) / 100 * 100 = 10%
+        # ((200-190)/(200-100))*100 = 10%
         assert result is not None
         assert abs(result - 10.0) < 0.01
 
@@ -243,8 +243,8 @@ class TestCalcTotalMoistureMt:
         """Valid p1 and p2"""
         from app.utils.server_calculations import calc_total_moisture_mt
         raw = {
-            "p1": {"m1": 100.0, "m2": 90.0},
-            "p2": {"m1": 100.0, "m2": 89.0}
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 190.0},
+            "p2": {"m1": 100.0, "m2": 200.0, "m3": 189.0}
         }
         result = calc_total_moisture_mt(raw)
         assert result is not None
@@ -612,8 +612,8 @@ class TestCalculationFunctions:
 class TestConstants:
     """Constants тестүүд"""
 
-    def test_epsilon(self):
-        """EPSILON exists"""
-        from app.utils.server_calculations import EPSILON
-        assert EPSILON > 0
-        assert EPSILON <= 1.0
+    def test_calc_mismatch_abs_threshold(self):
+        """CALC_MISMATCH_ABS_THRESHOLD exists"""
+        from app.utils.server_calculations import CALC_MISMATCH_ABS_THRESHOLD
+        assert CALC_MISMATCH_ABS_THRESHOLD > 0
+        assert CALC_MISMATCH_ABS_THRESHOLD <= 1.0

@@ -114,7 +114,8 @@ class TestDatabaseModels:
             user = User.query.filter_by(username='chemist').first()
 
             # Use unique sample code to avoid conflicts
-            unique_code = f"TEST-{uuid.uuid4().hex[:8]}"
+            # Note: Sample model uppercases codes for coal/petrography samples
+            unique_code = f"TEST-{uuid.uuid4().hex[:8].upper()}"
             sample = Sample(
                 sample_code=unique_code,
                 user_id=user.id,
@@ -164,7 +165,7 @@ class TestPasswordSecurity:
         # Too short
         errors = User.validate_password('abc')
         assert len(errors) > 0
-        assert any('8' in e for e in errors)
+        assert any('10' in e for e in errors)
 
         # No uppercase
         errors = User.validate_password('testpass123')

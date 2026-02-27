@@ -49,7 +49,7 @@ class TestAnalysisValueRanges:
     def test_csn_range(self):
         """CSN (crucible swelling number) range"""
         from app.utils.validators import ANALYSIS_VALUE_RANGES
-        assert ANALYSIS_VALUE_RANGES['CSN'] == (0.0, 9.6)
+        assert ANALYSIS_VALUE_RANGES['CSN'] == (0.0, 9.0)
 
     def test_cv_range(self):
         """CV (calorific value) range"""
@@ -209,14 +209,14 @@ class TestValidateAnalysisResult:
         assert error is None
 
     def test_csn_range_validation(self):
-        """CSN accepts values in 0-9.6 range"""
+        """CSN accepts values in 0-9.0 range"""
         from app.utils.validators import validate_analysis_result
         value, error = validate_analysis_result(5.5, 'CSN')
         assert value == 5.5
         assert error is None
 
     def test_csn_above_max(self):
-        """CSN rejects values above 9.6"""
+        """CSN rejects values above 9.0"""
         from app.utils.validators import validate_analysis_result
         value, error = validate_analysis_result(10.0, 'CSN')
         assert value is None

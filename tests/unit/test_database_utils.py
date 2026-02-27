@@ -99,8 +99,8 @@ class TestSafeCommit:
                     result = safe_commit()
                     assert result is False
 
-    def test_general_exception_includes_error_in_message(self, app):
-        """General exception includes error in flash message"""
+    def test_general_exception_flashes_error_msg(self, app):
+        """General exception flashes the error_msg (not raw exception details)"""
         from app.utils.database import safe_commit
         from app import db
         from flask import get_flashed_messages
@@ -108,10 +108,10 @@ class TestSafeCommit:
         with app.test_request_context():
             with patch.object(db.session, 'commit', side_effect=Exception("Specific Error")):
                 with patch.object(db.session, 'rollback'):
-                    safe_commit()
+                    safe_commit(error_msg="Custom error message")
 
             messages = get_flashed_messages()
-            assert any("Specific Error" in msg for msg in messages)
+            assert any("Custom error message" in msg for msg in messages)
 
 
 class TestSafeDelete:
@@ -315,8 +315,8 @@ class TestSafeAdd:
                         result = safe_add(mock_obj)
                         assert result is False
 
-    def test_exception_includes_error_detail(self, app):
-        """Exception includes error detail in message"""
+    def test_exception_flashes_error_msg(self, app):
+        """Exception flashes the error_msg (not raw exception details)"""
         from app.utils.database import safe_add
         from app import db
         from flask import get_flashed_messages
@@ -327,7 +327,7 @@ class TestSafeAdd:
             with patch.object(db.session, 'add'):
                 with patch.object(db.session, 'commit', side_effect=Exception("Specific DB Error")):
                     with patch.object(db.session, 'rollback'):
-                        safe_add(mock_obj)
+                        safe_add(mock_obj, error_msg="Нэмэхэд алдаа")
 
             messages = get_flashed_messages()
-            assert any("Specific DB Error" in msg for msg in messages)
+            assert any("Нэмэхэд алдаа" in msg for msg in messages)

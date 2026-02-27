@@ -27,8 +27,8 @@ class TestServerCalculationsImport:
         ])
 
     def test_import_constants(self):
-        from app.utils.server_calculations import EPSILON, CALCULATION_FUNCTIONS
-        assert EPSILON == 0.01
+        from app.utils.server_calculations import CALC_MISMATCH_ABS_THRESHOLD, CALCULATION_FUNCTIONS
+        assert CALC_MISMATCH_ABS_THRESHOLD == 0.01
         assert isinstance(CALCULATION_FUNCTIONS, dict)
 
 
@@ -198,17 +198,17 @@ class TestCalcTotalMoistureMT:
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_total_moisture_mt
         raw_data = {
-            "p1": {"m1": 100.0, "m2": 85.0}
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 185.0}
         }
         result = calc_total_moisture_mt(raw_data)
-        # MT = (100 - 85) / 100 * 100 = 15%
+        # MT = ((m2-m3)/(m2-m1))*100 = ((200-185)/(200-100))*100 = 15%
         assert result is not None
         assert abs(result - 15.0) < 0.01
 
     def test_negative_result(self):
         from app.utils.server_calculations import calc_total_moisture_mt
         raw_data = {
-            "p1": {"m1": 85.0, "m2": 100.0}  # m2 > m1
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 210.0}  # m3 > m2 -> negative
         }
         result = calc_total_moisture_mt(raw_data)
         assert result is None
@@ -454,8 +454,8 @@ class TestCalcTRD:
     def test_temperature_out_of_range(self):
         from app.utils.server_calculations import calc_trd
         raw_data = {
-            "p1": {"m": 2.0, "m1": 50.0, "m2": 51.0, "temp": 50},  # > 35
-            "mad": 5.0
+            "mad_used": 5.0, "temp_c": 50,
+            "p1": {"m": 2.0, "m1": 50.0, "m2": 51.0, "temp": 50, "mad": 5.0}
         }
         result = calc_trd(raw_data)
         assert result is None
@@ -463,6 +463,7 @@ class TestCalcTRD:
     def test_mad_in_parallel(self):
         from app.utils.server_calculations import calc_trd
         raw_data = {
+            "mad_used": 5.0, "temp_c": 20,
             "p1": {"m": 2.0, "m1": 50.0, "m2": 51.0, "temp": 20, "mad": 5.0}
         }
         result = calc_trd(raw_data)
@@ -471,8 +472,8 @@ class TestCalcTRD:
     def test_zero_dry_mass(self):
         from app.utils.server_calculations import calc_trd
         raw_data = {
-            "p1": {"m": 2.0, "m1": 50.0, "m2": 51.0, "temp": 20},
-            "mad": 100.0  # 100% moisture -> 0 dry mass
+            "mad_used": 100.0, "temp_c": 20,
+            "p1": {"m": 2.0, "m1": 50.0, "m2": 51.0, "temp": 20, "mad": 100.0}
         }
         result = calc_trd(raw_data)
         assert result is None
@@ -480,8 +481,8 @@ class TestCalcTRD:
     def test_zero_denominator(self):
         from app.utils.server_calculations import calc_trd
         raw_data = {
-            "p1": {"m": 2.0, "m1": 51.9, "m2": 50.0, "temp": 20},  # md + m2 - m1 = 0
-            "mad": 5.0
+            "mad_used": 5.0, "temp_c": 20,
+            "p1": {"m": 2.0, "m1": 51.9, "m2": 50.0, "temp": 20, "mad": 5.0}
         }
         result = calc_trd(raw_data)
         assert result is None
@@ -705,15 +706,15 @@ class TestParallel2Coverage:
         assert 15.0 < result < 16.0
 
     def test_mt_with_valid_p2(self):
-        """calc_total_moisture_mt p2 branch - lines 231-233"""
+        """calc_total_moisture_mt p2 branch"""
         from app.utils.server_calculations import calc_total_moisture_mt
         raw_data = {
-            "p1": {"m1": 100.0, "m2": 90.0},
-            "p2": {"m1": 100.0, "m2": 92.0}
+            "p1": {"m1": 100.0, "m2": 200.0, "m3": 190.0},
+            "p2": {"m1": 100.0, "m2": 200.0, "m3": 192.0}
         }
         result = calc_total_moisture_mt(raw_data)
         assert result is not None
-        # Average of 10% and 8%
+        # p1: (200-190)/(200-100)*100 = 10%, p2: (200-192)/(200-100)*100 = 8%
         assert 8.0 < result < 10.0
 
     def test_vad_with_valid_p2(self):
@@ -821,8 +822,8 @@ class TestParallel2Coverage:
         """p1 invalid, p2 valid for MT"""
         from app.utils.server_calculations import calc_total_moisture_mt
         raw_data = {
-            "p1": {"m1": None, "m2": None},  # Invalid p1
-            "p2": {"m1": 100.0, "m2": 90.0}  # Valid p2 - 10% moisture
+            "p1": {"m1": None, "m2": None, "m3": None},  # Invalid p1
+            "p2": {"m1": 100.0, "m2": 200.0, "m3": 190.0}  # Valid p2 - 10% moisture
         }
         result = calc_total_moisture_mt(raw_data)
         assert result is not None

@@ -36,9 +36,9 @@ class TestUserModel:
         """Password тохируулах"""
         with app.app_context():
             user = User(username='testpwd', role='chemist')
-            user.set_password('Test123!')
+            user.set_password('TestPass123')
             assert user.password_hash is not None
-            assert user.check_password('Test123!')
+            assert user.check_password('TestPass123')
             assert not user.check_password('wrongpassword')
 
     def test_user_role_validation(self, app):

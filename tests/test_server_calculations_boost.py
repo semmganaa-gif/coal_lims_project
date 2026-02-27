@@ -134,10 +134,10 @@ class TestCalcTotalMoistureMt:
     def test_calc_total_moisture_valid(self, app):
         with app.app_context():
             from app.utils.server_calculations import calc_total_moisture_mt
-            # Formula: MT% = ((m1 - m2) / m1) * 100
+            # Formula: MT% = ((m2 - m3) / (m2 - m1)) * 100
             raw_data = {
-                "p1": {"m1": 100.0, "m2": 90.0},
-                "p2": {"m1": 100.0, "m2": 90.0}
+                "p1": {"m1": 100.0, "m2": 200.0, "m3": 190.0},
+                "p2": {"m1": 100.0, "m2": 200.0, "m3": 190.0}
             }
             result = calc_total_moisture_mt(raw_data)
             assert result is not None
@@ -676,61 +676,67 @@ class TestCalcTrdEdgeCases:
     """Test calc_trd edge cases."""
 
     def test_calc_trd_temp_out_of_bounds_low(self, app):
-        """Test TRD with temperature below 6 degrees."""
+        """Test TRD with temperature below 6 degrees (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
+                "mad_used": 5.0, "temp_c": 5,
                 "p1": {"m": 1.0, "m1": 50.0, "m2": 50.5, "temp": 5, "mad": 5.0}
             }
             result = calc_trd(raw_data)
             assert result is None
 
     def test_calc_trd_temp_out_of_bounds_high(self, app):
-        """Test TRD with temperature above 35 degrees."""
+        """Test TRD with temperature above 35 degrees (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
+                "mad_used": 5.0, "temp_c": 40,
                 "p1": {"m": 1.0, "m1": 50.0, "m2": 50.5, "temp": 40, "mad": 5.0}
             }
             result = calc_trd(raw_data)
             assert result is None
 
     def test_calc_trd_negative_mad(self, app):
-        """Test TRD with negative mad value."""
+        """Test TRD with negative mad value (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
+                "mad_used": -5.0, "temp_c": 20,
                 "p1": {"m": 1.0, "m1": 50.0, "m2": 50.5, "temp": 20, "mad": -5.0}
             }
             result = calc_trd(raw_data)
             assert result is None
 
     def test_calc_trd_zero_dry_mass(self, app):
-        """Test TRD with md <= 0 (100% moisture)."""
+        """Test TRD with md <= 0 (100% moisture, coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
+                "mad_used": 100.0, "temp_c": 20,
                 "p1": {"m": 1.0, "m1": 50.0, "m2": 50.5, "temp": 20, "mad": 100.0}
             }
             result = calc_trd(raw_data)
             assert result is None
 
     def test_calc_trd_zero_denominator(self, app):
-        """Test TRD with denominator = 0."""
+        """Test TRD with denominator = 0 (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             # md + m2 - m1 = 0
             raw_data = {
+                "mad_used": 5.0, "temp_c": 20,
                 "p1": {"m": 1.0, "m1": 50.5, "m2": 49.55, "temp": 20, "mad": 5.0}
             }
             result = calc_trd(raw_data)
             assert result is None
 
     def test_calc_trd_infinite_temp(self, app):
-        """Test TRD with infinite temperature."""
+        """Test TRD with infinite temperature (coal format)."""
         with app.app_context():
             from app.utils.server_calculations import calc_trd
             raw_data = {
+                "mad_used": 5.0, "temp_c": float('inf'),
                 "p1": {"m": 1.0, "m1": 50.0, "m2": 50.5, "temp": float('inf'), "mad": 5.0}
             }
             result = calc_trd(raw_data)
