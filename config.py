@@ -57,11 +57,11 @@ class Config:
 
     # DB connection pool тохиргоо (PostgreSQL production-д)
     SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_size": 10,          # Үндсэн холболтын тоо
-        "max_overflow": 20,       # Нэмэлт холболт (завгүй үед)
+        "pool_size": 25,          # Үндсэн холболтын тоо (40 user-д зориулсан)
+        "max_overflow": 25,       # Нэмэлт холболт (нийт 50 хүртэл)
         "pool_recycle": 300,      # 5 мин-д нэг холболт шинэчлэх (idle timeout)
         "pool_pre_ping": True,    # Query-н өмнө холболт амьд эсэх шалгах
-        "pool_timeout": 10,       # Холболт хүлээх хугацаа (секунд)
+        "pool_timeout": 15,       # Холболт хүлээх хугацаа (секунд)
     }
 
     # ✅ САЙЖРУУЛСАН: Cookie аюулгүй байдал
@@ -114,8 +114,10 @@ class Config:
     SOCKETIO_CORS_ORIGINS = os.getenv('SOCKETIO_CORS_ORIGINS', '*' if ENV == 'development' else None)
 
     # ========================================================
-    # 🔒 RATE LIMIT STORAGE (Redis гэх мэт)
+    # 🔒 RATE LIMIT STORAGE
     # ========================================================
+    # CH-4: Production multi-worker: RATELIMIT_STORAGE_URI=redis://localhost:6379
+    # memory:// = worker бүрт тусдаа counter (single worker-д зүгээр)
     RATELIMIT_STORAGE_URI = os.getenv('RATELIMIT_STORAGE_URI', 'memory://')
 
     # ========================================================

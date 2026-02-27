@@ -14,11 +14,13 @@ from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.utils.datetime import now_local as now_mn
 import logging
 import re
+from threading import Lock
 
 logger = logging.getLogger(__name__)
 
-# Online users tracking
+# CC-5: Thread-safe online users tracking
 online_users = {}  # {user_id: socket_id}
+_online_lock = Lock()
 
 
 def get_user_room(user_id):
@@ -38,7 +40,8 @@ def handle_connect():
     join_room(get_user_room(user_id))
     join_room('broadcast')  # Broadcast room-д нэгдэх
 
-    online_users[user_id] = socket_id
+    with _online_lock:
+        online_users[user_id] = socket_id
     update_online_status(user_id, True, socket_id)
 
     emit('user_online', {
@@ -60,8 +63,8 @@ def handle_disconnect():
     leave_room(get_user_room(user_id))
     leave_room('broadcast')
 
-    if user_id in online_users:
-        del online_users[user_id]
+    with _online_lock:
+        online_users.pop(user_id, None)
     update_online_status(user_id, False, None)
 
     emit('user_offline', {
@@ -313,9 +316,11 @@ def handle_get_online_users():
     if not current_user.is_authenticated:
         return
 
+    with _online_lock:
+        user_ids = list(online_users.keys())
     online_list = []
-    for user_id in online_users.keys():
-        user = db.session.get(User, user_id)
+    for uid in user_ids:
+        user = db.session.get(User, uid)
         if user:
             online_list.append({
                 'user_id': user.id,

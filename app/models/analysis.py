@@ -6,6 +6,7 @@ Analysis models.
 import json
 from typing import Any, Dict, List, Optional
 
+from sqlalchemy import UniqueConstraint
 from app import db
 from app.utils.datetime import now_local as now_mn
 from app.models.mixins import FLOAT_EPSILON
@@ -77,17 +78,25 @@ class AnalysisResult(db.Model):
     # 🛑 KPI Алдааны шалтгаан
     error_reason = db.Column(db.String(50), nullable=True)
 
+    # CH-3: Optimistic locking — concurrent edit detection
+    version_id = db.Column(db.Integer, nullable=False, default=1)
+
     # Монгол цаг
     created_at = db.Column(db.DateTime, index=True, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
 
+    # CH-1: UNIQUE constraint — нэг дээжинд нэг шинжилгээний код давхардахгүй
     # Composite indexes - түгээмэл query-уудыг хурдасгах
     __table_args__ = (
-        db.Index('ix_analysis_result_sample_code', 'sample_id', 'analysis_code'),
+        UniqueConstraint('sample_id', 'analysis_code', name='uq_sample_analysis_code'),
         db.Index('ix_analysis_result_sample_status', 'sample_id', 'status'),
         db.Index('ix_analysis_result_code_status', 'analysis_code', 'status'),
         db.Index('ix_analysis_result_user_code', 'user_id', 'analysis_code'),
     )
+
+    __mapper_args__ = {
+        'version_id_col': version_id
+    }
 
     logs = db.relationship(
         "AnalysisResultLog",

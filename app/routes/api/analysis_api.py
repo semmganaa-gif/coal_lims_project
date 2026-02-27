@@ -17,7 +17,7 @@ from flask import (
     redirect,
 )
 from flask_login import login_required, current_user
-from sqlalchemy import or_, not_
+from sqlalchemy import or_, not_, exc
 from markupsafe import escape
 import json
 
@@ -344,7 +344,8 @@ def register_routes(bp):
                             current_app.logger.warning(f"Equipment ID {equipment_id} not found, ignoring")
                             equipment_id = None  # Reset to None if not found
 
-                    sample = db.session.get(Sample, sample_id)
+                    # CC-2: Lock parent sample row to serialize concurrent saves
+                    sample = db.session.query(Sample).filter_by(id=sample_id).with_for_update().first()
                     if not sample:
                         raise ValueError(f"Дээж {sample_id} олдсонгүй")
 
@@ -755,6 +756,11 @@ def register_routes(bp):
                         status=res.get("status", "completed")
                     )
 
+        except exc.StaleDataError:
+            # CH-3: Optimistic locking — concurrent edit detected
+            db.session.rollback()
+            current_app.logger.warning("StaleDataError: concurrent edit detected")
+            return jsonify({"message": "Өөр хэрэглэгч энэ үр дүнг засварласан байна. Хуудсаа дахин ачаалж оролдоно уу."}), 409
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"DB save error: {e}", exc_info=True)

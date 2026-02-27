@@ -183,7 +183,10 @@ def create_water_micro_samples(form, user_id):
     elif vol_05l:
         weight = 500.0
     return_sample = bool(form.get('return_sample'))
-    retention_days = int(form.get('retention_period', 7))
+    try:
+        retention_days = int(form.get('retention_period', 7))
+    except (ValueError, TypeError):
+        retention_days = 7
     retention_date = sample_date + timedelta(days=retention_days)
 
     # Микро лабын дугаар тооцоолох

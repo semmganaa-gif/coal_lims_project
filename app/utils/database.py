@@ -7,7 +7,7 @@
 import logging
 from typing import Optional, Any, List, Union
 from flask import flash
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, StaleDataError
 from app import db
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,12 @@ def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Error savin
         if success_msg:
             flash(success_msg, "success")
         return True
+    except StaleDataError:
+        # CH-3: Optimistic locking — concurrent edit detected
+        db.session.rollback()
+        logger.warning("StaleDataError: concurrent edit detected")
+        flash("Өөр хэрэглэгч энэ мэдээллийг засварласан байна. Дахин оролдоно уу.", "warning")
+        return False
     except IntegrityError:
         db.session.rollback()
         flash(error_msg, "danger")

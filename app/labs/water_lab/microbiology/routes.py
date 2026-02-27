@@ -2,12 +2,16 @@
 """Микробиологийн лабораторийн routes."""
 
 import json
+import logging
+import re
 import calendar
 from datetime import datetime, date, timedelta
 from collections import defaultdict, OrderedDict
+
 from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
+
 from app import db
 from app.models import Sample, AnalysisResult
 from app.labs.water_lab.microbiology.constants import (
@@ -19,7 +23,11 @@ from app.labs.water_lab.chemistry.constants import (
     WATER_ANALYSIS_TYPES, WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
 )
 from app.utils.decorators import lab_required
+from app.utils.database import safe_commit
 from app.utils.datetime import now_local
+from app.labs.water_lab.chemistry.constants import parse_display_name as _parse_display_name
+
+logger = logging.getLogger(__name__)
 
 micro_bp = Blueprint(
     'microbiology',
@@ -101,9 +109,10 @@ def edit_sample(sample_id):
                 else:
                     flash('No changes were made.', 'info')
                 return redirect(url_for('microbiology.register_sample'))
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
-                flash(f'Error: {e}', 'danger')
+                logger.exception('edit_sample error: sample_id=%s', sample_id)
+                flash('Дээж засахад алдаа гарлаа.', 'danger')
 
     return render_template(
         'labs/water/chemistry/water_edit_sample.html',
@@ -149,12 +158,15 @@ def delete_samples():
             )
             db.session.delete(sample)
             deleted += 1
-        except Exception as e:
-            failed.append(f'ID={sid} ({e})')
+        except Exception:
+            logger.exception('delete_samples error: sid=%s', sid)
+            failed.append(f'ID={sid}')
 
     if deleted:
-        db.session.commit()
-        flash(f'{deleted} samples deleted successfully.', 'success')
+        if not safe_commit():
+            flash('DB error during delete.', 'danger')
+        else:
+            flash(f'{deleted} samples deleted successfully.', 'success')
     if failed:
         flash(f'Error: {", ".join(failed)}', 'danger')
 
@@ -188,9 +200,10 @@ def register_sample():
             if skipped:
                 flash(f'{len(skipped)} дээж аль хэдийн бүртгэгдсэн: {", ".join(skipped)}', 'warning')
             return redirect(url_for('microbiology.register_sample'))
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            flash(f'Error: {e}', 'danger')
+            logger.exception('register_sample error')
+            flash('Дээж бүртгэхэд алдаа гарлаа.', 'danger')
             return redirect(url_for('microbiology.register_sample'))
 
     return render_template(
@@ -295,7 +308,6 @@ def api_samples():
 @lab_required('microbiology')
 def micro_grid_data():
     """Микробиологийн дээжний жагсаалт (grid-д зориулсан)."""
-    import re
     q = Sample.query.filter(
         Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
     )
@@ -309,14 +321,7 @@ def micro_grid_data():
 
     result = []
     for idx, s in enumerate(reversed(samples), 1):
-        display_name = s.sample_code
-        m = re.match(r'^(\d{2}_\d{2})_(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-        if m:
-            display_name = m.group(2)
-        else:
-            m2 = re.match(r'^(.+)_(\d{4}-\d{2}-\d{2})$', s.sample_code)
-            if m2:
-                display_name = m2.group(1)
+        display_name = _parse_display_name(s.sample_code)
 
         unit_info = WATER_UNITS.get(s.client_name)
         unit_name = unit_info.get('short_name', unit_info['name']) if unit_info else s.client_name
@@ -347,7 +352,7 @@ def micro_grid_data():
 @login_required
 @lab_required('microbiology')
 def save_results():
-    """Үр дүн хадгалах (нэг дээжид)."""
+    """Үр дүн хадгалах (нэг дээжид). H-1 fix: UPSERT логик нэмэгдсэн."""
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -356,14 +361,32 @@ def save_results():
     if not sample:
         return jsonify({'error': 'Sample not found'}), 404
 
-    ar = AnalysisResult(
+    analysis_code = data.get('analysis_code')
+    raw = json.dumps(data.get('results', {}), ensure_ascii=False)
+
+    # UPSERT: pending/rejected байвал шинэчлэх
+    ar = AnalysisResult.query.filter_by(
         sample_id=sample.id,
-        analysis_code=data.get('analysis_code'),
-        raw_data=json.dumps(data.get('results', {}), ensure_ascii=False),
-        user_id=current_user.id,
-    )
-    db.session.add(ar)
-    db.session.commit()
+        analysis_code=analysis_code,
+    ).filter(
+        AnalysisResult.status.in_(['pending_review', 'rejected'])
+    ).first()
+
+    if ar:
+        ar.raw_data = raw
+        ar.user_id = current_user.id
+        ar.status = 'pending_review'
+    else:
+        ar = AnalysisResult(
+            sample_id=sample.id,
+            analysis_code=analysis_code,
+            raw_data=raw,
+            user_id=current_user.id,
+        )
+        db.session.add(ar)
+
+    if not safe_commit():
+        return jsonify({'error': 'DB error'}), 500
     return jsonify({'success': True, 'id': ar.id})
 
 
@@ -395,7 +418,8 @@ def save_batch():
         if not results:
             continue
 
-        sample = Sample.query.filter_by(sample_code=sample_code).first()
+        # CC-4: Lock parent sample row to serialize concurrent saves
+        sample = Sample.query.filter_by(sample_code=sample_code).with_for_update().first()
         if not sample:
             errors.append(f'Sample not found. {sample_code}')
             continue
@@ -412,7 +436,7 @@ def save_batch():
         existing = AnalysisResult.query.filter_by(
             sample_id=sample.id,
             analysis_code=analysis_code,
-        ).first()
+        ).with_for_update().first()
 
         if existing:
             existing.raw_data = raw
@@ -428,7 +452,8 @@ def save_batch():
 
         saved += 1
 
-    db.session.commit()
+    if not safe_commit():
+        return jsonify({'error': 'DB error'}), 500
     resp = {'success': True, 'count': saved}
     if errors:
         resp['errors'] = errors
@@ -464,22 +489,8 @@ def load_batch():
     return jsonify({'rows': rows})
 
 
-@micro_bp.route('/api/data')
-@login_required
-@lab_required('microbiology')
-def micro_data():
-    """Микробиологийн дээжийн жагсаалт."""
-    samples = Sample.query.filter_by(lab_type='microbiology').order_by(
-        Sample.received_date.desc()
-    ).limit(200).all()
-    return jsonify([{
-        'id': s.id,
-        'sample_code': s.sample_code,
-        'client_name': s.client_name,
-        'status': s.status,
-        'sample_date': s.sample_date.isoformat() if s.sample_date else None,
-    } for s in samples])
-
+# C-2 fix: Duplicate /api/data route устгагдсан (micro_data).
+# micro_grid_data() нь бүх water/micro type шүүдэг тул зөв хувилбар.
 
 # ============ Micro lab types for monthly plan ============
 MICRO_SAMPLE_TYPES = {

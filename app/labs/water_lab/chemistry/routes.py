@@ -887,7 +887,8 @@ def save_results():
     if not analysis_code or analysis_code not in VALID_WATER_ANALYSIS_CODES:
         return jsonify({'success': False, 'message': 'Invalid analysis code'}), 400
 
-    sample = db.session.get(Sample, sample_id)
+    # CC-3: Lock parent sample row to serialize concurrent saves
+    sample = db.session.query(Sample).filter_by(id=sample_id).with_for_update().first()
     if not sample:
         return jsonify({'success': False, 'message': 'Sample not found'}), 404
 

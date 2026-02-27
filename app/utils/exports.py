@@ -114,7 +114,7 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
 
     Args:
         samples: Sample объектуудын жагсаалт
-        _include_results: Шинжилгээний үр дүнг оруулах эсэх (TODO: implement)
+        _include_results: Шинжилгээний үр дүнг оруулах эсэх
     """
     columns = [
         {"key": "id", "label": "ID"},

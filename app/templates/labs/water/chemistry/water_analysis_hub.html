@@ -166,7 +166,94 @@
   </div>
 
   <div class="cards-grid" id="analysis-list">
+    <a href="{{ url_for('water.sft_workspace') }}"
+       class="analysis-card"
+       data-name="sft"
+       data-code="sft"
+       data-cats="drinking"
+       style="animation-delay: 0s;">
+      <div class="card-icon icon-cyan">
+        <i class="bi bi-table"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">SFT</div>
+        <div class="card-title">СФТ (NH4/NO2/NO3/Fe)</div>
+        <div class="card-unit">mg/L</div>
+      </div>
+      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('water.sfm_workspace') }}"
+       class="analysis-card"
+       data-name="sfm"
+       data-code="sfm"
+       data-cats="wastewater"
+       style="animation-delay: 0.03s;">
+      <div class="card-icon icon-teal">
+        <i class="bi bi-table"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">SFM</div>
+        <div class="card-title">СФМ (NH4/NO2/PO4/Fe)</div>
+        <div class="card-unit">mg/L</div>
+      </div>
+      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('water.phys_wastewater_workspace') }}"
+       class="analysis-card"
+       data-name="phys"
+       data-code="phys-ww"
+       data-cats="wastewater"
+       style="animation-delay: 0.04s;">
+      <div class="card-icon icon-blue">
+        <i class="bi bi-thermometer-half"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">PHYS</div>
+        <div class="card-title">Физик (Өнгө/Градус/EC/pH/F/Cl)</div>
+        <div class="card-unit"></div>
+      </div>
+      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('water.sludge_workspace') }}"
+       class="analysis-card"
+       data-name="sludge"
+       data-code="sludge"
+       data-cats="wastewater"
+       style="animation-delay: 0.06s;">
+      <div class="card-icon icon-orange">
+        <i class="bi bi-layers"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">SLUDGE</div>
+        <div class="card-title">Лаг (SV/SD/SI)</div>
+        <div class="card-unit"></div>
+      </div>
+      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+    </a>
+
+    <a href="{{ url_for('water.sft_physical_workspace') }}"
+       class="analysis-card"
+       data-name="phys"
+       data-code="sft-phys"
+       data-cats="drinking"
+       style="animation-delay: 0.05s;">
+      <div class="card-icon icon-blue">
+        <i class="bi bi-thermometer-half"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-code">PHYS</div>
+        <div class="card-title">Физик (Өнгө/Темп/EC/pH/Ф/Cl)</div>
+        <div class="card-unit"></div>
+      </div>
+      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+    </a>
+
     {% for at in analysis_types %}
+    {% if 'summary_only' in (at.categories|default([])) %}
+    {% else %}
     {% set cats = at.categories|default(['other'])|join(',') %}
 
     {% set ic = 'icon-cyan' %}{% set ii = 'bi-droplet' %}
@@ -210,6 +297,7 @@
       </div>
       <i class="bi bi-arrow-right card-arrow"></i>
     </a>
+    {% endif %}
     {% endfor %}
   </div>
 </div>

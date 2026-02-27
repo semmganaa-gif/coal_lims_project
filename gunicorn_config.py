@@ -1,6 +1,12 @@
 # gunicorn_config.py
 # Coal LIMS - Production Gunicorn Configuration
-# Usage: gunicorn -c gunicorn_config.py "app:create_app()"
+#
+# CH-5: WebSocket (Flask-SocketIO) ашиглаж буй тул gevent worker шаардлагатай.
+#
+# Usage (WebSocket дэмжлэгтэй):
+#   gunicorn -c gunicorn_config.py "run:app"
+#
+# Шаардлагатай packages: pip install gevent gevent-websocket
 
 import multiprocessing
 import os
@@ -10,10 +16,11 @@ bind = os.getenv("GUNICORN_BIND", "127.0.0.1:8000")
 backlog = 2048
 
 # Worker processes
-workers = int(os.getenv("GUNICORN_WORKERS", multiprocessing.cpu_count() * 2 + 1))
-worker_class = "sync"
+# CH-5: WebSocket-д gevent worker class шаардлагатай (sync ажиллахгүй)
+workers = int(os.getenv("GUNICORN_WORKERS", min(multiprocessing.cpu_count() + 1, 4)))
+worker_class = os.getenv("GUNICORN_WORKER_CLASS", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker")
 worker_connections = 1000
-threads = 2
+threads = 1  # gevent worker-д thread=1 (async event loop ашигладаг)
 max_requests = 1000
 max_requests_jitter = 50
 

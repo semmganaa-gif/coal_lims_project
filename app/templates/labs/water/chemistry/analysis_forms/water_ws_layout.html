@@ -659,6 +659,7 @@
     if (!items.length) { showToast('{{ _("No data to save") }}', 'warning'); return; }
 
     let ok = 0;
+    const savedIds = [];
     for (const item of items) {
       const code = item.analysis_code || ANALYSIS_CODE;
       const results = item.results || item.raw_data;
@@ -670,12 +671,16 @@
         });
         if (!r.ok) { console.error('HTTP error', r.status); continue; }
         const res = await r.json();
-        if (res.success) ok++;
+        if (res.success) { ok++; savedIds.push(item.sample_id); }
       } catch(e) { console.error(e); }
     }
     if (ok > 0) {
-      draftMgr.purge(items.map(i => i.sample_id));
+      // CH-2: Зөвхөн амжилттай хадгалсан items-ийн draft устгана
+      draftMgr.purge(savedIds);
       showToast(ok + ' {{ _("sample result(s) saved successfully!") }}', 'success');
+      if (ok < items.length) {
+        showToast((items.length - ok) + ' {{ _("sample(s) failed — draft kept") }}', 'warning');
+      }
       setTimeout(() => location.reload(), 1200);
     } else {
       showToast('{{ _("Error saving data") }}', 'error');

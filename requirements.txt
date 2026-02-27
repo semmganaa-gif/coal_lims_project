@@ -65,5 +65,7 @@ sentry-sdk[flask]==1.39.1
 
 # PRODUCTION SERVER
 gunicorn==23.0.0
+gevent>=24.2.1
+gevent-websocket>=0.10.1
 psycopg2-binary==2.9.10
 waitress>=3.0.0

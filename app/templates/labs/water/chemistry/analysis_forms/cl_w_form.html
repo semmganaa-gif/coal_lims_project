@@ -6,112 +6,97 @@
 <div class="mt-2 p-2 bg-light rounded">
   <h6 class="mb-1"><i class="bi bi-calculator me-1"></i>MNS 4424:2005 - Chloride Ion</h6>
   <small class="text-muted">
-    <strong>K</strong> = 10 / Vtd {{ _("(correction coefficient, Vtd = avg of Vt1, Vt2)") }}<br>
-    <strong>{{ _("Formula") }}:</strong> Cl⁻ (mg/L) = (Vd - V0) × K × N × 35.453 × 1000 / V × {{ _("Dilution") }}<br>
+    <strong>K</strong> = 10 / Vt<sub>d</sub><br>
+    <strong>{{ _("Formula") }}:</strong>
+    Cl⁻ (mg/L) = (Vd − V0) × K × N × 35.453 × 1000 / V × DF<br>
     <span class="text-info">{{ _("MNS limit") }}: ≤1000 mg/L</span>
   </small>
 </div>
 {% endblock %}
 
 {% block column_defs %}
-  const CL_MASS = 35.453;
+  const CL_FACTOR = 35.453 * 1000;
 
-  function calcVtd(d) {
-    const vt1 = d.vt1, vt2 = d.vt2;
-    if (vt1 != null && vt2 != null) return (vt1 + vt2) / 2;
-    return vt1 || vt2 || null;
+  function avgPair(a, b) {
+    if (a != null && b != null) return (a + b) / 2;
+    if (a != null) return a;
+    if (b != null) return b;
+    return null;
+  }
+
+  function calcVtAvg(d) {
+    return avgPair(d.vt1, d.vt2);
   }
 
   function calcK(d) {
-    const vtd = calcVtd(d);
-    if (!vtd || vtd === 0) return null;
-    return 10 / vtd;
+    const vt = calcVtAvg(d);
+    if (vt == null || vt === 0) return null;
+    return 10 / vt;
+  }
+
+  function calcVd(d) {
+    return avgPair(d.v1, d.v2);
   }
 
   function calcChloride(d) {
-    const v1 = d.v1, v2 = d.v2, v0 = d.v0 || 0;
-    if (v1 == null && v2 == null) return null;
-    const vd = (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2);
-    const K = calcK(d);
-    if (K == null) return null;
-    const N = d.n_agno3 || 0.1;
-    const V = d.v_sample || 50;
-    const dil = d.dilution || 1;
-    if (V === 0) return null;
-    return ((vd - v0) * K * N * CL_MASS * 1000 / V) * dil;
+    const vd = calcVd(d);
+    if (vd == null) return null;
+    const v0 = d.v0 || 0;
+    const k = calcK(d);
+    if (k == null) return null;
+    const N = d.n_agno3 ?? 0.2;
+    const V = d.v_sample || 0;
+    const df = d.dilution ?? 5;
+    if (!V) return null;
+    return ((vd - v0) * k * N * CL_FACTOR / V) * df;
   }
 
   var formColumns = [
-    // Correction Coefficient
     {
-      headerName: '{{ _("Correction Coefficient") }}',
+      headerName: 'Засварын коэффициент',
       children: [
-        { headerName: 'Vt1', field: 'vt1', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
-        { headerName: 'Vt2', field: 'vt2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'Vt1', field: 'vt1', width: 65, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'Vt2', field: 'vt2', width: 65, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
         {
-          headerName: 'Vtd', field: 'vtd', width: 85,
-          valueGetter: p => calcVtd(p.data),
-          valueFormatter: fmt2
-        },
-        {
-          headerName: 'Δ', field: 'vt_diff', width: 85,
-          valueGetter: p => {
-            const vt1 = p.data.vt1, vt2 = p.data.vt2;
-            if (vt1 == null || vt2 == null) return null;
-            return Math.abs(vt1 - vt2);
-          },
+          headerName: 'Vd', field: 'vt_avg', width: 65,
+          valueGetter: p => calcVtAvg(p.data),
           valueFormatter: fmt2,
-          cellStyle: p => {
-            if (p.value == null) return {};
-            return p.value > 0.1 ? { color: '#dc2626', fontWeight: '700' } : { color: '#059669' };
-          },
-          headerTooltip: '|Vt1 − Vt2|'
+          cellStyle: { fontWeight: '600', color: '#0d6efd' }
         },
         {
-          headerName: 'K', field: 'k_coef', width: 100,
+          headerName: 'K', field: 'k_coef', width: 65,
           valueGetter: p => calcK(p.data),
           valueFormatter: p => p.value != null ? p.value.toFixed(4) : '',
-          cellStyle: { fontWeight: '600', color: '#7c3aed' },
-          headerTooltip: '{{ _("Correction Coefficient") }} K = 10 / Vtd'
+          cellStyle: { fontWeight: '600', color: '#7c3aed' }
         },
       ]
     },
-    // AgNO3 parameters
-    { headerName: 'N', field: 'n_agno3', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
-      headerTooltip: '{{ _("AgNO3 concentration") }}' },
-    { headerName: 'V, mL', field: 'v_sample', width: 85, type: 'numericColumn', ...editCol,
-      headerTooltip: '{{ _("Sample volume") }}' },
-    { headerName: 'V0', field: 'v0', width: 80, type: 'numericColumn', ...editCol, valueFormatter: fmt2,
-      headerTooltip: '{{ _("Blank titration") }}' },
-    // Sample titration
+    { headerName: 'AgNO3 конц', field: 'n_agno3', width: 70, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+    { headerName: 'V', field: 'v_sample', width: 60, type: 'numericColumn', ...editCol },
+    { headerName: 'V0', field: 'v0', width: 60, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
     {
-      headerName: '{{ _("Sample Titration") }}',
+      headerName: 'Сорьц титрлэхэд зарцуулсан AgNO3',
       children: [
-        { headerName: 'V1', field: 'v1', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
-        { headerName: 'V2', field: 'v2', width: 85, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'V1', field: 'v1', width: 65, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
+        { headerName: 'V2', field: 'v2', width: 65, type: 'numericColumn', ...editCol, valueFormatter: fmt2 },
         {
-          headerName: 'Vd', field: 'vd', width: 85,
-          valueGetter: p => {
-            const v1 = p.data.v1, v2 = p.data.v2;
-            return (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2 || null);
-          },
+          headerName: 'Vd', field: 'v_avg', width: 65,
+          valueGetter: p => calcVd(p.data),
           valueFormatter: fmt2,
           cellStyle: { fontWeight: '600', color: '#0d6efd' }
         },
       ]
     },
-    { headerName: '{{ _("Dilution") }}', field: 'dilution', width: 80, type: 'numericColumn', ...editCol,
-      valueFormatter: p => p.value != null ? p.value : '1',
-      headerTooltip: '{{ _("Dilution") }}' },
+    { headerName: 'DF', field: 'dilution', width: 55, type: 'numericColumn', ...editCol },
     {
-      headerName: 'Cl⁻ mg/L', field: 'result', width: 110,
+      headerName: 'Cl- мг/л', field: 'result', width: 85,
       valueGetter: p => calcChloride(p.data),
       valueFormatter: fmt2,
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     },
   ];
   var editableFields = ['vt1', 'vt2', 'n_agno3', 'v_sample', 'v0', 'v1', 'v2', 'dilution', 'notes'];
-  var computedCols = ['vtd', 'vt_diff', 'k_coef', 'vd', 'result'];
+  var computedCols = ['vt_avg', 'k_coef', 'v_avg', 'result'];
 {% endblock %}
 
 {% block row_builder %}
@@ -123,12 +108,12 @@
       is_saved: ex && ex.status !== 'rejected',
       vt1: raw.vt1 ?? null,
       vt2: raw.vt2 ?? null,
-      n_agno3: raw.n_agno3 ?? 0.1,
+      n_agno3: raw.n_agno3 ?? 0.2,
       v_sample: raw.v_sample ?? 50,
       v0: raw.v0 ?? null,
       v1: raw.v1 ?? null,
       v2: raw.v2 ?? null,
-      dilution: raw.dilution ?? 1,
+      dilution: raw.dilution ?? 5,
       notes: raw.notes || ''
     };
   });
@@ -140,23 +125,23 @@
     window.waterGridApi.forEachNode(n => {
       if (n.data.is_saved) return;
       const d = n.data;
-      const vtd = calcVtd(d);
+      const vt_avg = calcVtAvg(d);
       const k = calcK(d);
-      const vd = (d.v1 != null && d.v2 != null) ? (d.v1 + d.v2) / 2 : (d.v1 || d.v2 || null);
+      const v_avg = calcVd(d);
       const result = calcChloride(d);
       items.push({
         sample_id: d.sample_id,
         raw_data: {
           vt1: d.vt1,
           vt2: d.vt2,
-          vtd: vtd,
+          vt_avg: vt_avg,
           k_coef: k,
           n_agno3: d.n_agno3,
           v_sample: d.v_sample,
           v0: d.v0,
           v1: d.v1,
           v2: d.v2,
-          vd: vd,
+          v_avg: v_avg,
           dilution: d.dilution,
           result: result,
           notes: d.notes

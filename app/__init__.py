@@ -73,6 +73,12 @@ def create_app(config_class=Config):
     app.config.setdefault("RATELIMIT_STORAGE_URI", "memory://")
     limiter.storage_uri = app.config["RATELIMIT_STORAGE_URI"]
     limiter.init_app(app)
+    # CH-4: memory:// storage нь multi-worker орчинд per-worker counter ашигладаг
+    if app.config["RATELIMIT_STORAGE_URI"] == "memory://" and not app.debug:
+        app.logger.warning(
+            "Rate limiter: memory:// storage — multi-worker орчинд Redis ашиглана уу. "
+            "RATELIMIT_STORAGE_URI=redis://localhost:6379"
+        )
     mail.init_app(app)
 
     # Flask-Babel (i18n) - locale_selector

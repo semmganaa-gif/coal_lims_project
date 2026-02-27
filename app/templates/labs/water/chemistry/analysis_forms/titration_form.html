@@ -5,27 +5,59 @@
 {% block column_defs %}
   const ANALYSIS_CODE_LOCAL = {{ analysis_code | tojson }};
 
+  function calcN2(d) {
+    const vt1 = d.vt1, vt2 = d.vt2;
+    const vtAvg = (vt1 != null && vt2 != null) ? (vt1 + vt2) / 2 : (vt1 || vt2);
+    if (vtAvg == null || vtAvg === 0) return null;
+    const n1 = d.n1 ?? 0.02;
+    const v1Std = d.v1_std ?? 10;
+    return (n1 * v1Std) / vtAvg;
+  }
+
   function calcResult(d) {
     const v1 = d.v1, v2 = d.v2;
     if (v1 == null && v2 == null) return null;
     const vAvg = (v1 != null && v2 != null) ? (v1 + v2) / 2 : (v1 || v2);
-    const N = d.normality || 0.1;
     const dil = d.dilution || 1;
-    const vSample = d.v_sample || 100;
+    const vSample = d.v_sample || (ANALYSIS_CODE_LOCAL === 'HARD' ? 50 : 100);
     if (ANALYSIS_CODE_LOCAL === 'CL_W') {
       const blank = d.blank || 0;
+      const N = d.normality || 0.1;
       return ((vAvg - blank) * 35.453 * N * dil) / vSample;
     }
+    if (ANALYSIS_CODE_LOCAL === 'HARD') {
+      const n2 = calcN2(d);
+      if (n2 == null) return null;
+      return (n2 * vAvg * 1000) / vSample * dil;
+    }
+    const N = d.normality || 0.1;
     return (N * vAvg * 1000) / vSample * dil;
   }
 
   var formColumns = [
     { headerName: '{{ _("V sample, mL") }}', field: 'v_sample', width: 100, type: 'numericColumn', ...editCol },
-    { headerName: '{{ _("N (normality)") }}', field: 'normality', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
     { headerName: '{{ _("Dilution") }}', field: 'dilution', width: 110, type: 'numericColumn', ...editCol },
   ];
-  if (ANALYSIS_CODE_LOCAL === 'CL_W') {
-    formColumns.push({ headerName: '{{ _("Blank value") }}', field: 'blank', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 });
+  if (ANALYSIS_CODE_LOCAL === 'HARD') {
+    formColumns.push(
+      { headerName: 'Vt1', field: 'vt1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+      { headerName: 'Vt2', field: 'vt2', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+      {
+        headerName: 'Vt avg', field: 'vt_avg', width: 100,
+        valueGetter: p => {
+          const vt1 = p.data.vt1, vt2 = p.data.vt2;
+          return (vt1 != null && vt2 != null) ? (vt1 + vt2) / 2 : (vt1 || vt2 || null);
+        }, valueFormatter: fmt3
+      },
+      { headerName: 'V1 (std)', field: 'v1_std', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+      { headerName: 'N1', field: 'n1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+      { headerName: 'N2', field: 'n2', width: 90, valueGetter: p => calcN2(p.data), valueFormatter: fmt3 }
+    );
+  } else {
+    formColumns.push({ headerName: '{{ _("N (normality)") }}', field: 'normality', width: 100, type: 'numericColumn', ...editCol, valueFormatter: fmt3 });
+    if (ANALYSIS_CODE_LOCAL === 'CL_W') {
+      formColumns.push({ headerName: '{{ _("Blank value") }}', field: 'blank', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 });
+    }
   }
   formColumns.push(
     { headerName: 'V1', field: 'v1', width: 90, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
@@ -44,10 +76,14 @@
       cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
     }
   );
-  var editableFields = ANALYSIS_CODE_LOCAL === 'CL_W'
-    ? ['v_sample', 'normality', 'dilution', 'blank', 'v1', 'v2', 'notes']
-    : ['v_sample', 'normality', 'dilution', 'v1', 'v2', 'notes'];
-  var computedCols = ['v_avg', 'result'];
+  var editableFields = ANALYSIS_CODE_LOCAL === 'HARD'
+    ? ['v_sample', 'dilution', 'vt1', 'vt2', 'v1_std', 'n1', 'v1', 'v2', 'notes']
+    : (ANALYSIS_CODE_LOCAL === 'CL_W'
+      ? ['v_sample', 'normality', 'dilution', 'blank', 'v1', 'v2', 'notes']
+      : ['v_sample', 'normality', 'dilution', 'v1', 'v2', 'notes']);
+  var computedCols = ANALYSIS_CODE_LOCAL === 'HARD'
+    ? ['vt_avg', 'n2', 'v_avg', 'result']
+    : ['v_avg', 'result'];
 {% endblock %}
 
 {% block row_builder %}
@@ -57,9 +93,11 @@
     return {
       index: idx + 1, sample_id: s.id, sample_code: s.code,
       is_saved: ex && ex.status !== 'rejected',
-      v_sample: raw.v_sample ?? 100,
-      normality: raw.normality ?? ({{ analysis_code | tojson }} === 'HARD' ? 0.02 : 0.1),
+      v_sample: raw.v_sample ?? ({{ analysis_code | tojson }} === 'HARD' ? 50 : 100),
+      normality: raw.normality ?? 0.1,
       dilution: raw.dilution ?? 1, blank: raw.blank ?? null,
+      vt1: raw.vt1 ?? null, vt2: raw.vt2 ?? null,
+      v1_std: raw.v1_std ?? 10, n1: raw.n1 ?? 0.02, n2: raw.n2 ?? null,
       v1: raw.v1 ?? null, v2: raw.v2 ?? null, notes: raw.notes || ''
     };
   });
@@ -74,7 +112,17 @@
       const result = calcResult(d);
       items.push({
         sample_id: d.sample_id,
-        raw_data: { v_sample: d.v_sample, normality: d.normality, dilution: d.dilution, blank: d.blank, v1: d.v1, v2: d.v2, result: result, notes: d.notes }
+        raw_data: {
+          v_sample: d.v_sample,
+          normality: d.normality,
+          dilution: d.dilution,
+          blank: d.blank,
+          vt1: d.vt1, vt2: d.vt2,
+          v1_std: d.v1_std, n1: d.n1, n2: calcN2(d),
+          v1: d.v1, v2: d.v2,
+          result: result,
+          notes: d.notes
+        }
       });
     });
     return items;
