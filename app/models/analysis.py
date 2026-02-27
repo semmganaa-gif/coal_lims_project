@@ -6,7 +6,7 @@ Analysis models.
 import json
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from app import db
 from app.utils.datetime import now_local as now_mn
 from app.models.mixins import FLOAT_EPSILON
@@ -59,7 +59,7 @@ class AnalysisResult(db.Model):
     sample_id = db.Column(db.Integer, db.ForeignKey("sample.id"), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
-    final_result = db.Column(db.Float)
+    final_result = db.Column(db.Numeric(12, 4))
     raw_data = db.Column(db.Text)
     reason = db.Column(db.Text, nullable=True)  # Тайлбар
 
@@ -89,6 +89,10 @@ class AnalysisResult(db.Model):
     # Composite indexes - түгээмэл query-уудыг хурдасгах
     __table_args__ = (
         UniqueConstraint('sample_id', 'analysis_code', name='uq_sample_analysis_code'),
+        CheckConstraint(
+            "status IN ('pending_review','approved','rejected','reanalysis')",
+            name="ck_analysis_result_status",
+        ),
         db.Index('ix_analysis_result_sample_status', 'sample_id', 'status'),
         db.Index('ix_analysis_result_code_status', 'analysis_code', 'status'),
         db.Index('ix_analysis_result_user_code', 'user_id', 'analysis_code'),

@@ -6,7 +6,9 @@ Flask application үүсгэх factory pattern. Extensions, blueprints,
 error handlers болон middleware-үүдийг тохируулна.
 """
 
+from decimal import Decimal
 from flask import Flask
+from flask.json.provider import DefaultJSONProvider
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -51,9 +53,21 @@ limiter = Limiter(
 )
 
 
+class _LIMSJSONProvider(DefaultJSONProvider):
+    """Extend Flask's JSON provider to handle Decimal (Numeric columns)."""
+
+    @staticmethod
+    def default(o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return DefaultJSONProvider.default(o)
+
+
 def create_app(config_class=Config):
     """Flask application үүсгэх factory function."""
     app = Flask(__name__)
+    app.json_provider_class = _LIMSJSONProvider
+    app.json = _LIMSJSONProvider(app)
     app.config.from_object(config_class)
 
     # Template auto-reload (dev mode)

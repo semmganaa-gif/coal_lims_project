@@ -5,6 +5,7 @@ Equipment-related models.
 Separated from models.py for maintainability.
 """
 
+from sqlalchemy import CheckConstraint
 from app import db
 from app.utils.datetime import now_local as now_mn
 
@@ -66,6 +67,10 @@ class Equipment(db.Model):
 
     # H-9: Composite indexes
     __table_args__ = (
+        CheckConstraint(
+            "status IN ('normal','maintenance','calibration','out_of_service','retired')",
+            name="ck_equipment_status",
+        ),
         db.Index('ix_equipment_category_status', 'category', 'status'),
     )
 

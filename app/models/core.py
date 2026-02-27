@@ -217,7 +217,7 @@ class Sample(db.Model):
     sample_type = db.Column(db.String(100))
     analyses_to_perform = db.Column(db.String(500))
     notes = db.Column(Text)
-    weight = db.Column(db.Float)
+    weight = db.Column(db.Numeric(12, 4))
     return_sample = db.Column(db.Boolean, default=False)
     delivered_by = db.Column(db.String(200))
     prepared_by = db.Column(db.String(200))
@@ -230,7 +230,7 @@ class Sample(db.Model):
     # 🛑 Mass gate талбарууд
     mass_ready = db.Column(db.Boolean, nullable=False, default=False, index=True)
     mass_ready_at = db.Column(db.DateTime, nullable=True)
-    mass_ready_by_id = db.Column(db.Integer, nullable=True)
+    mass_ready_by_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_mass_ready_by_id"), nullable=True)
 
     # Усны лабын тусдаа дугаарууд
     chem_lab_id = db.Column(db.String(20), nullable=True, index=True)   # "1_05" = batch 1, сорьц 5
@@ -256,6 +256,10 @@ class Sample(db.Model):
             "'dotood_air','dotood_swab',"
             "'naimdain','maiga','sum','uurhaichin','gallerey','sbutsb')",
             name="ck_sample_client_name",
+        ),
+        CheckConstraint(
+            "status IN ('new','in_progress','analysis','completed','archived')",
+            name="ck_sample_status",
         ),
         # H-9: Composite indexes — dashboard болон workspace query-уудыг хурдасгах
         db.Index('ix_sample_lab_type_status', 'lab_type', 'status'),

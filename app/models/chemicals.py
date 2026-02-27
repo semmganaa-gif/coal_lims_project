@@ -5,6 +5,7 @@ Chemical-related models.
 Separated from models.py for maintainability.
 """
 
+from sqlalchemy import CheckConstraint
 from app import db
 from app.models.mixins import HashableMixin
 from app.utils.datetime import now_local as now_mn
@@ -65,6 +66,13 @@ class Chemical(db.Model):
     created_at = db.Column(db.DateTime, default=now_mn)
     updated_at = db.Column(db.DateTime, default=now_mn, onupdate=now_mn)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active','low_stock','expired','empty','disposed')",
+            name="ck_chemical_status",
+        ),
+    )
 
     # Relationships
     usages = db.relationship('ChemicalUsage', backref='chemical', lazy='dynamic',

@@ -3,6 +3,7 @@
 Quality management records.
 """
 
+from sqlalchemy import CheckConstraint
 from app import db
 from app.utils.datetime import now_local as now_mn
 
@@ -53,6 +54,17 @@ class CorrectiveAction(db.Model):
     # Төлөв
     status = db.Column(db.String(20), default='open', index=True)  # open, in_progress, reviewed, closed
     notes = db.Column(db.Text)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('open','in_progress','reviewed','closed')",
+            name="ck_corrective_action_status",
+        ),
+        CheckConstraint(
+            "severity IN ('Critical','Major','Minor')",
+            name="ck_corrective_action_severity",
+        ),
+    )
 
     # Relationships
     responsible_person = db.relationship('User', foreign_keys=[responsible_person_id], backref='assigned_capas')
