@@ -144,7 +144,7 @@ class TestAuthRoutes:
         """Login submit"""
         response = client.post('/login', data={
             'username': 'admin',
-            'password': 'Admin123'
+            'password': 'AdminPass123'
         })
         assert response.status_code in [200, 302, 400]
 
@@ -161,7 +161,7 @@ class TestAuthRoutes:
     def test_change_password_submit(self, auth_admin):
         """Change password submit"""
         response = auth_admin.post('/change_password', data={
-            'current_password': 'Admin123',
+            'current_password': 'AdminPass123',
             'new_password': 'NewPass123',
             'confirm_password': 'NewPass123'
         })

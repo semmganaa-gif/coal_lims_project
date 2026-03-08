@@ -56,13 +56,13 @@ class TestCreateSignature:
             result = _create_signature(data)
             assert isinstance(result, str)
 
-    def test_returns_32_chars(self, app):
-        """Test returns 32 character signature."""
+    def test_returns_64_chars(self, app):
+        """Test returns 64 character signature (full SHA256 hex)."""
         with app.app_context():
             from app.utils.license_protection import _create_signature
             data = {'company': 'Test', 'expiry': '2025-01-01', 'hardware_id': 'abc123'}
             result = _create_signature(data)
-            assert len(result) == 32
+            assert len(result) == 64
 
     def test_consistent_signature(self, app):
         """Test same data gives same signature."""

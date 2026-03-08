@@ -22,15 +22,15 @@ def app():
         # Create users
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
         if not User.query.filter_by(username='senior').first():
             user = User(username='senior', role='senior')
-            user.set_password('Senior123')
+            user.set_password('SeniorPass123')
             db.session.add(user)
         if not User.query.filter_by(username='chemist').first():
             user = User(username='chemist', role='chemist')
-            user.set_password('Chemist123')
+            user.set_password('ChemistPass123')
             db.session.add(user)
         db.session.commit()
 

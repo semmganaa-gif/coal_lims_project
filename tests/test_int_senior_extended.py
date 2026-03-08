@@ -50,7 +50,7 @@ def pending_sample(app, senior_chemist):
             sample_code=f'SR-{unique_id}',
             client_name='CHPP',  # Use valid client name
             sample_type='CM',
-            status='in_analysis',
+            status='analysis',
             received_date=datetime.now(),
             user_id=senior_chemist.id
         )
@@ -62,7 +62,7 @@ def pending_sample(app, senior_chemist):
             sample_id=sample.id,
             analysis_code='Mad',
             final_result='5.25',
-            status='pending',
+            status='pending_review',
             user_id=senior_chemist.id
         )
         db.session.add(result)

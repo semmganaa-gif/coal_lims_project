@@ -109,7 +109,7 @@ class TestAnalysisAPIEndpoints:
                 sample_id=sample.id,
                 analysis_code='Mad',
                 final_result=5.55,
-                status='pending'
+                status='pending_review'
             )
             db.session.add(result)
             db.session.commit()
@@ -655,7 +655,7 @@ class TestSampleRegistration:
 
     def test_register_chpp_2h_with_all_fields(self, app, auth_admin):
         """Test CHPP 2h registration with all fields."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_FULL_001', 'SC_2H_FULL_002'],
@@ -671,7 +671,7 @@ class TestSampleRegistration:
 
     def test_register_lab_unknown_type(self, app, auth_admin):
         """Test LAB unknown type registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Unknown',
             'sample_condition': 'good',

@@ -317,7 +317,7 @@ class TestRolePermissions:
             senior = User.query.filter_by(role='senior').first()
             if not senior:
                 senior = User(username='senior_test', role='senior')
-                senior.set_password('Test1234!')
+                senior.set_password('TestPass1234!')
                 db.session.add(senior)
                 db.session.commit()
 
@@ -337,7 +337,7 @@ class TestRolePermissions:
         # Login as senior
         client.post('/login', data={
             'username': 'senior_test',
-            'password': 'Test1234!'
+            'password': 'TestPass1234!'
         })
 
         response = client.post('/delete_selected_samples', data={

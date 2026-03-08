@@ -61,7 +61,7 @@ class TestIndexPage:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_get_admin(self, client, app, admin_user):
@@ -70,7 +70,7 @@ class TestIndexPage:
             'username': 'index_admin_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_route(self, client, app, prep_user):
@@ -92,7 +92,7 @@ class TestSampleRegistration:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat(),
@@ -108,7 +108,7 @@ class TestSampleRegistration:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'Routine',
             'sample_date': date.today().isoformat()
@@ -121,7 +121,7 @@ class TestSampleRegistration:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Control',
             'sample_date': date.today().isoformat()
@@ -134,7 +134,7 @@ class TestSampleRegistration:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': date.today().isoformat(),
@@ -148,7 +148,7 @@ class TestSampleRegistration:
             'username': 'index_chemist_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat()

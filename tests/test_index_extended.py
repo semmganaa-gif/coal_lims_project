@@ -14,7 +14,7 @@ class TestWTLSampleRegistration:
 
     def test_register_wtl_sample(self, app, auth_admin):
         """Test registering WTL sample with lab_number."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': date.today().isoformat(),
@@ -24,7 +24,7 @@ class TestWTLSampleRegistration:
 
     def test_register_wtl_size_sample(self, app, auth_admin):
         """Test registering WTL Size sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Size',
             'sample_date': date.today().isoformat(),
@@ -34,7 +34,7 @@ class TestWTLSampleRegistration:
 
     def test_register_wtl_fl_sample(self, app, auth_admin):
         """Test registering WTL FL sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'FL',
             'sample_date': date.today().isoformat(),
@@ -44,7 +44,7 @@ class TestWTLSampleRegistration:
 
     def test_register_wtl_test_sample(self, app, auth_admin):
         """Test registering WTL Test sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Test',
             'sample_code': 'WTL_TEST_001',
@@ -54,7 +54,7 @@ class TestWTLSampleRegistration:
 
     def test_register_wtl_no_lab_number(self, app, auth_admin):
         """Test WTL registration without lab_number shows error."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': date.today().isoformat()
@@ -67,7 +67,7 @@ class TestLABSampleRegistration:
 
     def test_register_lab_cm_sample(self, app, auth_admin):
         """Test registering LAB CM sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_date': date.today().isoformat()
@@ -76,7 +76,7 @@ class TestLABSampleRegistration:
 
     def test_register_lab_gbw_sample(self, app, auth_admin):
         """Test registering LAB GBW sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_date': date.today().isoformat()
@@ -85,7 +85,7 @@ class TestLABSampleRegistration:
 
     def test_register_lab_test_sample(self, app, auth_admin):
         """Test registering LAB Test sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_date': date.today().isoformat()
@@ -94,7 +94,7 @@ class TestLABSampleRegistration:
 
     def test_register_lab_unknown_type(self, app, auth_admin):
         """Test registering LAB with unknown type."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Unknown',
             'sample_date': date.today().isoformat()
@@ -107,7 +107,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_2h_with_weight(self, app, auth_admin):
         """Test registering CHPP 2h sample with weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -119,7 +119,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_4h_sample(self, app, auth_admin):
         """Test registering CHPP 4h sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '4 hourly',
             'sample_date': date.today().isoformat(),
@@ -130,7 +130,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_com_sample(self, app, auth_admin):
         """Test registering CHPP COM sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'COM',
             'sample_date': date.today().isoformat(),
@@ -142,7 +142,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_invalid_weight(self, app, auth_admin):
         """Test CHPP registration with invalid weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -154,7 +154,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_no_weight(self, app, auth_admin):
         """Test CHPP registration without weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -166,7 +166,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_weight_too_small(self, app, auth_admin):
         """Test CHPP registration with too small weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -178,7 +178,7 @@ class TestCHPPSampleRegistration:
 
     def test_register_chpp_weight_too_large(self, app, auth_admin):
         """Test CHPP registration with too large weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -194,7 +194,7 @@ class TestMultiGenSampleRegistration:
 
     def test_register_multi_gen_qc(self, app, auth_admin):
         """Test registering multi_gen QC sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Coal',
             'sample_date': date.today().isoformat(),
@@ -208,7 +208,7 @@ class TestMultiGenSampleRegistration:
 
     def test_register_multi_gen_proc(self, app, auth_admin):
         """Test registering multi_gen Proc sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'Coal',
             'sample_date': date.today().isoformat(),
@@ -226,14 +226,14 @@ class TestFormValidation:
 
     def test_form_errors_active_tab(self, app, auth_admin):
         """Test form errors keep active tab."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': '',
         }, follow_redirects=True)
         assert response.status_code in [200, 302]
 
     def test_incomplete_form_submission(self, app, auth_admin):
         """Test incomplete form shows error."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_date': date.today().isoformat()
         }, follow_redirects=True)
@@ -323,7 +323,7 @@ class TestIndexRoute:
 
     def test_index_post_method(self, app, auth_admin):
         """Test index POST method."""
-        response = auth_admin.post('/index', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Coal',
             'sample_date': date.today().isoformat()

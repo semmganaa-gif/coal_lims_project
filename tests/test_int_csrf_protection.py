@@ -20,6 +20,9 @@ class CSRFTestConfig(Config):
     RATELIMIT_ENABLED = False
     RATELIMIT_STORAGE_URI = "memory://"
 
+    # SQLite-д pool тохиргоо хэрэггүй - хоослох
+    SQLALCHEMY_ENGINE_OPTIONS = {}
+
 
 @pytest.fixture
 def csrf_app():

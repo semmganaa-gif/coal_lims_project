@@ -10,7 +10,7 @@ class TestAdminBlueprintExists:
     """admin_bp Blueprint тест"""
 
     def test_blueprint_exists(self):
-        from app.routes.admin_routes import admin_bp
+        from app.routes.admin.routes import admin_bp
         assert admin_bp is not None
         assert admin_bp.name == 'admin'
         assert admin_bp.url_prefix == '/admin'
@@ -20,12 +20,12 @@ class TestAdminRequiredDecorator:
     """admin_required декоратор тест"""
 
     def test_import_decorator(self):
-        from app.routes.admin_routes import admin_required
+        from app.routes.admin.routes import admin_required
         assert admin_required is not None
         assert callable(admin_required)
 
     def test_decorator_returns_function(self):
-        from app.routes.admin_routes import admin_required
+        from app.routes.admin.routes import admin_required
 
         @admin_required
         def test_func():
@@ -38,12 +38,12 @@ class TestSeniorOrAdminRequiredDecorator:
     """senior_or_admin_required декоратор тест"""
 
     def test_import_decorator(self):
-        from app.routes.admin_routes import senior_or_admin_required
+        from app.routes.admin.routes import senior_or_admin_required
         assert senior_or_admin_required is not None
         assert callable(senior_or_admin_required)
 
     def test_decorator_returns_function(self):
-        from app.routes.admin_routes import senior_or_admin_required
+        from app.routes.admin.routes import senior_or_admin_required
 
         @senior_or_admin_required
         def test_func():
@@ -56,7 +56,7 @@ class TestSeedAnalysisTypes:
     """_seed_analysis_types функц тест"""
 
     def test_import_function(self):
-        from app.routes.admin_routes import _seed_analysis_types
+        from app.routes.admin.routes import _seed_analysis_types
         assert _seed_analysis_types is not None
         assert callable(_seed_analysis_types)
 

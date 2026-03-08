@@ -10,30 +10,30 @@ class TestControlChartsHelpers:
     def test_convert_to_dry_basis_normal(self, app):
         """Normal dry basis conversion"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 5.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 5.0)
             # dry = 10.0 * 100 / (100 - 5) = 10.526
             assert abs(result - 10.526) < 0.01
 
     def test_convert_to_dry_basis_zero_moisture(self, app):
         """Dry basis with zero moisture"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 0.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 0.0)
             assert result == 10.0
 
     def test_convert_to_dry_basis_none_moisture(self, app):
         """Dry basis with None moisture"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, None)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, None)
             assert result == 10.0
 
     def test_convert_to_dry_basis_high_moisture(self, app):
         """Dry basis with 100% moisture"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 100)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 100)
             assert result == 10.0
 
     def test_get_qc_samples(self, app):
@@ -57,26 +57,27 @@ class TestControlChartsHelpers:
             results = _get_qc_results([1, 2, 3], analysis_code='Mad')
             assert isinstance(results, list)
 
-    def test_get_qc_results_from_log_empty(self, app):
-        """Get QC results from log with empty list"""
+    def test_get_qc_results_with_empty_ids(self, app):
+        """Get QC results with empty sample id list"""
         with app.app_context():
-            from app.routes.quality.control_charts import _get_qc_results_from_log
-            results = _get_qc_results_from_log([])
-            assert results == []
-
-    def test_get_qc_results_from_log_with_code(self, app):
-        """Get QC results from log with analysis code"""
-        with app.app_context():
-            from app.routes.quality.control_charts import _get_qc_results_from_log
-            results = _get_qc_results_from_log([1, 2], analysis_code='Aad')
+            from app.routes.quality.control_charts import _get_qc_results
+            results = _get_qc_results([], analysis_code='Aad')
             assert isinstance(results, list)
 
-    def test_get_active_cm_standard_name(self, app):
-        """Get active CM standard name"""
+    def test_get_qc_results_with_nonexistent_code(self, app):
+        """Get QC results with non-existent analysis code"""
         with app.app_context():
-            from app.routes.quality.control_charts import _get_active_cm_standard_name
-            name = _get_active_cm_standard_name()
-            assert isinstance(name, str)
+            from app.routes.quality.control_charts import _get_qc_results
+            results = _get_qc_results([1, 2], analysis_code='NONEXISTENT')
+            assert isinstance(results, list)
+
+    def test_ad_analyses_set(self, app):
+        """AD_ANALYSES set exists and contains expected entries"""
+        with app.app_context():
+            from app.routes.quality.control_charts import AD_ANALYSES
+            assert isinstance(AD_ANALYSES, set)
+            assert 'Aad' in AD_ANALYSES
+            assert 'Vad' in AD_ANALYSES
 
     def test_extract_standard_name_empty(self, app):
         """Extract standard name from empty"""
@@ -129,8 +130,10 @@ class TestControlChartsTargetTolerance:
         """Get target with empty sample code"""
         with app.app_context():
             from app.routes.quality.control_charts import _get_target_and_tolerance
-            from app.models import Sample
-            sample = Sample(sample_code='')
+            from unittest.mock import MagicMock
+            sample = MagicMock()
+            sample.sample_code = ''
+            sample.sample_type = None
             target, ucl, lcl, sd = _get_target_and_tolerance(sample, 'Mad')
             assert target is None
 
@@ -210,29 +213,29 @@ class TestControlChartsRoutes:
 
 
 class TestDryBasisMapping:
-    """Dry basis mapping tests"""
+    """Dry basis mapping tests - updated for AD_ANALYSES set"""
 
-    def test_dry_basis_mapping_exists(self, app):
-        """DRY_BASIS_MAPPING constant exists"""
+    def test_ad_analyses_exists(self, app):
+        """AD_ANALYSES constant exists and contains expected entries"""
         with app.app_context():
-            from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-            assert 'Ad' in DRY_BASIS_MAPPING
-            assert 'Vd' in DRY_BASIS_MAPPING
-            assert 'CV,d' in DRY_BASIS_MAPPING
+            from app.routes.quality.control_charts import AD_ANALYSES
+            assert isinstance(AD_ANALYSES, set)
+            assert 'Aad' in AD_ANALYSES
+            assert 'Vad' in AD_ANALYSES
+            assert 'Sad' in AD_ANALYSES
 
-    def test_db_to_standard_code(self, app):
-        """DB_TO_STANDARD_CODE mapping"""
+    def test_ad_analyses_contains_key_codes(self, app):
+        """AD_ANALYSES contains all ad->d conversion codes"""
         with app.app_context():
-            from app.routes.quality.control_charts import DB_TO_STANDARD_CODE
-            assert 'Aad' in DB_TO_STANDARD_CODE
-            assert DB_TO_STANDARD_CODE['Aad'] == 'Ad'
+            from app.routes.quality.control_charts import AD_ANALYSES
+            expected = {'Aad', 'Vad', 'Sad', 'Oad', 'Pad', 'Fad', 'Clad'}
+            assert expected == AD_ANALYSES
 
-    def test_mapping_conversion(self, app):
-        """Test mapping conversion values"""
+    def test_convert_to_dry_basis_function(self, app):
+        """_convert_to_dry_basis works correctly"""
         with app.app_context():
-            from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-            # Check that Aad needs conversion
-            assert DRY_BASIS_MAPPING['Ad'][0] == 'Aad'
-            assert DRY_BASIS_MAPPING['Ad'][1] == True
-            # Check that CSN doesn't need conversion
-            assert DRY_BASIS_MAPPING['CSN'][1] == False
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            # Normal conversion
+            result = _convert_to_dry_basis(10.0, 5.0)
+            expected = 10.0 * 100 / (100 - 5.0)
+            assert abs(result - expected) < 0.01

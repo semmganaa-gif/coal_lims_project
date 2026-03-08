@@ -14,7 +14,7 @@ class TestIndexPage:
 
     def test_index_get_page(self, client, auth_admin):
         """Test index page GET request."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
     def test_index_with_active_tab(self, client, auth_admin):
@@ -190,7 +190,7 @@ class TestIndexPostCHPP:
 
     def test_chpp_2h_registration(self, client, auth_admin, app, db):
         """Test CHPP 2H sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -205,7 +205,7 @@ class TestIndexPostCHPP:
 
     def test_chpp_4h_registration(self, client, auth_admin, app, db):
         """Test CHPP 4H sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '4H',
             'sample_date': date.today().isoformat(),
@@ -222,7 +222,7 @@ class TestIndexPostWTL:
 
     def test_wtl_registration_no_lab_number(self, client, auth_admin):
         """Test WTL registration without lab number."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': date.today().isoformat(),
@@ -234,7 +234,7 @@ class TestIndexPostWTL:
 
     def test_wtl_mg_registration(self, client, auth_admin):
         """Test WTL MG sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': date.today().isoformat(),
@@ -250,7 +250,7 @@ class TestIndexPostLAB:
 
     def test_lab_cm_registration(self, client, auth_admin):
         """Test LAB CM sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_date': date.today().isoformat(),
@@ -261,7 +261,7 @@ class TestIndexPostLAB:
 
     def test_lab_gbw_registration(self, client, auth_admin):
         """Test LAB GBW sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_date': date.today().isoformat(),
@@ -272,7 +272,7 @@ class TestIndexPostLAB:
 
     def test_lab_test_registration(self, client, auth_admin):
         """Test LAB Test sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_date': date.today().isoformat(),
@@ -287,7 +287,7 @@ class TestIndexPostQC:
 
     def test_qc_registration(self, client, auth_admin):
         """Test QC sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Gen',
             'sample_date': date.today().isoformat(),
@@ -303,7 +303,7 @@ class TestIndexPostQC:
 
     def test_proc_registration(self, client, auth_admin):
         """Test Proc sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'Gen',
             'sample_date': date.today().isoformat(),
@@ -321,7 +321,7 @@ class TestIndexFormValidation:
 
     def test_form_incomplete(self, client, auth_admin):
         """Test incomplete form submission."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': '',
             'sample_date': ''
         }, follow_redirects=True)
@@ -329,7 +329,7 @@ class TestIndexFormValidation:
 
     def test_weight_validation_too_small(self, client, auth_admin):
         """Test weight validation - too small."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -343,7 +343,7 @@ class TestIndexFormValidation:
 
     def test_weight_validation_invalid(self, client, auth_admin):
         """Test weight validation - invalid value."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),

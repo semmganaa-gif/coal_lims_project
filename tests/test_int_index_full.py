@@ -22,7 +22,7 @@ def app():
         # Create admin user
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
         # Create prep user
@@ -89,7 +89,7 @@ class TestIndexPage:
     def test_index_get_authenticated(self, auth_client, app):
         """Index page accessible when authenticated"""
         with app.app_context():
-            response = auth_client.get('/')
+            response = auth_client.get('/coal')
             assert response.status_code == 200
 
     def test_index_alt_path(self, auth_client, app):
@@ -101,7 +101,7 @@ class TestIndexPage:
     def test_index_unauthenticated(self, client, app):
         """Index redirects when not authenticated"""
         with app.app_context():
-            response = client.get('/')
+            response = client.get('/coal')
             assert response.status_code in [302, 401, 403]
 
     def test_index_with_active_tab_param(self, auth_client, app):
@@ -117,13 +117,13 @@ class TestSampleRegistration:
     def test_post_empty_form(self, auth_client, app):
         """POST with empty form"""
         with app.app_context():
-            response = auth_client.post('/', data={})
+            response = auth_client.post('/coal', data={})
             assert response.status_code in [200, 302, 400]
 
     def test_post_with_client_name(self, auth_client, app):
         """POST with client_name only"""
         with app.app_context():
-            response = auth_client.post('/', data={
+            response = auth_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': ''
             })
@@ -132,7 +132,7 @@ class TestSampleRegistration:
     def test_analyst_cannot_register(self, analyst_client, app):
         """Analyst role cannot register samples"""
         with app.app_context():
-            response = analyst_client.post('/', data={
+            response = analyst_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -149,7 +149,7 @@ class TestCHPPRegistration:
     def test_chpp_2hourly_registration(self, prep_client, app):
         """CHPP 2 hourly sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -164,7 +164,7 @@ class TestCHPPRegistration:
     def test_chpp_4hourly_registration(self, prep_client, app):
         """CHPP 4 hourly sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '4 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -179,7 +179,7 @@ class TestCHPPRegistration:
     def test_chpp_com_registration(self, prep_client, app):
         """CHPP COM sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': 'COM',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -194,7 +194,7 @@ class TestCHPPRegistration:
     def test_chpp_invalid_weight(self, prep_client, app):
         """CHPP with invalid weight value"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -209,7 +209,7 @@ class TestCHPPRegistration:
     def test_chpp_weight_too_small(self, prep_client, app):
         """CHPP with too small weight"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -224,7 +224,7 @@ class TestCHPPRegistration:
     def test_chpp_missing_weight(self, prep_client, app):
         """CHPP with missing weight"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -243,7 +243,7 @@ class TestWTLRegistration:
     def test_wtl_auto_names_registration(self, prep_client, app):
         """WTL auto-generated names registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -256,7 +256,7 @@ class TestWTLRegistration:
     def test_wtl_size_registration(self, prep_client, app):
         """WTL Size sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'Size',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -269,7 +269,7 @@ class TestWTLRegistration:
     def test_wtl_fl_registration(self, prep_client, app):
         """WTL FL sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'FL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -282,7 +282,7 @@ class TestWTLRegistration:
     def test_wtl_without_lab_number(self, prep_client, app):
         """WTL without lab number should fail"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -294,7 +294,7 @@ class TestWTLRegistration:
     def test_wtl_mg_registration(self, prep_client, app):
         """WTL MG manual sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -307,7 +307,7 @@ class TestWTLRegistration:
     def test_wtl_test_registration(self, prep_client, app):
         """WTL Test manual sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'Test',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -320,7 +320,7 @@ class TestWTLRegistration:
     def test_wtl_mg_without_sample_code(self, prep_client, app):
         """WTL MG without sample_code should fail"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -345,7 +345,7 @@ class TestLABRegistration:
             db.session.add(cm_std)
             db.session.commit()
 
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'CM',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -366,7 +366,7 @@ class TestLABRegistration:
             db.session.add(gbw_std)
             db.session.commit()
 
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'GBW',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -378,7 +378,7 @@ class TestLABRegistration:
     def test_lab_test_registration(self, prep_client, app):
         """LAB Test sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -390,7 +390,7 @@ class TestLABRegistration:
     def test_lab_unknown_type_registration(self, prep_client, app):
         """LAB unknown type registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'UNKNOWN',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -406,7 +406,7 @@ class TestQCRegistration:
     def test_qc_multi_gen_registration(self, prep_client, app):
         """QC multi_gen sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'QC',
                 'sample_type': 'General',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -427,7 +427,7 @@ class TestProcRegistration:
     def test_proc_multi_gen_registration(self, prep_client, app):
         """Proc multi_gen sample registration"""
         with app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'Proc',
                 'sample_type': 'Process',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),

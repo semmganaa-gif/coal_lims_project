@@ -50,17 +50,17 @@ def reg_chemist(app):
 class TestIndexPageAccess:
     def test_index_page_prep(self, client, app, reg_prep):
         client.post('/login', data={'username': 'reg_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        r = client.get('/')
+        r = client.get('/coal')
         assert r.status_code in [200, 302]
 
     def test_index_page_admin(self, client, app, reg_admin):
         client.post('/login', data={'username': 'reg_admin_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        r = client.get('/')
+        r = client.get('/coal')
         assert r.status_code in [200, 302]
 
     def test_index_page_chemist(self, client, app, reg_chemist):
         client.post('/login', data={'username': 'reg_chemist_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        r = client.get('/')
+        r = client.get('/coal')
         assert r.status_code in [200, 302]
 
 
@@ -76,7 +76,7 @@ class TestSampleRegistrationCHPP:
             'sample_codes': [f'CHPP-2H-{uid}'],
             'weights': ['150.5']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_chpp_4hour(self, client, app, reg_prep):
@@ -90,7 +90,7 @@ class TestSampleRegistrationCHPP:
             'sample_codes': [f'CHPP-4H-{uid}'],
             'weights': ['200']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_chpp_composite(self, client, app, reg_prep):
@@ -104,7 +104,7 @@ class TestSampleRegistrationCHPP:
             'sample_codes': [f'CHPP-COM-{uid}'],
             'weights': ['500']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
 
@@ -120,7 +120,7 @@ class TestSampleRegistrationGeo:
             'sample_codes': [f'UHG-{uid}'],
             'weights': ['100']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_bn_geo(self, client, app, reg_prep):
@@ -134,7 +134,7 @@ class TestSampleRegistrationGeo:
             'sample_codes': [f'BN-{uid}'],
             'weights': ['120']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
 
@@ -150,7 +150,7 @@ class TestSampleRegistrationOther:
             'sample_codes': [f'QC-{uid}'],
             'weights': ['50']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_proc(self, client, app, reg_prep):
@@ -164,7 +164,7 @@ class TestSampleRegistrationOther:
             'sample_codes': [f'Proc-{uid}'],
             'weights': ['80']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_lab(self, client, app, reg_prep):
@@ -178,7 +178,7 @@ class TestSampleRegistrationOther:
             'sample_codes': [f'LAB-{uid}'],
             'weights': ['60']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_register_wtl(self, client, app, reg_prep):
@@ -190,7 +190,7 @@ class TestSampleRegistrationOther:
             'sample_date': date.today().isoformat(),
             'sample_code': f'WTL-{uid}'
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
 
@@ -228,7 +228,7 @@ class TestRegistrationErrors:
             'sample_codes': [f'ERR-{uid}'],
             'weights': ['100']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 403]
 
     def test_invalid_weight(self, client, app, reg_prep):
@@ -242,7 +242,7 @@ class TestRegistrationErrors:
             'sample_codes': [f'INV-{uid}'],
             'weights': ['abc']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]
 
     def test_zero_weight(self, client, app, reg_prep):
@@ -256,5 +256,5 @@ class TestRegistrationErrors:
             'sample_codes': [f'ZRO-{uid}'],
             'weights': ['0']
         }
-        r = client.post('/', data=data, follow_redirects=True)
+        r = client.post('/coal', data=data, follow_redirects=True)
         assert r.status_code in [200, 302, 400]

@@ -53,7 +53,7 @@ def qc_samples(app):
                 sample_code=f'SC{datetime.now().strftime("%Y%m%d")}_D_{i+1}H_{unique_id}',
                 client_name='CHPP',
                 sample_type='2hour',
-                status='approved',
+                status='completed',
                 received_date=datetime.now()
             )
             db.session.add(sample)
@@ -76,7 +76,7 @@ def qc_samples(app):
             sample_code=f'SC{datetime.now().strftime("%Y%m%d")}_D_COM_{unique_id}',
             client_name='CHPP',
             sample_type='composite',
-            status='approved',
+            status='completed',
             received_date=datetime.now()
         )
         db.session.add(com_sample)

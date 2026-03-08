@@ -12,39 +12,39 @@ class TestYearArg:
     """_year_arg функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         assert _year_arg is not None
 
     def test_default_year(self, app):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         with app.test_request_context('/test'):
-            with patch('app.routes.report_routes.now_local') as mock_now:
+            with patch('app.routes.reports.routes.now_local') as mock_now:
                 mock_now.return_value = datetime(2026, 5, 15)
                 result = _year_arg()
                 assert result == 2026
 
     def test_valid_year_param(self, app):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         with app.test_request_context('/test?year=2024'):
             result = _year_arg()
             assert result == 2024
 
     def test_year_out_of_range_low(self, app):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         from werkzeug.exceptions import BadRequest
         with app.test_request_context('/test?year=1999'):
             with pytest.raises(BadRequest):
                 _year_arg()
 
     def test_year_out_of_range_high(self, app):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         from werkzeug.exceptions import BadRequest
         with app.test_request_context('/test?year=2101'):
             with pytest.raises(BadRequest):
                 _year_arg()
 
     def test_invalid_year_param(self, app):
-        from app.routes.report_routes import _year_arg
+        from app.routes.reports.routes import _year_arg
         from werkzeug.exceptions import BadRequest
         with app.test_request_context('/test?year=abc'):
             with pytest.raises(BadRequest):
@@ -55,11 +55,11 @@ class TestPickDateCol:
     """_pick_date_col функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _pick_date_col
+        from app.routes.reports.routes import _pick_date_col
         assert _pick_date_col is not None
 
     def test_returns_column(self):
-        from app.routes.report_routes import _pick_date_col
+        from app.routes.reports.routes import _pick_date_col
         col = _pick_date_col()
         assert col is not None
 
@@ -68,7 +68,7 @@ class TestCodeExprAndJoin:
     """_code_expr_and_join функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _code_expr_and_join
+        from app.routes.reports.routes import _code_expr_and_join
         assert _code_expr_and_join is not None
 
 
@@ -76,31 +76,31 @@ class TestParseDateSafe:
     """_parse_date_safe функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         assert _parse_date_safe is not None
 
     def test_valid_date(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         result = _parse_date_safe("2026-05-15")
         assert result == date(2026, 5, 15)
 
     def test_empty_value(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         result = _parse_date_safe("")
         assert result is None
 
     def test_none_value(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         result = _parse_date_safe(None)
         assert result is None
 
     def test_invalid_format(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         result = _parse_date_safe("15/05/2026")
         assert result is None
 
     def test_invalid_string(self):
-        from app.routes.report_routes import _parse_date_safe
+        from app.routes.reports.routes import _parse_date_safe
         result = _parse_date_safe("not-a-date")
         assert result is None
 
@@ -109,18 +109,18 @@ class TestGetWeeksInMonth:
     """_get_weeks_in_month функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _get_weeks_in_month
+        from app.routes.reports.routes import _get_weeks_in_month
         assert _get_weeks_in_month is not None
 
     def test_january_2026(self):
-        from app.routes.report_routes import _get_weeks_in_month
+        from app.routes.reports.routes import _get_weeks_in_month
         weeks = _get_weeks_in_month(2026, 1)
         assert len(weeks) > 0
         assert weeks[0][0] == 1  # week 1
         assert weeks[0][1] == date(2026, 1, 1)  # starts on Jan 1
 
     def test_february_2024_leap_year(self):
-        from app.routes.report_routes import _get_weeks_in_month
+        from app.routes.reports.routes import _get_weeks_in_month
         weeks = _get_weeks_in_month(2024, 2)
         assert len(weeks) > 0
         # February 2024 has 29 days (leap year)
@@ -128,13 +128,13 @@ class TestGetWeeksInMonth:
         assert last_week[2].day == 29
 
     def test_february_2025_non_leap(self):
-        from app.routes.report_routes import _get_weeks_in_month
+        from app.routes.reports.routes import _get_weeks_in_month
         weeks = _get_weeks_in_month(2025, 2)
         last_week = weeks[-1]
         assert last_week[2].day == 28
 
     def test_week_structure(self):
-        from app.routes.report_routes import _get_weeks_in_month
+        from app.routes.reports.routes import _get_weeks_in_month
         weeks = _get_weeks_in_month(2026, 3)
         for week_num, start, end in weeks:
             assert isinstance(week_num, int)
@@ -148,7 +148,7 @@ class TestErrorReasonLabels:
     """ERROR_REASON_LABELS тест"""
 
     def test_labels_exist(self):
-        from app.routes.report_routes import ERROR_REASON_LABELS
+        from app.routes.reports.routes import ERROR_REASON_LABELS
         assert isinstance(ERROR_REASON_LABELS, dict)
         assert "measurement_error" in ERROR_REASON_LABELS
         assert "documentation_error" in ERROR_REASON_LABELS
@@ -159,7 +159,7 @@ class TestReportsBlueprintRegistered:
     """Blueprint бүртгэгдсэн эсэх"""
 
     def test_blueprint_exists(self):
-        from app.routes.report_routes import reports_bp
+        from app.routes.reports.routes import reports_bp
         assert reports_bp is not None
         assert reports_bp.name == "reports"
         assert reports_bp.url_prefix == "/reports"
@@ -206,7 +206,7 @@ class TestConsumptionCellRoute:
         response = logged_in_user.get('/reports/consumption_cell?year=2026&month=5&unit=QC&stype=Coal')
         assert response.status_code == 200
         data = response.get_json()
-        assert "ok" in data
+        assert data.get("success") is True
 
 
 class TestMonthlyPlanRoute:
@@ -354,7 +354,7 @@ class TestCalculateConsumption:
     """_calculate_consumption функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _calculate_consumption
+        from app.routes.reports.routes import _calculate_consumption
         assert _calculate_consumption is not None
 
 
@@ -362,7 +362,7 @@ class TestCalculateWeeklyPerformance:
     """_calculate_weekly_performance функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _calculate_weekly_performance
+        from app.routes.reports.routes import _calculate_weekly_performance
         assert _calculate_weekly_performance is not None
 
 
@@ -370,7 +370,7 @@ class TestCountErrorReasons:
     """_count_error_reasons функц тест"""
 
     def test_import_function(self):
-        from app.routes.report_routes import _count_error_reasons
+        from app.routes.reports.routes import _count_error_reasons
         assert _count_error_reasons is not None
 
 

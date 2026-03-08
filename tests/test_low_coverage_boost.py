@@ -17,31 +17,45 @@ import json
 import pandas as pd
 import numpy as np
 
+# Try to import optional modules; set to None if not available.
+try:
+    import app.utils.excel_import as _excel_import
+except ImportError:
+    _excel_import = None
+
+try:
+    import app.services.icpms_integration as _icpms_integration
+except ImportError:
+    _icpms_integration = None
+
 
 # ==============================================================================
 # EXCEL IMPORT TESTS (utils/excel_import.py)
+# Skipped: module app.utils.excel_import does not exist in this codebase.
 # ==============================================================================
 
+
+@pytest.mark.skipif(_excel_import is None, reason="app.utils.excel_import module does not exist")
 class TestExcelImportParsing:
     """Test parsing functions in excel_import.py"""
 
     def test_parse_date_none(self):
         """Test parse_date with None/NaN"""
-        from app.utils.excel_import import parse_date
+        parse_date = _excel_import.parse_date
         assert parse_date(None) is None
         assert parse_date(pd.NA) is None
         assert parse_date(np.nan) is None
 
     def test_parse_date_datetime(self):
         """Test parse_date with datetime object"""
-        from app.utils.excel_import import parse_date
+        parse_date = _excel_import.parse_date
         dt = datetime(2024, 1, 15, 10, 30, 0)
         result = parse_date(dt)
         assert result == date(2024, 1, 15)
 
     def test_parse_date_string_formats(self):
         """Test parse_date with various string formats"""
-        from app.utils.excel_import import parse_date
+        parse_date = _excel_import.parse_date
 
         # Format: YYYY.MM.DD
         result = parse_date('2024.01.15')
@@ -61,27 +75,27 @@ class TestExcelImportParsing:
 
     def test_parse_date_invalid_string(self):
         """Test parse_date with invalid string"""
-        from app.utils.excel_import import parse_date
+        parse_date = _excel_import.parse_date
         assert parse_date('invalid date') is None
         assert parse_date('') is None
 
     def test_parse_float_none(self):
         """Test parse_float with None/NaN"""
-        from app.utils.excel_import import parse_float
+        parse_float = _excel_import.parse_float
         assert parse_float(None) is None
         assert parse_float(pd.NA) is None
         assert parse_float(np.nan) is None
 
     def test_parse_float_numeric(self):
         """Test parse_float with numeric values"""
-        from app.utils.excel_import import parse_float
+        parse_float = _excel_import.parse_float
         assert parse_float(10) == 10.0
         assert parse_float(10.5) == 10.5
         assert parse_float(-5.5) == -5.5
 
     def test_parse_float_string(self):
         """Test parse_float with string values"""
-        from app.utils.excel_import import parse_float
+        parse_float = _excel_import.parse_float
         assert parse_float('10.5') == 10.5
         assert parse_float('  15.3  ') == 15.3
         assert parse_float('-5.5') == -5.5
@@ -90,18 +104,19 @@ class TestExcelImportParsing:
 
     def test_parse_float_invalid_string(self):
         """Test parse_float with invalid string"""
-        from app.utils.excel_import import parse_float
+        parse_float = _excel_import.parse_float
         assert parse_float('abc') is None
         assert parse_float('') is None
 
 
+@pytest.mark.skipif(_excel_import is None, reason="app.utils.excel_import module does not exist")
 class TestExcelImportReadSheets:
     """Test sheet reading functions"""
 
     @patch('pandas.read_excel')
     def test_read_front_sheet(self, mock_read_excel):
         """Test reading front sheet"""
-        from app.utils.excel_import import read_front_sheet
+        read_front_sheet = _excel_import.read_front_sheet
 
         # Create mock DataFrame
         data = [
@@ -124,7 +139,7 @@ class TestExcelImportReadSheets:
     @patch('pandas.read_excel')
     def test_read_raw_coal_analysis(self, mock_read_excel):
         """Test reading raw coal analysis sheet"""
-        from app.utils.excel_import import read_raw_coal_analysis
+        read_raw_coal_analysis = _excel_import.read_raw_coal_analysis
 
         data = [
             ['Parameter', 'Value', ''],
@@ -148,38 +163,34 @@ class TestExcelImportReadSheets:
 
 # ==============================================================================
 # ICPMS INTEGRATION TESTS (services/icpms_integration.py)
+# Skipped: app.services.icpms_integration is part of a separate project (D:\icpms).
 # ==============================================================================
 
+@pytest.mark.skipif(_icpms_integration is None, reason="app.services.icpms_integration module does not exist (separate ICPMS project)")
 class TestICPMSIntegration:
     """Test ICPMS integration service"""
 
     def test_icpms_error_class(self):
         """Test ICPMSIntegrationError exception"""
-        from app.services.icpms_integration import ICPMSIntegrationError
-
-        error = ICPMSIntegrationError("Test error")
+        error = _icpms_integration.ICPMSIntegrationError("Test error")
         assert str(error) == "Test error"
 
     def test_icpms_init(self):
         """Test ICPMSIntegration initialization"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         with patch.dict('os.environ', {
             'ICPMS_API_URL': 'http://test:8000',
             'ICPMS_API_KEY': 'test-key',
             'ICPMS_TIMEOUT': '60'
         }):
-            icpms = ICPMSIntegration()
+            icpms = _icpms_integration.ICPMSIntegration()
             assert icpms.base_url == 'http://test:8000'
             assert icpms.api_key == 'test-key'
             assert icpms.timeout == 60
 
     def test_icpms_get_headers_with_api_key(self):
         """Test headers with API key"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         with patch.dict('os.environ', {'ICPMS_API_KEY': 'test-key'}):
-            icpms = ICPMSIntegration()
+            icpms = _icpms_integration.ICPMSIntegration()
             headers = icpms._get_headers()
 
             assert headers['Content-Type'] == 'application/json'
@@ -188,9 +199,7 @@ class TestICPMSIntegration:
 
     def test_icpms_get_headers_with_token(self):
         """Test headers with bearer token"""
-        from app.services.icpms_integration import ICPMSIntegration
-
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         icpms._token = 'bearer-token-123'
         headers = icpms._get_headers()
 
@@ -199,12 +208,10 @@ class TestICPMSIntegration:
     @patch('requests.post')
     def test_authenticate_success(self, mock_post):
         """Test successful authentication"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {'access_token': 'new-token'}
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.authenticate('user', 'pass')
 
         assert result is True
@@ -213,11 +220,9 @@ class TestICPMSIntegration:
     @patch('requests.post')
     def test_authenticate_failure(self, mock_post):
         """Test failed authentication"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         mock_post.return_value.status_code = 401
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.authenticate('user', 'wrong-pass')
 
         assert result is False
@@ -225,12 +230,11 @@ class TestICPMSIntegration:
     @patch('requests.post')
     def test_authenticate_connection_error(self, mock_post):
         """Test authentication with connection error"""
-        from app.services.icpms_integration import ICPMSIntegration
         from requests.exceptions import RequestException
 
         mock_post.side_effect = RequestException("Connection refused")
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.authenticate('user', 'pass')
 
         assert result is False
@@ -238,11 +242,9 @@ class TestICPMSIntegration:
     @patch('requests.get')
     def test_check_connection_success(self, mock_get):
         """Test successful connection check"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         mock_get.return_value.status_code = 200
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.check_connection()
 
         assert result['status'] == 'ok'
@@ -250,12 +252,11 @@ class TestICPMSIntegration:
     @patch('requests.get')
     def test_check_connection_timeout(self, mock_get):
         """Test connection check timeout"""
-        from app.services.icpms_integration import ICPMSIntegration
         from requests.exceptions import Timeout
 
         mock_get.side_effect = Timeout()
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.check_connection()
 
         assert result['status'] == 'error'
@@ -264,21 +265,18 @@ class TestICPMSIntegration:
     @patch('requests.get')
     def test_check_connection_error(self, mock_get):
         """Test connection check with error"""
-        from app.services.icpms_integration import ICPMSIntegration
         from requests.exceptions import RequestException
 
         mock_get.side_effect = RequestException("Connection refused")
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.check_connection()
 
         assert result['status'] == 'error'
 
     def test_send_sample_results_empty(self):
         """Test send_sample_results with empty list"""
-        from app.services.icpms_integration import ICPMSIntegration
-
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.send_sample_results([])
 
         assert result['success'] is False
@@ -286,22 +284,18 @@ class TestICPMSIntegration:
 
     def test_get_icpms_integration_singleton(self):
         """Test singleton pattern"""
-        from app.services.icpms_integration import get_icpms_integration
-
-        icpms1 = get_icpms_integration()
-        icpms2 = get_icpms_integration()
+        icpms1 = _icpms_integration.get_icpms_integration()
+        icpms2 = _icpms_integration.get_icpms_integration()
 
         assert icpms1 is icpms2
 
     @patch('requests.get')
     def test_get_optimization_result_success(self, mock_get):
         """Test getting optimization result"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {'id': 1, 'result': 'optimized'}
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.get_optimization_result(1)
 
         assert result is not None
@@ -310,11 +304,9 @@ class TestICPMSIntegration:
     @patch('requests.get')
     def test_get_optimization_result_not_found(self, mock_get):
         """Test optimization result not found"""
-        from app.services.icpms_integration import ICPMSIntegration
-
         mock_get.return_value.status_code = 404
 
-        icpms = ICPMSIntegration()
+        icpms = _icpms_integration.ICPMSIntegration()
         result = icpms.get_optimization_result(999)
 
         assert result is None
@@ -509,7 +501,7 @@ class TestAuditLogService:
 
     def test_to_jsonable_dataclass(self):
         """Test _to_jsonable with dataclass"""
-        from app.services.audit_log_service import _to_jsonable
+        from app.services.analysis_audit import _to_jsonable
         from dataclasses import dataclass
 
         @dataclass
@@ -524,7 +516,7 @@ class TestAuditLogService:
 
     def test_to_jsonable_with_id(self):
         """Test _to_jsonable with object having id attribute"""
-        from app.services.audit_log_service import _to_jsonable
+        from app.services.analysis_audit import _to_jsonable
 
         class MockObject:
             id = 123
@@ -536,7 +528,7 @@ class TestAuditLogService:
 
     def test_to_jsonable_primitive(self):
         """Test _to_jsonable with primitive types"""
-        from app.services.audit_log_service import _to_jsonable
+        from app.services.analysis_audit import _to_jsonable
 
         assert _to_jsonable(42) == 42
         assert _to_jsonable('test') == 'test'
@@ -544,7 +536,7 @@ class TestAuditLogService:
 
     def test_safe_json_dumps_normal(self):
         """Test _safe_json_dumps with normal data"""
-        from app.services.audit_log_service import _safe_json_dumps
+        from app.services.analysis_audit import _safe_json_dumps
 
         data = {'key': 'value', 'number': 42}
         result = _safe_json_dumps(data)
@@ -554,7 +546,7 @@ class TestAuditLogService:
 
     def test_safe_json_dumps_mongolian(self):
         """Test _safe_json_dumps preserves Mongolian characters"""
-        from app.services.audit_log_service import _safe_json_dumps
+        from app.services.analysis_audit import _safe_json_dumps
 
         data = {'name': 'Монгол тэмдэгт'}
         result = _safe_json_dumps(data)
@@ -563,7 +555,7 @@ class TestAuditLogService:
 
     def test_safe_json_dumps_truncation(self):
         """Test _safe_json_dumps truncates large payloads"""
-        from app.services.audit_log_service import _safe_json_dumps
+        from app.services.analysis_audit import _safe_json_dumps
 
         # Create a large payload
         large_data = {'data': 'x' * 100000}
@@ -574,11 +566,11 @@ class TestAuditLogService:
 
     def test_log_analysis_action(self, app):
         """Test log_analysis_action function"""
-        from app.services.audit_log_service import log_analysis_action
+        from app.services.analysis_audit import log_analysis_action
 
         with app.app_context():
             # Mock current_user
-            with patch('app.services.audit_log_service.current_user') as mock_user:
+            with patch('app.services.analysis_audit.current_user') as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.id = 1
 
@@ -713,8 +705,13 @@ class TestYieldRoutesWithData:
 
 # ==============================================================================
 # ICPMS API ROUTES TESTS (routes/api/icpms_api.py)
+# Skipped: depends on app.services.icpms_integration which is a separate project.
 # ==============================================================================
 
+@pytest.mark.skipif(
+    _icpms_integration is None,
+    reason="app.services.icpms_integration module does not exist (separate ICPMS project)"
+)
 class TestICPMSApiRoutes:
     """Test ICPMS API routes"""
 

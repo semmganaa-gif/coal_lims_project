@@ -65,7 +65,7 @@ class TestRoleRequired:
         with app.test_request_context():
             result = test_view()
             mock_flash.assert_called()
-            assert "нэвтэрнэ үү" in mock_flash.call_args[0][0]
+            assert "log in" in mock_flash.call_args[0][0].lower()
             mock_redirect.assert_called()
 
     @patch('app.utils.decorators.abort')
@@ -131,7 +131,7 @@ class TestAdminRequired:
         with app.test_request_context():
             result = test_view()
             mock_flash.assert_called()
-            assert "нэвтэрнэ үү" in mock_flash.call_args[0][0]
+            assert "log in" in mock_flash.call_args[0][0].lower()
             mock_redirect.assert_called()
 
     @patch('app.utils.decorators.abort')
@@ -171,7 +171,7 @@ class TestAdminRequired:
         with app.test_request_context():
             test_view()
             mock_abort.assert_called_with(403)
-            assert "админ" in mock_flash.call_args[0][0]
+            assert "admin" in mock_flash.call_args[0][0].lower()
 
 
 class TestRoleOrOwnerRequired:

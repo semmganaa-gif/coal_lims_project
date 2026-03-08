@@ -629,7 +629,7 @@
         <div class="eq-card-header">
           <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
           {{ _("Journal") }}
-          <span class="badge bg-light text-dark border ms-2">{{ eq.logs|length + (usage_logs|default([])|length) }}</span>
+          <span class="badge bg-light text-dark border ms-2">{{ eq.logs.count() + (usage_logs|default([])|length) }}</span>
         </div>
         <div class="eq-card-body">
           {# Filters #}

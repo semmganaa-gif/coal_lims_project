@@ -290,6 +290,7 @@ class Sample(db.Model):
             >>> cv_ar = calc.cv_ar
         """
         if not hasattr(self, "_calculations_cache"):
+            from app.models.analysis import SampleCalculations
             self._calculations_cache = SampleCalculations(self)
         return self._calculations_cache
 

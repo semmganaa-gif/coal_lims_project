@@ -20,11 +20,11 @@ def app():
         # Create users
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
         if not User.query.filter_by(username='senior').first():
             user = User(username='senior', role='senior')
-            user.set_password('Senior123')
+            user.set_password('SeniorPass123')
             db.session.add(user)
         if not User.query.filter_by(username='analyst').first():
             user = User(username='analyst', role='analyst')
@@ -61,7 +61,7 @@ class TestChatEventsHelpers:
     def test_get_user_room(self, app):
         """User room name generation"""
         with app.app_context():
-            from app.routes.chat_events import get_user_room
+            from app.routes.chat.events import get_user_room
             result = get_user_room(1)
             assert result == "user_1"
             result = get_user_room(999)
@@ -70,7 +70,7 @@ class TestChatEventsHelpers:
     def test_update_online_status_new_user(self, app):
         """Update online status for new user"""
         with app.app_context():
-            from app.routes.chat_events import update_online_status
+            from app.routes.chat.events import update_online_status
             user = User.query.filter_by(username='admin').first()
 
             update_online_status(user.id, True, 'socket123')
@@ -83,7 +83,7 @@ class TestChatEventsHelpers:
     def test_update_online_status_existing_user(self, app):
         """Update online status for existing user"""
         with app.app_context():
-            from app.routes.chat_events import update_online_status
+            from app.routes.chat.events import update_online_status
             user = User.query.filter_by(username='admin').first()
 
             # First update
@@ -99,7 +99,7 @@ class TestChatEventsHelpers:
     def test_online_users_dict(self, app):
         """Online users dictionary"""
         with app.app_context():
-            from app.routes.chat_events import online_users
+            from app.routes.chat.events import online_users
             # Should be a dict
             assert isinstance(online_users, dict)
 

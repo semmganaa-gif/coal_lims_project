@@ -175,7 +175,7 @@ class TestRegisterCommands:
             from app.models import User
             # Create a user first
             user = User(username='testuser', role='admin')
-            user.set_password('Test1234!')
+            user.set_password('TestPass1234!')
             db.session.add(user)
             db.session.commit()
 
@@ -204,11 +204,11 @@ class TestRegisterCommands:
             runner = CliRunner()
             result = runner.invoke(
                 app.cli,
-                ['users', 'create', 'newadmin', 'Test1234!', 'admin']
+                ['users', 'create', 'newadmin', 'AdminPass123', 'admin']
             )
             # Check if created or already exists
             user = User.query.filter_by(username='newadmin').first()
-            assert user is not None or 'амжилттай' in result.output or 'success' in result.output.lower()
+            assert user is not None or 'амжилттай' in result.output or 'success' in result.output.lower() or 'already exists' in result.output
 
 
 class TestEquipmentCommands:
@@ -233,7 +233,7 @@ class TestEquipmentCommands:
                 name='Test Equipment',
                 manufacturer='Test Mfg',
                 model='Model A',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()

@@ -86,7 +86,7 @@ class TestUserCliCommands:
             )
 
             # Should show duplicate error
-            assert 'аль хэдийн' in result.output or 'байна' in result.output
+            assert 'already exists' in result.output or 'аль хэдийн' in result.output or 'байна' in result.output
 
     def test_create_user_invalid_role(self, app):
         """Test creating user with invalid role"""
@@ -115,7 +115,7 @@ class TestUserCliCommands:
             )
 
             # Should show password error
-            assert 'Алдаа' in result.output or result.exit_code != 0
+            assert 'Алдаа' in result.output or 'Error' in result.output or result.exit_code != 0
 
 
 class TestEquipmentCliCommands:

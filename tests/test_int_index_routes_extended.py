@@ -57,12 +57,12 @@ class TestIndexPageExtended:
 
     def test_index_get_unauthenticated(self, client, app):
         """Index GET without login"""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302, 401]
 
     def test_index_post_unauthenticated(self, client, app):
         """Index POST without login"""
-        response = client.post('/', data={})
+        response = client.post('/coal', data={})
         assert response.status_code in [200, 302, 401]
 
     def test_index_with_date_filter(self, client, app, index_prep):
@@ -87,7 +87,7 @@ class TestSampleRegistrationExtended:
         }, follow_redirects=True)
         import uuid
         unique_id = uuid.uuid4().hex[:6]
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat(),
@@ -105,7 +105,7 @@ class TestSampleRegistrationExtended:
         }, follow_redirects=True)
         import uuid
         unique_id = uuid.uuid4().hex[:6]
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '4hour',
             'sample_date': date.today().isoformat(),
@@ -122,7 +122,7 @@ class TestSampleRegistrationExtended:
         }, follow_redirects=True)
         import uuid
         unique_id = uuid.uuid4().hex[:6]
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'composite',
             'sample_date': date.today().isoformat(),
@@ -138,7 +138,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'Routine',
             'sample_date': date.today().isoformat()
@@ -151,7 +151,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'BN-Geo',
             'sample_type': 'Exploration',
             'sample_date': date.today().isoformat()
@@ -164,7 +164,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'Process',
             'sample_date': date.today().isoformat()
@@ -177,7 +177,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Internal',
             'sample_date': date.today().isoformat()
@@ -192,7 +192,7 @@ class TestSampleRegistrationExtended:
         }, follow_redirects=True)
         import uuid
         unique_id = uuid.uuid4().hex[:6]
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': date.today().isoformat(),
@@ -208,7 +208,7 @@ class TestSampleRegistrationExtended:
         }, follow_redirects=True)
         import uuid
         unique_id = uuid.uuid4().hex[:6]
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Test',
             'sample_date': date.today().isoformat(),
@@ -222,7 +222,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat(),
@@ -238,7 +238,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_prep_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat(),
@@ -253,7 +253,7 @@ class TestSampleRegistrationExtended:
             'username': 'index_chemist_ext',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'sample_date': date.today().isoformat()

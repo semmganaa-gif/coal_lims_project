@@ -202,7 +202,7 @@ class TestEquipmentCommands:
                 manufacturer='Test Manufacturer',
                 model='TM-100',
                 location='Lab A',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()

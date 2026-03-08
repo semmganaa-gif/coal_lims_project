@@ -45,7 +45,7 @@ class TestIndexPage:
 
     def test_index_not_authenticated(self, client):
         """Нэвтрээгүй хэрэглэгч"""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [302, 401]
 
     def test_index_authenticated(self, client, app, prep_user):
@@ -55,7 +55,7 @@ class TestIndexPage:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_route(self, client, app, prep_user):
@@ -79,7 +79,7 @@ class TestSampleRegistration:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -93,7 +93,7 @@ class TestSampleRegistration:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Routine',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -107,7 +107,7 @@ class TestSampleRegistration:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_code': 'MG-Test',
@@ -122,7 +122,7 @@ class TestSampleRegistration:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -144,7 +144,7 @@ class TestSampleRegistration:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Routine',
             'received_date': datetime.now().strftime('%Y-%m-%d')

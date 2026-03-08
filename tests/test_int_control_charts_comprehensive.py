@@ -22,7 +22,7 @@ def app():
         # Create admin user
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
 
@@ -55,8 +55,9 @@ def create_qc_data(app):
         user = User.query.filter_by(username='admin').first()
 
         # Create CM standard
+        # Note: sample_code is uppercased, so CM_Batch1 -> CM_BATCH1
         cm_std = ControlStandard(
-            name='CM_Batch1',
+            name='CM_BATCH1',
             is_active=True,
             targets=json.dumps({
                 'TS': {'target': 10.0, 'tolerance': 0.5},
@@ -66,8 +67,10 @@ def create_qc_data(app):
         db.session.add(cm_std)
 
         # Create GBW standard
+        # Note: sample_code is uppercased by model validation,
+        # so GBW11135a -> GBW11135A. Standard name must match.
         gbw_std = GbwStandard(
-            name='GBW11135a',
+            name='GBW11135A',
             is_active=True,
             targets=json.dumps({
                 'TS': {'target': 8.5, 'tolerance': 0.3},
@@ -80,7 +83,7 @@ def create_qc_data(app):
         # Create CM samples
         for i in range(5):
             sample = Sample(
-                sample_code=f'CM_Batch1_2024120{i}A',
+                sample_code=f'CM_BATCH1_2024120{i}A',
                 user_id=user.id,
                 client_name='LAB',
                 sample_type='CM'
@@ -102,7 +105,7 @@ def create_qc_data(app):
         # Create GBW samples
         for i in range(5):
             sample = Sample(
-                sample_code=f'GBW11135a_2024120{i}A',
+                sample_code=f'GBW11135A_2024120{i}A',
                 user_id=user.id,
                 client_name='LAB',
                 sample_type='GBW'
@@ -137,11 +140,11 @@ class TestControlChartsHelpers:
     def test_extract_standard_name_cm(self, app):
         """Extract CM standard name"""
         with app.app_context():
-            create_qc_data(app)  # Create CM_Batch1 standard first
+            create_qc_data(app)  # Create CM_BATCH1 standard first
             from app.routes.quality.control_charts import _extract_standard_name
-            result = _extract_standard_name('CM_Batch1_20241213AQ4')
-            # Returns active CM standard name or 'CM' if none
-            assert result in ['CM_Batch1', 'CM']
+            result = _extract_standard_name('CM_BATCH1_20241213AQ4')
+            # Returns active CM standard name or 'CM'
+            assert result in ['CM_BATCH1', 'CM']
 
     def test_extract_standard_name_simple(self, app):
         """Extract simple standard name"""
@@ -204,7 +207,7 @@ class TestControlChartsHelpers:
         with app.app_context():
             create_qc_data(app)
             from app.routes.quality.control_charts import _get_target_and_tolerance
-            sample = Sample.query.filter(Sample.sample_code.like('CM_Batch1%')).first()
+            sample = Sample.query.filter(Sample.sample_code.like('CM_BATCH1%')).first()
             target, ucl, lcl, sd = _get_target_and_tolerance(sample, 'TS')
             assert target == 10.0
             assert sd == 0.5
@@ -214,7 +217,7 @@ class TestControlChartsHelpers:
         with app.app_context():
             create_qc_data(app)
             from app.routes.quality.control_charts import _get_target_and_tolerance
-            sample = Sample.query.filter(Sample.sample_code.like('GBW11135a%')).first()
+            sample = Sample.query.filter(Sample.sample_code.like('GBW11135A%')).first()
             target, ucl, lcl, sd = _get_target_and_tolerance(sample, 'TS')
             assert target == 8.5
             assert sd == 0.3
@@ -241,7 +244,7 @@ class TestControlChartsHelpers:
         with app.app_context():
             create_qc_data(app)
             from app.routes.quality.control_charts import _get_target_and_tolerance
-            sample = Sample.query.filter(Sample.sample_code.like('CM_Batch1%')).first()
+            sample = Sample.query.filter(Sample.sample_code.like('CM_BATCH1%')).first()
             target, ucl, lcl, sd = _get_target_and_tolerance(sample, 'NONEXISTENT')
             assert target is None
 

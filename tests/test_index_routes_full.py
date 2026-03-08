@@ -107,7 +107,7 @@ class TestIndexRoute:
 
     def test_index_get(self, client, auth_user):
         """Test GET index page."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
     def test_index_alternative_url(self, client, auth_user):
@@ -117,13 +117,13 @@ class TestIndexRoute:
 
     def test_index_requires_login(self, client):
         """Test index requires authentication."""
-        response = client.get('/')
+        response = client.get('/coal')
         # Should redirect to login
         assert response.status_code in [302, 200]
 
     def test_index_with_active_tab(self, client, auth_user):
         """Test index with active_tab parameter."""
-        response = client.get('/', query_string={'active_tab': 'add-pane'})
+        response = client.get('/coal', query_string={'active_tab': 'add-pane'})
         assert response.status_code == 200
 
 
@@ -198,18 +198,18 @@ class TestSampleRegistration:
             from app.models import User
             # Create a chemist user (not prep/admin)
             user = User(username='chemist_test', role='chemist')
-            user.set_password('Test1234!')
+            user.set_password('TestPass1234!')
             db.session.add(user)
             db.session.commit()
 
         # Login as chemist
         client.post('/login', data={
             'username': 'chemist_test',
-            'password': 'Test1234!'
+            'password': 'TestPass1234!'
         })
 
         # Try to register sample
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat()
@@ -220,7 +220,7 @@ class TestSampleRegistration:
 
     def test_registration_chpp_multi(self, client, auth_user):
         """Test CHPP multi-sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -238,7 +238,7 @@ class TestWTLRegistration:
 
     def test_wtl_without_lab_number(self, client, auth_user):
         """Test WTL registration without lab number."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': date.today().isoformat(),
@@ -254,7 +254,7 @@ class TestLABRegistration:
 
     def test_lab_cm_registration(self, client, auth_user):
         """Test LAB CM sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_date': date.today().isoformat(),
@@ -265,7 +265,7 @@ class TestLABRegistration:
 
     def test_lab_gbw_registration(self, client, auth_user):
         """Test LAB GBW sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_date': date.today().isoformat(),
@@ -276,7 +276,7 @@ class TestLABRegistration:
 
     def test_lab_test_registration(self, client, auth_user):
         """Test LAB Test sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_date': date.today().isoformat(),
@@ -291,7 +291,7 @@ class TestFormValidation:
 
     def test_form_client_choices(self, client, auth_user):
         """Test form has correct client choices."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
         # Check that the response contains client options or form
         html = response.data.decode('utf-8')
@@ -299,7 +299,7 @@ class TestFormValidation:
 
     def test_form_errors_displayed(self, client, auth_user):
         """Test form errors are displayed."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             # Missing required fields
         }, follow_redirects=True)
         assert response.status_code == 200
@@ -310,7 +310,7 @@ class TestWeightValidation:
 
     def test_weight_too_small(self, client, auth_user):
         """Test weight below minimum."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -324,7 +324,7 @@ class TestWeightValidation:
 
     def test_weight_too_large(self, client, auth_user):
         """Test weight above maximum."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -338,7 +338,7 @@ class TestWeightValidation:
 
     def test_weight_invalid_format(self, client, auth_user):
         """Test weight with invalid format."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': date.today().isoformat(),
@@ -378,17 +378,17 @@ class TestTemplateVariables:
 
     def test_sample_type_map(self, client, auth_user):
         """Test sample_type_map is passed to template."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
     def test_unit_abbreviations(self, client, auth_user):
         """Test unit_abbreviations is passed to template."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
     def test_all_12h_samples(self, client, auth_user):
         """Test ALL_12H_SAMPLES is passed to template."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
 
@@ -399,7 +399,7 @@ class TestErrorHandling:
         """Test database error is handled gracefully."""
         with patch('app.routes.main.index.db.session.commit') as mock_commit:
             mock_commit.side_effect = Exception('Database error')
-            response = client.post('/', data={
+            response = client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',
                 'sample_date': date.today().isoformat(),

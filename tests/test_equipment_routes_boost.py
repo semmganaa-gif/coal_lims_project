@@ -39,7 +39,7 @@ def test_equipment(app, db):
             category='balance',
             model='Model X',
             serial_number='SN123',
-            status='active',
+            status='normal',
             calibration_cycle_days=365,
             calibration_date=now_local().date()
         )

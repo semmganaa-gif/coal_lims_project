@@ -302,7 +302,7 @@ class TestEquipmentRoutesCoverage:
                 equipment = Equipment(
                     name='Detail Test Equipment',
                     equipment_type='balance',
-                    status='active'
+                    status='normal'
                 )
                 db.session.add(equipment)
                 db.session.commit()
@@ -323,7 +323,7 @@ class TestEquipmentRoutesCoverage:
                 equipment = Equipment(
                     name='Edit Test Equipment',
                     equipment_type='balance',
-                    status='active'
+                    status='normal'
                 )
                 db.session.add(equipment)
                 db.session.commit()
@@ -343,7 +343,7 @@ class TestEquipmentRoutesCoverage:
                 equipment = Equipment(
                     name='Calibration Test Equipment',
                     equipment_type='balance',
-                    status='active'
+                    status='normal'
                 )
                 db.session.add(equipment)
                 db.session.commit()
@@ -369,7 +369,7 @@ class TestEquipmentRoutesCoverage:
                 equipment = Equipment(
                     name='Maintenance Test Equipment',
                     equipment_type='balance',
-                    status='active'
+                    status='normal'
                 )
                 db.session.add(equipment)
                 db.session.commit()

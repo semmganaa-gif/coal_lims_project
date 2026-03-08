@@ -44,7 +44,7 @@ class TestLogAudit:
             user = User.query.filter_by(username='admin').first()
             if not user:
                 user = User(username='admin', role='admin')
-                user.set_password('testpass')
+                user.set_password('TestPass123')
                 db.session.add(user)
                 db.session.commit()
 

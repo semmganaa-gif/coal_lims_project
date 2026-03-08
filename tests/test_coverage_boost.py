@@ -102,7 +102,7 @@ class TestSamplesAPI:
                 sample_code='STATUS_001',
                 sample_type='coal',
                 client_name='CHPP',
-                status='received',
+                status='new',
                 received_date=datetime.now()
             )
             db.session.add(sample)
@@ -350,7 +350,7 @@ class TestMassAPI:
                     sample_code=f'MASS_{i:03d}',
                     sample_type='coal',
                     client_name='CHPP',
-                    status='received',
+                    status='new',
                     received_date=datetime.now()
                 )
                 db.session.add(sample)

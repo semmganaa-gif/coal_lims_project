@@ -29,6 +29,13 @@ class TestIndexHelperFunctions:
         from app import db
 
         with app.app_context():
+            # Clean up existing settings first to avoid UniqueConstraint
+            SystemSetting.query.filter(
+                SystemSetting.category == 'email',
+                SystemSetting.key.in_(['report_recipients_to', 'report_recipients_cc'])
+            ).delete(synchronize_session=False)
+            db.session.commit()
+
             # Add TO setting
             to_setting = SystemSetting(
                 category='email',
@@ -96,17 +103,17 @@ class TestIndexRoutes:
 
     def test_index_get(self, app, auth_admin):
         """Test index page GET."""
-        response = auth_admin.get('/')
+        response = auth_admin.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_get_with_active_tab(self, app, auth_admin):
         """Test index with active tab parameter."""
-        response = auth_admin.get('/?active_tab=add-pane')
+        response = auth_admin.get('/coal?active_tab=add-pane')
         assert response.status_code in [200, 302]
 
     def test_index_post_admin_role(self, app, auth_admin):
         """Admin user can register samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_condition': 'good',
@@ -121,7 +128,7 @@ class TestIndexMultiSampleRegistration:
 
     def test_chpp_2h_registration(self, app, auth_admin):
         """Register CHPP 2h samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_001', 'SC_2H_002'],
@@ -135,7 +142,7 @@ class TestIndexMultiSampleRegistration:
 
     def test_chpp_4h_registration(self, app, auth_admin):
         """Register CHPP 4h samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_4H_001'],
@@ -152,7 +159,7 @@ class TestWTLRegistration:
 
     def test_wtl_registration(self, app, auth_admin):
         """Register WTL samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'lab_number': 'WTL001',
@@ -164,7 +171,7 @@ class TestWTLRegistration:
 
     def test_wtl_size_registration(self, app, auth_admin):
         """Register Size samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Size',
             'lab_number': 'SIZE001',
@@ -176,7 +183,7 @@ class TestWTLRegistration:
 
     def test_wtl_fl_registration(self, app, auth_admin):
         """Register FL samples."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'FL',
             'lab_number': 'FL001',
@@ -192,7 +199,7 @@ class TestLABRegistration:
 
     def test_lab_cm_registration(self, app, auth_admin):
         """Register LAB CM sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_condition': 'good',
@@ -203,7 +210,7 @@ class TestLABRegistration:
 
     def test_lab_gbw_registration(self, app, auth_admin):
         """Register LAB GBW sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_condition': 'good',
@@ -214,7 +221,7 @@ class TestLABRegistration:
 
     def test_lab_test_registration(self, app, auth_admin):
         """Register LAB Test sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_condition': 'good',
@@ -229,7 +236,7 @@ class TestGenericRegistration:
 
     def test_uhg_geo_registration(self, app, auth_admin):
         """Register UHG-Geo sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'coal',
             'sample_code': 'GEO_001',
@@ -241,7 +248,7 @@ class TestGenericRegistration:
 
     def test_bn_geo_registration(self, app, auth_admin):
         """Register BN-Geo sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'BN-Geo',
             'sample_type': 'coal',
             'sample_code': 'BN_001',
@@ -253,7 +260,7 @@ class TestGenericRegistration:
 
     def test_qc_registration(self, app, auth_admin):
         """Register QC sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'coal',
             'sample_code': 'QC_001',
@@ -265,7 +272,7 @@ class TestGenericRegistration:
 
     def test_proc_registration(self, app, auth_admin):
         """Register Proc sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'coal',
             'sample_code': 'PROC_001',

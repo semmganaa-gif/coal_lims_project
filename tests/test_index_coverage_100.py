@@ -26,7 +26,7 @@ class TestSampleRegistrationRoleCheck:
         from app.models import Sample
         initial_count = Sample.query.count()
 
-        response = auth_user.post('/', data={
+        response = auth_user.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -44,7 +44,7 @@ class TestMultiSampleRegistration:
     def test_chpp_2h_sample_with_weight(self, auth_admin, db):
         """CHPP 2H дээж жинтэй бүртгэх"""
         ts = datetime.now().timestamp()
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -59,7 +59,7 @@ class TestMultiSampleRegistration:
 
     def test_chpp_weight_too_small(self, auth_admin, db):
         """Жин хэт бага үед алдаа"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -74,7 +74,7 @@ class TestMultiSampleRegistration:
 
     def test_chpp_weight_too_large(self, auth_admin, db):
         """Жин хэт том үед алдаа"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -89,7 +89,7 @@ class TestMultiSampleRegistration:
 
     def test_chpp_invalid_weight_format(self, auth_admin, db):
         """Жин буруу форматтай үед"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -104,7 +104,7 @@ class TestMultiSampleRegistration:
 
     def test_chpp_missing_weight(self, auth_admin, db):
         """Жин оруулаагүй үед"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -123,7 +123,7 @@ class TestWTLSampleRegistration:
 
     def test_wtl_sample_registration(self, auth_admin, db):
         """WTL дээж бүртгэх"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -136,7 +136,7 @@ class TestWTLSampleRegistration:
 
     def test_wtl_size_sample(self, auth_admin, db):
         """WTL Size дээж"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Size',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -149,7 +149,7 @@ class TestWTLSampleRegistration:
 
     def test_wtl_fl_sample(self, auth_admin, db):
         """WTL FL дээж"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'FL',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -162,7 +162,7 @@ class TestWTLSampleRegistration:
 
     def test_wtl_missing_lab_number(self, auth_admin, db):
         """WTL лаб дугааргүй үед алдаа"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -179,7 +179,7 @@ class TestLABSampleRegistration:
 
     def test_lab_cm_sample(self, auth_admin, db):
         """LAB CM стандарт дээж"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -191,7 +191,7 @@ class TestLABSampleRegistration:
 
     def test_lab_gbw_sample(self, auth_admin, db):
         """LAB GBW стандарт дээж"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -203,7 +203,7 @@ class TestLABSampleRegistration:
 
     def test_lab_test_sample(self, auth_admin, db):
         """LAB Test дээж"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -215,7 +215,7 @@ class TestLABSampleRegistration:
 
     def test_lab_unknown_sample_type(self, auth_admin, db):
         """LAB тодорхойгүй төрөл"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Unknown',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -232,7 +232,7 @@ class TestWTLManualSampleCode:
     def test_wtl_mg_sample(self, auth_admin, db):
         """WTL MG дээж - гар аргаар"""
         ts = datetime.now().timestamp()
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -246,7 +246,7 @@ class TestWTLManualSampleCode:
     def test_wtl_test_sample(self, auth_admin, db):
         """WTL Test дээж - гар аргаар"""
         ts = datetime.now().timestamp()
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Test',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -259,7 +259,7 @@ class TestWTLManualSampleCode:
 
     def test_wtl_mg_missing_sample_code(self, auth_admin, db):
         """WTL MG sample code байхгүй үед"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -276,7 +276,7 @@ class TestIncompleteForm:
 
     def test_incomplete_form_submission(self, auth_admin, db):
         """Дутуу форм submit"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': '',
             'sample_type': '',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -360,7 +360,7 @@ class TestCommitFailure:
             db.session.commit()
 
             # Try to create duplicate
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -380,7 +380,7 @@ class TestExceptionInLoop:
     def test_exception_during_registration(self, auth_admin, db):
         """Бүртгэлийн үед exception"""
         with patch('app.routes.main.index.assign_analyses_to_sample', side_effect=Exception("DB Error")):
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -400,7 +400,7 @@ class TestMultiGenSamples:
     def test_multi_gen_qc_sample(self, auth_admin, db):
         """Multi gen QC дээж"""
         ts = datetime.now().timestamp()
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'QC',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -422,7 +422,7 @@ class TestCOMSamples:
     def test_com_sample_registration(self, auth_admin, db):
         """COM дээж бүртгэх"""
         ts = datetime.now().timestamp()
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'COM',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -441,7 +441,7 @@ class TestEmptySampleCodes:
 
     def test_empty_sample_code_in_list(self, auth_admin, db):
         """Хоосон sample code"""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2 hourly',
             'sample_date': datetime.now().strftime('%Y-%m-%d'),

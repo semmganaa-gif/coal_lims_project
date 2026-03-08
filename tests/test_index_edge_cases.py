@@ -15,7 +15,7 @@ class TestWeightValidation:
 
     def test_weight_too_small(self, client, auth_admin, app, db):
         """Test weight below MIN_SAMPLE_WEIGHT."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -31,7 +31,7 @@ class TestWeightValidation:
 
     def test_weight_too_large(self, client, auth_admin, app, db):
         """Test weight above MAX_SAMPLE_WEIGHT."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -46,7 +46,7 @@ class TestWeightValidation:
 
     def test_weight_invalid_format(self, client, auth_admin, app, db):
         """Test invalid weight format (not a number)."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -61,7 +61,7 @@ class TestWeightValidation:
 
     def test_weight_empty(self, client, auth_admin, app, db):
         """Test empty weight for required weight sample."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -76,7 +76,7 @@ class TestWeightValidation:
 
     def test_weight_negative(self, client, auth_admin, app, db):
         """Test negative weight."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -91,7 +91,7 @@ class TestWeightValidation:
 
     def test_weight_zero(self, client, auth_admin, app, db):
         """Test zero weight."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -111,7 +111,7 @@ class TestDuplicateSample:
     def test_duplicate_sample_code(self, client, auth_admin, app, db):
         """Test duplicate sample code handling."""
         # First registration
-        response1 = client.post('/', data={
+        response1 = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -124,7 +124,7 @@ class TestDuplicateSample:
         }, follow_redirects=True)
 
         # Second registration with same code
-        response2 = client.post('/', data={
+        response2 = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -143,7 +143,7 @@ class TestWTLSpecialCases:
 
     def test_wtl_no_lab_number(self, client, auth_admin, app, db):
         """Test WTL registration without lab number."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'sample_date': date.today().isoformat(),
@@ -157,7 +157,7 @@ class TestWTLSpecialCases:
 
     def test_wtl_size_registration(self, client, auth_admin, app, db):
         """Test WTL Size sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Size',
             'sample_date': date.today().isoformat(),
@@ -170,7 +170,7 @@ class TestWTLSpecialCases:
 
     def test_wtl_fl_registration(self, client, auth_admin, app, db):
         """Test WTL FL sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'FL',
             'sample_date': date.today().isoformat(),
@@ -183,7 +183,7 @@ class TestWTLSpecialCases:
 
     def test_wtl_mg_no_sample_code(self, client, auth_admin, app, db):
         """Test WTL MG without sample code."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_date': date.today().isoformat(),
@@ -196,7 +196,7 @@ class TestWTLSpecialCases:
 
     def test_wtl_test_no_sample_code(self, client, auth_admin, app, db):
         """Test WTL Test without sample code."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Test',
             'sample_date': date.today().isoformat(),
@@ -225,7 +225,7 @@ class TestLABSpecialCases:
                 db.session.add(cm)
                 db.session.commit()
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_date': date.today().isoformat(),
@@ -237,7 +237,7 @@ class TestLABSpecialCases:
 
     def test_lab_gbw_with_active_standard(self, client, auth_admin, app, db):
         """Test LAB GBW with active GBW standard (route handles no standard case)."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_date': date.today().isoformat(),
@@ -249,7 +249,7 @@ class TestLABSpecialCases:
 
     def test_lab_unknown_type(self, client, auth_admin, app, db):
         """Test LAB with unknown sample type."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Unknown',
             'sample_date': date.today().isoformat(),
@@ -265,7 +265,7 @@ class TestCHPPSpecialCases:
 
     def test_chpp_com_registration(self, client, auth_admin, app, db):
         """Test CHPP COM sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'COM',
             'sample_date': date.today().isoformat(),
@@ -280,7 +280,7 @@ class TestCHPPSpecialCases:
 
     def test_chpp_multiple_codes(self, client, auth_admin, app, db):
         """Test CHPP with multiple sample codes."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -295,7 +295,7 @@ class TestCHPPSpecialCases:
 
     def test_chpp_empty_code_in_list(self, client, auth_admin, app, db):
         """Test CHPP with empty code in list."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -314,7 +314,7 @@ class TestQCProcSpecialCases:
 
     def test_qc_multi_gen_with_location(self, client, auth_admin, app, db):
         """Test QC multi_gen with location and product."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Gen',
             'sample_date': date.today().isoformat(),
@@ -331,7 +331,7 @@ class TestQCProcSpecialCases:
 
     def test_proc_multi_gen(self, client, auth_admin, app, db):
         """Test Proc multi_gen registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'Gen',
             'sample_date': date.today().isoformat(),
@@ -350,7 +350,7 @@ class TestUHGBNSpecialCases:
 
     def test_uhg_geo_registration(self, client, auth_admin, app, db):
         """Test UHG-Geo sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'Core',
             'sample_date': date.today().isoformat(),
@@ -364,7 +364,7 @@ class TestUHGBNSpecialCases:
 
     def test_bn_geo_registration(self, client, auth_admin, app, db):
         """Test BN-Geo sample registration."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'BN-Geo',
             'sample_type': 'Core',
             'sample_date': date.today().isoformat(),
@@ -382,7 +382,7 @@ class TestFormIncomplete:
 
     def test_no_client_name(self, client, auth_admin):
         """Test submission without client name."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'sample_type': '2H',
             'sample_date': date.today().isoformat()
         }, follow_redirects=True)
@@ -390,7 +390,7 @@ class TestFormIncomplete:
 
     def test_no_sample_date(self, client, auth_admin):
         """Test submission without sample date."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H'
         }, follow_redirects=True)
@@ -398,7 +398,7 @@ class TestFormIncomplete:
 
     def test_no_list_type_no_special_handling(self, client, auth_admin):
         """Test submission without list_type and no special client."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -424,7 +424,7 @@ class TestDatabaseErrors:
     def test_database_commit_failure(self, client, auth_admin, app, db):
         """Test handling of database commit failure."""
         with patch('app.utils.database.safe_commit', return_value=False):
-            response = client.post('/', data={
+            response = client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2H',
                 'sample_date': date.today().isoformat(),
@@ -496,7 +496,7 @@ class TestRetentionPeriod:
 
     def test_default_retention_period(self, client, auth_admin, app, db):
         """Test default retention period."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -511,7 +511,7 @@ class TestRetentionPeriod:
 
     def test_custom_retention_period(self, client, auth_admin, app, db):
         """Test custom retention period."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -532,7 +532,7 @@ class TestSampleCondition:
         """Test various sample conditions."""
         conditions = ['normal', 'wet', 'dry', 'damaged']
         for i, condition in enumerate(conditions):
-            response = client.post('/', data={
+            response = client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2H',
                 'sample_date': date.today().isoformat(),
@@ -551,7 +551,7 @@ class TestReturnSample:
 
     def test_return_sample_true(self, client, auth_admin, app, db):
         """Test return sample flag true."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),
@@ -566,7 +566,7 @@ class TestReturnSample:
 
     def test_return_sample_false(self, client, auth_admin, app, db):
         """Test return sample flag false."""
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_date': date.today().isoformat(),

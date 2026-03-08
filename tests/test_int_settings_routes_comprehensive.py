@@ -489,7 +489,7 @@ class TestAvgWithTolerance:
 
     def test_avg_tolerance_function(self, app):
         """Test _avg_with_tolerance function"""
-        from app.routes.settings_routes import _avg_with_tolerance
+        from app.routes.settings.routes import _avg_with_tolerance
 
         # Valid pair 1-2
         avg, pair = _avg_with_tolerance(1.0, 1.0001, None)
@@ -509,7 +509,7 @@ class TestAvgWithTolerance:
 
     def test_natural_sort_key(self, app):
         """Test _natural_sort_key function"""
-        from app.routes.settings_routes import _natural_sort_key
+        from app.routes.settings.routes import _natural_sort_key
 
         assert _natural_sort_key("PY-1") < _natural_sort_key("PY-10")
         assert _natural_sort_key("PY-2") < _natural_sort_key("PY-10")

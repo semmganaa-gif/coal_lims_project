@@ -133,7 +133,7 @@ class TestReportHelpers:
         """_year_arg with valid year"""
         with app.app_context():
             with app.test_request_context('/reports/consumption?year=2025'):
-                from app.routes.report_routes import _year_arg
+                from app.routes.reports.routes import _year_arg
                 try:
                     result = _year_arg()
                     assert result == 2025
@@ -143,7 +143,7 @@ class TestReportHelpers:
     def test_pick_date_col(self, app):
         """_pick_date_col function"""
         with app.app_context():
-            from app.routes.report_routes import _pick_date_col
+            from app.routes.reports.routes import _pick_date_col
             try:
                 col = _pick_date_col()
                 assert col is not None

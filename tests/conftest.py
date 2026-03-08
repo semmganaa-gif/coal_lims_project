@@ -126,7 +126,8 @@ def test_sample(app, test_user):
         _db.session.commit()
 
         # Re-query to get attached object
-        sample = Sample.query.filter_by(sample_code=unique_code).first()
+        # Note: sample_code is uppercased by model validation
+        sample = Sample.query.filter_by(sample_code=unique_code.upper()).first()
         yield sample
 
         # Cleanup

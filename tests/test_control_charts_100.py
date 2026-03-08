@@ -201,21 +201,20 @@ class TestControlChartHelpers:
     """Helper functions тест"""
 
     def test_convert_to_dry_basis(self, app):
-        """convert_to_dry_basis функц"""
+        """_convert_to_dry_basis функц"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 5.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 5.0)
             # Should convert based on Mad value
             assert result is not None
 
-    def test_db_to_standard_code_mapping(self, app):
-        """DB_TO_STANDARD_CODE mapping"""
+    def test_ad_analyses_set(self, app):
+        """AD_ANALYSES set (replaces DB_TO_STANDARD_CODE)"""
         with app.app_context():
-            from app.routes.quality.control_charts import DB_TO_STANDARD_CODE
-            assert isinstance(DB_TO_STANDARD_CODE, dict)
-            # Check some mappings
-            if 'Aad' in DB_TO_STANDARD_CODE:
-                assert DB_TO_STANDARD_CODE['Aad'] == 'Ad'
+            from app.routes.quality.control_charts import AD_ANALYSES
+            assert isinstance(AD_ANALYSES, set)
+            # Check that Aad is in the set
+            assert 'Aad' in AD_ANALYSES
 
 
 class TestWestgardIntegration:
@@ -254,13 +253,14 @@ class TestDryBasisConversion:
     def test_dry_conversion_function(self, app):
         """Dry basis хөрвүүлэлт"""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 5.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 5.0)
             expected = 10.0 * 100 / (100 - 5.0)
             assert abs(result - expected) < 0.01
 
-    def test_dry_basis_mapping(self, app):
-        """DRY_BASIS_MAPPING шалгах"""
+    def test_ad_analyses_set(self, app):
+        """AD_ANALYSES set шалгах (replaces DRY_BASIS_MAPPING)"""
         with app.app_context():
-            from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-            assert isinstance(DRY_BASIS_MAPPING, dict)
+            from app.routes.quality.control_charts import AD_ANALYSES
+            assert isinstance(AD_ANALYSES, set)
+            assert len(AD_ANALYSES) > 0

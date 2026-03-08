@@ -197,7 +197,7 @@ def register_commands(app):
                     initial_price=initial_price,
                     residual_price=residual_price,
                     remark=remark or None,
-                    status="active",
+                    status="normal",
                 )
 
                 db.session.add(eq)
@@ -278,7 +278,7 @@ def register_commands(app):
                 quantity=quantity,
                 commissioned_info=commissioned_info or None,
                 remark=remark,
-                status="active",
+                status="normal",
             )
 
             db.session.add(eq)

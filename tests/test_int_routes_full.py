@@ -71,7 +71,7 @@ class TestIndexRoutes:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_post_chpp(self, client, app, full_test_user):
@@ -81,7 +81,7 @@ class TestIndexRoutes:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -95,7 +95,7 @@ class TestIndexRoutes:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Routine',
             'received_date': datetime.now().strftime('%Y-%m-%d')

@@ -15,12 +15,12 @@ class TestIndexRoutesCoverage:
 
     def test_index_get_with_list_pane(self, app, auth_admin):
         """Test index with list-pane active tab."""
-        response = auth_admin.get('/?active_tab=list-pane')
+        response = auth_admin.get('/coal?active_tab=list-pane')
         assert response.status_code in [200, 302]
 
     def test_index_unauthorized_role(self, app, auth_user):
         """Test index POST with unauthorized role."""
-        response = auth_user.post('/', data={
+        response = auth_user.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_condition': 'good',
@@ -32,7 +32,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_2h_multi_sample_with_weights(self, app, auth_admin):
         """Test CHPP 2h registration with multiple samples and weights."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_T001', 'SC_2H_T002', 'SC_2H_T003'],
@@ -46,7 +46,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_2h_with_missing_weight(self, app, auth_admin):
         """Test CHPP 2h with missing weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_NO_WT'],
@@ -60,7 +60,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_2h_with_invalid_weight(self, app, auth_admin):
         """Test CHPP 2h with invalid weight value."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_INV_WT'],
@@ -74,7 +74,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_2h_with_low_weight(self, app, auth_admin):
         """Test CHPP 2h with too low weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_2H_LW'],
@@ -88,7 +88,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_4h_registration(self, app, auth_admin):
         """Test CHPP 4h registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_4H_001'],
@@ -101,7 +101,7 @@ class TestIndexRoutesCoverage:
 
     def test_chpp_com_registration(self, app, auth_admin):
         """Test CHPP COM registration with weight."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'SC',
             'sample_codes': ['SC_COM_001'],
@@ -115,7 +115,7 @@ class TestIndexRoutesCoverage:
 
     def test_multi_gen_registration(self, app, auth_admin):
         """Test multi_gen registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'coal',
             'sample_codes': ['QC_GEN_001'],
@@ -131,7 +131,7 @@ class TestIndexRoutesCoverage:
 
     def test_wtl_registration_no_lab_number(self, app, auth_admin):
         """Test WTL registration without lab number."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'WTL',
             'lab_number': '',  # Missing
@@ -143,7 +143,7 @@ class TestIndexRoutesCoverage:
 
     def test_wtl_size_registration(self, app, auth_admin):
         """Test WTL Size registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Size',
             'lab_number': 'SZ_001',
@@ -155,7 +155,7 @@ class TestIndexRoutesCoverage:
 
     def test_wtl_fl_registration(self, app, auth_admin):
         """Test WTL FL registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'FL',
             'lab_number': 'FL_001',
@@ -167,7 +167,7 @@ class TestIndexRoutesCoverage:
 
     def test_wtl_mg_registration(self, app, auth_admin):
         """Test WTL MG registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_code': 'MG_001',
@@ -179,7 +179,7 @@ class TestIndexRoutesCoverage:
 
     def test_wtl_mg_no_sample_code(self, app, auth_admin):
         """Test WTL MG without sample code."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_code': '',  # Missing
@@ -191,7 +191,7 @@ class TestIndexRoutesCoverage:
 
     def test_lab_cm_registration(self, app, auth_admin):
         """Test LAB CM registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'CM',
             'sample_condition': 'good',
@@ -202,7 +202,7 @@ class TestIndexRoutesCoverage:
 
     def test_lab_gbw_registration(self, app, auth_admin):
         """Test LAB GBW registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'GBW',
             'sample_condition': 'good',
@@ -213,7 +213,7 @@ class TestIndexRoutesCoverage:
 
     def test_lab_test_registration(self, app, auth_admin):
         """Test LAB Test registration."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Test',
             'sample_condition': 'good',

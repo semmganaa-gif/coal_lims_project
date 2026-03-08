@@ -19,7 +19,7 @@ def app():
         from app.models import User
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
 
@@ -42,7 +42,7 @@ def auth_client(app, client):
         user = User.query.filter_by(username='admin').first()
         if not user:
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
 

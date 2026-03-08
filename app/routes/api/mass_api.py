@@ -43,7 +43,7 @@ def _upsert_mass_result(sample_id, weight_g, user_id=None):
             analysis_code="m",
             final_result=weight_g,
             status="approved",
-            performed_by_id=user_id,
+            user_id=user_id,
         )
         db.session.add(ar)
     else:

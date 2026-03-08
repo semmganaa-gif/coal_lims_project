@@ -63,7 +63,7 @@ class TestEquipmentDetail:
             eq = Equipment(
                 name='Test Equipment Detail',
                 model='Model X',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()
@@ -143,12 +143,12 @@ class TestEquipmentQueries:
             # Create active equipment
             eq = Equipment(
                 name='Active Equipment',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()
 
-            active = Equipment.query.filter(Equipment.status == 'active').first()
+            active = Equipment.query.filter(Equipment.status == 'normal').first()
             assert active is not None
 
     def test_query_retired(self, app, db):
@@ -167,19 +167,19 @@ class TestEquipmentQueries:
             assert retired is not None
 
     def test_query_needs_spare(self, app, db):
-        """Test query for equipment needing spares."""
+        """Test query for equipment needing maintenance."""
         with app.app_context():
             from app.models import Equipment
 
             eq = Equipment(
                 name='Needs Spare Equipment',
-                status='needs_spare'
+                status='maintenance'
             )
             db.session.add(eq)
             db.session.commit()
 
             spares = Equipment.query.filter(
-                Equipment.status.in_(['needs_spare', 'broken'])
+                Equipment.status.in_(['maintenance', 'out_of_service'])
             ).all()
             assert len(spares) > 0
 
@@ -207,7 +207,7 @@ class TestCalibrationWarnings:
             eq = Equipment(
                 name='Calibration Due Equipment',
                 calibration_date=due_date,
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()
@@ -232,7 +232,7 @@ class TestMaintenanceLog:
             user = User.query.first()
             eq = Equipment(
                 name='Maintenance Test Equipment',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()
@@ -261,7 +261,7 @@ class TestUsageLog:
 
             eq = Equipment(
                 name='Usage Test Equipment',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()

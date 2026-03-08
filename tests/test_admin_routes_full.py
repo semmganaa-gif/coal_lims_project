@@ -26,13 +26,13 @@ class TestSeniorOrAdminRequired:
         with app.app_context():
             from app.models import User
             senior = User(username='test_senior_admin', role='senior')
-            senior.set_password('Test1234!')
+            senior.set_password('TestPass1234!')
             db.session.add(senior)
             db.session.commit()
 
         client.post('/login', data={
             'username': 'test_senior_admin',
-            'password': 'Test1234!'
+            'password': 'TestPass1234!'
         })
         response = client.get('/admin/control_standards')
         assert response.status_code in [200, 302, 403]
@@ -47,7 +47,7 @@ class TestManageUsers:
     def test_manage_users_post_new_user(self, client, auth_user, app, db):
         response = client.post('/admin/manage_users', data={
             'username': 'new_admin_user',
-            'password': 'Test1234!',
+            'password': 'TestPass1234!',
             'role': 'chemist',
             'full_name': 'Test User',
             'email': 'test@test.com'
@@ -58,13 +58,13 @@ class TestManageUsers:
         # First create user
         client.post('/admin/manage_users', data={
             'username': 'duplicate_user',
-            'password': 'Test1234!',
+            'password': 'TestPass1234!',
             'role': 'chemist'
         }, follow_redirects=True)
         # Try to create again
         response = client.post('/admin/manage_users', data={
             'username': 'duplicate_user',
-            'password': 'Test1234!',
+            'password': 'TestPass1234!',
             'role': 'chemist'
         }, follow_redirects=True)
         assert response.status_code in [200, 302, 403]
@@ -91,7 +91,7 @@ class TestDeleteUser:
         with app.app_context():
             from app.models import User
             test_user = User(username='delete_test_user', role='chemist')
-            test_user.set_password('Test1234!')
+            test_user.set_password('TestPass1234!')
             db.session.add(test_user)
             db.session.commit()
             user_id = test_user.id
@@ -148,7 +148,7 @@ class TestSeedAnalysisTypes:
 
     def test_seed_function(self, app, db):
         with app.app_context():
-            from app.routes.admin_routes import _seed_analysis_types
+            from app.routes.admin.routes import _seed_analysis_types
             # Should not raise
             _seed_analysis_types()
 

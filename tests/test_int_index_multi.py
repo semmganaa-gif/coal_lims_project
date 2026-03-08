@@ -37,51 +37,51 @@ def idx_admin(app):
 class TestMultiSample:
     def test_chpp_2h_multi(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'CHPP', 'sample_type': '2hour', 'list_type': 'chpp_2h', 'sample_codes': ['SC2025_D_1H'], 'weights': ['100.5'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'CHPP', 'sample_type': '2hour', 'list_type': 'chpp_2h', 'sample_codes': ['SC2025_D_1H'], 'weights': ['100.5'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_chpp_4h_multi(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'CHPP', 'sample_type': '4hour', 'list_type': 'chpp_4h', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'CHPP', 'sample_type': '4hour', 'list_type': 'chpp_4h', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_chpp_com_multi(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'CHPP', 'sample_type': 'composite', 'list_type': 'chpp_com', 'sample_codes': ['SC2025_D_COM'], 'weights': ['500.0'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'CHPP', 'sample_type': 'composite', 'list_type': 'chpp_com', 'sample_codes': ['SC2025_D_COM'], 'weights': ['500.0'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_weight_too_small(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'CHPP', 'sample_type': '2hour', 'list_type': 'chpp_2h', 'sample_codes': ['SC2025_TS_1H'], 'weights': ['0.0001'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'CHPP', 'sample_type': '2hour', 'list_type': 'chpp_2h', 'sample_codes': ['SC2025_TS_1H'], 'weights': ['0.0001'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
 
 class TestWTLSamples:
     def test_wtl_mg(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'WTL', 'sample_type': 'MG', 'sample_code': 'WTL-MG-001', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'WTL', 'sample_type': 'MG', 'sample_code': 'WTL-MG-001', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_wtl_test(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'WTL', 'sample_type': 'Test', 'sample_code': 'WTL-TEST-001', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'WTL', 'sample_type': 'Test', 'sample_code': 'WTL-TEST-001', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
 
 class TestQCProcGeo:
     def test_qc_multi_gen(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'QC', 'sample_type': 'Routine', 'list_type': 'multi_gen', 'sample_codes': ['QC-2025-001'], 'weights': ['250.0'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'QC', 'sample_type': 'Routine', 'list_type': 'multi_gen', 'sample_codes': ['QC-2025-001'], 'weights': ['250.0'], 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_proc_sample(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'Proc', 'sample_type': 'Test', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'Proc', 'sample_type': 'Test', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
     def test_uhg_geo(self, client, app, idx_prep):
         client.post('/login', data={'username': 'idx_prep_user', 'password': VALID_PASSWORD}, follow_redirects=True)
-        response = client.post('/', data={'client_name': 'UHG-Geo', 'sample_type': 'Core', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
+        response = client.post('/coal', data={'client_name': 'UHG-Geo', 'sample_type': 'Core', 'sample_date': datetime.now().strftime('%Y-%m-%d')})
         assert response.status_code in [200, 302, 400, 500]
 
 

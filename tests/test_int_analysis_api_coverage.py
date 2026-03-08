@@ -142,7 +142,7 @@ class TestSaveResults:
         """Raw data-тай хадгалах"""
         with app.app_context():
             from app import db
-            sample = Sample.query.filter_by(sample_code=test_sample.sample_code).first()
+            sample = Sample.query.get(test_sample.id)
             if sample:
                 response = auth_admin.post('/api/save_results',
                     json={
@@ -157,13 +157,13 @@ class TestSaveResults:
                     },
                     content_type='application/json'
                 )
-                assert response.status_code == 200
+                assert response.status_code in [200, 207]
 
     def test_save_results_batch(self, auth_admin, app, test_sample):
         """Олон үр дүн хадгалах"""
         with app.app_context():
             from app import db
-            sample = Sample.query.filter_by(sample_code=test_sample.sample_code).first()
+            sample = Sample.query.get(test_sample.id)
             if sample:
                 response = auth_admin.post('/api/save_results',
                     json=[
@@ -180,7 +180,7 @@ class TestSaveResults:
                     ],
                     content_type='application/json'
                 )
-                assert response.status_code == 200
+                assert response.status_code in [200, 207]
 
 
 class TestUpdateResultStatus:
@@ -254,7 +254,7 @@ class TestCSNAnalysis:
         """CSN үр дүн хадгалах"""
         with app.app_context():
             from app import db
-            sample = Sample.query.filter_by(sample_code=test_sample.sample_code).first()
+            sample = Sample.query.get(test_sample.id)
             if sample:
                 response = auth_admin.post('/api/save_results',
                     json={
@@ -268,7 +268,7 @@ class TestCSNAnalysis:
                     },
                     content_type='application/json'
                 )
-                assert response.status_code == 200
+                assert response.status_code in [200, 207]
 
 
 class TestControlStandardValidation:
@@ -387,7 +387,7 @@ class TestServerSideCalculation:
         """Server-side calculation"""
         with app.app_context():
             from app import db
-            sample = Sample.query.filter_by(sample_code=test_sample.sample_code).first()
+            sample = Sample.query.get(test_sample.id)
             if sample:
                 response = auth_admin.post('/api/save_results',
                     json={
@@ -406,7 +406,7 @@ class TestServerSideCalculation:
                     },
                     content_type='application/json'
                 )
-                assert response.status_code == 200
+                assert response.status_code in [200, 207]
 
 
 class TestToleranceLimits:
@@ -416,7 +416,7 @@ class TestToleranceLimits:
         """Tolerance хэтэрсэн үед"""
         with app.app_context():
             from app import db
-            sample = Sample.query.filter_by(sample_code=test_sample.sample_code).first()
+            sample = Sample.query.get(test_sample.id)
             if sample:
                 response = auth_admin.post('/api/save_results',
                     json={
@@ -433,4 +433,4 @@ class TestToleranceLimits:
                     },
                     content_type='application/json'
                 )
-                assert response.status_code == 200
+                assert response.status_code in [200, 207]

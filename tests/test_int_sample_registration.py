@@ -94,25 +94,25 @@ class TestIndexPageAccess:
 
     def test_index_requires_login(self, client):
         """Index page redirects to login"""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_page_prep_access(self, client, prep_user):
         """Prep user can access index"""
         login(client, 'prep_reg_test', 'PrepPass123')
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_page_admin_access(self, client, admin_user):
         """Admin user can access index"""
         login(client, 'admin_reg_test', 'AdminPass123')
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_page_analyst_access(self, client, analyst_user):
         """Analyst can access index"""
         login(client, 'analyst_reg_test', 'AnalystPass123')
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
 
@@ -123,7 +123,7 @@ class TestSampleRegistrationPost:
         """Register sample via POST"""
         login(client, 'prep_reg_test', 'PrepPass123')
         ts = int(datetime.now().timestamp())
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2H',
             'sample_code': f'TEST_REG_{ts}',
@@ -159,7 +159,7 @@ class TestSampleEdit:
                 client_name='CHPP',
                 sample_type='2H',
                 received_date=datetime.now(),
-                status='pending'
+                status='new'
             )
             db.session.add(sample)
             db.session.commit()
@@ -179,7 +179,7 @@ class TestSampleEdit:
                 client_name='CHPP',
                 sample_type='2H',
                 received_date=datetime.now(),
-                status='pending'
+                status='new'
             )
             db.session.add(sample)
             db.session.commit()
@@ -238,7 +238,7 @@ class TestDeleteSamples:
                 client_name='CHPP',
                 sample_type='2H',
                 received_date=datetime.now(),
-                status='pending'
+                status='new'
             )
             db.session.add(sample)
             db.session.commit()

@@ -163,23 +163,19 @@ class TestQCUtilFunctions:
         """qc_is_composite функц - type-аар"""
         with app.app_context():
             from app.utils.qc import qc_is_composite
-            from app import db
+            from unittest.mock import MagicMock
 
-            # COM sample type
-            com_sample = Sample(
-                sample_code='TEST_COM_001',
-                sample_type='com',
-                client_name='Test'
-            )
+            # COM sample type - use MagicMock to avoid DB constraints
+            com_sample = MagicMock()
+            com_sample.sample_code = 'TEST_COM_001'
+            com_sample.sample_type = 'com'
             result = qc_is_composite(com_sample, None)
             assert result == True
 
             # Composite sample type
-            comp_sample = Sample(
-                sample_code='TEST_COMP_001',
-                sample_type='composite',
-                client_name='Test'
-            )
+            comp_sample = MagicMock()
+            comp_sample.sample_code = 'TEST_COMP_001'
+            comp_sample.sample_type = 'composite'
             result2 = qc_is_composite(comp_sample, None)
             assert result2 == True
 

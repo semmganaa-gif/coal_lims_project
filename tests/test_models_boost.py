@@ -84,7 +84,7 @@ class TestAnalysisResultModel:
                 sample_id=sample.id,
                 analysis_code='TM',
                 final_result=5.5,
-                status='completed'
+                status='pending_review'
             )
             db.session.add(result)
             db.session.commit()

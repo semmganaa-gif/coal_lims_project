@@ -66,7 +66,7 @@ def workspace_sample(app, workspace_user):
             sample_code=f'WS-{unique_id}',
             client_name='CHPP',  # Use valid client name
             sample_type='CM',
-            status='registered',
+            status='new',
             received_date=datetime.now(),
             user_id=workspace_user.id
         )

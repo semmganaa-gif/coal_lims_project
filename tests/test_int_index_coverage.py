@@ -22,7 +22,7 @@ class TestIndexRegistrationPost:
                 'password': 'TestPass123'
             })
 
-            response = client.post('/', data={
+            response = client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -34,7 +34,7 @@ class TestIndexRegistrationPost:
     def test_registration_multi_samples_chpp_2h(self, auth_admin, app):
         """CHPP 2 hourly олон дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -50,7 +50,7 @@ class TestIndexRegistrationPost:
     def test_registration_invalid_weight(self, auth_admin, app):
         """Буруу жинтэй дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -66,7 +66,7 @@ class TestIndexRegistrationPost:
     def test_registration_weight_too_small(self, auth_admin, app):
         """Хэт бага жинтэй дээж"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -82,7 +82,7 @@ class TestIndexRegistrationPost:
     def test_registration_weight_too_large(self, auth_admin, app):
         """Хэт их жинтэй дээж"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -98,7 +98,7 @@ class TestIndexRegistrationPost:
     def test_registration_missing_weight(self, auth_admin, app):
         """Жин оруулаагүй дээж"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -118,7 +118,7 @@ class TestWTLRegistration:
     def test_wtl_sample_registration(self, auth_admin, app):
         """WTL төрлийн дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -132,7 +132,7 @@ class TestWTLRegistration:
     def test_wtl_size_registration(self, auth_admin, app):
         """WTL Size төрлийн дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'Size',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -146,7 +146,7 @@ class TestWTLRegistration:
     def test_wtl_fl_registration(self, auth_admin, app):
         """WTL FL төрлийн дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'FL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -160,7 +160,7 @@ class TestWTLRegistration:
     def test_wtl_missing_lab_number(self, auth_admin, app):
         """WTL lab number байхгүй үед"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -173,7 +173,7 @@ class TestWTLRegistration:
     def test_wtl_mg_registration(self, auth_admin, app):
         """WTL MG төрлийн дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -187,7 +187,7 @@ class TestWTLRegistration:
     def test_wtl_mg_missing_code(self, auth_admin, app):
         """WTL MG sample code байхгүй үед"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -204,7 +204,7 @@ class TestLABRegistration:
     def test_lab_cm_registration(self, auth_admin, app):
         """LAB CM дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'CM',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -217,7 +217,7 @@ class TestLABRegistration:
     def test_lab_gbw_registration(self, auth_admin, app):
         """LAB GBW дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'GBW',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -230,7 +230,7 @@ class TestLABRegistration:
     def test_lab_test_registration(self, auth_admin, app):
         """LAB Test дээж бүртгэх"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -354,7 +354,7 @@ class TestMultiGenRegistration:
     def test_multi_gen_qc(self, auth_admin, app):
         """QC multi_gen бүртгэл"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'QC',
                 'sample_type': 'ROM',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -372,7 +372,7 @@ class TestMultiGenRegistration:
     def test_chpp_com_registration(self, auth_admin, app):
         """CHPP COM бүртгэл"""
         with app.app_context():
-            response = auth_admin.post('/', data={
+            response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': 'COM',
                 'sample_date': datetime.now().strftime('%Y-%m-%d'),
@@ -392,13 +392,13 @@ class TestIndexPage:
     def test_index_page_admin(self, auth_admin, app):
         """Admin хэрэглэгч index хуудас харах"""
         with app.app_context():
-            response = auth_admin.get('/')
+            response = auth_admin.get('/coal')
             assert response.status_code == 200
 
     def test_index_page_chemist(self, auth_user, app):
         """Chemist хэрэглэгч index хуудас харах"""
         with app.app_context():
-            response = auth_user.get('/')
+            response = auth_user.get('/coal')
             assert response.status_code == 200
 
     def test_index_get_patterns(self, auth_admin, app):

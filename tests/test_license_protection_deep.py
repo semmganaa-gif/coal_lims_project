@@ -45,7 +45,7 @@ class TestHashFunctions:
         }
         result = _create_signature(data)
         assert result is not None
-        assert len(result) == 32
+        assert len(result) == 64
 
     def test_create_signature_empty_data(self, app):
         """Test _create_signature with empty data."""

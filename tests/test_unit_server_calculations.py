@@ -190,9 +190,9 @@ class TestCalcTotalMoistureMt:
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
         raw_data = {
-            "p1": {"m1": 100.0, "m2": 90.0}
+            "p1": {"m1": 50.0, "m2": 150.0, "m3": 140.0}
         }
-        # MT = ((m1 - m2) / m1) * 100 = ((100 - 90) / 100) * 100 = 10%
+        # MT = ((m2 - m3) / (m2 - m1)) * 100 = ((150 - 140) / (150 - 50)) * 100 = 10%
         result = calc_total_moisture_mt(raw_data)
         assert result is not None
         assert abs(result - 10.0) < 0.01
@@ -416,6 +416,8 @@ class TestCalcTrd:
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
         raw_data = {
+            "mad_used": 5.0,
+            "temp_c": 20,
             "p1": {
                 "m": 1.0,
                 "m1": 50.0,
@@ -431,6 +433,8 @@ class TestCalcTrd:
     def test_global_mad(self):
         """Global mad утга"""
         raw_data = {
+            "mad_used": 5.0,
+            "temp_c": 20,
             "mad": 5.0,
             "p1": {
                 "m": 1.0,
@@ -445,6 +449,8 @@ class TestCalcTrd:
     def test_temperature_out_of_range(self):
         """Температур хязгаараас гарсан"""
         raw_data = {
+            "mad_used": 5.0,
+            "temp_c": 40,
             "p1": {
                 "m": 1.0,
                 "m1": 50.0,

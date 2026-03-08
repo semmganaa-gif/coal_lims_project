@@ -19,7 +19,7 @@ def app():
         from app.models import User
         if not User.query.filter_by(username='admin').first():
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
 
@@ -43,7 +43,7 @@ def auth_client(app, client):
         user = User.query.filter_by(username='admin').first()
         if not user:
             user = User(username='admin', role='admin')
-            user.set_password('Admin123')
+            user.set_password('AdminPass123')
             db.session.add(user)
             db.session.commit()
 
@@ -60,7 +60,7 @@ class TestDashboardPages:
     def test_index_page(self, auth_client, app):
         """Index хуудас"""
         with app.app_context():
-            response = auth_client.get('/')
+            response = auth_client.get('/coal')
             assert response.status_code in [200, 302]
 
     def test_ahlah_dashboard(self, auth_client, app):

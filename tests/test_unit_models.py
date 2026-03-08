@@ -126,7 +126,7 @@ class TestEquipmentModel:
         with app.app_context():
             equipment = Equipment(
                 name='Test Equipment',
-                status='active'
+                status='normal'
             )
             assert equipment.name == 'Test Equipment'
 

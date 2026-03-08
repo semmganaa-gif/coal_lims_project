@@ -34,7 +34,7 @@ def bulk_samples(app):
                 sample_code=f'BLK-{uid}',
                 client_name='CHPP',
                 sample_type='2hour',
-                status='pending',
+                status='new',
                 received_date=datetime.now()
             )
             db.session.add(sample)

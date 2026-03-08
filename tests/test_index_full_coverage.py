@@ -14,17 +14,17 @@ class TestIndexRoutes:
 
     def test_index_get(self, app, auth_admin):
         """Test index GET request."""
-        response = auth_admin.get('/')
+        response = auth_admin.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_active_tab(self, app, auth_admin):
         """Test index with active_tab parameter."""
-        response = auth_admin.get('/?active_tab=add-pane')
+        response = auth_admin.get('/coal?active_tab=add-pane')
         assert response.status_code in [200, 302]
 
     def test_index_post_no_role(self, app, auth_user):
         """Test index POST without prep/admin role."""
-        response = auth_user.post('/', data={
+        response = auth_user.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'coal',
             'sample_date': date.today().isoformat()
@@ -102,7 +102,7 @@ class TestSampleRegistration:
 
     def test_register_chpp_sample(self, app, auth_admin):
         """Test registering CHPP sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'coal',
             'sample_date': date.today().isoformat(),
@@ -113,7 +113,7 @@ class TestSampleRegistration:
 
     def test_register_uhg_sample(self, app, auth_admin):
         """Test registering UHG sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'coal',
             'sample_date': date.today().isoformat()
@@ -122,7 +122,7 @@ class TestSampleRegistration:
 
     def test_register_qc_sample(self, app, auth_admin):
         """Test registering QC sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'CM',
             'sample_date': date.today().isoformat()
@@ -131,7 +131,7 @@ class TestSampleRegistration:
 
     def test_register_wtl_mg_sample(self, app, auth_admin):
         """Test registering WTL MG sample."""
-        response = auth_admin.post('/', data={
+        response = auth_admin.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_code': 'WTL_MG_TEST',

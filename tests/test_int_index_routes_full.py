@@ -58,7 +58,7 @@ class TestIndexRouteGet:
 
     def test_index_get_unauthenticated(self, client, app):
         """Index without login redirects"""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_get_prep_user(self, client, app, prep_user):
@@ -67,7 +67,7 @@ class TestIndexRouteGet:
             'username': 'index_prep_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
     def test_index_get_admin(self, client, app, admin_user):
@@ -76,7 +76,7 @@ class TestIndexRouteGet:
             'username': 'index_admin_user',
             'password': VALID_PASSWORD
         }, follow_redirects=True)
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code in [200, 302]
 
 
@@ -90,7 +90,7 @@ class TestIndexRoutePostCHPP:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -104,7 +104,7 @@ class TestIndexRoutePostCHPP:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '12hour',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -118,7 +118,7 @@ class TestIndexRoutePostCHPP:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'Composite',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -132,7 +132,7 @@ class TestIndexRoutePostCHPP:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': 'Daily',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -150,7 +150,7 @@ class TestIndexRoutePostQC:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Routine',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -164,7 +164,7 @@ class TestIndexRoutePostQC:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'QC',
             'sample_type': 'Check',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -182,7 +182,7 @@ class TestIndexRoutePostWTL:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'Coal',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -196,7 +196,7 @@ class TestIndexRoutePostWTL:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'WTL',
             'sample_type': 'MG',
             'sample_code': 'WTL-MG-001',
@@ -215,7 +215,7 @@ class TestIndexRoutePostGeo:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'UHG-Geo',
             'sample_type': 'Core',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -229,7 +229,7 @@ class TestIndexRoutePostGeo:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'BN-Geo',
             'sample_type': 'Core',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -247,7 +247,7 @@ class TestIndexRoutePostProc:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'Proc',
             'sample_type': 'Process',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -265,7 +265,7 @@ class TestIndexRoutePostLAB:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'LAB',
             'sample_type': 'Internal',
             'received_date': datetime.now().strftime('%Y-%m-%d')
@@ -283,7 +283,7 @@ class TestIndexRoutePermissions:
             'password': VALID_PASSWORD
         }, follow_redirects=True)
 
-        response = client.post('/', data={
+        response = client.post('/coal', data={
             'client_name': 'CHPP',
             'sample_type': '2hour',
             'received_date': datetime.now().strftime('%Y-%m-%d')

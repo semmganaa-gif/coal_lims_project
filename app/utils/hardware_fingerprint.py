@@ -35,7 +35,7 @@ def get_cpu_id():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except (OSError, subprocess.TimeoutExpired) as e:
+    except Exception as e:
         logger.warning(f"Failed to get CPU ID: {e}")
     return platform.processor() or "unknown"
 
@@ -53,7 +53,7 @@ def get_disk_serial():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except (OSError, subprocess.TimeoutExpired) as e:
+    except Exception as e:
         logger.warning(f"Failed to get disk serial: {e}")
     return "unknown"
 
@@ -71,7 +71,7 @@ def get_motherboard_serial():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except (OSError, subprocess.TimeoutExpired) as e:
+    except Exception as e:
         logger.warning(f"Failed to get motherboard serial: {e}")
     return "unknown"
 

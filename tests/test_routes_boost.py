@@ -759,7 +759,7 @@ class TestSampleWithResults:
                 sample_code='TEST_WITH_RESULTS_001',
                 client_name='CHPP',
                 sample_type='Test',
-                status='received'
+                status='new'
             )
             _db.session.add(sample)
             _db.session.flush()

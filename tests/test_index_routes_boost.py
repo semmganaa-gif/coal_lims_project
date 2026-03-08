@@ -27,7 +27,7 @@ class TestIndexRoutes:
 
     def test_index_page(self, client, admin_user):
         """Test index page."""
-        response = client.get('/')
+        response = client.get('/coal')
         assert response.status_code == 200
 
     def test_index_with_date_filter(self, client, admin_user):

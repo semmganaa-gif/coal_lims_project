@@ -17,18 +17,11 @@ class TestControlChartsImports:
         from app.routes.quality import control_charts
         assert control_charts is not None
 
-    def test_import_dry_basis_mapping(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert isinstance(DRY_BASIS_MAPPING, dict)
-        assert 'Ad' in DRY_BASIS_MAPPING
-        assert 'Vd' in DRY_BASIS_MAPPING
-        assert 'CV,d' in DRY_BASIS_MAPPING
-
-    def test_import_db_to_standard_code(self):
-        from app.routes.quality.control_charts import DB_TO_STANDARD_CODE
-        assert isinstance(DB_TO_STANDARD_CODE, dict)
-        assert 'Aad' in DB_TO_STANDARD_CODE
-        assert 'Vad' in DB_TO_STANDARD_CODE
+    def test_import_ad_analyses(self):
+        from app.routes.quality.control_charts import AD_ANALYSES
+        assert isinstance(AD_ANALYSES, set)
+        assert 'Aad' in AD_ANALYSES
+        assert 'Vad' in AD_ANALYSES
 
 
 # ============================================================
@@ -36,38 +29,38 @@ class TestControlChartsImports:
 # ============================================================
 
 class TestConvertToDryBasis:
-    """convert_to_dry_basis функц тест"""
+    """_convert_to_dry_basis функц тест"""
 
     def test_import_function(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
-        assert convert_to_dry_basis is not None
+        from app.routes.quality.control_charts import _convert_to_dry_basis
+        assert _convert_to_dry_basis is not None
 
     def test_zero_moisture(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
-        result = convert_to_dry_basis(10.0, 0.0)
+        from app.routes.quality.control_charts import _convert_to_dry_basis
+        result = _convert_to_dry_basis(10.0, 0.0)
         assert result == 10.0
 
     def test_normal_moisture(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
+        from app.routes.quality.control_charts import _convert_to_dry_basis
         # Formula: dry = as_received * 100 / (100 - Mad)
-        result = convert_to_dry_basis(10.0, 5.0)
+        result = _convert_to_dry_basis(10.0, 5.0)
         expected = 10.0 * 100 / (100 - 5.0)
         assert abs(result - expected) < 0.001
 
     def test_none_moisture(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
-        result = convert_to_dry_basis(10.0, None)
+        from app.routes.quality.control_charts import _convert_to_dry_basis
+        result = _convert_to_dry_basis(10.0, None)
         assert result == 10.0
 
     def test_high_moisture_edge(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
+        from app.routes.quality.control_charts import _convert_to_dry_basis
         # When moisture >= 100, return original value
-        result = convert_to_dry_basis(10.0, 100)
+        result = _convert_to_dry_basis(10.0, 100)
         assert result == 10.0
 
     def test_very_high_moisture(self):
-        from app.routes.quality.control_charts import convert_to_dry_basis
-        result = convert_to_dry_basis(10.0, 150)
+        from app.routes.quality.control_charts import _convert_to_dry_basis
+        result = _convert_to_dry_basis(10.0, 150)
         assert result == 10.0
 
 
@@ -89,22 +82,6 @@ class TestGetQcResults:
     def test_import_function(self):
         from app.routes.quality.control_charts import _get_qc_results
         assert _get_qc_results is not None
-
-
-class TestGetQcResultsFromLog:
-    """_get_qc_results_from_log функц тест"""
-
-    def test_import_function(self):
-        from app.routes.quality.control_charts import _get_qc_results_from_log
-        assert _get_qc_results_from_log is not None
-
-
-class TestGetActiveCmStandardName:
-    """_get_active_cm_standard_name функц тест"""
-
-    def test_import_function(self):
-        from app.routes.quality.control_charts import _get_active_cm_standard_name
-        assert _get_active_cm_standard_name is not None
 
 
 class TestExtractStandardName:
@@ -131,9 +108,14 @@ class TestExtractStandardName:
 
     def test_old_cm_format(self):
         from app.routes.quality.control_charts import _extract_standard_name
-        with patch('app.routes.quality.control_charts._get_active_cm_standard_name') as mock:
-            mock.return_value = 'CM-2025-Q4'
-            result = _extract_standard_name('CM_20251128_N_Q4')
+        # _extract_standard_name now checks DB for active CM standard
+        # when the extracted name is just 'CM'. Pass sample_type='CM'.
+        with patch('app.routes.quality.control_charts.ControlStandard') as MockCS:
+            mock_query = MockCS.query.filter_by.return_value
+            mock_std = MagicMock()
+            mock_std.name = 'CM-2025-Q4'
+            mock_query.first.return_value = mock_std
+            result = _extract_standard_name('CM_20251128_N_Q4', sample_type='CM')
             assert result == 'CM-2025-Q4'
 
     def test_gbw_format(self):
@@ -156,62 +138,23 @@ class TestGetTargetAndTolerance:
 
 
 # ============================================================
-# Dry Basis Mapping Tests
+# AD_ANALYSES Tests
 # ============================================================
 
-class TestDryBasisMapping:
-    """DRY_BASIS_MAPPING тест"""
+class TestAdAnalyses:
+    """AD_ANALYSES тест"""
 
-    def test_mapping_structure(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        for key, value in DRY_BASIS_MAPPING.items():
-            assert isinstance(value, tuple)
-            assert len(value) == 2
-            assert isinstance(value[0], str)
-            assert isinstance(value[1], bool)
+    def test_is_set(self):
+        from app.routes.quality.control_charts import AD_ANALYSES
+        assert isinstance(AD_ANALYSES, set)
 
-    def test_ash_mapping(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['Ad'] == ('Aad', True)
+    def test_contains_aad(self):
+        from app.routes.quality.control_charts import AD_ANALYSES
+        assert 'Aad' in AD_ANALYSES
 
-    def test_volatile_mapping(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['Vd'] == ('Vad', True)
-
-    def test_cv_mapping(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['CV,d'] == ('CV', True)
-
-    def test_sulfur_mapping(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['St,d'] == ('TS', True)
-
-    def test_trd_no_conversion(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['TRD,d'] == ('TRD', False)
-
-    def test_csn_no_conversion(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['CSN'] == ('CSN', False)
-
-    def test_gi_no_conversion(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['Gi'] == ('Gi', False)
-
-    def test_mad_no_conversion(self):
-        from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-        assert DRY_BASIS_MAPPING['Mad'] == ('Mad', False)
-
-
-class TestDbToStandardCode:
-    """DB_TO_STANDARD_CODE тест"""
-
-    def test_reverse_mapping(self):
-        from app.routes.quality.control_charts import DB_TO_STANDARD_CODE
-        assert DB_TO_STANDARD_CODE['Aad'] == 'Ad'
-        assert DB_TO_STANDARD_CODE['Vad'] == 'Vd'
-        assert DB_TO_STANDARD_CODE['CV'] == 'CV,d'
-        assert DB_TO_STANDARD_CODE['TS'] == 'St,d'
+    def test_contains_vad(self):
+        from app.routes.quality.control_charts import AD_ANALYSES
+        assert 'Vad' in AD_ANALYSES
 
 
 # ============================================================

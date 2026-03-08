@@ -116,14 +116,14 @@ class TestEquipmentModelExtended:
     def test_equipment_repr(self, app):
         """Equipment repr"""
         with app.app_context():
-            equipment = Equipment(name='Test Equipment', status='active')
+            equipment = Equipment(name='Test Equipment', status='normal')
             repr_str = repr(equipment)
             assert repr_str is not None
 
     def test_equipment_is_active(self, app):
-        """Equipment is active"""
+        """Equipment is normal"""
         with app.app_context():
-            equipment = Equipment(name='Test Equipment', status='active')
+            equipment = Equipment(name='Test Equipment', status='normal')
             if hasattr(equipment, 'is_active'):
                 assert equipment.is_active == True
 

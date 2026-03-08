@@ -54,7 +54,7 @@ def kpi_samples(app, kpi_chemist):
                 sample_code=f'KPI-{unique_id}-{i}',
                 client_name='CHPP',
                 sample_type='2hour',
-                status='approved' if i % 2 == 0 else 'new',
+                status='completed' if i % 2 == 0 else 'new',
                 received_date=datetime.now()
             )
             db.session.add(sample)

@@ -47,7 +47,7 @@ def sa_sample(app):
             sample_code=f'SA-{unique_id}',
             client_name='CHPP',
             sample_type='composite',
-            status='pending',
+            status='new',
             received_date=datetime.now()
         )
         db.session.add(sample)

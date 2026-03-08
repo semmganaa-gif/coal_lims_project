@@ -284,7 +284,7 @@ class TestRelatedEquipments:
             eq = Equipment(
                 name='Test Furnace',
                 related_analysis='Aad,Vad',
-                status='active'
+                status='normal'
             )
             db.session.add(eq)
             db.session.commit()

@@ -124,7 +124,7 @@ class TestEquipmentStatus:
     def test_status_values(self, app):
         """Valid equipment status values"""
         with app.app_context():
-            statuses = ['active', 'inactive', 'maintenance', 'calibration', 'retired']
+            statuses = ['normal', 'maintenance', 'calibration', 'out_of_service', 'retired']
             for status in statuses:
                 assert status in statuses
 
@@ -132,10 +132,10 @@ class TestEquipmentStatus:
         """Filter equipment by status"""
         with app.app_context():
             from app.models import Equipment
-            active = Equipment.query.filter_by(status='active').all()
-            inactive = Equipment.query.filter_by(status='inactive').all()
+            active = Equipment.query.filter_by(status='normal').all()
+            retired = Equipment.query.filter_by(status='retired').all()
             assert isinstance(active, list)
-            assert isinstance(inactive, list)
+            assert isinstance(retired, list)
 
 
 class TestEquipmentCalibrationDue:
@@ -179,10 +179,10 @@ class TestEquipmentModel:
                 name='Test Balance',
                 lab_code='BAL-001',
                 category='balance',
-                status='active'
+                status='normal'
             )
             assert eq.name == 'Test Balance'
-            assert eq.status == 'active'
+            assert eq.status == 'normal'
 
     def test_equipment_types(self, app):
         """Equipment categories"""

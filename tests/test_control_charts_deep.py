@@ -13,59 +13,52 @@ class TestDryBasisConversion:
     """Tests for dry basis conversion."""
 
     def test_convert_to_dry_basis_normal(self, app):
-        """Test convert_to_dry_basis with normal values."""
+        """Test _convert_to_dry_basis with normal values."""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 5.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 5.0)
             expected = 10.0 * 100 / (100 - 5.0)
             assert abs(result - expected) < 0.0001
 
     def test_convert_to_dry_basis_zero_moisture(self, app):
-        """Test convert_to_dry_basis with zero moisture."""
+        """Test _convert_to_dry_basis with zero moisture."""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 0.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 0.0)
             assert result == 10.0
 
     def test_convert_to_dry_basis_none_moisture(self, app):
-        """Test convert_to_dry_basis with None moisture."""
+        """Test _convert_to_dry_basis with None moisture."""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, None)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, None)
             assert result == 10.0
 
     def test_convert_to_dry_basis_high_moisture(self, app):
-        """Test convert_to_dry_basis with 100% moisture."""
+        """Test _convert_to_dry_basis with 100% moisture."""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 100.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 100.0)
             assert result == 10.0
 
     def test_convert_to_dry_basis_over_100_moisture(self, app):
-        """Test convert_to_dry_basis with over 100% moisture."""
+        """Test _convert_to_dry_basis with over 100% moisture."""
         with app.app_context():
-            from app.routes.quality.control_charts import convert_to_dry_basis
-            result = convert_to_dry_basis(10.0, 150.0)
+            from app.routes.quality.control_charts import _convert_to_dry_basis
+            result = _convert_to_dry_basis(10.0, 150.0)
             assert result == 10.0
 
 
-class TestDryBasisMapping:
-    """Tests for dry basis mapping constants."""
+class TestAdAnalyses:
+    """Tests for AD_ANALYSES constant."""
 
-    def test_dry_basis_mapping_exists(self, app):
-        """Test DRY_BASIS_MAPPING constant exists."""
+    def test_ad_analyses_exists(self, app):
+        """Test AD_ANALYSES constant exists."""
         with app.app_context():
-            from app.routes.quality.control_charts import DRY_BASIS_MAPPING
-            assert isinstance(DRY_BASIS_MAPPING, dict)
-            assert 'Ad' in DRY_BASIS_MAPPING
-            assert 'Vd' in DRY_BASIS_MAPPING
-
-    def test_db_to_standard_code_exists(self, app):
-        """Test DB_TO_STANDARD_CODE constant exists."""
-        with app.app_context():
-            from app.routes.quality.control_charts import DB_TO_STANDARD_CODE
-            assert isinstance(DB_TO_STANDARD_CODE, dict)
-            assert 'Aad' in DB_TO_STANDARD_CODE
+            from app.routes.quality.control_charts import AD_ANALYSES
+            assert isinstance(AD_ANALYSES, set)
+            assert 'Aad' in AD_ANALYSES
+            assert 'Vad' in AD_ANALYSES
 
 
 class TestGetQCSamples:
@@ -116,7 +109,9 @@ class TestGetQCSamples:
 
             result = _get_qc_samples()
             codes = [s.sample_code for s in result]
-            assert 'GBW11135a_20251224' in codes
+            # Sample model may uppercase the code, so check case-insensitively
+            codes_upper = [c.upper() for c in codes]
+            assert 'GBW11135A_20251224' in codes_upper
 
 
 class TestGetQCResults:
@@ -144,54 +139,6 @@ class TestGetQCResults:
             assert result == []
 
 
-class TestGetQCResultsFromLog:
-    """Tests for _get_qc_results_from_log function."""
-
-    def test_get_qc_results_from_log_with_ids(self, app, db):
-        """Test _get_qc_results_from_log with sample IDs."""
-        with app.app_context():
-            from app.routes.quality.control_charts import _get_qc_results_from_log
-            result = _get_qc_results_from_log([1, 2, 3])
-            assert isinstance(result, list)
-
-    def test_get_qc_results_from_log_with_analysis_code(self, app, db):
-        """Test _get_qc_results_from_log with analysis code filter."""
-        with app.app_context():
-            from app.routes.quality.control_charts import _get_qc_results_from_log
-            result = _get_qc_results_from_log([1, 2, 3], analysis_code='Aad')
-            assert isinstance(result, list)
-
-
-class TestGetActiveCMStandardName:
-    """Tests for _get_active_cm_standard_name function."""
-
-    def test_get_active_cm_standard_no_standard(self, app, db):
-        """Test _get_active_cm_standard_name when no active standard."""
-        with app.app_context():
-            from app.routes.quality.control_charts import _get_active_cm_standard_name
-            from app.models import ControlStandard
-            # Deactivate all CM standards
-            ControlStandard.query.update({'is_active': False})
-            db.session.commit()
-
-            result = _get_active_cm_standard_name()
-            assert result == 'CM'
-
-    def test_get_active_cm_standard_with_standard(self, app, db):
-        """Test _get_active_cm_standard_name with active standard."""
-        with app.app_context():
-            from app.routes.quality.control_charts import _get_active_cm_standard_name
-            from app.models import ControlStandard
-
-            # Create active standard
-            std = ControlStandard(name='CM-TEST-Q4', is_active=True)
-            db.session.add(std)
-            db.session.commit()
-
-            result = _get_active_cm_standard_name()
-            assert result == 'CM-TEST-Q4'
-
-
 class TestExtractStandardName:
     """Tests for _extract_standard_name function."""
 
@@ -214,7 +161,7 @@ class TestExtractStandardName:
         with app.app_context():
             from app.routes.quality.control_charts import _extract_standard_name
             result = _extract_standard_name('CM_20251224_N')
-            # Should return active CM standard name
+            # Should return extracted name (without DB lookup since sample_type not passed)
             assert result is not None
 
     def test_extract_standard_name_new_cm_format(self, app):
@@ -248,6 +195,7 @@ class TestGetTargetAndTolerance:
             from app.routes.quality.control_charts import _get_target_and_tolerance
             mock_sample = MagicMock()
             mock_sample.sample_code = ''
+            mock_sample.sample_type = 'CM'
 
             result = _get_target_and_tolerance(mock_sample, 'Aad')
             assert result == (None, None, None, None)
@@ -281,16 +229,16 @@ class TestWestgardIntegration:
     """Tests for Westgard integration."""
 
     def test_westgard_check_import(self, app):
-        """Test Westgard check functions can be imported."""
+        """Test Westgard check functions can be imported from westgard module."""
         with app.app_context():
-            from app.routes.quality.control_charts import check_westgard_rules, get_qc_status
+            from app.utils.westgard import check_westgard_rules, get_qc_status
             assert callable(check_westgard_rules)
             assert callable(get_qc_status)
 
     def test_check_single_value_import(self, app):
-        """Test check_single_value can be imported."""
+        """Test check_single_value can be imported from westgard module."""
         with app.app_context():
-            from app.routes.quality.control_charts import check_single_value
+            from app.utils.westgard import check_single_value
             assert callable(check_single_value)
 
 
@@ -298,7 +246,7 @@ class TestTrackQCCheck:
     """Tests for QC check tracking."""
 
     def test_track_qc_check_import(self, app):
-        """Test track_qc_check can be imported."""
+        """Test track_qc_check can be imported from monitoring module."""
         with app.app_context():
-            from app.routes.quality.control_charts import track_qc_check
+            from app.monitoring import track_qc_check
             assert callable(track_qc_check)

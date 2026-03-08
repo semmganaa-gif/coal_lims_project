@@ -74,7 +74,7 @@ class TestSampleRegistrationBranches:
     def test_chpp_2h_sample_with_weight(self, prep_client, prep_app):
         """CHPP 2H дээж зөв жинтэй бүртгэх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['PF211_D1', 'PF211_D2'],
@@ -92,7 +92,7 @@ class TestSampleRegistrationBranches:
     def test_chpp_4h_sample_registration(self, prep_client, prep_app):
         """CHPP 4H дээж бүртгэх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '4 hourly',
                 'sample_codes': ['CF501', 'CF502'],
@@ -110,7 +110,7 @@ class TestSampleRegistrationBranches:
     def test_chpp_12h_sample_registration(self, prep_client, prep_app):
         """CHPP 12H дээж бүртгэх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '12 hourly',
                 'sample_codes': ['12H-TEST-001'],
@@ -127,7 +127,7 @@ class TestSampleRegistrationBranches:
     def test_uhg_sample_registration(self, prep_client, prep_app):
         """UHG дээж бүртгэх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'UHG-Geo',
                 'sample_type': 'Stock',
                 'sample_codes': ['UHG-TEST-001'],
@@ -146,7 +146,7 @@ class TestSampleRegistrationBranches:
     def test_bn_sample_registration(self, prep_client, prep_app):
         """BN дээж бүртгэх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'BN-Geo',
                 'sample_type': 'Stock',
                 'sample_codes': ['BN-TEST-001'],
@@ -232,13 +232,13 @@ class TestFormValidation:
     def test_empty_form_submission(self, prep_client, prep_app):
         """Хоосон форм илгээх"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={}, follow_redirects=True)
+            response = prep_client.post('/coal', data={}, follow_redirects=True)
             assert response.status_code == 200
 
     def test_invalid_date_format(self, prep_client, prep_app):
         """Буруу огнооны формат"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_date': 'invalid-date'
@@ -264,14 +264,14 @@ class TestIndexPageAccess:
         """Нэвтрээгүй хэрэглэгч"""
         client = prep_app.test_client()
         with prep_app.app_context():
-            response = client.get('/')
+            response = client.get('/coal')
             # Should redirect to login
             assert response.status_code in [200, 302]
 
     def test_authenticated_access(self, prep_client, prep_app):
         """Нэвтэрсэн хэрэглэгч"""
         with prep_app.app_context():
-            response = prep_client.get('/')
+            response = prep_client.get('/coal')
             assert response.status_code == 200
 
     def test_index_with_tab_parameter(self, prep_client, prep_app):
@@ -287,7 +287,7 @@ class TestWTLSampleRegistration:
     def test_wtl_sample_without_lab_number(self, prep_client, prep_app):
         """WTL дээж - лаб дугааргүй бол алдаа"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'sample_date': date.today().isoformat(),
@@ -302,7 +302,7 @@ class TestWTLSampleRegistration:
     def test_wtl_sample_with_lab_number(self, prep_client, prep_app):
         """WTL дээж - лаб дугаартай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'WTL',
                 'lab_number': 'LAB001',
@@ -318,7 +318,7 @@ class TestWTLSampleRegistration:
     def test_wtl_size_sample(self, prep_client, prep_app):
         """WTL Size дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'Size',
                 'lab_number': 'SIZE001',
@@ -334,7 +334,7 @@ class TestWTLSampleRegistration:
     def test_wtl_fl_sample(self, prep_client, prep_app):
         """WTL FL дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'FL',
                 'lab_number': 'FL001',
@@ -354,7 +354,7 @@ class TestLABSampleRegistration:
     def test_lab_cm_sample(self, prep_client, prep_app):
         """LAB CM дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'CM',
                 'sample_date': date.today().isoformat(),
@@ -369,7 +369,7 @@ class TestLABSampleRegistration:
     def test_lab_gbw_sample(self, prep_client, prep_app):
         """LAB GBW дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'GBW',
                 'sample_date': date.today().isoformat(),
@@ -384,7 +384,7 @@ class TestLABSampleRegistration:
     def test_lab_test_sample(self, prep_client, prep_app):
         """LAB Test дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',
                 'sample_date': date.today().isoformat(),
@@ -399,7 +399,7 @@ class TestLABSampleRegistration:
     def test_lab_unknown_sample_type(self, prep_client, prep_app):
         """LAB тодорхойгүй төрөл"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Unknown',
                 'sample_date': date.today().isoformat(),
@@ -418,7 +418,7 @@ class TestWTLManualSampleCode:
     def test_wtl_mg_without_sample_code(self, prep_client, prep_app):
         """WTL MG - sample_code-гүй бол алдаа"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_date': date.today().isoformat(),
@@ -433,7 +433,7 @@ class TestWTLManualSampleCode:
     def test_wtl_mg_with_sample_code(self, prep_client, prep_app):
         """WTL MG - sample_code-тай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'MG',
                 'sample_code': 'MG-TEST-001',
@@ -449,7 +449,7 @@ class TestWTLManualSampleCode:
     def test_wtl_test_with_sample_code(self, prep_client, prep_app):
         """WTL Test - sample_code-тай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'WTL',
                 'sample_type': 'Test',
                 'sample_code': 'TEST-WTL-001',
@@ -469,7 +469,7 @@ class TestWeightValidation:
     def test_chpp_2h_with_valid_weight(self, prep_client, prep_app):
         """CHPP 2H зөв жинтэй"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['2H-TEST-001'],
@@ -487,7 +487,7 @@ class TestWeightValidation:
     def test_chpp_2h_with_invalid_weight(self, prep_client, prep_app):
         """CHPP 2H буруу жин (тоо биш)"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['2H-TEST-002'],
@@ -505,7 +505,7 @@ class TestWeightValidation:
     def test_chpp_2h_with_zero_weight(self, prep_client, prep_app):
         """CHPP 2H хэт бага жин"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['2H-TEST-003'],
@@ -523,7 +523,7 @@ class TestWeightValidation:
     def test_chpp_2h_with_excessive_weight(self, prep_client, prep_app):
         """CHPP 2H хэт их жин"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['2H-TEST-004'],
@@ -541,7 +541,7 @@ class TestWeightValidation:
     def test_chpp_2h_without_weight(self, prep_client, prep_app):
         """CHPP 2H жингүй"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['2H-TEST-005'],
@@ -559,7 +559,7 @@ class TestWeightValidation:
     def test_multi_gen_with_weight(self, prep_client, prep_app):
         """multi_gen жинтэй"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'UHG-Geo',
                 'sample_type': 'Stock',
                 'sample_codes': ['UHG-GEN-001'],
@@ -609,7 +609,7 @@ class TestQCProcSampleRegistration:
     def test_qc_sample_with_product(self, prep_client, prep_app):
         """QC дээж product талбартай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'QC',
                 'sample_type': 'HCC',
                 'sample_codes': ['QC-TEST-001'],
@@ -629,7 +629,7 @@ class TestQCProcSampleRegistration:
     def test_proc_sample_with_product(self, prep_client, prep_app):
         """Proc дээж product талбартай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'Proc',
                 'sample_type': 'CHP',
                 'sample_codes': ['PROC-TEST-001'],
@@ -653,7 +653,7 @@ class TestCHPPComSampleRegistration:
     def test_chpp_com_sample(self, prep_client, prep_app):
         """CHPP COM дээж"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': 'COM',
                 'sample_codes': ['COM-TEST-001'],
@@ -675,7 +675,7 @@ class TestMultipleSampleRegistration:
     def test_multiple_samples_with_weights(self, prep_client, prep_app):
         """Олон дээж жинтэй"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['MULTI-001', 'MULTI-002', 'MULTI-003'],
@@ -693,7 +693,7 @@ class TestMultipleSampleRegistration:
     def test_multiple_samples_mixed_weights(self, prep_client, prep_app):
         """Олон дээж - зарим жингүй"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['MIXED-001', 'MIXED-002'],
@@ -711,7 +711,7 @@ class TestMultipleSampleRegistration:
     def test_samples_with_empty_codes(self, prep_client, prep_app):
         """Хоосон код агуулсан"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['VALID-001', '', 'VALID-002'],
@@ -785,7 +785,7 @@ class TestRoleRestrictions:
                 sess['_user_id'] = str(user.id)
                 sess['_fresh'] = True
 
-            response = client.post('/', data={
+            response = client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['ANALYST-TEST-001'],
@@ -861,7 +861,7 @@ class TestFormEdgeCases:
         """Form нөхцөл биелэхгүй үед"""
         with prep_app.app_context():
             # Valid form but doesn't match any specific registration path
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 # No sample_codes, no list_type
@@ -877,7 +877,7 @@ class TestFormEdgeCases:
     def test_bn_geo_sample_with_location(self, prep_client, prep_app):
         """BN-Geo дээж байршилтай"""
         with prep_app.app_context():
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'BN-Geo',
                 'sample_type': 'TR',
                 'sample_codes': ['BN-TR-001'],
@@ -901,7 +901,7 @@ class TestDuplicateSampleHandling:
         """Давхардсан дээж бүртгэх үед"""
         with prep_app.app_context():
             # First registration
-            prep_client.post('/', data={
+            prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['DUP-TEST-001'],
@@ -916,7 +916,7 @@ class TestDuplicateSampleHandling:
             })
 
             # Try duplicate
-            response = prep_client.post('/', data={
+            response = prep_client.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',
                 'sample_codes': ['DUP-TEST-001'],

@@ -505,7 +505,7 @@ class TestReportHelpers:
         """Test _year_arg function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _year_arg
+                from app.routes.reports.routes import _year_arg
                 assert callable(_year_arg)
             except (ImportError, AttributeError):
                 pass
@@ -514,7 +514,7 @@ class TestReportHelpers:
         """Test _pick_date_col function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _pick_date_col
+                from app.routes.reports.routes import _pick_date_col
                 assert callable(_pick_date_col)
             except (ImportError, AttributeError):
                 pass
@@ -523,7 +523,7 @@ class TestReportHelpers:
         """Test _parse_date_safe function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _parse_date_safe
+                from app.routes.reports.routes import _parse_date_safe
                 result = _parse_date_safe('2025-01-01')
                 assert result is not None or result is None
             except (ImportError, AttributeError, Exception):
@@ -533,7 +533,7 @@ class TestReportHelpers:
         """Test _get_weeks_in_month function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _get_weeks_in_month
+                from app.routes.reports.routes import _get_weeks_in_month
                 result = _get_weeks_in_month(2025, 1)
                 assert result is not None
             except (ImportError, AttributeError, Exception):
@@ -543,7 +543,7 @@ class TestReportHelpers:
         """Test _calculate_weekly_performance function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _calculate_weekly_performance
+                from app.routes.reports.routes import _calculate_weekly_performance
                 result = _calculate_weekly_performance(2025, 1)
                 assert result is not None or result is None
             except (ImportError, AttributeError, Exception):
@@ -553,7 +553,7 @@ class TestReportHelpers:
         """Test _count_error_reasons function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _count_error_reasons
+                from app.routes.reports.routes import _count_error_reasons
                 result = _count_error_reasons(2025)
                 assert result is not None or result is None
             except (ImportError, AttributeError, Exception):
@@ -563,7 +563,7 @@ class TestReportHelpers:
         """Test _calculate_consumption function"""
         with app.app_context():
             try:
-                from app.routes.report_routes import _calculate_consumption
+                from app.routes.reports.routes import _calculate_consumption
                 assert callable(_calculate_consumption)
             except (ImportError, AttributeError, Exception):
                 pass

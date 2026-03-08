@@ -81,7 +81,7 @@ class TestSafeCommit:
         mock_db.session.rollback.assert_called_once()
         mock_flash.assert_called()
         call_args = mock_flash.call_args[0]
-        assert "Unknown error" in call_args[0]
+        assert "Алдаа гарлаа" in call_args[0]
 
     @patch('app.utils.database.flash')
     @patch('app.utils.database.db')
@@ -93,7 +93,7 @@ class TestSafeCommit:
         result = safe_commit()
 
         assert result is False
-        mock_flash.assert_called_with("Өгөгдөл хадгалахад алдаа гарлаа", "danger")
+        mock_flash.assert_called_with("Error saving data", "danger")
 
 
 class TestSafeDelete:
@@ -138,7 +138,7 @@ class TestSafeDelete:
         mock_db.session.rollback.assert_called_once()
         mock_flash.assert_called()
         call_args = mock_flash.call_args[0]
-        assert "FK constraint" in call_args[0]
+        assert "Устгах боломжгүй" in call_args[0]
 
     @patch('app.utils.database.flash')
     @patch('app.utils.database.db')
@@ -224,7 +224,7 @@ class TestSafeAdd:
         assert result is False
         mock_db.session.rollback.assert_called_once()
         call_args = mock_flash.call_args[0]
-        assert "Connection lost" in call_args[0]
+        assert "Нэмэх үед алдаа" in call_args[0]
 
     @patch('app.utils.database.flash')
     @patch('app.utils.database.db')

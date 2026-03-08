@@ -95,7 +95,7 @@ class TestAllSampleRegistrations:
                 data["list_type"] = lt
                 data["sample_codes"] = [f"{c}-{uid}"]
                 data["weights"] = ["100"]
-            r = client.post("/", data=data)
+            r = client.post("/coal", data=data)
             assert r.status_code in [200, 302, 400, 500]
 
 class TestAllAPIEndpoints:

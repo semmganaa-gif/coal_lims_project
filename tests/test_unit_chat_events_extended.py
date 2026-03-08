@@ -37,7 +37,7 @@ def chat_sample(app, chat_user):
             sample_code=f'CHAT-{unique_id}',
             client_name='CHPP',  # Use valid client name
             sample_type='CM',
-            status='registered',
+            status='new',
             received_date=datetime.now(),
             user_id=chat_user.id
         )
