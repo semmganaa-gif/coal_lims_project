@@ -1658,7 +1658,7 @@ def add_solution():
 
             # Chemical холбох + автомат зарцуулалт
             if chemical_id and chemical_used_mg and chemical_used_mg > 0:
-                chemical = Chemical.query.get(int(chemical_id))
+                chemical = db.session.get(Chemical, int(chemical_id))
                 if chemical:
                     solution.chemical_id = chemical.id
 

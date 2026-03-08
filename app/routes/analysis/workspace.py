@@ -162,11 +162,12 @@ def register_routes(bp):
         except Exception:
             pass
 
+        wtl_mg_view = type("AnalysisView", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})()
         return render_template(
             "analysis_page.html",
             title="WTL MG Шинжилгээ",
-            analysis=type("V", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})(),
-            analysis_type=type("V", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})(),
+            analysis=wtl_mg_view,
+            analysis_type=wtl_mg_view,
             analysis_code="WTL_MG",
             analysis_name="WTL MG Шинжилгээ",
             samples=samples_to_analyze,
@@ -240,14 +241,10 @@ def register_routes(bp):
             temp_ids = [int(x) for x in newly_selected_ids_str.split(",") if x.isdigit()]
             new_ids_list = list(dict.fromkeys(temp_ids))
 
-        try:
-            msg = (
-                f"analysis_page code={analysis_type.code} "
-                f"sample_ids_raw={newly_selected_ids_str} parsed_ids={new_ids_list}"
-            )
-            current_app.logger.warning(msg)
-        except Exception:
-            pass
+        current_app.logger.debug(
+            "analysis_page code=%s sample_ids_raw=%s parsed_ids=%s",
+            analysis_type.code, newly_selected_ids_str, new_ids_list,
+        )
 
         # 2. ХУУЧИН ХАДГАЛАГДСАН ҮР ДҮНГҮҮД
         approved_ids = [r.sample_id for r in db.session.query(AnalysisResult.sample_id).filter(
@@ -316,19 +313,15 @@ def register_routes(bp):
                 fallback_map = {s.id: s for s in fallback_samples}
                 samples_to_analyze = [fallback_map[sid] for sid in valid_ids if sid in fallback_map]
 
-        try:
-            msg = (
-                f"analysis_page code={analysis_type.code} "
-                f"samples_to_analyze={len(samples_to_analyze)} "
-                f"ids={[s.id for s in samples_to_analyze]}"
-            )
-            current_app.logger.warning(msg)
-        except Exception:
-            pass
+        current_app.logger.debug(
+            "analysis_page code=%s samples_to_analyze=%d ids=%s",
+            analysis_type.code, len(samples_to_analyze),
+            [s.id for s in samples_to_analyze],
+        )
 
         # 4. БУСАД ӨГӨГДӨЛ
         mad_results_map = {}
-        if (analysis_type.code == "Vad" or analysis_type.code == "TRD") and samples_to_analyze:
+        if analysis_type.code in ("Vad", "TRD") and samples_to_analyze:
             sample_ids = [s.id for s in samples_to_analyze]
             approved_mad_results = AnalysisResult.query.filter(
                 AnalysisResult.sample_id.in_(sample_ids),

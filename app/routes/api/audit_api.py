@@ -7,26 +7,27 @@
 """
 
 import asyncio
-
-from flask import (
-    request,
-    render_template,
-)
-from flask_login import login_required, current_user
-from sqlalchemy.orm import joinedload
-from datetime import datetime
-from app.utils.datetime import now_local
-from app.utils.shifts import get_shift_date
-from collections import defaultdict
 import json
 
+from collections import defaultdict
+from datetime import datetime
+
+from flask import request, jsonify, render_template
+from flask_login import login_required, current_user
+from sqlalchemy import extract, or_
+from sqlalchemy.orm import joinedload
+
 from app import db
-from app.models import AnalysisResult, AnalysisResultLog, AnalysisType, Sample, User
+from app.models import (
+    AnalysisResult, AnalysisResultLog, AnalysisType,
+    AuditLog, Sample, User,
+)
 from app.config.analysis_schema import get_analysis_schema
-from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS
-from app.utils.shifts import get_shift_info
 from app.utils.codes import norm_code
+from app.utils.datetime import now_local
+from app.utils.security import escape_like_pattern
+from app.utils.shifts import get_shift_date, get_shift_info
 
 
 def register_routes(bp):
@@ -46,7 +47,7 @@ def register_routes(bp):
     @bp.route("/audit_log/<analysis_code>")
     @login_required
     async def audit_log_page(analysis_code):
-        # ✅ Normalize analysis code (Solid -> SOLID, St,ad -> TS г.м.)
+        # Normalize analysis code (Solid -> SOLID, St,ad -> TS г.м.)
         base_code = norm_code(analysis_code)
 
         # Analysis type олох
@@ -69,7 +70,7 @@ def register_routes(bp):
         if not end_date_str:
             end_date_str = today.strftime("%Y-%m-%d")
 
-        # Query - ✅ base_code ашиглах (DB-д normalized хэлбэрээр хадгалагдсан)
+        # Query - base_code ашиглах (DB-д normalized хэлбэрээр хадгалагдсан)
         q = (
             db.session.query(AnalysisResultLog, Sample, User)
             .join(Sample, AnalysisResultLog.sample_id == Sample.id)
@@ -108,10 +109,8 @@ def register_routes(bp):
 
         # Ээлжийн шүүлтүүр (08:00-20:00 = өдөр, 20:00-08:00 = шөнө)
         if shift_str == "day":
-            from sqlalchemy import extract
             q = q.filter(extract('hour', AnalysisResultLog.timestamp).between(8, 19))
         elif shift_str == "night":
-            from sqlalchemy import extract, or_
             q = q.filter(or_(
                 extract('hour', AnalysisResultLog.timestamp) >= 20,
                 extract('hour', AnalysisResultLog.timestamp) < 8
@@ -128,11 +127,22 @@ def register_routes(bp):
             "final_status": None,
         })
 
+        # N+1 query-ээс сэргийлж original_user-уудыг нэг query-гээр авах
+        original_user_ids = {
+            log_obj.original_user_id for log_obj, _, _ in rows
+            if log_obj.original_user_id
+        }
+        original_users_map = {}
+        if original_user_ids:
+            original_users_map = {
+                u.id: u for u in User.query.filter(User.id.in_(original_user_ids)).all()
+            }
+
         for log_obj, sample_obj, user_obj in rows:
             sid = log_obj.sample_id
             group = sample_groups[sid]
             group["sample"] = sample_obj
-            # ✅ Дээжний код snapshot (sample устсан ч харагдана)
+            # Дээжний код snapshot (sample устсан ч харагдана)
             if log_obj.sample_code_snapshot:
                 group["sample_code_snapshot"] = log_obj.sample_code_snapshot
 
@@ -145,10 +155,8 @@ def register_routes(bp):
             # Ээлжийн мэдээлэл тооцоолох
             shift_info = get_shift_info(log_obj.timestamp)
 
-            # ✅ Анхны химичийн мэдээлэл олох
-            original_user = None
-            if log_obj.original_user_id:
-                original_user = User.query.get(log_obj.original_user_id)
+            # Анхны химичийн мэдээлэл
+            original_user = original_users_map.get(log_obj.original_user_id) if log_obj.original_user_id else None
 
             attempt = {
                 "id": log_obj.id,
@@ -162,10 +170,8 @@ def register_routes(bp):
                 "rejection_category": getattr(log_obj, 'rejection_category', None),
                 "shift_team": shift_info.team,  # A, B, C
                 "shift_type": shift_info.shift_type,  # day, night
-                # ✅ ШИНЭ: Анхны мэдээлэл
                 "original_user": original_user,
                 "original_timestamp": log_obj.original_timestamp,
-                # ✅ ШИНЭ: Hash (өөрчлөгдсөн эсэхийг шалгах)
                 "data_hash": log_obj.data_hash,
                 "hash_valid": log_obj.verify_hash() if log_obj.data_hash else None,
             }
@@ -232,7 +238,7 @@ def register_routes(bp):
             stats=stats,
             error_labels=ERROR_REASON_LABELS,
             all_users=all_users,
-            analysis_schema=get_analysis_schema(base_code),  # ✅ base_code ашиглах
+            analysis_schema=get_analysis_schema(base_code),
             is_senior=is_senior,
         )
 
@@ -252,14 +258,15 @@ def register_routes(bp):
             - action: Үйлдлийн төрөл (APPROVED, REJECTED, etc)
             - limit: Хязгаар (default 100, max 500)
         """
-        from flask import jsonify
-
         q = request.args.get('q', '').strip()
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         analysis_code = request.args.get('analysis_code')
         action = request.args.get('action')
-        limit = min(int(request.args.get('limit', 100)), 500)
+        try:
+            limit = min(int(request.args.get('limit', 100)), 500)
+        except (ValueError, TypeError):
+            limit = 100
 
         query = db.session.query(
             AnalysisResultLog, Sample, User
@@ -271,7 +278,6 @@ def register_routes(bp):
 
         # Хайлтын үг
         if q:
-            from sqlalchemy import or_
             safe_q = escape_like_pattern(q)
             query = query.filter(or_(
                 Sample.sample_code.ilike(f"%{safe_q}%"),
@@ -331,13 +337,15 @@ def register_routes(bp):
     async def export_audit():
         """Аудит логийг Excel экспорт"""
         from app.utils.exports import send_excel_response
-        from app.models import AuditLog
 
         # Query parameters
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         action = request.args.get('action')
-        limit = min(int(request.args.get('limit', 1000)), 5000)
+        try:
+            limit = min(int(request.args.get('limit', 1000)), 5000)
+        except (ValueError, TypeError):
+            limit = 1000
 
         query = AuditLog.query.options(joinedload(AuditLog.user))
 
@@ -366,3 +374,98 @@ def register_routes(bp):
         filename = f"audit_log_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
 
         return send_excel_response(excel_data, filename)
+
+    # -----------------------------------------------------------
+    # 5) СИСТЕМИЙН АУДИТ ХУУДАС
+    # -----------------------------------------------------------
+    @bp.route("/system_audit")
+    @login_required
+    async def system_audit():
+        """Системийн аудит лог — login, logout, delete, approve гэх мэт."""
+        # JSON API хүсэлт (AG-Grid-ээс)
+        if request.args.get('format') == 'json':
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            action_filter = request.args.get('action')
+            user_filter = request.args.get('user_id')
+            resource_filter = request.args.get('resource_type')
+            q = request.args.get('q', '').strip()
+            try:
+                limit = min(int(request.args.get('limit', 500)), 2000)
+            except (ValueError, TypeError):
+                limit = 500
+
+            query = AuditLog.query.options(joinedload(AuditLog.user))
+
+            if start_date:
+                try:
+                    sd = datetime.strptime(start_date, '%Y-%m-%d')
+                    query = query.filter(AuditLog.timestamp >= sd)
+                except ValueError:
+                    pass
+            if end_date:
+                try:
+                    ed = datetime.strptime(end_date, '%Y-%m-%d')
+                    ed = datetime.combine(ed, datetime.max.time())
+                    query = query.filter(AuditLog.timestamp <= ed)
+                except ValueError:
+                    pass
+
+            if action_filter:
+                safe_action = escape_like_pattern(action_filter)
+                query = query.filter(AuditLog.action.ilike(f"%{safe_action}%", escape='\\'))
+
+            if user_filter:
+                try:
+                    query = query.filter(AuditLog.user_id == int(user_filter))
+                except ValueError:
+                    pass
+
+            if resource_filter:
+                safe_res = escape_like_pattern(resource_filter)
+                query = query.filter(AuditLog.resource_type.ilike(f"%{safe_res}%", escape='\\'))
+
+            if q:
+                safe_q = escape_like_pattern(q)
+                query = query.filter(or_(
+                    AuditLog.action.ilike(f"%{safe_q}%", escape='\\'),
+                    AuditLog.resource_type.ilike(f"%{safe_q}%", escape='\\'),
+                    AuditLog.details.ilike(f"%{safe_q}%", escape='\\'),
+                    AuditLog.ip_address.ilike(f"%{safe_q}%", escape='\\'),
+                ))
+
+            logs = query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+
+            return jsonify({
+                'success': True,
+                'data': [
+                    {
+                        'id': log.id,
+                        'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else None,
+                        'user': log.user.username if log.user else '-',
+                        'user_id': log.user_id,
+                        'action': log.action,
+                        'resource_type': log.resource_type or '-',
+                        'resource_id': log.resource_id,
+                        'details': log.details or '',
+                        'ip_address': log.ip_address or '-',
+                        'user_agent': log.user_agent or '',
+                        'hash_valid': log.verify_hash() if log.data_hash else None,
+                    }
+                    for log in logs
+                ],
+                'count': len(logs),
+            })
+
+        # HTML хуудас
+        # Хэрэглэгчдийн жагсаалт (шүүлтүүрт)
+        users = User.query.filter(
+            User.role.in_(['chemist', 'senior', 'manager', 'admin'])
+        ).order_by(User.username).all()
+
+        return render_template(
+            "system_audit.html",
+            title="Системийн аудит",
+            users=users,
+            use_aggrid=True,
+        )

@@ -1,4 +1,4 @@
-# app/routes/report_routes.py
+# app/routes/reports/routes.py
 # -*- coding: utf-8 -*-
 """
 Reports:
@@ -27,7 +27,6 @@ from app.utils.datetime import now_local
 from app.utils.codes import norm_code
 from app.constants import MIN_VALID_YEAR, MAX_VALID_YEAR
 
-# ✅ ШИНЭ: Төвлөрсөн ээлжийн логикийг импортлох
 from app.utils.shifts import get_shift_info
 
 # alias-ууд
@@ -205,7 +204,7 @@ def dashboard():
 
     top_users_data = []
     for uid, cnt in top_users:
-        user = User.query.get(uid)
+        user = db.session.get(User, uid)
         if user:
             top_users_data.append({
                 'name': _format_short_name(user.full_name) or user.username,
@@ -1427,7 +1426,7 @@ def chemist_report():
         user_id = row.user_id
         if user_id not in chemist_data:
             # Химич биш хэрэглэгч байж магадгүй
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if user:
                 chemist_data[user_id] = {
                     'id': user_id,

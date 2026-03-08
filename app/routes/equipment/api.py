@@ -446,13 +446,18 @@ def api_equipment_usage_summary():
     end_str = request.args.get("end_date")
     category = request.args.get("category", "all")
 
-    if start_str:
-        start_dt = datetime.strptime(start_str, "%Y-%m-%d")
-    else:
+    try:
+        start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else None
+    except ValueError:
+        start_dt = None
+    if not start_dt:
         start_dt = datetime.combine(today - timedelta(days=30), datetime.min.time())
-    if end_str:
-        end_dt = datetime.strptime(end_str, "%Y-%m-%d")
-    else:
+
+    try:
+        end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else None
+    except ValueError:
+        end_dt = None
+    if not end_dt:
         end_dt = datetime.combine(today, datetime.min.time())
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
@@ -508,8 +513,19 @@ def api_equipment_journal_detailed():
     category = request.args.get("category", "all")
     equipment_id = request.args.get("equipment_id", type=int)
 
-    start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else now_local() - timedelta(days=30)
-    end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else now_local()
+    try:
+        start_dt = datetime.strptime(start_str, "%Y-%m-%d") if start_str else None
+    except ValueError:
+        start_dt = None
+    if not start_dt:
+        start_dt = now_local() - timedelta(days=30)
+
+    try:
+        end_dt = datetime.strptime(end_str, "%Y-%m-%d") if end_str else None
+    except ValueError:
+        end_dt = None
+    if not end_dt:
+        end_dt = now_local()
     end_dt = end_dt.replace(hour=23, minute=59, second=59)
 
     m_logs = db.session.query(MaintenanceLog, Equipment).join(Equipment).filter(
@@ -560,7 +576,10 @@ def api_equipment_journal_detailed():
 @login_required
 def api_equipment_monthly_stats():
     """Сарын статистик API."""
-    year = int(request.args.get("year", now_local().year))
+    try:
+        year = int(request.args.get("year", now_local().year))
+    except (ValueError, TypeError):
+        year = now_local().year
     category = request.args.get("category", "all")
 
     start_dt = datetime(year, 1, 1)
@@ -611,7 +630,6 @@ def api_equipment_monthly_stats():
 @login_required
 def api_equipment_list_json():
     """Төхөөрөмжийн жагсаалт JSON API (AG Grid-д)."""
-    # ✅ Retired filter нэмсэн + limit
     include_retired = request.args.get("include_retired", "false").lower() == "true"
     query = Equipment.query
     if not include_retired:

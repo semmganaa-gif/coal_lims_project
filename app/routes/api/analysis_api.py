@@ -237,12 +237,11 @@ def register_routes(bp):
         if not sample_id or not analysis_code:
             return jsonify({"success": False, "message": "sample_id болон analysis_code шаардлагатай"}), 400
 
-        sample = Sample.query.get(sample_id)
+        sample = db.session.get(Sample, sample_id)
         if not sample:
             return jsonify({"success": False, "message": "Дээж олдсонгүй"}), 404
 
         # analyses_to_perform-оос хасах
-        import json
         try:
             analyses = json.loads(sample.analyses_to_perform or "[]")
         except (json.JSONDecodeError, TypeError, ValueError):
@@ -429,6 +428,7 @@ def register_routes(bp):
                     # ============================================================
                     control_targets = None
                     val_to_check = final_result
+                    is_gbw = False
 
                     try:
                         # 1. Дээжийг таних (CM эсвэл GBW эсэхийг шалгах)
@@ -547,9 +547,7 @@ def register_routes(bp):
                     # determine_result_status функц нь ихэвчлэн "Control Failure" гэж буцаадаг тул
                     # хэрэв энэ нь GBW дээж байвал үгийг нь сольж "GBW Failure" болгоё.
                     # (is_gbw хувьсагч өмнөх блокоос ирж байгаа гэж тооцов)
-                    is_gbw_sample = locals().get('is_gbw', False) # Аюулгүй байдлын үүднээс шалгах
-
-                    if new_status == "rejected" and is_gbw_sample and status_reason:
+                    if new_status == "rejected" and is_gbw and status_reason:
                         status_reason = status_reason.replace("Control Failure", "GBW Failure")
 
                     # ------------------------------------------------------------
@@ -798,7 +796,9 @@ def register_routes(bp):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Хандах эрхгүй"}), 403
 
-        res = AnalysisResult.query.get_or_404(result_id)
+        res = db.session.get(AnalysisResult, result_id)
+        if not res:
+            return jsonify({"message": "Үр дүн олдсонгүй"}), 404
         allowed = {"approved", "rejected", "pending_review"}
 
         if new_status not in allowed:
@@ -845,6 +845,10 @@ def register_routes(bp):
         if action_type:
             reason_text = f"{reason_text}. action={action_type}"
 
+        # Дээжний кодыг snapshot хийх
+        sample = db.session.get(Sample, res.sample_id)
+        sample_code_snap = sample.sample_code if sample else None
+
         audit = AnalysisResultLog(
             timestamp=now_local(),
             user_id=current_user.id,
@@ -858,9 +862,20 @@ def register_routes(bp):
             rejection_subcategory=rejection_subcategory,
             reason=reason_text,
             error_reason=error_reason,
+            sample_code_snapshot=sample_code_snap,
         )
+        audit.data_hash = audit.compute_hash()
         db.session.add(audit)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except StaleDataError:
+            db.session.rollback()
+            return jsonify({"message": "Өөр хэрэглэгч энэ үр дүнг засварласан байна. Дахин оролдоно уу."}), 409
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"update_result_status commit error: {e}", exc_info=True)
+            return jsonify({"message": "Мэдээллийн сан хадгалах алдаа"}), 500
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
             return jsonify({"message": "Амжилттай", "status": new_status})
@@ -890,7 +905,7 @@ def register_routes(bp):
             return jsonify({"message": "sample_id болон analysis_code шаардлагатай"}), 400
 
         try:
-            sample = Sample.query.get(sample_id)
+            sample = db.session.get(Sample, sample_id)
             if not sample:
                 return jsonify({"message": f"#{sample_id} дээж олдсонгүй"}), 404
 

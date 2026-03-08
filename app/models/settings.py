@@ -85,8 +85,3 @@ class SystemSetting(db.Model):
     def __repr__(self) -> str:
         return f"<SystemSetting [{self.category}] {self.key}={self.value[:50]}>"
 
-# -------------------------
-# : ХЯНАЛТЫН СТАНДАРТ
-# -------------------------
-
-

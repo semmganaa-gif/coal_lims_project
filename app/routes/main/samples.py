@@ -4,12 +4,14 @@
 Sample management routes (edit/delete/disposal)
 """
 
-from flask import render_template, flash, redirect, url_for, request
-from flask_login import login_required, current_user
-from app import db
 import json
 import logging
 from datetime import date, timedelta
+
+from flask import render_template, flash, redirect, url_for, request, abort, current_app
+from flask_login import login_required, current_user
+
+from app import db
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
 
@@ -26,7 +28,9 @@ def register_routes(bp):
     @login_required
     def edit_sample(sample_id):
         from app.models import Sample, AnalysisType
-        sample = Sample.query.get_or_404(sample_id)
+        sample = db.session.get(Sample, sample_id)
+        if not sample:
+            abort(404)
 
         can_edit = current_user.role in ["admin", "senior"] or (
             current_user.role == "prep" and sample.status == "new"
@@ -106,7 +110,7 @@ def register_routes(bp):
         for sample_id_str in sample_ids_to_delete:
             try:
                 sample_id = int(sample_id_str)
-                sample_to_delete = Sample.query.get(sample_id)
+                sample_to_delete = db.session.get(Sample, sample_id)
                 if sample_to_delete:
                     if current_user.role == "senior" and sample_to_delete.status != "new":
                         failed_samples.append(f"{sample_to_delete.sample_code} (Боловсруулалтанд орсон)")
@@ -230,7 +234,7 @@ def register_routes(bp):
 
         for sid in sample_ids:
             try:
-                sample = Sample.query.get(int(sid))
+                sample = db.session.get(Sample, int(sid))
                 if sample and sample.disposal_date is None:
                     sample.disposal_date = today
                     sample.disposal_method = disposal_method
@@ -289,7 +293,7 @@ def register_routes(bp):
 
         for sid in sample_ids:
             try:
-                sample = Sample.query.get(int(sid))
+                sample = db.session.get(Sample, int(sid))
                 if sample:
                     sample.retention_date = retention_date
                     updated_count += 1

@@ -100,7 +100,7 @@ def register_routes(bp):
                 ChatMessage.sender_id == user.id,
                 ChatMessage.receiver_id == current_user.id,
                 ChatMessage.read_at.is_(None),
-                ChatMessage.is_deleted == False
+                ChatMessage.is_deleted.is_(False)
             ).count()
 
             last_msg = ChatMessage.query.filter(
@@ -108,7 +108,7 @@ def register_routes(bp):
                     and_(ChatMessage.sender_id == user.id, ChatMessage.receiver_id == current_user.id),
                     and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user.id)
                 ),
-                ChatMessage.is_deleted == False
+                ChatMessage.is_deleted.is_(False)
             ).order_by(ChatMessage.sent_at.desc()).first()
 
             online_status = db.session.get(UserOnlineStatus, user.id)
@@ -141,7 +141,7 @@ def register_routes(bp):
                 and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == user_id),
                 and_(ChatMessage.sender_id == user_id, ChatMessage.receiver_id == current_user.id)
             ),
-            ChatMessage.is_deleted == False
+            ChatMessage.is_deleted.is_(False)
         )
 
         # Хайлт
@@ -191,7 +191,7 @@ def register_routes(bp):
         safe_query_text = escape_like_pattern(query_text)
         q = ChatMessage.query.filter(
             ChatMessage.message.ilike(f'%{safe_query_text}%'),
-            ChatMessage.is_deleted == False,
+            ChatMessage.is_deleted.is_(False),
             or_(
                 ChatMessage.sender_id == current_user.id,
                 ChatMessage.receiver_id == current_user.id
@@ -220,7 +220,7 @@ def register_routes(bp):
         count = ChatMessage.query.filter(
             ChatMessage.receiver_id == current_user.id,
             ChatMessage.read_at.is_(None),
-            ChatMessage.is_deleted == False
+            ChatMessage.is_deleted.is_(False)
         ).count()
         return jsonify({'unread_count': count})
 
@@ -327,7 +327,7 @@ def register_routes(bp):
         """Broadcast зарлалууд"""
         broadcasts = ChatMessage.query.filter(
             ChatMessage.is_broadcast,
-            ChatMessage.is_deleted == False
+            ChatMessage.is_deleted.is_(False)
         ).order_by(ChatMessage.sent_at.desc()).limit(20).all()
 
         return jsonify({

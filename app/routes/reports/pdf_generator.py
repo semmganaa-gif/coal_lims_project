@@ -2,10 +2,17 @@
 # -*- coding: utf-8 -*-
 """PDF тайлан үүсгэгч."""
 
+import logging
 import os
+from datetime import datetime
 from io import BytesIO
 
 from flask import render_template, current_app, url_for, request
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+from app import db
+from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
 # Optional import - xhtml2pdf дутуу байж болно
 try:
@@ -14,16 +21,8 @@ try:
 except ImportError:
     pisa = None
     XHTML2PDF_AVAILABLE = False
-from datetime import datetime
-from app import db
-from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
-import logging
 _logger = logging.getLogger(__name__)
-
-# Font registration for Cyrillic support
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 
 _font_registered = False
 

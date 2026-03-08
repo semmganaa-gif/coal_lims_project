@@ -4,15 +4,19 @@
 
 import os
 import uuid
+from datetime import datetime, date
+
 from flask import (
     render_template, request, redirect, url_for,
-    flash, jsonify, send_file, current_app
+    flash, jsonify, send_file, current_app, abort
 )
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+
 from app import db
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
-from datetime import datetime, date
+from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
+from app.utils.database import safe_commit
 
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 IMAGE_MAGIC_BYTES = {
@@ -23,8 +27,6 @@ IMAGE_MAGIC_BYTES = {
     b'RIFF': 'webp',
 }
 MAX_SIGNATURE_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-from app.utils.database import safe_commit
-from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
 
 
 # -------------------------------------------------
@@ -172,7 +174,9 @@ def delete_signature(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
-    sig = ReportSignature.query.get_or_404(id)
+    sig = db.session.get(ReportSignature, id)
+    if not sig:
+        abort(404)
     sig.is_active = False
     safe_commit("Устгагдлаа.", "Устгахад алдаа гарлаа.")
     return redirect(url_for("pdf_reports.signature_list"))
@@ -185,7 +189,9 @@ def delete_signature(id):
 @login_required
 def report_detail(id):
     """Тайлангийн дэлгэрэнгүй."""
-    report = LabReport.query.get_or_404(id)
+    report = db.session.get(LabReport, id)
+    if not report:
+        abort(404)
 
     # Гарын үсэг, тамгын сонголт
     signatures = ReportSignature.query.filter_by(
@@ -221,7 +227,9 @@ def approve_report(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
-    report = LabReport.query.get_or_404(id)
+    report = db.session.get(LabReport, id)
+    if not report:
+        abort(404)
 
     # Гарын үсэг, тамга сонгох
     analyst_sig_id = request.form.get("analyst_signature_id")
@@ -256,7 +264,9 @@ def approve_report(id):
 @login_required
 def download_report(id):
     """PDF татах."""
-    report = LabReport.query.get_or_404(id)
+    report = db.session.get(LabReport, id)
+    if not report:
+        abort(404)
 
     if not report.pdf_path:
         flash("PDF файл олдсонгүй.", "warning")
@@ -290,7 +300,9 @@ def delete_report(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
-    report = LabReport.query.get_or_404(id)
+    report = db.session.get(LabReport, id)
+    if not report:
+        abort(404)
 
     # PDF файл устгах
     if report.pdf_path:
@@ -350,10 +362,13 @@ def api_create_report():
         # Огноо parse
         date_from = None
         date_to = None
-        if date_from_str:
-            date_from = datetime.strptime(date_from_str, "%Y-%m-%d").date()
-        if date_to_str:
-            date_to = datetime.strptime(date_to_str, "%Y-%m-%d").date()
+        try:
+            if date_from_str:
+                date_from = datetime.strptime(date_from_str, "%Y-%m-%d").date()
+            if date_to_str:
+                date_to = datetime.strptime(date_to_str, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({"success": False, "error": "Буруу огнооны формат. YYYY-MM-DD байх ёстой"}), 400
 
         # Лаб төрлөөр тайлан үүсгэх
         from app.routes.reports.pdf_generator import (

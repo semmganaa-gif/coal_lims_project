@@ -1,8 +1,12 @@
 # app/routes/quality/capa.py
 """Залруулах ажиллагааны бүртгэл - LAB.02.00.04 / ISO 17025 Clause 8.7"""
 
-from flask import render_template, flash, redirect, url_for, request
+import logging
+from datetime import date
+
+from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+
 from app import db
 from app.models import CorrectiveAction
 from app.utils.database import safe_commit
@@ -11,8 +15,6 @@ from app.utils.quality_helpers import (
     calculate_status_stats,
     generate_sequential_code
 )
-from datetime import date
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +88,9 @@ def register_routes(bp):
     @bp.route("/capa/<int:id>")
     @login_required
     def capa_detail(id):
-        record = CorrectiveAction.query.get_or_404(id)
+        record = db.session.get(CorrectiveAction, id)
+        if not record:
+            abort(404)
         return render_template(
             'quality/capa_detail.html',
             record=record,
@@ -98,7 +102,9 @@ def register_routes(bp):
     @require_quality_edit('quality.capa_list')
     def capa_fill(id):
         """Хэсэг 1: Хэрэгжүүлэгч бөглөх."""
-        record = CorrectiveAction.query.get_or_404(id)
+        record = db.session.get(CorrectiveAction, id)
+        if not record:
+            abort(404)
         record.issue_description = request.form.get('issue_description', '').strip() or record.issue_description
         record.corrective_action = request.form.get('corrective_action', '').strip()
         record.notes = request.form.get('notes', '').strip()
@@ -121,7 +127,9 @@ def register_routes(bp):
     @require_quality_edit('quality.capa_list')
     def capa_review(id):
         """Хэсэг 2: Хяналт (Техникийн менежер)."""
-        record = CorrectiveAction.query.get_or_404(id)
+        record = db.session.get(CorrectiveAction, id)
+        if not record:
+            abort(404)
         record.completed_on_time = request.form.get('completed_on_time') == '1'
         record.fully_resolved = request.form.get('fully_resolved') == '1'
         record.residual_risk_exists = request.form.get('residual_risk_exists') == '1'

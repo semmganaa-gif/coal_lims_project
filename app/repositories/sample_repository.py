@@ -38,7 +38,7 @@ class SampleRepository:
             >>> if sample:
             ...     print(sample.sample_code)
         """
-        return Sample.query.get(sample_id)
+        return db.session.get(Sample, sample_id)
 
     @staticmethod
     def get_by_id_or_404(sample_id: int) -> Sample:
@@ -54,7 +54,11 @@ class SampleRepository:
         Raises:
             404 error if not found
         """
-        return Sample.query.get_or_404(sample_id)
+        sample = db.session.get(Sample, sample_id)
+        if sample is None:
+            from flask import abort
+            abort(404)
+        return sample
 
     @staticmethod
     def get_by_ids(sample_ids: list[int]) -> list[Sample]:

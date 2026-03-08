@@ -9,6 +9,10 @@ Sample-related API endpoints:
 """
 
 import asyncio
+import json
+import logging
+
+from datetime import date, datetime, timedelta
 
 from flask import (
     request,
@@ -18,18 +22,19 @@ from flask import (
     render_template,
     flash,
 )
-from flask_login import login_required
-from datetime import datetime, timedelta
-import json
-
+from flask_login import login_required, current_user
+from sqlalchemy import extract, func
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
+
 from app import db, limiter
-from app.models import Sample, AnalysisResult, AnalysisResultLog
+from app.models import AnalysisType, Sample, AnalysisResult, AnalysisResultLog
 from app.utils.datetime import now_local
 from app.utils.codes import to_base_list
 from app.utils.security import escape_like_pattern
 from .helpers import _aggregate_sample_status
+
+logger = logging.getLogger(__name__)
 
 # Service layer imports
 from app.services import (
@@ -182,7 +187,6 @@ def register_routes(bp):
             if s.return_sample:
                 retention_html = '<span class="badge bg-primary">Return</span>'
             elif s.retention_date:
-                from datetime import date
                 today = date.today()
                 days_left = (s.retention_date - today).days
                 if days_left < 0:
@@ -300,7 +304,10 @@ def register_routes(bp):
     @bp.route("/sample_history/<int:sample_id>")
     @login_required
     async def sample_history(sample_id):
-        sample = Sample.query.get_or_404(sample_id)
+        from flask import abort
+        sample = db.session.get(Sample, sample_id)
+        if not sample:
+            abort(404)
         results = (
             AnalysisResult.query
             .options(joinedload(AnalysisResult.user))
@@ -331,7 +338,6 @@ def register_routes(bp):
     @login_required
     @limiter.limit("100 per minute")
     async def archive_hub():
-        from sqlalchemy import func, extract
         from collections import defaultdict
 
         # --- POST: Restore - Uses service ---
@@ -436,8 +442,7 @@ def register_routes(bp):
                         "status": r.status,
                     }
 
-        # 4. Analysis types (from AnalysisType)
-        from app.models import AnalysisType
+        # 4. Analysis types
         analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
 
         # Month names
@@ -479,7 +484,7 @@ def register_routes(bp):
             - analysis_by_status: Count by analysis status
             - daily_trend: Daily trend
         """
-        from sqlalchemy import func, case
+        from sqlalchemy import case
 
         today = now_local().date()
 
@@ -665,8 +670,6 @@ def register_routes(bp):
     @login_required
     async def htmx_search_samples():
         """htmx: Search samples (partial HTML)."""
-        from app.utils.security import escape_like_pattern
-
         q = request.args.get("q", "").strip()
         if len(q) < 2:
             return '<div class="text-muted small">Enter 2+ characters</div>'
@@ -719,8 +722,6 @@ def register_routes(bp):
     @login_required
     async def search_samples_json():
         """JSON: Search samples (used in complaints, registrations, etc.)."""
-        from app.utils.security import escape_like_pattern
-
         q = request.args.get("q", "").strip()
         if len(q) < 2:
             return jsonify([])
@@ -774,7 +775,7 @@ def register_routes(bp):
                 try:
                     count = 0
                     for sid in sample_ids:
-                        sample = Sample.query.get(sid)
+                        sample = db.session.get(Sample, sid)
                         if not sample:
                             continue
                         for code in codes:
@@ -808,7 +809,7 @@ def register_routes(bp):
                     })
                 except Exception as e:
                     db.session.rollback()
-                    logging.getLogger(__name__).error(f"MG repeat error: {e}", exc_info=True)
+                    logger.error(f"MG repeat error: {e}", exc_info=True)
                     return jsonify({"success": False, "message": "Давтан шинжилгээ буцаахад алдаа гарлаа"}), 500
 
             return jsonify({"success": False, "message": "Буруу хүсэлт"}), 400

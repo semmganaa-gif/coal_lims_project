@@ -3,19 +3,20 @@
 """Тоног төхөөрөмжийн үндсэн CRUD үйлдлүүд."""
 
 import os
-from werkzeug.utils import secure_filename
+from datetime import datetime, timedelta
+
 from flask import (
     render_template, request, redirect, url_for,
-    flash, send_from_directory, current_app
+    flash, abort, send_from_directory, current_app
 )
 from flask_login import login_required, current_user
+from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
+
 from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
-from datetime import datetime, timedelta
-from app.utils.datetime import now_local
 from app.utils.audit import log_audit
-from sqlalchemy.exc import IntegrityError
-
+from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
 from app.routes.equipment import equipment_bp, MAX_FILE_SIZE, ALLOWED_EXTENSIONS
 
@@ -75,7 +76,9 @@ def equipment_list():
 @login_required
 def equipment_detail(id):
     """Төхөөрөмжийн дэлгэрэнгүй мэдээлэл + журнал."""
-    eq = Equipment.query.get_or_404(id)
+    eq = db.session.get(Equipment, id)
+    if not eq:
+        abort(404)
     usage_logs = UsageLog.query.filter_by(equipment_id=id).order_by(UsageLog.start_time.desc()).all()
     return render_template("equipment_detail.html", eq=eq, usage_logs=usage_logs)
 
@@ -84,7 +87,9 @@ def equipment_detail(id):
 @login_required
 def equipment_journal_page(id):
     """Тухайн багажийн тусдаа журнал хуудас."""
-    eq = Equipment.query.get_or_404(id)
+    eq = db.session.get(Equipment, id)
+    if not eq:
+        abort(404)
     today = get_shift_date()
     return render_template(
         "equipment_eq_journal.html",
@@ -206,7 +211,9 @@ def edit_equipment(id):
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_detail", id=id))
 
-    eq = Equipment.query.get_or_404(id)
+    eq = db.session.get(Equipment, id)
+    if not eq:
+        abort(404)
     eq.name = request.form.get("name")
     eq.manufacturer = request.form.get("manufacturer")
     eq.model = request.form.get("model")
@@ -322,7 +329,9 @@ def delete_equipment(id):
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    eq = Equipment.query.get_or_404(id)
+    eq = db.session.get(Equipment, id)
+    if not eq:
+        abort(404)
     eq_name = eq.name
     eq_id = eq.id
     has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
@@ -373,7 +382,7 @@ def bulk_delete():
     retired_names = []
 
     for eq_id in ids:
-        eq = Equipment.query.get(eq_id)
+        eq = db.session.get(Equipment, eq_id)
         if eq:
             has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
                           UsageLog.query.filter_by(equipment_id=eq.id).first()
@@ -425,12 +434,19 @@ def bulk_delete():
 @login_required
 def add_maintenance_log(id):
     """Засвар үйлчилгээний бүртгэл нэмэх."""
-    eq = Equipment.query.get_or_404(id)
+    eq = db.session.get(Equipment, id)
+    if not eq:
+        abort(404)
     action_type = request.form.get("action_type")
     next_url = request.form.get("next") or url_for("equipment.equipment_detail", id=id)
 
     action_date_str = request.form.get("action_date")
-    action_date = datetime.strptime(action_date_str, "%Y-%m-%d") if action_date_str else now_local()
+    action_date = now_local()
+    if action_date_str:
+        try:
+            action_date = datetime.strptime(action_date_str, "%Y-%m-%d")
+        except ValueError:
+            pass
 
     file_filename = None
     if 'certificate_file' in request.files:
@@ -550,7 +566,9 @@ def add_maintenance_log(id):
 @login_required
 def download_certificate(log_id):
     """Гэрчилгээний файл татах."""
-    log = MaintenanceLog.query.get_or_404(log_id)
+    log = db.session.get(MaintenanceLog, log_id)
+    if not log:
+        abort(404)
     if not log.file_path:
         flash("Файл олдсонгүй.", "warning")
         return redirect(request.referrer or url_for('equipment.equipment_list'))

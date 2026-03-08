@@ -7,11 +7,11 @@
   - /correlation_check - Correlation check
 """
 
+import re
 from collections import defaultdict
 
 from flask import request, render_template, flash, redirect, url_for
 from flask_login import login_required
-import re
 
 from app import db
 from app.models import Sample, AnalysisResult

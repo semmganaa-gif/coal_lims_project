@@ -4,15 +4,17 @@
 AnalysisResult-аас CM/GBW дээжний үр дүнг татаж Westgard шалгах.
 """
 
-from flask import render_template, jsonify
-from flask_login import login_required
-from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
+import json
 import logging
 import statistics
-from datetime import datetime  # ✅ sort хамгаалалт
+from datetime import datetime
 
-from app.utils.westgard import check_westgard_rules, get_qc_status, check_single_value
+from flask import render_template, jsonify
+from flask_login import login_required
+
+from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
 from app.monitoring import track_qc_check
+from app.utils.westgard import check_westgard_rules, get_qc_status, check_single_value
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +144,6 @@ def _get_target_and_tolerance(sample, analysis_code: str):
 
     targets = active_std.targets
     if isinstance(targets, str):
-        import json
         try:
             targets = json.loads(targets)
         except (json.JSONDecodeError, TypeError, ValueError):
@@ -202,7 +203,6 @@ def register_routes(bp):
                     try:
                         val = float(r.final_result)
 
-                        # ✅ lcl/ucl 0.0 асуудлыг зассан
                         if lcl is not None and val < lcl:
                             in_control = False
                         if ucl is not None and val > ucl:
@@ -266,7 +266,7 @@ def register_routes(bp):
                 grouped[key] = {
                     'results': [],
                     'sample': sample,
-                    'qc_type': qc_type,  # ✅ таахгүй, зөв хадгална
+                    'qc_type': qc_type,
                 }
 
             if r.final_result is None:
@@ -275,7 +275,7 @@ def register_routes(bp):
             try:
                 value = float(r.final_result)
 
-                # ✅ ad -> dry
+                # ad -> dry
                 if r.analysis_code in AD_ANALYSES:
                     mad = _get_mad_for_sample(r.sample_id)
                     if mad is not None:
@@ -307,7 +307,7 @@ def register_routes(bp):
                 })
                 continue
 
-            # ✅ Westgard rules-д: хуучнаас шинэ дараалал
+            # Westgard rules-д: хуучнаас шинэ дараалал
             results_list.sort(key=lambda x: x['date'] or datetime.min)
             values_all = [r['value'] for r in results_list]
             values = values_all[-20:]  # хамгийн сүүлийн 20 (chronological хэвээр)
@@ -391,7 +391,7 @@ def register_routes(bp):
             try:
                 value = float(r.final_result)
 
-                # ✅ ad -> dry
+                # ad -> dry
                 if analysis_code in AD_ANALYSES:
                     mad = _get_mad_for_sample(r.sample_id)
                     if mad is not None:
@@ -414,7 +414,7 @@ def register_routes(bp):
                 "count": len(data_points)
             })
 
-        # ✅ Энд string isoformat байгаа тул chronological sort хийхэд safe
+        # String isoformat тул chronological sort хийхэд safe
         data_points.sort(key=lambda x: x['date'] or '', reverse=False)  # хуучнаас шинэ
         values_all = [d['value'] for d in data_points]
         values = values_all[-20:]  # хамгийн сүүлийн 20 (chronological)

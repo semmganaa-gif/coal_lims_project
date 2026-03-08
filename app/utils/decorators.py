@@ -99,7 +99,7 @@ def role_or_owner_required(*allowed_roles: str, owner_check: Optional[Callable[[
         >>> @bp.route('/sample/edit/<int:sample_id>')
         >>> @login_required
         >>> @role_or_owner_required('admin', 'senior',
-        ...     owner_check=lambda sample_id: Sample.query.get(sample_id).user_id == current_user.id)
+        ...     owner_check=lambda sample_id: db.session.get(Sample, sample_id).user_id == current_user.id)
         >>> def edit_sample(sample_id):
         >>>     ...
 

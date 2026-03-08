@@ -1,4 +1,4 @@
-# app/routes/admin_routes.py
+# app/routes/admin/routes.py
 # -*- coding: utf-8 -*-
 """
 Админ удирдлагын модуль.
@@ -7,23 +7,24 @@
 хяналтын стандартууд болон GBW стандартуудын удирдлагыг хариуцна.
 """
 
+import json
 import logging
-from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
-from flask_login import login_required, current_user
-from app import db
-from app.models import User, AnalysisType, AnalysisProfile, SystemSetting
-import sqlalchemy as sa
 from functools import wraps
 
-logger = logging.getLogger(__name__)
-import json
+import sqlalchemy as sa
+from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
+from flask_login import login_required, current_user
 
-# Forms болон Constants импорт
-from app.forms import UserManagementForm, SimpleProfileForm
+from app import db
 from app.constants import SAMPLE_TYPE_CHOICES_MAP, CHPP_CONFIG_GROUPS, MASTER_ANALYSIS_TYPES_LIST
-from app.models import ControlStandard
-from app.models import GbwStandard
+from app.forms import UserManagementForm, SimpleProfileForm
+from app.models import (
+    User, AnalysisType, AnalysisProfile, SystemSetting,
+    ControlStandard, GbwStandard,
+)
 from app.utils.audit import log_audit
+
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -90,6 +91,84 @@ def _seed_analysis_types():
             flash('Шинжилгээний төрөл үүсгэх/шинэчлэх алдаа гарлаа.', 'danger')
 
 
+def _auto_populate_profiles():
+    """
+    Simple болон CHPP профайлуудыг автоматаар үүсгэх.
+
+    Returns:
+        True бол шинэ профайл нэмэгдсэн (commit хийгдсэн, redirect шаардлагатай)
+    """
+    added_new = False
+
+    # Simple Profiles (CHPP-ээс бусад)
+    for client, types in SAMPLE_TYPE_CHOICES_MAP.items():
+        if client == 'CHPP':
+            continue
+        for s_type in types:
+            exists = AnalysisProfile.query.filter(
+                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
+                AnalysisProfile.client_name == client,
+                AnalysisProfile.sample_type == s_type
+            ).first()
+            if not exists:
+                db.session.add(AnalysisProfile(
+                    client_name=client,
+                    sample_type=s_type,
+                    pattern=None,
+                    analyses_json="[]"
+                ))
+                added_new = True
+
+    # CHPP Pattern Profiles
+    for hourly_type, config in CHPP_CONFIG_GROUPS.items():
+        for sample in config['samples']:
+            sample_name = sample['name']
+            exists = AnalysisProfile.query.filter(
+                AnalysisProfile.pattern == sample_name,
+                AnalysisProfile.client_name == 'CHPP',
+                AnalysisProfile.sample_type == hourly_type
+            ).first()
+            if not exists:
+                db.session.add(AnalysisProfile(
+                    client_name='CHPP',
+                    sample_type=hourly_type,
+                    pattern=sample_name,
+                    analyses_json="[]",
+                    priority=10
+                ))
+                added_new = True
+
+    if added_new:
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f'Profile auto-populate error: {e}', exc_info=True)
+            flash(f'Профайл үүсгэх алдаа: {str(e)[:100]}', 'danger')
+
+    return added_new
+
+
+def _load_gi_shift_config():
+    """Gi ээлжийн тохиргоо DB-с унших, default утгатай."""
+    gi_shift_config = {}
+    gi_setting = SystemSetting.query.filter_by(category='gi_shift', key='config').first()
+    if gi_setting and gi_setting.value:
+        try:
+            gi_shift_config = json.loads(gi_setting.value)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    if not gi_shift_config:
+        gi_shift_config = {
+            'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
+            'PF221': ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'],
+            'PF231': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
+        }
+
+    return gi_shift_config
+
+
 # ==============================================================================
 # 1. ХЭРЭГЛЭГЧИЙН УДИРДЛАГА
 # ==============================================================================
@@ -151,7 +230,9 @@ def manage_users():
 @admin_required
 def edit_user(user_id):
     """Хэрэглэгчийн мэдээлэл засах."""
-    user_to_edit = User.query.get_or_404(user_id)
+    user_to_edit = db.session.get(User, user_id)
+    if user_to_edit is None:
+        abort(404)
     form = UserManagementForm(obj=user_to_edit)
 
     if form.validate_on_submit():
@@ -233,7 +314,9 @@ def delete_user(user_id):
         flash("Админ хэрэглэгч өөрийгөө устгах боломжгүй.", 'danger')
         return redirect(url_for('admin.manage_users'))
 
-    user_to_delete = User.query.get_or_404(user_id)
+    user_to_delete = db.session.get(User, user_id)
+    if user_to_delete is None:
+        abort(404)
 
     # Админ хэрэглэгчийг устгахыг хориглох
     if user_to_delete.role == 'admin':
@@ -280,7 +363,7 @@ def analysis_config():
 
         chpp_profiles = AnalysisProfile.query.filter(
             AnalysisProfile.client_name == 'CHPP',
-            AnalysisProfile.pattern is not None,
+            AnalysisProfile.pattern.isnot(None),
             AnalysisProfile.pattern != ''
         ).all()
 
@@ -322,58 +405,11 @@ def analysis_config():
             flash(f'Тохиргоо хадгалах алдаа: {str(e)[:100]}', 'danger')
         return redirect(url_for('admin.analysis_config'))
 
-    # 3. Auto-populate Simple Profiles (CHPP-ээс бусад)
-    added_new = False
-    for client, types in SAMPLE_TYPE_CHOICES_MAP.items():
-        if client == 'CHPP':
-            continue
-        for s_type in types:
-            exists = AnalysisProfile.query.filter(
-                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-                AnalysisProfile.client_name == client,
-                AnalysisProfile.sample_type == s_type
-            ).first()
-
-            if not exists:
-                new_profile = AnalysisProfile(
-                    client_name=client,
-                    sample_type=s_type,
-                    pattern=None,
-                    analyses_json="[]"
-                )
-                db.session.add(new_profile)
-                added_new = True
-
-    # 4. Auto-populate CHPP Pattern Profiles
-    for hourly_type, config in CHPP_CONFIG_GROUPS.items():
-        for sample in config['samples']:
-            sample_name = sample['name']
-            exists = AnalysisProfile.query.filter(
-                AnalysisProfile.pattern == sample_name,
-                AnalysisProfile.client_name == 'CHPP',
-                AnalysisProfile.sample_type == hourly_type
-            ).first()
-
-            if not exists:
-                new_profile = AnalysisProfile(
-                    client_name='CHPP',
-                    sample_type=hourly_type,
-                    pattern=sample_name,
-                    analyses_json="[]",
-                    priority=10
-                )
-                db.session.add(new_profile)
-                added_new = True
-
-    if added_new:
-        try:
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Профайл үүсгэх алдаа: {str(e)[:100]}', 'danger')
+    # 3. Auto-populate profiles
+    if _auto_populate_profiles():
         return redirect(url_for('admin.analysis_config'))
 
-    # 5. Data Fetch for GET
+    # 4. Data Fetch for GET
     # MG codes belong to WTL_MG multi-code page — exclude from config matrix
     MG_EXCLUDE = ['MG', 'MG_SIZE']
     analysis_types = AnalysisType.query.filter(
@@ -387,28 +423,11 @@ def analysis_config():
 
     chpp_profiles = AnalysisProfile.query.filter(
         AnalysisProfile.client_name == 'CHPP',
-        AnalysisProfile.pattern is not None,
+        AnalysisProfile.pattern.isnot(None),
         AnalysisProfile.pattern != ''
     ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
 
     simple_form = SimpleProfileForm()
-
-    # ✅ Gi ээлжийн тохиргоо унших
-    gi_shift_config = {}
-    gi_setting = SystemSetting.query.filter_by(category='gi_shift', key='config').first()
-    if gi_setting and gi_setting.value:
-        try:
-            gi_shift_config = json.loads(gi_setting.value)
-        except (json.JSONDecodeError, TypeError):
-            gi_shift_config = {}
-
-    # Default утга (хэрэв DB-д байхгүй бол)
-    if not gi_shift_config:
-        gi_shift_config = {
-            'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
-            'PF221': ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'],
-            'PF231': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
-        }
 
     return render_template(
         'analysis_config.html',
@@ -417,7 +436,7 @@ def analysis_config():
         simple_profiles=simple_profiles,
         chpp_profiles=chpp_profiles,
         chpp_config_groups=CHPP_CONFIG_GROUPS,
-        gi_shift_config=gi_shift_config,
+        gi_shift_config=_load_gi_shift_config(),
     )
 
 
@@ -430,53 +449,7 @@ def analysis_config():
 def analysis_config_simple():
     """Шинэ энгийн Card-based шинжилгээний тохиргоо"""
     _seed_analysis_types()
-
-    # Auto-populate profiles (same as original)
-    added_new = False
-    for client, types in SAMPLE_TYPE_CHOICES_MAP.items():
-        if client == 'CHPP':
-            continue
-        for s_type in types:
-            exists = AnalysisProfile.query.filter(
-                (AnalysisProfile.pattern.is_(None)) | (AnalysisProfile.pattern == ''),
-                AnalysisProfile.client_name == client,
-                AnalysisProfile.sample_type == s_type
-            ).first()
-            if not exists:
-                new_profile = AnalysisProfile(
-                    client_name=client,
-                    sample_type=s_type,
-                    pattern=None,
-                    analyses_json="[]"
-                )
-                db.session.add(new_profile)
-                added_new = True
-
-    # Auto-populate CHPP Pattern Profiles
-    for hourly_type, config in CHPP_CONFIG_GROUPS.items():
-        for sample in config['samples']:
-            sample_name = sample['name']
-            exists = AnalysisProfile.query.filter(
-                AnalysisProfile.pattern == sample_name,
-                AnalysisProfile.client_name == 'CHPP',
-                AnalysisProfile.sample_type == hourly_type
-            ).first()
-            if not exists:
-                new_profile = AnalysisProfile(
-                    client_name='CHPP',
-                    sample_type=hourly_type,
-                    pattern=sample_name,
-                    analyses_json="[]",
-                    priority=10
-                )
-                db.session.add(new_profile)
-                added_new = True
-
-    if added_new:
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
+    _auto_populate_profiles()
 
     # Fetch data
     analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
@@ -501,22 +474,6 @@ def analysis_config_simple():
         AnalysisProfile.pattern != ''
     ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
 
-    # Gi shift config
-    gi_shift_config = {}
-    gi_setting = SystemSetting.query.filter_by(category='gi_shift', key='config').first()
-    if gi_setting and gi_setting.value:
-        try:
-            gi_shift_config = json.loads(gi_setting.value)
-        except (json.JSONDecodeError, TypeError):
-            pass
-
-    if not gi_shift_config:
-        gi_shift_config = {
-            'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
-            'PF221': ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'],
-            'PF231': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'],
-        }
-
     form = SimpleProfileForm()
     return render_template(
         'analysis_config_simple.html',
@@ -525,7 +482,7 @@ def analysis_config_simple():
         grouped_profiles=grouped_profiles,
         chpp_profiles=chpp_profiles,
         chpp_config_groups=CHPP_CONFIG_GROUPS,
-        gi_shift_config=gi_shift_config,
+        gi_shift_config=_load_gi_shift_config(),
     )
 
 
@@ -593,7 +550,9 @@ def analysis_config_simple_save():
 @senior_or_admin_required
 def delete_pattern_profile(profile_id):
     """Pattern профайл устгах."""
-    profile = AnalysisProfile.query.get_or_404(profile_id)
+    profile = db.session.get(AnalysisProfile, profile_id)
+    if profile is None:
+        abort(404)
     if profile.pattern:
         db.session.delete(profile)
         try:
@@ -649,7 +608,9 @@ def create_standard():
 @senior_or_admin_required
 def update_standard(id):
     """Хяналтын стандарт засах."""
-    std = ControlStandard.query.get_or_404(id)
+    std = db.session.get(ControlStandard, id)
+    if std is None:
+        abort(404)
     data = request.get_json()
 
     # Validation
@@ -673,7 +634,9 @@ def update_standard(id):
 @senior_or_admin_required
 def delete_standard(id):
     """Хяналтын стандарт устгах."""
-    std = ControlStandard.query.get_or_404(id)
+    std = db.session.get(ControlStandard, id)
+    if std is None:
+        abort(404)
 
     if std.is_active:
         return jsonify({"message": "Идэвхтэй стандартыг устгах боломжгүй!"}), 400
@@ -694,8 +657,10 @@ def delete_standard(id):
 @senior_or_admin_required
 def activate_standard(id):
     """Хяналтын стандарт идэвхжүүлэх."""
+    std = db.session.get(ControlStandard, id)
+    if std is None:
+        abort(404)
     ControlStandard.query.update({ControlStandard.is_active: False})
-    std = ControlStandard.query.get_or_404(id)
     std.is_active = True
     try:
         db.session.commit()
@@ -749,7 +714,9 @@ def create_gbw():
 @senior_or_admin_required
 def update_gbw(id):
     """GBW стандарт засах."""
-    gbw = GbwStandard.query.get_or_404(id)
+    gbw = db.session.get(GbwStandard, id)
+    if gbw is None:
+        abort(404)
     data = request.get_json()
 
     if not data.get('name') or not data.get('targets'):
@@ -772,7 +739,9 @@ def update_gbw(id):
 @senior_or_admin_required
 def delete_gbw(id):
     """GBW стандарт устгах."""
-    gbw = GbwStandard.query.get_or_404(id)
+    gbw = db.session.get(GbwStandard, id)
+    if gbw is None:
+        abort(404)
 
     if gbw.is_active:
         return jsonify({"message": "Ашиглагдаж буй GBW-ийг устгах боломжгүй!"}), 400
@@ -793,11 +762,15 @@ def delete_gbw(id):
 @senior_or_admin_required
 def activate_gbw(id):
     """GBW стандарт идэвхжүүлэх."""
-    # 1. Бүх GBW-ийг идэвхгүй болгоно (Зөвхөн нэг GBW идэвхтэй байх зарчмаар)
+    # 1. Эхлээд ID шалгах (бүгдийг идэвхгүй болгохын өмнө)
+    gbw = db.session.get(GbwStandard, id)
+    if gbw is None:
+        abort(404)
+
+    # 2. Бүх GBW-ийг идэвхгүй болгоно (Зөвхөн нэг GBW идэвхтэй байх зарчмаар)
     GbwStandard.query.update({GbwStandard.is_active: False})
 
-    # 2. Сонгосон GBW-ийг идэвхжүүлнэ
-    gbw = GbwStandard.query.get_or_404(id)
+    # 3. Сонгосон GBW-ийг идэвхжүүлнэ
     gbw.is_active = True
 
     try:
@@ -814,7 +787,9 @@ def activate_gbw(id):
 @senior_or_admin_required
 def deactivate_gbw(id):
     """GBW стандарт идэвхгүй болгох."""
-    gbw = GbwStandard.query.get_or_404(id)
+    gbw = db.session.get(GbwStandard, id)
+    if gbw is None:
+        abort(404)
     gbw.is_active = False
     try:
         db.session.commit()

@@ -20,12 +20,16 @@ def register_routes(bp):
     @login_required
     @require_quality_edit('quality.environmental_list')
     def environmental_add():
-        temp = float(request.form['temperature'])
-        humidity = float(request.form['humidity'])
-        temp_min = float(request.form.get('temp_min', 15))
-        temp_max = float(request.form.get('temp_max', 30))
-        humidity_min = float(request.form.get('humidity_min', 20))
-        humidity_max = float(request.form.get('humidity_max', 70))
+        try:
+            temp = float(request.form['temperature'])
+            humidity = float(request.form['humidity'])
+            temp_min = float(request.form.get('temp_min', 15))
+            temp_max = float(request.form.get('temp_max', 30))
+            humidity_min = float(request.form.get('humidity_min', 20))
+            humidity_max = float(request.form.get('humidity_max', 70))
+        except (ValueError, TypeError, KeyError):
+            flash("Тоон утга буруу байна.", "danger")
+            return redirect(url_for('quality.environmental_list'))
 
         within_limits = (temp_min <= temp <= temp_max) and (humidity_min <= humidity <= humidity_max)
 

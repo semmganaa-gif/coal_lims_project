@@ -18,7 +18,7 @@ from app.utils.security import escape_like_pattern
 from app.forms import KPIReportFilterForm
 from app.constants import ERROR_REASON_KEYS
 from app.utils.shifts import get_shift_info
-from app.utils.settings import get_error_reason_labels  # ✅ DB-ээс унших
+from app.utils.settings import get_error_reason_labels
 
 
 def _aggregate_error_reason_stats(date_from=None, date_to=None, user_name=None):
@@ -38,7 +38,6 @@ def _aggregate_error_reason_stats(date_from=None, date_to=None, user_name=None):
 
     # Химичийн нэрээр шүүх
     if user_name:
-        from app.utils.security import escape_like_pattern
         safe_user = escape_like_pattern(user_name)
         q = q.join(User, AnalysisResultLog.user_id == User.id).filter(
             User.username.ilike(f"%{safe_user}%")
@@ -276,7 +275,7 @@ def register_routes(bp):
             rows=result_rows,
             total_count=total_count,
             error_stats=error_stats,
-            error_reason_labels=get_error_reason_labels(),  # ✅ DB-ээс унших
+            error_reason_labels=get_error_reason_labels(),
             group_by=group_by,
             shift_summary=shift_summary
         )

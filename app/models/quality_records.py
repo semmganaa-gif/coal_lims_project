@@ -3,6 +3,8 @@
 Quality management records.
 """
 
+import json
+
 from sqlalchemy import CheckConstraint
 from app import db
 from app.utils.datetime import now_local as now_mn
@@ -389,8 +391,3 @@ class NonConformityRecord(db.Model):
 
     def __repr__(self):
         return f"<NonConformity {self.record_no} - {self.status}>"
-
-
-# -------------------------
-# САРЫН ТӨЛӨВЛӨГӨӨ (Monthly Plan)
-# -------------------------

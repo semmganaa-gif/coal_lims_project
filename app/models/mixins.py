@@ -4,6 +4,8 @@
 Shared model mixins and constants.
 """
 
+import hashlib
+
 from app import db
 
 # Float тооны харьцуулалтын хязгаар (epsilon)
@@ -16,6 +18,17 @@ class HashableMixin:
 
     Аудит бүртгэлүүдийн бүрэн бүтэн байдлыг SHA-256 hash-аар хангана.
     Бүртгэл өөрчлөгдсөн эсэхийг шалгах боломжтой.
+
+    Хэрэглээ:
+        class MyLog(HashableMixin, db.Model):
+            data_hash = db.Column(db.String(64))
+
+            def _get_hash_data(self) -> str:
+                return f"{self.field1}|{self.field2}"
+
+        log = MyLog(...)
+        log.set_hash()          # data_hash автомат тооцоолно
+        log.verify_hash()       # True/False
     """
 
     def _get_hash_data(self) -> str:
@@ -24,8 +37,11 @@ class HashableMixin:
 
     def compute_hash(self) -> str:
         """Compute SHA-256 hash of the record data."""
-        import hashlib
         return hashlib.sha256(self._get_hash_data().encode('utf-8')).hexdigest()
+
+    def set_hash(self) -> None:
+        """data_hash талбарыг автомат тооцоолж тохируулна."""
+        self.data_hash = self.compute_hash()
 
     def verify_hash(self) -> bool:
         """Verify hash integrity. Returns True if hash is valid or not set."""

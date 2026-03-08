@@ -1,19 +1,24 @@
-# app/routes/settings_routes.py
+# app/routes/settings/routes.py
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, send_from_directory, abort
-from flask_login import login_required, current_user
-from datetime import datetime
 import json
 import os
 import re
+from datetime import datetime
+
+from flask import (
+    Blueprint, render_template, request, redirect, url_for,
+    flash, send_from_directory, abort, jsonify, current_app
+)
+from flask_login import login_required, current_user
 
 from app import db
+from app.constants import BOTTLE_TOLERANCE
+from app.models import Bottle, BottleConstant, SystemSetting
 from app.utils.database import safe_commit
+from app.utils.datetime import now_local as now_mn
 from app.utils.repeatability_loader import load_limit_rules, clear_cache
-from app.models import Bottle, BottleConstant, SystemSetting  # моделууд models.py дотор байгаа хувилбар
-from app.utils.datetime import now_local as now_mn  # ✅ Монгол цагийн функц
 
 settings_bp = Blueprint("settings", __name__, url_prefix="/settings")
 
@@ -200,8 +205,6 @@ def bottles_constants_bulk():
 @login_required
 def bottles_constants_bulk_save():
     """Bulk хадгалалт API"""
-    from flask import jsonify
-
     if not _is_senior_or_admin():
         return jsonify({"success": False, "error": "Хандах эрхгүй"}), 403
 
@@ -288,7 +291,9 @@ def bottle_edit(bottle_id: int):
         flash("Зөвхөн ахлах/админ хэрэглэгч энэ хэсэгт хандах боломжтой.", "danger")
         return redirect(url_for("settings.bottles_index"))
 
-    bottle = Bottle.query.get_or_404(bottle_id)
+    bottle = db.session.get(Bottle, bottle_id)
+    if not bottle:
+        abort(404)
 
     if request.method == "POST":
         serial_no = (request.form.get("serial_no") or "").strip()
@@ -328,7 +333,9 @@ def bottle_delete(bottle_id: int):
     if not _is_senior_or_admin():
         return ("", 403)
 
-    bottle = Bottle.query.get_or_404(bottle_id)
+    bottle = db.session.get(Bottle, bottle_id)
+    if not bottle:
+        abort(404)
     serial = bottle.serial_no
     db.session.delete(bottle)  # cascade → constants устна
     safe_commit(f"Бортого {serial} бүртгэлээс устгагдлаа.", "Бортого устгахад алдаа гарлаа")
@@ -338,7 +345,6 @@ def bottle_delete(bottle_id: int):
 # ==========================
 # 5) Тохирцын helper функц
 # ==========================
-from app.constants import BOTTLE_TOLERANCE
 TOL = BOTTLE_TOLERANCE  # хоосон тодорхойлолтын тохирц (грамм)
 
 
@@ -695,8 +701,6 @@ SOP_CATEGORIES = {
 @login_required
 def standards_reference():
     """Стандартын лавлах хуудас - SOP болон MNS стандартууд"""
-    from flask import current_app
-
     # SOP фолдерт байгаа файлуудыг шалгах
     sop_folder = os.path.join(current_app.root_path, "..", "SOP")
     sop_folder = os.path.abspath(sop_folder)
@@ -734,8 +738,6 @@ def standards_reference():
 @login_required
 def view_standard_file(filename):
     """SOP/Стандарт файл үзэх"""
-    from flask import current_app
-
     sop_folder = os.path.join(current_app.root_path, "..", "SOP")
     sop_folder = os.path.abspath(sop_folder)
 

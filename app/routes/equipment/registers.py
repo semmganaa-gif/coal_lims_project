@@ -2,16 +2,17 @@
 # -*- coding: utf-8 -*-
 """Тоног төхөөрөмжийн тусгай бүртгэлүүд (7 журнал)."""
 
+from datetime import timedelta
+
 from flask import (
     render_template, request, redirect, url_for,
-    flash, current_app
+    flash, abort, current_app
 )
 from flask_login import login_required, current_user
+
 from app import db
 from app.models import Equipment
-from datetime import timedelta
 from app.utils.shifts import get_shift_date
-
 from app.routes.equipment import equipment_bp
 
 
@@ -169,7 +170,9 @@ def edit_register_item(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    item = Equipment.query.get_or_404(id)
+    item = db.session.get(Equipment, id)
+    if not item:
+        abort(404)
     data = request.form.to_dict()
     data.pop('csrf_token', None)
     data.pop('edit_item_id', None)
@@ -224,7 +227,7 @@ def delete_register_items():
 
     deleted = 0
     for item_id in ids:
-        item = Equipment.query.get(item_id)
+        item = db.session.get(Equipment, item_id)
         if item and item.register_type == register_type:
             db.session.delete(item)
             deleted += 1

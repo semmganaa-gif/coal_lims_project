@@ -4,17 +4,19 @@
 
 import os
 import smtplib
+from datetime import datetime
+from email import encoders
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-from flask import current_app, render_template, flash, redirect, url_for, request
+
+from flask import current_app, render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
-from datetime import datetime
+
 from app import db
 from app.models import LabReport
-from app.utils.database import safe_commit
 from app.routes.reports import pdf_reports_bp
+from app.utils.database import safe_commit
 
 
 def send_report_email(report, recipients, subject=None, body=None):
@@ -105,7 +107,9 @@ def send_email(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
-    report = LabReport.query.get_or_404(id)
+    report = db.session.get(LabReport, id)
+    if not report:
+        abort(404)
 
     if report.status not in ['approved', 'sent']:
         flash("Зөвхөн батлагдсан тайланг илгээх боломжтой.", "warning")

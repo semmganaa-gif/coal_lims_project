@@ -4,8 +4,6 @@
 import logging
 from datetime import date
 
-logger = logging.getLogger(__name__)
-
 from flask import jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy import func, case
@@ -14,6 +12,8 @@ from app import db, limiter
 from app.models import SparePart, SparePartUsage, SparePartLog, Equipment
 from app.routes.spare_parts import spare_parts_bp
 from app.utils.security import escape_like_pattern
+
+logger = logging.getLogger(__name__)
 
 
 @spare_parts_bp.route('/api/list')
@@ -97,7 +97,7 @@ def api_consume():
     if not spare_part_id or quantity <= 0:
         return jsonify({'success': False, 'message': 'spare_part_id and quantity are required'}), 400
 
-    spare_part = SparePart.query.get(spare_part_id)
+    spare_part = db.session.get(SparePart, spare_part_id)
     if not spare_part:
         return jsonify({'success': False, 'message': 'Spare part not found'}), 404
 
@@ -186,7 +186,7 @@ def api_consume_bulk():
             spare_part_id = item.get('spare_part_id')
             quantity = float(item.get('quantity', 0))
 
-            spare_part = SparePart.query.get(spare_part_id)
+            spare_part = db.session.get(SparePart, spare_part_id)
             if not spare_part:
                 errors.append(f'ID {spare_part_id} олдсонгүй')
                 continue
@@ -259,7 +259,6 @@ def api_search():
     if len(q) < 2:
         return jsonify([])
 
-    # ✅ SQL Injection хамгаалалт
     safe_q = escape_like_pattern(q)
     spare_parts = SparePart.query.filter(
         (SparePart.name.ilike(f'%{safe_q}%')) |

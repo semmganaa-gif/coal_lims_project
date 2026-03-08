@@ -289,6 +289,128 @@ def register_commands(app):
             f"✅ Импорт (Загвар B) дууслаа. Шинэ бичлэг: {created}, алгассан (давхардсан): {skipped}"
         )
 
+    # =======================
+    # LICENSE COMMANDS
+    # =======================
+    @app.cli.group()
+    def license():
+        """Лицензийн удирдлагын командууд."""
+        pass
+
+    @license.command("generate")
+    @click.option("--company", required=True, help="Компанийн нэр")
+    @click.option("--expiry", required=True, help="Дуусах огноо (YYYY-MM-DD)")
+    @click.option("--hardware-id", default=None, help="Hardware ID (заавал биш)")
+    @click.option("--max-users", default=10, help="Хэрэглэгчийн дээд хязгаар")
+    @click.option("--max-samples", default=10000, help="Сарын дээжний дээд хязгаар")
+    @click.option("--trial", is_flag=True, help="Туршилтын лиценз")
+    def generate_license(company, expiry, hardware_id, max_users, max_samples, trial):
+        """
+        Лиценз түлхүүр үүсгэх.
+
+        Жишээ:
+            flask license generate --company "Erdenes TT" --expiry "2027-12-31"
+            flask license generate --company "Test" --expiry "2026-06-30" --trial
+            flask license generate --company "Erdenes TT" --expiry "2027-12-31" --hardware-id ABC123
+        """
+        from app.utils.license_protection import license_manager
+
+        key = license_manager.generate_license_key(
+            company=company,
+            expiry_date=f"{expiry}T23:59:59",
+            hardware_id=hardware_id,
+            max_users=max_users,
+            max_samples=max_samples,
+            is_trial=trial,
+        )
+
+        click.echo("")
+        click.echo("=" * 60)
+        click.echo("  ЛИЦЕНЗ ТҮЛХҮҮР ҮҮСЛЭЭ")
+        click.echo("=" * 60)
+        click.echo(f"  Компани:     {company}")
+        click.echo(f"  Дуусах:      {expiry}")
+        click.echo(f"  Хэрэглэгч:  {max_users}")
+        click.echo(f"  Дээж/сар:    {max_samples}")
+        click.echo(f"  Hardware:    {hardware_id or 'ямар ч сервер'}")
+        click.echo(f"  Туршилт:    {'Тийм' if trial else 'Үгүй'}")
+        click.echo("=" * 60)
+        click.echo("")
+        click.echo(key)
+        click.echo("")
+        click.echo("Дээрх түлхүүрийг захиалагчид илгээнэ үү.")
+        click.echo("Захиалагч /license/activate хуудсанд оруулна.")
+
+    @license.command("info")
+    def license_info():
+        """Одоогийн лицензийн мэдээлэл харах."""
+        from app.models import SystemLicense
+
+        lic = SystemLicense.query.filter_by(is_active=True).first()
+        if not lic:
+            click.echo("Идэвхтэй лиценз олдсонгүй.")
+            return
+
+        click.echo("")
+        click.echo(f"  Компани:      {lic.company_name}")
+        click.echo(f"  Олгосон:      {lic.issued_date}")
+        click.echo(f"  Дуусах:       {lic.expiry_date}")
+        click.echo(f"  Үлдсэн хоног: {lic.days_remaining}")
+        click.echo(f"  Хэрэглэгч:   {lic.max_users}")
+        click.echo(f"  Дээж/сар:     {lic.max_samples_per_month}")
+        click.echo(f"  Hardware:     {lic.hardware_id or '-'}")
+        click.echo(f"  Хүчинтэй:    {'Тийм' if lic.is_valid else 'ҮГҮЙ'}")
+        click.echo(f"  Tampering:    {'ИЛЭРСЭН!' if lic.tampering_detected else 'Үгүй'}")
+
+    @license.command("extend")
+    @click.option("--days", type=int, default=None, help="Хэдэн хоногоор сунгах")
+    @click.option("--expiry", default=None, help="Шинэ дуусах огноо (YYYY-MM-DD)")
+    def extend_license(days, expiry):
+        """
+        Идэвхтэй лицензийн хугацааг сунгах (серверт шууд ажиллуулна).
+
+        Жишээ:
+            flask license extend --days 365
+            flask license extend --expiry "2028-06-30"
+        """
+        from datetime import datetime, timedelta
+        from app.models import SystemLicense
+
+        if not days and not expiry:
+            click.echo("Алдаа: --days эсвэл --expiry-н аль нэгийг заана уу.")
+            return
+
+        lic = SystemLicense.query.filter_by(is_active=True).first()
+        if not lic:
+            click.echo("Идэвхтэй лиценз олдсонгүй.")
+            return
+
+        old_expiry = lic.expiry_date
+        if expiry:
+            lic.expiry_date = datetime.fromisoformat(f"{expiry}T23:59:59")
+        else:
+            lic.expiry_date = lic.expiry_date + timedelta(days=days)
+
+        db.session.commit()
+
+        click.echo(f"Лиценз сунгагдлаа:")
+        click.echo(f"  Хуучин: {old_expiry}")
+        click.echo(f"  Шинэ:   {lic.expiry_date}")
+        click.echo(f"  Үлдсэн: {lic.days_remaining} хоног")
+
+    @license.command("hwid")
+    def show_hardware_id():
+        """Энэ компьютерийн Hardware ID харуулах."""
+        from app.utils.hardware_fingerprint import get_hardware_info
+
+        info = get_hardware_info()
+        click.echo("")
+        click.echo(f"  Hostname:   {info['hostname']}")
+        click.echo(f"  Short ID:   {info['short_id']}")
+        click.echo(f"  Full ID:    {info['hardware_id']}")
+        click.echo("")
+        click.echo("Захиалагч энэ Short ID-г чамд илгээнэ.")
+
     # ---------- EXPORT ----------
     @equipment.command("export-excel")
     @click.argument("excel_path")

@@ -230,9 +230,3 @@ class SparePartLog(HashableMixin, db.Model):
     def __repr__(self):
         return f"<SparePartLog {self.spare_part_id} {self.action}>"
 
-
-# -------------------------
-# ТООЦООЛОЛ
-# -------------------------
-
-

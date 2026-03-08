@@ -3,16 +3,17 @@
 """Химийн хог хаягдлын бүртгэл."""
 
 import logging
-from flask import render_template, request, redirect, url_for, flash, jsonify
-
-logger = logging.getLogger(__name__)
-from flask_login import login_required, current_user
-from app import db
-from app.models import ChemicalWaste, ChemicalWasteRecord
 from datetime import datetime
 
+from flask import render_template, request, redirect, url_for, flash, abort, jsonify
+from flask_login import login_required, current_user
+
+from app import db
+from app.models import ChemicalWaste, ChemicalWasteRecord
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp
+
+logger = logging.getLogger(__name__)
 
 # Хаягдах арга
 DISPOSAL_METHODS = {
@@ -155,7 +156,9 @@ def edit_waste(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.waste_list"))
 
-    waste = ChemicalWaste.query.get_or_404(id)
+    waste = db.session.get(ChemicalWaste, id)
+    if not waste:
+        abort(404)
 
     if request.method == "POST":
         try:
@@ -201,7 +204,9 @@ def delete_waste(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.waste_list"))
 
-    waste = ChemicalWaste.query.get_or_404(id)
+    waste = db.session.get(ChemicalWaste, id)
+    if not waste:
+        abort(404)
     waste.is_active = False
     safe_commit(
         success_msg=f"'{waste.name_mn}' устгагдлаа.",

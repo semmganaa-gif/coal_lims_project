@@ -164,7 +164,9 @@
       "Bash(node:*)",
       "Bash(npm --version:*)",
       "Bash(npm i:*)",
-      "Bash(codex:*)"
+      "Bash(codex:*)",
+      "Bash(kill 978:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

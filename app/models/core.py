@@ -39,7 +39,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(64), index=True, default="prep")
 
     # Мульти-лаборатори эрх
-    allowed_labs = db.Column(db.JSON, default=['coal'])  # ['coal', 'petrography', 'water']
+    allowed_labs = db.Column(db.JSON, default=lambda: ['coal'])  # ['coal', 'petrography', 'water']
 
     # Хэлний тохиргоо (i18n)
     language = db.Column(db.String(5), default='en')  # 'en' or 'mn'
@@ -342,8 +342,3 @@ class Sample(db.Model):
 
     def __repr__(self) -> str:
         return f"<Sample {self.sample_code}>"
-
-
-# -------------------------
-# ҮР ДҮН
-# -------------------------

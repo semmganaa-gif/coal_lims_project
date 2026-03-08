@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Quality control models.
+Bottle (pycnometer) models for TRD analysis.
 """
 
 from datetime import datetime
@@ -148,8 +148,3 @@ class BottleConstant(db.Model):
             f"<BottleConst b#{self.bottle_id} "
             f"avg={self.avg_value:.5f} @ {self.temperature_c}°C>"
         )
-
-
-# -------------------------
-# СИСТЕМИЙН ТОХИРГОО
-# -------------------------

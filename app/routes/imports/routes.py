@@ -1,4 +1,4 @@
-# app/routes/import_routes.py
+# app/routes/imports/routes.py
 # -*- coding: utf-8 -*-
 """
 Түүхэн CSV импорт (2009–оноос хойш)
@@ -23,8 +23,6 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple, List
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
-
-logger = logging.getLogger(__name__)
 from flask_login import login_required, current_user
 from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,6 +35,8 @@ from app.constants import MIN_VALID_YEAR, MAX_VALID_YEAR
 # -------------------------------------------------
 # Alias mapping
 # -------------------------------------------------
+logger = logging.getLogger(__name__)
+
 from app.utils.analysis_aliases import ALIAS_TO_BASE as _ALIAS_TO_BASE
 ALIAS_TO_BASE: Dict[str, str] = {k.lower(): v for k, v in _ALIAS_TO_BASE.items()}
 

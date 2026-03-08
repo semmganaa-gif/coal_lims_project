@@ -39,6 +39,12 @@ class ChatMessage(db.Model):
     # Broadcast мессеж
     is_broadcast = db.Column(db.Boolean, default=False)
 
+    # Composite indexes — чат query-уудыг хурдасгах
+    __table_args__ = (
+        db.Index('ix_chat_receiver_read', 'receiver_id', 'read_at'),
+        db.Index('ix_chat_sender_receiver', 'sender_id', 'receiver_id'),
+    )
+
     # Relationships
     sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
     receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
@@ -104,8 +110,3 @@ class UserOnlineStatus(db.Model):
     def __repr__(self):
         status = "online" if self.is_online else "offline"
         return f"<UserOnlineStatus {self.user_id}: {status}>"
-# -------------------------
-# ЛИЦЕНЗ (License Protection)
-# -------------------------
-
-

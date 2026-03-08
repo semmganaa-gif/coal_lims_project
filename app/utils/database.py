@@ -71,7 +71,7 @@ def safe_delete(obj: Any, success_msg: Optional[str] = None, error_msg: str = "�
         bool: True - амжилттай, False - алдаа гарсан
 
     Жишээ ашиглалт:
-        >>> sample = Sample.query.get(sample_id)
+        >>> sample = db.session.get(Sample, sample_id)
         >>> if safe_delete(sample, "Дээж deleted.):
         >>>     return redirect(url_for('main.index'))
     """

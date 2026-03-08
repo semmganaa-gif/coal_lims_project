@@ -101,7 +101,7 @@ ANALYSIS_SCHEMAS: dict[str, dict] = {
     "TRD": {
         "parallels": {
             "columns": [
-                {"key": "num", "label": "Crucible No."},
+                {"key": "num", "label": "Бортого №"},
                 {"key": "m1", "label": "m1 (хоосон)", "unit": "g"},
                 {"key": "m2", "label": "m2 (дүүрэн)", "unit": "g"},
                 {"key": "m", "label": "m (нүүрсний масс)", "unit": "g"},

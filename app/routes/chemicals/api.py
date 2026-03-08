@@ -45,7 +45,6 @@ def api_chemical_list():
     if not include_disposed:
         query = query.filter(Chemical.status != 'disposed')
 
-    # ✅ Limit нэмсэн
     chemicals = query.order_by(Chemical.name.asc()).limit(2000).all()
     today = date.today()
     warning_date = today + timedelta(days=30)
@@ -122,7 +121,10 @@ def api_low_stock():
 def api_expiring():
     """Хугацаа дуусах химийн бодисууд."""
     lab = request.args.get("lab", "all")
-    days = int(request.args.get("days", 30))
+    try:
+        days = int(request.args.get("days", 30))
+    except (ValueError, TypeError):
+        days = 30
 
     today = date.today()
     warning_date = today + timedelta(days=days)
@@ -177,7 +179,7 @@ def api_consume():
         if not chemical_id or quantity_used <= 0:
             return api_error("Invalid data")
 
-        chemical = Chemical.query.get(chemical_id)
+        chemical = db.session.get(Chemical, chemical_id)
         if not chemical:
             return api_error("Chemical not found", status_code=404)
 
@@ -254,12 +256,14 @@ def api_search():
     """Химийн бодис хайх (autocomplete)."""
     q = request.args.get("q", "").strip()
     lab = request.args.get("lab", "all")
-    limit = int(request.args.get("limit", 20))
+    try:
+        limit = int(request.args.get("limit", 20))
+    except (ValueError, TypeError):
+        limit = 20
 
     if len(q) < 2:
         return jsonify([])
 
-    # ✅ SQL Injection хамгаалалт
     safe_q = escape_like_pattern(q)
     query = Chemical.query.filter(
         Chemical.status != 'disposed',
@@ -361,26 +365,35 @@ def api_usage_history():
     lab = request.args.get("lab", "all")
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
-    limit = int(request.args.get("limit", 100))
+    try:
+        limit = int(request.args.get("limit", 100))
+    except (ValueError, TypeError):
+        limit = 100
 
     query = db.session.query(ChemicalUsage, Chemical).join(Chemical)
 
     if chemical_id:
-        query = query.filter(ChemicalUsage.chemical_id == int(chemical_id))
+        try:
+            query = query.filter(ChemicalUsage.chemical_id == int(chemical_id))
+        except (ValueError, TypeError):
+            return jsonify({"items": [], "count": 0})
 
     if lab and lab != "all":
         query = query.filter(
             (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
         )
 
-    if start_date:
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        query = query.filter(ChemicalUsage.used_at >= start_dt)
+    try:
+        if start_date:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(ChemicalUsage.used_at >= start_dt)
 
-    if end_date:
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-        end_dt = end_dt.replace(hour=23, minute=59, second=59)
-        query = query.filter(ChemicalUsage.used_at <= end_dt)
+        if end_date:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            end_dt = end_dt.replace(hour=23, minute=59, second=59)
+            query = query.filter(ChemicalUsage.used_at <= end_dt)
+    except ValueError:
+        return api_error("Буруу огнооны формат. YYYY-MM-DD байх ёстой", status_code=400)
 
     usages = query.order_by(ChemicalUsage.used_at.desc()).limit(limit).all()
 
@@ -432,7 +445,7 @@ def api_consume_bulk():
             if not chemical_id or quantity_used <= 0:
                 continue
 
-            chemical = Chemical.query.get(chemical_id)
+            chemical = db.session.get(Chemical, chemical_id)
             if not chemical:
                 errors.append(f"Chemical {chemical_id} not found")
                 continue

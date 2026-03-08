@@ -1,22 +1,24 @@
 # app/routes/quality/complaints.py
 """Санал гомдлын бүртгэл - LAB.02.00.01 / ISO 17025 Clause 7.9"""
 
-from flask import render_template, flash, redirect, url_for, request, jsonify
+import json
+import logging
+from collections import defaultdict
+from datetime import date
+
+from flask import render_template, flash, redirect, url_for, request, jsonify, abort
 from flask_login import login_required, current_user
+from sqlalchemy import func, extract
+
 from app import db
 from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult, AnalysisResultLog
 from app.utils.database import safe_commit
+from app.utils.datetime import now_local
 from app.utils.quality_helpers import (
     require_quality_edit,
     calculate_status_stats,
     generate_sequential_code
 )
-from datetime import date
-from app.utils.datetime import now_local
-from sqlalchemy import func, extract
-from collections import defaultdict
-import json
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +209,7 @@ def register_routes(bp):
                     ).all()
 
                     from app.models import Sample
-                    sample_obj = Sample.query.get(int(sample_id))
+                    sample_obj = db.session.get(Sample, int(sample_id))
                     sample_code = sample_obj.sample_code if sample_obj else ''
 
                     for ar in results:
@@ -255,7 +257,9 @@ def register_routes(bp):
     @bp.route("/complaints/<int:id>")
     @login_required
     def complaints_detail(id):
-        complaint = CustomerComplaint.query.get_or_404(id)
+        complaint = db.session.get(CustomerComplaint, id)
+        if not complaint:
+            abort(404)
         # Холбогдох дээжийн шинжилгээний үр дүн
         analysis_results = []
         if complaint.related_sample_id:
@@ -320,7 +324,9 @@ def register_routes(bp):
     @require_quality_edit('quality.complaints_list')
     def complaints_receive(id):
         """Хэсэг 2: Хүлээн авагч бөглөх."""
-        complaint = CustomerComplaint.query.get_or_404(id)
+        complaint = db.session.get(CustomerComplaint, id)
+        if not complaint:
+            abort(404)
         complaint.receiver_name = request.form.get('receiver_name', '').strip()
         complaint.action_taken = request.form.get('action_taken', '').strip()
         complaint.receiver_documentation = request.form.get('receiver_documentation', '').strip()
@@ -342,7 +348,9 @@ def register_routes(bp):
     @require_quality_edit('quality.complaints_list')
     def complaints_control(id):
         """Хэсэг 3: Хяналтын хэсэг (Чанарын менежер)."""
-        complaint = CustomerComplaint.query.get_or_404(id)
+        complaint = db.session.get(CustomerComplaint, id)
+        if not complaint:
+            abort(404)
         complaint.action_corrective = request.form.get('action_corrective') == '1'
         complaint.action_improvement = request.form.get('action_improvement') == '1'
         complaint.action_partial_audit = request.form.get('action_partial_audit') == '1'

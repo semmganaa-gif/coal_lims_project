@@ -63,7 +63,10 @@ def log_audit(
             details_str = str(details)
 
     # AuditLog бичлэг үүсгэх
+    # timestamp-г гараар тохируулна — hash тооцоолоход шаардлагатай
+    from app.utils.datetime import now_local as _now
     entry = AuditLog(
+        timestamp=_now(),
         user_id=user_id,
         action=action,
         resource_type=resource_type,

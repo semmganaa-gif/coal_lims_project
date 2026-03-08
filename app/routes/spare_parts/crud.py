@@ -3,13 +3,15 @@
 
 import os
 import uuid
-from flask import render_template, request, redirect, url_for, flash, current_app
+from datetime import datetime, date
+
+from flask import render_template, request, redirect, url_for, flash, current_app, abort
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, case
+
 from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategory, Equipment
-from datetime import datetime, date
 from app.routes.spare_parts import spare_parts_bp, UNITS, STATUS_TYPES
 from app.utils.converters import to_float
 from app.utils.database import safe_commit
@@ -151,7 +153,9 @@ def edit_category(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
-    cat = SparePartCategory.query.get_or_404(id)
+    cat = db.session.get(SparePartCategory, id)
+    if not cat:
+        abort(404)
 
     if request.method == 'POST':
         cat.name = request.form.get('name', '').strip()
@@ -180,7 +184,9 @@ def delete_category(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.category_list'))
 
-    cat = SparePartCategory.query.get_or_404(id)
+    cat = db.session.get(SparePartCategory, id)
+    if not cat:
+        abort(404)
 
     # Энэ категорид сэлбэг байгаа эсэх шалгах
     count = SparePart.query.filter_by(category=cat.code).count()
@@ -275,7 +281,9 @@ def spare_part_list():
 @login_required
 def spare_part_detail(id):
     """Сэлбэг хэрэгслийн дэлгэрэнгүй."""
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
 
     # Хэрэглээний түүх
     usages = SparePartUsage.query.filter_by(spare_part_id=id)\
@@ -385,7 +393,9 @@ def edit_spare_part(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
 
     if request.method == 'POST':
         try:
@@ -482,7 +492,9 @@ def receive_spare_part(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
 
     try:
         quantity = float(request.form.get('quantity', 0))
@@ -521,7 +533,9 @@ def receive_spare_part(id):
 @login_required
 def consume_spare_part(id):
     """Сэлбэг зарцуулах (ашиглах)."""
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
 
     try:
         quantity = float(request.form.get('quantity', 0))
@@ -585,7 +599,9 @@ def dispose_spare_part(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.spare_part_detail', id=id))
 
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
 
     try:
         old_quantity = spare_part.quantity
@@ -620,7 +636,9 @@ def delete_spare_part(id):
         flash('Хандах эрхгүй.', 'danger')
         return redirect(url_for('spare_parts.spare_part_list'))
 
-    spare_part = SparePart.query.get_or_404(id)
+    spare_part = db.session.get(SparePart, id)
+    if not spare_part:
+        abort(404)
     name = spare_part.name
 
     db.session.delete(spare_part)

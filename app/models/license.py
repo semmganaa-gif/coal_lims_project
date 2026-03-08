@@ -62,10 +62,10 @@ class SystemLicense(db.Model):
     @property
     def days_remaining(self):
         """Үлдсэн хоног"""
-        if _safe_now() > self.expiry_date:
+        now = _safe_now()
+        if now > self.expiry_date:
             return 0
-        delta = self.expiry_date - _safe_now()
-        return max(0, delta.days)
+        return (self.expiry_date - now).days
 
     @property
     def is_expiring_soon(self):
@@ -91,8 +91,3 @@ class LicenseLog(db.Model):
     created_at = db.Column(db.DateTime, default=_safe_now)
 
     license = db.relationship('SystemLicense', backref='logs')
-
-
-# -------------------------
-# WASHABILITY / THEORETICAL YIELD
-# -------------------------

@@ -1,20 +1,22 @@
-# app/routes/chat_events.py
+# app/routes/chat/events.py
 # -*- coding: utf-8 -*-
 """
 WebSocket чат events - Flask-SocketIO
 Химич ↔ Ахлах real-time харилцаа
 """
 
+import logging
+import re
+from threading import Lock
+
 from flask import request
 from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 from markupsafe import escape as _esc
+
 from app import socketio, db
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.utils.datetime import now_local as now_mn
-import logging
-import re
-from threading import Lock
 
 logger = logging.getLogger(__name__)
 
@@ -345,15 +347,14 @@ def handle_get_online_users():
 
     with _online_lock:
         user_ids = list(online_users.keys())
-    online_list = []
-    for uid in user_ids:
-        user = db.session.get(User, uid)
-        if user:
-            online_list.append({
-                'user_id': user.id,
-                'username': user.username,
-                'role': user.role
-            })
+    if not user_ids:
+        emit('online_users_list', {'users': []})
+        return
+    users = User.query.filter(User.id.in_(user_ids)).all()
+    online_list = [
+        {'user_id': u.id, 'username': u.username, 'role': u.role}
+        for u in users
+    ]
     emit('online_users_list', {'users': online_list})
 
 

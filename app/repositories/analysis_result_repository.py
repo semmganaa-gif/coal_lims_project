@@ -32,7 +32,7 @@ class AnalysisResultRepository:
         Returns:
             AnalysisResult эсвэл None
         """
-        return AnalysisResult.query.get(result_id)
+        return db.session.get(AnalysisResult, result_id)
 
     @staticmethod
     def get_by_id_or_404(result_id: int) -> AnalysisResult:
@@ -48,7 +48,11 @@ class AnalysisResultRepository:
         Raises:
             404 error if not found
         """
-        return AnalysisResult.query.get_or_404(result_id)
+        result = db.session.get(AnalysisResult, result_id)
+        if result is None:
+            from flask import abort
+            abort(404)
+        return result
 
     @staticmethod
     def get_by_ids(result_ids: list[int]) -> list[AnalysisResult]:

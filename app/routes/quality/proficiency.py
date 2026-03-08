@@ -6,8 +6,11 @@ ISO 17025 - Clause 7.7.2
 """
 # Сорилтын үр дүнгийн гадаад хяналтын бүртгэл
 
+import logging
+
 from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
+
 from app import db
 from app.models import ProficiencyTest
 from app.utils.database import safe_commit
@@ -16,7 +19,6 @@ from app.utils.quality_helpers import (
     calculate_status_stats,
     parse_date
 )
-import logging
 
 logger = logging.getLogger(__name__)
 

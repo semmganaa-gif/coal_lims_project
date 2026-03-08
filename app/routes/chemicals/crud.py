@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 """Химийн бодисын үндсэн CRUD үйлдлүүд."""
 
+from datetime import datetime, date, timedelta
+
 from flask import (
     render_template, request, redirect, url_for,
-    flash, current_app
+    flash, abort, current_app
 )
 from flask_login import login_required, current_user
-from app import db
-from app.models import Chemical, ChemicalUsage, ChemicalLog
-from datetime import datetime, date, timedelta
-from app.utils.datetime import now_local
 from sqlalchemy.exc import IntegrityError
 
+from app import db
+from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.utils.database import safe_commit
+from app.utils.datetime import now_local
 from app.routes.chemicals import chemicals_bp, LAB_TYPES, CATEGORIES, UNITS, STATUS_TYPES
 
 
@@ -136,7 +137,9 @@ def chemical_list():
 @login_required
 def chemical_detail(id):
     """Химийн бодисын дэлгэрэнгүй мэдээлэл."""
-    chemical = Chemical.query.get_or_404(id)
+    chemical = db.session.get(Chemical, id)
+    if not chemical:
+        abort(404)
 
     # Хэрэглээний түүх
     usages = ChemicalUsage.query.filter_by(chemical_id=id)\
@@ -273,7 +276,9 @@ def edit_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = Chemical.query.get_or_404(id)
+    chemical = db.session.get(Chemical, id)
+    if not chemical:
+        abort(404)
 
     if request.method == "POST":
         try:
@@ -376,7 +381,9 @@ def receive_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = Chemical.query.get_or_404(id)
+    chemical = db.session.get(Chemical, id)
+    if not chemical:
+        abort(404)
 
     try:
         quantity_add = float(request.form.get("quantity_add", 0))
@@ -428,7 +435,9 @@ def receive_chemical(id):
 @login_required
 def consume_chemical(id):
     """Химийн бодисын хэрэглээ бүртгэх."""
-    chemical = Chemical.query.get_or_404(id)
+    chemical = db.session.get(Chemical, id)
+    if not chemical:
+        abort(404)
 
     try:
         quantity_used = float(request.form.get("quantity_used", 0))
@@ -505,7 +514,9 @@ def dispose_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = Chemical.query.get_or_404(id)
+    chemical = db.session.get(Chemical, id)
+    if not chemical:
+        abort(404)
 
     try:
         old_quantity = chemical.quantity

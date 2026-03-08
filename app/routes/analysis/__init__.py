@@ -4,14 +4,10 @@
 Analysis модулиудыг нэгтгэсэн blueprint.
 
 Бүтэц:
-  - helpers.py: Хамтын хэрэгсэл, тогтмол, декоратор
-  - workspace.py: Химичийн ажлын талбар (2 routes)
-  - senior.py: Ахлахын хяналт (3 routes)
-  - kpi.py: KPI / Ээлжийн гүйцэтгэл (1 route)
-  - qc.py: QC хэрэгслүүд (3 routes)
-
-Өмнөх analysis_routes.py (1139 мөр) → 5 модуляр файл
-АНХААР: Давхардсан 5 route-ыг устгасан (api модульд байгаа)
+  - workspace.py: Химичийн ажлын талбар (analysis_hub, analysis_page)
+  - senior.py: Ахлахын хяналт (dashboard, approve/reject, bulk, repeat)
+  - kpi.py: KPI / Ээлжийн гүйцэтгэл (shift_daily, kpi_summary)
+  - qc.py: QC хэрэгслүүд (composite_check, norm_limit, correlation)
 """
 
 from flask import Blueprint

@@ -290,8 +290,6 @@ class AnalysisProfile(db.Model):
             return f"<Profile Pattern: {self.pattern}>"
 
 
-
-
 class SampleCalculations:
     """
     Нүүрсний шинжилгээний тооцоолол хийх класс.
@@ -484,8 +482,3 @@ class SampleCalculations:
     @property
     def p_ar(self):
         return self._calculate_conversion("P", "ar")
-
-
-# -------------------------
-# ҮР ДҮН – ЛОГ (Audit)
-# -------------------------

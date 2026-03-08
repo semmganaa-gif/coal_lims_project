@@ -7,26 +7,26 @@ Senior analyst review dashboard routes:
   - /update_result_status/<int:result_id>/<new_status> - Approve/reject results
 """
 
-from flask import request, render_template, jsonify, current_app
-from markupsafe import escape
-from flask_login import login_required, current_user
-from sqlalchemy import or_
-from datetime import datetime
-from app.utils.shifts import get_shift_info
 import json
+from datetime import datetime
 
+from flask import request, render_template, jsonify, current_app
+from flask_login import login_required, current_user
+from markupsafe import escape
+from sqlalchemy import or_
 from sqlalchemy.orm.exc import StaleDataError
 
 from app import db, cache
-from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
-from app.utils.datetime import now_local
-from app.utils.security import escape_like_pattern
-from app.utils.settings import get_error_reason_labels  # Read from DB
-from app.utils.normalize import normalize_raw_data
 from app.config.analysis_schema import get_analysis_schema
+from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
 from app.utils.audit import log_audit
+from app.utils.datetime import now_local
 from app.utils.decorators import analysis_role_required
+from app.utils.normalize import normalize_raw_data
 from app.utils.notifications import notify_sample_status_change
+from app.utils.security import escape_like_pattern
+from app.utils.settings import get_error_reason_labels
+from app.utils.shifts import get_shift_info
 
 
 def register_routes(bp):
@@ -50,7 +50,7 @@ def register_routes(bp):
         return render_template(
             "ahlah_dashboard.html",
             title="Ахлах хяналт",
-            error_labels=get_error_reason_labels(),  # Read from DB
+            error_labels=get_error_reason_labels(),
             analysis_schemas=schema_map,
             use_aggrid=True,  # Enable AG Grid loading
         )
@@ -187,6 +187,7 @@ def register_routes(bp):
         action_text = new_status.upper()
         reason_text = rejection_comment or ("Зөвшөөрөгдсөн" if new_status == "approved" else "Хянагдаж буй")
 
+        sample = db.session.get(Sample, res.sample_id) if res.sample_id else None
         audit = AnalysisResultLog(
             timestamp=now_local(),
             user_id=current_user.id,
@@ -199,7 +200,7 @@ def register_routes(bp):
             rejection_category=rejection_category,
             error_reason=rejection_category,
             reason=reason_text,
-            sample_code_snapshot=Sample.query.get(res.sample_id).sample_code if res.sample_id else None,
+            sample_code_snapshot=sample.sample_code if sample else None,
         )
         # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
         audit.data_hash = audit.compute_hash()
@@ -509,36 +510,17 @@ def register_routes(bp):
                 "rejected": row.rejected or 0,
             })
 
-        # 4. Total counts (today)
-        total_today = (
-            db.session.query(func.count(AnalysisResult.id))
+        # 4. Total counts (today) — нэг query-д нэгтгэсэн
+        summary_row = (
+            db.session.query(
+                func.count(AnalysisResult.id).label("total"),
+                func.sum(case((AnalysisResult.status == "approved", 1), else_=0)).label("approved"),
+                func.sum(case((AnalysisResult.status == "pending_review", 1), else_=0)).label("pending"),
+                func.sum(case((AnalysisResult.status == "rejected", 1), else_=0)).label("rejected"),
+            )
             .filter(AnalysisResult.updated_at >= today_start)
             .filter(AnalysisResult.updated_at <= today_end)
-            .scalar() or 0
-        )
-
-        approved_today = (
-            db.session.query(func.count(AnalysisResult.id))
-            .filter(AnalysisResult.updated_at >= today_start)
-            .filter(AnalysisResult.updated_at <= today_end)
-            .filter(AnalysisResult.status == "approved")
-            .scalar() or 0
-        )
-
-        pending_today = (
-            db.session.query(func.count(AnalysisResult.id))
-            .filter(AnalysisResult.updated_at >= today_start)
-            .filter(AnalysisResult.updated_at <= today_end)
-            .filter(AnalysisResult.status == "pending_review")
-            .scalar() or 0
-        )
-
-        rejected_today = (
-            db.session.query(func.count(AnalysisResult.id))
-            .filter(AnalysisResult.updated_at >= today_start)
-            .filter(AnalysisResult.updated_at <= today_end)
-            .filter(AnalysisResult.status == "rejected")
-            .scalar() or 0
+            .one()
         )
 
         return jsonify({
@@ -548,10 +530,10 @@ def register_routes(bp):
             "samples_by_unit": unit_list,
             "samples_by_type": type_list,
             "summary": {
-                "total": total_today,
-                "approved": approved_today,
-                "pending": pending_today,
-                "rejected": rejected_today,
+                "total": summary_row.total or 0,
+                "approved": summary_row.approved or 0,
+                "pending": summary_row.pending or 0,
+                "rejected": summary_row.rejected or 0,
             }
         })
 
@@ -603,7 +585,7 @@ def register_routes(bp):
         db.session.flush()
 
         # Audit log
-        sample = Sample.query.get(res.sample_id)
+        sample = db.session.get(Sample, res.sample_id)
         choice = "ORIGINAL" if use_original else "REPEAT"
         audit = AnalysisResultLog(
             timestamp=now_local(),

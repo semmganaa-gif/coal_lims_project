@@ -78,8 +78,3 @@ class StaffSettings(db.Model):
     __table_args__ = (
         db.UniqueConstraint('year', 'month', name='uq_staff_settings_month'),
     )
-
-
-# -------------------------
-# ЧАТ СИСТЕМ
-# -------------------------

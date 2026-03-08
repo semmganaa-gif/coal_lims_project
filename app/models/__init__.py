@@ -11,9 +11,10 @@ from app.models.core import User, Sample
 from app.models.analysis import AnalysisResult, AnalysisType, AnalysisProfile, SampleCalculations
 from app.models.analysis_audit import AnalysisResultLog
 from app.models.spare_parts import SparePartCategory, SparePart, SparePartUsage, SparePartLog
-from app.models.quality import Bottle, BottleConstant
+from app.models.bottles import Bottle, BottleConstant
 from app.models.settings import SystemSetting
-from app.models.quality_standards import ControlStandard, GbwStandard, AuditLog
+from app.models.quality_standards import ControlStandard, GbwStandard
+from app.models.audit import AuditLog
 from app.models.quality_records import (
     CorrectiveAction,
     ProficiencyTest,
@@ -26,7 +27,6 @@ from app.models.quality_records import (
 from app.models.planning import MonthlyPlan, StaffSettings
 from app.models.chat import ChatMessage, UserOnlineStatus
 from app.models.license import SystemLicense, LicenseLog
-from app.models.washability import WashabilityTest, WashabilityFraction, TheoreticalYield, PlantYield
 from app.models.reports import ReportSignature, LabReport
 from app.models.solutions import SolutionPreparation, SolutionRecipe, SolutionRecipeIngredient
 from app.models.equipment import Equipment, MaintenanceLog, UsageLog
@@ -100,12 +100,6 @@ __all__ = [
     # License
     'SystemLicense',
     'LicenseLog',
-
-    # Washability
-    'WashabilityTest',
-    'WashabilityFraction',
-    'TheoreticalYield',
-    'PlantYield',
 
     # Reports
     'ReportSignature',

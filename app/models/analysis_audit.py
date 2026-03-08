@@ -129,5 +129,40 @@ class AnalysisResultLog(HashableMixin, db.Model):
 
 
 # -------------------------
-# БОРТОГО / ТОГТМОЛ
+# БОРТОГО (ПИКНОМЕТР) ТОГТМОЛ
 # -------------------------
+# TRD шинжилгээнд хэрэглэдэг бортогоны (пикнометр) тогтмолууд.
+# Улирал бүр 3 хэмжилтээр хоосон тодорхойлолт хийж, дундаж массыг
+# тогтмол болгон хадгална (MNS GB/T 217, 7.4.1–7.4.8).
+#
+# Моделиуд:  app/models/quality.py → Bottle, BottleConstant
+# Routes:    app/routes/settings/routes.py → /settings/bottles/*
+# Tolerance: app/constants.py → BOTTLE_TOLERANCE = 0.0015g
+# API:       /settings/api/bottle/<serial_no>/active → идэвхтэй тогтмол
+
+# -------------------------
+# ТОГТМОЛУУД
+# -------------------------
+
+# Audit log action утгууд
+AUDIT_ACTIONS = (
+    'CREATED',          # Шинээр үүсгэсэн
+    'UPDATED',          # Засварласан
+    'APPROVED',         # Баталгаажуулсан
+    'REJECTED',         # Буцаасан
+    'PENDING_REVIEW',   # Хянагдаж буй
+    'REANALYSIS',       # Дахин шинжилгээ
+)
+
+# Буцаалтын шалтгаан (fallback — DB-д SystemSetting category='error_reason' байхгүй үед)
+# Бодит утгууд: SystemSetting.query.filter_by(category='error_reason') → app/utils/settings.py
+DEFAULT_ERROR_REASONS = {
+    'sample_prep':          '1. Дээж бэлтгэлийн алдаа (Бутлалт/Хуваалт)',
+    'measurement':          '2. Шинжилгээний гүйцэтгэлийн алдаа',
+    'qc_fail':              '3. QC / Стандарт дээжийн зөрүү',
+    'equipment':            '4. Тоног төхөөрөмж / Орчны нөхцөл',
+    'data_entry':           '5. Өгөгдөл шивэлт / Тооцооллын алдаа',
+    'method':               '6. Арга аргачлал зөрчсөн (SOP)',
+    'sample_mixup':         '7. Дээж солигдсон / Буруу дээж',
+    'customer_complaint':   '8. Санал гомдол / Хяналтын шинжилгээ',
+}

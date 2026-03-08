@@ -1,8 +1,12 @@
 # app/routes/quality/nonconformity.py
 """Nonconformity / үл тохирох ажлын бүртгэл - LAB.10.00.01 / ISO 17025 Clause 7.10"""
 
-from flask import render_template, flash, redirect, url_for, request
+import logging
+from datetime import date
+
+from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import login_required, current_user
+
 from app import db
 from app.models import NonConformityRecord
 from app.utils.database import safe_commit
@@ -11,8 +15,6 @@ from app.utils.quality_helpers import (
     calculate_status_stats,
     generate_sequential_code
 )
-from datetime import date
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +88,9 @@ def register_routes(bp):
     @bp.route("/nonconformity/<int:id>")
     @login_required
     def nonconformity_detail(id):
-        record = NonConformityRecord.query.get_or_404(id)
+        record = db.session.get(NonConformityRecord, id)
+        if not record:
+            abort(404)
         return render_template(
             'quality/nonconformity_detail.html',
             record=record,
@@ -98,7 +102,9 @@ def register_routes(bp):
     @require_quality_edit('quality.nonconformity_list')
     def nonconformity_investigate(id):
         """Хэсэг 2: Хариуцсан нэгж бөглөх."""
-        record = NonConformityRecord.query.get_or_404(id)
+        record = db.session.get(NonConformityRecord, id)
+        if not record:
+            abort(404)
         record.responsible_unit = request.form.get('responsible_unit', '').strip()
         record.responsible_person = request.form.get('responsible_person', '').strip()
         record.direct_cause = request.form.get('direct_cause', '').strip()
@@ -125,7 +131,9 @@ def register_routes(bp):
     @require_quality_edit('quality.nonconformity_list')
     def nonconformity_review(id):
         """Хэсэг 3: Хяналт (Чанарын/Техникийн менежер)."""
-        record = NonConformityRecord.query.get_or_404(id)
+        record = db.session.get(NonConformityRecord, id)
+        if not record:
+            abort(404)
         record.completed_on_time = request.form.get('completed_on_time') == '1'
         record.fully_implemented = request.form.get('fully_implemented') == '1'
         record.control_notes = request.form.get('control_notes', '').strip()
