@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% set use_aggrid = true %}
 
 {% block title %}{{ _("Water Archive") }}{% endblock %}
 
@@ -116,10 +117,6 @@
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-grid.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/styles/ag-theme-alpine.css">
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.3.0/dist/ag-grid-community.min.js"></script>
-
 <script>
   var WATER_ARCHIVE_CONFIG = {
     urls: {

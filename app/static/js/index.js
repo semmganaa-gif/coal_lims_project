@@ -205,11 +205,11 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/api/data?${params.toString()}`)
             .then(response => response.json())
             .then(data => {
-                gridApi.setRowData(data.data);
+                gridApi.setGridOption('rowData', data.data);
                 gridApi.hideOverlay();
             })
             .catch(error => {
-                logger.error('Error:', error);
+                console.error('Error:', error);
                 gridApi.showNoRowsOverlay();
             });
     }

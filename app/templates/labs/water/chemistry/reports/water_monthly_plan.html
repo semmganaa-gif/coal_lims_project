@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
       inputs.forEach(inp => { plans[inp.dataset.key] = parseInt(inp.value) || 0; });
 
       try {
-        const r = await fetch('{{ url_for("water.api_save_monthly_plan") }}', {
+        const r = await fetch('{{ url_for("reports.api_save_monthly_plan") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year, month, plans })
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btnStaff.addEventListener('click', async function() {
       const count = parseInt(document.getElementById('staffWater')?.value) || 3;
       try {
-        const r = await fetch('{{ url_for("water.api_save_staff") }}', {
+        const r = await fetch('{{ url_for("reports.api_save_staff_settings") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
           body: JSON.stringify({ year, month, staff_count: count })
