@@ -58,7 +58,7 @@ def equipment_list():
     view_counts = {}
 
     return render_template(
-        "equipment_list.html",
+        "equipment/list.html",
         equipments=equipments,
         pagination=pagination,
         today=today,
@@ -80,7 +80,7 @@ def equipment_detail(id):
     if not eq:
         abort(404)
     usage_logs = UsageLog.query.filter_by(equipment_id=id).order_by(UsageLog.start_time.desc()).all()
-    return render_template("equipment_detail.html", eq=eq, usage_logs=usage_logs)
+    return render_template("equipment/detail.html", eq=eq, usage_logs=usage_logs)
 
 
 @equipment_bp.route("/equipment/<int:id>/journal")
@@ -92,7 +92,7 @@ def equipment_journal_page(id):
         abort(404)
     today = get_shift_date()
     return render_template(
-        "equipment_eq_journal.html",
+        "equipment/eq_journal.html",
         eq=eq,
         start_date=today - timedelta(days=29),
         end_date=today,

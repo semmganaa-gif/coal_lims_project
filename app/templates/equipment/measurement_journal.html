@@ -1,13 +1,13 @@
-{# app/templates/equipment_measurement_journal.html #}
+{# app/templates/equipment/measurement_journal.html #}
 {% extends "base.html" %}
-{% from "partials/equipment_shared.html" import lab_purpose_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options %}
+{% from "equipment/partials/shared.html" import lab_purpose_options, measurement_group_options, measurement_unit_options, freq_cert_options, freq_check_options %}
 {% block title %}{{ _("Measuring Instruments Register") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid eq-page">
 
   {# add_modal_id removed - admin only #}
-  {% include "partials/equipment_hero_tabs.html" %}
+  {% include "equipment/partials/hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">

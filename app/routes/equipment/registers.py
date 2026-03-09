@@ -24,7 +24,7 @@ from app.routes.equipment import equipment_bp
 @login_required
 def equipment_journal_hub():
     """Төхөөрөмжийн журналын үндсэн хуудас."""
-    return render_template("equipment_hub.html")
+    return render_template("equipment/hub.html")
 
 
 @equipment_bp.route("/equipment_journal/grid", endpoint="equipment_journal_grid")
@@ -47,7 +47,7 @@ def equipment_journal_grid():
 
     today = get_shift_date()
     return render_template(
-        "equipment_journal.html",
+        "equipment/journal.html",
         title=title,
         start_date=today - timedelta(days=29),
         end_date=today,
@@ -68,12 +68,12 @@ def equipment_journal_special(journal_type):
         return redirect(url_for("spare_parts.spare_part_list"))
 
     templates = {
-        "measurement": "equipment_measurement_journal.html",
-        "glassware": "equipment_glassware_journal.html",
-        "internal_check": "equipment_internal_check.html",
-        "new_equipment": "equipment_new_register.html",
-        "out_of_service": "equipment_out_of_service.html",
-        "balances_register": "equipment_balances_register.html",
+        "measurement": "equipment/measurement_journal.html",
+        "glassware": "equipment/glassware_journal.html",
+        "internal_check": "equipment/internal_check.html",
+        "new_equipment": "equipment/new_register.html",
+        "out_of_service": "equipment/out_of_service.html",
+        "balances_register": "equipment/balances_register.html",
     }
     template = templates.get(journal_type)
     if not template:

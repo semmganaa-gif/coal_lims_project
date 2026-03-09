@@ -1,4 +1,4 @@
-{# app/templates/equipment_new_register.html #}
+{# app/templates/equipment/new_register.html #}
 {% extends "base.html" %}
 {% block title %}{{ _("New Equipment Register") }}{% endblock %}
 
@@ -6,7 +6,7 @@
 <div class="container-fluid eq-page">
 
   {# add_modal_id removed #}
-  {% include "partials/equipment_hero_tabs.html" %}
+  {% include "equipment/partials/hero_tabs.html" %}
 
   <div class="eq-toolbar-card">
     <div class="eq-toolbar-left">
