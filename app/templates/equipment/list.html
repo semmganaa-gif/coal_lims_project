@@ -406,6 +406,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   var today = parseDate(todayStr);
 
+  var _e = function(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+
   var categoryMap = {
     furnace: '{{ _("Coal Lab") }}', prep: '{{ _("Coal Lab") }}', analysis: '{{ _("Coal Lab") }}',
     water: '{{ _("Water Lab") }}', micro: '{{ _("Micro Lab") }}', wtl: '{{ _("WTL Lab") }}',
@@ -427,21 +429,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function nameFormatter(cell) {
     var d = cell.getRow().getData();
-    var html = '<div class="eq-name-main">' + (d.name || '') + '</div>';
-    if (d.manufacturer) html += '<div class="eq-name-sub">' + d.manufacturer + '</div>';
+    var html = '<div class="eq-name-main">' + _e(d.name) + '</div>';
+    if (d.manufacturer) html += '<div class="eq-name-sub">' + _e(d.manufacturer) + '</div>';
     return html;
   }
 
   function labCodeFormatter(cell) {
     var v = cell.getValue();
     if (!v) return '<span style="color:#cbd5e1">—</span>';
-    return '<span class="eq-lab-code">' + v + '</span>';
+    return '<span class="eq-lab-code">' + _e(v) + '</span>';
   }
 
   function serialFormatter(cell) {
     var v = cell.getValue();
     if (!v) return '<span style="color:#cbd5e1">—</span>';
-    return '<span class="eq-serial">' + v + '</span>';
+    return '<span class="eq-serial">' + _e(v) + '</span>';
   }
 
   function qtyFormatter(cell) {

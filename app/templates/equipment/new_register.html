@@ -91,13 +91,9 @@
 <link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/equipment_register.js') }}"></script>
 
-<style>
-  /* Page-specific: new equipment has yellow header */
-  .tabulator .tabulator-header { background:#fffbeb; }
-  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
-  .tabulator .tabulator-row { min-height:32px; }
-</style>
+<style>.tabulator .tabulator-header { background:#fffbeb; }</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -143,17 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ],
   });
 
-  var editBtn = document.getElementById('btn-edit-row');
-  var deleteBtn = document.getElementById('btn-delete-row');
-  var countBadge = document.getElementById('selected-count-badge');
-  table.on('rowSelectionChanged', function(data) {
-    editBtn.disabled = (data.length !== 1);
-    deleteBtn.disabled = (!data.length);
-    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
-    else { countBadge.classList.add('d-none'); }
-  });
-
-  document.getElementById('eqTotalCount').textContent = table.getData().length;
+  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
   window.editSelectedRow = function() {
     var sel = table.getSelectedData();
@@ -165,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function() {
       var el=document.getElementById('ne_'+f); if(!el) return;
       if(el.tagName==='SELECT'){for(var i=0;i<el.options.length;i++){if(el.options[i].value===(d[f]||'')){el.selectedIndex=i;break;}}} else el.value=d[f]||'';
     });
-    // Map serial_number and quantity from DB field names
     var serEl = document.getElementById('ne_serial'); if(serEl) serEl.value = d.serial_number||'';
     var qtyEl = document.getElementById('ne_qty'); if(qtyEl) qtyEl.value = d.quantity||'1';
     chkFields.forEach(function(f) { var el=document.getElementById('ne_'+f); if(el) el.checked=!!d[f]; });
@@ -182,17 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
     ['no','name','manufacturer','mark','lab_code','qty','manufactured_date','commissioned_date','location','accessories','checked_by','approved_by','remark'].forEach(function(f) { var el=document.getElementById('ne_'+f); if(el) { if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }});
     ['status_normal','status_broken','status_spare','chk_temp','chk_other'].forEach(function(f) { document.getElementById('ne_'+f).checked=false; });
   });
-
-  window.deleteSelectedRows = function() {
-    var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' {{ _("rows will be deleted. Continue?") }}')) return;
-    var form = document.getElementById('deleteForm');
-    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
-    sel.forEach(function(row) {
-      if (row.id) { var input = document.createElement('input'); input.type='hidden'; input.name='item_ids'; input.value=row.id; form.appendChild(input); }
-    });
-    form.submit();
-  };
 });
 </script>
 {% endblock %}

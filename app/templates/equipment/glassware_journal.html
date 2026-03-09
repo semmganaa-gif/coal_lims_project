@@ -71,13 +71,9 @@
 <link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/equipment_register.js') }}"></script>
 
-<style>
-  /* Page-specific: glassware has light green header */
-  .tabulator .tabulator-header { background:#f0fdf4; }
-  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:12px; padding:3px 6px; }
-  .tabulator .tabulator-row { min-height:32px; }
-</style>
+<style>.tabulator .tabulator-header { background:#f0fdf4; }</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -103,17 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ],
   });
 
-  var editBtn = document.getElementById('btn-edit-row');
-  var deleteBtn = document.getElementById('btn-delete-row');
-  var countBadge = document.getElementById('selected-count-badge');
-  table.on('rowSelectionChanged', function(data) {
-    editBtn.disabled = (data.length !== 1);
-    deleteBtn.disabled = (!data.length);
-    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
-    else { countBadge.classList.add('d-none'); }
-  });
-
-  document.getElementById('eqTotalCount').textContent = table.getData().length;
+  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
   window.editSelectedRow = function() {
     var sel = table.getSelectedData();
@@ -134,17 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Glassware") }}';
     ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) { document.getElementById('g_'+f).value=''; });
   });
-
-  window.deleteSelectedRows = function() {
-    var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' {{ _("rows will be deleted. Continue?") }}')) return;
-    var form = document.getElementById('deleteForm');
-    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
-    sel.forEach(function(row) {
-      if (row.id) { var input = document.createElement('input'); input.type='hidden'; input.name='item_ids'; input.value=row.id; form.appendChild(input); }
-    });
-    form.submit();
-  };
 });
 </script>
 {% endblock %}

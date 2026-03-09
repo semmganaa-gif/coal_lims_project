@@ -155,12 +155,7 @@
 <link href="{{ url_for('static', filename='css/tabulator_simple.min.css') }}" rel="stylesheet">
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
-
-<style>
-  /* Page-specific overrides for journal */
-  .tabulator .tabulator-tableholder .tabulator-table .tabulator-row .tabulator-cell { font-size:11px; padding:3px 6px; }
-  .tabulator .tabulator-row { min-height:30px; }
-</style>
+<script src="{{ url_for('static', filename='js/equipment_register.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -207,20 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
     ],
   });
 
-  // Selection handler
-  var editBtn = document.getElementById('btn-edit-row');
-  var deleteBtn = document.getElementById('btn-delete-row');
-  var countBadge = document.getElementById('selected-count-badge');
-  table.on('rowSelectionChanged', function(data) {
-    editBtn.disabled = (data.length !== 1);
-    deleteBtn.disabled = (!data.length);
-    if (data.length) { countBadge.textContent = data.length; countBadge.classList.remove('d-none'); }
-    else { countBadge.classList.add('d-none'); }
-  });
+  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  document.getElementById('eqTotalCount').textContent = table.getData().length;
-
-  // Edit: populate modal and change form action
   window.editSelectedRow = function() {
     var sel = table.getSelectedData();
     if (sel.length !== 1) return;
@@ -241,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
     new bootstrap.Modal(document.getElementById('addMeasModal')).show();
   };
 
-  // Reset modal on close
   document.getElementById('addMeasModal').addEventListener('hidden.bs.modal', function() {
     document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='measurement') }}";
     document.getElementById('edit_item_id').value = '';
@@ -249,23 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
     fields.forEach(function(f) { var el = document.getElementById('m_' + f); if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; });
   });
-
-  // Delete: POST selected IDs
-  window.deleteSelectedRows = function() {
-    var sel = table.getSelectedData();
-    if (!sel.length || !confirm(sel.length + ' {{ _("rows will be deleted. Continue?") }}')) return;
-    var form = document.getElementById('deleteForm');
-    // Remove old hidden inputs
-    form.querySelectorAll('input[name="item_ids"]').forEach(function(el) { el.remove(); });
-    sel.forEach(function(row) {
-      if (row.id) {
-        var input = document.createElement('input');
-        input.type = 'hidden'; input.name = 'item_ids'; input.value = row.id;
-        form.appendChild(input);
-      }
-    });
-    form.submit();
-  };
 });
 </script>
 {% endblock %}
