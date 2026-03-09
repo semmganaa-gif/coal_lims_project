@@ -345,6 +345,75 @@
   function renderCv(data)         { return renderGenericP1P2Percent(data, 'Q (cal/g)'); }
 
   // --------------------------------------------------
+  // FM – чөлөөт чийг
+  // --------------------------------------------------
+  function renderFm(data) {
+    data = data || {};
+    let html =
+      '<table class="table table-sm table-bordered mb-0" ' +
+      'style="font-size:0.8em;width:100%;margin:0;">' +
+      '<thead class="table-light">' +
+      '<tr>' +
+      '<th>Tray (g)</th>' +
+      '<th>Before drying (g)</th>' +
+      '<th>After drying (g)</th>' +
+      '<th>FM %</th>' +
+      '</tr></thead><tbody>';
+
+    html += '<tr>' +
+      '<td>' + fmt(data.tray_g || data.tray, 4) + '</td>' +
+      '<td>' + fmt(data.before_g || data.before, 4) + '</td>' +
+      '<td>' + fmt(data.after_g || data.after, 4) + '</td>' +
+      '<td>' + fmt(data.avg || data.result, 2) + '</td>' +
+      '</tr>';
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // --------------------------------------------------
+  // X, Y – пластометр
+  // --------------------------------------------------
+  function renderXY(data) {
+    data = data || {};
+    let html =
+      '<table class="table table-sm table-bordered mb-0" ' +
+      'style="font-size:0.8em;width:100%;margin:0;">' +
+      '<thead class="table-light">' +
+      '<tr>' +
+      '<th>Value (mm)</th>' +
+      '</tr></thead><tbody>';
+
+    html += '<tr>' +
+      '<td>' + fmt(data.value_mm || data.value, 1) + '</td>' +
+      '</tr>';
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // --------------------------------------------------
+  // CRI, CSR – коксын урвалжих чадвар
+  // --------------------------------------------------
+  function renderCriCsr(data) {
+    data = data || {};
+    let html =
+      '<table class="table table-sm table-bordered mb-0" ' +
+      'style="font-size:0.8em;width:100%;margin:0;">' +
+      '<thead class="table-light">' +
+      '<tr>' +
+      '<th>Value (%)</th>' +
+      '</tr></thead><tbody>';
+
+    html += '<tr>' +
+      '<td>' + fmt(data.value || data.result, 2) + '</td>' +
+      '</tr>';
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // --------------------------------------------------
   // MAIN MAP – base код → renderer
   // --------------------------------------------------
   const MINI_TABLE_RENDERERS = {
@@ -361,7 +430,12 @@
     'F':     renderFluorine,
     'CV':    renderCv,
     'Qgr':   renderCv,
-    'SOLID': renderDefaultRaw // одоохондоо raw-оор
+    'SOLID': renderDefaultRaw, // одоохондоо raw-оор
+    'FM':    renderFm,
+    'X':     renderXY,
+    'Y':     renderXY,
+    'CRI':   renderCriCsr,
+    'CSR':   renderCriCsr
   };
 
   // --------------------------------------------------
@@ -416,7 +490,11 @@
     'gi': 'Gi',
     'trd': 'TRD',
     'fm': 'FM',
-    'solid': 'SOLID'
+    'solid': 'SOLID',
+    'x': 'X',
+    'y': 'Y',
+    'cri': 'CRI',
+    'csr': 'CSR'
   };
 
   function normalizeCode(code) {

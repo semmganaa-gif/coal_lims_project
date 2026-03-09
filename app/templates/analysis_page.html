@@ -899,21 +899,7 @@
   })();
 </script>
 
-{# Calculators #}
-{% if analysis.code in ['St,ad','TS'] %}
-<script src="{{ url_for('static', filename='js/calculators/sulfur_calculator.js') }}?v=2"></script>
-{% endif %}
-
-{# AG Grid формын үед тусдаа calculator js ачаалахгүй #}
-{% if config.formula and config.formula != 'none' and ('aggrid' not in config.formula) %}
-  {% set _formula_map = {'P,ad':'phosphorus','F,ad':'fluorine','Cl,ad':'chlorine','FM':'FM','Solid':'solid','TRD':'TRD_calculator'} %}
-  {% set formula_js = _formula_map.get(config.formula, config.formula) %}
-  {% if analysis.code == 'TRD' %}
-    <script src="{{ url_for('static', filename='js/calculators/TRD_calculator.js') }}?v=5"></script>
-  {% else %}
-    <script src="{{ url_for('static', filename='js/calculators/' + formula_js + '_calculator.js') }}?v=4"></script>
-  {% endif %}
-{% endif %}
+{# Calculator JS файлууд устгагдсан — бүх тооцоолол aggrid template дотор #}
 
 <script src="{{ url_for('static', filename='js/analysis_page.js') }}"></script>
 

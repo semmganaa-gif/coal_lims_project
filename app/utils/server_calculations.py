@@ -208,14 +208,23 @@ def calc_volatile_vad(raw_data: Dict) -> Optional[float]:
     """
     Дэгдэмхий бодис (Vad) тооцоолол
 
-    Formula: Vad% = ((m2 - m3) / m1) * 100
+    SOP LAB.07.04 / MNS GB/T 212:2015:
+    Vad% = ((m1 + m2 - m3) / m2) * 100 - Mad
+
+    m1 = хоосон тигелийн масс (normalize: m1)
+    m2 = дээжийн жин (normalize: m2, m2_sample)
+    m3 = халаасны дараах тигел+дээж (normalize: m3, m3_residue)
+    Mad = аналитик дотоод чийг (raw_data.mad_used)
 
     Args:
-        raw_data: {"p1": {"m1": ..., "m2": ..., "m3": ...}, "p2": {...}}
+        raw_data: {"p1": {"m1": ..., "m2": ..., "m3": ...}, "p2": {...}, "mad_used": ...}
 
     Returns:
         Average Vad% or None
     """
+    # Mad утгыг raw_data-аас авна
+    mad = _safe_float(raw_data.get("mad_used"))
+
     m1_p1 = _get_from_dict(raw_data, "p1", "m1")
     m2_p1 = _get_from_dict(raw_data, "p1", "m2")
     m3_p1 = _get_from_dict(raw_data, "p1", "m3")
@@ -226,14 +235,24 @@ def calc_volatile_vad(raw_data: Dict) -> Optional[float]:
 
     results = []
 
-    if all(x is not None and x > 0 for x in [m1_p1, m2_p1, m3_p1]):
-        res1 = ((m2_p1 - m3_p1) / m1_p1) * 100
-        if res1 >= 0:
+    if all(x is not None for x in [m1_p1, m2_p1, m3_p1]) and m2_p1 > 0:
+        weight_loss = (m1_p1 + m2_p1) - m3_p1
+        if weight_loss >= 0:
+            res1 = (weight_loss / m2_p1) * 100
+            if mad is not None:
+                res1 -= mad
+            if res1 < 0:
+                res1 = 0
             results.append(res1)
 
-    if all(x is not None and x > 0 for x in [m1_p2, m2_p2, m3_p2]):
-        res2 = ((m2_p2 - m3_p2) / m1_p2) * 100
-        if res2 >= 0:
+    if all(x is not None for x in [m1_p2, m2_p2, m3_p2]) and m2_p2 > 0:
+        weight_loss = (m1_p2 + m2_p2) - m3_p2
+        if weight_loss >= 0:
+            res2 = (weight_loss / m2_p2) * 100
+            if mad is not None:
+                res2 -= mad
+            if res2 < 0:
+                res2 = 0
             results.append(res2)
 
     if not results:
@@ -297,37 +316,26 @@ def calc_total_moisture_mt(raw_data: Dict) -> Optional[float]:
 
 def calc_sulfur_ts(raw_data: Dict) -> Optional[float]:
     """
-    Хүхэр (TS) тооцоолол - Gravimetric method
+    Хүхэр (TS / St,ad) тооцоолол — Автомат анализатор (MNS ISO 19579)
 
-    Formula: S% = ((m2 - m1) / m_sample) * K * 100
+    Инструментээс шууд ирсэн хоёр зэрэгцээ үр дүнгийн дундаж.
+    Formula: avg = (p1.result + p2.result) / 2
 
     Args:
-        raw_data: {"p1": {"m1": ..., "m2": ..., "m_sample": ..., "k": ...}, ...}
+        raw_data: {"p1": {"result": ..., "weight": ...}, "p2": {"result": ..., "weight": ...}}
 
     Returns:
-        Average S% or None
+        Average St,ad% or None
     """
-    m1_p1 = _get_from_dict(raw_data, "p1", "m1")
-    m2_p1 = _get_from_dict(raw_data, "p1", "m2")
-    ms_p1 = _get_from_dict(raw_data, "p1", "m_sample")
-    k_p1 = _get_from_dict(raw_data, "p1", "k") or 0.34296
-
-    m1_p2 = _get_from_dict(raw_data, "p2", "m1")
-    m2_p2 = _get_from_dict(raw_data, "p2", "m2")
-    ms_p2 = _get_from_dict(raw_data, "p2", "m_sample")
-    k_p2 = _get_from_dict(raw_data, "p2", "k") or 0.34296
+    r1 = _get_from_dict(raw_data, "p1", "result")
+    r2 = _get_from_dict(raw_data, "p2", "result")
 
     results = []
 
-    if all(x is not None and x > 0 for x in [m1_p1, m2_p1, ms_p1]):
-        res1 = ((m2_p1 - m1_p1) / ms_p1) * k_p1 * 100
-        if res1 >= 0:
-            results.append(res1)
-
-    if all(x is not None and x > 0 for x in [m1_p2, m2_p2, ms_p2]):
-        res2 = ((m2_p2 - m1_p2) / ms_p2) * k_p2 * 100
-        if res2 >= 0:
-            results.append(res2)
+    if r1 is not None:
+        results.append(r1)
+    if r2 is not None:
+        results.append(r2)
 
     if not results:
         return None
@@ -335,41 +343,55 @@ def calc_sulfur_ts(raw_data: Dict) -> Optional[float]:
     return sum(results) / len(results)
 
 
-def calc_phosphorus_p(raw_data: Dict) -> Optional[float]:
+def calc_csn(raw_data: Dict) -> Optional[float]:
     """
-    Фосфор (P) тооцоолол
+    Бөсөх зэрэг (CSN / Crucible Swelling Number) тооцоолол
 
-    Formula: P% = ((V - V0) * C * 0.0030974 * 100) / m_sample
+    5 давталтын утгуудаас (v1–v5) доод тал нь 2 зөв утга байвал
+    дунджийг тооцоолж 0.5 алхамаар бөөрөнхийлнө.
 
     Args:
-        raw_data: {"p1": {"v": ..., "v0": ..., "c": ..., "m_sample": ...}, ...}
+        raw_data: {"v1": ..., "v2": ..., "v3": ..., "v4": ..., "v5": ..., ...}
+
+    Returns:
+        CSN index (0.5 step rounded) or None
+    """
+    values = []
+    for key in ("v1", "v2", "v3", "v4", "v5"):
+        v = _safe_float(raw_data.get(key))
+        if v is not None and 0 <= v <= 9:
+            # 0.5 алхамтай утга мөн эсэхийг шалгана
+            if abs(v * 2 - round(v * 2)) < 1e-9:
+                values.append(v)
+
+    if len(values) < 2:
+        return None
+
+    avg_raw = sum(values) / len(values)
+    # 0.5 алхамаар бөөрөнхийлөх
+    return round(avg_raw * 2) / 2
+
+
+def calc_phosphorus_p(raw_data: Dict) -> Optional[float]:
+    """
+    Фосфор (P) тооцоолол — Автомат анализатор (багажит шинжилгээ)
+
+    Formula: avg = (p1.result + p2.result) / 2
+
+    Args:
+        raw_data: {"p1": {"result": ...}, "p2": {"result": ...}}
 
     Returns:
         Average P% or None
     """
-    v_p1 = _get_from_dict(raw_data, "p1", "v")
-    v0_p1 = _get_from_dict(raw_data, "p1", "v0")
-    c_p1 = _get_from_dict(raw_data, "p1", "c")
-    ms_p1 = _get_from_dict(raw_data, "p1", "m_sample")
-
-    v_p2 = _get_from_dict(raw_data, "p2", "v")
-    v0_p2 = _get_from_dict(raw_data, "p2", "v0")
-    c_p2 = _get_from_dict(raw_data, "p2", "c")
-    ms_p2 = _get_from_dict(raw_data, "p2", "m_sample")
-
-    K = 0.0030974  # P conversion factor
+    r1 = _get_from_dict(raw_data, "p1", "result")
+    r2 = _get_from_dict(raw_data, "p2", "result")
 
     results = []
-
-    if all(x is not None for x in [v_p1, v0_p1, c_p1, ms_p1]) and ms_p1 > 0:
-        res1 = ((v_p1 - v0_p1) * c_p1 * K * 100) / ms_p1
-        if res1 >= 0:
-            results.append(res1)
-
-    if all(x is not None for x in [v_p2, v0_p2, c_p2, ms_p2]) and ms_p2 > 0:
-        res2 = ((v_p2 - v0_p2) * c_p2 * K * 100) / ms_p2
-        if res2 >= 0:
-            results.append(res2)
+    if r1 is not None:
+        results.append(r1)
+    if r2 is not None:
+        results.append(r2)
 
     if not results:
         return None
@@ -641,58 +663,32 @@ def calc_free_moisture_fm(raw_data: Dict) -> Optional[float]:
     - Wb = Weight before drying (хатаахын өмнө)
     - Wa = Weight after drying (хатаасны дараа)
 
+    FM нь p1/p2 бүтэцгүй — top-level дээр tray_g, before_g, after_g
+    илгээгддэг. Мөн fm_wet_pct шууд илгээгдэж болно.
+
     Args:
         raw_data: {
-            "p1": {"wt": ..., "wb": ..., "wa": ...},
-            "p2": {...}
+            "tray_g": ..., "before_g": ..., "after_g": ...,
+            "fm_wet_pct": ... (шууд тооцсон утга)
         }
 
     Returns:
-        Average FM% or None
+        FM% or None
     """
-    def calc_single_fm(wt, wb, wa) -> Optional[float]:
-        """Calculate FM for single parallel."""
-        if not all(x is not None and isfinite(x) for x in [wt, wb, wa]):
-            return None
+    # Top-level талбаруудаас авах (aggrid template илгээдэг формат)
+    wt = _safe_float(raw_data.get("tray_g") or raw_data.get("tray"))
+    wb = _safe_float(raw_data.get("before_g") or raw_data.get("before"))
+    wa = _safe_float(raw_data.get("after_g") or raw_data.get("after"))
 
-        numerator = wb - wa
+    if all(x is not None and isfinite(x) for x in [wt, wb, wa]):
         denominator = wa - wt
-
         if abs(denominator) < 1e-10:
             return None
+        fm = ((wb - wa) / denominator) * 100
+        if isfinite(fm) and fm >= 0:
+            return fm
 
-        fm = (numerator / denominator) * 100
-
-        return fm if isfinite(fm) and fm >= 0 else None
-
-    # Parallel 1
-    p1 = raw_data.get("p1") or {}
-    wt_p1 = _safe_float(p1.get("wt") or p1.get("Wt"))
-    wb_p1 = _safe_float(p1.get("wb") or p1.get("Wb"))
-    wa_p1 = _safe_float(p1.get("wa") or p1.get("Wa"))
-
-    # Parallel 2
-    p2 = raw_data.get("p2") or {}
-    wt_p2 = _safe_float(p2.get("wt") or p2.get("Wt"))
-    wb_p2 = _safe_float(p2.get("wb") or p2.get("Wb"))
-    wa_p2 = _safe_float(p2.get("wa") or p2.get("Wa"))
-
-    results = []
-
-    # Calculate p1
-    r1 = calc_single_fm(wt_p1, wb_p1, wa_p1)
-    if r1 is not None:
-        results.append(r1)
-
-    # Calculate p2
-    r2 = calc_single_fm(wt_p2, wb_p2, wa_p2)
-    if r2 is not None:
-        results.append(r2)
-
-    if not results:
-        return None
-
-    return sum(results) / len(results)
+    return None
 
 
 def calc_solid(raw_data: Dict) -> Optional[float]:
@@ -702,60 +698,31 @@ def calc_solid(raw_data: Dict) -> Optional[float]:
     Formula: Solid% = C * 100 / (A - B)
 
     Where:
-    - A, B, C = Mass measurements
-    - wet_mass = A - B
+    - A = нүүрстэй савны жин (bucket + sample)
+    - B = хоосон савны жин (bucket)
+    - C = хуурай үлдэгдлийн жин
+
+    Solid нь p1/p2 бүтэцгүй — top-level дээр A, B, C илгээгддэг.
 
     Args:
-        raw_data: {
-            "p1": {"a": ..., "b": ..., "c": ...},
-            "p2": {...}
-        }
+        raw_data: {"A": ..., "B": ..., "C": ...}
 
     Returns:
-        Average Solid% or None
+        Solid% or None
     """
-    def calc_single_solid(a, b, c) -> Optional[float]:
-        """Calculate Solid for single parallel."""
-        if not all(x is not None and isfinite(x) for x in [a, b, c]):
-            return None
+    a = _safe_float(raw_data.get("A") or raw_data.get("a"))
+    b = _safe_float(raw_data.get("B") or raw_data.get("b"))
+    c = _safe_float(raw_data.get("C") or raw_data.get("c"))
 
-        denominator = a - b
-
-        if abs(denominator) < 1e-10:
-            return None
-
-        solid = (c * 100) / denominator
-
-        return solid if isfinite(solid) and solid >= 0 else None
-
-    # Parallel 1
-    p1 = raw_data.get("p1") or {}
-    a_p1 = _safe_float(p1.get("a") or p1.get("A"))
-    b_p1 = _safe_float(p1.get("b") or p1.get("B"))
-    c_p1 = _safe_float(p1.get("c") or p1.get("C"))
-
-    # Parallel 2
-    p2 = raw_data.get("p2") or {}
-    a_p2 = _safe_float(p2.get("a") or p2.get("A"))
-    b_p2 = _safe_float(p2.get("b") or p2.get("B"))
-    c_p2 = _safe_float(p2.get("c") or p2.get("C"))
-
-    results = []
-
-    # Calculate p1
-    r1 = calc_single_solid(a_p1, b_p1, c_p1)
-    if r1 is not None:
-        results.append(r1)
-
-    # Calculate p2
-    r2 = calc_single_solid(a_p2, b_p2, c_p2)
-    if r2 is not None:
-        results.append(r2)
-
-    if not results:
+    if not all(x is not None and isfinite(x) for x in [a, b, c]):
         return None
 
-    return sum(results) / len(results)
+    denominator = a - b
+    if abs(denominator) < 1e-10:
+        return None
+
+    solid = (c * 100) / denominator
+    return solid if isfinite(solid) and solid >= 0 else None
 
 
 def calc_trd(raw_data: Dict) -> Optional[float]:
@@ -794,13 +761,14 @@ def calc_trd(raw_data: Dict) -> Optional[float]:
         return calc_mg_trd(raw_data)
 
     # Temperature coefficient table (6-35°C)
+    # SOP LAB.07.12 / MNS GB/T 217:2015 — Kt = ρ(t)/ρ(20°C)
     KT_TABLE = {
-        6: 0.99997, 7: 0.99993, 8: 0.99988, 9: 0.99981, 10: 0.99973,
-        11: 0.99963, 12: 0.99952, 13: 0.99940, 14: 0.99927, 15: 0.99913,
-        16: 0.99897, 17: 0.99880, 18: 0.99862, 19: 0.99843, 20: 0.99823,
-        21: 0.99802, 22: 0.99780, 23: 0.99756, 24: 0.99732, 25: 0.99707,
-        26: 0.99681, 27: 0.99654, 28: 0.99626, 29: 0.99597, 30: 0.99567,
-        31: 0.99537, 32: 0.99505, 33: 0.99473, 34: 0.99440, 35: 0.99406
+        6: 1.00174, 7: 1.00170, 8: 1.00165, 9: 1.00158, 10: 1.00150,
+        11: 1.00140, 12: 1.00129, 13: 1.00117, 14: 1.00100, 15: 1.00090,
+        16: 1.00074, 17: 1.00057, 18: 1.00039, 19: 1.00020, 20: 1.00000,
+        21: 0.99979, 22: 0.99956, 23: 0.99953, 24: 0.99909, 25: 0.99883,
+        26: 0.99857, 27: 0.99831, 28: 0.99803, 29: 0.99773, 30: 0.99743,
+        31: 0.99713, 32: 0.99682, 33: 0.99649, 34: 0.99616, 35: 0.99582
     }
 
     def get_kt(temp: Optional[float]) -> Optional[float]:
@@ -1021,6 +989,8 @@ CALCULATION_FUNCTIONS = {
     "TS": calc_sulfur_ts,
     "St,ad": calc_sulfur_ts,
     "S": calc_sulfur_ts,
+
+    "CSN": calc_csn,
 
     "P": calc_phosphorus_p,
     "P,ad": calc_phosphorus_p,
