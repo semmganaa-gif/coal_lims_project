@@ -240,15 +240,15 @@ def sulfur_map_for(sample_ids):
     if not sample_ids:
         return {}
 
-    rows = (
-        AnalysisResult.query.filter(
+    from app import db
+    from sqlalchemy import select
+    rows = db.session.execute(
+        select(AnalysisResult).filter(
             AnalysisResult.sample_id.in_(sample_ids),
             AnalysisResult.analysis_code.in_(["TS", "St,ad"]),
             AnalysisResult.status.in_(["approved", "pending_review"]),
-        )
-        .order_by(AnalysisResult.sample_id.asc(), AnalysisResult.id.desc())
-        .all()
-    )
+        ).order_by(AnalysisResult.sample_id.asc(), AnalysisResult.id.desc())
+    ).scalars().all()
 
     out = {}
     for r in rows:
@@ -257,6 +257,6 @@ def sulfur_map_for(sample_ids):
         if r.sample_id not in out:
             try:
                 out[r.sample_id] = float(r.final_result)
-            except Exception:
+            except (ValueError, TypeError):
                 pass
     return out

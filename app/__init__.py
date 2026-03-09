@@ -225,8 +225,8 @@ def create_app(config_class=Config):
     try:
         from app import cli as app_cli
         app_cli.register_commands(app)
-    except Exception:
-        pass
+    except Exception as e:
+        app.logger.warning(f"CLI commands registration failed: {e}")
 
     # CSRF exempt: зөвхөн JSON API blueprint-үүд
     # HTML form-тэй blueprint-үүдийг exempt хийхгүй (CSRF хамгаалалттай)
@@ -310,7 +310,7 @@ def create_app(config_class=Config):
             if (s.startswith("{") and s.endswith("}")) or (s.startswith("[") and s.endswith("]")):
                 try:
                     return json.loads(s)
-                except Exception:
+                except (json.JSONDecodeError, ValueError):
                     return {} if s.startswith("{") else []
         return {}
     app.jinja_env.filters["loads"] = jinja_loads_filter
@@ -319,7 +319,7 @@ def create_app(config_class=Config):
     from app.config.display_precision import format_result as format_result_centralized
 
     app.add_template_filter(
-        lambda v, analysis_code=None, metric=None: format_result_centralized(v, analysis_code),
+        lambda v, analysis_code=None: format_result_centralized(v, analysis_code),
         name="fmt_result"
     )
 
@@ -374,7 +374,10 @@ def create_app(config_class=Config):
 
     @login.user_loader
     def load_user(id):
-        return db.session.get(models.User, int(id))
+        try:
+            return db.session.get(models.User, int(id))
+        except (ValueError, TypeError):
+            return None
 
     # ======================================================
     # API Documentation (Swagger)

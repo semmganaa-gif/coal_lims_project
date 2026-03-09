@@ -8,6 +8,7 @@ flask create-user, flask import-equipment зэрэг командуудыг то
 from app import db
 from app.models import User, Equipment, SystemSetting
 from app.utils.repeatability_loader import clear_cache
+from sqlalchemy import select
 import click
 import pandas as pd
 from pathlib import Path
@@ -84,7 +85,7 @@ def register_commands(app):
     @click.argument("role")
     def create_user(username, password, role):
         """Шинэ хэрэглэгч үүсгэх."""
-        if User.query.filter_by(username=username).first():
+        if db.session.execute(select(User).filter_by(username=username)).scalars().first():
             click.echo(f"'{username}' user already exists.")
             return
 
@@ -175,11 +176,11 @@ def register_commands(app):
                 remark = _safe_str(row.get("Тайлбар"))
 
                 # Давхардал шалгах (нэр + марк + байршил)
-                existing = Equipment.query.filter_by(
+                existing = db.session.execute(select(Equipment).filter_by(
                     name=name or None,
                     model=model or None,
                     location=location or None,
-                ).first()
+                )).scalars().first()
 
                 if existing:
                     skipped += 1
@@ -258,11 +259,11 @@ def register_commands(app):
             commissioned_info = _safe_str(row.get(col_commissioned))
             location = _safe_str(row.get(col_location))
 
-            existing = Equipment.query.filter_by(
+            existing = db.session.execute(select(Equipment).filter_by(
                 name=name or None,
                 model=model or None,
                 location=location or None,
-            ).first()
+            )).scalars().first()
             if existing:
                 skipped += 1
                 continue
@@ -346,7 +347,7 @@ def register_commands(app):
         """Одоогийн лицензийн мэдээлэл харах."""
         from app.models import SystemLicense
 
-        lic = SystemLicense.query.filter_by(is_active=True).first()
+        lic = db.session.execute(select(SystemLicense).filter_by(is_active=True)).scalars().first()
         if not lic:
             click.echo("Идэвхтэй лиценз олдсонгүй.")
             return
@@ -380,7 +381,7 @@ def register_commands(app):
             click.echo("Алдаа: --days эсвэл --expiry-н аль нэгийг заана уу.")
             return
 
-        lic = SystemLicense.query.filter_by(is_active=True).first()
+        lic = db.session.execute(select(SystemLicense).filter_by(is_active=True)).scalars().first()
         if not lic:
             click.echo("Идэвхтэй лиценз олдсонгүй.")
             return
@@ -424,7 +425,7 @@ def register_commands(app):
         excel_path = Path(excel_path)
         click.echo(f"⬅ Excel рүү экспортолж байна: {excel_path}")
 
-        equipments = Equipment.query.order_by(Equipment.id).all()
+        equipments = db.session.execute(select(Equipment).order_by(Equipment.id)).scalars().all()
 
         rows = []
         for idx, eq in enumerate(equipments, start=1):
@@ -500,7 +501,7 @@ def register_commands(app):
                 "фосфор": "P",
                 "lab.07.10": "Cl",
                 "хлор": "Cl",
-                "lab.07.10 ": "F",  # Хоёр удаа LAB.07.10 = Фтор
+                "lab.07.10f": "F",  # Фтор — lab.07.10-тай collision тул "f" suffix
                 "фтор": "F",
                 "lab.07.11": "TRD",
                 "нягт": "TRD",
@@ -614,7 +615,7 @@ def register_commands(app):
                 rule.pop("bands", None)
 
         payload = json.dumps(rules, ensure_ascii=False)
-        setting = SystemSetting.query.filter_by(category="repeatability", key="limits").first()
+        setting = db.session.execute(select(SystemSetting).filter_by(category="repeatability", key="limits")).scalars().first()
         if not setting:
             setting = SystemSetting(category="repeatability", key="limits")
             db.session.add(setting)

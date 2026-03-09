@@ -8,13 +8,22 @@
 
 import logging
 from typing import List, Optional, Dict, Any
-from flask import render_template_string
+from jinja2 import Environment
 from flask_mail import Message
 from app import mail, db
 from app.models import User, SystemSetting
 from app.utils.datetime import now_local
 
 logger = logging.getLogger(__name__)
+
+# Autoescape-тэй Jinja2 environment (XSS хамгаалалт)
+_email_env = Environment(autoescape=True)
+
+
+def _render_email(template_str: str, **kwargs) -> str:
+    """render_template_string-ийн оронд autoescape=True-тэй render хийнэ."""
+    tmpl = _email_env.from_string(template_str)
+    return tmpl.render(**kwargs)
 
 
 # ============================================================
@@ -181,7 +190,7 @@ def get_email_signature(user: Optional['User'] = None) -> str:
     """
     if not user:
         # Default signature - системийн автомат мэдэгдэл
-        return render_template_string(
+        return _render_email(
             EMAIL_SIGNATURE_TEMPLATE,
             sender_name="Laboratory Team",
             sender_position="Coal Analysis Laboratory",
@@ -189,7 +198,7 @@ def get_email_signature(user: Optional['User'] = None) -> str:
             sender_phone=""
         )
 
-    return render_template_string(
+    return _render_email(
         EMAIL_SIGNATURE_TEMPLATE,
         sender_name=user.full_name or user.username,
         sender_position=user.position or "Senior Chemist, Laboratory",
@@ -208,17 +217,22 @@ def get_notification_recipients(notification_type: str) -> List[str]:
     Returns:
         Email хаягуудын жагсаалт
     """
+    from sqlalchemy import select
     # SystemSetting-ээс авах эсвэл default
-    setting = SystemSetting.query.filter_by(
-        category='notifications',
-        key=f'{notification_type}_recipients'
-    ).first()
+    setting = db.session.execute(
+        select(SystemSetting).filter_by(
+            category='notifications',
+            key=f'{notification_type}_recipients'
+        )
+    ).scalars().first()
 
     if setting and setting.value:
         return [e.strip() for e in setting.value.split(',') if e.strip()]
 
     # Default: Admin болон Senior Chemist-ууд
-    admins = User.query.filter(User.role.in_(['admin', 'senior'])).all()
+    admins = db.session.execute(
+        select(User).filter(User.role.in_(['admin', 'senior']))
+    ).scalars().all()
     return [u.email for u in admins if u.email]
 
 
@@ -293,7 +307,7 @@ def notify_qc_failure(
     if not recipients:
         return False
 
-    html = render_template_string(
+    html = _render_email(
         QC_FAILURE_TEMPLATE,
         analysis_code=analysis_code,
         qc_sample=qc_sample,
@@ -329,9 +343,7 @@ def notify_sample_status_change(
     }
     config = status_config.get(new_status.lower(), {'color': '#6c757d', 'icon': '📋'})
 
-    from app.utils.datetime import now_local
-
-    html = render_template_string(
+    html = _render_email(
         SAMPLE_STATUS_TEMPLATE,
         sample_code=sample_code,
         new_status=new_status,
@@ -363,7 +375,7 @@ def notify_equipment_calibration_due(equipment_list: List[Dict]) -> bool:
     if not recipients:
         return False
 
-    html = render_template_string(
+    html = _render_email(
         EQUIPMENT_CALIBRATION_TEMPLATE,
         equipment_list=equipment_list
     )
@@ -393,11 +405,14 @@ def check_and_send_equipment_notifications():
     today = now_local().date()
     threshold = today + timedelta(days=30)  # 30 хоногийн дотор
 
-    equipment_due = Equipment.query.filter(
-        Equipment.next_calibration_date <= threshold,
-        Equipment.next_calibration_date >= today,
-        Equipment.status == 'active'
-    ).all()
+    from sqlalchemy import select
+    equipment_due = db.session.execute(
+        select(Equipment).filter(
+            Equipment.next_calibration_date <= threshold,
+            Equipment.next_calibration_date >= today,
+            Equipment.status == 'active'
+        )
+    ).scalars().all()
 
     if not equipment_due:
         logger.info("No equipment calibration due within 30 days")
@@ -426,6 +441,7 @@ def check_and_notify_westgard():
     """
     from app.models import QCControlChart
     from app.utils.westgard import check_westgard_rules, get_qc_status
+    from sqlalchemy import select
 
     # Өвөрмөц analysis_code + qc_sample_name хосуудыг авах
     unique_pairs = db.session.query(
@@ -439,10 +455,12 @@ def check_and_notify_westgard():
         if not analysis_code or not qc_sample:
             continue
 
-        charts = QCControlChart.query.filter_by(
-            analysis_code=analysis_code,
-            qc_sample_name=qc_sample
-        ).order_by(QCControlChart.measurement_date.desc()).limit(20).all()
+        charts = db.session.execute(
+            select(QCControlChart).filter_by(
+                analysis_code=analysis_code,
+                qc_sample_name=qc_sample
+            ).order_by(QCControlChart.measurement_date.desc()).limit(20)
+        ).scalars().all()
 
         if len(charts) < 2:
             continue

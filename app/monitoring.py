@@ -19,13 +19,20 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
 
 
+def _get_existing(name):
+    """Бүртгэгдсэн metric-ийг аюулгүйгээр авах."""
+    try:
+        return REGISTRY._names_to_collectors.get(name + '_total', REGISTRY._names_to_collectors.get(name))
+    except AttributeError:
+        return None
+
+
 def _get_or_create_counter(name, description, labelnames):
     """Counter авах эсвэл шинээр үүсгэх (давхардлыг зайлсхийх)"""
     try:
         return Counter(name, description, labelnames)
     except ValueError:
-        # Metric already registered
-        return REGISTRY._names_to_collectors.get(name)
+        return _get_existing(name)
 
 
 def _get_or_create_gauge(name, description):
@@ -33,7 +40,7 @@ def _get_or_create_gauge(name, description):
     try:
         return Gauge(name, description)
     except ValueError:
-        return REGISTRY._names_to_collectors.get(name)
+        return _get_existing(name)
 
 
 def _get_or_create_histogram(name, description, labelnames, buckets):
@@ -41,7 +48,7 @@ def _get_or_create_histogram(name, description, labelnames, buckets):
     try:
         return Histogram(name, description, labelnames, buckets=buckets)
     except ValueError:
-        return REGISTRY._names_to_collectors.get(name)
+        return _get_existing(name)
 
 
 def _get_or_create_info(name, description):
@@ -49,7 +56,7 @@ def _get_or_create_info(name, description):
     try:
         return Info(name, description)
     except ValueError:
-        return REGISTRY._names_to_collectors.get(name)
+        return _get_existing(name)
 
 
 # Custom metrics (Prometheus байвал)
@@ -220,10 +227,9 @@ def setup_monitoring(app):
             }), 200
 
         except Exception as e:
-            app.logger.error(f"Health check failed: {e}")
+            app.logger.error(f"Health check failed: {e}", exc_info=True)
             return jsonify({
                 'status': 'unhealthy',
-                'error': str(e)
             }), 500
 
     app.logger.info("Performance monitoring initialized")
@@ -268,9 +274,11 @@ def get_performance_stats():
         }
 
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Performance stats error: {e}")
         return {
             "status": "error",
-            "message": str(e),
+            "message": "Failed to collect metrics",
             "prometheus_enabled": PROMETHEUS_AVAILABLE
         }
 

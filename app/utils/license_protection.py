@@ -109,7 +109,10 @@ class LicenseManager:
                     pass
 
         # Database-аас авах
-        license_obj = SystemLicense.query.filter_by(is_active=True).first()
+        from sqlalchemy import select
+        license_obj = db.session.execute(
+            select(SystemLicense).filter_by(is_active=True)
+        ).scalars().first()
         self._license_cache = license_obj
         self._last_check = now
 
@@ -264,7 +267,8 @@ class LicenseManager:
                 return {'success': False, 'error': 'License is for different hardware'}
 
         # Хуучин лицензийг идэвхгүй болгох
-        SystemLicense.query.update({'is_active': False})
+        from sqlalchemy import update
+        db.session.execute(update(SystemLicense).values(is_active=False))
 
         # Шинэ лиценз үүсгэх
         new_license = SystemLicense(
@@ -284,7 +288,11 @@ class LicenseManager:
         db.session.commit()
 
         self._log_event(new_license, 'activated', f'License activated for {new_license.company_name}')
-        self._license_cache = None  # Cache цэвэрлэх
+        # Cache бүрэн цэвэрлэх — stale result үлдэхээс сэргийлнэ
+        self._license_cache = None
+        self._last_check = None
+        self._last_valid_result = None
+        self._last_validate_time = None
 
         return {'success': True, 'license': new_license}
 

@@ -25,7 +25,7 @@ from wtforms import (
     HiddenField, # ✅ Нэмэгдсэн
     widgets,
 )
-from wtforms.validators import DataRequired, Optional, Regexp, NumberRange, Email, ValidationError
+from wtforms.validators import DataRequired, Optional, Regexp, NumberRange, Email, ValidationError, Length
 import re
 
 
@@ -290,11 +290,11 @@ class AddSampleForm(FlaskForm):
         choices=[("MODI", "MOD I"), ("MODII", "MOD II"), ("MODIII", "MOD III")],
         validators=[Optional()],
     )
-    wtl_supplier = StringField("Supplier", validators=[Optional()])
-    wtl_vehicle = StringField("Vehicle Number", validators=[Optional()])
+    wtl_supplier = StringField("Supplier", validators=[Optional(), Length(max=255)])
+    wtl_vehicle = StringField("Vehicle Number", validators=[Optional(), Length(max=100)])
 
     # Manual sample_code for WTL (MG/Test) and other cases
-    sample_code = StringField("Sample name", validators=[Optional()])
+    sample_code = StringField("Sample name", validators=[Optional(), Length(max=255)])
 
     submit = SubmitField("Register")
 
@@ -425,12 +425,12 @@ class KPIReportFilterForm(FlaskForm):
 
     analysis_code = StringField(
         "Шинжилгээний код",
-        validators=[Optional()],
+        validators=[Optional(), Length(max=50)],
     )
 
     user_name = StringField(
         "Хэрэглэгч",
-        validators=[Optional()],
+        validators=[Optional(), Length(max=100)],
     )
 
     # GROUP BY сонголт – KPI хүснэгтийн баруун талын багана

@@ -6,6 +6,7 @@
 
 from app import db
 from app.models import SystemSetting
+from sqlalchemy import select
 import json
 
 
@@ -16,10 +17,10 @@ def get_error_reason_labels():
     Returns:
         dict: {key: value} жишээ: {'sample_prep': '1. Дээж бэлтгэлийн алдаа', ...}
     """
-    settings = SystemSetting.query.filter_by(
-        category='error_reason',
-        is_active=True
-    ).order_by(SystemSetting.sort_order).all()
+    settings = db.session.execute(
+        select(SystemSetting).filter_by(category='error_reason', is_active=True)
+        .order_by(SystemSetting.sort_order)
+    ).scalars().all()
 
     return {s.key: s.value for s in settings}
 
@@ -34,10 +35,10 @@ def get_setting_by_category(category):
     Returns:
         dict: {key: value}
     """
-    settings = SystemSetting.query.filter_by(
-        category=category,
-        is_active=True
-    ).order_by(SystemSetting.sort_order).all()
+    settings = db.session.execute(
+        select(SystemSetting).filter_by(category=category, is_active=True)
+        .order_by(SystemSetting.sort_order)
+    ).scalars().all()
 
     return {s.key: s.value for s in settings}
 
@@ -54,13 +55,11 @@ def get_setting_value(category, key, default=None):
     Returns:
         str: Тохиргооны утга эсвэл default
     """
-    setting = SystemSetting.query.filter_by(
-        category=category,
-        key=key,
-        is_active=True
-    ).first()
+    setting = db.session.execute(
+        select(SystemSetting).filter_by(category=category, key=key, is_active=True)
+    ).scalars().first()
 
-    return setting.value if setting else default
+    return setting.value if setting and setting.value is not None else default
 
 
 def update_setting(category, key, value, updated_by_id=None):
@@ -76,7 +75,9 @@ def update_setting(category, key, value, updated_by_id=None):
     Returns:
         SystemSetting: Шинэчлэгдсэн эсвэл шинээр үүссэн setting
     """
-    setting = SystemSetting.query.filter_by(category=category, key=key).first()
+    setting = db.session.execute(
+        select(SystemSetting).filter_by(category=category, key=key)
+    ).scalars().first()
 
     if setting:
         setting.value = value
@@ -99,7 +100,9 @@ def get_sample_type_choices_map():
     SAMPLE_TYPE_CHOICES_MAP-ийг DB-ээс унших.
     DB хоосон бол constants.py-ээс fallback авна.
     """
-    settings = SystemSetting.query.filter_by(category='sample_type', is_active=True).all()
+    settings = db.session.execute(
+        select(SystemSetting).filter_by(category='sample_type', is_active=True)
+    ).scalars().all()
     if settings:
         return {s.key: json.loads(s.value) for s in settings}
     # Fallback: constants.py
@@ -112,7 +115,9 @@ def get_unit_abbreviations():
     UNIT_ABBREVIATIONS-ийг DB-ээс унших.
     DB хоосон бол constants.py-ээс fallback авна.
     """
-    settings = SystemSetting.query.filter_by(category='unit_abbr', is_active=True).all()
+    settings = db.session.execute(
+        select(SystemSetting).filter_by(category='unit_abbr', is_active=True)
+    ).scalars().all()
     if settings:
         return {s.key: s.value for s in settings}
     # Fallback: constants.py

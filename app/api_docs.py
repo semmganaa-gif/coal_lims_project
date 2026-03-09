@@ -50,7 +50,7 @@ def setup_api_docs(app):
                 "name": "Proprietary",
             }
         },
-        "host": "localhost:5000",  # Production-д өөрчлөх
+        "host": "",  # Swagger-ийн default-аар request host ашиглана
         "basePath": "/",
         "schemes": [
             "http",

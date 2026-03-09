@@ -521,6 +521,8 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
 function searchAudit() {
   const q = document.getElementById('auditSearchInput').value.trim();
   if (!q) return;
@@ -540,16 +542,16 @@ function searchAudit() {
       }
 
       tbody.innerHTML = data.results.map(r => {
-        const actionClass = r.action.includes('APPROVED') ? 'text-success' :
-                           r.action.includes('REJECTED') ? 'text-danger' : '';
+        const actionClass = (r.action||'').includes('APPROVED') ? 'text-success' :
+                           (r.action||'').includes('REJECTED') ? 'text-danger' : '';
         return `
           <tr>
-            <td><small>${r.timestamp || '-'}</small></td>
-            <td><strong>${r.sample_code}</strong></td>
-            <td><span class="badge bg-secondary">${r.analysis_code}</span></td>
-            <td><span class="${actionClass}">${r.action}</span></td>
-            <td>${r.user}</td>
-            <td>${r.final_result || '-'}</td>
+            <td><small>${_e(r.timestamp || '-')}</small></td>
+            <td><strong>${_e(r.sample_code)}</strong></td>
+            <td><span class="badge bg-secondary">${_e(r.analysis_code)}</span></td>
+            <td><span class="${actionClass}">${_e(r.action)}</span></td>
+            <td>${_e(r.user)}</td>
+            <td>${_e(r.final_result || '-')}</td>
           </tr>
         `;
       }).join('');

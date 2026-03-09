@@ -69,8 +69,8 @@ def calculate_all_conversions(
                 # TRD,ad = TRD,d * (100 - Mad) / 100
                 TRD_ad_val = TRD_d_val * denom_ad / 100.0
                 final_results['relative_density'] = TRD_ad_val
-            else:
-                final_results['relative_density'] = 0.0
+            # denom_ad <= 0 нь Mad >= 100% гэсэн утгагүй тохиолдол — TRD тооцоохгүй
+
         else:
             if 'relative_density' in final_results:
                 del final_results['relative_density']
@@ -82,16 +82,16 @@ def calculate_all_conversions(
 
     if M_ad is not None:
         denom_d = 100.0 - M_ad
-        if denom_d != 0:
+        if abs(denom_d) > 1e-10:
             factor_d = 100.0 / denom_d
             if A_ad is not None:
                 denom_daf = 100.0 - M_ad - A_ad
-                if denom_daf != 0:
+                if abs(denom_daf) > 1e-10:
                     factor_daf = 100.0 / denom_daf
 
     if M_t is not None and M_ad is not None:
         denom_ad = 100.0 - M_ad
-        if denom_ad != 0:
+        if abs(denom_ad) > 1e-10:
             factor_ar = (100.0 - M_t) / denom_ad
 
     # 5) PARAMETER_DEFINITIONS-ыг давтаж, _d/_daf/_ar хувиргалтууд
@@ -146,7 +146,7 @@ def calculate_all_conversions(
             assert Qgr_ad is not None and Aad is not None and Mad is not None
             assert Mt_ar is not None and Vdaf is not None
             denom = (100.0 - Mad)
-            if denom != 0:
+            if abs(denom) > 1e-10:
                 term1 = Qgr_ad * 4.1868
                 term2 = 206.0 * (100.0 - Aad - Mad) * (0.059 * Vdaf + 3.173) / 100.0
                 term3 = (100.0 - Mt_ar) / denom

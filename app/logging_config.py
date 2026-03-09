@@ -65,7 +65,7 @@ def setup_logging(app):
     # 3) SECURITY LOG
     # ========================================================
     security_logger = logging.getLogger('security')
-    security_logger.setLevel(logging.WARNING)
+    security_logger.setLevel(logging.INFO)
 
     if not security_logger.handlers:
         security_handler = RotatingFileHandler(

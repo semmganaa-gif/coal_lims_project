@@ -108,13 +108,15 @@ def get_recent_audit_logs(limit: int = DEFAULT_AUDIT_LOG_LIMIT, action: Optional
         >>> login_logs = get_recent_audit_logs(action='login')
     """
     from app.models import AuditLog
+    from app import db
+    from sqlalchemy import select
 
-    query = AuditLog.query
-
+    stmt = select(AuditLog)
     if action:
-        query = query.filter_by(action=action)
+        stmt = stmt.filter_by(action=action)
+    stmt = stmt.order_by(AuditLog.timestamp.desc()).limit(limit)
 
-    return query.order_by(AuditLog.timestamp.desc()).limit(limit).all()
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_user_audit_logs(user_id: int, limit: int = DEFAULT_AUDIT_LOG_LIMIT) -> list:
@@ -132,11 +134,12 @@ def get_user_audit_logs(user_id: int, limit: int = DEFAULT_AUDIT_LOG_LIMIT) -> l
         >>> user_logs = get_user_audit_logs(user_id=5, limit=20)
     """
     from app.models import AuditLog
+    from app import db
+    from sqlalchemy import select
 
-    return AuditLog.query.filter_by(user_id=user_id)\
-        .order_by(AuditLog.timestamp.desc())\
-        .limit(limit)\
-        .all()
+    stmt = select(AuditLog).filter_by(user_id=user_id)\
+        .order_by(AuditLog.timestamp.desc()).limit(limit)
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_resource_audit_logs(
@@ -160,11 +163,11 @@ def get_resource_audit_logs(
         >>> result_logs = get_resource_audit_logs('AnalysisResult', 456, limit=50)
     """
     from app.models import AuditLog
+    from app import db
+    from sqlalchemy import select
 
-    return AuditLog.query.filter_by(
+    stmt = select(AuditLog).filter_by(
         resource_type=resource_type,
         resource_id=resource_id
-    )\
-        .order_by(AuditLog.timestamp.desc())\
-        .limit(limit)\
-        .all()
+    ).order_by(AuditLog.timestamp.desc()).limit(limit)
+    return db.session.execute(stmt).scalars().all()

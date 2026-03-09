@@ -92,5 +92,5 @@ def is_safe_url(target):
     test_url = urlparse(urljoin(request.host_url, target))
 
     return (
-        test_url.scheme in ("http", "https") or test_url.scheme == ""
-    ) and test_url.netloc == host_url.netloc
+        test_url.scheme in ("http", "https")
+    ) and test_url.hostname == host_url.hostname

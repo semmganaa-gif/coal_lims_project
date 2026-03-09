@@ -129,7 +129,7 @@ def before_send_filter(event, hint):
     # Scrub sensitive headers
     if 'request' in event:
         headers = event['request'].get('headers', {})
-        sensitive_headers = ['Authorization', 'Cookie', 'X-CSRF-Token']
+        sensitive_headers = ['Authorization', 'Cookie', 'X-CSRF-Token', 'X-API-Key', 'X-Auth-Token', 'X-License-Key']
         for header in sensitive_headers:
             if header in headers:
                 headers[header] = '[Filtered]'

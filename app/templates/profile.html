@@ -150,6 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewEmail = document.getElementById('previewEmail');
     const previewPhone = document.getElementById('previewPhone');
 
+    function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
     function updatePreview() {
         if (previewName) previewName.textContent = nameInput.value || '{{ current_user.username }}';
         if (previewPosition) previewPosition.textContent = positionInput.value || 'Senior Chemist, Laboratory';
@@ -158,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewPhone) {
             let phoneHtml = '| Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279';
             if (phoneInput.value) {
-                phoneHtml += ' | Mobile: ' + phoneInput.value;
+                phoneHtml += ' | Mobile: ' + _e(phoneInput.value);
             }
             phoneHtml += ' |';
             previewPhone.innerHTML = phoneHtml;
@@ -168,7 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (previewEmail) {
             let emailHtml = '';
             if (emailInput.value) {
-                emailHtml = '| <a href="mailto:' + emailInput.value + '" style="color: #0066cc; text-decoration: none;">' + emailInput.value + '</a> | ';
+                var safeEmail = _e(emailInput.value);
+                emailHtml = '| <a href="mailto:' + encodeURI(emailInput.value) + '" style="color: #0066cc; text-decoration: none;">' + safeEmail + '</a> | ';
             }
             emailHtml += '<a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |';
             previewEmail.innerHTML = emailHtml;

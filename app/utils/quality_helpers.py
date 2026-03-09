@@ -102,10 +102,12 @@ def generate_sequential_code(model, code_field, prefix, year=None, padding=4):
     # Баганы объект авах
     column = getattr(model, code_field)
 
+    from app import db
+    from sqlalchemy import select
     # Тухайн оны сүүлийн кодыг олох
-    last_record = model.query.filter(
-        column.like(f'{prefix}-{year}-%')
-    ).order_by(column.desc()).first()
+    last_record = db.session.execute(
+        select(model).filter(column.like(f'{prefix}-{year}-%')).order_by(column.desc())
+    ).scalars().first()
 
     if last_record:
         last_code = getattr(last_record, code_field)

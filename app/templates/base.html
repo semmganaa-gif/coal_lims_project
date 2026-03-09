@@ -23,6 +23,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=9">
   <!-- Mobile CSS - Утас/таблетад зориулсан -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=10">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
   <script>
@@ -532,7 +534,7 @@
           <li class="nav-item">
             <a class="nav-link text-success" href="{{ url_for('main.send_hourly_report') }}"
                title="{{ _('Send Hourly Report') }}"
-               onclick="return confirm('Цагийн тайлан илгээх үү?')">
+               onclick="return confirm('{{ _("Send hourly report?") }}')">
               <i class="bi bi-envelope-paper-fill"></i>
             </a>
           </li>
@@ -557,7 +559,7 @@
               <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
                 <i class="bi bi-person-gear me-2"></i>{{ _('Profile') }}
               </a></li>
-              <li><a class="dropdown-item" href="#"><i class="bi bi-key me-2"></i>{{ _('Change Password') }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.profile') }}"><i class="bi bi-key me-2"></i>{{ _('Change Password') }}</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}">
                 <i class="bi bi-box-arrow-right me-2"></i>{{ _('Logout') }}
@@ -611,7 +613,6 @@
   <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
 
   <!-- DataTables (Quality Records pages) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
   <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
 
@@ -771,20 +772,6 @@
       window.addEventListener('resize', setNavHeight);
     })();
   </script>
-
-  <!-- Mobile debug -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      var nav = document.getElementById('mainNavbar');
-      if (nav) {
-        nav.addEventListener('show.bs.collapse', function() { console.log('NAVBAR SHOW'); });
-        nav.addEventListener('shown.bs.collapse', function() { console.log('NAVBAR SHOWN'); });
-        nav.addEventListener('hide.bs.collapse', function() { console.log('NAVBAR HIDE'); });
-        nav.addEventListener('hidden.bs.collapse', function() { console.log('NAVBAR HIDDEN'); });
-      }
-    });
-  </script>
-
 
   <!-- User session check - Clear localStorage when different user logs in -->
   {% if current_user.is_authenticated %}

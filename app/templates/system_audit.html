@@ -307,7 +307,7 @@ function initGrid() {
       cellRenderer: function(params) {
         const cls = getActionClass(params.value);
         const label = ACTION_LABELS[params.value] || params.value || '-';
-        return '<span class="action-badge ' + cls + '">' + label + '</span>';
+        return '<span class="action-badge ' + cls + '">' + _e(label) + '</span>';
       },
       filterValueGetter: function(params) {
         return (ACTION_LABELS[params.data.action] || '') + ' ' + (params.data.action || '');
@@ -336,11 +336,11 @@ function initGrid() {
           for (const [k, v] of Object.entries(obj)) {
             if (k.startsWith('_')) continue;
             const val = typeof v === 'object' ? JSON.stringify(v) : v;
-            parts.push('<span class="detail-key">' + k + ':</span> <span class="detail-val">' + val + '</span>');
+            parts.push('<span class="detail-key">' + _e(k) + ':</span> <span class="detail-val">' + _e(String(val)) + '</span>');
           }
           return parts.join(' &middot; ');
         } catch {
-          return params.value;
+          return _e(params.value);
         }
       },
     },
@@ -356,7 +356,7 @@ function initGrid() {
       cellRenderer: function(params) {
         const b = parseBrowser(params.value);
         if (!b) return '<span class="text-muted">-</span>';
-        return '<span class="browser-tag">' + b + '</span>';
+        return '<span class="browser-tag">' + _e(b) + '</span>';
       },
       filterValueGetter: function(params) {
         return parseBrowser(params.data.user_agent);
@@ -483,25 +483,27 @@ function updateStats(rows) {
   }
 }
 
+function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
 function showDetail(row) {
   let detailsHtml = '';
   try {
     const obj = JSON.parse(row.details);
-    detailsHtml = '<pre>' + JSON.stringify(obj, null, 2) + '</pre>';
+    detailsHtml = '<pre>' + _e(JSON.stringify(obj, null, 2)) + '</pre>';
   } catch {
-    detailsHtml = row.details ? '<pre>' + row.details + '</pre>' : '<span class="text-muted">-</span>';
+    detailsHtml = row.details ? '<pre>' + _e(row.details) + '</pre>' : '<span class="text-muted">-</span>';
   }
 
   const actionLabel = ACTION_LABELS[row.action] || row.action;
 
   const html = `
-    <div class="info-row"><span class="info-label">ID</span><span class="info-value">#${row.id}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Date") }}</span><span class="info-value">${row.timestamp || '-'}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("User") }}</span><span class="info-value">${row.user || '-'}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Action") }}</span><span class="info-value"><span class="action-badge ${getActionClass(row.action)}">${actionLabel}</span></span></div>
-    <div class="info-row"><span class="info-label">{{ _("Resource") }}</span><span class="info-value">${row.resource_type || '-'} ${row.resource_id ? '#' + row.resource_id : ''}</span></div>
-    <div class="info-row"><span class="info-label">IP</span><span class="info-value">${row.ip_address || '-'}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Browser") }}</span><span class="info-value">${row.user_agent || '-'}</span></div>
+    <div class="info-row"><span class="info-label">ID</span><span class="info-value">#${parseInt(row.id) || 0}</span></div>
+    <div class="info-row"><span class="info-label">{{ _("Date") }}</span><span class="info-value">${_e(row.timestamp || '-')}</span></div>
+    <div class="info-row"><span class="info-label">{{ _("User") }}</span><span class="info-value">${_e(row.user || '-')}</span></div>
+    <div class="info-row"><span class="info-label">{{ _("Action") }}</span><span class="info-value"><span class="action-badge ${getActionClass(row.action)}">${_e(actionLabel)}</span></span></div>
+    <div class="info-row"><span class="info-label">{{ _("Resource") }}</span><span class="info-value">${_e(row.resource_type || '-')} ${row.resource_id ? '#' + parseInt(row.resource_id) : ''}</span></div>
+    <div class="info-row"><span class="info-label">IP</span><span class="info-value">${_e(row.ip_address || '-')}</span></div>
+    <div class="info-row"><span class="info-label">{{ _("Browser") }}</span><span class="info-value">${_e(row.user_agent || '-')}</span></div>
     <div class="info-row"><span class="info-label">{{ _("Hash") }}</span><span class="info-value">${row.hash_valid === true ? '<i class="bi bi-check-circle-fill hash-ok"></i> OK' : row.hash_valid === false ? '<i class="bi bi-exclamation-triangle-fill hash-fail"></i> TAMPERED' : '-'}</span></div>
     <hr class="my-2">
     <strong class="small">{{ _("Details") }}</strong>
