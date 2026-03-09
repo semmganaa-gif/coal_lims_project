@@ -25,6 +25,8 @@ import json
 from app import db, limiter
 from app.utils.converters import to_float
 from app.models import Sample, AnalysisResult, AnalysisResultLog, ControlStandard, GbwStandard
+from app.schemas import AnalysisResultSchema
+from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
 from app.utils.normalize import normalize_raw_data
 from app.utils.codes import norm_code, BASE_TO_ALIASES
@@ -260,12 +262,15 @@ def register_routes(bp):
         sample.analyses_to_perform = json.dumps(analyses)
 
         # Audit log
-        from app.services.audit_log_service import log_action
-        log_action(
+        from app.utils.audit import log_audit
+        log_audit(
             action="unassign_analysis",
-            entity_type="sample",
-            entity_id=sample.id,
-            details=f"Дээж {sample.sample_code}-аас {analysis_code} шинжилгээг хассан"
+            resource_type="Sample",
+            resource_id=sample.id,
+            details={
+                "sample_code": sample.sample_code,
+                "analysis_code": analysis_code,
+            }
         )
 
         try:
@@ -303,7 +308,13 @@ def register_routes(bp):
         if not isinstance(data, list) or len(data) == 0:
             return jsonify({"message": "JSON массив байх ёстой"}), 400
 
-        # Input validation
+        # Schema validation (structural check)
+        _schema = AnalysisResultSchema(many=True)
+        schema_errors = _schema.validate(data)
+        if schema_errors:
+            current_app.logger.warning(f"Schema validation errors: {schema_errors}")
+
+        # Input validation (business logic: range, CSN, etc.)
         is_valid, validated_items, validation_errors = validate_save_results_batch(data)
 
         if not is_valid:
@@ -718,27 +729,19 @@ def register_routes(bp):
                         original_timestamp = now_local()
 
                     # Audit Log
-                    current_ts = now_local()
-                    audit = AnalysisResultLog(
-                        timestamp=current_ts,
-                        user_id=current_user.id,
+                    log_analysis_action(
+                        result_id=target_res_id,
                         sample_id=sample_id,
-                        analysis_result_id=target_res_id,
                         analysis_code=analysis_code,
                         action=action,
-                        raw_data_snapshot=raw_snapshot,
-                        final_result_snapshot=final_snapshot,
+                        raw_data_dict=raw_snapshot,
+                        final_result=final_snapshot,
                         reason=reason,
                         error_reason=auto_error_reason,
-                        # ✅ ШИНЭ: Анхны мэдээлэл (хэзээ ч өөрчлөгдөхгүй)
                         original_user_id=original_user_id,
                         original_timestamp=original_timestamp,
-                        # ✅ ШИНЭ: Дээжний код snapshot (sample устсан ч харагдана)
                         sample_code_snapshot=sample.sample_code,
                     )
-                    # ✅ ШИНЭ: Hash тооцоолох (өөрчлөгдсөн эсэхийг шалгах)
-                    audit.data_hash = audit.compute_hash()
-                    db.session.add(audit)
 
                     saved_count += 1
                     results_for_response.append({
@@ -849,23 +852,19 @@ def register_routes(bp):
         sample = db.session.get(Sample, res.sample_id)
         sample_code_snap = sample.sample_code if sample else None
 
-        audit = AnalysisResultLog(
-            timestamp=now_local(),
-            user_id=current_user.id,
+        log_analysis_action(
+            result_id=res.id,
             sample_id=res.sample_id,
-            analysis_result_id=res.id,
             analysis_code=res.analysis_code,
             action=action_text,
-            raw_data_snapshot=res.raw_data,
-            final_result_snapshot=res.final_result,
+            raw_data_dict=res.raw_data,
+            final_result=res.final_result,
             rejection_category=rejection_category,
             rejection_subcategory=rejection_subcategory,
             reason=reason_text,
             error_reason=error_reason,
             sample_code_snapshot=sample_code_snap,
         )
-        audit.data_hash = audit.compute_hash()
-        db.session.add(audit)
 
         try:
             db.session.commit()
@@ -933,16 +932,14 @@ def register_routes(bp):
             sample.updated_at = now_local()
 
             # Audit log
-            audit = AnalysisResultLog(
-                timestamp=now_local(),
-                user_id=current_user.id,
+            log_analysis_action(
+                result_id=None,
                 sample_id=sample_id,
                 analysis_code=base_code,
                 action="ANALYSIS_REQUESTED",
                 reason=f"Нэгтгэлээс '{base_code}' шинжилгээ захиалсан",
                 sample_code_snapshot=sample.sample_code,
             )
-            db.session.add(audit)
             db.session.commit()
 
             return jsonify({

@@ -144,17 +144,17 @@
 
 /* Status indicators */
 .status-approved {
-  color: #198754;
+  color: var(--status-approved, #198754);
   font-weight: 600;
 }
 
 .status-pending {
-  color: #ffc107;
+  color: var(--status-pending, #ffc107);
   font-weight: 600;
 }
 
 .status-rejected {
-  color: #dc3545;
+  color: var(--status-rejected, #dc3545);
   font-weight: 600;
 }
 

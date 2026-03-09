@@ -28,7 +28,7 @@ const _dbg_samples_defined = {{ (samples is defined) | lower }};
 const _dbg_aggrid_len = {{ aggrid_samples|length if aggrid_samples is defined else -1 }};
 const _dbg_samples_len = {{ samples|length if samples is defined else -1 }};
 const _dbg_combined_ids = {{ (aggrid_samples or samples or []) | map(attribute='id') | list | tojson | safe }};
-console.log('AGGrid dataset {{ samples_var }}:', {{ samples_var }}, 'len=', {{ source|length }});
+logger.log('AGGrid dataset {{ samples_var }}:', {{ samples_var }}, 'len=', {{ source|length }});
 {% if include_existing %}
 const {{ existing_var }} = {{ existing_results_map | default({}) | tojson | safe }};
 {% endif %}
@@ -94,7 +94,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   const WEIGHT_COLUMNS = {{ weight_columns | safe }};
 
   if (!$btnConnect || !$balanceStatus) {
-    console.log('Balance UI not found, skipping balance integration');
+    logger.log('Balance UI not found, skipping balance integration');
     return;
   }
 
@@ -151,7 +151,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   // F2 дарахад жин авах (AG-Grid integration)
   window.fetchBalanceWeight = async function(gridApi, colId) {
     if (!window.labBalance || !window.labBalance.isConnected) {
-      console.log('Balance not connected');
+      logger.log('Balance not connected');
       return null;
     }
 
@@ -220,7 +220,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
     }
   });
 
-  console.log('✅ Balance integration loaded. Press F2 on m1/m2/m3 to fetch weight.');
+  logger.log('Balance integration loaded. Press F2 on m1/m2/m3 to fetch weight.');
 })();
 </script>
 {% endmacro %}
@@ -228,6 +228,10 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 {# Common JS helpers injected into each AG Grid form #}
 {% macro common_js_helpers(nav_fields=None) %}
 <script>
+  function _escHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
   var navHandler = window.LIMS_AGGRID?.navHandlerFactory({{ nav_fields|default("[]")|tojson|safe }}) || (() => false);
   var numParser = window.LIMS_AGGRID?.numParser || (p => { const v = parseFloat(p.newValue); return isNaN(v) ? null : v; });
   var numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value!=null) ? parseFloat(p.value).toFixed(4) : '');
@@ -298,11 +302,11 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
   },
   cellRenderer: p => {
     if (p.data.parallel !== 1) return '';
-    let h = `<div class="sample-name">${p.value}</div>`;
+    let h = `<div class="sample-name">${_escHtml(p.value)}</div>`;
     const rej = rejectedInfo[p.data.sample_id];
     if (rej) {
       h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
-        errorLabels[rej.reason_code] || rej.reason
+        _escHtml(errorLabels[rej.reason_code] || rej.reason)
       }</div>`;
     }
     return h;
@@ -400,9 +404,9 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 let draftMgr;
 if (typeof LIMSDraftManager !== 'undefined') {
   draftMgr = new LIMSDraftManager('{{ analysis_code }}');
-  console.log('✅ Draft Manager initialized for {{ analysis_code }}');
+  logger.log('Draft Manager initialized for {{ analysis_code }}');
 } else {
-  console.warn('⚠️ LIMSDraftManager not loaded, using fallback');
+  logger.warn('LIMSDraftManager not loaded, using fallback');
   draftMgr = {
     save: (data) => localStorage.setItem('draft_{{ analysis_code }}', JSON.stringify(data)),
     restore: () => JSON.parse(localStorage.getItem('draft_{{ analysis_code }}') || '{}'),
@@ -426,24 +430,24 @@ const urlIds = urlParams.get('sample_ids');
 if (urlIds) {
   try {
     localStorage.setItem(STORAGE_KEY, urlIds);
-    console.log('✅ Sample IDs saved to localStorage:', urlIds);
+    logger.log('Sample IDs saved to localStorage:', urlIds);
   } catch(e) {
-    console.warn('localStorage save failed:', e);
+    logger.warn('localStorage save failed:', e);
   }
 } else {
   try {
     const savedIds = localStorage.getItem(STORAGE_KEY);
     if (savedIds) {
-      console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+      logger.log('URL has no sample_ids, restoring from localStorage:', savedIds);
       const url = new URL(window.location.href);
       url.searchParams.set('sample_ids', savedIds);
       window.history.replaceState({}, '', url.toString());
-      console.warn('⚠️ Reloading page to fetch samples from backend...');
+      logger.warn('Reloading page to fetch samples from backend...');
       window.location.reload();
       return;
     }
   } catch(e) {
-    console.warn('localStorage restore failed:', e);
+    logger.warn('localStorage restore failed:', e);
   }
 }
 {% endmacro %}

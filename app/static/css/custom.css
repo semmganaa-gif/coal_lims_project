@@ -1,4 +1,4 @@
-/* static/css/custom.css - САЙЖРУУЛСАН ДИЗАЙН v2.0 */
+/* static/css/custom.css - LIMS Design System v2.0 */
 
 /* ================================================================
    1. ҮНДСЭН ӨНГӨ & ТОХИРГОО (Color System & Base Settings)
@@ -40,7 +40,7 @@
   --status-rejected: #dc3545;
   --status-new: #17a2b8;
 
-  /* Font sizes - ТОМРУУЛСАН */
+  /* Font sizes */
   --font-size-base: 14px;  /* 12px-с 14px болгосон */
   --font-size-sm: 13px;
   --font-size-xs: 12px;
@@ -155,7 +155,7 @@ body {
 }
 
 .card-header {
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   border-bottom: 1px solid var(--lims-border-light);
   font-weight: 600;
   font-size: var(--font-size-lg);
@@ -176,14 +176,14 @@ body {
 }
 
 .card-footer {
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   border-top: 1px solid var(--lims-border-light);
   padding: 0.875rem 1.25rem;
   font-size: var(--font-size-sm);
 }
 
 /* ================================================================
-   5. BUTTON (Товчлуур) - САЙЖРУУЛСАН
+   5. BUTTON (Товчлуур)
    ================================================================ */
 .btn {
   border-radius: var(--border-radius);
@@ -262,7 +262,7 @@ body {
 }
 
 /* ================================================================
-   6. TABLE (Хүснэгт) - САЙЖРУУЛСАН + AUTO-SIZING
+   6. TABLE (Хүснэгт) + AUTO-SIZING
    ================================================================ */
 .table {
   font-size: var(--font-size-base);
@@ -272,7 +272,7 @@ body {
 }
 
 .table thead th {
-  background-color: #f1f3f5;
+  background-color: var(--bs-light);
   color: var(--bs-dark);
   font-weight: 600;
   font-size: var(--font-size-sm);
@@ -533,7 +533,7 @@ table[id$="-analysis-table"] .result-cell {
 }
 
 /* ================================================================
-   7. FORM (Форм) - САЙЖРУУЛСАН
+   7. FORM (Форм)
    ================================================================ */
 .form-label {
   font-weight: 600;
@@ -570,13 +570,13 @@ table[id$="-analysis-table"] .result-cell {
 /* Input group сайжруулалт */
 .input-group-text {
   font-size: var(--font-size-base);
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   border: 1px solid var(--lims-border);
   font-weight: 500;
 }
 
 /* ================================================================
-   8. BADGE (Badge) - САЙЖРУУЛСАН
+   8. BADGE (Badge)
    ================================================================ */
 .badge {
   font-size: 0.75rem;
@@ -735,7 +735,7 @@ body::before {
 }
 
 .modal-header {
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   border-bottom: 1px solid var(--lims-border);
   padding: 1rem 1.25rem;
 }
@@ -754,7 +754,7 @@ body::before {
 }
 
 .modal-footer {
-  background-color: #f8f9fa;
+  background-color: var(--bs-light);
   border-top: 1px solid var(--lims-border);
   padding: 0.875rem 1.25rem;
 }

@@ -308,20 +308,21 @@
     .then(data => {
       // Equipment alerts
       const el = document.getElementById('equipAlerts');
+      const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       let html = '';
       if (data.calibration_overdue && data.calibration_overdue.length) {
         data.calibration_overdue.forEach(e => {
           html += `<div class="equip-alert-item overdue">
-            <span class="badge-sm" style="background:#dc2626">${e.days_overdue} ${I18N_MORNING.days}</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>${I18N_MORNING.overdue}</em>
+            <span class="badge-sm" style="background:#dc2626">${_e(e.days_overdue)} ${I18N_MORNING.days}</span>
+            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.overdue}</em>
           </div>`;
         });
       }
       if (data.calibration_due && data.calibration_due.length) {
         data.calibration_due.forEach(e => {
           html += `<div class="equip-alert-item due-soon">
-            <span class="badge-sm" style="background:#d97706">${e.days_left} ${I18N_MORNING.days}</span>
-            <strong>${e.lab_code}</strong> ${e.name} — <em>${I18N_MORNING.calibrationDueSoon}</em>
+            <span class="badge-sm" style="background:#d97706">${_e(e.days_left)} ${I18N_MORNING.days}</span>
+            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.calibrationDueSoon}</em>
           </div>`;
         });
       }
@@ -330,7 +331,7 @@
         data.broken_equipment.forEach(e => {
           html += `<div class="equip-alert-item broken">
             <span class="badge-sm" style="background:#b91c1c"><i class="bi bi-exclamation-triangle"></i></span>
-            <strong>${e.lab_code}</strong> ${e.name} — ${statusMap[e.status] || e.status}
+            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — ${_e(statusMap[e.status] || e.status)}
           </div>`;
         });
       }

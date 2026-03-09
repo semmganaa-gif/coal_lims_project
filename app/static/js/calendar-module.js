@@ -50,7 +50,7 @@ const CalendarModule = (function() {
       }
       return new Date(str);
     } catch (e) {
-      console.warn('CalendarModule: Date parse error:', e);
+      logger.warn('CalendarModule: Date parse error:', e);
       return new Date();
     }
   }
@@ -97,7 +97,7 @@ const CalendarModule = (function() {
     const label = document.getElementById(labelId);
 
     if (!container) {
-      console.warn('CalendarModule: Container not found:', containerId);
+      logger.warn('CalendarModule: Container not found:', containerId);
       return;
     }
 
@@ -119,6 +119,8 @@ const CalendarModule = (function() {
     // Selected date-ийг ISO format болгох (хугацааг хасах)
     const selectedISO = selectedStr ? selectedStr.split('T')[0] : '';
 
+    const todayISO = formatISO(new Date());
+
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
@@ -137,8 +139,7 @@ const CalendarModule = (function() {
       td.className = 'calendar-day';
 
       // Өнөөдөр эсэхийг шалгах
-      const today = new Date();
-      if (formatISO(currentDate) === formatISO(today)) {
+      if (isoDate === todayISO) {
         td.classList.add('today');
       }
 
@@ -225,4 +226,4 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = CalendarModule;
 }
 
-console.log('✅ CalendarModule loaded');
+logger.log('CalendarModule loaded');

@@ -42,6 +42,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', loadAllCharts);
+const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 async function loadAllCharts() {
   const container = document.getElementById('chartsContainer');
@@ -63,20 +64,20 @@ async function loadAllCharts() {
       const isGbw = stdData.qc_type === 'GBW';
       const section = document.createElement('div');
       section.className = 'standard-section';
-      section.innerHTML = `<div class="standard-header ${isGbw ? 'gbw' : 'cm'}"><div class="standard-title"><i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>${standardName}<small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'CM'}</small></div><span class="standard-badge">${stdData.analyses.length} analyses</span></div><div class="westgard-legend"><div class="legend-item"><div class="legend-line target"></div>Target</div><div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div><div class="legend-item"><div class="legend-line sd2"></div>+/-2SD</div><div class="legend-item"><div class="legend-line sd3"></div>+/-3SD</div></div>`;
+      section.innerHTML = `<div class="standard-header ${isGbw ? 'gbw' : 'cm'}"><div class="standard-title"><i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>${_e(standardName)}<small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'CM'}</small></div><span class="standard-badge">${stdData.analyses.length} analyses</span></div><div class="westgard-legend"><div class="legend-item"><div class="legend-line target"></div>Target</div><div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div><div class="legend-item"><div class="legend-line sd2"></div>+/-2SD</div><div class="legend-item"><div class="legend-line sd3"></div>+/-3SD</div></div>`;
       stdData.analyses.sort((a, b) => a.analysis_code.localeCompare(b.analysis_code));
       for (const analysis of stdData.analyses) {
         const chartDiv = document.createElement('div');
         chartDiv.className = 'chart-container';
         const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">Pass</span>' : analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">Warning</span>' : analysis.status === 'reject' ? '<span class="badge bg-danger">Reject</span>' : '<span class="badge bg-secondary">N/A</span>';
         const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
-        chartDiv.innerHTML = `<div class="chart-label"><span>${analysis.analysis_code} ${statusBadge}</span><span class="chart-stats"><span>Target: ${analysis.target || '-'}</span><span>SD: ${analysis.sd || '-'}</span><span>n=${analysis.count}</span></span></div><canvas id="${canvasId}" height="100"></canvas>`;
+        chartDiv.innerHTML = `<div class="chart-label"><span>${_e(analysis.analysis_code)} ${statusBadge}</span><span class="chart-stats"><span>Target: ${_e(analysis.target || '-')}</span><span>SD: ${_e(analysis.sd || '-')}</span><span>n=${_e(analysis.count)}</span></span></div><canvas id="${canvasId}" height="100"></canvas>`;
         section.appendChild(chartDiv);
       }
       container.appendChild(section);
       for (const analysis of stdData.analyses) await loadChartData(standardName, stdData.qc_type, analysis);
     }
-  } catch (err) { container.innerHTML = '<div class="alert alert-danger">Error: ' + err.message + '</div>'; }
+  } catch (err) { container.innerHTML = '<div class="alert alert-danger">Error: ' + _e(err.message) + '</div>'; }
 }
 
 async function loadChartData(standardName, qcType, analysis) {
@@ -107,7 +108,7 @@ async function loadChartData(standardName, qcType, analysis) {
       ]},
       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, title: { display: true, text: analysis.analysis_code + ' %' } }, x: { title: { display: true, text: 'Date' } } } }
     });
-  } catch (err) { console.error('Error:', err); }
+  } catch (err) { logger.error('Error:', err); }
 }
 </script>
 {% endblock %}

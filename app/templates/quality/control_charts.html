@@ -361,6 +361,7 @@ let modalChart = null;
 let chartsData = {};
 let allQcData = null;
 let currentPeriod = 1; // Default: Today
+const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 const I18N = {
   noQcSamples: '{{ _("No CM/GBW sample results found") }}',
@@ -461,7 +462,7 @@ async function loadAllCharts() {
     allQcData = data;
     renderCharts(data);
   } catch (err) {
-    container.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+    container.innerHTML = `<div class="alert alert-danger">Error: ${_e(err.message)}</div>`;
   }
 }
 
@@ -513,7 +514,7 @@ async function renderCharts(data) {
     header.innerHTML = `
       <div class="standard-title">
         <i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>
-        ${standardName}
+        ${_e(standardName)}
         <small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? I18N.crm : I18N.controlMaterial}</small>
       </div>
       <div class="d-flex align-items-center gap-2">
@@ -580,13 +581,13 @@ function createChartCard(standardName, qcType, analysis) {
 
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-analysis-code">${analysis.analysis_code}</span>
+      <span class="card-analysis-code">${_e(analysis.analysis_code)}</span>
       ${statusBadge}
     </div>
     <div class="card-stats">
-      <div><span class="label">${I18N.target}:</span> <span class="value">${analysis.target || '-'}</span></div>
-      <div><span class="label">${I18N.sd}:</span> <span class="value">${analysis.sd || '-'}</span></div>
-      <div><span class="label">${I18N.latest}:</span> <span class="value">${analysis.latest_value || '-'}</span></div>
+      <div><span class="label">${I18N.target}:</span> <span class="value">${_e(analysis.target || '-')}</span></div>
+      <div><span class="label">${I18N.sd}:</span> <span class="value">${_e(analysis.sd || '-')}</span></div>
+      <div><span class="label">${I18N.latest}:</span> <span class="value">${_e(analysis.latest_value || '-')}</span></div>
       <div><span class="label">${I18N.count}:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
     </div>
     <div class="card-chart-container">
@@ -660,7 +661,7 @@ async function loadMiniChart(standardName, qcType, analysis) {
       }
     });
   } catch (err) {
-    console.error('Mini chart error:', err);
+    logger.error('Mini chart error:', err);
   }
 }
 
@@ -709,9 +710,9 @@ async function loadModalChart(standardName, qcType, analysis) {
       const icon = v.severity === 'reject' ? 'x-octagon text-danger' : 'exclamation-triangle text-warning';
       const badge = v.severity === 'reject' ? 'bg-danger' : 'bg-warning text-dark';
       return `<div class="violation-item d-flex align-items-center gap-2 mb-2">
-        <span class="badge ${badge}">${v.rule}</span>
+        <span class="badge ${badge}">${_e(v.rule)}</span>
         <i class="bi bi-${icon}"></i>
-        <span>${v.description}</span>
+        <span>${_e(v.description)}</span>
       </div>`;
     }).join('');
   } else {

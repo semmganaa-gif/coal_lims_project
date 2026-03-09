@@ -12,6 +12,7 @@ from flask import render_template, flash, redirect, url_for, request, abort, cur
 from flask_login import login_required, current_user
 
 from app import db
+from app.schemas import SampleSchema
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
 
@@ -304,6 +305,16 @@ def register_routes(bp):
             try:
                 db.session.commit()
                 flash(f"{updated_count} дээжинд хадгалах хугацаа {retention_date} гэж тохирууллаа.", "success")
+                # Audit: Хадгалах хугацаа тохируулсан
+                log_audit(
+                    action='retention_date_set',
+                    resource_type='Sample',
+                    details={
+                        'sample_count': updated_count,
+                        'retention_date': str(retention_date),
+                        'retention_days': days,
+                    }
+                )
             except Exception as e:
                 db.session.rollback()
                 flash(f"Алдаа: {str(e)[:100]}", "danger")
@@ -350,6 +361,16 @@ def register_routes(bp):
             safe_commit(
                 f"{updated_count} дээжинд хадгалах хугацаа тохируулагдлаа.",
                 "Хадгалах хугацаа тохируулахад алдаа гарлаа"
+            )
+            # Audit: Bulk хадгалах хугацаа
+            log_audit(
+                action='bulk_retention_date_set',
+                resource_type='Sample',
+                details={
+                    'sample_count': updated_count,
+                    'retention_days': retention_days,
+                    'from_date': from_date_type,
+                }
             )
 
         return redirect(url_for("main.sample_disposal"))

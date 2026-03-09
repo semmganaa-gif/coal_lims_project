@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function normalizeToBase(code) { if (!code) return code; const c = String(code).trim(); const a = {'St,ad':'TS','Qgr,ad':'CV','TRD,d':'TRD','P,ad':'P','F,ad':'F','Cl,ad':'Cl'}; return a[c]||c; }
   function displayCodeAlias(base) { const a = {'MT':'MT','TS':'St,ad','CV':'Qgr,ad'}; return a[base]||base; }
   function displayNameWithAlias(base) { return (analysisNameMap[base]||base).replace(`(${base})`,`(${displayCodeAlias(base)})`); }
+  function escapeAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   // Ээлжийн огноо - шөнийн ээлж (0:00-7:00) өмнөх өдрийн огноотой
   function getShiftDate() {
@@ -121,8 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
     types.forEach((type, idx) => {
       chipsHtml += `
         <div class="type-chip">
-          <input type="radio" name="sample_type" value="${type}" id="st-${idx}">
-          <label class="type-chip-label" for="st-${idx}">${type}</label>
+          <input type="radio" name="sample_type" value="${escapeAttr(type)}" id="st-${idx}">
+          <label class="type-chip-label" for="st-${idx}">${escapeAttr(type)}</label>
         </div>
       `;
     });
@@ -423,12 +424,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const groupId = `grp-${groupIdx}`;
 
         html += `
-          <div class="module-column" data-group="${groupId}">
-            <div class="module-column-header" onclick="toggleColumnGroup('${groupId}')">
+          <div class="module-column" data-group="${escapeAttr(groupId)}">
+            <div class="module-column-header" data-toggle-group="${escapeAttr(groupId)}">
               <i class="bi ${iconMap[groupName] || 'bi-folder'}"></i>
-              <span>${groupName}</span>
+              <span>${escapeAttr(groupName)}</span>
               <span class="col-count">${items.length}</span>
-              <input type="checkbox" class="col-check" id="chk-${groupId}" checked onclick="event.stopPropagation(); toggleColumnGroup('${groupId}')">
+              <input type="checkbox" class="col-check" id="chk-${escapeAttr(groupId)}" checked data-toggle-group="${escapeAttr(groupId)}">
             </div>
             <div class="module-column-items">
         `;
@@ -441,15 +442,15 @@ document.addEventListener('DOMContentLoaded', function() {
           if (listType === 'chpp_12h') {
             html += `
               <div class="col-item">
-                <input type="checkbox" name="sample_codes" value="${name}" class="col-item-check grp-${groupId}" checked>
-                <span class="col-item-code" title="${label}">${displayLabel}</span>
+                <input type="checkbox" name="sample_codes" value="${escapeAttr(name)}" class="col-item-check grp-${escapeAttr(groupId)}" checked>
+                <span class="col-item-code" title="${escapeAttr(label)}">${escapeAttr(displayLabel)}</span>
               </div>
             `;
           } else {
             html += `
               <div class="col-item">
-                <input type="hidden" name="sample_codes" value="${name}">
-                <span class="col-item-code" title="${label}">${displayLabel}</span>
+                <input type="hidden" name="sample_codes" value="${escapeAttr(name)}">
+                <span class="col-item-code" title="${escapeAttr(label)}">${escapeAttr(displayLabel)}</span>
                 ${requiresWeight ? `
                   <div class="col-item-weight">
                     <input type="text" inputmode="numeric" pattern="[0-9]*" name="weights" class="weight-input" data-index="${inputIndex}" autocomplete="off">
@@ -486,7 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <tr>
           <td class="row-num">${idx+1}</td>
           <td>
-            <input type="text" name="sample_codes" value="${name}" class="sample-code-input" autocomplete="off">
+            <input type="text" name="sample_codes" value="${escapeAttr(name)}" class="sample-code-input" autocomplete="off">
           </td>
           <td class="analysis-badges"></td>
           ${requiresWeight ? `<td><input type="text" inputmode="numeric" pattern="[0-9]*" name="weights" class="weight-input" data-index="${idx}" autocomplete="off"></td>` : ''}
@@ -586,11 +587,11 @@ document.addEventListener('DOMContentLoaded', function() {
           cell.innerHTML = '<span style="color:#94a3b8;font-size:0.65rem;">-</span>';
         }
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { logger.error(e); }
   }
 
   // ------------------------ 8. TOGGLE COLUMN GROUP ------------------------
-  window.toggleColumnGroup = function(groupId) {
+  function toggleColumnGroup(groupId) {
     const headerCheck = document.getElementById(`chk-${groupId}`);
     const itemChecks = document.querySelectorAll(`.grp-${groupId}`);
 
@@ -602,7 +603,16 @@ document.addEventListener('DOMContentLoaded', function() {
       headerCheck.checked = newState;
       itemChecks.forEach(cb => cb.checked = newState);
     }
-  };
+  }
+
+  // Event delegation — inline onclick-ийн оронд
+  entryContainer.addEventListener('click', function(e) {
+    const toggler = e.target.closest('[data-toggle-group]');
+    if (toggler) {
+      e.stopPropagation();
+      toggleColumnGroup(toggler.dataset.toggleGroup);
+    }
+  });
 
   // Update header checkbox when individual items change
   function setupColumnGroupListeners() {

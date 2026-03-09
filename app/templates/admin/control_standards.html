@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Safety check for Bootstrap
     if (!window.bootstrap) {
-        console.error("Bootstrap JS not loaded");
+        logger.error("Bootstrap JS not loaded");
         return;
     }
     const standardModal = new bootstrap.Modal(stdModalEl);
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#paramsTable input').forEach(inp => inp.value = '');
 
             for (const [code, val] of Object.entries(targets)) {
-                const row = document.querySelector(`#paramsTable tr[data-code="${code}"]`);
+                const row = document.querySelector('#paramsTable tr[data-code="' + CSS.escape(code) + '"]');
                 if (row) {
                     row.querySelector('.mean-input').value = val.mean;
                     row.querySelector('.sd-input').value = val.sd;
@@ -357,7 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
             for (const key of sortedKeys) {
                 const val = data[key];
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td><strong>${key}</strong></td><td>${val.mean}</td><td>± ${val.sd}</td>`;
+                const tdCode = document.createElement('td');
+                const strong = document.createElement('strong');
+                strong.textContent = key;
+                tdCode.appendChild(strong);
+                const tdMean = document.createElement('td');
+                tdMean.textContent = val.mean;
+                const tdSd = document.createElement('td');
+                tdSd.textContent = '\u00B1 ' + val.sd;
+                tr.appendChild(tdCode);
+                tr.appendChild(tdMean);
+                tr.appendChild(tdSd);
                 tbody.appendChild(tr);
             }
             viewModal.show();

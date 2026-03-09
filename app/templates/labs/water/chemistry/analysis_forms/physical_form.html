@@ -120,7 +120,7 @@ function saveAll() {
         analysis_code: analysisCode,
         results: { value: row.value, notes: row.notes }
       })
-    }).then(r => r.json()).catch(e => console.error(e));
+    }).then(r => r.json()).catch(e => logger.error(e));
   });
   alert('{{ _("Saved successfully!") }}');
 }

@@ -74,7 +74,7 @@
         const MAX_DRAFT_BYTES = 2 * 1024 * 1024; // 2MB
 
         if (sizeInBytes > MAX_DRAFT_BYTES) {
-          console.error(
+          logger.error(
             'LIMSDraftManager: Draft size exceeds 2MB limit (' +
             (sizeInBytes / (1024 * 1024)).toFixed(2) + 'MB). ' +
             'Please clear old drafts.'
@@ -88,7 +88,7 @@
 
       } catch (error) {
         if (this._isQuotaError(error)) {
-          console.error('❌ LocalStorage quota exceeded! Cannot save draft.');
+          logger.error('LocalStorage quota exceeded! Cannot save draft.');
 
           // Callback дуудах
           if (this.quotaExceededHandler) {
@@ -100,7 +100,7 @@
             );
           }
         } else {
-          console.error('❌ Failed to save draft:', error);
+          logger.error('Failed to save draft:', error);
         }
 
         return false;
@@ -139,7 +139,7 @@
         return data;
 
       } catch (error) {
-        console.error('❌ Failed to restore draft:', error);
+        logger.error('Failed to restore draft:', error);
 
         // Corrupt data байвал устгах
         this.purge();
@@ -210,7 +210,7 @@
         return true;
 
       } catch (error) {
-        console.error('❌ Failed to purge drafts:', error);
+        logger.error('Failed to purge drafts:', error);
         return false;
       }
     }
@@ -389,7 +389,7 @@
         }
 
       } catch (error) {
-        console.error(`❌ Corrupt draft: ${key}`, error);
+        logger.error(`Corrupt draft: ${key}`, error);
 
         if (!dryRun) {
           localStorage.removeItem(key);

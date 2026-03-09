@@ -120,11 +120,11 @@
       },
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
-        let html = `<div class="sample-name">${p.value}</div>`;
+        let html = `<div class="sample-name">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           const label = errorLabels[rej.reason_code] || rej.reason || '';
-          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${_escHtml(label)}</div>`;
         }
 
         return html;
@@ -370,7 +370,7 @@
       samples.forEach(s => recalcPair(s.id));
       window.cricSrGridApi.refreshCells({ force: true });
     } catch (e) {
-      console.warn('Failed to restore drafts', e);
+      logger.warn('Failed to restore drafts', e);
     }
   }
 
@@ -433,41 +433,41 @@
       // URL дээр байвал localStorage-д хадгалах
       try {
         localStorage.setItem(STORAGE_KEY, urlIds);
-        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+        logger.log('✅ Sample IDs saved to localStorage:', urlIds);
       } catch(e) {
-        console.warn('localStorage save failed:', e);
+        logger.warn('localStorage save failed:', e);
       }
     } else {
       // URL дээр байхгүй бол localStorage-аас сэргээх
       try {
         const savedIds = localStorage.getItem(STORAGE_KEY);
         if (savedIds) {
-          console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+          logger.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
           const url = new URL(window.location.href);
           url.searchParams.set('sample_ids', savedIds);
           window.history.replaceState({}, '', url.toString());
-          console.log('✅ URL updated with sample_ids from localStorage (no reload)');
-          console.warn('⚠️ Reloading page to fetch samples from backend...');
+          logger.log('✅ URL updated with sample_ids from localStorage (no reload)');
+          logger.warn('⚠️ Reloading page to fetch samples from backend...');
           window.location.reload();
           return;
         }
       } catch(e) {
-        console.warn('localStorage restore failed:', e);
+        logger.warn('localStorage restore failed:', e);
       }
     }
 
     const el = document.querySelector('#cricSrGrid');
     if (!el) {
-      console.error('cricSrGrid element not found');
+      logger.error('cricSrGrid element not found');
       return;
     }
 
     // ✨ Initialize Draft Manager (after scripts loaded)
     if (typeof LIMSDraftManager !== 'undefined') {
       draftMgr = new LIMSDraftManager(ANALY_CODE);
-      console.log('✅ Draft Manager initialized');
+      logger.log('✅ Draft Manager initialized');
     } else {
-      console.error('❌ LIMSDraftManager not loaded!');
+      logger.error('❌ LIMSDraftManager not loaded!');
       draftMgr = {
         save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
         restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
@@ -487,10 +487,10 @@
         enterNavigatesVerticallyAfterEdit: true,
         editableColIds: ['cri', 'csr']
       });
-      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+      logger.log('✅ Using LIMS_AGGRID.createGrid() factory');
     } else {
       // Fallback: Manual grid creation
-      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
       const gridOptions = {
         theme: 'legacy',
         columnDefs: columnDefs,
@@ -517,7 +517,7 @@
     samples.forEach(s => recalcPair(s.id));
     setTimeout(restoreDrafts, 100);
 
-    console.log('✅ CRI/CSR Grid initialized with factory pattern');
+    logger.log('✅ CRI/CSR Grid initialized with factory pattern');
   });
 
   // --- 7. ACTIONS ---
@@ -590,7 +590,7 @@
 
   // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
   window.updateCricSrGridAfterSave = function(savedPayload) {
-    console.log('✅ afterSave called, updating grid without reload');
+    logger.log('✅ afterSave called, updating grid without reload');
 
     // Group by sample ID
     const bySample = {};
@@ -636,27 +636,27 @@
       !approvedIds.includes(id) || pendingIds.includes(id)
     );
 
-    console.log(`📊 Both approved (арилах): ${approvedIds.length} -`, approvedIds);
-    console.log(`📊 Pending/Rejected (үлдэх): ${pendingIds.length} -`, pendingIds);
-    console.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
+    logger.log(`📊 Both approved (арилах): ${approvedIds.length} -`, approvedIds);
+    logger.log(`📊 Pending/Rejected (үлдэх): ${pendingIds.length} -`, pendingIds);
+    logger.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
 
     if (remainingIds.length > 0) {
       const idsString = remainingIds.join(',');
 
       try {
         localStorage.setItem(STORAGE_KEY, idsString);
-        console.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
+        logger.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
       } catch(e) {
-        console.warn('localStorage update failed:', e);
+        logger.warn('localStorage update failed:', e);
       }
 
       try {
         const url = new URL(window.location.href);
         url.searchParams.set('sample_ids', idsString);
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
+        logger.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
       } catch(e) {
-        console.warn('URL update failed:', e);
+        logger.warn('URL update failed:', e);
       }
     } else {
       try {
@@ -664,7 +664,7 @@
         const url = new URL(window.location.href);
         url.searchParams.delete('sample_ids');
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ All approved - cleared worksheet`);
+        logger.log(`✅ All approved - cleared worksheet`);
       } catch(e) {}
     }
 
@@ -717,19 +717,19 @@
 
       if (rowsToRemove.length > 0) {
         window.cricSrGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid (both CRI+CSR approved)`);
+        logger.log(`🗑️ Removed ${approvedIds.length} approved samples from grid (both CRI+CSR approved)`);
       }
     }
 
     // Grid refresh
     window.cricSrGridApi.refreshCells({ force: true });
 
-    console.log(`✅ ${savedPayload.length} анализын үр дүн хадгалагдлаа`);
+    logger.log(`✅ ${savedPayload.length} анализын үр дүн хадгалагдлаа`);
     if (approvedIds.length > 0) {
-      console.log(`   → ${approvedIds.length} samples with both CRI+CSR approved - worksheet-ээс арилсан`);
+      logger.log(`   → ${approvedIds.length} samples with both CRI+CSR approved - worksheet-ээс арилсан`);
     }
     if (pendingIds.length > 0) {
-      console.log(`   → ${pendingIds.length} samples with pending/rejected - worksheet-д үлдсэн`);
+      logger.log(`   → ${pendingIds.length} samples with pending/rejected - worksheet-д үлдсэн`);
     }
   };
 
@@ -740,7 +740,7 @@
     afterSave: window.updateCricSrGridAfterSave
   };
   ['CRI', 'CSR', 'cri', 'csr'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
-  console.log('✅ CRI/CSR collector & afterSave registered in LIMS_CALC namespace');
+  logger.log('✅ CRI/CSR collector & afterSave registered in LIMS_CALC namespace');
 
 })();
 </script>

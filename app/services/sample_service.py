@@ -18,6 +18,7 @@ from typing import Any, Optional
 
 from app import db
 from app.models import Sample, AnalysisResult
+from app.utils.audit import log_audit
 from app.repositories import SampleRepository, AnalysisResultRepository
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
@@ -30,6 +31,13 @@ logger = logging.getLogger(__name__)
 # =============================================================================
 # Data Classes
 # =============================================================================
+
+@dataclass
+class _AnalysisTypeView:
+    """Template-д шаардлагатай code/name бүтэц."""
+    code: str
+    name: str
+
 
 @dataclass
 class ArchiveResult:
@@ -86,6 +94,16 @@ def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResul
         message = f"{updated_count} дээжийг амжилттай {action_text}."
 
         logger.info(f"Samples {'archived' if archive else 'unarchived'}: {sample_ids}")
+
+        # Audit: Архивлах/сэргээх лог
+        action_name = 'sample_archived' if archive else 'sample_unarchived'
+        for sid in sample_ids:
+            log_audit(
+                action=action_name,
+                resource_type='Sample',
+                resource_id=sid,
+                details={'new_status': new_status}
+            )
 
         return ArchiveResult(
             success=True,
@@ -294,7 +312,7 @@ def _map_to_template_codes(calculated_data: dict) -> dict:
     """Canonical нэрсээс template код руу хөрвүүлэх."""
     result = {}
 
-    # Canonical → template code mapping
+    # Canonical → template code mapping (reverse lookup-д ашиглана)
     CANONICAL_TO_TEMPLATE = {
         "ash_d": "Ad",
         "volatile_matter_daf": "Vdaf",
@@ -313,16 +331,14 @@ def _map_to_template_codes(calculated_data: dict) -> dict:
         "total_fluorine_d": "F,d",
         "total_chlorine_d": "Cl,d",
     }
+    # O(1) reverse lookup dict
+    TEMPLATE_TO_CANONICAL = {v: k for k, v in CANONICAL_TO_TEMPLATE.items()}
 
     for col_view in SUMMARY_VIEW_COLUMNS:
         template_code = col_view["code"]
 
-        # Тусгай mapping шалгах
-        lookup_key = None
-        for canonical, tcode in CANONICAL_TO_TEMPLATE.items():
-            if tcode == template_code:
-                lookup_key = canonical
-                break
+        # O(1) reverse lookup
+        lookup_key = TEMPLATE_TO_CANONICAL.get(template_code)
 
         if not lookup_key:
             # canonical_base эсвэл template_code-оос canonical нэр авах
@@ -350,10 +366,6 @@ def _build_analysis_types() -> list:
         if details and details.get("display_name"):
             display_name = details["display_name"]
 
-        # Fake object үүсгэх (template-д code/name хэрэгтэй)
-        fake_type = type(
-            "FakeType", (object,), {"code": final_code, "name": display_name}
-        )()
-        analysis_types.append(fake_type)
+        analysis_types.append(_AnalysisTypeView(code=final_code, name=display_name))
 
     return analysis_types

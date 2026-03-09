@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros/accessibility_helpers.html' import render_accessible_input, render_accessible_textarea, render_accessible_submit %}
 
 {% block content %}
 <div class="container mt-4">
@@ -13,40 +14,61 @@
                 <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Corrective Action Implementer Section") }}</h5>
             </div>
             <div class="card-body">
-                <div class="row mb-3">
+                <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">{{ _("Date:") }}</label>
-                        <input type="date" name="issue_date" class="form-control" value="{{ today }}" required>
+                        {{ render_accessible_input(
+                            field_id='issue_date',
+                            label=_("Date:"),
+                            field_type='date',
+                            name='issue_date',
+                            value=today,
+                            required=true
+                        ) }}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">{{ _("No.:") }}</label>
-                        <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Nonconformity description") }} <span class="text-danger">*</span></label>
-                    <textarea name="issue_description" class="form-control" rows="4"
-                              placeholder="{{ _("Detailed description of the nonconformity...") }}" required></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Corrective action / Plan") }}</label>
-                    <textarea name="corrective_action" class="form-control" rows="3"
-                              placeholder="{{ _("Action measures, plan...") }}"></textarea>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ _("Deadline") }}</label>
-                        <input type="date" name="target_date" class="form-control">
+                        {{ render_accessible_input(
+                            field_id='record_no',
+                            label=_("No.:"),
+                            value=_("Auto-generated"),
+                            disabled=true
+                        ) }}
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Documented evidence, additional remarks") }}</label>
-                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                {{ render_accessible_textarea(
+                    field_id='issue_description',
+                    label=_("Nonconformity description"),
+                    name='issue_description',
+                    required=true,
+                    rows=4,
+                    placeholder=_("Detailed description of the nonconformity...")
+                ) }}
+
+                {{ render_accessible_textarea(
+                    field_id='corrective_action',
+                    label=_("Corrective action / Plan"),
+                    name='corrective_action',
+                    rows=3,
+                    placeholder=_("Action measures, plan...")
+                ) }}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ render_accessible_input(
+                            field_id='target_date',
+                            label=_("Deadline"),
+                            field_type='date',
+                            name='target_date'
+                        ) }}
+                    </div>
                 </div>
+
+                {{ render_accessible_textarea(
+                    field_id='notes',
+                    label=_("Documented evidence, additional remarks"),
+                    name='notes',
+                    rows=2
+                ) }}
 
                 <div class="border-top pt-3">
                     <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>

@@ -345,7 +345,11 @@ document.addEventListener('DOMContentLoaded', function() {
         minWidth: 150,
         formatter: function(cell) {
           const data = cell.getRow().getData();
-          return `<a href="/chemicals/${data.id}" class="text-decoration-none fw-semibold">${data.name}</a>`;
+          const a = document.createElement('a');
+          a.href = '/chemicals/' + data.id;
+          a.className = 'text-decoration-none fw-semibold';
+          a.textContent = data.name;
+          return a;
         }
       },
       { title: "{{ _('Formula') }}", field: "formula", width: 90 },
@@ -360,10 +364,11 @@ document.addEventListener('DOMContentLoaded', function() {
         hozAlign: "right",
         formatter: function(cell) {
           const data = cell.getRow().getData();
-          let cls = '';
-          if (data.status === 'low_stock') cls = 'text-warning fw-bold';
-          else if (data.status === 'empty') cls = 'text-muted';
-          return `<span class="${cls}">${data.quantity} ${data.unit}</span>`;
+          const span = document.createElement('span');
+          if (data.status === 'low_stock') span.className = 'text-warning fw-bold';
+          else if (data.status === 'empty') span.className = 'text-muted';
+          span.textContent = data.quantity + ' ' + data.unit;
+          return span;
         }
       },
       {

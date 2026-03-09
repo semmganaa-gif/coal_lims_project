@@ -671,10 +671,10 @@
           headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
           body: JSON.stringify({ sample_id: item.sample_id, analysis_code: code, results: results })
         });
-        if (!r.ok) { console.error('HTTP error', r.status); continue; }
+        if (!r.ok) { logger.error('HTTP error', r.status); continue; }
         const res = await r.json();
         if (res.success) { ok++; savedIds.push(item.sample_id); }
-      } catch(e) { console.error(e); }
+      } catch(e) { logger.error(e); }
     }
     if (ok > 0) {
       // CH-2: Зөвхөн амжилттай хадгалсан items-ийн draft устгана

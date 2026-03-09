@@ -138,11 +138,11 @@
       headerName:'{{ _("Sample Name") }}', field:'sample_code', width:280, pinned:'left',
       cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
       cellRenderer:p=>{
-        let html = `<div class="sample-name">${p.value}</div>`;
+        let html = `<div class="sample-name">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if(rej){
           const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
-          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${_escHtml(label)}</div>`;
         }
         return html;
       }

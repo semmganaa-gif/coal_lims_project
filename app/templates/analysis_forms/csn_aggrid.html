@@ -99,11 +99,11 @@
         lineHeight: '1.2'
       },
       cellRenderer: p => {
-        let h = `<div style="font-weight:600;color:#0d6efd;text-shadow:0 1px 0 rgba(255,255,255,0.8)">${p.value}</div>`;
+        let h = `<div style="font-weight:600;color:#0d6efd;text-shadow:0 1px 0 rgba(255,255,255,0.8)">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           h += `<div style="font-size:0.7em;padding:3px 6px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:4px;display:inline-block;margin-top:4px"><i class="bi bi-exclamation-triangle"></i> ${
-            errorLabels[rej.reason_code] || rej.reason
+            _escHtml(errorLabels[rej.reason_code] || rej.reason)
           }</div>`;
         }
         return h;
@@ -295,7 +295,7 @@
 
       window.csnGridApi.refreshCells({ force: true });
     } catch (e) {
-      console.warn('Failed to restore drafts', e);
+      logger.warn('Failed to restore drafts', e);
     }
   }
 
@@ -324,47 +324,47 @@
       // URL дээр байвал localStorage-д хадгалах
       try {
         localStorage.setItem(STORAGE_KEY, urlIds);
-        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+        logger.log('Sample IDs saved to localStorage:', urlIds);
       } catch(e) {
-        console.warn('localStorage save failed:', e);
+        logger.warn('localStorage save failed:', e);
       }
     } else {
       // URL дээр байхгүй бол localStorage-аас сэргээх
       try {
         const savedIds = localStorage.getItem(STORAGE_KEY);
         if (savedIds) {
-          console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+          logger.log('URL has no sample_ids, restoring from localStorage:', savedIds);
           const url = new URL(window.location.href);
           url.searchParams.set('sample_ids', savedIds);
 
           // ❌ БУУ: window.location.href = url.toString(); // Full reload!
           // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
           window.history.replaceState({}, '', url.toString());
-          console.log('✅ URL updated with sample_ids from localStorage (no reload)');
+          logger.log('URL updated with sample_ids from localStorage (no reload)');
 
           // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
           // Энэ тохиолдолд reload хийх хэрэгтэй
-          console.warn('⚠️ Reloading page to fetch samples from backend...');
+          logger.warn('Reloading page to fetch samples from backend...');
           window.location.reload();
           return;
         }
       } catch(e) {
-        console.warn('localStorage restore failed:', e);
+        logger.warn('localStorage restore failed:', e);
       }
     }
 
     const el = document.querySelector('#csnGrid');
     if (!el) {
-      console.error('csnGrid element not found');
+      logger.error('csnGrid element not found');
       return;
     }
 
     // ✨ Initialize Draft Manager (after scripts loaded)
     if (typeof LIMSDraftManager !== 'undefined') {
       draftMgr = new LIMSDraftManager(ANALY_CODE);
-      console.log('✅ Draft Manager initialized');
+      logger.log('Draft Manager initialized');
     } else {
-      console.error('❌ LIMSDraftManager not loaded!');
+      logger.error('LIMSDraftManager not loaded!');
       // Fallback to localStorage directly
       draftMgr = {
         save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
@@ -385,10 +385,10 @@
         enterNavigatesVerticallyAfterEdit: true,
         editableColIds: ['v1', 'v2', 'v3', 'v4', 'v5']
       });
-      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+      logger.log('Using LIMS_AGGRID.createGrid() factory');
     } else {
       // Fallback: Manual grid creation
-      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      logger.warn('LIMS_AGGRID not available, using fallback');
       const gridOptions = {
         theme: 'legacy',
         columnDefs: columnDefs,
@@ -432,7 +432,7 @@
       window.location.href = url.toString();
     });
 
-    console.log('✅ CSN Grid initialized with factory pattern');
+    logger.log('CSN Grid initialized with factory pattern');
   });
 
   // --- 7. ACTIONS ---
@@ -471,14 +471,14 @@
       const validValues = values.filter(v => v !== null);
 
       if (validValues.length === 0) {
-        console.warn(`⚠️ Sample ${d.sample_code || d.sample_id}: дутуу мэдээлэл`);
+        logger.warn(`Sample ${d.sample_code || d.sample_id}: incomplete data`);
         incomplete.push(d.sample_code || d.sample_id);
         return;
       }
 
       // ✅ CSN: Хамгийн багадаа 2 утга оруулсан байх шаардлага
       if (validValues.length < 2) {
-        console.warn(`⚠️ Sample ${d.sample_code || d.sample_id}: хамгийн багадаа 2 утга оруулах шаардлагатай`);
+        logger.warn(`Sample ${d.sample_code || d.sample_id}: requires at least 2 values`);
         tooFewValues.push(d.sample_code || d.sample_id);
         return;
       }
@@ -486,7 +486,7 @@
       // ✅ Calculate repeatability (range = max - min)
       const range = Math.max(...validValues) - Math.min(...validValues);
 
-      console.log(`📊 Sample ${d.sample_code}: values=${JSON.stringify(values)}, validValues=${JSON.stringify(validValues)}, max=${Math.max(...validValues)}, min=${Math.min(...validValues)}, range=${range}`);
+      logger.log(`Sample ${d.sample_code}: values=${JSON.stringify(values)}, validValues=${JSON.stringify(validValues)}, max=${Math.max(...validValues)}, min=${Math.min(...validValues)}, range=${range}`);
 
       // ✅ Toleranceын хязгаарыг config-оос авна
       const repeatabilityLimit = getCSNRepeatabilityLimit();
@@ -496,7 +496,7 @@
       const EPSILON = 1e-6;
       const t_exceeded = (range - repeatabilityLimit) > EPSILON;
       if (t_exceeded) {
-        console.warn(`⚠️ Sample ${d.sample_code || d.sample_id}: тохирцын зөрүү давсан (${range.toFixed(2)} > ${repeatabilityLimit})`);
+        logger.warn(`Sample ${d.sample_code || d.sample_id}: repeatability exceeded (${range.toFixed(2)} > ${repeatabilityLimit})`);
         exceededRepeatability.push(d.sample_code || d.sample_id);
       }
 
@@ -534,7 +534,7 @@
     // ✅ Toleranceын хязгаарыг alert-д харуулахад ашиглах
     const configLimit = getCSNRepeatabilityLimit();
 
-    console.log('📊 CSN Collect Summary:', {
+    logger.log('CSN Collect Summary:', {
       total_samples: payload.length + tooFewValues.length + incomplete.length,
       valid_payload: payload.length,
       too_few_values: tooFewValues.length,
@@ -575,12 +575,12 @@
         `{{ _("Continue?") }}`
       );
       if (!proceed) {
-        console.warn('❌ CSN: User cancelled save');
+        logger.warn('CSN: User cancelled save');
         return [];
       }
     }
 
-    console.log(`✅ CSN: ${payload.length} дээж хадгалахад бэлэн`);
+    logger.log(`CSN: ${payload.length} samples ready to save`);
     return payload;
   };
 
@@ -588,7 +588,7 @@
   window.updateCsnGridAfterSave = function(savedPayload) {
     if (!window.csnGridApi || !savedPayload || savedPayload.length === 0) return;
 
-    console.log('✅ CSN afterSave called with', savedPayload.length, 'samples');
+    logger.log('CSN afterSave called with', savedPayload.length, 'samples');
 
     const savedSampleIds = savedPayload.map(r => r.sample_id);
 
@@ -621,11 +621,11 @@
       !approvedIds.includes(id) || pendingIds.includes(id)
     );
 
-    console.log(`📊 All samples in grid: ${allSampleIds.length} -`, allSampleIds);
-    console.log(`📊 Saved samples: ${savedSampleIds.length} -`, savedSampleIds);
-    console.log(`📊 Approved (will remove): ${approvedIds.length} -`, approvedIds);
-    console.log(`📊 Pending (will keep): ${pendingIds.length} -`, pendingIds);
-    console.log(`📊 Remaining (will stay): ${remainingIds.length} -`, remainingIds);
+    logger.log(`All samples in grid: ${allSampleIds.length} -`, allSampleIds);
+    logger.log(`Saved samples: ${savedSampleIds.length} -`, savedSampleIds);
+    logger.log(`Approved (will remove): ${approvedIds.length} -`, approvedIds);
+    logger.log(`Pending (will keep): ${pendingIds.length} -`, pendingIds);
+    logger.log(`Remaining (will stay): ${remainingIds.length} -`, remainingIds);
 
     // ✅ URL ба localStorage шинэчлэх
     if (remainingIds.length > 0) {
@@ -633,18 +633,18 @@
 
       try {
         localStorage.setItem(STORAGE_KEY, idsString);
-        console.log(`✅ localStorage UPDATED: sample_ids=${idsString}`);
+        logger.log(`localStorage UPDATED: sample_ids=${idsString}`);
       } catch (e) {
-        console.warn('localStorage update failed:', e);
+        logger.warn('localStorage update failed:', e);
       }
 
       try {
         const url = new URL(window.location.href);
         url.searchParams.set('sample_ids', idsString);
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ URL UPDATED: sample_ids=${idsString}`);
+        logger.log(`URL UPDATED: sample_ids=${idsString}`);
       } catch (e) {
-        console.warn('URL update failed:', e);
+        logger.warn('URL update failed:', e);
       }
     } else {
       // Бүх дээж approved - worksheet цэвэрлэх
@@ -653,7 +653,7 @@
         const url = new URL(window.location.href);
         url.searchParams.delete('sample_ids');
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ All approved - worksheet cleared`);
+        logger.log('All approved - worksheet cleared');
       } catch (e) {}
     }
 
@@ -691,14 +691,14 @@
 
       if (rowsToRemove.length > 0) {
         window.csnGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+        logger.log(`Removed ${approvedIds.length} approved samples from grid`);
       }
     }
 
     // ✅ Grid refresh
     window.csnGridApi.refreshCells({ force: true });
 
-    console.log(`✅ CSN afterSave complete: ${savedSampleIds.length} saved, ${approvedIds.length} removed, ${remainingIds.length} remaining`);
+    logger.log(`CSN afterSave complete: ${savedSampleIds.length} saved, ${approvedIds.length} removed, ${remainingIds.length} remaining`);
   };
 
   // ✅ Register collector AND afterSave in LIMS_CALC namespace
@@ -711,7 +711,7 @@
     collect: window.collectCsnGridData,
     afterSave: window.updateCsnGridAfterSave
   };
-  console.log('✅ CSN collector & afterSave registered in LIMS_CALC namespace');
+  logger.log('CSN collector & afterSave registered in LIMS_CALC namespace');
 
 })();
 </script>

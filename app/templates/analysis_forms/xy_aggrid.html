@@ -187,12 +187,12 @@
       rowSpan: p => p.data.parallel === 1 ? 2 : 1,
       cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
       cellRenderer: p => {
-        let html = `<div class="fw-semibold text-primary">${p.value}</div>`;
+        let html = `<div class="fw-semibold text-primary">${_escHtml(p.value)}</div>`;
 
         // Rejection badge
         if(p.data.rejection_reason){
           const label = (errorLabels && (errorLabels[p.data.rejection_code] || p.data.rejection_reason)) || p.data.rejection_reason || '';
-          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${_escHtml(label)}</div>`;
         }
 
         // Status pills for X and Y

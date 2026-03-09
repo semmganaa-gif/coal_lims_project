@@ -11,7 +11,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import func, extract
 
 from app import db
-from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult, AnalysisResultLog
+from app.models import CustomerComplaint, ImprovementRecord, AnalysisResult
 from app.utils.database import safe_commit
 from app.utils.datetime import now_local
 from app.utils.quality_helpers import (
@@ -219,19 +219,18 @@ def register_routes(bp):
                         ar.error_reason = 'customer_complaint'
                         ar.updated_at = now_local()
 
-                        log = AnalysisResultLog(
-                            analysis_result_id=ar.id,
+                        from app.services.analysis_audit import log_analysis_action
+                        log_analysis_action(
+                            result_id=ar.id,
                             sample_id=ar.sample_id,
-                            sample_code_snapshot=sample_code,
-                            user_id=current_user.id,
-                            action='rejected',
-                            reason=f"Санал гомдол: {complaint_no}",
                             analysis_code=ar.analysis_code,
-                            final_result_snapshot=ar.final_result,
+                            action='rejected',
+                            final_result=ar.final_result,
+                            reason=f"Санал гомдол: {complaint_no}",
                             rejection_category='customer_complaint',
-                            error_reason='customer_complaint'
+                            error_reason='customer_complaint',
+                            sample_code_snapshot=sample_code,
                         )
-                        db.session.add(log)
                         rejected_count += 1
 
             success_msg = f"Гомдол {complaint_no} бүртгэгдлээ"

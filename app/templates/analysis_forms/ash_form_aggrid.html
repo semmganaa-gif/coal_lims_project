@@ -113,11 +113,11 @@
       },
       cellRenderer: p => {
         if (p.data.parallel !== 1) return '';
-        let h = `<div class="sample-name">${p.value}</div>`;
+        let h = `<div class="sample-name">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           h += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
-            errorLabels[rej.reason_code] || rej.reason
+            _escHtml(errorLabels[rej.reason_code] || rej.reason)
           }</div>`;
         }
         return h;
@@ -377,7 +377,7 @@
 
       window.ashGridApi.refreshCells({ force: true });
     } catch (e) {
-      console.warn('Failed to restore drafts', e);
+      logger.warn('Failed to restore drafts', e);
     }
   }
 
@@ -411,47 +411,47 @@
       // URL дээр байвал localStorage-д хадгалах
       try {
         localStorage.setItem(STORAGE_KEY, urlIds);
-        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+        logger.log('✅ Sample IDs saved to localStorage:', urlIds);
       } catch(e) {
-        console.warn('localStorage save failed:', e);
+        logger.warn('localStorage save failed:', e);
       }
     } else {
       // URL дээр байхгүй бол localStorage-аас сэргээх
       try {
         const savedIds = localStorage.getItem(STORAGE_KEY);
         if (savedIds) {
-          console.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+          logger.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
           const url = new URL(window.location.href);
           url.searchParams.set('sample_ids', savedIds);
 
           // ❌ БУУ: window.location.href = url.toString(); // Full reload!
           // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
           window.history.replaceState({}, '', url.toString());
-          console.log('✅ URL updated with sample_ids from localStorage (no reload)');
+          logger.log('✅ URL updated with sample_ids from localStorage (no reload)');
 
           // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
           // Энэ тохиолдолд reload хийх хэрэгтэй
-          console.warn('⚠️ Reloading page to fetch samples from backend...');
+          logger.warn('⚠️ Reloading page to fetch samples from backend...');
           window.location.reload();
           return;
         }
       } catch(e) {
-        console.warn('localStorage restore failed:', e);
+        logger.warn('localStorage restore failed:', e);
       }
     }
 
     const el = document.querySelector('#ashGrid');
     if (!el) {
-      console.error('ashGrid element not found');
+      logger.error('ashGrid element not found');
       return;
     }
 
     // ✨ Initialize Draft Manager (after scripts loaded)
     if (typeof LIMSDraftManager !== 'undefined') {
       draftMgr = new LIMSDraftManager(ANALY_CODE);
-      console.log('✅ Draft Manager initialized');
+      logger.log('✅ Draft Manager initialized');
     } else {
-      console.error('❌ LIMSDraftManager not loaded!');
+      logger.error('❌ LIMSDraftManager not loaded!');
       // Fallback to localStorage directly
       draftMgr = {
         save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
@@ -472,10 +472,10 @@
         enterNavigatesVerticallyAfterEdit: true,
         editableColIds: ['crucible_num', 'm1', 'm2', 'm3']
       });
-      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+      logger.log('✅ Using LIMS_AGGRID.createGrid() factory');
     } else {
       // Fallback: Manual grid creation
-      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
       const gridOptions = {
         theme: 'legacy',
         columnDefs: columnDefs,
@@ -501,7 +501,7 @@
     // Draft сэргээх
     setTimeout(restoreDrafts, 100);
 
-    console.log('✅ Ash Grid initialized with factory pattern');
+    logger.log('✅ Ash Grid initialized with factory pattern');
   });
 
   // --- 7. ACTIONS ---
@@ -542,7 +542,7 @@
         const res1 = computeResult(p1.m1, p1.m2, p1.m3);
         const res2 = computeResult(p2.m1, p2.m2, p2.m3);
         if (res1 == null || res2 == null) {
-          console.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
+          logger.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
           incomplete.push(p1.sample_code || sid);
           return;
         }
@@ -593,18 +593,18 @@
         const missing = [];
         if (!hasP1) missing.push('Parallel 1');
         if (!hasP2) missing.push('Parallel 2');
-        console.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+        logger.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
         incomplete.push(sampleCode);
       }
     });
 
     // ✅ Summary logging
     if (incomplete.length > 0) {
-      console.log(`📊 Total: ${Object.keys(map).length} дээж`);
-      console.log(`✅ Хадгалагдах: ${payload.length} дээж`);
-      console.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
+      logger.log(`📊 Total: ${Object.keys(map).length} дээж`);
+      logger.log(`✅ Хадгалагдах: ${payload.length} дээж`);
+      logger.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
     } else {
-      console.log(`✅ ${payload.length} дээж бэлэн`);
+      logger.log(`✅ ${payload.length} дээж бэлэн`);
     }
 
     return payload;
@@ -612,16 +612,16 @@
 
   // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
   window.updateAshGridAfterSave = function(savedPayload, failedItems = []) {
-    console.log('✅ afterSave called, updating grid without reload');
+    logger.log('✅ afterSave called, updating grid without reload');
 
     const savedSampleIds = savedPayload.map(r => r.sample_id);
     const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
 
     // ✅ Errorтай дээжийн мэдээлэл
     if (failedItems.length > 0) {
-      console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
+      logger.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
       failedItems.forEach(err => {
-        console.warn(`   - Sample ${err.sample_id}: ${err.error}`);
+        logger.warn(`   - Sample ${err.sample_id}: ${err.error}`);
       });
     }
 
@@ -655,9 +655,9 @@
       !approvedIds.includes(id) || pendingIds.includes(id)
     );
 
-    console.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
-    console.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
-    console.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
+    logger.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
+    logger.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
+    logger.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
 
     if (remainingIds.length > 0) {
       const idsString = remainingIds.join(',');
@@ -665,9 +665,9 @@
       // ✅ localStorage сэргээх
       try {
         localStorage.setItem(STORAGE_KEY, idsString);
-        console.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
+        logger.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
       } catch(e) {
-        console.warn('localStorage update failed:', e);
+        logger.warn('localStorage update failed:', e);
       }
 
       // ✅ URL сэргээх
@@ -675,9 +675,9 @@
         const url = new URL(window.location.href);
         url.searchParams.set('sample_ids', idsString);
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
+        logger.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
       } catch(e) {
-        console.warn('URL update failed:', e);
+        logger.warn('URL update failed:', e);
       }
     } else {
       // Бүх дээж approved болсон - worksheet цэвэрлэх
@@ -686,7 +686,7 @@
         const url = new URL(window.location.href);
         url.searchParams.delete('sample_ids');
         window.history.replaceState({}, '', url.toString());
-        console.log(`✅ All approved - cleared worksheet`);
+        logger.log(`✅ All approved - cleared worksheet`);
       } catch(e) {}
     }
 
@@ -754,22 +754,22 @@
 
       if (rowsToRemove.length > 0) {
         window.ashGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+        logger.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
       }
     }
 
     // Grid refresh
     window.ashGridApi.refreshCells({ force: true });
 
-    console.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
+    logger.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
     if (approvedIds.length > 0) {
-      console.log(`   → ${approvedIds.length} approved - worksheet-ээс арилсан`);
+      logger.log(`   → ${approvedIds.length} approved - worksheet-ээс арилсан`);
     }
     if (pendingIds.length > 0) {
-      console.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
+      logger.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
     }
     if (failedSampleIds.length > 0) {
-      console.log(`   → ${failedSampleIds.length} failed - worksheet-д үлдсэн (алдаатай)`);
+      logger.log(`   → ${failedSampleIds.length} failed - worksheet-д үлдсэн (алдаатай)`);
     }
   };
 
@@ -783,7 +783,7 @@
     collect: window.collectAshGridData,
     afterSave: window.updateAshGridAfterSave
   };
-  console.log('✅ Ash collector & afterSave registered in LIMS_CALC namespace');
+  logger.log('✅ Ash collector & afterSave registered in LIMS_CALC namespace');
 
   window.submitAshData = function() {
     const payload = window.collectAshGridData();
@@ -830,7 +830,7 @@
         // Grid refresh - тохирц/дундаж харагдана, cells locked болно
         window.ashGridApi.refreshCells({ force: true });
 
-        console.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа, бусад ${samples.length - savedSampleIds.length} дээж grid-д үлдлээ`);
+        logger.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа, бусад ${samples.length - savedSampleIds.length} дээж grid-д үлдлээ`);
 
         // ⚠️ RELOAD ХИЙХГҮЙ! Бусад дээжүүд алга болохгүй!
       } else {
@@ -838,7 +838,7 @@
       }
     })
     .catch(error => {
-      console.error('Submit error:', error);
+      logger.error('Submit error:', error);
       alert('{{ _("Server error!") }}');
     });
   };

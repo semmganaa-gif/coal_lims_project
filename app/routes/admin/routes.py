@@ -23,6 +23,7 @@ from app.models import (
     ControlStandard, GbwStandard,
 )
 from app.utils.audit import log_audit
+from app.schemas import UserSchema
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +180,26 @@ def manage_users():
     """Хэрэглэгчийн удирдлагын хуудас."""
     form = UserManagementForm()
     if form.validate_on_submit():
+        # Schema validation (field types, lengths, password policy)
+        _user_schema = UserSchema()
+        schema_data = {
+            'username': form.username.data,
+            'password': form.password.data,
+            'role': form.role.data,
+            'full_name': form.full_name.data or None,
+            'email': form.email.data or None,
+            'phone': form.phone.data or None,
+            'position': form.position.data or None,
+            'allowed_labs': form.allowed_labs.data or ['coal'],
+        }
+        schema_errors = _user_schema.validate(schema_data)
+        if schema_errors:
+            for field_name, messages in schema_errors.items():
+                for msg in (messages if isinstance(messages, list) else [messages]):
+                    flash(f'{msg}', 'danger')
+            users = User.query.order_by(User.id).all()
+            return render_template('manage_users.html', title='Хэрэглэгчийн удирдлага', users=users, form=form)
+
         existing_user = db.session.scalar(
             sa.select(User).where(User.username == form.username.data)
         )

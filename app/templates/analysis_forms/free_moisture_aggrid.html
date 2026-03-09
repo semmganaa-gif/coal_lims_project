@@ -117,11 +117,11 @@
         lineHeight: '1.2'
       },
       cellRenderer: p => {
-        let html = `<div class="sample-name">${p.value}</div>`;
+        let html = `<div class="sample-name">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if (rej) {
           html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${
-            errorLabels[rej.reason_code] || rej.reason || ''
+            _escHtml(errorLabels[rej.reason_code] || rej.reason || '')
           }</div>`;
         }
         return html;
@@ -340,7 +340,7 @@
 
       window.fmGridApi.refreshCells({ force: true });
     } catch (e) {
-      console.warn('Failed to restore drafts', e);
+      logger.warn('Failed to restore drafts', e);
     }
   }
 
@@ -359,7 +359,7 @@
     if (urlIds) {
       try {
         localStorage.setItem(STORAGE_KEY, urlIds);
-        console.log('✅ Sample IDs saved to localStorage:', urlIds);
+        logger.log('✅ Sample IDs saved to localStorage:', urlIds);
       } catch(e) {}
     } else {
       try {
@@ -368,7 +368,7 @@
           const url = new URL(window.location.href);
           url.searchParams.set('sample_ids', savedIds);
           window.history.replaceState({}, '', url.toString());
-          console.log('⚠️ Reloading page to fetch samples from backend...');
+          logger.log('⚠️ Reloading page to fetch samples from backend...');
           window.location.reload();
           return;
         }
@@ -381,7 +381,7 @@
     // ✨ Initialize Draft Manager
     if (typeof LIMSDraftManager !== 'undefined') {
       draftMgr = new LIMSDraftManager(ANALY_CODE);
-      console.log('✅ Draft Manager initialized');
+      logger.log('✅ Draft Manager initialized');
     } else {
       draftMgr = {
         save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
@@ -401,7 +401,7 @@
         enterNavigatesVerticallyAfterEdit: true,
         editableColIds: ['tray', 'before', 'after']
       });
-      console.log('✅ Using LIMS_AGGRID.createGrid() factory');
+      logger.log('✅ Using LIMS_AGGRID.createGrid() factory');
     } else {
       const gridOptions = {
         theme: 'legacy',
@@ -426,7 +426,7 @@
     }
 
     setTimeout(restoreDrafts, 100);
-    console.log('✅ FM Grid initialized with factory pattern');
+    logger.log('✅ FM Grid initialized with factory pattern');
   });
 
   // --- 7. ACTIONS ---
@@ -478,7 +478,7 @@
   };
 
   window.updateFmGridAfterSave = function(savedPayload) {
-    console.log('✅ afterSave called, updating grid without reload');
+    logger.log('✅ afterSave called, updating grid without reload');
 
     const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
     const approvedIds = [];
@@ -561,18 +561,18 @@
       });
       if (rowsToRemove.length > 0) {
         window.fmGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        console.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+        logger.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
       }
     }
 
     window.fmGridApi.refreshCells({ force: true });
-    console.log(`✅ ${savedPayload.length} дээж хадгалагдлаа`);
+    logger.log(`✅ ${savedPayload.length} дээж хадгалагдлаа`);
   };
 
   window.LIMS_CALC = window.LIMS_CALC || {};
   const REGISTERED = { collect: window.collectFmGridData, afterSave: window.updateFmGridAfterSave };
   ['FM', 'fm', 'Fm'].forEach(code => { window.LIMS_CALC[code] = REGISTERED; });
-  console.log('✅ FM collector & afterSave registered in LIMS_CALC namespace');
+  logger.log('✅ FM collector & afterSave registered in LIMS_CALC namespace');
 
 })();
 </script>

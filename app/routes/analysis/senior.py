@@ -18,7 +18,8 @@ from sqlalchemy.orm.exc import StaleDataError
 
 from app import db, cache
 from app.config.analysis_schema import get_analysis_schema
-from app.models import AnalysisResult, AnalysisResultLog, Sample, User, AnalysisType
+from app.models import AnalysisResult, Sample, User, AnalysisType
+from app.services.analysis_audit import log_analysis_action
 from app.utils.audit import log_audit
 from app.utils.datetime import now_local
 from app.utils.decorators import analysis_role_required
@@ -188,23 +189,18 @@ def register_routes(bp):
         reason_text = rejection_comment or ("Зөвшөөрөгдсөн" if new_status == "approved" else "Хянагдаж буй")
 
         sample = db.session.get(Sample, res.sample_id) if res.sample_id else None
-        audit = AnalysisResultLog(
-            timestamp=now_local(),
-            user_id=current_user.id,
+        log_analysis_action(
+            result_id=res.id,
             sample_id=res.sample_id,
-            analysis_result_id=res.id,
             analysis_code=res.analysis_code,
             action=action_text,
-            raw_data_snapshot=res.raw_data,
-            final_result_snapshot=res.final_result,
+            raw_data_dict=res.raw_data,
+            final_result=res.final_result,
             rejection_category=rejection_category,
             error_reason=rejection_category,
             reason=reason_text,
             sample_code_snapshot=sample.sample_code if sample else None,
         )
-        # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
-        audit.data_hash = audit.compute_hash()
-        db.session.add(audit)
 
         try:
             db.session.commit()
@@ -319,23 +315,19 @@ def register_routes(bp):
 
                 # Audit log (sample from pre-loaded map)
                 sample = samples_map.get(res.sample_id)
-                audit = AnalysisResultLog(
-                    timestamp=now_ts,
-                    user_id=current_user.id,
+                log_analysis_action(
+                    result_id=res.id,
                     sample_id=res.sample_id,
-                    analysis_result_id=res.id,
                     analysis_code=res.analysis_code,
                     action=f"BULK_{new_status.upper()}",
-                    raw_data_snapshot=res.raw_data,
-                    final_result_snapshot=res.final_result,
+                    raw_data_dict=res.raw_data,
+                    final_result=res.final_result,
                     rejection_category=rejection_category if new_status == "rejected" else None,
                     error_reason=rejection_category if new_status == "rejected" else None,
                     reason=rejection_comment or ("Бөөнөөр зөвшөөрөгдсөн" if new_status == "approved" else "Бөөнөөр буцаагдсан"),
                     sample_code_snapshot=sample.sample_code if sample else None,
+                    timestamp=now_ts,
                 )
-                # CRITICAL FIX: Compute hash (ISO 17025 audit integrity)
-                audit.data_hash = audit.compute_hash()
-                db.session.add(audit)
                 success_count += 1
 
             except Exception as e:
@@ -587,20 +579,16 @@ def register_routes(bp):
         # Audit log
         sample = db.session.get(Sample, res.sample_id)
         choice = "ORIGINAL" if use_original else "REPEAT"
-        audit = AnalysisResultLog(
-            timestamp=now_local(),
-            user_id=current_user.id,
+        log_analysis_action(
+            result_id=res.id,
             sample_id=res.sample_id,
-            analysis_result_id=res.id,
             analysis_code=res.analysis_code,
             action=f"SELECT_{choice}",
-            raw_data_snapshot=res.raw_data,
-            final_result_snapshot=res.final_result,
+            raw_data_dict=res.raw_data,
+            final_result=res.final_result,
             reason=f"Ахлах {choice.lower()} үр дүнг сонгосон: {old_final} → {res.final_result}",
             sample_code_snapshot=sample.sample_code if sample else None,
         )
-        audit.data_hash = audit.compute_hash()
-        db.session.add(audit)
 
         try:
             db.session.commit()

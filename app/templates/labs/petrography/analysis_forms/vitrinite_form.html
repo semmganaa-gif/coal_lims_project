@@ -167,7 +167,7 @@ function saveResults() {
   })
   .then(r => r.json())
   .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
-  .catch(e => console.error(e));
+  .catch(e => logger.error(e));
 }
 </script>
 {% endblock %}

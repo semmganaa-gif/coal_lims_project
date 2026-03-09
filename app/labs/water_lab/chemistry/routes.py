@@ -797,31 +797,28 @@ def sludge_workspace():
 @lab_required('water')
 def retest_result(result_id):
     """Давтах шинжилгээ — хуучин үр дүнг устгаж аудит бичлэг үүсгэнэ."""
-    from app.models import AnalysisResultLog
+    from app.services.analysis_audit import log_analysis_action
     from app.utils.database import safe_commit
 
     result = db.session.get(AnalysisResult, result_id)
     if not result:
         return jsonify({'success': False, 'message': 'Үр дүн олдсонгүй'}), 404
 
-    # ✅ H-8 fix: Delete хийхээс өмнө утгуудыг хадгалах
+    # Delete хийхээс өмнө утгуудыг хадгалах
     analysis_code_snapshot = result.analysis_code
     sample = db.session.get(Sample, result.sample_id)
 
     # Аудит бичлэг (result устахаас ӨМНӨ)
-    log = AnalysisResultLog(
-        user_id=current_user.id,
+    log_analysis_action(
+        result_id=result.id,
         sample_id=result.sample_id,
-        analysis_result_id=result.id,
         analysis_code=analysis_code_snapshot,
         action='RETEST_DELETED',
-        raw_data_snapshot=result.raw_data,
-        final_result_snapshot=result.final_result,
+        raw_data_dict=result.raw_data,
+        final_result=result.final_result,
         sample_code_snapshot=sample.sample_code if sample else None,
         reason=f'Давтах шинжилгээ ({current_user.username})',
     )
-    log.data_hash = log.compute_hash()
-    db.session.add(log)
 
     # Үр дүн устгах
     db.session.delete(result)

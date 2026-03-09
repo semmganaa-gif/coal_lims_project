@@ -336,10 +336,9 @@ body { background: var(--ws-bg); background-attachment: fixed; }
   font-style: italic !important;
 }
 
-
-
-/* Cell Styles */
-.cell-over-limit {
+/* Cell Styles — fail/pass indicators */
+.cell-over-limit,
+.cell-detect-fail {
   background: #fee2e2 !important;
   color: #dc2626 !important;
   font-weight: 700 !important;
@@ -347,12 +346,6 @@ body { background: var(--ws-bg); background-attachment: fixed; }
 
 .cell-within-limit {
   background: #f0fdf4 !important;
-}
-
-.cell-detect-fail {
-  background: #fee2e2 !important;
-  color: #dc2626 !important;
-  font-weight: 700 !important;
 }
 
 .cell-detect-pass {

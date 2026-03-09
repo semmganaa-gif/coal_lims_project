@@ -72,7 +72,7 @@
           // Move to first editable col of next row
           return {
             rowIndex: previousCellPosition.rowIndex + 1,
-            column: api.getColumnDef(editColIds[0])?.field || editColIds[0],
+            column: editColIds[0],
             rowPinned: previousCellPosition.rowPinned
           };
         }
@@ -155,10 +155,17 @@
     const v = parseFloat(p.newValue);
     return isNaN(v) ? null : v;
   }
-  const numFmt4 = p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '';  // m1, m2, m3 жин
-  const numFmt3 = p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '';  // тохирц
-  const numFmt2 = p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '';  // дундаж
-  const numFmt0 = p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '';  // тигель, бюкс дугаар
+  function safeFmt(digits) {
+    return function(p) {
+      if (p.value == null) return '';
+      var n = parseFloat(p.value);
+      return isNaN(n) ? '' : n.toFixed(digits);
+    };
+  }
+  const numFmt4 = safeFmt(4);  // m1, m2, m3 жин
+  const numFmt3 = safeFmt(3);  // тохирц
+  const numFmt2 = safeFmt(2);  // дундаж
+  const numFmt0 = safeFmt(0);  // тигель, бюкс дугаар
 
   // Base colDef / grid options fragments
   const baseDefaultColDef = {
@@ -216,7 +223,7 @@
       : container;
 
     if (!element) {
-      console.error('LIMS_AGGRID.createGrid: Container element not found:', container);
+      logger.error('LIMS_AGGRID.createGrid: Container element not found:', container);
       return null;
     }
 
@@ -229,7 +236,7 @@
     if (editableColIds.length > 0) {
       navigationCallbacks.onCellKeyDown = createCellKeyDown(editableColIds);
       navigationCallbacks.navigateToNextCell = createNavigateToNextCell(editableColIds);
-      console.log('✅ Excel-style keyboard navigation enabled for columns:', editableColIds);
+      logger.log('Excel-style keyboard navigation enabled for columns:', editableColIds);
     }
 
     // Grid options нэгтгэх
@@ -295,27 +302,6 @@
   w.LIMS_AGGRID.numFmt2 = numFmt2;  // дундаж
   w.LIMS_AGGRID.numFmt0 = numFmt0;  // тигель, бюкс дугаар
 
-  // HTML Header Component (for subscript rendering in AG-Grid headers)
-  class HtmlHeaderComp {
-    init(params) {
-      this.eGui = document.createElement('div');
-      this.eGui.classList.add('ag-cell-label-container');
-      this.eGui.style.display = 'flex';
-      this.eGui.style.alignItems = 'center';
-      const label = document.createElement('span');
-      label.classList.add('ag-header-cell-text');
-      label.textContent = params.displayName;
-      this.eGui.appendChild(label);
-      if (params.enableSorting) {
-        this.eGui.style.cursor = 'pointer';
-        this.eGui.addEventListener('click', (e) => params.progressSort(e.shiftKey));
-      }
-    }
-    getGui() { return this.eGui; }
-    destroy() {}
-  }
-  w.LIMS_AGGRID.HtmlHeaderComp = HtmlHeaderComp;
-
   // Base configs
   w.LIMS_AGGRID.baseDefaultColDef = baseDefaultColDef;
   w.LIMS_AGGRID.baseGridOptions = baseGridOptions;
@@ -325,18 +311,16 @@
   w.LIMS_AGGRID.createSpanningCellClassRules = createSpanningCellClassRules;
   w.LIMS_AGGRID.getStandardStatusBar = getStandardStatusBar;
 
-  console.log('✅ LIMS AG Grid Helpers loaded (v2.0 - Modern Navigation)');
+  logger.log('LIMS AG Grid Helpers loaded (v2.0 - Modern Navigation)');
 
   // Mobile: AG Grid дотор input focus хийхэд тоон keyboard харуулах
-  if (w.innerWidth < 992) {
-    document.addEventListener('focusin', function(e) {
-      var input = e.target;
-      if (input.tagName === 'INPUT' && input.closest('.ag-cell-editor')) {
-        if (!input.hasAttribute('inputmode')) {
-          input.setAttribute('inputmode', 'decimal');
-        }
+  document.addEventListener('focusin', function(e) {
+    if (w.innerWidth >= 992) return;
+    var input = e.target;
+    if (input.tagName === 'INPUT' && input.closest('.ag-cell-editor')) {
+      if (!input.hasAttribute('inputmode')) {
+        input.setAttribute('inputmode', 'decimal');
       }
-    }, true);
-    console.log('📱 Mobile numeric keyboard enabled for AG Grid inputs');
-  }
+    }
+  }, true);
 })(window);

@@ -682,8 +682,9 @@
     try {
       const r = await fetch(url);
       const j = await r.json();
+      const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       if (!j.ok) {
-        body.innerHTML = `<tr><td colspan="6" class="text-center text-danger">{{ _("Error") }}: ${j.message || '{{ _("unknown") }}'}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="6" class="text-center text-danger">{{ _("Error") }}: ${_e(j.message || '{{ _("unknown") }}')}</td></tr>`;
         return;
       }
       if (j.items.length === 0) {
@@ -696,12 +697,12 @@
         const displayName = it.sample_code || it.name || '';
         const internalCode = it.name && it.sample_code && it.name !== it.sample_code ? it.name : '';
         return `<tr>
-          <td>${it.sample_id}</td>
-          <td>${it.code || ''}</td>
-          <td>${displayName}</td>
-          <td>${internalCode}</td>
-          <td>${dt}</td>
-          <td><a class="btn btn-sm btn-outline-primary" href="${it.report_url}" target="_blank">{{ _("Report") }}</a></td>
+          <td>${_e(it.sample_id)}</td>
+          <td>${_e(it.code || '')}</td>
+          <td>${_e(displayName)}</td>
+          <td>${_e(internalCode)}</td>
+          <td>${_e(dt)}</td>
+          <td><a class="btn btn-sm btn-outline-primary" href="${_e(it.report_url)}" target="_blank">{{ _("Report") }}</a></td>
         </tr>`;
       }).join('');
     } catch(e) {

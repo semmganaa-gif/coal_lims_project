@@ -29,6 +29,7 @@ from markupsafe import escape
 
 from app import db, limiter
 from app.models import AnalysisType, Sample, AnalysisResult, AnalysisResultLog
+from app.schemas import SampleSchema
 from app.utils.datetime import now_local
 from app.utils.codes import to_base_list
 from app.utils.security import escape_like_pattern
@@ -788,19 +789,17 @@ def register_routes(bp):
                                 if hasattr(ar, "rejection_comment"):
                                     ar.rejection_comment = "Returned from MG Summary"
                                 # Audit log (update_result_status-тэй ижил бүтэц)
-                                audit = AnalysisResultLog(
-                                    timestamp=now_local(),
-                                    user_id=current_user.id,
+                                from app.services.analysis_audit import log_analysis_action
+                                log_analysis_action(
+                                    result_id=ar.id,
                                     sample_id=sid,
-                                    analysis_result_id=ar.id,
                                     analysis_code=code,
                                     action="REJECTED",
                                     reason=f"MG Summary-аас '{code}' давтан шинжилгээ буцаасан",
                                     sample_code_snapshot=sample.sample_code,
-                                    final_result_snapshot=ar.final_result,
-                                    raw_data_snapshot=ar.raw_data,
+                                    final_result=ar.final_result,
+                                    raw_data_dict=ar.raw_data,
                                 )
-                                db.session.add(audit)
                                 count += 1
                     db.session.commit()
                     return jsonify({

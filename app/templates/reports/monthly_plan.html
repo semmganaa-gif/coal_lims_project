@@ -844,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
       renderSummary(data);
       renderCharts(data);
     } catch (err) {
-      console.error('Statistics load error:', err);
+      logger.error('Statistics load error:', err);
     }
   }
 

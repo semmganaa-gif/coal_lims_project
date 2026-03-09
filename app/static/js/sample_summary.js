@@ -15,7 +15,7 @@ const SampleSummaryCalendar = (function() {
   function init() {
     // CalendarModule байгаа эсэх шалгах
     if (typeof CalendarModule === 'undefined') {
-      console.warn('SampleSummaryCalendar: CalendarModule not loaded');
+      logger.warn('SampleSummaryCalendar: CalendarModule not loaded');
       return;
     }
 
@@ -23,7 +23,7 @@ const SampleSummaryCalendar = (function() {
     const endHidden = document.getElementById('end_date_hidden');
 
     if (!startHidden || !endHidden) {
-      console.log('Calendar: Hidden inputs not found, skipping init');
+      logger.log('Calendar: Hidden inputs not found, skipping init');
       return;
     }
 
@@ -63,7 +63,7 @@ const SampleSummaryCalendar = (function() {
       });
     });
 
-    console.log('✅ SampleSummaryCalendar initialized');
+    logger.log('SampleSummaryCalendar initialized');
   }
 
   return { init: init };
@@ -133,7 +133,8 @@ const GridModule = (function() {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /* -------- CELL RENDERERS -------- */
@@ -380,7 +381,7 @@ const GridModule = (function() {
       const state = gridApi.getColumnState();
       localStorage.setItem(COL_STATE_KEY, JSON.stringify(state));
     } catch (e) {
-      console.warn('Failed to save column state:', e);
+      logger.warn('Failed to save column state:', e);
     }
   }
 
@@ -393,7 +394,7 @@ const GridModule = (function() {
         gridApi.applyColumnState({ state: state, applyOrder: true });
       }
     } catch (e) {
-      console.warn('Failed to restore column state:', e);
+      logger.warn('Failed to restore column state:', e);
     }
   }
 
@@ -514,11 +515,11 @@ const GridModule = (function() {
               params.api.autoSizeColumns(['id']);
             }
           } catch (e) {
-            console.warn('Column restore/autosize error:', e);
+            logger.warn('Column restore/autosize error:', e);
           }
         }, 100);
       } catch (e) {
-        console.error('onGridReady error:', e);
+        logger.error('onGridReady error:', e);
       }
     },
 
@@ -528,7 +529,7 @@ const GridModule = (function() {
           params.api.autoSizeColumns(['client_name', 'sample_type', 'received_date', 'analysis_date']);
         }
       } catch (e) {
-        console.warn('onFirstDataRendered error:', e);
+        logger.warn('onFirstDataRendered error:', e);
       }
     },
 
@@ -570,7 +571,7 @@ const GridModule = (function() {
           }
         }
       } catch (e) {
-        console.warn('onCellClicked error:', e);
+        logger.warn('onCellClicked error:', e);
       }
     }
   };
@@ -628,7 +629,7 @@ const GridModule = (function() {
     const api = gridApi || (gridOptions.api ? gridOptions.api : null);
     if (!api) {
       alert('Хүснэгт ачаалагдаагүй байна.');
-      console.error('copySelected: gridApi is null');
+      logger.error('copySelected: gridApi is null');
       return;
     }
 
@@ -637,7 +638,7 @@ const GridModule = (function() {
     try {
       selectedNodes = api.getSelectedNodes ? api.getSelectedNodes() : [];
     } catch (e) {
-      console.error('getSelectedNodes error:', e);
+      logger.error('getSelectedNodes error:', e);
       // Fallback: getSelectedRows ашиглах
       try {
         const rows = api.getSelectedRows ? api.getSelectedRows() : [];
@@ -647,7 +648,7 @@ const GridModule = (function() {
           });
         }
       } catch (e2) {
-        console.error('getSelectedRows error:', e2);
+        logger.error('getSelectedRows error:', e2);
       }
     }
 
@@ -670,7 +671,7 @@ const GridModule = (function() {
         });
       }
     } catch (e) {
-      console.error('getColumns error:', e);
+      logger.error('getColumns error:', e);
     }
 
     // Хэрэв columns хоосон бол columnDefs-ээс авах
@@ -714,7 +715,7 @@ const GridModule = (function() {
           alert(selectedNodes.length + ' мөр амжилттай хуулагдлаа!');
         })
         .catch(function(err) {
-          console.warn('Clipboard API failed:', err);
+          logger.warn('Clipboard API failed:', err);
           fallbackCopy(finalString, selectedNodes.length);
         });
     } else {
@@ -743,13 +744,13 @@ const GridModule = (function() {
   function init() {
     const gridDiv = document.getElementById('myGrid');
     if (!gridDiv) {
-      console.warn('Grid container #myGrid not found');
+      logger.warn('Grid container #myGrid not found');
       return;
     }
 
     // Check if AG Grid is loaded
     if (typeof agGrid === 'undefined') {
-      console.error('AG Grid library not loaded');
+      logger.error('AG Grid library not loaded');
       gridDiv.innerHTML = '<div style="padding:20px;color:#dc3545;">AG Grid failed to load.</div>';
       return;
     }
@@ -764,7 +765,7 @@ const GridModule = (function() {
         throw new Error('AG Grid API not available');
       }
     } catch (e) {
-      console.error('Grid initialization error:', e);
+      logger.error('Grid initialization error:', e);
       gridDiv.textContent = 'Хүснэгт үүсгэхэд алдаа: ' + e.message;
       gridDiv.style.cssText = 'padding:20px;color:#dc3545;';
     }
@@ -793,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
   try {
     GridModule.init();
   } catch (e) {
-    console.error('Grid initialization failed:', e);
+    logger.error('Grid initialization failed:', e);
   }
 
   // Helper to safely add event listener
@@ -804,7 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           handler.call(this, e);
         } catch (err) {
-          console.error('Event handler error for ' + id + ':', err);
+          logger.error('Event handler error for ' + id + ':', err);
         }
       });
     }
@@ -901,7 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // QC buttons helper
   function openQcWindow(url) {
     if (!url) {
-      console.warn('QC URL not defined');
+      logger.warn('QC URL not defined');
       return;
     }
     const ids = GridModule.getSelectedIds();

@@ -3,8 +3,15 @@
 Marshmallow schemas for API validation and serialization
 """
 
-from .sample_schema import SampleSchema
-from .analysis_schema import AnalysisResultSchema
-from .user_schema import UserSchema
+from .sample_schema import SampleSchema, SampleListSchema
+from .analysis_schema import AnalysisResultSchema, AnalysisResultListSchema
+from .user_schema import UserSchema, UserListSchema
 
-__all__ = ['SampleSchema', 'AnalysisResultSchema', 'UserSchema']
+__all__ = [
+    'SampleSchema',
+    'SampleListSchema',
+    'AnalysisResultSchema',
+    'AnalysisResultListSchema',
+    'UserSchema',
+    'UserListSchema',
+]

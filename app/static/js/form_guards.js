@@ -64,7 +64,7 @@
         try {
           await asyncFn(e);
         } catch (err) {
-          console.error('Save error:', err);
+          logger.error('Save error:', err);
         } finally {
           btn.disabled = false;
           btn.innerHTML = origHtml;

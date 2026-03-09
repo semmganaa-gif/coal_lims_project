@@ -144,8 +144,8 @@ function saveResults() {
       })
     })
     .then(r => r.json())
-    .then(d => { if (d.success) console.log('Saved:', d.id); })
-    .catch(e => console.error(e));
+    .then(d => { if (d.success) logger.log('Saved:', d.id); })
+    .catch(e => logger.error(e));
   });
   alert('{{ _("Saved successfully!") }}');
 }

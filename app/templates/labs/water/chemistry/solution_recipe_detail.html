@@ -272,7 +272,8 @@ function calculateRequired() {
     if (!isOk) hasShortage = true;
 
     const statusIcon = isOk ? '<span class="text-success">OK</span>' : '<span class="text-danger">' + '{{ _("Shortage!") }}' + '</span>';
-    html += '&bull; ' + ing.name + ': <strong>' + requiredStr + '</strong> ' + statusIcon + '<br>';
+    const _eName = String(ing.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html += '&bull; ' + _eName + ': <strong>' + requiredStr + '</strong> ' + statusIcon + '<br>';
   });
 
   const infoDiv = document.getElementById('requiredInfo');

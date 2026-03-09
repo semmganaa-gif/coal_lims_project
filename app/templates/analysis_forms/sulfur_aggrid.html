@@ -10,7 +10,7 @@
 {{ aggrid_macros.grid_container('sulfurGrid') | safe }}
 
 <script>
-console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
+logger.log('SULFUR TEMPLATE v3 LOADED');
 (function(){
   'use strict';
 
@@ -147,11 +147,11 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       headerName:'{{ _("Sample Name") }}', field:'sample_code', width:280, pinned:'left',
       cellStyle:{ display:'flex', flexDirection:'column', justifyContent:'center', lineHeight:'1.2' },
       cellRenderer:p=>{
-        let html = `<div class="sample-name">${p.value}</div>`;
+        let html = `<div class="sample-name">${_escHtml(p.value)}</div>`;
         const rej = rejectedInfo[p.data.sample_id];
         if(rej){
           const label = (errorLabels && (errorLabels[rej.reason_code] || rej.reason)) || rej.reason || '';
-          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${label}</div>`;
+          html += `<div class="reject-badge"><i class="bi bi-exclamation-triangle"></i> ${_escHtml(label)}</div>`;
         }
         return html;
       }
@@ -270,12 +270,12 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
   }
 
   function recalcPair(sampleId){
-    console.warn('🔄 recalcPair called for sample:', sampleId);
+    logger.log('recalcPair called for sample:', sampleId);
     window.sulfurGridApi.forEachNode(n => {
       if(n.data.sample_id === sampleId){
-        console.warn('📊 BEFORE applyPairMeta:', { p1: n.data.p1_result, p2: n.data.p2_result, avg: n.data.avg });
+        logger.log('BEFORE applyPairMeta:', { p1: n.data.p1_result, p2: n.data.p2_result, avg: n.data.avg });
         applyPairMeta(n.data);
-        console.warn('📊 AFTER applyPairMeta:', { avg: n.data.avg, diff: n.data.diff });
+        logger.log('AFTER applyPairMeta:', { avg: n.data.avg, diff: n.data.diff });
       }
     });
     window.sulfurGridApi.refreshCells({ force:true });
@@ -315,12 +315,12 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
       };
     }
 
-    console.warn('🚀 Initializing sulfur grid...', { LIMS_AGGRID: typeof LIMS_AGGRID, rowCount: rowData.length });
+    logger.log('Initializing sulfur grid...', { LIMS_AGGRID: typeof LIMS_AGGRID, rowCount: rowData.length });
     if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
-      console.warn('✅ Using LIMS_AGGRID.createGrid');
+      logger.log('Using LIMS_AGGRID.createGrid');
       window.sulfurGridApi = LIMS_AGGRID.createGrid('#sulfurGrid', columnDefs, rowData, {
         onCellValueChanged: (params) => {
-          console.warn('🔔 CELL CHANGED:', params.colDef.field, '=', params.newValue);
+          logger.log('CELL CHANGED:', params.colDef.field, '=', params.newValue);
           if(['p1_weight','p1_result','p2_weight','p2_result'].includes(params.colDef.field)){
             recalcPair(params.data.sample_id);
           }
@@ -330,7 +330,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
         editableColIds: ['p1_weight','p1_result','p2_weight','p2_result']
       });
     } else {
-      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      logger.warn('LIMS_AGGRID not available, using fallback');
       window.sulfurGridApi = agGrid.createGrid(el, {
         theme:'legacy',
         columnDefs,
@@ -342,7 +342,7 @@ console.warn('=== SULFUR TEMPLATE v3 LOADED ===');
         enterNavigatesVertically:true,
         enterNavigatesVerticallyAfterEdit:true,
         onCellValueChanged: (params) => {
-          console.warn('🔔 CELL CHANGED (fallback):', params.colDef.field, '=', params.newValue);
+          logger.log('CELL CHANGED (fallback):', params.colDef.field, '=', params.newValue);
           if(['p1_weight','p1_result','p2_weight','p2_result'].includes(params.colDef.field)){
             recalcPair(params.data.sample_id);
           }

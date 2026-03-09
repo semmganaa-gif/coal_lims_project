@@ -109,6 +109,12 @@
     // File input
     document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
+    // Image click → open in new tab (delegation, inline onclick-ийн оронд)
+    messagesEl.addEventListener('click', function(e) {
+      const img = e.target.closest('.message-image[data-file-url]');
+      if (img) window.open(img.dataset.fileUrl);
+    });
+
     // Sample search
     const sampleSearchInput = document.getElementById('sampleSearchInput');
     if (sampleSearchInput) {
@@ -144,12 +150,12 @@
     });
 
     socket.on('connect', () => {
-      console.log('Chat connected');
+      logger.log('Chat connected');
       isConnected = true;
     });
 
     socket.on('disconnect', () => {
-      console.log('Chat disconnected');
+      logger.log('Chat disconnected');
       isConnected = false;
     });
 
@@ -245,7 +251,7 @@
     });
 
     socket.on('error', (data) => {
-      console.error('Chat error:', data.message);
+      logger.error('Chat error:', data.message);
       alert(data.message);
     });
   }
@@ -293,7 +299,7 @@
         renderContacts();
       })
       .catch(err => {
-        console.error('Error loading contacts:', err);
+        logger.error('Error loading contacts:', err);
         // ✅ XSS сэргийлэлт: err.message escape
         contactsEmpty.innerHTML = `<i class="bi bi-exclamation-triangle"></i><p>Алдаа: ${escapeHtml(err.message || 'Тодорхойгүй алдаа')}</p>`;
       });
@@ -325,10 +331,10 @@
           </div>
           <div class="contact-info">
             <div class="contact-name">
-              ${c.username}
-              <span class="contact-role ${roleClass}">${roleLabel}</span>
+              ${escapeHtml(c.username)}
+              <span class="contact-role ${roleClass}">${escapeHtml(roleLabel)}</span>
             </div>
-            <div class="contact-preview">${urgentIcon}${c.last_message || 'Start a new conversation'}</div>
+            <div class="contact-preview">${urgentIcon}${escapeHtml(c.last_message || 'Start a new conversation')}</div>
           </div>
           ${c.unread_count > 0 ? `<span class="contact-unread">${c.unread_count}</span>` : ''}
         </div>
@@ -356,15 +362,15 @@
           const time = formatTime(b.sent_at);
           html += `
             <div class="broadcast-message">
-              <div class="sender">${b.sender_name}</div>
-              <div>${b.message}</div>
+              <div class="sender">${escapeHtml(b.sender_name)}</div>
+              <div>${escapeHtml(b.message)}</div>
               <div style="font-size:0.7rem;opacity:0.7;margin-top:0.3rem;">${time}</div>
             </div>
           `;
         });
         broadcastsEl.innerHTML = html;
       })
-      .catch(err => console.error('Error loading broadcasts:', err));
+      .catch(err => logger.error('Error loading broadcasts:', err));
   }
 
   // Open chat with specific user
@@ -373,7 +379,7 @@
     const contact = contacts.find(c => c.id === userId);
 
     if (!contact) {
-      console.error('Contact not found');
+      logger.error('Contact not found');
       return;
     }
 
@@ -410,7 +416,7 @@
         updateUnreadBadge();
       })
       .catch(err => {
-        console.error('Error loading messages:', err);
+        logger.error('Error loading messages:', err);
         messagesEl.innerHTML = '<div style="text-align:center;color:#ef4444;padding:2rem;">Алдаа гарлаа</div>';
       });
   }
@@ -441,16 +447,17 @@
 
     // File/Image attachment
     if (m.message_type === 'image' && m.file_url) {
-      content += `<div class="message-image-wrapper"><img src="${m.file_url}" class="message-image" onclick="window.open('${m.file_url}')" alt="Image"></div>`;
+      const safeUrl = escapeHtml(m.file_url);
+      content += `<div class="message-image-wrapper"><img src="${safeUrl}" class="message-image" data-file-url="${safeUrl}" alt="Image"></div>`;
     } else if (m.message_type === 'file' && m.file_url) {
       const size = m.file_size ? formatFileSize(m.file_size) : '';
-      content += `<div class="message-file"><i class="bi bi-file-earmark"></i><a href="${m.file_url}" target="_blank">${m.file_name || 'File'}</a> <small>(${size})</small></div>`;
+      content += `<div class="message-file"><i class="bi bi-file-earmark"></i><a href="${escapeHtml(m.file_url)}" target="_blank">${escapeHtml(m.file_name || 'File')}</a> <small>(${size})</small></div>`;
     }
 
     // Sample link
     if (m.sample_id) {
       const sampleCode = m.sample?.code || `#${m.sample_id}`;
-      content += `<div class="message-sample"><i class="bi bi-box"></i><a href="/api/sample_report/${m.sample_id}" target="_blank">${sampleCode}</a></div>`;
+      content += `<div class="message-sample"><i class="bi bi-box"></i><a href="/api/sample_report/${parseInt(m.sample_id)}" target="_blank">${escapeHtml(sampleCode)}</a></div>`;
     }
 
     const deleteBtn = isSent && !m.is_deleted ? `
@@ -561,8 +568,10 @@
     const formData = new FormData();
     formData.append('file', file);
 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch('/api/chat/upload', {
       method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken },
       body: formData
     })
       .then(r => r.json())
@@ -582,7 +591,7 @@
         });
       })
       .catch(err => {
-        console.error('File upload error:', err);
+        logger.error('File upload error:', err);
         alert('Файл илгээхэд алдаа гарлаа');
       });
 
@@ -597,7 +606,7 @@
         templates = data.templates || [];
         renderTemplates();
       })
-      .catch(err => console.error('Error loading templates:', err));
+      .catch(err => logger.error('Error loading templates:', err));
   }
 
   function renderTemplates() {
@@ -606,9 +615,14 @@
 
     let html = '';
     templates.forEach(t => {
-      html += `<div class="template-item" onclick="window.LIMS_CHAT.selectTemplate('${t.text}')">${t.icon} ${t.text}</div>`;
+      html += `<div class="template-item" data-template-text="${escapeHtml(t.text)}">${escapeHtml(t.icon)} ${escapeHtml(t.text)}</div>`;
     });
     list.innerHTML = html;
+
+    list.addEventListener('click', function(e) {
+      const item = e.target.closest('.template-item');
+      if (item) selectTemplate(item.dataset.templateText);
+    });
   }
 
   function selectTemplate(text) {
@@ -654,11 +668,16 @@
 
         let html = '';
         samples.forEach(s => {
-          html += `<div class="sample-item" onclick="window.LIMS_CHAT.selectSample(${s.id}, '${s.code}')">${s.code} - ${s.name || ''}</div>`;
+          html += `<div class="sample-item" data-sample-id="${s.id}" data-sample-code="${escapeHtml(s.code)}">${escapeHtml(s.code)} - ${escapeHtml(s.name || '')}</div>`;
         });
         list.innerHTML = html;
+
+        list.addEventListener('click', function(e) {
+          const item = e.target.closest('.sample-item');
+          if (item) selectSample(parseInt(item.dataset.sampleId), item.dataset.sampleCode);
+        });
       })
-      .catch(err => console.error('Error searching samples:', err));
+      .catch(err => logger.error('Error searching samples:', err));
   }
 
   function selectSample(id, code) {
@@ -701,11 +720,11 @@
           const otherName = isFromMe ? (m.receiver_name || 'User') : (m.sender_name || 'User');
 
           html += `
-            <div class="contact-item" onclick="window.LIMS_CHAT.openChat(${otherUserId})">
-              <div class="contact-avatar">${otherName.charAt(0).toUpperCase()}</div>
+            <div class="contact-item" onclick="window.LIMS_CHAT.openChat(${parseInt(otherUserId)})">
+              <div class="contact-avatar">${escapeHtml(otherName.charAt(0).toUpperCase())}</div>
               <div class="contact-info">
-                <div class="contact-name">${otherName}</div>
-                <div class="contact-preview">${m.message.substring(0, 50)}</div>
+                <div class="contact-name">${escapeHtml(otherName)}</div>
+                <div class="contact-preview">${escapeHtml(m.message.substring(0, 50))}</div>
               </div>
               <small style="color:#94a3b8;">${time}</small>
             </div>
@@ -716,7 +735,7 @@
         existingItems.forEach(el => el.remove());
         contactsEl.insertAdjacentHTML('beforeend', html);
       })
-      .catch(err => console.error('Search error:', err));
+      .catch(err => logger.error('Search error:', err));
   }
 
   function searchMessagesInChat(query) {
@@ -732,7 +751,7 @@
         }
         renderMessages(messages);
       })
-      .catch(err => console.error('Search error:', err));
+      .catch(err => logger.error('Search error:', err));
   }
 
   // Broadcast
@@ -790,7 +809,7 @@
           unreadBadge.style.display = 'none';
         }
       })
-      .catch(err => console.error('Error fetching unread count:', err));
+      .catch(err => logger.error('Error fetching unread count:', err));
   }
 
   function loadUnreadCount() {
@@ -819,7 +838,7 @@
           icon: '/static/favicon.ico'
         });
       } catch (e) {
-        console.log('Notification error:', e);
+        logger.warn('Notification error:', e);
       }
     }
 
@@ -875,7 +894,7 @@
       notificationAudio.volume = 0.6;
       notificationAudio.load();
     } catch (e) {
-      console.log('Audio preload failed:', e);
+      logger.warn('Audio preload failed:', e);
     }
   }
 
@@ -892,7 +911,7 @@
           notificationAudio.currentTime = 0;
           notificationAudio.volume = 0.6;
           audioUnlocked = true;
-          console.log('Audio unlocked');
+          logger.log('Audio unlocked');
         }).catch(() => {});
       }
       document.removeEventListener('click', unlock);
@@ -915,12 +934,12 @@
         const playPromise = notificationAudio.play();
         if (playPromise) {
           playPromise.catch(err => {
-            console.log('Sound play blocked:', err.message);
+            logger.warn('Sound play blocked:', err.message);
           });
         }
       }
     } catch (e) {
-      console.log('Sound error:', e);
+      logger.warn('Sound error:', e);
     }
   }
 
@@ -940,11 +959,11 @@
             notificationAudio.play().catch(() => {});
           }, 400);
         }).catch(err => {
-          console.log('Urgent sound blocked:', err.message);
+          logger.warn('Urgent sound blocked:', err.message);
         });
       }
     } catch (e) {
-      console.log('Urgent sound error:', e);
+      logger.warn('Urgent sound error:', e);
     }
   }
 
@@ -982,9 +1001,13 @@
   }
 
   function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    if (text === null || text === undefined) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function debounce(func, wait) {

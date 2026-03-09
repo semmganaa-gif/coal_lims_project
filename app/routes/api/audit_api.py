@@ -30,6 +30,19 @@ from app.utils.security import escape_like_pattern
 from app.utils.shifts import get_shift_date, get_shift_info
 
 
+def _audit_admin_required(f):
+    """Аудит хуудсуудад зөвхөн admin эрхтэй хэрэглэгч хандана."""
+    from functools import wraps
+    from flask import abort
+
+    @wraps(f)
+    async def decorated(*args, **kwargs):
+        if getattr(current_user, "role", None) != "admin":
+            abort(403)
+        return await f(*args, **kwargs)
+    return decorated
+
+
 def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
 
@@ -38,6 +51,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_hub")
     @login_required
+    @_audit_admin_required
     async def audit_hub():
         return render_template("audit_hub.html", title="Аудитын мөр")
 
@@ -46,6 +60,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_log/<analysis_code>")
     @login_required
+    @_audit_admin_required
     async def audit_log_page(analysis_code):
         # Normalize analysis code (Solid -> SOLID, St,ad -> TS г.м.)
         base_code = norm_code(analysis_code)
@@ -53,7 +68,13 @@ def register_routes(bp):
         # Analysis type олох
         analysis_type = AnalysisType.query.filter_by(code=analysis_code).first()
         if not analysis_type:
-            analysis_type = type("FakeType", (), {"code": analysis_code, "name": analysis_code})()
+            from dataclasses import dataclass as _dc
+
+            @_dc
+            class _AnalysisTypeStub:
+                code: str
+                name: str
+            analysis_type = _AnalysisTypeStub(code=analysis_code, name=analysis_code)
 
         # Шүүлтүүрүүд
         start_date_str = request.args.get("start_date")
@@ -247,6 +268,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/audit_search")
     @login_required
+    @_audit_admin_required
     async def api_audit_search():
         """
         Бүх шинжилгээнээс аудит хайх API
@@ -334,6 +356,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/export/audit")
     @login_required
+    @_audit_admin_required
     async def export_audit():
         """Аудит логийг Excel экспорт"""
         from app.utils.exports import send_excel_response
@@ -380,6 +403,7 @@ def register_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/system_audit")
     @login_required
+    @_audit_admin_required
     async def system_audit():
         """Системийн аудит лог — login, logout, delete, approve гэх мэт."""
         # JSON API хүсэлт (AG-Grid-ээс)

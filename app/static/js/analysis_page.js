@@ -1,6 +1,11 @@
 $(function () {
   // Шинжилгээний хуудасны үндсэн скрипт (v10 - Auto Badge)
 
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
   const analysisCodeRaw     = window.LIMS_ANALYSIS_CODE_RAW;
   const analysisCodeDisplay = window.LIMS_ANALYSIS_CODE_DISPLAY;
   const rejected   = window.REJECTED_SAMPLES || {};
@@ -29,7 +34,7 @@ $(function () {
         }
       }
     } catch(e) {
-      console.warn('localStorage sync алдаа:', e);
+      logger.warn('localStorage sync алдаа:', e);
     }
   })();
 
@@ -124,9 +129,9 @@ $(function () {
 
       // ✅ Алдаатай дээжүүдийг консолд харуулах
       if (failedItems.length > 0) {
-        console.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй:`);
+        logger.warn(`${failedItems.length} дээж хадгалагдсангүй:`);
         failedItems.forEach(err => {
-          console.warn(`   - Sample ${err.sample_id}: ${err.error}`);
+          logger.warn(`   - Sample ${err.sample_id}: ${err.error}`);
         });
       }
 
@@ -223,7 +228,7 @@ $(function () {
             <div class="mt-1">
                 <span class="badge bg-danger text-wrap text-start border border-light"
                       style="font-size:0.7rem; line-height:1.2; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> ${reasonText}
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> ${escapeHtml(reasonText)}
                 </span>
             </div>
         `;
@@ -255,11 +260,11 @@ $(function () {
     const modal = $(this), body = modal.find('.modal-body');
     body.html('<p class="text-center">Loading...</p>');
 
-    console.log('[Modal] Loading eligible samples for:', analysisCodeRaw);
+    logger.log('[Modal] Loading eligible samples for:', analysisCodeRaw);
 
     $.getJSON(`/api/eligible_samples/${analysisCodeRaw}`)
     .done(function(resp){
-      console.log('[Modal] API response:', resp);
+      logger.log('[Modal] API response:', resp);
       const samples = resp.samples || [];
       const rejected = resp.rejected || [];
       const rejectedCount = resp.rejected_count || 0;
@@ -300,13 +305,13 @@ $(function () {
             <div class="col-4">
               <select id="filter-client" class="form-select form-select-sm">
                 <option value="">All Clients</option>
-                ${uniqueClients.map(c => `<option value="${c}">${c}</option>`).join('')}
+                ${uniqueClients.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
               </select>
             </div>
             <div class="col-3">
               <select id="filter-type" class="form-select form-select-sm">
                 <option value="">All Types</option>
-                ${uniqueTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
+                ${uniqueTypes.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -329,10 +334,10 @@ $(function () {
         samples.forEach(s=>{
           html += `<tr data-code="${(s.sample_code||'').toLowerCase()}" data-client="${(s.client_name||'').toLowerCase()}" data-type="${(s.sample_type||'').toLowerCase()}" data-sample-id="${s.id}">
             <td><input type="checkbox" class="modal-sample-checkbox" value="${s.id}"></td>
-            <td>${s.sample_code}</td>
-            <td>${s.client_name||'-'}</td>
-            <td>${s.sample_type||'-'}</td>
-            ${canUnassign ? `<td><button type="button" class="btn btn-outline-danger btn-sm btn-unassign-sample" data-id="${s.id}" data-code="${s.sample_code}" title="Remove from analysis"><i class="bi bi-x-lg"></i></button></td>` : ''}
+            <td>${escapeHtml(s.sample_code)}</td>
+            <td>${escapeHtml(s.client_name||'-')}</td>
+            <td>${escapeHtml(s.sample_type||'-')}</td>
+            ${canUnassign ? `<td><button type="button" class="btn btn-outline-danger btn-sm btn-unassign-sample" data-id="${s.id}" data-code="${escapeHtml(s.sample_code)}" title="Remove from analysis"><i class="bi bi-x-lg"></i></button></td>` : ''}
           </tr>`;
         });
         html += `</tbody></table></div>`;
@@ -367,9 +372,9 @@ $(function () {
           const errLabel = errLabels[s.error_reason] || s.error_reason || '-';
           html += `<tr data-code="${(s.sample_code||'').toLowerCase()}">
             <td><input type="checkbox" class="modal-sample-checkbox rejected-sample" value="${s.id}"></td>
-            <td>${s.sample_code}</td>
-            <td>${s.client_name||'-'}</td>
-            <td><span class="badge bg-danger">${errLabel}</span></td>
+            <td>${escapeHtml(s.sample_code)}</td>
+            <td>${escapeHtml(s.client_name||'-')}</td>
+            <td><span class="badge bg-danger">${escapeHtml(errLabel)}</span></td>
           </tr>`;
         });
         html += `</tbody></table></div>`;
@@ -397,7 +402,7 @@ $(function () {
     })
     .fail(function(xhr) {
       body.html('<div class="alert alert-danger m-3">Failed to load samples. Please try again.</div>');
-      console.error('eligible_samples error:', xhr.status, xhr.statusText);
+      logger.error('eligible_samples error:', xhr.status, xhr.statusText);
     });
   });
 
@@ -541,7 +546,7 @@ $(function () {
     try {
       localStorage.setItem(storageKey, allIds.join(','));
     } catch(e) {
-      console.warn('localStorage хадгалах алдаа:', e);
+      logger.warn('localStorage хадгалах алдаа:', e);
     }
 
     url.searchParams.set('sample_ids', allIds.join(','));
@@ -606,7 +611,7 @@ $(function () {
                     const rowData = window.calculateAndDisplayForRow(sid, true);
                     pushRowDataFlex(payload, rowData);
                 }
-            }catch(e){ console.warn('calc error for sid=', sid, e); }
+            }catch(e){ logger.warn('calc error for sid=', sid, e); }
         });
     }
     // 3) Нэг мөрийн шинжилгээ

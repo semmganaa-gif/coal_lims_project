@@ -146,7 +146,7 @@
         gridApi.setRowData(rows);
       }
     } catch (e) {
-      console.error('Grid setData error:', e);
+      logger.error('Grid setData error:', e);
     }
   }
 
@@ -160,7 +160,7 @@
         gridApi.setColumnDefs(newCols);
       }
     } catch (e) {
-      console.error('Update columns error:', e);
+      logger.error('Update columns error:', e);
     }
   }
 
@@ -189,7 +189,7 @@
         setTimeout(function() { if (gridApi) { try { gridApi.autoSizeAllColumns(); } catch(e){} } }, 100);
       })
       .catch(function(err) {
-        console.error('Load error:', err);
+        logger.error('Load error:', err);
         document.getElementById('rowCount').textContent = '0';
       });
   }

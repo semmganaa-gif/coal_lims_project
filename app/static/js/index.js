@@ -1,6 +1,16 @@
 /* ----------------------------- CALENDAR LOGIC (7-Day Rolling) ----------------------------- */
 /* ✅ REFACTORED: CalendarModule ашиглаж байна (calendar-module.js) */
 
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // CalendarModule-ийн alias (хуучин кодтой нийцтэй байх)
 function toLocalISOString(date) {
     return CalendarModule.formatLocalDateTime(date);
@@ -20,19 +30,7 @@ function buildCalendar(containerId, labelId, centerDate, selectedStr, onSelect) 
 document.addEventListener('DOMContentLoaded', function() {
 
     // 1. Init Date Variables
-    const now = new Date();
-    const startDefault = new Date(now);
-    const endDefault = new Date(now);
-
-    if (now.getHours() < 6) {
-        startDefault.setDate(startDefault.getDate() - 1);
-        startDefault.setHours(6, 0, 0, 0);
-        endDefault.setHours(5, 59, 0, 0);
-    } else {
-        startDefault.setHours(6, 0, 0, 0);
-        endDefault.setDate(endDefault.getDate() + 1);
-        endDefault.setHours(5, 59, 0, 0);
-    }
+    const { start: startDefault, end: endDefault } = CalendarModule.getShiftDefaults();
 
     const startInput = document.getElementById('dateFilterStart');
     const endInput = document.getElementById('dateFilterEnd');
@@ -160,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const base = normalizeToBase(rawCode);
                             const label = displayCodeAlias(base);
                             const title = displayNameWithAlias(base);
-                            return `<span class="badge bg-secondary me-1" title="${title}">${label}</span>`;
+                            return `<span class="badge bg-secondary me-1" title="${escapeHtml(title)}">${escapeHtml(label)}</span>`;
                         }).join('');
                         return `<div class="d-flex flex-wrap gap-1">${badges}</div>`;
                     }
@@ -188,10 +186,10 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const gridDiv = document.querySelector('#myGrid');
-    new agGrid.Grid(gridDiv, gridOptions);
+    const gridApi = agGrid.createGrid(gridDiv, gridOptions);
 
     function loadData() {
-        gridOptions.api.showLoadingOverlay();
+        gridApi.showLoadingOverlay();
 
         const sDate = document.getElementById('dateFilterStart').value;
         const eDate = document.getElementById('dateFilterEnd').value;
@@ -207,21 +205,21 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/api/data?${params.toString()}`)
             .then(response => response.json())
             .then(data => {
-                gridOptions.api.setRowData(data.data);
-                gridOptions.api.hideOverlay();
+                gridApi.setRowData(data.data);
+                gridApi.hideOverlay();
             })
             .catch(error => {
-                console.error('Error:', error);
-                gridOptions.api.showNoRowsOverlay();
+                logger.error('Error:', error);
+                gridApi.showNoRowsOverlay();
             });
     }
 
     document.getElementById('btnLoadData').addEventListener('click', loadData);
-    document.getElementById('btnExportCsv').addEventListener('click', () => gridOptions.api.exportDataAsCsv({ fileName: 'SampleList.csv' }));
+    document.getElementById('btnExportCsv').addEventListener('click', () => gridApi.exportDataAsCsv({ fileName: 'SampleList.csv' }));
 
     document.getElementById('btnDeleteSelected').addEventListener('click', function() {
         // Зөвхөн одоо харагдаж байгаа (filtered) дээжүүдийг авах
-        const allSelectedNodes = gridOptions.api.getSelectedNodes();
+        const allSelectedNodes = gridApi.getSelectedNodes();
         const selectedNodes = allSelectedNodes.filter(node => node.displayed);
 
         if (selectedNodes.length === 0) { alert('Устгах дээжүүдийг сонгоно уу!'); return; }

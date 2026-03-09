@@ -15,16 +15,18 @@ const SafeStorage = {
      */
     set(key, value, useSession = false) {
         const val = String(value ?? '');
+        let localOk = false;
         try {
             localStorage.setItem(key, val);
+            localOk = true;
         } catch (e) {
             // localStorage бүтэлгүйтвэл sessionStorage руу fallback
             if (e.name === 'QuotaExceededError') {
-                console.warn('SafeStorage: localStorage quota exceeded, using sessionStorage');
+                logger.warn('SafeStorage: localStorage quota exceeded, falling back to sessionStorage');
             }
         }
         try {
-            if (useSession) {
+            if (useSession || !localOk) {
                 sessionStorage.setItem(key, val);
             }
         } catch (e) {

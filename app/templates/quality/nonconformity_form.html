@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros/accessibility_helpers.html' import render_accessible_input, render_accessible_textarea %}
 
 {% block content %}
 <div class="container mt-4">
@@ -8,14 +9,24 @@
     <form method="POST" class="mt-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-        <div class="row mb-2">
+        <div class="row">
             <div class="col-md-6">
-                <label class="form-label fw-bold">{{ _("Date:") }}</label>
-                <input type="date" name="record_date" class="form-control" value="{{ today }}" required>
+                {{ render_accessible_input(
+                    field_id='record_date',
+                    label=_("Date:"),
+                    field_type='date',
+                    name='record_date',
+                    value=today,
+                    required=true
+                ) }}
             </div>
             <div class="col-md-6">
-                <label class="form-label fw-bold">{{ _("No.:") }}</label>
-                <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
+                {{ render_accessible_input(
+                    field_id='record_no',
+                    label=_("No.:"),
+                    value=_("Auto-generated"),
+                    disabled=true
+                ) }}
             </div>
         </div>
 
@@ -25,31 +36,43 @@
                 <h5 class="mb-0"><i class="bi bi-person-exclamation me-2"></i>{{ _("Section to be filled by the person who detected the nonconformity") }}</h5>
             </div>
             <div class="card-body">
-                <div class="row mb-3">
+                <div class="row">
                     <div class="col-md-6">
-                        <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
-                        <input type="text" name="detector_name" class="form-control"
-                               placeholder="{{ _("E.g.: B.Bold, Analyst") }}" required>
+                        {{ render_accessible_input(
+                            field_id='detector_name',
+                            label=_("Full name, position"),
+                            name='detector_name',
+                            required=true,
+                            placeholder=_("E.g.: B.Bold, Analyst")
+                        ) }}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">{{ _("Department / Unit") }}</label>
-                        <input type="text" name="detector_department" class="form-control"
-                               placeholder="{{ _("E.g.: Coal Laboratory") }}">
+                        {{ render_accessible_input(
+                            field_id='detector_department',
+                            label=_("Department / Unit"),
+                            name='detector_department',
+                            placeholder=_("E.g.: Coal Laboratory")
+                        ) }}
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Nonconformity details, documented evidence") }} <span class="text-danger">*</span></label>
-                    <small class="form-text text-muted d-block mb-1">{{ _("Describe the related activity, the violated procedure, instruction, or standard clause") }}</small>
-                    <textarea name="nc_description" class="form-control" rows="5"
-                              placeholder="{{ _("Detailed description of the nonconformity...") }}" required></textarea>
-                </div>
+                {{ render_accessible_textarea(
+                    field_id='nc_description',
+                    label=_("Nonconformity details, documented evidence"),
+                    name='nc_description',
+                    required=true,
+                    rows=5,
+                    placeholder=_("Detailed description of the nonconformity..."),
+                    help_text=_("Describe the related activity, the violated procedure, instruction, or standard clause")
+                ) }}
 
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Proposed action") }}</label>
-                    <textarea name="proposed_action" class="form-control" rows="3"
-                              placeholder="{{ _("Suggested measures") }}"></textarea>
-                </div>
+                {{ render_accessible_textarea(
+                    field_id='proposed_action',
+                    label=_("Proposed action"),
+                    name='proposed_action',
+                    rows=3,
+                    placeholder=_("Suggested measures")
+                ) }}
 
                 <div class="border-top pt-3">
                     <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>

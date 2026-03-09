@@ -1590,9 +1590,10 @@ function renderAnalysisStats(analysisTypes) {
 }
 
 function approveResult(id) {
+  var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
   fetch('/api/update_result_status/' + id + '/approved', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }
   })
   .then(res => res.json())
   .then(data => {
@@ -1625,9 +1626,10 @@ document.getElementById('reject-form').addEventListener('submit', function(e) {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + I18N.processing;
 
+  var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
   fetch('/api/update_result_status/' + id + '/rejected', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
     body: JSON.stringify({
       rejection_category: cat,
       rejection_comment: catText,

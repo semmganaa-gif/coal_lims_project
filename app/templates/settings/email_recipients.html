@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from 'macros/accessibility_helpers.html' import render_accessible_textarea %}
+
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
@@ -22,37 +24,26 @@
                     <form method="POST">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                        <!-- TO addresses -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-send me-1 text-primary"></i>{{ _("TO (Recipients)") }}
-                                <span class="text-danger">*</span>
-                            </label>
-                            <textarea
-                                name="recipients_to"
-                                class="form-control"
-                                rows="3"
-                                placeholder="user1@mmc.mn, user2@mmc.mn"
-                                required>{{ current_to }}</textarea>
-                            <small class="text-muted">
-                                {{ _("Separate multiple addresses with commas. Example: user1@mmc.mn, user2@mmc.mn") }}
-                            </small>
-                        </div>
+                        {{ render_accessible_textarea(
+                            field_id='recipients_to',
+                            label=_("TO (Recipients)"),
+                            name='recipients_to',
+                            value=current_to,
+                            required=true,
+                            rows=3,
+                            placeholder='user1@mmc.mn, user2@mmc.mn',
+                            help_text=_("Separate multiple addresses with commas. Example: user1@mmc.mn, user2@mmc.mn")
+                        ) }}
 
-                        <!-- CC addresses -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                <i class="bi bi-files me-1 text-secondary"></i>{{ _("CC (Carbon Copy)") }}
-                            </label>
-                            <textarea
-                                name="recipients_cc"
-                                class="form-control"
-                                rows="3"
-                                placeholder="manager@mmc.mn, supervisor@mmc.mn">{{ current_cc }}</textarea>
-                            <small class="text-muted">
-                                {{ _("Carbon copy addresses (optional)") }}
-                            </small>
-                        </div>
+                        {{ render_accessible_textarea(
+                            field_id='recipients_cc',
+                            label=_("CC (Carbon Copy)"),
+                            name='recipients_cc',
+                            value=current_cc,
+                            rows=3,
+                            placeholder='manager@mmc.mn, supervisor@mmc.mn',
+                            help_text=_("Carbon copy addresses (optional)")
+                        ) }}
 
                         <hr>
 

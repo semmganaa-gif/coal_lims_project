@@ -64,14 +64,14 @@ class AnalysisResultLog(HashableMixin, db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
     user = db.relationship("User", foreign_keys=[user_id], backref=db.backref("logs", lazy="select"))
 
-    # ✅ SET NULL: Sample устахад log үлдэнэ
+    # SET NULL: Sample устахад log үлдэнэ
     sample_id = db.Column(
         db.Integer,
         db.ForeignKey("sample.id", ondelete="SET NULL"),
         index=True,
         nullable=True,  # NULL болох боломжтой
     )
-    # ✅ SET NULL: Result устахад log үлдэнэ
+    # SET NULL: Result устахад log үлдэнэ
     analysis_result_id = db.Column(
         db.Integer,
         db.ForeignKey("analysis_result.id", ondelete="SET NULL"),
@@ -80,17 +80,17 @@ class AnalysisResultLog(HashableMixin, db.Model):
     )
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
 
-    # ✅ ШИНЭ: Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй)
+    # Анхны хадгалсан химичийн ID (хэзээ ч өөрчлөгдөхгүй)
     original_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True, index=True)
     original_user = db.relationship("User", foreign_keys=[original_user_id])
 
-    # ✅ ШИНЭ: Анхны хадгалсан цаг (хэзээ ч өөрчлөгдөхгүй)
+    # Анхны хадгалсан цаг (хэзээ ч өөрчлөгдөхгүй)
     original_timestamp = db.Column(db.DateTime, nullable=True)
 
-    # ✅ ШИНЭ: Дээжний код хадгалах (sample устсан ч харагдах)
+    # Дээжний код хадгалах (sample устсан ч харагдах)
     sample_code_snapshot = db.Column(db.String(100), nullable=True)
 
-    # ✅ ШИНЭ: Hash checksum (өөрчлөгдсөн эсэхийг шалгах)
+    # Hash checksum (өөрчлөгдсөн эсэхийг шалгах)
     data_hash = db.Column(db.String(64), nullable=True)  # SHA-256
 
     result = db.relationship(
@@ -107,7 +107,7 @@ class AnalysisResultLog(HashableMixin, db.Model):
     rejection_subcategory = db.Column(db.String(100))
     reason = db.Column(db.String(255), nullable=True)
 
-    # 🛑 ШИНЭ: Алдаа гарч байсан хэсэг
+    # KPI алдааны шалтгаан
     error_reason = db.Column(db.String(50), nullable=True)
 
     # Composite indexes - audit log query-уудыг хурдасгах
@@ -119,9 +119,11 @@ class AnalysisResultLog(HashableMixin, db.Model):
 
     def _get_hash_data(self) -> str:
         """HashableMixin: Return data string for hashing."""
+        # timestamp-г тогтмол формат руу хөрвүүлнэ (DB round-trip-д өөрчлөгдөхгүй)
+        ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f') if self.timestamp else ''
         return (
             f"{self.sample_id}|{self.analysis_code}|{self.action}|"
-            f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{self.timestamp}"
+            f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{ts}"
         )
 
     def __repr__(self) -> str:

@@ -158,6 +158,7 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
+    const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     let searchTimer;
     $('#sampleSearch').on('input', function() {
         clearTimeout(searchTimer);
@@ -175,10 +176,10 @@ $(document).ready(function() {
                 let html = '';
                 data.forEach(function(s) {
                     html += `<a href="#" class="list-group-item list-group-item-action py-2 sample-pick"
-                                data-id="${s.id}" data-code="${s.sample_code}" data-client="${s.client_name}">
-                        <strong>${s.sample_code}</strong>
-                        <small class="text-muted ms-2">${s.client_name}</small>
-                        <span class="badge bg-secondary float-end">${s.lab_type}</span>
+                                data-id="${s.id}" data-code="${_e(s.sample_code)}" data-client="${_e(s.client_name)}">
+                        <strong>${_e(s.sample_code)}</strong>
+                        <small class="text-muted ms-2">${_e(s.client_name)}</small>
+                        <span class="badge bg-secondary float-end">${_e(s.lab_type)}</span>
                     </a>`;
                 });
                 $('#sampleResults').html('<div class="list-group list-group-flush">' + html + '</div>').show();
@@ -193,7 +194,7 @@ $(document).ready(function() {
         const client = $(this).data('client');
         $('#related_sample_id').val(id);
         $('#selectedSample').html(
-            `<strong>${code}</strong> <small class="text-muted ms-2">${client}</small>
+            `<strong>${_e(code)}</strong> <small class="text-muted ms-2">${_e(client)}</small>
              <button type="button" class="btn btn-sm btn-outline-danger float-end clear-sample">
                 <i class="bi bi-x"></i>
              </button>`

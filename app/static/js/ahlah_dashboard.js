@@ -1,5 +1,5 @@
 /* ===============================
- * 1) DoD,D?D,-?.O_??D???D3?, renderer (raw_data) - D`OrD?D-D? D?D?D'D~D>D`D?D?
+ * 1) Review data renderer (raw_data) - Parallel table display
  * =============================== */
 const DEFAULT_PARALLEL_SCHEMA = {
   title: "Parallel Measurements",
@@ -317,7 +317,7 @@ function ReviewDataRenderer(params) {
   const hasSummary = Boolean(summaryBlock);
 
   // Debug - console дээр харуулах
-  console.log('ReviewDataRenderer:', code, 'raw_data:', JSON.stringify(raw), 'parallels:', parallels.length);
+  logger.debug('ReviewDataRenderer:', code, 'raw_data:', JSON.stringify(raw), 'parallels:', parallels.length);
 
   // raw object-ын бодит утгууд (p1, p2, parallels гэх мэт - _schema-аас бусад)
   const meaningfulKeys = Object.keys(raw).filter(k => k !== '_schema' && raw[k] !== null && raw[k] !== undefined && raw[k] !== '');
@@ -420,9 +420,9 @@ function updateDashboardMetrics(rows) {
  * 2) Actions renderer (approve / reject)
  * =============================== */
 function ActionsRenderer(params) {
-  const resultId = params.data.result_id;
-  const sampleCode = params.data.sample_code;
-  const analysisName = params.data.analysis_name;
+  const resultId = escapeHtml(params.data.result_id);
+  const sampleCode = escapeHtml(params.data.sample_code);
+  const analysisName = escapeHtml(params.data.analysis_name);
 
   const approveBtn = `
     <button type="button" class="btn btn-success btn-sm w-100 mb-1 btn-approve" data-id="${resultId}">
@@ -471,15 +471,15 @@ const gridOptions = {
            // window.ERROR_LABELS нь дээд талд тодорхойлогдсон map
            const reasonText = window.ERROR_LABELS[errorReason] || errorReason || 'Rejected';
            badge = `<div class="mt-1"><span class="badge bg-danger text-wrap text-start" style="line-height:1.3; font-weight:normal;">
-                      <i class="bi bi-exclamation-triangle-fill"></i> ${reasonText}
+                      <i class="bi bi-exclamation-triangle-fill"></i> ${escapeHtml(reasonText)}
                     </span></div>`;
         } else if (status === 'pending_review') {
            badge = '<span class="badge bg-warning text-dark ms-1">Pending</span>';
         }
 
         return `<div class="d-flex flex-column py-1">
-                  <span class="fw-bold text-primary" style="font-size:0.95rem;">${p.sample_code}</span>
-                  <small class="text-muted fw-semibold">${p.analysis_name}</small>
+                  <span class="fw-bold text-primary" style="font-size:0.95rem;">${escapeHtml(p.sample_code)}</span>
+                  <small class="text-muted fw-semibold">${escapeHtml(p.analysis_name)}</small>
                   ${badge}
                 </div>`;
       },
@@ -517,8 +517,8 @@ const gridOptions = {
       headerName: "Analyst / Date",
       cellRenderer: p => `
         <div class="small lh-sm py-1">
-          <div class="fw-bold"><i class="bi bi-person-circle"></i> ${p.data.user_name}</div>
-          <div class="text-muted" style="font-size:0.75rem;">${p.data.updated_at}</div>
+          <div class="fw-bold"><i class="bi bi-person-circle"></i> ${escapeHtml(p.data.user_name)}</div>
+          <div class="text-muted" style="font-size:0.75rem;">${escapeHtml(p.data.updated_at)}</div>
         </div>`,
       width: 170,
       cellStyle: {verticalAlign: 'middle'}
@@ -573,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
       updateDashboardMetrics(data);
     })
     .catch(error => {
-      console.error('Error:', error);
+      logger.error('Grid data load error:', error);
       gridDiv.innerHTML = '<div class="alert alert-danger m-3">Өгөгдөл ачаалахад алдаа гарлаа.</div>';
     });
 
@@ -584,11 +584,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = btn.dataset.id;
         if(!confirm("Энэ үр дүнг зөвшөөрөх үү?")) return;
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/api/update_result_status/${id}/approved`;
-        document.body.appendChild(form);
-        form.submit();
+        btn.disabled = true;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        fetch(`/api/update_result_status/${id}/approved`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.message === 'OK') {
+            location.reload();
+          } else {
+            alert(data.message || 'Алдаа гарлаа');
+            btn.disabled = false;
+          }
+        })
+        .catch(function(err) {
+          logger.error('Approve error:', err);
+          alert('Сүлжээний алдаа');
+          btn.disabled = false;
+        });
     }
   });
 });
@@ -623,10 +638,12 @@ $('#reject-form').on('submit', function (e) {
   const $btn = $(this).find('button[type="submit"]');
   $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Боловсруулж байна...');
 
+  const csrfToken = $('meta[name="csrf-token"]').attr('content') || '';
   $.ajax({
     url: '/api/update_result_status/' + id + '/rejected',
     method: 'POST',
     contentType: 'application/json',
+    headers: { 'X-CSRFToken': csrfToken },
     data: JSON.stringify({
       rejection_category: cat,
       rejection_comment:  comment, // Сонголтын текстийг коммент болгож явуулна
@@ -671,7 +688,7 @@ function loadAhlahKpiSummary() {
       }
     })
     .catch(function (err) {
-      console.error('❌ KPI summary load failed:', err);
+      logger.error('KPI summary load failed:', err);
     });
 }
 
@@ -721,7 +738,7 @@ function loadAhlahStats() {
       }
     })
     .catch(function(err) {
-      console.error('❌ Ahlah stats load failed:', err);
+      logger.error('Ahlah stats load failed:', err);
     });
 }
 

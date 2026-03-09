@@ -94,7 +94,7 @@ class SerialBalance {
             return true;
 
         } catch (err) {
-            console.error("Balance connect error:", err);
+            logger.error("Balance connect error:", err);
 
             if (err.name === 'NotFoundError') {
                 this._emitError("No balance selected.");
@@ -159,7 +159,7 @@ class SerialBalance {
             this._handleDisconnect();
 
         } catch (err) {
-            console.error("Disconnect error:", err);
+            logger.error("Disconnect error:", err);
         }
     }
 
@@ -201,7 +201,7 @@ class SerialBalance {
             return weight;
 
         } catch (err) {
-            console.error("Read weight error:", err);
+            logger.error("Read weight error:", err);
             this._emitError(`Error: ${err.message}`);
             return null;
         }
@@ -297,7 +297,7 @@ class SerialBalance {
             }
         }
 
-        console.warn("Could not parse weight response:", response);
+        logger.warn("Could not parse weight response:", response);
         return null;
     }
 
@@ -320,7 +320,7 @@ class SerialBalance {
      * @private
      */
     _emitError(message) {
-        console.error("Balance error:", message);
+        logger.error("Balance error:", message);
 
         if (this.onError) {
             this.onError(message);
@@ -369,7 +369,7 @@ class BalanceGridIntegration {
 
         const focusedCell = this.gridApi.getFocusedCell();
         if (!focusedCell || focusedCell.column.getColId() !== this.weightColumnField) {
-            console.log("Weight column is not focused");
+            logger.log("Weight column is not focused");
             return false;
         }
 

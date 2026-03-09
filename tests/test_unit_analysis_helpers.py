@@ -5,11 +5,11 @@ Analysis helpers and routes tests
 """
 
 import pytest
-from app.routes.analysis.helpers import (
+from app.config.qc_config import (
     QC_PARAM_CODES, QC_TOLERANCE, QC_SPEC_DEFAULT,
     COMPOSITE_QC_CODES, COMPOSITE_QC_LIMITS, TIMER_PRESETS,
-    analysis_role_required
 )
+from app.utils.decorators import analysis_role_required
 
 
 class TestQCConstants:
@@ -166,8 +166,9 @@ class TestQCToleranceValues:
         assert QC_TOLERANCE['Vdaf'] == 0.50
 
     def test_csn_tolerance(self):
-        """CSN tolerance value"""
-        assert QC_TOLERANCE['CSN'] == 0.30
+        """CSN was removed from QC_TOLERANCE"""
+        # CSN устгагдсан — QC_TOLERANCE-д байхгүй
+        assert 'CSN' not in QC_TOLERANCE
 
     def test_gi_tolerance(self):
         """Gi tolerance value"""
@@ -190,9 +191,9 @@ class TestQCSpecDefault:
         assert spec is not None
 
     def test_csn_spec(self):
-        """CSN spec range"""
-        spec = QC_SPEC_DEFAULT.get('CSN')
-        assert spec is not None
+        """CSN was removed from QC_SPEC_DEFAULT"""
+        # CSN устгагдсан
+        assert 'CSN' not in QC_SPEC_DEFAULT
 
     def test_gi_spec(self):
         """Gi spec range"""

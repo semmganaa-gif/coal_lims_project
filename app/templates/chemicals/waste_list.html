@@ -188,7 +188,7 @@ function saveRecord(wasteId, year, month, value) {
       alert("{{ _('Error') }}" + ': ' + data.error);
     }
   })
-  .catch(err => console.error(err));
+  .catch(err => logger.error(err));
 }
 
 function saveBalance(wasteId, year, value) {
@@ -207,7 +207,7 @@ function saveBalance(wasteId, year, value) {
   .then(data => {
     if (!data.success) alert("{{ _('Error') }}" + ': ' + data.error);
   })
-  .catch(err => console.error(err));
+  .catch(err => logger.error(err));
 }
 
 function updateRowTotal(wasteId) {

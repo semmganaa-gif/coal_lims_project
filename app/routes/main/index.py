@@ -62,6 +62,7 @@ def get_report_email_recipients():
 
 from app.utils.sorting import custom_sample_sort_key
 from app.utils.database import safe_commit
+from app.utils.audit import log_audit
 from app.utils.settings import get_sample_type_choices_map, get_unit_abbreviations
 
 # Monitoring
@@ -301,6 +302,18 @@ def register_routes(bp):
                 if failed_samples:
                     flash(f'Анхааруулга: Дараах дээжүүд бүртгэгдсэнгүй: {", ".join(failed_samples)}', "warning")
 
+                # Audit: Дээж бүртгэлийн лог
+                for code in successful_samples:
+                    log_audit(
+                        action='sample_created',
+                        resource_type='Sample',
+                        details={
+                            'sample_code': code,
+                            'client_name': client_name,
+                            'sample_type': sample_type,
+                        }
+                    )
+
                 # ✅ Prometheus metrics: Дээж бүртгэлийг track хийх
                 for _ in range(count):
                     track_sample(client=client_name, sample_type=sample_type)
@@ -358,7 +371,6 @@ def register_routes(bp):
                             f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ.",
                             "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна."
                         ):
-                            # ✅ Бүх template variable дамжуулах
                             return render_template(
                                 "index.html",
                                 title="Нүүр хуудас",
@@ -370,6 +382,18 @@ def register_routes(bp):
                                 com_primary_products=COM_PRIMARY_PRODUCTS,
                                 com_secondary_map=COM_SECONDARY_MAP,
                                 unit_abbreviations=get_unit_abbreviations(),
+                            )
+                        # Audit: WTL дээж бүртгэл
+                        for name in all_wtl_names:
+                            log_audit(
+                                action='sample_created',
+                                resource_type='Sample',
+                                details={
+                                    'sample_code': f"{lab_number}_{name}",
+                                    'client_name': client_name,
+                                    'sample_type': sample_type,
+                                    'lab_type': 'water',
+                                }
                             )
 
                     return redirect(url_for("main.index", active_tab="add-pane"))
@@ -423,6 +447,17 @@ def register_routes(bp):
                     f"Дээж амжилттай бүртгэгдлээ. {final_sample_code}",
                     f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" дээж аль хэдийн бүртгэгдсэн байна.'
                 )
+                # Audit: LAB дээж бүртгэл
+                log_audit(
+                    action='sample_created',
+                    resource_type='Sample',
+                    resource_id=sample.id,
+                    details={
+                        'sample_code': final_sample_code,
+                        'client_name': client_name,
+                        'sample_type': sample_type,
+                    }
+                )
                 return redirect(url_for("main.index", active_tab="add-pane"))
 
             # --- 4) WTL – MG (structured) / Test (manual sample_code) ---
@@ -471,6 +506,18 @@ def register_routes(bp):
                 safe_commit(
                     "Шинэ дээж амжилттай бүртгэгдлээ.",
                     f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_sample_code}" дээж аль хэдийн бүртгэгдсэн байна.'
+                )
+                # Audit: WTL MG/Test дээж бүртгэл
+                log_audit(
+                    action='sample_created',
+                    resource_type='Sample',
+                    resource_id=sample.id,
+                    details={
+                        'sample_code': final_sample_code,
+                        'client_name': client_name,
+                        'sample_type': sample_type,
+                        'lab_type': 'water',
+                    }
                 )
                 return redirect(url_for("main.index", active_tab="add-pane"))
 

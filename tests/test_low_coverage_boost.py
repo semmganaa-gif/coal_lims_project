@@ -486,17 +486,17 @@ class TestSentryIntegration:
 class TestAuditLogService:
     """Test audit log service"""
 
-    def test_log_action(self, app):
-        """Test log_action function"""
-        from app.services.audit_log_service import log_action
+    def test_log_audit(self, app):
+        """Test log_audit function (replaced audit_log_service.log_action)"""
+        from app.utils.audit import log_audit
 
         with app.app_context():
             # Should not raise
-            log_action(
+            log_audit(
                 action='test_action',
-                entity_type='sample',
-                entity_id=123,
-                details='Test details'
+                resource_type='Sample',
+                resource_id=123,
+                details={'info': 'Test details'}
             )
 
     def test_to_jsonable_dataclass(self):

@@ -12,7 +12,9 @@
     return String(v)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function fmt(v, digits) {
@@ -522,9 +524,6 @@
     const base = normalizeCode(analysisCode);
     const fn   = MINI_TABLE_RENDERERS[base];
 
-    // debug-д
-    // console.log'[mini] code=', analysisCode, '→ base=', base, 'hasRenderer=', !!fn (removed for production)
-
     if (!fn) {
       return renderDefaultRaw(rawData);
     }
@@ -532,7 +531,7 @@
     try {
       return fn(rawData || {});
     } catch (e) {
-      console.error('mini table render error', e, analysisCode, rawData);
+      logger.error('mini table render error', e, analysisCode, rawData);
       return renderDefaultRaw(rawData);
     }
   }

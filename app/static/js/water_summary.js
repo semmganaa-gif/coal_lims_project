@@ -57,12 +57,12 @@ const WaterSummaryGrid = (function() {
         gridApi.autoSizeColumns(allColumnIds, false);
       }
     } catch (e) {
-      console.warn('Auto size columns error:', e);
+      logger.warn('Auto size columns error:', e);
       // Fallback: sizeColumnsToFit
       try {
         gridApi.sizeColumnsToFit();
       } catch (e2) {
-        console.warn('Size columns to fit error:', e2);
+        logger.warn('Size columns to fit error:', e2);
       }
     }
   }
@@ -75,7 +75,7 @@ const WaterSummaryGrid = (function() {
       const state = gridApi.getColumnState();
       localStorage.setItem(COL_STATE_KEY, JSON.stringify(state));
     } catch (e) {
-      console.warn('Failed to save column state:', e);
+      logger.warn('Failed to save column state:', e);
     }
   }
 
@@ -88,7 +88,7 @@ const WaterSummaryGrid = (function() {
         gridApi.applyColumnState({ state: state, applyOrder: true });
       }
     } catch (e) {
-      console.warn('Failed to restore column state:', e);
+      logger.warn('Failed to restore column state:', e);
     }
   }
 
@@ -414,7 +414,7 @@ const WaterSummaryGrid = (function() {
         if (callback) callback(null, data);
       })
       .catch(function(err) {
-        console.error('Load data error:', err);
+        logger.error('Load data error:', err);
         if (callback) callback(err, null);
       });
   }
@@ -424,7 +424,7 @@ const WaterSummaryGrid = (function() {
   function renderGrid(rows) {
     const gridDiv = document.getElementById('waterSummaryGrid');
     if (!gridDiv) {
-      console.error('Grid container #waterSummaryGrid not found');
+      logger.error('Grid container #waterSummaryGrid not found');
       return;
     }
 
@@ -461,7 +461,7 @@ const WaterSummaryGrid = (function() {
         gridApi = gridOptions.api;
       }
     } catch (e) {
-      console.error('Grid creation error:', e);
+      logger.error('Grid creation error:', e);
       gridDiv.textContent = 'Хүснэгт үүсгэхэд алдаа: ' + e.message;
       gridDiv.style.cssText = 'padding:40px;text-align:center;color:#dc3545;';
     }
@@ -783,6 +783,6 @@ document.addEventListener('DOMContentLoaded', function() {
   try {
     WaterSummaryGrid.init();
   } catch (e) {
-    console.error('WaterSummaryGrid init error:', e);
+    logger.error('WaterSummaryGrid init error:', e);
   }
 });

@@ -162,10 +162,10 @@
 
       if (restored > 0) {
         gridApi.refreshCells({ force: true });
-        console.log(`✅ Restored ${restored} draft weights`);
+        logger.log(`✅ Restored ${restored} draft weights`);
       }
     } catch(e) {
-      console.warn('Failed to restore drafts:', e);
+      logger.warn('Failed to restore drafts:', e);
     }
   }
 
@@ -195,7 +195,7 @@
       const data = await res.json();
       setRowData(data.samples || []);
     }catch(err){
-      console.error(err);
+      logger.error(err);
       toast('{{ _("Error loading data.") }}', 'danger');
       setRowData([]);
     }finally{
@@ -242,7 +242,7 @@
 
       fetchEligible();
     }catch(err){
-      console.error(err); toast('Server error.', 'danger');
+      logger.error(err); toast('Server error.', 'danger');
     }
   });
 
@@ -271,7 +271,7 @@
         toast(js.message || 'Weight updated.', 'success');
         // Draft устгах
         if (draftMgr) draftMgr.purge([String(id)]);
-      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
+      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
       return;
     }
 
@@ -286,7 +286,7 @@
         if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
         toast(js.message || 'OK', 'success');
         fetchEligible();
-      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
+      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
       return;
     }
 
@@ -303,7 +303,7 @@
         // Draft устгах
         if (draftMgr) draftMgr.purge([String(id)]);
         fetchEligible();
-      }catch(err){ console.error(err); toast('Network error.', 'danger'); }
+      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
       return;
     }
   });
@@ -372,7 +372,7 @@
 
   if (window.labBalance) {
     window.labBalance.onStatusChange = (msg) => {
-      console.log('Balance status:', msg);
+      logger.log('Balance status:', msg);
     };
 
     window.labBalance.onError = (msg) => {
@@ -438,9 +438,9 @@
     // ✨ Draft Manager
     if (typeof LIMSDraftManager !== 'undefined') {
       draftMgr = new LIMSDraftManager('mass');
-      console.log('✅ Mass Draft Manager initialized');
+      logger.log('✅ Mass Draft Manager initialized');
     } else {
-      console.warn('⚠️ LIMSDraftManager not loaded, using fallback');
+      logger.warn('⚠️ LIMSDraftManager not loaded, using fallback');
       draftMgr = {
         save: (data) => localStorage.setItem('draft_inputs_mass', JSON.stringify(data)),
         restore: () => JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}'),
@@ -467,10 +467,10 @@
         editableColIds: ['weight'],
         enterNavigatesVerticallyAfterEdit: true
       });
-      console.log('✅ Mass Grid initialized with LIMS_AGGRID factory');
+      logger.log('✅ Mass Grid initialized with LIMS_AGGRID factory');
     } else {
       // Fallback: manual grid
-      console.warn('⚠️ LIMS_AGGRID not available, using fallback');
+      logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
       const gridOptions = {
         theme: 'legacy',
         columnDefs,

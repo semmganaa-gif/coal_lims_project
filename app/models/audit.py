@@ -46,9 +46,11 @@ class AuditLog(HashableMixin, db.Model):
 
     def _get_hash_data(self) -> str:
         """HashableMixin: Return data string for hashing."""
+        # timestamp-г тогтмол формат руу хөрвүүлнэ (DB round-trip-д өөрчлөгдөхгүй)
+        ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f') if self.timestamp else ''
         return (
             f"{self.user_id}|{self.action}|{self.resource_type}|"
-            f"{self.resource_id}|{self.timestamp}|{self.details}|{self.ip_address}"
+            f"{self.resource_id}|{ts}|{self.details}|{self.ip_address}"
         )
 
     def __repr__(self) -> str:
