@@ -200,7 +200,6 @@ def register_routes(bp):
                     wtl_module=form.wtl_module.data,
                     wtl_supplier=form.wtl_supplier.data,
                     wtl_vehicle=form.wtl_vehicle.data,
-                    sample_date=common["sample_date"],
                     **common,
                 )
                 if not result.success:

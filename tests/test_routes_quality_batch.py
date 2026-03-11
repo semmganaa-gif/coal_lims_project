@@ -88,22 +88,24 @@ class TestCapaRoutes:
         )
         p_db = patch('app.routes.quality.capa.db')
         p_model = patch('app.routes.quality.capa.CorrectiveAction')
+        p_repo = patch('app.routes.quality.capa.CAPARepository')
         p_safe = patch('app.routes.quality.capa.safe_commit')
         p_stats = patch('app.routes.quality.capa.calculate_status_stats')
         p_seqcode = patch('app.routes.quality.capa.generate_sequential_code')
         p_render = patch('app.routes.quality.capa.render_template')
         p_cu = patch('app.routes.quality.capa.current_user', self.mock_user)
 
-        self.patches = [p_login, p_qedit, p_db, p_model, p_safe, p_stats,
+        self.patches = [p_login, p_qedit, p_db, p_model, p_repo, p_safe, p_stats,
                         p_seqcode, p_render, p_cu]
         mocks = [p.start() for p in self.patches]
-        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_safe,
-         self.m_stats, self.m_seqcode, self.m_render, _) = mocks
+        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_repo,
+         self.m_safe, self.m_stats, self.m_seqcode, self.m_render, _) = mocks
 
         self.m_render.return_value = "rendered"
         self.m_safe.return_value = True
         self.m_stats.return_value = {'open': 0, 'in_progress': 0, 'reviewed': 0, 'closed': 0}
         self.m_seqcode.return_value = "CA-001"
+        self.m_repo.get_all.return_value = []
 
         # Register routes
         bp = Blueprint('quality', __name__, url_prefix='/quality')
@@ -121,9 +123,7 @@ class TestCapaRoutes:
     # -- capa_list --
 
     def test_capa_list_success(self):
-        mock_query = MagicMock()
-        mock_query.order_by.return_value.limit.return_value.all.return_value = []
-        self.m_model.query = mock_query
+        self.m_repo.get_all.return_value = []
 
         with self.app.app_context():
             resp = self.client.get('/quality/capa')
@@ -154,7 +154,7 @@ class TestCapaRoutes:
                 'notes': 'Some notes',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
 
     # -- capa_new POST empty description --
 
@@ -192,14 +192,15 @@ class TestCapaRoutes:
     def test_capa_detail_found(self):
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.get('/quality/capa/1')
         assert resp.status_code == 200
 
     def test_capa_detail_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.get('/quality/capa/999')
         assert resp.status_code == 404
@@ -209,7 +210,7 @@ class TestCapaRoutes:
     def test_capa_fill_success(self):
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = True
 
         with self.app.app_context():
@@ -223,7 +224,8 @@ class TestCapaRoutes:
         assert mock_record.status == 'in_progress'
 
     def test_capa_fill_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/capa/999/fill', data={})
         assert resp.status_code == 404
@@ -231,7 +233,7 @@ class TestCapaRoutes:
     def test_capa_fill_commit_failure(self):
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -247,7 +249,7 @@ class TestCapaRoutes:
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
         mock_record.issue_description = "Original"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = True
 
         with self.app.app_context():
@@ -265,7 +267,7 @@ class TestCapaRoutes:
     def test_capa_review_success(self):
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = True
 
         with self.app.app_context():
@@ -285,7 +287,8 @@ class TestCapaRoutes:
         assert mock_record.technical_manager_id == 1
 
     def test_capa_review_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/capa/999/review', data={})
         assert resp.status_code == 404
@@ -293,7 +296,7 @@ class TestCapaRoutes:
     def test_capa_review_commit_failure(self):
         mock_record = MagicMock()
         mock_record.ca_number = "CA-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -329,22 +332,24 @@ class TestImprovementRoutes:
         )
         p_db = patch('app.routes.quality.improvement.db')
         p_model = patch('app.routes.quality.improvement.ImprovementRecord')
+        p_repo = patch('app.routes.quality.improvement.ImprovementRepository')
         p_safe = patch('app.routes.quality.improvement.safe_commit')
         p_stats = patch('app.routes.quality.improvement.calculate_status_stats')
         p_seqcode = patch('app.routes.quality.improvement.generate_sequential_code')
         p_render = patch('app.routes.quality.improvement.render_template')
         p_cu = patch('app.routes.quality.improvement.current_user', self.mock_user)
 
-        self.patches = [p_login, p_qedit, p_db, p_model, p_safe, p_stats,
+        self.patches = [p_login, p_qedit, p_db, p_model, p_repo, p_safe, p_stats,
                         p_seqcode, p_render, p_cu]
         mocks = [p.start() for p in self.patches]
-        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_safe,
-         self.m_stats, self.m_seqcode, self.m_render, _) = mocks
+        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_repo,
+         self.m_safe, self.m_stats, self.m_seqcode, self.m_render, _) = mocks
 
         self.m_render.return_value = "rendered"
         self.m_safe.return_value = True
         self.m_stats.return_value = {}
         self.m_seqcode.return_value = "IMP-001"
+        self.m_repo.get_all.return_value = []
 
         bp = Blueprint('quality', __name__, url_prefix='/quality')
         from app.routes.quality.improvement import register_routes
@@ -361,9 +366,7 @@ class TestImprovementRoutes:
     # -- improvement_list --
 
     def test_improvement_list(self):
-        mock_query = MagicMock()
-        mock_query.order_by.return_value.limit.return_value.all.return_value = []
-        self.m_model.query = mock_query
+        self.m_repo.get_all.return_value = []
 
         with self.app.app_context():
             resp = self.client.get('/quality/improvement')
@@ -391,7 +394,7 @@ class TestImprovementRoutes:
                 'documentation': 'Doc ref',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
 
     # -- improvement_new POST empty activity --
 
@@ -428,14 +431,15 @@ class TestImprovementRoutes:
     def test_improvement_detail_found(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.get('/quality/improvement/1')
         assert resp.status_code == 200
 
     def test_improvement_detail_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.get('/quality/improvement/999')
         assert resp.status_code == 404
@@ -445,7 +449,7 @@ class TestImprovementRoutes:
     def test_improvement_fill_success(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/1/fill', data={
@@ -459,7 +463,8 @@ class TestImprovementRoutes:
         assert mock_record.status == 'in_progress'
 
     def test_improvement_fill_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/999/fill', data={})
         assert resp.status_code == 404
@@ -467,7 +472,7 @@ class TestImprovementRoutes:
     def test_improvement_fill_commit_failure(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -484,7 +489,7 @@ class TestImprovementRoutes:
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
         mock_record.activity_description = "Original"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/1/fill', data={
@@ -498,7 +503,7 @@ class TestImprovementRoutes:
     def test_improvement_review_success(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/1/review', data={
@@ -513,7 +518,8 @@ class TestImprovementRoutes:
         assert mock_record.technical_manager_id == 1
 
     def test_improvement_review_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/999/review', data={})
         assert resp.status_code == 404
@@ -521,7 +527,7 @@ class TestImprovementRoutes:
     def test_improvement_review_commit_failure(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -535,7 +541,7 @@ class TestImprovementRoutes:
     def test_improvement_review_boolean_false_values(self):
         mock_record = MagicMock()
         mock_record.record_no = "IMP-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/improvement/1/review', data={
@@ -570,22 +576,24 @@ class TestNonConformityRoutes:
         )
         p_db = patch('app.routes.quality.nonconformity.db')
         p_model = patch('app.routes.quality.nonconformity.NonConformityRecord')
+        p_repo = patch('app.routes.quality.nonconformity.NonConformityRepository')
         p_safe = patch('app.routes.quality.nonconformity.safe_commit')
         p_stats = patch('app.routes.quality.nonconformity.calculate_status_stats')
         p_seqcode = patch('app.routes.quality.nonconformity.generate_sequential_code')
         p_render = patch('app.routes.quality.nonconformity.render_template')
         p_cu = patch('app.routes.quality.nonconformity.current_user', self.mock_user)
 
-        self.patches = [p_login, p_qedit, p_db, p_model, p_safe, p_stats,
+        self.patches = [p_login, p_qedit, p_db, p_model, p_repo, p_safe, p_stats,
                         p_seqcode, p_render, p_cu]
         mocks = [p.start() for p in self.patches]
-        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_safe,
-         self.m_stats, self.m_seqcode, self.m_render, _) = mocks
+        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_repo,
+         self.m_safe, self.m_stats, self.m_seqcode, self.m_render, _) = mocks
 
         self.m_render.return_value = "rendered"
         self.m_safe.return_value = True
         self.m_stats.return_value = {}
         self.m_seqcode.return_value = "NC-001"
+        self.m_repo.get_all.return_value = []
 
         bp = Blueprint('quality', __name__, url_prefix='/quality')
         from app.routes.quality.nonconformity import register_routes
@@ -602,9 +610,7 @@ class TestNonConformityRoutes:
     # -- nonconformity_list --
 
     def test_nonconformity_list(self):
-        mock_query = MagicMock()
-        mock_query.order_by.return_value.limit.return_value.all.return_value = []
-        self.m_model.query = mock_query
+        self.m_repo.get_all.return_value = []
 
         with self.app.app_context():
             resp = self.client.get('/quality/nonconformity')
@@ -630,7 +636,7 @@ class TestNonConformityRoutes:
                 'proposed_action': 'Investigate',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
 
     # -- nonconformity_new POST missing detector_name --
 
@@ -679,14 +685,15 @@ class TestNonConformityRoutes:
     def test_nonconformity_detail_found(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.get('/quality/nonconformity/1')
         assert resp.status_code == 200
 
     def test_nonconformity_detail_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.get('/quality/nonconformity/999')
         assert resp.status_code == 404
@@ -696,7 +703,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_investigate_success(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/1/investigate', data={
@@ -713,7 +720,8 @@ class TestNonConformityRoutes:
         assert mock_record.responsible_user_id == 1
 
     def test_nonconformity_investigate_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/999/investigate', data={})
         assert resp.status_code == 404
@@ -721,7 +729,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_investigate_commit_failure(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -734,7 +742,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_investigate_no_deadline(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/1/investigate', data={
@@ -754,7 +762,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_review_success(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/1/review', data={
@@ -769,7 +777,8 @@ class TestNonConformityRoutes:
         assert mock_record.manager_id == 1
 
     def test_nonconformity_review_not_found(self):
-        self.m_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        self.m_repo.get_by_id_or_404.side_effect = NotFound()
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/999/review', data={})
         assert resp.status_code == 404
@@ -777,7 +786,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_review_commit_failure(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
         self.m_safe.return_value = False
 
         with self.app.app_context():
@@ -791,7 +800,7 @@ class TestNonConformityRoutes:
     def test_nonconformity_review_false_booleans(self):
         mock_record = MagicMock()
         mock_record.record_no = "NC-001"
-        self.m_db.session.get.return_value = mock_record
+        self.m_repo.get_by_id_or_404.return_value = mock_record
 
         with self.app.app_context():
             resp = self.client.post('/quality/nonconformity/1/review', data={
@@ -825,19 +834,21 @@ class TestEnvironmentalRoutes:
         )
         p_db = patch('app.routes.quality.environmental.db')
         p_model = patch('app.routes.quality.environmental.EnvironmentalLog')
+        p_repo = patch('app.routes.quality.environmental.EnvironmentalLogRepository')
         p_safe = patch('app.routes.quality.environmental.safe_commit')
         p_render = patch('app.routes.quality.environmental.render_template')
         p_flash = patch('app.routes.quality.environmental.flash')
         p_cu = patch('app.routes.quality.environmental.current_user', self.mock_user)
 
-        self.patches = [p_login, p_qedit, p_db, p_model, p_safe, p_render,
+        self.patches = [p_login, p_qedit, p_db, p_model, p_repo, p_safe, p_render,
                         p_flash, p_cu]
         mocks = [p.start() for p in self.patches]
-        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_safe,
-         self.m_render, self.m_flash, _) = mocks
+        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_repo,
+         self.m_safe, self.m_render, self.m_flash, _) = mocks
 
         self.m_render.return_value = "rendered"
         self.m_safe.return_value = True
+        self.m_repo.get_all.return_value = []
 
         bp = Blueprint('quality', __name__, url_prefix='/quality')
         from app.routes.quality.environmental import register_routes
@@ -854,9 +865,7 @@ class TestEnvironmentalRoutes:
     # -- environmental_list --
 
     def test_environmental_list(self):
-        mock_query = MagicMock()
-        mock_query.order_by.return_value.limit.return_value.all.return_value = []
-        self.m_model.query = mock_query
+        self.m_repo.get_all.return_value = []
 
         with self.app.app_context():
             resp = self.client.get('/quality/environmental')
@@ -878,7 +887,7 @@ class TestEnvironmentalRoutes:
                 'notes': 'Normal conditions',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
         # Check within_limits was True
         call_kwargs = self.m_model.call_args
         assert call_kwargs[1]['within_limits'] is True
@@ -941,7 +950,7 @@ class TestEnvironmentalRoutes:
                 'humidity': '45.0',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
 
     # -- environmental_add invalid float --
 
@@ -954,7 +963,7 @@ class TestEnvironmentalRoutes:
         assert resp.status_code == 302
         self.m_flash.assert_called()
         # Should not add to session
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- environmental_add missing temperature key --
 
@@ -964,7 +973,7 @@ class TestEnvironmentalRoutes:
                 'humidity': '45.0',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- environmental_add invalid humidity --
 
@@ -975,7 +984,7 @@ class TestEnvironmentalRoutes:
                 'humidity': 'invalid',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- environmental_add commit failure --
 
@@ -1072,6 +1081,7 @@ class TestProficiencyRoutes:
         )
         p_db = patch('app.routes.quality.proficiency.db')
         p_model = patch('app.routes.quality.proficiency.ProficiencyTest')
+        p_repo = patch('app.routes.quality.proficiency.ProficiencyTestRepository')
         p_safe = patch('app.routes.quality.proficiency.safe_commit')
         p_stats = patch('app.routes.quality.proficiency.calculate_status_stats')
         p_parse_date = patch('app.routes.quality.proficiency.parse_date')
@@ -1079,16 +1089,17 @@ class TestProficiencyRoutes:
         p_flash = patch('app.routes.quality.proficiency.flash')
         p_cu = patch('app.routes.quality.proficiency.current_user', self.mock_user)
 
-        self.patches = [p_login, p_qedit, p_db, p_model, p_safe, p_stats,
+        self.patches = [p_login, p_qedit, p_db, p_model, p_repo, p_safe, p_stats,
                         p_parse_date, p_render, p_flash, p_cu]
         mocks = [p.start() for p in self.patches]
-        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_safe,
-         self.m_stats, self.m_parse_date, self.m_render, self.m_flash, _) = mocks
+        (self.m_login, self.m_qedit, self.m_db, self.m_model, self.m_repo,
+         self.m_safe, self.m_stats, self.m_parse_date, self.m_render, self.m_flash, _) = mocks
 
         self.m_render.return_value = "rendered"
         self.m_safe.return_value = True
         self.m_stats.return_value = {}
         self.m_parse_date.return_value = date(2026, 1, 15)
+        self.m_repo.get_all.return_value = []
 
         bp = Blueprint('quality', __name__, url_prefix='/quality')
         from app.routes.quality.proficiency import register_routes
@@ -1105,9 +1116,7 @@ class TestProficiencyRoutes:
     # -- proficiency_list --
 
     def test_proficiency_list(self):
-        mock_query = MagicMock()
-        mock_query.order_by.return_value.all.return_value = []
-        self.m_model.query = mock_query
+        self.m_repo.get_all.return_value = []
 
         with self.app.app_context():
             resp = self.client.get('/quality/proficiency')
@@ -1145,7 +1154,7 @@ class TestProficiencyRoutes:
                 'notes': 'Test note',
             })
         assert resp.status_code == 302
-        self.m_db.session.add.assert_called_once()
+        self.m_repo.save.assert_called_once()
         # z_score = (10.5 - 10.0) / 1.0 = 0.5 => satisfactory
         call_kwargs = self.m_model.call_args[1]
         assert abs(call_kwargs['z_score'] - 0.5) < 0.001
@@ -1241,7 +1250,7 @@ class TestProficiencyRoutes:
         assert resp.status_code == 200
         self.m_render.assert_called()
         self.m_flash.assert_called()
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- proficiency_new POST invalid assigned_value --
 
@@ -1253,7 +1262,7 @@ class TestProficiencyRoutes:
                 'uncertainty': '1.0',
             })
         assert resp.status_code == 200
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- proficiency_new POST invalid uncertainty --
 
@@ -1265,7 +1274,7 @@ class TestProficiencyRoutes:
                 'uncertainty': 'bad',
             })
         assert resp.status_code == 200
-        self.m_db.session.add.assert_not_called()
+        self.m_repo.save.assert_not_called()
 
     # -- proficiency_new POST commit failure --
 

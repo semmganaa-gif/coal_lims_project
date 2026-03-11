@@ -163,15 +163,15 @@ class TestSocketIOHandlers:
 
         mock_emit.assert_called_with('error', {'message': 'Мессеж хоосон байна'})
 
+    @patch('app.routes.chat.events.UserRepository')
     @patch('app.routes.chat.events.emit')
-    @patch('app.routes.chat.events.db')
     @patch('app.routes.chat.events.current_user')
-    def test_handle_send_message_invalid_receiver(self, mock_user, mock_db, mock_emit):
+    def test_handle_send_message_invalid_receiver(self, mock_user, mock_emit, mock_user_repo):
         """Test send_message with invalid receiver"""
         from app.routes.chat.events import handle_send_message
 
         mock_user.is_authenticated = True
-        mock_db.session.get.return_value = None
+        mock_user_repo.get_by_id.return_value = None
 
         handle_send_message({'message': 'test', 'receiver_id': 999})
 

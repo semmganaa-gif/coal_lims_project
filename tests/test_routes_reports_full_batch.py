@@ -628,14 +628,14 @@ class TestCrudAddSignature:
 
 class TestCrudDeleteSignature:
     @patch("app.routes.reports.crud.safe_commit", return_value=True)
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.ReportSignatureRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_delete_ok(self, mock_cu, mock_db, mock_commit, app_and_client):
+    def test_delete_ok(self, mock_cu, mock_repo, mock_commit, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
 
         sig = MagicMock()
-        mock_db.session.get.return_value = sig
+        mock_repo.get_by_id.return_value = sig
 
         resp = client.post("/pdf-reports/signatures/delete/1", follow_redirects=False)
         assert resp.status_code == 302
@@ -648,12 +648,12 @@ class TestCrudDeleteSignature:
         resp = client.post("/pdf-reports/signatures/delete/1", follow_redirects=False)
         assert resp.status_code == 302
 
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.ReportSignatureRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_delete_not_found(self, mock_cu, mock_db, app_and_client):
+    def test_delete_not_found(self, mock_cu, mock_repo, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
-        mock_db.session.get.return_value = None
+        mock_repo.get_by_id.return_value = None
         resp = client.post("/pdf-reports/signatures/delete/999")
         assert resp.status_code == 404
 
@@ -665,13 +665,13 @@ class TestCrudDeleteSignature:
 class TestCrudReportDetail:
     @patch("app.routes.reports.crud.render_template", return_value="<html></html>")
     @patch("app.routes.reports.crud.ReportSignature")
-    @patch("app.routes.reports.crud.db")
-    def test_detail_ok(self, mock_db, mock_rs, mock_render, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_detail_ok(self, mock_repo, mock_rs, mock_render, app_and_client):
         app, client, _ = app_and_client
 
         report = MagicMock()
         report.lab_type = "coal"
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         fq = MagicMock()
         fq.filter.return_value.all.return_value = []
@@ -680,10 +680,11 @@ class TestCrudReportDetail:
         resp = client.get("/pdf-reports/1")
         assert resp.status_code == 200
 
-    @patch("app.routes.reports.crud.db")
-    def test_detail_not_found(self, mock_db, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_detail_not_found(self, mock_repo, app_and_client):
         app, client, _ = app_and_client
-        mock_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        mock_repo.get_by_id_or_404.side_effect = NotFound()
         resp = client.get("/pdf-reports/999")
         assert resp.status_code == 404
 
@@ -695,15 +696,15 @@ class TestCrudReportDetail:
 class TestCrudApproveReport:
     @patch("app.routes.reports.pdf_generator.regenerate_pdf")
     @patch("app.routes.reports.crud.safe_commit", return_value=True)
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_approve_ok(self, mock_cu, mock_db, mock_commit, mock_regen, app_and_client):
+    def test_approve_ok(self, mock_cu, mock_repo, mock_commit, mock_regen, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
         mock_cu.id = 1
 
         report = MagicMock()
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         resp = client.post("/pdf-reports/1/approve", data={
             'analyst_signature_id': '2',
@@ -721,25 +722,26 @@ class TestCrudApproveReport:
         resp = client.post("/pdf-reports/1/approve", follow_redirects=False)
         assert resp.status_code == 302
 
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_approve_not_found(self, mock_cu, mock_db, app_and_client):
+    def test_approve_not_found(self, mock_cu, mock_repo, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
-        mock_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        mock_repo.get_by_id_or_404.side_effect = NotFound()
         resp = client.post("/pdf-reports/999/approve")
         assert resp.status_code == 404
 
     @patch("app.routes.reports.crud.safe_commit", return_value=False)
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_approve_commit_fails(self, mock_cu, mock_db, mock_commit, app_and_client):
+    def test_approve_commit_fails(self, mock_cu, mock_repo, mock_commit, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
         mock_cu.id = 1
 
         report = MagicMock()
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         resp = client.post("/pdf-reports/1/approve", follow_redirects=False)
         assert resp.status_code == 302
@@ -750,32 +752,33 @@ class TestCrudApproveReport:
 # =========================================================================
 
 class TestCrudDownloadReport:
-    @patch("app.routes.reports.crud.db")
-    def test_download_not_found(self, mock_db, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_download_not_found(self, mock_repo, app_and_client):
         app, client, _ = app_and_client
-        mock_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        mock_repo.get_by_id_or_404.side_effect = NotFound()
         resp = client.get("/pdf-reports/999/download")
         assert resp.status_code == 404
 
-    @patch("app.routes.reports.crud.db")
-    def test_download_no_pdf_path(self, mock_db, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_download_no_pdf_path(self, mock_repo, app_and_client):
         app, client, _ = app_and_client
         report = MagicMock()
         report.pdf_path = None
         report.id = 1
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
         resp = client.get("/pdf-reports/1/download", follow_redirects=False)
         assert resp.status_code == 302
 
     @patch("app.routes.reports.crud.os.path.exists", return_value=False)
     @patch("app.routes.reports.crud.os.path.realpath")
-    @patch("app.routes.reports.crud.db")
-    def test_download_path_traversal(self, mock_db, mock_realpath, mock_exists, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_download_path_traversal(self, mock_repo, mock_realpath, mock_exists, app_and_client):
         app, client, _ = app_and_client
         report = MagicMock()
         report.pdf_path = "../../etc/passwd"
         report.id = 1
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         # Simulate path traversal - realpath returns outside safe_dir
         mock_realpath.side_effect = lambda p: "/etc/passwd" if "passwd" in str(p) else "/app/static"
@@ -786,15 +789,15 @@ class TestCrudDownloadReport:
     @patch("app.routes.reports.crud.send_file", return_value=MagicMock(status_code=200))
     @patch("app.routes.reports.crud.os.path.exists", return_value=True)
     @patch("app.routes.reports.crud.os.path.realpath")
-    @patch("app.routes.reports.crud.db")
-    def test_download_ok(self, mock_db, mock_realpath, mock_exists, mock_send, app_and_client):
+    @patch("app.routes.reports.crud.LabReportRepository")
+    def test_download_ok(self, mock_repo, mock_realpath, mock_exists, mock_send, app_and_client):
         app, client, _ = app_and_client
 
         report = MagicMock()
         report.pdf_path = "uploads/reports/2026_1.pdf"
         report.report_number = "2026_1"
         report.id = 1
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         safe_dir = os.path.join(app.root_path, 'static')
         pdf_full = os.path.join(safe_dir, report.pdf_path)
@@ -816,42 +819,43 @@ class TestCrudDeleteReport:
         resp = client.post("/pdf-reports/1/delete", follow_redirects=False)
         assert resp.status_code == 302
 
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_delete_report_not_found(self, mock_cu, mock_db, app_and_client):
+    def test_delete_report_not_found(self, mock_cu, mock_repo, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
-        mock_db.session.get.return_value = None
+        from werkzeug.exceptions import NotFound
+        mock_repo.get_by_id_or_404.side_effect = NotFound()
         resp = client.post("/pdf-reports/999/delete")
         assert resp.status_code == 404
 
     @patch("app.routes.reports.crud.safe_commit", return_value=True)
     @patch("app.routes.reports.crud.os.remove")
     @patch("app.routes.reports.crud.os.path.exists", return_value=True)
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_delete_report_with_pdf(self, mock_cu, mock_db, mock_exists, mock_remove, mock_commit, app_and_client):
+    def test_delete_report_with_pdf(self, mock_cu, mock_repo, mock_exists, mock_remove, mock_commit, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
 
         report = MagicMock()
         report.pdf_path = "uploads/reports/test.pdf"
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         resp = client.post("/pdf-reports/1/delete", follow_redirects=False)
         assert resp.status_code == 302
         mock_remove.assert_called_once()
 
     @patch("app.routes.reports.crud.safe_commit", return_value=True)
-    @patch("app.routes.reports.crud.db")
+    @patch("app.routes.reports.crud.LabReportRepository")
     @patch("app.routes.reports.crud.current_user")
-    def test_delete_report_no_pdf(self, mock_cu, mock_db, mock_commit, app_and_client):
+    def test_delete_report_no_pdf(self, mock_cu, mock_repo, mock_commit, app_and_client):
         app, client, _ = app_and_client
         mock_cu.role = "admin"
 
         report = MagicMock()
         report.pdf_path = None
-        mock_db.session.get.return_value = report
+        mock_repo.get_by_id_or_404.return_value = report
 
         resp = client.post("/pdf-reports/1/delete", follow_redirects=False)
         assert resp.status_code == 302

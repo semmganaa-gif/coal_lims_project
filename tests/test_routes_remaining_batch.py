@@ -1470,16 +1470,17 @@ class TestChatHandlers:
 class TestSendMessageWithReceiver:
     """Test send_message with valid receiver"""
 
+    @patch('app.routes.chat.events.UserRepository')
     @patch('app.routes.chat.events.now_mn')
     @patch('app.routes.chat.events.db')
     @patch('app.routes.chat.events.emit')
     @patch('app.routes.chat.events.current_user')
-    def test_send_message_receiver_not_found(self, mock_user, mock_emit, mock_db, mock_now):
+    def test_send_message_receiver_not_found(self, mock_user, mock_emit, mock_db, mock_now, mock_user_repo):
         from app.routes.chat.events import handle_send_message
         mock_user.is_authenticated = True
         mock_user.id = 1
         mock_user.username = 'sender'
-        mock_db.session.get.return_value = None  # receiver not found
+        mock_user_repo.get_by_id.return_value = None  # receiver not found
         handle_send_message({'message': 'hello', 'receiver_id': 999})
         calls = [str(c) for c in mock_emit.call_args_list]
         assert any('error' in c for c in calls)

@@ -398,8 +398,8 @@ class TestErrorHandling:
 
     def test_database_error_handling(self, client, auth_user, app, db):
         """Test database error is handled gracefully."""
-        with patch('app.routes.main.index.db.session.commit') as mock_commit:
-            mock_commit.side_effect = SQLAlchemyError('Database error')
+        with patch('app.routes.main.index.register_lab_sample') as mock_register:
+            mock_register.side_effect = SQLAlchemyError('Database error')
             response = client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',

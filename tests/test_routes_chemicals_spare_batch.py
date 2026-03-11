@@ -213,9 +213,10 @@ class TestChemicalsApi:
     # -- /api/consume --
     @patch("app.routes.chemicals.api.db")
     @patch("app.routes.chemicals.api.consume_chemical_stock")
-    def test_api_consume_success(self, mock_consume, mock_db, client, app):
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_success(self, mock_repo, mock_consume, mock_db, client, app):
         chem = _make_chemical()
-        mock_db.session.get.return_value = chem
+        mock_repo.get_by_id.return_value = chem
         mock_consume.return_value = _ConsumeResult(success=True, new_quantity=90)
 
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
@@ -228,8 +229,7 @@ class TestChemicalsApi:
         data = resp.get_json()
         assert data["success"] is True
 
-    @patch("app.routes.chemicals.api.db")
-    def test_api_consume_invalid_quantity_non_numeric(self, mock_db, client, app):
+    def test_api_consume_invalid_quantity_non_numeric(self, client, app):
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
@@ -240,8 +240,7 @@ class TestChemicalsApi:
         data = resp.get_json()
         assert data["success"] is False
 
-    @patch("app.routes.chemicals.api.db")
-    def test_api_consume_missing_chemical_id(self, mock_db, client, app):
+    def test_api_consume_missing_chemical_id(self, client, app):
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
@@ -250,8 +249,7 @@ class TestChemicalsApi:
             )
         assert resp.status_code == 400
 
-    @patch("app.routes.chemicals.api.db")
-    def test_api_consume_zero_quantity(self, mock_db, client, app):
+    def test_api_consume_zero_quantity(self, client, app):
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
@@ -260,9 +258,9 @@ class TestChemicalsApi:
             )
         assert resp.status_code == 400
 
-    @patch("app.routes.chemicals.api.db")
-    def test_api_consume_chemical_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_chemical_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
@@ -273,8 +271,9 @@ class TestChemicalsApi:
 
     @patch("app.routes.chemicals.api.db")
     @patch("app.routes.chemicals.api.consume_chemical_stock")
-    def test_api_consume_service_error(self, mock_consume, mock_db, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_service_error(self, mock_repo, mock_consume, mock_db, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=False, error="Insufficient stock")
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
@@ -286,9 +285,10 @@ class TestChemicalsApi:
 
     @patch("app.routes.chemicals.api.db")
     @patch("app.routes.chemicals.api.consume_chemical_stock")
-    def test_api_consume_commit_error(self, mock_consume, mock_db, client, app):
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_commit_error(self, mock_repo, mock_consume, mock_db, client, app):
         from sqlalchemy.exc import SQLAlchemyError
-        mock_db.session.get.return_value = _make_chemical()
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=True)
         mock_db.session.commit.side_effect = SQLAlchemyError("db error")
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
@@ -301,8 +301,9 @@ class TestChemicalsApi:
 
     @patch("app.routes.chemicals.api.db")
     @patch("app.routes.chemicals.api.consume_chemical_stock", side_effect=ValueError("bad"))
-    def test_api_consume_value_error(self, mock_consume, mock_db, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_value_error(self, mock_repo, mock_consume, mock_db, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
@@ -313,9 +314,10 @@ class TestChemicalsApi:
 
     @patch("app.routes.chemicals.api.db")
     @patch("app.routes.chemicals.api.consume_chemical_stock")
-    def test_api_consume_invalid_sample_id(self, mock_consume, mock_db, client, app):
+    @patch("app.routes.chemicals.api.ChemicalRepository")
+    def test_api_consume_invalid_sample_id(self, mock_repo, mock_consume, mock_db, client, app):
         """sample_id that cannot be parsed as int should be silently ignored."""
-        mock_db.session.get.return_value = _make_chemical()
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=True)
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
@@ -325,12 +327,11 @@ class TestChemicalsApi:
             )
         assert resp.status_code == 200
 
-    @patch("app.routes.chemicals.api.db")
-    def test_api_consume_empty_json(self, mock_db, client, app):
+    def test_api_consume_empty_json(self, client, app):
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post(
                 "/chemicals/api/consume",
-                data="",
+                data="{}",
                 content_type="application/json",
             )
         # Should handle gracefully - missing chemical_id
@@ -485,10 +486,10 @@ class TestChemicalsCrud:
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
     @patch("app.routes.chemicals.crud.ChemicalLog")
     @patch("app.routes.chemicals.crud.ChemicalUsage")
-    @patch("app.routes.chemicals.crud.db")
-    def test_chemical_detail_found(self, mock_db, mock_usage, mock_log, mock_rt, client, app):
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_chemical_detail_found(self, mock_repo, mock_usage, mock_log, mock_rt, client, app):
         chem = _make_chemical()
-        mock_db.session.get.return_value = chem
+        mock_repo.get_by_id.return_value = chem
         # Mock query chains
         mock_usage.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
         mock_log.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
@@ -496,9 +497,9 @@ class TestChemicalsCrud:
             resp = client.get("/chemicals/1")
         assert resp.status_code == 200
 
-    @patch("app.routes.chemicals.crud.db")
-    def test_chemical_detail_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_chemical_detail_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.get("/chemicals/999")
         assert resp.status_code == 404
@@ -559,9 +560,9 @@ class TestChemicalsCrud:
 
     # -- /edit/<id> GET --
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
-    @patch("app.routes.chemicals.crud.db")
-    def test_edit_chemical_get(self, mock_db, mock_rt, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_get(self, mock_repo, mock_rt, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.get("/chemicals/edit/1")
         assert resp.status_code == 200
@@ -571,9 +572,9 @@ class TestChemicalsCrud:
             resp = client.get("/chemicals/edit/1")
         assert resp.status_code == 302
 
-    @patch("app.routes.chemicals.crud.db")
-    def test_edit_chemical_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.get("/chemicals/edit/999")
         assert resp.status_code == 404
@@ -582,9 +583,9 @@ class TestChemicalsCrud:
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
     @patch("app.routes.chemicals.crud.safe_commit", return_value=True)
     @patch("app.routes.chemicals.crud.update_chemical")
-    @patch("app.routes.chemicals.crud.db")
-    def test_edit_chemical_post_success(self, mock_db, mock_update, mock_commit, mock_rt, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_post_success(self, mock_repo, mock_update, mock_commit, mock_rt, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/edit/1", data={"name": "NaOH"})
         assert resp.status_code == 302
@@ -593,9 +594,9 @@ class TestChemicalsCrud:
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
     @patch("app.routes.chemicals.crud.safe_commit", return_value=False)
     @patch("app.routes.chemicals.crud.update_chemical")
-    @patch("app.routes.chemicals.crud.db")
-    def test_edit_chemical_post_commit_fail(self, mock_db, mock_update, mock_commit, mock_rt, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_post_commit_fail(self, mock_repo, mock_update, mock_commit, mock_rt, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/edit/1", data={"name": "NaOH"})
         assert resp.status_code == 200
@@ -604,8 +605,9 @@ class TestChemicalsCrud:
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
     @patch("app.routes.chemicals.crud.db")
     @patch("app.routes.chemicals.crud.update_chemical", side_effect=ValueError("bad"))
-    def test_edit_chemical_post_value_error(self, mock_update, mock_db, mock_rt, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_post_value_error(self, mock_repo, mock_update, mock_db, mock_rt, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/edit/1", data={"name": "X"})
         assert resp.status_code == 200
@@ -614,10 +616,11 @@ class TestChemicalsCrud:
     @patch("app.routes.chemicals.crud.render_template", return_value="ok")
     @patch("app.routes.chemicals.crud.db")
     @patch("app.routes.chemicals.crud.update_chemical")
-    def test_edit_chemical_post_sqlalchemy_error(self, mock_update, mock_db, mock_rt, client, app):
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_edit_chemical_post_sqlalchemy_error(self, mock_repo, mock_update, mock_db, mock_rt, client, app):
         from sqlalchemy.exc import SQLAlchemyError
         mock_update.side_effect = SQLAlchemyError("err")
-        mock_db.session.get.return_value = _make_chemical()
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/edit/1", data={"name": "X"})
         assert resp.status_code == 200
@@ -625,17 +628,17 @@ class TestChemicalsCrud:
     # -- /receive/<id> --
     @patch("app.routes.chemicals.crud.safe_commit", return_value=True)
     @patch("app.routes.chemicals.crud.receive_stock", return_value=(True, "Added 10"))
-    @patch("app.routes.chemicals.crud.db")
-    def test_receive_chemical_success(self, mock_db, mock_svc, mock_commit, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_receive_chemical_success(self, mock_repo, mock_svc, mock_commit, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/receive/1", data={"quantity_add": "10"})
         assert resp.status_code == 302
 
     @patch("app.routes.chemicals.crud.receive_stock", return_value=(False, "Invalid quantity"))
-    @patch("app.routes.chemicals.crud.db")
-    def test_receive_chemical_service_fail(self, mock_db, mock_svc, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_receive_chemical_service_fail(self, mock_repo, mock_svc, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/receive/1", data={"quantity_add": "0"})
         assert resp.status_code == 302
@@ -645,16 +648,17 @@ class TestChemicalsCrud:
             resp = client.post("/chemicals/receive/1", data={"quantity_add": "10"})
         assert resp.status_code == 302
 
-    @patch("app.routes.chemicals.crud.db")
-    def test_receive_chemical_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_receive_chemical_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/receive/1", data={"quantity_add": "10"})
         assert resp.status_code == 404
 
     @patch("app.routes.chemicals.crud.db")
-    def test_receive_chemical_value_error(self, mock_db, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_receive_chemical_value_error(self, mock_repo, mock_db, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/receive/1", data={"quantity_add": "bad"})
         assert resp.status_code == 302
@@ -662,9 +666,9 @@ class TestChemicalsCrud:
     # -- /consume/<id> --
     @patch("app.routes.chemicals.crud.safe_commit", return_value=True)
     @patch("app.routes.chemicals.crud.consume_chemical_stock")
-    @patch("app.routes.chemicals.crud.db")
-    def test_consume_chemical_success(self, mock_db, mock_consume, mock_commit, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_consume_chemical_success(self, mock_repo, mock_consume, mock_commit, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=True)
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post("/chemicals/consume/1", data={
@@ -673,32 +677,33 @@ class TestChemicalsCrud:
         assert resp.status_code == 302
 
     @patch("app.routes.chemicals.crud.consume_chemical_stock")
-    @patch("app.routes.chemicals.crud.db")
-    def test_consume_chemical_fail(self, mock_db, mock_consume, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_consume_chemical_fail(self, mock_repo, mock_consume, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=False, error="No stock")
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post("/chemicals/consume/1", data={"quantity_used": "5"})
         assert resp.status_code == 302
 
-    @patch("app.routes.chemicals.crud.db")
-    def test_consume_chemical_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_consume_chemical_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post("/chemicals/consume/999", data={"quantity_used": "5"})
         assert resp.status_code == 404
 
     @patch("app.routes.chemicals.crud.db")
-    def test_consume_chemical_value_error(self, mock_db, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_consume_chemical_value_error(self, mock_repo, mock_db, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser()):
             resp = client.post("/chemicals/consume/1", data={"quantity_used": "bad"})
         assert resp.status_code == 302
 
     @patch("app.routes.chemicals.crud.consume_chemical_stock")
-    @patch("app.routes.chemicals.crud.db")
-    def test_consume_chemical_invalid_sample_id(self, mock_db, mock_consume, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_consume_chemical_invalid_sample_id(self, mock_repo, mock_consume, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_consume.return_value = _ConsumeResult(success=True)
         with patch("app.routes.chemicals.crud.safe_commit", return_value=True):
             with patch("flask_login.utils._get_user", return_value=_FakeUser()):
@@ -710,9 +715,9 @@ class TestChemicalsCrud:
     # -- /dispose/<id> --
     @patch("app.routes.chemicals.crud.safe_commit", return_value=True)
     @patch("app.routes.chemicals.crud.svc_dispose_chemical")
-    @patch("app.routes.chemicals.crud.db")
-    def test_dispose_chemical_success(self, mock_db, mock_dispose, mock_commit, client, app):
-        mock_db.session.get.return_value = _make_chemical()
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_dispose_chemical_success(self, mock_repo, mock_dispose, mock_commit, client, app):
+        mock_repo.get_by_id.return_value = _make_chemical()
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="senior")):
             resp = client.post("/chemicals/dispose/1", data={"reason": "Expired"})
         assert resp.status_code == 302
@@ -723,18 +728,19 @@ class TestChemicalsCrud:
             resp = client.post("/chemicals/dispose/1")
         assert resp.status_code == 302
 
-    @patch("app.routes.chemicals.crud.db")
-    def test_dispose_chemical_not_found(self, mock_db, client, app):
-        mock_db.session.get.return_value = None
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_dispose_chemical_not_found(self, mock_repo, client, app):
+        mock_repo.get_by_id.return_value = None
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/dispose/999")
         assert resp.status_code == 404
 
-    @patch("app.routes.chemicals.crud.svc_dispose_chemical")
     @patch("app.routes.chemicals.crud.db")
-    def test_dispose_chemical_sqlalchemy_error(self, mock_db, mock_dispose, client, app):
+    @patch("app.routes.chemicals.crud.svc_dispose_chemical")
+    @patch("app.routes.chemicals.crud.ChemicalRepository")
+    def test_dispose_chemical_sqlalchemy_error(self, mock_repo, mock_dispose, mock_db, client, app):
         from sqlalchemy.exc import SQLAlchemyError
-        mock_db.session.get.return_value = _make_chemical()
+        mock_repo.get_by_id.return_value = _make_chemical()
         mock_dispose.side_effect = SQLAlchemyError("err")
         with patch("flask_login.utils._get_user", return_value=_FakeUser(role="admin")):
             resp = client.post("/chemicals/dispose/1")

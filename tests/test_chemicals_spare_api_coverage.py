@@ -40,7 +40,7 @@ def logged_in_client(app, client, db):
 class TestChemicalApiList:
     """GET /chemicals/api/list"""
 
-    @patch('app.services.chemical_service.get_chemical_api_list')
+    @patch('app.routes.chemicals.api.get_chemical_api_list')
     def test_list_default_params(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 1, 'name': 'HCl'}]
         resp = logged_in_client.get('/chemicals/api/list')
@@ -51,7 +51,7 @@ class TestChemicalApiList:
             lab='all', category='all', status='all', include_disposed=False
         )
 
-    @patch('app.services.chemical_service.get_chemical_api_list')
+    @patch('app.routes.chemicals.api.get_chemical_api_list')
     def test_list_with_filters(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get(
@@ -62,7 +62,7 @@ class TestChemicalApiList:
             lab='coal', category='acid', status='low_stock', include_disposed=True
         )
 
-    @patch('app.services.chemical_service.get_chemical_api_list')
+    @patch('app.routes.chemicals.api.get_chemical_api_list')
     def test_list_include_disposed_false_explicit(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/list?include_disposed=false')
@@ -79,14 +79,14 @@ class TestChemicalApiList:
 class TestChemicalApiLowStock:
     """GET /chemicals/api/low_stock"""
 
-    @patch('app.services.chemical_service.get_low_stock_chemicals')
+    @patch('app.routes.chemicals.api.get_low_stock_chemicals')
     def test_low_stock_default(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 2, 'name': 'NaOH', 'quantity': 5}]
         resp = logged_in_client.get('/chemicals/api/low_stock')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(lab='all')
 
-    @patch('app.services.chemical_service.get_low_stock_chemicals')
+    @patch('app.routes.chemicals.api.get_low_stock_chemicals')
     def test_low_stock_with_lab(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/low_stock?lab=water')
@@ -97,28 +97,28 @@ class TestChemicalApiLowStock:
 class TestChemicalApiExpiring:
     """GET /chemicals/api/expiring"""
 
-    @patch('app.services.chemical_service.get_expiring_chemicals')
+    @patch('app.routes.chemicals.api.get_expiring_chemicals')
     def test_expiring_default_days(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/expiring')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(lab='all', days=30)
 
-    @patch('app.services.chemical_service.get_expiring_chemicals')
+    @patch('app.routes.chemicals.api.get_expiring_chemicals')
     def test_expiring_custom_days(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 3}]
         resp = logged_in_client.get('/chemicals/api/expiring?days=7&lab=coal')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(lab='coal', days=7)
 
-    @patch('app.services.chemical_service.get_expiring_chemicals')
+    @patch('app.routes.chemicals.api.get_expiring_chemicals')
     def test_expiring_invalid_days_falls_back(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/expiring?days=abc')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(lab='all', days=30)
 
-    @patch('app.services.chemical_service.get_expiring_chemicals')
+    @patch('app.routes.chemicals.api.get_expiring_chemicals')
     def test_expiring_none_days_falls_back(self, mock_fn, logged_in_client):
         """days=None (TypeError branch)."""
         mock_fn.return_value = []
@@ -132,12 +132,12 @@ class TestChemicalApiConsume:
     """POST /chemicals/api/consume"""
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_chemical_stock')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_success(self, MockChemical, mock_consume, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.consume_chemical_stock')
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_success(self, MockRepo, mock_consume, mock_db, logged_in_client):
         chem = MagicMock()
         chem.unit = 'mL'
-        mock_db.session.get.return_value = chem
+        MockRepo.get_by_id.return_value = chem
         result = MagicMock(success=True, new_quantity=90.0, chemical_status='active')
         mock_consume.return_value = result
 
@@ -150,11 +150,11 @@ class TestChemicalApiConsume:
         assert data['data']['new_quantity'] == 90.0
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_chemical_stock')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_with_sample_id(self, MockChemical, mock_consume, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.consume_chemical_stock')
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_with_sample_id(self, MockRepo, mock_consume, mock_db, logged_in_client):
         chem = MagicMock(unit='g')
-        mock_db.session.get.return_value = chem
+        MockRepo.get_by_id.return_value = chem
         result = MagicMock(success=True, new_quantity=45.0, chemical_status='active')
         mock_consume.return_value = result
 
@@ -168,11 +168,11 @@ class TestChemicalApiConsume:
         assert call_kwargs['sample_id'] == 42
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_chemical_stock')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_invalid_sample_id_ignored(self, MockChemical, mock_consume, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.consume_chemical_stock')
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_invalid_sample_id_ignored(self, MockRepo, mock_consume, mock_db, logged_in_client):
         chem = MagicMock(unit='mL')
-        mock_db.session.get.return_value = chem
+        MockRepo.get_by_id.return_value = chem
         result = MagicMock(success=True, new_quantity=80.0, chemical_status='active')
         mock_consume.return_value = result
 
@@ -212,10 +212,9 @@ class TestChemicalApiConsume:
         assert data['success'] is False
         assert 'Invalid quantity' in data.get('error', '')
 
-    @patch('app.routes.chemicals.api.db')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_chemical_not_found(self, MockChemical, mock_db, logged_in_client):
-        mock_db.session.get.return_value = None
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_chemical_not_found(self, MockRepo, logged_in_client):
+        MockRepo.get_by_id.return_value = None
         resp = logged_in_client.post('/chemicals/api/consume', json={
             'chemical_id': 999, 'quantity_used': 10.0
         })
@@ -224,11 +223,11 @@ class TestChemicalApiConsume:
         assert data['success'] is False
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_chemical_stock')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_service_returns_failure(self, MockChemical, mock_consume, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.consume_chemical_stock')
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_service_returns_failure(self, MockRepo, mock_consume, mock_db, logged_in_client):
         chem = MagicMock(unit='mL')
-        mock_db.session.get.return_value = chem
+        MockRepo.get_by_id.return_value = chem
         result = MagicMock(success=False, error='Insufficient stock')
         mock_consume.return_value = result
 
@@ -240,11 +239,11 @@ class TestChemicalApiConsume:
         assert 'Insufficient stock' in data.get('error', '')
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_chemical_stock')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_commit_error(self, MockChemical, mock_consume, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.consume_chemical_stock')
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_commit_error(self, MockRepo, mock_consume, mock_db, logged_in_client):
         chem = MagicMock(unit='mL')
-        mock_db.session.get.return_value = chem
+        MockRepo.get_by_id.return_value = chem
         result = MagicMock(success=True, new_quantity=90.0, chemical_status='active')
         mock_consume.return_value = result
         mock_db.session.commit.side_effect = SQLAlchemyError('DB error')
@@ -258,15 +257,15 @@ class TestChemicalApiConsume:
 
     def test_consume_empty_json(self, logged_in_client):
         resp = logged_in_client.post('/chemicals/api/consume',
-                                     data='', content_type='application/json')
+                                     data='{}', content_type='application/json')
         data = resp.get_json()
         assert data['success'] is False
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.routes.chemicals.api.Chemical')
-    def test_consume_outer_valueerror(self, MockChemical, mock_db, logged_in_client):
+    @patch('app.routes.chemicals.api.ChemicalRepository')
+    def test_consume_outer_valueerror(self, MockRepo, mock_db, logged_in_client):
         """Trigger the outer (ValueError, TypeError) except block."""
-        mock_db.session.get.side_effect = ValueError('unexpected')
+        MockRepo.get_by_id.side_effect = ValueError('unexpected')
         resp = logged_in_client.post('/chemicals/api/consume', json={
             'chemical_id': 1, 'quantity_used': 5.0
         })
@@ -279,28 +278,28 @@ class TestChemicalApiConsume:
 class TestChemicalApiSearch:
     """GET /chemicals/api/search"""
 
-    @patch('app.services.chemical_service.search_chemicals')
+    @patch('app.routes.chemicals.api.search_chemicals')
     def test_search_default(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/search')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(q='', lab='all', limit=20)
 
-    @patch('app.services.chemical_service.search_chemicals')
+    @patch('app.routes.chemicals.api.search_chemicals')
     def test_search_with_query(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 1, 'name': 'HCl'}]
         resp = logged_in_client.get('/chemicals/api/search?q=HCl&lab=coal&limit=5')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(q='HCl', lab='coal', limit=5)
 
-    @patch('app.services.chemical_service.search_chemicals')
+    @patch('app.routes.chemicals.api.search_chemicals')
     def test_search_invalid_limit(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/search?q=test&limit=xyz')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(q='test', lab='all', limit=20)
 
-    @patch('app.services.chemical_service.search_chemicals')
+    @patch('app.routes.chemicals.api.search_chemicals')
     def test_search_strips_whitespace(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/chemicals/api/search?q=%20NaOH%20')
@@ -311,14 +310,14 @@ class TestChemicalApiSearch:
 class TestChemicalApiStats:
     """GET /chemicals/api/stats"""
 
-    @patch('app.services.chemical_service.get_chemical_stats')
+    @patch('app.routes.chemicals.api.get_chemical_stats')
     def test_stats_default(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'total': 50, 'low_stock': 3}
         resp = logged_in_client.get('/chemicals/api/stats')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(lab='all')
 
-    @patch('app.services.chemical_service.get_chemical_stats')
+    @patch('app.routes.chemicals.api.get_chemical_stats')
     def test_stats_with_lab(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'total': 10}
         resp = logged_in_client.get('/chemicals/api/stats?lab=water')
@@ -329,7 +328,7 @@ class TestChemicalApiStats:
 class TestChemicalApiUsageHistory:
     """GET /chemicals/api/usage_history"""
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_default(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [], 'count': 0}
         resp = logged_in_client.get('/chemicals/api/usage_history')
@@ -339,7 +338,7 @@ class TestChemicalApiUsageHistory:
             start_date=None, end_date=None, limit=100
         )
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_with_chemical_id(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [{'id': 1}], 'count': 1}
         resp = logged_in_client.get('/chemicals/api/usage_history?chemical_id=5&limit=10')
@@ -349,7 +348,7 @@ class TestChemicalApiUsageHistory:
             start_date=None, end_date=None, limit=10
         )
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_with_dates(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [], 'count': 0}
         resp = logged_in_client.get(
@@ -368,7 +367,7 @@ class TestChemicalApiUsageHistory:
         assert data['items'] == []
         assert data['count'] == 0
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_invalid_limit_fallback(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [], 'count': 0}
         resp = logged_in_client.get('/chemicals/api/usage_history?limit=bad')
@@ -378,7 +377,7 @@ class TestChemicalApiUsageHistory:
             start_date=None, end_date=None, limit=100
         )
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_service_value_error(self, mock_fn, logged_in_client):
         """Service raises ValueError for bad date format."""
         mock_fn.side_effect = ValueError('Bad date')
@@ -389,7 +388,7 @@ class TestChemicalApiUsageHistory:
         data = resp.get_json()
         assert data['success'] is False
 
-    @patch('app.services.chemical_service.get_usage_history')
+    @patch('app.routes.chemicals.api.get_usage_history')
     def test_usage_history_with_lab(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [], 'count': 0}
         resp = logged_in_client.get('/chemicals/api/usage_history?lab=coal')
@@ -404,7 +403,7 @@ class TestChemicalApiConsumeBulk:
     """POST /chemicals/api/consume_bulk"""
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_success(self, mock_consume, mock_db, logged_in_client):
         result = MagicMock(success=True, error=None, count=2, errors=[])
         mock_consume.return_value = result
@@ -423,7 +422,7 @@ class TestChemicalApiConsumeBulk:
         assert data['data']['count'] == 2
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_with_sample_id(self, mock_consume, mock_db, logged_in_client):
         result = MagicMock(success=True, error=None, count=1, errors=[])
         mock_consume.return_value = result
@@ -437,7 +436,7 @@ class TestChemicalApiConsumeBulk:
         assert call_kwargs['sample_id'] == 99
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_invalid_sample_id(self, mock_consume, mock_db, logged_in_client):
         result = MagicMock(success=True, error=None, count=1, errors=[])
         mock_consume.return_value = result
@@ -450,7 +449,7 @@ class TestChemicalApiConsumeBulk:
         call_kwargs = mock_consume.call_args[1]
         assert call_kwargs['sample_id'] is None
 
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_service_error(self, mock_consume, logged_in_client):
         result = MagicMock(success=False, error='No items provided')
         mock_consume.return_value = result
@@ -462,7 +461,7 @@ class TestChemicalApiConsumeBulk:
         assert data['success'] is False
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_commit_error(self, mock_consume, mock_db, logged_in_client):
         result = MagicMock(success=True, error=None, count=1, errors=[])
         mock_consume.return_value = result
@@ -476,7 +475,7 @@ class TestChemicalApiConsumeBulk:
         assert data['success'] is False
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_outer_exception(self, mock_consume, mock_db, logged_in_client):
         """Trigger the outer (ValueError, TypeError) except block."""
         mock_consume.side_effect = ValueError('unexpected')
@@ -490,18 +489,18 @@ class TestChemicalApiConsumeBulk:
         assert 'failed' in data.get('error', '').lower()
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_empty_json_body(self, mock_consume, mock_db, logged_in_client):
         """Empty JSON body => items=[], service handles it."""
         result = MagicMock(success=True, error=None, count=0, errors=[])
         mock_consume.return_value = result
 
         resp = logged_in_client.post('/chemicals/api/consume_bulk',
-                                     data='', content_type='application/json')
+                                     json={})
         assert resp.status_code == 200
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_partial_errors(self, mock_consume, mock_db, logged_in_client):
         result = MagicMock(
             success=True, error=None, count=1,
@@ -520,7 +519,7 @@ class TestChemicalApiConsumeBulk:
         assert len(data['data']['errors']) == 1
 
     @patch('app.routes.chemicals.api.db')
-    @patch('app.services.chemical_service.consume_bulk')
+    @patch('app.routes.chemicals.api.consume_bulk')
     def test_bulk_consume_sample_id_none_not_present(self, mock_consume, mock_db, logged_in_client):
         """sample_id key not in JSON at all => sample_id=None."""
         result = MagicMock(success=True, error=None, count=1, errors=[])
@@ -542,7 +541,7 @@ class TestChemicalApiConsumeBulk:
 class TestSparePartApiList:
     """GET /spare_parts/api/list"""
 
-    @patch('app.services.spare_parts_service.get_spare_parts_list_simple')
+    @patch('app.routes.spare_parts.api.get_spare_parts_list_simple')
     def test_list_success(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 1, 'name': 'O-ring'}]
         resp = logged_in_client.get('/spare_parts/api/list')
@@ -550,7 +549,7 @@ class TestSparePartApiList:
         data = resp.get_json()
         assert isinstance(data, list)
 
-    @patch('app.services.spare_parts_service.get_spare_parts_list_simple')
+    @patch('app.routes.spare_parts.api.get_spare_parts_list_simple')
     def test_list_empty(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/spare_parts/api/list')
@@ -565,7 +564,7 @@ class TestSparePartApiList:
 class TestSparePartApiLowStock:
     """GET /spare_parts/api/low_stock"""
 
-    @patch('app.services.spare_parts_service.get_low_stock_parts')
+    @patch('app.routes.spare_parts.api.get_low_stock_parts')
     def test_low_stock(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 2, 'quantity': 1}]
         resp = logged_in_client.get('/spare_parts/api/low_stock')
@@ -575,7 +574,7 @@ class TestSparePartApiLowStock:
 class TestSparePartApiStats:
     """GET /spare_parts/api/stats"""
 
-    @patch('app.services.spare_parts_service.get_full_stats')
+    @patch('app.routes.spare_parts.api.get_full_stats')
     def test_stats(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'total': 20, 'low_stock': 2}
         resp = logged_in_client.get('/spare_parts/api/stats')
@@ -588,7 +587,7 @@ class TestSparePartApiConsume:
     """POST /spare_parts/api/consume"""
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_success(self, mock_consume, mock_db, logged_in_client):
         mock_consume.return_value = (
             {'consumed': 2.0, 'unit': 'pcs', 'remaining': 8.0, 'status': 'active'},
@@ -603,7 +602,7 @@ class TestSparePartApiConsume:
         assert data['remaining'] == 8.0
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_with_equipment_and_maintenance(self, mock_consume, mock_db, logged_in_client):
         mock_consume.return_value = (
             {'consumed': 1.0, 'unit': 'pcs', 'remaining': 5.0, 'status': 'active'},
@@ -647,7 +646,7 @@ class TestSparePartApiConsume:
         data = resp.get_json()
         assert 'Invalid quantity' in data.get('message', '')
 
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_not_found(self, mock_consume, logged_in_client):
         mock_consume.return_value = (None, 'not_found')
         resp = logged_in_client.post('/spare_parts/api/consume', json={
@@ -657,7 +656,7 @@ class TestSparePartApiConsume:
         data = resp.get_json()
         assert data['success'] is False
 
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_other_error(self, mock_consume, logged_in_client):
         mock_consume.return_value = (None, 'Insufficient stock')
         resp = logged_in_client.post('/spare_parts/api/consume', json={
@@ -668,7 +667,7 @@ class TestSparePartApiConsume:
         assert data['success'] is False
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_commit_error(self, mock_consume, mock_db, logged_in_client):
         mock_consume.return_value = (
             {'consumed': 1.0, 'unit': 'pcs', 'remaining': 9.0, 'status': 'active'},
@@ -684,7 +683,7 @@ class TestSparePartApiConsume:
         assert data['success'] is False
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock')
+    @patch('app.routes.spare_parts.api.consume_stock')
     def test_consume_outer_exception(self, mock_consume, mock_db, logged_in_client):
         """Trigger the outer (ValueError, TypeError, SQLAlchemyError) except."""
         mock_consume.side_effect = ValueError('unexpected')
@@ -708,7 +707,7 @@ class TestSparePartApiConsumeBulk:
     """POST /spare_parts/api/consume_bulk"""
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_success(self, mock_bulk, mock_db, logged_in_client):
         mock_bulk.return_value = (
             [{'spare_part_id': 1, 'consumed': 2.0}],
@@ -743,7 +742,7 @@ class TestSparePartApiConsumeBulk:
         assert '100' in data.get('message', '')
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_exactly_100_items(self, mock_bulk, mock_db, logged_in_client):
         """Exactly 100 items should be allowed."""
         mock_bulk.return_value = (
@@ -757,7 +756,7 @@ class TestSparePartApiConsumeBulk:
         assert resp.status_code == 200
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_commit_error(self, mock_bulk, mock_db, logged_in_client):
         mock_bulk.return_value = ([{'id': 1}], [])
         mock_db.session.commit.side_effect = SQLAlchemyError('DB error')
@@ -770,7 +769,7 @@ class TestSparePartApiConsumeBulk:
         assert data['success'] is False
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_outer_exception(self, mock_bulk, mock_db, logged_in_client):
         mock_bulk.side_effect = ValueError('unexpected')
 
@@ -782,7 +781,7 @@ class TestSparePartApiConsumeBulk:
         assert data['success'] is False
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_with_equipment_id(self, mock_bulk, mock_db, logged_in_client):
         mock_bulk.return_value = ([{'id': 1}], [])
         resp = logged_in_client.post('/spare_parts/api/consume_bulk', json={
@@ -796,7 +795,7 @@ class TestSparePartApiConsumeBulk:
         assert call_kwargs['maintenance_log_id'] == 10
 
     @patch('app.routes.spare_parts.api.db')
-    @patch('app.services.spare_parts_service.consume_stock_bulk')
+    @patch('app.routes.spare_parts.api.consume_stock_bulk')
     def test_bulk_consume_with_errors(self, mock_bulk, mock_db, logged_in_client):
         mock_bulk.return_value = (
             [{'spare_part_id': 1, 'consumed': 2.0}],
@@ -817,21 +816,21 @@ class TestSparePartApiConsumeBulk:
 class TestSparePartApiSearch:
     """GET /spare_parts/api/search"""
 
-    @patch('app.services.spare_parts_service.search_spare_parts')
+    @patch('app.routes.spare_parts.api.search_spare_parts')
     def test_search_default(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/spare_parts/api/search')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with('')
 
-    @patch('app.services.spare_parts_service.search_spare_parts')
+    @patch('app.routes.spare_parts.api.search_spare_parts')
     def test_search_with_query(self, mock_fn, logged_in_client):
         mock_fn.return_value = [{'id': 1, 'name': 'O-ring'}]
         resp = logged_in_client.get('/spare_parts/api/search?q=O-ring')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with('O-ring')
 
-    @patch('app.services.spare_parts_service.search_spare_parts')
+    @patch('app.routes.spare_parts.api.search_spare_parts')
     def test_search_strips_whitespace(self, mock_fn, logged_in_client):
         mock_fn.return_value = []
         resp = logged_in_client.get('/spare_parts/api/search?q=%20seal%20')
@@ -842,14 +841,14 @@ class TestSparePartApiSearch:
 class TestSparePartApiUsageHistory:
     """GET /spare_parts/api/usage_history/<int:id>"""
 
-    @patch('app.services.spare_parts_service.get_usage_history')
+    @patch('app.routes.spare_parts.api.get_usage_history')
     def test_usage_history(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [{'id': 1}], 'count': 1}
         resp = logged_in_client.get('/spare_parts/api/usage_history/5')
         assert resp.status_code == 200
         mock_fn.assert_called_once_with(5)
 
-    @patch('app.services.spare_parts_service.get_usage_history')
+    @patch('app.routes.spare_parts.api.get_usage_history')
     def test_usage_history_empty(self, mock_fn, logged_in_client):
         mock_fn.return_value = {'items': [], 'count': 0}
         resp = logged_in_client.get('/spare_parts/api/usage_history/999')
