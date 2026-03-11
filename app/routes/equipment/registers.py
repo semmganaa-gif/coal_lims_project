@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import Equipment
+from app.repositories import EquipmentRepository
 from app.utils.shifts import get_shift_date
 from app.routes.equipment import equipment_bp
 
@@ -171,7 +172,7 @@ def edit_register_item(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    item = db.session.get(Equipment, id)
+    item = EquipmentRepository.get_by_id(id)
     if not item:
         abort(404)
     data = request.form.to_dict()
@@ -228,7 +229,7 @@ def delete_register_items():
 
     deleted = 0
     for item_id in ids:
-        item = db.session.get(Equipment, item_id)
+        item = EquipmentRepository.get_by_id(item_id)
         if item and item.register_type == register_type:
             db.session.delete(item)
             deleted += 1

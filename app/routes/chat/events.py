@@ -18,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import socketio, db
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
+from app.repositories import UserRepository, SampleRepository
 from app.utils.datetime import now_local as now_mn
 
 logger = logging.getLogger(__name__)
@@ -100,7 +101,7 @@ def handle_send_message(data):
     # Validate receiver
     receiver = None
     if receiver_id:
-        receiver = db.session.get(User, receiver_id)
+        receiver = UserRepository.get_by_id(receiver_id)
         if not receiver:
             emit('error', {'message': 'Хүлээн авагч олдсонгүй'})
             return
@@ -108,7 +109,7 @@ def handle_send_message(data):
     # Validate sample if provided
     sample = None
     if sample_id:
-        sample = db.session.get(Sample, sample_id)
+        sample = SampleRepository.get_by_id(sample_id)
         if sample:
             message_type = 'sample'
 

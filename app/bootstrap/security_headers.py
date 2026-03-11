@@ -14,11 +14,11 @@ def init_security_headers(app):
 
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+            "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net https://unpkg.com; "
             "img-src 'self' data: blob:; "
-            "connect-src 'self' ws: wss:; "
+            "connect-src 'self' ws: wss: https://cdn.jsdelivr.net; "
             "frame-ancestors 'self';"
         )
         response.headers['Content-Security-Policy'] = csp

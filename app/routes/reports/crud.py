@@ -17,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
+from app.repositories import LabReportRepository, ReportSignatureRepository
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
 from app.utils.database import safe_commit
 
@@ -176,7 +177,7 @@ def delete_signature(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.signature_list"))
 
-    sig = db.session.get(ReportSignature, id)
+    sig = ReportSignatureRepository.get_by_id(id)
     if not sig:
         abort(404)
     sig.is_active = False
@@ -191,9 +192,7 @@ def delete_signature(id):
 @login_required
 def report_detail(id):
     """Тайлангийн дэлгэрэнгүй."""
-    report = db.session.get(LabReport, id)
-    if not report:
-        abort(404)
+    report = LabReportRepository.get_by_id_or_404(id)
 
     # Гарын үсэг, тамгын сонголт
     signatures = ReportSignature.query.filter_by(
@@ -229,9 +228,7 @@ def approve_report(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
-    report = db.session.get(LabReport, id)
-    if not report:
-        abort(404)
+    report = LabReportRepository.get_by_id_or_404(id)
 
     # Гарын үсэг, тамга сонгох
     analyst_sig_id = request.form.get("analyst_signature_id")
@@ -266,9 +263,7 @@ def approve_report(id):
 @login_required
 def download_report(id):
     """PDF татах."""
-    report = db.session.get(LabReport, id)
-    if not report:
-        abort(404)
+    report = LabReportRepository.get_by_id_or_404(id)
 
     if not report.pdf_path:
         flash("PDF файл олдсонгүй.", "warning")
@@ -302,9 +297,7 @@ def delete_report(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_list"))
 
-    report = db.session.get(LabReport, id)
-    if not report:
-        abort(404)
+    report = LabReportRepository.get_by_id_or_404(id)
 
     # PDF файл устгах
     if report.pdf_path:

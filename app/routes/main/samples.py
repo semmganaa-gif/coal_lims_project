@@ -14,6 +14,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.repositories import SampleRepository
 from app.schemas import SampleSchema
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
@@ -32,9 +33,7 @@ def register_routes(bp):
     def edit_sample(sample_id):
         from app.models import Sample, AnalysisType
         from app.repositories import AnalysisTypeRepository
-        sample = db.session.get(Sample, sample_id)
-        if not sample:
-            abort(404)
+        sample = SampleRepository.get_by_id_or_404(sample_id)
 
         can_edit = current_user.role in ["admin", "senior"] or (
             current_user.role == "prep" and sample.status == "new"
@@ -114,7 +113,7 @@ def register_routes(bp):
         for sample_id_str in sample_ids_to_delete:
             try:
                 sample_id = int(sample_id_str)
-                sample_to_delete = db.session.get(Sample, sample_id)
+                sample_to_delete = SampleRepository.get_by_id(sample_id)
                 if sample_to_delete:
                     if current_user.role == "senior" and sample_to_delete.status != "new":
                         failed_samples.append(f"{sample_to_delete.sample_code} (Боловсруулалтанд орсон)")
@@ -238,7 +237,7 @@ def register_routes(bp):
 
         for sid in sample_ids:
             try:
-                sample = db.session.get(Sample, int(sid))
+                sample = SampleRepository.get_by_id(int(sid))
                 if sample and sample.disposal_date is None:
                     sample.disposal_date = today
                     sample.disposal_method = disposal_method
@@ -297,7 +296,7 @@ def register_routes(bp):
 
         for sid in sample_ids:
             try:
-                sample = db.session.get(Sample, int(sid))
+                sample = SampleRepository.get_by_id(int(sid))
                 if sample:
                     sample.retention_date = retention_date
                     updated_count += 1

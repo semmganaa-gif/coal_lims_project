@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import NonConformityRecord
+from app.repositories import NonConformityRepository
 from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
@@ -25,9 +26,7 @@ def register_routes(bp):
     @bp.route("/nonconformity")
     @login_required
     def nonconformity_list():
-        records = NonConformityRecord.query.order_by(
-            NonConformityRecord.record_date.desc()
-        ).limit(2000).all()
+        records = NonConformityRepository.get_all()
         stats = calculate_status_stats(
             records,
             status_values=['pending', 'investigating', 'reviewed', 'closed']
@@ -69,7 +68,7 @@ def register_routes(bp):
                 detector_user_id=current_user.id,
                 status='pending'
             )
-            db.session.add(record)
+            NonConformityRepository.save(record, commit=False)
             if not safe_commit(
                 f"Үл тохирол {record_no} бүртгэгдлээ",
                 "Үл тохирол хадгалахад алдаа гарлаа"
@@ -88,9 +87,7 @@ def register_routes(bp):
     @bp.route("/nonconformity/<int:id>")
     @login_required
     def nonconformity_detail(id):
-        record = db.session.get(NonConformityRecord, id)
-        if not record:
-            abort(404)
+        record = NonConformityRepository.get_by_id_or_404(id)
         return render_template(
             'quality/nonconformity_detail.html',
             record=record,
@@ -102,9 +99,7 @@ def register_routes(bp):
     @require_quality_edit('quality.nonconformity_list')
     def nonconformity_investigate(id):
         """Хэсэг 2: Хариуцсан нэгж бөглөх."""
-        record = db.session.get(NonConformityRecord, id)
-        if not record:
-            abort(404)
+        record = NonConformityRepository.get_by_id_or_404(id)
         record.responsible_unit = request.form.get('responsible_unit', '').strip()
         record.responsible_person = request.form.get('responsible_person', '').strip()
         record.direct_cause = request.form.get('direct_cause', '').strip()
@@ -131,9 +126,7 @@ def register_routes(bp):
     @require_quality_edit('quality.nonconformity_list')
     def nonconformity_review(id):
         """Хэсэг 3: Хяналт (Чанарын/Техникийн менежер)."""
-        record = db.session.get(NonConformityRecord, id)
-        if not record:
-            abort(404)
+        record = NonConformityRepository.get_by_id_or_404(id)
         record.completed_on_time = request.form.get('completed_on_time') == '1'
         record.fully_implemented = request.form.get('fully_implemented') == '1'
         record.control_notes = request.form.get('control_notes', '').strip()

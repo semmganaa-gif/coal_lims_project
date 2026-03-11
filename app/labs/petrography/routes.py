@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 from markupsafe import escape as html_escape
 from app import db
 from app.models import Sample, AnalysisResult
+from app.repositories import SampleRepository
 from app.labs.petrography.constants import ALL_PETRO_PARAMS, PETRO_ANALYSIS_TYPES
 from app.utils.decorators import lab_required
 from app.routes.api.helpers import api_success, api_error
@@ -139,7 +140,7 @@ def save_results():
     if analysis_code.upper() not in valid_codes:
         return api_error(f'Invalid analysis_code: {analysis_code}', status_code=400)
 
-    sample = db.session.get(Sample, sample_id)
+    sample = SampleRepository.get_by_id(sample_id)
     if not sample:
         return api_error('Sample not found', status_code=404)
 

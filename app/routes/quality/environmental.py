@@ -4,6 +4,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import EnvironmentalLog
+from app.repositories import EnvironmentalLogRepository
 from app.utils.database import safe_commit
 from app.utils.quality_helpers import require_quality_edit
 
@@ -13,7 +14,7 @@ def register_routes(bp):
     @bp.route("/environmental")
     @login_required
     def environmental_list():
-        logs = EnvironmentalLog.query.order_by(EnvironmentalLog.log_date.desc()).limit(500).all()
+        logs = EnvironmentalLogRepository.get_all()
         return render_template('quality/environmental_list.html', logs=logs, title="Орчны хяналт")
 
     @bp.route("/environmental/add", methods=["POST"])
@@ -45,7 +46,7 @@ def register_routes(bp):
             recorded_by_id=current_user.id,
             notes=request.form.get('notes')
         )
-        db.session.add(log)
+        EnvironmentalLogRepository.save(log, commit=False)
         if safe_commit(None, "Орчны хэмжилт хадгалахад алдаа гарлаа"):
             if within_limits:
                 flash("Орчны хэмжилт бүртгэгдлээ", "success")

@@ -12,8 +12,8 @@ Routes-аас салгасан бизнес логикийг агуулна:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -39,6 +39,17 @@ class _AnalysisTypeView:
     """Template-д шаардлагатай code/name бүтэц."""
     code: str
     name: str
+
+
+@dataclass
+class RegistrationResult:
+    """Дээж бүртгэлийн үр дүн."""
+    success: bool
+    count: int
+    message: str
+    successful_codes: list[str] = field(default_factory=list)
+    failed_codes: list[str] = field(default_factory=list)
+    error: Optional[str] = None
 
 
 @dataclass
@@ -371,3 +382,432 @@ def _build_analysis_types() -> list:
         analysis_types.append(_AnalysisTypeView(code=final_code, name=display_name))
 
     return analysis_types
+
+
+# =============================================================================
+# Sample Registration Functions (Phase 7: extracted from routes/main/index.py)
+# =============================================================================
+
+def _build_sample_base(
+    *,
+    sample_code: str,
+    user_id: int,
+    client_name: str,
+    sample_type: str,
+    sample_condition: str,
+    sample_date,
+    return_sample: bool,
+    retention_days: int,
+    delivered_by: str,
+    prepared_date,
+    prepared_by: str,
+    notes: Optional[str] = None,
+    weight=None,
+    location: Optional[str] = None,
+    product: Optional[str] = None,
+    hourly_system: Optional[str] = None,
+    lab_type: str = "coal",
+) -> Sample:
+    """Дээж бүртгэлийн нийтлэг талбаруудыг бөглөх."""
+    from app.utils.datetime import now_local
+
+    sample = Sample(
+        sample_code=sample_code,
+        user_id=user_id,
+        client_name=client_name,
+        sample_type=sample_type,
+        sample_condition=sample_condition,
+        sample_date=sample_date,
+        return_sample=return_sample,
+        retention_date=(now_local() + timedelta(days=retention_days)).date(),
+        delivered_by=delivered_by,
+        prepared_date=prepared_date,
+        prepared_by=prepared_by,
+        notes=notes,
+        weight=weight,
+        location=location,
+        product=product,
+        hourly_system=hourly_system,
+        analyses_to_perform="[]",
+    )
+
+    if lab_type != "coal":
+        sample.lab_type = lab_type
+    # PE дээжид lab_type='petrography' оноох
+    if sample_type == "PE":
+        sample.lab_type = "petrography"
+
+    return sample
+
+
+def _assign_and_add(sample: Sample) -> None:
+    """Шинжилгээ оноож, session-д нэмэх."""
+    from app.utils.analysis_assignment import assign_analyses_to_sample
+
+    with db.session.no_autoflush:
+        assign_analyses_to_sample(sample)
+    db.session.add(sample)
+
+
+def register_batch_samples(
+    *,
+    codes: list[str],
+    weights_map: dict[str, Optional[str]],
+    requires_weight: bool,
+    user_id: int,
+    client_name: str,
+    sample_type: str,
+    sample_condition: str,
+    sample_date,
+    return_sample: bool,
+    retention_days: int,
+    delivered_by: str,
+    prepared_date,
+    prepared_by: str,
+    notes: Optional[str],
+    location: Optional[str],
+    product: Optional[str],
+    list_type: str,
+) -> RegistrationResult:
+    """
+    Олон дээж нэг удаа бүртгэх (CHPP 2h/4h/12h, COM, multi_gen).
+
+    Args:
+        codes: Дээжний кодуудын жагсаалт
+        weights_map: {code: weight_str} жин Map
+        requires_weight: Жин шаардлагатай эсэх
+        ... (бусад form талбарууд)
+
+    Returns:
+        RegistrationResult
+    """
+    from app.utils.sorting import custom_sample_sort_key
+    from app.constants import MIN_SAMPLE_WEIGHT, MAX_SAMPLE_WEIGHT
+    from app.monitoring import track_sample
+
+    sorted_codes = sorted(codes, key=custom_sample_sort_key)
+    successful, failed = [], []
+    count = 0
+
+    try:
+        for code in sorted_codes:
+            if not code:
+                continue
+
+            weight, is_valid = None, True
+            if requires_weight:
+                weight_str = weights_map.get(code)
+                if weight_str:
+                    try:
+                        weight = float(weight_str)
+                        if weight <= MIN_SAMPLE_WEIGHT:
+                            failed.append(f"{code} (жин хэт бага: {weight}г)")
+                            is_valid = False
+                        elif weight > MAX_SAMPLE_WEIGHT:
+                            failed.append(f"{code} (жин хэт том: {weight}г, max {MAX_SAMPLE_WEIGHT}г)")
+                            is_valid = False
+                    except ValueError:
+                        failed.append(f'{code} (жин: "{weight_str}" буруу)')
+                        is_valid = False
+                else:
+                    failed.append(f"{code} (жин оруулаагүй)")
+                    is_valid = False
+
+            if not is_valid:
+                continue
+
+            sample = _build_sample_base(
+                sample_code=code,
+                user_id=user_id,
+                client_name=client_name,
+                sample_type=sample_type,
+                sample_condition=sample_condition,
+                sample_date=sample_date,
+                return_sample=return_sample,
+                retention_days=retention_days,
+                delivered_by=delivered_by,
+                prepared_date=prepared_date,
+                prepared_by=prepared_by,
+                notes=notes,
+                weight=weight,
+                location=location if list_type == "multi_gen" else None,
+                product=product if list_type == "multi_gen" and client_name in ("QC", "Proc") else None,
+                hourly_system=list_type.replace("chpp_", "") if "chpp" in list_type else None,
+            )
+            _assign_and_add(sample)
+            successful.append(code)
+            count += 1
+
+    except (SQLAlchemyError, ValueError, TypeError) as e:
+        db.session.rollback()
+        logger.error(f"Error during batch registration: {e}")
+        return RegistrationResult(
+            success=False, count=0, message="Дээж бүртгэхэд алдаа гарлаа.",
+            failed_codes=failed, error=str(e),
+        )
+
+    if count > 0:
+        from app.utils.database import safe_commit
+        if not safe_commit(
+            f"{count} ш дээж амжилттай бүртгэгдлээ.",
+            "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна.",
+        ):
+            return RegistrationResult(
+                success=False, count=0, message="Дээжний код давхардсан байна.",
+                failed_codes=failed, error="DUPLICATE_CODE",
+            )
+
+        for code in successful:
+            log_audit(
+                action="sample_created", resource_type="Sample",
+                details={"sample_code": code, "client_name": client_name, "sample_type": sample_type},
+            )
+        for _ in range(count):
+            track_sample(client=client_name, sample_type=sample_type)
+
+    return RegistrationResult(
+        success=True, count=count,
+        message=f"{count} ш дээж амжилттай бүртгэгдлээ.",
+        successful_codes=successful, failed_codes=failed,
+    )
+
+
+def register_wtl_auto_samples(
+    *,
+    sample_type: str,
+    lab_number: str,
+    user_id: int,
+    sample_condition: str,
+    sample_date,
+    return_sample: bool,
+    retention_days: int,
+    delivered_by: str,
+    prepared_date,
+    prepared_by: str,
+    notes: Optional[str],
+) -> RegistrationResult:
+    """
+    WTL (WTL/Size/FL) дээжүүдийг автоматаар олон нэрээр үүсгэх.
+
+    Returns:
+        RegistrationResult
+    """
+    from app.constants import (
+        WTL_SAMPLE_NAMES_19, WTL_SAMPLE_NAMES_70,
+        WTL_SAMPLE_NAMES_6, WTL_SAMPLE_NAMES_2,
+        WTL_SIZE_NAMES, WTL_FL_NAMES,
+    )
+
+    if not lab_number:
+        return RegistrationResult(
+            success=False, count=0,
+            message="WTL-д лабораторийн дугаар шаардлагатай.",
+            error="MISSING_LAB_NUMBER",
+        )
+
+    name_map = {
+        "WTL": WTL_SAMPLE_NAMES_19 + WTL_SAMPLE_NAMES_70 + WTL_SAMPLE_NAMES_6 + WTL_SAMPLE_NAMES_2,
+        "Size": WTL_SIZE_NAMES,
+        "FL": WTL_FL_NAMES,
+    }
+    all_wtl_names = name_map.get(sample_type, [])
+
+    count = 0
+    for name in all_wtl_names:
+        final_code = f"{lab_number}_{name}"
+        sample = _build_sample_base(
+            sample_code=final_code,
+            user_id=user_id,
+            client_name="WTL",
+            sample_type=sample_type,
+            sample_condition=sample_condition,
+            sample_date=sample_date,
+            return_sample=return_sample,
+            retention_days=retention_days,
+            delivered_by=delivered_by,
+            prepared_date=prepared_date,
+            prepared_by=prepared_by,
+            notes=notes,
+        )
+        _assign_and_add(sample)
+        count += 1
+
+    if count > 0:
+        from app.utils.database import safe_commit
+        if not safe_commit(
+            f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ.",
+            "БҮРТГЭЛ АМЖИЛТГҮЙ: Дээжний код давхардсан байна.",
+        ):
+            return RegistrationResult(
+                success=False, count=0, message="Дээжний код давхардсан байна.",
+                error="DUPLICATE_CODE",
+            )
+        for name in all_wtl_names:
+            log_audit(
+                action="sample_created", resource_type="Sample",
+                details={
+                    "sample_code": f"{lab_number}_{name}",
+                    "client_name": "WTL", "sample_type": sample_type, "lab_type": "water",
+                },
+            )
+
+    return RegistrationResult(
+        success=True, count=count,
+        message=f"{count} ш {sample_type} дээж амжилттай бүртгэгдлээ.",
+    )
+
+
+def register_lab_sample(
+    *,
+    sample_type: str,
+    sample_date,
+    user_id: int,
+    sample_condition: str,
+    return_sample: bool,
+    delivered_by: str,
+    prepared_date,
+    prepared_by: str,
+    notes: Optional[str],
+) -> RegistrationResult:
+    """
+    LAB дээж бүртгэх (CM/GBW/Test) — автоматаар нэр үүсгэнэ.
+
+    Returns:
+        RegistrationResult
+    """
+    from app.utils.datetime import now_local
+
+    formatted_date = sample_date.strftime("%Y%m%d")
+    # 12h shift code
+    from app.routes.main.helpers import get_12h_shift_code
+    shift_code = get_12h_shift_code(now_local())
+
+    if sample_type == "CM":
+        from app.repositories import ControlStandardRepository
+        active_cm = ControlStandardRepository.get_active()
+        cm_name = active_cm.name if active_cm else "CM"
+        final_code = f"{cm_name}_{formatted_date}{shift_code}"
+    elif sample_type == "GBW":
+        from app.repositories import GbwStandardRepository
+        active_gbw = GbwStandardRepository.get_active()
+        gbw_name = active_gbw.name if active_gbw else "GBW"
+        final_code = f"{gbw_name}_{formatted_date}{shift_code}"
+    elif sample_type == "Test":
+        final_code = f"Test_{formatted_date}{shift_code}"
+    else:
+        final_code = f"LAB_UNKNOWN_{formatted_date}"
+
+    sample = _build_sample_base(
+        sample_code=final_code,
+        user_id=user_id,
+        client_name="LAB",
+        sample_type=sample_type,
+        sample_condition=sample_condition,
+        sample_date=sample_date,
+        return_sample=return_sample,
+        retention_days=30,
+        delivered_by=delivered_by,
+        prepared_date=prepared_date,
+        prepared_by=prepared_by,
+        notes=notes,
+    )
+    _assign_and_add(sample)
+
+    from app.utils.database import safe_commit
+    if not safe_commit(
+        f"Дээж амжилттай бүртгэгдлээ. {final_code}",
+        f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_code}" дээж аль хэдийн бүртгэгдсэн байна.',
+    ):
+        return RegistrationResult(
+            success=False, count=0, message=f'"{final_code}" давхардсан.',
+            error="DUPLICATE_CODE",
+        )
+
+    log_audit(
+        action="sample_created", resource_type="Sample", resource_id=sample.id,
+        details={"sample_code": final_code, "client_name": "LAB", "sample_type": sample_type},
+    )
+    return RegistrationResult(success=True, count=1, message=f"Дээж бүртгэгдлээ: {final_code}")
+
+
+def register_wtl_mg_test(
+    *,
+    sample_type: str,
+    sample_code: Optional[str],
+    wtl_module: Optional[str],
+    wtl_supplier: Optional[str],
+    wtl_vehicle: Optional[str],
+    sample_date,
+    user_id: int,
+    sample_condition: str,
+    return_sample: bool,
+    retention_days: int,
+    delivered_by: str,
+    prepared_date,
+    prepared_by: str,
+    notes: Optional[str],
+) -> RegistrationResult:
+    """
+    WTL MG (structured) / Test (manual sample_code) дээж бүртгэх.
+
+    Returns:
+        RegistrationResult
+    """
+    if sample_type == "MG":
+        wtl_supplier = (wtl_supplier or "").strip()
+        wtl_vehicle = (wtl_vehicle or "").strip()
+        if not wtl_module or not wtl_supplier or not wtl_vehicle:
+            return RegistrationResult(
+                success=False, count=0,
+                message="MG-д Module, Supplier, Vehicle талбарууд шаардлагатай.",
+                error="MISSING_FIELDS",
+            )
+        formatted_date = sample_date.strftime("%Y%m%d")
+        final_code = f"MG_{wtl_module}_{wtl_supplier}_{formatted_date}_{wtl_vehicle}"
+        notes_data = notes or ""
+        if wtl_module:
+            notes_data = f"Module: {wtl_module}; {notes_data}".strip("; ")
+    else:
+        if not sample_code:
+            return RegistrationResult(
+                success=False, count=0,
+                message="Энэ WTL төрөлд дээжний нэр шаардлагатай.",
+                error="MISSING_SAMPLE_CODE",
+            )
+        final_code = sample_code
+        notes_data = notes
+
+    sample = _build_sample_base(
+        sample_code=final_code,
+        user_id=user_id,
+        client_name="WTL",
+        sample_type=sample_type,
+        sample_condition=sample_condition,
+        sample_date=sample_date,
+        return_sample=return_sample,
+        retention_days=retention_days,
+        delivered_by=delivered_by,
+        prepared_date=prepared_date,
+        prepared_by=prepared_by,
+        notes=notes_data,
+    )
+    _assign_and_add(sample)
+
+    from app.utils.database import safe_commit
+    if not safe_commit(
+        "Шинэ дээж амжилттай бүртгэгдлээ.",
+        f'БҮРТГЭЛ АМЖИЛТГҮЙ: "{final_code}" дээж аль хэдийн бүртгэгдсэн байна.',
+    ):
+        return RegistrationResult(
+            success=False, count=0, message=f'"{final_code}" давхардсан.',
+            error="DUPLICATE_CODE",
+        )
+
+    log_audit(
+        action="sample_created", resource_type="Sample", resource_id=sample.id,
+        details={
+            "sample_code": final_code, "client_name": "WTL",
+            "sample_type": sample_type, "lab_type": "water",
+        },
+    )
+    return RegistrationResult(success=True, count=1, message="Шинэ дээж амжилттай бүртгэгдлээ.")

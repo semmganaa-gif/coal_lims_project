@@ -444,7 +444,6 @@ function ActionsRenderer(params) {
  * 3) AG Grid options
  * =============================== */
 const gridOptions = {
-  theme: "legacy",  // AG Grid v34+ - use legacy CSS theme
   columnDefs: [
     {
       headerName: "Sample / Analysis",

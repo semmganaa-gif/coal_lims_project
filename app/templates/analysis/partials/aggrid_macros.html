@@ -247,7 +247,6 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
     autoHeaderHeight: true,
   };
   var baseGridOptions = window.LIMS_AGGRID?.baseGridOptions || {
-    theme: 'legacy',
     defaultColDef: baseDefaultColDef,
     suppressRowTransform: true,
     tooltipShowDelay: 0,

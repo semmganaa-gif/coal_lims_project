@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import ImprovementRecord
+from app.repositories import ImprovementRepository
 from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
@@ -25,9 +26,7 @@ def register_routes(bp):
     @bp.route("/improvement")
     @login_required
     def improvement_list():
-        records = ImprovementRecord.query.order_by(
-            ImprovementRecord.record_date.desc()
-        ).limit(2000).all()
+        records = ImprovementRepository.get_all()
         stats = calculate_status_stats(
             records,
             status_values=['pending', 'in_progress', 'reviewed', 'closed']
@@ -70,7 +69,7 @@ def register_routes(bp):
                 created_by_id=current_user.id,
                 status='pending'
             )
-            db.session.add(record)
+            ImprovementRepository.save(record, commit=False)
             if not safe_commit(
                 f"Сайжруулалт {record_no} бүртгэгдлээ",
                 "Сайжруулалт хадгалахад алдаа гарлаа"
@@ -89,9 +88,7 @@ def register_routes(bp):
     @bp.route("/improvement/<int:id>")
     @login_required
     def improvement_detail(id):
-        record = db.session.get(ImprovementRecord, id)
-        if not record:
-            abort(404)
+        record = ImprovementRepository.get_by_id_or_404(id)
         return render_template(
             'quality/improvement_detail.html',
             record=record,
@@ -102,9 +99,7 @@ def register_routes(bp):
     @login_required
     def improvement_fill(id):
         """Хэсэг 1: Ажилтан бөглөх."""
-        record = db.session.get(ImprovementRecord, id)
-        if not record:
-            abort(404)
+        record = ImprovementRepository.get_by_id_or_404(id)
         record.activity_description = request.form.get('activity_description', '').strip() or record.activity_description
         record.improvement_plan = request.form.get('improvement_plan', '').strip()
         record.responsible_person = request.form.get('responsible_person', '').strip()
@@ -128,9 +123,7 @@ def register_routes(bp):
     @require_quality_edit('quality.improvement_list')
     def improvement_review(id):
         """Хяналтын хэсэг: Техникийн менежер."""
-        record = db.session.get(ImprovementRecord, id)
-        if not record:
-            abort(404)
+        record = ImprovementRepository.get_by_id_or_404(id)
         record.completed_on_time = request.form.get('completed_on_time') == '1'
         record.fully_implemented = request.form.get('fully_implemented') == '1'
         record.control_notes = request.form.get('control_notes', '').strip()

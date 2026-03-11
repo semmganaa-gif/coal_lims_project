@@ -332,7 +332,6 @@ logger.log('SULFUR TEMPLATE v3 LOADED');
     } else {
       logger.warn('LIMS_AGGRID not available, using fallback');
       window.sulfurGridApi = agGrid.createGrid(el, {
-        theme:'legacy',
         columnDefs,
         rowData,
         defaultColDef:{ sortable:true, resizable:true, editable:false, suppressMovable:true, wrapHeaderText: true, autoHeaderHeight: true },

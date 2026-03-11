@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import Chemical, ChemicalUsage, ChemicalLog
+from app.repositories import ChemicalRepository
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp, LAB_TYPES, CATEGORIES, UNITS, STATUS_TYPES
 from app.services.chemical_service import (
@@ -65,7 +66,7 @@ def chemical_list():
 @login_required
 def chemical_detail(id):
     """Химийн бодисын дэлгэрэнгүй мэдээлэл."""
-    chemical = db.session.get(Chemical, id)
+    chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
 
@@ -167,7 +168,7 @@ def edit_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = db.session.get(Chemical, id)
+    chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
 
@@ -235,7 +236,7 @@ def receive_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = db.session.get(Chemical, id)
+    chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
 
@@ -275,7 +276,7 @@ def receive_chemical(id):
 @login_required
 def consume_chemical(id):
     """Химийн бодисын хэрэглээ бүртгэх."""
-    chemical = db.session.get(Chemical, id)
+    chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
 
@@ -330,7 +331,7 @@ def dispose_chemical(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("chemicals.chemical_detail", id=id))
 
-    chemical = db.session.get(Chemical, id)
+    chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
 

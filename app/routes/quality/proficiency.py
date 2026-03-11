@@ -13,6 +13,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import ProficiencyTest
+from app.repositories import ProficiencyTestRepository
 from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
@@ -30,7 +31,7 @@ def register_routes(bp):
     @login_required
     def proficiency_list():
         """PT жагсаалт"""
-        pts = ProficiencyTest.query.order_by(ProficiencyTest.test_date.desc()).all()
+        pts = ProficiencyTestRepository.get_all()
         stats = calculate_status_stats(
             pts,
             status_field='performance',
@@ -83,7 +84,7 @@ def register_routes(bp):
                 notes=request.form.get('notes')
             )
 
-            db.session.add(pt)
+            ProficiencyTestRepository.save(pt, commit=False)
             if not safe_commit(None, "PT хадгалахад алдаа гарлаа"):
                 return render_template('quality/proficiency_form.html', title="Шинэ PT бүртгэх")
 

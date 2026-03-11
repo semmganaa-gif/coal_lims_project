@@ -13,6 +13,20 @@ from app.repositories.standard_repository import GbwStandardRepository, ControlS
 from app.repositories.equipment_repository import EquipmentRepository
 from app.repositories.chemical_repository import ChemicalRepository
 from app.repositories.system_setting_repository import SystemSettingRepository
+from app.repositories.user_repository import UserRepository
+from app.repositories.bottle_repository import BottleRepository, BottleConstantRepository
+from app.repositories.chat_repository import ChatMessageRepository, UserOnlineStatusRepository
+from app.repositories.audit_repository import AuditLogRepository
+from app.repositories.quality_repository import (
+    ComplaintRepository,
+    CAPARepository,
+    NonConformityRepository,
+    ImprovementRepository,
+    ProficiencyTestRepository,
+    EnvironmentalLogRepository,
+)
+from app.repositories.report_repository import LabReportRepository, ReportSignatureRepository
+from app.repositories.maintenance_repository import MaintenanceLogRepository, UsageLogRepository
 
 __all__ = [
     "SampleRepository",
@@ -23,4 +37,20 @@ __all__ = [
     "EquipmentRepository",
     "ChemicalRepository",
     "SystemSettingRepository",
+    "UserRepository",
+    "BottleRepository",
+    "BottleConstantRepository",
+    "ChatMessageRepository",
+    "UserOnlineStatusRepository",
+    "AuditLogRepository",
+    "ComplaintRepository",
+    "CAPARepository",
+    "NonConformityRepository",
+    "ImprovementRepository",
+    "ProficiencyTestRepository",
+    "EnvironmentalLogRepository",
+    "LabReportRepository",
+    "ReportSignatureRepository",
+    "MaintenanceLogRepository",
+    "UsageLogRepository",
 ]

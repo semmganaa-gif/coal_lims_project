@@ -179,7 +179,6 @@
   };
 
   const baseGridOptions = {
-    theme: 'legacy',
     defaultColDef: baseDefaultColDef,
     suppressRowTransform: true,
     tooltipShowDelay: 0,
@@ -301,6 +300,14 @@
   w.LIMS_AGGRID.numFmt3 = numFmt3;  // тохирц
   w.LIMS_AGGRID.numFmt2 = numFmt2;  // дундаж
   w.LIMS_AGGRID.numFmt0 = numFmt0;  // тигель, бюкс дугаар
+
+  // XSS escape helper (global — used by cellRenderers in analysis templates)
+  function _escHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  w._escHtml = _escHtml;
+  w.LIMS_AGGRID._escHtml = _escHtml;
 
   // Base configs
   w.LIMS_AGGRID.baseDefaultColDef = baseDefaultColDef;

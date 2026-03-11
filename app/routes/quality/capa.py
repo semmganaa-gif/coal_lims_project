@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import CorrectiveAction
+from app.repositories import CAPARepository
 from app.utils.database import safe_commit
 from app.utils.quality_helpers import (
     require_quality_edit,
@@ -25,9 +26,7 @@ def register_routes(bp):
     @bp.route("/capa")
     @login_required
     def capa_list():
-        records = CorrectiveAction.query.order_by(
-            CorrectiveAction.issue_date.desc()
-        ).limit(2000).all()
+        records = CAPARepository.get_all()
         stats = calculate_status_stats(
             records,
             status_values=['open', 'in_progress', 'reviewed', 'closed']
@@ -69,7 +68,7 @@ def register_routes(bp):
                 notes=request.form.get('notes', '').strip(),
                 status='open'
             )
-            db.session.add(record)
+            CAPARepository.save(record, commit=False)
             if not safe_commit(
                 f"Залруулах ажиллагаа {ca_number} бүртгэгдлээ",
                 "CAPA хадгалахад алдаа гарлаа"
@@ -88,9 +87,7 @@ def register_routes(bp):
     @bp.route("/capa/<int:id>")
     @login_required
     def capa_detail(id):
-        record = db.session.get(CorrectiveAction, id)
-        if not record:
-            abort(404)
+        record = CAPARepository.get_by_id_or_404(id)
         return render_template(
             'quality/capa_detail.html',
             record=record,
@@ -102,9 +99,7 @@ def register_routes(bp):
     @require_quality_edit('quality.capa_list')
     def capa_fill(id):
         """Хэсэг 1: Хэрэгжүүлэгч бөглөх."""
-        record = db.session.get(CorrectiveAction, id)
-        if not record:
-            abort(404)
+        record = CAPARepository.get_by_id_or_404(id)
         record.issue_description = request.form.get('issue_description', '').strip() or record.issue_description
         record.corrective_action = request.form.get('corrective_action', '').strip()
         record.notes = request.form.get('notes', '').strip()
@@ -127,9 +122,7 @@ def register_routes(bp):
     @require_quality_edit('quality.capa_list')
     def capa_review(id):
         """Хэсэг 2: Хяналт (Техникийн менежер)."""
-        record = db.session.get(CorrectiveAction, id)
-        if not record:
-            abort(404)
+        record = CAPARepository.get_by_id_or_404(id)
         record.completed_on_time = request.form.get('completed_on_time') == '1'
         record.fully_resolved = request.form.get('fully_resolved') == '1'
         record.residual_risk_exists = request.form.get('residual_risk_exists') == '1'

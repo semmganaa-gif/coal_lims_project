@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
 from app.models import Chemical
+from app.repositories import ChemicalRepository
 from app.routes.chemicals import chemicals_bp
 from app.routes.api.helpers import api_success, api_error
 from app.services.chemical_service import (
@@ -92,7 +93,7 @@ def api_consume():
         if not chemical_id or quantity_used <= 0:
             return api_error("Invalid data")
 
-        chemical = db.session.get(Chemical, chemical_id)
+        chemical = ChemicalRepository.get_by_id(chemical_id)
         if not chemical:
             return api_error("Chemical not found", status_code=404)
 

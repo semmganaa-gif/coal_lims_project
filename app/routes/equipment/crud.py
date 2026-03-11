@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 
 from app import db
 from app.models import Equipment, MaintenanceLog, UsageLog
+from app.repositories import EquipmentRepository, MaintenanceLogRepository
 from app.utils.audit import log_audit
 from app.utils.datetime import now_local
 from app.utils.shifts import get_shift_date
@@ -76,7 +77,7 @@ def equipment_list():
 @login_required
 def equipment_detail(id):
     """Төхөөрөмжийн дэлгэрэнгүй мэдээлэл + журнал."""
-    eq = db.session.get(Equipment, id)
+    eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
     usage_logs = UsageLog.query.filter_by(equipment_id=id).order_by(UsageLog.start_time.desc()).all()
@@ -87,7 +88,7 @@ def equipment_detail(id):
 @login_required
 def equipment_journal_page(id):
     """Тухайн багажийн тусдаа журнал хуудас."""
-    eq = db.session.get(Equipment, id)
+    eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
     today = get_shift_date()
@@ -211,7 +212,7 @@ def edit_equipment(id):
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_detail", id=id))
 
-    eq = db.session.get(Equipment, id)
+    eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
     eq.name = request.form.get("name")
@@ -329,7 +330,7 @@ def delete_equipment(id):
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    eq = db.session.get(Equipment, id)
+    eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
     eq_name = eq.name
@@ -382,7 +383,7 @@ def bulk_delete():
     retired_names = []
 
     for eq_id in ids:
-        eq = db.session.get(Equipment, eq_id)
+        eq = EquipmentRepository.get_by_id(eq_id)
         if eq:
             has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
                           UsageLog.query.filter_by(equipment_id=eq.id).first()
@@ -434,7 +435,7 @@ def bulk_delete():
 @login_required
 def add_maintenance_log(id):
     """Засвар үйлчилгээний бүртгэл нэмэх."""
-    eq = db.session.get(Equipment, id)
+    eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
     action_type = request.form.get("action_type")
@@ -566,7 +567,7 @@ def add_maintenance_log(id):
 @login_required
 def download_certificate(log_id):
     """Гэрчилгээний файл татах."""
-    log = db.session.get(MaintenanceLog, log_id)
+    log = MaintenanceLogRepository.get_by_id(log_id)
     if not log:
         abort(404)
     if not log.file_path:

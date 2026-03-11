@@ -15,8 +15,8 @@
 
   <!-- AG Grid (нөхцөлт) -->
   {% if use_aggrid|default(false) %}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/styles/ag-theme-alpine.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ag-grid-custom.css') }}?v=3">
   {% endif %}
 
@@ -29,7 +29,10 @@
 
   <script>
     window.LIMS_LIMIT_RULES = {{ LIMS_LIMIT_RULES|tojson|safe if LIMS_LIMIT_RULES is defined else '{}'}};
+    window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
   </script>
+  <!-- Logger (head-д ачаалах — inline script-ээс өмнө бэлэн байхын тулд) -->
+  <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
 
   <style>
     :root {
@@ -616,15 +619,15 @@
   <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
 
+  <!-- Alpine.js - Collapse plugin (must load before Alpine core) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.3/dist/cdn.min.js"></script>
   <!-- Alpine.js - Lightweight reactive framework -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
 
   <!-- htmx - HTML over the wire -->
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 
-  <!-- Debug flag for logger.js -->
   <script>
-    window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
     // Production-д console.log/debug хаах (console.warn/error хэвээрээ)
     if (!window.DEBUG) {
       console.log = function() {};
@@ -749,13 +752,12 @@
     }
   </script>
 
-  <!-- Utility scripts -->
-  <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
+  <!-- Utility scripts (logger.js is in <head>) -->
   <script src="{{ url_for('static', filename='js/utils/safe-storage.js') }}"></script>
   <script src="{{ url_for('static', filename='js/form_guards.js') }}?v=1"></script>
 
   {% if use_aggrid|default(false) %}
-  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/dist/ag-grid-community.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
   <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}?v=4"></script>
   <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}?v=1"></script>
   {% endif %}

@@ -15,6 +15,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import LabReport
+from app.repositories import LabReportRepository
 from app.routes.reports import pdf_reports_bp
 from app.utils.database import safe_commit
 
@@ -107,9 +108,7 @@ def send_email(id):
         flash("Хандах эрхгүй.", "danger")
         return redirect(url_for("pdf_reports.report_detail", id=id))
 
-    report = db.session.get(LabReport, id)
-    if not report:
-        abort(404)
+    report = LabReportRepository.get_by_id_or_404(id)
 
     if report.status not in ['approved', 'sent']:
         flash("Зөвхөн батлагдсан тайланг илгээх боломжтой.", "warning")

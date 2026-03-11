@@ -19,7 +19,7 @@ from app.forms import UserManagementForm, SimpleProfileForm
 from app.models import User, AnalysisProfile
 from app.repositories import (
     AnalysisTypeRepository, GbwStandardRepository,
-    ControlStandardRepository,
+    ControlStandardRepository, UserRepository,
 )
 from app.services.admin_service import (
     seed_analysis_types,
@@ -118,9 +118,7 @@ def manage_users():
 @admin_required
 def edit_user(user_id):
     """Хэрэглэгчийн мэдээлэл засах."""
-    user_to_edit = db.session.get(User, user_id)
-    if user_to_edit is None:
-        abort(404)
+    user_to_edit = UserRepository.get_by_id_or_404(user_id)
     form = UserManagementForm(obj=user_to_edit)
 
     if form.validate_on_submit():
