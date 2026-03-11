@@ -90,12 +90,20 @@ site/
 
 # SSL certificates (private keys)
 ssl/
-app/static/uploads/chat/
+
+# User uploads (generated at runtime)
+app/static/uploads/
+
+# Screenshots
 Screenshot*.jpg
+Capture.*
+
+# Claude Code local settings
 .claude/settings.local.json
 
 # Node.js / Vite
 node_modules/
+package-lock.json
 app/static/dist/
 coverage-js/
 *.tsbuildinfo
@@ -106,14 +114,33 @@ seed_*.py
 !scripts/seeds/seed_*.py
 update_*.py
 
-# Screenshots
-Capture.*
-
-# Excel files
+# Binary data files (keep in external storage, not git)
 *.xlsx
-
-# Documents
+!app/static/hourly_template.xlsx
 *.docx
+*.pdf
+!SOP/**/*.pdf
+!SOP/**/*.docx
 
-# Temp folders
+# Temp/scratch scripts at root
+tmp.py
+_tmp_*.py
+analyze_structure.py
+check_unused.sh
+extract_docx.py
+fix_code.py
+fix_template.ps1
+import_final.py
+rewrite_mass_workspace.py
+test_new_calculations.py
+upgrade_sqlite.py
+
+# Misc data folders (not source code)
+read/
+burtgel/
 .tmp.driveupload/
+
+# Planning/review notes (not source code)
+*_refactor_plan.md
+*_code_review_log.md
+Project *.txt
