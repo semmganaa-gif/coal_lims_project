@@ -67,6 +67,7 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.ruff_cache/
 
 # Backups
 backups/
@@ -76,25 +77,22 @@ backups/
 tmp/
 temp/
 *.tmp
-nul
-or
+temp_*.txt
+temp_*.json
+cookies.txt
+alias_leftovers_report.txt
+helpers_dump.txt
+structure_analysis.txt
 
 # Documentation builds
 docs/_build/
 site/
-coal_lims_project
-
-# runtime
-instance/
-*.log
-
 
 # SSL certificates (private keys)
 ssl/
 app/static/uploads/chat/
 Screenshot*.jpg
 .claude/settings.local.json
-coverage.xml
 
 # Node.js / Vite
 node_modules/
@@ -102,9 +100,8 @@ app/static/dist/
 coverage-js/
 *.tsbuildinfo
 
-# Temporary files
+# Seed/update scripts (except scripts/seeds/)
 *.dump
-temp_*.json
 seed_*.py
 !scripts/seeds/seed_*.py
 update_*.py
@@ -120,4 +117,3 @@ Capture.*
 
 # Temp folders
 .tmp.driveupload/
-{
