@@ -412,8 +412,8 @@ class TestSeedAnalysisTypes:
     def test_seed_creates_analysis_types(self, app):
         """Шинжилгээний төрлүүд үүсгэх"""
         with app.app_context():
-            from app.routes.admin.routes import _seed_analysis_types
-            _seed_analysis_types()
+            from app.services.admin_service import seed_analysis_types
+            seed_analysis_types()
 
             # Check some analysis types exist
             mad = AnalysisType.query.filter_by(code='Mad').first()
@@ -427,17 +427,17 @@ class TestSeedAnalysisTypes:
     def test_seed_updates_existing(self, app):
         """Байгаа төрлүүдийг шинэчлэх"""
         with app.app_context():
-            from app.routes.admin.routes import _seed_analysis_types
+            from app.services.admin_service import seed_analysis_types
 
             # First seed
-            _seed_analysis_types()
+            seed_analysis_types()
 
             # Modify one
             mad = AnalysisType.query.filter_by(code='Mad').first()
             original_name = mad.name
 
             # Run seed again - should not fail
-            _seed_analysis_types()
+            seed_analysis_types()
 
             # Should still be correct
             mad = AnalysisType.query.filter_by(code='Mad').first()

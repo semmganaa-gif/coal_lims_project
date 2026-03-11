@@ -4,7 +4,7 @@ database.py модулийн 100% coverage тестүүд
 """
 import pytest
 from unittest.mock import patch, MagicMock
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 class TestDatabaseImport:
@@ -73,7 +73,7 @@ class TestSafeCommit:
     def test_commit_general_exception(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
 
-        mock_db.session.commit.side_effect = Exception("Unknown error")
+        mock_db.session.commit.side_effect = SQLAlchemyError("Unknown error")
 
         result = safe_commit(error_msg="Алдаа гарлаа")
 
@@ -130,7 +130,7 @@ class TestSafeDelete:
         from app.utils.database import safe_delete
 
         obj = MagicMock()
-        mock_db.session.delete.side_effect = Exception("FK constraint")
+        mock_db.session.delete.side_effect = SQLAlchemyError("FK constraint")
 
         result = safe_delete(obj, error_msg="Устгах боломжгүй")
 
@@ -146,7 +146,7 @@ class TestSafeDelete:
         from app.utils.database import safe_delete
 
         obj = MagicMock()
-        mock_db.session.commit.side_effect = Exception("Error")
+        mock_db.session.commit.side_effect = SQLAlchemyError("Error")
 
         result = safe_delete(obj)
 
@@ -217,7 +217,7 @@ class TestSafeAdd:
         from app.utils.database import safe_add
 
         obj = MagicMock()
-        mock_db.session.commit.side_effect = Exception("Connection lost")
+        mock_db.session.commit.side_effect = SQLAlchemyError("Connection lost")
 
         result = safe_add(obj, error_msg="Нэмэх үед алдаа")
 

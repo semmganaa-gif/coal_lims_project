@@ -13,6 +13,8 @@ from flask import (
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
@@ -152,7 +154,7 @@ def add_signature():
                 return redirect(url_for("pdf_reports.signature_list"))
             return redirect(url_for("pdf_reports.signature_list"))
 
-        except Exception as e:
+        except (OSError, SQLAlchemyError, ValueError) as e:
             db.session.rollback()
             flash(f"Алдаа: {str(e)[:100]}", "danger")
 
@@ -405,6 +407,6 @@ def api_create_report():
             "redirect_url": url_for("pdf_reports.report_detail", id=report.id)
         })
 
-    except Exception as e:
+    except (SQLAlchemyError, ValueError, TypeError, OSError) as e:
         current_app.logger.error(f"Error creating report: {e}", exc_info=True)
         return jsonify({"success": False, "error": "Тайлан үүсгэхэд алдаа гарлаа."}), 500

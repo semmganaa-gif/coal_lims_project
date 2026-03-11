@@ -397,7 +397,8 @@ class TestLogEventException:
             mock_license = MagicMock()
             mock_license.id = 1
 
-            with patch('app.models.LicenseLog', side_effect=Exception("DB Error")):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch('app.models.LicenseLog', side_effect=SQLAlchemyError("DB Error")):
                 with app.test_request_context('/test'):
                     # Should not raise exception
                     manager._log_event(mock_license, 'test', 'Test event')

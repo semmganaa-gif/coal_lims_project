@@ -1,0 +1,159 @@
+/* equipment_modal.css — Equipment Modal styles (extracted from analysis_page.html) */
+
+#equipmentModal .modal-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+  color: #fff;
+  border-bottom: 3px solid #3182ce;
+}
+#equipmentModal .modal-header .btn-close { filter: invert(1); }
+#equipmentModal .eq-table thead th {
+  background: #edf2f7;
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #cbd5e0;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+#equipmentModal .eq-table tbody tr {
+  transition: background 0.15s;
+}
+#equipmentModal .eq-table tbody tr:hover {
+  background: #f7fafc;
+}
+#equipmentModal .eq-table tbody td {
+  padding: 8px;
+  vertical-align: middle;
+  border-color: #e2e8f0;
+}
+#equipmentModal .eq-lab-code {
+  font-weight: 600;
+  color: #2b6cb0;
+  font-size: 0.9rem;
+}
+#equipmentModal .eq-lab-name {
+  font-size: 0.75rem;
+  color: #718096;
+}
+#equipmentModal .eq-check-ok:checked {
+  background-color: #38a169;
+  border-color: #38a169;
+}
+#equipmentModal .eq-repair-cb:checked {
+  background-color: #e53e3e;
+  border-color: #e53e3e;
+}
+#equipmentModal .repair-panel {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  padding: 8px;
+}
+#equipmentModal .repair-panel .repair-date-label {
+  font-size: 0.7rem;
+  color: #c53030;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+#equipmentModal .spare-row {
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  padding: 2px;
+}
+#equipmentModal .modal-footer {
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+}
+#equipmentModal .modal-content {
+  resize: both;
+  overflow: auto;
+  min-width: 500px;
+  min-height: 300px;
+}
+#equipmentModal .modal-dialog {
+  max-width: 90vw;
+}
+/* Calibration Check Styles */
+#equipmentModal .calib-btn {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+}
+#equipmentModal .calib-panel {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 8px;
+}
+#equipmentModal .calib-panel.furnace-panel {
+  background: #fffaf0;
+  border-color: #fbd38d;
+}
+#equipmentModal .calib-panel.balance-panel {
+  background: #ebf8ff;
+  border-color: #90cdf4;
+}
+#equipmentModal .calib-panel.analysis-panel {
+  background: #faf5ff;
+  border-color: #d6bcfa;
+}
+#equipmentModal .calib-panel-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#equipmentModal .furnace-panel .calib-panel-title { color: #c05621; }
+#equipmentModal .balance-panel .calib-panel-title { color: #2b6cb0; }
+#equipmentModal .analysis-panel .calib-panel-title { color: #6b46c1; }
+#equipmentModal .calib-input-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+#equipmentModal .calib-input-group label {
+  font-size: 0.7rem;
+  color: #4a5568;
+  min-width: 70px;
+}
+#equipmentModal .calib-input-group input {
+  flex: 1;
+  font-size: 0.8rem;
+}
+#equipmentModal .calib-weight-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 3px;
+}
+#equipmentModal .calib-weight-row input {
+  font-size: 0.75rem;
+  text-align: center;
+}
+#equipmentModal .calib-status {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+#equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
+#equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
+/* Sulfur */
+#equipmentModal .sulfur-panel { background: linear-gradient(135deg, #fefce8, #fef9c3); border-color: #fde047; }
+#equipmentModal .sulfur-panel .calib-panel-title { color: #a16207; }
+#equipmentModal .sulfur-panel .calib-std-row input { font-size: 0.75rem; }
+/* Calorimeter */
+#equipmentModal .calorimeter-panel { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-color: #fca5a5; }
+#equipmentModal .calorimeter-panel .calib-panel-title { color: #b91c1c; }
+/* CSN */
+#equipmentModal .csn-panel { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #86efac; }
+#equipmentModal .csn-panel .calib-panel-title { color: #15803d; }
+#equipmentModal .csn-crucible-row input, #equipmentModal .csn-crucible-row select { font-size: 0.75rem; }
+/* Drum */
+#equipmentModal .drum-panel { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #93c5fd; }
+#equipmentModal .drum-panel .calib-panel-title { color: #1d4ed8; }

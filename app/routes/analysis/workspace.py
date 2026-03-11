@@ -11,10 +11,12 @@ import json
 from flask import request, render_template, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from sqlalchemy import or_
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 
 from app import db
 from app.models import AnalysisType, AnalysisResult, Sample, Equipment
+from app.repositories import AnalysisTypeRepository
 from app.utils.codes import norm_code
 from app.utils.security import escape_like_pattern
 from app.constants import ERROR_REASON_LABELS
@@ -159,8 +161,8 @@ def register_routes(bp):
                 .limit(50)
                 .all()
             )
-        except Exception:
-            pass
+        except OperationalError as e:
+            current_app.logger.warning("Failed to load equipment: %s", e)
 
         wtl_mg_view = type("AnalysisView", (), {"code": "WTL_MG", "name": "WTL MG Шинжилгээ"})()
         return render_template(
@@ -196,13 +198,9 @@ def register_routes(bp):
     def analysis_hub():
         user_role = current_user.role
         if user_role in ["admin", "senior", "manager"]:
-            allowed_analyses = AnalysisType.query.order_by(AnalysisType.order_num).all()
+            allowed_analyses = AnalysisTypeRepository.get_all_ordered()
         else:
-            allowed_analyses = (
-                AnalysisType.query.filter_by(required_role=user_role)
-                .order_by(AnalysisType.order_num)
-                .all()
-            )
+            allowed_analyses = AnalysisTypeRepository.get_by_role(user_role)
 
         # MG/MG_SIZE → нэг "WTL_MG" карт болгох (MT, TRD хэвээр үлдэнэ)
         has_mg = any(a.code in MG_ONLY_CODES for a in allowed_analyses)
@@ -225,7 +223,7 @@ def register_routes(bp):
         if analysis_code in MG_ONLY_CODES or analysis_code == 'WTL_MG':
             return redirect(url_for('analysis.wtl_mg_page', **request.args))
 
-        analysis_type = AnalysisType.query.filter_by(code=analysis_code).first_or_404()
+        analysis_type = AnalysisTypeRepository.get_by_code_or_404(analysis_code)
         base_code = norm_code(analysis_type.code) or analysis_type.code
 
         AnalysisView = type("AnalysisView", (), {})
@@ -482,7 +480,7 @@ def register_routes(bp):
                 .order_by(Equipment.name.asc())
                 .all()
             )
-        except Exception:
+        except OperationalError:
             related_equipments = []
 
         # ✨ Check if this analysis uses AG Grid

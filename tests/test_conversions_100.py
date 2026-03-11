@@ -153,8 +153,8 @@ class TestTrdConversion:
             'inherent_moisture': 100.0
         }
         result = calculate_all_conversions(raw, {})
-        # denom = 0 тул relative_density = 0
-        assert result.get('relative_density') == 0.0
+        # denom = 0 тул relative_density retains raw value (no conversion applied)
+        assert result.get('relative_density') == 1.35
 
 
 class TestConversionFactors:

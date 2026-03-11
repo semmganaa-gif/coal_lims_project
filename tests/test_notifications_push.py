@@ -198,7 +198,7 @@ class TestSendNotification:
     @patch('app.utils.notifications.mail')
     def test_mail_error(self, mock_mail, app):
         from app.utils.notifications import send_notification
-        mock_mail.send.side_effect = Exception('SMTP error')
+        mock_mail.send.side_effect = OSError('SMTP error')
         with app.app_context():
             result = send_notification(
                 subject='Test',
@@ -394,9 +394,8 @@ class TestCheckAndNotifyWestgard:
     @patch('app.utils.notifications.notify_qc_failure')
     @patch('app.utils.westgard.get_qc_status')
     @patch('app.utils.westgard.check_westgard_rules')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_with_reject_status(self, mock_db, mock_chart, mock_check, mock_status, mock_notify):
+    def test_with_reject_status(self, mock_db, mock_check, mock_status, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         # Mock unique pairs
@@ -415,7 +414,7 @@ class TestCheckAndNotifyWestgard:
         chart2.target_value = 5.0
         chart2.ucl = 6.0
 
-        mock_chart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [chart1, chart2]
+        mock_db.session.execute.return_value.scalars.return_value.all.return_value = [chart1, chart2]
 
         # Mock westgard check
         mock_check.return_value = {'1_2s': True}
@@ -427,9 +426,8 @@ class TestCheckAndNotifyWestgard:
     @patch('app.utils.notifications.notify_qc_failure')
     @patch('app.utils.westgard.get_qc_status')
     @patch('app.utils.westgard.check_westgard_rules')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_with_ok_status(self, mock_db, mock_chart, mock_check, mock_status, mock_notify):
+    def test_with_ok_status(self, mock_db, mock_check, mock_status, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         mock_db.session.query.return_value.distinct.return_value.all.return_value = [
@@ -446,7 +444,7 @@ class TestCheckAndNotifyWestgard:
         chart2.target_value = 5.0
         chart2.ucl = 6.0
 
-        mock_chart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [chart1, chart2]
+        mock_db.session.execute.return_value.scalars.return_value.all.return_value = [chart1, chart2]
 
         mock_check.return_value = {}
         mock_status.return_value = {'status': 'ok', 'rules_violated': []}
@@ -456,9 +454,8 @@ class TestCheckAndNotifyWestgard:
         mock_notify.assert_not_called()
 
     @patch('app.utils.notifications.notify_qc_failure')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_skip_empty_analysis_code(self, mock_db, mock_chart, mock_notify):
+    def test_skip_empty_analysis_code(self, mock_db, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         mock_db.session.query.return_value.distinct.return_value.all.return_value = [
@@ -471,9 +468,8 @@ class TestCheckAndNotifyWestgard:
         mock_notify.assert_not_called()
 
     @patch('app.utils.notifications.notify_qc_failure')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_skip_insufficient_data(self, mock_db, mock_chart, mock_notify):
+    def test_skip_insufficient_data(self, mock_db, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         mock_db.session.query.return_value.distinct.return_value.all.return_value = [
@@ -483,7 +479,7 @@ class TestCheckAndNotifyWestgard:
         # Only 1 chart - not enough
         chart1 = MagicMock()
         chart1.measured_value = 5.0
-        mock_chart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [chart1]
+        mock_db.session.execute.return_value.scalars.return_value.all.return_value = [chart1]
 
         check_and_notify_westgard()
         mock_notify.assert_not_called()
@@ -491,9 +487,8 @@ class TestCheckAndNotifyWestgard:
     @patch('app.utils.notifications.notify_qc_failure')
     @patch('app.utils.westgard.get_qc_status')
     @patch('app.utils.westgard.check_westgard_rules')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_calculate_sd_from_values(self, mock_db, mock_chart, mock_check, mock_status, mock_notify):
+    def test_calculate_sd_from_values(self, mock_db, mock_check, mock_status, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         mock_db.session.query.return_value.distinct.return_value.all.return_value = [
@@ -511,7 +506,7 @@ class TestCheckAndNotifyWestgard:
         chart2.target_value = 5.0
         chart2.ucl = None
 
-        mock_chart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [chart1, chart2]
+        mock_db.session.execute.return_value.scalars.return_value.all.return_value = [chart1, chart2]
 
         mock_check.return_value = {}
         mock_status.return_value = {'status': 'ok', 'rules_violated': []}
@@ -522,9 +517,8 @@ class TestCheckAndNotifyWestgard:
     @patch('app.utils.notifications.notify_qc_failure')
     @patch('app.utils.westgard.get_qc_status')
     @patch('app.utils.westgard.check_westgard_rules')
-    @patch('app.models.QCControlChart')
     @patch('app.utils.notifications.db')
-    def test_zero_sd_fallback(self, mock_db, mock_chart, mock_check, mock_status, mock_notify):
+    def test_zero_sd_fallback(self, mock_db, mock_check, mock_status, mock_notify):
         from app.utils.notifications import check_and_notify_westgard
 
         mock_db.session.query.return_value.distinct.return_value.all.return_value = [
@@ -542,7 +536,7 @@ class TestCheckAndNotifyWestgard:
         chart2.target_value = 5.0
         chart2.ucl = 5.0
 
-        mock_chart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [chart1, chart2]
+        mock_db.session.execute.return_value.scalars.return_value.all.return_value = [chart1, chart2]
 
         mock_check.return_value = {}
         mock_status.return_value = {'status': 'ok', 'rules_violated': []}

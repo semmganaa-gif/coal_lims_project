@@ -202,7 +202,7 @@ class TestIndexHelperFunctions:
     def test_get_report_email_recipients(self, prep_app):
         """get_report_email_recipients функц шалгах"""
         with prep_app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # Ensure settings exist
@@ -597,7 +597,7 @@ class TestHourlyReportWithMock:
                 db.session.add(setting)
                 db.session.commit()
 
-            with patch('app.routes.main.index.mail') as mock_mail:
+            with patch('app.routes.main.hourly_report.mail') as mock_mail:
                 mock_mail.send = MagicMock()
                 response = admin_client.get('/send-hourly-report', follow_redirects=True)
             assert response.status_code in [200, 302, 500]
@@ -808,7 +808,7 @@ class TestEmailCCRecipients:
     def test_get_report_email_recipients_with_cc(self, prep_app):
         """CC хаягтай email recipients"""
         with prep_app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # Add CC setting
@@ -971,7 +971,7 @@ class TestHourlyReportWithSamples:
             db.session.add(sample)
             db.session.commit()
 
-            with patch('app.routes.main.index.mail') as mock_mail:
+            with patch('app.routes.main.hourly_report.mail') as mock_mail:
                 mock_mail.send = MagicMock()
                 response = admin_client.get('/send-hourly-report', follow_redirects=True)
 
@@ -983,11 +983,11 @@ class TestHourlyReportWithSamples:
             from datetime import datetime
 
             # Mock datetime to be before 8:00
-            with patch('app.routes.main.index.now_local') as mock_now:
+            with patch('app.routes.main.hourly_report.now_local') as mock_now:
                 # Set time to 7:00
                 mock_now.return_value = datetime.now().replace(hour=7, minute=0)
 
-                with patch('app.routes.main.index.mail') as mock_mail:
+                with patch('app.routes.main.hourly_report.mail') as mock_mail:
                     mock_mail.send = MagicMock()
                     response = admin_client.get('/send-hourly-report', follow_redirects=True)
 
@@ -1003,11 +1003,11 @@ class TestHourlyReportCounter:
             from datetime import datetime
 
             # Mock datetime to be exactly 7:00
-            with patch('app.routes.main.index.now_local') as mock_now:
+            with patch('app.routes.main.hourly_report.now_local') as mock_now:
                 target_time = datetime.now().replace(hour=7, minute=0, second=0)
                 mock_now.return_value = target_time
 
-                with patch('app.routes.main.index.mail') as mock_mail:
+                with patch('app.routes.main.hourly_report.mail') as mock_mail:
                     mock_mail.send = MagicMock()
                     response = admin_client.get('/send-hourly-report', follow_redirects=True)
 
@@ -1036,7 +1036,7 @@ class TestHourlyReportMailing:
                 ))
             db.session.commit()
 
-            with patch('app.routes.main.index.mail') as mock_mail:
+            with patch('app.routes.main.hourly_report.mail') as mock_mail:
                 mock_mail.send = MagicMock()
                 response = admin_client.get('/send-hourly-report', follow_redirects=True)
 
@@ -1045,8 +1045,8 @@ class TestHourlyReportMailing:
     def test_hourly_report_mail_exception(self, admin_client, prep_app):
         """Email илгээхэд алдаа гарах"""
         with prep_app.app_context():
-            with patch('app.routes.main.index.mail') as mock_mail:
-                mock_mail.send = MagicMock(side_effect=Exception("SMTP error"))
+            with patch('app.routes.main.hourly_report.mail') as mock_mail:
+                mock_mail.send = MagicMock(side_effect=OSError("SMTP error"))
                 response = admin_client.get('/send-hourly-report', follow_redirects=True)
 
             # Should handle exception and redirect

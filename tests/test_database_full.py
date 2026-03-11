@@ -6,7 +6,7 @@ Complete tests for app/utils/database.py
 
 import pytest
 from unittest.mock import patch, MagicMock
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 class TestSafeCommit:
@@ -71,7 +71,7 @@ class TestSafeCommit:
             with app.test_request_context('/'):
                 from app.utils.database import safe_commit
 
-                with patch('app.utils.database.db.session.commit', side_effect=Exception("DB Error")):
+                with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("DB Error")):
                     result = safe_commit()
                     assert result is False
 
@@ -81,7 +81,7 @@ class TestSafeCommit:
             with app.test_request_context('/'):
                 from app.utils.database import safe_commit
 
-                with patch('app.utils.database.db.session.commit', side_effect=Exception("Error")):
+                with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("Error")):
                     with patch('app.utils.database.db.session.rollback') as mock_rollback:
                         safe_commit()
                         mock_rollback.assert_called_once()
@@ -135,7 +135,7 @@ class TestSafeDelete:
 
                 mock_obj = MagicMock()
                 with patch('app.utils.database.db.session.delete'):
-                    with patch('app.utils.database.db.session.commit', side_effect=Exception("Delete error")):
+                    with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("Delete error")):
                         result = safe_delete(mock_obj)
                         assert result is False
 
@@ -147,7 +147,7 @@ class TestSafeDelete:
 
                 mock_obj = MagicMock()
                 with patch('app.utils.database.db.session.delete'):
-                    with patch('app.utils.database.db.session.commit', side_effect=Exception("Error")):
+                    with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("Error")):
                         with patch('app.utils.database.db.session.rollback') as mock_rollback:
                             safe_delete(mock_obj)
                             mock_rollback.assert_called_once()
@@ -236,7 +236,7 @@ class TestSafeAdd:
 
                 mock_obj = MagicMock()
                 with patch('app.utils.database.db.session.add'):
-                    with patch('app.utils.database.db.session.commit', side_effect=Exception("DB Error")):
+                    with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("DB Error")):
                         result = safe_add(mock_obj)
                         assert result is False
 
@@ -248,7 +248,7 @@ class TestSafeAdd:
 
                 mock_obj = MagicMock()
                 with patch('app.utils.database.db.session.add'):
-                    with patch('app.utils.database.db.session.commit', side_effect=Exception("Error")):
+                    with patch('app.utils.database.db.session.commit', side_effect=SQLAlchemyError("Error")):
                         with patch('app.utils.database.db.session.rollback') as mock_rollback:
                             safe_add(mock_obj)
                             mock_rollback.assert_called_once()

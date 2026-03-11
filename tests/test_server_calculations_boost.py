@@ -113,10 +113,10 @@ class TestCalcVolatileVad:
     def test_calc_volatile_vad_valid(self, app):
         with app.app_context():
             from app.utils.server_calculations import calc_volatile_vad
-            # Formula: Vad% = ((m2 - m3) / m1) * 100
+            # Formula: Vad% = ((m1 + m2) - m3) / m2 * 100 - mad
             raw_data = {
-                "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0},
-                "p2": {"m1": 1.0, "m2": 1.3, "m3": 1.0}
+                "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7},
+                "p2": {"m1": 10.0, "m2": 1.0, "m3": 10.7}
             }
             result = calc_volatile_vad(raw_data)
             assert result is not None
@@ -156,13 +156,14 @@ class TestCalcSulfurTs:
     def test_calc_sulfur_ts_valid(self, app):
         with app.app_context():
             from app.utils.server_calculations import calc_sulfur_ts
-            # Formula: S% = ((m2 - m1) / m_sample) * K * 100
+            # Source averages p1.result and p2.result
             raw_data = {
-                "p1": {"m1": 0.1, "m2": 0.15, "m_sample": 1.0, "k": 0.34296},
-                "p2": {"m1": 0.1, "m2": 0.15, "m_sample": 1.0, "k": 0.34296}
+                "p1": {"result": 1.20},
+                "p2": {"result": 1.30}
             }
             result = calc_sulfur_ts(raw_data)
             assert result is not None
+            assert abs(result - 1.25) < 0.01
 
     def test_calc_sulfur_ts_missing(self, app):
         with app.app_context():
@@ -177,13 +178,14 @@ class TestCalcPhosphorusP:
     def test_calc_phosphorus_valid(self, app):
         with app.app_context():
             from app.utils.server_calculations import calc_phosphorus_p
-            # Formula: P% = ((V - V0) * C * 0.0030974 * 100) / m_sample
+            # Source averages p1.result and p2.result
             raw_data = {
-                "p1": {"v": 10.0, "v0": 0.5, "c": 0.1, "m_sample": 1.0},
-                "p2": {"v": 10.0, "v0": 0.5, "c": 0.1, "m_sample": 1.0}
+                "p1": {"result": 0.020},
+                "p2": {"result": 0.030}
             }
             result = calc_phosphorus_p(raw_data)
             assert result is not None
+            assert abs(result - 0.025) < 0.001
 
     def test_calc_phosphorus_missing(self, app):
         with app.app_context():
@@ -339,18 +341,20 @@ class TestCalcFreeMoistureFm:
         with app.app_context():
             from app.utils.server_calculations import calc_free_moisture_fm
             # Formula: FM% = ((Wb - Wa) / (Wa - Wt)) * 100
+            # Source reads top-level tray_g/before_g/after_g
             raw_data = {
-                "p1": {"wt": 50.0, "wb": 110.0, "wa": 105.0},
-                "p2": {"wt": 50.0, "wb": 110.0, "wa": 105.0}
+                "tray_g": 50.0, "before_g": 110.0, "after_g": 105.0
             }
             result = calc_free_moisture_fm(raw_data)
             assert result is not None
+            # FM = (110-105)/(105-50)*100 = 5/55*100 = 9.09%
+            assert abs(result - 9.09) < 0.1
 
     def test_calc_free_moisture_zero_denominator(self, app):
         with app.app_context():
             from app.utils.server_calculations import calc_free_moisture_fm
             raw_data = {
-                "p1": {"wt": 50.0, "wb": 110.0, "wa": 50.0}  # wa - wt = 0
+                "tray_g": 50.0, "before_g": 110.0, "after_g": 50.0  # after - tray = 0
             }
             result = calc_free_moisture_fm(raw_data)
             assert result is None
@@ -369,9 +373,9 @@ class TestCalcSolid:
         with app.app_context():
             from app.utils.server_calculations import calc_solid
             # Formula: Solid% = C * 100 / (A - B)
+            # Source reads top-level A/B/C (or a/b/c)
             raw_data = {
-                "p1": {"a": 100.0, "b": 50.0, "c": 25.0},
-                "p2": {"a": 100.0, "b": 50.0, "c": 25.0}
+                "A": 100.0, "B": 50.0, "C": 25.0
             }
             result = calc_solid(raw_data)
             assert result is not None
@@ -381,7 +385,7 @@ class TestCalcSolid:
         with app.app_context():
             from app.utils.server_calculations import calc_solid
             raw_data = {
-                "p1": {"a": 100.0, "b": 100.0, "c": 25.0}  # a - b = 0
+                "A": 100.0, "B": 100.0, "C": 25.0  # A - B = 0
             }
             result = calc_solid(raw_data)
             assert result is None
@@ -451,8 +455,8 @@ class TestVerifyAndRecalculate:
         with app.app_context():
             from app.utils.server_calculations import verify_and_recalculate
             raw_data = {
-                "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0},
-                "p2": {"m1": 1.0, "m2": 1.3, "m3": 1.0}
+                "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7},
+                "p2": {"m1": 10.0, "m2": 1.0, "m3": 10.7}
             }
             result, warnings = verify_and_recalculate("Vad", 30.0, raw_data)
             assert result is not None
@@ -471,8 +475,8 @@ class TestVerifyAndRecalculate:
         with app.app_context():
             from app.utils.server_calculations import verify_and_recalculate
             raw_data = {
-                "p1": {"m1": 0.1, "m2": 0.15, "m_sample": 1.0, "k": 0.34296},
-                "p2": {"m1": 0.1, "m2": 0.15, "m_sample": 1.0}
+                "p1": {"result": 1.70},
+                "p2": {"result": 1.70}
             }
             result, warnings = verify_and_recalculate("TS", 1.7, raw_data)
             assert result is not None
@@ -501,16 +505,16 @@ class TestVerifyAndRecalculate:
         with app.app_context():
             from app.utils.server_calculations import verify_and_recalculate
             raw_data = {
-                "p1": {"wt": 50.0, "wb": 110.0, "wa": 105.0}
+                "tray_g": 50.0, "before_g": 110.0, "after_g": 105.0
             }
-            result, warnings = verify_and_recalculate("FM", 9.0, raw_data)
+            result, warnings = verify_and_recalculate("FM", 9.09, raw_data)
             assert result is not None
 
     def test_verify_solid(self, app):
         with app.app_context():
             from app.utils.server_calculations import verify_and_recalculate
             raw_data = {
-                "p1": {"a": 100.0, "b": 50.0, "c": 25.0}
+                "A": 100.0, "B": 50.0, "C": 25.0
             }
             result, warnings = verify_and_recalculate("SOLID", 50.0, raw_data)
             assert result is not None
@@ -551,7 +555,7 @@ class TestVerifyAndRecalculate:
         with app.app_context():
             from app.utils.server_calculations import verify_and_recalculate
             raw_data = {
-                "p1": {"v": 10.0, "v0": 0.5, "c": 0.1, "m_sample": 1.0}
+                "p1": {"result": 0.03}
             }
             result, warnings = verify_and_recalculate("P", 0.03, raw_data)
             assert result is not None

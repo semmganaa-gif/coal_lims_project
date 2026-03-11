@@ -152,7 +152,7 @@ def calculate_all_conversions(
                 term3 = (100.0 - Mt_ar) / denom
                 qnet_ar_value = ((term1 - term2) * term3 - 23.0 * Mt_ar) / 4.1868
                 final_results['qnet_ar'] = qnet_ar_value
-    except Exception:
+    except (ValueError, TypeError, ZeroDivisionError, ArithmeticError):
         # Тооцооны алдаа гарвал юу ч хийхгүй (qnet_ar = None хэвээр үлдэнэ)
         pass
 

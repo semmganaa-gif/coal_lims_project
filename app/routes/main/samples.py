@@ -11,6 +11,8 @@ from datetime import date, timedelta
 from flask import render_template, flash, redirect, url_for, request, abort, current_app
 from flask_login import login_required, current_user
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
 from app.schemas import SampleSchema
 from app.utils.audit import log_audit
@@ -29,6 +31,7 @@ def register_routes(bp):
     @login_required
     def edit_sample(sample_id):
         from app.models import Sample, AnalysisType
+        from app.repositories import AnalysisTypeRepository
         sample = db.session.get(Sample, sample_id)
         if not sample:
             abort(404)
@@ -40,7 +43,7 @@ def register_routes(bp):
             flash("Энэ дээжийг засах эрхгүй, эсвэл аль хэдийн боловсруулалтанд орсон байна.", "warning")
             return redirect(url_for("main.index"))
 
-        all_analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
+        all_analysis_types = AnalysisTypeRepository.get_all_ordered()
 
         try:
             current_analyses = json.loads(sample.analyses_to_perform or "[]")
@@ -76,7 +79,7 @@ def register_routes(bp):
                     else:
                         flash("Өөрчлөлт хийгдээгүй.", "info")
                     return redirect(url_for("main.index"))
-                except Exception as e:
+                except SQLAlchemyError as e:
                     db.session.rollback()
                     current_app.logger.error(f"Sample save error: {e}", exc_info=True)
                     flash("Хадгалахад алдаа гарлаа.", "danger")
@@ -130,16 +133,16 @@ def register_routes(bp):
                     deleted_count += 1
                 else:
                     failed_samples.append(f"ID={sample_id_str} (Олдсонгүй)")
-            except Exception as e:
+            except (ValueError, TypeError) as e:
                 failed_samples.append(f"ID={sample_id_str} (Алдаа: {e})")
 
         if deleted_count > 0:
             try:
                 db.session.commit()
                 flash(f"{deleted_count} дээж амжилттай устгагдлаа.", "success")
-            except Exception as e:
+            except SQLAlchemyError as e:
                 db.session.rollback()
-                logger.error(f"Bulk delete commit error: {e}")
+                current_app.logger.error(f"Bulk delete commit error: {e}")
                 flash("Устгах үед алдаа гарлаа. Дахин оролдоно уу.", "danger")
         if failed_samples:
             flash(f'Алдаа: Дараах дээжүүд устгагдсангүй: {", ".join(failed_samples)}', "danger")
@@ -250,7 +253,7 @@ def register_routes(bp):
                         }
                     )
                     disposed_count += 1
-            except Exception as e:
+            except (ValueError, TypeError) as e:
                 current_app.logger.warning(f"dispose_samples: sample_id={sid} error: {e}")
                 continue
 
@@ -258,7 +261,7 @@ def register_routes(bp):
             try:
                 db.session.commit()
                 flash(f"{disposed_count} дээж устгагдсан гэж тэмдэглэгдлээ.", "success")
-            except Exception as e:
+            except SQLAlchemyError as e:
                 db.session.rollback()
                 flash(f"Алдаа: {str(e)[:100]}", "danger")
 
@@ -298,7 +301,7 @@ def register_routes(bp):
                 if sample:
                     sample.retention_date = retention_date
                     updated_count += 1
-            except (ValueError, Exception):
+            except (ValueError, TypeError):
                 continue
 
         if updated_count > 0:
@@ -315,7 +318,7 @@ def register_routes(bp):
                         'retention_days': days,
                     }
                 )
-            except Exception as e:
+            except SQLAlchemyError as e:
                 db.session.rollback()
                 flash(f"Алдаа: {str(e)[:100]}", "danger")
 

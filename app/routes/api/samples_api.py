@@ -24,11 +24,13 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
 
 from app import db, limiter
 from app.models import AnalysisType, Sample, AnalysisResult, AnalysisResultLog
+from app.repositories import AnalysisTypeRepository
 from app.schemas import SampleSchema
 from app.utils.datetime import now_local
 from app.utils.codes import to_base_list
@@ -444,7 +446,7 @@ def register_routes(bp):
                     }
 
         # 4. Analysis types
-        analysis_types = AnalysisType.query.order_by(AnalysisType.order_num).all()
+        analysis_types = AnalysisTypeRepository.get_all_ordered()
 
         # Month names
         MONTH_NAMES = {
@@ -806,7 +808,7 @@ def register_routes(bp):
                         "success": True,
                         "message": f"{count} шинжилгээг буцаалаа (давтан хийнэ)"
                     })
-                except Exception as e:
+                except (SQLAlchemyError, ValueError, AttributeError) as e:
                     db.session.rollback()
                     logger.error(f"MG repeat error: {e}", exc_info=True)
                     return jsonify({"success": False, "message": "Давтан шинжилгээ буцаахад алдаа гарлаа"}), 500

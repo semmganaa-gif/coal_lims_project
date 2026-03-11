@@ -7,7 +7,7 @@
 import logging
 from typing import Optional, Any, List, Union
 from flask import flash
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 from app import db
 
@@ -48,7 +48,7 @@ def safe_commit(success_msg: Optional[str] = None, error_msg: str = "Error savin
         db.session.rollback()
         flash(error_msg, "danger")
         return False
-    except Exception as e:
+    except SQLAlchemyError as e:
         try:
             db.session.rollback()
         except Exception as rb_err:
@@ -81,7 +81,7 @@ def safe_delete(obj: Any, success_msg: Optional[str] = None, error_msg: str = "Ð
         if success_msg:
             flash(success_msg, "success")
         return True
-    except Exception as e:
+    except SQLAlchemyError as e:
         try:
             db.session.rollback()
         except Exception as rb_err:
@@ -125,7 +125,7 @@ def safe_add(
         db.session.rollback()
         flash(error_msg, "danger")
         return False
-    except Exception as e:
+    except SQLAlchemyError as e:
         try:
             db.session.rollback()
         except Exception as rb_err:

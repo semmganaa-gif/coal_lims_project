@@ -336,7 +336,7 @@ class TestGetReportEmailRecipientsExtended:
 
     def test_recipients_with_settings(self, app, db):
         """Test get_report_email_recipients with system settings."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
         from app.models import SystemSetting
         import uuid
 
@@ -387,7 +387,7 @@ class TestGetReportEmailRecipientsExtended:
 
     def test_recipients_empty_settings(self, app):
         """Test get_report_email_recipients with empty settings."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
 
         with app.app_context():
             result = get_report_email_recipients()

@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
 from app.models import Sample, AnalysisResult
 from app.utils.audit import log_audit
@@ -111,7 +113,7 @@ def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResul
             message=message
         )
 
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Error archiving samples: {e}")
         return ArchiveResult(
@@ -166,7 +168,7 @@ def get_sample_report_data(sample_id: int) -> SampleReportData:
     # Тооцоолол хийх
     try:
         calculations = calculate_all_conversions(raw_canonical_data, PARAMETER_DEFINITIONS)
-    except Exception as e:
+    except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
         logger.error(f"Calculation error for sample {sample_id}: {e}")
         return SampleReportData(
             sample=sample,
@@ -280,7 +282,7 @@ def build_sample_summary_data(samples: list[Sample]) -> dict[str, Any]:
             all_calculated_data = calculate_all_conversions(
                 raw_canonical_data, PARAMETER_DEFINITIONS
             )
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
             logger.error(f"Calculation error for sample {sample_id}: {e}", exc_info=True)
             all_calculated_data = {**raw_canonical_data, "_calc_error": True}
 

@@ -44,7 +44,7 @@ class TestGetReportEmailRecipients:
             _db.session.add(cc_setting)
             _db.session.commit()
 
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
 
             assert 'to' in result
@@ -64,7 +64,7 @@ class TestGetReportEmailRecipients:
             SystemSetting.query.filter_by(category='email').delete()
             _db.session.commit()
 
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
 
             assert result['to'] == []
@@ -89,7 +89,7 @@ class TestGetReportEmailRecipients:
             _db.session.add(to_setting)
             _db.session.commit()
 
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
 
             assert len(result['to']) == 1
@@ -115,7 +115,7 @@ class TestGetReportEmailRecipients:
             _db.session.add(setting)
             _db.session.commit()
 
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
 
             assert result['to'] == []

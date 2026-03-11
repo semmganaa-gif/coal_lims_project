@@ -90,8 +90,7 @@ def _norm_parallel(raw: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(v, str):
             try:
                 out[k] = float(v)
-            except Exception:
-                # Хувиргаж чадахгүй бол алгасна
+            except (ValueError, TypeError):
                 pass
 
     # UI-д weight нэртэй талбарууд ч ашиглагддаг тул m1-г дутуу байвал weight болгон давхар хадгална
@@ -149,7 +148,7 @@ def normalize_raw_data(raw_data: Any, analysis_code: str | None = None) -> Dict[
                 continue
             try:
                 val = float(val)
-            except Exception:
+            except (ValueError, TypeError):
                 pass
             csn_row[key] = val
             rep_count += 1

@@ -126,13 +126,17 @@ class TestLicenseManager:
             assert license1 is None
 
             # Now set the cache to test that cache path is exercised
-            manager._license_cache = 'cached_value'
+            mock_license = MagicMock(spec=SystemLicense)
+            mock_license.is_active = True
+            manager._license_cache = mock_license
             manager._last_check = now_mn()
 
-            # Second call: cache is set, merge will fail on string, fallthrough to DB
-            license2 = manager.get_current_license()
-            # DB has no licenses, so result is None (cache merge failed on string)
-            assert license2 is None
+            # Mock db.session.merge to return the cached object (avoids UnmappedInstanceError)
+            from app import db as app_db
+            with patch.object(app_db.session, 'merge', return_value=mock_license):
+                license2 = manager.get_current_license()
+                # Cache path should return the merged cached object
+                assert license2 is mock_license
 
     def test_validate_license_no_license(self, app, db):
         """Test validate_license when no license exists."""

@@ -6,6 +6,7 @@ Complete tests for app/routes/main/index.py
 
 import pytest
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, date, timedelta
 
 
@@ -15,7 +16,7 @@ class TestGetReportEmailRecipients:
     def test_empty_settings(self, app, db):
         """Test with no email settings."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
             assert 'to' in result
             assert 'cc' in result
@@ -25,7 +26,7 @@ class TestGetReportEmailRecipients:
     def test_with_to_recipients(self, app, db):
         """Test with TO recipients configured."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # Cleanup existing settings first
@@ -52,7 +53,7 @@ class TestGetReportEmailRecipients:
     def test_with_cc_recipients(self, app, db):
         """Test with CC recipients configured."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # Cleanup existing settings first
@@ -78,7 +79,7 @@ class TestGetReportEmailRecipients:
     def test_inactive_setting_ignored(self, app, db):
         """Test inactive settings are ignored."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # First clear any existing active settings
@@ -175,7 +176,7 @@ class TestSendHourlyReportRoute:
         # May redirect or show error based on role
         assert response.status_code in [200, 302]
 
-    @patch('app.routes.main.index.mail')
+    @patch('app.routes.main.hourly_report.mail')
     def test_send_report_no_recipients(self, mock_mail, client, auth_user, app, db):
         """Test send report with no recipients configured."""
         with app.app_context():
@@ -398,7 +399,7 @@ class TestErrorHandling:
     def test_database_error_handling(self, client, auth_user, app, db):
         """Test database error is handled gracefully."""
         with patch('app.routes.main.index.db.session.commit') as mock_commit:
-            mock_commit.side_effect = Exception('Database error')
+            mock_commit.side_effect = SQLAlchemyError('Database error')
             response = client.post('/coal', data={
                 'client_name': 'LAB',
                 'sample_type': 'Test',

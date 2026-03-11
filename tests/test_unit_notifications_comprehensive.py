@@ -16,47 +16,54 @@ from app.utils.notifications import (
 class TestGetNotificationRecipients:
     """Get notification recipients tests"""
 
-    @patch('app.utils.notifications.SystemSetting')
-    @patch('app.utils.notifications.User')
-    def test_get_recipients_qc_alert(self, mock_user, mock_setting):
+    @patch('app.utils.notifications.db')
+    def test_get_recipients_qc_alert(self, mock_db):
         """Get recipients for QC alert"""
-        mock_setting.query.filter_by.return_value.first.return_value = MagicMock(
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.first.return_value = MagicMock(
             value='admin@test.com,senior@test.com'
         )
+        mock_db.session.execute.return_value = mock_exec
 
         result = get_notification_recipients('qc_alert')
         assert isinstance(result, list)
         assert 'admin@test.com' in result
         assert 'senior@test.com' in result
 
-    @patch('app.utils.notifications.SystemSetting')
-    @patch('app.utils.notifications.User')
-    def test_get_recipients_no_setting(self, mock_user, mock_setting):
+    @patch('app.utils.notifications.db')
+    def test_get_recipients_no_setting(self, mock_db):
         """Get recipients when no setting exists"""
-        mock_setting.query.filter_by.return_value.first.return_value = None
-        mock_user.query.filter.return_value.all.return_value = []
+        mock_exec1 = MagicMock()
+        mock_exec1.scalars.return_value.first.return_value = None
+        mock_exec2 = MagicMock()
+        mock_exec2.scalars.return_value.all.return_value = []
+        mock_db.session.execute.side_effect = [mock_exec1, mock_exec2]
 
         result = get_notification_recipients('sample_status')
         assert result == [] or isinstance(result, list)
 
-    @patch('app.utils.notifications.SystemSetting')
-    @patch('app.utils.notifications.User')
-    def test_get_recipients_from_users(self, mock_user, mock_setting):
+    @patch('app.utils.notifications.db')
+    def test_get_recipients_from_users(self, mock_db):
         """Get recipients from admin/senior users when no setting"""
-        mock_setting.query.filter_by.return_value.first.return_value = None
+        mock_exec1 = MagicMock()
+        mock_exec1.scalars.return_value.first.return_value = None
         mock_admin = MagicMock(email='admin@test.com')
         mock_senior = MagicMock(email='senior@test.com')
-        mock_user.query.filter.return_value.all.return_value = [mock_admin, mock_senior]
+        mock_exec2 = MagicMock()
+        mock_exec2.scalars.return_value.all.return_value = [mock_admin, mock_senior]
+        mock_db.session.execute.side_effect = [mock_exec1, mock_exec2]
 
         result = get_notification_recipients('equipment')
         assert isinstance(result, list)
 
-    @patch('app.utils.notifications.SystemSetting')
-    @patch('app.utils.notifications.User')
-    def test_get_recipients_empty_value(self, mock_user, mock_setting):
+    @patch('app.utils.notifications.db')
+    def test_get_recipients_empty_value(self, mock_db):
         """Get recipients with empty setting value"""
-        mock_setting.query.filter_by.return_value.first.return_value = MagicMock(value='')
-        mock_user.query.filter.return_value.all.return_value = []
+        mock_exec1 = MagicMock()
+        mock_exec1.scalars.return_value.first.return_value = MagicMock(value='')
+        mock_exec2 = MagicMock()
+        mock_exec2.scalars.return_value.all.return_value = []
+        mock_db.session.execute.side_effect = [mock_exec1, mock_exec2]
 
         result = get_notification_recipients('all')
         assert isinstance(result, list)
@@ -122,7 +129,7 @@ class TestSendNotification:
         mock_msg = MagicMock()
         mock_message.return_value = mock_msg
         mock_signature.return_value = "<p>Signature</p>"
-        mock_mail.send.side_effect = Exception("SMTP error")
+        mock_mail.send.side_effect = OSError("SMTP error")
 
         result = send_notification(
             subject="Test",
@@ -153,7 +160,7 @@ class TestNotifySampleStatusChange:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_status_change_approved(self, mock_render, mock_recipients, mock_send):
         """Notify on sample approval"""
         mock_recipients.return_value = ['admin@test.com']
@@ -169,7 +176,7 @@ class TestNotifySampleStatusChange:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_status_change_rejected(self, mock_render, mock_recipients, mock_send):
         """Notify on sample rejection with reason"""
         mock_recipients.return_value = ['admin@test.com']
@@ -198,7 +205,7 @@ class TestNotifySampleStatusChange:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_status_with_timestamp(self, mock_render, mock_recipients, mock_send):
         """Notify with custom timestamp"""
         mock_recipients.return_value = ['admin@test.com']
@@ -215,7 +222,7 @@ class TestNotifySampleStatusChange:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_status_pending(self, mock_render, mock_recipients, mock_send):
         """Notify on pending status"""
         mock_recipients.return_value = ['admin@test.com']
@@ -231,7 +238,7 @@ class TestNotifySampleStatusChange:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_status_unknown(self, mock_render, mock_recipients, mock_send):
         """Notify on unknown status - default icon/color"""
         mock_recipients.return_value = ['admin@test.com']
@@ -251,7 +258,7 @@ class TestNotifyQcFailure:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_qc_failure(self, mock_render, mock_recipients, mock_send):
         """Notify on QC failure"""
         mock_recipients.return_value = ['admin@test.com']
@@ -268,7 +275,7 @@ class TestNotifyQcFailure:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_qc_failure_warn(self, mock_render, mock_recipients, mock_send):
         """Notify on QC warning"""
         mock_recipients.return_value = ['admin@test.com']
@@ -298,7 +305,7 @@ class TestNotifyQcFailure:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_qc_failure_multiple_rules(self, mock_render, mock_recipients, mock_send):
         """Notify on QC failure with multiple rule violations"""
         mock_recipients.return_value = ['admin@test.com']
@@ -319,7 +326,7 @@ class TestNotifyEquipmentCalibrationDue:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_equipment_calibration(self, mock_render, mock_recipients, mock_send):
         """Notify equipment calibration due"""
         mock_recipients.return_value = ['admin@test.com']
@@ -351,7 +358,7 @@ class TestNotifyEquipmentCalibrationDue:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_equipment_urgent(self, mock_render, mock_recipients, mock_send):
         """Notify equipment with urgent items"""
         mock_recipients.return_value = ['admin@test.com']
@@ -367,7 +374,7 @@ class TestNotifyEquipmentCalibrationDue:
 
     @patch('app.utils.notifications.send_notification')
     @patch('app.utils.notifications.get_notification_recipients')
-    @patch('app.utils.notifications.render_template_string')
+    @patch('app.utils.notifications._render_email')
     def test_notify_equipment_single_item(self, mock_render, mock_recipients, mock_send):
         """Notify equipment with single item"""
         mock_recipients.return_value = ['admin@test.com']

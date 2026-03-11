@@ -202,3 +202,94 @@ class TestDetermineResultStatus:
             status, reason = determine_result_status(code, low_value)
             # Should be pending_review for being below soft limit
             assert status in ['approved', 'pending_review']
+
+    # ================================================================
+    # Gi server-side threshold check (line 152)
+    # ================================================================
+
+    def test_gi_server_threshold_retest_5_1(self):
+        """Gi value < threshold with retest_mode=5_1 should be rejected"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'is_low_avg': False, 'retest_mode': '5_1'}
+        status, reason = determine_result_status('Gi', 10.0, raw_data=raw_data)
+        assert status == 'rejected'
+        assert 'GI_RETEST_3_3' in reason
+
+    def test_gi_server_threshold_retest_3_3_not_rejected(self):
+        """Gi with retest_mode=3_3 should NOT reject even if low"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'is_low_avg': True, 'retest_mode': '3_3'}
+        status, reason = determine_result_status('Gi', 10.0, raw_data=raw_data)
+        assert status == 'approved'
+
+    def test_gi_above_threshold_5_1_approved(self):
+        """Gi value >= threshold with retest_mode=5_1 should be approved"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'is_low_avg': False, 'retest_mode': '5_1'}
+        status, reason = determine_result_status('Gi', 25.0, raw_data=raw_data)
+        assert status == 'approved'
+
+    # ================================================================
+    # CSN rules (lines 158-182)
+    # ================================================================
+
+    def test_csn_value_out_of_range_negative(self):
+        """CSN < 0 should be rejected"""
+        from app.utils.analysis_rules import determine_result_status
+        status, reason = determine_result_status('CSN', -1.0)
+        assert status == 'rejected'
+        assert 'CSN' in reason
+
+    def test_csn_value_out_of_range_high(self):
+        """CSN > 9 should be rejected"""
+        from app.utils.analysis_rules import determine_result_status
+        status, reason = determine_result_status('CSN', 10.0)
+        assert status == 'rejected'
+        assert 'CSN' in reason
+
+    def test_csn_valid_value_approved(self):
+        """CSN within 0-9 should be approved"""
+        from app.utils.analysis_rules import determine_result_status
+        status, reason = determine_result_status('CSN', 5.0)
+        assert status == 'approved'
+
+    def test_csn_parallel_diff_exceeded(self):
+        """CSN parallel diff >= 1.0 should be pending_review"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'p1_csn': 3.0, 'p2_csn': 5.0}
+        status, reason = determine_result_status('CSN', 4.0, raw_data=raw_data)
+        assert status == 'pending_review'
+        assert 'parallel' in reason.lower() or 'CSN' in reason
+
+    def test_csn_parallel_diff_ok(self):
+        """CSN parallel diff < 1.0 should be approved"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'p1_csn': 4.0, 'p2_csn': 4.5}
+        status, reason = determine_result_status('CSN', 4.0, raw_data=raw_data)
+        assert status == 'approved'
+
+    def test_csn_parallel_from_p1_p2_dict(self):
+        """CSN parallel from nested p1/p2 dict"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'p1': {'csn': 2.0}, 'p2': {'csn': 4.0}}
+        status, reason = determine_result_status('CSN', 3.0, raw_data=raw_data)
+        assert status == 'pending_review'
+
+    def test_csn_parallel_invalid_values(self):
+        """CSN parallel with non-numeric values should be handled"""
+        from app.utils.analysis_rules import determine_result_status
+        raw_data = {'p1_csn': 'abc', 'p2_csn': 'xyz'}
+        status, reason = determine_result_status('CSN', 5.0, raw_data=raw_data)
+        assert status == 'approved'
+
+    def test_csn_zero_value(self):
+        """CSN = 0 should be approved (non-coking coal)"""
+        from app.utils.analysis_rules import determine_result_status
+        status, reason = determine_result_status('CSN', 0)
+        assert status == 'approved'
+
+    def test_csn_none_value(self):
+        """CSN with None value should be approved"""
+        from app.utils.analysis_rules import determine_result_status
+        status, reason = determine_result_status('CSN', None)
+        assert status == 'approved'

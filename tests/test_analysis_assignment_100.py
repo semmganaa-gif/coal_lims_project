@@ -5,6 +5,7 @@ analysis_assignment.py модулийн 100% coverage тестүүд
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestAnalysisAssignmentImport:
@@ -68,7 +69,7 @@ class TestGetGiShiftConfig:
     def test_config_exception(self, mock_setting):
         from app.utils.analysis_assignment import get_gi_shift_config, DEFAULT_GI_SHIFT_CONFIG
 
-        mock_setting.query.filter_by.side_effect = Exception("DB error")
+        mock_setting.query.filter_by.side_effect = SQLAlchemyError("DB error")
 
         result = get_gi_shift_config()
         assert result == DEFAULT_GI_SHIFT_CONFIG
@@ -124,8 +125,9 @@ class TestAssignAnalysesToSample:
         )
         assert 'MT' in result or 'Mad' in result or 'Aad' in result
 
+    @patch('app.utils.analysis_assignment.get_gi_shift_config')
     @patch('app.utils.analysis_assignment.AnalysisProfile')
-    def test_pattern_profile_match(self, mock_profile):
+    def test_pattern_profile_match(self, mock_profile, mock_gi_config):
         from app.utils.analysis_assignment import assign_analyses_to_sample
 
         # No simple profile
@@ -138,6 +140,9 @@ class TestAssignAnalysesToSample:
         pattern_profile.match_rule = 'merge'
 
         mock_profile.query.filter.return_value.order_by.return_value.all.return_value = [pattern_profile]
+
+        # Mock gi_shift_config to allow Gi for PF211_D1
+        mock_gi_config.return_value = {'PF211': ['D1', 'D3', 'D5']}
 
         result = assign_analyses_to_sample(
             client_name="CHPP",

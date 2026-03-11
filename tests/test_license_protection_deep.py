@@ -401,7 +401,8 @@ class TestLogEvent:
                 mock_license = MagicMock()
                 mock_license.id = 1
                 # Mock the entire function to test exception handling
-                with patch.object(manager, '_log_event', side_effect=Exception("DB Error")):
+                from sqlalchemy.exc import SQLAlchemyError
+                with patch.object(manager, '_log_event', side_effect=SQLAlchemyError("DB Error")):
                     try:
                         manager._log_event(mock_license, 'test', 'details')
                     except Exception:

@@ -290,7 +290,7 @@ def send_notification(
         logger.info(f"Notification sent: {subject} to {len(recipients)} recipients")
         return True
 
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         logger.error(f"Failed to send notification: {e}")
         return False
 

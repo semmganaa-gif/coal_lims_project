@@ -11,6 +11,8 @@ from flask import render_template, current_app, url_for, request
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
 from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
@@ -39,7 +41,7 @@ def register_fonts():
         if os.path.exists(font_path):
             pdfmetrics.registerFont(TTFont('DejaVuSans', font_path))
             _font_registered = True
-    except Exception as e:
+    except (OSError, ValueError) as e:
         current_app.logger.warning(f"Font registration failed: {e}")
 
 
@@ -115,7 +117,7 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
 
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         _logger.error(f"Microbiology report commit error: {e}")
         return None, "Микробиологийн тайлан хадгалахад алдаа гарлаа."
@@ -173,7 +175,7 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
 
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         _logger.error(f"Water report commit error: {e}")
         return None, "Усны тайлан хадгалахад алдаа гарлаа."
@@ -231,7 +233,7 @@ def generate_coal_report(sample_ids, date_from, date_to, created_by_id):
 
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         _logger.error(f"Coal report commit error: {e}")
         return None, "Нүүрсний тайлан хадгалахад алдаа гарлаа."
@@ -337,6 +339,6 @@ def regenerate_pdf(report):
     report.pdf_path = f"uploads/reports/{filename}"
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         _logger.error(f"Regenerate PDF commit error: {e}")

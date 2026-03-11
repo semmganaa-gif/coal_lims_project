@@ -89,7 +89,7 @@ class TestGetReportEmailRecipients:
 
     def test_get_recipients(self, app):
         """Test get report email recipients."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
 
         with app.app_context():
             result = get_report_email_recipients()

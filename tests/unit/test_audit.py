@@ -86,7 +86,8 @@ class TestLogAudit:
 
         with app.test_request_context():
             with patch.object(db.session, 'add'):
-                with patch.object(db.session, 'commit', side_effect=Exception("DB Error")):
+                from sqlalchemy.exc import SQLAlchemyError
+                with patch.object(db.session, 'commit', side_effect=SQLAlchemyError("DB Error")):
                     with patch.object(db.session, 'rollback') as mock_rollback:
                         # Should not raise exception
                         log_audit('test_action')

@@ -6,7 +6,7 @@ Deep coverage tests for app/utils/database.py
 
 import pytest
 from unittest.mock import patch, MagicMock
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 class TestSafeCommit:
@@ -50,7 +50,7 @@ class TestSafeCommit:
             from app.utils.database import safe_commit
             from app import db as database
 
-            with patch.object(database.session, 'commit', side_effect=Exception('Test error')):
+            with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test error')):
                 with patch('app.utils.database.flash'):  # Mock flash
                     result = safe_commit("Success", "Error occurred")
                     assert result is False
@@ -90,7 +90,7 @@ class TestSafeDelete:
             mock_obj = MagicMock()
 
             with patch.object(database.session, 'delete'):
-                with patch.object(database.session, 'commit', side_effect=Exception('Delete failed')):
+                with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Delete failed')):
                     with patch('app.utils.database.flash'):
                         result = safe_delete(mock_obj, "Deleted", "Delete error")
                         assert result is False
@@ -158,7 +158,7 @@ class TestSafeAdd:
             mock_obj = MagicMock()
 
             with patch.object(database.session, 'add'):
-                with patch.object(database.session, 'commit', side_effect=Exception('Add failed')):
+                with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Add failed')):
                     with patch('app.utils.database.flash'):
                         result = safe_add(mock_obj, "Added", "Add error")
                         assert result is False

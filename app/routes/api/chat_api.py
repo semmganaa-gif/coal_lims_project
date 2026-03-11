@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.models import ChatMessage, User, UserOnlineStatus, Sample
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import SQLAlchemyError
 from app.utils.security import escape_like_pattern
 
 
@@ -166,7 +167,7 @@ def register_routes(bp):
 
         try:
             db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Mark messages read commit error: {e}")
 

@@ -6,7 +6,7 @@ Database utility functions тест
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 
 class TestSafeCommit:
@@ -52,7 +52,7 @@ class TestSafeCommit:
         from app import db
 
         with app.test_request_context():
-            with patch.object(db.session, 'commit', side_effect=Exception("DB error")):
+            with patch.object(db.session, 'commit', side_effect=SQLAlchemyError("DB error")):
                 with patch.object(db.session, 'rollback') as mock_rollback:
                     result = safe_commit()
                     assert result is False
@@ -98,7 +98,7 @@ class TestSafeDelete:
         mock_obj = Mock()
 
         with app.test_request_context():
-            with patch.object(db.session, 'delete', side_effect=Exception("Delete error")):
+            with patch.object(db.session, 'delete', side_effect=SQLAlchemyError("Delete error")):
                 with patch.object(db.session, 'rollback') as mock_rollback:
                     result = safe_delete(mock_obj)
                     assert result is False
@@ -160,7 +160,7 @@ class TestSafeAdd:
 
         with app.test_request_context():
             with patch.object(db.session, 'add'):
-                with patch.object(db.session, 'commit', side_effect=Exception("Add error")):
+                with patch.object(db.session, 'commit', side_effect=SQLAlchemyError("Add error")):
                     with patch.object(db.session, 'rollback') as mock_rollback:
                         result = safe_add(mock_obj)
                         assert result is False

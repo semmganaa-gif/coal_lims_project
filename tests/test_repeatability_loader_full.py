@@ -7,6 +7,7 @@ Complete tests for app/utils/repeatability_loader.py
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestLoadLimitRules:
@@ -35,8 +36,12 @@ class TestLoadLimitRules:
     def test_loads_from_db(self, app, db):
         """Test loads rules from database when available."""
         with app.app_context():
-            from app.utils.repeatability_loader import load_limit_rules
+            from app.utils.repeatability_loader import load_limit_rules, clear_cache
             from app.models import SystemSetting
+
+            # Remove any existing setting
+            SystemSetting.query.filter_by(category='repeatability', key='limits').delete()
+            db.session.commit()
 
             # Create test setting with JSON value
             test_rules = {"test_param": {"T": 0.5}}
@@ -49,6 +54,7 @@ class TestLoadLimitRules:
             db.session.add(setting)
             db.session.commit()
 
+            clear_cache()
             result = load_limit_rules()
             assert 'test_param' in result
             assert result['test_param']['T'] == 0.5
@@ -56,12 +62,17 @@ class TestLoadLimitRules:
             # Cleanup
             db.session.delete(setting)
             db.session.commit()
+            clear_cache()
 
     def test_empty_value_returns_fallback(self, app, db):
         """Test returns fallback when DB value is empty."""
         with app.app_context():
-            from app.utils.repeatability_loader import load_limit_rules
+            from app.utils.repeatability_loader import load_limit_rules, clear_cache
             from app.models import SystemSetting
+
+            # Remove any existing setting
+            SystemSetting.query.filter_by(category='repeatability', key='limits').delete()
+            db.session.commit()
 
             # Create setting with empty value
             setting = SystemSetting(
@@ -73,18 +84,24 @@ class TestLoadLimitRules:
             db.session.add(setting)
             db.session.commit()
 
+            clear_cache()
             result = load_limit_rules()
             assert isinstance(result, dict)
 
             # Cleanup
             db.session.delete(setting)
             db.session.commit()
+            clear_cache()
 
     def test_invalid_json_returns_fallback(self, app, db):
         """Test returns fallback when DB value is invalid JSON."""
         with app.app_context():
-            from app.utils.repeatability_loader import load_limit_rules
+            from app.utils.repeatability_loader import load_limit_rules, clear_cache
             from app.models import SystemSetting
+
+            # Remove any existing setting
+            SystemSetting.query.filter_by(category='repeatability', key='limits').delete()
+            db.session.commit()
 
             # Create setting with invalid JSON
             setting = SystemSetting(
@@ -96,23 +113,27 @@ class TestLoadLimitRules:
             db.session.add(setting)
             db.session.commit()
 
+            clear_cache()
             result = load_limit_rules()
             assert isinstance(result, dict)
 
             # Cleanup
             db.session.delete(setting)
             db.session.commit()
+            clear_cache()
 
     def test_db_exception_returns_fallback(self, app):
         """Test returns fallback when DB exception occurs."""
         with app.app_context():
-            from app.utils.repeatability_loader import load_limit_rules
+            from app.utils.repeatability_loader import load_limit_rules, clear_cache
 
-            # Mock DB query to raise exception
-            with patch('app.utils.repeatability_loader.SystemSetting') as mock_setting:
-                mock_setting.query.filter_by.side_effect = Exception("DB Error")
+            clear_cache()
+            # Mock db.session.execute to raise exception
+            from app import db as app_db
+            with patch.object(app_db.session, 'execute', side_effect=SQLAlchemyError("DB Error")):
                 result = load_limit_rules()
                 assert isinstance(result, dict)
+            clear_cache()
 
 
 class TestClearCache:

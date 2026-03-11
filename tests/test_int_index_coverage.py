@@ -302,7 +302,7 @@ class TestGetReportEmailRecipients:
         """TO болон CC хаягтай үед"""
         with app.app_context():
             from app import db
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
 
             # Хуучин email setting устгах
             SystemSetting.query.filter(
@@ -337,7 +337,7 @@ class TestGetReportEmailRecipients:
         """Recipient байхгүй үед"""
         with app.app_context():
             from app import db
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
 
             # Бүх email setting устгах
             SystemSetting.query.filter_by(category='email').delete()

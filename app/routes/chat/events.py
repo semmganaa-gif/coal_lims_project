@@ -14,6 +14,8 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 from markupsafe import escape as _esc
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import socketio, db
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.utils.datetime import now_local as now_mn
@@ -123,7 +125,7 @@ def handle_send_message(data):
     db.session.add(msg)
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Message save error: {e}")
         emit('error', {'message': 'Message save failed'})
@@ -190,7 +192,7 @@ def handle_send_file(data):
     db.session.add(msg)
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"File message save error: {e}")
         emit('error', {'message': 'File save failed'})
@@ -226,7 +228,7 @@ def handle_delete_message(data):
     msg.message = "Мессеж устгагдсан"
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Delete message error: {e}")
         return
@@ -262,7 +264,7 @@ def handle_broadcast(data):
     db.session.add(msg)
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Broadcast save error: {e}")
         emit('error', {'message': 'Broadcast save failed'})
@@ -312,7 +314,7 @@ def handle_mark_read(data):
                 'reader_id': current_user.id,
                 'count': len(unread)
             }, room=get_user_room(sender_id))
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Mark read error: {e}")
 
@@ -370,6 +372,6 @@ def update_online_status(user_id, is_online, socket_id):
         status.last_seen = now_mn()
         status.socket_id = socket_id
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Error updating online status: {e}")
         db.session.rollback()

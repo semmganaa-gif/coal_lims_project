@@ -106,17 +106,17 @@ class TestExtractStandardName:
         result = _extract_standard_name('CM-2025-Q4_20251219_N')
         assert result == 'CM-2025-Q4'
 
-    def test_old_cm_format(self):
+    def test_old_cm_format(self, app):
         from app.routes.quality.control_charts import _extract_standard_name
-        # _extract_standard_name now checks DB for active CM standard
+        # _extract_standard_name now checks ControlStandardRepository for active CM standard
         # when the extracted name is just 'CM'. Pass sample_type='CM'.
-        with patch('app.routes.quality.control_charts.ControlStandard') as MockCS:
-            mock_query = MockCS.query.filter_by.return_value
-            mock_std = MagicMock()
-            mock_std.name = 'CM-2025-Q4'
-            mock_query.first.return_value = mock_std
-            result = _extract_standard_name('CM_20251128_N_Q4', sample_type='CM')
-            assert result == 'CM-2025-Q4'
+        with app.app_context():
+            with patch('app.routes.quality.control_charts.ControlStandardRepository') as MockRepo:
+                mock_std = MagicMock()
+                mock_std.name = 'CM-2025-Q4'
+                MockRepo.get_active.return_value = mock_std
+                result = _extract_standard_name('CM_20251128_N_Q4', sample_type='CM')
+                assert result == 'CM-2025-Q4'
 
     def test_gbw_format(self):
         from app.routes.quality.control_charts import _extract_standard_name

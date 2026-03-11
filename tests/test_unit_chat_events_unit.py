@@ -83,7 +83,8 @@ class TestUpdateOnlineStatus:
     def test_handles_exception(self, mock_now, mock_db, mock_logger):
         """Handles database exceptions"""
         mock_now.return_value = MagicMock()
-        mock_db.session.get.side_effect = Exception("DB Error")
+        from sqlalchemy.exc import SQLAlchemyError
+        mock_db.session.get.side_effect = SQLAlchemyError("DB Error")
 
         update_online_status(1, True, 'socket123')
 
@@ -342,9 +343,9 @@ class TestSocketIOHandlers:
         assert result is None
 
     @patch('app.routes.chat.events.emit')
-    @patch('app.routes.chat.events.db')
+    @patch('app.routes.chat.events.User')
     @patch('app.routes.chat.events.current_user')
-    def test_handle_get_online_users(self, mock_user, mock_db, mock_emit):
+    def test_handle_get_online_users(self, mock_user, mock_user_model, mock_emit):
         """Test get_online_users handler"""
         from app.routes.chat.events import handle_get_online_users, online_users
 
@@ -357,7 +358,7 @@ class TestSocketIOHandlers:
 
         mock_user1 = MagicMock(id=1, username='user1', role='analyst')
         mock_user2 = MagicMock(id=2, username='user2', role='senior')
-        mock_db.session.get.side_effect = lambda cls, uid: {1: mock_user1, 2: mock_user2}.get(uid)
+        mock_user_model.query.filter.return_value.all.return_value = [mock_user1, mock_user2]
 
         handle_get_online_users()
 

@@ -225,7 +225,7 @@ def create_app(config_class=Config):
     try:
         from app import cli as app_cli
         app_cli.register_commands(app)
-    except Exception as e:
+    except (ImportError, AttributeError) as e:
         app.logger.warning(f"CLI commands registration failed: {e}")
 
     # CSRF exempt: зөвхөн JSON API blueprint-үүд

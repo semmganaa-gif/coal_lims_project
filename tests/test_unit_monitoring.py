@@ -185,11 +185,11 @@ class TestGetPerformanceStatsWithPrometheus:
         if PROMETHEUS_AVAILABLE:
             from app.monitoring import get_performance_stats
             with patch('prometheus_client.REGISTRY') as mock_registry:
-                mock_registry.collect.side_effect = Exception("Test error")
+                mock_registry.collect.side_effect = RuntimeError("Test error")
                 result = get_performance_stats()
 
                 assert result['status'] == 'error'
-                assert 'Test error' in result['message']
+                assert result['message'] == 'Failed to collect metrics'
 
 
 class TestTrackFunctionsWithPrometheusMore:
@@ -269,7 +269,8 @@ class TestSetupMonitoringMore:
         from flask import jsonify
 
         with app.test_client() as client:
-            with patch('app.db.session.execute', side_effect=Exception("DB Error")):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch('app.db.session.execute', side_effect=SQLAlchemyError("DB Error")):
                 response = client.get('/health')
                 # May return 200 or 500 depending on implementation
                 data = response.get_json()
@@ -538,7 +539,7 @@ class TestPrometheusSetup:
         test_app.config['ENV'] = 'production'
         test_app.debug = False
 
-        mock_prometheus.side_effect = Exception("Prometheus init error")
+        mock_prometheus.side_effect = RuntimeError("Prometheus init error")
 
         # Should not raise exception
         setup_monitoring(test_app)

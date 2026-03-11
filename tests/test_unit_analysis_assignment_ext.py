@@ -4,6 +4,7 @@ Analysis assignment extended тестүүд
 """
 import pytest
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestDefaultGiShiftConfig:
@@ -64,7 +65,7 @@ class TestGetGiShiftConfig:
     def test_returns_default_on_error(self, mock_setting):
         """Returns default on error"""
         from app.utils.analysis_assignment import get_gi_shift_config, DEFAULT_GI_SHIFT_CONFIG
-        mock_setting.query.filter_by.side_effect = Exception("DB Error")
+        mock_setting.query.filter_by.side_effect = SQLAlchemyError("DB Error")
 
         result = get_gi_shift_config()
         assert result == DEFAULT_GI_SHIFT_CONFIG
@@ -125,10 +126,13 @@ class TestAssignAnalysesToSample:
         result = assign_analyses_to_sample(client_name='CHPP', sample_type='2H')
         assert 'Aad' in result or isinstance(result, list)
 
+    @patch('app.utils.analysis_assignment.get_gi_shift_config')
     @patch('app.utils.analysis_assignment.AnalysisProfile')
-    def test_pattern_profile_match(self, mock_profile):
+    def test_pattern_profile_match(self, mock_profile, mock_config):
         """Pattern profile match adds analyses"""
         from app.utils.analysis_assignment import assign_analyses_to_sample
+
+        mock_config.return_value = {'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5']}
 
         # Mock pattern profile
         pattern = MagicMock()

@@ -282,19 +282,21 @@ class TestCalcFreeMoistureFm:
         """Test valid FM calculation."""
         with app.app_context():
             from app.utils.server_calculations import calc_free_moisture_fm
+            # Source reads top-level tray_g/before_g/after_g
             raw_data = {
-                'p1': {'wt': 100.0, 'wb': 200.0, 'wa': 180.0},
-                'p2': {'wt': 100.0, 'wb': 200.0, 'wa': 182.0}
+                'tray_g': 100.0, 'before_g': 200.0, 'after_g': 180.0
             }
             result = calc_free_moisture_fm(raw_data)
             assert result is not None
+            # FM = (200-180)/(180-100)*100 = 20/80*100 = 25%
+            assert abs(result - 25.0) < 0.1
 
     def test_zero_denominator_returns_none(self, app):
         """Test zero denominator returns None."""
         with app.app_context():
             from app.utils.server_calculations import calc_free_moisture_fm
             raw_data = {
-                'p1': {'wt': 100.0, 'wb': 150.0, 'wa': 100.0}  # wa - wt = 0
+                'tray_g': 100.0, 'before_g': 150.0, 'after_g': 100.0  # after - tray = 0
             }
             result = calc_free_moisture_fm(raw_data)
             assert result is None
@@ -307,8 +309,9 @@ class TestCalcSolid:
         """Test valid Solid calculation."""
         with app.app_context():
             from app.utils.server_calculations import calc_solid
+            # Source reads top-level A/B/C
             raw_data = {
-                'p1': {'A': 100.0, 'B': 50.0, 'C': 25.0}
+                'A': 100.0, 'B': 50.0, 'C': 25.0
             }
             result = calc_solid(raw_data)
             assert result is not None
@@ -319,7 +322,7 @@ class TestCalcSolid:
         with app.app_context():
             from app.utils.server_calculations import calc_solid
             raw_data = {
-                'p1': {'A': 50.0, 'B': 50.0, 'C': 25.0}  # A - B = 0
+                'A': 50.0, 'B': 50.0, 'C': 25.0  # A - B = 0
             }
             result = calc_solid(raw_data)
             assert result is None
@@ -396,7 +399,7 @@ class TestVerifyAndRecalculate:
             # Need to patch the dictionary entry since it holds a reference to the function
             original_func = CALCULATION_FUNCTIONS.get('F')
             try:
-                CALCULATION_FUNCTIONS['F'] = MagicMock(side_effect=Exception("Calc error"))
+                CALCULATION_FUNCTIONS['F'] = MagicMock(side_effect=ValueError("Calc error"))
                 result, warnings = verify_and_recalculate('F', 150.0, {})
                 assert result == 150.0
                 assert len(warnings) > 0

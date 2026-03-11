@@ -9,6 +9,8 @@
 from typing import Optional, Dict, Any
 import json
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.constants import DEFAULT_AUDIT_LOG_LIMIT
 
 
@@ -59,7 +61,7 @@ def log_audit(
     if details:
         try:
             details_str = json.dumps(details, ensure_ascii=False)
-        except Exception:
+        except (TypeError, ValueError):
             details_str = str(details)
 
     # AuditLog бичлэг үүсгэх
@@ -83,7 +85,7 @@ def log_audit(
 
     try:
         db.session.commit()
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         # Audit log бичихэд алдаа гарсан ч үндсэн үйлдэл үргэлжлэх ёстой
         # Алдааг зөвхөн log-д бичнэ

@@ -10,6 +10,7 @@ import pytest
 import json
 import os
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from app import create_app, db
@@ -186,7 +187,7 @@ class TestEditEquipmentErrors:
     def test_edit_integrity_error(self, admin_client, equip_app, sample_equipment):
         """Test IntegrityError handling in edit"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
                 from sqlalchemy.exc import IntegrityError
                 mock_commit.side_effect = IntegrityError('mock', 'params', 'orig')
                 response = admin_client.post(f'/edit_equipment/{sample_equipment}', data={
@@ -198,8 +199,8 @@ class TestEditEquipmentErrors:
     def test_edit_general_exception(self, admin_client, equip_app, sample_equipment):
         """Test general exception handling in edit"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('Database error')
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('Database error')
                 response = admin_client.post(f'/edit_equipment/{sample_equipment}', data={
                     'name': 'Error Name',
                     'category': 'balance'
@@ -227,8 +228,8 @@ class TestDeleteEquipment:
     def test_delete_equipment_db_error(self, admin_client, equip_app, sample_equipment):
         """Delete equipment database error"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('DB error')
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('DB error')
                 response = admin_client.post(f'/equipment/delete/{sample_equipment}',
                     follow_redirects=True)
             assert response.status_code in [200, 302]
@@ -263,8 +264,8 @@ class TestBulkDelete:
     def test_bulk_delete_db_error(self, admin_client, equip_app, sample_equipment):
         """Bulk delete database error"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('Bulk DB error')
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('Bulk DB error')
                 response = admin_client.post('/bulk_delete', data={
                     'equipment_ids': [str(sample_equipment)]
                 }, follow_redirects=True)
@@ -436,8 +437,8 @@ class TestUsageBulkAPI:
     def test_log_usage_bulk_exception(self, admin_client, equip_app, sample_equipment):
         """Log usage bulk exception handling"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('Commit error')
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('Commit error')
                 response = admin_client.post('/api/log_usage_bulk',
                     data=json.dumps({
                         'items': [{'eq_id': sample_equipment, 'minutes': 30}]
@@ -606,8 +607,8 @@ class TestAddEquipmentDBError:
     def test_add_equipment_db_exception(self, admin_client, equip_app):
         """Add equipment database exception"""
         with equip_app.app_context():
-            with patch('app.routes.equipment.crud.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('DB save error')
+            with patch('app.services.equipment_service.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('DB save error')
                 response = admin_client.post('/add_equipment', data={
                     'name': 'Error Equipment',
                     'quantity': '1',

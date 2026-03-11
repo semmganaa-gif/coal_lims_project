@@ -565,7 +565,7 @@ def register_commands(app):
 
         try:
             df = pd.read_csv(csv_path, encoding="utf-8-sig")
-        except Exception as e:
+        except (OSError, ValueError, pd.errors.ParserError) as e:
             click.echo(f"CSV уншихад алдаа: {e}")
             return
 

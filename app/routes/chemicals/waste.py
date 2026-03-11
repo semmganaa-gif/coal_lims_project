@@ -8,6 +8,8 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_login import login_required, current_user
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app import db
 from app.models import ChemicalWaste, ChemicalWasteRecord
 from app.utils.database import safe_commit
@@ -131,7 +133,7 @@ def add_waste():
             ):
                 return redirect(url_for("chemicals.waste_list"))
 
-        except Exception as e:
+        except (ValueError, TypeError) as e:
             db.session.rollback()
             flash(f"Алдаа: {str(e)[:100]}", "danger")
 
@@ -179,7 +181,7 @@ def edit_waste(id):
             ):
                 return redirect(url_for("chemicals.waste_list"))
 
-        except Exception as e:
+        except (ValueError, TypeError) as e:
             db.session.rollback()
             flash(f"Алдаа: {str(e)[:100]}", "danger")
 
@@ -254,14 +256,14 @@ def save_waste_record():
 
         try:
             db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             logger.error(f"Waste record commit error: {e}", exc_info=True)
             return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500
 
         return jsonify({"success": True, "message": "Хадгалагдлаа"})
 
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         db.session.rollback()
         logger.error(f"Waste record save error: {e}", exc_info=True)
         return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500

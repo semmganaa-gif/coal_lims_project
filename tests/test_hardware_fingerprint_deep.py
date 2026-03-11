@@ -30,7 +30,7 @@ class TestGetMacAddress:
     def test_get_mac_address_exception(self):
         """Test get_mac_address handles exceptions."""
         from app.utils.hardware_fingerprint import get_mac_address
-        with patch('app.utils.hardware_fingerprint.uuid.getnode', side_effect=Exception("Error")):
+        with patch('app.utils.hardware_fingerprint.uuid.getnode', side_effect=OSError("Error")):
             result = get_mac_address()
             assert result == "unknown"
 
@@ -87,7 +87,7 @@ class TestGetCpuId:
         """Test get_cpu_id handles exceptions."""
         from app.utils.hardware_fingerprint import get_cpu_id
         with patch('app.utils.hardware_fingerprint.platform.system', return_value='Windows'):
-            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=Exception("Error")):
+            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=OSError("Error")):
                 result = get_cpu_id()
                 # Should return platform.processor() or "unknown"
                 assert result is not None
@@ -124,7 +124,7 @@ class TestGetDiskSerial:
         """Test get_disk_serial handles exceptions."""
         from app.utils.hardware_fingerprint import get_disk_serial
         with patch('app.utils.hardware_fingerprint.platform.system', return_value='Windows'):
-            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=Exception("Error")):
+            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=OSError("Error")):
                 result = get_disk_serial()
                 assert result == "unknown"
 
@@ -160,7 +160,7 @@ class TestGetMotherboardSerial:
         """Test get_motherboard_serial handles exceptions."""
         from app.utils.hardware_fingerprint import get_motherboard_serial
         with patch('app.utils.hardware_fingerprint.platform.system', return_value='Windows'):
-            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=Exception("Error")):
+            with patch('app.utils.hardware_fingerprint.subprocess.run', side_effect=OSError("Error")):
                 result = get_motherboard_serial()
                 assert result == "unknown"
 
@@ -183,7 +183,7 @@ class TestGetHostname:
     def test_get_hostname_exception(self):
         """Test get_hostname handles exceptions."""
         from app.utils.hardware_fingerprint import get_hostname
-        with patch('app.utils.hardware_fingerprint.platform.node', side_effect=Exception("Error")):
+        with patch('app.utils.hardware_fingerprint.platform.node', side_effect=OSError("Error")):
             result = get_hostname()
             assert result == "unknown"
 

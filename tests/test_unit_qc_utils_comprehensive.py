@@ -372,55 +372,59 @@ class TestSulfurMapFor:
         result = sulfur_map_for(None)
         assert result == {}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_with_results(self, mock_ar):
+    @patch('app.db')
+    def test_with_results(self, mock_db):
         """Returns sulfur values from results"""
         mock_result1 = MagicMock(sample_id=1, final_result=0.45)
         mock_result2 = MagicMock(sample_id=2, final_result=0.52)
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_result1, mock_result2
-        ]
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.all.return_value = [mock_result1, mock_result2]
+        mock_db.session.execute.return_value = mock_exec
 
         result = sulfur_map_for([1, 2])
         assert result == {1: 0.45, 2: 0.52}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_ignores_none_results(self, mock_ar):
+    @patch('app.db')
+    def test_ignores_none_results(self, mock_db):
         """Ignores results with None final_result"""
         mock_result1 = MagicMock(sample_id=1, final_result=0.45)
         mock_result2 = MagicMock(sample_id=2, final_result=None)
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_result1, mock_result2
-        ]
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.all.return_value = [mock_result1, mock_result2]
+        mock_db.session.execute.return_value = mock_exec
 
         result = sulfur_map_for([1, 2])
         assert result == {1: 0.45}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_first_result_wins(self, mock_ar):
+    @patch('app.db')
+    def test_first_result_wins(self, mock_db):
         """First result for sample_id wins"""
         mock_result1 = MagicMock(sample_id=1, final_result=0.45)
         mock_result2 = MagicMock(sample_id=1, final_result=0.50)  # Same sample_id
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
-            mock_result1, mock_result2
-        ]
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.all.return_value = [mock_result1, mock_result2]
+        mock_db.session.execute.return_value = mock_exec
 
         result = sulfur_map_for([1])
         assert result == {1: 0.45}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_handles_invalid_float(self, mock_ar):
+    @patch('app.db')
+    def test_handles_invalid_float(self, mock_db):
         """Handles invalid float conversion"""
         mock_result1 = MagicMock(sample_id=1, final_result="invalid")
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_result1]
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.all.return_value = [mock_result1]
+        mock_db.session.execute.return_value = mock_exec
 
         result = sulfur_map_for([1])
         assert result == {}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_no_results(self, mock_ar):
+    @patch('app.db')
+    def test_no_results(self, mock_db):
         """No results returns empty dict"""
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = []
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.all.return_value = []
+        mock_db.session.execute.return_value = mock_exec
 
         result = sulfur_map_for([1, 2, 3])
         assert result == {}

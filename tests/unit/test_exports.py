@@ -214,23 +214,24 @@ class TestCreateSampleExport:
         result = create_sample_export(samples)
         assert result.getvalue()
 
-    def test_include_results_parameter(self):
+    def test_include_results_parameter(self, app):
         """Accepts include_results parameter"""
         from app.utils.exports import create_sample_export
 
-        mock_sample = MagicMock()
-        mock_sample.id = 1
-        mock_sample.sample_code = "S001"
-        mock_sample.client_name = "Client"
-        mock_sample.sample_type = "Coal"
-        mock_sample.sample_date = None
-        mock_sample.received_date = None
-        mock_sample.status = "registered"
-        mock_sample.delivered_by = None
+        with app.app_context():
+            mock_sample = MagicMock()
+            mock_sample.id = 1
+            mock_sample.sample_code = "S001"
+            mock_sample.client_name = "Client"
+            mock_sample.sample_type = "Coal"
+            mock_sample.sample_date = None
+            mock_sample.received_date = None
+            mock_sample.status = "registered"
+            mock_sample.delivered_by = None
 
-        # Should not raise error
-        result = create_sample_export([mock_sample], _include_results=True)
-        assert isinstance(result, BytesIO)
+            # Should not raise error
+            result = create_sample_export([mock_sample], _include_results=True)
+            assert isinstance(result, BytesIO)
 
 
 class TestCreateAnalysisExport:

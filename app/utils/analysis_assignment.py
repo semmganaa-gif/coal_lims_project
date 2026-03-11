@@ -2,6 +2,7 @@
 import re
 import json
 import logging
+from sqlalchemy.exc import SQLAlchemyError
 from app.models import AnalysisProfile, SystemSetting
 
 # Default Gi shift config (fallback)
@@ -20,7 +21,7 @@ def get_gi_shift_config():
         ).first()
         if setting and setting.value:
             return json.loads(setting.value)
-    except Exception as e:
+    except (json.JSONDecodeError, TypeError, OSError, SQLAlchemyError) as e:
         logging.warning(f"Gi shift config load error: {e}")
     return DEFAULT_GI_SHIFT_CONFIG
 

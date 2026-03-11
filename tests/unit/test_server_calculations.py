@@ -144,10 +144,10 @@ class TestCalcVolatileVad:
         from app.utils.server_calculations import calc_volatile_vad
 
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0},
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7},
         }
         result = calc_volatile_vad(raw_data)
-        # Vad = ((1.3 - 1.0) / 1.0) * 100 = 30%
+        # Vad = ((10+1) - 10.7) / 1 * 100 = 30%
         assert result is not None
         assert abs(result - 30.0) < 0.1
 
@@ -186,20 +186,23 @@ class TestCalcSulfurTs:
         from app.utils.server_calculations import calc_sulfur_ts
 
         raw_data = {
-            "p1": {"m1": 0.1, "m2": 0.2, "m_sample": 1.0, "k": 0.34296},
+            "p1": {"result": 1.25},
         }
         result = calc_sulfur_ts(raw_data)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
-    def test_calc_ts_default_k(self):
-        """Default k value"""
+    def test_calc_ts_both_parallels(self):
+        """Both parallels averaged"""
         from app.utils.server_calculations import calc_sulfur_ts
 
         raw_data = {
-            "p1": {"m1": 0.1, "m2": 0.2, "m_sample": 1.0},
+            "p1": {"result": 1.20},
+            "p2": {"result": 1.30},
         }
         result = calc_sulfur_ts(raw_data)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
     def test_calc_ts_missing_data(self):
         """Missing data returns None"""
@@ -215,10 +218,11 @@ class TestCalcPhosphorusP:
         from app.utils.server_calculations import calc_phosphorus_p
 
         raw_data = {
-            "p1": {"v": 10.0, "v0": 1.0, "c": 0.1, "m_sample": 1.0},
+            "p1": {"result": 0.025},
         }
         result = calc_phosphorus_p(raw_data)
         assert result is not None
+        assert abs(result - 0.025) < 0.001
 
     def test_calc_p_missing_data(self):
         """Missing data returns None"""
@@ -343,8 +347,9 @@ class TestCalcFreeMoistureFm:
         """Valid FM calculation"""
         from app.utils.server_calculations import calc_free_moisture_fm
 
+        # Source reads top-level tray_g/before_g/after_g
         raw_data = {
-            "p1": {"wt": 50.0, "wb": 150.0, "wa": 140.0}
+            "tray_g": 50.0, "before_g": 150.0, "after_g": 140.0
         }
         result = calc_free_moisture_fm(raw_data)
         # FM = ((150 - 140) / (140 - 50)) * 100 = (10/90)*100 = 11.11%
@@ -356,7 +361,7 @@ class TestCalcFreeMoistureFm:
         from app.utils.server_calculations import calc_free_moisture_fm
 
         raw_data = {
-            "p1": {"wt": 100.0, "wb": 150.0, "wa": 100.0}
+            "tray_g": 100.0, "before_g": 150.0, "after_g": 100.0
         }
         result = calc_free_moisture_fm(raw_data)
         assert result is None
@@ -374,8 +379,9 @@ class TestCalcSolid:
         """Valid Solid calculation"""
         from app.utils.server_calculations import calc_solid
 
+        # Source reads top-level A/B/C (or a/b/c)
         raw_data = {
-            "p1": {"a": 100.0, "b": 90.0, "c": 5.0}
+            "a": 100.0, "b": 90.0, "c": 5.0
         }
         result = calc_solid(raw_data)
         # Solid = (5 * 100) / (100 - 90) = 500/10 = 50%
@@ -387,7 +393,7 @@ class TestCalcSolid:
         from app.utils.server_calculations import calc_solid
 
         raw_data = {
-            "p1": {"a": 100.0, "b": 100.0, "c": 5.0}
+            "a": 100.0, "b": 100.0, "c": 5.0
         }
         result = calc_solid(raw_data)
         assert result is None

@@ -2,16 +2,22 @@
 """Сэлбэг хэрэгслийн API routes."""
 
 import logging
-from datetime import date
 
 from flask import jsonify, request
 from flask_login import login_required, current_user
-from sqlalchemy import func, case
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import db, limiter
-from app.models import SparePart, SparePartUsage, SparePartLog, Equipment
 from app.routes.spare_parts import spare_parts_bp
-from app.utils.security import escape_like_pattern
+from app.services.spare_parts_service import (
+    get_spare_parts_list_simple,
+    get_low_stock_parts,
+    get_full_stats,
+    consume_stock,
+    consume_stock_bulk,
+    search_spare_parts,
+    get_usage_history,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,65 +26,21 @@ logger = logging.getLogger(__name__)
 @login_required
 def api_spare_part_list():
     """Сэлбэг хэрэгслийн жагсаалт API."""
-    spare_parts = SparePart.query.order_by(SparePart.name).all()
-
-    data = [{
-        'id': sp.id,
-        'name': sp.name,
-        'name_en': sp.name_en,
-        'part_number': sp.part_number,
-        'quantity': sp.quantity,
-        'unit': sp.unit,
-        'reorder_level': sp.reorder_level,
-        'status': sp.status,
-        'category': sp.category,
-        'storage_location': sp.storage_location,
-        'equipment_name': sp.equipment.name if sp.equipment else None,
-    } for sp in spare_parts]
-
-    return jsonify(data)
+    return jsonify(get_spare_parts_list_simple())
 
 
 @spare_parts_bp.route('/api/low_stock')
 @login_required
 def api_low_stock():
     """Нөөц бага сэлбэгүүд."""
-    spare_parts = SparePart.query.filter(
-        SparePart.status.in_(['low_stock', 'out_of_stock'])
-    ).order_by(SparePart.quantity.asc()).all()
-
-    data = [{
-        'id': sp.id,
-        'name': sp.name,
-        'quantity': sp.quantity,
-        'unit': sp.unit,
-        'reorder_level': sp.reorder_level,
-        'status': sp.status,
-    } for sp in spare_parts]
-
-    return jsonify(data)
+    return jsonify(get_low_stock_parts())
 
 
 @spare_parts_bp.route('/api/stats')
 @login_required
 def api_stats():
     """Статистик API."""
-    # P-H3: Нэг query-гээр бүх статистик авах (4 COUNT + SUM → 1 query)
-    row = db.session.query(
-        func.count(SparePart.id).label('total'),
-        func.count(case((SparePart.status == 'active', SparePart.id))).label('active'),
-        func.count(case((SparePart.status == 'low_stock', SparePart.id))).label('low_stock'),
-        func.count(case((SparePart.status == 'out_of_stock', SparePart.id))).label('out_of_stock'),
-        func.coalesce(func.sum(SparePart.quantity * SparePart.unit_price), 0).label('total_value'),
-    ).one()
-
-    return jsonify({
-        'total': row.total,
-        'active': row.active,
-        'low_stock': row.low_stock,
-        'out_of_stock': row.out_of_stock,
-        'total_value': float(row.total_value),
-    })
+    return jsonify(get_full_stats())
 
 
 @spare_parts_bp.route('/api/consume', methods=['POST'])
@@ -89,74 +51,46 @@ def api_consume():
     data = request.get_json()
 
     spare_part_id = data.get('spare_part_id')
-    quantity = float(data.get('quantity', 0))
-    equipment_id = data.get('equipment_id')
-    maintenance_log_id = data.get('maintenance_log_id')
-    purpose = data.get('purpose', 'Засвар')
+    try:
+        quantity = float(data.get('quantity', 0))
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'message': 'Invalid quantity'}), 400
 
     if not spare_part_id or quantity <= 0:
         return jsonify({'success': False, 'message': 'spare_part_id and quantity are required'}), 400
 
-    spare_part = db.session.get(SparePart, spare_part_id)
-    if not spare_part:
-        return jsonify({'success': False, 'message': 'Spare part not found'}), 404
-
-    if quantity > spare_part.quantity:
-        return jsonify({
-            'success': False,
-            'message': f'Insufficient stock! Available: {spare_part.quantity} {spare_part.unit}'
-        }), 400
-
     try:
-        old_quantity = spare_part.quantity
-        spare_part.quantity -= quantity
-        spare_part.update_status()
-        spare_part.last_used_date = date.today()
-
-        # Usage бүртгэл
-        usage = SparePartUsage(
-            spare_part_id=spare_part.id,
-            equipment_id=equipment_id,
-            maintenance_log_id=maintenance_log_id,
-            quantity_used=quantity,
-            unit=spare_part.unit,
-            purpose=purpose,
-            used_by_id=current_user.id,
-            quantity_before=old_quantity,
-            quantity_after=spare_part.quantity,
-        )
-        db.session.add(usage)
-
-        # Аудит лог (with hash - ISO 17025)
-        log = SparePartLog(
-            spare_part_id=spare_part.id,
-            action='consumed',
-            quantity_change=-quantity,
-            quantity_before=old_quantity,
-            quantity_after=spare_part.quantity,
+        result, error = consume_stock(
+            spare_part_id=spare_part_id,
+            quantity=quantity,
             user_id=current_user.id,
-            details=f"API: {purpose}"
+            equipment_id=data.get('equipment_id'),
+            maintenance_log_id=data.get('maintenance_log_id'),
+            purpose=data.get('purpose', 'Засвар'),
         )
-        log.data_hash = log.compute_hash()
-        db.session.add(log)
+
+        if error == 'not_found':
+            return jsonify({'success': False, 'message': 'Spare part not found'}), 404
+        if error:
+            return jsonify({'success': False, 'message': error}), 400
 
         try:
             db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
-            logger.error(f"Spare part consume commit error: {e}", exc_info=True)
+            logger.error("Spare part consume commit error: %s", e, exc_info=True)
             return jsonify({'success': False, 'message': 'Сэлбэг зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
             'success': True,
-            'message': f'{quantity} {spare_part.unit} consumed',
-            'remaining': spare_part.quantity,
-            'status': spare_part.status,
+            'message': f"{result['consumed']} {result['unit']} consumed",
+            'remaining': result['remaining'],
+            'status': result['status'],
         })
 
-    except Exception as e:
+    except (ValueError, TypeError, SQLAlchemyError) as e:
         db.session.rollback()
-        logger.error(f"Spare part consume error: {e}", exc_info=True)
+        logger.error("Spare part consume error: %s", e, exc_info=True)
         return jsonify({'success': False, 'message': 'Сэлбэг зарцуулахад алдаа гарлаа'}), 500
 
 
@@ -167,9 +101,6 @@ def api_consume_bulk():
     """Олон сэлбэг нэг дор зарцуулах API."""
     data = request.get_json()
     items = data.get('items', [])
-    equipment_id = data.get('equipment_id')
-    maintenance_log_id = data.get('maintenance_log_id')
-    purpose = data.get('purpose', 'Засвар')
 
     if not items:
         return jsonify({'success': False, 'message': 'items are required'}), 400
@@ -178,65 +109,20 @@ def api_consume_bulk():
     if len(items) > 100:
         return jsonify({'success': False, 'message': 'Нэг удаад 100-аас ихийг зарцуулах боломжгүй'}), 400
 
-    results = []
-    errors = []
-
     try:
-        for item in items:
-            spare_part_id = item.get('spare_part_id')
-            quantity = float(item.get('quantity', 0))
-
-            spare_part = db.session.get(SparePart, spare_part_id)
-            if not spare_part:
-                errors.append(f'ID {spare_part_id} олдсонгүй')
-                continue
-
-            if quantity > spare_part.quantity:
-                errors.append(f'{spare_part.name}: нөөц хүрэлцэхгүй ({spare_part.quantity})')
-                continue
-
-            old_quantity = spare_part.quantity
-            spare_part.quantity -= quantity
-            spare_part.update_status()
-            spare_part.last_used_date = date.today()
-
-            usage = SparePartUsage(
-                spare_part_id=spare_part.id,
-                equipment_id=equipment_id,
-                maintenance_log_id=maintenance_log_id,
-                quantity_used=quantity,
-                unit=spare_part.unit,
-                purpose=purpose,
-                used_by_id=current_user.id,
-                quantity_before=old_quantity,
-                quantity_after=spare_part.quantity,
-            )
-            db.session.add(usage)
-
-            log = SparePartLog(
-                spare_part_id=spare_part.id,
-                action='consumed',
-                quantity_change=-quantity,
-                quantity_before=old_quantity,
-                quantity_after=spare_part.quantity,
-                user_id=current_user.id,
-                details=f"Bulk API: {purpose}"
-            )
-            log.data_hash = log.compute_hash()
-            db.session.add(log)
-
-            results.append({
-                'spare_part_id': spare_part.id,
-                'name': spare_part.name,
-                'consumed': quantity,
-                'remaining': spare_part.quantity,
-            })
+        results, errors = consume_stock_bulk(
+            items=items,
+            user_id=current_user.id,
+            equipment_id=data.get('equipment_id'),
+            maintenance_log_id=data.get('maintenance_log_id'),
+            purpose=data.get('purpose', 'Засвар'),
+        )
 
         try:
             db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
-            logger.error(f"Spare part bulk consume commit error: {e}", exc_info=True)
+            logger.error("Spare part bulk consume commit error: %s", e, exc_info=True)
             return jsonify({'success': False, 'message': 'Олноор зарцуулахад алдаа гарлаа'}), 500
 
         return jsonify({
@@ -245,9 +131,9 @@ def api_consume_bulk():
             'errors': errors,
         })
 
-    except Exception as e:
+    except (ValueError, TypeError, SQLAlchemyError) as e:
         db.session.rollback()
-        logger.error(f"Spare part bulk consume error: {e}", exc_info=True)
+        logger.error("Spare part bulk consume error: %s", e, exc_info=True)
         return jsonify({'success': False, 'message': 'Олноор зарцуулахад алдаа гарлаа'}), 500
 
 
@@ -256,46 +142,11 @@ def api_consume_bulk():
 def api_search():
     """Сэлбэг хайх (autocomplete)."""
     q = request.args.get('q', '').strip()
-    if len(q) < 2:
-        return jsonify([])
-
-    safe_q = escape_like_pattern(q)
-    spare_parts = SparePart.query.filter(
-        (SparePart.name.ilike(f'%{safe_q}%')) |
-        (SparePart.name_en.ilike(f'%{safe_q}%')) |
-        (SparePart.part_number.ilike(f'%{safe_q}%'))
-    ).limit(20).all()
-
-    data = [{
-        'id': sp.id,
-        'name': sp.name,
-        'name_en': sp.name_en,
-        'part_number': sp.part_number,
-        'quantity': sp.quantity,
-        'unit': sp.unit,
-        'status': sp.status,
-    } for sp in spare_parts]
-
-    return jsonify(data)
+    return jsonify(search_spare_parts(q))
 
 
 @spare_parts_bp.route('/api/usage_history/<int:id>')
 @login_required
 def api_usage_history(id):
     """Зарцуулалтын түүх API."""
-    usages = SparePartUsage.query.filter_by(spare_part_id=id)\
-        .order_by(SparePartUsage.used_at.desc()).limit(100).all()
-
-    data = [{
-        'id': u.id,
-        'quantity_used': u.quantity_used,
-        'unit': u.unit,
-        'purpose': u.purpose,
-        'used_by': u.used_by.username if u.used_by else None,
-        'used_at': u.used_at.strftime('%Y-%m-%d %H:%M') if u.used_at else None,
-        'equipment_name': u.equipment.name if u.equipment else None,
-        'quantity_before': u.quantity_before,
-        'quantity_after': u.quantity_after,
-    } for u in usages]
-
-    return jsonify(data)
+    return jsonify(get_usage_history(id))

@@ -153,7 +153,7 @@ def create_sample_export(samples: List, _include_results: bool = False) -> Bytes
                 if sid not in results_map:
                     results_map[sid] = {}
                 results_map[sid][code] = {"value": value, "status": status}
-        except Exception as e:
+        except (AttributeError, TypeError) as e:
             logger.error(f"Failed to build results map for export: {e}")
 
     data = []

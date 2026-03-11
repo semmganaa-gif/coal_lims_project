@@ -6,6 +6,7 @@ Analysis assignment utility tests
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestDefaultGiShiftConfig:
@@ -104,7 +105,7 @@ class TestGetGiShiftConfig:
         from app.utils.analysis_assignment import get_gi_shift_config, DEFAULT_GI_SHIFT_CONFIG
 
         with patch('app.utils.analysis_assignment.SystemSetting') as mock_ss:
-            mock_ss.query.filter_by.side_effect = Exception("DB Error")
+            mock_ss.query.filter_by.side_effect = SQLAlchemyError("DB Error")
             result = get_gi_shift_config()
             assert result == DEFAULT_GI_SHIFT_CONFIG
 
@@ -208,12 +209,15 @@ class TestAssignAnalysesToSample:
             mock_ap.query.filter.return_value.first.return_value = mock_simple
             mock_ap.query.filter.return_value.order_by.return_value.all.return_value = [mock_pattern]
 
-            result = assign_analyses_to_sample(
-                client_name="CHPP",
-                sample_type="2H",
-                sample_code="PF211_D1"
-            )
-            assert 'MAD' in result
+            with patch('app.utils.analysis_assignment.get_gi_shift_config') as mock_config:
+                mock_config.return_value = {'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5']}
+
+                result = assign_analyses_to_sample(
+                    client_name="CHPP",
+                    sample_type="2H",
+                    sample_code="PF211_D1"
+                )
+                assert 'MAD' in result
 
     def test_pattern_replace_rule(self):
         """Pattern with replace rule replaces all"""
@@ -498,13 +502,16 @@ class TestAssignAnalysesToSample:
             mock_ap.query.filter.return_value.first.return_value = None
             mock_ap.query.filter.return_value.order_by.return_value.all.return_value = [mock_pattern]
 
-            result = assign_analyses_to_sample(
-                client_name="CHPP",
-                sample_type="2H",
-                sample_code="PF211_D1"  # uppercase
-            )
-            # The Gi might be removed by shift logic, but pattern should match
-            assert isinstance(result, list)
+            with patch('app.utils.analysis_assignment.get_gi_shift_config') as mock_config:
+                mock_config.return_value = {'PF211': ['D1', 'D3', 'D5', 'N1', 'N3', 'N5']}
+
+                result = assign_analyses_to_sample(
+                    client_name="CHPP",
+                    sample_type="2H",
+                    sample_code="PF211_D1"  # uppercase
+                )
+                # The Gi might be removed by shift logic, but pattern should match
+                assert isinstance(result, list)
 
     def test_multiple_pattern_profiles(self):
         """Multiple pattern profiles are processed"""

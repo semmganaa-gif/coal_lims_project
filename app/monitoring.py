@@ -7,8 +7,11 @@ Request хурд, алдаа, metrics бүртгэнэ.
 Prometheus/Grafana интеграцтай.
 """
 
-from flask import request, g
+import logging
 import time
+
+from flask import request, g
+from sqlalchemy.exc import SQLAlchemyError
 
 # Prometheus metrics
 try:
@@ -147,7 +150,7 @@ def setup_monitoring(app):
                 pass  # Metric already registered
 
             app.logger.info("Prometheus metrics enabled at /metrics")
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError) as e:
             app.logger.warning(f"Prometheus metrics initialization failed: {e}")
 
     # metrics объектыг app-д хадгалах (testing mode-д None)
@@ -226,7 +229,7 @@ def setup_monitoring(app):
                 'database': 'connected'
             }), 200
 
-        except Exception as e:
+        except (SQLAlchemyError, OSError) as e:
             app.logger.error(f"Health check failed: {e}", exc_info=True)
             return jsonify({
                 'status': 'unhealthy',
@@ -273,8 +276,7 @@ def get_performance_stats():
             "message": "Use /metrics endpoint for Prometheus scraping"
         }
 
-    except Exception as e:
-        import logging
+    except (RuntimeError, ValueError, AttributeError) as e:
         logging.getLogger(__name__).error(f"Performance stats error: {e}")
         return {
             "status": "error",

@@ -14,6 +14,18 @@ from datetime import datetime, timedelta
 class TestGetNotificationRecipients:
     """get_notification_recipients() функцийн тест"""
 
+    def _mock_db_execute(self, results_sequence):
+        """Helper: mock db.session.execute to return results in order."""
+        mock_db = MagicMock()
+        side_effects = []
+        for result in results_sequence:
+            mock_exec = MagicMock()
+            mock_exec.scalars.return_value.first.return_value = result
+            mock_exec.scalars.return_value.all.return_value = result if isinstance(result, list) else [result] if result else []
+            side_effects.append(mock_exec)
+        mock_db.session.execute.side_effect = side_effects
+        return mock_db
+
     def test_recipients_from_system_setting(self, app):
         """SystemSetting-ээс хүлээн авагчдыг авах"""
         from app.utils.notifications import get_notification_recipients
@@ -22,8 +34,10 @@ class TestGetNotificationRecipients:
         mock_setting.value = "admin@test.com, senior@test.com"
 
         with app.app_context():
-            with patch('app.utils.notifications.SystemSetting') as MockSetting:
-                MockSetting.query.filter_by.return_value.first.return_value = mock_setting
+            with patch('app.utils.notifications.db') as mock_db:
+                mock_exec = MagicMock()
+                mock_exec.scalars.return_value.first.return_value = mock_setting
+                mock_db.session.execute.return_value = mock_exec
                 result = get_notification_recipients('qc_alert')
 
                 assert result == ['admin@test.com', 'senior@test.com']
@@ -39,14 +53,18 @@ class TestGetNotificationRecipients:
         mock_senior = Mock(email="senior@test.com")
 
         with app.app_context():
-            with patch('app.utils.notifications.SystemSetting') as MockSetting:
-                with patch('app.utils.notifications.User') as MockUser:
-                    MockSetting.query.filter_by.return_value.first.return_value = mock_setting
-                    MockUser.query.filter.return_value.all.return_value = [mock_admin, mock_senior]
+            with patch('app.utils.notifications.db') as mock_db:
+                # First call: select(SystemSetting) -> empty setting
+                mock_exec1 = MagicMock()
+                mock_exec1.scalars.return_value.first.return_value = mock_setting
+                # Second call: select(User) -> admin users
+                mock_exec2 = MagicMock()
+                mock_exec2.scalars.return_value.all.return_value = [mock_admin, mock_senior]
+                mock_db.session.execute.side_effect = [mock_exec1, mock_exec2]
 
-                    result = get_notification_recipients('sample_status')
-                    assert 'admin@test.com' in result
-                    assert 'senior@test.com' in result
+                result = get_notification_recipients('sample_status')
+                assert 'admin@test.com' in result
+                assert 'senior@test.com' in result
 
     def test_recipients_no_setting(self, app):
         """SystemSetting байхгүй үед default"""
@@ -55,13 +73,17 @@ class TestGetNotificationRecipients:
         mock_user = Mock(email="default@test.com")
 
         with app.app_context():
-            with patch('app.utils.notifications.SystemSetting') as MockSetting:
-                with patch('app.utils.notifications.User') as MockUser:
-                    MockSetting.query.filter_by.return_value.first.return_value = None
-                    MockUser.query.filter.return_value.all.return_value = [mock_user]
+            with patch('app.utils.notifications.db') as mock_db:
+                # First call: select(SystemSetting) -> None
+                mock_exec1 = MagicMock()
+                mock_exec1.scalars.return_value.first.return_value = None
+                # Second call: select(User) -> default user
+                mock_exec2 = MagicMock()
+                mock_exec2.scalars.return_value.all.return_value = [mock_user]
+                mock_db.session.execute.side_effect = [mock_exec1, mock_exec2]
 
-                    result = get_notification_recipients('equipment')
-                    assert result == ['default@test.com']
+                result = get_notification_recipients('equipment')
+                assert result == ['default@test.com']
 
     def test_recipients_filters_empty_emails(self, app):
         """Хоосон email-г шүүх"""
@@ -71,8 +93,10 @@ class TestGetNotificationRecipients:
         mock_setting.value = "valid@test.com, , blank@test.com, "
 
         with app.app_context():
-            with patch('app.utils.notifications.SystemSetting') as MockSetting:
-                MockSetting.query.filter_by.return_value.first.return_value = mock_setting
+            with patch('app.utils.notifications.db') as mock_db:
+                mock_exec = MagicMock()
+                mock_exec.scalars.return_value.first.return_value = mock_setting
+                mock_db.session.execute.return_value = mock_exec
                 result = get_notification_recipients('qc_alert')
 
                 assert result == ['valid@test.com', 'blank@test.com']
@@ -139,7 +163,7 @@ class TestSendNotification:
 
         with app.app_context():
             with patch('app.utils.notifications.mail') as mock_mail:
-                mock_mail.send.side_effect = Exception("SMTP Error")
+                mock_mail.send.side_effect = OSError("SMTP Error")
 
                 result = send_notification(
                     subject="Test",
@@ -366,20 +390,22 @@ class TestCheckAndNotifyWestgard:
 
         with app.app_context():
             with patch('app.utils.notifications.db') as mock_db:
-                with patch('app.models.QCControlChart') as MockChart:
-                    with patch('app.utils.westgard.check_westgard_rules') as mock_westgard:
-                        with patch('app.utils.westgard.get_qc_status') as mock_status:
-                            with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
-                                mock_db.session.query.return_value.distinct.return_value.all.return_value = [
-                                    ('Aad', 'GBW-001')
-                                ]
-                                MockChart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_chart] * 5
-                                mock_westgard.return_value = {'1-3s': True}
-                                mock_status.return_value = {'status': 'reject', 'rules_violated': ['1-3s']}
+                with patch('app.utils.westgard.check_westgard_rules') as mock_westgard:
+                    with patch('app.utils.westgard.get_qc_status') as mock_status:
+                        with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
+                            mock_db.session.query.return_value.distinct.return_value.all.return_value = [
+                                ('Aad', 'GBW-001')
+                            ]
+                            # db.session.execute for select(QCControlChart)
+                            mock_exec = MagicMock()
+                            mock_exec.scalars.return_value.all.return_value = [mock_chart] * 5
+                            mock_db.session.execute.return_value = mock_exec
+                            mock_westgard.return_value = {'1-3s': True}
+                            mock_status.return_value = {'status': 'reject', 'rules_violated': ['1-3s']}
 
-                                check_and_notify_westgard()
+                            check_and_notify_westgard()
 
-                                mock_notify.assert_called_once()
+                            mock_notify.assert_called_once()
 
     def test_westgard_check_no_violations(self, app):
         """Westgard зөрчилгүй үед"""
@@ -395,20 +421,21 @@ class TestCheckAndNotifyWestgard:
 
         with app.app_context():
             with patch('app.utils.notifications.db') as mock_db:
-                with patch('app.models.QCControlChart') as MockChart:
-                    with patch('app.utils.westgard.check_westgard_rules') as mock_westgard:
-                        with patch('app.utils.westgard.get_qc_status') as mock_status:
-                            with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
-                                mock_db.session.query.return_value.distinct.return_value.all.return_value = [
-                                    ('Mad', 'GBW-002')
-                                ]
-                                MockChart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_chart] * 5
-                                mock_westgard.return_value = {}
-                                mock_status.return_value = {'status': 'ok'}
+                with patch('app.utils.westgard.check_westgard_rules') as mock_westgard:
+                    with patch('app.utils.westgard.get_qc_status') as mock_status:
+                        with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
+                            mock_db.session.query.return_value.distinct.return_value.all.return_value = [
+                                ('Mad', 'GBW-002')
+                            ]
+                            mock_exec = MagicMock()
+                            mock_exec.scalars.return_value.all.return_value = [mock_chart] * 5
+                            mock_db.session.execute.return_value = mock_exec
+                            mock_westgard.return_value = {}
+                            mock_status.return_value = {'status': 'ok'}
 
-                                check_and_notify_westgard()
+                            check_and_notify_westgard()
 
-                                mock_notify.assert_not_called()
+                            mock_notify.assert_not_called()
 
     def test_westgard_check_insufficient_data(self, app):
         """Хангалттай data байхгүй үед"""
@@ -420,17 +447,18 @@ class TestCheckAndNotifyWestgard:
 
         with app.app_context():
             with patch('app.utils.notifications.db') as mock_db:
-                with patch('app.models.QCControlChart') as MockChart:
-                    with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
-                        mock_db.session.query.return_value.distinct.return_value.all.return_value = [
-                            ('Vad', 'GBW-003')
-                        ]
-                        # Only 1 chart - insufficient
-                        MockChart.query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [mock_chart]
+                with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
+                    mock_db.session.query.return_value.distinct.return_value.all.return_value = [
+                        ('Vad', 'GBW-003')
+                    ]
+                    # Only 1 chart - insufficient
+                    mock_exec = MagicMock()
+                    mock_exec.scalars.return_value.all.return_value = [mock_chart]
+                    mock_db.session.execute.return_value = mock_exec
 
-                        check_and_notify_westgard()
+                    check_and_notify_westgard()
 
-                        mock_notify.assert_not_called()
+                    mock_notify.assert_not_called()
 
     def test_westgard_check_empty_analysis_code(self, app):
         """Хоосон analysis_code skip хийх"""
@@ -438,16 +466,15 @@ class TestCheckAndNotifyWestgard:
 
         with app.app_context():
             with patch('app.utils.notifications.db') as mock_db:
-                with patch('app.models.QCControlChart') as MockChart:
-                    with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
-                        mock_db.session.query.return_value.distinct.return_value.all.return_value = [
-                            (None, 'GBW-001'),  # None analysis_code
-                            ('Aad', None),       # None qc_sample
-                        ]
+                with patch('app.utils.notifications.notify_qc_failure') as mock_notify:
+                    mock_db.session.query.return_value.distinct.return_value.all.return_value = [
+                        (None, 'GBW-001'),  # None analysis_code
+                        ('Aad', None),       # None qc_sample
+                    ]
 
-                        check_and_notify_westgard()
+                    check_and_notify_westgard()
 
-                        mock_notify.assert_not_called()
+                    mock_notify.assert_not_called()
 
 
 class TestEmailTemplates:

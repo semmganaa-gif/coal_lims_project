@@ -461,43 +461,43 @@ class TestSulfurMapFor:
         result = sulfur_map_for(None)
         assert result == {}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_with_results(self, mock_ar):
+    @patch('app.db.session')
+    def test_with_results(self, mock_session):
         from app.utils.qc import sulfur_map_for
         # Mock query result
         mock_row = MagicMock()
         mock_row.sample_id = 1
         mock_row.final_result = "0.45"
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_row]
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [mock_row]
 
         result = sulfur_map_for([1, 2, 3])
         assert 1 in result
         assert result[1] == 0.45
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_none_final_result(self, mock_ar):
+    @patch('app.db.session')
+    def test_none_final_result(self, mock_session):
         from app.utils.qc import sulfur_map_for
         mock_row = MagicMock()
         mock_row.sample_id = 1
         mock_row.final_result = None
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_row]
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [mock_row]
 
         result = sulfur_map_for([1])
         assert 1 not in result
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_invalid_final_result(self, mock_ar):
+    @patch('app.db.session')
+    def test_invalid_final_result(self, mock_session):
         from app.utils.qc import sulfur_map_for
         mock_row = MagicMock()
         mock_row.sample_id = 1
         mock_row.final_result = "abc"
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_row]
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [mock_row]
 
         result = sulfur_map_for([1])
         assert 1 not in result
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_duplicate_sample_id(self, mock_ar):
+    @patch('app.db.session')
+    def test_duplicate_sample_id(self, mock_session):
         from app.utils.qc import sulfur_map_for
         # First result for sample_id 1
         mock_row1 = MagicMock()
@@ -507,7 +507,7 @@ class TestSulfurMapFor:
         mock_row2 = MagicMock()
         mock_row2.sample_id = 1
         mock_row2.final_result = "0.50"
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_row1, mock_row2]
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [mock_row1, mock_row2]
 
         result = sulfur_map_for([1])
         assert result[1] == 0.45  # First one kept

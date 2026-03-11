@@ -166,7 +166,9 @@
       "Bash(npm i:*)",
       "Bash(codex:*)",
       "Bash(kill 978:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(xargs -0 grep -c \"^[[:space:]]*print\\(\")",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

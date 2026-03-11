@@ -436,14 +436,12 @@ class TestSulfurMapFor:
         result = sulfur_map_for(None)
         assert result == {}
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_with_results(self, mock_ar):
+    @patch('app.db.session')
+    def test_with_results(self, mock_session):
         """With analysis results"""
         from app.utils.qc import sulfur_map_for
 
-        # Mock query chain
-        mock_query = MagicMock()
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [
             MagicMock(sample_id=1, final_result=0.45),
             MagicMock(sample_id=2, final_result=0.52)
         ]
@@ -451,12 +449,12 @@ class TestSulfurMapFor:
         result = sulfur_map_for([1, 2])
         assert isinstance(result, dict)
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_with_none_result(self, mock_ar):
+    @patch('app.db.session')
+    def test_with_none_result(self, mock_session):
         """With None final_result"""
         from app.utils.qc import sulfur_map_for
 
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [
             MagicMock(sample_id=1, final_result=None),
             MagicMock(sample_id=2, final_result=0.52)
         ]
@@ -465,12 +463,12 @@ class TestSulfurMapFor:
         # sample_id=1 should not be in result due to None
         assert isinstance(result, dict)
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_duplicate_sample_id(self, mock_ar):
+    @patch('app.db.session')
+    def test_duplicate_sample_id(self, mock_session):
         """Duplicate sample_id keeps first"""
         from app.utils.qc import sulfur_map_for
 
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [
             MagicMock(sample_id=1, final_result=0.45),
             MagicMock(sample_id=1, final_result=0.50)  # Duplicate
         ]
@@ -479,12 +477,12 @@ class TestSulfurMapFor:
         # First value should be kept
         assert isinstance(result, dict)
 
-    @patch('app.utils.qc.AnalysisResult')
-    def test_invalid_result_value(self, mock_ar):
+    @patch('app.db.session')
+    def test_invalid_result_value(self, mock_session):
         """Invalid result value"""
         from app.utils.qc import sulfur_map_for
 
-        mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
+        mock_session.execute.return_value.scalars.return_value.all.return_value = [
             MagicMock(sample_id=1, final_result="invalid")
         ]
 

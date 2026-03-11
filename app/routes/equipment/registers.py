@@ -9,6 +9,7 @@ from flask import (
     flash, abort, current_app
 )
 from flask_login import login_required, current_user
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import Equipment
@@ -155,7 +156,7 @@ def add_register_item(register_type):
     try:
         db.session.commit()
         flash("Амжилттай нэмэгдлээ.", "success")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error adding register item: {e}")
         flash(f"Алдаа: {str(e)[:100]}", "danger")
@@ -203,7 +204,7 @@ def edit_register_item(id):
     try:
         db.session.commit()
         flash("Амжилттай шинэчлэгдлээ.", "success")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error editing register item: {e}")
         flash(f"Алдаа: {str(e)[:100]}", "danger")
@@ -235,7 +236,7 @@ def delete_register_items():
     try:
         db.session.commit()
         flash(f"{deleted} мөр устгагдлаа.", "success")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting register items: {e}")
         flash(f"Устгахад алдаа гарлаа: {str(e)[:100]}", "danger")

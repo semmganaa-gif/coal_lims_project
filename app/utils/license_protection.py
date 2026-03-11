@@ -18,6 +18,8 @@ from functools import wraps
 from flask import redirect, url_for, flash, request, g
 import logging
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.utils.hardware_fingerprint import generate_hardware_id, generate_short_hardware_id
 from app.utils.datetime import now_local as _now_mn_raw
 
@@ -105,8 +107,8 @@ class LicenseManager:
             if now - self._last_check < self._check_interval:
                 try:
                     return db.session.merge(self._license_cache, load=False)
-                except Exception:
-                    pass
+                except (RuntimeError, OSError):
+                    self._license_cache = None
 
         # Database-аас авах
         from sqlalchemy import select
@@ -210,7 +212,7 @@ class LicenseManager:
             license_obj.check_count = (license_obj.check_count or 0) + 1
             try:
                 db.session.commit()
-            except Exception:
+            except Exception:  # rollback fallback — keep broad
                 db.session.rollback()
 
         # 7. Анхааруулга
@@ -237,7 +239,7 @@ class LicenseManager:
             )
             db.session.add(log)
             db.session.commit()
-        except Exception as e:
+        except (SQLAlchemyError, OSError) as e:
             logger.error(f"Failed to log license event: {e}")
 
     def activate_license(self, license_key: str) -> dict:
@@ -248,7 +250,7 @@ class LicenseManager:
         # Лиценз файл уншаад decode хийх
         try:
             license_data = self._decode_license_key(license_key)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             return {'success': False, 'error': f'Invalid license format: {e}'}
 
         # Гарын үсэг шалгах
@@ -303,7 +305,7 @@ class LicenseManager:
             decoded = base64.b64decode(license_key.encode()).decode()
             data = json.loads(decoded)
             return data
-        except Exception as e:
+        except (ValueError, TypeError, json.JSONDecodeError) as e:
             raise ValueError(f"Cannot decode license: {e}")
 
     def generate_license_key(self, company: str, expiry_date: str, hardware_id: str = None, **kwargs) -> str:

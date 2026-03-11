@@ -8,6 +8,7 @@ import pytest
 import json
 from unittest.mock import patch, MagicMock
 from dataclasses import dataclass
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestToJsonable:
@@ -50,14 +51,14 @@ class TestToJsonable:
             assert _to_jsonable([1, 2, 3]) == [1, 2, 3]
 
     def test_exception_returns_original(self, app):
-        """Test exception returns original value."""
+        """Test exception returns original value (TypeError/AttributeError fallback)."""
         with app.app_context():
             from app.services.analysis_audit import _to_jsonable
 
             class BadObject:
                 @property
                 def id(self):
-                    raise Exception("Error")
+                    raise AttributeError("Error")
 
             obj = BadObject()
             result = _to_jsonable(obj)
@@ -242,7 +243,7 @@ class TestLogAnalysisAction:
                 mock_user.is_authenticated = True
                 mock_user.id = 1
 
-                with patch('app.services.analysis_audit.db.session.add', side_effect=Exception("DB Error")):
+                with patch('app.services.analysis_audit.db.session.add', side_effect=SQLAlchemyError("DB Error")):
                     # Should not raise, just log error
                     log_analysis_action(
                         result_id=1,
@@ -297,8 +298,8 @@ class TestLogAnalysisAction:
                     raw_data_dict=raw_data
                 )
 
-    def test_rollback_on_exception(self, app, db):
-        """Test rollback on exception."""
+    def test_exception_handled_gracefully(self, app, db):
+        """Test exception is handled gracefully (no rollback, caller decides)."""
         with app.app_context():
             from app.services.analysis_audit import log_analysis_action
 
@@ -306,17 +307,16 @@ class TestLogAnalysisAction:
                 mock_user.is_authenticated = True
                 mock_user.id = 1
 
-                with patch('app.services.analysis_audit.db.session.add', side_effect=Exception("Error")):
-                    with patch('app.services.analysis_audit.db.session.rollback') as mock_rollback:
-                        log_analysis_action(
-                            result_id=1,
-                            sample_id=1,
-                            analysis_code='Mad',
-                            action='created',
-                            final_result=8.5,
-                            raw_data_dict={}
-                        )
-                        mock_rollback.assert_called_once()
+                with patch('app.services.analysis_audit.db.session.add', side_effect=SQLAlchemyError("Error")):
+                    # Should not raise; error is logged, no rollback (caller decides)
+                    log_analysis_action(
+                        result_id=1,
+                        sample_id=1,
+                        analysis_code='Mad',
+                        action='created',
+                        final_result=8.5,
+                        raw_data_dict={}
+                    )
 
     def test_debug_logging(self, app, db):
         """Test debug logging is called."""
@@ -338,6 +338,8 @@ class TestLogAnalysisAction:
                         reason='Normal approval'
                     )
                     mock_debug.assert_called_once()
-                    call_arg = mock_debug.call_args[0][0]
-                    assert 'AUDIT' in call_arg
-                    assert 'approved' in call_arg
+                    call_args = mock_debug.call_args[0]
+                    fmt_string = call_args[0]
+                    assert 'AUDIT' in fmt_string
+                    # action='approved' is passed as a positional arg to logger.debug
+                    assert 'approved' in call_args

@@ -7,6 +7,7 @@ Complete tests for app/utils/analysis_assignment.py
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestGetGiShiftConfig:
@@ -61,7 +62,7 @@ class TestGetGiShiftConfig:
             from app.utils.analysis_assignment import get_gi_shift_config, DEFAULT_GI_SHIFT_CONFIG
 
             with patch('app.utils.analysis_assignment.SystemSetting.query') as mock_query:
-                mock_query.filter_by.side_effect = Exception("DB Error")
+                mock_query.filter_by.side_effect = SQLAlchemyError("DB Error")
                 result = get_gi_shift_config()
                 assert result == DEFAULT_GI_SHIFT_CONFIG
 

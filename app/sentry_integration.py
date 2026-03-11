@@ -87,7 +87,7 @@ def init_sentry(app):
         logger.info(f"Sentry initialized for environment: {environment}")
         return True
 
-    except Exception as e:
+    except (ImportError, ValueError, RuntimeError) as e:
         logger.error(f"Failed to initialize Sentry: {e}")
         return False
 

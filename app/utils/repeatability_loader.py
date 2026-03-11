@@ -9,6 +9,8 @@ import json
 import logging
 from functools import lru_cache
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.config.repeatability import LIMIT_RULES as FILE_LIMIT_RULES
 
 logger = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ def load_limit_rules() -> dict:
         ).scalars().first()
         if setting and setting.value:
             return json.loads(setting.value)
-    except Exception as e:
+    except (json.JSONDecodeError, TypeError, OSError, SQLAlchemyError) as e:
         logger.debug(f"Repeatability rules DB fallback: {e}")
     return FILE_LIMIT_RULES
 

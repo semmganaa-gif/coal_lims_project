@@ -14,7 +14,7 @@ class TestBaseCode:
     def test_base_code_alias(self, app):
         """Alias code хөрвүүлэх - line 137"""
         with app.app_context():
-            from app.routes.imports.routes import _base_code
+            from app.services.import_service import _base_code
             # Test with a known alias if exists
             result = _base_code("MT")
             assert result is not None
@@ -22,14 +22,14 @@ class TestBaseCode:
     def test_base_code_empty(self, app):
         """Хоосон код"""
         with app.app_context():
-            from app.routes.imports.routes import _base_code
+            from app.services.import_service import _base_code
             result = _base_code("")
             assert result == ""
 
     def test_base_code_normal(self, app):
         """Энгийн код - line 137"""
         with app.app_context():
-            from app.routes.imports.routes import _base_code
+            from app.services.import_service import _base_code
             result = _base_code("SomeUnknownCode")
             assert result == "SomeUnknownCode"
 
@@ -40,7 +40,7 @@ class TestGetOrCreateSample:
     def test_function_exists(self, app):
         """Function байгаа эсэх"""
         with app.app_context():
-            from app.routes.imports.routes import _get_or_create_sample
+            from app.services.import_service import _get_or_create_sample
             assert callable(_get_or_create_sample)
 
 
@@ -50,7 +50,7 @@ class TestUpsertResult:
     def test_function_exists(self, app):
         """Function байгаа эсэх"""
         with app.app_context():
-            from app.routes.imports.routes import _upsert_result
+            from app.services.import_service import _upsert_result
             assert callable(_upsert_result)
 
 
@@ -88,13 +88,13 @@ class TestImportLong:
     def test_function_exists(self, app):
         """Function байгаа эсэх"""
         with app.app_context():
-            from app.routes.imports.routes import _import_long
+            from app.services.import_service import import_long as _import_long
             assert callable(_import_long)
 
     def test_import_long_signature(self, app):
         """_import_long функцийн параметрүүд"""
         with app.app_context():
-            from app.routes.imports.routes import _import_long
+            from app.services.import_service import import_long as _import_long
             import inspect
             sig = inspect.signature(_import_long)
             params = list(sig.parameters.keys())
@@ -107,14 +107,14 @@ class TestParseDate:
     def test_parse_date_valid(self, app):
         """Зөв огноо"""
         with app.app_context():
-            from app.routes.imports.routes import _parse_date
+            from app.services.import_service import _parse_date
             result = _parse_date("2025-01-01")
             assert result is not None or result is None
 
     def test_parse_date_invalid(self, app):
         """Буруу огноо"""
         with app.app_context():
-            from app.routes.imports.routes import _parse_date
+            from app.services.import_service import _parse_date
             result = _parse_date("invalid")
             assert result is None
 
@@ -125,14 +125,14 @@ class TestNorm:
     def test_norm_string(self, app):
         """String normalize"""
         with app.app_context():
-            from app.routes.imports.routes import _norm
+            from app.services.import_service import _norm
             result = _norm("  test  ")
             assert result == "test"
 
     def test_norm_none(self, app):
         """None normalize"""
         with app.app_context():
-            from app.routes.imports.routes import _norm
+            from app.services.import_service import _norm
             result = _norm(None)
             assert result == ""
 
@@ -143,14 +143,14 @@ class TestToFloat:
     def test_to_float_valid(self, app):
         """Зөв тоо"""
         with app.app_context():
-            from app.routes.imports.routes import to_float
+            from app.utils.converters import to_float
             result = to_float("15.5")
             assert result == 15.5
 
     def test_to_float_invalid(self, app):
         """Буруу тоо"""
         with app.app_context():
-            from app.routes.imports.routes import to_float
+            from app.utils.converters import to_float
             try:
                 result = to_float("invalid")
             except ValueError:
@@ -163,7 +163,7 @@ class TestImportLongDryRun:
     def test_dry_run_functionality(self, app):
         """Dry run функц байгаа эсэх"""
         with app.app_context():
-            from app.routes.imports.routes import _import_long
+            from app.services.import_service import import_long as _import_long
             # Function exists and can be called with dry_run parameter
             assert callable(_import_long)
 
@@ -174,6 +174,6 @@ class TestSampleTypeNormalization:
     def test_normalize_sample_type(self, app):
         """Sample type normalize"""
         with app.app_context():
-            from app.routes.imports.routes import _norm
+            from app.services.import_service import _norm
             result = _norm("  2 hourly  ")
             assert result == "2 hourly"

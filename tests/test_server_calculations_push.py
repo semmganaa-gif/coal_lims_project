@@ -197,10 +197,10 @@ class TestCalcVolatileVad:
         """Valid p1 only"""
         from app.utils.server_calculations import calc_volatile_vad
         raw = {
-            "p1": {"m1": 1.0, "m2": 1.0, "m3": 0.65}
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.65}
         }
         result = calc_volatile_vad(raw)
-        # (1.0 - 0.65) / 1.0 * 100 = 35%
+        # ((10+1) - 10.65) / 1 * 100 = 35%
         assert result is not None
         assert abs(result - 35.0) < 0.01
 
@@ -208,8 +208,8 @@ class TestCalcVolatileVad:
         """Valid p1 and p2"""
         from app.utils.server_calculations import calc_volatile_vad
         raw = {
-            "p1": {"m1": 1.0, "m2": 1.0, "m3": 0.65},
-            "p2": {"m1": 1.0, "m2": 1.0, "m3": 0.64}
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.65},
+            "p2": {"m1": 10.0, "m2": 1.0, "m3": 10.64}
         }
         result = calc_volatile_vad(raw)
         assert result is not None
@@ -267,19 +267,22 @@ class TestCalcSulfurTs:
         """Valid p1 only"""
         from app.utils.server_calculations import calc_sulfur_ts
         raw = {
-            "p1": {"m1": 0.01, "m2": 0.02, "m_sample": 1.0, "k": 0.34296}
+            "p1": {"result": 1.25}
         }
         result = calc_sulfur_ts(raw)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
-    def test_default_k_value(self):
-        """Default k value used"""
+    def test_valid_both_parallels(self):
+        """Valid p1 and p2 - averages results"""
         from app.utils.server_calculations import calc_sulfur_ts
         raw = {
-            "p1": {"m1": 0.01, "m2": 0.02, "m_sample": 1.0}  # no k
+            "p1": {"result": 1.20},
+            "p2": {"result": 1.30}
         }
         result = calc_sulfur_ts(raw)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
     def test_empty_raw_data(self):
         """Empty raw data returns None"""
@@ -299,21 +302,33 @@ class TestCalcPhosphorusP:
         """Valid p1 only"""
         from app.utils.server_calculations import calc_phosphorus_p
         raw = {
-            "p1": {"v": 10.0, "v0": 0.5, "c": 0.01, "m_sample": 1.0}
+            "p1": {"result": 0.025}
         }
         result = calc_phosphorus_p(raw)
         assert result is not None
+        assert abs(result - 0.025) < 0.001
+
+    def test_valid_both_parallels(self):
+        """Valid p1 and p2 - averages results"""
+        from app.utils.server_calculations import calc_phosphorus_p
+        raw = {
+            "p1": {"result": 0.020},
+            "p2": {"result": 0.030}
+        }
+        result = calc_phosphorus_p(raw)
+        assert result is not None
+        assert abs(result - 0.025) < 0.001
 
     def test_empty_raw_data(self):
         """Empty raw data returns None"""
         from app.utils.server_calculations import calc_phosphorus_p
         assert calc_phosphorus_p({}) is None
 
-    def test_zero_m_sample(self):
-        """Zero m_sample returns None"""
+    def test_no_result_key(self):
+        """No result key returns None"""
         from app.utils.server_calculations import calc_phosphorus_p
         raw = {
-            "p1": {"v": 10.0, "v0": 0.5, "c": 0.01, "m_sample": 0}
+            "p1": {"v": 10.0, "v0": 0.5, "c": 0.01, "m_sample": 1.0}
         }
         assert calc_phosphorus_p(raw) is None
 

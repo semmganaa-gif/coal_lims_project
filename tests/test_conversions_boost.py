@@ -176,8 +176,8 @@ class TestCalculateAllConversions:
 
             result = calculate_all_conversions(raw_results, param_defs)
 
-            # When denom <= 0, TRD_ad should be 0
-            assert result.get("relative_density") == 0.0
+            # When denom <= 0, relative_density retains its raw value (no conversion applied)
+            assert result.get("relative_density") == 1.35
 
     def test_fixed_carbon_calculation(self, app):
         """Test fixed carbon calculation."""

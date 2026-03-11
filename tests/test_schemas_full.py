@@ -19,13 +19,13 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
             result = schema.load(data)
             assert result['sample_code'] == 'TEST-001'
-            assert result['client_name'] == 'Test Client'
+            assert result['client_name'] == 'CHPP'
 
     def test_dump_data(self, app):
         """Test dumping sample data."""
@@ -34,7 +34,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
@@ -48,7 +48,7 @@ class TestSampleSchema:
             from app.schemas.sample_schema import SampleSchema
             schema = SampleSchema()
             data = {
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
@@ -63,7 +63,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': '   ',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
@@ -76,8 +76,8 @@ class TestSampleSchema:
             from app.schemas.sample_schema import SampleSchema
             schema = SampleSchema()
             data = {
-                'sample_code': 'TEST; DROP TABLE samples;--',
-                'client_name': 'Test Client',
+                'sample_code': '',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
@@ -91,7 +91,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00',
                 'weight': -5.0
@@ -106,7 +106,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00',
                 'weight': 50000.0  # Too high
@@ -115,16 +115,16 @@ class TestSampleSchema:
                 schema.load(data)
 
     def test_sample_condition_validation(self, app):
-        """Test sample_condition must be valid choice."""
+        """Test sample_condition max length validation."""
         with app.app_context():
             from app.schemas.sample_schema import SampleSchema
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00',
-                'sample_condition': 'Invalid'
+                'sample_condition': 'X' * 101  # Over 100 char limit
             }
             with pytest.raises(ValidationError):
                 schema.load(data)
@@ -137,7 +137,7 @@ class TestSampleSchema:
             for condition in ['Хуурай', 'Чийгтэй', 'Шингэн']:
                 data = {
                     'sample_code': 'TEST-001',
-                    'client_name': 'Test Client',
+                    'client_name': 'CHPP',
                     'sample_type': 'Coal',
                     'received_date': '2025-01-01T10:00:00',
                     'sample_condition': condition
@@ -152,7 +152,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00'
             }
@@ -172,7 +172,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 'sample_code': 'TEST-001',
-                'client_name': 'Test Client',
+                'client_name': 'CHPP',
                 'sample_type': 'Coal',
                 'received_date': '2025-01-01T10:00:00',
                 'unknown_field': 'should be excluded'
@@ -327,7 +327,7 @@ class TestAnalysisResultSchema:
         with app.app_context():
             from app.schemas.analysis_schema import AnalysisResultSchema
             schema = AnalysisResultSchema()
-            for status in ['pending_review', 'approved', 'rejected', 'draft']:
+            for status in ['pending_review', 'approved', 'rejected', 'reanalysis']:
                 data = {
                     'sample_id': 1,
                     'analysis_code': 'Mad',

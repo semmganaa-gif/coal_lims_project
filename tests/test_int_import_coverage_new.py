@@ -14,7 +14,7 @@ class TestImportHelperFunctions:
 
     def test_norm_with_string(self, app):
         """Test _norm with string input."""
-        from app.routes.imports.routes import _norm
+        from app.services.import_service import _norm
 
         assert _norm("  test  ") == "test"
         assert _norm("hello") == "hello"
@@ -23,14 +23,14 @@ class TestImportHelperFunctions:
 
     def test_norm_with_number(self, app):
         """Test _norm with number input."""
-        from app.routes.imports.routes import _norm
+        from app.services.import_service import _norm
 
         assert _norm(123) == "123"
         assert _norm(45.67) == "45.67"
 
     def test_parse_date_valid_formats(self, app):
         """Test _parse_date with various valid date formats."""
-        from app.routes.imports.routes import _parse_date
+        from app.services.import_service import _parse_date
 
         # YYYY-MM-DD
         result = _parse_date("2025-12-23")
@@ -66,7 +66,7 @@ class TestImportHelperFunctions:
 
     def test_parse_date_invalid(self, app):
         """Test _parse_date with invalid input."""
-        from app.routes.imports.routes import _parse_date
+        from app.services.import_service import _parse_date
 
         assert _parse_date(None) is None
         assert _parse_date("") is None
@@ -77,7 +77,7 @@ class TestImportHelperFunctions:
 
     def test_map_header(self, app):
         """Test _map_header function."""
-        from app.routes.imports.routes import _map_header
+        from app.services.import_service import _map_header
 
         # Standard headers
         assert _map_header("sample_code") == "sample_code"
@@ -95,7 +95,7 @@ class TestImportHelperFunctions:
 
     def test_base_code(self, app):
         """Test _base_code function."""
-        from app.routes.imports.routes import _base_code
+        from app.services.import_service import _base_code
 
         # Empty input
         assert _base_code("") == ""
@@ -112,7 +112,7 @@ class TestImportHelperFunctions:
 
     def test_get_or_create_sample_new(self, app):
         """Test _get_or_create_sample creates new sample."""
-        from app.routes.imports.routes import _get_or_create_sample
+        from app.services.import_service import _get_or_create_sample
         from app.models import Sample
         from app import db
 
@@ -131,7 +131,7 @@ class TestImportHelperFunctions:
 
     def test_get_or_create_sample_existing(self, app):
         """Test _get_or_create_sample finds existing sample."""
-        from app.routes.imports.routes import _get_or_create_sample
+        from app.services.import_service import _get_or_create_sample
         from app.models import Sample
         from app import db
 
@@ -155,7 +155,7 @@ class TestImportHelperFunctions:
 
     def test_upsert_result_new(self, app):
         """Test _upsert_result creates new result."""
-        from app.routes.imports.routes import _upsert_result
+        from app.services.import_service import _upsert_result
         from app.models import Sample
         from app import db
 
@@ -181,7 +181,7 @@ class TestImportHelperFunctions:
 
     def test_upsert_result_update(self, app):
         """Test _upsert_result updates existing result."""
-        from app.routes.imports.routes import _upsert_result
+        from app.services.import_service import _upsert_result
         from app.models import Sample, AnalysisResult
         from app import db
 
@@ -214,7 +214,7 @@ class TestImportCHPPWide:
 
     def test_import_chpp_wide_valid(self, app):
         """Test CHPP wide import with valid data."""
-        from app.routes.imports.routes import _import_chpp_wide
+        from app.services.import_service import import_chpp_wide as _import_chpp_wide
         import csv
 
         with app.app_context():
@@ -234,7 +234,7 @@ class TestImportCHPPWide:
 
     def test_import_chpp_wide_insufficient_columns(self, app):
         """Test CHPP wide import with too few columns."""
-        from app.routes.imports.routes import _import_chpp_wide
+        from app.services.import_service import import_chpp_wide as _import_chpp_wide
         import csv
 
         with app.app_context():
@@ -246,7 +246,7 @@ class TestImportCHPPWide:
 
     def test_import_chpp_wide_empty_sample_code(self, app):
         """Test CHPP wide import with empty sample code."""
-        from app.routes.imports.routes import _import_chpp_wide
+        from app.services.import_service import import_chpp_wide as _import_chpp_wide
         import csv
 
         with app.app_context():
@@ -277,7 +277,7 @@ class TestImportLongFormat:
 
     def test_import_long_format_valid(self, app):
         """Test long format import with valid data."""
-        from app.routes.imports.routes import _norm, _parse_date, _base_code
+        from app.services.import_service import _norm, _parse_date, _base_code
 
         with app.app_context():
             # Test helper functions that are used in long format
@@ -287,7 +287,7 @@ class TestImportLongFormat:
 
     def test_import_with_various_date_formats(self, app):
         """Test import with various date formats."""
-        from app.routes.imports.routes import _parse_date
+        from app.services.import_service import _parse_date
 
         # Test all supported formats
         formats = [
@@ -308,7 +308,7 @@ class TestImportEdgeCases:
 
     def test_import_unicode_sample_code(self, app):
         """Test import with unicode in sample code."""
-        from app.routes.imports.routes import _norm
+        from app.services.import_service import _norm
 
         # Mongolian characters
         result = _norm("Дээж_001")
@@ -316,14 +316,14 @@ class TestImportEdgeCases:
 
     def test_import_special_characters(self, app):
         """Test import with special characters."""
-        from app.routes.imports.routes import _norm
+        from app.services.import_service import _norm
 
         result = _norm("Sample-001_A/B")
         assert result == "Sample-001_A/B"
 
     def test_import_numeric_sample_code(self, app):
         """Test import with numeric sample code."""
-        from app.routes.imports.routes import _norm
+        from app.services.import_service import _norm
 
         result = _norm(12345)
         assert result == "12345"
@@ -339,7 +339,7 @@ class TestImportEdgeCases:
 
     def test_import_with_batch_commit(self, app):
         """Test import with batch commit."""
-        from app.routes.imports.routes import _import_chpp_wide
+        from app.services.import_service import import_chpp_wide as _import_chpp_wide
         import csv
 
         with app.app_context():

@@ -148,9 +148,9 @@ class TestSeedAnalysisTypes:
 
     def test_seed_function(self, app, db):
         with app.app_context():
-            from app.routes.admin.routes import _seed_analysis_types
+            from app.services.admin_service import seed_analysis_types
             # Should not raise
-            _seed_analysis_types()
+            seed_analysis_types()
 
             from app.models import AnalysisType
             count = AnalysisType.query.count()

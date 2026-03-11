@@ -7,7 +7,7 @@ Coverage target: app/routes/import_routes.py
 
 import pytest
 from datetime import datetime
-from app.routes.imports.routes import (
+from app.services.import_service import (
     _norm, _parse_date, _map_header, _base_code,
     HEADER_KEYS, ALIAS_TO_BASE
 )

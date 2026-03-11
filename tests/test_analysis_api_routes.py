@@ -9,6 +9,7 @@ Routes: /api/eligible_samples, /api/unassign_sample, /api/save_results,
 import pytest
 import json
 from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, date, timedelta
 from app import create_app, db
 from app.models import User, Sample, AnalysisResult, AnalysisResultLog
@@ -665,7 +666,7 @@ class TestReadySamplesEdgeCases:
         """Check ready samples with exception"""
         with analysis_app.app_context():
             with patch('app.routes.api.analysis_api.Sample.query') as mock_query:
-                mock_query.filter.side_effect = Exception('DB error')
+                mock_query.filter.side_effect = SQLAlchemyError('DB error')
                 response = admin_client.get('/api/check_ready_samples')
             assert response.status_code in [200, 500]
 
@@ -726,8 +727,8 @@ class TestRequestAnalysisEdgeCases:
     def test_request_db_exception(self, admin_client, analysis_app, sample_with_analyses):
         """Request analysis with DB exception"""
         with analysis_app.app_context():
-            with patch('app.routes.api.analysis_api.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('DB commit error')
+            with patch('app.services.analysis_workflow.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('DB commit error')
                 response = admin_client.post('/api/request_analysis',
                     data=json.dumps({
                         'sample_id': sample_with_analyses,
@@ -743,8 +744,8 @@ class TestSaveResultsDBError:
     def test_save_db_commit_error(self, admin_client, analysis_app, sample_with_analyses):
         """Save results with DB commit error"""
         with analysis_app.app_context():
-            with patch('app.routes.api.analysis_api.db.session.commit') as mock_commit:
-                mock_commit.side_effect = Exception('DB commit failed')
+            with patch('app.services.analysis_workflow.db.session.commit') as mock_commit:
+                mock_commit.side_effect = SQLAlchemyError('DB commit failed')
                 response = admin_client.post('/api/save_results',
                     data=json.dumps({
                         'sample_id': sample_with_analyses,

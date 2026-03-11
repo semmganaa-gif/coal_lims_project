@@ -176,17 +176,17 @@ class TestCalcVolatileVad:
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_volatile_vad
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0}
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7}
         }
         result = calc_volatile_vad(raw_data)
-        # Vad = (1.3 - 1.0) / 1.0 * 100 = 30%
+        # Vad = ((10+1) - 10.7) / 1 * 100 = 30%
         assert result is not None
         assert abs(result - 30.0) < 0.01
 
     def test_negative_result(self):
         from app.utils.server_calculations import calc_volatile_vad
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.0, "m3": 1.5}  # m3 > m2
+            "p1": {"m1": 1.0, "m2": 1.0, "m3": 2.5}  # m3 > m1+m2 => weight_loss < 0
         }
         result = calc_volatile_vad(raw_data)
         assert result is None
@@ -219,21 +219,23 @@ class TestCalcSulfurTS:
 
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_sulfur_ts
+        # Source averages p1.result and p2.result
         raw_data = {
-            "p1": {"m1": 10.0, "m2": 10.05, "m_sample": 1.0}
+            "p1": {"result": 1.25}
         }
         result = calc_sulfur_ts(raw_data)
-        # S = (10.05 - 10) / 1 * 0.34296 * 100 = 1.7148%
         assert result is not None
-        assert result > 0
+        assert abs(result - 1.25) < 0.01
 
-    def test_with_custom_k(self):
+    def test_both_parallels(self):
         from app.utils.server_calculations import calc_sulfur_ts
         raw_data = {
-            "p1": {"m1": 10.0, "m2": 10.05, "m_sample": 1.0, "k": 0.5}
+            "p1": {"result": 1.20},
+            "p2": {"result": 1.30}
         }
         result = calc_sulfur_ts(raw_data)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
 
 class TestCalcPhosphorusP:
@@ -241,22 +243,24 @@ class TestCalcPhosphorusP:
 
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_phosphorus_p
+        # Source averages p1.result and p2.result
         raw_data = {
-            "p1": {"v": 10.0, "v0": 1.0, "c": 0.1, "m_sample": 1.0}
+            "p1": {"result": 0.025}
         }
         result = calc_phosphorus_p(raw_data)
         assert result is not None
+        assert abs(result - 0.025) < 0.001
 
     def test_missing_values(self):
         from app.utils.server_calculations import calc_phosphorus_p
-        raw_data = {"p1": {"v": 10.0}}
+        raw_data = {"p1": {"v": 10.0}}  # No 'result' key
         result = calc_phosphorus_p(raw_data)
         assert result is None
 
-    def test_zero_sample_mass(self):
+    def test_no_result_key(self):
         from app.utils.server_calculations import calc_phosphorus_p
         raw_data = {
-            "p1": {"v": 10.0, "v0": 1.0, "c": 0.1, "m_sample": 0}
+            "p1": {"v": 10.0, "v0": 1.0, "c": 0.1, "m_sample": 1.0}
         }
         result = calc_phosphorus_p(raw_data)
         assert result is None
@@ -383,8 +387,9 @@ class TestCalcFreeMoistureFM:
 
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_free_moisture_fm
+        # Source reads top-level tray_g/before_g/after_g (or tray/before/after)
         raw_data = {
-            "p1": {"wt": 10.0, "wb": 110.0, "wa": 105.0}
+            "tray_g": 10.0, "before_g": 110.0, "after_g": 105.0
         }
         result = calc_free_moisture_fm(raw_data)
         # FM = (110 - 105) / (105 - 10) * 100 = 5/95 * 100 = 5.26%
@@ -394,15 +399,16 @@ class TestCalcFreeMoistureFM:
     def test_zero_denominator(self):
         from app.utils.server_calculations import calc_free_moisture_fm
         raw_data = {
-            "p1": {"wt": 100.0, "wb": 110.0, "wa": 100.0}  # wa == wt
+            "tray_g": 100.0, "before_g": 110.0, "after_g": 100.0  # after - tray = 0
         }
         result = calc_free_moisture_fm(raw_data)
         assert result is None
 
-    def test_uppercase_fields(self):
+    def test_alternative_field_names(self):
         from app.utils.server_calculations import calc_free_moisture_fm
+        # Source also accepts tray/before/after
         raw_data = {
-            "p1": {"Wt": 10.0, "Wb": 110.0, "Wa": 105.0}
+            "tray": 10.0, "before": 110.0, "after": 105.0
         }
         result = calc_free_moisture_fm(raw_data)
         assert result is not None
@@ -413,8 +419,9 @@ class TestCalcSolid:
 
     def test_valid_calculation(self):
         from app.utils.server_calculations import calc_solid
+        # Source reads top-level A/B/C (or a/b/c)
         raw_data = {
-            "p1": {"a": 100.0, "b": 20.0, "c": 68.0}
+            "a": 100.0, "b": 20.0, "c": 68.0
         }
         result = calc_solid(raw_data)
         # Solid = 68 * 100 / (100 - 20) = 6800/80 = 85%
@@ -424,7 +431,7 @@ class TestCalcSolid:
     def test_zero_denominator(self):
         from app.utils.server_calculations import calc_solid
         raw_data = {
-            "p1": {"a": 100.0, "b": 100.0, "c": 50.0}  # a == b
+            "a": 100.0, "b": 100.0, "c": 50.0  # a == b
         }
         result = calc_solid(raw_data)
         assert result is None
@@ -432,7 +439,7 @@ class TestCalcSolid:
     def test_uppercase_fields(self):
         from app.utils.server_calculations import calc_solid
         raw_data = {
-            "p1": {"A": 100.0, "B": 20.0, "C": 68.0}
+            "A": 100.0, "B": 20.0, "C": 68.0
         }
         result = calc_solid(raw_data)
         assert result is not None
@@ -592,7 +599,7 @@ class TestBulkVerifyResults:
         assert len(result["verified_items"]) == 1
         assert result["verified_items"][0]["server_verified"] is True
 
-    @patch('app.utils.server_calculations.verify_and_recalculate')
+    @patch('app.utils.server_calculations.dispatcher.verify_and_recalculate')
     def test_with_warnings(self, mock_verify):
         from app.utils.server_calculations import bulk_verify_results
         mock_verify.return_value = (3.0, ["MISMATCH warning"])
@@ -603,7 +610,7 @@ class TestBulkVerifyResults:
         assert result["total_warnings"] == 1
         assert result["total_mismatches"] == 1
 
-    @patch('app.utils.server_calculations.verify_and_recalculate')
+    @patch('app.utils.server_calculations.dispatcher.verify_and_recalculate')
     def test_multiple_items(self, mock_verify):
         from app.utils.server_calculations import bulk_verify_results
         mock_verify.side_effect = [
@@ -721,33 +728,35 @@ class TestParallel2Coverage:
         """calc_volatile_vad p2 branch - lines 271-273, 276"""
         from app.utils.server_calculations import calc_volatile_vad
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0},
-            "p2": {"m1": 1.0, "m2": 1.25, "m3": 1.0}
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7},
+            "p2": {"m1": 10.0, "m2": 1.0, "m3": 10.75}
         }
         result = calc_volatile_vad(raw_data)
         assert result is not None
-        # Average of 30% and 25%
+        # p1: ((10+1)-10.7)/1*100=30%, p2: ((10+1)-10.75)/1*100=25%, avg=27.5%
         assert 25.0 < result < 30.0
 
     def test_ts_with_valid_p2(self):
-        """calc_sulfur_ts p2 branch - lines 271-273, 313-315"""
+        """calc_sulfur_ts p2 branch"""
         from app.utils.server_calculations import calc_sulfur_ts
         raw_data = {
-            "p1": {"m1": 0.01, "m2": 0.1, "m_sample": 1.0, "k": 0.34296},
-            "p2": {"m1": 0.01, "m2": 0.12, "m_sample": 1.0, "k": 0.34296}
+            "p1": {"result": 1.20},
+            "p2": {"result": 1.30}
         }
         result = calc_sulfur_ts(raw_data)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
     def test_p_with_valid_p2(self):
-        """calc_phosphorus_p p2 branch - line 313-315, 376"""
+        """calc_phosphorus_p p2 branch"""
         from app.utils.server_calculations import calc_phosphorus_p
         raw_data = {
-            "p1": {"v": 10.0, "v0": 0.0, "c": 0.005, "m_sample": 1.0},
-            "p2": {"v": 10.5, "v0": 0.0, "c": 0.005, "m_sample": 1.0}
+            "p1": {"result": 0.020},
+            "p2": {"result": 0.030}
         }
         result = calc_phosphorus_p(raw_data)
         assert result is not None
+        assert abs(result - 0.025) < 0.001
 
     def test_cv_with_valid_p2(self):
         """calc_calorific_value_cv p2 branch - lines 412, 414, 423, 425"""
@@ -760,25 +769,26 @@ class TestParallel2Coverage:
         result = calc_calorific_value_cv(raw_data)
         assert result is not None
 
-    def test_fm_with_valid_p2(self):
-        """calc_free_moisture_fm p2 branch - line 547, 550, 613"""
+    def test_fm_valid(self):
+        """calc_free_moisture_fm - source uses top-level keys"""
         from app.utils.server_calculations import calc_free_moisture_fm
         raw_data = {
-            "p1": {"wt": 10.0, "wb": 100.0, "wa": 95.0},  # FM = (100-95)/(95-10)*100
-            "p2": {"wt": 10.0, "wb": 100.0, "wa": 94.0}   # FM = (100-94)/(94-10)*100
+            "tray_g": 10.0, "before_g": 100.0, "after_g": 95.0
         }
         result = calc_free_moisture_fm(raw_data)
         assert result is not None
+        # FM = (100-95)/(95-10)*100 = 5/85*100 = 5.88%
+        assert abs(result - 5.88) < 0.1
 
-    def test_solid_with_valid_p2(self):
-        """calc_solid p2 branch - line 676"""
+    def test_solid_valid(self):
+        """calc_solid - source uses top-level keys"""
         from app.utils.server_calculations import calc_solid
         raw_data = {
-            "p1": {"a": 100.0, "b": 50.0, "c": 25.0},  # Solid = 25*100/(100-50) = 50%
-            "p2": {"a": 100.0, "b": 48.0, "c": 26.0}   # Solid = 26*100/(100-48) = 50%
+            "a": 100.0, "b": 50.0, "c": 25.0  # Solid = 25*100/(100-50) = 50%
         }
         result = calc_solid(raw_data)
         assert result is not None
+        assert abs(result - 50.0) < 0.1
 
     def test_gi_51_with_valid_p2(self):
         """calc_gray_king_gi p2 branch - line 477, 547"""

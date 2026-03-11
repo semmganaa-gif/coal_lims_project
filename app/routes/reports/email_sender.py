@@ -92,7 +92,7 @@ def send_report_email(report, recipients, subject=None, body=None):
         return False, "SMTP нэвтрэлт амжилтгүй. Нууц үг шалгана уу."
     except smtplib.SMTPException as e:
         return False, f"SMTP алдаа: {str(e)}"
-    except Exception as e:
+    except OSError as e:
         return False, f"Error: {str(e)}"
 
 

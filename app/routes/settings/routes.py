@@ -16,6 +16,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.constants import BOTTLE_TOLERANCE
 from app.models import Bottle, BottleConstant, SystemSetting
+from app.repositories import SystemSettingRepository
 from app.utils.database import safe_commit
 from app.utils.datetime import now_local as now_mn
 from app.utils.repeatability_loader import load_limit_rules, clear_cache
@@ -106,7 +107,7 @@ def bottles_constants_new():
         try:
             t1 = float(request.form.get("trial_1") or "nan")
             t2 = float(request.form.get("trial_2") or "nan")
-        except Exception:
+        except (ValueError, TypeError):
             flash("Туршилт 1, 2 тоон утга шаардлагатай.", "danger")
             return redirect(url_for("settings.bottles_constants_new"))
 
@@ -116,7 +117,7 @@ def bottles_constants_new():
         # температур (optional, default 20 °C)
         try:
             temperature_c = float(request.form.get("temperature_c") or 20.0)
-        except Exception:
+        except (ValueError, TypeError):
             temperature_c = 20.0
 
         remarks = (request.form.get("remarks") or "").strip()
@@ -256,7 +257,7 @@ def bottles_constants_bulk_save():
         if eff_from_str:
             try:
                 eff_from = datetime.fromisoformat(eff_from_str)
-            except Exception:
+            except (ValueError, TypeError):
                 eff_from = now_mn()
         else:
             eff_from = now_mn()
@@ -427,7 +428,7 @@ def repeatability_limits():
             parsed = json.loads(raw_json)
             if not isinstance(parsed, dict):
                 raise ValueError("JSON обьект байх ёстой.")
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             flash(f"JSON задлах алдаа: {e}", "danger")
             return render_template(
                 "settings/repeatability_limits.html",
@@ -435,11 +436,7 @@ def repeatability_limits():
                 limits_json=raw_json,
             )
 
-        setting = SystemSetting.query.filter_by(category="repeatability", key="limits").first()
-        if not setting:
-            setting = SystemSetting(category="repeatability", key="limits")
-            db.session.add(setting)
-        setting.value = json.dumps(parsed, ensure_ascii=False)
+        SystemSettingRepository.set_value("repeatability", "limits", json.dumps(parsed, ensure_ascii=False), commit=False)
         if safe_commit("Лимитүүд амжилттай хадгалагдлаа.", "Лимит хадгалахад алдаа гарлаа"):
             clear_cache()
             current_rules = parsed
@@ -472,38 +469,19 @@ def notification_settings():
 
     current_settings = {}
     for nt in notification_types:
-        setting = SystemSetting.query.filter_by(
-            category="notifications",
-            key=f"{nt['key']}_recipients"
-        ).first()
+        setting = SystemSettingRepository.get("notifications", f"{nt['key']}_recipients")
         current_settings[nt['key']] = setting.value if setting else ""
 
     if request.method == "POST":
         for nt in notification_types:
             recipients = request.form.get(f"{nt['key']}_recipients", "").strip()
-
-            setting = SystemSetting.query.filter_by(
-                category="notifications",
-                key=f"{nt['key']}_recipients"
-            ).first()
-
-            if not setting:
-                setting = SystemSetting(
-                    category="notifications",
-                    key=f"{nt['key']}_recipients"
-                )
-                db.session.add(setting)
-
-            setting.value = recipients
+            SystemSettingRepository.set_value("notifications", f"{nt['key']}_recipients", recipients, commit=False)
 
         safe_commit("Мэдэгдлийн тохиргоо хадгалагдлаа.", "Мэдэгдлийн тохиргоо хадгалахад алдаа гарлаа")
 
         # Reload
         for nt in notification_types:
-            setting = SystemSetting.query.filter_by(
-                category="notifications",
-                key=f"{nt['key']}_recipients"
-            ).first()
+            setting = SystemSettingRepository.get("notifications", f"{nt['key']}_recipients")
             current_settings[nt['key']] = setting.value if setting else ""
 
     return render_template(
@@ -526,14 +504,8 @@ def email_recipients():
         return redirect(url_for("settings.bottles_index"))
 
     # Одоогийн тохиргоог авах
-    to_setting = SystemSetting.query.filter_by(
-        category="email",
-        key="report_recipients_to"
-    ).first()
-    cc_setting = SystemSetting.query.filter_by(
-        category="email",
-        key="report_recipients_cc"
-    ).first()
+    to_setting = SystemSettingRepository.get("email", "report_recipients_to")
+    cc_setting = SystemSettingRepository.get("email", "report_recipients_cc")
 
     current_to = to_setting.value if to_setting else ""
     current_cc = cc_setting.value if cc_setting else ""

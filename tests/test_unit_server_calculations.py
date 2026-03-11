@@ -172,9 +172,9 @@ class TestCalcVolatileVad:
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.3, "m3": 1.0}
+            "p1": {"m1": 10.0, "m2": 1.0, "m3": 10.7}
         }
-        # Vad = ((m2 - m3) / m1) * 100 = ((1.3 - 1.0) / 1.0) * 100 = 30%
+        # Vad = ((m1 + m2) - m3) / m2 * 100 = ((10+1) - 10.7) / 1 * 100 = 30%
         result = calc_volatile_vad(raw_data)
         assert result is not None
         assert abs(result - 30.0) < 0.01
@@ -207,21 +207,23 @@ class TestCalcSulfurTs:
 
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
+        # Source averages p1.result and p2.result
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.1, "m_sample": 1.0, "k": 0.34296}
+            "p1": {"result": 1.25}
         }
-        # S = ((m2 - m1) / m_sample) * k * 100
         result = calc_sulfur_ts(raw_data)
         assert result is not None
-        assert result > 0
+        assert abs(result - 1.25) < 0.01
 
-    def test_default_k(self):
-        """k байхгүй үед default"""
+    def test_both_parallels(self):
+        """Хоёр parallel"""
         raw_data = {
-            "p1": {"m1": 1.0, "m2": 1.1, "m_sample": 1.0}
+            "p1": {"result": 1.20},
+            "p2": {"result": 1.30}
         }
         result = calc_sulfur_ts(raw_data)
         assert result is not None
+        assert abs(result - 1.25) < 0.01
 
     def test_empty_data(self):
         """Хоосон өгөгдөл"""
@@ -233,12 +235,13 @@ class TestCalcPhosphorusP:
 
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
+        # Source averages p1.result and p2.result
         raw_data = {
-            "p1": {"v": 10.0, "v0": 0.5, "c": 0.1, "m_sample": 0.5}
+            "p1": {"result": 0.025}
         }
         result = calc_phosphorus_p(raw_data)
         assert result is not None
-        assert result >= 0
+        assert abs(result - 0.025) < 0.001
 
     def test_empty_data(self):
         """Хоосон өгөгдөл"""
@@ -367,18 +370,19 @@ class TestCalcFreeMoistureFm:
 
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
+        # Source reads top-level tray_g/before_g/after_g
         raw_data = {
-            "p1": {"wt": 50.0, "wb": 160.0, "wa": 150.0}
+            "tray_g": 50.0, "before_g": 160.0, "after_g": 150.0
         }
-        # FM = ((wb - wa) / (wa - wt)) * 100 = ((160-150) / (150-50)) * 100 = 10%
+        # FM = ((160-150) / (150-50)) * 100 = 10%
         result = calc_free_moisture_fm(raw_data)
         assert result is not None
         assert abs(result - 10.0) < 0.01
 
     def test_zero_denominator(self):
-        """wa == wt үед"""
+        """after == tray үед"""
         raw_data = {
-            "p1": {"wt": 50.0, "wb": 60.0, "wa": 50.0}
+            "tray_g": 50.0, "before_g": 60.0, "after_g": 50.0
         }
         assert calc_free_moisture_fm(raw_data) is None
 
@@ -392,8 +396,9 @@ class TestCalcSolid:
 
     def test_valid_calculation(self):
         """Зөв тооцоолол"""
+        # Source reads top-level A/B/C (or a/b/c)
         raw_data = {
-            "p1": {"a": 110.0, "b": 100.0, "c": 5.0}
+            "a": 110.0, "b": 100.0, "c": 5.0
         }
         # Solid = (c * 100) / (a - b) = (5 * 100) / (110 - 100) = 50%
         result = calc_solid(raw_data)
@@ -402,7 +407,7 @@ class TestCalcSolid:
 
     def test_zero_denominator(self):
         """a == b үед"""
-        raw_data = {"p1": {"a": 100.0, "b": 100.0, "c": 5.0}}
+        raw_data = {"a": 100.0, "b": 100.0, "c": 5.0}
         assert calc_solid(raw_data) is None
 
     def test_empty_data(self):

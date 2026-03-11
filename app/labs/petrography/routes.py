@@ -26,6 +26,7 @@ def _pe_samples(statuses):
     2. analyses_to_perform дотор 'PE' код байвал (шинжилгээний тохиргоогоор PE чек хийгдсэн)
     """
     from sqlalchemy import or_
+    from sqlalchemy.exc import SQLAlchemyError
     return Sample.query.filter(
         Sample.status.in_(statuses),
         or_(
@@ -157,7 +158,7 @@ def save_results():
             return api_error('Error saving results', status_code=500)
 
         return api_success({'id': ar.id}, 'Results saved')
-    except Exception as e:
+    except (SQLAlchemyError, ValueError, TypeError) as e:
         db.session.rollback()
         return api_error(f'Error: {html_escape(str(e))}', status_code=500)
 

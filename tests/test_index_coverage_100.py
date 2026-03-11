@@ -321,7 +321,7 @@ class TestSendHourlyReportException:
         """send_hourly_report exception үед"""
         # Try different patch paths
         try:
-            with patch('smtplib.SMTP', side_effect=Exception("SMTP error")):
+            with patch('smtplib.SMTP', side_effect=OSError("SMTP error")):
                 response = auth_admin.post('/send_hourly_report', data={
                     'report_time': '07:00'
                 }, follow_redirects=True)
@@ -379,7 +379,8 @@ class TestExceptionInLoop:
 
     def test_exception_during_registration(self, auth_admin, db):
         """Бүртгэлийн үед exception"""
-        with patch('app.routes.main.index.assign_analyses_to_sample', side_effect=Exception("DB Error")):
+        from sqlalchemy.exc import SQLAlchemyError
+        with patch('app.routes.main.index.assign_analyses_to_sample', side_effect=SQLAlchemyError("DB Error")):
             response = auth_admin.post('/coal', data={
                 'client_name': 'CHPP',
                 'sample_type': '2 hourly',

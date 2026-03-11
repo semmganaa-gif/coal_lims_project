@@ -90,7 +90,7 @@ class TestEmailSettings:
     def test_get_report_email_recipients_empty(self, app, db):
         """Test get email recipients when none configured."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
             assert 'to' in result
             assert 'cc' in result

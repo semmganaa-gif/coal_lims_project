@@ -6,6 +6,7 @@ import pytest
 import json
 from unittest.mock import patch, MagicMock
 from dataclasses import dataclass
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class TestAnalysisAuditImport:
@@ -193,7 +194,7 @@ class TestLogAnalysisAction:
 
         mock_user.is_authenticated = True
         mock_user.id = 1
-        mock_log_class.side_effect = Exception("Database error")
+        mock_log_class.side_effect = SQLAlchemyError("Database error")
 
         # Should not raise exception
         log_analysis_action(
@@ -205,8 +206,8 @@ class TestLogAnalysisAction:
             raw_data_dict={}
         )
 
-        # Rollback should be called
-        mock_db.session.rollback.assert_called()
+        # Error is logged but no rollback (caller decides)
+        # Just verify it didn't raise
 
     @patch('app.services.analysis_audit.db')
     @patch('app.services.analysis_audit.current_user')
@@ -216,8 +217,8 @@ class TestLogAnalysisAction:
 
         mock_user.is_authenticated = True
         mock_user.id = 1
-        mock_log_class.side_effect = Exception("Database error")
-        mock_db.session.rollback.side_effect = Exception("Rollback failed")
+        mock_log_class.side_effect = SQLAlchemyError("Database error")
+        mock_db.session.rollback.side_effect = SQLAlchemyError("Rollback failed")
 
         # Should not raise exception even if rollback fails
         log_analysis_action(

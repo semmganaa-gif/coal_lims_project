@@ -56,7 +56,8 @@ class TestDatabaseSafeCommit:
             from app.utils.database import safe_commit
             from app import db as database
 
-            with patch.object(database.session, 'commit', side_effect=Exception('Test error')):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test error')):
                 with patch('app.utils.database.flash'):
                     result = safe_commit("Success", "Error")
                     assert result is False

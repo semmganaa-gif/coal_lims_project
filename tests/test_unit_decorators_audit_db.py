@@ -259,7 +259,8 @@ class TestDatabaseHelpers:
         """safe_commit should return False on general exception"""
         with app.test_request_context():
             with patch('app.utils.database.db') as mock_db:
-                mock_db.session.commit.side_effect = Exception("DB error")
+                from sqlalchemy.exc import SQLAlchemyError
+                mock_db.session.commit.side_effect = SQLAlchemyError("DB error")
 
                 from app.utils.database import safe_commit
 
@@ -283,7 +284,8 @@ class TestDatabaseHelpers:
         """safe_delete should return False on error"""
         with app.test_request_context():
             with patch('app.utils.database.db') as mock_db:
-                mock_db.session.delete.side_effect = Exception("Delete error")
+                from sqlalchemy.exc import SQLAlchemyError
+                mock_db.session.delete.side_effect = SQLAlchemyError("Delete error")
 
                 from app.utils.database import safe_delete
 

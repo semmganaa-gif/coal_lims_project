@@ -21,7 +21,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
 from app.utils.security import escape_like_pattern
@@ -86,7 +86,7 @@ def register_routes(bp):
 
         try:
             db.session.commit()
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Update sample status commit error: {e}")
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -222,7 +222,7 @@ def register_routes(bp):
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_save: {e}")
             return api_error("Data conflict occurred", 409)
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_save: {e}")
             return api_error("Error saving data", 500)
@@ -263,7 +263,7 @@ def register_routes(bp):
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_update_weight: {e}")
             return api_error("Data conflict occurred", 409)
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_update_weight: {e}")
             return api_error("Error saving data", 500)
@@ -298,7 +298,7 @@ def register_routes(bp):
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_unready: {e}")
             return api_error("Data conflict occurred", 409)
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_unready: {e}")
             return api_error("Error saving data", 500)
@@ -333,7 +333,7 @@ def register_routes(bp):
             db.session.rollback()
             current_app.logger.error(f"Integrity error in mass_delete: {e}")
             return api_error("Cannot delete (related records exist)", 409)
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in mass_delete: {e}")
             return api_error("Error deleting data", 500)

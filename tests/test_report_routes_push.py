@@ -76,31 +76,31 @@ class TestParseDateSafe:
     """_parse_date_safe функц тест"""
 
     def test_import_function(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         assert _parse_date_safe is not None
 
     def test_valid_date(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         result = _parse_date_safe("2026-05-15")
         assert result == date(2026, 5, 15)
 
     def test_empty_value(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         result = _parse_date_safe("")
         assert result is None
 
     def test_none_value(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         result = _parse_date_safe(None)
         assert result is None
 
     def test_invalid_format(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         result = _parse_date_safe("15/05/2026")
         assert result is None
 
     def test_invalid_string(self):
-        from app.routes.reports.routes import _parse_date_safe
+        from app.routes.reports.consumption import _parse_date_safe
         result = _parse_date_safe("not-a-date")
         assert result is None
 
@@ -109,18 +109,18 @@ class TestGetWeeksInMonth:
     """_get_weeks_in_month функц тест"""
 
     def test_import_function(self):
-        from app.routes.reports.routes import _get_weeks_in_month
+        from app.services.report_service import get_weeks_in_month as _get_weeks_in_month
         assert _get_weeks_in_month is not None
 
     def test_january_2026(self):
-        from app.routes.reports.routes import _get_weeks_in_month
+        from app.services.report_service import get_weeks_in_month as _get_weeks_in_month
         weeks = _get_weeks_in_month(2026, 1)
         assert len(weeks) > 0
         assert weeks[0][0] == 1  # week 1
         assert weeks[0][1] == date(2026, 1, 1)  # starts on Jan 1
 
     def test_february_2024_leap_year(self):
-        from app.routes.reports.routes import _get_weeks_in_month
+        from app.services.report_service import get_weeks_in_month as _get_weeks_in_month
         weeks = _get_weeks_in_month(2024, 2)
         assert len(weeks) > 0
         # February 2024 has 29 days (leap year)
@@ -128,13 +128,13 @@ class TestGetWeeksInMonth:
         assert last_week[2].day == 29
 
     def test_february_2025_non_leap(self):
-        from app.routes.reports.routes import _get_weeks_in_month
+        from app.services.report_service import get_weeks_in_month as _get_weeks_in_month
         weeks = _get_weeks_in_month(2025, 2)
         last_week = weeks[-1]
         assert last_week[2].day == 28
 
     def test_week_structure(self):
-        from app.routes.reports.routes import _get_weeks_in_month
+        from app.services.report_service import get_weeks_in_month as _get_weeks_in_month
         weeks = _get_weeks_in_month(2026, 3)
         for week_num, start, end in weeks:
             assert isinstance(week_num, int)
@@ -148,7 +148,7 @@ class TestErrorReasonLabels:
     """ERROR_REASON_LABELS тест"""
 
     def test_labels_exist(self):
-        from app.routes.reports.routes import ERROR_REASON_LABELS
+        from app.routes.reports.consumption import ERROR_REASON_LABELS
         assert isinstance(ERROR_REASON_LABELS, dict)
         assert "measurement_error" in ERROR_REASON_LABELS
         assert "documentation_error" in ERROR_REASON_LABELS
@@ -354,7 +354,7 @@ class TestCalculateConsumption:
     """_calculate_consumption функц тест"""
 
     def test_import_function(self):
-        from app.routes.reports.routes import _calculate_consumption
+        from app.routes.reports.consumption import _calculate_consumption
         assert _calculate_consumption is not None
 
 
@@ -362,7 +362,7 @@ class TestCalculateWeeklyPerformance:
     """_calculate_weekly_performance функц тест"""
 
     def test_import_function(self):
-        from app.routes.reports.routes import _calculate_weekly_performance
+        from app.services.report_service import calculate_weekly_performance as _calculate_weekly_performance
         assert _calculate_weekly_performance is not None
 
 
@@ -370,7 +370,7 @@ class TestCountErrorReasons:
     """_count_error_reasons функц тест"""
 
     def test_import_function(self):
-        from app.routes.reports.routes import _count_error_reasons
+        from app.routes.reports.consumption import _count_error_reasons
         assert _count_error_reasons is not None
 
 

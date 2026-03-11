@@ -13,6 +13,7 @@ from flask import render_template, jsonify
 from flask_login import login_required
 
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
+from app.repositories import ControlStandardRepository, GbwStandardRepository
 from app.monitoring import track_qc_check
 from app.utils.westgard import check_westgard_rules, get_qc_status, check_single_value
 
@@ -99,7 +100,7 @@ def _extract_standard_name(sample_code: str, sample_type: str = None) -> str:
 
     # "CM" → идэвхтэй ControlStandard нэрээр солих
     if extracted.upper() == 'CM' and (sample_type or '').upper() == 'CM':
-        active = ControlStandard.query.filter_by(is_active=True).first()
+        active = ControlStandardRepository.get_active()
         if active:
             return active.name
 
@@ -125,18 +126,11 @@ def _get_target_and_tolerance(sample, analysis_code: str):
     sample_type = getattr(sample, 'sample_type', '') or ''
     active_std = None
     if sample_type.upper() == 'GBW' or 'GBW' in sample_code_upper:
-        active_std = GbwStandard.query.filter_by(name=standard_name, is_active=True).first()
-        # Fallback: нэрээр олдохгүй бол идэвхтэйг авах
-        if not active_std:
-            active_std = GbwStandard.query.filter_by(name=standard_name).first()
+        active_std = GbwStandardRepository.get_active_or_by_name(standard_name)
     elif sample_type.upper() == 'CM' or 'CM' in sample_code_upper:
-        active_std = ControlStandard.query.filter_by(name=standard_name, is_active=True).first()
-        # Fallback: нэрээр олдохгүй бол идэвхтэй CM стандарт авах
-        if not active_std:
-            active_std = ControlStandard.query.filter_by(name=standard_name).first()
-        if not active_std:
-            active_std = ControlStandard.query.filter_by(is_active=True).first()
-            if active_std:
+        active_std = ControlStandardRepository.get_active_or_by_name(standard_name)
+        if active_std:
+            if active_std.name != standard_name:
                 logger.info(f"CM fallback: '{standard_name}' -> '{active_std.name}'")
 
     if not active_std or not active_std.targets:

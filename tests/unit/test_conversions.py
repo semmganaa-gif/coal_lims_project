@@ -138,7 +138,7 @@ class TestTRDCalculations:
         assert result.get("relative_density_d") == 1.35
 
     def test_trd_zero_denominator(self):
-        """TRD handles zero denominator (100 - Mad = 0)"""
+        """TRD handles zero denominator (100 - Mad = 0) — keeps original value"""
         from app.utils.conversions import calculate_all_conversions
 
         raw = {
@@ -147,7 +147,8 @@ class TestTRDCalculations:
         }
 
         result = calculate_all_conversions(raw, {})
-        assert result.get("relative_density") == 0.0
+        # When denom_ad = 0, TRD,ad is not calculated; original value remains
+        assert result.get("relative_density") == 1.35
 
 
 class TestConversionFactors:

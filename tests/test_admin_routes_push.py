@@ -56,9 +56,9 @@ class TestSeedAnalysisTypes:
     """_seed_analysis_types функц тест"""
 
     def test_import_function(self):
-        from app.routes.admin.routes import _seed_analysis_types
-        assert _seed_analysis_types is not None
-        assert callable(_seed_analysis_types)
+        from app.services.admin_service import seed_analysis_types
+        assert seed_analysis_types is not None
+        assert callable(seed_analysis_types)
 
 
 # ============================================================

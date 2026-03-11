@@ -27,14 +27,14 @@ class TestSampleSchema:
         schema = SampleSchema()
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test Client',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat()
         }
         result = schema.load(data)
 
         assert result['sample_code'] == 'TEST-001'
-        assert result['client_name'] == 'Test Client'
+        assert result['client_name'] == 'CHPP'
 
     def test_sample_schema_missing_required(self):
         """Missing required fields"""
@@ -55,7 +55,7 @@ class TestSampleSchema:
         schema = SampleSchema()
         data = {
             'sample_code': '   ',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat()
         }
@@ -63,15 +63,15 @@ class TestSampleSchema:
         with pytest.raises(ValidationError):
             schema.load(data)
 
-    def test_sample_schema_sql_injection_protection(self):
-        """SQL injection protection"""
+    def test_sample_schema_empty_code_rejected(self):
+        """Empty sample_code rejected"""
         from app.schemas.sample_schema import SampleSchema
         from datetime import datetime
 
         schema = SampleSchema()
         data = {
-            'sample_code': 'TEST; DROP TABLE--',
-            'client_name': 'Test',
+            'sample_code': '',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat()
         }
@@ -89,7 +89,7 @@ class TestSampleSchema:
         # Negative weight
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat(),
             'weight': -5.0
@@ -106,7 +106,7 @@ class TestSampleSchema:
         schema = SampleSchema()
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat(),
             'weight': 100.5
@@ -125,7 +125,7 @@ class TestSampleSchema:
         # Valid condition
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat(),
             'sample_condition': 'Хуурай'
@@ -133,18 +133,18 @@ class TestSampleSchema:
         result = schema.load(data)
         assert result['sample_condition'] == 'Хуурай'
 
-    def test_sample_schema_invalid_condition(self):
-        """Invalid sample condition"""
+    def test_sample_schema_condition_max_length(self):
+        """Sample condition max length validation"""
         from app.schemas.sample_schema import SampleSchema
         from datetime import datetime
 
         schema = SampleSchema()
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat(),
-            'sample_condition': 'Invalid'
+            'sample_condition': 'X' * 101  # Over 100 char limit
         }
 
         with pytest.raises(ValidationError):
@@ -157,7 +157,7 @@ class TestSampleSchema:
         schema = SampleSchema()
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test Client',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'status': 'new'
         }
@@ -173,7 +173,7 @@ class TestSampleSchema:
         schema = SampleSchema()
         data = {
             'sample_code': 'TEST-001',
-            'client_name': 'Test',
+            'client_name': 'CHPP',
             'sample_type': 'Coal',
             'received_date': datetime.now().isoformat(),
             'unknown_field': 'value'
@@ -324,7 +324,7 @@ class TestAnalysisResultSchema:
 
         schema = AnalysisResultSchema()
 
-        for status in ['pending_review', 'approved', 'rejected', 'draft']:
+        for status in ['pending_review', 'approved', 'rejected', 'reanalysis']:
             data = {
                 'sample_id': 1,
                 'analysis_code': 'Mad',

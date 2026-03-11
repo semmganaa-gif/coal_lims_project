@@ -332,7 +332,7 @@ class TestReportHelperFunctions:
     def test_parse_date_safe_valid(self, app):
         """_parse_date_safe зөв огноо"""
         with app.app_context():
-            from app.routes.reports.routes import _parse_date_safe
+            from app.routes.reports.consumption import _parse_date_safe
             result = _parse_date_safe('2024-01-15')
             assert result is not None
             assert result.year == 2024
@@ -342,21 +342,21 @@ class TestReportHelperFunctions:
     def test_parse_date_safe_invalid(self, app):
         """_parse_date_safe буруу огноо"""
         with app.app_context():
-            from app.routes.reports.routes import _parse_date_safe
+            from app.routes.reports.consumption import _parse_date_safe
             result = _parse_date_safe('invalid')
             assert result is None
 
     def test_parse_date_safe_none(self, app):
         """_parse_date_safe None"""
         with app.app_context():
-            from app.routes.reports.routes import _parse_date_safe
+            from app.routes.reports.consumption import _parse_date_safe
             result = _parse_date_safe(None)
             assert result is None
 
     def test_parse_date_safe_empty(self, app):
         """_parse_date_safe хоосон"""
         with app.app_context():
-            from app.routes.reports.routes import _parse_date_safe
+            from app.routes.reports.consumption import _parse_date_safe
             result = _parse_date_safe('')
             assert result is None
 
@@ -519,7 +519,7 @@ class TestCalculateConsumption:
     def test_calculate_consumption_basic(self, app):
         """_calculate_consumption basic call"""
         with app.app_context():
-            from app.routes.reports.routes import _calculate_consumption
+            from app.routes.reports.consumption import _calculate_consumption
 
             year = datetime.now().year
             try:
@@ -532,7 +532,7 @@ class TestCalculateConsumption:
     def test_calculate_consumption_with_filters(self, app):
         """_calculate_consumption with filters"""
         with app.app_context():
-            from app.routes.reports.routes import _calculate_consumption
+            from app.routes.reports.consumption import _calculate_consumption
             from datetime import date
 
             year = datetime.now().year

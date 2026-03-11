@@ -302,8 +302,8 @@ class TestControlChartsEndpoints:
 class TestSendHourlyReportMocked:
     """Test send_hourly_report with mocking."""
 
-    @patch('app.routes.main.index.mail')
-    @patch('app.routes.main.index.load_workbook')
+    @patch('app.routes.main.hourly_report.mail')
+    @patch('app.routes.main.hourly_report.load_workbook')
     def test_send_hourly_report_mocked(self, mock_workbook, mock_mail, app, auth_admin):
         """Test send hourly report with mocked dependencies."""
         from app.models import SystemSetting

@@ -10,7 +10,7 @@ from flask import (
     flash, abort, send_from_directory, current_app
 )
 from flask_login import login_required, current_user
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.utils import secure_filename
 
 from app import db
@@ -195,7 +195,7 @@ def add_equipment():
             }
         )
         flash("Амжилттай бүртгэгдлээ.", "success")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in add_equipment: {e}")
         flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
@@ -312,7 +312,7 @@ def edit_equipment(id):
         db.session.rollback()
         current_app.logger.error(f"IntegrityError in edit_equipment: {e}")
         flash("Өгөгдөл зөрчилдлөө (давхардсан утга).", "danger")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in edit_equipment: {e}")
         flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
@@ -354,7 +354,7 @@ def delete_equipment(id):
             resource_id=eq_id,
             details={'name': eq_name, 'had_history': has_history}
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in delete_equipment: {e}")
         flash(f"Устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
@@ -410,7 +410,7 @@ def bulk_delete():
                     'retired_names': retired_names[:10]
                 }
             )
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in bulk_delete: {e}")
         flash(f"Олноор устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
@@ -518,7 +518,7 @@ def add_maintenance_log(id):
                 }
             )
             flash("Ашиглалтын бүртгэл хадгалагдлаа.", "success")
-        except Exception as e:
+        except SQLAlchemyError as e:
             db.session.rollback()
             current_app.logger.error(f"Database error in add_usage_log: {e}")
             flash(f"Алдаа: {str(e)[:100]}", "danger")
@@ -555,7 +555,7 @@ def add_maintenance_log(id):
             }
         )
         flash("Бүртгэл хадгалагдлаа.", "success")
-    except Exception as e:
+    except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error in add_maintenance_log: {e}")
         flash(f"Бүртгэл хадгалахад алдаа гарлаа: {str(e)[:100]}", "danger")

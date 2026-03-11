@@ -542,8 +542,10 @@ class TestSulfurMapFor:
         mock_result.sample_id = 1
         mock_result.final_result = 0.45
 
-        with patch('app.utils.qc.AnalysisResult') as mock_ar:
-            mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_result]
+        with patch('app.db') as mock_db:
+            mock_exec = MagicMock()
+            mock_exec.scalars.return_value.all.return_value = [mock_result]
+            mock_db.session.execute.return_value = mock_exec
 
             result = sulfur_map_for([1, 2, 3])
             assert result[1] == 0.45
@@ -556,8 +558,10 @@ class TestSulfurMapFor:
         mock_result.sample_id = 1
         mock_result.final_result = None
 
-        with patch('app.utils.qc.AnalysisResult') as mock_ar:
-            mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_result]
+        with patch('app.db') as mock_db:
+            mock_exec = MagicMock()
+            mock_exec.scalars.return_value.all.return_value = [mock_result]
+            mock_db.session.execute.return_value = mock_exec
 
             result = sulfur_map_for([1])
             assert 1 not in result
@@ -574,10 +578,10 @@ class TestSulfurMapFor:
         mock_result2.sample_id = 1
         mock_result2.final_result = 0.50
 
-        with patch('app.utils.qc.AnalysisResult') as mock_ar:
-            mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [
-                mock_result1, mock_result2
-            ]
+        with patch('app.db') as mock_db:
+            mock_exec = MagicMock()
+            mock_exec.scalars.return_value.all.return_value = [mock_result1, mock_result2]
+            mock_db.session.execute.return_value = mock_exec
 
             result = sulfur_map_for([1])
             # First one (0.45) should be used
@@ -591,8 +595,10 @@ class TestSulfurMapFor:
         mock_result.sample_id = 1
         mock_result.final_result = "not a number"
 
-        with patch('app.utils.qc.AnalysisResult') as mock_ar:
-            mock_ar.query.filter.return_value.order_by.return_value.all.return_value = [mock_result]
+        with patch('app.db') as mock_db:
+            mock_exec = MagicMock()
+            mock_exec.scalars.return_value.all.return_value = [mock_result]
+            mock_db.session.execute.return_value = mock_exec
 
             result = sulfur_map_for([1])
             assert 1 not in result

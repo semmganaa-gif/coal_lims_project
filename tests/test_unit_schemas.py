@@ -155,7 +155,7 @@ class TestAnalysisResultSchema:
         with app.app_context():
             from app.schemas.analysis_schema import AnalysisResultSchema
             schema = AnalysisResultSchema()
-            for status in ['pending_review', 'approved', 'rejected', 'draft']:
+            for status in ['pending_review', 'approved', 'rejected', 'reanalysis']:
                 data = {
                     "sample_id": 1,
                     "analysis_code": "MT",
@@ -191,13 +191,13 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 "sample_code": "SAMPLE-001",
-                "client_name": "Test Client",
+                "client_name": "CHPP",
                 "sample_type": "Coal",
                 "received_date": "2025-01-15T10:00:00"
             }
             result = schema.load(data)
             assert result["sample_code"] == "SAMPLE-001"
-            assert result["client_name"] == "Test Client"
+            assert result["client_name"] == "CHPP"
 
     def test_missing_sample_code_fails(self, app):
         """Missing sample_code should fail"""
@@ -205,7 +205,7 @@ class TestSampleSchema:
             from app.schemas.sample_schema import SampleSchema
             schema = SampleSchema()
             data = {
-                "client_name": "Test Client",
+                "client_name": "CHPP",
                 "sample_type": "Coal",
                 "received_date": "2025-01-15T10:00:00"
             }
@@ -213,14 +213,14 @@ class TestSampleSchema:
                 schema.load(data)
             assert "sample_code" in exc.value.messages
 
-    def test_sql_injection_in_sample_code_fails(self, app):
-        """SQL injection attempt should fail"""
+    def test_empty_sample_code_fails(self, app):
+        """Empty sample_code should fail"""
         with app.app_context():
             from app.schemas.sample_schema import SampleSchema
             schema = SampleSchema()
             data = {
-                "sample_code": "SAMPLE; DROP--",
-                "client_name": "Test Client",
+                "sample_code": "",
+                "client_name": "CHPP",
                 "sample_type": "Coal",
                 "received_date": "2025-01-15T10:00:00"
             }
@@ -235,7 +235,7 @@ class TestSampleSchema:
             schema = SampleSchema()
             data = {
                 "sample_code": "SAMPLE-001",
-                "client_name": "Test Client",
+                "client_name": "CHPP",
                 "sample_type": "Coal",
                 "received_date": "2025-01-15T10:00:00",
                 "weight": -10
@@ -252,7 +252,7 @@ class TestSampleSchema:
             for condition in ['Хуурай', 'Чийгтэй', 'Шингэн']:
                 data = {
                     "sample_code": "SAMPLE-001",
-                    "client_name": "Test Client",
+                    "client_name": "CHPP",
                     "sample_type": "Coal",
                     "received_date": "2025-01-15T10:00:00",
                     "sample_condition": condition

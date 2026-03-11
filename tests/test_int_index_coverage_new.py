@@ -13,7 +13,7 @@ class TestIndexHelperFunctions:
 
     def test_get_report_email_recipients_empty(self, app):
         """Test email recipients when no settings."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
 
         with app.app_context():
             result = get_report_email_recipients()
@@ -24,7 +24,7 @@ class TestIndexHelperFunctions:
 
     def test_get_report_email_recipients_with_settings(self, app):
         """Test email recipients with settings."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
         from app.models import SystemSetting
         from app import db
 

@@ -14,6 +14,7 @@ from dataclasses import asdict, is_dataclass
 from typing import Any, Mapping, Optional
 
 from flask_login import current_user
+from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import AnalysisResultLog
@@ -31,8 +32,8 @@ def _to_jsonable(data: Any) -> Any:
             return asdict(data)
         if hasattr(data, "id"):
             return getattr(data, "id")
-    except Exception:
-        pass
+    except (TypeError, AttributeError) as e:
+        logger.debug("_to_jsonable fallback for %s: %s", type(data).__name__, e)
     return data
 
 
@@ -139,7 +140,7 @@ def log_analysis_action(
             action, analysis_code, sample_id, result_id, user_id, reason or '-',
         )
 
-    except Exception as e:
+    except (SQLAlchemyError, TypeError, ValueError) as e:
         # Аудит алдаанаас болж үндсэн transaction нурахгүй байх ёстой.
         # rollback хийхгүй — дуудагч тал шийднэ.
         logger.error("CRITICAL ERROR in log_analysis_action: %s", e)

@@ -22,6 +22,7 @@ from app.models import (
     AnalysisResult, AnalysisResultLog, AnalysisType,
     AuditLog, Sample, User,
 )
+from app.repositories import AnalysisTypeRepository
 from app.config.analysis_schema import get_analysis_schema
 from app.constants import ERROR_REASON_LABELS
 from app.utils.codes import norm_code
@@ -66,7 +67,7 @@ def register_routes(bp):
         base_code = norm_code(analysis_code)
 
         # Analysis type олох
-        analysis_type = AnalysisType.query.filter_by(code=analysis_code).first()
+        analysis_type = AnalysisTypeRepository.get_by_code(analysis_code)
         if not analysis_type:
             from dataclasses import dataclass as _dc
 
@@ -170,7 +171,7 @@ def register_routes(bp):
             # Raw data parse
             try:
                 raw_data = json.loads(log_obj.raw_data_snapshot or "{}")
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
                 raw_data = {}
 
             # Ээлжийн мэдээлэл тооцоолох

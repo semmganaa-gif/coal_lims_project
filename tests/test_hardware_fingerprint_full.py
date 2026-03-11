@@ -34,7 +34,7 @@ class TestGetMacAddress:
         """Test exception returns 'unknown'."""
         with app.app_context():
             from app.utils.hardware_fingerprint import get_mac_address
-            with patch('uuid.getnode', side_effect=Exception("Test error")):
+            with patch('uuid.getnode', side_effect=OSError("Test error")):
                 result = get_mac_address()
                 assert result == "unknown"
 
@@ -61,7 +61,7 @@ class TestGetCpuId:
         """Test exception returns processor() or 'unknown'."""
         with app.app_context():
             from app.utils.hardware_fingerprint import get_cpu_id
-            with patch('subprocess.run', side_effect=Exception("Test error")):
+            with patch('subprocess.run', side_effect=OSError("Test error")):
                 result = get_cpu_id()
                 assert isinstance(result, str)
 
@@ -88,7 +88,7 @@ class TestGetDiskSerial:
         """Test exception returns 'unknown'."""
         with app.app_context():
             from app.utils.hardware_fingerprint import get_disk_serial
-            with patch('subprocess.run', side_effect=Exception("Test error")):
+            with patch('subprocess.run', side_effect=OSError("Test error")):
                 result = get_disk_serial()
                 assert result == "unknown"
 
@@ -115,7 +115,7 @@ class TestGetMotherboardSerial:
         """Test exception returns 'unknown'."""
         with app.app_context():
             from app.utils.hardware_fingerprint import get_motherboard_serial
-            with patch('subprocess.run', side_effect=Exception("Test error")):
+            with patch('subprocess.run', side_effect=OSError("Test error")):
                 result = get_motherboard_serial()
                 assert result == "unknown"
 
@@ -141,7 +141,7 @@ class TestGetHostname:
         """Test exception returns 'unknown'."""
         with app.app_context():
             from app.utils.hardware_fingerprint import get_hostname
-            with patch('platform.node', side_effect=Exception("Test error")):
+            with patch('platform.node', side_effect=OSError("Test error")):
                 result = get_hostname()
                 assert result == "unknown"
 

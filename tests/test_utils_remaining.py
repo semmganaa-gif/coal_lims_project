@@ -289,7 +289,8 @@ class TestSafeCommit:
             from app.utils.database import safe_commit
             from app import db as database
 
-            with patch.object(database.session, 'commit', side_effect=Exception('Test')):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test')):
                 with patch('app.utils.database.flash'):
                     result = safe_commit("Success", "Error")
                     assert result is False
@@ -324,7 +325,8 @@ class TestSafeDelete:
             from app import db as database
 
             mock_obj = MagicMock()
-            with patch.object(database.session, 'delete', side_effect=Exception('Test')):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch.object(database.session, 'delete', side_effect=SQLAlchemyError('Test')):
                 with patch('app.utils.database.flash'):
                     result = safe_delete(mock_obj, "Deleted", "Error")
                     assert result is False
@@ -385,7 +387,8 @@ class TestSafeAdd:
             from app import db as database
 
             mock_obj = MagicMock()
-            with patch.object(database.session, 'add', side_effect=Exception('Test')):
+            from sqlalchemy.exc import SQLAlchemyError
+            with patch.object(database.session, 'add', side_effect=SQLAlchemyError('Test')):
                 with patch('app.utils.database.flash'):
                     result = safe_add(mock_obj, "Added", "Error")
                     assert result is False
@@ -439,7 +442,8 @@ class TestLogAudit:
             with patch('flask_login.current_user') as mock_user:
                 mock_user.is_authenticated = True
                 mock_user.id = 1
-                with patch.object(database.session, 'commit', side_effect=Exception('Test')):
+                from sqlalchemy.exc import SQLAlchemyError
+                with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test')):
                     log_audit('test_action')  # Should not raise
 
 

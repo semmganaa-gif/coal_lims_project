@@ -33,7 +33,7 @@ class TestGetMacAddress:
         """Exception returns 'unknown'"""
         from app.utils.hardware_fingerprint import get_mac_address
 
-        with patch('app.utils.hardware_fingerprint.uuid.getnode', side_effect=Exception("Error")):
+        with patch('app.utils.hardware_fingerprint.uuid.getnode', side_effect=OSError("Error")):
             result = get_mac_address()
             assert result == "unknown"
 
@@ -113,7 +113,7 @@ class TestGetHostname:
         """Exception returns 'unknown'"""
         from app.utils.hardware_fingerprint import get_hostname
 
-        with patch('app.utils.hardware_fingerprint.platform.node', side_effect=Exception("Error")):
+        with patch('app.utils.hardware_fingerprint.platform.node', side_effect=OSError("Error")):
             result = get_hostname()
             assert result == "unknown"
 

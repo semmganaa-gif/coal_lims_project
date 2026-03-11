@@ -34,14 +34,14 @@ class TestGetReportEmailRecipients:
     def test_get_report_email_recipients_no_settings(self, app, db):
         """Test when no email settings exist."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             result = get_report_email_recipients()
             assert result == {'to': [], 'cc': []}
 
     def test_get_report_email_recipients_with_to(self, app, db):
         """Test with TO email setting."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             setting = SystemSetting(
@@ -60,7 +60,7 @@ class TestGetReportEmailRecipients:
     def test_get_report_email_recipients_with_cc(self, app, db):
         """Test with CC email setting."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             setting = SystemSetting(
@@ -78,7 +78,7 @@ class TestGetReportEmailRecipients:
     def test_get_report_email_recipients_inactive(self, app, db):
         """Test with inactive email setting."""
         with app.app_context():
-            from app.routes.main.index import get_report_email_recipients
+            from app.routes.main.hourly_report import get_report_email_recipients
             from app.models import SystemSetting
 
             # Deactivate any existing setting first

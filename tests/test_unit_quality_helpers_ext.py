@@ -141,20 +141,26 @@ class TestGenerateSequentialCode:
         from app.utils.quality_helpers import generate_sequential_code
         assert generate_sequential_code is not None
 
+    @patch('sqlalchemy.select')
+    @patch('app.db')
     @patch('app.utils.quality_helpers.now_local')
-    def test_first_code_of_year(self, mock_now_local):
+    def test_first_code_of_year(self, mock_now_local, mock_db, mock_select):
         """First code of year"""
         from app.utils.quality_helpers import generate_sequential_code
         mock_now_local.return_value.year = 2025
 
-        mock_model = MagicMock()
-        mock_model.query.filter.return_value.order_by.return_value.first.return_value = None
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.first.return_value = None
+        mock_db.session.execute.return_value = mock_exec
 
+        mock_model = MagicMock()
         result = generate_sequential_code(mock_model, 'ca_number', 'CA')
         assert result == 'CA-2025-0001'
 
+    @patch('sqlalchemy.select')
+    @patch('app.db')
     @patch('app.utils.quality_helpers.now_local')
-    def test_increment_existing_code(self, mock_now_local):
+    def test_increment_existing_code(self, mock_now_local, mock_db, mock_select):
         """Increment existing code"""
         from app.utils.quality_helpers import generate_sequential_code
         mock_now_local.return_value.year = 2025
@@ -162,21 +168,27 @@ class TestGenerateSequentialCode:
         mock_last = MagicMock()
         mock_last.ca_number = 'CA-2025-0005'
 
-        mock_model = MagicMock()
-        mock_model.query.filter.return_value.order_by.return_value.first.return_value = mock_last
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.first.return_value = mock_last
+        mock_db.session.execute.return_value = mock_exec
 
+        mock_model = MagicMock()
         result = generate_sequential_code(mock_model, 'ca_number', 'CA')
         assert result == 'CA-2025-0006'
 
+    @patch('sqlalchemy.select')
+    @patch('app.db')
     @patch('app.utils.quality_helpers.now_local')
-    def test_custom_padding(self, mock_now_local):
+    def test_custom_padding(self, mock_now_local, mock_db, mock_select):
         """Custom padding"""
         from app.utils.quality_helpers import generate_sequential_code
         mock_now_local.return_value.year = 2025
 
-        mock_model = MagicMock()
-        mock_model.query.filter.return_value.order_by.return_value.first.return_value = None
+        mock_exec = MagicMock()
+        mock_exec.scalars.return_value.first.return_value = None
+        mock_db.session.execute.return_value = mock_exec
 
+        mock_model = MagicMock()
         result = generate_sequential_code(mock_model, 'code', 'TEST', padding=6)
         assert result == 'TEST-2025-000001'
 

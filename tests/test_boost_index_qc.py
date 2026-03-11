@@ -569,7 +569,7 @@ class TestIndexHelperFunctionsCoverage:
 
     def test_get_report_email_recipients(self, app):
         """Test get report email recipients."""
-        from app.routes.main.index import get_report_email_recipients
+        from app.routes.main.hourly_report import get_report_email_recipients
         from app.models import SystemSetting
         from app import db
 

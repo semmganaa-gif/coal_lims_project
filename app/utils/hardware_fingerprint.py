@@ -17,7 +17,7 @@ def get_mac_address():
     try:
         mac = uuid.getnode()
         return ':'.join(('%012x' % mac)[i:i+2] for i in range(0, 12, 2))
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.warning(f"Failed to get MAC address: {e}")
         return "unknown"
 
@@ -35,7 +35,7 @@ def get_cpu_id():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
         logger.warning(f"Failed to get CPU ID: {e}")
     return platform.processor() or "unknown"
 
@@ -53,7 +53,7 @@ def get_disk_serial():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
         logger.warning(f"Failed to get disk serial: {e}")
     return "unknown"
 
@@ -71,7 +71,7 @@ def get_motherboard_serial():
             lines = result.stdout.strip().split('\n')
             if len(lines) > 1:
                 return lines[1].strip()
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
         logger.warning(f"Failed to get motherboard serial: {e}")
     return "unknown"
 
@@ -80,7 +80,7 @@ def get_hostname():
     """Hostname авах"""
     try:
         return platform.node()
-    except Exception as e:
+    except OSError as e:
         logger.warning(f"Failed to get hostname: {e}")
         return "unknown"
 
