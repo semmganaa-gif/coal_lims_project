@@ -26,7 +26,7 @@ class TestDatabaseSafeCommit:
         """Test safe_commit success case."""
         with app.test_request_context('/'):
             from app.utils.database import safe_commit
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_commit(None, "Error")
                 assert result is True
 
@@ -34,7 +34,7 @@ class TestDatabaseSafeCommit:
         """Test safe_commit with success message."""
         with app.test_request_context('/'):
             from app.utils.database import safe_commit
-            with patch('app.utils.database.flash') as mock_flash:
+            with patch('app.utils.database._flash_msg') as mock_flash:
                 result = safe_commit("Success!", "Error")
                 assert result is True
 
@@ -46,7 +46,7 @@ class TestDatabaseSafeCommit:
             from sqlalchemy.exc import IntegrityError
 
             with patch.object(database.session, 'commit', side_effect=IntegrityError('', '', '')):
-                with patch('app.utils.database.flash'):
+                with patch('app.utils.database._flash_msg'):
                     result = safe_commit("Success", "Integrity Error")
                     assert result is False
 
@@ -58,7 +58,7 @@ class TestDatabaseSafeCommit:
 
             from sqlalchemy.exc import SQLAlchemyError
             with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test error')):
-                with patch('app.utils.database.flash'):
+                with patch('app.utils.database._flash_msg'):
                     result = safe_commit("Success", "Error")
                     assert result is False
 
@@ -81,7 +81,7 @@ class TestDatabaseSafeDelete:
             db.session.add(sample)
             db.session.commit()
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_delete(sample, "Deleted", "Error")
                 assert result is True
 
@@ -100,7 +100,7 @@ class TestDatabaseSafeDelete:
             db.session.add(sample)
             db.session.commit()
 
-            with patch('app.utils.database.flash') as mock_flash:
+            with patch('app.utils.database._flash_msg') as mock_flash:
                 result = safe_delete(sample, "Deleted successfully", "Error")
                 assert result is True
 
@@ -121,7 +121,7 @@ class TestDatabaseSafeAdd:
                 user_id=1
             )
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_add(sample, "Added", "Error")
                 assert result is True
 
@@ -136,7 +136,7 @@ class TestDatabaseSafeAdd:
                 Sample(sample_code='ADD_LIST_B', client_name='CHPP', sample_type='2H', user_id=1)
             ]
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_add(samples, "Added", "Error")
                 assert result is True
 

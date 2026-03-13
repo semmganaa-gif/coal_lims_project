@@ -39,7 +39,7 @@ class TestSafeCommit:
             from app import db as database
 
             with patch.object(database.session, 'commit', side_effect=IntegrityError('', '', '')):
-                with patch('app.utils.database.flash'):  # Mock flash
+                with patch('app.utils.database._flash_msg'):  # Mock flash
                     result = safe_commit("Success", "Integrity Error")
                     assert result is False
 
@@ -51,7 +51,7 @@ class TestSafeCommit:
             from app import db as database
 
             with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Test error')):
-                with patch('app.utils.database.flash'):  # Mock flash
+                with patch('app.utils.database._flash_msg'):  # Mock flash
                     result = safe_commit("Success", "Error occurred")
                     assert result is False
 
@@ -76,7 +76,7 @@ class TestSafeDelete:
             db.session.add(sample)
             db.session.commit()
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_delete(sample, "Deleted", "Delete error")
                 assert result is True
 
@@ -91,7 +91,7 @@ class TestSafeDelete:
 
             with patch.object(database.session, 'delete'):
                 with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Delete failed')):
-                    with patch('app.utils.database.flash'):
+                    with patch('app.utils.database._flash_msg'):
                         result = safe_delete(mock_obj, "Deleted", "Delete error")
                         assert result is False
 
@@ -113,7 +113,7 @@ class TestSafeAdd:
                 user_id=1
             )
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_add(sample, "Added", "Add error")
                 assert result is True
 
@@ -129,7 +129,7 @@ class TestSafeAdd:
                 Sample(sample_code='ADD_LIST_002', client_name='CHPP', sample_type='2H', user_id=1)
             ]
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_add(samples, "Added", "Add error")
                 assert result is True
 
@@ -144,7 +144,7 @@ class TestSafeAdd:
 
             with patch.object(database.session, 'add'):
                 with patch.object(database.session, 'commit', side_effect=IntegrityError('', '', '')):
-                    with patch('app.utils.database.flash'):
+                    with patch('app.utils.database._flash_msg'):
                         result = safe_add(mock_obj, "Added", "Integrity error")
                         assert result is False
 
@@ -159,7 +159,7 @@ class TestSafeAdd:
 
             with patch.object(database.session, 'add'):
                 with patch.object(database.session, 'commit', side_effect=SQLAlchemyError('Add failed')):
-                    with patch('app.utils.database.flash'):
+                    with patch('app.utils.database._flash_msg'):
                         result = safe_add(mock_obj, "Added", "Add error")
                         assert result is False
 
@@ -177,7 +177,7 @@ class TestSafeAdd:
                 user_id=1
             )
 
-            with patch('app.utils.database.flash'):
+            with patch('app.utils.database._flash_msg'):
                 result = safe_add(sample, None, "Add error")
                 assert result is True
 

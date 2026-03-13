@@ -99,7 +99,7 @@ class TestSetupApiDocs:
 
             args, kwargs = mock_swagger.call_args
             template = kwargs.get('template', {})
-            assert template['info']['version'] == '1.0.0'
+            assert template['info']['version'] == '1.1.0'
 
     def test_swagger_template_has_security_definitions(self):
         """Template has security definitions"""

@@ -33,7 +33,7 @@ class TestDatabaseImport:
 class TestSafeCommit:
     """safe_commit функцийн тест"""
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_commit_success_with_message(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
@@ -44,7 +44,7 @@ class TestSafeCommit:
         mock_db.session.commit.assert_called_once()
         mock_flash.assert_called_with("Амжилттай!", "success")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_commit_success_no_message(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
@@ -55,7 +55,7 @@ class TestSafeCommit:
         mock_db.session.commit.assert_called_once()
         mock_flash.assert_not_called()
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_commit_integrity_error(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
@@ -68,7 +68,7 @@ class TestSafeCommit:
         mock_db.session.rollback.assert_called_once()
         mock_flash.assert_called_with("Давхардсан код", "danger")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_commit_general_exception(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
@@ -83,7 +83,7 @@ class TestSafeCommit:
         call_args = mock_flash.call_args[0]
         assert "Алдаа гарлаа" in call_args[0]
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_commit_default_error_message(self, mock_db, mock_flash):
         from app.utils.database import safe_commit
@@ -99,7 +99,7 @@ class TestSafeCommit:
 class TestSafeDelete:
     """safe_delete функцийн тест"""
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_delete_success_with_message(self, mock_db, mock_flash):
         from app.utils.database import safe_delete
@@ -112,7 +112,7 @@ class TestSafeDelete:
         mock_db.session.commit.assert_called_once()
         mock_flash.assert_called_with("Устгагдлаа", "success")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_delete_success_no_message(self, mock_db, mock_flash):
         from app.utils.database import safe_delete
@@ -124,7 +124,7 @@ class TestSafeDelete:
         mock_db.session.delete.assert_called_once_with(obj)
         mock_flash.assert_not_called()
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_delete_exception(self, mock_db, mock_flash):
         from app.utils.database import safe_delete
@@ -140,7 +140,7 @@ class TestSafeDelete:
         call_args = mock_flash.call_args[0]
         assert "Устгах боломжгүй" in call_args[0]
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_delete_default_error_message(self, mock_db, mock_flash):
         from app.utils.database import safe_delete
@@ -158,7 +158,7 @@ class TestSafeDelete:
 class TestSafeAdd:
     """safe_add функцийн тест"""
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_single_object_success(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -171,7 +171,7 @@ class TestSafeAdd:
         mock_db.session.commit.assert_called_once()
         mock_flash.assert_called_with("Нэмэгдлээ", "success")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_list_of_objects(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -186,7 +186,7 @@ class TestSafeAdd:
         mock_db.session.add_all.assert_called_once_with(obj_list)
         mock_db.session.commit.assert_called_once()
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_success_no_message(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -197,7 +197,7 @@ class TestSafeAdd:
         assert result is True
         mock_flash.assert_not_called()
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_integrity_error(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -211,7 +211,7 @@ class TestSafeAdd:
         mock_db.session.rollback.assert_called_once()
         mock_flash.assert_called_with("Давхардсан утга", "danger")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_general_exception(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -226,7 +226,7 @@ class TestSafeAdd:
         call_args = mock_flash.call_args[0]
         assert "Нэмэх үед алдаа" in call_args[0]
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_default_error_message(self, mock_db, mock_flash):
         from app.utils.database import safe_add
@@ -239,7 +239,7 @@ class TestSafeAdd:
         assert result is False
         mock_flash.assert_called_with("Нэмэхэд алдаа гарлаа", "danger")
 
-    @patch('app.utils.database.flash')
+    @patch('app.utils.database._flash_msg')
     @patch('app.utils.database.db')
     def test_add_empty_list(self, mock_db, mock_flash):
         from app.utils.database import safe_add
