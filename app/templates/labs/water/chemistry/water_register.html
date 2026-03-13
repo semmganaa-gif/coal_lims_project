@@ -136,6 +136,12 @@
         <i class="bi bi-plus-circle me-1"></i>{{ _("New Sample") }}
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="sla-tab" data-bs-toggle="tab"
+              data-bs-target="#sla-pane" type="button" role="tab">
+        <i class="bi bi-clock-history me-1"></i>{{ _("SLA") }}
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content">
@@ -401,6 +407,11 @@
           </div>
         </div>
       </form>
+    </div>
+
+    <!-- ===== TAB 3: SLA Dashboard ===== -->
+    <div class="tab-pane fade" id="sla-pane" role="tabpanel" style="padding: 1rem 0.5rem;">
+      {% include 'partials/_sla_dashboard_content.html' %}
     </div>
 
   </div>

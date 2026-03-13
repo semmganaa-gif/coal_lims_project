@@ -332,7 +332,6 @@ def water_hub():
         completed=stats['completed'],
         water_analysis_count=water_count,
         micro_analysis_count=micro_count,
-        sla_lab_types=['water', 'microbiology'],
     )
 
 
@@ -537,6 +536,7 @@ def register_sample():
         water_analyses=WATER_ANALYSIS_TYPES,
         micro_analyses=MICRO_ANALYSIS_TYPES,
         use_aggrid=True,
+        sla_lab_types=['water', 'microbiology'],
     )
 
 
