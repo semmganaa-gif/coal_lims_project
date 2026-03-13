@@ -222,11 +222,14 @@
     });
   }
 
-  // Init on tab show
+  // Init on tab show or directly if no tab wrapper
   var slaTab = document.getElementById('sla-tab');
   if (slaTab) {
     slaTab.addEventListener('shown.bs.tab', slaInit);
     if (slaTab.classList.contains('active')) slaInit();
+  } else {
+    // No tab — init directly (embedded in page)
+    slaInit();
   }
 })();
 </script>

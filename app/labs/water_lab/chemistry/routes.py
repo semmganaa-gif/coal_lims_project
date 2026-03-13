@@ -332,6 +332,7 @@ def water_hub():
         completed=stats['completed'],
         water_analysis_count=water_count,
         micro_analysis_count=micro_count,
+        sla_lab_types=['water', 'microbiology'],
     )
 
 

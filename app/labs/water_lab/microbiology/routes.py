@@ -60,6 +60,7 @@ def micro_hub():
         new_samples=stats['new'],
         in_progress=stats['in_progress'],
         completed=stats['completed'],
+        sla_lab_types=['microbiology'],
     )
 
 
