@@ -3,7 +3,7 @@
 {% block title %}{{ _("Microbiology Laboratory") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --glass-bg: rgba(255, 255, 255, 0.7);
     --glass-border: rgba(148, 163, 184, 0.2);

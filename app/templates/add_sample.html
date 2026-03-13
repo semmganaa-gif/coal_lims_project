@@ -1,5 +1,5 @@
 {# app/templates/add_sample.html - LIMS Gateway - Hub + 50/50 Layout #}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --glass-bg: rgba(255, 255, 255, 0.9);
     --glass-border: rgba(148, 163, 184, 0.2);
@@ -1135,7 +1135,7 @@
   </div>
 </form>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const GLOBAL_DATA = {
     sampleTypeOptions: {{ sample_type_map | tojson }},
     all12hSamples: {{ all_12h_samples | tojson }},

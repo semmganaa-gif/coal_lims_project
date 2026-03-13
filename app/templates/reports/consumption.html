@@ -5,7 +5,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
 
-<style>
+<style nonce="{{ csp_nonce }}">
   /* Hub-style Unit Cards */
   .units-grid {
     display: grid;
@@ -592,7 +592,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function(){
   // View Toggle
   const viewCardsBtn = document.getElementById('viewCards');

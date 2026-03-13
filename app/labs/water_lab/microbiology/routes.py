@@ -8,7 +8,7 @@ import calendar
 from datetime import datetime, date, timedelta
 from collections import defaultdict, OrderedDict
 
-from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for
+from flask import Blueprint, render_template, jsonify, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import extract, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -430,24 +430,29 @@ def save_batch():
             **results,
         }, ensure_ascii=False)
 
-        existing = AnalysisResult.query.filter_by(
-            sample_id=sample.id,
-            analysis_code=analysis_code,
-        ).with_for_update().first()
+        try:
+            with db.session.begin_nested():
+                existing = AnalysisResult.query.filter_by(
+                    sample_id=sample.id,
+                    analysis_code=analysis_code,
+                ).with_for_update().first()
 
-        if existing:
-            existing.raw_data = raw
-            existing.user_id = current_user.id
-        else:
-            ar = AnalysisResult(
-                sample_id=sample.id,
-                analysis_code=analysis_code,
-                raw_data=raw,
-                user_id=current_user.id,
-            )
-            db.session.add(ar)
+                if existing:
+                    existing.raw_data = raw
+                    existing.user_id = current_user.id
+                else:
+                    ar = AnalysisResult(
+                        sample_id=sample.id,
+                        analysis_code=analysis_code,
+                        raw_data=raw,
+                        user_id=current_user.id,
+                    )
+                    db.session.add(ar)
 
-        saved += 1
+            saved += 1
+        except SQLAlchemyError as e:
+            current_app.logger.warning("Batch row %s failed: %s", sample_code, e)
+            errors.append(f'Save failed for {sample_code}: {str(e)[:100]}')
 
     if not safe_commit():
         return jsonify({'error': 'DB error'}), 500

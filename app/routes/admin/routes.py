@@ -216,6 +216,15 @@ def analysis_config():
 
     simple_form = SimpleProfileForm()
 
+    from app.services.sla_service import get_sla_config_all, DEFAULT_SLA_HOURS, DEFAULT_SLA_FALLBACK
+
+    # SLA config map: {"CHPP:2 hourly": 48, "QC": 72, ...}
+    sla_configs = get_sla_config_all()
+    sla_config_map = {}
+    for c in sla_configs:
+        key = f"{c['client_name']}:{c['sample_type']}" if c['sample_type'] else c['client_name']
+        sla_config_map[key] = c['hours']
+
     return render_template(
         'analysis_config.html',
         simple_form=simple_form,
@@ -224,6 +233,9 @@ def analysis_config():
         chpp_profiles=chpp_profiles,
         chpp_config_groups=CHPP_CONFIG_GROUPS,
         gi_shift_config=load_gi_shift_config(),
+        sla_config_map=sla_config_map,
+        sla_defaults=DEFAULT_SLA_HOURS,
+        sla_fallback=DEFAULT_SLA_FALLBACK,
     )
 
 
@@ -261,6 +273,14 @@ def analysis_config_simple():
         AnalysisProfile.pattern != ''
     ).order_by(AnalysisProfile.sample_type, AnalysisProfile.pattern).all()
 
+    from app.services.sla_service import get_sla_config_all, DEFAULT_SLA_HOURS, DEFAULT_SLA_FALLBACK
+
+    sla_configs = get_sla_config_all()
+    sla_config_map = {}
+    for c in sla_configs:
+        key = f"{c['client_name']}:{c['sample_type']}" if c['sample_type'] else c['client_name']
+        sla_config_map[key] = c['hours']
+
     form = SimpleProfileForm()
     return render_template(
         'analysis_config_simple.html',
@@ -270,6 +290,9 @@ def analysis_config_simple():
         chpp_profiles=chpp_profiles,
         chpp_config_groups=CHPP_CONFIG_GROUPS,
         gi_shift_config=load_gi_shift_config(),
+        sla_config_map=sla_config_map,
+        sla_defaults=DEFAULT_SLA_HOURS,
+        sla_fallback=DEFAULT_SLA_FALLBACK,
     )
 
 

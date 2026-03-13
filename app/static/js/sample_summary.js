@@ -278,7 +278,7 @@ const GridModule = (function() {
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
-        floatingFilterComponentParams: { suppressFilterButton: true, debounceMs: 300 },
+        suppressFloatingFilterButton: true, floatingFilterComponentParams: { debounceMs: 300 },
         resizable: true,
         tooltipValueGetter: function(p) {
           return p.data ? (p.data.sample_code || p.data.name || '') : '';
@@ -292,7 +292,7 @@ const GridModule = (function() {
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
-        floatingFilterComponentParams: { suppressFilterButton: true, debounceMs: 300 },
+        suppressFloatingFilterButton: true, floatingFilterComponentParams: { debounceMs: 300 },
         resizable: true
       },
       // Sample type
@@ -303,7 +303,7 @@ const GridModule = (function() {
         sortable: true,
         filter: 'agTextColumnFilter',
         floatingFilter: true,
-        floatingFilterComponentParams: { suppressFilterButton: true, debounceMs: 300 },
+        suppressFloatingFilterButton: true, floatingFilterComponentParams: { debounceMs: 300 },
         resizable: true
       }
     ];
@@ -346,7 +346,7 @@ const GridModule = (function() {
       filter: 'agDateColumnFilter',
       filterParams: dateFilterParams,
       floatingFilter: true,
-      floatingFilterComponentParams: { suppressFilterButton: true },
+      suppressFloatingFilterButton: true,
       resizable: true,
       valueFormatter: function(p) {
         if (!p.value) return '';
@@ -362,7 +362,7 @@ const GridModule = (function() {
       filter: 'agDateColumnFilter',
       filterParams: dateFilterParams,
       floatingFilter: true,
-      floatingFilterComponentParams: { suppressFilterButton: true },
+      suppressFloatingFilterButton: true,
       resizable: true,
       valueFormatter: function(p) {
         if (!p.value) return '';
@@ -478,7 +478,7 @@ const GridModule = (function() {
       sortable: true,
       filter: true,
       suppressHeaderMenuButton: true,
-      floatingFilterComponentParams: { suppressFilterButton: true }
+      suppressFloatingFilterButton: true
     },
     rowHeight: 28,
     headerHeight: 26,

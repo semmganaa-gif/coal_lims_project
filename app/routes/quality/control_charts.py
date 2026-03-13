@@ -9,13 +9,21 @@ import logging
 import statistics
 from datetime import datetime
 
-from flask import render_template, jsonify
-from flask_login import login_required
+from flask import render_template, jsonify, request, Response
+from flask_login import login_required, current_user
 
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
 from app.repositories import ControlStandardRepository, GbwStandardRepository
 from app.monitoring import track_qc_check
 from app.utils.westgard import check_westgard_rules, get_qc_status, check_single_value
+from app.services.qc_chart_service import (
+    calculate_capability,
+    calculate_moving_average,
+    calculate_cusum,
+    calculate_ewma,
+    export_chart_data,
+    create_corrective_action_from_violation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -454,3 +462,190 @@ def register_routes(bp):
             ],
             "data_points": data_points[-20:]  # хамгийн сүүлийн 20-г (хуучнаас шинэ) буцаана
         })
+
+    @bp.route("/api/chart_advanced/<qc_type>/<analysis_code>")
+    @login_required
+    def api_chart_advanced(qc_type, analysis_code):
+        """
+        Advanced chart data: capability indices, moving average, CUSUM, EWMA.
+        """
+        standard_name = request.args.get('standard_name', '')
+
+        qc_samples = _get_qc_samples()
+        if not qc_samples:
+            return jsonify(success=False, message="QC дээж олдсонгүй")
+
+        filtered_samples = [
+            s for s in qc_samples
+            if (s.sample_type or "").upper() == qc_type.upper()
+        ]
+
+        if standard_name:
+            filtered_samples = [
+                s for s in filtered_samples
+                if _extract_standard_name(s.sample_code or "", s.sample_type) == standard_name
+            ]
+
+        if not filtered_samples:
+            return jsonify(success=False, message=f"{qc_type} дээж олдсонгүй")
+
+        sample_ids = [s.id for s in filtered_samples]
+        samples_map = {s.id: s for s in filtered_samples}
+        results = _get_qc_results(sample_ids, analysis_code)
+
+        data_points = []
+        for r in results:
+            sample = samples_map.get(r.sample_id)
+            if not sample or r.final_result is None:
+                continue
+            try:
+                value = float(r.final_result)
+                if analysis_code in AD_ANALYSES:
+                    mad = _get_mad_for_sample(r.sample_id)
+                    if mad is not None:
+                        value = _convert_to_dry_basis(value, mad)
+                data_points.append({
+                    'value': value,
+                    'date': r.updated_at.isoformat() if r.updated_at else None,
+                    'sample_code': sample.sample_code,
+                    'operator': r.user.username if getattr(r, "user", None) else None
+                })
+            except (ValueError, TypeError, AttributeError):
+                pass
+
+        if len(data_points) < 2:
+            return jsonify(success=False, message="Хангалттай өгөгдөл байхгүй", count=len(data_points))
+
+        data_points.sort(key=lambda x: x['date'] or '')
+        values = [d['value'] for d in data_points]
+
+        target, ucl, lcl, sd = _get_target_and_tolerance(filtered_samples[0], analysis_code)
+        if target is None:
+            target = statistics.mean(values)
+            sd = statistics.stdev(values) if len(values) >= 2 else 1
+            ucl = target + 2 * sd
+            lcl = target - 2 * sd
+
+        if sd <= 0:
+            sd = 0.001
+
+        # Capability indices
+        capability = calculate_capability(values, target, sd, ucl, lcl)
+
+        # Moving average
+        ma_window = min(int(request.args.get('ma_window', 5)), 20)
+        moving_avg = calculate_moving_average(values, ma_window)
+
+        # CUSUM
+        cusum = calculate_cusum(values, target, sd=sd)
+
+        # EWMA
+        lam = min(float(request.args.get('ewma_lambda', 0.2)), 1.0)
+        ewma = calculate_ewma(values, target, lam=lam, sd=sd)
+
+        return jsonify(success=True, data={
+            "capability": {
+                "cp": capability.cp,
+                "cpk": capability.cpk,
+                "rsd_percent": capability.rsd_percent,
+                "mean": capability.mean,
+                "sd": capability.sd,
+                "n": capability.n,
+                "bias": capability.bias,
+                "bias_percent": capability.bias_percent,
+            },
+            "moving_average": moving_avg,
+            "ma_window": ma_window,
+            "cusum": cusum,
+            "ewma": ewma,
+        })
+
+    @bp.route("/api/chart_export/<qc_type>/<analysis_code>")
+    @login_required
+    def api_chart_export(qc_type, analysis_code):
+        """Export chart data as CSV or JSON."""
+        standard_name = request.args.get('standard_name', '')
+        fmt = request.args.get('format', 'csv')
+
+        qc_samples = _get_qc_samples()
+        filtered_samples = [
+            s for s in qc_samples
+            if (s.sample_type or "").upper() == qc_type.upper()
+        ]
+        if standard_name:
+            filtered_samples = [
+                s for s in filtered_samples
+                if _extract_standard_name(s.sample_code or "", s.sample_type) == standard_name
+            ]
+
+        if not filtered_samples:
+            return jsonify(success=False, message="Дээж олдсонгүй"), 404
+
+        sample_ids = [s.id for s in filtered_samples]
+        samples_map = {s.id: s for s in filtered_samples}
+        results = _get_qc_results(sample_ids, analysis_code)
+
+        data_points = []
+        for r in results:
+            sample = samples_map.get(r.sample_id)
+            if not sample or r.final_result is None:
+                continue
+            try:
+                value = float(r.final_result)
+                if analysis_code in AD_ANALYSES:
+                    mad = _get_mad_for_sample(r.sample_id)
+                    if mad is not None:
+                        value = _convert_to_dry_basis(value, mad)
+                data_points.append({
+                    'value': round(value, 4),
+                    'date': r.updated_at.isoformat() if r.updated_at else None,
+                    'sample_code': sample.sample_code,
+                    'operator': r.user.username if getattr(r, "user", None) else None
+                })
+            except (ValueError, TypeError, AttributeError):
+                pass
+
+        data_points.sort(key=lambda x: x['date'] or '')
+
+        target, ucl, lcl, sd = _get_target_and_tolerance(filtered_samples[0], analysis_code)
+        if target is None:
+            values = [d['value'] for d in data_points]
+            target = statistics.mean(values) if values else 0
+            sd = statistics.stdev(values) if len(values) >= 2 else 1
+
+        if sd <= 0:
+            sd = 0.001
+
+        content = export_chart_data(data_points, analysis_code, standard_name, target, sd, fmt)
+
+        if fmt == "json":
+            return Response(content, mimetype="application/json",
+                            headers={"Content-Disposition": f"attachment; filename=qc_{analysis_code}.json"})
+        else:
+            return Response(content, mimetype="text/csv",
+                            headers={"Content-Disposition": f"attachment; filename=qc_{analysis_code}.csv"})
+
+    @bp.route("/api/chart_auto_ca", methods=["POST"])
+    @login_required
+    def api_chart_auto_ca():
+        """Auto-create Corrective Action from QC violation."""
+        if current_user.role not in ("admin", "manager", "senior_analyst"):
+            return jsonify(success=False, message="Эрх хүрэлцэхгүй"), 403
+
+        data = request.json or {}
+        standard_name = data.get("standard_name", "")
+        analysis_code = data.get("analysis_code", "")
+        violations = data.get("violations", [])
+
+        if not standard_name or not analysis_code:
+            return jsonify(success=False, message="standard_name, analysis_code шаардлагатай"), 400
+
+        ca_id = create_corrective_action_from_violation(
+            standard_name, analysis_code, violations, current_user.id
+        )
+
+        if ca_id:
+            return jsonify(success=True, data={"ca_id": ca_id},
+                           message="Засвар арга хэмжээ автоматаар үүсгэгдлээ")
+        else:
+            return jsonify(success=False, message="Reject зөрчил олдсонгүй")

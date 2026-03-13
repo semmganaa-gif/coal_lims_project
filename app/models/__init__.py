@@ -30,6 +30,7 @@ from app.models.license import SystemLicense, LicenseLog
 from app.models.reports import ReportSignature, LabReport
 from app.models.solutions import SolutionPreparation, SolutionRecipe, SolutionRecipeIngredient
 from app.models.equipment import Equipment, MaintenanceLog, UsageLog
+from app.models.instrument import InstrumentReading
 from app.models.chemicals import Chemical, ChemicalUsage, ChemicalLog, ChemicalWaste, ChemicalWasteRecord
 
 __all__ = [
@@ -56,6 +57,9 @@ __all__ = [
     'Equipment',
     'MaintenanceLog',
     'UsageLog',
+
+    # Instrument Integration
+    'InstrumentReading',
 
     # Spare Parts
     'SparePartCategory',

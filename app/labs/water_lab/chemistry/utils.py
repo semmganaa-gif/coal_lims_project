@@ -270,6 +270,8 @@ def create_water_micro_samples(form, user_id):
                 chem_lab_id=cur_chem_lab_id,
                 micro_lab_id=cur_micro_lab_id,
             )
+            from app.services.sla_service import assign_sla
+            assign_sla(sample)
             db.session.add(sample)
             created.append(actual_name)
 

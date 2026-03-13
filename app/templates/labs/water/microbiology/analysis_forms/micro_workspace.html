@@ -3,7 +3,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .micro-ws {
     min-height: calc(100vh - 120px); padding: 1.5rem;
     background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 30%, #f0fdf4 60%, #f8fafc 100%);
@@ -111,7 +111,7 @@
 </div>
 
 {# --- ТОНОГ ТӨХӨӨРӨМЖИЙН MODAL --- #}
-<style>
+<style nonce="{{ csp_nonce }}">
   #equipmentModal .modal-header {
     background: linear-gradient(135deg, #065f46 0%, #047857 100%);
     color: #fff; border-bottom: 3px solid #20c997;
@@ -380,10 +380,10 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 // Custom Date Cell Editor — HTML5 date input
 class DateCellEditor {
   init(params) {
@@ -726,7 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {# --- Equipmentийн ашиглалт --- #}
-<script>
+<script nonce="{{ csp_nonce }}">
 let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
 

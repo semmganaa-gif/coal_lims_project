@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .qc-page {
     min-height: calc(100vh - 80px);
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
@@ -475,7 +475,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const SERVER_BANDS = {{ tolerance_bands | default({}) | tojson | safe }};
 const DEFAULT_BANDS = {"Mad": 0.2, "Aad": 2.0, "Vdaf": 3.0, "Qnet,ar": 200, "CSN": 1.0, "Gi": 5.0};
 const MASTER_SPECS = {{ name_class_master_specs | default({}) | tojson | safe }};

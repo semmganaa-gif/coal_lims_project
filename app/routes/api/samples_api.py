@@ -8,11 +8,8 @@ Sample-related API endpoints:
   - /sample_history/<int:sample_id> - Sample history
 """
 
-import asyncio
-import json
 import logging
-
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 from flask import (
     request,
@@ -21,31 +18,33 @@ from flask import (
     redirect,
     render_template,
     flash,
+    abort,
 )
 from flask_login import login_required, current_user
-from sqlalchemy import extract, func
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from markupsafe import escape
 
 from app import db, limiter
-from app.models import AnalysisType, Sample, AnalysisResult, AnalysisResultLog
+from app.models import AnalysisResult, Sample, AnalysisResultLog
 from app.repositories import AnalysisTypeRepository
-from app.schemas import SampleSchema
 from app.utils.datetime import now_local
-from app.utils.codes import to_base_list
 from app.utils.security import escape_like_pattern
-from .helpers import _aggregate_sample_status
 
-logger = logging.getLogger(__name__)
-
-# Service layer imports
 from app.services import (
     archive_samples,
     get_sample_report_data,
     get_samples_with_results,
     build_sample_summary_data,
 )
+from app.services.dashboard_service import (
+    get_dashboard_stats,
+    get_archive_tree,
+    MONTH_NAMES,
+)
+from app.services.datatable_service import query_samples_datatable
+from app.services.mg_service import get_mg_summary, repeat_analyses
+
+logger = logging.getLogger(__name__)
 
 
 def register_routes(bp):
@@ -53,17 +52,16 @@ def register_routes(bp):
 
     # -----------------------------------------------------------
     # 1) DataTables data provider (index.html)
-    #    GET /api/data
     # -----------------------------------------------------------
     @bp.route("/data", methods=["GET"])
     @login_required
     @limiter.limit("100 per minute")
     async def data():
+        # Parse DataTables parameters
         draw = int(request.args.get("draw", 1))
         start = int(request.args.get("start", 0))
-        length = min(int(request.args.get("length", 25)), 1000)  # Max 1000 limit
+        length = int(request.args.get("length", 25))
 
-        # Per-column search filters for DataTables
         column_search = {}
         i = 0
         while True:
@@ -74,174 +72,29 @@ def register_routes(bp):
             column_search[i] = search_val
             i += 1
 
-        date_start = request.args.get("dateFilterStart")
-        date_end = request.args.get("dateFilterEnd")
-
-        q = Sample.query.filter(Sample.lab_type == 'coal')
-
-        if date_start:
-            try:
-                ds = datetime.fromisoformat(date_start)
-                q = q.filter(Sample.received_date >= ds)
-            except ValueError:
-                pass  # Invalid date format
-        if date_end:
-            try:
-                de = datetime.fromisoformat(date_end)
-                q = q.filter(Sample.received_date <= de)
-            except ValueError:
-                pass  # Invalid date format
-
-        # Column filters
-        for idx, val in column_search.items():
-            if not val:
-                continue
-            if idx == 1:
-                # ID
-                try:
-                    q = q.filter(Sample.id == int(val))
-                except ValueError:
-                    pass  # Not a number
-            elif idx == 2:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.sample_code.ilike(f"%{safe_val}%"))
-            elif idx == 3:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.client_name.ilike(f"%{safe_val}%"))
-            elif idx == 4:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.sample_type.ilike(f"%{safe_val}%"))
-            elif idx == 5:
-                # Sample condition (dry / moist / liquid)
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.sample_condition.ilike(f"%{safe_val}%"))
-            elif idx == 6:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.delivered_by.ilike(f"%{safe_val}%"))
-            elif idx == 7:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.prepared_by.ilike(f"%{safe_val}%"))
-            elif idx == 9:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.notes.ilike(f"%{safe_val}%"))
-            elif idx == 11:
-                try:
-                    w = float(val)
-                    q = q.filter(Sample.weight == w)
-                except ValueError:
-                    pass  # Not a number
-            elif idx == 13:
-                safe_val = escape_like_pattern(val)
-                q = q.filter(Sample.analyses_to_perform.ilike(f"%{safe_val}%"))
-
-        records_total = q.count()
-        records_filtered = records_total
-
-        samples = (
-            q.order_by(Sample.received_date.desc())
-            .offset(start)
-            .limit(length)
-            .all()
+        result = query_samples_datatable(
+            draw=draw,
+            start=start,
+            length=length,
+            column_search=column_search,
+            date_start=request.args.get("dateFilterStart"),
+            date_end=request.args.get("dateFilterEnd"),
         )
 
-        # Build analysis status map for all samples in one query
-        sample_ids = [s.id for s in samples]
-        status_map: dict[int, set[str]] = {}
-        if sample_ids:
-            rows = (
-                db.session.query(AnalysisResult.sample_id, AnalysisResult.status)
-                .filter(AnalysisResult.sample_id.in_(sample_ids))
-                .all()
-            )
-            for sid, st in rows:
-                if sid not in status_map:
-                    status_map[sid] = set()
-                if st:
-                    status_map[sid].add(st)
-
-        data_rows = []
-        for s in samples:
-            # analyses_to_perform -> base code list
-            try:
-                raw_codes = json.loads(s.analyses_to_perform or "[]")
-            except (json.JSONDecodeError, TypeError):
-                raw_codes = []
-            analyses_base = to_base_list(raw_codes)
-            analyses_txt = json.dumps(analyses_base, ensure_ascii=False)
-
-            # SAMPLE CONDITION
-            sample_condition_val = ""
-            if hasattr(s, "sample_condition") and getattr(s, "sample_condition") is not None:
-                sample_condition_val = getattr(s, "sample_condition")  # Dry/Moist/Liquid
-            elif hasattr(s, "sample_state") and getattr(s, "sample_state") is not None:
-                sample_condition_val = getattr(s, "sample_state")
-
-            # AGGREGATED STATUS (analysis status)
-            result_statuses = status_map.get(s.id, set())
-            workflow_status = _aggregate_sample_status(s.status or "", result_statuses)
-
-            action_html = (
-                f'<a href="{url_for("main.edit_sample", sample_id=s.id)}" '
-                f'class="btn btn-sm btn-outline-primary">Edit</a>'
-            )
-
-            # Retention date calculation
-            retention_html = ""
-            if s.return_sample:
-                retention_html = '<span class="badge bg-primary">Return</span>'
-            elif s.retention_date:
-                today = date.today()
-                days_left = (s.retention_date - today).days
-                if days_left < 0:
-                    retention_html = f'<span class="badge bg-danger">{abs(days_left)} days overdue</span>'
-                elif days_left <= 7:
-                    retention_html = f'<span class="badge bg-warning text-dark">{days_left} days</span>'
-                elif days_left <= 30:
-                    retention_html = f'<span class="badge bg-info">{days_left} days</span>'
-                else:
-                    retention_html = f'<span class="badge bg-success">{days_left} days</span>'
-            else:
-                retention_html = '<span class="badge bg-secondary">-</span>'
-
-            data_rows.append(
-                [
-                    f'<input type="checkbox" class="sample-checkbox" value="{s.id}">',  # 0
-                    s.id,  # 1
-                    escape(s.sample_code or ""),  # 2
-                    escape(s.client_name or ""),  # 3
-                    escape(s.sample_type or ""),  # 4
-                    escape(sample_condition_val or ""),  # 5  SAMPLE CONDITION
-                    escape(s.delivered_by or ""),  # 6
-                    escape(s.prepared_by or ""),  # 7
-                    escape(s.prepared_date.strftime("%Y-%m-%d") if s.prepared_date else ""),  # 8
-                    escape(s.notes or ""),  # 9
-                    s.received_date.strftime("%Y-%m-%d %H:%M") if s.received_date else "",  # 10
-                    s.weight or "",  # 11
-                    escape(workflow_status),  # 12 AGGREGATED STATUS
-                    escape(analyses_txt),  # 13
-                    retention_html,  # 14 RETENTION DATE
-                    action_html,  # 15
-                ]
-            )
-
-        return jsonify(
-            {
-                "draw": draw,
-                "recordsTotal": records_total,
-                "recordsFiltered": records_filtered,
-                "data": data_rows,
-            }
-        )
+        return jsonify({
+            "draw": result.draw,
+            "recordsTotal": result.records_total,
+            "recordsFiltered": result.records_filtered,
+            "data": result.data,
+        })
 
     # -----------------------------------------------------------
-    # 2) sample_summary.html -> archive / restore (POST /api/sample_summary)
-    #    REFACTORED: Uses service layer
+    # 2) Sample Summary
     # -----------------------------------------------------------
     @bp.route("/sample_summary", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def sample_summary():
-        # --- POST (Archive) - Uses service ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
@@ -253,7 +106,6 @@ def register_routes(bp):
                 flash(result.message, "success" if result.success else "danger")
                 return redirect(url_for("api.sample_summary", **request.args))
 
-        # --- GET: Fetch data from service ---
         samples = get_samples_with_results(exclude_archived=True, sort_by="full")
         summary_data = build_sample_summary_data(samples)
 
@@ -272,16 +124,13 @@ def register_routes(bp):
         )
 
     # -----------------------------------------------------------
-    # 3) SAMPLE REPORT
-    #    REFACTORED: Uses service layer
+    # 3) Sample Report
     # -----------------------------------------------------------
     @bp.route("/sample_report/<int:sample_id>")
     @login_required
     async def sample_report(sample_id):
-        # Fetch report data from service
         report_data = get_sample_report_data(sample_id)
 
-        # Error check
         if report_data.error == "SAMPLE_NOT_FOUND":
             flash("Дээж олдсонгүй.", "danger")
             return redirect(url_for("api.sample_summary"))
@@ -302,12 +151,11 @@ def register_routes(bp):
         )
 
     # -----------------------------------------------------------
-    # 4) SAMPLE HISTORY
+    # 4) Sample History
     # -----------------------------------------------------------
     @bp.route("/sample_history/<int:sample_id>")
     @login_required
     async def sample_history(sample_id):
-        from flask import abort
         sample = db.session.get(Sample, sample_id)
         if not sample:
             abort(404)
@@ -333,17 +181,12 @@ def register_routes(bp):
         )
 
     # -----------------------------------------------------------
-    # 5) ARCHIVE HUB
-    #    Client -> Year -> Month tree structure
-    #    REFACTORED: Uses service layer (unarchive)
+    # 5) Archive Hub
     # -----------------------------------------------------------
     @bp.route("/archive_hub", methods=["GET", "POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def archive_hub():
-        from collections import defaultdict
-
-        # --- POST: Restore - Uses service ---
         if request.method == "POST":
             action = request.form.get("action")
             sample_ids_str = request.form.get("sample_ids")
@@ -355,324 +198,130 @@ def register_routes(bp):
                 flash(result.message, "success" if result.success else "danger")
             return redirect(url_for("api.archive_hub", **request.args))
 
-        # --- GET: View archive ---
-        # Filter parameters
-        selected_client = request.args.get("client")
-        selected_type = request.args.get("type")
-        selected_year = request.args.get("year", type=int)
-        selected_month = request.args.get("month", type=int)
-
-        # 1. Statistics for archived COAL samples (Client -> Type -> Year -> Month)
-        #    Усны дээж тусдаа архивтай (water_archive)
-        archive_stats = (
-            db.session.query(
-                Sample.client_name,
-                Sample.sample_type,
-                extract("year", Sample.received_date).label("year"),
-                extract("month", Sample.received_date).label("month"),
-                func.count(Sample.id).label("count"),
-            )
-            .filter(Sample.status == "archived", Sample.lab_type == "coal")
-            .group_by(
-                Sample.client_name,
-                Sample.sample_type,
-                extract("year", Sample.received_date),
-                extract("month", Sample.received_date),
-            )
-            .order_by(
-                Sample.client_name,
-                Sample.sample_type,
-                extract("year", Sample.received_date).desc(),
-                extract("month", Sample.received_date).desc(),
-            )
-            .all()
+        tree = get_archive_tree(
+            selected_client=request.args.get("client"),
+            selected_type=request.args.get("type"),
+            selected_year=request.args.get("year", type=int),
+            selected_month=request.args.get("month", type=int),
         )
-
-        # 2. Tree structure: client -> sample_type -> year -> month
-        tree_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(int))))
-        client_totals = defaultdict(int)
-        total_archived = 0
-
-        for row in archive_stats:
-            client = row.client_name or "Unknown"
-            stype = row.sample_type or "Other"
-            year = int(row.year) if row.year else 0
-            month = int(row.month) if row.month else 0
-            count = row.count
-
-            tree_data[client][stype][year][month] = count
-            client_totals[client] += count
-            total_archived += count
-
-        # 3. Samples for selected group (if filter applied)
-        samples = []
-        results_map = {}
-
-        if selected_client and selected_type:
-            query = db.session.query(Sample).filter(
-                Sample.status == "archived",
-                Sample.lab_type == "coal",
-                Sample.client_name == selected_client,
-                Sample.sample_type == selected_type,
-            )
-            if selected_year:
-                query = query.filter(
-                    extract("year", Sample.received_date) == selected_year
-                )
-            if selected_month:
-                query = query.filter(
-                    extract("month", Sample.received_date) == selected_month
-                )
-
-            query = query.order_by(Sample.received_date.desc())
-            samples = query.limit(500).all()  # Max 500
-
-            # Simple form: Get raw results directly
-            if samples:
-                sample_ids = [s.id for s in samples]
-                all_results = (
-                    AnalysisResult.query.filter(
-                        AnalysisResult.sample_id.in_(sample_ids),
-                        AnalysisResult.status.in_(["approved", "pending_review"]),
-                    ).all()
-                )
-                for r in all_results:
-                    if r.sample_id not in results_map:
-                        results_map[r.sample_id] = {}
-                    results_map[r.sample_id][r.analysis_code] = {
-                        "id": r.id,
-                        "value": r.final_result,
-                        "status": r.status,
-                    }
-
-        # 4. Analysis types
-        analysis_types = AnalysisTypeRepository.get_all_ordered()
-
-        # Month names
-        MONTH_NAMES = {
-            1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
-            5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
-            9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec",
-        }
 
         return render_template(
             "archive_hub.html",
             title="Archive Hub",
-            tree_data=dict(tree_data),
-            client_totals=dict(client_totals),
-            total_archived=total_archived,
-            samples=samples,
-            results_map=results_map,
-            analysis_types=analysis_types,
-            selected_client=selected_client,
-            selected_type=selected_type,
-            selected_year=selected_year,
-            selected_month=selected_month,
+            tree_data=tree.tree_data,
+            client_totals=tree.client_totals,
+            total_archived=tree.total_archived,
+            samples=tree.samples,
+            results_map=tree.results_map,
+            analysis_types=tree.analysis_types,
+            selected_client=request.args.get("client"),
+            selected_type=request.args.get("type"),
+            selected_year=request.args.get("year", type=int),
+            selected_month=request.args.get("month", type=int),
             month_names=MONTH_NAMES,
         )
 
     # -----------------------------------------------------------
-    # 6) DASHBOARD STATISTICS API
-    #    Statistics for Chart.js
+    # 6) Dashboard Statistics API
     # -----------------------------------------------------------
     @bp.route("/dashboard_stats")
     @login_required
     async def api_dashboard_stats():
-        """
-        Dashboard statistics for Chart.js
-
-        Returns:
-            - samples_by_day: Sample count for last 7 days
-            - samples_by_client: Sample count per client
-            - analysis_by_status: Count by analysis status
-            - daily_trend: Daily trend
-        """
-        from sqlalchemy import case
-
-        today = now_local().date()
-
-        # 1. Sample count for last 7 days (coal only)
-        samples_by_day = []
-        for i in range(6, -1, -1):
-            day = today - timedelta(days=i)
-            count = Sample.query.filter(
-                Sample.lab_type == 'coal',
-                func.date(Sample.received_date) == day
-            ).count()
-            samples_by_day.append({
-                "date": day.strftime("%m/%d"),
-                "day_name": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day.weekday()],
-                "count": count
-            })
-
-        # 2. Sample count per client (this month, coal only)
-        first_of_month = today.replace(day=1)
-        samples_by_client = db.session.query(
-            Sample.client_name,
-            func.count(Sample.id).label("count")
-        ).filter(
-            Sample.lab_type == 'coal',
-            Sample.received_date >= first_of_month
-        ).group_by(Sample.client_name).all()
-
-        # 3. Count by analysis status (today, coal only)
-        analysis_by_status = db.session.query(
-            AnalysisResult.status,
-            func.count(AnalysisResult.id).label("count")
-        ).join(Sample, AnalysisResult.sample_id == Sample.id).filter(
-            Sample.lab_type == 'coal',
-            func.date(AnalysisResult.updated_at) == today
-        ).group_by(AnalysisResult.status).all()
-
-        # 4. This month's approve/reject ratio (coal only)
-        approval_stats = db.session.query(
-            func.sum(case((AnalysisResult.status == 'approved', 1), else_=0)).label('approved'),
-            func.sum(case((AnalysisResult.status == 'rejected', 1), else_=0)).label('rejected'),
-            func.sum(case((AnalysisResult.status == 'pending_review', 1), else_=0)).label('pending')
-        ).join(Sample, AnalysisResult.sample_id == Sample.id).filter(
-            Sample.lab_type == 'coal',
-            AnalysisResult.updated_at >= first_of_month
-        ).first()
-
-        # 5. Today's overall statistics (coal only)
-        today_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            func.date(Sample.received_date) == today
-        ).count()
-
-        today_analyses = db.session.query(func.count(AnalysisResult.id)).join(
-            Sample, AnalysisResult.sample_id == Sample.id
-        ).filter(
-            Sample.lab_type == 'coal',
-            func.date(AnalysisResult.created_at) == today
-        ).scalar()
-
-        pending_review = db.session.query(func.count(AnalysisResult.id)).join(
-            Sample, AnalysisResult.sample_id == Sample.id
-        ).filter(
-            Sample.lab_type == 'coal',
-            AnalysisResult.status == 'pending_review'
-        ).scalar()
-
+        stats = get_dashboard_stats()
         return jsonify({
-            "samples_by_day": samples_by_day,
-            "samples_by_client": [
-                {"client": c, "count": cnt} for c, cnt in samples_by_client
-            ],
-            "analysis_by_status": [
-                {"status": s, "count": cnt} for s, cnt in analysis_by_status
-            ],
-            "approval_stats": {
-                "approved": approval_stats.approved or 0,
-                "rejected": approval_stats.rejected or 0,
-                "pending": approval_stats.pending or 0
-            },
-            "today": {
-                "samples": today_samples,
-                "analyses": today_analyses,
-                "pending_review": pending_review
-            }
+            "samples_by_day": stats.samples_by_day,
+            "samples_by_client": stats.samples_by_client,
+            "analysis_by_status": stats.analysis_by_status,
+            "approval_stats": stats.approval_stats,
+            "today": stats.today,
         })
 
     # -----------------------------------------------------------
-    # 7) EXPORT TO EXCEL
+    # 7) Export to Excel
     # -----------------------------------------------------------
     @bp.route("/export/samples")
     @login_required
     async def export_samples():
-        """Export sample data to Excel"""
         from app.utils.exports import create_sample_export, send_excel_response
 
-        # Query parameters
-        client = request.args.get('client')
-        sample_type = request.args.get('type')
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        limit = min(int(request.args.get('limit', 1000)), 5000)
-        include_results = request.args.get('include_results', 'false').lower() in ('1', 'true', 'yes')
+        client = request.args.get("client")
+        sample_type = request.args.get("type")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        limit = min(int(request.args.get("limit", 1000)), 5000)
+        include_results = request.args.get("include_results", "false").lower() in ("1", "true", "yes")
 
-        query = Sample.query.filter(Sample.lab_type == 'coal')
-
+        query = Sample.query.filter(Sample.lab_type == "coal")
         if client:
             query = query.filter(Sample.client_name == client)
         if sample_type:
             query = query.filter(Sample.sample_type == sample_type)
         if start_date:
             try:
-                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                sd = datetime.strptime(start_date, "%Y-%m-%d")
                 query = query.filter(Sample.received_date >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
-                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.strptime(end_date, "%Y-%m-%d")
                 ed = datetime.combine(ed, datetime.max.time())
                 query = query.filter(Sample.received_date <= ed)
             except ValueError:
                 pass
 
         samples = query.order_by(Sample.received_date.desc()).limit(limit).all()
-
         excel_data = create_sample_export(samples, _include_results=include_results)
         filename = f"samples_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
-
         return send_excel_response(excel_data, filename)
 
     @bp.route("/export/analysis")
     @login_required
     async def export_analysis():
-        """Export analysis results to Excel"""
         from app.utils.exports import create_analysis_export, send_excel_response
+        from sqlalchemy.orm import joinedload as jl
 
-        # Query parameters
-        status = request.args.get('status')
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        limit = min(int(request.args.get('limit', 1000)), 5000)
+        status = request.args.get("status")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        limit = min(int(request.args.get("limit", 1000)), 5000)
 
         query = AnalysisResult.query.options(
-            joinedload(AnalysisResult.sample),
-            joinedload(AnalysisResult.user),
+            jl(AnalysisResult.sample), jl(AnalysisResult.user)
         )
-
         if status:
             query = query.filter(AnalysisResult.status == status)
         if start_date:
             try:
-                sd = datetime.strptime(start_date, '%Y-%m-%d')
+                sd = datetime.strptime(start_date, "%Y-%m-%d")
                 query = query.filter(AnalysisResult.created_at >= sd)
             except ValueError:
                 pass
         if end_date:
             try:
-                ed = datetime.strptime(end_date, '%Y-%m-%d')
+                ed = datetime.strptime(end_date, "%Y-%m-%d")
                 ed = datetime.combine(ed, datetime.max.time())
                 query = query.filter(AnalysisResult.created_at <= ed)
             except ValueError:
                 pass
 
         results = query.order_by(AnalysisResult.created_at.desc()).limit(limit).all()
-
         excel_data = create_analysis_export(results)
         filename = f"analysis_{now_local().strftime('%Y%m%d_%H%M')}.xlsx"
-
         return send_excel_response(excel_data, filename)
 
     # -----------------------------------------------------------
-    # HTMX ENDPOINTS - Return HTML fragments
+    # HTMX Endpoints
     # -----------------------------------------------------------
-
     @bp.route("/sample_count", methods=["GET"])
     @login_required
     async def htmx_sample_count():
-        """htmx: Return total sample count as HTML."""
-        count = Sample.query.filter(Sample.lab_type == 'coal').count()
+        count = Sample.query.filter(Sample.lab_type == "coal").count()
         return f'<strong class="text-primary">{count}</strong> samples'
 
     @bp.route("/search_samples", methods=["GET"])
     @login_required
     async def htmx_search_samples():
-        """htmx: Search samples (partial HTML)."""
         q = request.args.get("q", "").strip()
         if len(q) < 2:
             return '<div class="text-muted small">Enter 2+ characters</div>'
@@ -690,18 +339,18 @@ def register_routes(bp):
 
         html = '<div class="list-group list-group-flush">'
         for s in samples:
-            html += f'''
-            <a href="/sample/{s.id}" class="list-group-item list-group-item-action py-2">
-                <strong>{escape(s.sample_code or "")}</strong>
-                <small class="text-muted ms-2">{escape(s.client_name or "")}</small>
-            </a>'''
-        html += '</div>'
+            html += (
+                f'<a href="/sample/{s.id}" class="list-group-item list-group-item-action py-2">'
+                f'<strong>{escape(s.sample_code or "")}</strong>'
+                f'<small class="text-muted ms-2">{escape(s.client_name or "")}</small>'
+                f"</a>"
+            )
+        html += "</div>"
         return html
 
     @bp.route("/sample_analysis_results/<int:sample_id>")
     @login_required
     async def sample_analysis_results(sample_id):
-        """Return all analysis results for a sample as JSON (used in complaints)."""
         results = AnalysisResult.query.filter_by(
             sample_id=sample_id
         ).order_by(AnalysisResult.analysis_code).all()
@@ -715,16 +364,15 @@ def register_routes(bp):
                     "final_result": r.final_result,
                     "status": r.status,
                     "user": r.user.username if r.user else None,
-                    "created_at": r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else None
+                    "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else None,
                 }
                 for r in results
-            ]
+            ],
         })
 
     @bp.route("/search_samples_json", methods=["GET"])
     @login_required
     async def search_samples_json():
-        """JSON: Search samples (used in complaints, registrations, etc.)."""
         q = request.args.get("q", "").strip()
         if len(q) < 2:
             return jsonify([])
@@ -744,20 +392,17 @@ def register_routes(bp):
                 "sample_code": s.sample_code,
                 "client_name": s.client_name or "",
                 "lab_type": s.lab_type or "",
-                "status": s.status or ""
+                "status": s.status or "",
             }
             for s in samples
         ])
 
     # -----------------------------------------------------------
-    # MG SUMMARY (WTL MG нэгтгэл)
+    # MG Summary
     # -----------------------------------------------------------
     @bp.route("/mg_summary", methods=["GET", "POST"])
     @login_required
     async def mg_summary():
-        """WTL MG шинжилгээний нэгтгэл — бүх MG дээжийн MT, TRD, MG, MG_SIZE үр дүн."""
-
-
         # POST: Archive/Unarchive/Repeat
         if request.method == "POST":
             data = request.get_json(silent=True) or {}
@@ -768,117 +413,29 @@ def register_routes(bp):
                 result = archive_samples(sample_ids, archive=(action == "archive"))
                 return jsonify({"success": result.success, "message": result.message})
 
-            # Давтан шинжилгээ (return/reject → химич дахин хийнэ)
             if sample_ids and action == "repeat":
-                if getattr(current_user, "role", None) not in ("senior", "admin"):
-                    return jsonify({"success": False, "message": "Зөвхөн ахлах/админ"}), 403
-                codes = data.get("codes", [])
-                if not codes:
-                    return jsonify({"success": False, "message": "Код сонгоогүй"}), 400
-                try:
-                    count = 0
-                    for sid in sample_ids:
-                        sample = db.session.get(Sample, sid)
-                        if not sample:
-                            continue
-                        for code in codes:
-                            ar = AnalysisResult.query.filter_by(
-                                sample_id=sid, analysis_code=code
-                            ).first()
-                            if ar and ar.status in ("approved", "pending_review"):
-                                ar.status = "rejected"
-                                ar.updated_at = now_local()
-                                if hasattr(ar, "rejection_comment"):
-                                    ar.rejection_comment = "Returned from MG Summary"
-                                # Audit log (update_result_status-тэй ижил бүтэц)
-                                from app.services.analysis_audit import log_analysis_action
-                                log_analysis_action(
-                                    result_id=ar.id,
-                                    sample_id=sid,
-                                    analysis_code=code,
-                                    action="REJECTED",
-                                    reason=f"MG Summary-аас '{code}' давтан шинжилгээ буцаасан",
-                                    sample_code_snapshot=sample.sample_code,
-                                    final_result=ar.final_result,
-                                    raw_data_dict=ar.raw_data,
-                                )
-                                count += 1
-                    db.session.commit()
-                    return jsonify({
-                        "success": True,
-                        "message": f"{count} шинжилгээг буцаалаа (давтан хийнэ)"
-                    })
-                except (SQLAlchemyError, ValueError, AttributeError) as e:
-                    db.session.rollback()
-                    logger.error(f"MG repeat error: {e}", exc_info=True)
-                    return jsonify({"success": False, "message": "Давтан шинжилгээ буцаахад алдаа гарлаа"}), 500
+                result = repeat_analyses(
+                    sample_ids=sample_ids,
+                    codes=data.get("codes", []),
+                    user_role=getattr(current_user, "role", None),
+                )
+                if result.success:
+                    status_code = 200
+                elif "ахлах" in result.message:
+                    status_code = 403
+                elif "алдаа" in result.message:
+                    status_code = 500
+                else:
+                    status_code = 400
+                return jsonify({"success": result.success, "message": result.message}), status_code
 
             return jsonify({"success": False, "message": "Буруу хүсэлт"}), 400
-        MG_CODES = ['MT', 'TRD', 'MG', 'MG_SIZE']
-        MG_ONLY = ['MG', 'MG_SIZE']
 
-        # 1. MG эсвэл MG_SIZE үр дүнтэй дээжүүдийг олох (архивласнаас бусад)
-        q_ids = (
-            db.session.query(AnalysisResult.sample_id)
-            .join(Sample, Sample.id == AnalysisResult.sample_id)
-            .filter(
-                AnalysisResult.analysis_code.in_(MG_ONLY),
-                AnalysisResult.status.in_(["approved", "pending_review"]),
-                Sample.status != "archived",
-            )
-        )
-        sample_ids = [r.sample_id for r in q_ids.distinct().all()]
-
-        if not sample_ids:
-            return render_template(
-                "mg_summary.html",
-                title="MG Summary",
-                samples=[],
-                mg_data={},
-            )
-
-        # 2. Дээж мэдээлэл
-        samples = (
-            Sample.query
-            .filter(Sample.id.in_(sample_ids))
-            .order_by(Sample.received_date.desc())
-            .all()
-        )
-
-        # 3. Бүх MG кодын үр дүн
-        results = (
-            AnalysisResult.query
-            .filter(
-                AnalysisResult.sample_id.in_(sample_ids),
-                AnalysisResult.analysis_code.in_(MG_CODES),
-                AnalysisResult.status.in_(["approved", "pending_review"]),
-            )
-            .all()
-        )
-
-        # {sample_id: {code: {final_result, raw_data, status}}}
-        mg_data = {}
-        for r in results:
-            if r.sample_id not in mg_data:
-                mg_data[r.sample_id] = {}
-            raw = r.raw_data
-            if isinstance(raw, str):
-                try:
-                    raw = json.loads(raw)
-                except (json.JSONDecodeError, TypeError):
-                    raw = {}
-            elif raw is None:
-                raw = {}
-            mg_data[r.sample_id][r.analysis_code] = {
-                "id": r.id,
-                "final_result": r.final_result,
-                "raw_data": raw,
-                "status": r.status,
-            }
-
+        # GET: MG summary data
+        mg_data = get_mg_summary()
         return render_template(
             "mg_summary.html",
             title="MG Summary",
-            samples=samples,
-            mg_data=mg_data,
+            samples=mg_data.samples,
+            mg_data=mg_data.mg_data,
         )

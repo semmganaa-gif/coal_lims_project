@@ -8,7 +8,7 @@
 
 {{ aggrid_macros.grid_container('chlorineGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function(){
   'use strict';
 

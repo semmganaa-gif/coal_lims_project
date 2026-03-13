@@ -359,13 +359,13 @@
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
 
-<style>
+<style nonce="{{ csp_nonce }}">
   /* Page-specific overrides - register tabs with accent color */
   .eq-tab-register { color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-bottom:none; }
   .eq-tab-register:hover { color:#0c4a6e; background:#e0f2fe; }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function () {
   var gridDiv = document.querySelector('#equipmentGrid');
   if (!gridDiv || typeof Tabulator === 'undefined') return;

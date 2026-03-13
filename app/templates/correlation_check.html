@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb;
     --success: #16a34a; --danger: #dc2626; --text-main: #1e293b;
@@ -197,7 +197,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-<script>
+<script nonce="{{ csp_nonce }}">
   const rawData = {{ data_list | tojson }};
   let chartInstance = null;
 

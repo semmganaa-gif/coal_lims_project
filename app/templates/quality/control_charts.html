@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
   .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
   .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
@@ -178,6 +178,30 @@
   .violations-title { font-weight: 600; color: #dc2626; margin-bottom: 0.5rem; }
   .violation-item { font-size: 0.85rem; color: #7f1d1d; padding: 0.25rem 0; }
 
+  /* Capability Indices */
+  .capability-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  .cap-card {
+    background: #f0f9ff;
+    border-radius: 10px;
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid #e0f2fe;
+  }
+  .cap-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+  .cap-value { font-size: 1.2rem; font-weight: 700; }
+  .cap-value.good { color: #16a34a; }
+  .cap-value.marginal { color: #f59e0b; }
+  .cap-value.poor { color: #ef4444; }
+
+  /* Chart type toggle */
+  .chart-type-toggle { margin-bottom: 0.75rem; }
+  .chart-type-toggle .btn { font-size: 0.8rem; padding: 0.25rem 0.75rem; }
+
   /* Loading & Empty States */
   .loading-state { text-align: center; padding: 3rem; }
   .empty-state { text-align: center; padding: 3rem; color: #64748b; }
@@ -335,11 +359,51 @@
           </div>
         </div>
 
+        <!-- Capability Indices -->
+        <div class="capability-grid" id="capabilityGrid" style="display:none;">
+          <div class="cap-card">
+            <div class="cap-label">Cp</div>
+            <div class="cap-value" id="capCp">-</div>
+          </div>
+          <div class="cap-card">
+            <div class="cap-label">Cpk</div>
+            <div class="cap-value" id="capCpk">-</div>
+          </div>
+          <div class="cap-card">
+            <div class="cap-label">%RSD</div>
+            <div class="cap-value" id="capRsd">-</div>
+          </div>
+          <div class="cap-card">
+            <div class="cap-label">{{ _("Bias") }} %</div>
+            <div class="cap-value" id="capBias">-</div>
+          </div>
+        </div>
+
+        <!-- Chart type toggle -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="chart-type-toggle btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-primary active" data-chart-type="shewhart">Shewhart</button>
+            <button type="button" class="btn btn-outline-primary" data-chart-type="cusum">CUSUM</button>
+            <button type="button" class="btn btn-outline-primary" data-chart-type="ewma">EWMA</button>
+          </div>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" id="btnExportCsv" title="Export CSV">
+              <i class="bi bi-filetype-csv"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="btnExportJson" title="Export JSON">
+              <i class="bi bi-filetype-json"></i>
+            </button>
+            <button class="btn btn-outline-danger" id="btnAutoCA" style="display:none;" title="{{ _('Create Corrective Action') }}">
+              <i class="bi bi-exclamation-octagon me-1"></i>CA
+            </button>
+          </div>
+        </div>
+
         <div class="modal-chart-container">
           <canvas id="modalChart"></canvas>
         </div>
 
-        <div class="modal-legend">
+        <div class="modal-legend" id="modalLegend">
           <div class="legend-item"><div class="legend-line target"></div>{{ _("Target") }}</div>
           <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
           <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD ({{ _("Warning") }})</div>
@@ -356,7 +420,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 let modalChart = null;
 let chartsData = {};
 let allQcData = null;
@@ -686,10 +750,20 @@ async function openChartModal(standardName, qcType, analysis) {
   // Hide violations section initially (will show after detail API loads)
   document.getElementById('modalViolations').style.display = 'none';
 
+  // Show auto-CA button only for reject status
+  const autoCABtn = document.getElementById('btnAutoCA');
+  autoCABtn.style.display = (analysis.status === 'reject' || analysis.status === 'fail') ? 'inline-block' : 'none';
+
+  // Store context for chart type switching and export
+  currentModalContext = { standardName, qcType, analysis };
+
   modal.show();
 
-  // Load full chart
-  setTimeout(() => loadModalChart(standardName, qcType, analysis), 100);
+  // Load full chart + advanced data (capability, cusum, ewma)
+  setTimeout(() => {
+    loadModalChart(standardName, qcType, analysis);
+    loadAdvancedData(standardName, qcType, analysis.analysis_code);
+  }, 100);
 }
 
 async function loadModalChart(standardName, qcType, analysis) {
@@ -759,21 +833,43 @@ async function loadModalChart(standardName, qcType, analysis) {
     return '#22c55e';
   });
 
+  // Build datasets with zone shading
+  const datasets = [
+    // Zone fills (background)
+    { label: '+/-1SD Zone', data: Array(labels.length).fill(usl1), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: { target: '+1', above: 'rgba(34,197,94,0.08)', below: 'rgba(34,197,94,0.08)' }, pointRadius: 0, order: 10 },
+    { label: '+/-2SD Zone', data: Array(labels.length).fill(ucl), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.06)', fill: { target: '-1', above: 'rgba(249,115,22,0.06)' }, pointRadius: 0, order: 11 },
+    // Control lines
+    { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
+    { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
+    { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
+    { label: '+2SD (UCL)', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
+    { label: '-2SD (LCL)', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
+    { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
+    { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 },
+    // Measured values (on top)
+    { label: 'Measured', data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 6, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
+  ];
+
+  // Add moving average if advanced data available
+  if (advancedData && advancedData.moving_average) {
+    const maSlice = advancedData.moving_average.slice(-points.length);
+    if (maSlice.length === values.length) {
+      datasets.push({
+        label: 'MA(' + (advancedData.ma_window || 5) + ')',
+        data: maSlice,
+        borderColor: '#f97316',
+        borderWidth: 2,
+        borderDash: [6, 3],
+        pointRadius: 0,
+        tension: 0.3,
+        order: 0
+      });
+    }
+  }
+
   modalChart = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Measured', data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 6, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
-        { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
-        { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
-        { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
-        { label: '+2SD', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
-        { label: '-2SD', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
-        { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
-        { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 }
-      ]
-    },
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -805,12 +901,203 @@ async function loadModalChart(standardName, qcType, analysis) {
   });
 }
 
+// ========== Chart type toggle ==========
+let currentModalContext = null; // {standardName, qcType, analysis}
+let advancedData = null;
+
+document.querySelectorAll('[data-chart-type]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const chartType = this.dataset.chartType;
+    if (currentModalContext) {
+      renderModalByType(chartType);
+    }
+  });
+});
+
+async function loadAdvancedData(standardName, qcType, analysisCode) {
+  try {
+    const resp = await fetch('/quality/api/chart_advanced/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysisCode) + '?standard_name=' + encodeURIComponent(standardName));
+    const data = await resp.json();
+    if (data.success) {
+      advancedData = data.data;
+      showCapability(advancedData.capability);
+    }
+  } catch(e) { /* ignore */ }
+}
+
+function showCapability(cap) {
+  if (!cap || cap.n < 2) {
+    document.getElementById('capabilityGrid').style.display = 'none';
+    return;
+  }
+  document.getElementById('capabilityGrid').style.display = 'grid';
+
+  const cpEl = document.getElementById('capCp');
+  const cpkEl = document.getElementById('capCpk');
+  const rsdEl = document.getElementById('capRsd');
+  const biasEl = document.getElementById('capBias');
+
+  cpEl.textContent = cap.cp != null ? cap.cp.toFixed(2) : '-';
+  cpEl.className = 'cap-value ' + (cap.cp >= 1.33 ? 'good' : cap.cp >= 1.0 ? 'marginal' : 'poor');
+
+  cpkEl.textContent = cap.cpk != null ? cap.cpk.toFixed(2) : '-';
+  cpkEl.className = 'cap-value ' + (cap.cpk >= 1.33 ? 'good' : cap.cpk >= 1.0 ? 'marginal' : 'poor');
+
+  rsdEl.textContent = cap.rsd_percent != null ? cap.rsd_percent.toFixed(1) + '%' : '-';
+  rsdEl.className = 'cap-value ' + (cap.rsd_percent <= 2 ? 'good' : cap.rsd_percent <= 5 ? 'marginal' : 'poor');
+
+  biasEl.textContent = cap.bias_percent != null ? cap.bias_percent.toFixed(1) + '%' : '-';
+  const absBias = Math.abs(cap.bias_percent || 0);
+  biasEl.className = 'cap-value ' + (absBias <= 1 ? 'good' : absBias <= 3 ? 'marginal' : 'poor');
+}
+
+function renderModalByType(chartType) {
+  if (!currentModalContext) return;
+  const key = `${currentModalContext.standardName}_${currentModalContext.analysis.analysis_code}`;
+  const data = chartsData[key];
+  if (!data) return;
+
+  if (chartType === 'cusum' && advancedData) {
+    renderCusumChart(data, advancedData.cusum);
+  } else if (chartType === 'ewma' && advancedData) {
+    renderEwmaChart(data, advancedData.ewma);
+  } else {
+    // Shewhart with zone shading + moving average
+    loadModalChart(currentModalContext.standardName, currentModalContext.qcType, currentModalContext.analysis);
+    document.getElementById('modalLegend').innerHTML = `
+      <div class="legend-item"><div class="legend-line target"></div>Target</div>
+      <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
+      <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD (Warning)</div>
+      <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD (Reject)</div>
+      <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>MA</div>
+    `;
+  }
+}
+
+function renderCusumChart(baseData, cusumData) {
+  const ctx = document.getElementById('modalChart');
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  if (!cusumData || !cusumData.cusum_pos) return;
+
+  const n = cusumData.cusum_pos.length;
+  const labels = Array.from({length: n}, (_, i) => i + 1);
+
+  modalChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'CUSUM+', data: cusumData.cusum_pos, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.1 },
+        { label: 'CUSUM-', data: cusumData.cusum_neg, borderColor: '#dc2626', borderWidth: 2, pointRadius: 3, tension: 0.1 },
+        { label: 'H+', data: Array(n).fill(cusumData.h_upper), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
+        { label: 'H-', data: Array(n).fill(cusumData.h_lower), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
+        { label: 'Zero', data: Array(n).fill(0), borderColor: '#94a3b8', borderWidth: 1, pointRadius: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
+      scales: { y: { title: { display: true, text: 'CUSUM' } }, x: { title: { display: true, text: 'Observation #' } } }
+    }
+  });
+
+  // Update legend
+  document.getElementById('modalLegend').innerHTML = `
+    <div class="legend-item"><div class="legend-line" style="background:#1e40af"></div>CUSUM+</div>
+    <div class="legend-item"><div class="legend-line" style="background:#dc2626"></div>CUSUM-</div>
+    <div class="legend-item"><div class="legend-line" style="background:#9333ea"></div>Decision (H)</div>
+  `;
+}
+
+function renderEwmaChart(baseData, ewmaData) {
+  const ctx = document.getElementById('modalChart');
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+  if (!ewmaData || !ewmaData.ewma) return;
+
+  const n = ewmaData.ewma.length;
+  const labels = Array.from({length: n}, (_, i) => i + 1);
+
+  modalChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'EWMA', data: ewmaData.ewma, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.3 },
+        { label: 'UCL', data: ewmaData.ucl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
+        { label: 'LCL', data: ewmaData.lcl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
+        { label: 'Target', data: Array(n).fill(ewmaData.target), borderColor: '#000', borderWidth: 2, pointRadius: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
+      scales: { y: { title: { display: true, text: 'EWMA' } }, x: { title: { display: true, text: 'Observation #' } } }
+    }
+  });
+
+  document.getElementById('modalLegend').innerHTML = `
+    <div class="legend-item"><div class="legend-line" style="background:#1e40af"></div>EWMA</div>
+    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div>UCL/LCL</div>
+    <div class="legend-item"><div class="legend-line target"></div>Target</div>
+  `;
+}
+
+// ========== Export buttons ==========
+document.getElementById('btnExportCsv').addEventListener('click', () => {
+  if (!currentModalContext) return;
+  const {standardName, qcType, analysis} = currentModalContext;
+  window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=csv');
+});
+
+document.getElementById('btnExportJson').addEventListener('click', () => {
+  if (!currentModalContext) return;
+  const {standardName, qcType, analysis} = currentModalContext;
+  window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=json');
+});
+
+// ========== Auto Corrective Action ==========
+document.getElementById('btnAutoCA').addEventListener('click', async () => {
+  if (!currentModalContext) return;
+  const {standardName, analysis} = currentModalContext;
+  const key = `${standardName}_${analysis.analysis_code}`;
+  const data = chartsData[key];
+  if (!data || !data.violations) return;
+
+  if (!confirm('QC REJECT - Засвар арга хэмжээ (Corrective Action) автоматаар үүсгэх үү?')) return;
+
+  try {
+    const resp = await fetch('/quality/api/chart_auto_ca', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''},
+      body: JSON.stringify({
+        standard_name: standardName,
+        analysis_code: analysis.analysis_code,
+        violations: data.violations
+      })
+    });
+    const result = await resp.json();
+    if (result.success) {
+      alert(result.message + ' (CA ID: ' + result.data.ca_id + ')');
+    } else {
+      alert(result.message);
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+});
+
 // Cleanup on modal close
 document.getElementById('chartModal').addEventListener('hidden.bs.modal', function() {
   if (modalChart) {
     modalChart.destroy();
     modalChart = null;
   }
+  currentModalContext = null;
+  advancedData = null;
+  document.getElementById('capabilityGrid').style.display = 'none';
+  // Reset chart type toggle
+  document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-chart-type="shewhart"]').classList.add('active');
 });
 </script>
 {% endblock %}

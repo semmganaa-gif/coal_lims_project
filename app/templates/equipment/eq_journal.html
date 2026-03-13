@@ -214,12 +214,12 @@
 
 {% block scripts %}
   {{ super() }}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-quartz.css">
   <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
     var gridApi = null;
     const EQUIPMENT_ID = {{ eq.id }};
 
@@ -365,8 +365,7 @@
     }
 
     function setGridRows(rows) {
-      if (gridApi.setRowData) gridApi.setRowData(rows);
-      else gridApi.setGridOption('rowData', rows);
+      gridApi.setGridOption('rowData', rows);
     }
 
     function loadData() {

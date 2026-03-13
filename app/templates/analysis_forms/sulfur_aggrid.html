@@ -9,7 +9,7 @@
 
 {{ aggrid_macros.grid_container('sulfurGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 logger.log('SULFUR TEMPLATE v3 LOADED');
 (function(){
   'use strict';

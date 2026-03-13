@@ -4,7 +4,7 @@
 {% block title %}{{ _("Monthly Plan") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --glass-bg: rgba(255, 255, 255, 0.75);
     --glass-border: rgba(148, 163, 184, 0.2);
@@ -742,7 +742,7 @@
 {% block scripts %}
 {{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
   const year = document.getElementById('selectYear').value;

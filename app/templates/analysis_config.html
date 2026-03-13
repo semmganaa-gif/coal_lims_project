@@ -2,7 +2,7 @@
 
 {% block head_extra %}
 {{ super() }}
-<style>
+<style nonce="{{ csp_nonce }}">
   /* --- MATRIX TABLE STYLE --- */
   .matrix-wrapper {
     position: relative;
@@ -171,6 +171,59 @@
   .section-title.chpp i {
     color: #f59e0b;
   }
+
+  /* SLA input in matrix */
+  .sla-input {
+    width: 52px;
+    padding: 1px 4px;
+    font-size: 0.7rem;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+    color: inherit;
+    text-align: center;
+    font-weight: 600;
+  }
+  .sla-input:focus {
+    outline: none;
+    border-color: #fff;
+    background: rgba(255,255,255,0.35);
+  }
+  .sla-input::placeholder { color: rgba(255,255,255,0.5); font-weight: 400; }
+  .sla-label { font-size: 0.6rem; opacity: 0.8; margin-left: 2px; }
+
+  /* SLA in type-row (non-header) */
+  .sla-cell {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px !important;
+  }
+  .sla-cell input {
+    width: 50px;
+    padding: 2px 4px;
+    font-size: 0.72rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    text-align: center;
+    background: #fff;
+  }
+  .sla-cell input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+  }
+
+  /* SLA header column */
+  .sla-col-header {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    text-align: center;
+    vertical-align: bottom;
+  }
 </style>
 {% endblock %}
 
@@ -215,6 +268,11 @@
                     </div>
                   </th>
                   {% endfor %}
+                  <th class="sla-col-header">
+                    <div class="rotate-wrapper">
+                      <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -224,9 +282,20 @@
                   {% if profile.sample_type != current_type.value %}
                     {% set current_type.value = profile.sample_type %}
                     {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
+                    {% set sla_key = 'CHPP:' ~ profile.sample_type %}
+                    {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
                     <tr class="group-header-row chpp-header-row">
                       <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
                         <i class="bi bi-clock me-2"></i>{{ display_name }}
+                      </td>
+                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; text-align: center; padding: 4px !important;">
+                        <input type="number" class="sla-input"
+                               name="sla_hours[CHPP:{{ profile.sample_type }}]"
+                               value="{{ sla_val }}"
+                               placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
+                               min="1" max="8760"
+                               title="{{ _('SLA hours') }}">
+                        <span class="sla-label">{{ _("hrs") }}</span>
                       </td>
                     </tr>
                   {% endif %}
@@ -248,6 +317,7 @@
                              {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
                     </td>
                     {% endfor %}
+                    <td class="sla-cell"></td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -281,6 +351,11 @@
                     </div>
                   </th>
                   {% endfor %}
+                  <th class="sla-col-header">
+                    <div class="rotate-wrapper">
+                      <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -289,13 +364,25 @@
                 {% for profile in simple_profiles %}
                   {% if profile.client_name != current_client.value %}
                     {% set current_client.value = profile.client_name %}
+                    {% set client_sla = sla_config_map.get(profile.client_name, '') %}
                     <tr class="group-header-row">
                       <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
                         <i class="bi bi-building me-2"></i>{{ profile.client_name }}
                       </td>
+                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; text-align: center; padding: 4px !important;">
+                        <input type="number" class="sla-input"
+                               name="sla_hours[{{ profile.client_name }}]"
+                               value="{{ client_sla }}"
+                               placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
+                               min="1" max="8760"
+                               title="{{ _('Default SLA hours for') }} {{ profile.client_name }}">
+                        <span class="sla-label">{{ _("hrs") }}</span>
+                      </td>
                     </tr>
                   {% endif %}
 
+                  {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
+                  {% set type_sla = sla_config_map.get(type_sla_key, '') %}
                   <tr class="type-row" data-profile-id="{{ profile.id }}">
                     <td class="sticky-col px-3 py-1 align-middle">
                       <input type="checkbox" class="row-select-all"
@@ -313,6 +400,14 @@
                              {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
                     </td>
                     {% endfor %}
+                    <td class="sla-cell">
+                      <input type="number"
+                             name="sla_hours[{{ type_sla_key }}]"
+                             value="{{ type_sla }}"
+                             placeholder="-"
+                             min="1" max="8760"
+                             title="{{ _('SLA hours for') }} {{ profile.client_name }} / {{ profile.sample_type }}">
+                    </td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -404,7 +499,7 @@
   </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Gi shift helper functions
 function setOddShifts() {
   const oddShifts = ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'];

@@ -18,6 +18,7 @@ from app.repositories import SampleRepository
 from app.schemas import SampleSchema
 from app.utils.audit import log_audit
 from app.utils.database import safe_commit
+from app.services.sample_service import get_retention_context
 
 logger = logging.getLogger(__name__)
 
@@ -155,60 +156,10 @@ def register_routes(bp):
     @login_required
     def sample_disposal():
         """Sample retention and disposal management - Visible to all"""
-        from app.models import Sample
-
-        today = date.today()
-        warning_days = 30  # Warn 30 days before expiry
-
-        # Expired samples (retention_date < today, disposal_date = None)
-        expired_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.retention_date < today,
-            Sample.disposal_date.is_(None)
-        ).order_by(Sample.retention_date.asc()).limit(200).all()
-
-        # Upcoming expiry samples (retention_date <= today + 30 days)
-        warning_date = today + timedelta(days=warning_days)
-        upcoming_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.retention_date >= today,
-            Sample.retention_date <= warning_date,
-            Sample.disposal_date.is_(None)
-        ).order_by(Sample.retention_date.asc()).limit(200).all()
-
-        # Disposed samples (last 90 days)
-        disposed_since = today - timedelta(days=90)
-        disposed_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.disposal_date >= disposed_since
-        ).order_by(Sample.disposal_date.desc()).limit(100).all()
-
-        # Samples with no retention date set (all statuses)
-        no_retention_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.retention_date.is_(None),
-            Sample.disposal_date.is_(None),
-            Sample.return_sample.is_(False)
-        ).order_by(Sample.received_date.desc()).limit(100).all()
-
-        # Samples to return (return_sample=True, analysis completed)
-        return_samples = Sample.query.filter(
-            Sample.lab_type == 'coal',
-            Sample.return_sample.is_(True),
-            Sample.disposal_date.is_(None),
-            Sample.status == 'completed'
-        ).order_by(Sample.received_date.desc()).limit(100).all()
-
         return render_template(
             "sample_disposal.html",
             title="Sample Retention & Disposal",
-            expired_samples=expired_samples,
-            upcoming_samples=upcoming_samples,
-            disposed_samples=disposed_samples,
-            no_retention_samples=no_retention_samples,
-            return_samples=return_samples,
-            today=today,
-            warning_days=warning_days
+            **get_retention_context(lab_type="coal"),
         )
 
     @bp.route("/dispose_samples", methods=["POST"])

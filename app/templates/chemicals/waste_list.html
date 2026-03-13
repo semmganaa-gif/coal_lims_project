@@ -3,7 +3,7 @@
 {% block title %}{{ _("Waste Management") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .waste-page { padding: 1.5rem; }
   .month-input {
     width: 60px; text-align: center; padding: 0.25rem;
@@ -166,7 +166,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 const _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 function saveRecord(wasteId, year, month, value) {
   fetch('{{ url_for("chemicals.save_waste_record") }}', {

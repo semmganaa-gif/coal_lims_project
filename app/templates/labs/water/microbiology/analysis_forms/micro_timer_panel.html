@@ -22,7 +22,7 @@
   </div>
 </div>
 
-<style>
+<style nonce="{{ csp_nonce }}">
   .micro-timer-card {
     background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
     padding: 0.75rem 1rem; min-width: 200px; max-width: 260px;
@@ -35,7 +35,7 @@
   .micro-timer-card .btn-group .btn { font-size: 0.75rem; padding: 2px 8px; }
 </style>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   const WS_CODE = '{{ workspace_code | default("water") }}';
   const STORAGE_PREFIX = 'tmr_MICRO_' + WS_CODE.toUpperCase() + '_';

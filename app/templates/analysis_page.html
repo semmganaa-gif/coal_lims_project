@@ -3,7 +3,7 @@
 
 {% block content %}
 {% set is_mass_page = (analysis.code|lower == 'm') %}
-<script>
+<script nonce="{{ csp_nonce }}">
     // Энэ мөрийг нэмснээр JavaScript токен авах боломжтой болно
     window.csrfToken = "{{ csrf_token() }}";
     window.userRole = "{{ current_user.role }}";
@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/analysis_page.css') }}">
 
 {% if is_mass_page %}
-<style>
+<style nonce="{{ csp_nonce }}">
   #save-analysis-results, .btn-save-results, [data-action="save-results"]{ display:none !important; }
 </style>
 {% endif %}
@@ -684,7 +684,7 @@
 {{ super() }}
 
 <script src="{{ url_for('static', filename='js/repeatability.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
   window.LIMS_ANALYSIS_CODE_RAW     = "{{ analysis.code }}";
   window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
   window.REJECTED_SAMPLES = window.REJECTED_SAMPLES || {{ rejected_samples_info|tojson|safe }};
@@ -695,7 +695,7 @@
   window.ERROR_LABELS     = {{ error_labels | tojson | safe | default("{}") }};
 </script>
 
-<script>
+<script nonce="{{ csp_nonce }}">
   window.LIMS_ANALYSIS_CODE = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
   (function(){
     const ls = window.localStorage, ss = window.sessionStorage;
@@ -707,7 +707,7 @@
   })();
 </script>
 
-<script>
+<script nonce="{{ csp_nonce }}">
   // ===== STICKY CONTROLS SCROLL EFFECT =====
   (function() {
     const stickyControls = document.querySelector('.sticky-controls');
@@ -745,9 +745,8 @@
 
 <script src="{{ url_for('static', filename='js/analysis_page.js') }}"></script>
 
-{# 🔌 Жингийн холболт (Web Serial API) - Бүх шинжилгээнд ашиглагдана #}
-<script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
-<script>
+{# serial_balance.js — aggrid_macros.html macro-аас ачаалагдана #}
+<script nonce="{{ csp_nonce }}">
   window.EQ_I18N = {
     balanceNotLoaded: "{{ _('Balance module not loaded.') }}",
     webSerialNotSupported: "{{ _('Web Serial API is not supported. Please use Chrome 89+.') }}",

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
     .test-report-container {
         max-width: 1600px;
         margin: auto;

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --glass-bg: rgba(255, 255, 255, 0.7);
     --glass-border: rgba(148, 163, 184, 0.2);
@@ -497,7 +497,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   const tabs = document.querySelectorAll('.cat-tab');
   const sections = document.querySelectorAll('.category-section');

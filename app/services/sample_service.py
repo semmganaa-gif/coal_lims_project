@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -109,13 +109,16 @@ def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResul
         logger.info(f"Samples {'archived' if archive else 'unarchived'}: {sample_ids}")
 
         # Audit: Архивлах/сэргээх лог
+        old_status = "new" if archive else "archived"
         action_name = 'sample_archived' if archive else 'sample_unarchived'
         for sid in sample_ids:
             log_audit(
                 action=action_name,
                 resource_type='Sample',
                 resource_id=sid,
-                details={'new_status': new_status}
+                details={'new_status': new_status},
+                old_value={'status': old_status},
+                new_value={'status': new_status},
             )
 
         return ArchiveResult(
@@ -441,11 +444,13 @@ def _build_sample_base(
 
 
 def _assign_and_add(sample: Sample) -> None:
-    """Шинжилгээ оноож, session-д нэмэх."""
+    """Шинжилгээ оноож, SLA тохируулж, session-д нэмэх."""
     from app.utils.analysis_assignment import assign_analyses_to_sample
+    from app.services.sla_service import assign_sla
 
     with db.session.no_autoflush:
         assign_analyses_to_sample(sample)
+    assign_sla(sample)
     db.session.add(sample)
 
 
@@ -811,3 +816,60 @@ def register_wtl_mg_test(
         },
     )
     return RegistrationResult(success=True, count=1, message="Шинэ дээж амжилттай бүртгэгдлээ.")
+
+
+# ==========================================================================
+# RETENTION & DISPOSAL
+# ==========================================================================
+
+def get_retention_context(lab_type: str = "coal", warning_days: int = 30) -> dict:
+    """
+    Sample retention dashboard-д шаардлагатай бүх query-г нэг дор гүйцэтгэнэ.
+
+    Returns:
+        dict with keys: expired_samples, upcoming_samples, disposed_samples,
+                        no_retention_samples, return_samples, today, warning_days
+    """
+    today = date.today()
+
+    expired_samples = Sample.query.filter(
+        Sample.lab_type == lab_type,
+        Sample.retention_date < today,
+        Sample.disposal_date.is_(None),
+    ).order_by(Sample.retention_date.asc()).limit(200).all()
+
+    upcoming_samples = Sample.query.filter(
+        Sample.lab_type == lab_type,
+        Sample.retention_date >= today,
+        Sample.retention_date <= today + timedelta(days=warning_days),
+        Sample.disposal_date.is_(None),
+    ).order_by(Sample.retention_date.asc()).limit(200).all()
+
+    disposed_samples = Sample.query.filter(
+        Sample.lab_type == lab_type,
+        Sample.disposal_date >= today - timedelta(days=90),
+    ).order_by(Sample.disposal_date.desc()).limit(100).all()
+
+    no_retention_samples = Sample.query.filter(
+        Sample.lab_type == lab_type,
+        Sample.retention_date.is_(None),
+        Sample.disposal_date.is_(None),
+        Sample.return_sample.is_(False),
+    ).order_by(Sample.received_date.desc()).limit(100).all()
+
+    return_samples = Sample.query.filter(
+        Sample.lab_type == lab_type,
+        Sample.return_sample.is_(True),
+        Sample.disposal_date.is_(None),
+        Sample.status == "completed",
+    ).order_by(Sample.received_date.desc()).limit(100).all()
+
+    return dict(
+        expired_samples=expired_samples,
+        upcoming_samples=upcoming_samples,
+        disposed_samples=disposed_samples,
+        no_retention_samples=no_retention_samples,
+        return_samples=return_samples,
+        today=today,
+        warning_days=warning_days,
+    )

@@ -2,7 +2,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --glass-bg: rgba(255, 255, 255, 0.7);
     --glass-border: rgba(148, 163, 184, 0.2);
@@ -487,7 +487,7 @@
 
 {% block scripts %}
 {{ super() }}
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('analysis-search');
   const cards = document.querySelectorAll('#analysis-list .analysis-card');

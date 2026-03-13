@@ -22,8 +22,10 @@ from . import auth
 from . import index
 from . import samples
 from . import hourly_report  # noqa: F401 — registers @main_bp.route
+from . import tools
 
 # Route-уудыг бүртгэх
 auth.register_routes(main_bp)
 index.register_routes(main_bp)
 samples.register_routes(main_bp)
+tools.register_routes(main_bp)

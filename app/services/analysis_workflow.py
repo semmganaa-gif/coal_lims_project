@@ -382,6 +382,23 @@ def update_result_status(result_id, new_status, rejection_comment=None,
     if not res:
         return None, "Үр дүн олдсонгүй", 404
 
+    # Өмнөх төлөв хадгалах (before/after audit)
+    old_status = res.status
+
+    # Workflow engine validation (configurable transitions)
+    from app.services.workflow_engine import WorkflowEngine
+    engine = None
+    try:
+        engine = WorkflowEngine("analysis_result")
+        from flask_login import current_user as _cu
+        user_role = _cu.role if hasattr(_cu, 'role') else "admin"
+        ctx = {"comment": rejection_comment or ""}
+        check = engine.can_transition(res.status, new_status, user_role, ctx)
+        if not check.allowed:
+            return None, check.reason, 403
+    except Exception:
+        pass  # Fallback: workflow engine unavailable → allow (backward compat)
+
     # XSS protection
     safe_comment = str(escape(rejection_comment)) if rejection_comment else None
 
@@ -405,6 +422,9 @@ def update_result_status(result_id, new_status, rejection_comment=None,
         error_reason=rejection_category,
         reason=reason_text,
         sample_code_snapshot=sample.sample_code if sample else None,
+        previous_value=res.final_result,
+        old_status=old_status,
+        new_status=new_status,
     )
 
     try:
@@ -428,7 +448,25 @@ def update_result_status(result_id, new_status, rejection_comment=None,
             'final_result': res.final_result,
             'rejection_comment': safe_comment,
         },
+        old_value={'status': old_status},
+        new_value={'status': new_status},
     )
+
+    # Execute workflow hooks
+    if engine is not None:
+        try:
+            engine.execute_hooks(new_status, {
+                'workflow_name': 'analysis_result',
+                'entity_type': 'AnalysisResult',
+                'entity_id': res.id,
+                'entity': res,
+                'from_state': old_status,
+                'to_state': new_status,
+                'comment': safe_comment or '',
+                'sample_id': res.sample_id,
+            })
+        except Exception:
+            logger.exception("Workflow hook execution failed")
 
     return {"message": "OK", "status": new_status}, None, 200
 
@@ -1006,6 +1044,10 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
         if status_reason and ("Failure" in status_reason):
             auto_error_reason = "qc_fail"
 
+    # Өмнөх утга хадгалах (before/after audit)
+    prev_final_result = existing.final_result if existing else None
+    prev_status = existing.status if existing else None
+
     if not existing:
         new_res = AnalysisResult(
             sample_id=sample_id,
@@ -1130,6 +1172,9 @@ def save_single_result(item, user_id, batch_data=None, coalesce_diff_fn=None,
         original_user_id=original_user_id,
         original_timestamp=original_timestamp,
         sample_code_snapshot=sample.sample_code,
+        previous_value=prev_final_result,
+        old_status=prev_status,
+        new_status=new_status,
     )
 
     return {

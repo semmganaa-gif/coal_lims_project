@@ -60,7 +60,7 @@ def _is_senior_or_admin() -> bool:
 def bottles_index():
     """Бортого бүрийн хамгийн сүүлийн тогтмолын мөрийг хавсаргаж харуулна."""
     # Natural sorting: PY-1, PY-2, ..., PY-10 (not PY-1, PY-10, PY-2)
-    bottles = Bottle.query.all()
+    bottles = BottleRepository.get_all()
     bottles.sort(key=lambda b: _natural_sort_key(b.serial_no or ""))
 
     latest_by_bottle: dict[int, BottleConstant] = {}
@@ -127,7 +127,7 @@ def bottles_constants_new():
             return redirect(url_for("settings.bottles_constants_new"))
 
         # Bottle хайх/үүсгэх
-        bottle = Bottle.query.filter_by(serial_no=serial_no).first()
+        bottle = BottleRepository.get_by_serial(serial_no)
         if not bottle:
             bottle = Bottle(
                 serial_no=serial_no,
@@ -192,7 +192,7 @@ def bottles_constants_bulk():
         return redirect(url_for("settings.bottles_index"))
 
     # Идэвхтэй бортогуудыг natural sorting-ээр харуулах
-    bottles = Bottle.query.filter_by(is_active=True).all()
+    bottles = BottleRepository.get_active()
     bottles.sort(key=lambda b: _natural_sort_key(b.serial_no or ""))
 
     return render_template(
@@ -232,7 +232,7 @@ def bottles_constants_bulk_save():
             continue
 
         # Бортого хайх/үүсгэх
-        bottle = Bottle.query.filter_by(serial_no=serial).first()
+        bottle = BottleRepository.get_by_serial(serial)
         if not bottle:
             bottle = Bottle(
                 serial_no=serial,
@@ -303,8 +303,7 @@ def bottle_edit(bottle_id: int):
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
         # serial_no давхцахгүй байх шалгалт (өөрөөс нь бусадтай)
-        dup = Bottle.query.filter(Bottle.serial_no == serial_no, Bottle.id != bottle.id).first()
-        if dup:
+        if BottleRepository.serial_exists(serial_no, exclude_id=bottle.id):
             flash("Ижил дугаартай бортого аль хэдийн бүртгэгдсэн байна.", "danger")
             return redirect(url_for("settings.bottle_edit", bottle_id=bottle.id))
 
@@ -386,7 +385,7 @@ def _avg_with_tolerance(t1: float, t2: float, t3: float | None):
 @login_required
 def api_bottle_active(serial_no):
     # Зөвхөн ахлах/админ бус—химич ч үзэж болно (шинжилгээнд хэрэгтэй)
-    bottle = Bottle.query.filter_by(serial_no=serial_no).first()
+    bottle = BottleRepository.get_by_serial(serial_no)
     if not bottle:
         return {"success": False, "error": "not_found"}, 404
     const = (
@@ -540,129 +539,7 @@ def email_recipients():
 # 6) Стандартын лавлах (SOP / Standards Reference)
 # ==================================
 
-# SOP файлуудын mapping - шинжилгээ тус бүрт холбогдох файлууд
-SOP_MAPPING = {
-    # Техникийн анализ
-    "MT": {
-        "name": "Нийт чийг (MT)",
-        "mns": ["2. MNS ISO 589-2003 Нийт чийгийг тодорхойлох.pdf"],
-        "sop": ["LAB.07.02 Нийт чийг тодорхойлох.docx"],
-    },
-    "Mad": {
-        "name": "Дотоод чийг (Mad)",
-        "mns": ["3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf"],
-        "sop": ["LAB.07.03 Дотоод чийг тодорхойлох.docx"],
-    },
-    "Aad": {
-        "name": "Үнслэг (Aad)",
-        "mns": ["3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf"],
-        "sop": ["LAB.07.05 Үнслэгийн гарц тодорхойлох.docx"],
-    },
-    "Vad": {
-        "name": "Дэгдэмхий бодис (Vad)",
-        "mns": ["3. MNS GBT 212-2015 Нүүрсний техникийн шинжилгээний арга.pdf"],
-        "sop": ["LAB.07.04 Дэгдэмхий бодисын гарц тодорхойлох.docx"],
-    },
-    "CV": {
-        "name": "Илчлэг (CV)",
-        "mns": ["13. MNS GB-T 213-2024 Нүүрсний илчлэгийг тодорхойлох арга.pdf"],
-        "sop": ["LAB.07.13 Нүүрсний илчлэг тодорхойлох арга.docx"],
-    },
-    # Элементийн анализ
-    "TS": {
-        "name": "Нийт хүхэр (TS)",
-        "mns": ["8. MNS ISO 19579-2014 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.pdf"],
-        "sop": ["LAB.07.08 Нил улаан туяаны спектрометрээр хатуу түлшний хүхрийн хэмжээг тодорхойлох.docx"],
-    },
-    "P": {
-        "name": "Фосфор (P)",
-        "mns": [
-            "11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон "
-            "хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"
-        ],
-        "sop": [
-            "LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох "
-            "рентген флюресценцийн спектрометрийн арга.docx"
-        ],
-    },
-    "F": {
-        "name": "Фтор (F)",
-        "mns": ["10. MNS GB-T 4633-2024 Нүүрсэнд фторын агуулга тодорхойлох арга.pdf"],
-        "sop": ["LAB.07.10 Нүүрсэнд фторын агуулга тодорхойлох арга.docx"],
-    },
-    "Cl": {
-        "name": "Хлор (Cl)",
-        "mns": [
-            "11. MNS 7057-2024 Нүүрсэнд агуулагдах хүхэр, фосфор, хүнцэл болон "
-            "хлорын агуулгыг тодорхойлох рентген флюресценцийн спектрометрийн арга.pdf"
-        ],
-        "sop": [
-            "LAB.07.09 Нүүрсэнд агуулагдах фосфор, хлорын агуулгыг тодорхойлох "
-            "рентген флюресценцийн спектрометрийн арга.docx"
-        ],
-    },
-    # Коксжих чанар
-    "CSN": {
-        "name": "Хөөлтийн зэрэг (CSN)",
-        "mns": ["6. MNS ISO 501-2003 Тигелийн аргаар хөөлтийн зэргийг тодорхойлох.pdf"],
-        "sop": ["LAB.07.06 Хөөлтийн зэрэг тодорхойлох.docx"],
-    },
-    "Gi": {
-        "name": "Барьцалдах чанар (Gi)",
-        "mns": ["7. MNS ISO 15585-2014 Хатуу нүүрс. Барьцалдах (бөсөх) чанар тодорхойлох.pdf"],
-        "sop": ["LAB.07.07 Барьцалдах чанар тодорхойлох.docx"],
-    },
-    "X": {
-        "name": "Пластометр - X",
-        "mns": ["14. Битумжсан нүүрсний пластометрийн үзүүлэлтийг тодорхойлох арга.pdf"],
-        "sop": ["LAB.07.14 Нүүрсний Пластометрийн үзүүлэлт тодорхойлох арга.docx"],
-    },
-    "Y": {
-        "name": "Пластометр - Y",
-        "mns": ["14. Битумжсан нүүрсний пластометрийн үзүүлэлтийг тодорхойлох арга.pdf"],
-        "sop": ["LAB.07.14 Нүүрсний Пластометрийн үзүүлэлт тодорхойлох арга.docx"],
-    },
-    # Бусад
-    "TRD": {
-        "name": "Харьцангуй нягт (TRD)",
-        "mns": ["12. MNS GBT 217-2015 Нүүрсний харьцангуй нягт тодорхойлох арга.pdf"],
-        "sop": ["LAB.07.12 Нүүрсний харьцангуй нягт тодорхойлох арга.docx"],
-    },
-    "FM": {
-        "name": "Чөлөөт чийг / Дээж бэлтгэл (FM)",
-        "mns": ["1. MNS GB-T 474-2015 Нүүрсний дээж бэлтгэх арга.pdf"],
-        "sop": ["LAB.07.01 Нүүрсний дээж бэлтгэх арга.docx"],
-    },
-    "Solid": {
-        "name": "Хатуу үлдэгдэл / Дээж бэлтгэл (Solid)",
-        "mns": ["1. MNS GB-T 474-2015 Нүүрсний дээж бэлтгэх арга.pdf"],
-        "sop": ["LAB.07.01 Нүүрсний дээж бэлтгэх арга.docx"],
-    },
-}
-
-# Ангиллуудыг тодорхойлох
-SOP_CATEGORIES = {
-    "tech": {
-        "name": "Техникийн анализ",
-        "icon": "bi-thermometer-half",
-        "codes": ["MT", "Mad", "Aad", "Vad", "CV"],
-    },
-    "element": {
-        "name": "Элементийн анализ",
-        "icon": "bi-circle-half",
-        "codes": ["TS", "P", "F", "Cl"],
-    },
-    "coking": {
-        "name": "Коксжих чанар",
-        "icon": "bi-fire",
-        "codes": ["CSN", "Gi", "X", "Y"],
-    },
-    "other": {
-        "name": "Бусад",
-        "icon": "bi-box",
-        "codes": ["TRD", "FM", "Solid"],
-    },
-}
+from app.config.sop_standards import SOP_MAPPING, SOP_CATEGORIES
 
 
 @settings_bp.route("/standards", methods=["GET"])

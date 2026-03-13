@@ -18,7 +18,10 @@ def log_audit(
     action: str,
     resource_type: Optional[str] = None,
     resource_id: Optional[int] = None,
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[Dict[str, Any]] = None,
+    old_value: Optional[Dict[str, Any]] = None,
+    new_value: Optional[Dict[str, Any]] = None,
+    commit: bool = True,
 ) -> None:
     """
     Аудитын лог бичих.
@@ -64,6 +67,20 @@ def log_audit(
         except (TypeError, ValueError):
             details_str = str(details)
 
+    # Before/after values → JSON string
+    old_value_str = None
+    new_value_str = None
+    if old_value:
+        try:
+            old_value_str = json.dumps(old_value, ensure_ascii=False)
+        except (TypeError, ValueError):
+            old_value_str = str(old_value)
+    if new_value:
+        try:
+            new_value_str = json.dumps(new_value, ensure_ascii=False)
+        except (TypeError, ValueError):
+            new_value_str = str(new_value)
+
     # AuditLog бичлэг үүсгэх
     # timestamp-г гараар тохируулна — hash тооцоолоход шаардлагатай
     from app.utils.datetime import now_local as _now
@@ -75,7 +92,9 @@ def log_audit(
         resource_id=resource_id,
         details=details_str,
         ip_address=ip_address,
-        user_agent=user_agent
+        user_agent=user_agent,
+        old_value=old_value_str,
+        new_value=new_value_str,
     )
 
     # ISO 17025: Audit log integrity hash
@@ -83,15 +102,15 @@ def log_audit(
 
     db.session.add(entry)
 
-    try:
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        # Audit log бичихэд алдаа гарсан ч үндсэн үйлдэл үргэлжлэх ёстой
-        # Алдааг зөвхөн log-д бичнэ
-        import logging
-        logger = logging.getLogger('security')
-        logger.error(f"Failed to write audit log: {e}")
+    if commit:
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            import logging
+            logger = logging.getLogger('security')
+            logger.error(f"Failed to write audit log: {e}")
+    # commit=False: дуудагч тал commit хийнэ (transaction consistency)
 
 
 def get_recent_audit_logs(limit: int = DEFAULT_AUDIT_LOG_LIMIT, action: Optional[str] = None) -> list:

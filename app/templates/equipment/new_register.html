@@ -93,9 +93,9 @@
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/equipment_register.js') }}"></script>
 
-<style>.tabulator .tabulator-header { background:#fffbeb; }</style>
+<style nonce="{{ csp_nonce }}">.tabulator .tabulator-header { background:#fffbeb; }</style>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   var rowData = {{ items | tojson }};
   rowData.forEach(function(r) {

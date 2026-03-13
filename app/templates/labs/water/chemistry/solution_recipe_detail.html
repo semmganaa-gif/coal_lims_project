@@ -227,7 +227,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Calculate required chemicals
 const standardVolume = {{ recipe.standard_volume_ml or 1000 }};
 const ingredients = [

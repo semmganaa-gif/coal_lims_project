@@ -38,6 +38,10 @@ class AuditLog(HashableMixin, db.Model):
     ip_address = db.Column(db.String(50))
     user_agent = db.Column(db.String(200))
 
+    # Before/after values — ChatGPT зөвлөмж #4: "өмнөх утга, шинэ утга"
+    old_value = db.Column(db.Text, nullable=True)   # Өмнөх утга (JSON)
+    new_value = db.Column(db.Text, nullable=True)   # Шинэ утга (JSON)
+
     # ISO 17025: Audit log integrity hash
     data_hash = db.Column(db.String(64), nullable=True)
 
@@ -45,13 +49,42 @@ class AuditLog(HashableMixin, db.Model):
     user = db.relationship("User", backref="audit_logs")
 
     def _get_hash_data(self) -> str:
-        """HashableMixin: Return data string for hashing."""
-        # timestamp-г тогтмол формат руу хөрвүүлнэ (DB round-trip-д өөрчлөгдөхгүй)
+        """HashableMixin: Return data string for hashing.
+
+        ChatGPT P0: user_agent, old_value, new_value бүгд hash-д орох ёстой.
+        """
         ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f') if self.timestamp else ''
         return (
             f"{self.user_id}|{self.action}|{self.resource_type}|"
-            f"{self.resource_id}|{ts}|{self.details}|{self.ip_address}"
+            f"{self.resource_id}|{ts}|{self.details}|{self.ip_address}|"
+            f"{self.user_agent}|{self.old_value}|{self.new_value}"
         )
 
     def __repr__(self) -> str:
         return f"<AuditLog {self.action} by user_id={self.user_id} at {self.timestamp}>"
+
+
+# ──────────────────────────────────────────
+# Append-only enforcement (ChatGPT P2)
+# ──────────────────────────────────────────
+from sqlalchemy import event
+
+
+def _block_system_audit_update(mapper, connection, target):
+    """AuditLog бичлэгийг UPDATE хийхийг хориглоно."""
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: AuditLog #{target.id} cannot be modified. "
+        "Audit records are append-only."
+    )
+
+
+def _block_system_audit_delete(mapper, connection, target):
+    """AuditLog бичлэгийг DELETE хийхийг хориглоно."""
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: AuditLog #{target.id} cannot be deleted. "
+        "Audit records are append-only."
+    )
+
+
+event.listen(AuditLog, "before_update", _block_system_audit_update)
+event.listen(AuditLog, "before_delete", _block_system_audit_delete)

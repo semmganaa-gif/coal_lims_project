@@ -248,9 +248,9 @@
 /* ==================== STATS PANELS ==================== */
 .stats-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 .stats-panel {
   background: var(--glass-bg);
@@ -259,6 +259,7 @@
   border-radius: 20px;
   padding: 1.25rem;
   box-shadow: var(--shadow-soft);
+  min-width: 0;
 }
 .stats-panel-header {
   display: flex;
@@ -353,6 +354,38 @@
   font-size: 0.85rem;
 }
 .stats-empty i { font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5; }
+
+/* AI Analytics mini stats */
+.ai-mini-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.ai-mini-stat {
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+.ai-mini-stat .fw-bold {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+/* AI panel accent bar */
+.stats-panel.ai-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #6366f1, #4f46e5);
+  border-radius: 20px 0 0 20px;
+}
+.stats-panel.ai-panel {
+  position: relative;
+  overflow: hidden;
+}
 
 /* ==================== FILTER CARD ==================== */
 .filter-card {
@@ -724,8 +757,15 @@
 .modal-footer.premium { border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
 
 /* ==================== RESPONSIVE ==================== */
+@media (max-width: 1600px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stats-panel.ai-panel { grid-column: 1 / -1; }
+  .ai-mini-stats { grid-template-columns: repeat(4, 1fr); }
+}
 @media (max-width: 1400px) {
   .stats-row { grid-template-columns: 1fr; }
+  .stats-panel.ai-panel { grid-column: auto; }
+  .ai-mini-stats { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 1200px) {
   .ahlah-layout {
@@ -766,6 +806,7 @@
 @media (max-width: 992px) {
   .results-container { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr; }
+  .ai-mini-stats { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 768px) {
   .ahlah-page { padding: 0.75rem; }

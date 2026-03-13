@@ -448,41 +448,46 @@ class TestSLAService:
     """Test SLA service functions."""
 
     def test_get_default_sla_hours_known_client(self, app):
-        from app.services.sla_service import get_default_sla_hours
-        assert get_default_sla_hours("CHPP") == 72
-        assert get_default_sla_hours("QC") == 48
-        assert get_default_sla_hours("UHG-Geo") == 120
+        with app.app_context():
+            from app.services.sla_service import get_default_sla_hours
+            assert get_default_sla_hours("CHPP") == 72
+            assert get_default_sla_hours("QC") == 48
+            assert get_default_sla_hours("UHG-Geo") == 120
 
     def test_get_default_sla_hours_unknown_client(self, app):
-        from app.services.sla_service import get_default_sla_hours
-        assert get_default_sla_hours("UnknownClient") == 72  # DEFAULT_SLA_FALLBACK
+        with app.app_context():
+            from app.services.sla_service import get_default_sla_hours
+            assert get_default_sla_hours("UnknownClient") == 72  # DEFAULT_SLA_FALLBACK
 
     def test_assign_sla_no_received_date(self, app):
-        from app.services.sla_service import assign_sla
-        sample = MagicMock()
-        sample.received_date = None
-        assign_sla(sample)
-        # Should not set due_date
+        with app.app_context():
+            from app.services.sla_service import assign_sla
+            sample = MagicMock()
+            sample.received_date = None
+            assign_sla(sample)
+            # Should not set due_date
 
     def test_assign_sla_sets_due_date(self, app):
-        from app.services.sla_service import assign_sla
-        sample = MagicMock()
-        sample.received_date = datetime(2026, 1, 1, 8, 0)
-        sample.sla_hours = None
-        sample.client_name = "CHPP"
-        assign_sla(sample)
-        assert sample.sla_hours == 72
-        assert sample.due_date == datetime(2026, 1, 1, 8, 0) + timedelta(hours=72)
+        with app.app_context():
+            from app.services.sla_service import assign_sla
+            sample = MagicMock()
+            sample.received_date = datetime(2026, 1, 1, 8, 0)
+            sample.sla_hours = None
+            sample.client_name = "CHPP"
+            assign_sla(sample)
+            assert sample.sla_hours == 72
+            assert sample.due_date == datetime(2026, 1, 1, 8, 0) + timedelta(hours=72)
 
     def test_assign_sla_preserves_existing_sla_hours(self, app):
-        from app.services.sla_service import assign_sla
-        sample = MagicMock()
-        sample.received_date = datetime(2026, 1, 1, 8, 0)
-        sample.sla_hours = 24  # already set
-        sample.client_name = "CHPP"
-        assign_sla(sample)
-        assert sample.sla_hours == 24  # unchanged
-        assert sample.due_date == datetime(2026, 1, 1, 8, 0) + timedelta(hours=24)
+        with app.app_context():
+            from app.services.sla_service import assign_sla
+            sample = MagicMock()
+            sample.received_date = datetime(2026, 1, 1, 8, 0)
+            sample.sla_hours = 24  # already set
+            sample.client_name = "CHPP"
+            assign_sla(sample)
+            assert sample.sla_hours == 24  # unchanged
+            assert sample.due_date == datetime(2026, 1, 1, 8, 0) + timedelta(hours=24)
 
     def test_mark_completed(self, app):
         from app.services.sla_service import mark_completed

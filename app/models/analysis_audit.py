@@ -110,6 +110,17 @@ class AnalysisResultLog(HashableMixin, db.Model):
     # KPI алдааны шалтгаан
     error_reason = db.Column(db.String(50), nullable=True)
 
+    # ISO 17025: Хэн хаанаас хийсэн бүртгэл
+    ip_address = db.Column(db.String(50), nullable=True)        # Хэрэглэгчийн IP
+    source_endpoint = db.Column(db.String(200), nullable=True)  # API endpoint / route
+
+    # Before/after — өмнөх утга (ChatGPT зөвлөмж #4)
+    previous_value = db.Column(db.Float, nullable=True)  # Өөрчлөлтийн өмнөх final_result
+
+    # Status transition tracking (ChatGPT P0: old/new status)
+    old_status = db.Column(db.String(50), nullable=True)   # Өмнөх status
+    new_status = db.Column(db.String(50), nullable=True)   # Шинэ status
+
     # Composite indexes - audit log query-уудыг хурдасгах
     __table_args__ = (
         db.Index('ix_result_log_code_timestamp', 'analysis_code', 'timestamp'),
@@ -118,16 +129,51 @@ class AnalysisResultLog(HashableMixin, db.Model):
     )
 
     def _get_hash_data(self) -> str:
-        """HashableMixin: Return data string for hashing."""
-        # timestamp-г тогтмол формат руу хөрвүүлнэ (DB round-trip-д өөрчлөгдөхгүй)
+        """HashableMixin: Return data string for hashing.
+
+        ChatGPT P0: Бүх critical metadata hash-д оруулах ёстой.
+        Өмнө зөвхөн 6 талбар байсан → одоо 14 талбар.
+        """
         ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f') if self.timestamp else ''
+        ots = self.original_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f') if self.original_timestamp else ''
         return (
-            f"{self.sample_id}|{self.analysis_code}|{self.action}|"
-            f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{ts}"
+            f"{self.user_id}|{self.sample_id}|{self.analysis_code}|{self.action}|"
+            f"{self.raw_data_snapshot}|{self.final_result_snapshot}|{ts}|"
+            f"{self.reason}|{self.error_reason}|{self.rejection_category}|"
+            f"{self.rejection_subcategory}|{self.sample_code_snapshot}|"
+            f"{self.original_user_id}|{ots}|{self.ip_address}|{self.source_endpoint}|"
+            f"{self.previous_value}|{self.old_status}|{self.new_status}"
         )
 
     def __repr__(self) -> str:
         return f"<AnalysisResultLog {self.id}: {self.action}>"
+
+
+# ──────────────────────────────────────────
+# Append-only enforcement (ChatGPT P2)
+# ──────────────────────────────────────────
+# SQLAlchemy event listeners: UPDATE/DELETE хориглох
+from sqlalchemy import event
+
+
+def _block_audit_update(mapper, connection, target):
+    """AnalysisResultLog бичлэгийг UPDATE хийхийг хориглоно."""
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: AnalysisResultLog #{target.id} cannot be modified. "
+        "Audit records are append-only."
+    )
+
+
+def _block_audit_delete(mapper, connection, target):
+    """AnalysisResultLog бичлэгийг DELETE хийхийг хориглоно."""
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: AnalysisResultLog #{target.id} cannot be deleted. "
+        "Audit records are append-only."
+    )
+
+
+event.listen(AnalysisResultLog, "before_update", _block_audit_update)
+event.listen(AnalysisResultLog, "before_delete", _block_audit_delete)
 
 
 # -------------------------

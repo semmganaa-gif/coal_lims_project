@@ -2,7 +2,7 @@
 
 {% block head_extra %}
 {{ super() }}
-<style>
+<style nonce="{{ csp_nonce }}">
 /* Main layout */
 .config-container {
   max-width: 1400px;
@@ -223,6 +223,35 @@
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
 }
 
+/* SLA inline input */
+.sla-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255,255,255,0.6);
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+.sla-type-input {
+  width: 50px;
+  padding: 1px 4px;
+  font-size: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  text-align: center;
+  background: #fff;
+}
+.sla-type-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+}
+.sla-type-input::placeholder {
+  color: #c0c4cc;
+  font-size: 0.7rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .analysis-chips {
@@ -275,12 +304,26 @@
             {% endif %}
             {% set current_type.value = profile.sample_type %}
             {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
+            {% set sla_key = 'CHPP:' ~ profile.sample_type %}
+            {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
             <div class="sample-type-item">
-              <div class="sample-type-header" onclick="toggleSection(this)">
+              <div class="sample-type-header collapsed" onclick="toggleSection(this)">
                 <span class="type-name"><i class="bi bi-clock me-2"></i>{{ display_name }}</span>
-                <i class="bi bi-chevron-down chevron"></i>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="sla-inline" onclick="event.stopPropagation()">
+                    <i class="bi bi-clock-history text-muted" style="font-size:0.7rem;"></i>
+                    <input type="number" class="sla-type-input"
+                           name="sla_hours[{{ sla_key }}]"
+                           value="{{ sla_val }}"
+                           placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
+                           min="1" max="8760"
+                           title="{{ _('SLA hours') }}">
+                    <span style="font-size:0.65rem;color:#9ca3af;">{{ _("hrs") }}</span>
+                  </span>
+                  <i class="bi bi-chevron-down chevron"></i>
+                </div>
               </div>
-              <div class="analysis-grid show">
+              <div class="analysis-grid">
           {% endif %}
 
           <div class="mb-3">
@@ -325,14 +368,28 @@
       <div id="client-{{ loop.index }}-content" class="collapse show">
         {% for profile in profiles %}
         <div class="sample-type-item">
-          <div class="sample-type-header {% if not loop.first %}collapsed{% endif %}" onclick="toggleSection(this)">
+          {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
+          {% set type_sla = sla_config_map.get(type_sla_key, '') %}
+          <div class="sample-type-header collapsed" onclick="toggleSection(this)">
             <div class="d-flex align-items-center gap-2">
               <span class="type-name">{{ profile.sample_type }}</span>
               <span class="count-badge">{{ profile.get_analyses()|length }} {{ _("analyses") }}</span>
             </div>
-            <i class="bi bi-chevron-down chevron"></i>
+            <div class="d-flex align-items-center gap-2">
+              <span class="sla-inline" onclick="event.stopPropagation()">
+                <i class="bi bi-clock-history text-muted" style="font-size:0.7rem;"></i>
+                <input type="number" class="sla-type-input"
+                       name="sla_hours[{{ type_sla_key }}]"
+                       value="{{ type_sla }}"
+                       placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
+                       min="1" max="8760"
+                       title="{{ _('SLA hours for') }} {{ profile.client_name }}/{{ profile.sample_type }}">
+                <span style="font-size:0.65rem;color:#9ca3af;">{{ _("hrs") }}</span>
+              </span>
+              <i class="bi bi-chevron-down chevron"></i>
+            </div>
           </div>
-          <div class="analysis-grid {% if loop.first %}show{% endif %}">
+          <div class="analysis-grid">
             <div class="quick-actions">
               <button type="button" class="quick-btn" onclick="selectAll(this, 'simple-{{ profile.id }}')">{{ _("All") }}</button>
               <button type="button" class="quick-btn" onclick="selectStandard(this, 'simple-{{ profile.id }}')">{{ _("Standard") }}</button>
@@ -447,7 +504,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Standard analyses set
 const STANDARD_ANALYSES = ['MT', 'Mad', 'Aad', 'Vad', 'TS', 'CV'];
 

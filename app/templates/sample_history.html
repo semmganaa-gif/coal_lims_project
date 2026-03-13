@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
     /* Style for differentiating actions like Rejected, Edited */
     .log-entry {
         border-left: 5px solid #dee2e6;

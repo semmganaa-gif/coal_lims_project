@@ -19,7 +19,7 @@
     </ul>
   </div>
 
-  <style>
+  <style nonce="{{ csp_nonce }}">
     .qc-card {
       border-radius: .6rem;
       box-shadow: 0 2px 6px rgba(0,0,0,.04);
@@ -237,7 +237,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
   function qcSelectSpec(key) {
     const url = new URL(window.location.href);
     if (key) {

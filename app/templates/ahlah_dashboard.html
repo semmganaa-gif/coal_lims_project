@@ -97,7 +97,7 @@
 
     <!-- Main Content Area -->
     <div class="ahlah-main">
-  <!-- Stats Panels: Chemist & Analysis -->
+  <!-- Stats Panels: Chemist & Analysis & AI -->
   <div class="stats-row">
     <!-- Chemist Statistics -->
     <div class="stats-panel">
@@ -127,6 +127,79 @@
         <div class="stats-empty">
           <i class="bi bi-hourglass"></i>
           {{ _("Loading...") }}
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Analytics Panel -->
+    <div class="stats-panel ai-panel">
+      <div class="stats-panel-header">
+        <div class="stats-panel-title">
+          <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Analytics
+        </div>
+        <div class="d-flex gap-1 align-items-center">
+          <select id="aiHours" class="form-select form-select-sm" style="width: auto; font-size: 0.7rem; border-radius: 8px; padding: 2px 8px;">
+            <option value="2">2h</option>
+            <option value="8" selected>8h</option>
+            <option value="24">24h</option>
+            <option value="48">48h</option>
+          </select>
+          <button class="btn btn-sm" id="btnAiLoad"
+                  style="font-size: 0.7rem; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-radius: 8px; padding: 3px 10px;">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <div id="aiSpinner" class="spinner-border spinner-border-sm text-primary d-none" style="width: 1rem; height: 1rem;"></div>
+        </div>
+      </div>
+
+      <!-- Quality Score -->
+      <div id="aiScoreBox" class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2"
+           style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8;">
+        <div id="aiGradeBadge" class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+             style="width: 40px; height: 40px; font-size: 1rem; background: #94a3b8; flex-shrink: 0;">-</div>
+        <div style="min-width: 0;">
+          <div class="fw-bold" id="aiScoreText" style="font-size: 0.85rem;">Quality Score: -</div>
+          <div class="text-muted" style="font-size: 0.62rem;" id="aiScoreDetail">{{ _('Click Analyze to start') }}</div>
+          <div class="text-muted" style="font-size: 0.58rem;" id="aiScoreBreakdown"></div>
+        </div>
+      </div>
+
+      <!-- Mini stats 2x2 -->
+      <div class="ai-mini-stats">
+        <div class="ai-mini-stat" style="background: #eff6ff; border-color: #bfdbfe;">
+          <div class="fw-bold text-primary" id="aiSamples">-</div>
+          <div>{{ _('Samples') }}</div>
+        </div>
+        <div class="ai-mini-stat" style="background: #f0fdf4; border-color: #bbf7d0;">
+          <div class="fw-bold text-success" id="aiAnalyses">-</div>
+          <div>{{ _('Analyses') }}</div>
+        </div>
+        <div class="ai-mini-stat" style="background: #fef2f2; border-color: #fecaca;">
+          <div class="fw-bold text-danger" id="aiCritical">0</div>
+          <div>Critical</div>
+        </div>
+        <div class="ai-mini-stat" style="background: #fffbeb; border-color: #fde68a;">
+          <div class="fw-bold text-warning" id="aiWarning">0</div>
+          <div>Warning</div>
+        </div>
+      </div>
+
+      <!-- Expandable details -->
+      <div id="aiDetails" class="d-none mt-2">
+        <!-- Anomalies -->
+        <div class="p-2 rounded-3 mb-2" style="background: #fff; border: 1px solid #e2e8f0; max-height: 150px; overflow-y: auto;">
+          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle me-1 text-danger"></i>Anomaly Detection</div>
+          <div id="aiAnomalyList"><span class="text-muted small">-</span></div>
+        </div>
+        <!-- Trends -->
+        <div class="p-2 rounded-3 mb-2" style="background: #fff; border: 1px solid #e2e8f0;">
+          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-graph-up me-1 text-info"></i>30-Day Trends</div>
+          <div id="aiTrendList"><span class="text-muted small">-</span></div>
+        </div>
+        <!-- Insights -->
+        <div class="p-2 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-lightbulb me-1 text-primary"></i>AI Insights</div>
+          <ul id="aiInsightList" class="mb-0 ps-3" style="font-size: 0.7rem;"><li class="text-muted">-</li></ul>
         </div>
       </div>
     </div>
@@ -281,18 +354,18 @@
 </div>
 
 <!-- API URLs -->
-<script>
+<script nonce="{{ csp_nonce }}">
   window.AHLAH_KPI_SUMMARY_URL = "{{ url_for('analysis.kpi_summary_for_ahlah') }}";
   window.AHLAH_STATS_URL = "{{ url_for('analysis.api_ahlah_stats') }}";
   window.AHLAH_DATA_URL = "/api/ahlah_data";
 </script>
 
 <!-- Config -->
-<script>
+<script nonce="{{ csp_nonce }}">
   window.ERROR_LABELS = {{ error_labels | tojson | safe }};
 </script>
 
-<script>
+<script nonce="{{ csp_nonce }}">
   /* i18n translation strings for JS */
   const I18N = {
     updated: "{{ _('Updated') }}",
@@ -335,5 +408,104 @@
 
 
 <script src="{{ url_for('static', filename='js/ahlah_dashboard_page.js') }}"></script>
+
+<script nonce="{{ csp_nonce }}">
+// ── AI Analytics ──
+(function() {
+  const $ = id => document.getElementById(id);
+  const API = '/api/v1/analytics/report';
+
+  loadAI();
+  $('btnAiLoad').addEventListener('click', loadAI);
+
+  async function loadAI() {
+    const hours = $('aiHours').value;
+    $('aiSpinner').classList.remove('d-none');
+    try {
+      const resp = await fetch(API + '?hours=' + hours + '&client=CHPP');
+      const json = await resp.json();
+      if (!json.success) return;
+      const d = json.data;
+
+      // Score
+      const qs = d.quality_score;
+      $('aiGradeBadge').textContent = qs.grade;
+      $('aiGradeBadge').style.background = qs.color;
+      $('aiScoreText').textContent = 'Quality Score: ' + qs.score + '/100';
+      $('aiScoreDetail').textContent = qs.message;
+      $('aiScoreBox').style.borderLeftColor = qs.color;
+      const bd = qs.breakdown;
+      $('aiScoreBreakdown').textContent =
+        'Completeness: ' + (bd.completeness||0).toFixed(0) + '/30 | ' +
+        'Accuracy: ' + (bd.accuracy||0).toFixed(0) + '/30 | ' +
+        'Timeliness: ' + (bd.timeliness||0).toFixed(0) + '/20 | ' +
+        'Consistency: ' + (bd.consistency||0).toFixed(0) + '/20';
+
+      // Stats
+      $('aiSamples').textContent = d.sample_count;
+      $('aiAnalyses').textContent = d.analysis_count;
+      const crit = d.anomalies.filter(a => a.severity === 'critical').length;
+      const warn = d.anomalies.filter(a => a.severity === 'warning').length;
+      $('aiCritical').textContent = crit;
+      $('aiWarning').textContent = warn;
+
+      $('aiDetails').classList.remove('d-none');
+      renderAnomalies(d.anomalies);
+      renderTrends(d.trends);
+      renderInsights(d.insights);
+    } catch (e) {
+      console.error('AI Analytics error:', e);
+    } finally {
+      $('aiSpinner').classList.add('d-none');
+    }
+  }
+
+  function renderAnomalies(list) {
+    const el = $('aiAnomalyList');
+    if (!list.length) {
+      el.innerHTML = '<div class="text-success small"><i class="bi bi-check-circle me-1"></i>All results within normal range</div>';
+      return;
+    }
+    let h = '<table class="table table-sm mb-0" style="font-size:0.7rem;"><thead><tr><th>Level</th><th>Sample</th><th>Analysis</th><th>Value</th><th>Z</th><th>Action</th></tr></thead><tbody>';
+    list.slice(0, 8).forEach(a => {
+      const cls = a.severity === 'critical' ? 'table-danger' : 'table-warning';
+      const badge = a.severity === 'critical'
+        ? '<span class="badge bg-danger" style="font-size:0.55rem">CRIT</span>'
+        : '<span class="badge bg-warning text-dark" style="font-size:0.55rem">WARN</span>';
+      h += '<tr class="' + cls + '"><td>' + badge + '</td><td class="fw-bold">' + a.sample_code +
+        '</td><td>' + a.analysis_code + '</td><td class="fw-bold">' + a.value +
+        '</td><td>z=' + (a.z_score > 0 ? '+' : '') + a.z_score.toFixed(1) +
+        '</td><td class="text-muted" style="font-size:0.65rem">' + (a.recommendation || '') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    if (list.length > 8) h += '<div class="text-muted small mt-1">+' + (list.length - 8) + ' more...</div>';
+    el.innerHTML = h;
+  }
+
+  function renderTrends(trends) {
+    const el = $('aiTrendList');
+    if (!trends.length) { el.innerHTML = '<span class="text-muted small">Not enough data</span>'; return; }
+    let h = '<div class="d-flex flex-wrap gap-1">';
+    trends.forEach(t => {
+      let icon, color;
+      if (t.direction === 'stable') { icon = '\u2192'; color = '#22c55e'; }
+      else if (t.direction === 'increasing') { icon = '\u2191'; color = '#f59e0b'; }
+      else { icon = '\u2193'; color = '#3b82f6'; }
+      h += '<div class="px-2 py-1 rounded-2" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:0.72rem;">' +
+        '<span style="color:' + color + ';font-weight:bold;font-size:0.95rem;">' + icon + '</span> ' +
+        '<b>' + t.analysis_code + '</b>: ' + (t.change_pct > 0 ? '+' : '') + t.change_pct.toFixed(1) + '% ' +
+        '<span class="text-muted" style="font-size:0.55rem;">(R\u00b2=' + t.r_squared.toFixed(2) + ')</span></div>';
+    });
+    h += '</div>';
+    el.innerHTML = h;
+  }
+
+  function renderInsights(insights) {
+    const el = $('aiInsightList');
+    if (!insights.length) { el.innerHTML = '<li class="text-muted">-</li>'; return; }
+    el.innerHTML = insights.map(i => '<li style="margin-bottom:3px;">' + i + '</li>').join('');
+  }
+})();
+</script>
 
 {% endblock %}

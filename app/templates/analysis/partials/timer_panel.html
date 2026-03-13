@@ -5,7 +5,7 @@
 {% set current_code = analysis_code or 'GEN' %}
 
 {% if timers|length > 0 or editable %}
-<style>
+<style nonce="{{ csp_nonce }}">
 /* Утас, таблет дээр нуух (< 1024px) */
 @media (max-width: 1023px) { .timer-panel { display: none !important; } }
 .timer-panel{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.5rem}
@@ -107,7 +107,7 @@
   </audio>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 window.LIMS_ANALYSIS_CODE="{{ current_code }}";
 (function(){
 const code=window.LIMS_ANALYSIS_CODE,bell=document.getElementById('timer-sound');

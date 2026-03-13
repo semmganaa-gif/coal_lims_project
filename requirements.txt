@@ -55,6 +55,13 @@ tzdata==2025.2
 # ASYNC SUPPORT
 asgiref>=3.8.0
 
+# TASK QUEUE
+celery[redis]==5.4.0
+redis==5.2.1
+
+# FILE WATCHING
+watchdog==4.0.0
+
 # UTILITIES
 python-dotenv==1.2.1
 typing_extensions==4.15.0

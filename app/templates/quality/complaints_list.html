@@ -58,7 +58,7 @@
     </div>
 
     <!-- Table -->
-    <style>
+    <style nonce="{{ csp_nonce }}">
         #complaintsTable { width: 100%; }
         #complaintsTable th:nth-child(1),
         #complaintsTable td:nth-child(1) { min-width: 250px !important; }
@@ -132,7 +132,7 @@
 {{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.4/js/dataTables.bootstrap5.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
     $('#complaintsTable').DataTable({
         order: [[1, 'desc']],

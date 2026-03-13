@@ -89,7 +89,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
   const LIMS_CONFIG = {
     i18n: {
       sampleName: "{{ _('Sample Name') }}",

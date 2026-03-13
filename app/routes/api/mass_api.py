@@ -1,339 +1,123 @@
 # app/routes/api/mass_api.py
 # -*- coding: utf-8 -*-
 """
-Массын ажлын талбартай холбоотой API endpoints:
-  - /mass/update_sample_status - Archive/unarchive samples
-  - /mass/eligible - Get eligible samples for mass workspace
-  - /mass/save - Save mass measurements
-  - /mass/update_weight - Update sample weight
-  - /mass/unready - Mark samples as not ready
-  - /mass/delete - Delete samples
+Массын ажлын талбартай холбоотой API endpoints.
+
+Бизнес логик mass_service.py-д, route layer зөвхөн HTTP concerns хариуцна.
 """
 
-import asyncio
-
-from flask import (
-    request,
-    jsonify,
-    url_for,
-    redirect,
-    current_app,
-)
+from flask import request, jsonify, url_for, redirect
 from flask_login import login_required, current_user
-from sqlalchemy import or_, and_
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm.exc import StaleDataError
 
-from app.utils.security import escape_like_pattern
-
-from app import db, limiter
-from app.models import Sample, AnalysisResult
-from app.utils.datetime import now_local
-from .helpers import _has_m_task_sql, _can_delete_sample, api_success, api_error
-
-
-def _upsert_mass_result(sample_id, weight_g, user_id=None):
-    """AnalysisResult(code='m') үүсгэх/шинэчлэх — sample summary-д харагдана."""
-    ar = AnalysisResult.query.filter_by(
-        sample_id=sample_id, analysis_code="m"
-    ).with_for_update().first()
-    if ar is None:
-        ar = AnalysisResult(
-            sample_id=sample_id,
-            analysis_code="m",
-            final_result=weight_g,
-            status="approved",
-            user_id=user_id,
-        )
-        db.session.add(ar)
-    else:
-        ar.final_result = weight_g
-        ar.status = "approved"
+from app import limiter
+from app.services.mass_service import (
+    update_sample_status,
+    get_eligible_samples,
+    save_mass_measurements,
+    update_weight,
+    unready_samples,
+    delete_sample,
+)
+from .helpers import _can_delete_sample, api_success, api_error
 
 
 def register_routes(bp):
     """Route-уудыг өгөгдсөн blueprint дээр бүртгэх"""
 
-    # -----------------------------------------------------------
-    # 1) МАССЫН АЖЛЫН ТАЛБАР (архив/сэргээлт)
-    # -----------------------------------------------------------
     @bp.route("/mass/update_sample_status", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    async def update_sample_status():
+    async def mass_update_sample_status():
         action = request.form.get("action")
-        sample_ids = request.form.getlist("sample_ids")
-
-        if not sample_ids:
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"message": "Дээж сонгогдоогүй байна"}), 400
-            return redirect(url_for("api.sample_summary"))
+        sample_ids_raw = request.form.getlist("sample_ids")
+        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
         try:
-            sample_ids_int = [int(sid) for sid in sample_ids]
+            sample_ids = [int(sid) for sid in sample_ids_raw]
         except ValueError:
-            sample_ids_int = []
+            sample_ids = []
 
-        samples = Sample.query.filter(Sample.id.in_(sample_ids_int)).all()
-        count = 0
-        for s in samples:
-            if action == "archive":
-                s.status = "archived"
-                count += 1
-            elif action == "unarchive":
-                s.status = "new"
-                count += 1
+        result = update_sample_status(sample_ids, action)
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Update sample status commit error: {e}")
-            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-                return jsonify({"message": "Хадгалахад алдаа гарлаа"}), 500
-            return redirect(url_for("api.sample_summary"))
-
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"message": f"{count} sample status updated."}), 200
+        if is_ajax:
+            if result.success:
+                return jsonify({"message": result.message}), 200
+            return jsonify({"message": result.message}), result.status_code
 
         return redirect(url_for("api.sample_summary"))
-
-    # ===========================================================
-    # 2) 🆕 Массын ажлын талбар (+ delete / unready / update)
-    # ===========================================================
 
     @bp.route("/mass/eligible", methods=["GET"])
     @login_required
     @limiter.limit("100 per minute")
     async def mass_eligible():
-        """
-        Массын ажлын талбарт харагдах дээжүүд:
-          - status ∈ {"new","New"}
-          - analyses_to_perform дотор "m" байгаа
-          - include_ready=0 (default) үед mass_ready != True л гарна
-          - include_ready=1 үед mass_ready == True мөрүүдийг ч хамт харуулна (саарал badge)
-          - q=<sample_code> хайлт
-        """
         include_ready = request.args.get("include_ready", "0") in ("1", "true", "True")
         q_text = (request.args.get("q") or "").strip()
 
-        base_filters = [
-            Sample.status.in_(["new", "New"]),
-            _has_m_task_sql(),
-        ]
-
-        if not include_ready:
-            base_filters.append(
-                or_(Sample.mass_ready.is_(False), Sample.mass_ready.is_(None))
-            )
-
-        q = Sample.query.filter(and_(*base_filters))
-
-        if q_text:
-            safe_text = escape_like_pattern(q_text)
-            q = q.filter(Sample.sample_code.ilike(f"%{safe_text}%"))
-
-        rows = q.order_by(Sample.received_date.desc()).limit(400).all()
-
-        return jsonify(
-            {
-                "samples": [
-                    {
-                        "id": s.id,
-                        "sample_code": s.sample_code or "",
-                        "client_name": s.client_name or "",
-                        "sample_type": s.sample_type or "",
-                        "weight": s.weight,
-                        "received_date": s.received_date.strftime("%Y-%m-%d %H:%M")
-                        if s.received_date
-                        else "",
-                        "mass_ready": bool(getattr(s, "mass_ready", False)),
-                    }
-                    for s in rows
-                ]
-            }
-        )
+        samples = get_eligible_samples(include_ready=include_ready, q_text=q_text)
+        return jsonify({"samples": samples})
 
     @bp.route("/mass/save", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def mass_save():
-        """
-        Payload:
-        {
-          "items": [{"sample_id": 123, "weight": 2500.0}, ...],
-          "mark_ready": true   # default: true
-        }
-        """
         data = request.get_json(silent=True) or {}
         items = data.get("items") or []
         mark_ready = bool(data.get("mark_ready", True))
-
-        if not items:
-            return api_error("No rows to save.")
-
         user_id = getattr(current_user, "id", None)
-        now_ts = now_local()
 
-        # ✅ N+1 query асуудал засварлах: Бүх sample-г нэг query-гээр авах
-        sample_ids = [it.get("sample_id") for it in items if it.get("sample_id")]
-        if not sample_ids:
-            return api_error("No valid IDs found.")
+        result = save_mass_measurements(items, mark_ready=mark_ready, user_id=user_id)
 
-        # Bulk load + row lock: Нэг query-гээр бүх sample-г татна
-        samples_map = {s.id: s for s in
-                       Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()}
-
-        # Items-ийг map-аар давтаж шинэчилнэ
-        weight_map = {it.get("sample_id"): it.get("weight") for it in items if "weight" in it}
-
-        updated = []
-        for sid in sample_ids:
-            s = samples_map.get(sid)
-            if not s:
-                continue
-
-            # weight шинэчлэх (гр → кг хөрвүүлэлт)
-            if sid in weight_map and isinstance(weight_map[sid], (int, float)):
-                weight_g = float(weight_map[sid])
-                s.weight = round(weight_g / 1000, 3)  # гр → кг
-                # AnalysisResult(code="m") — sample summary-д харуулах
-                _upsert_mass_result(sid, weight_g, user_id)
-
-            # mass_ready тэмдэглэх эсэх
-            if mark_ready:
-                s.mass_ready = True
-                s.mass_ready_at = now_ts
-                s.mass_ready_by_id = user_id
-
-            db.session.add(s)
-            updated.append(sid)
-
-        if not updated:
-            return api_error("Rows are not valid.")
-
-        try:
-            db.session.commit()
-            return api_success({"updated_ids": updated}, f"{len(updated)} дээж шинэчлэгдлээ.")
-        except StaleDataError:
-            db.session.rollback()
-            return api_error("Data was modified by another user. Please refresh and try again.", 409)
-        except IntegrityError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Integrity error in mass_save: {e}")
-            return api_error("Data conflict occurred", 409)
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Database error in mass_save: {e}")
-            return api_error("Error saving data", 500)
+        if result.success:
+            return api_success(result.data, result.message)
+        return api_error(result.message, status_code=result.status_code)
 
     @bp.route("/mass/update_weight", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def mass_update_weight():
-        """
-        Mass Ready болсон байсан ч зөвхөн жинг нь засаж хадгална.
-        Payload: {"sample_id": 123, "weight": 1800}
-        """
         data = request.get_json(silent=True) or {}
         sid = data.get("sample_id")
         w = data.get("weight")
+
         if not sid or not isinstance(w, (int, float)):
             return api_error("Missing parameter.")
 
-        s = db.session.query(Sample).filter_by(id=sid).with_for_update().first()
-        if not s:
-            return api_error("Sample not found.", 404)
+        user_id = getattr(current_user, "id", None)
+        result = update_weight(sid, float(w), user_id=user_id)
 
-        # гр → кг хөрвүүлэлт
-        weight_g = float(w)
-        s.weight = round(weight_g / 1000, 3)  # гр → кг
-        s.received_date = s.received_date or now_local()  # хоосон байсан тохиолдолд
-        # AnalysisResult(code="m") — sample summary-д харуулах
-        _upsert_mass_result(sid, weight_g, getattr(current_user, "id", None))
-        db.session.add(s)
-
-        try:
-            db.session.commit()
-            return api_success({"sample_id": s.id}, "Weight updated.")
-        except StaleDataError:
-            db.session.rollback()
-            return api_error("Data was modified by another user. Please refresh and try again.", 409)
-        except IntegrityError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Integrity error in mass_update_weight: {e}")
-            return api_error("Data conflict occurred", 409)
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Database error in mass_update_weight: {e}")
-            return api_error("Error saving data", 500)
+        if result.success:
+            return api_success(result.data, result.message)
+        return api_error(result.message, status_code=result.status_code)
 
     @bp.route("/mass/unready", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def mass_unready():
-        """
-        mass_ready-г буцааж false болгоно.
-        Payload: {"sample_ids":[1,2,3]}
-        """
         data = request.get_json(silent=True) or {}
         ids = data.get("sample_ids") or []
-        if not ids:
-            return api_error("No ID provided.")
 
-        rows = Sample.query.filter(Sample.id.in_(ids)).with_for_update().all()
-        for s in rows:
-            s.mass_ready = False
-            s.mass_ready_at = None
-            s.mass_ready_by_id = None
-            db.session.add(s)
+        result = unready_samples(ids)
 
-        try:
-            db.session.commit()
-            return api_success(None, f"{len(rows)} дээжийг Unready болголоо.")
-        except StaleDataError:
-            db.session.rollback()
-            return api_error("Data was modified by another user. Please refresh and try again.", 409)
-        except IntegrityError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Integrity error in mass_unready: {e}")
-            return api_error("Data conflict occurred", 409)
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Database error in mass_unready: {e}")
-            return api_error("Error saving data", 500)
+        if result.success:
+            return api_success(None, result.message)
+        return api_error(result.message, status_code=result.status_code)
 
     @bp.route("/mass/delete", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
     async def mass_delete():
-        """
-        Дээжийг бүртгэлээс бүр мөсөн устгана (каскадтай).
-        Payload: {"sample_id": 123}
-        Зөвхөн admin/ahlah.
-        """
         if not _can_delete_sample():
-            return api_error("Access denied for this action.", 403)
+            return api_error("Access denied for this action.", status_code=403)
 
         data = request.get_json(silent=True) or {}
         sid = data.get("sample_id")
+
         if not sid:
             return api_error("ID missing.")
 
-        s = db.session.get(Sample, sid)
-        if not s:
-            return api_error("Sample not found.", 404)
+        user_id = getattr(current_user, "id", None)
+        result = delete_sample(sid, user_id=user_id)
 
-        db.session.delete(s)
-
-        try:
-            db.session.commit()
-            return api_success({"deleted_id": sid}, "Sample deleted.")
-        except IntegrityError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Integrity error in mass_delete: {e}")
-            return api_error("Cannot delete (related records exist)", 409)
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Database error in mass_delete: {e}")
-            return api_error("Error deleting data", 500)
+        if result.success:
+            return api_success(result.data, result.message)
+        return api_error(result.message, status_code=result.status_code)

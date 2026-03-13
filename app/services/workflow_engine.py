@@ -443,6 +443,75 @@ class WorkflowEngine:
         key = f"{event}_{state}"
         return hooks.get(key, [])
 
+    def execute_hooks(self, new_state: str, context: dict = None):
+        """Execute hooks for entering a state."""
+        hook_names = self.get_hooks(new_state)
+        context = context or {}
+        for hook_name in hook_names:
+            try:
+                _run_hook(hook_name, context)
+            except Exception:
+                logger.exception(f"Hook '{hook_name}' failed for state '{new_state}'")
+
+
+# ──────────────────────────────────────────
+# Hook execution
+# ──────────────────────────────────────────
+
+def _run_hook(name: str, context: dict):
+    """Execute a named hook."""
+    if name == "invalidate_cache":
+        from app.bootstrap.extensions import cache
+        cache.delete('kpi_summary_ahlah')
+        cache.delete('ahlah_stats')
+    elif name == "log_audit":
+        from app.utils.audit import log_audit
+        log_audit(
+            action=f"workflow_{context.get('workflow_name', '')}_{context.get('to_state', '')}",
+            resource_type=context.get('entity_type', ''),
+            resource_id=context.get('entity_id', 0),
+            details={
+                'from_state': context.get('from_state', ''),
+                'to_state': context.get('to_state', ''),
+                'comment': context.get('comment', ''),
+            },
+        )
+    elif name == "check_sample_complete":
+        _hook_check_sample_complete(context)
+    elif name == "notify_analyst":
+        logger.info(
+            "Notification: workflow transition %s → %s for %s #%s",
+            context.get('from_state'), context.get('to_state'),
+            context.get('entity_type'), context.get('entity_id'),
+        )
+    elif name == "mark_sla_completed":
+        sample = context.get('entity')
+        if sample:
+            from app.services.sla_service import mark_completed
+            mark_completed(sample)
+    else:
+        logger.warning(f"Unknown hook: {name}")
+
+
+def _hook_check_sample_complete(context: dict):
+    """Check if all analysis results for a sample are approved."""
+    from app.models import AnalysisResult
+    sample_id = context.get('sample_id')
+    if not sample_id:
+        return
+    pending = AnalysisResult.query.filter(
+        AnalysisResult.sample_id == sample_id,
+        AnalysisResult.status != 'approved',
+    ).count()
+    if pending == 0:
+        from app.models import Sample
+        sample = db.session.get(Sample, sample_id)
+        if sample and sample.status not in ('completed', 'archived'):
+            sample.status = 'completed'
+            from app.services.sla_service import mark_completed
+            mark_completed(sample)
+            logger.info(f"Sample #{sample_id} auto-completed (all results approved)")
+
 
 # ──────────────────────────────────────────
 # Configuration management

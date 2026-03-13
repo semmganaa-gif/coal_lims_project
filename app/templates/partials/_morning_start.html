@@ -3,7 +3,7 @@
    Include in all lab hub pages:
    {% include 'partials/_morning_start.html' %}
    ============================================================ #}
-<style>
+<style nonce="{{ csp_nonce }}">
   .morning-panel {
     background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.95));
     backdrop-filter: blur(20px);
@@ -233,7 +233,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   const I18N_MORNING = {
     goodMorning: '{{ _("Good Morning!") }}',

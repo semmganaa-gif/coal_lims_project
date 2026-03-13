@@ -2,7 +2,7 @@
 {% set use_aggrid = true %}
 
 {% block head_extra %}
-<style>
+<style nonce="{{ csp_nonce }}">
   /* Calendar Cards */
   .calendar-card {
     background: #fff;
@@ -151,6 +151,18 @@
       </button>
     </li>
     {% endif %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'sla-pane' %}active{% endif %}"
+              id="sla-tab" data-bs-toggle="tab" data-bs-target="#sla-pane" type="button" role="tab">
+        <i class="bi bi-clock-history me-1"></i>{{ _('SLA Dashboard') }}
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if active_tab == 'retention-pane' %}active{% endif %}"
+              id="retention-tab" data-bs-toggle="tab" data-bs-target="#retention-pane" type="button" role="tab">
+        <i class="bi bi-archive me-1"></i>{{ _('Sample Retention') }}
+      </button>
+    </li>
   </ul>
 
   <div class="tab-content" id="myTabContent">
@@ -231,12 +243,27 @@
       {% include 'add_sample.html' %}
     </div>
     {% endif %}
+
+    <!-- SLA Dashboard Tab -->
+    <div class="tab-pane fade {% if active_tab == 'sla-pane' %}show active{% endif %}" id="sla-pane" role="tabpanel">
+      <div class="card border-0 shadow-sm p-3" style="border-radius: 0 12px 12px 12px;">
+        {% include 'partials/_sla_dashboard_content.html' %}
+      </div>
+    </div>
+
+    <!-- Sample Retention Tab -->
+    <div class="tab-pane fade {% if active_tab == 'retention-pane' %}show active{% endif %}" id="retention-pane" role="tabpanel">
+      <div class="card border-0 shadow-sm p-3" style="border-radius: 0 12px 12px 12px;">
+        {% include 'partials/_sample_disposal_content.html' %}
+      </div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 window.LIMS_ACTIVE_TAB = '{{ active_tab | default("list-pane") }}';
 window.LIMS_I18N = {
   sampleCode: "{{ _('Sample Code') }}",

@@ -1,6 +1,6 @@
 {# Dashboard Charts Component - Chart.js #}
 
-<style>
+<style nonce="{{ csp_nonce }}">
 .chart-container {
     position: relative;
     height: 250px;
@@ -114,7 +114,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 let chartWeeklySamples, chartByClient, chartApprovalStats, chartTodayStatus;
 
 function loadDashboardCharts() {

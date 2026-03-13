@@ -10,7 +10,7 @@
 
 {{ aggrid_macros.grid_container('fmGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 

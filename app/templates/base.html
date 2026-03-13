@@ -27,14 +27,14 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.LIMS_LIMIT_RULES = {{ LIMS_LIMIT_RULES|tojson|safe if LIMS_LIMIT_RULES is defined else '{}'}};
     window.DEBUG = {{ 'true' if config.DEBUG else 'false' }};
   </script>
   <!-- Logger (head-д ачаалах — inline script-ээс өмнө бэлэн байхын тулд) -->
   <script src="{{ url_for('static', filename='js/utils/logger.js') }}"></script>
 
-  <style>
+  <style nonce="{{ csp_nonce }}">
     :root {
       --nav-h: 64px;
       --primary: #0d6efd;
@@ -473,9 +473,12 @@
                 <li><a class="dropdown-item" href="{{ url_for('main.analytics_dashboard') }}">
                   <i class="bi bi-graph-up me-2"></i>{{ _('Statistics') }}
                 </a></li>
+                <li><a class="dropdown-item" href="{{ url_for('main.report_builder') }}">
+                  <i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>{{ _('Report Builder') }}
+                </a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('main.sample_disposal') }}">
-                  <i class="bi bi-archive me-2"></i>{{ _('Sample Retention') }}
+                <li><a class="dropdown-item" href="{{ url_for('analysis.shift_daily') }}">
+                  <i class="bi bi-calendar-day me-2"></i>{{ _('Shift Performance') }}
                 </a></li>
               </ul>
             </li>
@@ -522,9 +525,15 @@
                 <li><a class="dropdown-item" href="{{ url_for('api.system_audit') }}">
                   <i class="bi bi-shield-lock me-2"></i>{{ _('System Audit') }}
                 </a></li>
-                <li><a class="dropdown-item" href="{{ url_for('analysis.shift_daily') }}">
-                  <i class="bi bi-calendar-day me-2"></i>{{ _('Shift Performance') }}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('main.instrument_readings') }}">
+                  <i class="bi bi-cpu me-2 text-info"></i>{{ _('Instrument Readings') }}
                 </a></li>
+                {% if current_user.role == 'admin' %}
+                <li><a class="dropdown-item" href="{{ url_for('main.workflow_admin') }}">
+                  <i class="bi bi-diagram-3 me-2 text-purple"></i>{{ _('Workflow Config') }}
+                </a></li>
+                {% endif %}
               </ul>
             </li>
             {% endif %}
@@ -627,7 +636,7 @@
   <!-- htmx - HTML over the wire -->
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
     // Production-д console.log/debug хаах (console.warn/error хэвээрээ)
     if (!window.DEBUG) {
       console.log = function() {};
@@ -644,7 +653,7 @@
   </script>
 
   <!-- Global Excel export helper -->
-  <script>
+  <script nonce="{{ csp_nonce }}">
     /**
      * AG-Grid өгөгдлийг .xlsx файл болгон татах.
      * @param {object} api - AG-Grid gridApi
@@ -763,7 +772,7 @@
   {% endif %}
 
   <!-- Navbar height CSS variable -->
-  <script>
+  <script nonce="{{ csp_nonce }}">
     (function() {
       function setNavHeight() {
         const nav = document.getElementById('mainNav');
@@ -777,7 +786,7 @@
 
   <!-- User session check - Clear localStorage when different user logs in -->
   {% if current_user.is_authenticated %}
-  <script>
+  <script nonce="{{ csp_nonce }}">
     (function() {
       const CURRENT_USER_ID = {{ current_user.id }};
       const STORAGE_KEY = 'lims_current_user_id';
@@ -813,7 +822,7 @@
   {% endif %}
 
   <!-- Real-time notification (6 min interval) -->
-  <script>
+  <script nonce="{{ csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function() {
       function checkReadySamples() {
         fetch("{{ url_for('api.check_ready_samples') }}")
@@ -832,7 +841,7 @@
   </script>
 
   <!-- Ээлжийн огнооны глобал функц -->
-  <script>
+  <script nonce="{{ csp_nonce }}">
     window.LIMS = window.LIMS || {};
     /**
      * Ээлжийн огноо авах

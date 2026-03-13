@@ -78,6 +78,9 @@ def log_analysis_action(
     original_user_id: Optional[int] = None,
     original_timestamp: Optional[Any] = None,
     timestamp: Optional[Any] = None,
+    previous_value: Optional[Any] = None,
+    old_status: Optional[str] = None,
+    new_status: Optional[str] = None,
 ) -> None:
     """
     Шинжилгээний үр дүн дээр хийсэн өөрчлөлтийг аудитын хүснэгтэд нэмнэ.
@@ -103,6 +106,17 @@ def log_analysis_action(
     try:
         user_id = current_user.id if getattr(current_user, "is_authenticated", False) else -1
 
+        # IP address + source endpoint автоматаар авах
+        ip_address = None
+        source_endpoint = None
+        try:
+            from flask import request as _req
+            if _req:
+                ip_address = _req.remote_addr
+                source_endpoint = _req.endpoint
+        except RuntimeError:
+            pass  # request context байхгүй бол алгасах
+
         # raw_data нь dict бол JSON руу хөрвүүлнэ, string бол шууд ашиглана
         if isinstance(raw_data_dict, str):
             raw_data_snapshot = raw_data_dict
@@ -124,6 +138,11 @@ def log_analysis_action(
             sample_code_snapshot=sample_code_snapshot,
             original_user_id=original_user_id,
             original_timestamp=original_timestamp,
+            ip_address=ip_address,
+            source_endpoint=source_endpoint,
+            previous_value=_to_float(previous_value),
+            old_status=old_status,
+            new_status=new_status,
         )
         if timestamp is not None:
             kwargs['timestamp'] = timestamp

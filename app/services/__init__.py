@@ -15,6 +15,11 @@ Available services:
 - chemical_service: Химийн бодисын бизнес логик
 - import_service: CSV/Excel импорт
 - spare_parts_service: Сэлбэг хэрэгслийн бизнес логик
+- dashboard_service: Dashboard статистик, archive hub tree
+- datatable_service: DataTables server-side processing
+- mg_service: MG summary бизнес логик
+- mass_service: Массын ажлын талбарын бизнес логик
+- sla_service: SLA turnaround tracking
 """
 
 from app.services.analysis_audit import log_analysis_action

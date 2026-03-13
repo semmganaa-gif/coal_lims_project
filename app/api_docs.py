@@ -41,7 +41,7 @@ def setup_api_docs(app):
         "info": {
             "title": "Coal LIMS API",
             "description": "Нүүрсний лабораторийн мэдээллийн удирдлагын системийн API",
-            "version": "1.0.0",
+            "version": "1.1.0",
             "contact": {
                 "name": "Coal LIMS",
                 "email": "support@energyresources.mn"
@@ -51,7 +51,7 @@ def setup_api_docs(app):
             }
         },
         "host": "",  # Swagger-ийн default-аар request host ашиглана
-        "basePath": "/",
+        "basePath": "/api/v1",
         "schemes": [
             "http",
             "https"

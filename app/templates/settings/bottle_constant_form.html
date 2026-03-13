@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .k-card{max-width:820px}
   .muted{color:#64748b}
   .warn{color:#b45309}
@@ -75,7 +75,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function toNum(x){ const v=parseFloat(x); return isNaN(v)?null:v; }
 function calcAvg(){
   const t1=toNum(document.getElementById('t1').value),

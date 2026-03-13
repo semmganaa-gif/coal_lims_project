@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% set use_aggrid = true %}
+
+{% block title %}{{ _("SLA Dashboard") }}{% endblock %}
+
+{% block content %}
+<style nonce="{{ csp_nonce }}">
+  .sla-page {
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .sla-header {
+    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .sla-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+  /* Summary cards */
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+  .summary-card {
+    flex: 1; min-width: 160px;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 14px 18px;
+    text-align: center;
+  }
+  .summary-card .val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .summary-card .lbl { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+  .summary-card .sub { font-size: 0.65rem; color: #94a3b8; }
+  .summary-card.overdue { border-top: 3px solid #ef4444; }
+  .summary-card.overdue .val { color: #ef4444; }
+  .summary-card.due-soon { border-top: 3px solid #f59e0b; }
+  .summary-card.due-soon .val { color: #f59e0b; }
+  .summary-card.on-track { border-top: 3px solid #22c55e; }
+  .summary-card.on-track .val { color: #22c55e; }
+  .summary-card.avg-tat { border-top: 3px solid #3b82f6; }
+  .summary-card.avg-tat .val { color: #3b82f6; }
+  .summary-card.compliance { border-top: 3px solid #8b5cf6; }
+  .summary-card.compliance .val { color: #8b5cf6; }
+
+  /* Tabs */
+  .sla-tabs {
+    display: flex; gap: 4px;
+    background: rgba(248,250,252,0.85);
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 14px;
+    padding: 6px 10px;
+    flex-shrink: 0;
+  }
+  .sla-tab {
+    padding: 5px 14px; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 500;
+    cursor: pointer; border: none; background: none; color: #64748b;
+  }
+  .sla-tab.active { background: #3b82f6; color: #fff; font-weight: 600; }
+  .sla-tab:hover:not(.active) { background: #f1f5f9; }
+  .sla-tab .count {
+    display: inline-block; min-width: 20px; text-align: center;
+    padding: 0 5px; border-radius: 10px; font-size: 0.65rem;
+    background: rgba(0,0,0,0.1); margin-left: 4px;
+  }
+  .sla-tab.active .count { background: rgba(255,255,255,0.3); }
+
+  /* Grid */
+  .grid-wrap {
+    flex: 1; min-height: 0; overflow: hidden;
+    background: #fff; border: 1px solid rgba(15,23,42,0.06); border-radius: 14px;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 11px; --ag-row-height: 28px; --ag-header-height: 30px;
+  }
+  .grid-full { width: 100%; height: 100%; }
+
+  /* Header select */
+  .header-lab-select { width: auto; font-size: 0.8rem; }
+
+  /* Progress bar cell */
+  .pct-cell { display: flex; align-items: center; gap: 4px; }
+  .pct-track { flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .pct-fill { height: 100%; border-radius: 3px; }
+  .pct-label { font-size: 0.65rem; min-width: 30px; }
+
+  /* Overdue hours */
+  .hours-overdue { color: #ef4444; font-weight: 700; }
+
+  /* Badges */
+  .sla-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+  .sla-overdue { background: #fee2e2; color: #991b1b; }
+  .sla-due-soon { background: #fef3c7; color: #92400e; }
+  .sla-ok { background: #dcfce7; color: #166534; }
+
+  .priority-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+  .priority-urgent { background: #fee2e2; color: #991b1b; }
+  .priority-rush { background: #fef3c7; color: #92400e; }
+  .priority-normal { background: #f1f5f9; color: #64748b; }
+</style>
+
+<div class="container-fluid sla-page mt-2">
+  <!-- Header -->
+  <div class="sla-header">
+    <div class="d-flex align-items-center gap-2">
+      <h5><i class="bi bi-clock-history me-1 text-warning"></i>{{ _("SLA Dashboard") }}</h5>
+      <select id="labFilter" class="form-select form-select-sm header-lab-select">
+        <option value="coal">{{ _("Coal Lab") }}</option>
+        <option value="water">{{ _("Water Lab") }}</option>
+        <option value="microbiology">{{ _("Microbiology") }}</option>
+        <option value="petrography">{{ _("Petrography") }}</option>
+      </select>
+    </div>
+    <div class="d-flex gap-2">
+      {% if current_user.role in ['manager', 'admin'] %}
+      <button class="btn btn-sm btn-outline-warning" id="btnAssignSla">
+        <i class="bi bi-lightning me-1"></i>{{ _("Auto-assign SLA") }}
+      </button>
+      {% endif %}
+      <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
+        <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row">
+    <div class="summary-card overdue">
+      <div class="val" id="sOverdue">0</div>
+      <div class="lbl">{{ _("Overdue") }}</div>
+      <div class="sub">{{ _("exceeded deadline") }}</div>
+    </div>
+    <div class="summary-card due-soon">
+      <div class="val" id="sDueSoon">0</div>
+      <div class="lbl">{{ _("Due Soon") }}</div>
+      <div class="sub">{{ _("within 24 hours") }}</div>
+    </div>
+    <div class="summary-card on-track">
+      <div class="val" id="sOnTrack">0</div>
+      <div class="lbl">{{ _("On Track") }}</div>
+      <div class="sub">{{ _("within SLA") }}</div>
+    </div>
+    <div class="summary-card avg-tat">
+      <div class="val" id="sAvgTat">-</div>
+      <div class="lbl">{{ _("Avg TAT") }}</div>
+      <div class="sub">{{ _("hours") }}</div>
+    </div>
+    <div class="summary-card compliance">
+      <div class="val" id="sCompliance">-</div>
+      <div class="lbl">{{ _("SLA Compliance") }}</div>
+      <div class="sub">{{ _("percentage") }}</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sla-tabs">
+    <button class="sla-tab active" data-tab="overdue">
+      <i class="bi bi-exclamation-triangle me-1"></i>{{ _("Overdue") }}
+      <span class="count" id="tabOverdue">0</span>
+    </button>
+    <button class="sla-tab" data-tab="due_soon">
+      <i class="bi bi-clock me-1"></i>{{ _("Due Soon") }}
+      <span class="count" id="tabDueSoon">0</span>
+    </button>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrap">
+    <div id="slaGrid" class="ag-theme-alpine grid-full"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const API = '/api/v1/sla';
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+let gridApi = null;
+let currentTab = 'overdue';
+
+async function apiFetch(path, opts = {}) {
+  const resp = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
+    ...opts
+  });
+  return resp.json();
+}
+
+function getLabType() {
+  return document.getElementById('labFilter').value;
+}
+
+// ── Status renderer ──
+function slaStatusRenderer(params) {
+  const v = params.value || '';
+  if (v === 'overdue') return '<span class="sla-badge sla-overdue">OVERDUE</span>';
+  if (v === 'due_soon') return '<span class="sla-badge sla-due-soon">DUE SOON</span>';
+  return '<span class="sla-badge sla-ok">ON TRACK</span>';
+}
+
+function priorityRenderer(params) {
+  const v = (params.value || 'normal').toLowerCase();
+  const cls = v === 'urgent' ? 'priority-urgent' : v === 'rush' ? 'priority-rush' : 'priority-normal';
+  return `<span class="priority-badge ${cls}">${v.toUpperCase()}</span>`;
+}
+
+function hoursRenderer(params) {
+  const v = params.value;
+  if (v == null) return '-';
+  const h = parseFloat(v);
+  if (h < 0) return `<span class="hours-overdue">${h.toFixed(1)}h</span>`;
+  return `${h.toFixed(1)}h`;
+}
+
+// ── Load summary ──
+async function loadSummary() {
+  const data = await apiFetch(`/summary?lab_type=${getLabType()}`);
+  if (!data.success) return;
+  const s = data.data;
+  document.getElementById('sOverdue').textContent = s.overdue_count || 0;
+  document.getElementById('sDueSoon').textContent = s.due_soon_count || 0;
+  document.getElementById('sOnTrack').textContent = s.on_track_count || 0;
+  document.getElementById('sAvgTat').textContent = s.avg_tat_hours != null ? s.avg_tat_hours.toFixed(1) + 'h' : '-';
+  document.getElementById('sCompliance').textContent = s.compliance_pct != null ? s.compliance_pct.toFixed(1) + '%' : '-';
+  document.getElementById('tabOverdue').textContent = s.overdue_count || 0;
+  document.getElementById('tabDueSoon').textContent = s.due_soon_count || 0;
+}
+
+// ── Load grid data ──
+async function loadGrid() {
+  const lab = getLabType();
+  let rows = [];
+
+  if (currentTab === 'overdue') {
+    const data = await apiFetch(`/overdue?lab_type=${lab}`);
+    rows = data.success ? (data.data || []) : [];
+  } else {
+    const data = await apiFetch(`/due_soon?lab_type=${lab}`);
+    rows = data.success ? (data.data || []) : [];
+  }
+
+  const colDefs = [
+    { field: 'sample_code', headerName: '{{ _("Sample Code") }}', width: 150, filter: 'agTextColumnFilter', floatingFilter: true, pinned: 'left' },
+    { field: 'client_name', headerName: '{{ _("Client") }}', width: 140, filter: 'agTextColumnFilter', floatingFilter: true },
+    { field: 'lab_type', headerName: '{{ _("Lab") }}', width: 90 },
+    { field: 'priority', headerName: '{{ _("Priority") }}', width: 90, cellRenderer: priorityRenderer },
+    { field: 'sla_hours', headerName: '{{ _("SLA") }}', width: 70, valueFormatter: p => p.value ? p.value + 'h' : '-' },
+    { field: 'hours_remaining', headerName: '{{ _("Remaining") }}', width: 100, cellRenderer: hoursRenderer },
+    { field: 'due_date', headerName: '{{ _("Due Date") }}', width: 130 },
+    { field: 'received_date', headerName: '{{ _("Received") }}', width: 130 },
+    { field: 'status', headerName: '{{ _("Sample Status") }}', width: 110 },
+    { field: 'sla_status', headerName: '{{ _("SLA Status") }}', width: 100, cellRenderer: slaStatusRenderer },
+    { field: 'completion_pct', headerName: '{{ _("Progress") }}', width: 90,
+      cellRenderer: p => {
+        const v = p.value || 0;
+        const color = v >= 100 ? '#22c55e' : v >= 50 ? '#f59e0b' : '#ef4444';
+        return `<div class="pct-cell">
+          <div class="pct-track">
+            <div class="pct-fill" style="width:${Math.min(v,100)}%;background:${color};"></div>
+          </div>
+          <span class="pct-label">${v.toFixed(0)}%</span>
+        </div>`;
+      }
+    }
+  ];
+
+  if (gridApi) gridApi.destroy();
+  const gridDiv = document.getElementById('slaGrid');
+  gridApi = agGrid.createGrid(gridDiv, {
+    columnDefs: colDefs,
+    rowData: rows,
+    defaultColDef: { sortable: true, resizable: true },
+    animateRows: true,
+    enableCellTextSelection: true
+  });
+}
+
+// ── Tab switching ──
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.sla-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  loadGrid();
+}
+
+// ── Auto-assign SLA ──
+async function assignSla() {
+  if (!confirm('{{ _("Auto-assign SLA to all active samples?") }}')) return;
+  const data = await apiFetch(`/assign?lab_type=${getLabType()}`, { method: 'POST' });
+  if (data.success) {
+    alert(data.message);
+    refresh();
+  } else {
+    alert(data.message);
+  }
+}
+
+function refresh() {
+  loadSummary();
+  loadGrid();
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadSummary(), loadGrid()]);
+
+  document.querySelectorAll('.sla-tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+  document.getElementById('labFilter').addEventListener('change', refresh);
+  document.getElementById('btnRefresh').addEventListener('click', refresh);
+
+  const assignBtn = document.getElementById('btnAssignSla');
+  if (assignBtn) assignBtn.addEventListener('click', assignSla);
+});
+</script>
+{% endblock %}

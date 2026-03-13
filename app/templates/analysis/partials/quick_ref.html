@@ -17,7 +17,7 @@
         (analysis_name if analysis_name is defined else _code_raw))) %}
 {% set name = _name_raw or code %}
 
-<style>
+<style nonce="{{ csp_nonce }}">
   .qr-section { margin-bottom: 0.6rem; }
   .qr-label { font-weight: 600; font-size: 0.78rem; color: #334155; margin-bottom: 2px; }
   .qr-formula { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-family: ui-monospace, monospace; font-size: 0.82rem; }

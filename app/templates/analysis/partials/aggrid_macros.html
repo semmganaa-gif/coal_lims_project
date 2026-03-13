@@ -42,7 +42,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 
 {# Common container + base Alpine theme CSS #}
 {% macro common_grid_css(grid_id, height='75vh', min_height='360px') %}
-<style>
+<style nonce="{{ csp_nonce }}">
   #{{ grid_id }} {
     margin-top: 20px;
     height: {{ height }};
@@ -85,7 +85,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 
 {% macro balance_connection_js(weight_columns="['m1', 'm2', 'm3']") %}
 <script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 
@@ -227,7 +227,7 @@ const {{ error_var }} = {{ error_labels | default({}) | tojson | safe }};
 
 {# Common JS helpers injected into each AG Grid form #}
 {% macro common_js_helpers(nav_fields=None) %}
-<script>
+<script nonce="{{ csp_nonce }}">
   function _escHtml(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');

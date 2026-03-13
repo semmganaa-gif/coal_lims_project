@@ -1,0 +1,474 @@
+{% extends "base.html" %}
+{% set use_aggrid = true %}
+
+{% block title %}{{ _("Report Builder") }}{% endblock %}
+
+{% block content %}
+<style nonce="{{ csp_nonce }}">
+  .rb-page {
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .rb-header {
+    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .rb-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+  /* Config panel */
+  .config-panel {
+    background: rgba(248,250,252,0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 14px;
+    padding: 14px;
+    flex-shrink: 0;
+  }
+  .config-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .config-group { display: flex; flex-direction: column; gap: 4px; }
+  .config-group label { font-size: 0.7rem; font-weight: 600; color: #64748b; }
+  .config-group select, .config-group input {
+    font-size: 0.8rem; padding: 4px 8px; border: 1px solid #cbd5e1;
+    border-radius: 6px; background: #fff;
+  }
+
+  /* Column picker */
+  .col-picker {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    max-height: 120px; overflow-y: auto;
+    padding: 8px; background: #f8fafc; border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .col-chip {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 0.7rem; cursor: pointer;
+    border: 1px solid #cbd5e1; background: #fff;
+    transition: all 0.15s;
+  }
+  .col-chip.selected { background: #dbeafe; border-color: #3b82f6; color: #1e40af; font-weight: 600; }
+  .col-chip:hover { border-color: #3b82f6; }
+
+  /* Filter row */
+  .filter-row {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 8px; background: #fffbeb; border-radius: 8px;
+    border: 1px solid #fde68a; margin-top: 8px;
+  }
+  .filter-row select, .filter-row input {
+    font-size: 0.75rem; padding: 3px 6px; border: 1px solid #cbd5e1;
+    border-radius: 4px;
+  }
+
+  /* Templates sidebar */
+  .templates-list {
+    max-height: 200px; overflow-y: auto;
+    padding: 6px; background: #f8fafc; border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .tpl-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 8px; border-radius: 4px; cursor: pointer;
+    font-size: 0.75rem;
+  }
+  .tpl-item:hover { background: #e2e8f0; }
+
+  /* Grid */
+  .grid-wrap {
+    flex: 1; min-height: 0; overflow: hidden;
+    background: #fff; border: 1px solid rgba(15,23,42,0.06); border-radius: 14px;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 11px; --ag-row-height: 26px; --ag-header-height: 28px;
+  }
+
+  /* Row count */
+  .row-count { font-size: 0.75rem; color: #64748b; padding: 4px 10px; }
+
+  /* Inline style replacements */
+  .entity-select { min-width: 160px; }
+  .columns-group { flex: 1; }
+  .hint-text { font-size: 0.7rem; }
+  .limit-input { width: 80px; }
+  .action-btn { height: 32px; }
+  .filter-btn { font-size: 0.7rem; }
+  .tpl-section-hidden { display: none; }
+  .tpl-label { font-size: 0.7rem; font-weight: 600; color: #64748b; }
+  .modal-label { font-size: 0.8rem; }
+  .grid-full { width: 100%; height: 100%; }
+  .filter-val-input { min-width: 120px; }
+</style>
+
+<div class="container-fluid rb-page mt-2">
+  <!-- Header -->
+  <div class="rb-header">
+    <div class="d-flex align-items-center gap-2">
+      <h5><i class="bi bi-file-earmark-bar-graph me-1 text-primary"></i>{{ _("Report Builder") }}</h5>
+      <span class="badge bg-info" id="rowCountBadge">0 {{ _("rows") }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" id="btnSaveTemplate">
+        <i class="bi bi-save me-1"></i>{{ _("Save Template") }}
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" id="btnExport">
+          <i class="bi bi-download me-1"></i>{{ _("Export") }}
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#" id="exportCsv"><i class="bi bi-filetype-csv me-2"></i>CSV</a></li>
+          <li><a class="dropdown-item" href="#" id="exportJson"><i class="bi bi-filetype-json me-2"></i>JSON</a></li>
+          <li><a class="dropdown-item" href="#" id="exportXlsx"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Excel</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config panel -->
+  <div class="config-panel">
+    <div class="config-row">
+      <div class="config-group">
+        <label>{{ _("Entity") }}</label>
+        <select id="entitySelect" class="entity-select">
+          <option value="">{{ _("Loading...") }}</option>
+        </select>
+      </div>
+      <div class="config-group columns-group">
+        <label>{{ _("Columns") }} <small class="text-muted">({{ _("click to select") }})</small></label>
+        <div class="col-picker" id="colPicker">
+          <span class="text-muted hint-text">{{ _("Select entity first") }}</span>
+        </div>
+      </div>
+      <div class="config-group">
+        <label>{{ _("Limit") }}</label>
+        <input type="number" id="limitInput" value="100" min="1" max="10000" class="limit-input">
+      </div>
+      <button class="btn btn-primary btn-sm action-btn" id="btnPreview">
+        <i class="bi bi-play-fill me-1"></i>{{ _("Preview") }}
+      </button>
+      <button class="btn btn-success btn-sm action-btn" id="btnExecute">
+        <i class="bi bi-lightning me-1"></i>{{ _("Run Full") }}
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div id="filtersContainer"></div>
+    <div class="mt-1">
+      <button class="btn btn-sm btn-outline-warning filter-btn" id="btnAddFilter">
+        <i class="bi bi-funnel me-1"></i>{{ _("Add Filter") }}
+      </button>
+    </div>
+
+    <!-- Saved templates -->
+    <div class="mt-2 tpl-section-hidden" id="templatesSection">
+      <label class="tpl-label">{{ _("Saved Templates") }}</label>
+      <div class="templates-list" id="templatesList"></div>
+    </div>
+  </div>
+
+  <!-- Results Grid -->
+  <div class="grid-wrap">
+    <div id="reportGrid" class="ag-theme-alpine grid-full"></div>
+  </div>
+</div>
+
+<!-- Save Template Modal -->
+<div class="modal fade" id="saveTemplateModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-save me-1"></i>{{ _("Save Template") }}</h6>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label modal-label">{{ _("Template Name") }}</label>
+          <input type="text" class="form-control form-control-sm" id="templateName">
+        </div>
+        <div class="mb-2">
+          <label class="form-label modal-label">{{ _("Description") }}</label>
+          <input type="text" class="form-control form-control-sm" id="templateDesc">
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button class="btn btn-sm btn-primary" id="btnDoSave">{{ _("Save") }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const API = '/api/v1/report-builder';
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+let gridApi = null;
+let availableColumns = [];
+let selectedColumns = [];
+
+// ── Fetch helpers ──
+async function apiFetch(path, opts = {}) {
+  const resp = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
+    ...opts
+  });
+  return resp.json();
+}
+
+// ── Load entities ──
+async function loadEntities() {
+  const data = await apiFetch('/entities');
+  const sel = document.getElementById('entitySelect');
+  sel.innerHTML = '<option value="">-- {{ _("Select") }} --</option>';
+  if (data.success && data.data) {
+    data.data.forEach(e => {
+      sel.innerHTML += `<option value="${e.key}">${e.label}</option>`;
+    });
+  }
+}
+
+// ── Load columns for entity ──
+async function loadColumns(entity) {
+  const picker = document.getElementById('colPicker');
+  if (!entity) {
+    picker.innerHTML = '<span class="text-muted hint-text">{{ _("Select entity first") }}</span>';
+    availableColumns = [];
+    selectedColumns = [];
+    return;
+  }
+  picker.innerHTML = '<span class="hint-text">{{ _("Loading...") }}</span>';
+  const data = await apiFetch(`/columns/${entity}`);
+  if (!data.success) {
+    picker.innerHTML = `<span class="text-danger hint-text">${data.message}</span>`;
+    return;
+  }
+  availableColumns = data.data || [];
+  selectedColumns = availableColumns.slice(0, 6).map(c => c.key);
+  renderColumnPicker();
+}
+
+function renderColumnPicker() {
+  const picker = document.getElementById('colPicker');
+  picker.innerHTML = availableColumns.map(col => {
+    const sel = selectedColumns.includes(col.key) ? 'selected' : '';
+    return `<div class="col-chip ${sel}" data-key="${col.key}">${col.label}</div>`;
+  }).join('');
+  picker.querySelectorAll('.col-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const key = chip.dataset.key;
+      if (selectedColumns.includes(key)) {
+        selectedColumns = selectedColumns.filter(k => k !== key);
+      } else {
+        selectedColumns.push(key);
+      }
+      renderColumnPicker();
+    });
+  });
+}
+
+// ── Build config ──
+function buildConfig() {
+  const entity = document.getElementById('entitySelect').value;
+  if (!entity) return null;
+  const filters = [];
+  document.querySelectorAll('.filter-row').forEach(row => {
+    const col = row.querySelector('.filter-col')?.value;
+    const op = row.querySelector('.filter-op')?.value;
+    const val = row.querySelector('.filter-val')?.value;
+    if (col && val) filters.push({ column: col, operator: op || 'eq', value: val });
+  });
+  return {
+    entity,
+    columns: selectedColumns,
+    filters,
+    limit: parseInt(document.getElementById('limitInput').value) || 100
+  };
+}
+
+// ── Run query ──
+async function runQuery(preview = true) {
+  const config = buildConfig();
+  if (!config) return alert('{{ _("Select entity first") }}');
+  if (!config.columns.length) return alert('{{ _("Select at least one column") }}');
+
+  const endpoint = preview ? '/preview' : '/execute';
+  const data = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(config) });
+
+  if (!data.success) return alert(data.message || '{{ _("Error") }}');
+
+  const result = data.data;
+  const rows = result.rows || [];
+  const cols = result.columns || config.columns;
+
+  // Build AG Grid columns
+  const colDefs = cols.map(c => ({
+    field: c.key || c,
+    headerName: c.label || c,
+    sortable: true,
+    filter: true,
+    resizable: true,
+    floatingFilter: true,
+    minWidth: 80
+  }));
+
+  if (gridApi) gridApi.destroy();
+
+  const gridDiv = document.getElementById('reportGrid');
+  gridApi = agGrid.createGrid(gridDiv, {
+    columnDefs: colDefs,
+    rowData: rows,
+    defaultColDef: { sortable: true, resizable: true, filter: true },
+    animateRows: true,
+    enableCellTextSelection: true
+  });
+
+  document.getElementById('rowCountBadge').textContent = rows.length + ' {{ _("rows") }}';
+}
+
+// ── Filters ──
+function addFilterRow() {
+  const container = document.getElementById('filtersContainer');
+  const row = document.createElement('div');
+  row.className = 'filter-row';
+  const opts = availableColumns.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+  row.innerHTML = `
+    <select class="filter-col">${opts}</select>
+    <select class="filter-op">
+      <option value="eq">=</option>
+      <option value="ne">!=</option>
+      <option value="gt">&gt;</option>
+      <option value="lt">&lt;</option>
+      <option value="gte">&gt;=</option>
+      <option value="lte">&lt;=</option>
+      <option value="contains">{{ _("Contains") }}</option>
+    </select>
+    <input type="text" class="filter-val filter-val-input" placeholder="{{ _('Value') }}">
+    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.filter-row').remove()">
+      <i class="bi bi-x"></i>
+    </button>
+  `;
+  container.appendChild(row);
+}
+
+// ── Templates ──
+async function loadTemplates() {
+  const data = await apiFetch('/templates');
+  const section = document.getElementById('templatesSection');
+  const list = document.getElementById('templatesList');
+  if (data.success && data.data && data.data.length > 0) {
+    section.classList.remove('tpl-section-hidden');
+    list.innerHTML = data.data.map(t => `
+      <div class="tpl-item" data-name="${t.name}">
+        <span><i class="bi bi-file-text me-1"></i>${t.name}</span>
+        <span class="text-muted hint-text">${t.description || ''}</span>
+      </div>
+    `).join('');
+    list.querySelectorAll('.tpl-item').forEach(item => {
+      item.addEventListener('click', () => loadTemplate(item.dataset.name));
+    });
+  } else {
+    section.classList.add('tpl-section-hidden');
+  }
+}
+
+async function loadTemplate(name) {
+  const data = await apiFetch(`/templates/${encodeURIComponent(name)}`);
+  if (!data.success) return;
+  const config = data.data.config || data.data;
+  if (config.entity) {
+    document.getElementById('entitySelect').value = config.entity;
+    await loadColumns(config.entity);
+    if (config.columns) selectedColumns = config.columns;
+    renderColumnPicker();
+  }
+  if (config.limit) document.getElementById('limitInput').value = config.limit;
+}
+
+async function saveTemplate() {
+  const config = buildConfig();
+  if (!config) return;
+  const name = document.getElementById('templateName').value.trim();
+  if (!name) return alert('{{ _("Enter template name") }}');
+  const desc = document.getElementById('templateDesc').value.trim();
+  const data = await apiFetch('/templates/save', {
+    method: 'POST',
+    body: JSON.stringify({ name, config, description: desc })
+  });
+  if (data.success) {
+    bootstrap.Modal.getInstance(document.getElementById('saveTemplateModal')).hide();
+    loadTemplates();
+  } else {
+    alert(data.message);
+  }
+}
+
+// ── Export ──
+async function exportReport(format) {
+  const config = buildConfig();
+  if (!config) return;
+  config.export_format = format;
+  config.name = 'report_' + new Date().toISOString().slice(0, 10);
+
+  const resp = await fetch(API + '/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify(config)
+  });
+  if (!resp.ok) {
+    const err = await resp.json();
+    return alert(err.message || '{{ _("Export error") }}');
+  }
+  const blob = await resp.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = config.name + '.' + format;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Excel via AG Grid ──
+function exportXlsx() {
+  if (gridApi && typeof gridToXlsx === 'function') {
+    gridToXlsx(gridApi, 'report_' + new Date().toISOString().slice(0, 10) + '.xlsx', 'Report');
+  } else {
+    exportReport('csv');
+  }
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadEntities();
+  await loadTemplates();
+
+  document.getElementById('entitySelect').addEventListener('change', e => {
+    const val = e.target.value;
+    if (val) loadColumns(val);
+    else {
+      document.getElementById('colPicker').innerHTML = '<span class="text-muted hint-text">{{ _("Select entity first") }}</span>';
+      availableColumns = [];
+      selectedColumns = [];
+    }
+  });
+  document.getElementById('btnPreview').addEventListener('click', () => runQuery(true));
+  document.getElementById('btnExecute').addEventListener('click', () => runQuery(false));
+  document.getElementById('btnAddFilter').addEventListener('click', addFilterRow);
+  document.getElementById('btnSaveTemplate').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('saveTemplateModal')).show();
+  });
+  document.getElementById('btnDoSave').addEventListener('click', saveTemplate);
+  document.getElementById('exportCsv').addEventListener('click', e => { e.preventDefault(); exportReport('csv'); });
+  document.getElementById('exportJson').addEventListener('click', e => { e.preventDefault(); exportReport('json'); });
+  document.getElementById('exportXlsx').addEventListener('click', e => { e.preventDefault(); exportXlsx(); });
+});
+</script>
+{% endblock %}

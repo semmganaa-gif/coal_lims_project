@@ -332,7 +332,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function toggleAll(source, tabName) {
   const checkboxes = document.querySelectorAll(`.${tabName}-check`);
   checkboxes.forEach(cb => cb.checked = source.checked);

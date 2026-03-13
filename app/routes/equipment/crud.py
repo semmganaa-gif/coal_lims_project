@@ -23,6 +23,140 @@ from app.routes.equipment import equipment_bp, MAX_FILE_SIZE, ALLOWED_EXTENSIONS
 
 
 # -------------------------------------------------
+# Form helpers
+# -------------------------------------------------
+
+# Equipment model-д шууд map хийгдэх form талбарууд
+_BASE_FIELDS = frozenset({
+    'csrf_token', 'name', 'manufacturer', 'model', 'serial', 'lab_code',
+    'quantity', 'cycle', 'location', 'room', 'related', 'chk_checked',
+    'chk_calibrated', 'manufactured_info', 'commissioned_info', 'remark',
+    'category', 'register_type', 'status', 'calibration_note',
+    'initial_price', 'residual_price', 'calibration_date', 'next_calibration_date',
+    'edit_item_id',
+})
+
+
+def _parse_date(value: str | None):
+    """Form-оос огноо parse. None бол None буцаана."""
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _parse_int(value: str | None, default: int = 0, positive: bool = False) -> int:
+    """Form-оос int parse. ValueError үед default буцаана."""
+    if not value:
+        return default
+    try:
+        v = int(value)
+        if positive and v <= 0:
+            raise ValueError
+        return v
+    except ValueError:
+        return default
+
+
+def _parse_float(value: str | None) -> float | None:
+    """Form-оос float parse. Алдаатай бол None."""
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _extract_extra_data(form, register_type: str) -> dict | None:
+    """Register type-д тохирох нэмэлт талбаруудыг extra_data dict болгоно."""
+    if register_type == "main":
+        return None
+    extra = {k: form[k] for k in form if k not in _BASE_FIELDS and form[k]}
+    return extra or None
+
+
+def _populate_equipment(eq: Equipment, form) -> None:
+    """Form өгөгдлөөр Equipment объектыг бөглөнө (add/edit хоёуланд ашиглагдана)."""
+    eq.name = form.get("name")
+    eq.manufacturer = form.get("manufacturer")
+    eq.model = form.get("model")
+    if form.get("serial"):
+        eq.serial_number = form.get("serial")
+    eq.lab_code = form.get("lab_code")
+    eq.location = form.get("location")
+    eq.room_number = form.get("room")
+    eq.related_analysis = form.get("related")
+    eq.manufactured_info = form.get("manufactured_info")
+    eq.commissioned_info = form.get("commissioned_info")
+    eq.remark = form.get("remark")
+    eq.category = form.get("category") or "other"
+    eq.register_type = form.get("register_type") or "main"
+
+    # Тоон талбарууд
+    qty = _parse_int(form.get("quantity"), default=eq.quantity or 1, positive=True)
+    if qty > 0:
+        eq.quantity = qty
+
+    cycle = _parse_int(form.get("cycle"), default=eq.calibration_cycle_days or 365, positive=True)
+    if cycle > 0:
+        eq.calibration_cycle_days = cycle
+
+    eq.initial_price = _parse_float(form.get("initial_price")) or eq.initial_price
+    eq.residual_price = _parse_float(form.get("residual_price")) or eq.residual_price
+
+    # Огноонууд
+    cal_str = form.get("calibration_date")
+    if cal_str:
+        eq.calibration_date = _parse_date(cal_str)
+    elif cal_str == "":
+        eq.calibration_date = None
+
+    next_cal_str = form.get("next_calibration_date")
+    if next_cal_str:
+        eq.next_calibration_date = _parse_date(next_cal_str)
+    elif next_cal_str == "":
+        eq.next_calibration_date = None
+
+    # Калибрацийн тэмдэглэл
+    if form.get("calibration_note") is not None:
+        eq.calibration_note = form.get("calibration_note")
+    else:
+        eq.calibration_note = ", ".join(filter(None, [
+            form.get("chk_checked"), form.get("chk_calibrated")
+        ]))
+
+    # Статус (edit-д л байна)
+    if form.get("status"):
+        eq.status = form.get("status")
+
+    # Extra data
+    eq.extra_data = _extract_extra_data(form, eq.register_type)
+
+
+def _commit_with_audit(action: str, eq: Equipment, **extra_details) -> bool:
+    """Commit + audit log + flash. Амжилтгүй бол False."""
+    try:
+        db.session.commit()
+        details = {"name": eq.name, "category": eq.category}
+        details.update(extra_details)
+        log_audit(action=action, resource_type="Equipment", resource_id=eq.id, details=details)
+        return True
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.error(f"IntegrityError in {action}: {e}")
+        flash("Өгөгдөл зөрчилдлөө (давхардсан утга).", "danger")
+        return False
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error in {action}: {e}")
+        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
+        return False
+
+
+# -------------------------------------------------
 # 1. Төхөөрөмжийн жагсаалт
 # -------------------------------------------------
 
@@ -34,7 +168,6 @@ def equipment_list():
     warning_date = today + timedelta(days=30)
     view = request.args.get("view", "all")
     page = request.args.get("page", 1, type=int)
-    per_page = 500
 
     query = Equipment.query
 
@@ -53,19 +186,17 @@ def equipment_list():
         query = query.filter(Equipment.status != "retired")
 
     pagination = query.order_by(Equipment.name.asc()).paginate(
-        page=page, per_page=per_page, error_out=False
+        page=page, per_page=500, error_out=False
     )
-    equipments = pagination.items
-    view_counts = {}
 
     return render_template(
         "equipment/list.html",
-        equipments=equipments,
+        equipments=pagination.items,
         pagination=pagination,
         today=today,
         warning_date=warning_date,
         view=view,
-        view_counts=view_counts,
+        view_counts={},
     )
 
 
@@ -108,100 +239,15 @@ def add_equipment():
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    try:
-        quantity = int(request.form.get("quantity", "1"))
-        if quantity <= 0:
-            raise ValueError("Тоо ширхэг эерэг тоо байх ёстой")
-    except ValueError as e:
-        flash(f"Буруу тоо ширхэг: {e}", "error")
-        return redirect(url_for("equipment.equipment_list"))
-
-    try:
-        calibration_cycle_days = int(request.form.get("cycle", "365"))
-        if calibration_cycle_days <= 0:
-            raise ValueError("Калибрацийн мөчлөг эерэг тоо байх ёстой")
-    except ValueError as e:
-        flash(f"Буруу калибрацийн мөчлөг: {e}", "error")
-        return redirect(url_for("equipment.equipment_list"))
-
-    register_type = request.form.get("register_type", "main") or "main"
-
-    # Баталгаажуулалтын огноонууд
-    calibration_date = None
-    calibration_date_str = request.form.get("calibration_date")
-    if calibration_date_str:
-        try:
-            calibration_date = datetime.strptime(calibration_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            pass
-
-    next_calibration_date = None
-    next_calibration_date_str = request.form.get("next_calibration_date")
-    if next_calibration_date_str:
-        try:
-            next_calibration_date = datetime.strptime(next_calibration_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            pass
-
-    # Үндсэн талбаруудаас гадна register_type-д зориулсан нэмэлт талбаруудыг extra_data-д хадгална
-    base_fields = {
-        'csrf_token', 'name', 'manufacturer', 'model', 'serial', 'lab_code',
-        'quantity', 'cycle', 'location', 'room', 'related', 'chk_checked',
-        'chk_calibrated', 'manufactured_info', 'commissioned_info', 'remark',
-        'category', 'register_type', 'calibration_date', 'next_calibration_date',
-    }
-    extra_data = {}
-    if register_type != 'main':
-        for key in request.form:
-            if key not in base_fields and request.form.get(key):
-                extra_data[key] = request.form.get(key)
-        extra_data.pop('csrf_token', None)
-        extra_data.pop('edit_item_id', None)
-
-    new_eq = Equipment(
-        name=request.form.get("name"),
-        manufacturer=request.form.get("manufacturer"),
-        model=request.form.get("model"),
-        serial_number=request.form.get("serial"),
-        lab_code=request.form.get("lab_code"),
-        quantity=quantity,
-        calibration_cycle_days=calibration_cycle_days,
-        calibration_date=calibration_date,
-        next_calibration_date=next_calibration_date,
-        location=request.form.get("location"),
-        room_number=request.form.get("room"),
-        related_analysis=request.form.get("related"),
-        calibration_note=', '.join(filter(None, [request.form.get("chk_checked"), request.form.get("chk_calibrated")])),
-        manufactured_info=request.form.get("manufactured_info"),
-        commissioned_info=request.form.get("commissioned_info"),
-        remark=request.form.get("remark"),
-        status="normal",
-        category=request.form.get("category") or "other",
-        register_type=register_type,
-        extra_data=extra_data if extra_data else None,
-    )
+    new_eq = Equipment(status="normal")
     new_eq.created_by_id = current_user.id
+    _populate_equipment(new_eq, request.form)
+
     db.session.add(new_eq)
-    try:
-        db.session.commit()
-        # Audit log
-        log_audit(
-            action='create_equipment',
-            resource_type='Equipment',
-            resource_id=new_eq.id,
-            details={
-                'name': new_eq.name,
-                'category': new_eq.category,
-                'register_type': register_type
-            }
-        )
+    if _commit_with_audit("create_equipment", new_eq, register_type=new_eq.register_type):
         flash("Амжилттай бүртгэгдлээ.", "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in add_equipment: {e}")
-        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
-    view = request.form.get("category") or "all"
-    return redirect(url_for("equipment.equipment_list", view=view))
+
+    return redirect(url_for("equipment.equipment_list", view=new_eq.category or "all"))
 
 
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
@@ -215,108 +261,12 @@ def edit_equipment(id):
     eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
-    eq.name = request.form.get("name")
-    eq.manufacturer = request.form.get("manufacturer")
-    eq.model = request.form.get("model")
-    if request.form.get("serial"):
-        eq.serial_number = request.form.get("serial")
-    eq.lab_code = request.form.get("lab_code")
-    eq.location = request.form.get("location")
-    eq.room_number = request.form.get("room")
-    eq.related_analysis = request.form.get("related")
 
-    if request.form.get("cycle"):
-        try:
-            cycle_value = int(request.form.get("cycle"))
-            if cycle_value <= 0:
-                raise ValueError("Калибрацийн мөчлөг эерэг тоо байх ёстой")
-            eq.calibration_cycle_days = cycle_value
-        except ValueError as e:
-            flash(f"Буруу калибрацийн мөчлөг: {e}", "error")
-            return redirect(url_for("equipment.equipment_detail", id=id))
+    _populate_equipment(eq, request.form)
 
-    if request.form.get("status"):
-        eq.status = request.form.get("status")
-    eq.calibration_note = request.form.get("calibration_note")
-    eq.remark = request.form.get("remark")
-    eq.category = request.form.get("category") or "other"
-    eq.register_type = request.form.get("register_type") or "main"
-
-    # Баталгаажуулалтын огноонууд
-    calibration_date_str = request.form.get("calibration_date")
-    if calibration_date_str:
-        try:
-            eq.calibration_date = datetime.strptime(calibration_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            pass
-    elif calibration_date_str == '':
-        eq.calibration_date = None
-
-    next_calibration_date_str = request.form.get("next_calibration_date")
-    if next_calibration_date_str:
-        try:
-            eq.next_calibration_date = datetime.strptime(next_calibration_date_str, "%Y-%m-%d").date()
-        except ValueError:
-            pass
-    elif next_calibration_date_str == '':
-        eq.next_calibration_date = None
-
-    if request.form.get("quantity"):
-        try:
-            eq.quantity = int(request.form.get("quantity"))
-        except ValueError:
-            pass
-    eq.manufactured_info = request.form.get("manufactured_info")
-    eq.commissioned_info = request.form.get("commissioned_info")
-
-    # register_type-д тохирох extra fields-г extra_data-д хадгалах
-    base_fields = {
-        'csrf_token', 'name', 'manufacturer', 'model', 'serial', 'lab_code',
-        'quantity', 'cycle', 'location', 'room', 'related', 'chk_checked',
-        'chk_calibrated', 'manufactured_info', 'commissioned_info', 'remark',
-        'category', 'register_type', 'status', 'calibration_note',
-        'initial_price', 'residual_price', 'calibration_date', 'next_calibration_date',
-    }
-    extra_data = {}
-    for key in request.form:
-        if key not in base_fields and request.form.get(key):
-            extra_data[key] = request.form.get(key)
-    eq.extra_data = extra_data if extra_data else None
-
-
-    if request.form.get("initial_price"):
-        try:
-            eq.initial_price = float(request.form.get("initial_price"))
-        except ValueError:
-            pass
-    if request.form.get("residual_price"):
-        try:
-            eq.residual_price = float(request.form.get("residual_price"))
-        except ValueError:
-            pass
-
-    try:
-        db.session.commit()
-        # Audit log
-        log_audit(
-            action='update_equipment',
-            resource_type='Equipment',
-            resource_id=eq.id,
-            details={
-                'name': eq.name,
-                'status': eq.status,
-                'category': eq.category
-            }
-        )
+    if _commit_with_audit("update_equipment", eq, status=eq.status):
         flash("Амжилттай шинэчлэгдлээ.", "success")
-    except IntegrityError as e:
-        db.session.rollback()
-        current_app.logger.error(f"IntegrityError in edit_equipment: {e}")
-        flash("Өгөгдөл зөрчилдлөө (давхардсан утга).", "danger")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in edit_equipment: {e}")
-        flash(f"Алдаа гарлаа: {str(e)[:100]}", "danger")
+
     return redirect(url_for("equipment.equipment_detail", id=id))
 
 
@@ -333,12 +283,13 @@ def delete_equipment(id):
     eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
-    eq_name = eq.name
-    eq_id = eq.id
-    has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
-                  UsageLog.query.filter_by(equipment_id=eq.id).first()
 
-    action = 'retire_equipment' if has_history else 'delete_equipment'
+    eq_name = eq.name
+    has_history = (
+        MaintenanceLog.query.filter_by(equipment_id=eq.id).first()
+        or UsageLog.query.filter_by(equipment_id=eq.id).first()
+    )
+
     if has_history:
         eq.status = "retired"
         flash(f"'{eq_name}' багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.", "warning")
@@ -346,19 +297,8 @@ def delete_equipment(id):
         db.session.delete(eq)
         flash(f"'{eq_name}' устгагдлаа.", "success")
 
-    try:
-        db.session.commit()
-        # Audit log
-        log_audit(
-            action=action,
-            resource_type='Equipment',
-            resource_id=eq_id,
-            details={'name': eq_name, 'had_history': has_history}
-        )
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in delete_equipment: {e}")
-        flash(f"Устгахад алдаа гарлаа: {str(e)[:100]}", "danger")
+    action = "retire_equipment" if has_history else "delete_equipment"
+    _commit_with_audit(action, eq, had_history=has_history)
     return redirect(url_for("equipment.equipment_list"))
 
 
@@ -372,44 +312,41 @@ def bulk_delete():
         flash("Эрх хүрэлцэхгүй байна.", "danger")
         return redirect(url_for("equipment.equipment_list"))
 
-    ids = request.form.getlist('equipment_ids')
+    ids = request.form.getlist("equipment_ids")
     if not ids:
         flash("Багаж сонгогдоогүй байна.", "warning")
         return redirect(url_for("equipment.equipment_list"))
 
-    deleted_count = 0
-    retired_count = 0
-    deleted_names = []
-    retired_names = []
+    deleted_names, retired_names = [], []
 
     for eq_id in ids:
         eq = EquipmentRepository.get_by_id(eq_id)
-        if eq:
-            has_history = MaintenanceLog.query.filter_by(equipment_id=eq.id).first() or \
-                          UsageLog.query.filter_by(equipment_id=eq.id).first()
-            if has_history:
-                eq.status = "retired"
-                retired_count += 1
-                retired_names.append(eq.name)
-            else:
-                deleted_names.append(eq.name)
-                db.session.delete(eq)
-                deleted_count += 1
+        if not eq:
+            continue
+        has_history = (
+            MaintenanceLog.query.filter_by(equipment_id=eq.id).first()
+            or UsageLog.query.filter_by(equipment_id=eq.id).first()
+        )
+        if has_history:
+            eq.status = "retired"
+            retired_names.append(eq.name)
+        else:
+            deleted_names.append(eq.name)
+            db.session.delete(eq)
 
     try:
         db.session.commit()
-        # Audit log
-        if deleted_count > 0 or retired_count > 0:
+        if deleted_names or retired_names:
             log_audit(
-                action='bulk_delete_equipment',
-                resource_type='Equipment',
+                action="bulk_delete_equipment",
+                resource_type="Equipment",
                 resource_id=None,
                 details={
-                    'deleted_count': deleted_count,
-                    'retired_count': retired_count,
-                    'deleted_names': deleted_names[:10],  # Эхний 10
-                    'retired_names': retired_names[:10]
-                }
+                    "deleted_count": len(deleted_names),
+                    "retired_count": len(retired_names),
+                    "deleted_names": deleted_names[:10],
+                    "retired_names": retired_names[:10],
+                },
             )
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -418,11 +355,10 @@ def bulk_delete():
         return redirect(url_for("equipment.equipment_list"))
 
     msg = []
-    if deleted_count > 0:
-        msg.append(f"{deleted_count} багаж устгагдлаа.")
-    if retired_count > 0:
-        msg.append(f"{retired_count} багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.")
-
+    if deleted_names:
+        msg.append(f"{len(deleted_names)} багаж устгагдлаа.")
+    if retired_names:
+        msg.append(f"{len(retired_names)} багаж түүхтэй тул 'Ашиглалтаас гарсан' төлөвт шилжүүллээ.")
     flash(" ".join(msg), "success" if msg else "info")
     return redirect(url_for("equipment.equipment_list"))
 
@@ -449,54 +385,13 @@ def add_maintenance_log(id):
         except ValueError:
             pass
 
-    file_filename = None
-    if 'certificate_file' in request.files:
-        file = request.files['certificate_file']
-        if file and file.filename != '':
-            file.seek(0, 2)
-            file_size = file.tell()
-            file.seek(0)
-
-            if file_size > MAX_FILE_SIZE:
-                flash(f"Файл хэт том байна (дээд хэмжээ {MAX_FILE_SIZE/1024/1024:.0f}MB).", "danger")
-                return redirect(next_url)
-
-            filename = secure_filename(file.filename)
-            if '.' not in filename:
-                flash("Файлын өргөтгөл тодорхойгүй байна.", "danger")
-                return redirect(next_url)
-
-            ext = filename.rsplit('.', 1)[1].lower()
-            if ext not in ALLOWED_EXTENSIONS:
-                flash(
-                    f"Файлын төрөл зөвшөөрөгдөөгүй (.{ext}). "
-                    f"Зөвшөөрөгдөх: {', '.join(ALLOWED_EXTENSIONS)}",
-                    "danger"
-                )
-                return redirect(next_url)
-
-            unique_filename = f"{int(now_local().timestamp())}_{filename}"
-            upload_folder = current_app.config.get('UPLOAD_FOLDER')
-            if not os.path.exists(upload_folder):
-                os.makedirs(upload_folder, mode=0o755)
-
-            # Файлын замыг шалгах
-            full_save_path = os.path.realpath(os.path.join(upload_folder, unique_filename))
-            real_upload = os.path.realpath(upload_folder)
-            if not full_save_path.startswith(real_upload):
-                current_app.logger.warning(f"Path traversal attempt in file save: {unique_filename}")
-                flash("Буруу файлын нэр.", "danger")
-                return redirect(next_url)
-
-            file.save(full_save_path)
-            file_filename = unique_filename
+    file_filename = _handle_file_upload(next_url)
+    if file_filename is False:
+        return redirect(next_url)
 
     # --- Ашиглалт бүртгэл (UsageLog) ---
     if action_type == "Usage":
-        try:
-            minutes = int(request.form.get("duration_minutes", 0))
-        except (TypeError, ValueError):
-            minutes = 0
+        minutes = _parse_int(request.form.get("duration_minutes"))
         usage = UsageLog(
             equipment_id=eq.id,
             start_time=action_date,
@@ -507,30 +402,20 @@ def add_maintenance_log(id):
             purpose=request.form.get("description"),
         )
         db.session.add(usage)
-        try:
-            db.session.commit()
-            log_audit(
-                action='add_usage_log',
-                resource_type='Equipment',
-                resource_id=eq.id,
-                details={
-                    'equipment_name': eq.name,
-                    'duration_minutes': minutes,
-                }
-            )
+        if _commit_with_audit("add_usage_log", eq, duration_minutes=minutes):
             flash("Ашиглалтын бүртгэл хадгалагдлаа.", "success")
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            current_app.logger.error(f"Database error in add_usage_log: {e}")
-            flash(f"Алдаа: {str(e)[:100]}", "danger")
         return redirect(next_url)
 
     # --- Засвар/Калибровка/Шалгалт (MaintenanceLog) ---
     log = MaintenanceLog(
-        equipment_id=eq.id, action_type=action_type, description=request.form.get("description"),
-        performed_by=request.form.get("performed_by"), certificate_no=request.form.get("certificate_no"),
-        action_date=action_date, file_path=file_filename,
-        performed_by_id=current_user.id
+        equipment_id=eq.id,
+        action_type=action_type,
+        description=request.form.get("description"),
+        performed_by=request.form.get("performed_by"),
+        certificate_no=request.form.get("certificate_no"),
+        action_date=action_date,
+        file_path=file_filename,
+        performed_by_id=current_user.id,
     )
 
     if action_type == "Calibration":
@@ -542,25 +427,61 @@ def add_maintenance_log(id):
         eq.status = "maintenance"
 
     db.session.add(log)
-    try:
-        db.session.commit()
-        log_audit(
-            action='add_maintenance_log',
-            resource_type='Equipment',
-            resource_id=eq.id,
-            details={
-                'equipment_name': eq.name,
-                'action_type': action_type,
-                'log_id': log.id,
-                'has_file': file_filename is not None
-            }
-        )
+    if _commit_with_audit(
+        "add_maintenance_log", eq,
+        action_type=action_type, log_id=log.id, has_file=file_filename is not None,
+    ):
         flash("Бүртгэл хадгалагдлаа.", "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in add_maintenance_log: {e}")
-        flash(f"Бүртгэл хадгалахад алдаа гарлаа: {str(e)[:100]}", "danger")
     return redirect(next_url)
+
+
+def _handle_file_upload(error_redirect_url: str) -> str | None | bool:
+    """
+    File upload шалгаж хадгална.
+
+    Returns:
+        str: Хадгалсан файлын нэр
+        None: Файл байхгүй
+        False: Алдаа гарсан (redirect хэрэгтэй)
+    """
+    if "certificate_file" not in request.files:
+        return None
+    file = request.files["certificate_file"]
+    if not file or file.filename == "":
+        return None
+
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+
+    if file_size > MAX_FILE_SIZE:
+        flash(f"Файл хэт том байна (дээд хэмжээ {MAX_FILE_SIZE / 1024 / 1024:.0f}MB).", "danger")
+        return False
+
+    filename = secure_filename(file.filename)
+    if "." not in filename:
+        flash("Файлын өргөтгөл тодорхойгүй байна.", "danger")
+        return False
+
+    ext = filename.rsplit(".", 1)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        flash(f"Файлын төрөл зөвшөөрөгдөөгүй (.{ext}). Зөвшөөрөгдөх: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
+        return False
+
+    unique_filename = f"{int(now_local().timestamp())}_{filename}"
+    upload_folder = current_app.config.get("UPLOAD_FOLDER")
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder, mode=0o755)
+
+    full_save_path = os.path.realpath(os.path.join(upload_folder, unique_filename))
+    real_upload = os.path.realpath(upload_folder)
+    if not full_save_path.startswith(real_upload):
+        current_app.logger.warning(f"Path traversal attempt in file save: {unique_filename}")
+        flash("Буруу файлын нэр.", "danger")
+        return False
+
+    file.save(full_save_path)
+    return unique_filename
 
 
 @equipment_bp.route("/download_cert/<int:log_id>")
@@ -572,21 +493,21 @@ def download_certificate(log_id):
         abort(404)
     if not log.file_path:
         flash("Файл олдсонгүй.", "warning")
-        return redirect(request.referrer or url_for('equipment.equipment_list'))
+        return redirect(request.referrer or url_for("equipment.equipment_list"))
 
-    upload_folder = os.path.abspath(current_app.config.get('UPLOAD_FOLDER', ''))
+    upload_folder = os.path.abspath(current_app.config.get("UPLOAD_FOLDER", ""))
     safe_filename = os.path.basename(log.file_path)
 
     full_path = os.path.join(upload_folder, safe_filename)
     if not os.path.exists(full_path):
         flash("Файл олдсонгүй.", "warning")
-        return redirect(request.referrer or url_for('equipment.equipment_list'))
+        return redirect(request.referrer or url_for("equipment.equipment_list"))
 
     real_path = os.path.realpath(full_path)
     real_upload = os.path.realpath(upload_folder)
     if not real_path.startswith(real_upload):
         current_app.logger.warning(f"Path traversal attempt: {log.file_path}")
         flash("Файлд хандах эрхгүй.", "danger")
-        return redirect(request.referrer or url_for('equipment.equipment_list'))
+        return redirect(request.referrer or url_for("equipment.equipment_list"))
 
     return send_from_directory(upload_folder, safe_filename, as_attachment=True)

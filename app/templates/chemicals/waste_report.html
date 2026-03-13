@@ -3,7 +3,7 @@
 {% block title %}{{ _("Waste Report") }} - {{ year }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .report-table th, .report-table td {
     font-size: 0.8rem;
     padding: 0.4rem 0.5rem;
@@ -105,7 +105,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 function exportToExcel() {
   tableToXlsx('reportTable', 'waste_report_{{ year }}.xlsx', "{{ _('Waste') }}");
 }

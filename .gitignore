@@ -144,3 +144,20 @@ burtgel/
 *_refactor_plan.md
 *_code_review_log.md
 Project *.txt
+
+# Audit/coverage output
+coverage_result.txt
+audit.txt
+coal_lims_*.md
+chpp_*.md
+
+# ChatGPT/Claude conversation artifacts (Mongolian .txt)
+Байна*.txt
+Дунд*.txt
+Одоо*.txt
+Тийм*.txt
+Энэ*.txt
+\#*.txt
+
+# Instrument data files
+instrument_data/

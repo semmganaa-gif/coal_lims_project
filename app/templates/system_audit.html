@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .system-audit-page {
     padding: 1rem 1.5rem;
     min-height: calc(100vh - 120px);
@@ -217,7 +217,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('filterStartDate').value = today;
@@ -426,7 +426,7 @@ function loadData() {
   if (userId) params.set('user_id', userId);
   if (q) params.set('q', q);
 
-  gridApi.showLoadingOverlay();
+  gridApi.setGridOption('loading', true);
 
   fetch('/api/system_audit?' + params.toString())
     .then(res => res.json())

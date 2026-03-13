@@ -3,7 +3,7 @@
 {% block title %}{{ _("Chemistry Lab — Dashboard") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .water-dash {
     min-height: calc(100vh - 120px);
     padding: 1.5rem;

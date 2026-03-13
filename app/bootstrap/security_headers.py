@@ -1,9 +1,23 @@
 # app/bootstrap/security_headers.py
-"""HTTP security headers (after_request)."""
+"""HTTP security headers with nonce-based CSP."""
+
+import secrets
+
+from flask import g, request
 
 
 def init_security_headers(app):
-    """Add security headers to all responses."""
+    """Add security headers to all responses with per-request CSP nonce."""
+
+    @app.before_request
+    def generate_csp_nonce():
+        """Generate a unique nonce for each request."""
+        g.csp_nonce = secrets.token_urlsafe(32)
+
+    @app.context_processor
+    def inject_csp_nonce():
+        """Make csp_nonce available in all templates."""
+        return {"csp_nonce": getattr(g, "csp_nonce", "")}
 
     @app.after_request
     def add_security_headers(response):
@@ -12,6 +26,7 @@ def init_security_headers(app):
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
+        nonce = getattr(g, "csp_nonce", "")
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; "

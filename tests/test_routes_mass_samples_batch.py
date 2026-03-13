@@ -121,7 +121,7 @@ class TestUpsertMassResult:
     """Tests for _upsert_mass_result helper."""
 
     def test_create_new_result(self, mass_app, sample_in_db):
-        from app.routes.api.mass_api import _upsert_mass_result
+        from app.services.mass_service import _upsert_mass_result
         with mass_app.app_context():
             _upsert_mass_result(sample_in_db.id, 1500.0, user_id=1)
             _db.session.commit()
@@ -136,7 +136,7 @@ class TestUpsertMassResult:
             _db.session.commit()
 
     def test_update_existing_result(self, mass_app, sample_in_db):
-        from app.routes.api.mass_api import _upsert_mass_result
+        from app.services.mass_service import _upsert_mass_result
         with mass_app.app_context():
             # Create first
             ar = AnalysisResult(
@@ -161,7 +161,7 @@ class TestUpsertMassResult:
             _db.session.commit()
 
     def test_create_without_user_id(self, mass_app, sample_in_db):
-        from app.routes.api.mass_api import _upsert_mass_result
+        from app.services.mass_service import _upsert_mass_result
         with mass_app.app_context():
             _upsert_mass_result(sample_in_db.id, 500.0)
             _db.session.commit()
@@ -230,8 +230,8 @@ class TestUpdateSampleStatus:
             data={'action': 'archive', 'sample_ids': ['abc', 'xyz']},
             headers={'X-Requested-With': 'XMLHttpRequest'},
         )
-        # Should handle gracefully - empty int list
-        assert resp.status_code == 200
+        # Invalid IDs → empty list → 400 (no samples selected)
+        assert resp.status_code == 400
 
     def test_commit_error_ajax(self, admin_client, sample_in_db):
         from sqlalchemy.exc import SQLAlchemyError
@@ -508,9 +508,7 @@ class TestMassUpdateWeight:
             '/api/mass/update_weight',
             json={'sample_id': 999999, 'weight': 100},
         )
-        # api_error("Sample not found.", 404) passes 404 as 'code' param, not status_code
-        # So actual HTTP status is 400 (default)
-        assert resp.status_code == 400
+        assert resp.status_code == 404
         data = resp.get_json()
         assert data['success'] is False
 
@@ -521,8 +519,7 @@ class TestMassUpdateWeight:
                 '/api/mass/update_weight',
                 json={'sample_id': sample_in_db.id, 'weight': 100},
             )
-            # api_error passes status code as positional 'code' param, actual HTTP is 400
-            assert resp.status_code == 400
+            assert resp.status_code == 409  # Conflict
 
     def test_update_weight_integrity_error(self, admin_client, sample_in_db):
         from sqlalchemy.exc import IntegrityError
@@ -531,7 +528,7 @@ class TestMassUpdateWeight:
                 '/api/mass/update_weight',
                 json={'sample_id': sample_in_db.id, 'weight': 100},
             )
-            assert resp.status_code == 400
+            assert resp.status_code == 409  # Conflict
 
     def test_update_weight_sqlalchemy_error(self, admin_client, sample_in_db):
         from sqlalchemy.exc import SQLAlchemyError
@@ -540,7 +537,7 @@ class TestMassUpdateWeight:
                 '/api/mass/update_weight',
                 json={'sample_id': sample_in_db.id, 'weight': 100},
             )
-            assert resp.status_code == 400
+            assert resp.status_code == 500  # Server error
 
     def test_update_weight_no_json(self, admin_client):
         resp = admin_client.post('/api/mass/update_weight', data='bad', content_type='text/plain')
@@ -577,7 +574,7 @@ class TestMassUnready:
                 '/api/mass/unready',
                 json={'sample_ids': [sample_in_db.id]},
             )
-            assert resp.status_code == 400
+            assert resp.status_code == 409
             data = resp.get_json()
             assert data['success'] is False
 
@@ -588,7 +585,7 @@ class TestMassUnready:
                 '/api/mass/unready',
                 json={'sample_ids': [sample_in_db.id]},
             )
-            assert resp.status_code == 400
+            assert resp.status_code == 409
 
     def test_unready_sqlalchemy_error(self, admin_client, sample_in_db):
         from sqlalchemy.exc import SQLAlchemyError
@@ -597,7 +594,7 @@ class TestMassUnready:
                 '/api/mass/unready',
                 json={'sample_ids': [sample_in_db.id]},
             )
-            assert resp.status_code == 400
+            assert resp.status_code == 500
 
 
 # ============================================================
@@ -630,8 +627,7 @@ class TestMassDelete:
 
     def test_delete_access_denied_chemist(self, chemist_client):
         resp = chemist_client.post('/api/mass/delete', json={'sample_id': 1})
-        # api_error("Access denied...", 403) -> 403 is 'code' param, HTTP status = 400
-        assert resp.status_code == 400
+        assert resp.status_code == 403
         data = resp.get_json()
         assert data['success'] is False
 
@@ -641,20 +637,19 @@ class TestMassDelete:
 
     def test_delete_not_found(self, admin_client):
         resp = admin_client.post('/api/mass/delete', json={'sample_id': 999999})
-        # api_error("Sample not found.", 404) -> 404 is 'code' param, HTTP status = 400
-        assert resp.status_code == 400
+        assert resp.status_code == 404
 
     def test_delete_integrity_error(self, admin_client, sample_in_db):
         from sqlalchemy.exc import IntegrityError
         with patch.object(_db.session, 'commit', side_effect=IntegrityError("fk", {}, None)):
             resp = admin_client.post('/api/mass/delete', json={'sample_id': sample_in_db.id})
-            assert resp.status_code == 400
+            assert resp.status_code == 409
 
     def test_delete_sqlalchemy_error(self, admin_client, sample_in_db):
         from sqlalchemy.exc import SQLAlchemyError
         with patch.object(_db.session, 'commit', side_effect=SQLAlchemyError("err")):
             resp = admin_client.post('/api/mass/delete', json={'sample_id': sample_in_db.id})
-            assert resp.status_code == 400
+            assert resp.status_code == 500
 
     def test_delete_senior_allowed(self, senior_client, mass_app):
         import uuid

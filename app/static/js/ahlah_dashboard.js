@@ -542,7 +542,7 @@ const gridOptions = {
     sortable: true,
     filter: true,
     suppressHeaderMenuButton: true,
-    floatingFilterComponentParams: { suppressFilterButton: true },
+    suppressFloatingFilterButton: true,
     wrapText: true,
     autoHeight: true
   },

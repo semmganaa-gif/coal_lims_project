@@ -232,6 +232,12 @@ class Sample(db.Model):
     mass_ready_at = db.Column(db.DateTime, nullable=True)
     mass_ready_by_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_mass_ready_by_id"), nullable=True)
 
+    # SLA / Turnaround tracking
+    sla_hours = db.Column(db.Integer, nullable=True)  # SLA хугацаа (цагаар, жишээ: 72 = 3 хоног)
+    due_date = db.Column(db.DateTime, nullable=True, index=True)  # Хариу өгөх эцсийн хугацаа
+    priority = db.Column(db.String(20), nullable=True, default='normal')  # normal, urgent, rush
+    completed_at = db.Column(db.DateTime, nullable=True)  # Бүх шинжилгээ дуусах огноо
+
     # Усны лабын тусдаа дугаарууд
     chem_lab_id = db.Column(db.String(20), nullable=True, index=True)   # "1_05" = batch 1, сорьц 5
     micro_lab_id = db.Column(db.String(20), nullable=True, index=True)  # "01_05" = өдөр 1, дэс 5

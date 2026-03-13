@@ -24,7 +24,7 @@ def init_blueprints(app):
     from app.routes.main import main_bp
     from app.routes.analysis import analysis_bp
     from app.routes.admin.routes import admin_bp
-    from app.routes.api import api_bp
+    from app.routes.api import api_bp, APIVersionMiddleware
     from app.routes.settings.routes import settings_bp
     from app.routes.reports.routes import reports_bp
     from app.routes.imports.routes import import_bp
@@ -68,3 +68,6 @@ def init_blueprints(app):
 
     # CSRF exempt: JSON API only
     csrf.exempt(api_bp)
+
+    # WSGI middleware: /api/* → /api/v1/* backward-compat rewrite
+    app.wsgi_app = APIVersionMiddleware(app.wsgi_app, app)

@@ -4,7 +4,7 @@
 {% block title %}{{ _("Microbiology") if is_micro else _("Water") }} {{ _("Sample Registration") }}{% endblock %}
 
 {% block head %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .water-register-page {
     padding: 1rem 1.5rem;
     height: calc(100vh - 120px);
@@ -408,7 +408,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 const UNITS = {{ units|tojson }};
 let currentUnit = null;
 
@@ -513,7 +513,7 @@ const statusMap = {
 
 const sampleColDefs = [
   { headerName: '', checkboxSelection: true, headerCheckboxSelection: true,
-    width: 40, pinned: 'left', filter: false, suppressMenu: true },
+    width: 40, pinned: 'left', filter: false, suppressHeaderMenuButton: true },
   { headerName: 'No.', field: 'seq', width: 55, pinned: 'left',
     filter: 'agNumberColumnFilter' },
   { headerName: 'Chemistry Laboratory Number', field: 'chem_lab_id',
@@ -563,7 +563,7 @@ const sampleColDefs = [
   { headerName: 'Notes', field: 'notes', minWidth: 120, flex: 1,
     filter: 'agTextColumnFilter' },
   { headerName: '', field: 'id', width: 80, filter: false, sortable: false, pinned: 'right',
-    suppressMenu: true,
+    suppressHeaderMenuButton: true,
     cellRenderer: p => {
       const base = {{ 'true' if is_micro else 'false' }}
         ? '/labs/water-lab/microbiology/edit_sample/' : '/labs/water-lab/chemistry/edit_sample/';
@@ -585,7 +585,7 @@ function loadSampleGrid() {
       filter: true,
       floatingFilter: true,
       menuTabs: [],
-      floatingFilterComponentParams: { suppressFilterButton: true },
+      suppressFloatingFilterButton: true,
     },
     animateRows: true,
     rowSelection: 'multiple',

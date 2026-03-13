@@ -24,7 +24,7 @@
 
 {{ aggrid_macros.grid_container('trdGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 

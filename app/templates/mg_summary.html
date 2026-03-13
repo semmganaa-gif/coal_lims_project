@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .mg-summary-wrap { padding: 12px 16px; }
   .mg-summary-wrap h1 { font-size: 1.3rem; }
   .mg-tbl { font-size: 0.82rem; }
@@ -176,7 +176,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';

@@ -56,13 +56,13 @@
   </div>
 </div>
 
-<style>
+<style nonce="{{ csp_nonce }}">
   .bg-purple { background-color: #6f42c1 !important; }
 </style>
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   fetch("{{ url_for('petrography.eligible_samples', code='TS') }}")
     .then(r => r.json())

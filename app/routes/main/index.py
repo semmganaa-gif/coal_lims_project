@@ -25,12 +25,13 @@ from app.services.sample_service import (
     register_wtl_auto_samples,
     register_lab_sample,
     register_wtl_mg_test,
+    get_retention_context,
 )
 
 
 def _index_template_context(form):
     """render_template-д дамжуулах нийтлэг context."""
-    return dict(
+    ctx = dict(
         title="Нүүр хуудас",
         form=form,
         active_tab="add-pane",
@@ -40,7 +41,10 @@ def _index_template_context(form):
         com_primary_products=COM_PRIMARY_PRODUCTS,
         com_secondary_map=COM_SECONDARY_MAP,
         unit_abbreviations=get_unit_abbreviations(),
+        sla_lab_types=["coal", "petrography"],
     )
+    ctx.update(get_retention_context(lab_type="coal"))
+    return ctx
 
 
 def register_routes(bp):

@@ -3,7 +3,7 @@
 {% block title %}{{ param.name_mn }} - {{ _("Workspace") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .water-ws {
     min-height: calc(100vh - 120px); padding: 1.5rem;
     background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
@@ -174,7 +174,7 @@
       </div>
     </div>
   </div>
-  <style>
+  <style nonce="{{ csp_nonce }}">
     .water-timer-card {
       background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
       padding: 0.75rem 1rem; min-width: 200px; max-width: 260px;
@@ -259,7 +259,7 @@
 </div>
 
 {# --- EQUIPMENT MODAL --- #}
-<style>
+<style nonce="{{ csp_nonce }}">
   #equipmentModal .modal-header {
     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     color: #fff; border-bottom: 3px solid #60a5fa;
@@ -448,7 +448,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 

@@ -196,7 +196,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
   // Config for WaterSummaryGrid
   const WATER_SUMMARY_CONFIG = {
     urls: {

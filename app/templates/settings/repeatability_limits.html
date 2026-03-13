@@ -84,7 +84,7 @@
   </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (() => {
   const form = document.getElementById('limitsForm');
   form.addEventListener('submit', (e) => {

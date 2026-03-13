@@ -3,7 +3,7 @@
 {% block title %}{{ _("Water Lab") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .water-lab-main {
     min-height: calc(100vh - 120px);
     padding: 1.5rem;

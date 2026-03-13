@@ -307,7 +307,7 @@
 {{ super() }}
 {% if error_stats and error_stats.total > 0 %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     (function () {
       const canvas = document.getElementById('errorReasonChart');
       if (!canvas) return;

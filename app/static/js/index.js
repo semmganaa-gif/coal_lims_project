@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             headerName: '', field: 'sel',
             checkboxSelection: true, headerCheckboxSelection: true,
             width: 40, pinned: 'left', lockPosition: 'left',
-            filter: false, suppressMenu: true
+            filter: false, suppressHeaderMenuButton: true
         },
         {
             field: '1', headerName: 'ID', width: 70, pinned: 'left',
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             sortable: true,
             filter: true,
             floatingFilter: true,
-            floatingFilterComponentParams: { suppressFilterButton: true },
+            suppressFloatingFilterButton: true,
             menuTabs: [],
         },
         rowSelection: 'multiple',
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const gridApi = agGrid.createGrid(gridDiv, gridOptions);
 
     function loadData() {
-        gridApi.showLoadingOverlay();
+        gridApi.setGridOption('loading', true);
 
         const sDate = document.getElementById('dateFilterStart').value;
         const eDate = document.getElementById('dateFilterEnd').value;
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 gridApi.setGridOption('rowData', data.data);
-                gridApi.hideOverlay();
+                gridApi.setGridOption('loading', false);
             })
             .catch(error => {
                 console.error('Error:', error);

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
 #envTable th:first-child,
 #envTable td:first-child {
     min-width: 200px !important;
@@ -161,7 +161,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
     $('#envTable').DataTable({
         order: [[0, 'desc']],

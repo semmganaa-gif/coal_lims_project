@@ -633,7 +633,7 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Monthly data
     const monthlyData = [{% for m in range(1, 13) %}{{ grand_monthly[m] }}{% if not loop.last %},{% endif %}{% endfor %}];
@@ -791,7 +791,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
+<style nonce="{{ csp_nonce }}">
 .sticky-col {
     position: sticky;
     left: 0;

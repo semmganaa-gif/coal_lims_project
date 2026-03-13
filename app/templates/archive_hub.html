@@ -2,7 +2,7 @@
 {% set use_aggrid = true %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .archive-wrap {
     display: flex;
     flex-direction: column;
@@ -405,7 +405,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 // Tree navigation functions
 function toggleNode(el) {
   const childEl = el.nextElementSibling;
@@ -454,7 +454,7 @@ const columnDefs = [
     checkboxSelection: true,
     width: 50,
     pinned: 'left',
-    suppressMenu: true,
+    suppressHeaderMenuButton: true,
   },
   { field: 'sample_code', headerName: '{{ _("Sample Code") }}', width: 170, pinned: 'left', filter: 'agTextColumnFilter', floatingFilter: true },
   { field: 'sample_condition', headerName: '{{ _("Status") }}', width: 80 },
@@ -475,7 +475,7 @@ const gridOptions = {
     sortable: true,
     filter: true,
     resizable: true,
-    floatingFilterComponentParams: { suppressFilterButton: true },
+    suppressFloatingFilterButton: true,
   },
   onSelectionChanged: function() {
     const selectedRows = gridOptions.api.getSelectedRows();

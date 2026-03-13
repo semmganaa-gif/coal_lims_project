@@ -46,7 +46,7 @@
 
 </div>
 
-<style>
+<style nonce="{{ csp_nonce }}">
   #massGrid{
     margin-top: 12px;
     height: 70vh;
@@ -61,7 +61,7 @@
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 (() => {
   'use strict';
 
@@ -189,7 +189,7 @@
   async function fetchEligible() {
     const inc = $toggleInc.checked ? '1' : '0';
     const q   = encodeURIComponent($search.value || '');
-    if(gridApi) gridApi.showLoadingOverlay();
+    if(gridApi) gridApi.setGridOption('loading', true);
     try{
       const res = await fetch(`/api/mass/eligible?include_ready=${inc}&q=${q}`, { credentials:'same-origin' });
       const data = await res.json();
@@ -199,7 +199,7 @@
       toast('{{ _("Error loading data.") }}', 'danger');
       setRowData([]);
     }finally{
-      if(gridApi) gridApi.hideOverlay();
+      if(gridApi) gridApi.setGridOption('loading', false);
     }
   }
 

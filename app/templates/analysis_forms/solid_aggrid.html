@@ -7,7 +7,7 @@
 
 {{ aggrid_macros.grid_container('solidGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 

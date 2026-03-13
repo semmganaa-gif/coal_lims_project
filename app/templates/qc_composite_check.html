@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .qc-page {
     min-height: calc(100vh - 80px);
     background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);

@@ -2,7 +2,7 @@
 {% block title %}{{ _("Water Monthly Plan") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .water-plan {
     min-height: calc(100vh - 80px); padding: 1rem 1.5rem;
     background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
@@ -213,7 +213,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
   const year = {{ year }};

@@ -349,8 +349,8 @@ const WaterSummaryGrid = (function() {
         resizable: true,
         sortable: true,
         filter: true,
-        suppressMenu: true,
-        floatingFilterComponentParams: { suppressFilterButton: true }
+        suppressHeaderMenuButton: true,
+        suppressFloatingFilterButton: true
       },
       rowHeight: 28,
       headerHeight: 32,

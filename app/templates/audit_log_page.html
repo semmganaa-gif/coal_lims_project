@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<style>
+<style nonce="{{ csp_nonce }}">
   :root {
     --bg: #f8fafc;
     --surface: #ffffff;
@@ -342,7 +342,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
 // Schema-based audit columns config
 const AUDIT_COLUMNS = {{ analysis_schema.get('audit_columns', [])|tojson }};
 const AUDIT_EXTRA_COLUMNS = {{ analysis_schema.get('audit_extra_columns', [])|tojson }};
@@ -767,7 +767,7 @@ const gridOptions = {
     sortable: true,
     resizable: true,
     filter: true,
-    floatingFilterComponentParams: { suppressFilterButton: true }
+    suppressFloatingFilterButton: true
   },
   getRowClass: getRowClass,
   animateRows: true,

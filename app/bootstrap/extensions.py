@@ -13,6 +13,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_login import current_user as _limiter_current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 from flask_socketio import SocketIO
@@ -31,8 +32,18 @@ babel = Babel()
 cache = Cache()
 socketio = SocketIO()
 csrf = CSRFProtect()
+def _rate_limit_key():
+    """Authenticated хэрэглэгчийг user ID-аар, бусдыг IP-аар тодорхойлох."""
+    try:
+        if getattr(_limiter_current_user, 'is_authenticated', False):
+            return f"user:{_limiter_current_user.id}"
+    except RuntimeError:
+        pass  # app context-гүй үед (test, CLI)
+    return get_remote_address()
+
+
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=_rate_limit_key,
     default_limits=["10000 per day", "500 per hour"],
     storage_uri=None
 )

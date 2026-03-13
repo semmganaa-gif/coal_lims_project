@@ -29,7 +29,7 @@
 
 {{ aggrid_macros.grid_container('cvGrid') | safe }}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 (function() {
   'use strict';
 

@@ -157,7 +157,7 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const labels = [{% for stat in monthly_stats %}'{{ stat.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
     const data = [{% for stat in monthly_stats %}{{ stat.count }}{% if not loop.last %},{% endif %}{% endfor %}];

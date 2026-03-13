@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
 #ptTable th:first-child,
 #ptTable td:first-child {
     min-width: 200px !important;
@@ -139,7 +139,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
     $('#ptTable').DataTable({
         order: [[8, 'desc']],

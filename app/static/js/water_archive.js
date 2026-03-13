@@ -223,7 +223,7 @@
     var gridOptions = {
       columnDefs: buildColumnDefs('water'),
       rowData: [],
-      defaultColDef: { resizable: true, sortable: true, filter: true, suppressMenu: true, floatingFilterComponentParams: { suppressFilterButton: true } },
+      defaultColDef: { resizable: true, sortable: true, filter: true, suppressHeaderMenuButton: true, suppressFloatingFilterButton: true },
       rowHeight: 28, headerHeight: 32, groupHeaderHeight: 28, floatingFiltersHeight: 28,
       rowSelection: 'multiple', suppressCellFocus: true,
       getRowId: function(p) { return String(p.data.sample_id); },

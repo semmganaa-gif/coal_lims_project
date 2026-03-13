@@ -3,7 +3,7 @@
 {% block title %}{{ _("Microbiology Analysis") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .micro-hub {
     min-height: calc(100vh - 120px); padding: 1.5rem;
     background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 30%, #f0fdf4 60%, #f8fafc 100%);

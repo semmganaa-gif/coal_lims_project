@@ -271,6 +271,15 @@ def update_user(
 
     original_username = user_to_edit.username
 
+    # Capture old values for audit before/after
+    _old_audit = {
+        'username': user_to_edit.username,
+        'role': user_to_edit.role,
+        'allowed_labs': user_to_edit.allowed_labs,
+        'full_name': user_to_edit.full_name,
+        'email': user_to_edit.email,
+    }
+
     # Duplicate check
     if original_username != username:
         existing_user = db.session.scalar(
@@ -313,7 +322,15 @@ def update_user(
                 'role': user_to_edit.role,
                 'allowed_labs': user_to_edit.allowed_labs,
                 'password_changed': bool(password)
-            }
+            },
+            old_value=_old_audit,
+            new_value={
+                'username': user_to_edit.username,
+                'role': user_to_edit.role,
+                'allowed_labs': user_to_edit.allowed_labs,
+                'full_name': user_to_edit.full_name,
+                'email': user_to_edit.email,
+            },
         )
         msg = f'"{user_to_edit.username}" хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ.'
         if admin_role_warning:
@@ -411,6 +428,36 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
 
     if gi_config:
         SystemSettingRepository.set_value('gi_shift', 'config', json.dumps(gi_config), commit=False)
+
+    # Save SLA hours config
+    from app.services.sla_service import SLA_CONFIG_CATEGORY
+    from app.models import SystemSetting
+    sla_count = 0
+    for field_key in form_data:
+        if field_key.startswith('sla_hours[') and field_key.endswith(']'):
+            sla_key = field_key[10:-1]  # extract "CHPP:2 hourly" from "sla_hours[CHPP:2 hourly]"
+            val = (form_data.get(field_key) or '').strip()
+            existing = SystemSetting.query.filter_by(
+                category=SLA_CONFIG_CATEGORY, key=sla_key
+            ).first()
+            if val:
+                try:
+                    hours = int(val)
+                    if 1 <= hours <= 8760:
+                        if existing:
+                            existing.value = str(hours)
+                        else:
+                            db.session.add(SystemSetting(
+                                category=SLA_CONFIG_CATEGORY, key=sla_key,
+                                value=str(hours), is_active=True,
+                            ))
+                        sla_count += 1
+                except (ValueError, TypeError):
+                    pass
+            elif existing:
+                # Empty value = remove custom config (revert to default)
+                db.session.delete(existing)
+                sla_count += 1
 
     try:
         db.session.commit()

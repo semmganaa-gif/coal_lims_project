@@ -3,7 +3,7 @@
 {% block title %}{{ _('Coal Laboratory') }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .coal-dash {
     min-height: calc(100vh - 120px); padding: 1.5rem;
     background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f1f5f9 100%);

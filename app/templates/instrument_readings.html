@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% set use_aggrid = true %}
+
+{% block title %}{{ _("Instrument Readings") }}{% endblock %}
+
+{% block content %}
+<style nonce="{{ csp_nonce }}">
+  .ir-page {
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .ir-header {
+    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .ir-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+
+  /* Metric cards */
+  .metrics-row { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+  .metric-card {
+    flex: 1; min-width: 140px;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .metric-card .icon { font-size: 1.5rem; }
+  .metric-card .val { font-size: 1.5rem; font-weight: 700; }
+  .metric-card .lbl { font-size: 0.7rem; color: #64748b; }
+  .metric-card.pending { border-left: 3px solid #f59e0b; }
+  .metric-card.pending .icon { color: #f59e0b; }
+  .metric-card.approved { border-left: 3px solid #22c55e; }
+  .metric-card.approved .icon { color: #22c55e; }
+  .metric-card.rejected { border-left: 3px solid #ef4444; }
+  .metric-card.rejected .icon { color: #ef4444; }
+  .metric-card.total { border-left: 3px solid #3b82f6; }
+  .metric-card.total .icon { color: #3b82f6; }
+
+  /* Toolbar */
+  .toolbar {
+    background: rgba(248,250,252,0.85);
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .toolbar select, .toolbar input {
+    font-size: 0.8rem; padding: 4px 8px;
+    border: 1px solid #cbd5e1; border-radius: 6px;
+  }
+  .toolbar-select-wide { min-width: 150px; }
+
+  /* Grid */
+  .grid-full { width: 100%; height: 100%; }
+
+  /* Form labels */
+  .lbl-sm { font-size: 0.8rem; }
+
+  /* Grid */
+  .grid-wrap {
+    flex: 1; min-height: 0; overflow: hidden;
+    background: #fff; border: 1px solid rgba(15,23,42,0.06); border-radius: 14px;
+  }
+  .ag-theme-alpine {
+    --ag-font-size: 11px; --ag-row-height: 28px; --ag-header-height: 30px;
+  }
+
+  .st { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+  .st-pending { background: #fef3c7; color: #92400e; }
+  .st-approved { background: #dcfce7; color: #166534; }
+  .st-rejected { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="container-fluid ir-page mt-2">
+  <!-- Header -->
+  <div class="ir-header">
+    <div class="d-flex align-items-center gap-2">
+      <h5><i class="bi bi-cpu me-1 text-info"></i>{{ _("Instrument Readings") }}</h5>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" id="btnUpload">
+        <i class="bi bi-upload me-1"></i>{{ _("Upload File") }}
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
+        <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics-row">
+    <div class="metric-card total">
+      <div class="icon"><i class="bi bi-stack"></i></div>
+      <div><div class="val" id="mTotal">0</div><div class="lbl">{{ _("Total") }}</div></div>
+    </div>
+    <div class="metric-card pending">
+      <div class="icon"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="val" id="mPending">0</div><div class="lbl">{{ _("Pending") }}</div></div>
+    </div>
+    <div class="metric-card approved">
+      <div class="icon"><i class="bi bi-check-circle"></i></div>
+      <div><div class="val" id="mApproved">0</div><div class="lbl">{{ _("Approved") }}</div></div>
+    </div>
+    <div class="metric-card rejected">
+      <div class="icon"><i class="bi bi-x-circle"></i></div>
+      <div><div class="val" id="mRejected">0</div><div class="lbl">{{ _("Rejected") }}</div></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <select id="instrumentFilter" class="toolbar-select-wide">
+      <option value="">{{ _("All Instruments") }}</option>
+    </select>
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-sm btn-success" id="btnBulkApprove" disabled>
+        <i class="bi bi-check-all me-1"></i>{{ _("Approve Selected") }}
+      </button>
+      <button class="btn btn-sm btn-danger" id="btnBulkReject" disabled>
+        <i class="bi bi-x-lg me-1"></i>{{ _("Reject Selected") }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrap">
+    <div id="readingsGrid" class="ag-theme-alpine grid-full"></div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-upload me-1"></i>{{ _("Upload Instrument File") }}</h6>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2">
+          <label class="form-label lbl-sm">{{ _("Instrument Type") }}</label>
+          <select class="form-select form-select-sm" id="uploadInstrType">
+            <option value="generic_csv">Generic CSV</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label lbl-sm">{{ _("Instrument Name") }}</label>
+          <input type="text" class="form-control form-control-sm" id="uploadInstrName" placeholder="{{ _('Optional') }}">
+        </div>
+        <div class="mb-2">
+          <label class="form-label lbl-sm">{{ _("File") }}</label>
+          <input type="file" class="form-control form-control-sm" id="uploadFile">
+        </div>
+      </div>
+      <div class="modal-footer py-1">
+        <button class="btn btn-sm btn-primary" id="btnDoUpload">{{ _("Upload") }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Reason Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title"><i class="bi bi-x-circle me-1 text-danger"></i>{{ _("Reject Reason") }}</h6>
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control form-control-sm" id="rejectReason" rows="3"
+                  placeholder="{{ _('Enter reason for rejection...') }}"></textarea>
+      </div>
+      <div class="modal-footer py-1">
+        <button class="btn btn-sm btn-danger" id="btnDoReject">{{ _("Reject") }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const API = '/api/v1/instrument';
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+let gridApi = null;
+let pendingRejectIds = [];
+
+async function apiFetch(path, opts = {}) {
+  const resp = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
+    ...opts
+  });
+  return resp.json();
+}
+
+// ── Load stats ──
+async function loadStats() {
+  const data = await apiFetch('/stats');
+  if (data.success && data.data) {
+    const s = data.data;
+    document.getElementById('mTotal').textContent = s.total || 0;
+    document.getElementById('mPending').textContent = s.pending || 0;
+    document.getElementById('mApproved').textContent = s.approved || 0;
+    document.getElementById('mRejected').textContent = s.rejected || 0;
+  }
+}
+
+// ── Load instrument types ──
+async function loadTypes() {
+  const data = await apiFetch('/types');
+  if (data.success && data.data) {
+    const sel = document.getElementById('instrumentFilter');
+    const upSel = document.getElementById('uploadInstrType');
+    data.data.forEach(t => {
+      sel.innerHTML += `<option value="${t.key || t}">${t.label || t}</option>`;
+      upSel.innerHTML += `<option value="${t.key || t}">${t.label || t}</option>`;
+    });
+  }
+}
+
+// ── Status renderer ──
+function statusRenderer(params) {
+  const s = (params.value || '').toLowerCase();
+  if (s === 'approved') return '<span class="st st-approved">APPROVED</span>';
+  if (s === 'rejected') return '<span class="st st-rejected">REJECTED</span>';
+  return '<span class="st st-pending">PENDING</span>';
+}
+
+// ── Action buttons renderer ──
+function actionRenderer(params) {
+  if (params.data.status !== 'pending') return '';
+  return `<button class="btn btn-sm btn-outline-success py-0 px-1 me-1" onclick="approveOne(${params.data.id})" title="{{ _('Approve') }}">
+    <i class="bi bi-check"></i>
+  </button>
+  <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="rejectOne(${params.data.id})" title="{{ _('Reject') }}">
+    <i class="bi bi-x"></i>
+  </button>`;
+}
+
+// ── Load readings ──
+async function loadReadings() {
+  const instrType = document.getElementById('instrumentFilter').value;
+  const params = instrType ? `?instrument_type=${instrType}` : '';
+  const data = await apiFetch(`/pending${params}`);
+
+  if (!data.success) return;
+  const rows = data.data || [];
+
+  const colDefs = [
+    { headerCheckboxSelection: true, checkboxSelection: true, width: 40, pinned: 'left' },
+    { field: 'id', headerName: 'ID', width: 60 },
+    { field: 'instrument_name', headerName: '{{ _("Instrument") }}', width: 140, filter: 'agTextColumnFilter', floatingFilter: true },
+    { field: 'sample_code', headerName: '{{ _("Sample") }}', width: 130, filter: 'agTextColumnFilter', floatingFilter: true },
+    { field: 'analysis_code', headerName: '{{ _("Analysis") }}', width: 90, filter: 'agTextColumnFilter', floatingFilter: true },
+    { field: 'parsed_value', headerName: '{{ _("Value") }}', width: 100, cellClass: 'mono' },
+    { field: 'unit', headerName: '{{ _("Unit") }}', width: 70 },
+    { field: 'source_file', headerName: '{{ _("Source File") }}', width: 150 },
+    { field: 'status', headerName: '{{ _("Status") }}', width: 90, cellRenderer: statusRenderer },
+    { field: 'created_at', headerName: '{{ _("Date") }}', width: 130,
+      valueFormatter: p => p.value ? new Date(p.value).toLocaleString('en-GB', {dateStyle:'short', timeStyle:'short'}) : '' },
+    { headerName: '{{ _("Actions") }}', width: 90, cellRenderer: actionRenderer, pinned: 'right' }
+  ];
+
+  if (gridApi) gridApi.destroy();
+  const gridDiv = document.getElementById('readingsGrid');
+  gridApi = agGrid.createGrid(gridDiv, {
+    columnDefs: colDefs,
+    rowData: rows,
+    defaultColDef: { sortable: true, resizable: true },
+    rowSelection: 'multiple',
+    animateRows: true,
+    enableCellTextSelection: true,
+    onSelectionChanged: updateBulkButtons
+  });
+}
+
+function updateBulkButtons() {
+  const sel = gridApi ? gridApi.getSelectedRows() : [];
+  const pending = sel.filter(r => r.status === 'pending');
+  document.getElementById('btnBulkApprove').disabled = pending.length === 0;
+  document.getElementById('btnBulkReject').disabled = pending.length === 0;
+}
+
+// ── Single actions ──
+async function approveOne(id) {
+  const data = await apiFetch(`/approve/${id}`, { method: 'POST' });
+  if (data.success) { loadReadings(); loadStats(); }
+  else alert(data.message);
+}
+
+function rejectOne(id) {
+  pendingRejectIds = [id];
+  document.getElementById('rejectReason').value = '';
+  new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+// ── Bulk actions ──
+async function bulkApprove() {
+  const sel = gridApi.getSelectedRows().filter(r => r.status === 'pending');
+  if (!sel.length) return;
+  const data = await apiFetch('/bulk-approve', {
+    method: 'POST', body: JSON.stringify({ ids: sel.map(r => r.id) })
+  });
+  if (data.success) { loadReadings(); loadStats(); }
+  else alert(data.message);
+}
+
+function bulkReject() {
+  const sel = gridApi.getSelectedRows().filter(r => r.status === 'pending');
+  if (!sel.length) return;
+  pendingRejectIds = sel.map(r => r.id);
+  document.getElementById('rejectReason').value = '';
+  new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+async function doReject() {
+  const reason = document.getElementById('rejectReason').value.trim();
+  if (pendingRejectIds.length === 1) {
+    await apiFetch(`/reject/${pendingRejectIds[0]}`, {
+      method: 'POST', body: JSON.stringify({ reason })
+    });
+  } else {
+    await apiFetch('/bulk-reject', {
+      method: 'POST', body: JSON.stringify({ ids: pendingRejectIds, reason })
+    });
+  }
+  bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+  loadReadings();
+  loadStats();
+}
+
+// ── Upload ──
+async function doUpload() {
+  const file = document.getElementById('uploadFile').files[0];
+  if (!file) return alert('{{ _("Select a file") }}');
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('instrument_type', document.getElementById('uploadInstrType').value);
+  fd.append('instrument_name', document.getElementById('uploadInstrName').value);
+
+  const resp = await fetch(API + '/upload', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF },
+    body: fd
+  });
+  const data = await resp.json();
+  if (data.success) {
+    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+    loadReadings();
+    loadStats();
+  } else {
+    alert(data.message);
+  }
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', async () => {
+  await Promise.all([loadStats(), loadTypes()]);
+  await loadReadings();
+
+  document.getElementById('btnRefresh').addEventListener('click', () => { loadReadings(); loadStats(); });
+  document.getElementById('btnUpload').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('uploadModal')).show();
+  });
+  document.getElementById('btnDoUpload').addEventListener('click', doUpload);
+  document.getElementById('btnBulkApprove').addEventListener('click', bulkApprove);
+  document.getElementById('btnBulkReject').addEventListener('click', bulkReject);
+  document.getElementById('btnDoReject').addEventListener('click', doReject);
+  document.getElementById('instrumentFilter').addEventListener('change', loadReadings);
+});
+</script>
+{% endblock %}

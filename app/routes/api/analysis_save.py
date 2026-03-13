@@ -21,6 +21,9 @@ from app.utils.validators import validate_save_results_batch
 from .helpers import _coalesce_diff, _effective_limit
 from app.monitoring import track_analysis
 
+# Нэг удаагийн batch хүсэлтийн дээд хэмжээ (DoS хамгаалалт)
+MAX_BATCH_SIZE = 500
+
 
 def register_save_routes(bp):
     """Save/update route-уудыг blueprint дээр бүртгэх"""
@@ -46,6 +49,12 @@ def register_save_routes(bp):
 
         if not isinstance(data, list) or len(data) == 0:
             return jsonify({"message": "JSON массив байх ёстой"}), 400
+
+        if len(data) > MAX_BATCH_SIZE:
+            return jsonify({
+                "message": f"Нэг удаад {MAX_BATCH_SIZE}-аас их мөр хадгалах боломжгүй. "
+                           f"Хүлээн авсан: {len(data)}"
+            }), 400
 
         # Schema validation (structural check)
         _schema = AnalysisResultSchema(many=True)

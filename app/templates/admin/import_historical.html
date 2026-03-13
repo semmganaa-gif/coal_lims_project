@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .card{ border:1px solid rgba(15,23,42,.08); border-radius:14px; box-shadow:0 8px 24px rgba(15,23,42,.06); }
   .card-header{ background:#f8fafc; font-weight:700; }
   .kv{ display:grid; grid-template-columns: 220px 1fr; gap:6px 14px; }

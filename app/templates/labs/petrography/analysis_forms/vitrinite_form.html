@@ -3,8 +3,8 @@
 {% block title %}{{ param.name_mn }} - {{ _("Vitrinite Reflectance") }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
 {% endblock %}
 
 {% block content %}
@@ -73,7 +73,7 @@
   </div>
 </div>
 
-<style>
+<style nonce="{{ csp_nonce }}">
   .btn-purple { background-color: #6f42c1; color: white; border: none; }
   .btn-purple:hover { background-color: #5a32a3; color: white; }
   .bg-purple { background-color: #6f42c1 !important; }
@@ -81,8 +81,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
+<script nonce="{{ csp_nonce }}">
 const analysisCode = "{{ analysis_code }}";
 let gridApi;
 let selectedSampleId = null;

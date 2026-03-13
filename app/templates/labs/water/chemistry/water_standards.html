@@ -3,7 +3,7 @@
 {% block title %}{{ _("Water Quality Standards — MNS/WHO") }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .standards-page {
     min-height: calc(100vh - 120px);
     padding: 1.5rem;
@@ -186,7 +186,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('searchInput').addEventListener('input', function() {
   const query = this.value.toLowerCase().trim();
   const cards = document.querySelectorAll('.standard-card');

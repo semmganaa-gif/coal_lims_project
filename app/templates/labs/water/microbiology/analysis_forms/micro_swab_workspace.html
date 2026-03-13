@@ -2,7 +2,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<style>
+<style nonce="{{ csp_nonce }}">
   .micro-ws { min-height: calc(100vh - 120px); padding: 1.5rem; background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #f8fafc 100%); background-attachment: fixed; }
   .ws-header { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(124,58,237,0.08)); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px rgba(139,92,246,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
   .ws-header h1 { font-size: 1.4rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #8b5cf6, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -65,7 +65,7 @@
 </div>
 
 {# --- ТОНОГ ТӨХӨӨРӨМЖИЙН MODAL --- #}
-<style>
+<style nonce="{{ csp_nonce }}">
   #equipmentModal .modal-header {
     background: linear-gradient(135deg, #065f46 0%, #047857 100%);
     color: #fff; border-bottom: 3px solid #20c997;
@@ -223,10 +223,10 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 class DateCellEditor {
   init(params) {
     this.value = params.value || '';
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {# --- Equipmentийн ашиглалт --- #}
-<script>
+<script nonce="{{ csp_nonce }}">
 let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
 

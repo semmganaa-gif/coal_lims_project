@@ -1,0 +1,232 @@
+{# Partial: SLA Dashboard content for embedding in index.html tab #}
+<style nonce="{{ csp_nonce }}">
+  .sla-header-inline {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .sla-header-inline h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .summary-card {
+    flex: 1; min-width: 140px;
+    background: #fff; border: 1px solid #e2e8f0;
+    border-radius: 12px; padding: 14px 18px; text-align: center;
+  }
+  .summary-card .val { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+  .summary-card .lbl { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+  .summary-card .sub { font-size: 0.65rem; color: #94a3b8; }
+  .summary-card.overdue { border-top: 3px solid #ef4444; }
+  .summary-card.overdue .val { color: #ef4444; }
+  .summary-card.due-soon { border-top: 3px solid #f59e0b; }
+  .summary-card.due-soon .val { color: #f59e0b; }
+  .summary-card.on-track { border-top: 3px solid #22c55e; }
+  .summary-card.on-track .val { color: #22c55e; }
+  .summary-card.avg-tat { border-top: 3px solid #3b82f6; }
+  .summary-card.avg-tat .val { color: #3b82f6; }
+  .summary-card.compliance { border-top: 3px solid #8b5cf6; }
+  .summary-card.compliance .val { color: #8b5cf6; }
+  .sla-tabs-inline { display: flex; gap: 4px; background: #f8fafc; border: 1px solid rgba(148,163,184,0.18); border-radius: 10px; padding: 5px 8px; margin-bottom: 10px; }
+  .sla-tab-i { padding: 5px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; background: none; color: #64748b; }
+  .sla-tab-i.active { background: #3b82f6; color: #fff; font-weight: 600; }
+  .sla-tab-i:hover:not(.active) { background: #f1f5f9; }
+  .sla-tab-i .cnt { display: inline-block; min-width: 18px; text-align: center; padding: 0 4px; border-radius: 10px; font-size: 0.65rem; background: rgba(0,0,0,0.1); margin-left: 4px; }
+  .sla-tab-i.active .cnt { background: rgba(255,255,255,0.3); }
+  #slaGridInline { height: calc(100vh - 460px); min-height: 300px; width: 100%; }
+  .sla-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+  .sla-overdue { background: #fee2e2; color: #991b1b; }
+  .sla-due-soon { background: #fef3c7; color: #92400e; }
+  .sla-ok { background: #dcfce7; color: #166534; }
+  .priority-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
+  .priority-urgent { background: #fee2e2; color: #991b1b; }
+  .priority-rush { background: #fef3c7; color: #92400e; }
+  .priority-normal { background: #f1f5f9; color: #64748b; }
+  .hours-overdue { color: #ef4444; font-weight: 700; }
+</style>
+
+<!-- Header -->
+<div class="sla-header-inline">
+  <div class="d-flex align-items-center gap-2">
+    <h5><i class="bi bi-clock-history me-1 text-warning"></i>{{ _("SLA Dashboard") }}</h5>
+  </div>
+  <div class="d-flex gap-2">
+    {% if current_user.role in ['manager', 'admin'] %}
+    <button class="btn btn-sm btn-outline-warning" id="btnSlaAssign">
+      <i class="bi bi-lightning me-1"></i>{{ _("Auto-assign SLA") }}
+    </button>
+    {% endif %}
+    <button class="btn btn-sm btn-outline-secondary" id="btnSlaRefresh">
+      <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
+    </button>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-row">
+  <div class="summary-card overdue">
+    <div class="val" id="slaOverdue">0</div>
+    <div class="lbl">{{ _("Overdue") }}</div>
+    <div class="sub">{{ _("exceeded deadline") }}</div>
+  </div>
+  <div class="summary-card due-soon">
+    <div class="val" id="slaDueSoon">0</div>
+    <div class="lbl">{{ _("Due Soon") }}</div>
+    <div class="sub">{{ _("within 24 hours") }}</div>
+  </div>
+  <div class="summary-card on-track">
+    <div class="val" id="slaOnTrack">0</div>
+    <div class="lbl">{{ _("On Track") }}</div>
+    <div class="sub">{{ _("within SLA") }}</div>
+  </div>
+  <div class="summary-card avg-tat">
+    <div class="val" id="slaAvgTat">-</div>
+    <div class="lbl">{{ _("Avg TAT") }}</div>
+    <div class="sub">{{ _("hours") }}</div>
+  </div>
+  <div class="summary-card compliance">
+    <div class="val" id="slaCompliance">-</div>
+    <div class="lbl">{{ _("SLA Compliance") }}</div>
+    <div class="sub">{{ _("percentage") }}</div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="sla-tabs-inline">
+  <button class="sla-tab-i active" data-sla-tab="overdue">
+    <i class="bi bi-exclamation-triangle me-1"></i>{{ _("Overdue") }}
+    <span class="cnt" id="slaTabOverdue">0</span>
+  </button>
+  <button class="sla-tab-i" data-sla-tab="due_soon">
+    <i class="bi bi-clock me-1"></i>{{ _("Due Soon") }}
+    <span class="cnt" id="slaTabDueSoon">0</span>
+  </button>
+  <button class="sla-tab-i" data-sla-tab="on_track">
+    <i class="bi bi-check-circle me-1"></i>{{ _("On Track") }}
+    <span class="cnt" id="slaTabOnTrack">0</span>
+  </button>
+</div>
+
+<!-- Grid -->
+<div id="slaGridInline" class="ag-theme-alpine"></div>
+
+<script nonce="{{ csp_nonce }}">
+(function(){
+  const SLA_API = '/api/v1/sla';
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const SLA_LAB_TYPES = {{ sla_lab_types | default(['coal']) | tojson | safe }};
+  let slaGridApi = null;
+  let slaCurrentTab = 'overdue';
+  let slaInitialized = false;
+
+  async function slaFetch(path, opts = {}) {
+    const resp = await fetch(SLA_API + path, {
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
+      ...opts
+    });
+    return resp.json();
+  }
+
+  function slaPriorityRenderer(p) {
+    const v = (p.value || 'normal').toLowerCase();
+    const cls = v === 'urgent' ? 'priority-urgent' : v === 'rush' ? 'priority-rush' : 'priority-normal';
+    return '<span class="priority-badge ' + cls + '">' + v.toUpperCase() + '</span>';
+  }
+  function slaHoursRenderer(p) {
+    const v = p.value;
+    if (v == null) return '-';
+    const h = parseFloat(v);
+    if (h > 0) return '<span class="hours-overdue">+' + h.toFixed(1) + 'h</span>';
+    return h.toFixed(1) + 'h';
+  }
+
+  async function slaLoadSummary() {
+    var totals = { overdue: 0, due_soon: 0, on_track: 0, tat_sum: 0, tat_count: 0, on_time: 0, late: 0 };
+    for (var i = 0; i < SLA_LAB_TYPES.length; i++) {
+      var data = await slaFetch('/summary?lab_type=' + SLA_LAB_TYPES[i]);
+      if (!data.success) continue;
+      var s = data.data;
+      totals.overdue += (s.overdue || 0);
+      totals.due_soon += (s.due_soon || 0);
+      totals.on_track += (s.on_track || 0);
+      if (s.avg_turnaround_hours) { totals.tat_sum += s.avg_turnaround_hours; totals.tat_count++; }
+      totals.on_time += (s.completed_on_time || 0);
+      totals.late += (s.completed_late || 0);
+    }
+    document.getElementById('slaOverdue').textContent = totals.overdue;
+    document.getElementById('slaDueSoon').textContent = totals.due_soon;
+    document.getElementById('slaOnTrack').textContent = totals.on_track;
+    document.getElementById('slaAvgTat').textContent = totals.tat_count ? (totals.tat_sum / totals.tat_count).toFixed(1) + 'h' : '-';
+    var total_done = totals.on_time + totals.late;
+    document.getElementById('slaCompliance').textContent = total_done ? ((totals.on_time / total_done) * 100).toFixed(1) + '%' : '-';
+    document.getElementById('slaTabOverdue').textContent = totals.overdue;
+    document.getElementById('slaTabDueSoon').textContent = totals.due_soon;
+    document.getElementById('slaTabOnTrack').textContent = totals.on_track;
+  }
+
+  async function slaLoadGrid() {
+    var rows = [];
+    for (var i = 0; i < SLA_LAB_TYPES.length; i++) {
+      var endpoint = slaCurrentTab === 'overdue' ? '/overdue' : slaCurrentTab === 'due_soon' ? '/due_soon' : '/on_track';
+      var data = await slaFetch(endpoint + '?lab_type=' + SLA_LAB_TYPES[i]);
+      if (data.success && data.data) rows = rows.concat(data.data);
+    }
+
+    var colDefs = [
+      { field: 'sample_code', headerName: '{{ _("Sample Code") }}', filter: 'agTextColumnFilter', floatingFilter: true, pinned: 'left' },
+      { field: 'client_name', headerName: '{{ _("Client") }}', filter: 'agTextColumnFilter', floatingFilter: true },
+      { field: 'priority', headerName: '{{ _("Priority") }}', cellRenderer: slaPriorityRenderer },
+      { field: 'due_date', headerName: '{{ _("Due Date") }}' },
+    ];
+    if (slaCurrentTab === 'overdue') {
+      colDefs.push({ field: 'overdue_hours', headerName: '{{ _("Overdue") }}', cellRenderer: slaHoursRenderer });
+      colDefs.push({ field: 'received_date', headerName: '{{ _("Received") }}' });
+      colDefs.push({ field: 'pending_analyses', headerName: '{{ _("Pending") }}' });
+    } else {
+      colDefs.push({ field: 'hours_remaining', headerName: '{{ _("Remaining") }}', valueFormatter: function(p) { return p.value != null ? p.value.toFixed(1) + 'h' : '-'; } });
+    }
+
+    if (slaGridApi) slaGridApi.destroy();
+    var gridDiv = document.getElementById('slaGridInline');
+    slaGridApi = agGrid.createGrid(gridDiv, {
+      columnDefs: colDefs,
+      rowData: rows,
+      defaultColDef: { sortable: true, resizable: true },
+      autoSizeStrategy: { type: 'fitCellContents' },
+      animateRows: true,
+      enableCellTextSelection: true
+    });
+  }
+
+  function slaRefresh() { slaLoadSummary(); slaLoadGrid(); }
+
+  function slaInit() {
+    if (slaInitialized) { slaRefresh(); return; }
+    slaInitialized = true;
+
+    slaRefresh();
+
+    document.querySelectorAll('.sla-tab-i').forEach(function(t) {
+      t.addEventListener('click', function() {
+        slaCurrentTab = t.dataset.slaTab;
+        document.querySelectorAll('.sla-tab-i').forEach(function(b) { b.classList.toggle('active', b.dataset.slaTab === slaCurrentTab); });
+        slaLoadGrid();
+      });
+    });
+    document.getElementById('btnSlaRefresh').addEventListener('click', slaRefresh);
+    var assignBtn = document.getElementById('btnSlaAssign');
+    if (assignBtn) assignBtn.addEventListener('click', async function() {
+      if (!confirm('{{ _("Auto-assign SLA to all active samples?") }}')) return;
+      for (var i = 0; i < SLA_LAB_TYPES.length; i++) {
+        await slaFetch('/assign?lab_type=' + SLA_LAB_TYPES[i], { method: 'POST' });
+      }
+      alert('SLA assigned');
+      slaRefresh();
+    });
+  }
+
+  // Init on tab show
+  var slaTab = document.getElementById('sla-tab');
+  if (slaTab) {
+    slaTab.addEventListener('shown.bs.tab', slaInit);
+    if (slaTab.classList.contains('active')) slaInit();
+  }
+})();
+</script>

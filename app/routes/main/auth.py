@@ -68,6 +68,11 @@ def register_routes(bp):
         form = UserProfileForm()
 
         if form.validate_on_submit():
+            _old_profile = {
+                'full_name': current_user.full_name,
+                'email': current_user.email,
+                'position': current_user.position,
+            }
             current_user.full_name = form.full_name.data
             current_user.email = form.email.data
             current_user.phone = form.phone.data
@@ -80,7 +85,13 @@ def register_routes(bp):
                         'full_name': form.full_name.data,
                         'email': form.email.data,
                         'position': form.position.data
-                    }
+                    },
+                    old_value=_old_profile,
+                    new_value={
+                        'full_name': form.full_name.data,
+                        'email': form.email.data,
+                        'position': form.position.data,
+                    },
                 )
 
             return redirect(url_for("main.profile"))
