@@ -584,6 +584,26 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
             },
         )
 
+        # Execute workflow hooks for each updated result
+        try:
+            from app.services.workflow_engine import WorkflowEngine
+            engine = WorkflowEngine("analysis_result")
+            for rid in int_ids:
+                res = results_map.get(rid)
+                if res and rid not in failed_ids:
+                    engine.execute_hooks(new_status, {
+                        'workflow_name': 'analysis_result',
+                        'entity_type': 'AnalysisResult',
+                        'entity_id': res.id,
+                        'entity': res,
+                        'from_state': '',
+                        'to_state': new_status,
+                        'comment': safe_comment or '',
+                        'sample_id': res.sample_id,
+                    })
+        except Exception:
+            logger.exception("Bulk workflow hook execution failed")
+
         # Email notification (don't block)
         try:
             notify_sample_status_change(
@@ -768,6 +788,23 @@ def update_result_status_api(result_id, new_status, action_type=None,
         db.session.rollback()
         logger.error("update_result_status commit error: %s", exc, exc_info=True)
         return None, "Мэдээллийн сан хадгалах алдаа", 500
+
+    # Execute workflow hooks (check_sample_complete, mark_sla_completed, etc.)
+    try:
+        from app.services.workflow_engine import WorkflowEngine
+        engine = WorkflowEngine("analysis_result")
+        engine.execute_hooks(new_status, {
+            'workflow_name': 'analysis_result',
+            'entity_type': 'AnalysisResult',
+            'entity_id': res.id,
+            'entity': res,
+            'from_state': '',
+            'to_state': new_status,
+            'comment': safe_comment or '',
+            'sample_id': res.sample_id,
+        })
+    except Exception:
+        logger.exception("Workflow hook execution failed (API path)")
 
     return {"message": "Амжилттай", "status": new_status}, None, 200
 
