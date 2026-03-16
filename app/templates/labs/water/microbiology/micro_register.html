@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-
-{% block title %}{{ _("Water Chemistry") }} {{ _("Sample Registration") }}{% endblock %}
+{% block title %}{{ _("Microbiology") }} {{ _("Sample Registration") }}{% endblock %}
 
 {% block head %}
 <style nonce="{{ csp_nonce }}">
@@ -15,21 +14,19 @@
     color: #64748b; border: none; padding: 0.5rem 1.25rem;
   }
   .nav-tabs .nav-link.active {
-    color: #0dcaf0; border-bottom: 3px solid #0dcaf0;
+    color: #20c997; border-bottom: 3px solid #20c997;
     background: transparent;
   }
   .tab-content { flex: 1; overflow: hidden; }
   .tab-pane { height: 100%; overflow: auto; }
   .tab-pane#list-pane { overflow: hidden; }
 
-  /* Grid wrapper */
   .grid-wrapper { width: 100%; height: calc(100% - 50px); }
   .ag-theme-alpine .ag-header-cell-label { white-space: normal !important; line-height: 1.2; }
   .ag-theme-alpine .ag-header-row-column { height: 60px !important; }
   .ag-theme-alpine .ag-header-row-column-filter { height: 32px !important; }
   .ag-theme-alpine .ag-header-cell { padding-top: 2px; padding-bottom: 2px; }
 
-  /* ---- Add form styles ---- */
   .water-gateway {
     height: 100%;
     padding: 0.5rem 0;
@@ -47,7 +44,7 @@
   .water-hub-header { text-align: center; margin-bottom: 1.5rem; }
   .water-hub-header h1 {
     font-size: 1.6rem; font-weight: 900;
-    background: linear-gradient(135deg, #0dcaf0 0%, #20c997 100%);
+    background: linear-gradient(135deg, #20c997 0%, #0dcaf0 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
   }
@@ -59,44 +56,38 @@
     gap: 0.75rem; max-width: 900px; width: 100%;
   }
   .unit-card {
-    border: none; border-radius: 14px; padding: 1rem 0.75rem;
-    text-align: center; cursor: pointer; transition: all 0.3s ease;
-    color: white; box-shadow: 0 4px 12px var(--card-shadow, rgba(0,0,0,0.1));
+    border-radius: 16px; padding: 1rem 0.75rem;
+    text-align: center; cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+    color: white;
+    box-shadow: 0 4px 15px var(--card-shadow, rgba(0,0,0,0.15));
   }
-  .unit-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px var(--card-shadow); }
-  .unit-card .icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
-  .unit-card .name { font-weight: 700; font-size: 0.8rem; }
-  .unit-card .count { font-size: 0.68rem; opacity: 0.8; }
+  .unit-card:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 8px 25px var(--card-shadow, rgba(0,0,0,0.2)); }
+  .unit-card .icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+  .unit-card .name { font-size: 0.82rem; font-weight: 700; }
+  .unit-card .count { font-size: 0.72rem; opacity: 0.85; margin-top: 0.2rem; }
 
-  .water-workspace {
-    display: none; flex: 1; flex-direction: column;
-    animation: wFadeIn 0.4s ease; overflow: auto;
-  }
+  .water-workspace { display: none; flex-direction: column; gap: 0.75rem; animation: wFadeIn 0.3s ease; }
   .water-workspace.active { display: flex; }
-
-  .ws-header {
-    display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; margin-bottom: 0.5rem;
-  }
-  .btn-back {
-    background: none; border: 2px solid #e2e8f0; border-radius: 10px;
-    padding: 0.3rem 0.5rem; cursor: pointer; color: #64748b; transition: all 0.2s;
-  }
-  .btn-back:hover { border-color: #94a3b8; color: #334155; }
+  .ws-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; }
+  .btn-back { background: none; border: none; font-size: 1.3rem; color: #64748b; cursor: pointer; padding: 0.2rem; }
+  .btn-back:hover { color: #20c997; }
   .unit-badge {
     display: inline-flex; align-items: center; gap: 0.4rem;
-    padding: 0.25rem 0.7rem; border-radius: 8px;
-    font-weight: 700; font-size: 0.82rem; color: white;
+    background: #20c997; color: white;
+    padding: 0.3rem 0.8rem; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 700;
   }
 
-  .sample-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+  .sample-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; min-height: 36px; }
   .sample-chip {
-    padding: 0.35rem 0.7rem; border: 2px solid #e2e8f0; border-radius: 10px;
-    font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    color: #475569; background: white; transition: all 0.2s;
+    padding: 0.2rem 0.65rem; border-radius: 20px;
+    border: 1.5px solid #e2e8f0; background: #f8fafc;
+    font-size: 0.78rem; cursor: pointer; transition: all 0.15s;
+    color: #475569;
   }
-  .sample-chip:hover { border-color: #0dcaf0; color: #0891b2; }
-  .sample-chip.selected { border-color: #0dcaf0; background: rgba(13,202,240,0.1); color: #0891b2; }
+  .sample-chip:hover { border-color: #20c997; background: rgba(32,201,151,0.06); }
+  .sample-chip.selected { border-color: #20c997; background: rgba(32,201,151,0.12); color: #059669; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
   @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
@@ -105,11 +96,6 @@
     border: 1px solid #e2e8f0;
   }
   .form-card h6 { font-weight: 700; margin-bottom: 0.5rem; color: #334155; font-size: 0.82rem; }
-  .soft-btn-blue  { background: #dbeafe; }
-  .soft-btn-red   { background: #fee2e2; }
-  .soft-btn-yellow{ background: #fef9c3; }
-  .soft-btn-green { background: #dcfce7; }
-  .soft-btn-gray  { background: #f1f5f9; }
 
   .analysis-check-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.35rem;
@@ -119,7 +105,7 @@
     padding: 0.25rem 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px;
     font-size: 0.76rem; cursor: pointer; transition: all 0.2s;
   }
-  .analysis-check:hover { border-color: #0dcaf0; background: rgba(13,202,240,0.04); }
+  .analysis-check:hover { border-color: #20c997; background: rgba(32,201,151,0.04); }
 </style>
 {% endblock %}
 
@@ -158,19 +144,19 @@
           <input type="date" id="dateFrom" class="form-control form-control-sm" style="width:130px;">
           <label class="small fw-bold mb-0">{{ _("To") }}:</label>
           <input type="date" id="dateTo" class="form-control form-control-sm" style="width:130px;">
-          <button type="button" class="btn btn-sm btn-outline-info" onclick="refreshSampleGrid()">
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="refreshSampleGrid()">
             <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
           </button>
           <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearDateFilter()">
             {{ _("All") }}
           </button>
-          <span class="badge bg-info" id="grid-count">0</span>
+          <span class="badge bg-success" id="grid-count">0</span>
           <span class="text-muted small">{{ _("samples") }}</span>
           <div class="ms-auto d-flex gap-2">
             <button type="button" class="btn btn-sm btn-outline-success" id="btnExportCsv">
               <i class="bi bi-file-earmark-spreadsheet me-1"></i>{{ _("Export CSV") }}
             </button>
-            <form id="deleteSelectedForm" action="{{ url_for('water.delete_samples') }}" method="post" class="d-inline">
+            <form id="deleteSelectedForm" action="{{ url_for('microbiology.delete_samples') }}" method="post" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="button" id="btnDeleteSelected" class="btn btn-sm btn-outline-danger">
                 <i class="bi bi-trash me-1"></i>{{ _("Delete") }}
@@ -184,7 +170,7 @@
 
     <!-- ===== TAB 2: New Sample ===== -->
     <div class="tab-pane fade" id="add-pane" role="tabpanel">
-      <form action="{{ url_for('water.register_sample') }}" method="post" id="water-sample-form">
+      <form action="{{ url_for('microbiology.register_sample') }}" method="post" id="micro-sample-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="source_type" id="source_type_input" value="">
         <div id="sample_codes_container"></div>
@@ -194,8 +180,8 @@
           <!-- PHASE 1: Select Unit -->
           <div class="water-hub-section" id="water-unit-hub">
             <div class="water-hub-header">
-              <h1><i class="bi bi-droplet-fill"></i> {{ _("Select Unit") }}</h1>
-              <p>{{ units|length }} units, {{ total_samples }} samples</p>
+              <h1><i class="bi bi-bug-fill"></i> {{ _("Select Unit") }}</h1>
+              <p>{{ units|length }} {{ _("units") }}, {{ total_samples }} {{ _("samples") }}</p>
             </div>
             <div class="unit-grid">
               {% for key, unit in units.items() %}
@@ -214,13 +200,13 @@
           <div class="water-workspace" id="water-workspace">
             <div class="ws-header">
               <button type="button" class="btn-back" onclick="goBack()"><i class="bi bi-arrow-left"></i></button>
-              <div class="unit-badge" id="unit-badge"><i class="bi bi-droplet"></i> <span id="unit-name-display"></span></div>
+              <div class="unit-badge" id="unit-badge"><i class="bi bi-bug"></i> <span id="unit-name-display"></span></div>
               <div class="ms-auto d-flex align-items-center gap-2">
                 <label class="form-check form-switch mb-0 d-flex align-items-center gap-1" style="cursor:pointer;">
                   <input type="checkbox" name="next_batch" value="1" class="form-check-input" style="width:2.5em; height:1.3em;" id="nextBatchCheck">
                   <span class="fw-bold text-warning" style="font-size:0.82rem;">{{ _("New Batch") }}</span>
                 </label>
-                <button type="submit" class="btn btn-info text-white fw-bold px-4">
+                <button type="submit" class="btn btn-success text-white fw-bold px-4">
                   <i class="bi bi-check-circle me-1"></i>{{ _("Register") }}
                 </button>
               </div>
@@ -229,7 +215,7 @@
             <!-- Select sample name -->
             <div class="mb-1 d-flex align-items-center gap-2">
               <label class="form-label small fw-bold mb-0">{{ _("Sample Name") }}:</label>
-              <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">{{ _("All") }}</button>
+              <button type="button" class="btn btn-outline-success btn-sm py-0 px-2" onclick="toggleAllSamples(true)" style="font-size:0.72rem;">{{ _("All") }}</button>
               <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" onclick="toggleAllSamples(false)" style="font-size:0.72rem;">{{ _("Clear") }}</button>
               <span class="text-muted small" id="sample-count-label"></span>
             </div>
@@ -239,22 +225,16 @@
               <!-- Left: Information -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-droplet me-1 text-info"></i>{{ _("Sample Information") }}</h6>
-                  <div class="row g-2 mb-2">
-                    <div class="col-6">
-                      <label class="form-label small">{{ _("Sampling Date") }}</label>
-                      <input type="date" name="sample_date" class="form-control form-control-sm" required>
-                    </div>
-                    <div class="col-6">
-                      <label class="form-label small">{{ _("Sampled By") }}</label>
-                      <input type="text" name="sampled_by" class="form-control form-control-sm">
-                    </div>
+                  <h6><i class="bi bi-bug me-1 text-success"></i>{{ _("Sample Information") }}</h6>
+                  <div class="mb-2">
+                    <label class="form-label small">{{ _("Sampling Date") }}</label>
+                    <input type="date" name="sample_date" class="form-control form-control-sm" required>
                   </div>
                   <div class="mb-2">
                     <label class="form-label small">{{ _("Sampling Time") }}</label>
                     <div class="d-flex align-items-center gap-2">
                       <input type="time" name="sample_time" id="sample_time" class="form-control form-control-sm" style="max-width:130px;">
-                      <button type="button" class="btn btn-outline-info btn-sm py-0 px-2" style="font-size:0.72rem; white-space:nowrap;" onclick="setNowTime()">
+                      <button type="button" class="btn btn-outline-success btn-sm py-0 px-2" style="font-size:0.72rem; white-space:nowrap;" onclick="setNowTime()">
                         <i class="bi bi-clock me-1"></i>{{ _("Now") }}
                       </button>
                       <div class="d-flex gap-1 flex-wrap" id="quickTimeButtons">
@@ -266,67 +246,57 @@
                       </div>
                     </div>
                   </div>
-                  <div class="row g-2 mb-2">
-                    <div class="col-4">
-                      <label class="form-label small d-block">{{ _("Volume") }}</label>
-                      <input type="checkbox" class="btn-check" name="volume_2l" id="vol_2l" value="1">
-                      <label class="btn btn-outline-primary btn-sm w-100 soft-btn-blue" for="vol_2l">
-                        <i class="bi bi-droplet-fill me-1"></i>2 л
-                      </label>
-                    </div>
-                    <div class="col-4">
-                      <label class="form-label small d-block">{{ _("Retention Period") }}</label>
-                      <div class="d-flex gap-1">
-                        <input type="radio" class="btn-check" name="retention_period" id="ret_1" value="1">
-                        <label class="btn btn-outline-danger btn-sm flex-fill text-center soft-btn-red" for="ret_1">1</label>
-                        <input type="radio" class="btn-check" name="retention_period" id="ret_3" value="3" checked>
-                        <label class="btn btn-outline-warning btn-sm flex-fill text-center soft-btn-yellow" for="ret_3">3</label>
-                        <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7">
-                        <label class="btn btn-outline-success btn-sm flex-fill text-center soft-btn-green" for="ret_7">7</label>
-                      </div>
-                    </div>
-                    <div class="col-4">
-                      <label class="form-label small d-block">{{ _("Return Sample") }}</label>
-                      <input type="checkbox" class="btn-check" name="return_sample" id="return_sample" value="1">
-                      <label class="btn btn-outline-secondary btn-sm w-100 soft-btn-gray" for="return_sample">
-                        <i class="bi bi-box-arrow-in-left me-1"></i>{{ _("Return") }}
-                      </label>
-                    </div>
+                  <div class="mb-2">
+                    <label class="form-label small">{{ _("Sampled By") }}</label>
+                    <input type="text" name="sampled_by" class="form-control form-control-sm">
                   </div>
-                  <div>
+                  <div class="mb-2">
+                    <label class="form-label small">{{ _("Sampling Location") }}</label>
+                    <input type="text" name="sampling_location" class="form-control form-control-sm">
+                  </div>
+                </div>
+                <div class="form-card mb-2">
+                  <h6><i class="bi bi-box me-1"></i>{{ _("Volume") }}</h6>
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="volume_2l" value="1"> 2 л
+                    </label>
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="volume_05l" value="1"> 0.5 л
+                    </label>
+                    <span class="mx-2 text-muted">|</span>
+                    <label class="form-label small d-flex align-items-center gap-1 mb-0">
+                      <input type="checkbox" name="return_sample" value="1"> {{ _("Return Sample") }}
+                    </label>
+                  </div>
+                </div>
+                <div class="form-card">
+                  <h6><i class="bi bi-calendar-check me-1"></i>{{ _("Retention Period") }}</h6>
+                  <div class="d-flex flex-wrap gap-1">
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_1" value="1">
+                    <label class="btn btn-outline-danger btn-sm" for="ret_1">{{ _("1 day") }}</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_3" value="3" checked>
+                    <label class="btn btn-outline-warning btn-sm" for="ret_3">{{ _("3 days") }}</label>
+                    <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7">
+                    <label class="btn btn-outline-success btn-sm" for="ret_7">{{ _("7 days") }}</label>
+                  </div>
+                  <div class="mt-2">
                     <label class="form-label small">{{ _("Notes") }}</label>
                     <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="{{ _("Color, odor...") }}"></textarea>
                   </div>
                 </div>
-                <div class="form-card mb-2">
-                  <h6><i class="bi bi-thermometer-half me-1"></i>{{ _("Field Measurements") }}</h6>
-                  <div class="row g-2">
-                    <div class="col-4">
-                      <label class="form-label small">Temp (°C)</label>
-                      <input type="number" step="0.1" name="field_temp" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-4">
-                      <label class="form-label small">pH</label>
-                      <input type="number" step="0.01" name="field_ph" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-4">
-                      <label class="form-label small">EC (μS/cm)</label>
-                      <input type="number" step="0.1" name="field_ec" class="form-control form-control-sm">
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              <!-- Right: Analysis -->
+              <!-- Right: Microbiology Analysis -->
               <div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1 text-info"></i>{{ _("Drinking Water Analysis") }}</h6>
+                  <h6><i class="bi bi-droplet-fill me-1" style="color:#0dcaf0"></i>{{ _("Microbiology (Water)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAll('wc_drink',true)">{{ _("All") }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_drink',false)">{{ _("Clear") }}</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="toggleAll('mc_water',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_water',false)">{{ _("Clear") }}</button>
                   </div>
-                  <div class="analysis-check-grid" id="wc_drink">
-                    {% for at in water_analyses if 'drinking' in at.categories %}
+                  <div class="analysis-check-grid" id="mc_water">
+                    {% for at in micro_analyses if at.code in ['CFU','ECOLI','SALM'] %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -335,13 +305,13 @@
                   </div>
                 </div>
                 <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#ef4444"></i>{{ _("Domestic Water Analysis") }}</h6>
+                  <h6><i class="bi bi-wind me-1" style="color:#6366f1"></i>{{ _("Microbiology (Air)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="toggleAll('wc_waste',true)">{{ _("All") }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_waste',false)">{{ _("Clear") }}</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleAll('mc_air',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_air',false)">{{ _("Clear") }}</button>
                   </div>
-                  <div class="analysis-check-grid" id="wc_waste">
-                    {% for at in water_analyses if 'wastewater' in at.categories %}
+                  <div class="analysis-check-grid" id="mc_air">
+                    {% for at in micro_analyses if at.code in ['AIR_CFU','AIR_STAPH'] %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -349,14 +319,14 @@
                     {% endfor %}
                   </div>
                 </div>
-                <div class="form-card mb-2">
-                  <h6><i class="bi bi-clipboard-check me-1" style="color:#64748b"></i>{{ _("Sludge Analysis") }}</h6>
+                <div class="form-card">
+                  <h6><i class="bi bi-hand-index me-1" style="color:#8b5cf6"></i>{{ _("Microbiology (Swab)") }}</h6>
                   <div class="mb-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',true)">{{ _("All") }}</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('wc_other',false)">{{ _("Clear") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',true)">{{ _("All") }}</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleAll('mc_swab',false)">{{ _("Clear") }}</button>
                   </div>
-                  <div class="analysis-check-grid" id="wc_other">
-                    {% for at in water_analyses if 'sludge' in at.categories %}
+                  <div class="analysis-check-grid" id="mc_swab">
+                    {% for at in micro_analyses if at.code in ['SWAB_CFU','SWAB_ECOLI','SWAB_SALM'] %}
                     <label class="analysis-check">
                       <input type="checkbox" name="analyses" value="{{ at.code }}">
                       <span>{{ at.name }}</span>
@@ -385,7 +355,6 @@
 const UNITS = {{ units|tojson }};
 let currentUnit = null;
 
-// ============ Tab 2: New sample registration ============
 function selectUnit(key) {
   currentUnit = key;
   const unit = UNITS[key];
@@ -410,19 +379,9 @@ function selectUnit(key) {
     };
     list.appendChild(chip);
   });
-  // Давхар checkbox sync (EC, PH г.м. 2 хэсэгт байвал)
-  document.querySelectorAll('input[name="analyses"]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      document.querySelectorAll(`input[name="analyses"][value="${this.value}"]`).forEach(other => {
-        if (other !== this) other.checked = this.checked;
-      });
-    });
-  });
-  // auto_analyses байвал шинжилгээг автомат чеклэх
+
   if (unit.auto_analyses && unit.auto_analyses.length) {
-    // Бүх шинжилгээний checkbox-г эхлээд цуцлах
     document.querySelectorAll('input[name="analyses"]').forEach(cb => { cb.checked = false; });
-    // auto_analyses дахь кодуудыг чеклэх
     unit.auto_analyses.forEach(code => {
       const cb = document.querySelector(`input[name="analyses"][value="${code}"]`);
       if (cb) cb.checked = true;
@@ -464,7 +423,6 @@ function toggleAll(id, checked) {
   document.querySelectorAll(`#${id} input[type="checkbox"]`).forEach(cb => cb.checked = checked);
 }
 
-// ============ Quick time selection buttons ============
 function setNowTime() {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, '0');
@@ -475,7 +433,7 @@ function setQuickTime(t) {
   document.getElementById('sample_time').value = t;
 }
 
-// ============ Tab 1: AG Grid list ============
+// ============ AG Grid list ============
 let sampleGridApi = null;
 const statusMap = {
   'new': '<span class="badge bg-primary">{{ _("New") }}</span>',
@@ -487,44 +445,43 @@ const statusMap = {
 const sampleColDefs = [
   { headerName: '', checkboxSelection: true, headerCheckboxSelection: true,
     width: 40, pinned: 'left', filter: false, suppressHeaderMenuButton: true },
-  { headerName: 'Chemistry Laboratory Number', field: 'chem_lab_id',
-    width: 120, minWidth: 120, maxWidth: 120, pinned: 'left',
+  { headerName: 'No.', field: 'seq', width: 55, pinned: 'left',
+    filter: 'agNumberColumnFilter' },
+  { headerName: '{{ _("Micro Lab No.") }}', field: 'micro_lab_id',
+    width: 110, minWidth: 110, maxWidth: 130, pinned: 'left',
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter',
-    cellStyle: { fontWeight: '700', color: '#0d9488' } },
-  { headerName: 'Sample Name', field: 'sample_name', minWidth: 200, flex: 2, pinned: 'left',
+    cellStyle: { fontWeight: '700', color: '#8b5cf6' } },
+  { headerName: '{{ _("Sample Name") }}', field: 'sample_name', minWidth: 200, flex: 2, pinned: 'left',
     filter: 'agTextColumnFilter' },
-  { headerName: 'Source Unit', field: 'unit_name', minWidth: 100,
+  { headerName: '{{ _("Source Unit") }}', field: 'unit_name', minWidth: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
-  { headerName: 'Sampling Date', field: 'sample_date', width: 100,
+  { headerName: '{{ _("Sampling Date") }}', field: 'sample_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
-  { headerName: 'Registration Date', field: 'received_date', width: 100,
+  { headerName: '{{ _("Registration Date") }}', field: 'received_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
-  { headerName: 'Sampled By', field: 'sampled_by', width: 100,
+  { headerName: '{{ _("Sampled By") }}', field: 'sampled_by', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
-  { headerName: 'Volume', field: 'volume', width: 75,
-    filter: 'agTextColumnFilter',
-    valueFormatter: p => p.value || '-' },
-  { headerName: 'Return Sample', field: 'return_sample', width: 70,
+  { headerName: '{{ _("Return Sample") }}', field: 'return_sample', width: 70,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: false,
     cellRenderer: p => p.value ? '<i class="bi bi-check-circle-fill text-success"></i>' : '' },
-  { headerName: 'Retention Date', field: 'retention_date', width: 100,
+  { headerName: '{{ _("Retention Date") }}', field: 'retention_date', width: 100,
     wrapHeaderText: true, autoHeaderHeight: true,
     filter: 'agTextColumnFilter' },
-  { headerName: 'Status', field: 'status', width: 100,
+  { headerName: '{{ _("Status") }}', field: 'status', width: 100,
     filter: 'agTextColumnFilter',
     cellRenderer: p => statusMap[p.value] || p.value },
-  { headerName: 'Notes', field: 'notes', minWidth: 120, flex: 1,
+  { headerName: '{{ _("Notes") }}', field: 'notes', minWidth: 120, flex: 1,
     filter: 'agTextColumnFilter' },
   { headerName: '', field: 'id', width: 80, filter: false, sortable: false, pinned: 'right',
     suppressHeaderMenuButton: true,
     cellRenderer: p => {
-      return '<a href="/labs/water-chemistry/edit_sample/' + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Edit</a>';
+      return '<a href="/labs/microbiology/edit_sample/' + p.value + '" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem;">Edit</a>';
     }
   },
 ];
@@ -537,12 +494,8 @@ function loadSampleGrid() {
     columnDefs: sampleColDefs,
     rowData: [],
     defaultColDef: {
-      resizable: true,
-      sortable: true,
-      filter: true,
-      floatingFilter: true,
-      menuTabs: [],
-      suppressFloatingFilterButton: true,
+      resizable: true, sortable: true, filter: true,
+      floatingFilter: true, menuTabs: [], suppressFloatingFilterButton: true,
     },
     animateRows: true,
     rowSelection: 'multiple',
@@ -555,7 +508,7 @@ function loadSampleGrid() {
 }
 
 function refreshSampleGrid() {
-  const base = "{{ url_for('water.water_data') }}";
+  const base = "{{ url_for('microbiology.micro_grid_data') }}";
   const params = new URLSearchParams();
   const df = document.getElementById('dateFrom').value;
   const dt = document.getElementById('dateTo').value;
@@ -565,12 +518,9 @@ function refreshSampleGrid() {
   fetch(url)
     .then(r => r.json())
     .then(data => {
-      data.sort((a, b) => (a.chem_lab_id || '').localeCompare(b.chem_lab_id || '', undefined, { numeric: true }));
       sampleGridApi.setGridOption('rowData', data);
       document.getElementById('grid-count').textContent = data.length;
-      setTimeout(() => {
-        sampleGridApi.autoSizeAllColumns();
-      }, 100);
+      setTimeout(() => { sampleGridApi.autoSizeAllColumns(); }, 100);
     });
 }
 
@@ -582,39 +532,33 @@ function clearDateFilter() {
 
 document.addEventListener('DOMContentLoaded', function() {
   loadSampleGrid();
-  // Tab шилжихэд grid resize хийх
   document.getElementById('list-tab').addEventListener('shown.bs.tab', function() {
     if (sampleGridApi) sampleGridApi.sizeColumnsToFit();
   });
 
-  // CSV Export
-  document.getElementById('btnExportCsv').addEventListener('click', function() {
-    if (sampleGridApi) sampleGridApi.exportDataAsCsv({ fileName: 'WaterSamples.csv' });
-  });
-
-  // Delete товч
+  // Delete selected
   document.getElementById('btnDeleteSelected').addEventListener('click', function() {
-    if (!sampleGridApi) return;
-    const selectedNodes = sampleGridApi.getSelectedNodes();
-    if (selectedNodes.length === 0) {
-      alert('Устгах дээжүүдийг сонгоно уу!');
-      return;
-    }
-    if (!confirm('Сонгосон ' + selectedNodes.length + ' дээжийг устгах уу?')) return;
-
+    const selected = sampleGridApi ? sampleGridApi.getSelectedRows() : [];
+    if (!selected.length) { alert('{{ _("Please select samples") }}'); return; }
+    if (!confirm(`${selected.length} {{ _("sample(s) will be deleted. Continue?") }}`)) return;
     const form = document.getElementById('deleteSelectedForm');
-    // Хуучин hidden input-уудыг арилгах
-    form.querySelectorAll('input[name="sample_ids"]').forEach(i => i.remove());
-    // Шинээр нэмэх
-    selectedNodes.forEach(node => {
+    form.querySelectorAll('input[name="sample_ids"]').forEach(el => el.remove());
+    selected.forEach(row => {
       const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'sample_ids';
-      input.value = node.data.id;
+      input.type = 'hidden'; input.name = 'sample_ids'; input.value = row.id;
       form.appendChild(input);
     });
     form.submit();
   });
+
+  // Export CSV
+  document.getElementById('btnExportCsv').addEventListener('click', function() {
+    if (sampleGridApi) sampleGridApi.exportDataAsCsv({ fileName: 'micro_samples.csv' });
+  });
+
+  // Set today as default date
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="sample_date"]').value = today;
 });
 </script>
 {% endblock %}

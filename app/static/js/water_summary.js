@@ -21,7 +21,6 @@ const WaterSummaryGrid = (function() {
   var isDetectFail = U.isDetectFail || function(){ return false; };
   var isDetectPass = U.isDetectPass || function(){ return false; };
   var WATER_CHEM_COLUMNS = U.WATER_CHEM_COLUMNS || [];
-  var MICRO_COLUMNS = U.MICRO_COLUMNS || [];
 
   // Config from HTML
   var CONFIG = (typeof WATER_SUMMARY_CONFIG !== 'undefined') ? WATER_SUMMARY_CONFIG : {};
@@ -39,7 +38,6 @@ const WaterSummaryGrid = (function() {
 
   // Data holders
   var chemParams = [];
-  var microFields = [];
 
   /* -------- AUTO SIZE COLUMNS -------- */
 
@@ -118,41 +116,10 @@ const WaterSummaryGrid = (function() {
       + '</span>';
   }
 
-  /**
-   * Микро баганын cellRenderer — утга + давтах товч
-   * detect баганд (ecoli, salmonella) тусгай format
-   */
-  function microResultRenderer(isDetect, isInt) {
-    return function(params) {
-      if (params.value == null || params.value === '') return '';
-      var text;
-      if (isDetect) {
-        var s = String(params.value).trim().toLowerCase();
-        if (s === '0' || s === 'илрээгүй' || s === 'not detected' || s === '-') text = 'Not Detected';
-        else if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) > 0) text = 'Detected';
-        else text = escapeHtml(params.value);
-      } else {
-        var val = String(params.value).replace(',', '.');
-        var n = parseFloat(val);
-        if (isNaN(n)) text = escapeHtml(params.value);
-        else text = isInt ? Math.round(n).toString() : formatValue('', n);
-      }
-
-      var rid = params.data ? params.data._micro_result_id : null;
-      if (!rid) return text;
-      return '<span class="ws-result-cell">'
-        + '<span class="ws-result-value">' + text + '</span>'
-        + '<button class="ws-retest-btn" data-rid="' + rid + '" data-micro="1" title="Давтах (бүх микро устана)">&#x21BB;</button>'
-        + '</span>';
-    };
-  }
-
   /* -------- RETEST HANDLER -------- */
 
-  function handleRetestClick(resultId, isMicro) {
-    var msg = isMicro
-      ? 'Микробиологийн бүх үр дүнг устгаж дахин оруулах уу?\n(CFU, E.coli, Salmonella бүгд устна)'
-      : 'Энэ үр дүнг устгаж дахин шинжилгээ хийх үү?';
+  function handleRetestClick(resultId) {
+    var msg = 'Энэ үр дүнг устгаж дахин шинжилгээ хийх үү?';
     if (!confirm(msg)) return;
 
     var url = (URLS.retest || '/labs/water-lab/chemistry/api/retest') + '/' + resultId;
@@ -178,7 +145,7 @@ const WaterSummaryGrid = (function() {
 
   /* -------- BUILD COLUMN DEFINITIONS -------- */
 
-  function buildColumnDefs(chemP, microF) {
+  function buildColumnDefs(chemP) {
     const cols = [];
 
     // Selection checkbox
@@ -225,21 +192,6 @@ const WaterSummaryGrid = (function() {
       cellStyle: { textAlign: 'center', fontWeight: '600', color: '#3b82f6' }
     });
 
-    // Микро лаб номер
-    cols.push({
-      headerName: 'Micro #',
-      field: 'micro_lab_id',
-      width: 95,
-      minWidth: 95,
-      maxWidth: 95,
-      pinned: 'left',
-      sortable: false,
-      filter: 'agTextColumnFilter',
-      floatingFilter: true,
-      resizable: false,
-      cellStyle: { textAlign: 'center', fontWeight: '600', color: '#10b981' }
-    });
-
     // Сорьцын нэр
     cols.push({
       headerName: 'Sample Name',
@@ -280,60 +232,14 @@ const WaterSummaryGrid = (function() {
           };
         })(p.mns_limit)
       };
-      // primary биш баганууд зөвхөн group дэлгэсэн үед харагдана
-      if (!p.primary) {
-        colDef.columnGroupShow = 'open';
-      }
       chemChildren.push(colDef);
     }
 
     cols.push({
-      headerName: 'Chemistry ▸',
+      headerName: 'Chemistry',
       headerClass: 'chem-header-group',
       marryChildren: false,
       children: chemChildren
-    });
-
-    // Микробиологийн баганууд (5 багана)
-    var microChildren = [];
-
-    for (var m = 0; m < MICRO_COLUMNS.length; m++) {
-      var mc = MICRO_COLUMNS[m];
-      var isDetect = !!mc.detect;
-      var headerClass = 'micro-header';
-      if (mc.italic) headerClass += ' micro-italic-header';
-
-      microChildren.push({
-        headerName: mc.headerName,
-        headerTooltip: mc.headerTooltip,
-        field: mc.code,
-        minWidth: mc.minWidth || 70,
-        maxWidth: mc.maxWidth || 120,
-        sortable: false,
-        filter: false,
-        floatingFilter: false,
-        headerClass: headerClass,
-        cellRenderer: microResultRenderer(isDetect, !!mc.integer),
-        cellClassRules: isDetect ? {
-          'cell-detect-fail': function(params) { return isDetectFail(params.value); },
-          'cell-detect-pass': function(params) { return isDetectPass(params.value); },
-          'cell-empty': function(params) { return params.value == null || params.value === ''; }
-        } : (function(limit) {
-          return {
-            'cell-over-limit': function(params) { return isOverLimit(limit, params.value); },
-            'cell-within-limit': function(params) { return isWithinLimit(limit, params.value); },
-            'cell-empty': function(params) { return params.value == null || params.value === ''; }
-          };
-        })(mc.mns_limit)
-      });
-    }
-
-    cols.push({
-      headerName: 'Microbiology',
-      headerTooltip: 'MNS 0900:2018',
-      headerClass: 'micro-header-group',
-      marryChildren: false,
-      children: microChildren
     });
 
     return cols;
@@ -373,8 +279,7 @@ const WaterSummaryGrid = (function() {
           var btn = params.event.target.closest('.ws-retest-btn');
           if (btn) {
             var rid = btn.getAttribute('data-rid');
-            var isMicro = btn.getAttribute('data-micro') === '1';
-            if (rid) handleRetestClick(rid, isMicro);
+            if (rid) handleRetestClick(rid);
           }
         }
       },
@@ -408,7 +313,6 @@ const WaterSummaryGrid = (function() {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         chemParams = data.chem_params || [];
-        microFields = data.micro_fields || [];
         // MNS limit-ийг серверээс merge хийх
         if (U.mergeMnsLimits) U.mergeMnsLimits(chemParams);
         if (callback) callback(null, data);
@@ -432,7 +336,7 @@ const WaterSummaryGrid = (function() {
     const rowCountEl = document.getElementById('rowCount');
     if (rowCountEl) rowCountEl.textContent = rows.length;
 
-    const columnDefs = buildColumnDefs(chemParams, microFields);
+    const columnDefs = buildColumnDefs(chemParams);
 
     // Update stats
     updateStats();
@@ -695,14 +599,6 @@ const WaterSummaryGrid = (function() {
     if (btnReportWater) {
       btnReportWater.addEventListener('click', function() {
         createReport('water', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Chemistry');
-      });
-    }
-
-    // Microbiology report button
-    const btnReportMicro = document.getElementById('btnReportMicro');
-    if (btnReportMicro) {
-      btnReportMicro.addEventListener('click', function() {
-        createReport('microbiology', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Micro');
       });
     }
 

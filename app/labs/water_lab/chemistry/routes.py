@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 water_bp = Blueprint(
     'water',
     __name__,
-    url_prefix='/labs/water-lab/chemistry'
+    url_prefix='/labs/water-chemistry'
 )
 
 
@@ -316,11 +316,11 @@ def _build_multi_workspace(codes, template, title, analysis_code,
 
 @water_bp.route('/')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_hub():
     """Усны хими лабораторийн dashboard."""
     from app.labs import get_lab
-    stats = get_lab('water').sample_stats()
+    stats = get_lab('water_chemistry').sample_stats()
     water_count = len(WATER_ANALYSIS_TYPES)
     micro_count = len(MICRO_ANALYSIS_TYPES)
     return render_template(
@@ -337,11 +337,11 @@ def water_hub():
 
 @water_bp.route('/analysis')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_analysis_hub():
     """Усны шинжилгээний төв (картууд)."""
     sample_count = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
     ).count()
     return render_template(
         'labs/water/chemistry/water_analysis_hub.html',
@@ -354,7 +354,7 @@ def water_analysis_hub():
 
 @water_bp.route('/summary', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_summary():
     """Усны хими + микробиологийн нэгдсэн үр дүнгийн нэгтгэл."""
     # POST: Архивлах
@@ -376,7 +376,7 @@ def water_summary():
 
 @water_bp.route('/archive', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_archive():
     """Усны архив хуудас."""
     # POST: Сэргээх
@@ -391,7 +391,7 @@ def water_archive():
         return redirect(url_for('water.water_archive'))
 
     archived_count = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.lab_type.in_(['water_chemistry', 'microbiology']),
         Sample.status == 'archived'
     ).count()
 
@@ -404,38 +404,33 @@ def water_archive():
 
 @water_bp.route('/api/archive_data')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def archive_data():
     """Архивлагдсан усны дээжүүд + шинжилгээний үр дүн."""
     lab_type_filter = request.args.get('lab_type', 'all')
 
     q = Sample.query.filter(Sample.status == 'archived')
 
-    if lab_type_filter == 'water':
-        q = q.filter(Sample.lab_type == 'water')
+    if lab_type_filter == 'water_chemistry':
+        q = q.filter(Sample.lab_type == 'water_chemistry')
     elif lab_type_filter == 'microbiology':
         q = q.filter(Sample.lab_type == 'microbiology')
-    elif lab_type_filter == 'water & micro':
-        q = q.filter(Sample.lab_type == 'water & micro')
     else:
-        q = q.filter(Sample.lab_type.in_(['water', 'microbiology', 'water & micro']))
+        q = q.filter(Sample.lab_type.in_(['water_chemistry', 'microbiology']))
 
     samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
 
-    # M-1 fix: 3 query → 1 conditional count query
     from sqlalchemy import func, case
     count_row = db.session.query(
-        func.count(case((Sample.lab_type == 'water', Sample.id))).label('water'),
+        func.count(case((Sample.lab_type == 'water_chemistry', Sample.id))).label('water'),
         func.count(case((Sample.lab_type == 'microbiology', Sample.id))).label('micro'),
-        func.count(case((Sample.lab_type == 'water & micro', Sample.id))).label('combined'),
     ).filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.lab_type.in_(['water_chemistry', 'microbiology']),
         Sample.status == 'archived'
     ).first()
     water_count = count_row.water if count_row else 0
     micro_count = count_row.micro if count_row else 0
-    combined_count = count_row.combined if count_row else 0
-    total_archived = water_count + micro_count + combined_count
+    total_archived = water_count + micro_count
 
     if not samples:
         return jsonify({
@@ -443,7 +438,6 @@ def archive_data():
             'chem_params': [],
             'water_count': water_count,
             'micro_count': micro_count,
-            'combined_count': combined_count,
             'total_count': total_archived,
         })
 
@@ -454,24 +448,22 @@ def archive_data():
         'chem_params': _build_chem_params(active_chem_codes),
         'water_count': water_count,
         'micro_count': micro_count,
-        'combined_count': combined_count,
         'total_count': total_archived,
     })
 
 
 @water_bp.route('/api/summary_data')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def summary_data():
-    """Усны хими + микробиологийн үр дүнг нэгтгэж буцаана."""
+    """Усны химийн үр дүнг нэгтгэж буцаана."""
     from datetime import datetime as _dt
 
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
 
-    # Ус + микро дээжүүд (архивлагдаагүй)
     q = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro']),
+        Sample.lab_type == 'water_chemistry',
         Sample.status != 'archived'
     )
     if date_from:
@@ -480,29 +472,19 @@ def summary_data():
         q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
     samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300).all()
     if not samples:
-        return jsonify({'rows': [], 'chem_params': [], 'micro_fields': []})
+        return jsonify({'rows': [], 'chem_params': []})
 
     rows, active_chem_codes = _build_water_rows(samples)
-
-    # Микро баганууд
-    micro_fields = [
-        {'code': 'cfu_22', 'name': 'CFU 22°C', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
-        {'code': 'cfu_37', 'name': 'CFU 37°C', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
-        {'code': 'cfu_avg', 'name': 'CFU дундаж', 'unit': 'CFU/мл', 'mns_limit': [None, 100]},
-        {'code': 'ecoli', 'name': 'E.coli', 'unit': '100мл', 'mns_limit': None, 'detect': True},
-        {'code': 'salmonella', 'name': 'Salmonella', 'unit': '25мл', 'mns_limit': None, 'detect': True},
-    ]
 
     return jsonify({
         'rows': rows,
         'chem_params': _build_chem_params(active_chem_codes),
-        'micro_fields': micro_fields,
     })
 
 
 @water_bp.route('/register', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def register_sample():
     """Усны дээж бүртгэх (Ус + Микробиологи дундын)."""
     if request.method == 'POST':
@@ -534,15 +516,14 @@ def register_sample():
         units=WATER_UNITS,
         total_samples=len(ALL_WATER_SAMPLE_NAMES),
         water_analyses=WATER_ANALYSIS_TYPES,
-        micro_analyses=MICRO_ANALYSIS_TYPES,
         use_aggrid=True,
-        sla_lab_types=['water', 'microbiology'],
+        sla_lab_types=['water_chemistry'],
     )
 
 
 @water_bp.route('/workspace/<code>')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def workspace(code):
     """Шинжилгээний ажлын талбар."""
     code_upper = code.upper()
@@ -719,7 +700,7 @@ def workspace(code):
 
 @water_bp.route('/workspace/sft-phys')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def sft_physical_workspace():
     """Физик нэгтгэсэн ажлын талбар (COLOR/TEMP/EC/PH/F_W/CL_FREE)."""
     return _build_multi_workspace(
@@ -734,7 +715,7 @@ def sft_physical_workspace():
 
 @water_bp.route('/workspace/phys-ww')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def phys_wastewater_workspace():
     """Ахуйн бохир ус — PHYS нэгтгэсэн ажлын талбар (ундны PHYS-тэй адил)."""
     return _build_multi_workspace(
@@ -749,7 +730,7 @@ def phys_wastewater_workspace():
 
 @water_bp.route('/workspace/sft')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def sft_workspace():
     """СФТ нэгтгэсэн ажлын талбар (NH4/NO2/NO3/FE_W)."""
     return _build_multi_workspace(
@@ -764,7 +745,7 @@ def sft_workspace():
 
 @water_bp.route('/workspace/sfm')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def sfm_workspace():
     """СФМ нэгтгэсэн ажлын талбар (NH4/NO2/PO4/FE_W)."""
     return _build_multi_workspace(
@@ -779,7 +760,7 @@ def sfm_workspace():
 
 @water_bp.route('/workspace/sludge')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def sludge_workspace():
     """Лагийн нэгтгэсэн ажлын талбар (SV/SD/SI)."""
     return _build_multi_workspace(
@@ -796,7 +777,7 @@ def sludge_workspace():
 
 @water_bp.route('/api/retest/<int:result_id>', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def retest_result(result_id):
     """Давтах шинжилгээ — хуучин үр дүнг устгаж аудит бичлэг үүсгэнэ."""
     from app.services.analysis_audit import log_analysis_action
@@ -836,13 +817,13 @@ def retest_result(result_id):
 
 @water_bp.route('/api/eligible/<code>')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def eligible_samples(code):
     """Боломжит дээж (усны химийн шинжилгээнд)."""
     from datetime import datetime as _dt, timedelta as _td
 
     q = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'water & micro']),
+        Sample.lab_type.in_(['water_chemistry']),
         Sample.status.in_(['new', 'in_progress'])
     )
 
@@ -856,21 +837,27 @@ def eligible_samples(code):
         cutoff = (_dt.now() - _td(days=filter_days)).date()
         q = q.filter(Sample.received_date >= cutoff)
 
-    samples = q.order_by(Sample.received_date.desc()).all()
+    samples = q.order_by(Sample.chem_lab_id.asc()).all()
+    # WATER_UNITS дахь дарааллаар эрэмбэлэх индекс
+    order_map = {name: idx for idx, name in enumerate(ALL_WATER_SAMPLE_NAMES)}
     result = []
     for s in samples:
+        display = _parse_display_name(s.sample_code)
         result.append({
             'id': s.id,
             'sample_code': s.sample_code,
+            'sample_name': display,
             'client_name': s.client_name,
             'sample_date': s.sample_date.isoformat() if s.sample_date else None,
+            'order_idx': order_map.get(display, 9999),
         })
+    result.sort(key=lambda x: x['order_idx'])
     return jsonify(result)
 
 
 @water_bp.route('/api/save_results', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def save_results():
     """Үр дүн хадгалах."""
     data = request.get_json()
@@ -944,12 +931,12 @@ def save_results():
 
 @water_bp.route('/api/data')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_data():
     """Усны дээжийн жагсаалт (ус + микробиологи)."""
     from datetime import datetime as _dt
     q = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
     )
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
@@ -957,7 +944,7 @@ def water_data():
         q = q.filter(Sample.sample_date >= _dt.strptime(date_from, '%Y-%m-%d').date())
     if date_to:
         q = q.filter(Sample.sample_date <= _dt.strptime(date_to, '%Y-%m-%d').date())
-    samples = q.order_by(Sample.id.desc()).limit(MAX_QUERY_LIMIT).all()
+    samples = q.order_by(Sample.id.asc()).limit(MAX_QUERY_LIMIT).all()
 
     result = []
     for idx, s in enumerate(reversed(samples), 1):
@@ -991,7 +978,7 @@ def water_data():
 
 @water_bp.route('/edit_sample/<int:sample_id>', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def edit_sample(sample_id):
     """Усны дээж засах."""
     import json as _json
@@ -1053,7 +1040,7 @@ def edit_sample(sample_id):
 
 @water_bp.route('/delete_samples', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def delete_samples():
     """Усны/микро дээж устгах (admin, senior эрхтэй)."""
     from app.utils.audit import log_audit
@@ -1116,7 +1103,7 @@ def delete_samples():
 
 @water_bp.route('/standards')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def standards():
     """MNS/WHO стандартын хуудас."""
     standards_data = get_mns_standards()
@@ -1125,7 +1112,7 @@ def standards():
 
 @water_bp.route('/api/standards')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def api_standards():
     """MNS/WHO стандартын хязгаарууд (API)."""
     return jsonify(get_mns_standards())

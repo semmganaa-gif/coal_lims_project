@@ -41,14 +41,9 @@
 
         {% if current_user.role in ['senior', 'admin', 'manager'] %}
         <!-- Report buttons -->
-        <div class="btn-group">
-          <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="{{ _("Water chemistry report") }}">
-            <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Chemistry") }}
-          </button>
-          <button type="button" id="btnReportMicro" class="btn btn-sm btn-warning" title="{{ _("Microbiology report") }}">
-            <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Micro") }}
-          </button>
-        </div>
+        <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="{{ _("Water chemistry report") }}">
+          <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Report") }}
+        </button>
         <!-- Archive button -->
         <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="{{ _("Archive selected") }}">
           <i class="bi bi-archive-fill me-1"></i>{{ _("Archive") }}
@@ -64,8 +59,7 @@
         <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="{{ _("Refresh") }}">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
-        {% set from_micro = request.args.get('lab') == 'micro' %}
-        <a href="{{ url_for('microbiology.analysis_hub') if from_micro else url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Back") }}">
+        <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Back") }}">
           <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
         </a>
       </div>
@@ -141,28 +135,6 @@
           <span class="std-name">SI</span>
           <span class="std-limit">80-150</span>
         </div>
-        <!-- Micro - MNS 0900:2018 -->
-        <div class="ws-std-divider"></div>
-        <div class="ws-std-item micro" title="MNS ISO 6222:1998">
-          <span class="std-name">CFU</span>
-          <span class="std-limit">1мл ≤100</span>
-        </div>
-        <div class="ws-std-item micro" title="MNS ISO 9308-1:1998">
-          <span class="std-name"><em>E.coli</em></span>
-          <span class="std-limit">{{ _("Not Detected") }}</span>
-        </div>
-        <div class="ws-std-item micro" title="MNS ISO 19250:2017">
-          <span class="std-name"><em>Salmonella</em></span>
-          <span class="std-limit">{{ _("Not Detected") }}</span>
-        </div>
-        <div class="ws-std-item micro" title="MNS 5484/6410">
-          <span class="std-name"><em>S.aureus</em></span>
-          <span class="std-limit">{{ _("Not Detected") }}</span>
-        </div>
-        <div class="ws-std-item micro" title="MNS 5484:2005">
-          <span class="std-name">Bacteria</span>
-          <span class="std-limit">1м³ ≤3000</span>
-        </div>
       </div>
     </div>
   </div>
@@ -181,11 +153,7 @@
         <h6>
           <i class="bi bi-table" style="color:#3b82f6"></i> {{ _("Laboratory Test Results Sheet") }}
         </h6>
-        <div class="ws-stats">
-          <span class="badge bg-light text-muted" title="Click Chemistry/Micro header to expand">
-            <i class="bi bi-arrows-angle-expand me-1"></i>{{ _("Click header to expand") }}
-          </span>
-        </div>
+        <div class="ws-stats"></div>
       </div>
       <div class="ws-grid-body">
         <div id="waterSummaryGrid" class="ag-theme-alpine"></div>

@@ -32,13 +32,14 @@
   }
   function avgRowStyle(p) {
     if (p.data.row_type === 'M2') return { display: 'none' };
-    return { fontWeight: 'bold', ...checkLimit(p.value) };
+    return { fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', ...checkLimit(p.value) };
   }
 
   // Merge base sample name column (avoid duplicate)
   if (baseCols && baseCols[1]) {
     baseCols[1].rowSpan = spanIfM1;
-    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : {});
+    baseCols[1].cellClassRules = { 'ag-cell-span': p => p.data.row_type === 'M1' };
+    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : { display: 'flex', alignItems: 'center' });
   }
 
   var formColumns = [
@@ -69,6 +70,7 @@
       },
       valueFormatter: fmt2,
       rowSpan: spanIfM1,
+      cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
       cellStyle: avgRowStyle
     },
     { headerName: 'Шинжилгээ хийсэн', field: 'analyst', width: 140, ...editCol },

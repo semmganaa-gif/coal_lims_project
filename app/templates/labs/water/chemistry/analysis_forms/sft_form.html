@@ -59,13 +59,14 @@
   }
   function avgRowStyle(code, p) {
     if (p.data.row_type === 'M2') return { display: 'none' };
-    return limitStyle(code, p.value);
+    return { display: 'flex', alignItems: 'center', justifyContent: 'center', ...limitStyle(code, p.value) };
   }
 
   // Merge base sample name column (avoid duplicate)
   if (baseCols && baseCols[1]) {
     baseCols[1].rowSpan = spanIfM1;
-    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : {});
+    baseCols[1].cellClassRules = { 'ag-cell-span': p => p.data.row_type === 'M1' };
+    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : { display: 'flex', alignItems: 'center' });
   }
 
   const editNH4 = { ...editCol, editable: p => !p.data._lock_nh4 };
@@ -83,6 +84,7 @@
           valueGetter: p => avgFromRows(p.data, 'nh4_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('NH4', p)
         },
       ]
@@ -95,6 +97,7 @@
           valueGetter: p => avgFromRows(p.data, 'no2_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('NO2', p)
         },
       ]
@@ -107,6 +110,7 @@
           valueGetter: p => avgFromRows(p.data, 'no3_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('NO3', p)
         },
       ]
@@ -119,6 +123,7 @@
           valueGetter: p => feResult(p.data),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('FE_W', p)
         },
         { headerName: '{{ _("Dilution") }}', field: 'fe_dil', width: 100, type: 'numericColumn',

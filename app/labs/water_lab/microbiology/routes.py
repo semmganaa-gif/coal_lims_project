@@ -21,8 +21,9 @@ from app.labs.water_lab.microbiology.constants import (
     CATEGORY_ANALYSIS_CODES,
 )
 from app.labs.water_lab.chemistry.constants import (
-    WATER_ANALYSIS_TYPES, WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
+    WATER_UNITS, ALL_WATER_SAMPLE_NAMES,
 )
+from app.labs.water_lab.microbiology.constants import MICRO_UNITS
 from app.utils.decorators import lab_required
 from app.utils.database import safe_commit
 from app.utils.datetime import now_local
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 micro_bp = Blueprint(
     'microbiology',
     __name__,
-    url_prefix='/labs/water-lab/microbiology'
+    url_prefix='/labs/microbiology'
 )
 
 # Workspace code → field list mapping
@@ -208,14 +209,12 @@ def register_sample():
             return redirect(url_for('microbiology.register_sample'))
 
     return render_template(
-        'labs/water/chemistry/water_register.html',
+        'labs/water/microbiology/micro_register.html',
         title='Микробиологийн дээж бүртгэл',
-        units=WATER_UNITS,
+        units={**WATER_UNITS, **MICRO_UNITS},
         total_samples=len(ALL_WATER_SAMPLE_NAMES),
-        water_analyses=WATER_ANALYSIS_TYPES,
         micro_analyses=MICRO_ANALYSIS_TYPES,
         use_aggrid=True,
-        is_micro_lab=True,
         sla_lab_types=['microbiology'],
     )
 
@@ -274,7 +273,7 @@ def api_samples():
     category = request.args.get('category')
 
     query = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['microbiology'])
     )
 
     # Category-д хамааралтай analysis код бүхий дээжийг шүүх
@@ -307,7 +306,7 @@ def api_samples():
 def micro_grid_data():
     """Микробиологийн дээжний жагсаалт (grid-д зориулсан)."""
     q = Sample.query.filter(
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['microbiology'])
     )
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')

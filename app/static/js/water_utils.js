@@ -89,23 +89,23 @@
   // Усны химийн баганууд — mns_limit серверээс ирнэ (mergeMnsLimits)
   // primary: true = үргэлж харагдана
   var WATER_CHEM_COLUMNS = [
-    { code: 'COLOR_TEMP', name: 'Color/Temp', shortName: 'Color/°C', unit: '', mns_limit: null, primary: true },
-    { code: 'EC', name: 'Electrical Conductivity', shortName: 'EC', unit: 'µS/cm', mns_limit: null, primary: true },
-    { code: 'PH', name: 'pH', shortName: 'pH', unit: '', mns_limit: null, primary: true },
-    { code: 'F_W', name: 'Fluoride', shortName: 'F⁻', unit: 'mg/L', mns_limit: null, primary: true },
-    { code: 'CL_FREE', name: 'Free Chlorine', shortName: 'Cl₂', unit: 'mg/L', mns_limit: null, primary: true },
-    { code: 'HARD', name: 'Total Hardness', shortName: 'Hard', unit: 'meq/L', mns_limit: null },
-    { code: 'NH4', name: 'Ammonium Ion', shortName: 'NH₄⁺', unit: 'mg/L', mns_limit: null },
-    { code: 'NO2', name: 'Nitrite Ion', shortName: 'NO₂⁻', unit: 'mg/L', mns_limit: null },
-    { code: 'FE_W', name: 'Iron', shortName: 'Fe', unit: 'mg/L', mns_limit: null },
-    { code: 'TDS', name: 'Total Dissolved Solids', shortName: 'TDS', unit: 'mg/L', mns_limit: null },
-    { code: 'CL_W', name: 'Chloride', shortName: 'Cl⁻', unit: 'mg/L', mns_limit: null },
-    { code: 'PO4', name: 'Phosphate Ion', shortName: 'PO₄³⁻', unit: 'mg/L', mns_limit: null },
-    { code: 'BOD', name: 'Biochemical Oxygen Demand', shortName: 'BOD', unit: 'mg/L', mns_limit: null },
-    { code: 'BOD_PUR', name: 'BOD Purification', shortName: 'BOD %', unit: '%', mns_limit: null },
-    { code: 'SLUDGE_VOL', name: 'Sludge Volume', shortName: 'SV', unit: 'mL', mns_limit: null },
-    { code: 'SLUDGE_DOSE', name: 'Sludge Dose', shortName: 'SD', unit: 'g/L', mns_limit: null },
-    { code: 'SLUDGE_INDEX', name: 'Sludge Index', shortName: 'SI', unit: 'mL/g', mns_limit: null }
+    { code: 'COLOR_TEMP', name: 'Өнгө, градус С°',                        shortName: 'Өнгө, °С',                        unit: '',        mns_limit: null, primary: true },
+    { code: 'EC',         name: 'Цахилгаан дамжуулах чанар',               shortName: 'Цах. дамж. чанар, мСм/см',        unit: 'мСм/см',  mns_limit: null, primary: true },
+    { code: 'PH',         name: 'Усны орчин, рН',                          shortName: 'Усны орчин, рН',                   unit: '',        mns_limit: null, primary: true },
+    { code: 'F_W',        name: 'Фторид',                                   shortName: 'Фторид',                           unit: 'мг/л',    mns_limit: null, primary: true },
+    { code: 'CL_FREE',    name: 'Үлдэгдэл хлор /Cl/',                      shortName: 'Үлдэгдэл хлор /Cl/, мг/л',        unit: 'мг/л',    mns_limit: null, primary: true },
+    { code: 'HARD',       name: 'Ерөнхий хатуулаг',                        shortName: 'Ерөнхий хатуулаг, мг-экв/л',      unit: 'мг-экв/л',mns_limit: null },
+    { code: 'NH4',        name: 'Аммонийн ион',                            shortName: 'Аммонийн ион, мг/л',               unit: 'мг/л',    mns_limit: null },
+    { code: 'NO2',        name: 'Нитрит ион',                              shortName: 'Нитрит ион, мг/л',                 unit: 'мг/л',    mns_limit: null },
+    { code: 'FE_W',       name: 'Төмөр',                                   shortName: 'Төмөр, мг/л',                      unit: 'мг/л',    mns_limit: null },
+    { code: 'TDS',        name: 'Нийт уусмал бодис',                       shortName: 'ТДС, мг/л',                        unit: 'мг/л',    mns_limit: null },
+    { code: 'CL_W',       name: 'Хлорид',                                  shortName: 'Хлорид, мг/л',                     unit: 'мг/л',    mns_limit: null },
+    { code: 'PO4',        name: 'Фосфатын ион',                            shortName: 'Фосфат, мг/л',                     unit: 'мг/л',    mns_limit: null },
+    { code: 'BOD',        name: 'Биохимийн хүчилтөрөгчийн хэрэгцээ',      shortName: 'БХХ, мг/л',                        unit: 'мг/л',    mns_limit: null },
+    { code: 'BOD_PUR',    name: 'БХХ цэвэршилт',                           shortName: 'БХХ %',                            unit: '%',       mns_limit: null },
+    { code: 'SLUDGE_VOL', name: 'Лагийн эзэлхүүн',                        shortName: 'ЛЭ, мл',                           unit: 'мл',      mns_limit: null },
+    { code: 'SLUDGE_DOSE',name: 'Лагийн тун',                              shortName: 'ЛТ, г/л',                          unit: 'г/л',     mns_limit: null },
+    { code: 'SLUDGE_INDEX',name: 'Лагийн индекс',                          shortName: 'ЛИ, мл/г',                         unit: 'мл/г',    mns_limit: null }
   ];
 
   // Микробиологийн баганууд

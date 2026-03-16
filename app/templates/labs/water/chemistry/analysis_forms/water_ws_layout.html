@@ -722,6 +722,7 @@
     fetch(ELIGIBLE_URL)
       .then(r => r.json())
       .then(list => {
+        list.sort((a, b) => (a.order_idx != null ? a.order_idx : 9999) - (b.order_idx != null ? b.order_idx : 9999));
         allSamples = list;
         document.getElementById('sampleListLoading').style.display = 'none';
         if (!list.length) {
@@ -746,8 +747,7 @@
           if (inGrid) tr.style.opacity = '0.5';
           const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
           tr.innerHTML = '<td><input type="checkbox" class="form-check-input ws-chk" value="' + s.id + '"' + (inGrid ? ' disabled' : '') + '></td>'
-            + '<td>' + _e(s.sample_code) + '</td>'
-            + '<td class="text-muted small">' + _e(s.client_name || '-') + '</td>'
+            + '<td>' + _e(s.sample_name || s.sample_code) + '</td>'
             + '<td class="text-muted small">' + _e(s.sample_date || '-') + '</td>';
           tr.addEventListener('click', function(e) {
             if (e.target.tagName === 'INPUT') return;

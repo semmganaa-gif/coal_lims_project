@@ -51,13 +51,14 @@
   function spanIfM1(p) { return p.data.row_type === 'M1' ? 2 : 1; }
   function avgRowStyle(code, p) {
     if (p.data.row_type === 'M2') return { display: 'none' };
-    return limitStyle(code, p.value);
+    return { display: 'flex', alignItems: 'center', justifyContent: 'center', ...limitStyle(code, p.value) };
   }
 
   // Merge base sample name column (avoid duplicate)
   if (baseCols && baseCols[1]) {
     baseCols[1].rowSpan = spanIfM1;
-    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : {});
+    baseCols[1].cellClassRules = { 'ag-cell-span': p => p.data.row_type === 'M1' };
+    baseCols[1].cellStyle = p => (p.data.row_type === 'M2' ? { display: 'none' } : { display: 'flex', alignItems: 'center' });
   }
 
   const editColorTemp = { ...editCol, editable: p => !p.data._lock_color_temp };
@@ -79,6 +80,7 @@
           valueGetter: p => avgFromRows(p.data, 'color_temp_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('COLOR_TEMP', p),
           cellClass: groupCellClass
         },
@@ -92,6 +94,7 @@
           valueGetter: p => avgFromRows(p.data, 'ec_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('EC', p),
           cellClass: groupCellClass
         },
@@ -105,6 +108,7 @@
           valueGetter: p => avgFromRows(p.data, 'ph_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('PH', p),
           cellClass: groupCellClass
         },
@@ -118,6 +122,7 @@
           valueGetter: p => avgFromRows(p.data, 'f_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('F_W', p),
           cellClass: groupCellClass
         },
@@ -131,6 +136,7 @@
           valueGetter: p => avgFromRows(p.data, 'clfree_m'),
           valueFormatter: fmt3,
           rowSpan: spanIfM1,
+          cellClassRules: { 'ag-cell-span': p => p.data.row_type === 'M1' },
           cellStyle: p => avgRowStyle('CL_FREE', p),
           cellClass: groupCellClass
         },
