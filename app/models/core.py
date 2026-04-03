@@ -39,7 +39,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(64), index=True, default="prep")
 
     # Мульти-лаборатори эрх
-    allowed_labs = db.Column(db.JSON, default=lambda: ['coal'])  # ['coal', 'petrography', 'water']
+    allowed_labs = db.Column(db.JSON, default=lambda: ['coal'])  # ['coal', 'petrography', 'water_chemistry', 'microbiology']
 
     # Хэлний тохиргоо (i18n)
     language = db.Column(db.String(5), default='en')  # 'en' or 'mn'
@@ -209,7 +209,7 @@ class Sample(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_user_id"), index=True)
 
     status = db.Column(db.String(64), default="new", index=True)
-    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water'
+    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water_chemistry', 'microbiology'
     sample_date = db.Column(Date, default=lambda: now_mn().date())
 
     sample_condition = db.Column(db.String(100))
@@ -316,7 +316,7 @@ class Sample(db.Model):
         # Усны/микробиологийн дээж → Кирилл зөвшөөрнө
         # Кирилл үсэг агуулж байвал усны дээж гэж үзнэ (lab_type тохируулагдаагүй байж болно)
         has_cyrillic = bool(re.search(r'[\u0400-\u04FF]', value))
-        if has_cyrillic or (hasattr(self, 'lab_type') and self.lab_type in ('water', 'microbiology')):
+        if has_cyrillic or (hasattr(self, 'lab_type') and self.lab_type in ('water_chemistry', 'microbiology')):
             # Кирилл, Latin, тоо, тусгай тэмдэгт зөвшөөрнө
             if not re.match(r'^[\w\u0400-\u04FF\s/.,+\-\"""()³]+$', value):
                 invalid_chars = re.findall(r'[^\w\u0400-\u04FF\s/.,+\-\"""()³]', value)

@@ -652,7 +652,7 @@ def register_wtl_auto_samples(
                 action="sample_created", resource_type="Sample",
                 details={
                     "sample_code": f"{lab_number}_{name}",
-                    "client_name": "WTL", "sample_type": sample_type, "lab_type": "water",
+                    "client_name": "WTL", "sample_type": sample_type, "lab_type": "water_chemistry",
                 },
             )
 
@@ -812,7 +812,7 @@ def register_wtl_mg_test(
         action="sample_created", resource_type="Sample", resource_id=sample.id,
         details={
             "sample_code": final_code, "client_name": "WTL",
-            "sample_type": sample_type, "lab_type": "water",
+            "sample_type": sample_type, "lab_type": "water_chemistry",
         },
     )
     return RegistrationResult(success=True, count=1, message="Шинэ дээж амжилттай бүртгэгдлээ.")

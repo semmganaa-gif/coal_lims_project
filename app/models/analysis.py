@@ -182,7 +182,7 @@ class AnalysisType(db.Model):
     required_role = db.Column(
         db.String(64), default="chemist", index=True, nullable=False
     )
-    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water'
+    lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water_chemistry', 'microbiology'
 
     def __repr__(self) -> str:
         return f"<AnalysisType {self.name}>"

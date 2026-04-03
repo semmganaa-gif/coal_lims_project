@@ -22,7 +22,7 @@ def check_sla_overdue():
     from app.services.sla_service import get_sla_summary
     from app.tasks.email_tasks import send_sla_overdue_alert
 
-    for lab_type in ("coal", "water", "microbiology"):
+    for lab_type in ("coal", "water_chemistry", "microbiology"):
         summary = get_sla_summary(lab_type)
         if summary.overdue > 0:
             send_sla_overdue_alert.delay(lab_type)
@@ -39,7 +39,7 @@ def auto_assign_sla():
     from app.services.sla_service import bulk_assign_sla
 
     total = 0
-    for lab_type in ("coal", "water", "microbiology"):
+    for lab_type in ("coal", "water_chemistry", "microbiology"):
         count = bulk_assign_sla(lab_type)
         total += count
 
