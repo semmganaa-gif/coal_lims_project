@@ -11,7 +11,7 @@ pdf_reports_bp = Blueprint("pdf_reports", __name__, url_prefix="/pdf-reports")
 # Constants
 LAB_TYPES = {
     'coal': 'Нүүрсний лаб',
-    'water': 'Усны хими',
+    'water_chemistry': 'Усны хими',
     'microbiology': 'Микробиологи',
     'petrography': 'Петрограф',
 }

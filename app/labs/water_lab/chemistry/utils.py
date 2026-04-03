@@ -16,8 +16,8 @@ WATER_CODES = {at['code'] for at in WATER_ANALYSIS_TYPES}
 MICRO_CODES = {at['code'] for at in MICRO_ANALYSIS_TYPES}
 
 
-_MICRO_TYPES = ['microbiology', 'water & micro']
-_CHEM_TYPES = ['water', 'water & micro']
+_MICRO_TYPES = ['microbiology']
+_CHEM_TYPES = ['water_chemistry']
 
 
 def _generate_micro_lab_id(sample_date, next_batch=False):
@@ -162,15 +162,13 @@ def create_water_micro_samples(form, user_id):
 
     analyses = form.getlist('analyses')
 
-    # lab_type логик
+    # lab_type логик: тус тусдаа лаб — хими эсвэл микро
     has_micro = any(a in MICRO_CODES for a in analyses)
     has_water = any(a in WATER_CODES for a in analyses)
-    if has_water and has_micro:
-        lab_type = 'water & micro'
-    elif has_micro:
+    if has_micro and not has_water:
         lab_type = 'microbiology'
     else:
-        lab_type = 'water'
+        lab_type = 'water_chemistry'
 
     # Эзэлхүүн (2л=2000мл, 0.5л=500мл), буцаах, хадгалах хугацаа
     vol_2l = bool(form.get('volume_2l'))
@@ -206,8 +204,8 @@ def create_water_micro_samples(form, user_id):
     else:
         chem_batch = chem_seq = 0
 
-    # sample_code-д micro lab_id ашиглах (хуучин формат хадгалах)
-    needs_lab_id = lab_type in ('microbiology', 'water & micro')
+    # sample_code-д micro lab_id ашиглах
+    needs_lab_id = lab_type == 'microbiology'
 
     # Ахуйн ус: Оролт/Гаралт хос үүсгэх
     wastewater_only = {

@@ -10,13 +10,11 @@ def init_blueprints(app):
     from app.labs import register_lab
     from app.labs.coal import CoalLab
     from app.labs.petrography import PetrographyLab
-    from app.labs.water_lab import WaterLaboratory
     from app.labs.water_lab.chemistry import ChemistryLab
     from app.labs.water_lab.microbiology import MicrobiologyLab
 
     register_lab(CoalLab())
     register_lab(PetrographyLab())
-    register_lab(WaterLaboratory())
     register_lab(ChemistryLab())
     register_lab(MicrobiologyLab())
 
@@ -35,7 +33,6 @@ def init_blueprints(app):
     from app.routes.license.routes import license_bp
     from app.routes.quality import bp as quality_bp, register_routes_all as register_quality_routes
     from app.labs.petrography.routes import petro_bp
-    from app.labs.water_lab.routes import water_lab_bp
     from app.labs.water_lab.chemistry.routes import water_bp
     from app.labs.water_lab.microbiology.routes import micro_bp
 
@@ -57,7 +54,6 @@ def init_blueprints(app):
     _safe_register(spare_parts_bp)
     _safe_register(license_bp)
     _safe_register(petro_bp)
-    _safe_register(water_lab_bp)
     _safe_register(water_bp)
     _safe_register(micro_bp)
 

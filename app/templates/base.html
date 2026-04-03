@@ -140,11 +140,11 @@
 
       <div class="collapse navbar-collapse" id="mainNavbar">
         {% set lab_param = request.args.get('lab') or request.args.get('from_lab') %}
-        {% set is_water_lab_main = request.path == '/labs/water-lab' or request.path == '/labs/water-lab/' %}
-        {% set is_water_lab = request.path.startswith('/labs/water-lab/chemistry') or lab_param == 'water' %}
-        {% set is_micro_lab = request.path.startswith('/labs/water-lab/microbiology') or lab_param == 'micro' or lab_param == 'microbiology' %}
+        {% set is_water_lab_main = false %}
+        {% set is_water_lab = request.path.startswith('/labs/water-chemistry') or lab_param == 'water' or lab_param == 'water_chemistry' %}
+        {% set is_micro_lab = request.path.startswith('/labs/microbiology') or lab_param == 'micro' or lab_param == 'microbiology' %}
         {% set is_petro_lab = request.path.startswith('/labs/petrography') or lab_param == 'petrography' %}
-        {% set is_any_water_lab = is_water_lab_main or is_water_lab or is_micro_lab %}
+        {% set is_any_water_lab = is_water_lab or is_micro_lab %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3">
           {% if current_user.is_authenticated %}
 
@@ -191,19 +191,10 @@
 
             {% elif is_micro_lab %}
             {# =============== МИКРОБИОЛОГИЙН ЛАБ NAVBAR =============== #}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1" style="color:#20c997"></i>{{ _('Water Lab') }}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
+                <i class="bi bi-house-door me-1" style="color:#20c997"></i>{{ _('Home') }}
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('water_lab.main_hub') }}">
-                  <i class="bi bi-house-door me-2" style="color:#0dcaf0"></i>{{ _('Water Lab Home') }}</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('water.water_hub') }}">
-                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>{{ _('Chemistry Lab') }}</a></li>
-                <li><a class="dropdown-item active" href="{{ url_for('microbiology.micro_hub') }}">
-                  <i class="bi bi-bug me-2" style="color:#20c997"></i>{{ _('Microbiology') }}</a></li>
-              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('microbiology.register_sample') }}">
@@ -246,19 +237,10 @@
 
             {% elif is_water_lab %}
             {# =============== УСНЫ ХИМИ ЛАБ NAVBAR =============== #}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-droplet-fill me-1 text-info"></i>{{ _('Water Lab') }}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('water.water_hub') }}">
+                <i class="bi bi-house-door me-1 text-info"></i>{{ _('Home') }}
               </a>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url_for('water_lab.main_hub') }}">
-                  <i class="bi bi-house-door me-2 text-info"></i>{{ _('Water Lab Home') }}</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item active" href="{{ url_for('water.water_hub') }}">
-                  <i class="bi bi-droplet-half me-2" style="color:#0dcaf0"></i>{{ _('Chemistry Lab') }}</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('microbiology.micro_hub') }}">
-                  <i class="bi bi-bug me-2" style="color:#20c997"></i>{{ _('Microbiology') }}</a></li>
-              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('water.register_sample') }}">
@@ -310,28 +292,6 @@
               </ul>
             </li>
 
-            {% elif is_water_lab_main %}
-            {# =============== УСНЫ ЛАБ НҮҮР NAVBAR =============== #}
-            <li class="nav-item">
-              <a class="nav-link active" href="{{ url_for('water_lab.main_hub') }}">
-                <i class="bi bi-droplet-fill me-1" style="color:#0891b2"></i>{{ _('Water Lab') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_hub') }}">
-                <i class="bi bi-droplet-half me-1 text-info"></i>{{ _('Chemistry') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('microbiology.micro_hub') }}">
-                <i class="bi bi-bug me-1" style="color:#20c997"></i>{{ _('Microbiology') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('water.water_summary') }}">
-                <i class="bi bi-table me-1 text-info"></i>{{ _('Summary') }}
-              </a>
-            </li>
 
             {% else %}
             {# =============== НҮҮРСНИЙ ЛАБ NAVBAR =============== #}

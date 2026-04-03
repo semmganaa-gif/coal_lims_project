@@ -75,7 +75,7 @@
               </td>
               <td>{{ r.title or '-' }}</td>
               <td>
-                <span class="badge bg-{{ 'info' if r.lab_type == 'water' else 'success' if r.lab_type == 'microbiology' else 'warning' }}">
+                <span class="badge bg-{{ 'info' if r.lab_type == 'water_chemistry' else 'success' if r.lab_type == 'microbiology' else 'warning' }}">
                   {{ lab_types.get(r.lab_type, r.lab_type) }}
                 </span>
               </td>

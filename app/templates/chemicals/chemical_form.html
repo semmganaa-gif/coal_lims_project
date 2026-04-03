@@ -66,7 +66,7 @@
                 <select name="lab_type" class="form-select">
                   <option value="all" {{ 'selected' if (not chemical) or chemical.lab_type == 'all' }}>{{ _("All Labs") }}</option>
                   <option value="coal" {{ 'selected' if chemical and chemical.lab_type == 'coal' }}>{{ _("Coal") }}</option>
-                  <option value="water" {{ 'selected' if chemical and chemical.lab_type == 'water' }}>{{ _("Water") }}</option>
+                  <option value="water_chemistry" {{ 'selected' if chemical and chemical.lab_type == 'water_chemistry' }}>{{ _("Water Chemistry") }}</option>
                   <option value="microbiology" {{ 'selected' if chemical and chemical.lab_type == 'microbiology' }}>{{ _("Microbiology") }}</option>
                   <option value="petrography" {{ 'selected' if chemical and chemical.lab_type == 'petrography' }}>{{ _("Petrography") }}</option>
                 </select>

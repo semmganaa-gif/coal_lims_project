@@ -24,7 +24,7 @@ MICRO_SAMPLE_TYPES = {
     'MICRO_SWAB': ['Swab'],
 }
 
-_MICRO_LAB_TYPES = ['water', 'microbiology', 'water & micro']
+_MICRO_LAB_TYPES = ['microbiology']
 _MICRO_CODES = ['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']
 
 

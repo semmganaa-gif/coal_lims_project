@@ -41,7 +41,7 @@ class WaterLaboratory(BaseLab):
     def sample_query(self, statuses=None):
         """Ус + Микро хоёр lab_type-ыг хамтад нь шүүнэ."""
         from app.models import Sample
-        q = Sample.query.filter(Sample.lab_type.in_(['water', 'microbiology', 'water & micro']))
+        q = Sample.query.filter(Sample.lab_type.in_(['water_chemistry', 'microbiology']))
         if statuses:
             q = q.filter(Sample.status.in_(statuses))
         return q
@@ -49,7 +49,7 @@ class WaterLaboratory(BaseLab):
     def sample_stats(self):
         """Ус + Микро хамтын тоон мэдээлэл."""
         from app.models import Sample
-        base = Sample.query.filter(Sample.lab_type.in_(['water', 'microbiology', 'water & micro']))
+        base = Sample.query.filter(Sample.lab_type.in_(['water_chemistry', 'microbiology']))
         return {
             'total': base.count(),
             'new': base.filter(Sample.status == 'new').count(),

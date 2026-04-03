@@ -102,16 +102,28 @@
     </a>
     {% endif %}
 
-    {% if is_admin or 'water' in user_labs or 'microbiology' in user_labs %}
-    <a href="{{ url_for('water_lab.main_hub') }}" class="lab-card">
-      <div class="lab-icon" style="background:linear-gradient(135deg,#06b6d4,#20c997)">
-        <i class="bi bi-droplet-fill"></i>
+    {% if is_admin or 'water_chemistry' in user_labs %}
+    <a href="{{ url_for('water.water_hub') }}" class="lab-card">
+      <div class="lab-icon" style="background:linear-gradient(135deg,#0284c7,#0dcaf0)">
+        <i class="bi bi-droplet-half"></i>
       </div>
       <div class="lab-info">
-        <h5>{{ _('Water Laboratory') }}</h5>
-        <p>{{ _('Chemistry (pH, EC, metals) + Microbiology (Coliform, E.coli)') }}</p>
+        <h5>{{ _('Water Chemistry Laboratory') }}</h5>
+        <p>{{ _('pH, EC, metals, anions, organic parameters') }}</p>
         <span class="badge" style="background:#0dcaf0">{{ _('Chemistry') }}</span>
-        <span class="badge" style="background:#20c997">{{ _('Micro') }}</span>
+      </div>
+    </a>
+    {% endif %}
+
+    {% if is_admin or 'microbiology' in user_labs %}
+    <a href="{{ url_for('microbiology.micro_hub') }}" class="lab-card">
+      <div class="lab-icon" style="background:linear-gradient(135deg,#059669,#20c997)">
+        <i class="bi bi-bug"></i>
+      </div>
+      <div class="lab-info">
+        <h5>{{ _('Microbiology Laboratory') }}</h5>
+        <p>{{ _('Coliform, E.coli, Salmonella, air & swab tests') }}</p>
+        <span class="badge" style="background:#20c997">{{ _('Microbiology') }}</span>
       </div>
     </a>
     {% endif %}

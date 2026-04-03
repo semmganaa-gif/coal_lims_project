@@ -58,7 +58,7 @@ class ChemicalRepository:
             Chemical.query
             .filter(
                 Chemical.status != 'disposed',
-                (Chemical.lab_type == 'water') | (Chemical.lab_type == 'all'),
+                (Chemical.lab_type == 'water_chemistry') | (Chemical.lab_type == 'all'),
             )
             .order_by(Chemical.name)
             .all()

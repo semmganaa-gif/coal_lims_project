@@ -18,7 +18,7 @@ from app.labs.water_lab.chemistry.constants import (
 from app.utils.decorators import lab_required
 from app.labs.water_lab.chemistry.routes import water_bp
 
-_WATER_LAB_TYPES = ['water', 'water & micro']
+_WATER_LAB_TYPES = ['water_chemistry']
 
 
 def _active_chem_codes():
@@ -31,7 +31,7 @@ def _active_chem_codes():
 
 @water_bp.route('/reports/dashboard')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_dashboard():
     """Усны хими Dashboard - KPI, тренд."""
     now = datetime.now()
@@ -171,7 +171,7 @@ def water_dashboard():
 
 @water_bp.route('/reports/consumption')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_consumption():
     """Усны хими Consumption тайлан."""
     now = datetime.now()
@@ -263,7 +263,7 @@ def water_consumption():
 
 @water_bp.route('/api/consumption_cell')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def api_consumption_cell():
     """Consumption drill-down."""
     try:
@@ -322,7 +322,7 @@ def api_consumption_cell():
 
 @water_bp.route('/reports/monthly_plan')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def water_monthly_plan():
     """Усны хими Monthly Plan."""
     from calendar import monthrange

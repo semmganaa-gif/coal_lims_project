@@ -379,7 +379,7 @@ def api_create_report():
             report, error = generate_microbiology_report(
                 sample_ids, date_from, date_to, current_user.id
             )
-        elif lab_type == 'water':
+        elif lab_type == 'water_chemistry':
             report, error = generate_water_report(
                 sample_ids, date_from, date_to, current_user.id
             )

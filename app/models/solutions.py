@@ -124,7 +124,7 @@ class SolutionRecipe(db.Model):
     preparation_notes = db.Column(db.Text)  # Дэлгэрэнгүй заавар
 
     # Категори
-    lab_type = db.Column(db.String(20), default='water', index=True)  # water, coal, micro, petro
+    lab_type = db.Column(db.String(20), default='water_chemistry', index=True)  # water_chemistry, coal, microbiology, petrography
     category = db.Column(db.String(50))  # titrant, buffer, indicator, standard, reagent
 
     # Төлөв

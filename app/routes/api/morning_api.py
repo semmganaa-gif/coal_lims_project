@@ -14,12 +14,12 @@ from app.models import Equipment, Sample
 
 # Лаб төрөл → дээжийн lab_type, тоног төхөөрөмжийн category
 _LAB_CONFIG = {
-    'water': {
-        'sample_types': ['water'],
+    'water_chemistry': {
+        'sample_types': ['water_chemistry'],
         'equip_categories': ['water'],
     },
     'micro': {
-        'sample_types': ['water', 'microbiology'],
+        'sample_types': ['microbiology'],
         'equip_categories': ['micro'],
     },
     'coal': {
@@ -41,7 +41,7 @@ def register_routes(bp):
     def morning_dashboard():
         """Өглөөний dashboard дата.
 
-        ?lab=coal|water|micro  (default: coal)
+        ?lab=coal|water_chemistry|micro  (default: coal)
         """
         today = date.today()
         lab = flask_request.args.get('lab', 'coal')

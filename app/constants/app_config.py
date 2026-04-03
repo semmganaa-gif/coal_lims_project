@@ -28,7 +28,7 @@ MAX_DESCRIPTION_LENGTH = 1000
 LAB_TYPES = {
     'coal': {'name': 'Нүүрсний лаборатори', 'icon': 'bi-fire', 'color': '#dc3545'},
     'petrography': {'name': 'Петрограф лаборатори', 'icon': 'bi-gem', 'color': '#6f42c1'},
-    'water': {'name': 'Усны лаборатори', 'icon': 'bi-droplet', 'color': '#0dcaf0'},
+    'water_chemistry': {'name': 'Усны хими лаборатори', 'icon': 'bi-droplet-half', 'color': '#0dcaf0'},
     'microbiology': {'name': 'Микробиологийн лаборатори', 'icon': 'bi-bug', 'color': '#20c997'},
 }
 

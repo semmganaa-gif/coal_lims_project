@@ -9,7 +9,7 @@ class ChemistryLab(BaseLab):
 
     @property
     def key(self) -> str:
-        return 'water'  # Backward compatibility
+        return 'water_chemistry'
 
     @property
     def name(self) -> str:
@@ -31,7 +31,7 @@ class ChemistryLab(BaseLab):
     def sample_query(self, statuses=None):
         """Усны хими дээжүүдийг шүүнэ."""
         from app.models import Sample
-        q = Sample.query.filter(Sample.lab_type.in_(['water', 'water & micro']))
+        q = Sample.query.filter(Sample.lab_type.in_(['water_chemistry']))
         if statuses:
             q = q.filter(Sample.status.in_(statuses))
         return q
@@ -39,7 +39,7 @@ class ChemistryLab(BaseLab):
     def sample_stats(self):
         """Усны хими дээжийн тоон мэдээлэл."""
         from app.models import Sample
-        base = Sample.query.filter(Sample.lab_type.in_(['water', 'water & micro']))
+        base = Sample.query.filter(Sample.lab_type.in_(['water_chemistry']))
         return {
             'total': base.count(),
             'new': base.filter(Sample.status == 'new').count(),
