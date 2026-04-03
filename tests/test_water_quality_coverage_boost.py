@@ -51,7 +51,7 @@ def _make_water_sample(app, code_suffix=None):
             user_id=user.id,
             client_name='QC',
             sample_type='Ус',
-            lab_type='water',
+            lab_type='water_chemistry',
             status='new',
             sample_date=date.today(),
             received_date=datetime.now(),
@@ -120,28 +120,28 @@ class TestWaterLabHelpers:
     def test_parse_filter_days_default(self, app, client):
         c = _login_admin(client)
         # Default = 7 days
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH')
         assert resp.status_code == 200
 
     def test_parse_filter_days_custom(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=30')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=30')
         assert resp.status_code == 200
 
     def test_parse_filter_days_invalid(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=abc')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=abc')
         assert resp.status_code == 200
 
     def test_parse_filter_days_zero(self, app, client):
         c = _login_admin(client)
         # days=0 means no cutoff
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=0')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=0')
         assert resp.status_code == 200
 
     def test_parse_filter_days_negative(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=-5')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=-5')
         assert resp.status_code == 200
 
 
@@ -150,21 +150,21 @@ class TestWaterHub:
 
     def test_water_hub_page(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/')
+        resp = c.get('/labs/water-chemistry/')
         assert resp.status_code == 200
 
     def test_water_analysis_hub(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/analysis')
+        resp = c.get('/labs/water-chemistry/analysis')
         assert resp.status_code == 200
 
     def test_water_hub_unauthenticated(self, app, client):
-        resp = client.get('/labs/water-lab/chemistry/')
+        resp = client.get('/labs/water-chemistry/')
         assert resp.status_code in [302, 401]
 
     def test_water_hub_no_lab_access(self, app, client):
         c = _login_chemist(client)
-        resp = c.get('/labs/water-lab/chemistry/')
+        resp = c.get('/labs/water-chemistry/')
         # chemist may not have water lab access => redirect
         assert resp.status_code in [200, 302]
 
@@ -174,12 +174,12 @@ class TestWaterSummary:
 
     def test_summary_get(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/summary')
+        resp = c.get('/labs/water-chemistry/summary')
         assert resp.status_code == 200
 
     def test_summary_data_api_empty(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+        resp = c.get('/labs/water-chemistry/api/summary_data')
         assert resp.status_code == 200
         data = resp.get_json()
         assert 'rows' in data
@@ -187,14 +187,14 @@ class TestWaterSummary:
     def test_summary_data_with_dates(self, app, client):
         c = _login_admin(client)
         today = date.today().isoformat()
-        resp = c.get(f'/labs/water-lab/chemistry/api/summary_data?date_from={today}&date_to={today}')
+        resp = c.get(f'/labs/water-chemistry/api/summary_data?date_from={today}&date_to={today}')
         assert resp.status_code == 200
 
     def test_summary_post_archive(self, app, client):
         c = _login_admin(client)
         sid, _ = _make_water_sample(app)
         try:
-            resp = c.post('/labs/water-lab/chemistry/summary', data={
+            resp = c.post('/labs/water-chemistry/summary', data={
                 'action': 'archive',
                 'sample_ids': str(sid),
             }, follow_redirects=True)
@@ -204,7 +204,7 @@ class TestWaterSummary:
 
     def test_summary_post_no_action(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/summary', data={
+        resp = c.post('/labs/water-chemistry/summary', data={
             'action': 'nothing',
             'sample_ids': '',
         }, follow_redirects=True)
@@ -228,7 +228,7 @@ class TestWaterSummary:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+            resp = c.get('/labs/water-chemistry/api/summary_data')
             assert resp.status_code == 200
             data = resp.get_json()
             assert 'rows' in data
@@ -241,27 +241,27 @@ class TestWaterArchive:
 
     def test_archive_page_get(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/archive')
+        resp = c.get('/labs/water-chemistry/archive')
         assert resp.status_code == 200
 
     def test_archive_data_api_empty(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/archive_data')
+        resp = c.get('/labs/water-chemistry/api/archive_data')
         assert resp.status_code == 200
         data = resp.get_json()
         assert 'rows' in data
 
     def test_archive_data_with_filter(self, app, client):
         c = _login_admin(client)
-        for lab_type in ['water', 'microbiology', 'water & micro', 'all']:
-            resp = c.get(f'/labs/water-lab/chemistry/api/archive_data?lab_type={lab_type}')
+        for lab_type in ['water_chemistry', 'microbiology', 'all']:
+            resp = c.get(f'/labs/water-chemistry/api/archive_data?lab_type={lab_type}')
             assert resp.status_code == 200
 
     def test_archive_post_unarchive(self, app, client):
         c = _login_admin(client)
         sid, _ = _make_water_sample(app)
         try:
-            resp = c.post('/labs/water-lab/chemistry/archive', data={
+            resp = c.post('/labs/water-chemistry/archive', data={
                 'action': 'unarchive',
                 'sample_ids': str(sid),
             }, follow_redirects=True)
@@ -271,7 +271,7 @@ class TestWaterArchive:
 
     def test_archive_post_no_action(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/archive', data={
+        resp = c.post('/labs/water-chemistry/archive', data={
             'action': 'wrong',
             'sample_ids': '',
         }, follow_redirects=True)
@@ -287,7 +287,7 @@ class TestWaterArchive:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/archive_data')
+            resp = c.get('/labs/water-chemistry/api/archive_data')
             assert resp.status_code == 200
             data = resp.get_json()
             assert data['total_count'] >= 1
@@ -300,12 +300,12 @@ class TestWaterRegister:
 
     def test_register_get(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/register')
+        resp = c.get('/labs/water-chemistry/register')
         assert resp.status_code == 200
 
     def test_register_post_no_names(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/register', data={},
+        resp = c.post('/labs/water-chemistry/register', data={},
                        follow_redirects=True)
         assert resp.status_code == 200
 
@@ -317,7 +317,7 @@ class TestWaterRegister:
         # (not caught by the route's except clause).
         # We use pytest.raises to handle this, or accept 500 if error handler catches it.
         try:
-            resp = c.post('/labs/water-lab/chemistry/register', data={
+            resp = c.post('/labs/water-chemistry/register', data={
                 'sample_codes': ['Ундны ус - 1-р байр'],
                 'sample_date': date.today().isoformat(),
                 'client_name': 'QC',
@@ -333,54 +333,54 @@ class TestWaterWorkspace:
 
     def test_workspace_known_code(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/PH')
+        resp = c.get('/labs/water-chemistry/workspace/PH')
         assert resp.status_code == 200
 
     def test_workspace_unknown_code(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/ZZZZZ')
+        resp = c.get('/labs/water-chemistry/workspace/ZZZZZ')
         assert resp.status_code == 404
 
     def test_workspace_sft(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/SFT')
+        resp = c.get('/labs/water-chemistry/workspace/SFT')
         assert resp.status_code == 200
 
     def test_workspace_sft_phys(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/SFT_PHYS')
+        resp = c.get('/labs/water-chemistry/workspace/SFT_PHYS')
         assert resp.status_code == 200
 
     def test_workspace_sft_physical_direct(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/sft-phys')
+        resp = c.get('/labs/water-chemistry/workspace/sft-phys')
         assert resp.status_code == 200
 
     def test_workspace_phys_ww(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/phys-ww')
+        resp = c.get('/labs/water-chemistry/workspace/phys-ww')
         assert resp.status_code == 200
 
     def test_workspace_sft_direct(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/sft')
+        resp = c.get('/labs/water-chemistry/workspace/sft')
         assert resp.status_code == 200
 
     def test_workspace_sfm(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/sfm')
+        resp = c.get('/labs/water-chemistry/workspace/sfm')
         assert resp.status_code == 200
 
     def test_workspace_sludge(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/sludge')
+        resp = c.get('/labs/water-chemistry/workspace/sludge')
         assert resp.status_code == 200
 
     def test_workspace_with_sample_ids(self, app, client):
         sid, _ = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.get(f'/labs/water-lab/chemistry/workspace/PH?sample_ids={sid}')
+            resp = c.get(f'/labs/water-chemistry/workspace/PH?sample_ids={sid}')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
@@ -403,7 +403,7 @@ class TestWaterWorkspace:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/workspace/PH')
+            resp = c.get('/labs/water-chemistry/workspace/PH')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
@@ -428,44 +428,44 @@ class TestWaterWorkspace:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/workspace/EC')
+            resp = c.get('/labs/water-chemistry/workspace/EC')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
 
     def test_workspace_with_days_filter(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/PH?days=30')
+        resp = c.get('/labs/water-chemistry/workspace/PH?days=30')
         assert resp.status_code == 200
 
     def test_workspace_with_days_zero(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/PH?days=0')
+        resp = c.get('/labs/water-chemistry/workspace/PH?days=0')
         assert resp.status_code == 200
 
     def test_workspace_bod(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/BOD')
+        resp = c.get('/labs/water-chemistry/workspace/BOD')
         assert resp.status_code == 200
 
     def test_workspace_nh4(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/NH4')
+        resp = c.get('/labs/water-chemistry/workspace/NH4')
         assert resp.status_code == 200
 
     def test_workspace_hard(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/HARD')
+        resp = c.get('/labs/water-chemistry/workspace/HARD')
         assert resp.status_code == 200
 
     def test_workspace_tds(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/TDS')
+        resp = c.get('/labs/water-chemistry/workspace/TDS')
         assert resp.status_code == 200
 
     def test_workspace_color(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/workspace/COLOR')
+        resp = c.get('/labs/water-chemistry/workspace/COLOR')
         assert resp.status_code == 200
 
 
@@ -474,7 +474,7 @@ class TestWaterSaveResults:
 
     def test_save_no_data(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/api/save_results',
+        resp = c.post('/labs/water-chemistry/api/save_results',
                        content_type='application/json',
                        data=json.dumps(None))
         # get_json() returns None => 400
@@ -482,21 +482,21 @@ class TestWaterSaveResults:
 
     def test_save_invalid_code(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/api/save_results',
+        resp = c.post('/labs/water-chemistry/api/save_results',
                        content_type='application/json',
                        data=json.dumps({'sample_id': 1, 'analysis_code': 'INVALID_XYZ', 'results': {}}))
         assert resp.status_code == 400
 
     def test_save_empty_code(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/api/save_results',
+        resp = c.post('/labs/water-chemistry/api/save_results',
                        content_type='application/json',
                        data=json.dumps({'sample_id': 1, 'analysis_code': '', 'results': {}}))
         assert resp.status_code == 400
 
     def test_save_sample_not_found(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/api/save_results',
+        resp = c.post('/labs/water-chemistry/api/save_results',
                        content_type='application/json',
                        data=json.dumps({'sample_id': 999999, 'analysis_code': 'PH', 'results': {'value': '7.5'}}))
         assert resp.status_code == 404
@@ -505,7 +505,7 @@ class TestWaterSaveResults:
         sid, _ = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.post('/labs/water-lab/chemistry/api/save_results',
+            resp = c.post('/labs/water-chemistry/api/save_results',
                            content_type='application/json',
                            data=json.dumps({
                                'sample_id': sid,
@@ -528,7 +528,7 @@ class TestWaterSaveResults:
                 'analysis_code': 'PH',
                 'results': {'value': '7.5'},
             })
-            resp1 = c.post('/labs/water-lab/chemistry/api/save_results',
+            resp1 = c.post('/labs/water-chemistry/api/save_results',
                             content_type='application/json', data=payload)
             assert resp1.status_code == 200
 
@@ -537,7 +537,7 @@ class TestWaterSaveResults:
                 'analysis_code': 'PH',
                 'results': {'value': '7.8'},
             })
-            resp2 = c.post('/labs/water-lab/chemistry/api/save_results',
+            resp2 = c.post('/labs/water-chemistry/api/save_results',
                             content_type='application/json', data=payload2)
             assert resp2.status_code == 200
         finally:
@@ -561,7 +561,7 @@ class TestWaterSaveResults:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.post('/labs/water-lab/chemistry/api/save_results',
+            resp = c.post('/labs/water-chemistry/api/save_results',
                            content_type='application/json',
                            data=json.dumps({
                                'sample_id': sid,
@@ -582,7 +582,7 @@ class TestWaterSaveResults:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.post('/labs/water-lab/chemistry/api/save_results',
+            resp = c.post('/labs/water-chemistry/api/save_results',
                            content_type='application/json',
                            data=json.dumps({
                                'sample_id': sid,
@@ -599,25 +599,25 @@ class TestWaterEligibleSamples:
 
     def test_eligible_default(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH')
         assert resp.status_code == 200
         assert isinstance(resp.get_json(), list)
 
     def test_eligible_with_days(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=30')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=30')
         assert resp.status_code == 200
 
     def test_eligible_with_invalid_days(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=xxx')
+        resp = c.get('/labs/water-chemistry/api/eligible/PH?days=xxx')
         assert resp.status_code == 200
 
     def test_eligible_with_sample(self, app, client):
         sid, _ = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/eligible/PH?days=30')
+            resp = c.get('/labs/water-chemistry/api/eligible/PH?days=30')
             data = resp.get_json()
             sample_ids = [s['id'] for s in data]
             assert sid in sample_ids
@@ -630,21 +630,21 @@ class TestWaterData:
 
     def test_water_data_default(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/data')
+        resp = c.get('/labs/water-chemistry/api/data')
         assert resp.status_code == 200
         assert isinstance(resp.get_json(), list)
 
     def test_water_data_with_dates(self, app, client):
         c = _login_admin(client)
         today = date.today().isoformat()
-        resp = c.get(f'/labs/water-lab/chemistry/api/data?date_from={today}&date_to={today}')
+        resp = c.get(f'/labs/water-chemistry/api/data?date_from={today}&date_to={today}')
         assert resp.status_code == 200
 
     def test_water_data_with_sample(self, app, client):
         sid, code = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/data')
+            resp = c.get('/labs/water-chemistry/api/data')
             data = resp.get_json()
             ids = [r['id'] for r in data]
             assert sid in ids
@@ -657,7 +657,7 @@ class TestWaterRetest:
 
     def test_retest_not_found(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/api/retest/999999')
+        resp = c.post('/labs/water-chemistry/api/retest/999999')
         assert resp.status_code == 404
 
     def test_retest_valid(self, app, client):
@@ -678,7 +678,7 @@ class TestWaterRetest:
                 ar_id = ar.id
 
             c = _login_admin(client)
-            resp = c.post(f'/labs/water-lab/chemistry/api/retest/{ar_id}')
+            resp = c.post(f'/labs/water-chemistry/api/retest/{ar_id}')
             assert resp.status_code == 200
             data = resp.get_json()
             assert data['success'] is True
@@ -693,14 +693,14 @@ class TestWaterEditSample:
         sid, _ = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.get(f'/labs/water-lab/chemistry/edit_sample/{sid}')
+            resp = c.get(f'/labs/water-chemistry/edit_sample/{sid}')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
 
     def test_edit_sample_not_found(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/edit_sample/999999',
+        resp = c.get('/labs/water-chemistry/edit_sample/999999',
                       follow_redirects=True)
         assert resp.status_code == 200  # Redirects with flash
 
@@ -712,7 +712,7 @@ class TestWaterEditSample:
             with app.app_context():
                 s = _db.session.get(Sample, sid)
                 actual_code = s.sample_code
-            resp = c.post(f'/labs/water-lab/chemistry/edit_sample/{sid}',
+            resp = c.post(f'/labs/water-chemistry/edit_sample/{sid}',
                            data={'sample_code': actual_code, 'analyses': []},
                            follow_redirects=True)
             assert resp.status_code == 200
@@ -723,7 +723,7 @@ class TestWaterEditSample:
         sid, _ = _make_water_sample(app)
         try:
             c = _login_admin(client)
-            resp = c.post(f'/labs/water-lab/chemistry/edit_sample/{sid}',
+            resp = c.post(f'/labs/water-chemistry/edit_sample/{sid}',
                            data={'sample_code': '', 'analyses': []},
                            follow_redirects=True)
             assert resp.status_code == 200  # Flash: code cannot be empty
@@ -735,7 +735,7 @@ class TestWaterEditSample:
         try:
             c = _login_admin(client)
             new_code = f"WTR-EDIT-{uuid.uuid4().hex[:6]}"
-            resp = c.post(f'/labs/water-lab/chemistry/edit_sample/{sid}',
+            resp = c.post(f'/labs/water-chemistry/edit_sample/{sid}',
                            data={'sample_code': new_code, 'analyses': ['PH']},
                            follow_redirects=True)
             assert resp.status_code == 200
@@ -748,20 +748,20 @@ class TestWaterDeleteSamples:
 
     def test_delete_no_selection(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/delete_samples',
+        resp = c.post('/labs/water-chemistry/delete_samples',
                        data={}, follow_redirects=True)
         assert resp.status_code == 200
 
     def test_delete_valid(self, app, client):
         sid, _ = _make_water_sample(app)
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/delete_samples',
+        resp = c.post('/labs/water-chemistry/delete_samples',
                        data={'sample_ids': [str(sid)]}, follow_redirects=True)
         assert resp.status_code == 200
 
     def test_delete_nonexistent_id(self, app, client):
         c = _login_admin(client)
-        resp = c.post('/labs/water-lab/chemistry/delete_samples',
+        resp = c.post('/labs/water-chemistry/delete_samples',
                        data={'sample_ids': ['999999']}, follow_redirects=True)
         assert resp.status_code == 200
 
@@ -771,12 +771,12 @@ class TestWaterStandards:
 
     def test_standards_page(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/standards')
+        resp = c.get('/labs/water-chemistry/standards')
         assert resp.status_code == 200
 
     def test_api_standards(self, app, client):
         c = _login_admin(client)
-        resp = c.get('/labs/water-lab/chemistry/api/standards')
+        resp = c.get('/labs/water-chemistry/api/standards')
         assert resp.status_code == 200
 
 
@@ -805,7 +805,7 @@ class TestBuildWaterRows:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+            resp = c.get('/labs/water-chemistry/api/summary_data')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
@@ -842,7 +842,7 @@ class TestBuildWaterRows:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+            resp = c.get('/labs/water-chemistry/api/summary_data')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
@@ -865,7 +865,7 @@ class TestBuildWaterRows:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+            resp = c.get('/labs/water-chemistry/api/summary_data')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])
@@ -888,7 +888,7 @@ class TestBuildWaterRows:
                 _db.session.commit()
 
             c = _login_admin(client)
-            resp = c.get('/labs/water-lab/chemistry/api/summary_data')
+            resp = c.get('/labs/water-chemistry/api/summary_data')
             assert resp.status_code == 200
         finally:
             _cleanup_samples(app, [sid])

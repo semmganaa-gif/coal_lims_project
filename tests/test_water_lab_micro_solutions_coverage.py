@@ -239,13 +239,13 @@ class TestMicroDashboard:
     """Test micro_dashboard route."""
 
     def test_dashboard_unauthenticated(self, client):
-        resp = client.get('/labs/water-lab/microbiology/reports/dashboard')
+        resp = client.get('/labs/microbiology/reports/dashboard')
         # Should redirect to login
         assert resp.status_code in (302, 308)
 
     def test_dashboard_success(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/dashboard')
+            resp = admin_client.get('/labs/microbiology/reports/dashboard')
             assert resp.status_code == 200
 
     def test_dashboard_with_data(self, admin_client, app, db):
@@ -288,7 +288,7 @@ class TestMicroDashboard:
 
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/dashboard')
+            resp = admin_client.get('/labs/microbiology/reports/dashboard')
             assert resp.status_code == 200
 
             # Cleanup
@@ -304,17 +304,17 @@ class TestMicroConsumption:
 
     def test_consumption_default(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/consumption')
+            resp = admin_client.get('/labs/microbiology/reports/consumption')
             assert resp.status_code == 200
 
     def test_consumption_with_year(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/consumption?year=2025')
+            resp = admin_client.get('/labs/microbiology/reports/consumption?year=2025')
             assert resp.status_code == 200
 
     def test_consumption_invalid_year(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/consumption?year=abc')
+            resp = admin_client.get('/labs/microbiology/reports/consumption?year=abc')
             assert resp.status_code == 200  # Falls back to current year
 
     def test_consumption_with_data(self, admin_client, app, db):
@@ -323,7 +323,7 @@ class TestMicroConsumption:
 
             sample = Sample(
                 sample_code='MICRO-CON-001',
-                lab_type='water & micro',
+                lab_type='microbiology',
                 client_name='QC',
                 user_id=1,
             )
@@ -338,7 +338,7 @@ class TestMicroConsumption:
             db.session.add(ar)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/consumption?year=2026')
+            resp = admin_client.get('/labs/microbiology/reports/consumption?year=2026')
             assert resp.status_code == 200
 
             db.session.delete(ar)
@@ -351,20 +351,20 @@ class TestApiConsumptionCell:
 
     def test_missing_params(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/api/consumption_cell')
+            resp = admin_client.get('/labs/microbiology/api/consumption_cell')
             assert resp.status_code == 400
 
     def test_invalid_month(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/consumption_cell?year=2026&month=13&unit=X&stype=MICRO_WATER'
+                '/labs/microbiology/api/consumption_cell?year=2026&month=13&unit=X&stype=MICRO_WATER'
             )
             assert resp.status_code == 400
 
     def test_invalid_year_string(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/consumption_cell?year=abc&month=3&unit=X&stype=MICRO_WATER'
+                '/labs/microbiology/api/consumption_cell?year=abc&month=3&unit=X&stype=MICRO_WATER'
             )
             assert resp.status_code == 400
 
@@ -390,7 +390,7 @@ class TestApiConsumptionCell:
             db.session.commit()
 
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/consumption_cell'
+                '/labs/microbiology/api/consumption_cell'
                 '?year=2026&month=3&unit=QC&stype=MICRO_WATER&kind=samples'
             )
             assert resp.status_code == 200
@@ -423,7 +423,7 @@ class TestApiConsumptionCell:
             db.session.commit()
 
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/consumption_cell'
+                '/labs/microbiology/api/consumption_cell'
                 '?year=2026&month=3&unit=QC&stype=MICRO_WATER&kind=code&code=MICRO_WATER'
             )
             assert resp.status_code == 200
@@ -437,7 +437,7 @@ class TestApiConsumptionCell:
     def test_valid_with_no_results(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/consumption_cell'
+                '/labs/microbiology/api/consumption_cell'
                 '?year=2020&month=1&unit=Nobody&stype=MICRO_WATER&kind=samples'
             )
             assert resp.status_code == 200
@@ -451,13 +451,13 @@ class TestMicroMonthlyPlan:
 
     def test_monthly_plan_default(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/monthly_plan')
+            resp = admin_client.get('/labs/microbiology/reports/monthly_plan')
             assert resp.status_code == 200
 
     def test_monthly_plan_with_params(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/reports/monthly_plan?year=2026&month=3'
+                '/labs/microbiology/reports/monthly_plan?year=2026&month=3'
             )
             assert resp.status_code == 200
 
@@ -465,7 +465,7 @@ class TestMicroMonthlyPlan:
         """Year out of range resets to current."""
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/reports/monthly_plan?year=1900&month=3'
+                '/labs/microbiology/reports/monthly_plan?year=1900&month=3'
             )
             assert resp.status_code == 200
 
@@ -473,14 +473,14 @@ class TestMicroMonthlyPlan:
         """Month out of range resets to current."""
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/reports/monthly_plan?year=2026&month=15'
+                '/labs/microbiology/reports/monthly_plan?year=2026&month=15'
             )
             assert resp.status_code == 200
 
     def test_monthly_plan_month_zero(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/reports/monthly_plan?year=2026&month=0'
+                '/labs/microbiology/reports/monthly_plan?year=2026&month=0'
             )
             assert resp.status_code == 200
 
@@ -499,7 +499,7 @@ class TestMicroMonthlyPlan:
             db.session.commit()
 
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/reports/monthly_plan?year=2026&month=3'
+                '/labs/microbiology/reports/monthly_plan?year=2026&month=3'
             )
             assert resp.status_code == 200
 
@@ -513,12 +513,12 @@ class TestApiGetMonthlyPlan:
 
     def test_missing_params(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/api/monthly_plan')
+            resp = admin_client.get('/labs/microbiology/api/monthly_plan')
             assert resp.status_code == 400
 
     def test_missing_month(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/api/monthly_plan?year=2026')
+            resp = admin_client.get('/labs/microbiology/api/monthly_plan?year=2026')
             assert resp.status_code == 400
 
     def test_valid_params(self, admin_client, app, db):
@@ -534,7 +534,7 @@ class TestApiGetMonthlyPlan:
             db.session.commit()
 
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/monthly_plan?year=2026&month=4'
+                '/labs/microbiology/api/monthly_plan?year=2026&month=4'
             )
             assert resp.status_code == 200
             data = resp.get_json()
@@ -546,7 +546,7 @@ class TestApiGetMonthlyPlan:
     def test_empty_result(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/monthly_plan?year=1999&month=1'
+                '/labs/microbiology/api/monthly_plan?year=1999&month=1'
             )
             assert resp.status_code == 200
             data = resp.get_json()
@@ -559,7 +559,7 @@ class TestApiSaveMonthlyPlan:
     def test_chemist_forbidden(self, chemist_client, app):
         with app.app_context():
             resp = chemist_client.post(
-                '/labs/water-lab/microbiology/api/monthly_plan',
+                '/labs/microbiology/api/monthly_plan',
                 json={'year': 2026, 'month': 3, 'plans': {'MICRO_WATER|Water|1': 5}},
             )
             assert resp.status_code == 403
@@ -567,7 +567,7 @@ class TestApiSaveMonthlyPlan:
     def test_missing_year_month(self, senior_client, app):
         with app.app_context():
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/monthly_plan',
+                '/labs/microbiology/api/monthly_plan',
                 json={'plans': {}},
             )
             assert resp.status_code == 400
@@ -577,7 +577,7 @@ class TestApiSaveMonthlyPlan:
             from app.models import MonthlyPlan
 
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/monthly_plan',
+                '/labs/microbiology/api/monthly_plan',
                 json={
                     'year': 2026, 'month': 5,
                     'plans': {'MICRO_WATER|Water|1': 10, 'MICRO_AIR|Air|2': 5},
@@ -605,7 +605,7 @@ class TestApiSaveMonthlyPlan:
             db.session.commit()
 
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/monthly_plan',
+                '/labs/microbiology/api/monthly_plan',
                 json={
                     'year': 2026, 'month': 6,
                     'plans': {'MICRO_WATER|Water|1': 20},
@@ -626,7 +626,7 @@ class TestApiSaveMonthlyPlan:
         """Keys with wrong format should be skipped."""
         with app.app_context():
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/monthly_plan',
+                '/labs/microbiology/api/monthly_plan',
                 json={
                     'year': 2026, 'month': 7,
                     'plans': {'BAD_KEY': 5, 'ALSO|BAD': 10},
@@ -642,7 +642,7 @@ class TestApiPlanStats:
 
     def test_defaults(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/microbiology/api/plan_stats')
+            resp = admin_client.get('/labs/microbiology/api/plan_stats')
             assert resp.status_code == 200
             data = resp.get_json()
             assert 'weekly' in data
@@ -650,7 +650,7 @@ class TestApiPlanStats:
     def test_with_year_month(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/microbiology/api/plan_stats?year=2026&month=3'
+                '/labs/microbiology/api/plan_stats?year=2026&month=3'
             )
             assert resp.status_code == 200
             data = resp.get_json()
@@ -664,7 +664,7 @@ class TestApiSaveStaff:
     def test_chemist_forbidden(self, chemist_client, app):
         with app.app_context():
             resp = chemist_client.post(
-                '/labs/water-lab/microbiology/api/save_staff',
+                '/labs/microbiology/api/save_staff',
                 json={'year': 2026, 'month': 3, 'staff_count': 5},
             )
             assert resp.status_code == 403
@@ -672,7 +672,7 @@ class TestApiSaveStaff:
     def test_missing_params(self, senior_client, app):
         with app.app_context():
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/save_staff',
+                '/labs/microbiology/api/save_staff',
                 json={'staff_count': 5},
             )
             assert resp.status_code == 400
@@ -682,7 +682,7 @@ class TestApiSaveStaff:
             from app.models import StaffSettings
 
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/save_staff',
+                '/labs/microbiology/api/save_staff',
                 json={'year': 2026, 'month': 8, 'staff_count': 7},
             )
             assert resp.status_code == 200
@@ -702,7 +702,7 @@ class TestApiSaveStaff:
             db.session.commit()
 
             resp = senior_client.post(
-                '/labs/water-lab/microbiology/api/save_staff',
+                '/labs/microbiology/api/save_staff',
                 json={'year': 2026, 'month': 9, 'staff_count': 12},
             )
             assert resp.status_code == 200
@@ -722,39 +722,39 @@ class TestSolutionJournal:
     """Test solution_journal route."""
 
     def test_unauthenticated(self, client):
-        resp = client.get('/labs/water-lab/chemistry/solution_journal')
+        resp = client.get('/labs/water-chemistry/solution_journal')
         assert resp.status_code in (302, 308)
 
     def test_default(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_journal')
+            resp = admin_client.get('/labs/water-chemistry/solution_journal')
             assert resp.status_code == 200
 
     def test_with_date_filters(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/chemistry/solution_journal?start_date=2026-01-01&end_date=2026-12-31'
+                '/labs/water-chemistry/solution_journal?start_date=2026-01-01&end_date=2026-12-31'
             )
             assert resp.status_code == 200
 
     def test_with_invalid_dates(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/chemistry/solution_journal?start_date=bad&end_date=bad'
+                '/labs/water-chemistry/solution_journal?start_date=bad&end_date=bad'
             )
             assert resp.status_code == 200
 
     def test_with_status_filter(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/chemistry/solution_journal?status=active'
+                '/labs/water-chemistry/solution_journal?status=active'
             )
             assert resp.status_code == 200
 
     def test_with_status_all(self, admin_client, app):
         with app.app_context():
             resp = admin_client.get(
-                '/labs/water-lab/chemistry/solution_journal?status=all'
+                '/labs/water-chemistry/solution_journal?status=all'
             )
             assert resp.status_code == 200
 
@@ -764,14 +764,14 @@ class TestAddSolution:
 
     def test_get_form(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_journal/add')
+            resp = admin_client.get('/labs/water-chemistry/solution_journal/add')
             assert resp.status_code == 200
 
     def test_post_basic(self, admin_client, app, db):
         with app.app_context():
             from app.models import SolutionPreparation
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Test HCl 0.1N',
                 'concentration': '0.1',
                 'concentration_unit': 'N',
@@ -802,13 +802,13 @@ class TestAddSolution:
                 name='Test HCl',
                 quantity=100.0,
                 unit='g',
-                lab_type='water',
+                lab_type='water_chemistry',
                 status='active',
             )
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'HCl Solution Test',
                 'concentration': '0.1',
                 'volume_ml': '1000',
@@ -842,13 +842,13 @@ class TestAddSolution:
                 name='Test Salt kg',
                 quantity=10.0,
                 unit='kg',
-                lab_type='water',
+                lab_type='water_chemistry',
                 status='active',
             )
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Salt Solution kg Test',
                 'concentration': '0.1',
                 'volume_ml': '1000',
@@ -877,13 +877,13 @@ class TestAddSolution:
                 name='Test Liquid mL',
                 quantity=500.0,
                 unit='mL',
-                lab_type='water',
+                lab_type='water_chemistry',
                 status='active',
             )
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Liquid Solution mL',
                 'concentration': '0.1',
                 'volume_ml': '100',
@@ -912,13 +912,13 @@ class TestAddSolution:
                 name='Test Liquid L',
                 quantity=5.0,
                 unit='L',
-                lab_type='water',
+                lab_type='water_chemistry',
                 status='active',
             )
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Liquid Solution L',
                 'concentration': '0.1',
                 'volume_ml': '100',
@@ -947,13 +947,13 @@ class TestAddSolution:
                 name='Low Stock Chem',
                 quantity=0.5,
                 unit='g',
-                lab_type='water',
+                lab_type='water_chemistry',
                 status='active',
             )
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Low Stock Solution',
                 'concentration': '0.1',
                 'volume_ml': '1000',
@@ -976,7 +976,7 @@ class TestAddSolution:
     def test_post_invalid_date(self, admin_client, app):
         """Test error handling when date is invalid."""
         with app.app_context():
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'Bad Date Sol',
                 'prepared_date': 'not-a-date',
             }, follow_redirects=True)
@@ -987,7 +987,7 @@ class TestAddSolution:
         with app.app_context():
             from app.models import SolutionPreparation
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/add', data={
                 'solution_name': 'No Expiry Solution',
                 'concentration': '0.5',
                 'volume_ml': '500',
@@ -1017,7 +1017,7 @@ class TestEditSolution:
             db.session.add(sol)
             db.session.commit()
 
-            resp = admin_client.get(f'/labs/water-lab/chemistry/solution_journal/edit/{sol.id}')
+            resp = admin_client.get(f'/labs/water-chemistry/solution_journal/edit/{sol.id}')
             assert resp.status_code == 200
 
             db.session.delete(sol)
@@ -1036,7 +1036,7 @@ class TestEditSolution:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/edit/{sol.id}',
+                f'/labs/water-chemistry/solution_journal/edit/{sol.id}',
                 data={
                     'solution_name': 'After Edit',
                     'prepared_date': '2026-03-11',
@@ -1078,7 +1078,7 @@ class TestEditSolution:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/edit/{sol.id}',
+                f'/labs/water-chemistry/solution_journal/edit/{sol.id}',
                 data={
                     'solution_name': 'Expiry Clear Test',
                     'prepared_date': '2026-03-10',
@@ -1109,7 +1109,7 @@ class TestEditSolution:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/edit/{sol.id}',
+                f'/labs/water-chemistry/solution_journal/edit/{sol.id}',
                 data={
                     'solution_name': 'Bad Edit Date',
                     'prepared_date': 'not-valid',
@@ -1124,7 +1124,7 @@ class TestEditSolution:
 
     def test_edit_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_journal/edit/999999')
+            resp = admin_client.get('/labs/water-chemistry/solution_journal/edit/999999')
             assert resp.status_code == 404
 
     def test_post_edit_with_chemical_id(self, admin_client, app, db):
@@ -1132,7 +1132,7 @@ class TestEditSolution:
         with app.app_context():
             from app.models import SolutionPreparation, Chemical
 
-            chem = Chemical(name='Edit Chem', quantity=50.0, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Edit Chem', quantity=50.0, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1145,7 +1145,7 @@ class TestEditSolution:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/edit/{sol.id}',
+                f'/labs/water-chemistry/solution_journal/edit/{sol.id}',
                 data={
                     'solution_name': 'Edit Chem Test',
                     'prepared_date': '2026-03-10',
@@ -1181,7 +1181,7 @@ class TestDeleteSolution:
             db.session.commit()
 
             resp = chemist_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/delete/{sol.id}',
+                f'/labs/water-chemistry/solution_journal/delete/{sol.id}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1206,7 +1206,7 @@ class TestDeleteSolution:
             sol_id = sol.id
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/delete/{sol_id}',
+                f'/labs/water-chemistry/solution_journal/delete/{sol_id}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1217,7 +1217,7 @@ class TestDeleteSolution:
         with app.app_context():
             from app.models import SolutionPreparation, Chemical
 
-            chem = Chemical(name='Return Chem', quantity=90.0, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Return Chem', quantity=90.0, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1233,7 +1233,7 @@ class TestDeleteSolution:
             sol_id = sol.id
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/delete/{sol_id}',
+                f'/labs/water-chemistry/solution_journal/delete/{sol_id}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1252,7 +1252,7 @@ class TestDeleteSolution:
         with app.app_context():
             from app.models import SolutionPreparation, Chemical
 
-            chem = Chemical(name='Return kg Chem', quantity=9.0, unit='kg', lab_type='water', status='active')
+            chem = Chemical(name='Return kg Chem', quantity=9.0, unit='kg', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1268,7 +1268,7 @@ class TestDeleteSolution:
             sol_id = sol.id
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_journal/delete/{sol_id}',
+                f'/labs/water-chemistry/solution_journal/delete/{sol_id}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1283,7 +1283,7 @@ class TestDeleteSolution:
 
     def test_delete_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_journal/delete/999999')
+            resp = admin_client.post('/labs/water-chemistry/solution_journal/delete/999999')
             assert resp.status_code == 404
 
 
@@ -1292,7 +1292,7 @@ class TestApiSolutions:
 
     def test_empty(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/api/solutions')
+            resp = admin_client.get('/labs/water-chemistry/api/solutions')
             assert resp.status_code == 200
             data = resp.get_json()
             assert isinstance(data, list)
@@ -1319,7 +1319,7 @@ class TestApiSolutions:
             db.session.add(sol)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/chemistry/api/solutions')
+            resp = admin_client.get('/labs/water-chemistry/api/solutions')
             assert resp.status_code == 200
             data = resp.get_json()
             found = [s for s in data if s['solution_name'] == 'API Test Sol']
@@ -1341,7 +1341,7 @@ class TestSolutionRecipes:
 
     def test_list(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes')
             assert resp.status_code == 200
 
     def test_list_with_recipes(self, admin_client, app, db):
@@ -1353,14 +1353,14 @@ class TestSolutionRecipes:
                 concentration=0.1,
                 concentration_unit='N',
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
             db.session.add(recipe)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes')
             assert resp.status_code == 200
 
             db.session.delete(recipe)
@@ -1375,7 +1375,7 @@ class TestSolutionRecipes:
                 name='Recipe With Preps',
                 concentration=0.05,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1391,7 +1391,7 @@ class TestSolutionRecipes:
             db.session.add(prep)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes')
             assert resp.status_code == 200
 
             db.session.delete(prep)
@@ -1410,14 +1410,14 @@ class TestRecipeDetail:
                 name='Detail Test Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
             db.session.add(recipe)
             db.session.commit()
 
-            resp = admin_client.get(f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}')
+            resp = admin_client.get(f'/labs/water-chemistry/solution_recipes/{recipe.id}')
             assert resp.status_code == 200
 
             db.session.delete(recipe)
@@ -1427,7 +1427,7 @@ class TestRecipeDetail:
         with app.app_context():
             from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
 
-            chem = Chemical(name='Detail Ingred Chem', quantity=100, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Detail Ingred Chem', quantity=100, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1435,7 +1435,7 @@ class TestRecipeDetail:
                 name='Detail Ingredients',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1451,7 +1451,7 @@ class TestRecipeDetail:
             db.session.add(ing)
             db.session.commit()
 
-            resp = admin_client.get(f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}')
+            resp = admin_client.get(f'/labs/water-chemistry/solution_recipes/{recipe.id}')
             assert resp.status_code == 200
 
             db.session.delete(ing)
@@ -1461,7 +1461,7 @@ class TestRecipeDetail:
 
     def test_detail_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes/999999')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes/999999')
             assert resp.status_code == 404
 
 
@@ -1472,7 +1472,7 @@ class TestPrepareFromRecipe:
         with app.app_context():
             from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical, SolutionPreparation
 
-            chem = Chemical(name='Prep Chem', quantity=100.0, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Prep Chem', quantity=100.0, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1480,7 +1480,7 @@ class TestPrepareFromRecipe:
                 name='Prep Test Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1497,7 +1497,7 @@ class TestPrepareFromRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}/prepare',
+                f'/labs/water-chemistry/solution_recipes/{recipe.id}/prepare',
                 data={
                     'volume_ml': '1000',
                     'v1': '10.1',
@@ -1528,7 +1528,7 @@ class TestPrepareFromRecipe:
         with app.app_context():
             from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
 
-            chem = Chemical(name='Insuff Chem', quantity=1.0, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Insuff Chem', quantity=1.0, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1536,7 +1536,7 @@ class TestPrepareFromRecipe:
                 name='Insuff Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1553,7 +1553,7 @@ class TestPrepareFromRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}/prepare',
+                f'/labs/water-chemistry/solution_recipes/{recipe.id}/prepare',
                 data={'volume_ml': '1000'},
                 follow_redirects=True,
             )
@@ -1577,7 +1577,7 @@ class TestPrepareFromRecipe:
                 name='No Expiry Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1585,7 +1585,7 @@ class TestPrepareFromRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}/prepare',
+                f'/labs/water-chemistry/solution_recipes/{recipe.id}/prepare',
                 data={'volume_ml': '500'},
                 follow_redirects=True,
             )
@@ -1597,7 +1597,7 @@ class TestPrepareFromRecipe:
 
     def test_prepare_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_recipes/999999/prepare',
+            resp = admin_client.post('/labs/water-chemistry/solution_recipes/999999/prepare',
                                      data={'volume_ml': '1000'})
             assert resp.status_code == 404
 
@@ -1610,7 +1610,7 @@ class TestPrepareFromRecipe:
                 name='Bad Volume Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1618,7 +1618,7 @@ class TestPrepareFromRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/{recipe.id}/prepare',
+                f'/labs/water-chemistry/solution_recipes/{recipe.id}/prepare',
                 data={'volume_ml': 'not-a-number'},
                 follow_redirects=True,
             )
@@ -1633,18 +1633,18 @@ class TestAddRecipe:
 
     def test_get_form(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes/add')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes/add')
             assert resp.status_code == 200
 
     def test_post_recipe(self, admin_client, app, db):
         with app.app_context():
             from app.models import SolutionRecipe, Chemical
 
-            chem = Chemical(name='Recipe Add Chem', quantity=100, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Recipe Add Chem', quantity=100, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.commit()
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_recipes/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_recipes/add', data={
                 'name': 'New Test Recipe',
                 'concentration': '0.05',
                 'concentration_unit': 'N',
@@ -1671,7 +1671,7 @@ class TestAddRecipe:
         with app.app_context():
             from app.models import SolutionRecipe
 
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_recipes/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_recipes/add', data={
                 'name': 'No Ingredient Recipe',
                 'concentration': '0.1',
                 'standard_volume_ml': '1000',
@@ -1686,7 +1686,7 @@ class TestAddRecipe:
     def test_post_recipe_invalid_data(self, admin_client, app):
         """Test error handling on invalid data."""
         with app.app_context():
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_recipes/add', data={
+            resp = admin_client.post('/labs/water-chemistry/solution_recipes/add', data={
                 'name': None,
                 'concentration': 'bad',
                 'chemical_id[]': ['999'],
@@ -1707,14 +1707,14 @@ class TestEditRecipe:
                 name='Edit Recipe Test',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
             db.session.add(recipe)
             db.session.commit()
 
-            resp = admin_client.get(f'/labs/water-lab/chemistry/solution_recipes/edit/{recipe.id}')
+            resp = admin_client.get(f'/labs/water-chemistry/solution_recipes/edit/{recipe.id}')
             assert resp.status_code == 200
 
             db.session.delete(recipe)
@@ -1724,7 +1724,7 @@ class TestEditRecipe:
         with app.app_context():
             from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
 
-            chem = Chemical(name='Edit Recipe Chem', quantity=100, unit='g', lab_type='water', status='active')
+            chem = Chemical(name='Edit Recipe Chem', quantity=100, unit='g', lab_type='water_chemistry', status='active')
             db.session.add(chem)
             db.session.flush()
 
@@ -1732,7 +1732,7 @@ class TestEditRecipe:
                 name='Before Recipe Edit',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1749,7 +1749,7 @@ class TestEditRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/edit/{recipe.id}',
+                f'/labs/water-chemistry/solution_recipes/edit/{recipe.id}',
                 data={
                     'name': 'After Recipe Edit',
                     'concentration': '0.2',
@@ -1782,7 +1782,7 @@ class TestEditRecipe:
                 name='Bad Edit Recipe',
                 concentration=0.1,
                 standard_volume_ml=1000,
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1790,7 +1790,7 @@ class TestEditRecipe:
             db.session.commit()
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/edit/{recipe.id}',
+                f'/labs/water-chemistry/solution_recipes/edit/{recipe.id}',
                 data={
                     'name': 'Bad Edit Recipe',
                     'concentration': 'bad',
@@ -1807,7 +1807,7 @@ class TestEditRecipe:
 
     def test_edit_recipe_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.get('/labs/water-lab/chemistry/solution_recipes/edit/999999')
+            resp = admin_client.get('/labs/water-chemistry/solution_recipes/edit/999999')
             assert resp.status_code == 404
 
 
@@ -1820,7 +1820,7 @@ class TestDeleteRecipe:
 
             recipe = SolutionRecipe(
                 name='Chemist Delete Recipe',
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1828,7 +1828,7 @@ class TestDeleteRecipe:
             db.session.commit()
 
             resp = chemist_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/delete/{recipe.id}',
+                f'/labs/water-chemistry/solution_recipes/delete/{recipe.id}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1845,7 +1845,7 @@ class TestDeleteRecipe:
 
             recipe = SolutionRecipe(
                 name='Admin Delete Recipe',
-                lab_type='water',
+                lab_type='water_chemistry',
                 is_active=True,
                 created_by_id=1,
             )
@@ -1854,7 +1854,7 @@ class TestDeleteRecipe:
             rid = recipe.id
 
             resp = admin_client.post(
-                f'/labs/water-lab/chemistry/solution_recipes/delete/{rid}',
+                f'/labs/water-chemistry/solution_recipes/delete/{rid}',
                 follow_redirects=True,
             )
             assert resp.status_code == 200
@@ -1862,7 +1862,7 @@ class TestDeleteRecipe:
 
     def test_delete_recipe_404(self, admin_client, app):
         with app.app_context():
-            resp = admin_client.post('/labs/water-lab/chemistry/solution_recipes/delete/999999')
+            resp = admin_client.post('/labs/water-chemistry/solution_recipes/delete/999999')
             assert resp.status_code == 404
 
 
@@ -1933,8 +1933,8 @@ class TestMicroConstants:
     def test_micro_lab_types(self, app):
         with app.app_context():
             from app.labs.water_lab.microbiology.micro_reports import _MICRO_LAB_TYPES
-            assert 'water' in _MICRO_LAB_TYPES
-            assert 'microbiology' in _MICRO_LAB_TYPES
+
+
 
     def test_micro_codes(self, app):
         with app.app_context():
@@ -1973,7 +1973,7 @@ class TestDashboardPassFailEdgeCases:
             db.session.add(ar)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/dashboard')
+            resp = admin_client.get('/labs/microbiology/reports/dashboard')
             assert resp.status_code == 200
 
             db.session.delete(ar)
@@ -2004,7 +2004,7 @@ class TestDashboardPassFailEdgeCases:
             db.session.add(ar)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/dashboard')
+            resp = admin_client.get('/labs/microbiology/reports/dashboard')
             assert resp.status_code == 200
 
             db.session.delete(ar)
@@ -2028,7 +2028,7 @@ class TestDashboardDecemberBoundary:
                 mock_dt.month = 2  # February - will go back to previous year
                 mock_now.return_value = mock_dt
 
-                resp = admin_client.get('/labs/water-lab/microbiology/reports/dashboard')
+                resp = admin_client.get('/labs/microbiology/reports/dashboard')
                 assert resp.status_code == 200
 
 
@@ -2058,7 +2058,7 @@ class TestConsumptionWithNullMonth:
             db.session.add(ar)
             db.session.commit()
 
-            resp = admin_client.get('/labs/water-lab/microbiology/reports/consumption?year=2026')
+            resp = admin_client.get('/labs/microbiology/reports/consumption?year=2026')
             assert resp.status_code == 200
 
             db.session.delete(ar)

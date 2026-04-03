@@ -21,7 +21,7 @@ def _make_sample(db, **kwargs):
     defaults = dict(
         sample_code=f"WTR-{uuid.uuid4().hex[:8]}",
         user_id=1,
-        lab_type='water',
+        lab_type='water_chemistry',
         client_name='QC',
         sample_type='water',
         sample_date=date(2026, 3, 1),
@@ -98,7 +98,7 @@ class TestGenerateMicroLabId:
         """next_batch=True + today samples exist: picks max+1."""
         with app.app_context():
             sd = date(2099, 4, 1)
-            s1 = _make_sample(db, lab_type='water & micro', sample_date=sd,
+            s1 = _make_sample(db, lab_type='microbiology', sample_date=sd,
                               micro_lab_id='07_05')
             db.session.commit()
 
@@ -177,7 +177,7 @@ class TestGenerateChemLabId:
         """Same day reuses batch number."""
         with app.app_context():
             sd = date(2099, 9, 1)
-            s = _make_sample(db, lab_type='water', sample_date=sd,
+            s = _make_sample(db, lab_type='water_chemistry', sample_date=sd,
                              chem_lab_id='10_05')
             db.session.commit()
 
@@ -192,7 +192,7 @@ class TestGenerateChemLabId:
         """next_batch increments from max."""
         with app.app_context():
             sd = date(2099, 10, 1)
-            s = _make_sample(db, lab_type='water', sample_date=sd,
+            s = _make_sample(db, lab_type='water_chemistry', sample_date=sd,
                              chem_lab_id='15_03')
             db.session.commit()
 
@@ -207,7 +207,7 @@ class TestGenerateChemLabId:
         """Today has water samples but no chem_lab_id => fallback to max+1."""
         with app.app_context():
             sd = date(2099, 11, 1)
-            s = _make_sample(db, lab_type='water', sample_date=sd,
+            s = _make_sample(db, lab_type='water_chemistry', sample_date=sd,
                              chem_lab_id=None)
             db.session.commit()
 
@@ -222,7 +222,7 @@ class TestGenerateChemLabId:
     def test_max_batch_with_invalid_format(self, app, db):
         """chem_lab_id without underscore is skipped."""
         with app.app_context():
-            s = _make_sample(db, lab_type='water', sample_date=date(2099, 12, 1),
+            s = _make_sample(db, lab_type='water_chemistry', sample_date=date(2099, 12, 1),
                              chem_lab_id='GARBAGE')
             db.session.commit()
 
@@ -284,7 +284,7 @@ class TestCreateWaterMicroSamples:
         return FakeForm(data)
 
     def test_create_water_only_samples(self, app, db):
-        """Water-only analyses => lab_type='water'."""
+        """Water-only analyses => lab_type='water_chemistry'."""
         with app.app_context():
             from app.labs.water_lab.chemistry.utils import create_water_micro_samples
             user = User.query.filter_by(username='chemist').first()
@@ -314,7 +314,7 @@ class TestCreateWaterMicroSamples:
             db.session.commit()
 
     def test_create_water_and_micro_samples(self, app, db):
-        """Mixed analyses => lab_type='water & micro'."""
+        """Mixed analyses => lab_type='microbiology'."""
         with app.app_context():
             from app.labs.water_lab.chemistry.utils import create_water_micro_samples
             user = User.query.filter_by(username='chemist').first()
@@ -547,8 +547,8 @@ class TestActiveChem:
             assert 'PH' in codes
             # 'COD' is archive
             assert 'COD' not in codes
-            # 'SLUDGE' is archive
-            assert 'SLUDGE' not in codes
+            # 'DO_W' is archive
+            assert 'DO_W' not in codes
 
     def test_returns_list(self, app):
         with app.app_context():
@@ -567,20 +567,20 @@ class TestWaterDashboard:
 
     def test_dashboard_requires_login(self, client):
         """Should redirect to login without auth."""
-        resp = client.get('/labs/water-lab/chemistry/reports/dashboard')
+        resp = client.get('/labs/water-chemistry/reports/dashboard')
         assert resp.status_code in (302, 401)
 
     def test_dashboard_with_auth(self, app, db, auth_admin):
         """Dashboard renders with correct data."""
         with app.app_context():
             now = datetime.now()
-            s = _make_sample(db, lab_type='water',
+            s = _make_sample(db, lab_type='water_chemistry',
                              received_date=now,
                              sample_date=now.date())
             ar_pass = _make_ar(db, s, code='PH',
                                raw_data={'value': 7.0},
                                created_at=now)
-            s2 = _make_sample(db, lab_type='water',
+            s2 = _make_sample(db, lab_type='water_chemistry',
                               received_date=now,
                               sample_date=now.date())
             ar_fail = _make_ar(db, s2, code='PH',
@@ -589,7 +589,7 @@ class TestWaterDashboard:
             db.session.commit()
             s_id, s2_id = s.id, s2.id
 
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/dashboard')
+        resp = auth_admin.get('/labs/water-chemistry/reports/dashboard')
         assert resp.status_code in (200, 302, 403)
 
         with app.app_context():
@@ -604,11 +604,11 @@ class TestWaterDashboard:
         with app.app_context():
             now = datetime.now()
             # Each sample gets one PH result (unique constraint on sample_id+analysis_code)
-            s1 = _make_sample(db, lab_type='water', received_date=now, sample_date=now.date())
-            s2 = _make_sample(db, lab_type='water', received_date=now, sample_date=now.date())
-            s3 = _make_sample(db, lab_type='water', received_date=now, sample_date=now.date())
-            s4 = _make_sample(db, lab_type='water', received_date=now, sample_date=now.date())
-            s5 = _make_sample(db, lab_type='water', received_date=now, sample_date=now.date())
+            s1 = _make_sample(db, lab_type='water_chemistry', received_date=now, sample_date=now.date())
+            s2 = _make_sample(db, lab_type='water_chemistry', received_date=now, sample_date=now.date())
+            s3 = _make_sample(db, lab_type='water_chemistry', received_date=now, sample_date=now.date())
+            s4 = _make_sample(db, lab_type='water_chemistry', received_date=now, sample_date=now.date())
+            s5 = _make_sample(db, lab_type='water_chemistry', received_date=now, sample_date=now.date())
 
             # Pass: exactly 6.5
             _make_ar(db, s1, 'PH', raw_data={'value': 6.5}, created_at=now)
@@ -665,21 +665,21 @@ class TestWaterConsumption:
     """Tests for water_consumption route."""
 
     def test_consumption_requires_login(self, client):
-        resp = client.get('/labs/water-lab/chemistry/reports/consumption')
+        resp = client.get('/labs/water-chemistry/reports/consumption')
         assert resp.status_code in (302, 401)
 
     def test_consumption_with_data(self, app, db, auth_admin):
         """Consumption builds tree from analysis data."""
         with app.app_context():
             now = datetime.now()
-            s = _make_sample(db, lab_type='water', client_name='QC',
+            s = _make_sample(db, lab_type='water_chemistry', client_name='QC',
                              received_date=now, sample_date=now.date())
             _make_ar(db, s, 'PH', created_at=now)
             _make_ar(db, s, 'EC', created_at=now)
             db.session.commit()
             s_id = s.id
 
-        resp = auth_admin.get(f'/labs/water-lab/chemistry/reports/consumption?year={datetime.now().year}')
+        resp = auth_admin.get(f'/labs/water-chemistry/reports/consumption?year={datetime.now().year}')
         assert resp.status_code in (200, 302, 403)
 
         with app.app_context():
@@ -689,12 +689,12 @@ class TestWaterConsumption:
 
     def test_consumption_invalid_year(self, app, db, auth_admin):
         """Invalid year parameter falls back to current year."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/consumption?year=abc')
+        resp = auth_admin.get('/labs/water-chemistry/reports/consumption?year=abc')
         assert resp.status_code in (200, 302, 403)
 
     def test_consumption_year_out_of_range(self, app, db, auth_admin):
         """Year out of 2000-2100 range falls back."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/consumption?year=1999')
+        resp = auth_admin.get('/labs/water-chemistry/reports/consumption?year=1999')
         assert resp.status_code in (200, 302, 403)
 
 
@@ -706,12 +706,12 @@ class TestApiConsumptionCell:
     """Tests for api_consumption_cell API."""
 
     def test_cell_requires_login(self, client):
-        resp = client.get('/labs/water-lab/chemistry/api/consumption_cell?year=2026&month=3&unit=x')
+        resp = client.get('/labs/water-chemistry/api/consumption_cell?year=2026&month=3&unit=x')
         assert resp.status_code in (302, 401)
 
     def test_cell_missing_params(self, app, db, auth_admin):
         """Missing required params returns failure."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/api/consumption_cell')
+        resp = auth_admin.get('/labs/water-chemistry/api/consumption_cell')
         assert resp.status_code == 200
         data = resp.get_json()
         if data:
@@ -719,7 +719,7 @@ class TestApiConsumptionCell:
 
     def test_cell_invalid_month(self, app, db, auth_admin):
         """month=13 is invalid."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/api/consumption_cell?year=2026&month=13&unit=x')
+        resp = auth_admin.get('/labs/water-chemistry/api/consumption_cell?year=2026&month=13&unit=x')
         assert resp.status_code == 200
         data = resp.get_json()
         if data:
@@ -729,14 +729,14 @@ class TestApiConsumptionCell:
         """Valid request returns items."""
         with app.app_context():
             now = datetime(2026, 3, 5)
-            s = _make_sample(db, lab_type='water', client_name='QC',
+            s = _make_sample(db, lab_type='water_chemistry', client_name='QC',
                              received_date=now, sample_date=now.date())
             _make_ar(db, s, 'PH', created_at=now)
             db.session.commit()
             s_id = s.id
 
         resp = auth_admin.get(
-            '/labs/water-lab/chemistry/api/consumption_cell?year=2026&month=3&unit=QC&stype=Хими&kind=samples'
+            '/labs/water-chemistry/api/consumption_cell?year=2026&month=3&unit=QC&stype=Хими&kind=samples'
         )
         assert resp.status_code in (200, 302, 403)
 
@@ -748,14 +748,14 @@ class TestApiConsumptionCell:
     def test_cell_kind_code(self, app, db, auth_admin):
         """kind=code with a specific code filters by that code."""
         resp = auth_admin.get(
-            '/labs/water-lab/chemistry/api/consumption_cell?year=2026&month=3&unit=x&kind=code&code=PH'
+            '/labs/water-chemistry/api/consumption_cell?year=2026&month=3&unit=x&kind=code&code=PH'
         )
         assert resp.status_code in (200, 302, 403)
 
     def test_cell_invalid_kind(self, app, db, auth_admin):
         """Invalid kind defaults to 'samples'."""
         resp = auth_admin.get(
-            '/labs/water-lab/chemistry/api/consumption_cell?year=2026&month=3&unit=x&kind=badkind'
+            '/labs/water-chemistry/api/consumption_cell?year=2026&month=3&unit=x&kind=badkind'
         )
         assert resp.status_code in (200, 302, 403)
 
@@ -768,41 +768,41 @@ class TestWaterMonthlyPlan:
     """Tests for water_monthly_plan route."""
 
     def test_plan_requires_login(self, client):
-        resp = client.get('/labs/water-lab/chemistry/reports/monthly_plan')
+        resp = client.get('/labs/water-chemistry/reports/monthly_plan')
         assert resp.status_code in (302, 401)
 
     def test_plan_default_params(self, app, db, auth_admin):
         """Default year/month from now."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan')
         assert resp.status_code in (200, 302, 403)
 
     def test_plan_specific_month(self, app, db, auth_admin):
         """Specific year/month params."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan?year=2026&month=1')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan?year=2026&month=1')
         assert resp.status_code in (200, 302, 403)
 
     def test_plan_invalid_params(self, app, db, auth_admin):
         """Invalid year/month falls back to now."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan?year=abc&month=13')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan?year=abc&month=13')
         assert resp.status_code in (200, 302, 403)
 
     def test_plan_year_out_of_range(self, app, db, auth_admin):
         """Year out of range falls back."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan?year=1999&month=6')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan?year=1999&month=6')
         assert resp.status_code in (200, 302, 403)
 
     def test_plan_with_data(self, app, db, auth_admin):
         """Plan with existing analysis data."""
         with app.app_context():
             now = datetime.now()
-            s = _make_sample(db, lab_type='water', client_name='QC',
+            s = _make_sample(db, lab_type='water_chemistry', client_name='QC',
                              received_date=now, sample_date=now.date())
             _make_ar(db, s, 'PH', created_at=now)
             db.session.commit()
             s_id = s.id
 
         resp = auth_admin.get(
-            f'/labs/water-lab/chemistry/reports/monthly_plan?year={datetime.now().year}&month={datetime.now().month}'
+            f'/labs/water-chemistry/reports/monthly_plan?year={datetime.now().year}&month={datetime.now().month}'
         )
         assert resp.status_code in (200, 302, 403)
 
@@ -813,12 +813,12 @@ class TestWaterMonthlyPlan:
 
     def test_plan_december(self, app, db, auth_admin):
         """December edge case (month=12)."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan?year=2026&month=12')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan?year=2026&month=12')
         assert resp.status_code in (200, 302, 403)
 
     def test_plan_january(self, app, db, auth_admin):
         """January edge case (trend goes into previous year)."""
-        resp = auth_admin.get('/labs/water-lab/chemistry/reports/monthly_plan?year=2026&month=1')
+        resp = auth_admin.get('/labs/water-chemistry/reports/monthly_plan?year=2026&month=1')
         assert resp.status_code in (200, 302, 403)
 
 
