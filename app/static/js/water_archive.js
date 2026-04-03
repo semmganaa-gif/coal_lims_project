@@ -21,12 +21,11 @@
   var I18N = CONFIG.i18n || {};
 
   var gridApi = null;
-  var currentType = 'water';
+  var currentType = 'water_chemistry';
 
   var TAB_CONFIG = {
-    'water': { title: '<i class="bi bi-droplet-fill" style="color:#3b82f6"></i> ' + (I18N.waterArchive || 'Water Chemistry Archive') },
-    'microbiology': { title: '<i class="bi bi-bug-fill" style="color:#20c997"></i> ' + (I18N.microArchive || 'Microbiology Archive') },
-    'water & micro': { title: '<i class="bi bi-layers-fill" style="color:#8b5cf6"></i> ' + (I18N.combinedArchive || 'Combined Archive') }
+    'water_chemistry': { title: '<i class="bi bi-droplet-fill" style="color:#3b82f6"></i> ' + (I18N.waterArchive || 'Water Chemistry Archive') },
+    'microbiology': { title: '<i class="bi bi-bug-fill" style="color:#20c997"></i> ' + (I18N.microArchive || 'Microbiology Archive') }
   };
 
   // Archive-д micro баганууд богино хэлбэрээр
@@ -42,8 +41,8 @@
 
   function buildColumnDefs(labType) {
     var cols = [];
-    var showChem = (labType === 'water' || labType === 'water & micro');
-    var showMicro = (labType === 'microbiology' || labType === 'water & micro');
+    var showChem = (labType === 'water_chemistry');
+    var showMicro = (labType === 'microbiology');
 
     // Checkbox
     cols.push({
@@ -146,7 +145,7 @@
         gridApi.setRowData(rows);
       }
     } catch (e) {
-      logger.error('Grid setData error:', e);
+      console.error('Grid setData error:', e);
     }
   }
 
@@ -160,12 +159,12 @@
         gridApi.setColumnDefs(newCols);
       }
     } catch (e) {
-      logger.error('Update columns error:', e);
+      console.error('Update columns error:', e);
     }
   }
 
   function loadData(labType) {
-    currentType = labType || 'water';
+    currentType = labType || 'water_chemistry';
     var url = (URLS.archiveData || '/labs/water-lab/chemistry/api/archive_data') + '?lab_type=' + encodeURIComponent(currentType);
     document.getElementById('rowCount').textContent = '...';
 
@@ -177,9 +176,9 @@
         document.getElementById('totalCount').textContent = data.total_count || 0;
         document.getElementById('waterCount').textContent = data.water_count || 0;
         document.getElementById('microCount').textContent = data.micro_count || 0;
-        document.getElementById('combinedCount').textContent = data.combined_count || 0;
+        // combined_count removed (no longer used)
         document.getElementById('rowCount').textContent = (data.rows || []).length;
-        document.getElementById('gridTitle').innerHTML = (TAB_CONFIG[currentType] || TAB_CONFIG['water']).title;
+        document.getElementById('gridTitle').innerHTML = (TAB_CONFIG[currentType] || TAB_CONFIG['water_chemistry']).title;
         // MNS limits серверээс merge
         if (data.chem_params && U.mergeMnsLimits) {
           U.mergeMnsLimits(data.chem_params);
@@ -189,7 +188,7 @@
         setTimeout(function() { if (gridApi) { try { gridApi.autoSizeAllColumns(); } catch(e){} } }, 100);
       })
       .catch(function(err) {
-        logger.error('Load error:', err);
+        console.error('Load error:', err);
         document.getElementById('rowCount').textContent = '0';
       });
   }
@@ -221,13 +220,13 @@
     if (!gridDiv) return;
 
     var gridOptions = {
-      columnDefs: buildColumnDefs('water'),
+      columnDefs: buildColumnDefs('water_chemistry'),
       rowData: [],
       defaultColDef: { resizable: true, sortable: true, filter: true, suppressHeaderMenuButton: true, suppressFloatingFilterButton: true },
       rowHeight: 28, headerHeight: 32, groupHeaderHeight: 28, floatingFiltersHeight: 28,
       rowSelection: 'multiple', suppressCellFocus: true,
       getRowId: function(p) { return String(p.data.sample_id); },
-      onGridReady: function(params) { gridApi = params.api; loadData('water'); }
+      onGridReady: function(params) { gridApi = params.api; loadData('water_chemistry'); }
     };
 
     try {

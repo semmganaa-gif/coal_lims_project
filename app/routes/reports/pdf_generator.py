@@ -52,13 +52,21 @@ def create_pdf_from_html(html_content, output_path):
 
     register_fonts()
 
-    with open(output_path, "wb") as pdf_file:
-        pisa_status = pisa.CreatePDF(
-            html_content,
-            dest=pdf_file,
-            encoding='utf-8'
-        )
-    return not pisa_status.err
+    try:
+        with open(output_path, "wb") as pdf_file:
+            pisa_status = pisa.CreatePDF(
+                html_content,
+                dest=pdf_file,
+                encoding='utf-8'
+            )
+    except (OSError, Exception) as e:
+        _logger.exception("PDF үүсгэхэд алдаа гарлаа: %s", output_path)
+        raise RuntimeError(f"PDF үүсгэхэд алдаа гарлаа: {e}") from e
+
+    if pisa_status.err:
+        _logger.error("xhtml2pdf алдаа: %s — файл: %s", pisa_status.err, output_path)
+        return False
+    return True
 
 
 def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
@@ -68,7 +76,7 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     # Дээжүүд татах (microbiology, water & micro дээжүүд)
     samples = Sample.query.filter(
         Sample.id.in_(sample_ids),
-        Sample.lab_type.in_(['microbiology', 'water & micro', 'water'])
+        Sample.lab_type.in_(['microbiology', 'water_chemistry'])
     ).order_by(Sample.sample_date, Sample.id).all()
 
     if not samples:
@@ -131,13 +139,13 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
 
     samples = Sample.query.filter(
         Sample.id.in_(sample_ids),
-        Sample.lab_type.in_(['water', 'microbiology', 'water & micro'])
+        Sample.lab_type.in_(['water_chemistry', 'microbiology'])
     ).order_by(Sample.sample_date, Sample.id).all()
 
     if not samples:
         return None, "Sample not found"
 
-    report_number = get_next_report_number('water')
+    report_number = get_next_report_number('water_chemistry')
 
     results_data = []
     for sample in samples:
@@ -156,7 +164,7 @@ def generate_water_report(sample_ids, date_from, date_to, created_by_id):
 
     report = LabReport(
         report_number=report_number,
-        lab_type='water',
+        lab_type='water_chemistry',
         report_type='analysis',
         title=f"Усны химийн шинжилгээний тайлан",
         status='draft',

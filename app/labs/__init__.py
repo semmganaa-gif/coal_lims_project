@@ -5,7 +5,10 @@ Multi-lab registry.
 INSTALLED_LABS dict нь бүх бүртгэлтэй лабораториудыг хадгална.
 """
 
+from __future__ import annotations
+
 from app.labs.base import BaseLab
+from app.constants.app_config import LAB_TYPES  # noqa: F401 — re-exported for templates
 
 INSTALLED_LABS = {}
 
@@ -23,13 +26,3 @@ def get_lab(key: str) -> BaseLab | None:
 def get_all_labs() -> dict:
     """Бүх лабораториудыг авах."""
     return INSTALLED_LABS
-
-
-# Lab types тогтмол
-LAB_TYPES = {
-    'coal': {'name': 'Нүүрсний лаборатори', 'icon': 'bi-fire', 'color': '#dc3545'},
-    'petrography': {'name': 'Петрограф лаборатори', 'icon': 'bi-gem', 'color': '#6f42c1'},
-    'water_lab': {'name': 'Усны лаборатори', 'icon': 'bi-droplet-fill', 'color': '#0891b2'},
-    'water': {'name': 'Хими лаборатори', 'icon': 'bi-droplet-half', 'color': '#0dcaf0', 'parent': 'water_lab'},
-    'microbiology': {'name': 'Микробиологийн лаборатори', 'icon': 'bi-bug', 'color': '#20c997', 'parent': 'water_lab'},
-}

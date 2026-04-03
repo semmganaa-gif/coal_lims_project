@@ -40,7 +40,7 @@ HAZARD_TYPES = {
 LAB_TYPES = {
     'all': 'Бүх лаб',
     'coal': 'Нүүрсний лаб',
-    'water': 'Усны хими',
+    'water_chemistry': 'Усны хими',
     'microbiology': 'Микробиологи',
     'petrography': 'Петрограф',
 }

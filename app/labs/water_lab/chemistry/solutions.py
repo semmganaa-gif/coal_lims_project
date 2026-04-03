@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @water_bp.route('/solution_journal')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def solution_journal():
     """Уусмал бэлдэх дэвтэр - жагсаалт."""
     from app.models import SolutionPreparation
@@ -64,7 +64,7 @@ def solution_journal():
         'active': SolutionPreparation.query.filter_by(status='active').count(),
         'expired': SolutionPreparation.query.filter(
             SolutionPreparation.expiry_date < today
-        ).count() if SolutionPreparation.query.first() else 0,
+        ).count(),
     }
 
     return render_template(
@@ -80,7 +80,7 @@ def solution_journal():
 
 @water_bp.route('/solution_journal/add', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def add_solution():
     """Шинэ уусмал бүртгэх."""
     from app.models import SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
@@ -203,7 +203,7 @@ def add_solution():
 
 @water_bp.route('/solution_journal/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def edit_solution(id):
     """Уусмал засварлах."""
     from app.models import SolutionPreparation, Chemical
@@ -270,7 +270,7 @@ def edit_solution(id):
 
 @water_bp.route('/solution_journal/delete/<int:id>', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def delete_solution(id):
     """Уусмал устгах."""
     from app.models import SolutionPreparation, Chemical, ChemicalLog
@@ -321,7 +321,7 @@ def delete_solution(id):
 
 @water_bp.route('/api/solutions')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def api_solutions():
     """Уусмалын жагсаалт API."""
     from app.models import SolutionPreparation
@@ -390,13 +390,13 @@ def convert_recipe_unit_to_chemical(amount, recipe_unit, chemical_unit):
 
 @water_bp.route('/solution_recipes')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def solution_recipes():
     """Уусмалын жорын жагсаалт - карт хэлбэрээр."""
     from app.models import SolutionRecipe, SolutionPreparation
 
     recipes = SolutionRecipe.query.filter_by(
-        lab_type='water', is_active=True
+        lab_type='water_chemistry', is_active=True
     ).order_by(SolutionRecipe.name).all()
 
     # Recipe бүрийн статистик — нэг query-р авах
@@ -438,7 +438,7 @@ def solution_recipes():
 
 @water_bp.route('/solution_recipes/<int:id>')
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def recipe_detail(id):
     """Уусмалын жорын дэлгэрэнгүй + найруулах форм."""
     from app.models import SolutionRecipe, SolutionPreparation
@@ -473,7 +473,7 @@ def recipe_detail(id):
 
 @water_bp.route('/solution_recipes/<int:id>/prepare', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def prepare_from_recipe(id):
     """Жороор уусмал найруулах - химийн бодис автоматаар хасагдана."""
     from app.models import SolutionRecipe, SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
@@ -483,6 +483,8 @@ def prepare_from_recipe(id):
     try:
         # Найруулах эзэлхүүн
         target_volume = float(request.form.get('volume_ml', recipe.standard_volume_ml or 1000))
+        if not (0 < target_volume <= 100_000):
+            raise ValueError(f"Эзэлхүүн хүчингүй: {target_volume}")
 
         # Шаардлагатай бодисуудыг тооцоолох
         required_ingredients = recipe.calculate_ingredients(target_volume)
@@ -611,7 +613,7 @@ def prepare_from_recipe(id):
 
 @water_bp.route('/solution_recipes/add', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def add_recipe():
     """Шинэ уусмалын жор нэмэх."""
     from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
@@ -624,7 +626,7 @@ def add_recipe():
                 concentration_unit=request.form.get('concentration_unit', 'N'),
                 standard_volume_ml=to_float(request.form.get('standard_volume_ml')) or 1000,
                 preparation_notes=request.form.get('preparation_notes'),
-                lab_type='water',
+                lab_type='water_chemistry',
                 category=request.form.get('category'),
                 created_by_id=current_user.id,
             )
@@ -669,7 +671,7 @@ def add_recipe():
 
 @water_bp.route('/solution_recipes/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def edit_recipe(id):
     """Уусмалын жор засварлах."""
     from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
@@ -725,7 +727,7 @@ def edit_recipe(id):
 
 @water_bp.route('/solution_recipes/delete/<int:id>', methods=['POST'])
 @login_required
-@lab_required('water')
+@lab_required('water_chemistry')
 def delete_recipe(id):
     """Уусмалын жор устгах."""
     from app.models import SolutionRecipe

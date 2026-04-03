@@ -20,7 +20,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_EXTENSIONS = {'pdf', 'xlsx', 'xls', 'doc', 'docx', 'jpg', 'jpeg', 'png'}
 
 # Lab types
-LAB_TYPES = ['coal', 'water', 'microbiology', 'petrography', 'all']
+LAB_TYPES = ['coal', 'water_chemistry', 'microbiology', 'petrography', 'all']
 
 # Chemical categories
 CATEGORIES = [

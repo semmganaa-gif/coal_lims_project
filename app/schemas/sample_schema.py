@@ -30,7 +30,7 @@ ALLOWED_CLIENT_NAMES = [
 
 ALLOWED_STATUSES = ["new", "in_progress", "analysis", "completed", "archived"]
 
-ALLOWED_LAB_TYPES = ["coal", "petrography", "water"]
+ALLOWED_LAB_TYPES = ["coal", "petrography", "water_chemistry", "microbiology"]
 
 
 class SampleSchema(Schema):
