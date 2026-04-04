@@ -137,6 +137,9 @@
       <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-primary" style="border-radius:12px;font-weight:600;">
         <i class="bi bi-table me-1"></i>{{ _("Summary") }}
       </a>
+      <a href="{{ url_for('water.worksheet_list') }}" class="btn btn-sm btn-outline-info" style="border-radius:12px;font-weight:600;">
+        <i class="bi bi-clipboard2-check me-1"></i>QC Worksheet
+      </a>
       <div class="hub-search">
         <i class="bi bi-search"></i>
         <input type="text" id="analysis-search" placeholder="{{ _("Search... (pH, Iron, SO4)") }}">

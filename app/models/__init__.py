@@ -32,6 +32,7 @@ from app.models.solutions import SolutionPreparation, SolutionRecipe, SolutionRe
 from app.models.equipment import Equipment, MaintenanceLog, UsageLog
 from app.models.instrument import InstrumentReading
 from app.models.chemicals import Chemical, ChemicalUsage, ChemicalLog, ChemicalWaste, ChemicalWasteRecord
+from app.models.worksheets import WaterWorksheet, WorksheetRow
 
 __all__ = [
     # Constants
@@ -73,6 +74,10 @@ __all__ = [
     'ChemicalLog',
     'ChemicalWaste',
     'ChemicalWasteRecord',
+
+    # Water Worksheets
+    'WaterWorksheet',
+    'WorksheetRow',
 
     # Quality
     'Bottle',

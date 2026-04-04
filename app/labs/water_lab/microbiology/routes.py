@@ -291,12 +291,48 @@ def api_samples():
         query = query.filter(~Sample.id.in_(saved_ids))
 
     samples = query.order_by(Sample.id.desc()).limit(200).all()
+
+    # Previous result per sample (last approved/pending result for this category)
+    _prev_key_map = {
+        'MICRO_WATER': 'cfu_37',
+        'MICRO_AIR': 'cfu_air',
+        'MICRO_SWAB': 'cfu_swab',
+    }
+    prev_results = {}
+    if category in _prev_key_map and samples:
+        result_key = _prev_key_map[category]
+        sample_ids = [s.id for s in samples]
+        prev_ars = (
+            AnalysisResult.query
+            .filter(
+                AnalysisResult.sample_id.in_(sample_ids),
+                AnalysisResult.analysis_code == category,
+                AnalysisResult.status.in_(['approved', 'pending_review']),
+            )
+            .order_by(AnalysisResult.id.desc())
+            .all()
+        )
+        seen = set()
+        for ar in prev_ars:
+            if ar.sample_id not in seen:
+                seen.add(ar.sample_id)
+                try:
+                    rd = json.loads(ar.raw_data or '{}')
+                    val = rd.get(result_key)
+                    if val is not None:
+                        prev_results[ar.sample_id] = val
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
     return jsonify([{
         'id': s.id,
         'sample_code': s.sample_code,
         'client_name': s.client_name,
         'status': s.status,
         'sample_date': s.sample_date.isoformat() if s.sample_date else None,
+        'sampled_by': s.sampled_by or '',
+        'sampling_location': s.sampling_location or '',
+        'prev_result': prev_results.get(s.id),
     } for s in samples])
 
 
@@ -489,6 +525,168 @@ def load_batch():
 
     rows.reverse()
     return jsonify({'rows': rows})
+
+
+# ============ Summary / Archive ============
+
+def _build_micro_row(s, results_by_code, idx):
+    """Нэг дээжийг summary grid-ийн мөр болгон хөрвүүлэх."""
+    row = {
+        'seq': idx,
+        'id': s.id,
+        'sample_id': s.id,
+        'sample_code': s.sample_code,
+        'micro_lab_id': s.micro_lab_id or '',
+        'client_name': s.client_name or '',
+        'sampled_by': s.sampled_by or '',
+        'sampling_location': s.sampling_location or '',
+        'sample_date': s.sample_date.isoformat() if s.sample_date else None,
+        'received_date': s.received_date.strftime('%Y-%m-%d %H:%M') if s.received_date else None,
+        'status': s.status,
+    }
+    # Шинжилгээний үр дүн нэмэх
+    for code in ('MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB'):
+        ar = results_by_code.get((s.id, code))
+        row[f'{code.lower()}_status'] = ar.status if ar else None
+        if ar and ar.raw_data:
+            try:
+                rd = json.loads(ar.raw_data)
+                for field in ('cfu_22', 'cfu_37', 'cfu_avg', 'ecoli', 'salmonella',
+                              'cfu_air', 'staphylococcus', 'mold_fungi',
+                              'cfu_swab', 'ecoli_swab', 'salmonella_swab', 'staphylococcus_swab',
+                              'start_date', 'end_date', 'room_temp', 'room_humidity',
+                              'plating_method', 'media_lot'):
+                    if field in rd:
+                        row[field] = rd[field]
+            except (json.JSONDecodeError, TypeError):
+                pass
+    return row
+
+
+@micro_bp.route('/summary', methods=['GET', 'POST'])
+@login_required
+@lab_required('microbiology')
+def micro_summary():
+    """Микробиологийн нэгтгэл хуудас."""
+    if request.method == 'POST':
+        action = request.form.get('action')
+        sample_ids_str = request.form.get('sample_ids', '')
+        if sample_ids_str and action == 'archive':
+            from app.services import archive_samples
+            sample_ids = [int(sid) for sid in sample_ids_str.split(',') if sid.isdigit()]
+            result = archive_samples(sample_ids, archive=True)
+            flash(result.message, 'success' if result.success else 'danger')
+        return redirect(url_for('microbiology.micro_summary'))
+
+    return render_template(
+        'labs/water/microbiology/micro_summary.html',
+        title='Микробиологийн шинжилгээний нэгтгэл',
+    )
+
+
+@micro_bp.route('/api/micro_summary_data')
+@login_required
+@lab_required('microbiology')
+def micro_summary_data():
+    """Микробиологийн нэгтгэлийн өгөгдөл (AG Grid)."""
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+
+    q = Sample.query.filter(
+        Sample.lab_type == 'microbiology',
+        Sample.status != 'archived',
+    )
+    if date_from:
+        try:
+            q = q.filter(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+        except ValueError:
+            pass
+
+    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(300).all()
+    if not samples:
+        return jsonify({'rows': []})
+
+    sample_ids = [s.id for s in samples]
+    all_results = AnalysisResult.query.filter(
+        AnalysisResult.sample_id.in_(sample_ids),
+        AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
+    ).all()
+    results_by_code = {(ar.sample_id, ar.analysis_code): ar for ar in all_results}
+
+    rows = [_build_micro_row(s, results_by_code, idx) for idx, s in enumerate(samples, 1)]
+    return jsonify({'rows': rows})
+
+
+@micro_bp.route('/micro_archive', methods=['GET', 'POST'])
+@login_required
+@lab_required('microbiology')
+def micro_archive():
+    """Микробиологийн архив хуудас."""
+    if request.method == 'POST':
+        action = request.form.get('action')
+        sample_ids_str = request.form.get('sample_ids', '')
+        if sample_ids_str and action == 'unarchive':
+            from app.services import archive_samples
+            sample_ids = [int(sid) for sid in sample_ids_str.split(',') if sid.isdigit()]
+            result = archive_samples(sample_ids, archive=False)
+            flash(result.message, 'success' if result.success else 'danger')
+        return redirect(url_for('microbiology.micro_archive'))
+
+    archived_count = Sample.query.filter(
+        Sample.lab_type == 'microbiology',
+        Sample.status == 'archived',
+    ).count()
+    return render_template(
+        'labs/water/microbiology/micro_archive.html',
+        title='Микробиологийн архив',
+        archived_count=archived_count,
+    )
+
+
+@micro_bp.route('/api/micro_archive_data')
+@login_required
+@lab_required('microbiology')
+def micro_archive_data():
+    """Архивлагдсан микробиологийн дээж."""
+    q = Sample.query.filter(
+        Sample.lab_type == 'microbiology',
+        Sample.status == 'archived',
+    )
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    if date_from:
+        try:
+            q = q.filter(Sample.sample_date >= datetime.strptime(date_from, '%Y-%m-%d').date())
+        except ValueError:
+            pass
+    if date_to:
+        try:
+            q = q.filter(Sample.sample_date <= datetime.strptime(date_to, '%Y-%m-%d').date())
+        except ValueError:
+            pass
+
+    samples = q.order_by(Sample.sample_date.desc(), Sample.id.desc()).limit(500).all()
+    total = Sample.query.filter(
+        Sample.lab_type == 'microbiology', Sample.status == 'archived'
+    ).count()
+
+    if not samples:
+        return jsonify({'rows': [], 'total_count': total})
+
+    sample_ids = [s.id for s in samples]
+    all_results = AnalysisResult.query.filter(
+        AnalysisResult.sample_id.in_(sample_ids),
+        AnalysisResult.analysis_code.in_(['MICRO_WATER', 'MICRO_AIR', 'MICRO_SWAB']),
+    ).all()
+    results_by_code = {(ar.sample_id, ar.analysis_code): ar for ar in all_results}
+
+    rows = [_build_micro_row(s, results_by_code, idx) for idx, s in enumerate(samples, 1)]
+    return jsonify({'rows': rows, 'total_count': total})
 
 
 # C-2 fix: Duplicate /api/data route устгагдсан (micro_data).

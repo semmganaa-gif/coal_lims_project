@@ -325,15 +325,24 @@ document.addEventListener('DOMContentLoaded', function() {
   function showToast(msg, type) { type=type||'success'; const c={success:'#8b5cf6',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
   function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
 
+  const _PLATING_METHODS = ['Pour plate', 'Spread plate', 'Membrane filtration'];
   const columnDefs = [
     { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: 'Sample Name\nSample Name', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
-    { field: 'start_date', headerName: 'Analysis Start Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    { field: 'end_date', headerName: 'Analysis End Date', minWidth: 140, editable: true, cellEditor: DateCellEditor },
-    microCol('cfu_swab', 'CFU\nMNS 6410:2018\nPermissible Limit\nper 50cm² <100', 100),
-    presenceCol('ecoli_swab', 'E.coli\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
-    presenceCol('salmonella_swab', 'Salmonella spp.\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
-    presenceCol('staphylococcus_swab', 'S.aureus\nMNS 6410:2018\nPermissible Limit\nNot Detected'),
+    { field: 'sample_code', headerName: '{{ _("Sample Name") }}', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+    { field: 'sampled_by', headerName: '{{ _("Sampled By") }}', minWidth: 110, editable: false, cellStyle: { color: '#64748b', fontStyle: 'italic', fontSize: '0.8rem' } },
+    { field: 'prev_result', headerName: '{{ _("Prev CFU") }}', minWidth: 90, editable: false, cellStyle: { color: '#94a3b8', fontStyle: 'italic', fontSize: '0.8rem', textAlign: 'right' } },
+    { field: 'start_date', headerName: '{{ _("Start Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
+    { field: 'end_date', headerName: '{{ _("End Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
+    { field: 'room_temp', headerName: 'T°C', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
+    { field: 'room_humidity', headerName: 'RH%', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
+    { field: 'plating_method', headerName: '{{ _("Plating Method") }}', minWidth: 130, editable: true, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: _PLATING_METHODS }, cellStyle: { fontSize: '0.8rem' } },
+    { field: 'media_lot', headerName: '{{ _("Media Lot") }}', minWidth: 110, editable: true, cellStyle: { fontSize: '0.8rem' } },
+    { field: 'dilution_factor', headerName: '{{ _("Dilution") }}', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
+    { field: 'volume_ml', headerName: 'V (мл)', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
+    microCol('cfu_swab', 'CFU /MNS 6410:2018/ <100/50см²', 100),
+    presenceCol('ecoli_swab', 'E.coli /MNS 6410:2018/ ND'),
+    presenceCol('salmonella_swab', 'Salmonella /MNS 6410:2018/ ND'),
+    presenceCol('staphylococcus_swab', 'S.aureus /MNS 6410:2018/ ND'),
     { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="Remove" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
   ];
 
@@ -342,7 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) { initialRows = savedDraft.rows; rowSeq = initialRows.length; }
 
   const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
-    editableColIds: ['start_date', 'end_date', 'cfu_swab', 'salmonella_swab', 'ecoli_swab', 'staphylococcus_swab'],
+    editableColIds: ['start_date', 'end_date', 'room_temp', 'room_humidity', 'plating_method', 'media_lot',
+                     'dilution_factor', 'volume_ml', 'cfu_swab', 'salmonella_swab', 'ecoli_swab', 'staphylococcus_swab'],
     undoRedoCellEditing: true, undoRedoCellEditingLimit: 20,
     onCellValueChanged: () => saveDraft(),
     onFirstDataRendered: p => { p.api.autoSizeAllColumns(); updateRowCount(); },
@@ -380,9 +390,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
   document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
   document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
-  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Please select samples','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),start_date:today,end_date:''})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' samples added');});
+  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('Please select samples','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),sampled_by:s?(s.sampled_by||''):'',prev_result:s?(s.prev_result!==undefined?s.prev_result:null):null,start_date:today,end_date:'',plating_method:'Pour plate',dilution_factor:1})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' samples added');});
 
-  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('No data to save','warning');return;} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Saved successfully! ('+d.count+' rows)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Error: '+(d.error||''),'error');}).catch(e=>showToast('Network error: '+e.message,'error'));});
+  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('No data to save','warning');return;} for(const r of rows){if(r.start_date&&r.end_date&&r.start_date>r.end_date){showToast('Error: '+r.sample_code+' — Start date must be before end date','error');return;}} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Saved successfully! ('+d.count+' rows)');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('Error: '+(d.error||''),'error');}).catch(e=>showToast('Network error: '+e.message,'error'));});
   updateRowCount();
 });
 </script>

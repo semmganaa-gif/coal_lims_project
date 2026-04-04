@@ -175,8 +175,73 @@
               </div>
             </div>
 
+            {# === GHS & Safety === #}
+            <h6 class="text-warning mb-3 border-bottom pb-2 mt-3">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ _("GHS / Safety") }}
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">{{ _("GHS Signal Word") }}</label>
+                <select name="ghs_signal_word" class="form-select">
+                  <option value="">— {{ _("None") }} —</option>
+                  <option value="Danger" {{ 'selected' if chemical and chemical.ghs_signal_word == 'Danger' }}>Danger (Аюул)</option>
+                  <option value="Warning" {{ 'selected' if chemical and chemical.ghs_signal_word == 'Warning' }}>Warning (Анхааруулга)</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">SDS {{ _("Version") }}</label>
+                <input type="text" name="sds_version" class="form-control"
+                       value="{{ chemical.sds_version if chemical else '' }}"
+                       placeholder="e.g. 4.0">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">SDS {{ _("Revision Date") }}</label>
+                <input type="date" name="sds_revision_date" class="form-control"
+                       value="{{ chemical.sds_revision_date.strftime('%Y-%m-%d') if chemical and chemical.sds_revision_date else '' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">{{ _("GHS Pictograms") }}</label>
+                <div class="d-flex flex-wrap gap-2">
+                  {% set ghs_codes = ['GHS01','GHS02','GHS03','GHS04','GHS05','GHS06','GHS07','GHS08','GHS09'] %}
+                  {% set ghs_names = ['Тэсрэх','Шатамхай','Исэлдүүлэгч','Шахсан хий','Идэмхий','Хортой','Цочроогч','Эрүүл мэндэд аюул','Байгальд аюул'] %}
+                  {% set ghs_colors = ['#ef4444','#f97316','#eab308','#06b6d4','#a16207','#1e293b','#f59e0b','#7c3aed','#16a34a'] %}
+                  {% set current_ghs = chemical.ghs_pictograms if chemical and chemical.ghs_pictograms else [] %}
+                  {% for i in range(ghs_codes|length) %}
+                  {% set code = ghs_codes[i] %}
+                  <label class="d-flex align-items-center gap-1" style="cursor:pointer;">
+                    <input type="checkbox" name="ghs_pictograms" value="{{ code }}"
+                           {{ 'checked' if code in current_ghs }}
+                           style="width:16px;height:16px;">
+                    <span style="background:{{ ghs_colors[i] }};color:#fff;border-radius:4px;padding:2px 6px;font-size:0.72rem;font-weight:700;">{{ code }}</span>
+                    <span style="font-size:0.75rem;color:#64748b;">{{ ghs_names[i] }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{{ _("Shelf Life After Opening") }} ({{ _("days") }})</label>
+                <input type="number" name="shelf_life_after_opening_days" class="form-control" min="1"
+                       value="{{ chemical.shelf_life_after_opening_days if chemical and chemical.shelf_life_after_opening_days else '' }}"
+                       placeholder="e.g. 90">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{{ _("Alert Before Expiry") }} ({{ _("days") }})</label>
+                <input type="number" name="days_alert_before_expiry" class="form-control" min="1"
+                       value="{{ chemical.days_alert_before_expiry if chemical else 30 }}"
+                       placeholder="30">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">{{ _("Prevent Use If Expired") }}</label>
+                <div class="form-check mt-2">
+                  <input type="checkbox" name="prevent_use_if_expired" class="form-check-input" id="preventUse"
+                         {{ 'checked' if not chemical or chemical.prevent_use_if_expired }}>
+                  <label class="form-check-label" for="preventUse">{{ _("Block usage when expired") }}</label>
+                </div>
+              </div>
+            </div>
+
             {# === Notes === #}
-            <h6 class="text-primary mb-3 border-bottom pb-2">
+            <h6 class="text-primary mb-3 border-bottom pb-2 mt-3">
               <i class="bi bi-chat-left-text me-2"></i>{{ _("Notes") }}
             </h6>
             <div class="row g-3">

@@ -127,6 +127,7 @@ def get_chemical_list(lab: str = "all", category: str = "all",
 
 def _chemical_to_list_dict(c: Chemical) -> dict:
     """Chemical model -> list dict."""
+    days = c.days_until_expiry()
     return {
         'id': c.id,
         'name': c.name,
@@ -143,12 +144,24 @@ def _chemical_to_list_dict(c: Chemical) -> dict:
         'received_date': c.received_date.strftime('%Y-%m-%d') if c.received_date else None,
         'expiry_date': c.expiry_date.strftime('%Y-%m-%d') if c.expiry_date else None,
         'opened_date': c.opened_date.strftime('%Y-%m-%d') if c.opened_date else None,
+        'opened_expiry_date': c.opened_expiry_date.strftime('%Y-%m-%d') if c.opened_expiry_date else None,
+        'shelf_life_after_opening_days': c.shelf_life_after_opening_days,
         'storage_location': c.storage_location,
         'storage_conditions': c.storage_conditions,
         'hazard_class': c.hazard_class,
         'lab_type': c.lab_type,
         'category': c.category,
         'status': c.status,
+        # GHS & SDS
+        'ghs_pictograms': c.ghs_pictograms or [],
+        'ghs_signal_word': c.ghs_signal_word or '',
+        'sds_version': c.sds_version or '',
+        'sds_revision_date': c.sds_revision_date.strftime('%Y-%m-%d') if c.sds_revision_date else None,
+        # Expiry
+        'days_alert_before_expiry': c.days_alert_before_expiry or 30,
+        'prevent_use_if_expired': c.prevent_use_if_expired,
+        'days_until_expiry': days,
+        'is_expiring_soon': c.is_expiring_soon(),
     }
 
 
@@ -482,6 +495,13 @@ def create_chemical(data: dict, user_id: int) -> Chemical:
         lab_type=data.get("lab_type", "all"),
         category=data.get("category", "other"),
         notes=data.get("notes"),
+        ghs_pictograms=data.get("ghs_pictograms") or [],
+        ghs_signal_word=data.get("ghs_signal_word") or None,
+        sds_version=data.get("sds_version") or None,
+        sds_revision_date=_parse_date(data.get("sds_revision_date")),
+        shelf_life_after_opening_days=int(data["shelf_life_after_opening_days"]) if data.get("shelf_life_after_opening_days") else None,
+        days_alert_before_expiry=int(data["days_alert_before_expiry"]) if data.get("days_alert_before_expiry") else 30,
+        prevent_use_if_expired=bool(data.get("prevent_use_if_expired")),
         created_by_id=user_id,
     )
 
@@ -534,6 +554,20 @@ def update_chemical(chemical: Chemical, data: dict, user_id: int) -> None:
     chemical.lab_type = data.get("lab_type", "all")
     chemical.category = data.get("category", "other")
     chemical.notes = data.get("notes")
+    # GHS & Safety fields
+    chemical.ghs_pictograms = data.get("ghs_pictograms") or []
+    chemical.ghs_signal_word = data.get("ghs_signal_word") or None
+    chemical.sds_version = data.get("sds_version") or None
+    chemical.sds_revision_date = _parse_date(data.get("sds_revision_date"))
+    if data.get("shelf_life_after_opening_days"):
+        chemical.shelf_life_after_opening_days = int(data["shelf_life_after_opening_days"])
+    else:
+        chemical.shelf_life_after_opening_days = None
+    if data.get("days_alert_before_expiry"):
+        chemical.days_alert_before_expiry = int(data["days_alert_before_expiry"])
+    else:
+        chemical.days_alert_before_expiry = 30
+    chemical.prevent_use_if_expired = bool(data.get("prevent_use_if_expired"))
 
     if data.get("reorder_level"):
         chemical.reorder_level = float(data["reorder_level"])
@@ -739,3 +773,170 @@ def _parse_date(date_str: Optional[str]) -> Optional[date]:
     if not date_str:
         return None
     return datetime.strptime(date_str, "%Y-%m-%d").date()
+
+
+# =============================================================================
+# Lot-based Result Invalidation
+# =============================================================================
+
+@dataclass
+class LotInvalidationResult:
+    """Lot invalidation operation result."""
+    lot_id: int
+    lot_name: str
+    affected_result_ids: list
+    affected_sample_ids: list
+    flagged_count: int
+    errors: list = field(default_factory=list)
+
+
+def invalidate_results_by_lot(
+    lot_id: int,
+    reason: str = 'Урвалжийн lot дохиолол — дахин шинжилгээ шаардлагатай',
+    performed_by_id: Optional[int] = None,
+) -> LotInvalidationResult:
+    """
+    Тодорхой chemical lot ашигласан бүх AnalysisResult-ийг reanalysis руу шилжүүлэх.
+
+    Тохиолдол: дохиолсон lot, чанарт үл нийцэх lot гэх мэт.
+
+    Args:
+        lot_id:           Chemical.id (дохиологдох lot)
+        reason:           Буцаалтын шалтгаан (audit log-д бичигдэнэ)
+        performed_by_id:  Үйлдэл хийсэн хэрэглэгч (User.id)
+
+    Returns:
+        LotInvalidationResult — хэдэн үр дүн нөлөөлсөн, алдаа
+    """
+    from app.models import AnalysisResult, Sample
+
+    chemical = db.session.get(Chemical, lot_id)
+    if not chemical:
+        return LotInvalidationResult(
+            lot_id=lot_id, lot_name='?',
+            affected_result_ids=[], affected_sample_ids=[],
+            flagged_count=0,
+            errors=[f'Chemical lot id={lot_id} олдсонгүй'],
+        )
+
+    # 1. Тухайн lot ашигласан бүх ChemicalUsage олох
+    usages = (
+        ChemicalUsage.query
+        .filter_by(chemical_id=lot_id)
+        .filter(ChemicalUsage.sample_id.isnot(None))
+        .all()
+    )
+
+    # 2. WorksheetRow-оор холбогдсон AnalysisResult-үүд
+    #    (raw_data-д reagent_lot_id хадгалсан тохиолдол)
+    try:
+        from app.models.worksheets import WorksheetRow
+        ws_rows = (
+            WorksheetRow.query
+            .filter_by(reagent_lot_id=lot_id)
+            .filter(WorksheetRow.analysis_result_id.isnot(None))
+            .all()
+        )
+        ws_result_ids = {r.analysis_result_id for r in ws_rows}
+    except Exception:
+        ws_result_ids = set()
+
+    # 3. Бүх нөлөөлсөн result ID-уудыг нэгтгэх
+    usage_sample_ids = {u.sample_id for u in usages if u.sample_id}
+
+    raw_lot_results = (
+        AnalysisResult.query
+        .filter(AnalysisResult.raw_data.contains(f'"reagent_lot_id": {lot_id}'))
+        .all()
+    ) if usage_sample_ids else []
+    raw_lot_result_ids = {r.id for r in raw_lot_results}
+
+    all_result_ids = ws_result_ids | raw_lot_result_ids
+
+    # sample_id-аас AnalysisResult олох
+    sample_results = []
+    if usage_sample_ids:
+        sample_results = (
+            AnalysisResult.query
+            .filter(
+                AnalysisResult.sample_id.in_(list(usage_sample_ids)),
+                AnalysisResult.status.in_(['approved', 'pending_review']),
+            )
+            .all()
+        )
+    direct_results = (
+        AnalysisResult.query
+        .filter(
+            AnalysisResult.id.in_(list(all_result_ids)),
+            AnalysisResult.status.in_(['approved', 'pending_review']),
+        )
+        .all()
+    ) if all_result_ids else []
+
+    # Давхардал арилгах
+    combined = {r.id: r for r in sample_results + direct_results}
+    affected_results = list(combined.values())
+
+    affected_ids = []
+    affected_sample_ids_list = []
+    errors = []
+
+    for ar in affected_results:
+        try:
+            ar.status = 'reanalysis'
+            ar.rejection_comment = reason
+            if performed_by_id:
+                ar.user_id = performed_by_id
+            affected_ids.append(ar.id)
+            if ar.sample_id not in affected_sample_ids_list:
+                affected_sample_ids_list.append(ar.sample_id)
+        except Exception as e:
+            errors.append(f'Result id={ar.id}: {e}')
+
+    # Audit log
+    try:
+        log = ChemicalLog(
+            chemical_id=lot_id,
+            action='lot_flagged',
+            quantity_change=0,
+            quantity_before=chemical.quantity,
+            quantity_after=chemical.quantity,
+            details=f'Lot дохиолол: {len(affected_ids)} үр дүн reanalysis болсон. Шалтгаан: {reason}',
+            performed_by_id=performed_by_id,
+        )
+        log.set_hash()
+        db.session.add(log)
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        errors.append(f'Audit log алдаа: {e}')
+        logger.error('invalidate_results_by_lot audit log алдаа: %s', e)
+
+    return LotInvalidationResult(
+        lot_id=lot_id,
+        lot_name=chemical.name,
+        affected_result_ids=affected_ids,
+        affected_sample_ids=affected_sample_ids_list,
+        flagged_count=len(affected_ids),
+        errors=errors,
+    )
+
+
+def get_expiring_soon_chemicals(lab_type: Optional[str] = None) -> list:
+    """
+    Удахгүй дуусах (days_alert_before_expiry хоног дотор) химийн бодисуудыг буцаана.
+
+    Args:
+        lab_type: 'water', 'coal', 'all' гэх мэт. None бол бүгдийг буцаана.
+
+    Returns:
+        list of Chemical objects
+    """
+    q = Chemical.query.filter(
+        Chemical.status.in_(['active', 'low_stock']),
+        Chemical.expiry_date.isnot(None),
+    )
+    if lab_type:
+        q = q.filter(Chemical.lab_type.in_([lab_type, 'all']))
+    chemicals = q.all()
+    return [c for c in chemicals if c.is_expiring_soon()]

@@ -73,6 +73,59 @@ def api_expiring():
 
 
 # -------------------------------------------------
+# 3b. Notification summary (navbar bell)
+# -------------------------------------------------
+
+@chemicals_bp.route("/api/notifications")
+@login_required
+def api_notifications():
+    """Navbar notification bell-д зориулсан нэгдсэн alert.
+
+    Returns expiring-soon + expired chemicals (нийт тоо + жагсаалт).
+    """
+    from datetime import date
+    from app.models import Chemical
+
+    today = date.today()
+    chemicals = Chemical.query.filter(
+        Chemical.status.in_(['active', 'low_stock', 'expired']),
+    ).all()
+
+    expired = []
+    expiring = []
+    for c in chemicals:
+        days = c.days_until_expiry()
+        if days is None:
+            continue
+        entry = {
+            'id': c.id,
+            'name': c.name,
+            'lot_number': c.lot_number or '',
+            'lab_type': c.lab_type,
+            'days': days,
+            'expiry_date': c.expiry_date.strftime('%Y-%m-%d') if c.expiry_date else None,
+            'opened_expiry_date': c.opened_expiry_date.strftime('%Y-%m-%d') if c.opened_expiry_date else None,
+            'ghs_signal_word': c.ghs_signal_word or '',
+        }
+        if days < 0:
+            expired.append(entry)
+        elif c.is_expiring_soon():
+            expiring.append(entry)
+
+    # Sort by urgency
+    expired.sort(key=lambda x: x['days'])
+    expiring.sort(key=lambda x: x['days'])
+
+    return jsonify({
+        'total': len(expired) + len(expiring),
+        'expired_count': len(expired),
+        'expiring_count': len(expiring),
+        'expired': expired[:10],
+        'expiring': expiring[:10],
+    })
+
+
+# -------------------------------------------------
 # 4. Хэрэглээ бүртгэх API
 # -------------------------------------------------
 

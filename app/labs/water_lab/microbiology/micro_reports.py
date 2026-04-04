@@ -142,6 +142,17 @@ def micro_dashboard():
         AnalysisResult.created_at < year_end
     ).all()
 
+    # MNS limits per analysis code and field
+    _LIMITS = {
+        'MICRO_WATER': {'cfu_22': 100, 'cfu_37': 100, 'cfu_avg': 100},
+        'MICRO_AIR': {'cfu_air': 3000, 'staphylococcus': 50, 'mold_fungi': 500},
+        'MICRO_SWAB': {'cfu_swab': 100},
+    }
+    _PRESENCE_FAIL = {
+        'MICRO_WATER': ['ecoli', 'salmonella'],
+        'MICRO_SWAB': ['ecoli_swab', 'salmonella_swab', 'staphylococcus_swab'],
+    }
+
     pass_count = 0
     fail_count = 0
     for ar in all_results:
@@ -149,16 +160,25 @@ def micro_dashboard():
             rd = json.loads(ar.raw_data) if ar.raw_data else {}
         except (json.JSONDecodeError, TypeError):
             continue
+        code = ar.analysis_code
         failed = False
-        for key in ('cfu_37', 'ecoli', 'cfu_air', 'cfu_swab'):
-            val = rd.get(key)
+        # Numeric limit checks
+        for field, limit in _LIMITS.get(code, {}).items():
+            val = rd.get(field)
             if val is not None and val != '':
                 try:
-                    if float(val) > 100:
+                    if float(val) > limit:
                         failed = True
                         break
                 except (ValueError, TypeError):
                     pass
+        # Presence/absence checks
+        if not failed:
+            for field in _PRESENCE_FAIL.get(code, []):
+                val = rd.get(field)
+                if val and str(val).lower() in ('detected', 'илэрсэн'):
+                    failed = True
+                    break
         if failed:
             fail_count += 1
         else:

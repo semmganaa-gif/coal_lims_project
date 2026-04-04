@@ -296,6 +296,19 @@ let table;
 document.addEventListener('DOMContentLoaded', function() {
   const data = {{ chemicals|tojson|safe if chemicals else '[]' }};
 
+  // GHS pictogram config
+  const GHS_INFO = {
+    GHS01: { label: 'GHS01', title: 'Explosive', color: '#ef4444' },
+    GHS02: { label: 'GHS02', title: 'Flammable', color: '#f97316' },
+    GHS03: { label: 'GHS03', title: 'Oxidizing', color: '#eab308' },
+    GHS04: { label: 'GHS04', title: 'Compressed Gas', color: '#06b6d4' },
+    GHS05: { label: 'GHS05', title: 'Corrosive', color: '#a16207' },
+    GHS06: { label: 'GHS06', title: 'Toxic', color: '#1e293b' },
+    GHS07: { label: 'GHS07', title: 'Harmful/Irritant', color: '#f59e0b' },
+    GHS08: { label: 'GHS08', title: 'Health Hazard', color: '#7c3aed' },
+    GHS09: { label: 'GHS09', title: 'Environmental', color: '#16a34a' },
+  };
+
   // Transform data for display
   const rows = data.map(c => ({
     id: c.id,
@@ -309,10 +322,16 @@ document.addEventListener('DOMContentLoaded', function() {
     unit: c.unit,
     reorder_level: c.reorder_level,
     expiry_date: c.expiry_date ? c.expiry_date.split('T')[0] : '',
+    opened_expiry_date: c.opened_expiry_date ? c.opened_expiry_date.split('T')[0] : '',
     storage_location: c.storage_location || '',
     lab_type: c.lab_type,
     category: c.category,
     status: c.status,
+    ghs_pictograms: c.ghs_pictograms || [],
+    ghs_signal_word: c.ghs_signal_word || '',
+    days_until_expiry: c.days_until_expiry,
+    is_expiring_soon: c.is_expiring_soon,
+    days_alert_before_expiry: c.days_alert_before_expiry || 30,
   }));
 
   table = new Tabulator("#chemicalGrid", {
@@ -324,17 +343,12 @@ document.addEventListener('DOMContentLoaded', function() {
     placeholder: "{{ _('No chemicals found') }}",
     rowFormatter: function(row) {
       const data = row.getData();
-      if (data.status === 'low_stock') {
-        row.getElement().classList.add('row-low-stock');
-      } else if (data.status === 'expired') {
+      if (data.status === 'expired') {
         row.getElement().classList.add('row-expired');
-      } else if (data.expiry_date) {
-        const exp = new Date(data.expiry_date);
-        const today = new Date();
-        const diff = (exp - today) / (1000 * 60 * 60 * 24);
-        if (diff > 0 && diff <= 30) {
-          row.getElement().classList.add('row-expiring');
-        }
+      } else if (data.status === 'low_stock') {
+        row.getElement().classList.add('row-low-stock');
+      } else if (data.is_expiring_soon) {
+        row.getElement().classList.add('row-expiring');
       }
     },
     columns: [
@@ -372,19 +386,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       },
       {
-        title: "{{ _('Expiry Date') }}",
+        title: "{{ _('Expiry') }}",
         field: "expiry_date",
-        width: 105,
+        width: 130,
         formatter: function(cell) {
-          const val = cell.getValue();
-          if (!val) return '-';
-          const exp = new Date(val);
-          const today = new Date();
-          const diff = Math.floor((exp - today) / (1000 * 60 * 60 * 24));
-          let cls = '';
-          if (diff < 0) cls = 'text-danger fw-bold';
-          else if (diff <= 30) cls = 'text-warning';
-          return `<span class="${cls}">${val}</span>`;
+          const d = cell.getRow().getData();
+          const parts = [];
+          // Effective expiry (earliest of expiry_date / opened_expiry_date)
+          const eff = d.opened_expiry_date && (!d.expiry_date || d.opened_expiry_date < d.expiry_date)
+                      ? d.opened_expiry_date : d.expiry_date;
+          if (!eff) return '<span class="text-muted">—</span>';
+          const days = d.days_until_expiry;
+          let cls = 'text-success';
+          if (days !== null && days !== undefined) {
+            if (days < 0) cls = 'text-danger fw-bold';
+            else if (days <= (d.days_alert_before_expiry || 30)) cls = 'text-warning fw-semibold';
+          }
+          let badge = '';
+          if (days !== null && days !== undefined) {
+            if (days < 0) badge = `<span class="badge bg-danger ms-1">${-days}д хэтэрсэн</span>`;
+            else if (days <= (d.days_alert_before_expiry || 30)) badge = `<span class="badge bg-warning text-dark ms-1">${days}д үлдсэн</span>`;
+          }
+          const openedNote = d.opened_expiry_date && d.opened_expiry_date < (d.expiry_date || '9999')
+            ? `<div style="font-size:0.7rem;color:#9ca3af">Нээлт: ${d.opened_expiry_date}</div>` : '';
+          return `<span class="${cls}">${eff}</span>${badge}${openedNote}`;
+        }
+      },
+      {
+        title: "GHS",
+        field: "ghs_pictograms",
+        width: 130,
+        headerSort: false,
+        formatter: function(cell) {
+          const d = cell.getRow().getData();
+          const pics = d.ghs_pictograms || [];
+          if (!pics.length && !d.ghs_signal_word) return '<span class="text-muted small">—</span>';
+          let html = '';
+          if (d.ghs_signal_word) {
+            const sw = d.ghs_signal_word;
+            html += `<span class="badge ${sw === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'} me-1" style="font-size:0.65rem">${sw}</span>`;
+          }
+          pics.forEach(code => {
+            const info = GHS_INFO[code] || { label: code, color: '#64748b', title: code };
+            html += `<span title="${info.title}" style="display:inline-block;background:${info.color};color:#fff;border-radius:3px;padding:1px 4px;font-size:0.65rem;font-weight:700;margin:1px;">${info.label}</span>`;
+          });
+          return html;
         }
       },
       { title: "{{ _('Location') }}", field: "storage_location", widthGrow: 1, minWidth: 100 },

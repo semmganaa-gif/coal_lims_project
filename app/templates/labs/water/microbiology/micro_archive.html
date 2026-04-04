@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% set use_aggrid = true %}
+
+{% block title %}{{ _("Microbiology Archive") }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/water_summary.css') }}">
+
+<div class="ws-page-wrap">
+  <div class="ws-header">
+    <div class="ws-header-top">
+      <div class="ws-header-left">
+        <h1><i class="bi bi-archive-fill"></i> {{ _("Microbiology Archive") }}</h1>
+        <span class="badge bg-secondary" id="rowCount">{{ archived_count }}</span>
+      </div>
+      <div class="ws-header-actions">
+        <div class="ws-filters">
+          <input type="date" id="dateFrom" class="form-control form-control-sm" title="{{ _('From') }}">
+          <span class="text-muted">—</span>
+          <input type="date" id="dateTo" class="form-control form-control-sm" title="{{ _('To') }}">
+        </div>
+        <div class="btn-group">
+          <button id="btnExportCsv" class="btn btn-sm btn-success">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
+          </button>
+          <button id="btnCopy" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-clipboard-check me-1"></i>{{ _("Copy") }}
+          </button>
+        </div>
+        {% if current_user.role in ['senior', 'admin'] %}
+        <button type="button" id="btnUnarchive" class="btn btn-sm btn-warning">
+          <i class="bi bi-box-arrow-up me-1"></i>{{ _("Restore") }}
+        </button>
+        {% endif %}
+        <button id="btnRefresh" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <a href="{{ url_for('microbiology.micro_summary') }}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>{{ _("Summary") }}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden unarchive form -->
+  <form id="unarchiveForm" method="POST" action="{{ url_for('microbiology.micro_archive') }}" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="sample_ids" id="unarchiveSampleIds">
+    <input type="hidden" name="action" value="unarchive">
+  </form>
+
+  <div class="ws-grid-wrap">
+    <div class="ws-grid-card">
+      <div class="card-header">
+        <h6><i class="bi bi-archive me-1" style="color:#64748b"></i>{{ _("Archived Samples") }}</h6>
+      </div>
+      <div class="ws-grid-body">
+        <div id="microArchiveGrid" class="ag-theme-alpine"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+const MICRO_ARCHIVE_CONFIG = {
+  urls: { archiveData: "{{ url_for('microbiology.micro_archive_data') }}" },
+  csrfToken: "{{ csrf_token() }}"
+};
+</script>
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('DOMContentLoaded', function () {
+  const $ = id => document.getElementById(id);
+
+  function statusBadge(s) {
+    const m = { archived: ['secondary', '{{ _("Archived") }}'], approved: ['success', '{{ _("Approved") }}'], pending_review: ['info', '{{ _("Pending") }}'] };
+    const [c, l] = m[s] || ['secondary', s || '—'];
+    return `<span class="badge bg-${c}">${l}</span>`;
+  }
+  function passStyle(val, limit) {
+    const n = Number(val);
+    if (val == null || val === '' || isNaN(n)) return {};
+    return n > limit ? { color: '#dc2626', fontWeight: '700', background: '#fef2f2' }
+                     : { color: '#047857', fontWeight: '600' };
+  }
+  function presenceStyle(val) {
+    if (!val) return {};
+    return String(val).toLowerCase().includes('detected') && !String(val).toLowerCase().includes('not')
+      ? { color: '#dc2626', fontWeight: '700', background: '#fef2f2' }
+      : { color: '#047857', fontWeight: '600' };
+  }
+
+  const columnDefs = [
+    { field: 'seq', headerName: '№', maxWidth: 55, pinned: 'left', cellStyle: { fontWeight: '700', color: '#64748b', textAlign: 'center' } },
+    { field: 'sample_code', headerName: '{{ _("Sample Code") }}', minWidth: 150, pinned: 'left', cellStyle: { fontWeight: '600' } },
+    { field: 'micro_lab_id', headerName: 'Lab ID', minWidth: 100, cellStyle: { color: '#6366f1' } },
+    { field: 'client_name', headerName: '{{ _("Unit") }}', minWidth: 120 },
+    { field: 'sampled_by', headerName: '{{ _("Sampled By") }}', minWidth: 110, cellStyle: { color: '#64748b', fontSize: '0.82rem' } },
+    { field: 'sample_date', headerName: '{{ _("Date") }}', minWidth: 105, cellStyle: { color: '#64748b' } },
+    { field: 'cfu_22', headerName: 'CFU 22°C', minWidth: 90, type: 'numericColumn', cellStyle: p => passStyle(p.value, 100) },
+    { field: 'cfu_37', headerName: 'CFU 37°C', minWidth: 90, type: 'numericColumn', cellStyle: p => passStyle(p.value, 100) },
+    { field: 'ecoli', headerName: 'E.coli', minWidth: 90, cellStyle: p => presenceStyle(p.value) },
+    { field: 'salmonella', headerName: 'Salmonella', minWidth: 90, cellStyle: p => presenceStyle(p.value) },
+    { field: 'cfu_air', headerName: 'CFU Агаар', minWidth: 90, type: 'numericColumn', cellStyle: p => passStyle(p.value, 3000) },
+    { field: 'staphylococcus', headerName: 'S.aureus', minWidth: 90, type: 'numericColumn', cellStyle: p => passStyle(p.value, 50) },
+    { field: 'cfu_swab', headerName: 'CFU Арчдас', minWidth: 90, type: 'numericColumn', cellStyle: p => passStyle(p.value, 100) },
+    { field: 'micro_water_status', headerName: 'Ус', minWidth: 90, cellRenderer: p => statusBadge(p.value) },
+    { field: 'micro_air_status', headerName: 'Агаар', minWidth: 90, cellRenderer: p => statusBadge(p.value) },
+    { field: 'micro_swab_status', headerName: 'Арчдас', minWidth: 90, cellRenderer: p => statusBadge(p.value) },
+  ];
+
+  let gridApi = null;
+  const gridDiv = $('microArchiveGrid');
+  gridDiv.style.height = 'calc(100vh - 320px)';
+  gridDiv.style.minHeight = '350px';
+
+  const gridOptions = {
+    columnDefs,
+    rowData: [],
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    defaultColDef: { sortable: true, filter: true, resizable: true },
+    onGridReady: p => { gridApi = p.api; loadData(); },
+    onRowDataUpdated: updateCount,
+  };
+
+  if (window.agGrid) agGrid.createGrid(gridDiv, gridOptions);
+
+  function updateCount() {
+    if (!gridApi) return;
+    let c = 0; gridApi.forEachNode(() => c++);
+    $('rowCount').textContent = c;
+  }
+
+  function loadData() {
+    if (!gridApi) return;
+    const from = $('dateFrom').value;
+    const to = $('dateTo').value;
+    let url = MICRO_ARCHIVE_CONFIG.urls.archiveData;
+    const p = [];
+    if (from) p.push('date_from=' + from);
+    if (to) p.push('date_to=' + to);
+    if (p.length) url += '?' + p.join('&');
+    gridApi.showLoadingOverlay();
+    fetch(url).then(r => r.json()).then(d => {
+      gridApi.setGridOption('rowData', d.rows || []);
+      gridApi.hideOverlay();
+      updateCount();
+    }).catch(() => { gridApi.hideOverlay(); });
+  }
+
+  $('dateFrom').addEventListener('change', loadData);
+  $('dateTo').addEventListener('change', loadData);
+  $('btnRefresh').addEventListener('click', loadData);
+  $('btnExportCsv').addEventListener('click', () => gridApi && gridApi.exportDataAsCsv({ fileName: 'micro_archive.csv' }));
+  $('btnCopy').addEventListener('click', () => gridApi && gridApi.copySelectedRowsToClipboard({ includeHeaders: true }));
+
+  const unarchiveBtn = $('btnUnarchive');
+  if (unarchiveBtn) {
+    unarchiveBtn.addEventListener('click', function () {
+      const sel = gridApi ? gridApi.getSelectedRows() : [];
+      if (!sel.length) { alert('{{ _("Please select samples") }}'); return; }
+      if (!confirm(sel.length + ' {{ _("samples will be restored. Continue?") }}')) return;
+      $('unarchiveSampleIds').value = sel.map(r => r.id).join(',');
+      $('unarchiveForm').submit();
+    });
+  }
+});
+</script>
+{% endblock %}

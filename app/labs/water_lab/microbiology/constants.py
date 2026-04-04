@@ -42,16 +42,22 @@ MICRO_WATER_FIELDS = [
     'cfu_22', 'cfu_37', 'cfu_avg',
     'ecoli', 'salmonella',
     'start_date', 'end_date',
+    'dilution_factor', 'volume_ml', 'plating_method', 'media_lot',
+    'room_temp', 'room_humidity',
 ]
 
 MICRO_AIR_FIELDS = [
     'cfu_air', 'staphylococcus', 'mold_fungi',
     'start_date', 'end_date',
+    'dilution_factor', 'volume_ml', 'plating_method', 'media_lot',
+    'room_temp', 'room_humidity',
 ]
 
 MICRO_SWAB_FIELDS = [
     'cfu_swab', 'salmonella_swab', 'ecoli_swab', 'staphylococcus_swab',
     'start_date', 'end_date',
+    'dilution_factor', 'volume_ml', 'plating_method', 'media_lot',
+    'room_temp', 'room_humidity',
 ]
 
 # =====================================================================

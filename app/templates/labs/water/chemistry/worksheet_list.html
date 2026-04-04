@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}QC Ажлын хуудас{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 px-4">
+
+  {# ── Header ── #}
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-0 fw-bold">
+        <i class="bi bi-clipboard2-check text-info me-2"></i>QC Ажлын хуудас
+      </h4>
+      <small class="text-muted">ISO 17025 — Blank / Control / Duplicate / Spike бүртгэл</small>
+    </div>
+    <a href="{{ url_for('water.worksheet_new') }}" class="btn btn-info text-white">
+      <i class="bi bi-plus-lg me-1"></i>Шинэ ажлын хуудас
+    </a>
+  </div>
+
+  {# ── Flash messages ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ 'success' if cat == 'success' else 'warning' if cat == 'warning' else 'danger' }} alert-dismissible fade show py-2">
+      {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endwith %}
+
+  {# ── Status filter tabs ── #}
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    {% set statuses = [('', 'Бүгд', 'secondary'), ('open', 'Нээлттэй', 'info'), ('submitted', 'Хянуулж буй', 'warning'), ('approved', 'Батлагдсан', 'success'), ('rejected', 'Буцаагдсан', 'danger')] %}
+    {% for val, label, color in statuses %}
+    <a href="{{ url_for('water.worksheet_list', status=val) }}"
+       class="btn btn-sm btn-{{ 'outline-' + color if status_filter != val else color + ' text-white' }}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {# ── Table ── #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0 align-middle" id="wsTable">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">#</th>
+            <th>Шинжилгээ</th>
+            <th>Огноо</th>
+            <th>Химич</th>
+            <th>Дээж тоо</th>
+            <th>QC дамжсан %</th>
+            <th>Урвалж lot</th>
+            <th>Төлөв</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ws in worksheets %}
+          {% set status_map = {'open': ('info', 'Нээлттэй'), 'submitted': ('warning', 'Хянуулж буй'), 'approved': ('success', 'Батлагдсан'), 'rejected': ('danger', 'Буцаагдсан')} %}
+          {% set sc, sl = status_map.get(ws.status, ('secondary', ws.status)) %}
+          <tr>
+            <td class="ps-3 text-muted small">{{ ws.id }}</td>
+            <td>
+              <span class="fw-semibold">{{ ws.method_code }}</span>
+              {% if ws.notes %}
+              <br><small class="text-muted">{{ ws.notes[:60] }}{% if ws.notes|length > 60 %}…{% endif %}</small>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">{{ ws.analysis_date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ ws.analyst.full_name or ws.analyst.username }}</td>
+            <td class="text-center">
+              <span class="badge bg-light text-dark border">{{ ws.batch_size }}</span>
+            </td>
+            <td class="text-center">
+              {% set rate = ws.qc_pass_rate %}
+              {% if rate is not none %}
+                <span class="badge {% if rate >= 90 %}bg-success{% elif rate >= 70 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                  {{ rate }}%
+                </span>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">
+              {% if ws.primary_reagent %}{{ ws.primary_reagent.name[:25] }}{% else %}—{% endif %}
+            </td>
+            <td>
+              <span class="badge bg-{{ sc }}-subtle text-{{ sc }} border border-{{ sc }}-subtle fw-semibold px-2">
+                {{ sl }}
+              </span>
+            </td>
+            <td class="text-end pe-3">
+              <a href="{{ url_for('water.worksheet_detail', ws_id=ws.id) }}"
+                 class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-eye"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="text-center text-muted py-4">
+              <i class="bi bi-clipboard2 fs-2 d-block mb-2"></i>
+              Ажлын хуудас олдсонгүй
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

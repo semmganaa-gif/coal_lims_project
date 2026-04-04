@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 1.2cm;
+    }
+    body {
+      font-family: 'DejaVuSans', Arial, sans-serif;
+      font-size: 9pt;
+      line-height: 1.4;
+      color: #000;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .header-title {
+      font-size: 12pt;
+      font-weight: bold;
+    }
+    .header-sub {
+      font-size: 8pt;
+      color: #444;
+    }
+    .report-title {
+      text-align: center;
+      font-size: 13pt;
+      font-weight: bold;
+      margin: 14px 0 6px 0;
+    }
+    .report-number {
+      text-align: center;
+      font-size: 10pt;
+      margin-bottom: 10px;
+    }
+    .meta-row {
+      text-align: right;
+      font-size: 8pt;
+      margin-bottom: 3px;
+    }
+    .info-block {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 8.5pt;
+    }
+    .info-block td {
+      padding: 4px 8px;
+      vertical-align: top;
+    }
+    .info-label {
+      font-weight: bold;
+      width: 140px;
+      color: #333;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 7.5pt;
+    }
+    .results-table th {
+      background-color: #dce6f1;
+      border: 1px solid #888;
+      padding: 4px 3px;
+      text-align: center;
+      font-size: 7pt;
+      font-weight: bold;
+    }
+    .results-table td {
+      border: 1px solid #aaa;
+      padding: 3px 4px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .param-name {
+      text-align: left !important;
+      padding-left: 6px !important;
+    }
+    .pass {
+      background-color: #e8f5e9;
+    }
+    .fail {
+      background-color: #fde8e8;
+      font-weight: bold;
+    }
+    .section-label {
+      font-weight: bold;
+      font-size: 9pt;
+      margin: 12px 0 4px 0;
+      color: #1a5276;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 8pt;
+      margin: 16px 0 8px 0;
+      font-style: italic;
+      color: #555;
+    }
+    .sig-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    .sig-table td {
+      width: 33%;
+      padding: 4px 8px;
+      vertical-align: top;
+      font-size: 8.5pt;
+    }
+    .watermark {
+      text-align: center;
+      font-size: 7.5pt;
+      color: #888;
+      margin-top: 20px;
+      border-top: 1px solid #ccc;
+      padding-top: 6px;
+    }
+    .no-data {
+      color: #aaa;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+{# ── Ordered parameter list: (code, name_mn, unit, limit_lo, limit_hi) ── #}
+{% set PARAMS = [
+  ('COLOR_TEMP', 'Өнгө/Градус', '', None, None),
+  ('EC',         'Цахилгаан дамжуулалт (EC)', 'μS/cm', None, 1500),
+  ('PH',         'Усны орчин (pH)', '-', 6.5, 8.5),
+  ('ODOR',       'Үнэр', 'балл', None, 2),
+  ('COLOR',      'Өнгө', 'Pt-Co', None, 15),
+  ('F_W',        'Фторид (F⁻)', 'mg/L', None, 1.5),
+  ('CL_FREE',    'Чөлөөт үлдэгдэл хлор', 'mg/L', 0.3, 0.5),
+  ('HARD',       'Ерөнхий хатуулаг', 'mg/L CaCO3', None, 300),
+  ('NH4',        'Аммонийн ион (NH₄⁺)', 'mg/L', None, 0.5),
+  ('NO2',        'Нитритийн ион (NO₂⁻)', 'mg/L', None, 3.0),
+  ('NO3',        'Нитратын ион (NO₃⁻)', 'mg/L', None, 50),
+  ('FE_W',       'Төмрийн ион (Fe)', 'mg/L', None, 0.3),
+  ('TDS',        'Хуурай үлдэгдэл', 'mg/L', None, 1000),
+  ('CL_W',       'Хлорид (Cl⁻)', 'mg/L', None, 350),
+  ('SO4',        'Сульфат (SO₄²⁻)', 'mg/L', None, 500),
+  ('PO4',        'Фосфат ион (PO₄³⁻)', 'mg/L', None, None),
+  ('BOD',        'БХХ5 (BOD5)', 'mg/L', None, None),
+  ('BOD_PUR',    'БХХ5 цэвэршилт', '%', None, None),
+  ('MN_W',       'Манган (Mn)', 'mg/L', None, 0.1),
+  ('CU_W',       'Зэс (Cu)', 'mg/L', None, 1.0),
+  ('ZN_W',       'Цайр (Zn)', 'mg/L', None, 5.0),
+  ('PB_W',       'Хар тугалга (Pb)', 'mg/L', None, 0.01),
+  ('AS_W',       'Хүнцэл (As)', 'mg/L', None, 0.01),
+  ('DS',         'Ууссан давс', 'mg/L', None, None),
+  ('SLUDGE_VOL',   'Лагийн эзлэхүүн', 'мл', 70, 80),
+  ('SLUDGE_DOSE',  'Лагийн тун', 'г/л', 2, 4),
+  ('SLUDGE_INDEX', 'Лагийн индекс', 'мл/г', 80, 150),
+  ('SLUDGE',       'Идэвхт лагийн шинж', '', None, None),
+  ('DUST',         'Тоос', 'mg/m³', None, None),
+] %}
+
+{# ── Collect only codes that have at least one result across all samples ── #}
+{% set active_codes = [] %}
+{% for code, name, unit, lo, hi in PARAMS %}
+  {% set has_val = false %}
+  {% for item in results_data %}
+    {% if item.results.get(code) and item.results.get(code).final_result %}
+      {% set has_val = true %}
+    {% endif %}
+  {% endfor %}
+  {% if has_val %}
+    {% if active_codes.append(code) %}{% endif %}
+  {% endif %}
+{% endfor %}
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-title">УСНЫ ХИМИЙН ШИНЖИЛГЭЭНИЙ ЛАБОРАТОРИ</div>
+  <div class="header-sub">
+    Өмнөговь аймаг, Цогтцэций сум, Ухаа худаг нүүрсний уурхай<br>
+    Email: laboratory@mmc.mn
+  </div>
+</div>
+
+<div class="report-title">ШИНЖИЛГЭЭНИЙ ТАЙЛАН</div>
+<div class="report-number">Дугаар: {{ report.report_number }}</div>
+
+<div class="meta-row">Хэвлэсэн огноо: {{ now.strftime('%Y.%m.%d') }}</div>
+<div class="meta-row">Дээж тоо: {{ samples|length }}</div>
+
+<!-- ── Meta info ── -->
+<table class="info-block">
+  <tr>
+    <td class="info-label">Шинжилгээний огноо:</td>
+    <td>
+      {{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}
+      {% if report.date_to and report.date_to != report.date_from %}
+        — {{ report.date_to.strftime('%Y.%m.%d') }}
+      {% endif %}
+    </td>
+    <td class="info-label">Стандарт:</td>
+    <td>MNS 4586:2007, MNS ISO 5667-5:2001</td>
+  </tr>
+  <tr>
+    <td class="info-label">Лабораторийн ID:</td>
+    <td>
+      {% for item in results_data %}
+        {{ item.sample.chem_lab_id or item.sample.sample_code }}{% if not loop.last %}, {% endif %}
+      {% endfor %}
+    </td>
+    <td class="info-label">Дээжний төрөл:</td>
+    <td>Ус</td>
+  </tr>
+</table>
+
+<!-- ── Results table ── -->
+<div class="section-label">Шинжилгээний үр дүн:</div>
+
+{% if active_codes %}
+<table class="results-table">
+  <thead>
+    <tr>
+      <th style="width:22px;">№</th>
+      <th style="min-width:120px; text-align:left; padding-left:6px;">Үзүүлэлт</th>
+      <th style="width:50px;">Нэгж</th>
+      <th style="width:55px;">MNS хязгаар</th>
+      {% for item in results_data %}
+      <th>{{ item.sample.chem_lab_id or item.sample.sample_code }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% set row_num = namespace(n=0) %}
+    {% for code, name, unit, lo, hi in PARAMS %}
+      {% if code in active_codes %}
+        {% set row_num.n = row_num.n + 1 %}
+        <tr>
+          <td>{{ row_num.n }}</td>
+          <td class="param-name">{{ name }}</td>
+          <td>{{ unit if unit else '-' }}</td>
+          <td>
+            {% if lo is not none and hi is not none %}
+              {{ lo }}–{{ hi }}
+            {% elif hi is not none %}
+              ≤{{ hi }}
+            {% elif lo is not none %}
+              ≥{{ lo }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          {% for item in results_data %}
+            {% set ar = item.results.get(code) %}
+            {% if ar and ar.final_result %}
+              {# Pass/fail calculation #}
+              {% set val_str = ar.final_result | string | trim %}
+              {% set cell_class = '' %}
+              {% if lo is not none or hi is not none %}
+                {% set val_f = val_str | float(-999) %}
+                {% if val_f != -999 %}
+                  {% if lo is not none and hi is not none %}
+                    {% if val_f >= lo and val_f <= hi %}
+                      {% set cell_class = 'pass' %}
+                    {% else %}
+                      {% set cell_class = 'fail' %}
+                    {% endif %}
+                  {% elif hi is not none %}
+                    {% if val_f <= hi %}
+                      {% set cell_class = 'pass' %}
+                    {% else %}
+                      {% set cell_class = 'fail' %}
+                    {% endif %}
+                  {% elif lo is not none %}
+                    {% if val_f >= lo %}
+                      {% set cell_class = 'pass' %}
+                    {% else %}
+                      {% set cell_class = 'fail' %}
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+              <td class="{{ cell_class }}">{{ val_str }}</td>
+            {% else %}
+              <td class="no-data">—</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p style="color:#888; font-style:italic;">Батлагдсан шинжилгээний үр дүн олдсонгүй.</p>
+{% endif %}
+
+<!-- ── Sample details ── -->
+<div class="section-label">Дээжний мэдээлэл:</div>
+<table class="results-table">
+  <thead>
+    <tr>
+      <th>№</th>
+      <th style="text-align:left; padding-left:6px;">Дээжний нэр</th>
+      <th>Лаб ID</th>
+      <th>Дээж авсан огноо</th>
+      <th>Дээж авсан хүн</th>
+      <th>Дээж авах байршил</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in results_data %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td style="text-align:left; padding-left:6px;">{{ item.sample.sample_code }}</td>
+      <td>{{ item.sample.chem_lab_id or '—' }}</td>
+      <td>{{ item.sample.sample_date.strftime('%Y.%m.%d') if item.sample.sample_date else '—' }}</td>
+      <td>{{ item.sample.sampled_by or '—' }}</td>
+      <td>{{ item.sample.sampling_location or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="footer-note">
+  Энэ тест тайлан нь шинжилсэн дээжид л хамаарна. Зөвшөөрөлгүй хуулбарлахыг хориглоно.
+</div>
+
+<!-- ── Signatures ── -->
+<table class="sig-table">
+  <tr>
+    <td>
+      <strong>Шинжилсэн:</strong><br>
+      {% if report.analyst_signature %}
+        {{ report.analyst_signature.name or '' }}<br>
+        /______________________/<br>
+        {{ report.analyst_signature.title or 'Хими шинжээч' }}
+      {% else %}
+        /______________________/<br>
+        Хими шинжээч
+      {% endif %}
+    </td>
+    <td style="text-align:center;">
+      <strong>Хянасан:</strong><br>
+      {% if report.reviewer_signature %}
+        {{ report.reviewer_signature.name or '' }}<br>
+        /______________________/<br>
+        {{ report.reviewer_signature.title or 'Ахлах шинжээч' }}
+      {% else %}
+        /______________________/<br>
+        Ахлах шинжээч
+      {% endif %}
+    </td>
+    <td style="text-align:right;">
+      <strong>Баталсан:</strong><br>
+      {% if report.manager_signature %}
+        {{ report.manager_signature.name or '' }}<br>
+        /______________________/<br>
+        {{ report.manager_signature.title or 'Чанарын менежер' }}
+      {% else %}
+        /______________________/<br>
+        Чанарын менежер
+      {% endif %}
+      {% if report.stamp and report.stamp.image_path %}
+      <br><img src="{{ report.stamp.image_path }}"
+           style="height:70px; opacity:0.85; margin-top:6px;">
+      {% endif %}
+    </td>
+  </tr>
+</table>
+
+<div class="watermark">
+  {{ now.strftime('%Y-%m-%d %H:%M') }} — Coal LIMS автоматаар үүсгэсэн
+</div>
+
+</body>
+</html>

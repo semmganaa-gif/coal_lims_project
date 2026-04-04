@@ -37,6 +37,9 @@
           <button id="btnCopy" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
             <i class="bi bi-clipboard-check me-1"></i>{{ _("Copy") }}
           </button>
+          <button id="btnGenerateCoa" class="btn btn-sm btn-outline-primary" title="{{ _('Generate unified CoA PDF for selected sample') }}" onclick="generateCoaForSelected()">
+            <i class="bi bi-file-earmark-pdf me-1"></i>CoA
+          </button>
         </div>
 
         {% if current_user.role in ['senior', 'admin', 'manager'] %}
@@ -169,10 +172,60 @@
   const WATER_SUMMARY_CONFIG = {
     urls: {
       summaryData: "{{ url_for('water.summary_data') }}",
-      retest: "{{ url_for('water.retest_result', result_id=0) }}".replace('/0', '')
+      retest: "{{ url_for('water.retest_result', result_id=0) }}".replace('/0', ''),
+      generateCoa: "{{ url_for('water.generate_coa', sample_id=0) }}".replace('/0', '')
     },
     csrfToken: "{{ csrf_token() }}"
   };
+
+  function generateCoaForSelected() {
+    if (typeof window.waterSummaryGrid === 'undefined') {
+      alert('Grid байхгүй байна.');
+      return;
+    }
+    const selected = window.waterSummaryGrid.getSelectedRows();
+    if (!selected || selected.length === 0) {
+      alert('Нэг дээж сонгоно уу.');
+      return;
+    }
+    if (selected.length > 1) {
+      alert('CoA нэг дээжид зориулагдана. Нэг л дээж сонгоно уу.');
+      return;
+    }
+    const sampleId = selected[0].sample_id;
+    if (!sampleId) {
+      alert('Дээжийн ID олдсонгүй.');
+      return;
+    }
+    const btn = document.getElementById('btnGenerateCoa');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>CoA...';
+
+    fetch(WATER_SUMMARY_CONFIG.urls.generateCoa + '/' + sampleId, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': WATER_SUMMARY_CONFIG.csrfToken, 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        const msg = res.report_number + ' CoA амжилттай үүслээ!';
+        if (res.pdf_url) {
+          if (confirm(msg + '\n\nPDF нээх үү?')) {
+            window.open(res.pdf_url, '_blank');
+          }
+        } else {
+          alert(msg);
+        }
+      } else {
+        alert('CoA алдаа: ' + (res.message || 'Тодорхойгүй алдаа'));
+      }
+    })
+    .catch(e => alert('Сүлжээний алдаа: ' + e))
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>CoA';
+    });
+  }
 </script>
 
 <script src="{{ url_for('static', filename='js/water_utils.js') }}"></script>

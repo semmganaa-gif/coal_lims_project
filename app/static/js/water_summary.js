@@ -598,7 +598,7 @@ const WaterSummaryGrid = (function() {
     const btnReportWater = document.getElementById('btnReportWater');
     if (btnReportWater) {
       btnReportWater.addEventListener('click', function() {
-        createReport('water', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Chemistry');
+        createReport('water_chemistry', this, '<i class="bi bi-file-earmark-pdf me-1"></i>Chemistry');
       });
     }
 

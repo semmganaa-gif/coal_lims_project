@@ -57,6 +57,8 @@
   .nc-air .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
   .nc-swab::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
   .nc-swab .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+  .nc-summary::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .nc-summary .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
 
   @media (max-width: 768px) {
     .micro-hub { padding: 1rem; }
@@ -92,6 +94,14 @@
       <div class="nav-card-content">
         <h3>{{ _("Swab") }}</h3>
         <p>CFU, Salmonella, E.coli, Staphylococcus — MNS 6410:2018</p>
+      </div>
+      <i class="bi bi-arrow-right arrow"></i>
+    </a>
+    <a href="{{ url_for('microbiology.micro_summary') }}" class="nav-card nc-summary">
+      <div class="nav-card-icon"><i class="bi bi-table"></i></div>
+      <div class="nav-card-content">
+        <h3>{{ _("Summary") }}</h3>
+        <p>{{ _("View all results, archive, export CSV") }}</p>
       </div>
       <i class="bi bi-arrow-right arrow"></i>
     </a>

@@ -1,0 +1,557 @@
+{% extends "base.html" %}
+{% block title %}QC Ажлын хуудас #{{ ws.id }}{% endblock %}
+
+{% block content %}
+<style nonce="{{ csp_nonce }}">
+  .status-open      { background:#e0f7fa; color:#0097a7; border:1px solid #b2ebf2; }
+  .status-submitted { background:#fff8e1; color:#f9a825; border:1px solid #ffe082; }
+  .status-approved  { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+  .status-rejected  { background:#fce4ec; color:#c62828; border:1px solid #f48fb1; }
+
+  .qc-pass    { background:#e8f5e9 !important; }
+  .qc-warn    { background:#fff8e1 !important; }
+  .qc-fail    { background:#fde8e8 !important; font-weight:600; }
+  .qc-pending { background:#f8fafc !important; color:#94a3b8; }
+
+  .row-type-badge {
+    display:inline-block; padding:2px 8px; border-radius:4px;
+    font-size:0.72rem; font-weight:700; text-transform:uppercase;
+  }
+  .rt-unknown   { background:#e0e7ff; color:#4338ca; }
+  .rt-blank     { background:#f0fdf4; color:#166534; }
+  .rt-control   { background:#fef9c3; color:#854d0e; }
+  .rt-duplicate { background:#fdf4ff; color:#7e22ce; }
+  .rt-spike     { background:#fff7ed; color:#c2410c; }
+  .rt-msd       { background:#fff1f2; color:#9f1239; }
+
+  #wsGrid th { position:sticky; top:0; z-index:2; background:#f1f5f9; }
+  #wsGrid { font-size:0.875rem; }
+  #wsGrid tbody tr:hover { background:#f0f9ff; }
+  #wsGrid td, #wsGrid th { vertical-align:middle; }
+  .editable-cell { cursor:pointer; }
+  .editable-cell:hover { background:#e0f2fe; }
+  input.cell-input {
+    border:none; background:transparent; width:100%; padding:0;
+    font-size:inherit; text-align:inherit;
+  }
+  input.cell-input:focus { outline:2px solid #0dcaf0; border-radius:3px; }
+</style>
+
+<div class="container-fluid py-3 px-4">
+
+  {# ── Back + header ── #}
+  <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <a href="{{ url_for('water.worksheet_list') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0 fw-bold">
+      <i class="bi bi-clipboard2-check text-info me-1"></i>
+      QC Ажлын хуудас #{{ ws.id }} — {{ ws.method_code }}
+    </h5>
+    <span class="badge status-{{ ws.status }} px-2 py-1 fw-semibold">
+      {% if ws.status == 'open' %}Нээлттэй
+      {% elif ws.status == 'submitted' %}Хянуулж буй
+      {% elif ws.status == 'approved' %}Батлагдсан
+      {% elif ws.status == 'rejected' %}Буцаагдсан
+      {% endif %}
+    </span>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="alert alert-{{ 'success' if cat == 'success' else 'warning' if cat == 'warning' else 'danger' }} alert-dismissible fade show py-2">
+      {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="row g-3">
+
+    {# ── Left: Meta info ── #}
+    <div class="col-lg-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted text-uppercase small mb-3">Мэдээлэл</h6>
+
+          <div class="mb-2">
+            <div class="small text-muted">Шинжилгээний код</div>
+            <div class="fw-semibold">{{ ws.method_code }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="small text-muted">Огноо</div>
+            <div>{{ ws.analysis_date.strftime('%Y-%m-%d') }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="small text-muted">Химич</div>
+            <div>{{ ws.analyst.full_name or ws.analyst.username }}</div>
+          </div>
+          <div class="mb-2">
+            <div class="small text-muted">Дээжний тоо</div>
+            <div><span class="badge bg-info-subtle text-info border">{{ ws.batch_size }}</span></div>
+          </div>
+          {% if ws.primary_reagent %}
+          <div class="mb-2">
+            <div class="small text-muted">Урвалж lot</div>
+            <div class="small">{{ ws.primary_reagent.name }}
+              {% if ws.primary_reagent.lot_number %}
+              <br><code class="small">{{ ws.primary_reagent.lot_number }}</code>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% set rate = ws.qc_pass_rate %}
+          {% if rate is not none %}
+          <div class="mb-2">
+            <div class="small text-muted">QC дамжсан %</div>
+            <div>
+              <span class="badge {% if rate >= 90 %}bg-success{% elif rate >= 70 %}bg-warning text-dark{% else %}bg-danger{% endif %} px-2">
+                {{ rate }}%
+              </span>
+            </div>
+          </div>
+          {% endif %}
+          {% if ws.notes %}
+          <div class="mb-2">
+            <div class="small text-muted">Тэмдэглэл</div>
+            <div class="small">{{ ws.notes }}</div>
+          </div>
+          {% endif %}
+
+          {% if ws.reviewer %}
+          <hr class="my-2">
+          <div class="mb-2">
+            <div class="small text-muted">Шалгасан</div>
+            <div class="small">{{ ws.reviewer.full_name or ws.reviewer.username }}</div>
+            {% if ws.reviewed_at %}
+            <div class="small text-muted">{{ ws.reviewed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            {% endif %}
+          </div>
+          {% if ws.review_comment %}
+          <div class="alert alert-light border p-2 small mb-0">{{ ws.review_comment }}</div>
+          {% endif %}
+          {% endif %}
+
+          {# ── Action buttons ── #}
+          <hr class="my-3">
+
+          {% if ws.status == 'open' %}
+            {# Save rows button — JS controlled #}
+            <button id="btnSaveRows" class="btn btn-info text-white w-100 mb-2">
+              <i class="bi bi-floppy me-1"></i>Хадгалах
+            </button>
+            <form method="POST" action="{{ url_for('water.worksheet_submit', ws_id=ws.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-warning w-100 mb-2" onclick="return confirm('Хянуулахаар илгээх үү?')">
+                <i class="bi bi-send me-1"></i>Хянуулах
+              </button>
+            </form>
+          {% endif %}
+
+          {% if ws.status == 'submitted' and current_user.role in ('senior', 'manager', 'admin') %}
+          <form method="POST" action="{{ url_for('water.worksheet_approve', ws_id=ws.id) }}" class="mb-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="review_comment" class="form-control form-control-sm mb-2"
+                      placeholder="Тайлбар (заавал биш)..." rows="2"></textarea>
+            <button class="btn btn-success w-100" onclick="return confirm('Батлах уу?')">
+              <i class="bi bi-check-circle me-1"></i>Батлах
+            </button>
+          </form>
+          <form method="POST" action="{{ url_for('water.worksheet_reject', ws_id=ws.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="review_comment" class="form-control form-control-sm mb-2"
+                      placeholder="Буцаах шалтгаан..." rows="2"></textarea>
+            <button class="btn btn-outline-danger w-100" onclick="return confirm('Буцаах уу?')">
+              <i class="bi bi-x-circle me-1"></i>Буцаах
+            </button>
+          </form>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+    {# ── Right: Rows grid ── #}
+    <div class="col-lg-9">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex align-items-center justify-content-between py-2 px-3">
+          <span class="fw-semibold text-info"><i class="bi bi-table me-1"></i>QC мөрүүд</span>
+          {% if ws.status == 'open' %}
+          <div class="d-flex gap-1 flex-wrap">
+            <button class="btn btn-sm btn-outline-primary" onclick="addRow('unknown')">
+              <i class="bi bi-plus"></i> Дээж
+            </button>
+            <button class="btn btn-sm btn-outline-success" onclick="addRow('blank')">
+              <i class="bi bi-plus"></i> Blank
+            </button>
+            <button class="btn btn-sm btn-outline-warning" onclick="addRow('control')">
+              <i class="bi bi-plus"></i> Control
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="addRow('duplicate')">
+              <i class="bi bi-plus"></i> Duplicate
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="addRow('spike')">
+              <i class="bi bi-plus"></i> Spike
+            </button>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered mb-0" id="wsGrid">
+              <thead>
+                <tr>
+                  <th style="width:32px;" class="text-center">#</th>
+                  <th style="width:100px;">Төрөл</th>
+                  <th>Дээжний код</th>
+                  <th style="width:110px;" class="text-center">Хүлээгдэх утга</th>
+                  <th style="width:110px;" class="text-center">Хэмжсэн утга</th>
+                  <th style="width:90px;" class="text-center">Recovery %</th>
+                  <th style="width:80px;" class="text-center">RPD %</th>
+                  <th style="width:80px;" class="text-center">QC</th>
+                  <th>Тэмдэглэл</th>
+                  {% if ws.status == 'open' %}<th style="width:36px;"></th>{% endif %}
+                </tr>
+              </thead>
+              <tbody id="wsBody">
+                {% for row in ws.rows %}
+                {% set qc_class = 'qc-' + row.qc_status %}
+                <tr data-id="{{ row.id }}" data-type="{{ row.row_type }}" class="{{ qc_class }}">
+                  <td class="text-center text-muted small">{{ loop.index }}</td>
+                  <td>
+                    <span class="row-type-badge rt-{{ row.row_type }}">
+                      {% if row.row_type == 'unknown' %}Дээж
+                      {% elif row.row_type == 'blank' %}Blank
+                      {% elif row.row_type == 'control' %}Control
+                      {% elif row.row_type == 'duplicate' %}Duplicate
+                      {% elif row.row_type == 'spike' %}Spike
+                      {% elif row.row_type == 'msd' %}MSD
+                      {% else %}{{ row.row_type }}{% endif %}
+                    </span>
+                  </td>
+                  <td>
+                    {% if row.sample %}
+                      <span class="fw-semibold">{{ row.sample.chem_lab_id or row.sample.sample_code }}</span>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                    {% if row.row_type == 'unknown' and row.analysis_result %}
+                      <span class="ms-1 text-muted small">= {{ row.analysis_result.final_result }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">{{ '%.4g' % row.expected_value if row.expected_value is not none else '—' }}</td>
+                  <td class="text-center fw-semibold">{{ '%.4g' % row.result_value if row.result_value is not none else '—' }}</td>
+                  <td class="text-center">{{ row.recovery_pct | round(1) if row.recovery_pct is not none else '—' }}</td>
+                  <td class="text-center">{{ row.rpd_pct | round(1) if row.rpd_pct is not none else '—' }}</td>
+                  <td class="text-center">
+                    {% if row.qc_status == 'pass' %}<span class="badge bg-success">Pass</span>
+                    {% elif row.qc_status == 'warn' %}<span class="badge bg-warning text-dark">Warn</span>
+                    {% elif row.qc_status == 'fail' %}<span class="badge bg-danger">Fail</span>
+                    {% else %}<span class="badge bg-secondary">—</span>{% endif %}
+                  </td>
+                  <td class="small text-muted">{{ row.notes or '' }}</td>
+                  {% if ws.status == 'open' %}
+                  <td class="text-center p-1">
+                    <button class="btn btn-sm btn-link text-danger p-0 del-row-btn" title="Устгах">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </td>
+                  {% endif %}
+                </tr>
+                {% else %}
+                <tr id="emptyRow">
+                  <td colspan="10" class="text-center text-muted py-4">
+                    <i class="bi bi-clipboard2 d-block fs-2 mb-2"></i>
+                    Мөр байхгүй. Дээр товчлуур ашиглан нэмнэ үү.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {# QC Reference table #}
+        <div class="card-footer bg-light py-2 px-3">
+          <small class="text-muted fw-semibold">QC хязгаар:</small>
+          <small class="text-muted ms-2">
+            Blank: &lt;MDL &nbsp;|&nbsp;
+            Control/Spike: 80–120% Recovery &nbsp;|&nbsp;
+            Duplicate: RPD ≤ 20%
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Row add modal ── #}
+<div class="modal fade" id="addRowModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="addRowModalTitle">Мөр нэмэх</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="newRowType" value="">
+
+        <div class="mb-3" id="sampleCodeGroup">
+          <label class="form-label small fw-semibold">Дээжний код / нэр</label>
+          <input type="text" id="newSampleCode" class="form-control form-control-sm"
+                 placeholder="Жишээ: 1_05, УУЦБ-6м3/ц">
+          <div class="form-text">Дээж эсвэл QC материалын нэр</div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6" id="expectedGroup">
+            <label class="form-label small fw-semibold">Хүлээгдэх утга</label>
+            <input type="number" id="newExpected" class="form-control form-control-sm" step="any"
+                   placeholder="Control стандартын утга">
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold">Хэмжсэн утга</label>
+            <input type="number" id="newResult" class="form-control form-control-sm" step="any"
+                   placeholder="Туршилтын үр дүн">
+          </div>
+        </div>
+
+        <div class="mb-3" id="rpdGroup" style="display:none;">
+          <label class="form-label small fw-semibold">RPD % (Duplicate зөрүү)</label>
+          <input type="number" id="newRpd" class="form-control form-control-sm" step="0.1"
+                 placeholder="Хоёр хэмжилтийн RPD %">
+          <div class="form-text">RPD = |r1−r2| / avg × 100</div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Тэмдэглэл</label>
+          <input type="text" id="newNotes" class="form-control form-control-sm" placeholder="...">
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Цуцлах</button>
+        <button type="button" class="btn btn-sm btn-info text-white" id="confirmAddRow">Нэмэх</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if ws.status == 'open' %}
+<script nonce="{{ csp_nonce }}">
+(function() {
+  const WS_ID   = {{ ws.id }};
+  const SAVE_URL = "{{ url_for('water.worksheet_save_rows', ws_id=ws.id) }}";
+  const CSRF    = "{{ csrf_token() }}";
+
+  // In-memory rows array
+  let rows = [
+    {% for row in ws.rows %}
+    {
+      row_type:       {{ row.row_type | tojson }},
+      sample_code:    {{ (row.sample.chem_lab_id or row.sample.sample_code if row.sample else '') | tojson }},
+      sample_id:      {{ row.sample_id or 'null' }},
+      expected_value: {{ row.expected_value or 'null' }},
+      result_value:   {{ row.result_value or 'null' }},
+      rpd_pct:        {{ row.rpd_pct or 'null' }},
+      notes:          {{ (row.notes or '') | tojson }},
+      qc_status:      {{ row.qc_status | tojson }},
+      recovery_pct:   {{ row.recovery_pct or 'null' }},
+    },
+    {% endfor %}
+  ];
+
+  let pendingAdd = null;
+
+  const modalEl = document.getElementById('addRowModal');
+  const modal   = new bootstrap.Modal(modalEl);
+
+  const TYPE_LABELS = {
+    unknown:'Дээж', blank:'Blank', control:'Control',
+    duplicate:'Duplicate', spike:'Spike', msd:'MSD'
+  };
+
+  function addRow(type) {
+    pendingAdd = type;
+    document.getElementById('newRowType').value = type;
+    document.getElementById('addRowModalTitle').textContent = TYPE_LABELS[type] + ' мөр нэмэх';
+
+    // Show/hide fields based on type
+    document.getElementById('expectedGroup').style.display =
+      ['control','spike','msd'].includes(type) ? '' : 'none';
+    document.getElementById('rpdGroup').style.display =
+      type === 'duplicate' ? '' : 'none';
+
+    // Reset inputs
+    ['newSampleCode','newExpected','newResult','newRpd','newNotes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    modal.show();
+    setTimeout(() => document.getElementById('newSampleCode').focus(), 300);
+  }
+
+  document.getElementById('confirmAddRow').addEventListener('click', function() {
+    const type   = document.getElementById('newRowType').value;
+    const code   = document.getElementById('newSampleCode').value.trim();
+    const exp    = parseFloat(document.getElementById('newExpected').value) || null;
+    const res    = parseFloat(document.getElementById('newResult').value);
+    const rpd    = parseFloat(document.getElementById('newRpd').value) || null;
+    const notes  = document.getElementById('newNotes').value.trim();
+
+    // Quick client-side recovery calc
+    let recovery = null;
+    if (exp && !isNaN(res)) {
+      recovery = Math.round((res / exp) * 1000) / 10;
+    }
+
+    // Client-side QC status
+    let qc = 'pending';
+    if (type === 'blank') {
+      qc = (!isNaN(res) && res < 0.01) ? 'pass' : (isNaN(res) ? 'pending' : 'fail');
+    } else if (['control','spike','msd'].includes(type) && recovery !== null) {
+      qc = (recovery >= 85 && recovery <= 115) ? 'pass'
+         : (recovery >= 80 && recovery <= 120) ? 'warn' : 'fail';
+    } else if (type === 'duplicate' && rpd !== null) {
+      qc = rpd <= 15 ? 'pass' : rpd <= 20 ? 'warn' : 'fail';
+    }
+
+    rows.push({
+      row_type: type,
+      sample_code: code,
+      sample_id: null,
+      expected_value: exp,
+      result_value: isNaN(res) ? null : res,
+      rpd_pct: rpd,
+      notes: notes,
+      qc_status: qc,
+      recovery_pct: recovery,
+    });
+
+    modal.hide();
+    renderTable();
+  });
+
+  function renderTable() {
+    const tbody = document.getElementById('wsBody');
+    const RT_COLORS = {
+      unknown:'rt-unknown', blank:'rt-blank', control:'rt-control',
+      duplicate:'rt-duplicate', spike:'rt-spike', msd:'rt-msd'
+    };
+    const QC_ROW = {pass:'qc-pass', warn:'qc-warn', fail:'qc-fail', pending:'qc-pending'};
+    const QC_BADGE = {
+      pass:'<span class="badge bg-success">Pass</span>',
+      warn:'<span class="badge bg-warning text-dark">Warn</span>',
+      fail:'<span class="badge bg-danger">Fail</span>',
+      pending:'<span class="badge bg-secondary">—</span>',
+    };
+    const TYPE_MN = {
+      unknown:'Дээж', blank:'Blank', control:'Control',
+      duplicate:'Duplicate', spike:'Spike', msd:'MSD'
+    };
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr id="emptyRow"><td colspan="10" class="text-center text-muted py-4">
+        <i class="bi bi-clipboard2 d-block fs-2 mb-2"></i>Мөр байхгүй.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map((r, i) => `
+      <tr class="${QC_ROW[r.qc_status] || 'qc-pending'}" data-idx="${i}">
+        <td class="text-center text-muted small">${i + 1}</td>
+        <td><span class="row-type-badge ${RT_COLORS[r.row_type] || ''}">${TYPE_MN[r.row_type] || r.row_type}</span></td>
+        <td class="fw-semibold">${r.sample_code || '—'}</td>
+        <td class="text-center">${r.expected_value !== null ? r.expected_value : '—'}</td>
+        <td class="text-center fw-semibold">${r.result_value !== null ? r.result_value : '—'}</td>
+        <td class="text-center">${r.recovery_pct !== null ? r.recovery_pct + '%' : '—'}</td>
+        <td class="text-center">${r.rpd_pct !== null ? r.rpd_pct + '%' : '—'}</td>
+        <td class="text-center">${QC_BADGE[r.qc_status] || QC_BADGE.pending}</td>
+        <td class="small text-muted">${r.notes || ''}</td>
+        <td class="text-center p-1">
+          <button class="btn btn-sm btn-link text-danger p-0 del-row-btn" data-idx="${i}" title="Устгах">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.del-row-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx);
+        rows.splice(idx, 1);
+        renderTable();
+      });
+    });
+  }
+
+  // Delete existing db rows when page first loads (delegate from static HTML)
+  document.getElementById('wsBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.del-row-btn');
+    if (!btn) return;
+    const tr = btn.closest('tr');
+    if (tr && tr.dataset.idx !== undefined) return; // handled by renderTable
+    // Static row from server render — just remove from DOM and mark dirty
+    tr.remove();
+    collectStaticRows();
+  });
+
+  function collectStaticRows() {
+    // After initial page load, sync DOM back into rows[] if user deletes static rows
+    // (only needed before first renderTable call)
+    // We skip this path since we renderTable() on first addRow
+  }
+
+  // Save rows to server
+  document.getElementById('btnSaveRows').addEventListener('click', async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Хадгалж байна...';
+
+    // Collect from rows[] (if rendered) or from static DOM
+    let payload = rows.length > 0 ? rows : collectDomRows();
+
+    try {
+      const res = await fetch(SAVE_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'X-CSRFToken': CSRF},
+        body: JSON.stringify({ rows: payload }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Хадгалагдлаа';
+        btn.className = 'btn btn-success w-100 mb-2';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="bi bi-floppy me-1"></i>Хадгалах';
+          btn.className = 'btn btn-info text-white w-100 mb-2';
+          btn.disabled = false;
+        }, 2000);
+      } else {
+        alert('Алдаа: ' + (data.message || 'Тодорхойгүй'));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-floppy me-1"></i>Хадгалах';
+      }
+    } catch (err) {
+      alert('Сервертэй холбогдох алдаа: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-floppy me-1"></i>Хадгалах';
+    }
+  });
+
+  function collectDomRows() {
+    // Collect from static server-rendered rows (before first JS renderTable)
+    const trs = document.querySelectorAll('#wsBody tr[data-id]');
+    return Array.from(trs).map(tr => ({
+      row_type:       tr.dataset.type,
+      sample_code:    '',
+      sample_id:      null,
+      expected_value: null,
+      result_value:   null,
+      rpd_pct:        null,
+      notes:          '',
+    }));
+  }
+
+  // Expose addRow globally
+  window.addRow = addRow;
+})();
+</script>
+{% endif %}
+
+{% endblock %}

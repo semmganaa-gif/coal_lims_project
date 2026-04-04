@@ -521,6 +521,32 @@
             </a>
           </li>
 
+          {% if current_user.is_authenticated %}
+          <!-- Notification Bell -->
+          <li class="nav-item dropdown" id="notifDropdownItem" style="display:none;">
+            <a class="nav-link position-relative px-2" href="#" id="notifBell"
+               data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('Alerts') }}">
+              <i class="bi bi-bell-fill" style="font-size:1.15rem;color:#fbbf24;"></i>
+              <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style="font-size:0.6rem;display:none;">0</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0"
+                 id="notifDropdown"
+                 style="min-width:320px;max-width:380px;border-radius:12px;overflow:hidden;">
+              <div style="background:#1e293b;color:#fff;padding:10px 14px;font-weight:700;font-size:0.85rem;">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _("Chemical Alerts") }}
+                <span id="notifTotalBadge" class="badge bg-danger ms-1"></span>
+              </div>
+              <div id="notifList" style="max-height:340px;overflow-y:auto;background:#fff;"></div>
+              <div style="background:#f8fafc;padding:8px 14px;border-top:1px solid #e2e8f0;">
+                <a href="{{ url_for('chemicals.chemical_list', view='expiring') }}"
+                   class="btn btn-sm btn-outline-warning w-100" style="border-radius:8px;font-size:0.8rem;">
+                  <i class="bi bi-list-ul me-1"></i>{{ _("View all expiring") }}
+                </a>
+              </div>
+            </div>
+          </li>
+          {% endif %}
 
           {% if current_user.is_authenticated %}
           <li class="nav-item dropdown">
@@ -799,6 +825,83 @@
       setInterval(checkReadySamples, 360000);
     });
   </script>
+
+  {% if current_user.is_authenticated %}
+  <!-- Chemical Expiry Notification Bell -->
+  <script nonce="{{ csp_nonce }}">
+  (function() {
+    const NOTIF_URL = "{{ url_for('chemicals.api_notifications') }}";
+    const LAB_MAP = { coal: 'Нүүрс', water: 'Ус', microbiology: 'Микро', petrography: 'Петро', all: 'Бүх' };
+
+    function renderNotifItem(c, isExpired) {
+      const days = c.days;
+      let badge, bgColor;
+      if (isExpired) {
+        badge = `<span class="badge bg-danger" style="font-size:0.65rem;">${-days}д хэтэрсэн</span>`;
+        bgColor = '#fff5f5';
+      } else {
+        badge = `<span class="badge bg-warning text-dark" style="font-size:0.65rem;">${days}д үлдсэн</span>`;
+        bgColor = '#fffbeb';
+      }
+      const lab = LAB_MAP[c.lab_type] || c.lab_type;
+      const sw = c.ghs_signal_word ? `<span class="badge ${c.ghs_signal_word === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'}" style="font-size:0.6rem;margin-left:3px;">${c.ghs_signal_word}</span>` : '';
+      return `<a href="/chemicals/${c.id}" class="d-flex align-items-start gap-2 text-decoration-none px-3 py-2"
+                 style="background:${bgColor};border-bottom:1px solid #f1f5f9;color:#1e293b;">
+        <i class="bi bi-flask-fill text-warning mt-1" style="font-size:1rem;flex-shrink:0;"></i>
+        <div style="flex:1;min-width:0;">
+          <div class="fw-semibold text-truncate" style="font-size:0.82rem;">${c.name}${sw}</div>
+          <div style="font-size:0.72rem;color:#64748b;">${lab}${c.lot_number ? ' · Lot: ' + c.lot_number : ''}</div>
+        </div>
+        ${badge}
+      </a>`;
+    }
+
+    function fetchNotifications() {
+      fetch(NOTIF_URL)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const total = data.total || 0;
+          const bellItem = document.getElementById('notifDropdownItem');
+          const badge = document.getElementById('notifBadge');
+          const totalBadge = document.getElementById('notifTotalBadge');
+          const list = document.getElementById('notifList');
+          if (!bellItem) return;
+
+          if (total > 0) {
+            bellItem.style.display = '';
+            badge.style.display = '';
+            badge.textContent = total > 99 ? '99+' : total;
+            totalBadge.textContent = total;
+
+            let html = '';
+            if (data.expired && data.expired.length) {
+              html += `<div style="padding:6px 14px;background:#fff1f2;font-size:0.72rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px;">
+                <i class="bi bi-x-octagon-fill me-1"></i>Хугацаа хэтэрсэн (${data.expired_count})
+              </div>`;
+              data.expired.forEach(c => { html += renderNotifItem(c, true); });
+            }
+            if (data.expiring && data.expiring.length) {
+              html += `<div style="padding:6px 14px;background:#fffbeb;font-size:0.72rem;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.5px;">
+                <i class="bi bi-clock-history me-1"></i>Дуусах дөхсөн (${data.expiring_count})
+              </div>`;
+              data.expiring.forEach(c => { html += renderNotifItem(c, false); });
+            }
+            if (!html) html = '<div class="p-3 text-muted text-center small">Мэдэгдэл байхгүй</div>';
+            list.innerHTML = html;
+          } else {
+            bellItem.style.display = 'none';
+          }
+        })
+        .catch(() => {});
+    }
+
+    // Load on page ready
+    fetchNotifications();
+    // Refresh every 10 minutes
+    setInterval(fetchNotifications, 600000);
+  })();
+  </script>
+  {% endif %}
 
   <!-- Ээлжийн огнооны глобал функц -->
   <script nonce="{{ csp_nonce }}">

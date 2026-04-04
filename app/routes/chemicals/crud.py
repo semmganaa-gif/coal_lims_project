@@ -78,6 +78,7 @@ def chemical_detail(id):
     logs = ChemicalLog.query.filter_by(chemical_id=id)\
         .order_by(ChemicalLog.timestamp.desc()).limit(50).all()
 
+    from datetime import date as _date
     return render_template(
         "chemicals/chemical_detail.html",
         chemical=chemical,
@@ -87,6 +88,7 @@ def chemical_detail(id):
         status_types=STATUS_TYPES,
         units=UNITS,
         lab_types=LAB_TYPES,
+        today=_date.today(),
     )
 
 
@@ -125,6 +127,13 @@ def add_chemical():
                 "lab_type": request.form.get("lab_type", "all"),
                 "category": request.form.get("category", "other"),
                 "notes": request.form.get("notes"),
+                "ghs_pictograms": request.form.getlist("ghs_pictograms"),
+                "ghs_signal_word": request.form.get("ghs_signal_word"),
+                "sds_version": request.form.get("sds_version"),
+                "sds_revision_date": request.form.get("sds_revision_date"),
+                "shelf_life_after_opening_days": request.form.get("shelf_life_after_opening_days"),
+                "days_alert_before_expiry": request.form.get("days_alert_before_expiry"),
+                "prevent_use_if_expired": request.form.get("prevent_use_if_expired"),
             }
 
             chemical = create_chemical(data, user_id=current_user.id)
@@ -195,6 +204,13 @@ def edit_chemical(id):
                 "lab_type": request.form.get("lab_type", "all"),
                 "category": request.form.get("category", "other"),
                 "notes": request.form.get("notes"),
+                "ghs_pictograms": request.form.getlist("ghs_pictograms"),
+                "ghs_signal_word": request.form.get("ghs_signal_word"),
+                "sds_version": request.form.get("sds_version"),
+                "sds_revision_date": request.form.get("sds_revision_date"),
+                "shelf_life_after_opening_days": request.form.get("shelf_life_after_opening_days"),
+                "days_alert_before_expiry": request.form.get("days_alert_before_expiry"),
+                "prevent_use_if_expired": request.form.get("prevent_use_if_expired"),
             }
 
             update_chemical(chemical, data, user_id=current_user.id)

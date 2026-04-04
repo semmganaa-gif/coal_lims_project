@@ -133,6 +133,191 @@ def generate_microbiology_report(sample_ids, date_from, date_to, created_by_id):
     return report, None
 
 
+def generate_water_coa(sample_id: int, created_by_id: int):
+    """
+    Нэг дээжийн хими + микробиологийн нэгдсэн CoA PDF үүсгэх.
+
+    Args:
+        sample_id:       CoA гаргах Sample.id
+        created_by_id:   Үүсгэж буй хэрэглэгч
+
+    Returns:
+        (LabReport | None, error_message | None)
+    """
+    from app.routes.reports.crud import get_next_report_number
+    from app.labs.water_lab.chemistry.constants import ALL_WATER_PARAMS
+
+    sample = Sample.query.get(sample_id)
+    if not sample:
+        return None, 'Дээж олдсонгүй'
+
+    # ── Бүх үр дүн (хими + микро) ──
+    all_results = AnalysisResult.query.filter_by(sample_id=sample_id).all()
+    results_by_code = {r.analysis_code: r for r in all_results}
+
+    # ── Химийн үр дүнгийн мөрүүд ──
+    chem_rows = []
+    for code, param in ALL_WATER_PARAMS.items():
+        ar = results_by_code.get(code)
+        if not ar or ar.status not in ('approved', 'pending_review'):
+            continue
+        result_val = ar.final_result
+        limit = param.get('mns_limit')
+        pass_fail = None
+        if result_val is not None and limit:
+            if isinstance(limit, (list, tuple)):
+                lo, hi = limit[0], limit[1]
+                ok = True
+                if lo is not None and result_val < lo:
+                    ok = False
+                if hi is not None and result_val > hi:
+                    ok = False
+                pass_fail = ok
+            else:
+                pass_fail = result_val <= float(limit)
+        chem_rows.append({
+            'code': code,
+            'name_mn': param.get('name_mn', code),
+            'unit': param.get('unit', ''),
+            'limit': limit,
+            'standard': param.get('standard', 'MNS 4586:2007'),
+            'result': result_val,
+            'pass_fail': pass_fail,
+        })
+
+    # ── Микробиологийн үр дүнгийн мөрүүд ──
+    # (field_key, name_mn, unit, limit_hi, is_presence)
+    MICRO_FIELDS = {
+        'MICRO_WATER': [
+            ('cfu_22', 'КҮБ (22°C)', 'КҮБ/мл', 100, False),
+            ('cfu_37', 'КҮБ (37°C)', 'КҮБ/мл', 100, False),
+            ('ecoli', 'E.coli', 'КҮБ/100мл', None, True),
+            ('salmonella', 'Сальмонелла', 'КҮБ/25мл', None, True),
+        ],
+        'MICRO_AIR': [
+            ('cfu_air', 'КҮБ (агаар)', 'КҮБ/м³', 3000, False),
+            ('staphylococcus', 'Стафилококк (S.aureus)', 'КҮБ/м³', 50, False),
+            ('mold_fungi', 'Мөөгөнцөр', 'КҮБ/м³', 500, False),
+        ],
+        'MICRO_SWAB': [
+            ('cfu_swab', 'КҮБ (арчдас)', 'КҮБ/50см²', 100, False),
+            ('ecoli_swab', 'E.coli (арчдас)', '—', None, True),
+            ('salmonella_swab', 'Сальмонелла (арчдас)', '—', None, True),
+            ('staphylococcus_swab', 'S.aureus (арчдас)', '—', None, True),
+        ],
+    }
+    _PRESENCE_DETECTED = ('detected', 'илэрсэн')
+
+    micro_rows = []
+    for micro_code, fields in MICRO_FIELDS.items():
+        ar = results_by_code.get(micro_code)
+        if not ar or ar.status not in ('approved', 'pending_review'):
+            continue
+        import json as _json
+        raw = {}
+        if ar.raw_data:
+            try:
+                raw = _json.loads(ar.raw_data)
+            except (ValueError, TypeError):
+                raw = {}
+
+        for field_key, field_name, unit, limit_hi, is_presence in fields:
+            val = raw.get(field_key)
+            if val is None:
+                continue
+
+            pass_fail = None
+            limit_str = None
+
+            if is_presence:
+                # Pass = Not Detected
+                limit_str = 'Илрэхгүй'
+                pass_fail = str(val).lower() not in _PRESENCE_DETECTED
+            else:
+                try:
+                    val_f = float(val)
+                    if limit_hi is not None:
+                        pass_fail = val_f <= limit_hi
+                        limit_str = f'≤ {limit_hi}'
+                    val = val_f
+                except (TypeError, ValueError):
+                    pass
+
+            micro_rows.append({
+                'name_mn': field_name,
+                'unit': unit,
+                'limit_str': limit_str,
+                'result': val,
+                'pass_fail': pass_fail,
+            })
+
+    if not chem_rows and not micro_rows:
+        return None, 'Батлагдсан шинжилгээний үр дүн олдсонгүй'
+
+    # ── LabReport бүртгэл ──
+    report_number = get_next_report_number('water_chemistry')
+    report_data = {
+        'sample_id': sample_id,
+        'sample_code': sample.sample_code,
+        'chem_count': len(chem_rows),
+        'micro_count': len(micro_rows),
+    }
+
+    report = LabReport(
+        report_number=report_number,
+        lab_type='water_chemistry',
+        report_type='coa',
+        title=f'Усны шинжилгээний дүгнэлт — {sample.sample_code}',
+        status='draft',
+        sample_ids=[sample_id],
+        date_from=sample.sample_date,
+        date_to=sample.sample_date,
+        report_data=report_data,
+        created_by_id=created_by_id,
+    )
+    db.session.add(report)
+    db.session.flush()
+
+    # ── PDF үүсгэх ──
+    upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'reports')
+    os.makedirs(upload_folder, exist_ok=True)
+    filename = f"COA_{report.report_number.replace('/', '_')}.pdf"
+    filepath = os.path.join(upload_folder, filename)
+
+    font_path = os.path.join(current_app.root_path, 'static', 'fonts', 'DejaVuSans.ttf').replace('\\', '/')
+    company_logo = None
+    logo_path = os.path.join(current_app.root_path, 'static', 'images', 'energy_resources_logo.png')
+    if os.path.exists(logo_path):
+        company_logo = logo_path.replace('\\', '/')
+
+    html_content = render_template(
+        'reports/pdf/water_coa.html',
+        report=report,
+        sample=sample,
+        chem_results=chem_rows,
+        micro_results=micro_rows,
+        now=datetime.now(),
+        font_path=font_path,
+        company_logo=company_logo,
+    )
+
+    try:
+        create_pdf_from_html(html_content, filepath)
+        report.pdf_path = f'uploads/reports/{filename}'
+    except Exception as e:
+        _logger.error('CoA PDF үүсгэх алдаа: %s', e)
+        report.pdf_path = None
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        _logger.error('CoA commit алдаа: %s', e)
+        return None, 'CoA хадгалахад алдаа гарлаа'
+
+    return report, None
+
+
 def generate_water_report(sample_ids, date_from, date_to, created_by_id):
     """Усны химийн тайлан үүсгэх."""
     from app.routes.reports.crud import get_next_report_number

@@ -289,6 +289,34 @@ def _build_multi_workspace(codes, template, title, analysis_code,
 
     limits = {code: ALL_WATER_PARAMS.get(code, {}).get('mns_limit') for code in codes}
 
+    # Өмнөх батлагдсан үр дүн — ижил байршлын сүүлийн дата
+    previous_results = {}
+    if samples_to_analyze and codes:
+        primary_code = codes[0]
+        current_ids = list({s.id for s in samples_to_analyze})
+        for s in samples_to_analyze:
+            loc = _parse_display_name(s.sample_code)
+            if not loc:
+                continue
+            try:
+                prev = (
+                    db.session.query(AnalysisResult.final_result)
+                    .join(Sample, Sample.id == AnalysisResult.sample_id)
+                    .filter(
+                        Sample.sample_code.contains(loc),
+                        ~AnalysisResult.sample_id.in_(current_ids),
+                        AnalysisResult.analysis_code == primary_code,
+                        AnalysisResult.status == 'approved',
+                    )
+                    .order_by(AnalysisResult.id.desc())
+                    .limit(1)
+                    .scalar()
+                )
+                if prev is not None:
+                    previous_results[s.id] = float(prev)
+            except SQLAlchemyError:
+                logger.debug('previous_results query алдаа: sample=%s', s.id)
+
     ctx = {
         'title': title,
         'analysis_code': analysis_code,
@@ -301,6 +329,7 @@ def _build_multi_workspace(codes, template, title, analysis_code,
         'error_labels': {},
         'related_equipments': related_equipments,
         'filter_days': filter_days,
+        'previous_results': previous_results,
     }
     if extra_ctx:
         ctx.update(extra_ctx)
@@ -855,6 +884,57 @@ def eligible_samples(code):
     return jsonify(result)
 
 
+@water_bp.route('/api/generate_coa/<int:sample_id>', methods=['POST'])
+@login_required
+@lab_required('water_chemistry')
+def generate_coa(sample_id):
+    """Нэгдсэн CoA (Certificate of Analysis) PDF үүсгэх."""
+    from app.routes.reports.pdf_generator import generate_water_coa
+    report, err = generate_water_coa(sample_id, current_user.id)
+    if err:
+        return jsonify({'success': False, 'message': err}), 400
+
+    pdf_url = None
+    if report and report.pdf_path:
+        from flask import url_for as _url_for
+        pdf_url = _url_for('static', filename=report.pdf_path)
+    return jsonify({
+        'success': True,
+        'report_id': report.id if report else None,
+        'report_number': report.report_number if report else None,
+        'pdf_url': pdf_url,
+        'message': f'CoA амжилттай үүслээ — {report.report_number}' if report else 'CoA үүслээ',
+    })
+
+
+@water_bp.route('/api/reagent_lots')
+@login_required
+@lab_required('water_chemistry')
+def reagent_lots():
+    """Усны лабораторийн идэвхтэй урвалжийн lot жагсаалт."""
+    try:
+        from app.models.chemicals import Chemical
+        chemicals = (
+            Chemical.query
+            .filter(
+                Chemical.lab_type.in_(['water', 'all']),
+                Chemical.status.in_(['active', 'low_stock']),
+            )
+            .order_by(Chemical.name.asc())
+            .all()
+        )
+        return jsonify([{
+            'id': c.id,
+            'name': c.name,
+            'lot_number': c.lot_number or '',
+            'expiry_date': c.expiry_date.isoformat() if c.expiry_date else None,
+            'status': c.status,
+        } for c in chemicals])
+    except Exception:
+        logger.debug('reagent_lots query алдаа', exc_info=True)
+        return jsonify([])
+
+
 @water_bp.route('/api/save_results', methods=['POST'])
 @login_required
 @lab_required('water_chemistry')
@@ -1116,6 +1196,263 @@ def standards():
 def api_standards():
     """MNS/WHO стандартын хязгаарууд (API)."""
     return jsonify(get_mns_standards())
+
+
+# ─────────────────────────────────────────────
+# QC WORKSHEET ROUTES
+# ─────────────────────────────────────────────
+
+@water_bp.route('/worksheets')
+@login_required
+@lab_required('water_chemistry')
+def worksheet_list():
+    """QC ажлын хуудасны жагсаалт."""
+    from app.models.worksheets import WaterWorksheet
+    status_filter = request.args.get('status', '')
+    q = WaterWorksheet.query.order_by(WaterWorksheet.analysis_date.desc(), WaterWorksheet.id.desc())
+    if status_filter:
+        q = q.filter(WaterWorksheet.status == status_filter)
+    worksheets = q.limit(200).all()
+    return render_template(
+        'labs/water/chemistry/worksheet_list.html',
+        worksheets=worksheets,
+        status_filter=status_filter,
+        analysis_types=WATER_ANALYSIS_TYPES,
+    )
+
+
+@water_bp.route('/worksheets/new', methods=['GET', 'POST'])
+@login_required
+@lab_required('water_chemistry')
+def worksheet_new():
+    """Шинэ QC ажлын хуудас үүсгэх."""
+    from app.models.worksheets import WaterWorksheet
+    from app.models.chemicals import Chemical
+
+    if request.method == 'POST':
+        method_code = request.form.get('method_code', '').strip()
+        analysis_date_str = request.form.get('analysis_date', '')
+        reagent_id_raw = request.form.get('primary_reagent_lot_id', '')
+        notes = request.form.get('notes', '').strip()
+
+        if not method_code:
+            flash('Шинжилгээний код сонгоно уу.', 'danger')
+        else:
+            try:
+                from datetime import date as _date
+                analysis_date = _date.fromisoformat(analysis_date_str) if analysis_date_str else _date.today()
+            except ValueError:
+                from datetime import date as _date
+                analysis_date = _date.today()
+
+            reagent_id = int(reagent_id_raw) if reagent_id_raw.isdigit() else None
+
+            ws = WaterWorksheet(
+                method_code=method_code,
+                analysis_date=analysis_date,
+                analyst_id=current_user.id,
+                primary_reagent_lot_id=reagent_id,
+                notes=notes or None,
+                status='open',
+            )
+            db.session.add(ws)
+            try:
+                db.session.commit()
+                flash('QC ажлын хуудас үүслээ.', 'success')
+                return redirect(url_for('water.worksheet_detail', ws_id=ws.id))
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                flash(f'Алдаа: {e}', 'danger')
+
+    reagents = []
+    try:
+        from app.models.chemicals import Chemical as _Chem
+        reagents = _Chem.query.filter(
+            _Chem.status.in_(['active', 'low_stock'])
+        ).order_by(_Chem.name).all()
+    except Exception:
+        pass
+
+    from datetime import date as _today_date
+    return render_template(
+        'labs/water/chemistry/worksheet_new.html',
+        analysis_types=WATER_ANALYSIS_TYPES,
+        reagents=reagents,
+        now=_today_date.today(),
+    )
+
+
+@water_bp.route('/worksheets/<int:ws_id>')
+@login_required
+@lab_required('water_chemistry')
+def worksheet_detail(ws_id):
+    """QC ажлын хуудасны дэлгэрэнгүй."""
+    from app.models.worksheets import WaterWorksheet
+    ws = WaterWorksheet.query.get_or_404(ws_id)
+    reagents = []
+    try:
+        from app.models.chemicals import Chemical as _Chem
+        reagents = _Chem.query.filter(
+            _Chem.status.in_(['active', 'low_stock'])
+        ).order_by(_Chem.name).all()
+    except Exception:
+        pass
+    return render_template(
+        'labs/water/chemistry/worksheet_detail.html',
+        ws=ws,
+        reagents=reagents,
+    )
+
+
+@water_bp.route('/worksheets/<int:ws_id>/submit', methods=['POST'])
+@login_required
+@lab_required('water_chemistry')
+def worksheet_submit(ws_id):
+    """Ажлын хуудсыг хянуулахаар илгээх."""
+    from app.models.worksheets import WaterWorksheet
+    ws = WaterWorksheet.query.get_or_404(ws_id)
+    if ws.analyst_id != current_user.id and current_user.role not in ('senior', 'manager', 'admin'):
+        flash('Зөвхөн боловсруулсан химич илгээх боломжтой.', 'danger')
+        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+    if ws.status != 'open':
+        flash('Зөвхөн "open" төлөвтэй ажлын хуудас илгээж болно.', 'warning')
+        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+    ws.status = 'submitted'
+    try:
+        db.session.commit()
+        flash('Ажлын хуудас хянуулахаар илгээгдлээ.', 'success')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash(f'Алдаа: {e}', 'danger')
+    return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+
+
+@water_bp.route('/worksheets/<int:ws_id>/approve', methods=['POST'])
+@login_required
+@lab_required('water_chemistry')
+def worksheet_approve(ws_id):
+    """Ажлын хуудас батлах (senior / manager / admin)."""
+    from app.models.worksheets import WaterWorksheet
+    from app.utils.datetime import now_local
+    if current_user.role not in ('senior', 'manager', 'admin'):
+        flash('Зөвхөн ахлах химич/менежер батлах боломжтой.', 'danger')
+        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+    ws = WaterWorksheet.query.get_or_404(ws_id)
+    if ws.status not in ('submitted', 'open'):
+        flash('Батлах боломжгүй төлөв.', 'warning')
+        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+    ws.status = 'approved'
+    ws.reviewer_id = current_user.id
+    ws.reviewed_at = now_local()
+    ws.review_comment = request.form.get('review_comment', '').strip() or None
+    try:
+        db.session.commit()
+        flash('Ажлын хуудас батлагдлаа.', 'success')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash(f'Алдаа: {e}', 'danger')
+    return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+
+
+@water_bp.route('/worksheets/<int:ws_id>/reject', methods=['POST'])
+@login_required
+@lab_required('water_chemistry')
+def worksheet_reject(ws_id):
+    """Ажлын хуудас буцаах."""
+    from app.models.worksheets import WaterWorksheet
+    from app.utils.datetime import now_local
+    if current_user.role not in ('senior', 'manager', 'admin'):
+        flash('Зөвхөн ахлах химич/менежер буцаах боломжтой.', 'danger')
+        return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+    ws = WaterWorksheet.query.get_or_404(ws_id)
+    ws.status = 'rejected'
+    ws.reviewer_id = current_user.id
+    ws.reviewed_at = now_local()
+    ws.review_comment = request.form.get('review_comment', '').strip() or None
+    try:
+        db.session.commit()
+        flash('Ажлын хуудас буцаагдлаа.', 'warning')
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        flash(f'Алдаа: {e}', 'danger')
+    return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
+
+
+@water_bp.route('/api/worksheets/<int:ws_id>/rows', methods=['POST'])
+@login_required
+@lab_required('water_chemistry')
+def worksheet_save_rows(ws_id):
+    """Мөрүүдийг AJAX-аар хадгалах."""
+    from app.models.worksheets import WaterWorksheet, WorksheetRow
+    ws = WaterWorksheet.query.get_or_404(ws_id)
+    if ws.status != 'open':
+        return jsonify({'success': False, 'message': 'Зөвхөн open ажлын хуудсанд мөр нэмж болно'}), 400
+
+    data = request.get_json() or {}
+    rows_data = data.get('rows', [])
+
+    # Existing rows устгаад дахин үүсгэх (simplest approach for small batches)
+    for row in list(ws.rows):
+        db.session.delete(row)
+    db.session.flush()
+
+    _QC_LIMITS = {
+        'recovery_min': 80, 'recovery_max': 120,
+        'rpd_max': 20, 'rpd_warn': 15,
+        'warn_margin': 5,
+    }
+
+    for pos, rd in enumerate(rows_data):
+        row_type = rd.get('row_type', 'unknown')
+        sample_id = rd.get('sample_id') or None
+        if sample_id:
+            try:
+                sample_id = int(sample_id)
+            except (ValueError, TypeError):
+                sample_id = None
+
+        def _to_f(v):
+            try:
+                return float(v) if v not in (None, '', 'null') else None
+            except (ValueError, TypeError):
+                return None
+
+        result_val = _to_f(rd.get('result_value'))
+        expected_val = _to_f(rd.get('expected_value'))
+        rpd_val = _to_f(rd.get('rpd_pct'))
+
+        reagent_raw = rd.get('reagent_lot_id')
+        reagent_id = int(reagent_raw) if reagent_raw and str(reagent_raw).isdigit() else None
+
+        row = WorksheetRow(
+            worksheet_id=ws_id,
+            position=pos,
+            row_type=row_type,
+            sample_id=sample_id,
+            expected_value=expected_val,
+            result_value=result_val,
+            rpd_pct=rpd_val,
+            reagent_lot_id=reagent_id,
+            notes=rd.get('notes', '') or None,
+            qc_status='pending',
+        )
+        row.evaluate_qc(_QC_LIMITS)
+        db.session.add(row)
+
+    ws.batch_size = sum(1 for rd in rows_data if rd.get('row_type') == 'unknown')
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+    return jsonify({
+        'success': True,
+        'row_count': len(rows_data),
+        'batch_size': ws.batch_size,
+        'qc_pass_rate': ws.qc_pass_rate,
+    })
 
 
 # Report routes (dashboard, consumption, monthly plan) + Solution journal — тусдаа файлд

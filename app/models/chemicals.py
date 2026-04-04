@@ -44,13 +44,25 @@ class Chemical(db.Model):
     expiry_date = db.Column(db.Date, index=True)                # Дуусах хугацаа
     opened_date = db.Column(db.Date)                            # Нээсэн огноо
 
+    # Нээсний дараах хугацаа (зарим урвалж нээсний дараа богино хугацаатай)
+    shelf_life_after_opening_days = db.Column(db.Integer)       # Нээсний дараах хоног
+    opened_expiry_date = db.Column(db.Date)                     # Нээсний дараах дуусах хугацаа (автомат)
+
     # Хадгалалт
     storage_location = db.Column(db.String(100))                # Байршил (шүүгээ, тавиур)
     storage_conditions = db.Column(db.String(200))              # Нөхцөл (температур, гэх мэт)
 
     # Аюулгүй байдал
-    hazard_class = db.Column(db.String(100))                    # Аюулын ангилал
+    hazard_class = db.Column(db.String(100))                    # Аюулын ангилал (текст)
     sds_file_path = db.Column(db.String(255))                   # Safety Data Sheet файл
+    ghs_pictograms = db.Column(db.JSON)                         # GHS тэмдэгүүд ['GHS01','GHS06',...]
+    ghs_signal_word = db.Column(db.String(10))                  # 'Danger' эсвэл 'Warning'
+    sds_version = db.Column(db.String(20))                      # SDS хувилбар
+    sds_revision_date = db.Column(db.Date)                      # SDS хянасан огноо
+
+    # Урьдчилсан анхааруулга
+    days_alert_before_expiry = db.Column(db.Integer, default=30)  # Дуусахаас хэдэн хоногийн өмнө анхааруулах
+    prevent_use_if_expired = db.Column(db.Boolean, default=True)  # Дуусвал хаах
 
     # Ангилал
     lab_type = db.Column(db.String(30), default='all', index=True)  # coal, water, microbiology, petrography, all
@@ -83,20 +95,50 @@ class Chemical(db.Model):
 
     def update_status(self):
         """Нөөц болон хугацаанд үндэслэн төлөвийг автоматаар шинэчлэх."""
-        from datetime import date
+        from datetime import date, timedelta
         today = date.today()
 
         if self.status == 'disposed':
             return  # Устгагдсан бол өөрчлөхгүй
 
+        # Нээсний дараах дуусах хугацааг автомат тооцоолох
+        if self.opened_date and self.shelf_life_after_opening_days:
+            self.opened_expiry_date = self.opened_date + timedelta(days=self.shelf_life_after_opening_days)
+
+        # Нэн эрт дуусах хугацааг тодорхойлох (expiry_date vs opened_expiry_date)
+        effective_expiry = self.expiry_date
+        if self.opened_expiry_date:
+            if effective_expiry is None or self.opened_expiry_date < effective_expiry:
+                effective_expiry = self.opened_expiry_date
+
         if self.quantity <= 0:
             self.status = 'empty'
-        elif self.expiry_date and self.expiry_date < today:
+        elif effective_expiry and effective_expiry < today:
             self.status = 'expired'
         elif self.reorder_level and self.quantity <= self.reorder_level:
             self.status = 'low_stock'
         else:
             self.status = 'active'
+
+    def days_until_expiry(self):
+        """Дуусах хүртэлх хоногийн тоо (эрт дуусах хугацаагаар)."""
+        from datetime import date
+        today = date.today()
+        effective_expiry = self.expiry_date
+        if self.opened_expiry_date:
+            if effective_expiry is None or self.opened_expiry_date < effective_expiry:
+                effective_expiry = self.opened_expiry_date
+        if effective_expiry is None:
+            return None
+        return (effective_expiry - today).days
+
+    def is_expiring_soon(self):
+        """Анхааруулах хугацаанд орсон эсэх."""
+        days = self.days_until_expiry()
+        if days is None:
+            return False
+        threshold = self.days_alert_before_expiry or 30
+        return 0 <= days <= threshold
 
     def __repr__(self):
         return f"<Chemical {self.name} ({self.quantity} {self.unit})>"
