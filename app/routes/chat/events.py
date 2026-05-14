@@ -19,6 +19,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import socketio, db
 from app.models import ChatMessage, UserOnlineStatus, User, Sample
 from app.repositories import UserRepository, SampleRepository
+from app.repositories.chat_repository import (
+    ChatMessageRepository, UserOnlineStatusRepository,
+)
 from app.utils.datetime import now_local as now_mn
 
 logger = logging.getLogger(__name__)
@@ -123,9 +126,8 @@ def handle_send_message(data):
         sample_id=sample_id if sample else None,
         sent_at=now_mn()
     )
-    db.session.add(msg)
     try:
-        db.session.commit()
+        ChatMessageRepository.save(msg, commit=True)
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Message save error: {e}")
@@ -190,9 +192,8 @@ def handle_send_file(data):
         file_size=file_size,
         sent_at=now_mn()
     )
-    db.session.add(msg)
     try:
-        db.session.commit()
+        ChatMessageRepository.save(msg, commit=True)
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"File message save error: {e}")
@@ -224,11 +225,9 @@ def handle_delete_message(data):
         emit('error', {'message': 'Зөвхөн өөрийн мессежийг устгах боломжтой'})
         return
 
-    msg.is_deleted = True
-    msg.deleted_at = now_mn()
     msg.message = "Мессеж устгагдсан"
     try:
-        db.session.commit()
+        ChatMessageRepository.soft_delete(msg, commit=True)
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Delete message error: {e}")
@@ -262,9 +261,8 @@ def handle_broadcast(data):
         is_broadcast=True,
         sent_at=now_mn()
     )
-    db.session.add(msg)
     try:
-        db.session.commit()
+        ChatMessageRepository.save(msg, commit=True)
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Broadcast save error: {e}")
@@ -293,27 +291,26 @@ def handle_mark_read(data):
         if message_id:
             msg = db.session.get(ChatMessage, message_id)
             if msg and msg.receiver_id == current_user.id and not msg.read_at:
-                msg.read_at = now_mn()
-                db.session.commit()
+                ChatMessageRepository.mark_as_read([msg.id], commit=True)
                 emit('message_read', {
                     'message_id': message_id,
-                    'read_at': msg.read_at.isoformat()
+                    'read_at': msg.read_at.isoformat() if msg.read_at else now_mn().isoformat()
                 }, room=get_user_room(msg.sender_id))
 
         elif sender_id:
-            unread = ChatMessage.query.filter(
-                ChatMessage.sender_id == sender_id,
-                ChatMessage.receiver_id == current_user.id,
-                ChatMessage.read_at.is_(None)
-            ).all()
-
-            for msg in unread:
-                msg.read_at = now_mn()
-            db.session.commit()
+            unread_ids = [
+                row.id for row in
+                ChatMessage.query.filter(
+                    ChatMessage.sender_id == sender_id,
+                    ChatMessage.receiver_id == current_user.id,
+                    ChatMessage.read_at.is_(None)
+                ).with_entities(ChatMessage.id).all()
+            ]
+            count = ChatMessageRepository.mark_as_read(unread_ids, commit=True) if unread_ids else 0
 
             emit('messages_read', {
                 'reader_id': current_user.id,
-                'count': len(unread)
+                'count': count
             }, room=get_user_room(sender_id))
     except SQLAlchemyError as e:
         db.session.rollback()
@@ -364,15 +361,10 @@ def handle_get_online_users():
 def update_online_status(user_id, is_online, socket_id):
     """Database дээр онлайн статус шинэчлэх"""
     try:
-        status = db.session.get(UserOnlineStatus, user_id)
-        if not status:
-            status = UserOnlineStatus(user_id=user_id)
-            db.session.add(status)
-
-        status.is_online = is_online
-        status.last_seen = now_mn()
-        status.socket_id = socket_id
-        db.session.commit()
+        if is_online:
+            UserOnlineStatusRepository.set_online(user_id, socket_id, commit=True)
+        else:
+            UserOnlineStatusRepository.set_offline(user_id, commit=True)
     except SQLAlchemyError as e:
         logger.error(f"Error updating online status: {e}")
         db.session.rollback()
