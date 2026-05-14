@@ -23,8 +23,10 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import AnalysisResultStatus
 from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.utils.security import escape_like_pattern
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -791,6 +793,7 @@ class LotInvalidationResult:
     errors: list = field(default_factory=list)
 
 
+@transactional()
 def invalidate_results_by_lot(
     lot_id: int,
     reason: str = _l('Урвалжийн lot дохиолол — дахин шинжилгээ шаардлагатай'),
@@ -798,6 +801,9 @@ def invalidate_results_by_lot(
 ) -> LotInvalidationResult:
     """
     Тодорхой chemical lot ашигласан бүх AnalysisResult-ийг reanalysis руу шилжүүлэх.
+
+    Атомик transaction: status update + audit log нэг unit-ээр. Алдаа гарвал
+    @transactional rollback хийнэ.
 
     Тохиолдол: дохиолсон lot, чанарт үл нийцэх lot гэх мэт.
 
@@ -884,7 +890,7 @@ def invalidate_results_by_lot(
 
     for ar in affected_results:
         try:
-            ar.status = 'reanalysis'
+            ar.status = AnalysisResultStatus.REANALYSIS.value
             ar.rejection_comment = reason
             if performed_by_id:
                 ar.user_id = performed_by_id
@@ -894,24 +900,19 @@ def invalidate_results_by_lot(
         except Exception as e:
             errors.append(f'Result id={ar.id}: {e}')
 
-    # Audit log
-    try:
-        log = ChemicalLog(
-            chemical_id=lot_id,
-            action='lot_flagged',
-            quantity_change=0,
-            quantity_before=chemical.quantity,
-            quantity_after=chemical.quantity,
-            details=f'Lot дохиолол: {len(affected_ids)} үр дүн reanalysis болсон. Шалтгаан: {reason}',
-            performed_by_id=performed_by_id,
-        )
-        log.set_hash()
-        db.session.add(log)
-        db.session.commit()
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        errors.append(f'Audit log алдаа: {e}')
-        logger.error('invalidate_results_by_lot audit log алдаа: %s', e)
+    # Audit log — @transactional нь commit-ыг хариуцна. Алдаа гарвал бүхэлд нь
+    # rollback (status update + audit log нэг atomic unit).
+    log = ChemicalLog(
+        chemical_id=lot_id,
+        action='lot_flagged',
+        quantity_change=0,
+        quantity_before=chemical.quantity,
+        quantity_after=chemical.quantity,
+        details=f'Lot дохиолол: {len(affected_ids)} үр дүн reanalysis болсон. Шалтгаан: {reason}',
+        performed_by_id=performed_by_id,
+    )
+    log.set_hash()
+    db.session.add(log)
 
     return LotInvalidationResult(
         lot_id=lot_id,
