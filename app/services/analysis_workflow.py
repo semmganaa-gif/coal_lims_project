@@ -39,6 +39,7 @@ from app.utils.settings import get_error_reason_labels
 from app.utils.shifts import get_shift_info
 from app.utils.analysis_rules import determine_result_status
 from app.utils.server_calculations import verify_and_recalculate
+from app.utils.transaction import transactional
 from app.utils.validators import (
     validate_sample_id,
     validate_analysis_code,
@@ -359,31 +360,21 @@ def _apply_status_fields(res, new_status, rejection_category=None, rejection_com
             res.error_reason = None
 
 
-def update_result_status(result_id, new_status, rejection_comment=None,
-                         rejection_category=None):
-    """
-    Approve, reject, or return-to-pending a single analysis result.
-
-    Args:
-        result_id: int
-        new_status: 'approved' | 'rejected' | 'pending_review'
-        rejection_comment: Optional raw comment string (will be XSS-escaped)
-        rejection_category: Optional category string
+@transactional()
+def _update_result_status_atomic(result_id, new_status, rejection_category,
+                                 safe_comment, rejection_comment_raw):
+    """update_result_status-ийн atomic core (lock + workflow check + update + audit).
 
     Returns:
-        tuple: (result_dict, error_msg, http_status_code)
-            On success: ({"message": "OK", "status": ...}, None, 200)
-            On error:   (None, error_message, http_status)
+        tuple: (payload_dict_or_None, error_msg, status_code)
+            payload: {"res_id", "sample_id", "old_status", "engine", "res"}
+                — engine, res нь post-commit hook-д хэрэгтэй
     """
-    if new_status not in {"approved", "rejected", "pending_review"}:
-        return None, _l("Төлөв буруу байна"), 400
-
     # Row lock to prevent lost update
     res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
     if not res:
         return None, _l("Үр дүн олдсонгүй"), 404
 
-    # Өмнөх төлөв хадгалах (before/after audit)
     old_status = res.status
 
     # Workflow engine validation (configurable transitions)
@@ -393,15 +384,12 @@ def update_result_status(result_id, new_status, rejection_comment=None,
         engine = WorkflowEngine("analysis_result")
         from flask_login import current_user as _cu
         user_role = _cu.role if hasattr(_cu, 'role') else "admin"
-        ctx = {"comment": rejection_comment or ""}
+        ctx = {"comment": rejection_comment_raw or ""}
         check = engine.can_transition(res.status, new_status, user_role, ctx)
         if not check.allowed:
             return None, check.reason, 403
     except Exception:
         pass  # Fallback: workflow engine unavailable → allow (backward compat)
-
-    # XSS protection
-    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
 
     _apply_status_fields(res, new_status, rejection_category, safe_comment)
     db.session.flush()
@@ -428,11 +416,51 @@ def update_result_status(result_id, new_status, rejection_comment=None,
         new_status=new_status,
     )
 
+    return {
+        "res_id": res.id,
+        "sample_id": res.sample_id,
+        "analysis_code": res.analysis_code,
+        "final_result": res.final_result,
+        "old_status": old_status,
+        "engine": engine,
+        "res": res,
+    }, None, 200
+
+
+def update_result_status(result_id, new_status, rejection_comment=None,
+                         rejection_category=None):
+    """
+    Approve, reject, or return-to-pending a single analysis result.
+
+    Args:
+        result_id: int
+        new_status: 'approved' | 'rejected' | 'pending_review'
+        rejection_comment: Optional raw comment string (will be XSS-escaped)
+        rejection_category: Optional category string
+
+    Returns:
+        tuple: (result_dict, error_msg, http_status_code)
+            On success: ({"message": "OK", "status": ...}, None, 200)
+            On error:   (None, error_message, http_status)
+    """
+    if new_status not in {"approved", "rejected", "pending_review"}:
+        return None, _l("Төлөв буруу байна"), 400
+
+    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
+
     try:
-        db.session.commit()
+        payload, err, code = _update_result_status_atomic(
+            result_id, new_status, rejection_category,
+            safe_comment, rejection_comment,
+        )
     except StaleDataError:
-        db.session.rollback()
         return None, _l("Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."), 409
+    except SQLAlchemyError as exc:
+        logger.error("update_result_status DB error: %s", exc)
+        return None, _l("Мэдээллийн сан хадгалах алдаа"), 500
+
+    if err is not None:
+        return None, err, code
 
     # Invalidate cached stats after status change
     cache.delete('kpi_summary_ahlah')
@@ -442,29 +470,30 @@ def update_result_status(result_id, new_status, rejection_comment=None,
     log_audit(
         action=f'result_{new_status}',
         resource_type='AnalysisResult',
-        resource_id=res.id,
+        resource_id=payload["res_id"],
         details={
-            'sample_id': res.sample_id,
-            'analysis_code': res.analysis_code,
-            'final_result': res.final_result,
+            'sample_id': payload["sample_id"],
+            'analysis_code': payload["analysis_code"],
+            'final_result': payload["final_result"],
             'rejection_comment': safe_comment,
         },
-        old_value={'status': old_status},
+        old_value={'status': payload["old_status"]},
         new_value={'status': new_status},
     )
 
     # Execute workflow hooks
+    engine = payload.get("engine")
     if engine is not None:
         try:
             engine.execute_hooks(new_status, {
                 'workflow_name': 'analysis_result',
                 'entity_type': 'AnalysisResult',
-                'entity_id': res.id,
-                'entity': res,
-                'from_state': old_status,
+                'entity_id': payload["res_id"],
+                'entity': payload["res"],
+                'from_state': payload["old_status"],
                 'to_state': new_status,
                 'comment': safe_comment or '',
-                'sample_id': res.sample_id,
+                'sample_id': payload["sample_id"],
             })
         except Exception:
             logger.exception("Workflow hook execution failed")
@@ -472,41 +501,14 @@ def update_result_status(result_id, new_status, rejection_comment=None,
     return {"message": "OK", "status": new_status}, None, 200
 
 
-def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
-                              rejection_category=None, username=None):
-    """
-    Bulk approve/reject multiple analysis results.
-
-    Args:
-        result_ids: list of result ID values
-        new_status: 'approved' | 'rejected'
-        rejection_comment: Optional raw comment string (will be XSS-escaped)
-        rejection_category: Optional category string
-        username: Username of the person performing the action (for notifications)
+@transactional()
+def _bulk_update_result_status_atomic(int_ids, new_status, rejection_category, safe_comment):
+    """bulk_update_result_status-ийн atomic core (lock + apply + audit).
 
     Returns:
-        tuple: (result_dict, error_msg, http_status_code)
+        tuple: (payload_dict, error_msg, status_code)
+            payload: {"success_count", "failed_ids", "results_map", "int_ids"}
     """
-    if not result_ids:
-        return None, _l("Үр дүн сонгогдоогүй байна"), 400
-
-    if len(result_ids) > 200:
-        return None, _l("Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй"), 400
-
-    if new_status not in {"approved", "rejected"}:
-        return None, _l("Төлөв буруу байна"), 400
-
-    if new_status == "rejected" and not rejection_category:
-        return None, _l("Буцаах шалтгаанаа сонгоно уу"), 400
-
-    # XSS protection
-    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
-
-    try:
-        int_ids = [int(rid) for rid in result_ids]
-    except (ValueError, TypeError):
-        return None, _l("ID буруу байна"), 400
-
     results_map = {
         r.id: r for r in
         AnalysisResult.query.filter(
@@ -559,21 +561,73 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
             )
             success_count += 1
 
-        except (SQLAlchemyError, ValueError, AttributeError) as exc:
+        except (ValueError, AttributeError) as exc:
+            # SQLAlchemyError-ыг @transactional-д rollback хийлгэх — энд барихгүй
             logger.warning("bulk_update_status: result_id=%s error: %s", rid, exc)
             failed_ids.append(rid)
             continue
 
-    if success_count > 0:
-        try:
-            db.session.commit()
-        except StaleDataError:
-            db.session.rollback()
-            return None, _l("Зарим үр дүнг өөр хэрэглэгч өөрчилсөн байна. Refresh хийнэ үү."), 409
-        except SQLAlchemyError:
-            db.session.rollback()
-            return None, _l("Мэдээллийн сангийн алдаа"), 500
+    return {
+        "success_count": success_count,
+        "failed_ids": failed_ids,
+        "results_map": results_map,
+        "int_ids": int_ids,
+    }, None, 200
 
+
+def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
+                              rejection_category=None, username=None):
+    """
+    Bulk approve/reject multiple analysis results.
+
+    Args:
+        result_ids: list of result ID values
+        new_status: 'approved' | 'rejected'
+        rejection_comment: Optional raw comment string (will be XSS-escaped)
+        rejection_category: Optional category string
+        username: Username of the person performing the action (for notifications)
+
+    Returns:
+        tuple: (result_dict, error_msg, http_status_code)
+    """
+    if not result_ids:
+        return None, _l("Үр дүн сонгогдоогүй байна"), 400
+
+    if len(result_ids) > 200:
+        return None, _l("Нэг удаад 200-аас их үр дүн шинэчлэх боломжгүй"), 400
+
+    if new_status not in {"approved", "rejected"}:
+        return None, _l("Төлөв буруу байна"), 400
+
+    if new_status == "rejected" and not rejection_category:
+        return None, _l("Буцаах шалтгаанаа сонгоно уу"), 400
+
+    # XSS protection
+    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
+
+    try:
+        int_ids = [int(rid) for rid in result_ids]
+    except (ValueError, TypeError):
+        return None, _l("ID буруу байна"), 400
+
+    try:
+        payload, err, code = _bulk_update_result_status_atomic(
+            int_ids, new_status, rejection_category, safe_comment,
+        )
+    except StaleDataError:
+        return None, _l("Зарим үр дүнг өөр хэрэглэгч өөрчилсөн байна. Refresh хийнэ үү."), 409
+    except SQLAlchemyError as exc:
+        logger.error("bulk_update_result_status DB error: %s", exc)
+        return None, _l("Мэдээллийн сангийн алдаа"), 500
+
+    if err is not None:
+        return None, err, code
+
+    success_count = payload["success_count"]
+    failed_ids = payload["failed_ids"]
+    results_map = payload["results_map"]
+
+    if success_count > 0:
         log_audit(
             action=f'bulk_result_{new_status}',
             resource_type='AnalysisResult',
@@ -624,16 +678,13 @@ def bulk_update_result_status(result_ids, new_status, rejection_comment=None,
     }, None, 200
 
 
-def select_repeat_result(result_id, use_original=False):
-    """
-    Select which result to use for a repeated analysis.
-
-    Args:
-        result_id: int
-        use_original: bool - True to use original value, False for repeat value
+@transactional()
+def _select_repeat_result_atomic(result_id, use_original):
+    """select_repeat_result-ийн atomic core (final_result + raw_data + audit log).
 
     Returns:
-        tuple: (result_dict, error_msg, http_status_code)
+        tuple: (payload_dict_or_None, error_msg, status_code)
+            payload: {"res_id", "old_final", "new_final", "sample_id", "analysis_code"}
     """
     res = AnalysisResult.query.filter_by(id=result_id).with_for_update().first()
     if not res:
@@ -651,11 +702,7 @@ def select_repeat_result(result_id, use_original=False):
         return None, _l("Анхны/давтан утга олдсонгүй"), 400
 
     old_final = res.final_result
-
-    if use_original:
-        res.final_result = original_val
-    else:
-        res.final_result = repeat_val
+    res.final_result = original_val if use_original else repeat_val
 
     repeat_info["use_original"] = use_original
     raw["_repeat"] = repeat_info
@@ -677,28 +724,54 @@ def select_repeat_result(result_id, use_original=False):
         sample_code_snapshot=sample.sample_code if sample else None,
     )
 
-    try:
-        db.session.commit()
-    except StaleDataError:
-        db.session.rollback()
-        return None, _l("Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."), 409
+    return {
+        "res_id": res.id,
+        "sample_id": res.sample_id,
+        "analysis_code": res.analysis_code,
+        "old_final": old_final,
+        "new_final": res.final_result,
+    }, None, 200
 
+
+def select_repeat_result(result_id, use_original=False):
+    """
+    Select which result to use for a repeated analysis.
+
+    Args:
+        result_id: int
+        use_original: bool - True to use original value, False for repeat value
+
+    Returns:
+        tuple: (result_dict, error_msg, http_status_code)
+    """
+    try:
+        payload, err, code = _select_repeat_result_atomic(result_id, use_original)
+    except StaleDataError:
+        return None, _l("Өөр хэрэглэгч энэ үр дүнг өөрчилсөн байна. Refresh хийнэ үү."), 409
+    except SQLAlchemyError as exc:
+        logger.error("select_repeat_result DB error: %s", exc)
+        return None, _l("Мэдээллийн сан хадгалах алдаа"), 500
+
+    if err is not None:
+        return None, err, code
+
+    choice = "ORIGINAL" if use_original else "REPEAT"
     log_audit(
         action=f"select_{choice.lower()}_result",
         resource_type="AnalysisResult",
-        resource_id=res.id,
+        resource_id=payload["res_id"],
         details={
-            "sample_id": res.sample_id,
-            "analysis_code": res.analysis_code,
-            "old_final": old_final,
-            "new_final": res.final_result,
+            "sample_id": payload["sample_id"],
+            "analysis_code": payload["analysis_code"],
+            "old_final": payload["old_final"],
+            "new_final": payload["new_final"],
             "use_original": use_original,
         },
     )
 
     return {
         "message": f"{_l('Анхны') if use_original else _l('Давтан')} үр дүн сонгогдлоо",
-        "final_result": res.final_result,
+        "final_result": payload["new_final"],
         "use_original": use_original,
     }, None, 200
 
@@ -707,33 +780,14 @@ def select_repeat_result(result_id, use_original=False):
 # API STATUS UPDATE (from analysis_save.py)
 # =========================================================================
 
-def update_result_status_api(result_id, new_status, action_type=None,
-                             rejection_category=None, rejection_subcategory=None,
-                             rejection_comment=None, error_reason=None):
-    """
-    Senior approve/reject from API endpoint (analysis_save.py variant).
-
-    Args:
-        result_id: int
-        new_status: 'approved' | 'rejected' | 'pending_review'
-        action_type: Optional action type string
-        rejection_category: Optional category
-        rejection_subcategory: Optional subcategory
-        rejection_comment: Optional raw comment (will be XSS-escaped)
-        error_reason: Optional error reason
-
-    Returns:
-        tuple: (result_dict, error_msg, http_status_code)
-    """
+@transactional()
+def _update_result_status_api_atomic(result_id, new_status, action_type,
+                                     rejection_category, rejection_subcategory,
+                                     safe_comment, error_reason):
+    """update_result_status_api-ийн atomic core."""
     res = db.session.get(AnalysisResult, result_id)
     if not res:
         return None, _l("Үр дүн олдсонгүй"), 404
-
-    allowed = {"approved", "rejected", "pending_review"}
-    if new_status not in allowed:
-        return None, _l("Буруу статус"), 400
-
-    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
 
     res.status = new_status
     res.updated_at = now_local()
@@ -780,15 +834,51 @@ def update_result_status_api(result_id, new_status, action_type=None,
         sample_code_snapshot=sample_code_snap,
     )
 
+    return {
+        "res_id": res.id,
+        "sample_id": res.sample_id,
+        "res": res,
+    }, None, 200
+
+
+def update_result_status_api(result_id, new_status, action_type=None,
+                             rejection_category=None, rejection_subcategory=None,
+                             rejection_comment=None, error_reason=None):
+    """
+    Senior approve/reject from API endpoint (analysis_save.py variant).
+
+    Args:
+        result_id: int
+        new_status: 'approved' | 'rejected' | 'pending_review'
+        action_type: Optional action type string
+        rejection_category: Optional category
+        rejection_subcategory: Optional subcategory
+        rejection_comment: Optional raw comment (will be XSS-escaped)
+        error_reason: Optional error reason
+
+    Returns:
+        tuple: (result_dict, error_msg, http_status_code)
+    """
+    allowed = {"approved", "rejected", "pending_review"}
+    if new_status not in allowed:
+        return None, _l("Буруу статус"), 400
+
+    safe_comment = str(escape(rejection_comment)) if rejection_comment else None
+
     try:
-        db.session.commit()
+        payload, err, code = _update_result_status_api_atomic(
+            result_id, new_status, action_type,
+            rejection_category, rejection_subcategory,
+            safe_comment, error_reason,
+        )
     except StaleDataError:
-        db.session.rollback()
         return None, _l("Өөр хэрэглэгч энэ үр дүнг засварласан байна. Дахин оролдоно уу."), 409
     except SQLAlchemyError as exc:
-        db.session.rollback()
-        logger.error("update_result_status commit error: %s", exc, exc_info=True)
+        logger.error("update_result_status_api DB error: %s", exc, exc_info=True)
         return None, _l("Мэдээллийн сан хадгалах алдаа"), 500
+
+    if err is not None:
+        return None, err, code
 
     # Execute workflow hooks (check_sample_complete, mark_sla_completed, etc.)
     try:
@@ -797,12 +887,12 @@ def update_result_status_api(result_id, new_status, action_type=None,
         engine.execute_hooks(new_status, {
             'workflow_name': 'analysis_result',
             'entity_type': 'AnalysisResult',
-            'entity_id': res.id,
-            'entity': res,
+            'entity_id': payload["res_id"],
+            'entity': payload["res"],
             'from_state': '',
             'to_state': new_status,
             'comment': safe_comment or '',
-            'sample_id': res.sample_id,
+            'sample_id': payload["sample_id"],
         })
     except Exception:
         logger.exception("Workflow hook execution failed (API path)")

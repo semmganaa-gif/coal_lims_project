@@ -439,13 +439,14 @@ class TestApplyStatusFields:
 
 class TestUpdateResultStatus:
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_audit")
     @patch("app.services.analysis_workflow.cache")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
     @patch("app.services.analysis_workflow.AnalysisResult")
     def test_approve_success(self, mock_AR, mock_db, mock_log_action, mock_cache,
-                             mock_log_audit, app):
+                             mock_log_audit, mock_tx_db, app):
         with app.app_context():
             res = _make_result()
             sample = _make_sample()
@@ -458,7 +459,7 @@ class TestUpdateResultStatus:
             assert code == 200
             assert err is None
             assert data["status"] == "approved"
-            mock_db.session.commit.assert_called_once()
+            mock_tx_db.session.commit.assert_called_once()
             mock_cache.delete.assert_any_call('kpi_summary_ahlah')
 
     @patch("app.services.analysis_workflow.db")
@@ -481,21 +482,22 @@ class TestUpdateResultStatus:
             assert code == 404
             assert data is None
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
     @patch("app.services.analysis_workflow.AnalysisResult")
-    def test_stale_data_error(self, mock_AR, mock_db, mock_log_action, app):
+    def test_stale_data_error(self, mock_AR, mock_db, mock_log_action, mock_tx_db, app):
         with app.app_context():
             res = _make_result()
             mock_AR.query.filter_by.return_value.with_for_update.return_value.first.return_value = res
             mock_db.session.get.return_value = _make_sample()
-            mock_db.session.commit.side_effect = StaleDataError()
+            mock_tx_db.session.commit.side_effect = StaleDataError()
 
             from app.services.analysis_workflow import update_result_status
             data, err, code = update_result_status(1, "approved")
             assert code == 409
             assert data is None
-            mock_db.session.rollback.assert_called_once()
+            mock_tx_db.session.rollback.assert_called_once()
 
     @patch("app.services.analysis_workflow.log_audit")
     @patch("app.services.analysis_workflow.cache")
@@ -545,6 +547,7 @@ class TestUpdateResultStatus:
 class TestBulkUpdateResultStatus:
 
     @patch("app.services.analysis_workflow.notify_sample_status_change")
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_audit")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
@@ -552,7 +555,7 @@ class TestBulkUpdateResultStatus:
     @patch("app.services.analysis_workflow.AnalysisResult")
     def test_bulk_approve_success(self, mock_AR, mock_Sample, mock_db,
                                    mock_log_action, mock_log_audit,
-                                   mock_notify, app):
+                                   mock_tx_db, mock_notify, app):
         with app.app_context():
             res1 = _make_result(id=1, sample_id=10, status="pending_review")
             res2 = _make_result(id=2, sample_id=11, status="pending_review")
@@ -569,7 +572,7 @@ class TestBulkUpdateResultStatus:
             assert code == 200
             assert data["success_count"] == 2
             assert data["failed_count"] == 0
-            mock_db.session.commit.assert_called_once()
+            mock_tx_db.session.commit.assert_called_once()
 
     def test_empty_result_ids(self, app):
         with app.app_context():
@@ -644,6 +647,7 @@ class TestBulkUpdateResultStatus:
             assert data["success_count"] == 0
 
     @patch("app.services.analysis_workflow.notify_sample_status_change")
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_audit")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
@@ -651,18 +655,19 @@ class TestBulkUpdateResultStatus:
     @patch("app.services.analysis_workflow.AnalysisResult")
     def test_stale_data_on_commit(self, mock_AR, mock_Sample, mock_db,
                                    mock_log_action, mock_log_audit,
-                                   mock_notify, app):
+                                   mock_tx_db, mock_notify, app):
         with app.app_context():
             res = _make_result(id=1, status="pending_review")
             mock_AR.query.filter.return_value.with_for_update.return_value.all.return_value = [res]
             mock_Sample.query.filter.return_value.all.return_value = [_make_sample()]
-            mock_db.session.commit.side_effect = StaleDataError()
+            mock_tx_db.session.commit.side_effect = StaleDataError()
 
             from app.services.analysis_workflow import bulk_update_result_status
             data, err, code = bulk_update_result_status([1], "approved")
             assert code == 409
-            mock_db.session.rollback.assert_called_once()
+            mock_tx_db.session.rollback.assert_called_once()
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.notify_sample_status_change")
     @patch("app.services.analysis_workflow.log_audit")
     @patch("app.services.analysis_workflow.log_analysis_action")
@@ -671,12 +676,12 @@ class TestBulkUpdateResultStatus:
     @patch("app.services.analysis_workflow.AnalysisResult")
     def test_sqlalchemy_error_on_commit(self, mock_AR, mock_Sample, mock_db,
                                          mock_log_action, mock_log_audit,
-                                         mock_notify, app):
+                                         mock_notify, mock_tx_db, app):
         with app.app_context():
             res = _make_result(id=1, status="pending_review")
             mock_AR.query.filter.return_value.with_for_update.return_value.all.return_value = [res]
             mock_Sample.query.filter.return_value.all.return_value = [_make_sample()]
-            mock_db.session.commit.side_effect = SQLAlchemyError("DB gone")
+            mock_tx_db.session.commit.side_effect = SQLAlchemyError("DB gone")
 
             from app.services.analysis_workflow import bulk_update_result_status
             data, err, code = bulk_update_result_status([1], "approved")
@@ -820,10 +825,11 @@ class TestSelectRepeatResult:
             data, err, code = select_repeat_result(1)
             assert code == 400
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
     @patch("app.services.analysis_workflow.AnalysisResult")
-    def test_stale_data_error(self, mock_AR, mock_db, mock_log_action, app):
+    def test_stale_data_error(self, mock_AR, mock_db, mock_log_action, mock_tx_db, app):
         with app.app_context():
             res = _make_result()
             res.get_raw_data.return_value = {
@@ -834,7 +840,7 @@ class TestSelectRepeatResult:
             }
             mock_AR.query.filter_by.return_value.with_for_update.return_value.first.return_value = res
             mock_db.session.get.return_value = _make_sample()
-            mock_db.session.commit.side_effect = StaleDataError()
+            mock_tx_db.session.commit.side_effect = StaleDataError()
 
             from app.services.analysis_workflow import select_repeat_result
             data, err, code = select_repeat_result(1, use_original=True)
@@ -883,16 +889,17 @@ class TestUpdateResultStatusApi:
             data, err, code = update_result_status_api(1, "bogus")
             assert code == 400
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
-    def test_reject_with_comment(self, mock_db, mock_log_action, app):
+    def test_reject_with_comment(self, mock_db, mock_log_action, mock_tx_db, app):
         with app.app_context():
             res = _make_result()
             sample = _make_sample()
             mock_db.session.get.side_effect = lambda model, id: (
                 res if model.__name__ == "AnalysisResult" else sample
             )
-            mock_db.session.commit.side_effect = StaleDataError()
+            mock_tx_db.session.commit.side_effect = StaleDataError()
 
             from app.services.analysis_workflow import update_result_status_api
             data, err, code = update_result_status_api(
@@ -903,16 +910,17 @@ class TestUpdateResultStatusApi:
             )
             assert code == 409
 
+    @patch("app.utils.transaction.db")
     @patch("app.services.analysis_workflow.log_analysis_action")
     @patch("app.services.analysis_workflow.db")
-    def test_sqlalchemy_error(self, mock_db, mock_log_action, app):
+    def test_sqlalchemy_error(self, mock_db, mock_log_action, mock_tx_db, app):
         with app.app_context():
             res = _make_result()
             sample = _make_sample()
             mock_db.session.get.side_effect = lambda model, id: (
                 res if model.__name__ == "AnalysisResult" else sample
             )
-            mock_db.session.commit.side_effect = SQLAlchemyError("DB error")
+            mock_tx_db.session.commit.side_effect = SQLAlchemyError("DB error")
 
             from app.services.analysis_workflow import update_result_status_api
             data, err, code = update_result_status_api(1, "approved")

@@ -61,6 +61,8 @@ from typing import Any, Callable, TypeVar
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from app import db
+
 logger = logging.getLogger(__name__)
 
 # Context flag for nested @transactional — гадна нь commit удирдана
@@ -100,9 +102,6 @@ def transactional(*, readonly: bool = False, reraise: bool = True) -> Callable[[
     def decorator(f: F) -> F:
         @wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Import inside function — circular import safety
-            from app import db
-
             # Гадна транзакц нээгдсэн эсэхийг шалгах (nested @transactional)
             outer_already_open = _in_transaction.get()
             if outer_already_open:
