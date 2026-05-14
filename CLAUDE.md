@@ -223,9 +223,11 @@ flask license generate --company X --expiry YYYY-MM-DD
 - **sentry-sdk v2 API:** `push_scope()` deprecated → `new_scope()`-ээр
   context manager бичнэ. `set_user`, `set_extra`, `add_breadcrumb`
   хэвээр ажиллана.
-- **`instance/logs/security.log` болон `logs/audit.log`** бараг хоосон —
-  production audit logging тохиргоо ажиллахгүй байх магадлалтай. Шалгах
-  хэрэгтэй.
+- **File-based audit/security log:** `instance/logs/audit.log` болон
+  `security.log` нь `app/utils/audit.py:_write_file_log` ба
+  `app/utils/license_protection.py:_log_event`-ээс бичигдэнэ (commit `b94d34c`).
+  Integration тест: `tests/unit/test_audit.py::TestFileLoggers`. `logs/`
+  фолдер хуучин — `instance/logs/` бол active path.
 - **`docs_all/README.md` "39% coverage"** гэж бичсэн — хоцрогдсон. Бодит
   coverage 89%.
 - **CRLF/LF warning:** `git diff`-д их хэмжээний LF→CRLF warning гарна
