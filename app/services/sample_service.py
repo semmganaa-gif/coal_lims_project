@@ -26,6 +26,7 @@ from app.repositories import SampleRepository, AnalysisResultRepository
 from app.utils.conversions import calculate_all_conversions
 from app.utils.parameters import PARAMETER_DEFINITIONS, get_canonical_name
 from app.utils.sorting import sort_samples
+from app.utils.transaction import transactional
 from app.constants import SUMMARY_VIEW_COLUMNS
 
 logger = logging.getLogger(__name__)
@@ -75,67 +76,70 @@ class SampleReportData:
 # Service Functions
 # =============================================================================
 
+@transactional()
+def _archive_samples_atomic(sample_ids: list[int], archive: bool) -> ArchiveResult:
+    """archive_samples-ийн atomic transaction core (status update + audit log).
+
+    `@transactional` нь нэг atomic commit явуулна: status update + бүх audit
+    log нэг unit-ээр хадгалагдана. Repository / log_audit-аас `commit=False`
+    дамжуулна — гадна decorator commit-ыг хариуцна. Exception үед автомат
+    rollback + raise.
+    """
+    new_status = "archived" if archive else "new"
+    updated_count = SampleRepository.update_status(sample_ids, new_status, commit=False)
+
+    action_text = _l("архивд шилжүүллээ") if archive else _l("архивнаас сэргээллээ")
+    message = f"{updated_count} дээжийг амжилттай {action_text}."
+    logger.info(f"Samples {'archived' if archive else 'unarchived'}: {sample_ids}")
+
+    old_status = "new" if archive else "archived"
+    action_name = 'sample_archived' if archive else 'sample_unarchived'
+    for sid in sample_ids:
+        log_audit(
+            action=action_name,
+            resource_type='Sample',
+            resource_id=sid,
+            details={'new_status': new_status},
+            old_value={'status': old_status},
+            new_value={'status': new_status},
+            commit=False,
+        )
+
+    return ArchiveResult(success=True, updated_count=updated_count, message=message)
+
+
 def archive_samples(sample_ids: list[int], archive: bool = True) -> ArchiveResult:
     """
-    Дээжүүдийг архивлах эсвэл сэргээх.
+    Дээжүүдийг архивлах эсвэл сэргээх — public API.
+
+    Public API хадгална (ArchiveResult-аар exception-уудыг wrap хийнэ). Atomic
+    transaction logic нь `_archive_samples_atomic`-д `@transactional`-аар
+    хэрэгжсэн.
 
     Args:
         sample_ids: Дээжний ID-уудын жагсаалт
         archive: True бол архивлах, False бол сэргээх
 
     Returns:
-        ArchiveResult: Үйлдлийн үр дүн
-
-    Examples:
-        >>> result = archive_samples([1, 2, 3], archive=True)
-        >>> if result.success:
-        ...     print(f"Archived {result.updated_count} samples")
+        ArchiveResult: Үйлдлийн үр дүн (DB алдаа → success=False).
     """
     if not sample_ids:
         return ArchiveResult(
             success=False,
             updated_count=0,
             message=_l("Дээж сонгоогүй байна."),
-            error="NO_SAMPLES"
+            error="NO_SAMPLES",
         )
 
     try:
-        new_status = "archived" if archive else "new"
-        # Repository ашиглах
-        updated_count = SampleRepository.update_status(sample_ids, new_status)
-
-        action_text = _l("архивд шилжүүллээ") if archive else _l("архивнаас сэргээллээ")
-        message = f"{updated_count} дээжийг амжилттай {action_text}."
-
-        logger.info(f"Samples {'archived' if archive else 'unarchived'}: {sample_ids}")
-
-        # Audit: Архивлах/сэргээх лог
-        old_status = "new" if archive else "archived"
-        action_name = 'sample_archived' if archive else 'sample_unarchived'
-        for sid in sample_ids:
-            log_audit(
-                action=action_name,
-                resource_type='Sample',
-                resource_id=sid,
-                details={'new_status': new_status},
-                old_value={'status': old_status},
-                new_value={'status': new_status},
-            )
-
-        return ArchiveResult(
-            success=True,
-            updated_count=updated_count,
-            message=message
-        )
-
+        return _archive_samples_atomic(sample_ids, archive)
     except SQLAlchemyError as e:
-        db.session.rollback()
         logger.error(f"Error archiving samples: {e}")
         return ArchiveResult(
             success=False,
             updated_count=0,
             message=f"Архивлах үед алдаа гарлаа: {e}",
-            error=str(e)
+            error=str(e),
         )
 
 
