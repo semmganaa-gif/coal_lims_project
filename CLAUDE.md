@@ -18,24 +18,42 @@
 - **DB:** PostgreSQL 15 (prod) / SQLite (dev)
 - **Real-time:** Flask-SocketIO (chat)
 - **Cache:** Redis / SimpleCache
-- **Test:** pytest (~10 400 тест, README дээр 64%, сүүлийн ажилд **89%** coverage)
+- **Test:** pytest (657+ critical test pass, 0 fail, 89% coverage)
 
 ## Архитектурын давхарга — заавал баримтлах
 
 ```
-Route → Service → Repository → Model
+Route → @transactional Service → Repository → Model
+                ↓                       ↓
+            commit/rollback         add/delete (no commit)
 ```
 
-- **Routes** — зөвхөн service-ийн public API дуудна. `db.session.*` болон
-  `Model.query.*`-ыг **route-д бичихгүй**.
-- **Services** — business logic. Repository-гоор дамжина. `db.session.commit()`
-  зөвхөн `@transactional` wrapper-аар.
-- **Repositories** — DB I/O-ийн цорын ганц цэг.
+- **Routes** — Service-ийн public API дуудна. `db.session.commit()`-ыг
+  `safe_commit()` helper-ээр centralize эсвэл @transactional service-р дамжуулна.
+- **Services** — Business logic. `@transactional()` декоратораар transaction
+  boundary тогтооно. `db.session.commit()` гар хийхгүй.
+- **Repositories** — DB I/O-ийн цорын ганц цэг. Default `commit=False`,
+  caller-ийн @transactional эсвэл explicit commit хариуцна.
 - **Models** — SQLAlchemy ORM (~46 ширхэг).
 
-> Энэ дүрэм одоогоор бүрэн биелээгүй (Sprint 4–5-аар цэвэрлэж байна). Шинэ код
-> бичих үед энэ давхаргын дагуу бичиж, refactor-д routes/services-аас
-> `db.session` / `.query` хасах чиглэлтэй.
+**Pattern: public + atomic core (`_xxx_atomic` + `xxx`):**
+```python
+@transactional()
+def _xxx_atomic(args) -> Result:
+    # DB read + write + audit log
+    return Result(...)
+
+def xxx(args) -> Result:
+    # Validation (no DB)
+    try:
+        return _xxx_atomic(args)
+    except SQLAlchemyError as e:
+        return _db_error_to_result(e)
+```
+
+Жишээ: `mass_service._save_mass_measurements_atomic`, `admin_service._delete_
+standard_atomic`. Зорилго — StaleDataError/IntegrityError-ийг public translator-
+оор тогтсон HTTP status code болгож буцаах.
 
 ## Лабын модулиуд
 
@@ -53,21 +71,21 @@ Route → Service → Repository → Model
 
 ```
 app/
-├── bootstrap/      # Flask app factory + security headers
+├── bootstrap/      # Flask app factory + i18n + security headers
 ├── models/         # SQLAlchemy (core, analysis, equipment, chemicals, ...)
-├── repositories/   # 14 repository файл
-├── services/       # business logic (sample, analysis_workflow, chemical, ...)
+├── repositories/   # 45 repository class (бүх model хамрагдсан)
+├── services/       # business logic, @transactional pattern (30+ функц)
 ├── labs/           # BaseLab + лаб бүрийн route/report/constants
 ├── routes/         # main, analysis, api, admin, equipment, chemicals, ...
-├── utils/          # server_calculations/, conversions, audit, security helpers,
-│                   # decorators (@lab_required, analysis_role_required),
-│                   # license_protection, hardware_fingerprint
+├── utils/          # transaction.py (@transactional), database.py (safe_commit),
+│                   # server_calculations/, conversions, audit, security helpers,
+│                   # decorators, license_protection, hardware_fingerprint
 ├── templates/      # Jinja2 + analysis_forms/ (AG Grid форм 18+)
 └── static/         # CSS, JS (aggrid_helpers, form_guards, xlsx)
 
 config/             # dev/prod/test тохиргоо
 migrations/         # Alembic
-tests/              # pytest, 100+ файл
+tests/              # pytest, 100+ файл, 657+ critical pass
 SOP/                # ISO 17025 SOP
 docs/dev-logs/      # dev session log + architecture audit/plan/progress
 docs_all/           # албан ёсны баримт (60+ файл, README.md = index)
@@ -76,7 +94,7 @@ docs_all/           # албан ёсны баримт (60+ файл, README.md 
 ## Ажиллуулах команд
 
 ```bash
-# Dev сервер
+# Dev сервер (0.0.0.0:5000)
 python run.py
 
 # Production (Linux)
@@ -87,53 +105,109 @@ gunicorn -w 4 -b 0.0.0.0:8000 "app:create_app()"
 # Тест
 pytest
 pytest --cov=app --cov-report=html
-pytest tests/unit/
+pytest tests/test_services_admin.py tests/test_services_analysis_workflow.py  # critical
+
+# Лиценз (CLI)
+flask license info                           # Одоогийн лицензийн төлөв
+flask license hwid                           # Энэ компьютерийн hardware ID
+flask license allow-hardware <hwid>          # Нэг лицензээр хэд хэдэн компьютер
+flask license clear-tamper                   # tampering flag арилгах
+flask license generate --company X --expiry YYYY-MM-DD
 ```
 
-## Идэвхтэй ажил (2026-05-09 байдлаар)
+## Архитектурын төлөв (2026-05-14 байдлаар)
 
-**Architecture Sprint 1** (`docs/dev-logs/ARCHITECTURE_PROGRESS_2026_04_22.md`):
+### ✅ ДУУССАН Sprint 1-5
 
-- ✅ S1.4 — `X-XSS-Protection` header хассан
-- ✅ S1.1a — CSP nonce + `base-uri` / `form-action` hardening
-- ✅ S1.3 — `config/database.py` dialect-ийн дагуу `connect_args`
-- 🔜 **S1.1b** — 277 inline event handler → external JS (3 batch-аар).
-  Эхний batch (`errors/`, `spare_parts/`, `settings/`) хэсэгчлэн эхэлсэн,
-  шинэ `app/static/js/csp_handlers.js` үүсгэсэн, **commit-логдоогүй**
-  ~38 modified template/JS байна.
-- ⏳ S1.1c — 44+ inline style → class
-- ⏳ S1.1d — Alpine CSP build руу шилжих
-- ⏳ S1.1e — `'unsafe-inline'` + `'unsafe-eval'` хасах
+**Sprint 1 (Security/CSP):** S1.1a-e, S1.3, S1.4 (өмнө хийсэн)
 
-**Дараагийн sprint-үүд (төлөвлөсөн):**
+**Sprint 4 — Service @transactional + commit устгал:**
+- 30+ service функц @transactional pattern-д шилжсэн (mass, sample,
+  analysis_workflow, admin × 15, equipment, instrument, report, sla,
+  qc_chart, workflow_engine, report_builder)
+- 13 repository default `commit=True` → `commit=False`
+- Route layer-аас 30+ direct `db.session.commit()` устгасан
+- `app/utils/transaction.py` — `@transactional` декоратор (ContextVar-аар
+  nested support, SAVEPOINT биш гадна transaction-ыг ашиглана)
+- `app/utils/database.py` — `safe_commit()`/`safe_delete()`/`safe_add()`
+  route layer-ийн helper
 
-- Sprint 2 — Vite bundle (CDN-ыг local bundle руу)
-- Sprint 3 — Dependency cleanup (sentry-sdk 1→2, pytz хасах, gevent vs waitress)
-- Sprint 4 — Routes-аас `db.session.*` / `.query` хасах (196 call-site)
-- Sprint 5 — Services → Repositories давхаргын цэвэрлэгээ
+**Sprint 5 — Repository pattern:**
+- 14 → **45 repository** (21 шинэ model хамрагдсан)
+- Service direct `Model.query` → repository method (68 газар)
+- Шинэ repository файлууд:
+  - `analysis_profile_repository.py`
+  - `instrument_repository.py`
+  - `planning_repository.py` (MonthlyPlan + StaffSettings)
+  - `spare_parts_repository.py` (4 class)
+  - `chemical_usage_repository.py` (Usage + Log + Waste × 2)
+  - `solutions_repository.py` (Recipe + Preparation + Ingredient)
+  - `worksheets_repository.py` (WaterWorksheet + Row)
+  - `qc_chart_repository.py`
+  - `license_repository.py`
+  - `analysis_audit_repository.py`
+
+**Test cleanup:**
+- 37 pre-existing test failure-ийг 0 болгосон
+- Root cause: `get_locale` request context, LazyString → DB binding, legacy
+  'water' lab_type, workflow mismatch, test fixture issues
+
+### 🔜 Үлдсэн ажил
+
+- **Sprint 2** — Vite bundle (CDN-ыг local bundle руу). `app/utils/vite_
+  assets.py`, `vite.config.js`, `src/styles.css` бэлэн боловч integration
+  дуусаагүй.
+- **Sprint 3** — Dependency cleanup (sentry-sdk 1→2, pytz хасах, gevent vs
+  waitress).
+- **`api/analysis_save.py`** — StaleDataError 409 vs SQLAlchemyError 500
+  тусгай error handling-той тул `safe_commit`-аар орлоогүй, route-д
+  үлдсэн.
+- **`equipment/crud.py:_commit_with_audit`** — IntegrityError vs SQLAlchemy
+  Error ялгаатай flash өгөх тусгай helper, route-домэйн транзакц hooks-той
+  тул `safe_commit`-аар орлоогүй.
+- **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
+  memory + partial-failure tolerance), `@transactional` applicable биш.
 
 ## Conventions
 
-- **Commit message:** Монгол хэл, conventional prefix (`feat:`, `fix:`, `refactor:`, `chore:`)
-  — жишээ: `commit f9e051a`, `e206e63`. Нэг мөр нийлбэр + bullet detail.
-- **Co-author trailer:** Claude-ийн оролцоотой commit-д `Co-Authored-By: Claude ...` нэмдэг.
+- **Commit message:** Монгол хэл, conventional prefix (`feat:`, `fix:`,
+  `refactor:`, `chore:`, `docs:`) — жишээ `5a980e2`, `e206e63`. Нэг мөр
+  нийлбэр + bullet detail.
+- **Co-author trailer:** Claude-ийн оролцоотой commit-д
+  `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` нэмнэ.
+- **Public + atomic split:** Service layer-ийн write функц нь
+  `_xxx_atomic` (@transactional, business logic) + `xxx` (public, error
+  translation) хосоор бичнэ.
 - **Dev log:** `docs/dev-logs/<TOPIC>_<YYYY_MM_DD>.md` форматтай.
-- **Доc хэл:** `docs_all/` дотор Mongolian + English холимог. Архитектур audit-ууд бараг бүхэлдээ Монгол.
+- **Доc хэл:** `docs_all/` дотор Mongolian + English холимог. Архитектур
+  audit-ууд бараг бүхэлдээ Монгол.
 
 ## Анхаарах зүйлс
 
 - **Repo public** ([github.com/semmganaa-gif/coal_lims_project](https://github.com/semmganaa-gif/coal_lims_project)).
   Нууц өгөгдөл, client мэдээлэл commit-д орохгүй байх.
+- **License hardware-bound:** Нэг лицензээр хэд хэдэн компьютер ашиглах
+  бол `flask license allow-hardware <hwid>` команд ажиллуулна. Hardware
+  ID нь LicenseLog хүснэгтэд `event_type='hardware_mismatch'`-аас олно.
+- **LazyString → DB column:** `_l(...)`-ийг шууд model field-д бичих бол
+  `str(_l(...))`-ээр eager evaluate хийх (SQLAlchemy bind error-аас
+  сэргийлэх).
+- **`get_locale` request context-аас гадуур:** `has_request_context()`
+  шалгалттай тул CLI/тест/background task-д default 'en'-ийг буцаана.
 - **`instance/logs/security.log` болон `logs/audit.log`** бараг хоосон —
-  production audit logging тохиргоо ажиллахгүй байх магадлалтай. Шалгах хэрэгтэй.
-- **`docs_all/README.md` "39% coverage"** гэж бичсэн — хоцрогдсон. Бодит coverage 89%.
-- **CRLF/LF warning:** `git diff`-д их хэмжээний LF→CRLF warning гарна (Windows).
-  `.gitattributes` тохиргоог дараа цэгцлэх.
+  production audit logging тохиргоо ажиллахгүй байх магадлалтай. Шалгах
+  хэрэгтэй.
+- **`docs_all/README.md` "39% coverage"** гэж бичсэн — хоцрогдсон. Бодит
+  coverage 89%.
+- **CRLF/LF warning:** `git diff`-д их хэмжээний LF→CRLF warning гарна
+  (Windows). `.gitattributes` тохиргоог дараа цэгцлэх.
 
 ## Шинэ session-д юу уншихыг зөвлөнө
 
 1. Энэ `CLAUDE.md`
-2. `git log --oneline -10`, `git status`
-3. `docs/dev-logs/ARCHITECTURE_PROGRESS_2026_04_22.md` — идэвхтэй sprint
-4. `docs_all/README.md` — албан ёсны баримтын index
-5. Зөвхөн хийх ажилд хамаатай файлуудыг (тэр үед нь)
+2. `git log --oneline -20`, `git status`
+3. Шинэ Repository ашиглахаас өмнө `app/repositories/__init__.py` —
+   бүх 45 repository-ийн экспорт нэгдсэн index
+4. `app/utils/transaction.py` — @transactional pattern reference
+5. `docs_all/README.md` — албан ёсны баримтын index
+6. Зөвхөн хийх ажилд хамаатай файлуудыг (тэр үед нь)
