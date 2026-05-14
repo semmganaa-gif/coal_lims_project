@@ -12,7 +12,12 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
-from app.repositories import ChemicalRepository
+from app.repositories import (
+    ChemicalRepository,
+    SolutionRecipeRepository,
+    SolutionPreparationRepository,
+    SolutionRecipeIngredientRepository,
+)
 from app.utils.decorators import lab_required
 from app.utils.converters import to_float
 from app.labs.water_lab.chemistry.routes import water_bp
@@ -29,44 +34,15 @@ logger = logging.getLogger(__name__)
 @lab_required('water_chemistry')
 def solution_journal():
     """Уусмал бэлдэх дэвтэр - жагсаалт."""
-    from app.models import SolutionPreparation
-    from datetime import timedelta
-
     # Шүүлтүүр
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     status = request.args.get('status', 'all')
 
-    query = SolutionPreparation.query
-
-    if start_date:
-        try:
-            start_dt = datetime.strptime(start_date, '%Y-%m-%d').date()
-            query = query.filter(SolutionPreparation.prepared_date >= start_dt)
-        except (ValueError, TypeError):
-            start_date = None
-
-    if end_date:
-        try:
-            end_dt = datetime.strptime(end_date, '%Y-%m-%d').date()
-            query = query.filter(SolutionPreparation.prepared_date <= end_dt)
-        except (ValueError, TypeError):
-            end_date = None
-
-    if status and status != 'all':
-        query = query.filter(SolutionPreparation.status == status)
-
-    solutions = query.order_by(SolutionPreparation.prepared_date.desc()).all()
-
-    # Статистик
-    today = date.today()
-    stats = {
-        'total': SolutionPreparation.query.count(),
-        'active': SolutionPreparation.query.filter_by(status='active').count(),
-        'expired': SolutionPreparation.query.filter(
-            SolutionPreparation.expiry_date < today
-        ).count(),
-    }
+    solutions = SolutionPreparationRepository.get_filtered(
+        start_date=start_date, end_date=end_date, status=status,
+    )
+    stats = SolutionPreparationRepository.get_journal_stats()
 
     return render_template(
         'labs/water/chemistry/solution_journal.html',
@@ -207,9 +183,9 @@ def add_solution():
 @lab_required('water_chemistry')
 def edit_solution(id):
     """Уусмал засварлах."""
-    from app.models import SolutionPreparation, Chemical
+    from app.models import Chemical
 
-    solution = SolutionPreparation.query.get_or_404(id)
+    solution = SolutionPreparationRepository.get_by_id_or_404(id)
 
     if request.method == 'POST':
         try:
@@ -274,14 +250,14 @@ def edit_solution(id):
 @lab_required('water_chemistry')
 def delete_solution(id):
     """Уусмал устгах."""
-    from app.models import SolutionPreparation, Chemical, ChemicalLog
+    from app.models import Chemical, ChemicalLog
     from app.utils.database import safe_commit
 
     if current_user.role not in ('senior', 'admin'):
         flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_journal'))
 
-    solution = SolutionPreparation.query.get_or_404(id)
+    solution = SolutionPreparationRepository.get_by_id_or_404(id)
     name = solution.solution_name
 
     if solution.chemical_id and solution.chemical_used_mg:
@@ -325,11 +301,7 @@ def delete_solution(id):
 @lab_required('water_chemistry')
 def api_solutions():
     """Уусмалын жагсаалт API."""
-    from app.models import SolutionPreparation
-
-    solutions = SolutionPreparation.query.order_by(
-        SolutionPreparation.prepared_date.desc()
-    ).all()
+    solutions = SolutionPreparationRepository.get_all_ordered()
 
     data = [{
         'id': s.id,
@@ -394,40 +366,9 @@ def convert_recipe_unit_to_chemical(amount, recipe_unit, chemical_unit):
 @lab_required('water_chemistry')
 def solution_recipes():
     """Уусмалын жорын жагсаалт - карт хэлбэрээр."""
-    from app.models import SolutionRecipe, SolutionPreparation
-
-    recipes = SolutionRecipe.query.filter_by(
-        lab_type='water_chemistry', is_active=True
-    ).order_by(SolutionRecipe.name).all()
-
-    # Recipe бүрийн статистик — нэг query-р авах
+    recipes = SolutionRecipeRepository.get_active_for_lab('water_chemistry')
     recipe_ids = [r.id for r in recipes]
-    recipe_stats = {rid: {'last_prep': None, 'prep_count': 0} for rid in recipe_ids}
-
-    if recipe_ids:
-        count_rows = db.session.query(
-            SolutionPreparation.recipe_id,
-            func.count(SolutionPreparation.id),
-            func.max(SolutionPreparation.prepared_date),
-        ).filter(
-            SolutionPreparation.recipe_id.in_(recipe_ids)
-        ).group_by(SolutionPreparation.recipe_id).all()
-
-        max_dates = {}
-        for rid, cnt, max_date in count_rows:
-            recipe_stats[rid]['prep_count'] = cnt
-            max_dates[rid] = max_date
-
-        # Сүүлийн бэлдэлтүүдийг нэг query-р авах
-        if max_dates:
-            last_preps = SolutionPreparation.query.filter(
-                SolutionPreparation.recipe_id.in_(list(max_dates.keys()))
-            ).order_by(SolutionPreparation.prepared_date.desc()).all()
-            seen = set()
-            for p in last_preps:
-                if p.recipe_id not in seen:
-                    recipe_stats[p.recipe_id]['last_prep'] = p
-                    seen.add(p.recipe_id)
+    recipe_stats = SolutionPreparationRepository.get_recipe_stats(recipe_ids)
 
     return render_template(
         'labs/water/chemistry/solution_recipes.html',
@@ -442,14 +383,10 @@ def solution_recipes():
 @lab_required('water_chemistry')
 def recipe_detail(id):
     """Уусмалын жорын дэлгэрэнгүй + найруулах форм."""
-    from app.models import SolutionRecipe, SolutionPreparation
-
-    recipe = SolutionRecipe.query.get_or_404(id)
+    recipe = SolutionRecipeRepository.get_by_id_or_404(id)
 
     # Сүүлийн 10 бэлдэлт
-    recent_preps = SolutionPreparation.query.filter_by(
-        recipe_id=recipe.id
-    ).order_by(SolutionPreparation.prepared_date.desc()).limit(10).all()
+    recent_preps = SolutionPreparationRepository.get_for_recipe(recipe.id, limit=10)
 
     # Орц бодисуудын одоогийн нөөц
     ingredients_info = []
@@ -477,9 +414,9 @@ def recipe_detail(id):
 @lab_required('water_chemistry')
 def prepare_from_recipe(id):
     """Жороор уусмал найруулах - химийн бодис автоматаар хасагдана."""
-    from app.models import SolutionRecipe, SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
+    from app.models import SolutionPreparation, Chemical, ChemicalUsage, ChemicalLog
 
-    recipe = SolutionRecipe.query.get_or_404(id)
+    recipe = SolutionRecipeRepository.get_by_id_or_404(id)
 
     try:
         # Найруулах эзэлхүүн
@@ -675,9 +612,9 @@ def add_recipe():
 @lab_required('water_chemistry')
 def edit_recipe(id):
     """Уусмалын жор засварлах."""
-    from app.models import SolutionRecipe, SolutionRecipeIngredient, Chemical
+    from app.models import SolutionRecipeIngredient, Chemical
 
-    recipe = SolutionRecipe.query.get_or_404(id)
+    recipe = SolutionRecipeRepository.get_by_id_or_404(id)
 
     if request.method == 'POST':
         try:
@@ -689,7 +626,7 @@ def edit_recipe(id):
             recipe.category = request.form.get('category')
 
             # Хуучин орц устгаад шинээр нэмэх
-            SolutionRecipeIngredient.query.filter_by(recipe_id=recipe.id).delete()
+            SolutionRecipeIngredientRepository.delete_for_recipe(recipe.id)
 
             chemical_ids = request.form.getlist('chemical_id[]')
             amounts = request.form.getlist('amount[]')
@@ -731,13 +668,11 @@ def edit_recipe(id):
 @lab_required('water_chemistry')
 def delete_recipe(id):
     """Уусмалын жор устгах."""
-    from app.models import SolutionRecipe
-
     if current_user.role not in ('senior', 'admin'):
         flash('Access denied.', 'danger')
         return redirect(url_for('water.solution_recipes'))
 
-    recipe = SolutionRecipe.query.get_or_404(id)
+    recipe = SolutionRecipeRepository.get_by_id_or_404(id)
     name = recipe.name
 
     db.session.delete(recipe)

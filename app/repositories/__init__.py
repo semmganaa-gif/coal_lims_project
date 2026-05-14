@@ -42,6 +42,11 @@ from app.repositories.chemical_usage_repository import (
     ChemicalWasteRepository,
     ChemicalWasteRecordRepository,
 )
+from app.repositories.solutions_repository import (
+    SolutionRecipeRepository,
+    SolutionPreparationRepository,
+    SolutionRecipeIngredientRepository,
+)
 
 __all__ = [
     "SampleRepository",
@@ -59,6 +64,9 @@ __all__ = [
     "ChemicalLogRepository",
     "ChemicalWasteRepository",
     "ChemicalWasteRecordRepository",
+    "SolutionRecipeRepository",
+    "SolutionPreparationRepository",
+    "SolutionRecipeIngredientRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",
