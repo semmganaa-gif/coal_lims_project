@@ -265,46 +265,46 @@ def unready_samples(sample_ids: list[int]) -> ServiceResult:
         return _db_error_to_result(exc)
 
 
-def delete_sample(sample_id: int, user_id: int | None = None) -> ServiceResult:
-    """
-    Дээжийг бүр мөсөн устгах (каскадтай) + audit log бичих.
+@transactional()
+def _delete_sample_atomic(sample_id: int, user_id: int | None) -> ServiceResult:
+    """delete_sample-ийн atomic core (audit log + cascade delete нэг transaction).
 
-    ISO 17025: Устгасан дээжний шинжилгээний бүртгэлийг AnalysisResultLog-д хадгална.
+    ISO 17025: Audit log үүсгэхэд алдаа гарвал бүх transaction rollback болж,
+    дээж устгагдахгүй. Audit log байхгүй устгал гарахаас сэргийлнэ.
     """
     s = SampleRepository.get_by_id(sample_id)
     if not s:
         return ServiceResult(False, "Sample not found.", status_code=404)
 
-    # --- Audit: Устгахын өмнө шинжилгээний үр дүнгүүдийг log-д хадгалах ---
+    sample_code = s.sample_code
     results = AnalysisResultRepository.get_by_sample_id(sample_id)
     for r in results:
-        try:
-            log_entry = AnalysisResultLog(
-                user_id=user_id,
-                sample_id=sample_id,
-                analysis_result_id=r.id,
-                analysis_code=r.analysis_code,
-                action="DELETED",
-                final_result_snapshot=r.final_result,
-                raw_data_snapshot=str(r.raw_data) if r.raw_data else None,
-                reason=f"Sample {s.sample_code} deleted by user",
-                sample_code_snapshot=s.sample_code,
-                timestamp=now_local(),
-            )
-            db.session.add(log_entry)
-        except Exception as e:
-            logger.warning("Failed to create audit log for result %s: %s", r.id, e)
+        log_entry = AnalysisResultLog(
+            user_id=user_id,
+            sample_id=sample_id,
+            analysis_result_id=r.id,
+            analysis_code=r.analysis_code,
+            action="DELETED",
+            final_result_snapshot=r.final_result,
+            raw_data_snapshot=str(r.raw_data) if r.raw_data else None,
+            reason=f"Sample {sample_code} deleted by user",
+            sample_code_snapshot=sample_code,
+            timestamp=now_local(),
+        )
+        db.session.add(log_entry)
 
     db.session.delete(s)
+    return ServiceResult(True, "Sample deleted.", data={"deleted_id": sample_id})
 
+
+def delete_sample(sample_id: int, user_id: int | None = None) -> ServiceResult:
+    """Дээжийг бүр мөсөн устгах (каскадтай) + audit log бичих.
+
+    ISO 17025: Устгасан дээжний шинжилгээний бүртгэлийг AnalysisResultLog-д хадгална.
+    Audit log болон cascade delete нэг atomic transaction — аль нь нэг нь алдаа
+    өгвөл бүхэлдээ rollback хийнэ.
+    """
     try:
-        db.session.commit()
-        return ServiceResult(True, "Sample deleted.", data={"deleted_id": sample_id})
-    except IntegrityError as e:
-        db.session.rollback()
-        logger.error("Integrity error in delete_sample: %s", e)
-        return ServiceResult(False, "Cannot delete (related records exist)", status_code=409)
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        logger.error("Database error in delete_sample: %s", e)
-        return ServiceResult(False, "Error deleting data", status_code=500)
+        return _delete_sample_atomic(sample_id, user_id)
+    except SQLAlchemyError as exc:
+        return _db_error_to_result(exc)

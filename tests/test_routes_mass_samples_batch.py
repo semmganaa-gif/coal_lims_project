@@ -671,6 +671,49 @@ class TestMassDelete:
         resp = senior_client.post('/api/mass/delete', json={'sample_id': sid})
         assert resp.status_code == 200
 
+    def test_delete_audit_log_failure_rolls_back(self, mass_app):
+        """ISO 17025: Audit log үүсгэхэд алдаа гарвал sample устгагдахгүй
+        (atomic transaction). delete_sample-ийг шууд дуудаж rollback шалгана."""
+        import uuid
+        from sqlalchemy.exc import SQLAlchemyError
+        from app.services.mass_service import delete_sample
+
+        with mass_app.app_context():
+            user = User.query.filter_by(username='mschemist').first()
+            s = Sample(
+                sample_code=f"DEL3-{uuid.uuid4().hex[:6]}",
+                user_id=user.id,
+                client_name="QC",
+                sample_type="Coal",
+                lab_type="coal",
+                status="new",
+                received_date=datetime.now(),
+            )
+            _db.session.add(s)
+            ar = AnalysisResult(
+                sample_id=None,
+                analysis_code="Mad",
+                final_result=5.5,
+                status="approved",
+                user_id=user.id,
+            )
+            _db.session.flush()
+            ar.sample_id = s.id
+            _db.session.add(ar)
+            _db.session.commit()
+            sid = s.id
+
+            with patch(
+                'app.services.mass_service.AnalysisResultLog',
+                side_effect=SQLAlchemyError("audit log insert failed"),
+            ):
+                result = delete_sample(sid, user_id=user.id)
+
+            assert result.success is False
+            assert result.status_code == 500
+            assert _db.session.get(Sample, sid) is not None, \
+                "Sample must NOT be deleted when audit log insert fails"
+
 
 # ============================================================
 # SAMPLES API: /data (DataTables)
