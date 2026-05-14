@@ -287,26 +287,6 @@ class TestRequireLicenseDecorator:
         assert callable(require_license)
 
 
-class TestCheckLicenseMiddleware:
-    """Tests for check_license_middleware function."""
-
-    def test_check_license_middleware_skip_endpoints(self, app):
-        """Test middleware skips certain endpoints."""
-        from app.utils.license_protection import check_license_middleware
-
-        with app.test_request_context('/static/file.js'):
-            result = check_license_middleware()
-            assert result is None
-
-    def test_check_license_middleware_static_path(self, app):
-        """Test middleware skips static paths."""
-        from app.utils.license_protection import check_license_middleware
-
-        with app.test_request_context('/static/css/style.css'):
-            result = check_license_middleware()
-            assert result is None
-
-
 class TestLicenseManagerLogEvent:
     """Tests for _log_event method."""
 

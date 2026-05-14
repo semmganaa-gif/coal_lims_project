@@ -46,7 +46,7 @@ print(secrets.token_hex(16))  # 32 тэмдэгт үүснэ
 **1. Import нэмэх (файлын эхэнд):**
 ```python
 from app.routes.license_routes import license_bp
-from app.utils.license_protection import license_manager, check_license_middleware
+from app.utils.license_protection import license_manager
 ```
 
 **2. Blueprint бүртгэх (бусад blueprint-уудын дараа):**
@@ -54,13 +54,13 @@ from app.utils.license_protection import license_manager, check_license_middlewa
 safe_register_blueprint(license_bp)
 ```
 
-**3. Before request нэмэх (create_app функц дотор, return app-ийн өмнө):**
-```python
-# Лиценз шалгалт идэвхжүүлэх (Production-д)
-# АНХААРУУЛГА: Хөгжүүлэлтийн үед comment хийж болно
-if not app.debug:
-    app.before_request(check_license_middleware)
-```
+**3. Before request middleware:**
+
+Лиценз шалгалтыг `app/bootstrap/middleware.py:check_license` `@app.before_request`
+hook нь хариуцна (`init_middleware(app)` дуудлагаар автоматаар бүртгэгдэнэ).
+Энэ middleware нь `current_user.is_authenticated`, exempt endpoints (login,
+license routes, static), `TESTING` орчин зэргийг шалгаж `license_manager.
+validate_license()`-ийг ашиглана.
 
 ---
 

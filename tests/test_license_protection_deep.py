@@ -354,30 +354,6 @@ class TestRequireLicenseDecorator:
                     assert result == "success"
 
 
-class TestCheckLicenseMiddleware:
-    """Tests for check_license_middleware function."""
-
-    def test_middleware_skip_static(self, app):
-        """Test middleware skips static files."""
-        from app.utils.license_protection import check_license_middleware
-        with app.app_context():
-            with app.test_request_context('/static/js/app.js'):
-                result = check_license_middleware()
-                assert result is None
-
-    def test_middleware_skip_auth_login(self, app):
-        """Test middleware skips auth.login - uses actual request context."""
-        # Simplified test: just verify function can be called
-        from app.utils.license_protection import check_license_middleware
-        # Function exists and is callable
-        assert callable(check_license_middleware)
-
-    def test_middleware_skip_license_routes(self, app):
-        """Test middleware function exists."""
-        from app.utils.license_protection import check_license_middleware
-        assert callable(check_license_middleware)
-
-
 class TestLogEvent:
     """Tests for _log_event method."""
 
