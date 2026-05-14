@@ -71,22 +71,19 @@ def register_routes(bp):
                     "danger",
                 )
             else:
-                try:
-                    if code_changed:
-                        sample.sample_code = new_code  # Model @validates auto-uppercases
-                    if analyses_changed:
-                        sample.analyses_to_perform = json.dumps(selected_analyses)
+                if code_changed:
+                    sample.sample_code = new_code  # Model @validates auto-uppercases
+                if analyses_changed:
+                    sample.analyses_to_perform = json.dumps(selected_analyses)
 
-                    if code_changed or analyses_changed:
-                        db.session.commit()
-                        flash(_l("Дээжний мэдээлэл амжилттай шинэчлэгдлээ."), "success")
-                    else:
-                        flash(_l("Өөрчлөлт хийгдээгүй."), "info")
-                    return redirect(url_for("main.index"))
-                except SQLAlchemyError as e:
-                    db.session.rollback()
-                    current_app.logger.error(f"Sample save error: {e}", exc_info=True)
-                    flash(_l("Хадгалахад алдаа гарлаа."), "danger")
+                if code_changed or analyses_changed:
+                    safe_commit(
+                        success_msg=_l("Дээжний мэдээлэл амжилттай шинэчлэгдлээ."),
+                        error_msg=_l("Хадгалахад алдаа гарлаа."),
+                    )
+                else:
+                    flash(_l("Өөрчлөлт хийгдээгүй."), "info")
+                return redirect(url_for("main.index"))
 
         return render_template(
             "edit_sample.html",
@@ -141,13 +138,10 @@ def register_routes(bp):
                 failed_samples.append(f"ID={sample_id_str} (Алдаа: {e})")
 
         if deleted_count > 0:
-            try:
-                db.session.commit()
-                flash(_l("%(count)s дээж амжилттай устгагдлаа.") % {"count": deleted_count}, "success")
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                current_app.logger.error(f"Bulk delete commit error: {e}")
-                flash(_l("Устгах үед алдаа гарлаа. Дахин оролдоно уу."), "danger")
+            safe_commit(
+                success_msg=_l("%(count)s дээж амжилттай устгагдлаа.") % {"count": deleted_count},
+                error_msg=_l("Устгах үед алдаа гарлаа. Дахин оролдоно уу."),
+            )
         if failed_samples:
             flash(
                 _l('Алдаа: Дараах дээжүүд устгагдсангүй: %(samples)s') % {'samples': ", ".join(failed_samples)},
@@ -215,12 +209,10 @@ def register_routes(bp):
                 continue
 
         if disposed_count > 0:
-            try:
-                db.session.commit()
-                flash(_l("%(count)s дээж устгагдсан гэж тэмдэглэгдлээ.") % {"count": disposed_count}, "success")
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
+            safe_commit(
+                success_msg=_l("%(count)s дээж устгагдсан гэж тэмдэглэгдлээ.") % {"count": disposed_count},
+                error_msg=_l("Дээж тэмдэглэхэд алдаа гарлаа."),
+            )
 
         return redirect(url_for("main.sample_disposal"))
 
@@ -262,15 +254,12 @@ def register_routes(bp):
                 continue
 
         if updated_count > 0:
-            try:
-                db.session.commit()
-                flash(
-                    _l("%(count)s дээжинд хадгалах хугацаа %(date)s гэж тохирууллаа.") % {
-                        'count': updated_count, 'date': retention_date,
-                    },
-                    "success",
-                )
-                # Audit: Хадгалах хугацаа тохируулсан
+            if safe_commit(
+                success_msg=_l("%(count)s дээжинд хадгалах хугацаа %(date)s гэж тохирууллаа.") % {
+                    'count': updated_count, 'date': retention_date,
+                },
+                error_msg=_l("Хадгалах хугацаа тохируулахад алдаа гарлаа."),
+            ):
                 log_audit(
                     action='retention_date_set',
                     resource_type='Sample',
@@ -280,9 +269,6 @@ def register_routes(bp):
                         'retention_days': days,
                     }
                 )
-            except SQLAlchemyError as e:
-                db.session.rollback()
-                flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
 
         return redirect(url_for("main.sample_disposal"))
 

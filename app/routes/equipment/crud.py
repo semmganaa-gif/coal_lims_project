@@ -19,6 +19,7 @@ from app.constants import UserRole
 from app.models import Equipment, MaintenanceLog, UsageLog
 from app.repositories import EquipmentRepository, MaintenanceLogRepository
 from app.utils.audit import log_audit
+from app.utils.database import safe_commit
 from app.utils.datetime import now_local
 from app.utils.decorators import role_required
 from app.utils.shifts import get_shift_date
@@ -325,25 +326,22 @@ def bulk_delete():
             deleted_names.append(eq.name)
             db.session.delete(eq)
 
-    try:
-        db.session.commit()
-        if deleted_names or retired_names:
-            log_audit(
-                action="bulk_delete_equipment",
-                resource_type="Equipment",
-                resource_id=None,
-                details={
-                    "deleted_count": len(deleted_names),
-                    "retired_count": len(retired_names),
-                    "deleted_names": deleted_names[:10],
-                    "retired_names": retired_names[:10],
-                },
-            )
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Database error in bulk_delete: {e}")
-        flash(_l("Олноор устгахад алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
+    if not safe_commit(error_msg="Bulk delete equipment commit error", notify=False):
+        flash(_l("Олноор устгахад алдаа гарлаа."), "danger")
         return redirect(url_for("equipment.equipment_list"))
+
+    if deleted_names or retired_names:
+        log_audit(
+            action="bulk_delete_equipment",
+            resource_type="Equipment",
+            resource_id=None,
+            details={
+                "deleted_count": len(deleted_names),
+                "retired_count": len(retired_names),
+                "deleted_names": deleted_names[:10],
+                "retired_names": retired_names[:10],
+            },
+        )
 
     msg = []
     if deleted_names:

@@ -249,11 +249,7 @@ def save_waste_record():
             )
             db.session.add(record)
 
-        try:
-            db.session.commit()
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            logger.error(f"Waste record commit error: {e}", exc_info=True)
+        if not safe_commit(error_msg="Waste record commit error", notify=False):
             return jsonify({"success": False, "error": "Хадгалахад алдаа гарлаа"}), 500
 
         return jsonify({"success": True, "message": "Хадгалагдлаа"})

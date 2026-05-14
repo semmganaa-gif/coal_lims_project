@@ -18,6 +18,7 @@ from app.utils.decorators import role_required
 from app.models import Equipment
 from app.repositories import EquipmentRepository
 from app.utils.shifts import get_shift_date
+from app.utils.database import safe_commit
 from app.routes.equipment import equipment_bp
 
 
@@ -154,13 +155,10 @@ def add_register_item(register_type):
         extra_data=data if data else None,
     )
     db.session.add(new_item)
-    try:
-        db.session.commit()
-        flash(_l("Амжилттай нэмэгдлээ."), "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error adding register item: {e}")
-        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
+    safe_commit(
+        success_msg=_l("Амжилттай нэмэгдлээ."),
+        error_msg=_l("Бүртгэл нэмэхэд алдаа гарлаа."),
+    )
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
 
@@ -199,13 +197,10 @@ def edit_register_item(id):
 
     item.extra_data = data if data else None
 
-    try:
-        db.session.commit()
-        flash(_l("Амжилттай шинэчлэгдлээ."), "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error editing register item: {e}")
-        flash(_l("Алдаа: %(error)s") % {"error": str(e)[:100]}, "danger")
+    safe_commit(
+        success_msg=_l("Амжилттай шинэчлэгдлээ."),
+        error_msg=_l("Бүртгэл шинэчлэхэд алдаа гарлаа."),
+    )
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
 
 
@@ -228,11 +223,8 @@ def delete_register_items():
             db.session.delete(item)
             deleted += 1
 
-    try:
-        db.session.commit()
-        flash(_l("%(count)s мөр устгагдлаа.") % {"count": deleted}, "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error deleting register items: {e}")
-        flash(_l("Устгахад алдаа гарлаа: %(error)s") % {"error": str(e)[:100]}, "danger")
+    safe_commit(
+        success_msg=_l("%(count)s мөр устгагдлаа.") % {"count": deleted},
+        error_msg=_l("Бүртгэл устгахад алдаа гарлаа."),
+    )
     return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
