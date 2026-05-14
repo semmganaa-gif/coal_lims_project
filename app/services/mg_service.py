@@ -16,9 +16,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask_babel import lazy_gettext as _l
 
 from app import db
+from app.constants import AnalysisResultStatus, UserRole
 from app.models import AnalysisResult, Sample
 from app.services.analysis_audit import log_analysis_action
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,42 @@ def get_mg_summary() -> MgSummaryData:
     return MgSummaryData(samples=samples, mg_data=mg_data)
 
 
+@transactional()
+def _repeat_analyses_atomic(sample_ids: list[int], codes: list[str]) -> RepeatResult:
+    """repeat_analyses-ийн atomic core: rejecting + audit log."""
+    approveable = (AnalysisResultStatus.APPROVED.value, AnalysisResultStatus.PENDING_REVIEW.value)
+    count = 0
+    for sid in sample_ids:
+        sample = db.session.get(Sample, sid)
+        if not sample:
+            continue
+        for code in codes:
+            ar = AnalysisResult.query.filter_by(
+                sample_id=sid, analysis_code=code
+            ).first()
+            if ar and ar.status in approveable:
+                ar.status = AnalysisResultStatus.REJECTED.value
+                ar.updated_at = now_local()
+                if hasattr(ar, "rejection_comment"):
+                    ar.rejection_comment = "Returned from MG Summary"
+                log_analysis_action(
+                    result_id=ar.id,
+                    sample_id=sid,
+                    analysis_code=code,
+                    action="REJECTED",
+                    reason=f"MG Summary-аас '{code}' давтан шинжилгээ буцаасан",
+                    sample_code_snapshot=sample.sample_code,
+                    final_result=ar.final_result,
+                    raw_data_dict=ar.raw_data,
+                )
+                count += 1
+    return RepeatResult(
+        success=True,
+        message=f"{count} шинжилгээг буцаалаа (давтан хийнэ)",
+        count=count,
+    )
+
+
 def repeat_analyses(
     sample_ids: list[int],
     codes: list[str],
@@ -119,46 +157,14 @@ def repeat_analyses(
     Returns:
         RepeatResult объект
     """
-    if user_role not in ("senior", "admin"):
+    if user_role not in (UserRole.SENIOR.value, UserRole.ADMIN.value):
         return RepeatResult(success=False, message=_l("Зөвхөн ахлах/админ"))
-
     if not codes:
         return RepeatResult(success=False, message=_l("Код сонгоогүй"))
 
     try:
-        count = 0
-        for sid in sample_ids:
-            sample = db.session.get(Sample, sid)
-            if not sample:
-                continue
-            for code in codes:
-                ar = AnalysisResult.query.filter_by(
-                    sample_id=sid, analysis_code=code
-                ).first()
-                if ar and ar.status in ("approved", "pending_review"):
-                    ar.status = "rejected"
-                    ar.updated_at = now_local()
-                    if hasattr(ar, "rejection_comment"):
-                        ar.rejection_comment = "Returned from MG Summary"
-                    log_analysis_action(
-                        result_id=ar.id,
-                        sample_id=sid,
-                        analysis_code=code,
-                        action="REJECTED",
-                        reason=f"MG Summary-аас '{code}' давтан шинжилгээ буцаасан",
-                        sample_code_snapshot=sample.sample_code,
-                        final_result=ar.final_result,
-                        raw_data_dict=ar.raw_data,
-                    )
-                    count += 1
-        db.session.commit()
-        return RepeatResult(
-            success=True,
-            message=f"{count} шинжилгээг буцаалаа (давтан хийнэ)",
-            count=count,
-        )
+        return _repeat_analyses_atomic(sample_ids, codes)
     except (SQLAlchemyError, ValueError, AttributeError) as e:
-        db.session.rollback()
         logger.error(f"MG repeat error: {e}", exc_info=True)
         return RepeatResult(
             success=False, message=_l("Давтан шинжилгээ буцаахад алдаа гарлаа")

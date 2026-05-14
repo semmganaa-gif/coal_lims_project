@@ -20,6 +20,7 @@ from app.models import Sample, AnalysisResult, AnalysisResultLog
 from app.repositories import SampleRepository, AnalysisResultRepository
 from app.utils.datetime import now_local
 from app.utils.security import escape_like_pattern
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -59,22 +60,25 @@ def _has_m_task_sql():
     return func.lower(Sample.analyses_to_perform).like('%"m"%')
 
 
-def _safe_commit() -> ServiceResult | None:
-    """Commit with standard error handling. Returns error result or None on success."""
-    try:
-        db.session.commit()
-        return None
-    except StaleDataError:
-        db.session.rollback()
-        return ServiceResult(False, _l("Өгөгдөл өөрчлөгдсөн байна. Refresh хийнэ үү."), status_code=409)
-    except IntegrityError as e:
-        db.session.rollback()
-        logger.error("Integrity error: %s", e)
+def _db_error_to_result(exc: Exception) -> ServiceResult:
+    """SQLAlchemy exception-ыг тогтсон ServiceResult болгож хөрвүүлэх.
+
+    @transactional decorator-аас raise хийсэн алдааг public function-д
+    барих үед ашиглана. Тус бүрт онцлох HTTP status code:
+      409 — StaleDataError (concurrent edit), IntegrityError (constraint)
+      500 — бусад DB алдаа
+    """
+    if isinstance(exc, StaleDataError):
+        return ServiceResult(
+            False,
+            _l("Өгөгдөл өөрчлөгдсөн байна. Refresh хийнэ үү."),
+            status_code=409,
+        )
+    if isinstance(exc, IntegrityError):
+        logger.error("Integrity error: %s", exc)
         return ServiceResult(False, _l("Өгөгдлийн зөрчил гарлаа"), status_code=409)
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        logger.error("Database error: %s", e)
-        return ServiceResult(False, _l("Өгөгдлийн санд алдаа гарлаа"), status_code=500)
+    logger.error("Database error: %s", exc)
+    return ServiceResult(False, _l("Өгөгдлийн санд алдаа гарлаа"), status_code=500)
 
 
 # ---------------------------------------------------------------------------
@@ -158,11 +162,48 @@ def get_eligible_samples(include_ready: bool = False, q_text: str = "") -> list[
     ]
 
 
+@transactional()
+def _save_mass_measurements_atomic(
+    sample_ids: list[int],
+    weight_map: dict,
+    mark_ready: bool,
+    user_id: int | None,
+) -> ServiceResult:
+    """save_mass_measurements-ийн atomic core (Sample weight + mass_ready + audit)."""
+    samples_map = {
+        s.id: s
+        for s in Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
+    }
+    now_ts = now_local()
+
+    updated = []
+    for sid in sample_ids:
+        s = samples_map.get(sid)
+        if not s:
+            continue
+        if sid in weight_map and isinstance(weight_map[sid], (int, float)):
+            weight_g = float(weight_map[sid])
+            s.weight = round(weight_g / 1000, 3)
+            _upsert_mass_result(sid, weight_g, user_id)
+        if mark_ready:
+            s.mass_ready = True
+            s.mass_ready_at = now_ts
+            s.mass_ready_by_id = user_id
+        updated.append(sid)
+
+    if not updated:
+        return ServiceResult(False, "Rows are not valid.", status_code=400)
+    return ServiceResult(
+        True,
+        f"{len(updated)} дээж шинэчлэгдлээ.",
+        data={"updated_ids": updated},
+    )
+
+
 def save_mass_measurements(
     items: list[dict], mark_ready: bool = True, user_id: int | None = None
 ) -> ServiceResult:
-    """
-    Масс хэмжилтийн үр дүнг хадгалах.
+    """Масс хэмжилтийн үр дүнг хадгалах (атомик transaction).
 
     Args:
         items: [{"sample_id": 123, "weight": 2500.0}, ...]
@@ -171,78 +212,56 @@ def save_mass_measurements(
     """
     if not items:
         return ServiceResult(False, "No rows to save.", status_code=400)
-
     sample_ids = [it.get("sample_id") for it in items if it.get("sample_id")]
     if not sample_ids:
         return ServiceResult(False, "No valid IDs found.", status_code=400)
-
-    # Bulk load + row lock
-    samples_map = {
-        s.id: s
-        for s in Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
-    }
-
     weight_map = {it.get("sample_id"): it.get("weight") for it in items if "weight" in it}
-    now_ts = now_local()
 
-    updated = []
-    for sid in sample_ids:
-        s = samples_map.get(sid)
-        if not s:
-            continue
+    try:
+        return _save_mass_measurements_atomic(sample_ids, weight_map, mark_ready, user_id)
+    except SQLAlchemyError as exc:
+        return _db_error_to_result(exc)
 
-        if sid in weight_map and isinstance(weight_map[sid], (int, float)):
-            weight_g = float(weight_map[sid])
-            s.weight = round(weight_g / 1000, 3)
-            _upsert_mass_result(sid, weight_g, user_id)
 
-        if mark_ready:
-            s.mass_ready = True
-            s.mass_ready_at = now_ts
-            s.mass_ready_by_id = user_id
-
-        updated.append(sid)
-
-    if not updated:
-        return ServiceResult(False, "Rows are not valid.", status_code=400)
-
-    err = _safe_commit()
-    if err:
-        return err
-    return ServiceResult(True, f"{len(updated)} дээж шинэчлэгдлээ.", data={"updated_ids": updated})
+@transactional()
+def _update_weight_atomic(sample_id: int, weight_g: float, user_id: int | None) -> ServiceResult:
+    """update_weight-ийн atomic core."""
+    s = db.session.query(Sample).filter_by(id=sample_id).with_for_update().first()
+    if not s:
+        return ServiceResult(False, "Sample not found.", status_code=404)
+    s.weight = round(weight_g / 1000, 3)
+    s.received_date = s.received_date or now_local()
+    _upsert_mass_result(sample_id, weight_g, user_id)
+    return ServiceResult(True, "Weight updated.", data={"sample_id": s.id})
 
 
 def update_weight(sample_id: int, weight_g: float, user_id: int | None = None) -> ServiceResult:
     """Нэг дээжийн жинг шинэчлэх."""
-    s = db.session.query(Sample).filter_by(id=sample_id).with_for_update().first()
-    if not s:
-        return ServiceResult(False, "Sample not found.", status_code=404)
+    try:
+        return _update_weight_atomic(sample_id, weight_g, user_id)
+    except SQLAlchemyError as exc:
+        return _db_error_to_result(exc)
 
-    s.weight = round(weight_g / 1000, 3)
-    s.received_date = s.received_date or now_local()
-    _upsert_mass_result(sample_id, weight_g, user_id)
 
-    err = _safe_commit()
-    if err:
-        return err
-    return ServiceResult(True, "Weight updated.", data={"sample_id": s.id})
+@transactional()
+def _unready_samples_atomic(sample_ids: list[int]) -> ServiceResult:
+    """unready_samples-ийн atomic core."""
+    rows = Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
+    for s in rows:
+        s.mass_ready = False
+        s.mass_ready_at = None
+        s.mass_ready_by_id = None
+    return ServiceResult(True, f"{len(rows)} дээжийг Unready болголоо.")
 
 
 def unready_samples(sample_ids: list[int]) -> ServiceResult:
     """mass_ready-г буцааж false болгох."""
     if not sample_ids:
         return ServiceResult(False, "No ID provided.", status_code=400)
-
-    rows = Sample.query.filter(Sample.id.in_(sample_ids)).with_for_update().all()
-    for s in rows:
-        s.mass_ready = False
-        s.mass_ready_at = None
-        s.mass_ready_by_id = None
-
-    err = _safe_commit()
-    if err:
-        return err
-    return ServiceResult(True, f"{len(rows)} дээжийг Unready болголоо.")
+    try:
+        return _unready_samples_atomic(sample_ids)
+    except SQLAlchemyError as exc:
+        return _db_error_to_result(exc)
 
 
 def delete_sample(sample_id: int, user_id: int | None = None) -> ServiceResult:

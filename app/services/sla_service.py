@@ -16,6 +16,7 @@ from sqlalchemy import and_, func, case
 from app import db
 from app.models import Sample, AnalysisResult, SystemSetting
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -406,9 +407,10 @@ def get_on_track_samples(
 # Bulk SLA assign (одоо байгаа дээжүүдэд SLA тохируулах)
 # ---------------------------------------------------------------------------
 
+@transactional()
 def bulk_assign_sla(lab_type: str = "coal") -> int:
     """
-    due_date байхгүй active дээжүүдэд SLA автоматаар тохируулах.
+    due_date байхгүй active дээжүүдэд SLA автоматаар тохируулах (атомик).
 
     Returns:
         Шинэчилсэн дээжний тоо
@@ -424,9 +426,6 @@ def bulk_assign_sla(lab_type: str = "coal") -> int:
     for s in samples:
         assign_sla(s)
         count += 1
-
     if count > 0:
-        db.session.commit()
         logger.info("Bulk SLA assigned: %d samples", count)
-
     return count
