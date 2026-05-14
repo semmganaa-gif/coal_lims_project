@@ -36,23 +36,27 @@ from app.repositories import (
 )
 from app.schemas import UserSchema
 from app.utils.audit import log_audit
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
+
+
+def _admin_db_error(operation: str, exc: Exception,
+                    template: str = "Алдаа: {msg}") -> tuple[bool, str]:
+    """SQLAlchemyError-ыг tuple[bool, str] болгож log хийх."""
+    logger.error("%s error: %s", operation, exc, exc_info=True)
+    return False, template.format(msg=str(exc)[:100])
 
 
 # ==============================================================================
 # ШИНЖИЛГЭЭНИЙ ТӨРӨЛ / ПРОФАЙЛ
 # ==============================================================================
 
-def seed_analysis_types() -> bool:
-    """
-    Шинжилгээний төрлүүдийг автоматаар үүсгэх/шинэчлэх.
-
-    Returns:
-        True if changes were committed.
-    """
+@transactional()
+def _seed_analysis_types_atomic() -> bool:
+    """seed_analysis_types-ийн atomic core. True if changes made."""
     existing_analysis_types = {at.code: at for at in AnalysisTypeRepository.get_all()}
-    needs_commit = False
+    changed_any = False
 
     for req in MASTER_ANALYSIS_TYPES_LIST:
         if req['code'] not in existing_analysis_types:
@@ -63,7 +67,7 @@ def seed_analysis_types() -> bool:
                 required_role=req['role']
             )
             db.session.add(new_at)
-            needs_commit = True
+            changed_any = True
         else:
             existing = existing_analysis_types[req['code']]
             changed = (
@@ -76,27 +80,28 @@ def seed_analysis_types() -> bool:
                 existing.order_num = req['order']
                 existing.required_role = req['role']
                 db.session.add(existing)
-                needs_commit = True
+                changed_any = True
 
-    if needs_commit:
-        try:
-            db.session.commit()
-            return True
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            logger.error(f'Analysis type save error: {e}', exc_info=True)
-            return False
-
-    return False
+    return changed_any
 
 
-def auto_populate_profiles() -> bool:
+def seed_analysis_types() -> bool:
     """
-    Simple болон CHPP профайлуудыг автоматаар үүсгэх.
+    Шинжилгээний төрлүүдийг автоматаар үүсгэх/шинэчлэх.
 
     Returns:
-        True if new profiles were added and committed.
+        True if changes were committed.
     """
+    try:
+        return _seed_analysis_types_atomic()
+    except SQLAlchemyError as e:
+        logger.error("Analysis type save error: %s", e, exc_info=True)
+        return False
+
+
+@transactional()
+def _auto_populate_profiles_atomic() -> bool:
+    """auto_populate_profiles-ийн atomic core. True if new profiles added."""
     added_new = False
 
     # Simple Profiles (CHPP-ээс бусад)
@@ -137,16 +142,21 @@ def auto_populate_profiles() -> bool:
                 ))
                 added_new = True
 
-    if added_new:
-        try:
-            db.session.commit()
-            return True
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            logger.error(f'Profile auto-populate error: {e}', exc_info=True)
-            return False
+    return added_new
 
-    return False
+
+def auto_populate_profiles() -> bool:
+    """
+    Simple болон CHPP профайлуудыг автоматаар үүсгэх.
+
+    Returns:
+        True if new profiles were added and committed.
+    """
+    try:
+        return _auto_populate_profiles_atomic()
+    except SQLAlchemyError as e:
+        logger.error("Profile auto-populate error: %s", e, exc_info=True)
+        return False
 
 
 def load_gi_shift_config() -> dict:
@@ -233,23 +243,27 @@ def validate_and_create_user(
     except ValueError:
         return False, _l('Нууц үг шаардлагыг хангахгүй байна (10+ тэмдэгт, том/жижиг үсэг, тоо).'), None
 
-    db.session.add(user)
+    @transactional()
+    def _persist():
+        db.session.add(user)
+
     try:
-        db.session.commit()
-        log_audit(
-            action='create_user',
-            resource_type='User',
-            resource_id=user.id,
-            details={
-                'username': user.username,
-                'role': user.role,
-                'allowed_labs': user.allowed_labs
-            }
-        )
-        return True, f'"{user.username}" хэрэглэгч амжилттай нэмэгдлээ.', user.id
+        _persist()
     except SQLAlchemyError as e:
-        db.session.rollback()
+        logger.error("validate_and_create_user error: %s", e, exc_info=True)
         return False, f'Хэрэглэгч үүсгэх алдаа: {str(e)[:100]}', None
+
+    log_audit(
+        action='create_user',
+        resource_type='User',
+        resource_id=user.id,
+        details={
+            'username': user.username,
+            'role': user.role,
+            'allowed_labs': user.allowed_labs
+        }
+    )
+    return True, f'"{user.username}" хэрэглэгч амжилттай нэмэгдлээ.', user.id
 
 
 def update_user(
@@ -315,34 +329,39 @@ def update_user(
         except ValueError:
             return False, _l('Нууц үг шаардлагыг хангахгүй байна (10+ тэмдэгт, том/жижиг үсэг, тоо).')
 
+    @transactional()
+    def _persist():
+        pass  # user_to_edit аль хэдийн session-д бэлэн — commit нь @transactional-аар явна
+
     try:
-        db.session.commit()
-        log_audit(
-            action='edit_user',
-            resource_type='User',
-            resource_id=user_to_edit.id,
-            details={
-                'username': user_to_edit.username,
-                'role': user_to_edit.role,
-                'allowed_labs': user_to_edit.allowed_labs,
-                'password_changed': bool(password)
-            },
-            old_value=_old_audit,
-            new_value={
-                'username': user_to_edit.username,
-                'role': user_to_edit.role,
-                'allowed_labs': user_to_edit.allowed_labs,
-                'full_name': user_to_edit.full_name,
-                'email': user_to_edit.email,
-            },
-        )
-        msg = f'"{user_to_edit.username}" хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ.'
-        if admin_role_warning:
-            msg = admin_role_warning + ' ' + msg
-        return True, msg
+        _persist()
     except SQLAlchemyError as e:
-        db.session.rollback()
+        logger.error("update_user error: %s", e, exc_info=True)
         return False, f'Хэрэглэгч шинэчлэх алдаа: {str(e)[:100]}'
+
+    log_audit(
+        action='edit_user',
+        resource_type='User',
+        resource_id=user_to_edit.id,
+        details={
+            'username': user_to_edit.username,
+            'role': user_to_edit.role,
+            'allowed_labs': user_to_edit.allowed_labs,
+            'password_changed': bool(password)
+        },
+        old_value=_old_audit,
+        new_value={
+            'username': user_to_edit.username,
+            'role': user_to_edit.role,
+            'allowed_labs': user_to_edit.allowed_labs,
+            'full_name': user_to_edit.full_name,
+            'email': user_to_edit.email,
+        },
+    )
+    msg = f'"{user_to_edit.username}" хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ.'
+    if admin_role_warning:
+        msg = admin_role_warning + ' ' + msg
+    return True, msg
 
 
 def delete_user(user_id: int, current_user_id: int) -> tuple[bool, str]:
@@ -364,19 +383,24 @@ def delete_user(user_id: int, current_user_id: int) -> tuple[bool, str]:
 
     username = user_to_delete.username
     user_role = user_to_delete.role
-    db.session.delete(user_to_delete)
+
+    @transactional()
+    def _persist():
+        db.session.delete(user_to_delete)
+
     try:
-        db.session.commit()
-        log_audit(
-            action='delete_user',
-            resource_type='User',
-            resource_id=user_id,
-            details={'username': username, 'role': user_role}
-        )
-        return True, f'"{username}" хэрэглэгч амжилттай устгагдлаа.'
+        _persist()
     except SQLAlchemyError as e:
-        db.session.rollback()
+        logger.error("delete_user error: %s", e, exc_info=True)
         return False, f'Хэрэглэгч устгах алдаа: {str(e)[:100]}'
+
+    log_audit(
+        action='delete_user',
+        resource_type='User',
+        resource_id=user_id,
+        details={'username': username, 'role': user_role}
+    )
+    return True, f'"{username}" хэрэглэгч амжилттай устгагдлаа.'
 
 
 # ==============================================================================
@@ -463,11 +487,15 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
                 db.session.delete(existing)
                 sla_count += 1
 
+    @transactional()
+    def _persist():
+        pass  # objects already in session
+
     try:
-        db.session.commit()
+        _persist()
         return True, f'{updated_count} тохиргоо амжилттай хадгалагдлаа.'
     except SQLAlchemyError as e:
-        db.session.rollback()
+        logger.error("save_analysis_config error: %s", e, exc_info=True)
         return False, f'Тохиргоо хадгалах алдаа: {str(e)[:100]}'
 
 
@@ -475,156 +503,170 @@ def save_analysis_config(form_data: dict) -> tuple[bool, str]:
 # CONTROL STANDARD CRUD
 # ==============================================================================
 
+@transactional()
+def _create_standard_atomic(name: str, targets: dict) -> tuple[bool, str]:
+    new_std = ControlStandard(name=name, targets=targets, is_active=False)
+    db.session.add(new_std)
+    return True, _l("Амжилттай үүсгэгдлээ")
+
+
 def create_standard(name: str, targets: dict) -> tuple[bool, str]:
     """Шинэ хяналтын стандарт үүсгэх."""
     if not name or not targets:
         return False, _l("Нэр болон утгууд шаардлагатай")
-
-    new_std = ControlStandard(name=name, targets=targets, is_active=False)
-    db.session.add(new_std)
     try:
-        db.session.commit()
-        return True, _l("Амжилттай үүсгэгдлээ")
+        return _create_standard_atomic(name, targets)
     except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+        return _admin_db_error("create_standard", e)
+
+
+@transactional()
+def _update_standard_atomic(std_id: int, name: str, targets: dict) -> tuple[bool, str]:
+    std = ControlStandardRepository.get_by_id(std_id)
+    if std is None:
+        return False, 'not_found'
+    std.name = name
+    std.targets = targets
+    return True, _l("Амжилттай шинэчлэгдлээ")
 
 
 def update_standard(std_id: int, name: str, targets: dict) -> tuple[bool, str]:
     """Хяналтын стандарт засах."""
+    if not name or not targets:
+        return False, _l("Бүрэн бус өгөгдөл")
+    try:
+        return _update_standard_atomic(std_id, name, targets)
+    except SQLAlchemyError as e:
+        return _admin_db_error("update_standard", e)
+
+
+@transactional()
+def _delete_standard_atomic(std_id: int) -> tuple[bool, str]:
     std = ControlStandardRepository.get_by_id(std_id)
     if std is None:
         return False, 'not_found'
-
-    if not name or not targets:
-        return False, _l("Бүрэн бус өгөгдөл")
-
-    std.name = name
-    std.targets = targets
-    try:
-        db.session.commit()
-        return True, _l("Амжилттай шинэчлэгдлээ")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+    if std.is_active:
+        return False, _l("Идэвхтэй стандартыг устгах боломжгүй!")
+    db.session.delete(std)
+    return True, _l("Устгагдлаа")
 
 
 def delete_standard(std_id: int) -> tuple[bool, str]:
     """Хяналтын стандарт устгах."""
+    try:
+        return _delete_standard_atomic(std_id)
+    except SQLAlchemyError as e:
+        return _admin_db_error("delete_standard", e)
+
+
+@transactional()
+def _activate_standard_atomic(std_id: int) -> tuple[bool, str]:
     std = ControlStandardRepository.get_by_id(std_id)
     if std is None:
         return False, 'not_found'
-
-    if std.is_active:
-        return False, _l("Идэвхтэй стандартыг устгах боломжгүй!")
-
-    db.session.delete(std)
-    try:
-        db.session.commit()
-        return True, _l("Устгагдлаа")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+    ControlStandardRepository.deactivate_all(commit=False)
+    std.is_active = True
+    return True, _l("Идэвхжүүлэгдлээ")
 
 
 def activate_standard(std_id: int) -> tuple[bool, str]:
     """Хяналтын стандарт идэвхжүүлэх."""
-    std = ControlStandardRepository.get_by_id(std_id)
-    if std is None:
-        return False, 'not_found'
-
-    ControlStandardRepository.deactivate_all(commit=False)
-    std.is_active = True
     try:
-        db.session.commit()
-        return True, _l("Идэвхжүүлэгдлээ")
+        return _activate_standard_atomic(std_id)
     except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+        return _admin_db_error("activate_standard", e)
 
 
 # ==============================================================================
 # GBW STANDARD CRUD
 # ==============================================================================
 
+@transactional()
+def _create_gbw_atomic(name: str, targets: dict) -> tuple[bool, str]:
+    new_gbw = GbwStandard(name=name, targets=targets, is_active=False)
+    db.session.add(new_gbw)
+    return True, _l("GBW амжилттай бүртгэгдлээ")
+
+
 def create_gbw(name: str, targets: dict) -> tuple[bool, str]:
     """Шинэ GBW стандарт үүсгэх."""
     if not name or not targets:
         return False, _l("GBW дугаар болон утгууд шаардлагатай")
-
-    new_gbw = GbwStandard(name=name, targets=targets, is_active=False)
-    db.session.add(new_gbw)
     try:
-        db.session.commit()
-        return True, _l("GBW амжилттай бүртгэгдлээ")
+        return _create_gbw_atomic(name, targets)
     except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+        return _admin_db_error("create_gbw", e)
+
+
+@transactional()
+def _update_gbw_atomic(gbw_id: int, name: str, targets: dict) -> tuple[bool, str]:
+    gbw = GbwStandardRepository.get_by_id(gbw_id)
+    if gbw is None:
+        return False, 'not_found'
+    gbw.name = name
+    gbw.targets = targets
+    return True, _l("GBW мэдээлэл шинэчлэгдлээ")
 
 
 def update_gbw(gbw_id: int, name: str, targets: dict) -> tuple[bool, str]:
     """GBW стандарт засах."""
+    if not name or not targets:
+        return False, _l("Бүрэн бус өгөгдөл")
+    try:
+        return _update_gbw_atomic(gbw_id, name, targets)
+    except SQLAlchemyError as e:
+        return _admin_db_error("update_gbw", e)
+
+
+@transactional()
+def _delete_gbw_atomic(gbw_id: int) -> tuple[bool, str]:
     gbw = GbwStandardRepository.get_by_id(gbw_id)
     if gbw is None:
         return False, 'not_found'
-
-    if not name or not targets:
-        return False, _l("Бүрэн бус өгөгдөл")
-
-    gbw.name = name
-    gbw.targets = targets
-    try:
-        db.session.commit()
-        return True, _l("GBW мэдээлэл шинэчлэгдлээ")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+    if gbw.is_active:
+        return False, _l("Ашиглагдаж буй GBW-ийг устгах боломжгүй!")
+    db.session.delete(gbw)
+    return True, _l("GBW устгагдлаа")
 
 
 def delete_gbw(gbw_id: int) -> tuple[bool, str]:
     """GBW стандарт устгах."""
+    try:
+        return _delete_gbw_atomic(gbw_id)
+    except SQLAlchemyError as e:
+        return _admin_db_error("delete_gbw", e)
+
+
+@transactional()
+def _activate_gbw_atomic(gbw_id: int) -> tuple[bool, str]:
     gbw = GbwStandardRepository.get_by_id(gbw_id)
     if gbw is None:
         return False, 'not_found'
-
-    if gbw.is_active:
-        return False, _l("Ашиглагдаж буй GBW-ийг устгах боломжгүй!")
-
-    db.session.delete(gbw)
-    try:
-        db.session.commit()
-        return True, _l("GBW устгагдлаа")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+    GbwStandardRepository.deactivate_all(commit=False)
+    gbw.is_active = True
+    return True, _l("GBW идэвхжүүлэгдлээ")
 
 
 def activate_gbw(gbw_id: int) -> tuple[bool, str]:
     """GBW стандарт идэвхжүүлэх."""
+    try:
+        return _activate_gbw_atomic(gbw_id)
+    except SQLAlchemyError as e:
+        return _admin_db_error("activate_gbw", e)
+
+
+@transactional()
+def _deactivate_gbw_atomic(gbw_id: int) -> tuple[bool, str]:
     gbw = GbwStandardRepository.get_by_id(gbw_id)
     if gbw is None:
         return False, 'not_found'
-
-    GbwStandardRepository.deactivate_all(commit=False)
-    gbw.is_active = True
-    try:
-        db.session.commit()
-        return True, _l("GBW идэвхжүүлэгдлээ")
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+    gbw.is_active = False
+    return True, _l("Амжилттай идэвхгүй болгогдлоо")
 
 
 def deactivate_gbw(gbw_id: int) -> tuple[bool, str]:
     """GBW стандарт идэвхгүй болгох."""
-    gbw = GbwStandardRepository.get_by_id(gbw_id)
-    if gbw is None:
-        return False, 'not_found'
-
-    gbw.is_active = False
     try:
-        db.session.commit()
-        return True, _l("Амжилттай идэвхгүй болгогдлоо")
+        return _deactivate_gbw_atomic(gbw_id)
     except SQLAlchemyError as e:
-        db.session.rollback()
-        return False, f"Алдаа: {str(e)[:100]}"
+        return _admin_db_error("deactivate_gbw", e)

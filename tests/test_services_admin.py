@@ -33,9 +33,14 @@ def app_context(app):
 
 @pytest.fixture()
 def mock_db():
-    with patch('app.services.admin_service.db') as m:
-        m.session = MagicMock()
-        yield m
+    """Patch both `admin_service.db` and `app.utils.transaction.db` with the
+    same mock — @transactional decorator-ийн commit/rollback-ыг ижил mock
+    дээр assert хийх боломжтой."""
+    shared = MagicMock()
+    shared.session = MagicMock()
+    with patch('app.services.admin_service.db', shared), \
+         patch('app.utils.transaction.db', shared):
+        yield shared
 
 
 @pytest.fixture()
@@ -103,7 +108,7 @@ class TestSeedAnalysisTypes:
         result = seed_analysis_types()
 
         assert result is False
-        mock_db.session.commit.assert_not_called()
+        mock_db.session.add.assert_not_called()
 
     @patch('app.services.admin_service.MASTER_ANALYSIS_TYPES_LIST', [
         {'code': 'New', 'name': 'New Type', 'order': 5, 'role': 'senior'},
