@@ -21,7 +21,7 @@ from marshmallow import (
 
 ALLOWED_ROLES = ["prep", "chemist", "senior", "manager", "admin"]
 ALLOWED_LANGUAGES = ["en", "mn"]
-ALLOWED_LABS = ["coal", "petrography", "water"]
+ALLOWED_LABS = ["coal", "petrography", "water_chemistry", "microbiology"]
 
 
 class UserSchema(Schema):

@@ -41,6 +41,7 @@ from app.bootstrap.extensions import db
 from app.models.core import Sample, User
 from app.models.analysis import AnalysisResult, AnalysisType
 from app.models.settings import SystemSetting
+from app.utils.datetime import now_local
 
 logger = logging.getLogger(__name__)
 
@@ -332,7 +333,7 @@ def export_report_json(config: dict) -> str:
 
     return json.dumps({
         "report_name": config.get("name", "Ad-hoc Report"),
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": now_local().isoformat(),
         "total": result["total"],
         "columns": result["columns"],
         "column_labels": result["column_labels"],

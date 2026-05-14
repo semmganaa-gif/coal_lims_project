@@ -9,6 +9,7 @@ class RuntimeConfig:
     """Log file paths."""
     SECURITY_LOG_FILE = os.path.join(INSTANCE_DIR, 'logs', 'security.log')
     APP_LOG_FILE = os.path.join(INSTANCE_DIR, 'logs', 'app.log')
+    AUDIT_LOG_FILE = os.path.join(INSTANCE_DIR, 'logs', 'audit.log')
 
 
 # Ensure logs directory exists at import time

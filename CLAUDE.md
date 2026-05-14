@@ -59,8 +59,9 @@ app/
 ├── services/       # business logic (sample, analysis_workflow, chemical, ...)
 ├── labs/           # BaseLab + лаб бүрийн route/report/constants
 ├── routes/         # main, analysis, api, admin, equipment, chemicals, ...
-├── security/       # decorators (@lab_required, @role_required), license, fingerprint
-├── utils/          # server_calculations/, conversions, westgard, audit
+├── utils/          # server_calculations/, conversions, audit, security helpers,
+│                   # decorators (@lab_required, analysis_role_required),
+│                   # license_protection, hardware_fingerprint
 ├── templates/      # Jinja2 + analysis_forms/ (AG Grid форм 18+)
 └── static/         # CSS, JS (aggrid_helpers, form_guards, xlsx)
 

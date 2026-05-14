@@ -684,7 +684,7 @@ def register_lab_sample(
 
     formatted_date = sample_date.strftime("%Y%m%d")
     # 12h shift code
-    from app.routes.main.helpers import get_12h_shift_code
+    from app.utils.shifts import get_12h_shift_code
     shift_code = get_12h_shift_code(now_local())
 
     if sample_type == "CM":

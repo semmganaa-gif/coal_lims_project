@@ -5,7 +5,6 @@ Instrument reading business logic — parse, store, review, approve.
 """
 
 import hashlib
-from datetime import datetime, timezone
 
 from flask import current_app
 from sqlalchemy import and_
@@ -15,6 +14,7 @@ from app.models.instrument import InstrumentReading
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
 from app.instrument_parsers import get_parser, PARSER_REGISTRY
+from app.utils.datetime import now_local
 
 
 def parse_instrument_file(file_path: str, instrument_type: str,
@@ -99,7 +99,7 @@ def approve_reading(reading_id: int, user_id: int) -> InstrumentReading:
 
     reading.status = "approved"
     reading.reviewed_by_id = user_id
-    reading.reviewed_at = datetime.now(timezone.utc)
+    reading.reviewed_at = now_local()
 
     # Link to AnalysisResult if sample exists
     if reading.sample_id and reading.analysis_code:
@@ -132,7 +132,7 @@ def reject_reading(reading_id: int, user_id: int,
 
     reading.status = "rejected"
     reading.reviewed_by_id = user_id
-    reading.reviewed_at = datetime.now(timezone.utc)
+    reading.reviewed_at = now_local()
     reading.reject_reason = reason
 
     db.session.commit()

@@ -9,7 +9,6 @@ ISO 17025 Clause 7.7.1 compliant statistical process control.
 import math
 import statistics
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import and_
@@ -17,6 +16,7 @@ from sqlalchemy import and_
 from app.bootstrap.extensions import db
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
+from app.utils.datetime import now_local
 
 
 @dataclass
@@ -229,7 +229,7 @@ def create_corrective_action_from_violation(
     # Generate CA number
     from sqlalchemy import func
     max_ca = db.session.query(func.max(CorrectiveAction.ca_number)).scalar()
-    year = datetime.now().year
+    year = now_local().year
     if max_ca and max_ca.startswith(f"CA-{year}-"):
         try:
             seq = int(max_ca.split("-")[-1]) + 1
@@ -249,7 +249,7 @@ def create_corrective_action_from_violation(
 
     ca = CorrectiveAction(
         ca_number=ca_number,
-        issue_date=datetime.now().date(),
+        issue_date=now_local().date(),
         issue_source="QC Control Chart",
         issue_description=desc,
         severity="Major",

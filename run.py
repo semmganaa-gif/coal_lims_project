@@ -3,10 +3,9 @@
 import os
 from app import create_app, db, socketio
 from app.models import User, Sample
-from app.cli import register_commands
 
+# CLI commands нь bootstrap_app(app) → init_cli(app) дотроос автомат бүртгэгдэнэ
 app = create_app()
-register_commands(app)
 
 @app.shell_context_processor
 def make_shell_context():

@@ -11,22 +11,23 @@ import os
 
 def setup_logging(app):
     """
-    Configure structured logging with multiple log files
+    Configure structured logging with multiple log files.
+
+    Бүх лог `instance/logs/`-д бичигдэнэ (config/runtime.py-аас уншина).
 
     Creates three log files:
-    - logs/app.log: General application logs
-    - logs/audit.log: User actions and data changes
-    - logs/security.log: Security events (failed logins, tampering, etc.)
+    - instance/logs/app.log: General application logs
+    - instance/logs/audit.log: User actions and data changes (ISO 17025)
+    - instance/logs/security.log: Security events (failed logins, tampering, etc.)
     """
-    # Create logs directory
-    os.makedirs('logs', exist_ok=True)
+    # Logs directory нь config/runtime.py-аас INSTANCE_DIR/logs/ бэлдэгдсэн
 
     # ========================================================
     # 1) APPLICATION LOG
     # ========================================================
     if not app.logger.handlers:
         app_handler = RotatingFileHandler(
-            app.config.get('APP_LOG_FILE', 'logs/app.log'),
+            app.config['APP_LOG_FILE'],
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=5
         )
@@ -48,7 +49,7 @@ def setup_logging(app):
 
     if not audit_logger.handlers:
         audit_handler = RotatingFileHandler(
-            'logs/audit.log',
+            app.config['AUDIT_LOG_FILE'],
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=10
         )
@@ -69,7 +70,7 @@ def setup_logging(app):
 
     if not security_logger.handlers:
         security_handler = RotatingFileHandler(
-            app.config.get('SECURITY_LOG_FILE', 'logs/security.log'),
+            app.config['SECURITY_LOG_FILE'],
             maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=10
         )

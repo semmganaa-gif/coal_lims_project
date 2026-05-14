@@ -152,7 +152,7 @@ def _build_sample_row(s: Sample, status_map: dict[int, set[str]]) -> list:
     """Нэг дээжний DataTables row бэлдэх."""
     from markupsafe import escape
     from flask import url_for
-    from app.routes.api.helpers import _aggregate_sample_status
+    from app.utils.sample_status import aggregate_sample_status
 
     # analyses_to_perform → base code list
     try:
@@ -166,7 +166,7 @@ def _build_sample_row(s: Sample, status_map: dict[int, set[str]]) -> list:
 
     # Aggregated status
     result_statuses = status_map.get(s.id, set())
-    workflow_status = _aggregate_sample_status(s.status or "", result_statuses)
+    workflow_status = aggregate_sample_status(s.status or "", result_statuses)
 
     # Action button
     action_html = (

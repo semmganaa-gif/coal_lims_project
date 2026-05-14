@@ -182,26 +182,10 @@ def _can_delete_sample() -> bool:
 # -----------------------------
 # 🧬 Дээжийн нэгтгэсэн ТӨЛӨВ
 # -----------------------------
-def _aggregate_sample_status(sample_status: str, result_statuses: set[str] | None) -> str:
-    """
-    - Хэрэв дээж archived бол үр дүнгээс үл хамааран 'archived'
-    - Өөргүй бол шинжилгээний статусуудаас:
-        pending_review > rejected > approved
-    - Хэрэв шинжилгээ байхгүй бол sample_status-г буцаана.
-    """
-    if sample_status == "archived":
-        return "archived"
-
-    sts = result_statuses or set()
-
-    if "pending_review" in sts:
-        return "pending_review"
-    if "rejected" in sts:
-        return "rejected"
-    if "approved" in sts:
-        return "approved"
-
-    return sample_status or ""
+# Канон implementation нь `app/utils/sample_status.py` дотор шилжсэн.
+# Backward-compat alias — routes-ын хуучин код `_aggregate_sample_status`-ийг
+# import хийдэг тул нэрийн хэвээр үлдээв.
+from app.utils.sample_status import aggregate_sample_status as _aggregate_sample_status  # noqa: F401
 
 
 # =========================

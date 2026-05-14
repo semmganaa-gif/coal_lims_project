@@ -22,7 +22,7 @@ class MaintenanceLogRepository:
         return (
             MaintenanceLog.query
             .filter_by(equipment_id=equipment_id)
-            .order_by(MaintenanceLog.maintenance_date.desc())
+            .order_by(MaintenanceLog.action_date.desc())
             .all()
         )
 
