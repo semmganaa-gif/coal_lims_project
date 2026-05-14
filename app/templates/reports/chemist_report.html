@@ -2,801 +2,801 @@
 
 {% block content %}
 <div class="container-fluid mt-3">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
-        <h4 class="mb-0">
-            <i class="bi bi-person-badge me-2"></i>{{ _("Staff Performance") }}
-        </h4>
-        <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
-            <div class="input-group input-group-sm" style="width: auto;">
-                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                <input type="date" name="date_from" class="form-control" value="{{ date_from }}" title="{{ _("Start Date") }}">
-                <span class="input-group-text">-</span>
-                <input type="date" name="date_to" class="form-control" value="{{ date_to }}" title="{{ _("End Date") }}">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
-            </div>
-            <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('reports.chemist_report', year=year-1) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-chevron-left"></i> {{ year - 1 }}
-                </a>
-                <a href="{{ url_for('reports.chemist_report', year=year) }}" class="btn btn-outline-primary">
-                    {{ year }}
-                </a>
-                <a href="{{ url_for('reports.chemist_report', year=year+1) }}" class="btn btn-outline-secondary">
-                    {{ year + 1 }} <i class="bi bi-chevron-right"></i>
-                </a>
-            </div>
-        </form>
-    </div>
+ <!-- Header -->
+ <div class="d-flex justify-content-between align-items-center flex-wrap mb-3 gap-2">
+ <h4 class="mb-0">
+ <i class="bi bi-person-badge me-2"></i>{{ _("Staff Performance") }}
+ </h4>
+ <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+ <div class="input-group input-group-sm w-auto">
+ <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+ <input type="date" name="date_from" class="form-control" value="{{ date_from }}" title="{{ _("Start Date") }}">
+ <span class="input-group-text">-</span>
+ <input type="date" name="date_to" class="form-control" value="{{ date_to }}" title="{{ _("End Date") }}">
+ <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+ </div>
+ <div class="btn-group btn-group-sm">
+ <a href="{{ url_for('reports.chemist_report', year=year-1) }}" class="btn btn-outline-secondary">
+ <i class="bi bi-chevron-left"></i> {{ year - 1 }}
+ </a>
+ <a href="{{ url_for('reports.chemist_report', year=year) }}" class="btn btn-outline-primary">
+ {{ year }}
+ </a>
+ <a href="{{ url_for('reports.chemist_report', year=year+1) }}" class="btn btn-outline-secondary">
+ {{ year + 1 }} <i class="bi bi-chevron-right"></i>
+ </a>
+ </div>
+ </form>
+ </div>
 
-    <!-- Summary Cards -->
-    <div class="row mb-3 g-2">
-        <div class="col-6 col-md-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body py-2 text-center">
-                    <h4 class="mb-0">{{ chemists|length }}</h4>
-                    <small>{{ _("Staff") }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body py-2 text-center">
-                    <h4 class="mb-0">{{ "{:,}".format(grand_total) }}</h4>
-                    <small>{{ _("Analyses") }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-danger text-white h-100">
-                <div class="card-body py-2 text-center">
-                    <h4 class="mb-0">{{ grand_error_total }}</h4>
-                    <small>{{ _("Errors") }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card bg-warning text-dark h-100">
-                <div class="card-body py-2 text-center">
-                    <h4 class="mb-0">
-                        {% if grand_total > 0 %}{{ ((grand_error_total / grand_total) * 100)|round(2) }}%{% else %}0%{% endif %}
-                    </h4>
-                    <small>{{ _("Error %%") }}</small>
-                </div>
-            </div>
-        </div>
-    </div>
+ <!-- Summary Cards -->
+ <div class="row mb-3 g-2">
+ <div class="col-6 col-md-3">
+ <div class="card bg-primary text-white h-100">
+ <div class="card-body py-2 text-center">
+ <h4 class="mb-0">{{ chemists|length }}</h4>
+ <small>{{ _("Staff") }}</small>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="card bg-success text-white h-100">
+ <div class="card-body py-2 text-center">
+ <h4 class="mb-0">{{ "{:,}".format(grand_total) }}</h4>
+ <small>{{ _("Analyses") }}</small>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="card bg-danger text-white h-100">
+ <div class="card-body py-2 text-center">
+ <h4 class="mb-0">{{ grand_error_total }}</h4>
+ <small>{{ _("Errors") }}</small>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="card bg-warning text-dark h-100">
+ <div class="card-body py-2 text-center">
+ <h4 class="mb-0">
+ {% if grand_total> 0 %}{{ ((grand_error_total / grand_total) * 100)|round(2) }}%{% else %}0%{% endif %}
+ </h4>
+ <small>{{ _("Error %%") }}</small>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <!-- Tabs -->
-    <ul class="nav nav-pills nav-fill mb-3" id="reportTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="cards-tab" data-bs-toggle="tab" data-bs-target="#cards" type="button">
-                <i class="bi bi-grid-3x3-gap me-1"></i>{{ _("Cards") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button">
-                <i class="bi bi-calendar3 me-1"></i>{{ _("Monthly") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button">
-                <i class="bi bi-list-check me-1"></i>{{ _("Analysis") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="errors-tab" data-bs-toggle="tab" data-bs-target="#errors" type="button">
-                <i class="bi bi-exclamation-triangle me-1"></i>{{ _("Error") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button">
-                <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="ranking-tab" data-bs-toggle="tab" data-bs-target="#ranking" type="button">
-                <i class="bi bi-trophy me-1"></i>{{ _("Ranking") }}
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart" type="button">
-                <i class="bi bi-bar-chart-line me-1"></i>{{ _("Chart") }}
-            </button>
-        </li>
-    </ul>
+ <!-- Tabs -->
+ <ul class="nav nav-pills nav-fill mb-3" id="reportTabs" role="tablist">
+ <li class="nav-item" role="presentation">
+ <button class="nav-link active" id="cards-tab" data-bs-toggle="tab" data-bs-target="#cards" type="button">
+ <i class="bi bi-grid-3x3-gap me-1"></i>{{ _("Cards") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly" type="button">
+ <i class="bi bi-calendar3 me-1"></i>{{ _("Monthly") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button">
+ <i class="bi bi-list-check me-1"></i>{{ _("Analysis") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="errors-tab" data-bs-toggle="tab" data-bs-target="#errors" type="button">
+ <i class="bi bi-exclamation-triangle me-1"></i>{{ _("Error") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button">
+ <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="ranking-tab" data-bs-toggle="tab" data-bs-target="#ranking" type="button">
+ <i class="bi bi-trophy me-1"></i>{{ _("Ranking") }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link" id="chart-tab" data-bs-toggle="tab" data-bs-target="#chart" type="button">
+ <i class="bi bi-bar-chart-line me-1"></i>{{ _("Chart") }}
+ </button>
+ </li>
+ </ul>
 
-    <div class="tab-content" id="reportTabsContent">
-        <!-- CARDS TAB (Default) -->
-        <div class="tab-pane fade show active" id="cards" role="tabpanel">
-            <div class="row g-2" id="chemistCards">
-                {% for chemist in chemists %}
-                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 chemist-card" data-name="{{ chemist.name|lower }}">
-                    <div class="card h-100 {% if loop.index <= 3 %}border-warning{% endif %}">
-                        {% if loop.index <= 3 %}
-                        <div class="card-header py-1 bg-warning text-dark text-center">
-                            <small class="fw-bold">
-                                {% if loop.index == 1 %}<i class="bi bi-trophy-fill"></i> #1
-                                {% elif loop.index == 2 %}<i class="bi bi-award-fill"></i> #2
-                                {% else %}<i class="bi bi-award"></i> #3{% endif %}
-                            </small>
-                        </div>
-                        {% endif %}
-                        <div class="card-body p-2 text-center">
-                            <div class="mb-1">
-                                <i class="bi bi-person-circle fs-3 text-secondary"></i>
-                            </div>
-                            <h6 class="card-title mb-1 text-truncate" title="{{ chemist.name }}">
-                                {{ chemist.name }}
-                            </h6>
-                            <div class="d-flex justify-content-center gap-2 mb-2">
-                                <span class="badge bg-success fs-6">{{ chemist.total }}</span>
-                                {% if chemist.error_total > 0 %}
-                                <span class="badge bg-danger">{{ chemist.error_total }}</span>
-                                {% endif %}
-                            </div>
-                            <!-- Mini progress bar for months -->
-                            <div class="d-flex gap-1 justify-content-center flex-wrap">
-                                {% for m in range(1, 13) %}
-                                <div class="text-center" style="width: 18px;">
-                                    <div class="small text-muted" style="font-size: 9px;">{{ m }}</div>
-                                    <div class="{% if chemist.monthly[m] > 0 %}bg-success{% else %}bg-light{% endif %} rounded"
-                                         style="height: 4px;" title="{{ _("Month") }} {{ m }}: {{ chemist.monthly[m] }}"></div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="card-footer py-1 bg-light">
-                            <div class="d-flex justify-content-between small">
-                                <span class="text-success"><i class="bi bi-check2"></i> {{ chemist.total }}</span>
-                                <span class="text-danger"><i class="bi bi-x"></i> {{ chemist.error_total }}</span>
-                                {% if chemist.total > 0 %}
-                                <span class="{% if (chemist.error_total / chemist.total * 100) > 5 %}text-danger{% else %}text-success{% endif %}">
-                                    {{ (chemist.error_total / chemist.total * 100)|round(1) }}%
-                                </span>
-                                {% else %}
-                                <span class="text-muted">0%</span>
-                                {% endif %}
-                            </div>
-                            {% if chemist.eq_usage_count or chemist.eq_maint_count or chemist.eq_calib_count %}
-                            <div class="d-flex justify-content-between small mt-1 pt-1 border-top">
-                                <span class="text-primary" title="{{ _("Equipment usage") }}"><i class="bi bi-clock"></i> {{ chemist.eq_usage_hours }}{{ _("h") }}</span>
-                                <span class="text-warning" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i> {{ chemist.eq_maint_count }}</span>
-                                <span class="text-info" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i> {{ chemist.eq_calib_count }}</span>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        <i class="bi bi-info-circle me-2"></i>{{ _("No data available") }}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+ <div class="tab-content" id="reportTabsContent">
+ <!-- CARDS TAB (Default) -->
+ <div class="tab-pane fade show active" id="cards" role="tabpanel">
+ <div class="row g-2" id="chemistCards">
+ {% for chemist in chemists %}
+ <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 chemist-card" data-name="{{ chemist.name|lower }}">
+ <div class="card h-100 {% if loop.index <= 3 %}border-warning{% endif %}">
+ {% if loop.index <= 3 %}
+ <div class="card-header py-1 bg-warning text-dark text-center">
+ <small class="fw-bold">
+ {% if loop.index == 1 %}<i class="bi bi-trophy-fill"></i> #1
+ {% elif loop.index == 2 %}<i class="bi bi-award-fill"></i> #2
+ {% else %}<i class="bi bi-award"></i> #3{% endif %}
+ </small>
+ </div>
+ {% endif %}
+ <div class="card-body p-2 text-center">
+ <div class="mb-1">
+ <i class="bi bi-person-circle fs-3 text-secondary"></i>
+ </div>
+ <h6 class="card-title mb-1 text-truncate" title="{{ chemist.name }}">
+ {{ chemist.name }}
+ </h6>
+ <div class="d-flex justify-content-center gap-2 mb-2">
+ <span class="badge bg-success fs-6">{{ chemist.total }}</span>
+ {% if chemist.error_total> 0 %}
+ <span class="badge bg-danger">{{ chemist.error_total }}</span>
+ {% endif %}
+ </div>
+ <!-- Mini progress bar for months -->
+ <div class="d-flex gap-1 justify-content-center flex-wrap">
+ {% for m in range(1, 13) %}
+ <div class="text-center w-[18px]">
+ <div class="small text-muted text-[9px]">{{ m }}</div>
+ <div class="{% if chemist.monthly[m]> 0 %}bg-success{% else %}bg-light{% endif %} rounded"
+ title="{{ _("Month") }} {{ m }}: {{ chemist.monthly[m] }}"></div>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+ <div class="card-footer py-1 bg-light">
+ <div class="d-flex justify-content-between small">
+ <span class="text-success"><i class="bi bi-check2"></i> {{ chemist.total }}</span>
+ <span class="text-danger"><i class="bi bi-x"></i> {{ chemist.error_total }}</span>
+ {% if chemist.total> 0 %}
+ <span class="{% if (chemist.error_total / chemist.total * 100)> 5 %}text-danger{% else %}text-success{% endif %}">
+ {{ (chemist.error_total / chemist.total * 100)|round(1) }}%
+ </span>
+ {% else %}
+ <span class="text-muted">0%</span>
+ {% endif %}
+ </div>
+ {% if chemist.eq_usage_count or chemist.eq_maint_count or chemist.eq_calib_count %}
+ <div class="d-flex justify-content-between small mt-1 pt-1 border-top">
+ <span class="text-primary" title="{{ _("Equipment usage") }}"><i class="bi bi-clock"></i> {{ chemist.eq_usage_hours }}{{ _("h") }}</span>
+ <span class="text-warning" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i> {{ chemist.eq_maint_count }}</span>
+ <span class="text-info" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i> {{ chemist.eq_calib_count }}</span>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ {% else %}
+ <div class="col-12">
+ <div class="alert alert-info text-center">
+ <i class="bi bi-info-circle me-2"></i>{{ _("No data available") }}
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
 
-        <!-- MONTHLY TAB -->
-        <div class="tab-pane fade" id="monthly" role="tabpanel">
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 70vh;">
-                        <table class="table table-sm table-bordered table-hover mb-0 table-sticky-header chemist-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="sticky-col col-num">#</th>
-                                    <th class="sticky-col col-name">{{ _("Name") }}</th>
-                                    {% for m in range(1, 13) %}
-                                    <th class="col-data">{{ m }}</th>
-                                    {% endfor %}
-                                    <th class="col-total bg-primary">{{ _("Total") }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for chemist in chemists %}
-                                <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
-                                    <td class="col-num">{{ loop.index }}</td>
-                                    <td class="col-name fw-bold" title="{{ chemist.name }}">
-                                        {% if loop.index <= 3 %}<i class="bi bi-trophy-fill text-warning"></i>{% endif %}
-                                        {{ chemist.name }}
-                                    </td>
-                                    {% for m in range(1, 13) %}
-                                    <td class="col-data {% if chemist.monthly[m] > 0 %}table-success{% endif %}">
-                                        {{ chemist.monthly[m] or '-' }}
-                                    </td>
-                                    {% endfor %}
-                                    <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-secondary">
-                                <tr class="fw-bold">
-                                    <td class="col-num"></td>
-                                    <td class="col-name">{{ _("TOTAL") }}</td>
-                                    {% for m in range(1, 13) %}
-                                    <td class="col-data">{{ grand_monthly[m] }}</td>
-                                    {% endfor %}
-                                    <td class="col-total bg-primary text-white">{{ grand_total }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+ <!-- MONTHLY TAB -->
+ <div class="tab-pane fade" id="monthly" role="tabpanel">
+ <div class="card">
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[70vh]">
+ <table class="table table-sm table-bordered table-hover mb-0 table-sticky-header chemist-table">
+ <thead class="table-dark">
+ <tr>
+ <th class="sticky-col col-num">#</th>
+ <th class="sticky-col col-name">{{ _("Name") }}</th>
+ {% for m in range(1, 13) %}
+ <th class="col-data">{{ m }}</th>
+ {% endfor %}
+ <th class="col-total bg-primary">{{ _("Total") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists %}
+ <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
+ <td class="col-num">{{ loop.index }}</td>
+ <td class="col-name fw-bold" title="{{ chemist.name }}">
+ {% if loop.index <= 3 %}<i class="bi bi-trophy-fill text-warning"></i>{% endif %}
+ {{ chemist.name }}
+ </td>
+ {% for m in range(1, 13) %}
+ <td class="col-data {% if chemist.monthly[m]> 0 %}table-success{% endif %}">
+ {{ chemist.monthly[m] or '-' }}
+ </td>
+ {% endfor %}
+ <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ <tfoot class="table-secondary">
+ <tr class="fw-bold">
+ <td class="col-num"></td>
+ <td class="col-name">{{ _("TOTAL") }}</td>
+ {% for m in range(1, 13) %}
+ <td class="col-data">{{ grand_monthly[m] }}</td>
+ {% endfor %}
+ <td class="col-total bg-primary text-white">{{ grand_total }}</td>
+ </tr>
+ </tfoot>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        <!-- ANALYSIS TAB -->
-        <div class="tab-pane fade" id="analysis" role="tabpanel">
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 70vh;">
-                        <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="col-num">#</th>
-                                    <th class="col-name">{{ _("Name") }}</th>
-                                    {% for code in analysis_codes %}
-                                    <th class="col-data">{{ code }}</th>
-                                    {% endfor %}
-                                    <th class="col-total bg-primary">{{ _("Total") }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for chemist in chemists %}
-                                <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
-                                    <td class="col-num">{{ loop.index }}</td>
-                                    <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                    {% for code in analysis_codes %}
-                                    <td class="col-data {% if chemist.by_analysis.get(code, 0) > 0 %}table-info{% endif %}">
-                                        {{ chemist.by_analysis.get(code, 0) or '-' }}
-                                    </td>
-                                    {% endfor %}
-                                    <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-secondary">
-                                <tr class="fw-bold">
-                                    <td class="col-num"></td>
-                                    <td class="col-name">{{ _("TOTAL") }}</td>
-                                    {% for code in analysis_codes %}
-                                    <td class="col-data">{{ grand_by_analysis.get(code, 0) }}</td>
-                                    {% endfor %}
-                                    <td class="col-total bg-primary text-white">{{ grand_total }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+ <!-- ANALYSIS TAB -->
+ <div class="tab-pane fade" id="analysis" role="tabpanel">
+ <div class="card">
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[70vh]">
+ <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
+ <thead class="table-dark">
+ <tr>
+ <th class="col-num">#</th>
+ <th class="col-name">{{ _("Name") }}</th>
+ {% for code in analysis_codes %}
+ <th class="col-data">{{ code }}</th>
+ {% endfor %}
+ <th class="col-total bg-primary">{{ _("Total") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists %}
+ <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
+ <td class="col-num">{{ loop.index }}</td>
+ <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ {% for code in analysis_codes %}
+ <td class="col-data {% if chemist.by_analysis.get(code, 0)> 0 %}table-info{% endif %}">
+ {{ chemist.by_analysis.get(code, 0) or '-' }}
+ </td>
+ {% endfor %}
+ <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ <tfoot class="table-secondary">
+ <tr class="fw-bold">
+ <td class="col-num"></td>
+ <td class="col-name">{{ _("TOTAL") }}</td>
+ {% for code in analysis_codes %}
+ <td class="col-data">{{ grand_by_analysis.get(code, 0) }}</td>
+ {% endfor %}
+ <td class="col-total bg-primary text-white">{{ grand_total }}</td>
+ </tr>
+ </tfoot>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        <!-- ERROR TAB -->
-        <div class="tab-pane fade" id="errors" role="tabpanel">
-            <div class="card">
-                <div class="card-header py-2">
-                    <small>
-                        {% for key in error_reason_keys %}
-                        <span class="badge bg-secondary me-1">{{ loop.index }}. {{ error_reason_labels[key].split('. ')[1] if '. ' in error_reason_labels[key] else error_reason_labels[key] }}</span>
-                        {% endfor %}
-                    </small>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 60vh;">
-                        <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="col-num">#</th>
-                                    <th class="col-name">{{ _("Name") }}</th>
-                                    {% for key in error_reason_keys %}
-                                    <th class="col-data" title="{{ error_reason_labels[key] }}">{{ loop.index }}</th>
-                                    {% endfor %}
-                                    <th class="col-data bg-danger">{{ _("Err") }}</th>
-                                    <th class="col-data bg-success">{{ _("Work") }}</th>
-                                    <th class="col-data bg-warning text-dark">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for chemist in chemists|sort(attribute='error_total', reverse=true) %}
-                                {% if chemist.error_total > 0 or chemist.total > 0 %}
-                                <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
-                                    <td class="col-num">{{ loop.index }}</td>
-                                    <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                    {% for key in error_reason_keys %}
-                                    <td class="col-data">
-                                        {% if chemist.errors.get(key, 0) > 0 %}
-                                        <span class="badge bg-danger">{{ chemist.errors.get(key, 0) }}</span>
-                                        {% else %}-{% endif %}
-                                    </td>
-                                    {% endfor %}
-                                    <td class="col-data fw-bold text-danger">{{ chemist.error_total }}</td>
-                                    <td class="col-data fw-bold text-success">{{ chemist.total }}</td>
-                                    <td class="col-data">
-                                        {% if chemist.total > 0 %}
-                                        {% set pct = (chemist.error_total / chemist.total * 100)|round(1) %}
-                                        <span class="badge {% if pct > 5 %}bg-danger{% elif pct > 2 %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pct }}%</span>
-                                        {% else %}-{% endif %}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-secondary">
-                                <tr class="fw-bold">
-                                    <td class="col-num"></td>
-                                    <td class="col-name">{{ _("TOTAL") }}</td>
-                                    {% for key in error_reason_keys %}
-                                    <td class="col-data">{{ grand_errors[key] }}</td>
-                                    {% endfor %}
-                                    <td class="col-data bg-danger text-white">{{ grand_error_total }}</td>
-                                    <td class="col-data bg-success text-white">{{ grand_total }}</td>
-                                    <td class="col-data bg-warning text-dark">
-                                        {% if grand_total > 0 %}{{ (grand_error_total / grand_total * 100)|round(1) }}%{% else %}-{% endif %}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+ <!-- ERROR TAB -->
+ <div class="tab-pane fade" id="errors" role="tabpanel">
+ <div class="card">
+ <div class="card-header py-2">
+ <small>
+ {% for key in error_reason_keys %}
+ <span class="badge bg-secondary me-1">{{ loop.index }}. {{ error_reason_labels[key].split('. ')[1] if '. ' in error_reason_labels[key] else error_reason_labels[key] }}</span>
+ {% endfor %}
+ </small>
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[60vh]">
+ <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
+ <thead class="table-dark">
+ <tr>
+ <th class="col-num">#</th>
+ <th class="col-name">{{ _("Name") }}</th>
+ {% for key in error_reason_keys %}
+ <th class="col-data" title="{{ error_reason_labels[key] }}">{{ loop.index }}</th>
+ {% endfor %}
+ <th class="col-data bg-danger">{{ _("Err") }}</th>
+ <th class="col-data bg-success">{{ _("Work") }}</th>
+ <th class="col-data bg-warning text-dark">%</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists|sort(attribute='error_total', reverse=true) %}
+ {% if chemist.error_total> 0 or chemist.total> 0 %}
+ <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
+ <td class="col-num">{{ loop.index }}</td>
+ <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ {% for key in error_reason_keys %}
+ <td class="col-data">
+ {% if chemist.errors.get(key, 0)> 0 %}
+ <span class="badge bg-danger">{{ chemist.errors.get(key, 0) }}</span>
+ {% else %}-{% endif %}
+ </td>
+ {% endfor %}
+ <td class="col-data fw-bold text-danger">{{ chemist.error_total }}</td>
+ <td class="col-data fw-bold text-success">{{ chemist.total }}</td>
+ <td class="col-data">
+ {% if chemist.total> 0 %}
+ {% set pct = (chemist.error_total / chemist.total * 100)|round(1) %}
+ <span class="badge {% if pct> 5 %}bg-danger{% elif pct> 2 %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ pct }}%</span>
+ {% else %}-{% endif %}
+ </td>
+ </tr>
+ {% endif %}
+ {% endfor %}
+ </tbody>
+ <tfoot class="table-secondary">
+ <tr class="fw-bold">
+ <td class="col-num"></td>
+ <td class="col-name">{{ _("TOTAL") }}</td>
+ {% for key in error_reason_keys %}
+ <td class="col-data">{{ grand_errors[key] }}</td>
+ {% endfor %}
+ <td class="col-data bg-danger text-white">{{ grand_error_total }}</td>
+ <td class="col-data bg-success text-white">{{ grand_total }}</td>
+ <td class="col-data bg-warning text-dark">
+ {% if grand_total> 0 %}{{ (grand_error_total / grand_total * 100)|round(1) }}%{% else %}-{% endif %}
+ </td>
+ </tr>
+ </tfoot>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        <!-- EQUIPMENT TAB -->
-        <div class="tab-pane fade" id="equipment" role="tabpanel">
-            <div class="card">
-                <div class="card-header bg-secondary text-white py-2">
-                    <i class="bi bi-tools me-2"></i>{{ _("Equipment Usage") }}
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 70vh;">
-                        <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th class="col-num">#</th>
-                                    <th class="col-name">{{ _("Name") }}</th>
-                                    <th class="col-data text-center" title="{{ _("Usage count") }}"><i class="bi bi-clock me-1"></i>{{ _("Count") }}</th>
-                                    <th class="col-data text-center" title="{{ _("Total usage hours") }}"><i class="bi bi-hourglass-split me-1"></i>{{ _("Hours") }}</th>
-                                    <th class="col-data text-center" title="{{ _("Maintenance") }}"><i class="bi bi-wrench me-1"></i>{{ _("Maint.") }}</th>
-                                    <th class="col-data text-center" title="{{ _("Calibration") }}"><i class="bi bi-shield-check me-1"></i>{{ _("Calib.") }}</th>
-                                    <th class="col-data text-center" title="{{ _("Total equipment records") }}">{{ _("Total") }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for chemist in chemists %}
-                                {% if chemist.eq_usage_count or chemist.eq_maint_count or chemist.eq_calib_count %}
-                                <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
-                                    <td class="col-num">{{ loop.index }}</td>
-                                    <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                    <td class="col-data text-center {% if chemist.eq_usage_count > 0 %}table-info{% endif %}">
-                                        {{ chemist.eq_usage_count or '-' }}
-                                    </td>
-                                    <td class="col-data text-center {% if chemist.eq_usage_hours > 0 %}table-primary{% endif %}">
-                                        {{ chemist.eq_usage_hours or '-' }}
-                                    </td>
-                                    <td class="col-data text-center {% if chemist.eq_maint_count > 0 %}table-warning{% endif %}">
-                                        {{ chemist.eq_maint_count or '-' }}
-                                    </td>
-                                    <td class="col-data text-center {% if chemist.eq_calib_count > 0 %}table-success{% endif %}">
-                                        {{ chemist.eq_calib_count or '-' }}
-                                    </td>
-                                    <td class="col-data text-center fw-bold bg-light">
-                                        {{ chemist.eq_usage_count + chemist.eq_maint_count + chemist.eq_calib_count }}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-secondary">
-                                <tr class="fw-bold">
-                                    <td class="col-num"></td>
-                                    <td class="col-name">{{ _("TOTAL") }}</td>
-                                    <td class="col-data text-center">{{ chemists|sum(attribute='eq_usage_count') }}</td>
-                                    <td class="col-data text-center">{{ chemists|sum(attribute='eq_usage_hours')|round(1) }}</td>
-                                    <td class="col-data text-center">{{ chemists|sum(attribute='eq_maint_count') }}</td>
-                                    <td class="col-data text-center">{{ chemists|sum(attribute='eq_calib_count') }}</td>
-                                    <td class="col-data text-center bg-primary text-white">
-                                        {{ chemists|sum(attribute='eq_usage_count') + chemists|sum(attribute='eq_maint_count') + chemists|sum(attribute='eq_calib_count') }}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-                <div class="card-footer small text-muted">
-                    <i class="bi bi-info-circle me-1"></i>{{ _("Equipment usage, maintenance, and calibration records (UsageLog + MaintenanceLog)") }}
-                </div>
-            </div>
-        </div>
+ <!-- EQUIPMENT TAB -->
+ <div class="tab-pane fade" id="equipment" role="tabpanel">
+ <div class="card">
+ <div class="card-header bg-secondary text-white py-2">
+ <i class="bi bi-tools me-2"></i>{{ _("Equipment Usage") }}
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[70vh]">
+ <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
+ <thead class="table-dark">
+ <tr>
+ <th class="col-num">#</th>
+ <th class="col-name">{{ _("Name") }}</th>
+ <th class="col-data text-center" title="{{ _("Usage count") }}"><i class="bi bi-clock me-1"></i>{{ _("Count") }}</th>
+ <th class="col-data text-center" title="{{ _("Total usage hours") }}"><i class="bi bi-hourglass-split me-1"></i>{{ _("Hours") }}</th>
+ <th class="col-data text-center" title="{{ _("Maintenance") }}"><i class="bi bi-wrench me-1"></i>{{ _("Maint.") }}</th>
+ <th class="col-data text-center" title="{{ _("Calibration") }}"><i class="bi bi-shield-check me-1"></i>{{ _("Calib.") }}</th>
+ <th class="col-data text-center" title="{{ _("Total equipment records") }}">{{ _("Total") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists %}
+ {% if chemist.eq_usage_count or chemist.eq_maint_count or chemist.eq_calib_count %}
+ <tr class="chemist-row" data-name="{{ chemist.name|lower }}">
+ <td class="col-num">{{ loop.index }}</td>
+ <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ <td class="col-data text-center {% if chemist.eq_usage_count> 0 %}table-info{% endif %}">
+ {{ chemist.eq_usage_count or '-' }}
+ </td>
+ <td class="col-data text-center {% if chemist.eq_usage_hours> 0 %}table-primary{% endif %}">
+ {{ chemist.eq_usage_hours or '-' }}
+ </td>
+ <td class="col-data text-center {% if chemist.eq_maint_count> 0 %}table-warning{% endif %}">
+ {{ chemist.eq_maint_count or '-' }}
+ </td>
+ <td class="col-data text-center {% if chemist.eq_calib_count> 0 %}table-success{% endif %}">
+ {{ chemist.eq_calib_count or '-' }}
+ </td>
+ <td class="col-data text-center fw-bold bg-light">
+ {{ chemist.eq_usage_count + chemist.eq_maint_count + chemist.eq_calib_count }}
+ </td>
+ </tr>
+ {% endif %}
+ {% endfor %}
+ </tbody>
+ <tfoot class="table-secondary">
+ <tr class="fw-bold">
+ <td class="col-num"></td>
+ <td class="col-name">{{ _("TOTAL") }}</td>
+ <td class="col-data text-center">{{ chemists|sum(attribute='eq_usage_count') }}</td>
+ <td class="col-data text-center">{{ chemists|sum(attribute='eq_usage_hours')|round(1) }}</td>
+ <td class="col-data text-center">{{ chemists|sum(attribute='eq_maint_count') }}</td>
+ <td class="col-data text-center">{{ chemists|sum(attribute='eq_calib_count') }}</td>
+ <td class="col-data text-center bg-primary text-white">
+ {{ chemists|sum(attribute='eq_usage_count') + chemists|sum(attribute='eq_maint_count') + chemists|sum(attribute='eq_calib_count') }}
+ </td>
+ </tr>
+ </tfoot>
+ </table>
+ </div>
+ </div>
+ <div class="card-footer small text-muted">
+ <i class="bi bi-info-circle me-1"></i>{{ _("Equipment usage, maintenance, and calibration records (UsageLog + MaintenanceLog)") }}
+ </div>
+ </div>
+ </div>
 
-        <!-- RANKING TAB -->
-        <div class="tab-pane fade" id="ranking" role="tabpanel">
-            <div class="row g-3">
-                <!-- By Count Ranking -->
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-success text-white py-2">
-                            <i class="bi bi-bar-chart-fill me-2"></i>{{ _("By Count (Productivity)") }}
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive" style="max-height: 400px;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
-                                        <tr>
-                                            <th style="width: 40px;">#</th>
-                                            <th>{{ _("Name") }}</th>
-                                            <th class="text-end" style="width: 60px;">{{ _("Count") }}</th>
-                                            <th class="text-end" style="width: 55px;" title="{{ _("Equipment usage (hours)") }}"><i class="bi bi-clock"></i></th>
-                                            <th class="text-end" style="width: 45px;" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i></th>
-                                            <th class="text-end" style="width: 45px;" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for chemist in chemists %}
-                                        <tr>
-                                            <td>
-                                                {% if loop.index == 1 %}
-                                                <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i></span>
-                                                {% elif loop.index == 2 %}
-                                                <span class="badge bg-secondary"><i class="bi bi-award-fill"></i></span>
-                                                {% elif loop.index == 3 %}
-                                                <span class="badge bg-danger"><i class="bi bi-award"></i></span>
-                                                {% else %}
-                                                <span class="text-muted">{{ loop.index }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                            <td class="text-end">
-                                                <span class="badge bg-success">{{ chemist.total }}</span>
-                                            </td>
-                                            <td class="text-end small text-primary">{{ chemist.eq_usage_hours or '-' }}</td>
-                                            <td class="text-end small text-warning">{{ chemist.eq_maint_count or '-' }}</td>
-                                            <td class="text-end small text-info">{{ chemist.eq_calib_count or '-' }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+ <!-- RANKING TAB -->
+ <div class="tab-pane fade" id="ranking" role="tabpanel">
+ <div class="row g-3">
+ <!-- By Count Ranking -->
+ <div class="col-lg-6">
+ <div class="card h-100">
+ <div class="card-header bg-success text-white py-2">
+ <i class="bi bi-bar-chart-fill me-2"></i>{{ _("By Count (Productivity)") }}
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[400px]">
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light sticky-top">
+ <tr>
+ <th class="w-[40px]">#</th>
+ <th class="w-[40px]">{{ _("Name") }}</th>
+ <th class="text-end w-[60px]">{{ _("Count") }}</th>
+ <th class="text-end w-[55px]" title="{{ _("Equipment usage (hours)") }}"><i class="bi bi-clock"></i></th>
+ <th class="text-end w-[45px]" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i></th>
+ <th class="text-end w-[45px]" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists %}
+ <tr>
+ <td>
+ {% if loop.index == 1 %}
+ <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i></span>
+ {% elif loop.index == 2 %}
+ <span class="badge bg-secondary"><i class="bi bi-award-fill"></i></span>
+ {% elif loop.index == 3 %}
+ <span class="badge bg-danger"><i class="bi bi-award"></i></span>
+ {% else %}
+ <span class="text-muted">{{ loop.index }}</span>
+ {% endif %}
+ </td>
+ <td class="fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ <td class="text-end">
+ <span class="badge bg-success">{{ chemist.total }}</span>
+ </td>
+ <td class="text-end small text-primary">{{ chemist.eq_usage_hours or '-' }}</td>
+ <td class="text-end small text-warning">{{ chemist.eq_maint_count or '-' }}</td>
+ <td class="text-end small text-info">{{ chemist.eq_calib_count or '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
 
-                <!-- By Quality Ranking -->
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-primary text-white py-2">
-                            <i class="bi bi-shield-check me-2"></i>{{ _("By Quality (Low Error = Good)") }}
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive" style="max-height: 400px;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
-                                        <tr>
-                                            <th style="width: 40px;">#</th>
-                                            <th>{{ _("Name") }}</th>
-                                            <th class="text-end" style="width: 55px;">%</th>
-                                            <th class="text-end" style="width: 70px;">{{ _("Count") }}</th>
-                                            <th class="text-end" style="width: 55px;" title="{{ _("Equipment usage (hours)") }}"><i class="bi bi-clock"></i></th>
-                                            <th class="text-end" style="width: 45px;" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i></th>
-                                            <th class="text-end" style="width: 45px;" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for chemist in chemists_by_quality %}
-                                        <tr>
-                                            <td>
-                                                {% if loop.index == 1 %}
-                                                <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i></span>
-                                                {% elif loop.index == 2 %}
-                                                <span class="badge bg-secondary"><i class="bi bi-award-fill"></i></span>
-                                                {% elif loop.index == 3 %}
-                                                <span class="badge bg-danger"><i class="bi bi-award"></i></span>
-                                                {% else %}
-                                                <span class="text-muted">{{ loop.index }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                            <td class="text-end">
-                                                {% set pct = (chemist.error_total / chemist.total * 100)|round(1) if chemist.total > 0 else 0 %}
-                                                <span class="badge {% if pct == 0 %}bg-success{% elif pct < 2 %}bg-info{% elif pct < 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                                    {{ pct }}%
-                                                </span>
-                                            </td>
-                                            <td class="text-end small">
-                                                {{ chemist.total }}/{{ chemist.error_total }}
-                                            </td>
-                                            <td class="text-end small text-primary">{{ chemist.eq_usage_hours or '-' }}</td>
-                                            <td class="text-end small text-warning">{{ chemist.eq_maint_count or '-' }}</td>
-                                            <td class="text-end small text-info">{{ chemist.eq_calib_count or '-' }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer small text-muted">
-                            <i class="bi bi-info-circle me-1"></i>{{ _("Only staff with 10+ analyses are ranked") }}
-                        </div>
-                    </div>
-                </div>
+ <!-- By Quality Ranking -->
+ <div class="col-lg-6">
+ <div class="card h-100">
+ <div class="card-header bg-primary text-white py-2">
+ <i class="bi bi-shield-check me-2"></i>{{ _("By Quality (Low Error = Good)") }}
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[400px]">
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light sticky-top">
+ <tr>
+ <th class="w-[40px]">#</th>
+ <th class="w-[40px]">{{ _("Name") }}</th>
+ <th class="text-end w-[55px]">%</th>
+ <th class="text-end w-[70px]">{{ _("Count") }}</th>
+ <th class="text-end w-[55px]" title="{{ _("Equipment usage (hours)") }}"><i class="bi bi-clock"></i></th>
+ <th class="text-end w-[45px]" title="{{ _("Maintenance") }}"><i class="bi bi-tools"></i></th>
+ <th class="text-end w-[45px]" title="{{ _("Calibration") }}"><i class="bi bi-shield-check"></i></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists_by_quality %}
+ <tr>
+ <td>
+ {% if loop.index == 1 %}
+ <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i></span>
+ {% elif loop.index == 2 %}
+ <span class="badge bg-secondary"><i class="bi bi-award-fill"></i></span>
+ {% elif loop.index == 3 %}
+ <span class="badge bg-danger"><i class="bi bi-award"></i></span>
+ {% else %}
+ <span class="text-muted">{{ loop.index }}</span>
+ {% endif %}
+ </td>
+ <td class="fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ <td class="text-end">
+ {% set pct = (chemist.error_total / chemist.total * 100)|round(1) if chemist.total> 0 else 0 %}
+ <span class="badge {% if pct == 0 %}bg-success{% elif pct < 2 %}bg-info{% elif pct < 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+ {{ pct }}%
+ </span>
+ </td>
+ <td class="text-end small">
+ {{ chemist.total }}/{{ chemist.error_total }}
+ </td>
+ <td class="text-end small text-primary">{{ chemist.eq_usage_hours or '-' }}</td>
+ <td class="text-end small text-warning">{{ chemist.eq_maint_count or '-' }}</td>
+ <td class="text-end small text-info">{{ chemist.eq_calib_count or '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ <div class="card-footer small text-muted">
+ <i class="bi bi-info-circle me-1"></i>{{ _("Only staff with 10+ analyses are ranked") }}
+ </div>
+ </div>
+ </div>
 
-                <!-- Quarterly Growth -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-info text-white">
-                            <i class="bi bi-graph-up-arrow me-2"></i>{{ _("Quarterly Growth/Decline") }}
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th class="col-num">#</th>
-                                            <th class="col-name">{{ _("Name") }}</th>
-                                            <th class="col-data">Q1</th>
-                                            <th class="col-data">→</th>
-                                            <th class="col-data">Q2</th>
-                                            <th class="col-data">→</th>
-                                            <th class="col-data">Q3</th>
-                                            <th class="col-data">→</th>
-                                            <th class="col-data">Q4</th>
-                                            <th class="col-total">{{ _("Total") }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for chemist in chemists[:20] %}
-                                        <tr>
-                                            <td class="col-num">{{ loop.index }}</td>
-                                            <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
-                                            {% for i in range(4) %}
-                                            <td class="col-data {% if chemist.quarterly[i] > 0 %}table-success{% endif %}">
-                                                {{ chemist.quarterly[i] or '-' }}
-                                            </td>
-                                            {% if i < 3 %}
-                                            <td class="col-data">
-                                                {% set growth = chemist.quarterly_growth[i] %}
-                                                {% if growth > 0 %}
-                                                <span class="text-success"><i class="bi bi-arrow-up"></i></span>
-                                                {% elif growth < 0 %}
-                                                <span class="text-danger"><i class="bi bi-arrow-down"></i></span>
-                                                {% else %}-{% endif %}
-                                            </td>
-                                            {% endif %}
-                                            {% endfor %}
-                                            <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer small text-muted">
-                            <i class="bi bi-info-circle me-1"></i>{{ _("Top 20. Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec") }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+ <!-- Quarterly Growth -->
+ <div class="col-12">
+ <div class="card">
+ <div class="card-header bg-info text-white">
+ <i class="bi bi-graph-up-arrow me-2"></i>{{ _("Quarterly Growth/Decline") }}
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive max-h-[70vh]">
+ <table class="table table-sm table-bordered table-hover mb-0 chemist-table">
+ <thead class="table-dark">
+ <tr>
+ <th class="col-num">#</th>
+ <th class="col-name">{{ _("Name") }}</th>
+ <th class="col-data">Q1</th>
+ <th class="col-data">→</th>
+ <th class="col-data">Q2</th>
+ <th class="col-data">→</th>
+ <th class="col-data">Q3</th>
+ <th class="col-data">→</th>
+ <th class="col-data">Q4</th>
+ <th class="col-total">{{ _("Total") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for chemist in chemists[:20] %}
+ <tr>
+ <td class="col-num">{{ loop.index }}</td>
+ <td class="col-name fw-bold" title="{{ chemist.name }}">{{ chemist.name }}</td>
+ {% for i in range(4) %}
+ <td class="col-data {% if chemist.quarterly[i]> 0 %}table-success{% endif %}">
+ {{ chemist.quarterly[i] or '-' }}
+ </td>
+ {% if i < 3 %}
+ <td class="col-data">
+ {% set growth = chemist.quarterly_growth[i] %}
+ {% if growth> 0 %}
+ <span class="text-success"><i class="bi bi-arrow-up"></i></span>
+ {% elif growth < 0 %}
+ <span class="text-danger"><i class="bi bi-arrow-down"></i></span>
+ {% else %}-{% endif %}
+ </td>
+ {% endif %}
+ {% endfor %}
+ <td class="col-total fw-bold bg-light">{{ chemist.total }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ <div class="card-footer small text-muted">
+ <i class="bi bi-info-circle me-1"></i>{{ _("Top 20. Q1=Jan-Mar, Q2=Apr-Jun, Q3=Jul-Sep, Q4=Oct-Dec") }}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        <!-- CHART TAB -->
-        <div class="tab-pane fade" id="chart" role="tabpanel">
-            <div class="row g-3">
-                <!-- Monthly Chart -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-info text-white py-2">
-                            <i class="bi bi-bar-chart-line me-2"></i>{{ _("Monthly Analysis Count") }}
-                        </div>
-                        <div class="card-body">
-                            <canvas id="monthlyChart" height="100"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <!-- Top 10 Chart -->
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-header bg-success text-white py-2">
-                            <i class="bi bi-trophy me-2"></i>{{ _("Top 10 Staff") }}
-                        </div>
-                        <div class="card-body">
-                            <canvas id="top10Chart" height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <!-- Error Chart -->
-                <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-header bg-danger text-white py-2">
-                            <i class="bi bi-exclamation-triangle me-2"></i>{{ _("Error Types") }}
-                        </div>
-                        <div class="card-body">
-                            <canvas id="errorChart" height="200"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <!-- Equipment Usage Chart -->
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-secondary text-white py-2">
-                            <i class="bi bi-tools me-2"></i>{{ _("Equipment Usage (Top 10)") }}
-                        </div>
-                        <div class="card-body">
-                            <canvas id="equipmentChart" height="120"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+ <!-- CHART TAB -->
+ <div class="tab-pane fade" id="chart" role="tabpanel">
+ <div class="row g-3">
+ <!-- Monthly Chart -->
+ <div class="col-12">
+ <div class="card">
+ <div class="card-header bg-info text-white py-2">
+ <i class="bi bi-bar-chart-line me-2"></i>{{ _("Monthly Analysis Count") }}
+ </div>
+ <div class="card-body">
+ <canvas id="monthlyChart" height="100"></canvas>
+ </div>
+ </div>
+ </div>
+ <!-- Top 10 Chart -->
+ <div class="col-lg-6">
+ <div class="card">
+ <div class="card-header bg-success text-white py-2">
+ <i class="bi bi-trophy me-2"></i>{{ _("Top 10 Staff") }}
+ </div>
+ <div class="card-body">
+ <canvas id="top10Chart" height="200"></canvas>
+ </div>
+ </div>
+ </div>
+ <!-- Error Chart -->
+ <div class="col-lg-6">
+ <div class="card">
+ <div class="card-header bg-danger text-white py-2">
+ <i class="bi bi-exclamation-triangle me-2"></i>{{ _("Error Types") }}
+ </div>
+ <div class="card-body">
+ <canvas id="errorChart" height="200"></canvas>
+ </div>
+ </div>
+ </div>
+ <!-- Equipment Usage Chart -->
+ <div class="col-12">
+ <div class="card">
+ <div class="card-header bg-secondary text-white py-2">
+ <i class="bi bi-tools me-2"></i>{{ _("Equipment Usage (Top 10)") }}
+ </div>
+ <div class="card-body">
+ <canvas id="equipmentChart" height="120"></canvas>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ vite_js_tag('src/chart.js') }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-    // Monthly data
-    const monthlyData = [{% for m in range(1, 13) %}{{ grand_monthly[m] }}{% if not loop.last %},{% endif %}{% endfor %}];
-    const monthLabels = ['{{ _("Jan") }}', '{{ _("Feb") }}', '{{ _("Mar") }}', '{{ _("Apr") }}', '{{ _("May") }}', '{{ _("Jun") }}',
-                         '{{ _("Jul") }}', '{{ _("Aug") }}', '{{ _("Sep") }}', '{{ _("Oct") }}', '{{ _("Nov") }}', '{{ _("Dec") }}'];
+ // Monthly data
+ const monthlyData = [{% for m in range(1, 13) %}{{ grand_monthly[m] }}{% if not loop.last %},{% endif %}{% endfor %}];
+ const monthLabels = ['{{ _("Jan") }}', '{{ _("Feb") }}', '{{ _("Mar") }}', '{{ _("Apr") }}', '{{ _("May") }}', '{{ _("Jun") }}',
+ '{{ _("Jul") }}', '{{ _("Aug") }}', '{{ _("Sep") }}', '{{ _("Oct") }}', '{{ _("Nov") }}', '{{ _("Dec") }}'];
 
-    // Previous year data
-    const prevYearData = [{% for m in range(1, 13) %}{{ prev_monthly[m] }}{% if not loop.last %},{% endif %}{% endfor %}];
+ // Previous year data
+ const prevYearData = [{% for m in range(1, 13) %}{{ prev_monthly[m] }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-    // Monthly chart (year comparison)
-    new Chart(document.getElementById('monthlyChart'), {
-        type: 'bar',
-        data: {
-            labels: monthLabels,
-            datasets: [{
-                label: '{{ year }}',
-                data: monthlyData,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }, {
-                label: '{{ prev_year }}',
-                data: prevYearData,
-                backgroundColor: 'rgba(255, 159, 64, 0.5)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: true, position: 'top' }
-            },
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
+ // Monthly chart (year comparison)
+ new Chart(document.getElementById('monthlyChart'), {
+ type: 'bar',
+ data: {
+ labels: monthLabels,
+ datasets: [{
+ label: '{{ year }}',
+ data: monthlyData,
+ backgroundColor: 'rgba(54, 162, 235, 0.7)',
+ borderColor: 'rgba(54, 162, 235, 1)',
+ borderWidth: 1
+ }, {
+ label: '{{ prev_year }}',
+ data: prevYearData,
+ backgroundColor: 'rgba(255, 159, 64, 0.5)',
+ borderColor: 'rgba(255, 159, 64, 1)',
+ borderWidth: 1
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { display: true, position: 'top' }
+ },
+ scales: {
+ y: { beginAtZero: true }
+ }
+ }
+ });
 
-    // Top 10 data
-    const top10Names = [{% for c in chemists[:10] %}'{{ c.name }}'{% if not loop.last %},{% endif %}{% endfor %}];
-    const top10Values = [{% for c in chemists[:10] %}{{ c.total }}{% if not loop.last %},{% endif %}{% endfor %}];
+ // Top 10 data
+ const top10Names = [{% for c in chemists[:10] %}'{{ c.name }}'{% if not loop.last %},{% endif %}{% endfor %}];
+ const top10Values = [{% for c in chemists[:10] %}{{ c.total }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-    new Chart(document.getElementById('top10Chart'), {
-        type: 'bar',
-        data: {
-            labels: top10Names,
-            datasets: [{
-                label: '{{ _("Total") }}',
-                data: top10Values,
-                backgroundColor: [
-                    'rgba(255, 193, 7, 0.8)',
-                    'rgba(108, 117, 125, 0.8)',
-                    'rgba(220, 53, 69, 0.8)',
-                    'rgba(40, 167, 69, 0.7)',
-                    'rgba(40, 167, 69, 0.6)',
-                    'rgba(40, 167, 69, 0.5)',
-                    'rgba(40, 167, 69, 0.4)',
-                    'rgba(40, 167, 69, 0.4)',
-                    'rgba(40, 167, 69, 0.4)',
-                    'rgba(40, 167, 69, 0.4)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true } }
-        }
-    });
+ new Chart(document.getElementById('top10Chart'), {
+ type: 'bar',
+ data: {
+ labels: top10Names,
+ datasets: [{
+ label: '{{ _("Total") }}',
+ data: top10Values,
+ backgroundColor: [
+ 'rgba(255, 193, 7, 0.8)',
+ 'rgba(108, 117, 125, 0.8)',
+ 'rgba(220, 53, 69, 0.8)',
+ 'rgba(40, 167, 69, 0.7)',
+ 'rgba(40, 167, 69, 0.6)',
+ 'rgba(40, 167, 69, 0.5)',
+ 'rgba(40, 167, 69, 0.4)',
+ 'rgba(40, 167, 69, 0.4)',
+ 'rgba(40, 167, 69, 0.4)',
+ 'rgba(40, 167, 69, 0.4)'
+ ],
+ borderWidth: 1
+ }]
+ },
+ options: {
+ indexAxis: 'y',
+ responsive: true,
+ plugins: { legend: { display: false } },
+ scales: { x: { beginAtZero: true } }
+ }
+ });
 
-    // Error data
-    const errorLabels = [{% for key in error_reason_keys %}'{{ error_reason_labels[key].split(". ")[1] if ". " in error_reason_labels[key] else error_reason_labels[key] }}'{% if not loop.last %},{% endif %}{% endfor %}];
-    const errorValues = [{% for key in error_reason_keys %}{{ grand_errors[key] }}{% if not loop.last %},{% endif %}{% endfor %}];
+ // Error data
+ const errorLabels = [{% for key in error_reason_keys %}'{{ error_reason_labels[key].split(". ")[1] if ". " in error_reason_labels[key] else error_reason_labels[key] }}'{% if not loop.last %},{% endif %}{% endfor %}];
+ const errorValues = [{% for key in error_reason_keys %}{{ grand_errors[key] }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-    new Chart(document.getElementById('errorChart'), {
-        type: 'doughnut',
-        data: {
-            labels: errorLabels,
-            datasets: [{
-                data: errorValues,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(153, 102, 255, 0.8)',
-                    'rgba(255, 159, 64, 0.8)',
-                    'rgba(199, 199, 199, 0.8)',
-                    'rgba(83, 102, 255, 0.8)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'right', labels: { font: { size: 11 } } }
-            }
-        }
-    });
+ new Chart(document.getElementById('errorChart'), {
+ type: 'doughnut',
+ data: {
+ labels: errorLabels,
+ datasets: [{
+ data: errorValues,
+ backgroundColor: [
+ 'rgba(255, 99, 132, 0.8)',
+ 'rgba(54, 162, 235, 0.8)',
+ 'rgba(255, 206, 86, 0.8)',
+ 'rgba(75, 192, 192, 0.8)',
+ 'rgba(153, 102, 255, 0.8)',
+ 'rgba(255, 159, 64, 0.8)',
+ 'rgba(199, 199, 199, 0.8)',
+ 'rgba(83, 102, 255, 0.8)'
+ ]
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { position: 'right', labels: { font: { size: 11 } } }
+ }
+ }
+ });
 
-    // Equipment usage chart (Top 10)
-    const eqData = [
-        {% for c in chemists[:10] %}
-        {name: '{{ c.name }}', hours: {{ c.eq_usage_hours }}, maint: {{ c.eq_maint_count }}, calib: {{ c.eq_calib_count }}}{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ].filter(d => d.hours > 0 || d.maint > 0 || d.calib > 0);
+ // Equipment usage chart (Top 10)
+ const eqData = [
+ {% for c in chemists[:10] %}
+ {name: '{{ c.name }}', hours: {{ c.eq_usage_hours }}, maint: {{ c.eq_maint_count }}, calib: {{ c.eq_calib_count }}}{% if not loop.last %},{% endif %}
+ {% endfor %}
+ ].filter(d => d.hours> 0 || d.maint> 0 || d.calib> 0);
 
-    if (eqData.length > 0) {
-        new Chart(document.getElementById('equipmentChart'), {
-            type: 'bar',
-            data: {
-                labels: eqData.map(d => d.name),
-                datasets: [
-                    {
-                        label: '{{ _("Usage (hours)") }}',
-                        data: eqData.map(d => d.hours),
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: '{{ _("Maintenance") }}',
-                        data: eqData.map(d => d.maint),
-                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
-                        borderColor: 'rgba(255, 193, 7, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: '{{ _("Calibration") }}',
-                        data: eqData.map(d => d.calib),
-                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
-                        borderColor: 'rgba(40, 167, 69, 1)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true, position: 'top' }
-                },
-                scales: {
-                    x: { stacked: false },
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    } else {
-        document.getElementById('equipmentChart').parentElement.innerHTML =
-            '<div class="text-center text-muted py-4"><i class="bi bi-info-circle me-2"></i>{{ _("No equipment usage data") }}</div>';
-    }
+ if (eqData.length> 0) {
+ new Chart(document.getElementById('equipmentChart'), {
+ type: 'bar',
+ data: {
+ labels: eqData.map(d => d.name),
+ datasets: [
+ {
+ label: '{{ _("Usage (hours)") }}',
+ data: eqData.map(d => d.hours),
+ backgroundColor: 'rgba(54, 162, 235, 0.7)',
+ borderColor: 'rgba(54, 162, 235, 1)',
+ borderWidth: 1
+ },
+ {
+ label: '{{ _("Maintenance") }}',
+ data: eqData.map(d => d.maint),
+ backgroundColor: 'rgba(255, 193, 7, 0.7)',
+ borderColor: 'rgba(255, 193, 7, 1)',
+ borderWidth: 1
+ },
+ {
+ label: '{{ _("Calibration") }}',
+ data: eqData.map(d => d.calib),
+ backgroundColor: 'rgba(40, 167, 69, 0.7)',
+ borderColor: 'rgba(40, 167, 69, 1)',
+ borderWidth: 1
+ }
+ ]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { display: true, position: 'top' }
+ },
+ scales: {
+ x: { stacked: false },
+ y: { beginAtZero: true }
+ }
+ }
+ });
+ } else {
+ document.getElementById('equipmentChart').parentElement.innerHTML =
+ '<div class="text-center text-muted py-4"><i class="bi bi-info-circle me-2"></i>{{ _("No equipment usage data") }}</div>';
+ }
 });
 </script>
 
 <style nonce="{{ csp_nonce }}">
 .sticky-col {
-    position: sticky;
-    left: 0;
-    background: inherit;
-    z-index: 1;
+ position: sticky;
+ left: 0;
+ background: inherit;
+ z-index: 1;
 }
 thead .sticky-col { background: #212529; z-index: 2; }
 tbody tr:hover .sticky-col { background: #f5f5f5; }
@@ -805,10 +805,10 @@ tbody tr:hover .sticky-col { background: #f5f5f5; }
 /* Table column width */
 .chemist-table { table-layout: fixed; width: 100%; }
 .chemist-table th, .chemist-table td {
-    padding: 0.25rem 0.35rem !important;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
+ padding: 0.25rem 0.35rem !important;
+ text-align: center;
+ overflow: hidden;
+ text-overflow: ellipsis;
 }
 .chemist-table .col-num { width: 30px; }
 .chemist-table .col-name { width: 90px; text-align: left !important; }

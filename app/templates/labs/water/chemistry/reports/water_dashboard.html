@@ -3,196 +3,196 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .water-dash {
-    min-height: calc(100vh - 80px); padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
-    background-attachment: fixed;
-  }
-  .dash-header {
-    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.08));
-    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 24px; padding: 1.25rem 2rem; margin-bottom: 1.25rem;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
-    box-shadow: 0 4px 24px rgba(59,130,246,0.1);
-  }
-  .dash-header h4 {
-    margin: 0; font-size: 1.5rem; font-weight: 800;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .dash-header .subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+ .water-dash {
+ min-height: calc(100vh - 80px); padding: 1rem 1.5rem;
+ background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
+ background-attachment: fixed;
+ }
+ .dash-header {
+ background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.08));
+ backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 24px; padding: 1.25rem 2rem; margin-bottom: 1.25rem;
+ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+ box-shadow: 0 4px 24px rgba(59,130,246,0.1);
+ }
+ .dash-header h4 {
+ margin: 0; font-size: 1.5rem; font-weight: 800;
+ background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+ -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+ }
+ .dash-header .subtitle { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
 
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
-  .kpi-card {
-    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.5rem; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-  }
-  .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
-  .kpi-card .d-flex { display: flex; justify-content: space-between; align-items: flex-start; }
-  .kpi-card h6 { color: #64748b; font-size: 0.82rem; margin-bottom: 0.5rem; }
-  .kpi-card h2 { margin: 0; font-size: 2rem; font-weight: 800; }
-  .kpi-card small { color: #64748b; font-size: 0.78rem; }
-  .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+ .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+ .kpi-card {
+ background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.5rem; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ }
+ .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+ .kpi-card .d-flex { display: flex; justify-content: space-between; align-items: flex-start; }
+ .kpi-card h6 { color: #64748b; font-size: 0.82rem; margin-bottom: 0.5rem; }
+ .kpi-card h2 { margin: 0; font-size: 2rem; font-weight: 800; }
+ .kpi-card small { color: #64748b; font-size: 0.78rem; }
+ .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
 
-  .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
-  @media (max-width: 992px) { .chart-row { grid-template-columns: 1fr; } }
-  .chart-card {
-    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.25rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-  }
-  .chart-card h6 { font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
+ .chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+ @media (max-width: 992px) { .chart-row { grid-template-columns: 1fr; } }
+ .chart-card {
+ background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.25rem; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ }
+ .chart-card h6 { font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
 
-  .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
-  .quick-links a {
-    display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.85rem 1.25rem; border-radius: 14px;
-    text-decoration: none; font-weight: 600; font-size: 0.9rem;
-    transition: all 0.2s; color: #0f172a;
-    background: rgba(255,255,255,0.8); border: 1px solid rgba(148,163,184,0.15);
-  }
-  .quick-links a:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+ .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+ .quick-links a {
+ display: flex; align-items: center; gap: 0.75rem;
+ padding: 0.85rem 1.25rem; border-radius: 14px;
+ text-decoration: none; font-weight: 600; font-size: 0.9rem;
+ transition: all 0.2s; color: #0f172a;
+ background: rgba(255,255,255,0.8); border: 1px solid rgba(148,163,184,0.15);
+ }
+ .quick-links a:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
 </style>
 
 <div class="water-dash">
-  <div class="dash-header">
-    <div>
-      <h4><i class="bi bi-speedometer2 me-2"></i>{{ _("Water Chemistry Dashboard") }}</h4>
-      <p class="subtitle">{{ month }}-р сар, {{ year }} {{ _("year") }}</p>
-    </div>
-    <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary">
-      <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
-    </a>
-  </div>
+ <div class="dash-header">
+ <div>
+ <h4><i class="bi bi-speedometer2 me-2"></i>{{ _("Water Chemistry Dashboard") }}</h4>
+ <p class="subtitle">{{ month }}-р сар, {{ year }} {{ _("year") }}</p>
+ </div>
+ <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
+ </a>
+ </div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="d-flex">
-        <div>
-          <h6>{{ _("Samples (this month)") }}</h6>
-          <h2 style="color:#2563eb">{{ "{:,}".format(samples_month) }}</h2>
-          <small>{{ _("Year total") }}: {{ "{:,}".format(samples_year) }}</small>
-        </div>
-        <div class="kpi-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb">
-          <i class="bi bi-droplet-fill"></i>
-        </div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="d-flex">
-        <div>
-          <h6>{{ _("Analyses (this month)") }}</h6>
-          <h2 style="color:#3b82f6">{{ "{:,}".format(analyses_month) }}</h2>
-          <small>{{ _("Year total") }}: {{ "{:,}".format(analyses_year) }}</small>
-        </div>
-        <div class="kpi-icon" style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);color:#4f46e5">
-          <i class="bi bi-clipboard-check-fill"></i>
-        </div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="d-flex">
-        <div>
-          <h6>{{ _("Categories") }}</h6>
-          <h2 style="color:#0ea5e9">{{ category_counts|length }}</h2>
-          <small>{{ _("Drinking / Wastewater / Sludge") }}</small>
-        </div>
-        <div class="kpi-icon" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd);color:#0284c7">
-          <i class="bi bi-pie-chart-fill"></i>
-        </div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="d-flex">
-        <div>
-          <h6>{{ _("MNS Pass rate") }}</h6>
-          <h2 style="color:{% if pass_rate >= 90 %}#059669{% else %}#dc2626{% endif %}">{{ "%.0f"|format(pass_rate) }}%</h2>
-          <small>{{ pass_count }} {{ _("pass") }} / {{ fail_count }} {{ _("fail") }}</small>
-        </div>
-        <div class="kpi-icon" style="background:linear-gradient(135deg,#d1fae5,#bbf7d0);color:#15803d">
-          <i class="bi bi-shield-check"></i>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- KPI Cards -->
+ <div class="kpi-grid">
+ <div class="kpi-card">
+ <div class="d-flex">
+ <div>
+ <h6>{{ _("Samples (this month)") }}</h6>
+ <h2 class="text-blue-600">{{ "{:,}".format(samples_month) }}</h2>
+ <small>{{ _("Year total") }}: {{ "{:,}".format(samples_year) }}</small>
+ </div>
+ <div class="kpi-icon bg-info-gradient text-blue-600">
+ <i class="bi bi-droplet-fill"></i>
+ </div>
+ </div>
+ </div>
+ <div class="kpi-card">
+ <div class="d-flex">
+ <div>
+ <h6>{{ _("Analyses (this month)") }}</h6>
+ <h2 class="text-info-2">{{ "{:,}".format(analyses_month) }}</h2>
+ <small>{{ _("Year total") }}: {{ "{:,}".format(analyses_year) }}</small>
+ </div>
+ <div class="kpi-icon bg-[linear-gradient(135deg,#e0e7ff,#c7d2fe)] text-[#4f46e5]">
+ <i class="bi bi-clipboard-check-fill"></i>
+ </div>
+ </div>
+ </div>
+ <div class="kpi-card">
+ <div class="d-flex">
+ <div>
+ <h6>{{ _("Categories") }}</h6>
+ <h2 class="text-[#0ea5e9]">{{ category_counts|length }}</h2>
+ <small>{{ _("Drinking / Wastewater / Sludge") }}</small>
+ </div>
+ <div class="kpi-icon bg-[linear-gradient(135deg,#e0f2fe,#bae6fd)] text-[#0284c7]">
+ <i class="bi bi-pie-chart-fill"></i>
+ </div>
+ </div>
+ </div>
+ <div class="kpi-card">
+ <div class="d-flex">
+ <div>
+ <h6>{{ _("MNS Pass rate") }}</h6>
+ <h2 class="text-blue-600" class="{% if pass_rate >= 90 %}text-success-emerald{% else %}text-fail-rose{% endif %}">{{ "%.0f"|format(pass_rate) }}%</h2>
+ <small>{{ pass_count }} {{ _("pass") }} / {{ fail_count }} {{ _("fail") }}</small>
+ </div>
+ <div class="kpi-icon bg-pass-gradient text-pass-bold">
+ <i class="bi bi-shield-check"></i>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Charts -->
-  <div class="chart-row">
-    <div class="chart-card">
-      <h6><i class="bi bi-graph-up me-2" style="color:#3b82f6"></i>{{ _("Last 6 months analyses") }}</h6>
-      <canvas id="trendChart" height="120"></canvas>
-    </div>
-    <div class="chart-card">
-      <h6><i class="bi bi-pie-chart me-2" style="color:#0ea5e9"></i>{{ _("By Category") }}</h6>
-      <canvas id="categoryChart" height="200"></canvas>
-    </div>
-  </div>
+ <!-- Charts -->
+ <div class="chart-row">
+ <div class="chart-card">
+ <h6><i class="bi bi-graph-up me-2 text-info-2"></i>{{ _("Last 6 months analyses") }}</h6>
+ <canvas id="trendChart" height="120"></canvas>
+ </div>
+ <div class="chart-card">
+ <h6><i class="bi bi-pie-chart me-2 text-[#0ea5e9]"></i>{{ _("By Category") }}</h6>
+ <canvas id="categoryChart" height="200"></canvas>
+ </div>
+ </div>
 
-  <!-- Quick Links -->
-  <div class="chart-card">
-    <h6><i class="bi bi-link-45deg me-2" style="color:#3b82f6"></i>{{ _("Reports") }}</h6>
-    <div class="quick-links">
-      <a href="{{ url_for('water.water_consumption') }}">
-        <i class="bi bi-journal-bookmark" style="color:#2563eb;font-size:1.2rem"></i> {{ _("Analysis Summary") }}
-      </a>
-      <a href="{{ url_for('water.water_monthly_plan') }}">
-        <i class="bi bi-calendar-check" style="color:#3b82f6;font-size:1.2rem"></i> {{ _("Monthly Plan") }}
-      </a>
-      <a href="{{ url_for('water.water_analysis_hub') }}">
-        <i class="bi bi-house" style="color:#64748b;font-size:1.2rem"></i> {{ _("Water Hub") }}
-      </a>
-    </div>
-  </div>
+ <!-- Quick Links -->
+ <div class="chart-card">
+ <h6><i class="bi bi-link-45deg me-2 text-info-2"></i>{{ _("Reports") }}</h6>
+ <div class="quick-links">
+ <a href="{{ url_for('water.water_consumption') }}">
+ <i class="bi bi-journal-bookmark text-blue-600 text-[1.2rem]"></i> {{ _("Analysis Summary") }}
+ </a>
+ <a href="{{ url_for('water.water_monthly_plan') }}">
+ <i class="bi bi-calendar-check text-info-2 text-[1.2rem]"></i> {{ _("Monthly Plan") }}
+ </a>
+ <a href="{{ url_for('water.water_analysis_hub') }}">
+ <i class="bi bi-house text-slate-500 text-[1.2rem]"></i> {{ _("Water Hub") }}
+ </a>
+ </div>
+ </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ vite_js_tag('src/chart.js') }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  // Trend chart
-  const trendLabels = [{% for s in monthly_stats %}'{{ s.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
-  const trendData = [{% for s in monthly_stats %}{{ s.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+ // Trend chart
+ const trendLabels = [{% for s in monthly_stats %}'{{ s.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
+ const trendData = [{% for s in monthly_stats %}{{ s.count }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-  new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels: trendLabels,
-      datasets: [{
-        label: '{{ _("Analysis") }}',
-        data: trendData,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.1)',
-        fill: true, tension: 0.3,
-        pointBackgroundColor: '#2563eb', pointRadius: 5
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+ new Chart(document.getElementById('trendChart'), {
+ type: 'line',
+ data: {
+ labels: trendLabels,
+ datasets: [{
+ label: '{{ _("Analysis") }}',
+ data: trendData,
+ borderColor: '#3b82f6',
+ backgroundColor: 'rgba(59,130,246,0.1)',
+ fill: true, tension: 0.3,
+ pointBackgroundColor: '#2563eb', pointRadius: 5
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { display: false } },
+ scales: { y: { beginAtZero: true } }
+ }
+ });
 
-  // Category doughnut
-  const catLabels = [{% for c in category_counts %}'{{ c.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
-  const catData = [{% for c in category_counts %}{{ c.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+ // Category doughnut
+ const catLabels = [{% for c in category_counts %}'{{ c.label }}'{% if not loop.last %},{% endif %}{% endfor %}];
+ const catData = [{% for c in category_counts %}{{ c.count }}{% if not loop.last %},{% endif %}{% endfor %}];
 
-  new Chart(document.getElementById('categoryChart'), {
-    type: 'doughnut',
-    data: {
-      labels: catLabels,
-      datasets: [{
-        data: catData,
-        backgroundColor: ['#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6'],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
-    }
-  });
+ new Chart(document.getElementById('categoryChart'), {
+ type: 'doughnut',
+ data: {
+ labels: catLabels,
+ datasets: [{
+ data: catData,
+ backgroundColor: ['#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6'],
+ borderWidth: 2, borderColor: '#fff'
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
+ }
+ });
 });
 </script>
 {% endblock %}

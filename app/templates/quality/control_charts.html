@@ -2,424 +2,424 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
-  .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
-  .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-  .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+ .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
+ .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+ .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+ .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
 
-  /* Standard Section */
-  .standard-section { margin-bottom: 1rem; }
-  .standard-header {
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .standard-header:hover { opacity: 0.95; }
-  .standard-header.expanded { border-radius: 12px 12px 0 0; }
-  .standard-header.gbw { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); }
-  .standard-header.cm { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
-  .standard-title { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; }
-  .collapse-icon { transition: transform 0.3s; }
-  .standard-header.expanded .collapse-icon { transform: rotate(180deg); }
+ /* Standard Section */
+ .standard-section { margin-bottom: 1rem; }
+ .standard-header {
+ padding: 0.75rem 1.25rem;
+ border-radius: 12px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ color: white;
+ cursor: pointer;
+ transition: all 0.2s;
+ }
+ .standard-header:hover { opacity: 0.95; }
+ .standard-header.expanded { border-radius: 12px 12px 0 0; }
+ .standard-header.gbw { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); }
+ .standard-header.cm { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
+ .standard-title { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+ .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.25); padding: 4px 12px; border-radius: 20px; }
+ .collapse-icon { transition: transform 0.3s; }
+ .standard-header.expanded .collapse-icon { transform: rotate(180deg); }
 
-  /* Collapsible content */
-  .charts-grid-wrapper {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-  }
-  .charts-grid-wrapper.expanded {
-    max-height: 2000px;
-  }
+ /* Collapsible content */
+ .charts-grid-wrapper {
+ max-height: 0;
+ overflow: hidden;
+ transition: max-height 0.3s ease-out;
+ }
+ .charts-grid-wrapper.expanded {
+ max-height: 2000px;
+ }
 
-  /* Cards Grid */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
+ /* Cards Grid */
+ .charts-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+ gap: 1rem;
+ padding: 1rem;
+ background: white;
+ border-radius: 0 0 12px 12px;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+ }
 
-  /* Chart Card */
-  .chart-card {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 2px solid transparent;
-  }
-  .chart-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    border-color: #8b5cf6;
-  }
-  .chart-card.status-pass { border-left: 4px solid #22c55e; }
-  .chart-card.status-warning { border-left: 4px solid #f59e0b; }
-  .chart-card.status-reject { border-left: 4px solid #ef4444; }
-  .chart-card.status-na { border-left: 4px solid #94a3b8; }
-  .chart-card.status-nodata { border-left: 4px solid #cbd5e1; background: #f8fafc; }
+ /* Chart Card */
+ .chart-card {
+ background: #f8fafc;
+ border-radius: 12px;
+ padding: 1rem;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ border: 2px solid transparent;
+ }
+ .chart-card:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+ border-color: #8b5cf6;
+ }
+ .chart-card.status-pass { border-left: 4px solid #22c55e; }
+ .chart-card.status-warning { border-left: 4px solid #f59e0b; }
+ .chart-card.status-reject { border-left: 4px solid #ef4444; }
+ .chart-card.status-na { border-left: 4px solid #94a3b8; }
+ .chart-card.status-nodata { border-left: 4px solid #cbd5e1; background: #f8fafc; }
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.75rem;
-  }
-  .card-analysis-code {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1e293b;
-  }
-  .card-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-bottom: 0.75rem;
-  }
-  .card-stats .label { color: #94a3b8; }
-  .card-stats .value { font-weight: 600; color: #1e293b; }
+ .card-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-start;
+ margin-bottom: 0.75rem;
+ }
+ .card-analysis-code {
+ font-size: 1.1rem;
+ font-weight: 700;
+ color: #1e293b;
+ }
+ .card-stats {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 0.5rem;
+ font-size: 0.8rem;
+ color: #64748b;
+ margin-bottom: 0.75rem;
+ }
+ .card-stats .label { color: #94a3b8; }
+ .card-stats .value { font-weight: 600; color: #1e293b; }
 
-  .card-chart-container {
-    height: 120px;
-    position: relative;
-  }
+ .card-chart-container {
+ height: 120px;
+ position: relative;
+ }
 
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #e2e8f0;
-    font-size: 0.75rem;
-    color: #64748b;
-  }
+ .card-footer {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ margin-top: 0.75rem;
+ padding-top: 0.75rem;
+ border-top: 1px solid #e2e8f0;
+ font-size: 0.75rem;
+ color: #64748b;
+ }
 
-  /* Modal */
-  .chart-modal .modal-dialog { max-width: 900px; }
-  .chart-modal .modal-content { border-radius: 16px; border: none; }
-  .chart-modal .modal-header {
-    border-bottom: none;
-    padding: 1.5rem 1.5rem 0.5rem;
-  }
-  .chart-modal .modal-body { padding: 1rem 1.5rem 1.5rem; }
+ /* Modal */
+ .chart-modal .modal-dialog { max-width: 900px; }
+ .chart-modal .modal-content { border-radius: 16px; border: none; }
+ .chart-modal .modal-header {
+ border-bottom: none;
+ padding: 1.5rem 1.5rem 0.5rem;
+ }
+ .chart-modal .modal-body { padding: 1rem 1.5rem 1.5rem; }
 
-  .modal-analysis-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+ .modal-analysis-title {
+ font-size: 1.5rem;
+ font-weight: 700;
+ color: #1e293b;
+ display: flex;
+ align-items: center;
+ gap: 0.75rem;
+ }
 
-  .modal-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  .modal-stat-card {
-    background: #f8fafc;
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-  }
-  .modal-stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem; }
-  .modal-stat-value { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
-  .modal-stat-value.target { color: #1e40af; }
-  .modal-stat-value.sd { color: #7c3aed; }
-  .modal-stat-value.count { color: #0891b2; }
+ .modal-stats-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 1rem;
+ margin-bottom: 1.5rem;
+ }
+ .modal-stat-card {
+ background: #f8fafc;
+ border-radius: 10px;
+ padding: 1rem;
+ text-align: center;
+ }
+ .modal-stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem; }
+ .modal-stat-value { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+ .modal-stat-value.target { color: #1e40af; }
+ .modal-stat-value.sd { color: #7c3aed; }
+ .modal-stat-value.count { color: #0891b2; }
 
-  .modal-chart-container {
-    height: 350px;
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
+ .modal-chart-container {
+ height: 350px;
+ background: #f8fafc;
+ border-radius: 12px;
+ padding: 1rem;
+ margin-bottom: 1rem;
+ }
 
-  .modal-legend {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    font-size: 0.8rem;
-    color: #64748b;
-    padding: 0.75rem;
-    background: #f1f5f9;
-    border-radius: 8px;
-  }
-  .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-line { width: 24px; height: 3px; border-radius: 2px; }
-  .legend-line.target { background: #000; }
-  .legend-line.sd1 { background: #22c55e; }
-  .legend-line.sd2 { background: #ef4444; }
-  .legend-line.sd3 { background: #9333ea; }
+ .modal-legend {
+ display: flex;
+ justify-content: center;
+ gap: 1.5rem;
+ font-size: 0.8rem;
+ color: #64748b;
+ padding: 0.75rem;
+ background: #f1f5f9;
+ border-radius: 8px;
+ }
+ .legend-item { display: flex; align-items: center; gap: 6px; }
+ .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+ .legend-line.target { background: #000; }
+ .legend-line.sd1 { background: #22c55e; }
+ .legend-line.sd2 { background: #ef4444; }
+ .legend-line.sd3 { background: #9333ea; }
 
-  .violations-section {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #fef2f2;
-    border-radius: 10px;
-    border-left: 4px solid #ef4444;
-  }
-  .violations-title { font-weight: 600; color: #dc2626; margin-bottom: 0.5rem; }
-  .violation-item { font-size: 0.85rem; color: #7f1d1d; padding: 0.25rem 0; }
+ .violations-section {
+ margin-top: 1rem;
+ padding: 1rem;
+ background: #fef2f2;
+ border-radius: 10px;
+ border-left: 4px solid #ef4444;
+ }
+ .violations-title { font-weight: 600; color: #dc2626; margin-bottom: 0.5rem; }
+ .violation-item { font-size: 0.85rem; color: #7f1d1d; padding: 0.25rem 0; }
 
-  /* Capability Indices */
-  .capability-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  .cap-card {
-    background: #f0f9ff;
-    border-radius: 10px;
-    padding: 0.75rem;
-    text-align: center;
-    border: 1px solid #e0f2fe;
-  }
-  .cap-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
-  .cap-value { font-size: 1.2rem; font-weight: 700; }
-  .cap-value.good { color: #16a34a; }
-  .cap-value.marginal { color: #f59e0b; }
-  .cap-value.poor { color: #ef4444; }
+ /* Capability Indices */
+ .capability-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 0.75rem;
+ margin-bottom: 1rem;
+ }
+ .cap-card {
+ background: #f0f9ff;
+ border-radius: 10px;
+ padding: 0.75rem;
+ text-align: center;
+ border: 1px solid #e0f2fe;
+ }
+ .cap-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+ .cap-value { font-size: 1.2rem; font-weight: 700; }
+ .cap-value.good { color: #16a34a; }
+ .cap-value.marginal { color: #f59e0b; }
+ .cap-value.poor { color: #ef4444; }
 
-  /* Chart type toggle */
-  .chart-type-toggle { margin-bottom: 0.75rem; }
-  .chart-type-toggle .btn { font-size: 0.8rem; padding: 0.25rem 0.75rem; }
+ /* Chart type toggle */
+ .chart-type-toggle { margin-bottom: 0.75rem; }
+ .chart-type-toggle .btn { font-size: 0.8rem; padding: 0.25rem 0.75rem; }
 
-  /* Loading & Empty States */
-  .loading-state { text-align: center; padding: 3rem; }
-  .empty-state { text-align: center; padding: 3rem; color: #64748b; }
+ /* Loading & Empty States */
+ .loading-state { text-align: center; padding: 3rem; }
+ .empty-state { text-align: center; padding: 3rem; color: #64748b; }
 
-  /* Stats Summary */
-  .stats-summary {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-  .stat-item {
-    background: white;
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border-top: 3px solid #94a3b8;
-  }
-  .stat-item.stat-total { border-top-color: #3b82f6; }
-  .stat-item.stat-pass { border-top-color: #22c55e; }
-  .stat-item.stat-warning { border-top-color: #f59e0b; }
-  .stat-item.stat-reject { border-top-color: #ef4444; }
-  .stat-item.stat-repeat { border-top-color: #8b5cf6; }
-  .stat-item.stat-declined { border-top-color: #64748b; }
-  .stat-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
-  .stat-value { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; }
-  .stat-total .stat-value { color: #3b82f6; }
-  .stat-pass .stat-value { color: #22c55e; }
-  .stat-warning .stat-value { color: #f59e0b; }
-  .stat-reject .stat-value { color: #ef4444; }
-  .stat-repeat .stat-value { color: #8b5cf6; }
-  .stat-declined .stat-value { color: #64748b; }
+ /* Stats Summary */
+ .stats-summary {
+ display: grid;
+ grid-template-columns: repeat(6, 1fr);
+ gap: 0.75rem;
+ margin-bottom: 1.5rem;
+ }
+ .stat-item {
+ background: white;
+ border-radius: 10px;
+ padding: 1rem;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+ border-top: 3px solid #94a3b8;
+ }
+ .stat-item.stat-total { border-top-color: #3b82f6; }
+ .stat-item.stat-pass { border-top-color: #22c55e; }
+ .stat-item.stat-warning { border-top-color: #f59e0b; }
+ .stat-item.stat-reject { border-top-color: #ef4444; }
+ .stat-item.stat-repeat { border-top-color: #8b5cf6; }
+ .stat-item.stat-declined { border-top-color: #64748b; }
+ .stat-label { font-size: 0.7rem; color: #64748b; font-weight: 600; letter-spacing: 0.5px; }
+ .stat-value { font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem; }
+ .stat-total .stat-value { color: #3b82f6; }
+ .stat-pass .stat-value { color: #22c55e; }
+ .stat-warning .stat-value { color: #f59e0b; }
+ .stat-reject .stat-value { color: #ef4444; }
+ .stat-repeat .stat-value { color: #8b5cf6; }
+ .stat-declined .stat-value { color: #64748b; }
 
-  /* Period buttons */
-  .period-btn.active {
-    background: #7c3aed !important;
-    border-color: #7c3aed !important;
-    color: white !important;
-  }
+ /* Period buttons */
+ .period-btn.active {
+ background: #7c3aed !important;
+ border-color: #7c3aed !important;
+ color: white !important;
+ }
 
-  @media (max-width: 992px) {
-    .stats-summary { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (max-width: 768px) {
-    .stats-summary { grid-template-columns: repeat(2, 1fr); }
-    .qc-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
-  }
+ @media (max-width: 992px) {
+ .stats-summary { grid-template-columns: repeat(3, 1fr); }
+ }
+ @media (max-width: 768px) {
+ .stats-summary { grid-template-columns: repeat(2, 1fr); }
+ .qc-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+ }
 </style>
 
 <div class="qc-page">
-  <div class="qc-header">
-    <div>
-      <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>{{ _("QC Control Charts") }}</h1>
-      <div class="qc-subtitle">{{ _("ISO 17025 - Levey-Jennings | Click a card to view details") }}</div>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <!-- Period filter -->
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn active" data-period="1">{{ _("Today") }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="7">{{ _("7 Days") }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="30">{{ _("1 Month") }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="90">{{ _("Quarter") }}</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="all">{{ _("All") }}</button>
-      </div>
-      <div class="btn-group" role="group">
-        <button class="btn btn-outline-secondary btn-sm" onclick="collapseAll()" title="{{ _("Collapse All") }}">
-          <i class="bi bi-arrows-collapse"></i>
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="expandAll()" title="{{ _("Expand All") }}">
-          <i class="bi bi-arrows-expand"></i>
-        </button>
-      </div>
-      <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
-        <i class="bi bi-arrow-clockwise"></i>
-      </button>
-    </div>
-  </div>
+ <div class="qc-header">
+ <div>
+ <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>{{ _("QC Control Charts") }}</h1>
+ <div class="qc-subtitle">{{ _("ISO 17025 - Levey-Jennings | Click a card to view details") }}</div>
+ </div>
+ <div class="d-flex align-items-center gap-2">
+ <!-- Period filter -->
+ <div class="btn-group" role="group">
+ <button type="button" class="btn btn-outline-secondary btn-sm period-btn active" data-period="1">{{ _("Today") }}</button>
+ <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="7">{{ _("7 Days") }}</button>
+ <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="30">{{ _("1 Month") }}</button>
+ <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="90">{{ _("Quarter") }}</button>
+ <button type="button" class="btn btn-outline-secondary btn-sm period-btn" data-period="all">{{ _("All") }}</button>
+ </div>
+ <div class="btn-group" role="group">
+ <button class="btn btn-outline-secondary btn-sm" data-action="collapseAll" title="{{ _("Collapse All") }}">
+ <i class="bi bi-arrows-collapse"></i>
+ </button>
+ <button class="btn btn-outline-secondary btn-sm" data-action="expandAll" title="{{ _("Expand All") }}">
+ <i class="bi bi-arrows-expand"></i>
+ </button>
+ </div>
+ <button class="btn btn-outline-primary btn-sm" data-action="reload">
+ <i class="bi bi-arrow-clockwise"></i>
+ </button>
+ </div>
+ </div>
 
-  <!-- Overall statistics -->
-  <div class="stats-summary" id="statsSummary">
-    <div class="stat-item stat-total">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("TOTAL") }}</div>
-        <div class="stat-value" id="statTotal">0</div>
-      </div>
-    </div>
-    <div class="stat-item stat-pass">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("OK") }}</div>
-        <div class="stat-value" id="statPass">0</div>
-      </div>
-    </div>
-    <div class="stat-item stat-warning">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("WARNING") }}</div>
-        <div class="stat-value" id="statWarning">0</div>
-      </div>
-    </div>
-    <div class="stat-item stat-reject">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("EXCEEDED") }}</div>
-        <div class="stat-value" id="statReject">0</div>
-      </div>
-    </div>
-    <div class="stat-item stat-repeat">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("REPEAT") }}</div>
-        <div class="stat-value" id="statRepeat">0</div>
-      </div>
-    </div>
-    <div class="stat-item stat-declined">
-      <div class="stat-info">
-        <div class="stat-label">{{ _("DECLINED") }}</div>
-        <div class="stat-value" id="statDeclined">0</div>
-      </div>
-    </div>
-  </div>
+ <!-- Overall statistics -->
+ <div class="stats-summary" id="statsSummary">
+ <div class="stat-item stat-total">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("TOTAL") }}</div>
+ <div class="stat-value" id="statTotal">0</div>
+ </div>
+ </div>
+ <div class="stat-item stat-pass">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("OK") }}</div>
+ <div class="stat-value" id="statPass">0</div>
+ </div>
+ </div>
+ <div class="stat-item stat-warning">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("WARNING") }}</div>
+ <div class="stat-value" id="statWarning">0</div>
+ </div>
+ </div>
+ <div class="stat-item stat-reject">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("EXCEEDED") }}</div>
+ <div class="stat-value" id="statReject">0</div>
+ </div>
+ </div>
+ <div class="stat-item stat-repeat">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("REPEAT") }}</div>
+ <div class="stat-value" id="statRepeat">0</div>
+ </div>
+ </div>
+ <div class="stat-item stat-declined">
+ <div class="stat-info">
+ <div class="stat-label">{{ _("DECLINED") }}</div>
+ <div class="stat-value" id="statDeclined">0</div>
+ </div>
+ </div>
+ </div>
 
-  <div id="chartsContainer">
-    <div class="loading-state">
-      <div class="spinner-border text-primary mb-3"></div>
-      <div class="text-muted">{{ _("Loading...") }}</div>
-    </div>
-  </div>
+ <div id="chartsContainer">
+ <div class="loading-state">
+ <div class="spinner-border text-primary mb-3"></div>
+ <div class="text-muted">{{ _("Loading...") }}</div>
+ </div>
+ </div>
 </div>
 
 <!-- Detail Modal -->
 <div class="modal fade chart-modal" id="chartModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-analysis-title">
-          <span id="modalAnalysisCode">-</span>
-          <span id="modalStatusBadge"></span>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-stats-grid">
-          <div class="modal-stat-card">
-            <div class="modal-stat-label">{{ _("Target") }}</div>
-            <div class="modal-stat-value target" id="modalTarget">-</div>
-          </div>
-          <div class="modal-stat-card">
-            <div class="modal-stat-label">{{ _("SD") }} (+/-)</div>
-            <div class="modal-stat-value sd" id="modalSD">-</div>
-          </div>
-          <div class="modal-stat-card">
-            <div class="modal-stat-label">{{ _("Latest Value") }}</div>
-            <div class="modal-stat-value" id="modalLatest">-</div>
-          </div>
-          <div class="modal-stat-card">
-            <div class="modal-stat-label">{{ _("Measurement Count") }}</div>
-            <div class="modal-stat-value count" id="modalCount">-</div>
-          </div>
-        </div>
+ <div class="modal-dialog modal-lg modal-dialog-centered">
+ <div class="modal-content">
+ <div class="modal-header">
+ <div class="modal-analysis-title">
+ <span id="modalAnalysisCode">-</span>
+ <span id="modalStatusBadge"></span>
+ </div>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="modal-stats-grid">
+ <div class="modal-stat-card">
+ <div class="modal-stat-label">{{ _("Target") }}</div>
+ <div class="modal-stat-value target" id="modalTarget">-</div>
+ </div>
+ <div class="modal-stat-card">
+ <div class="modal-stat-label">{{ _("SD") }} (+/-)</div>
+ <div class="modal-stat-value sd" id="modalSD">-</div>
+ </div>
+ <div class="modal-stat-card">
+ <div class="modal-stat-label">{{ _("Latest Value") }}</div>
+ <div class="modal-stat-value" id="modalLatest">-</div>
+ </div>
+ <div class="modal-stat-card">
+ <div class="modal-stat-label">{{ _("Measurement Count") }}</div>
+ <div class="modal-stat-value count" id="modalCount">-</div>
+ </div>
+ </div>
 
-        <!-- Capability Indices -->
-        <div class="capability-grid" id="capabilityGrid" style="display:none;">
-          <div class="cap-card">
-            <div class="cap-label">Cp</div>
-            <div class="cap-value" id="capCp">-</div>
-          </div>
-          <div class="cap-card">
-            <div class="cap-label">Cpk</div>
-            <div class="cap-value" id="capCpk">-</div>
-          </div>
-          <div class="cap-card">
-            <div class="cap-label">%RSD</div>
-            <div class="cap-value" id="capRsd">-</div>
-          </div>
-          <div class="cap-card">
-            <div class="cap-label">{{ _("Bias") }} %</div>
-            <div class="cap-value" id="capBias">-</div>
-          </div>
-        </div>
+ <!-- Capability Indices -->
+ <div class="capability-grid hidden" id="capabilityGrid">
+ <div class="cap-card">
+ <div class="cap-label">Cp</div>
+ <div class="cap-value" id="capCp">-</div>
+ </div>
+ <div class="cap-card">
+ <div class="cap-label">Cpk</div>
+ <div class="cap-value" id="capCpk">-</div>
+ </div>
+ <div class="cap-card">
+ <div class="cap-label">%RSD</div>
+ <div class="cap-value" id="capRsd">-</div>
+ </div>
+ <div class="cap-card">
+ <div class="cap-label">{{ _("Bias") }} %</div>
+ <div class="cap-value" id="capBias">-</div>
+ </div>
+ </div>
 
-        <!-- Chart type toggle -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="chart-type-toggle btn-group btn-group-sm" role="group">
-            <button type="button" class="btn btn-outline-primary active" data-chart-type="shewhart">Shewhart</button>
-            <button type="button" class="btn btn-outline-primary" data-chart-type="cusum">CUSUM</button>
-            <button type="button" class="btn btn-outline-primary" data-chart-type="ewma">EWMA</button>
-          </div>
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-secondary" id="btnExportCsv" title="Export CSV">
-              <i class="bi bi-filetype-csv"></i>
-            </button>
-            <button class="btn btn-outline-secondary" id="btnExportJson" title="Export JSON">
-              <i class="bi bi-filetype-json"></i>
-            </button>
-            <button class="btn btn-outline-danger" id="btnAutoCA" style="display:none;" title="{{ _('Create Corrective Action') }}">
-              <i class="bi bi-exclamation-octagon me-1"></i>CA
-            </button>
-          </div>
-        </div>
+ <!-- Chart type toggle -->
+ <div class="d-flex justify-content-between align-items-center mb-2">
+ <div class="chart-type-toggle btn-group btn-group-sm" role="group">
+ <button type="button" class="btn btn-outline-primary active" data-chart-type="shewhart">Shewhart</button>
+ <button type="button" class="btn btn-outline-primary" data-chart-type="cusum">CUSUM</button>
+ <button type="button" class="btn btn-outline-primary" data-chart-type="ewma">EWMA</button>
+ </div>
+ <div class="btn-group btn-group-sm">
+ <button class="btn btn-outline-secondary" id="btnExportCsv" title="Export CSV">
+ <i class="bi bi-filetype-csv"></i>
+ </button>
+ <button class="btn btn-outline-secondary" id="btnExportJson" title="Export JSON">
+ <i class="bi bi-filetype-json"></i>
+ </button>
+ <button class="btn btn-outline-danger hidden" id="btnAutoCA" title="{{ _('Create Corrective Action') }}">
+ <i class="bi bi-exclamation-octagon me-1"></i>CA
+ </button>
+ </div>
+ </div>
 
-        <div class="modal-chart-container">
-          <canvas id="modalChart"></canvas>
-        </div>
+ <div class="modal-chart-container">
+ <canvas id="modalChart"></canvas>
+ </div>
 
-        <div class="modal-legend" id="modalLegend">
-          <div class="legend-item"><div class="legend-line target"></div>{{ _("Target") }}</div>
-          <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
-          <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD ({{ _("Warning") }})</div>
-          <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD ({{ _("Reject") }})</div>
-        </div>
+ <div class="modal-legend" id="modalLegend">
+ <div class="legend-item"><div class="legend-line target"></div>{{ _("Target") }}</div>
+ <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
+ <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD ({{ _("Warning") }})</div>
+ <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD ({{ _("Reject") }})</div>
+ </div>
 
-        <div id="modalViolations" class="violations-section" style="display:none;">
-          <div class="violations-title"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Westgard Violations") }}</div>
-          <div id="violationsList"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <div id="modalViolations" class="violations-section hidden">
+ <div class="violations-title"><i class="bi bi-exclamation-triangle me-1"></i>{{ _("Westgard Violations") }}</div>
+ <div id="violationsList"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{{ vite_js_tag('src/chart.js') }}
 <script nonce="{{ csp_nonce }}">
 let modalChart = null;
 let chartsData = {};
@@ -428,477 +428,477 @@ let currentPeriod = 1; // Default: Today
 const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 const I18N = {
-  noQcSamples: '{{ _("No CM/GBW sample results found") }}',
-  registerQc: '{{ _("Please register QC samples and enter results") }}',
-  crm: '{{ _("CRM") }}',
-  controlMaterial: '{{ _("Control Material") }}',
-  analyses: '{{ _("analyses") }}',
-  noData: '{{ _("No data") }}',
-  viewDetails: '{{ _("View Details") }}',
-  violation: '{{ _("violation(s)") }}',
-  notEnoughData: '{{ _("Not enough data") }}',
-  target: '{{ _("Target") }}',
-  sd: '{{ _("SD") }}',
-  latest: '{{ _("Latest") }}',
-  count: '{{ _("Count") }}',
-  date: '{{ _("Date") }}'
+ noQcSamples: '{{ _("No CM/GBW sample results found") }}',
+ registerQc: '{{ _("Please register QC samples and enter results") }}',
+ crm: '{{ _("CRM") }}',
+ controlMaterial: '{{ _("Control Material") }}',
+ analyses: '{{ _("analyses") }}',
+ noData: '{{ _("No data") }}',
+ viewDetails: '{{ _("View Details") }}',
+ violation: '{{ _("violation(s)") }}',
+ notEnoughData: '{{ _("Not enough data") }}',
+ target: '{{ _("Target") }}',
+ sd: '{{ _("SD") }}',
+ latest: '{{ _("Latest") }}',
+ count: '{{ _("Count") }}',
+ date: '{{ _("Date") }}'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadAllCharts();
-  setupPeriodButtons();
+ loadAllCharts();
+ setupPeriodButtons();
 });
 
 function toggleSection(sectionId) {
-  const wrapper = document.getElementById(sectionId);
-  const header = document.querySelector(`[data-section="${sectionId}"]`);
-  if (wrapper && header) {
-    wrapper.classList.toggle('expanded');
-    header.classList.toggle('expanded');
-  }
+ const wrapper = document.getElementById(sectionId);
+ const header = document.querySelector(`[data-section="${sectionId}"]`);
+ if (wrapper && header) {
+ wrapper.classList.toggle('expanded');
+ header.classList.toggle('expanded');
+ }
 }
 
 function collapseAll() {
-  document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.remove('expanded'));
-  document.querySelectorAll('.standard-header').forEach(h => h.classList.remove('expanded'));
+ document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.remove('expanded'));
+ document.querySelectorAll('.standard-header').forEach(h => h.classList.remove('expanded'));
 }
 
 function expandAll() {
-  document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.add('expanded'));
-  document.querySelectorAll('.standard-header').forEach(h => h.classList.add('expanded'));
+ document.querySelectorAll('.charts-grid-wrapper').forEach(w => w.classList.add('expanded'));
+ document.querySelectorAll('.standard-header').forEach(h => h.classList.add('expanded'));
 }
 
 function setupPeriodButtons() {
-  document.querySelectorAll('.period-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      currentPeriod = this.dataset.period === 'all' ? 'all' : parseInt(this.dataset.period);
-      if (allQcData) {
-        renderCharts(allQcData);
-      }
-    });
-  });
+ document.querySelectorAll('.period-btn').forEach(btn => {
+ btn.addEventListener('click', function() {
+ document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+ this.classList.add('active');
+ currentPeriod = this.dataset.period === 'all' ? 'all' : parseInt(this.dataset.period);
+ if (allQcData) {
+ renderCharts(allQcData);
+ }
+ });
+ });
 }
 
 function updateStats(qcSamples) {
-  let total = 0, pass = 0, warning = 0, reject = 0, repeat = 0, declined = 0;
-  qcSamples.forEach(item => {
-    total++;
-    if (item.status === 'pass') pass++;
-    else if (item.status === 'warning') warning++;
-    else if (item.status === 'reject' || item.status === 'fail') reject++;
-    // REPEAT: if count > 1, repeat measurements were performed
-    if (item.count > 1) repeat += (item.count - 1);
-  });
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statPass').textContent = pass;
-  document.getElementById('statWarning').textContent = warning;
-  document.getElementById('statReject').textContent = reject;
-  document.getElementById('statRepeat').textContent = repeat;
-  document.getElementById('statDeclined').textContent = declined;
+ let total = 0, pass = 0, warning = 0, reject = 0, repeat = 0, declined = 0;
+ qcSamples.forEach(item => {
+ total++;
+ if (item.status === 'pass') pass++;
+ else if (item.status === 'warning') warning++;
+ else if (item.status === 'reject' || item.status === 'fail') reject++;
+ // REPEAT: if count> 1, repeat measurements were performed
+ if (item.count> 1) repeat += (item.count - 1);
+ });
+ document.getElementById('statTotal').textContent = total;
+ document.getElementById('statPass').textContent = pass;
+ document.getElementById('statWarning').textContent = warning;
+ document.getElementById('statReject').textContent = reject;
+ document.getElementById('statRepeat').textContent = repeat;
+ document.getElementById('statDeclined').textContent = declined;
 }
 
 function filterByPeriod(dataPoints, period) {
-  if (period === 'all') return dataPoints;
-  const now = new Date();
+ if (period === 'all') return dataPoints;
+ const now = new Date();
 
-  if (period === 1) {
-    // Today: Use local time (not UTC)
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-    return dataPoints.filter(p => p.date && p.date.startsWith(today));
-  }
+ if (period === 1) {
+ // Today: Use local time (not UTC)
+ const year = now.getFullYear();
+ const month = String(now.getMonth() + 1).padStart(2, '0');
+ const day = String(now.getDate()).padStart(2, '0');
+ const today = `${year}-${month}-${day}`;
+ return dataPoints.filter(p => p.date && p.date.startsWith(today));
+ }
 
-  // Others: last N days
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - period);
-  return dataPoints.filter(p => p.date && new Date(p.date) >= cutoff);
+ // Others: last N days
+ const cutoff = new Date();
+ cutoff.setDate(cutoff.getDate() - period);
+ return dataPoints.filter(p => p.date && new Date(p.date)>= cutoff);
 }
 
 async function loadAllCharts() {
-  const container = document.getElementById('chartsContainer');
-  try {
-    const resp = await fetch("{{ url_for('quality.api_westgard_summary') }}");
-    const data = await resp.json();
-    allQcData = data;
-    renderCharts(data);
-  } catch (err) {
-    container.innerHTML = `<div class="alert alert-danger">Error: ${_e(err.message)}</div>`;
-  }
+ const container = document.getElementById('chartsContainer');
+ try {
+ const resp = await fetch("{{ url_for('quality.api_westgard_summary') }}");
+ const data = await resp.json();
+ allQcData = data;
+ renderCharts(data);
+ } catch (err) {
+ container.innerHTML = `<div class="alert alert-danger">Error: ${_e(err.message)}</div>`;
+ }
 }
 
 async function renderCharts(data) {
-  const container = document.getElementById('chartsContainer');
-  chartsData = {}; // Reset cache
+ const container = document.getElementById('chartsContainer');
+ chartsData = {}; // Reset cache
 
-  if (!data.qc_samples || data.qc_samples.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i>
-        <h5 class="mt-3">${I18N.noQcSamples}</h5>
-        <p class="text-muted">${I18N.registerQc}</p>
-      </div>`;
-    updateStats([]);
-    return;
-  }
+ if (!data.qc_samples || data.qc_samples.length === 0) {
+ container.innerHTML = `
+ <div class="empty-state">
+ <i class="bi bi-inbox text-[3rem] opacity-[0.5]"></i>
+ <h5 class="mt-3">${I18N.noQcSamples}</h5>
+ <p class="text-muted">${I18N.registerQc}</p>
+ </div>`;
+ updateStats([]);
+ return;
+ }
 
-  // Update stats
-  updateStats(data.qc_samples);
+ // Update stats
+ updateStats(data.qc_samples);
 
-  // Group by standard
-  const byStandard = {};
-  const standardOrder = []; // Preserve order from API
-  data.qc_samples.forEach(item => {
-    if (!byStandard[item.standard_name]) {
-      byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
-      standardOrder.push(item.standard_name); // Add on first occurrence
-    }
-    byStandard[item.standard_name].analyses.push(item);
-  });
+ // Group by standard
+ const byStandard = {};
+ const standardOrder = []; // Preserve order from API
+ data.qc_samples.forEach(item => {
+ if (!byStandard[item.standard_name]) {
+ byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
+ standardOrder.push(item.standard_name); // Add on first occurrence
+ }
+ byStandard[item.standard_name].analyses.push(item);
+ });
 
-  container.innerHTML = '';
+ container.innerHTML = '';
 
-  // Iterate in API order (active standards on top)
-  for (const standardName of standardOrder) {
-    const stdData = byStandard[standardName];
-    const isGbw = stdData.qc_type === 'GBW';
+ // Iterate in API order (active standards on top)
+ for (const standardName of standardOrder) {
+ const stdData = byStandard[standardName];
+ const isGbw = stdData.qc_type === 'GBW';
 
-    const section = document.createElement('div');
-    section.className = 'standard-section';
+ const section = document.createElement('div');
+ section.className = 'standard-section';
 
-    // Header (click to toggle)
-    const sectionId = 'section_' + standardName.replace(/[^a-zA-Z0-9]/g, '_');
-    const header = document.createElement('div');
-    header.className = `standard-header ${isGbw ? 'gbw' : 'cm'} expanded`;
-    header.setAttribute('data-section', sectionId);
-    header.onclick = function() { toggleSection(sectionId); };
-    header.innerHTML = `
-      <div class="standard-title">
-        <i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>
-        ${_e(standardName)}
-        <small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? I18N.crm : I18N.controlMaterial}</small>
-      </div>
-      <div class="d-flex align-items-center gap-2">
-        <span class="standard-badge">${stdData.analyses.length} ${I18N.analyses}</span>
-        <i class="bi bi-chevron-up collapse-icon"></i>
-      </div>
-    `;
-    section.appendChild(header);
+ // Header (click to toggle)
+ const sectionId = 'section_' + standardName.replace(/[^a-zA-Z0-9]/g, '_');
+ const header = document.createElement('div');
+ header.className = `standard-header ${isGbw ? 'gbw' : 'cm'} expanded`;
+ header.setAttribute('data-section', sectionId);
+ header.onclick = function() { toggleSection(sectionId); };
+ header.innerHTML = `
+ <div class="standard-title">
+ <i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>
+ ${_e(standardName)}
+ <small class="opacity-[0.8] font-normal ml-[8px]">${isGbw ? I18N.crm : I18N.controlMaterial}</small>
+ </div>
+ <div class="d-flex align-items-center gap-2">
+ <span class="standard-badge">${stdData.analyses.length} ${I18N.analyses}</span>
+ <i class="bi bi-chevron-up collapse-icon"></i>
+ </div>
+ `;
+ section.appendChild(header);
 
-    // Collapsible wrapper
-    const wrapper = document.createElement('div');
-    wrapper.className = 'charts-grid-wrapper expanded';
-    wrapper.id = sectionId;
+ // Collapsible wrapper
+ const wrapper = document.createElement('div');
+ wrapper.className = 'charts-grid-wrapper expanded';
+ wrapper.id = sectionId;
 
-    // Cards Grid
-    const grid = document.createElement('div');
-    grid.className = 'charts-grid';
+ // Cards Grid
+ const grid = document.createElement('div');
+ grid.className = 'charts-grid';
 
-    // Fixed order (new format)
-    const ORDER = ['Mad', 'Aad', 'Vad', 'St', 'CV', 'TRD', 'CSN', 'Gi', 'P'];
-    stdData.analyses.sort((a, b) => {
-      const idxA = ORDER.indexOf(a.analysis_code);
-      const idxB = ORDER.indexOf(b.analysis_code);
-      const orderA = idxA === -1 ? 999 : idxA;
-      const orderB = idxB === -1 ? 999 : idxB;
-      return orderA - orderB;
-    });
+ // Fixed order (new format)
+ const ORDER = ['Mad', 'Aad', 'Vad', 'St', 'CV', 'TRD', 'CSN', 'Gi', 'P'];
+ stdData.analyses.sort((a, b) => {
+ const idxA = ORDER.indexOf(a.analysis_code);
+ const idxB = ORDER.indexOf(b.analysis_code);
+ const orderA = idxA === -1 ? 999 : idxA;
+ const orderB = idxB === -1 ? 999 : idxB;
+ return orderA - orderB;
+ });
 
-    for (const analysis of stdData.analyses) {
-      const card = createChartCard(standardName, stdData.qc_type, analysis);
-      grid.appendChild(card);
-    }
+ for (const analysis of stdData.analyses) {
+ const card = createChartCard(standardName, stdData.qc_type, analysis);
+ grid.appendChild(card);
+ }
 
-    wrapper.appendChild(grid);
-    section.appendChild(wrapper);
-    container.appendChild(section);
+ wrapper.appendChild(grid);
+ section.appendChild(wrapper);
+ container.appendChild(section);
 
-    // Load mini charts for cards
-    for (const analysis of stdData.analyses) {
-      await loadMiniChart(standardName, stdData.qc_type, analysis);
-    }
-  }
+ // Load mini charts for cards
+ for (const analysis of stdData.analyses) {
+ await loadMiniChart(standardName, stdData.qc_type, analysis);
+ }
+ }
 }
 
 function createChartCard(standardName, qcType, analysis) {
-  const statusClass = analysis.status === 'pass' ? 'status-pass' :
-                      analysis.status === 'warning' ? 'status-warning' :
-                      analysis.status === 'reject' || analysis.status === 'fail' ? 'status-reject' :
-                      analysis.status === 'no_data' ? 'status-nodata' : 'status-na';
+ const statusClass = analysis.status === 'pass' ? 'status-pass' :
+ analysis.status === 'warning' ? 'status-warning' :
+ analysis.status === 'reject' || analysis.status === 'fail' ? 'status-reject' :
+ analysis.status === 'no_data' ? 'status-nodata' : 'status-na';
 
-  const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">PASS</span>' :
-                      analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">WARNING</span>' :
-                      analysis.status === 'reject' || analysis.status === 'fail' ? '<span class="badge bg-danger">REJECT</span>' :
-                      analysis.status === 'no_data' ? '<span class="badge bg-light text-muted">N/A</span>' :
-                      '<span class="badge bg-secondary">N/A</span>';
+ const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">PASS</span>' :
+ analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">WARNING</span>' :
+ analysis.status === 'reject' || analysis.status === 'fail' ? '<span class="badge bg-danger">REJECT</span>' :
+ analysis.status === 'no_data' ? '<span class="badge bg-light text-muted">N/A</span>' :
+ '<span class="badge bg-secondary">N/A</span>';
 
-  const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
+ const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
 
-  const card = document.createElement('div');
-  card.className = `chart-card ${statusClass}`;
-  card.onclick = () => openChartModal(standardName, qcType, analysis);
+ const card = document.createElement('div');
+ card.className = `chart-card ${statusClass}`;
+ card.onclick = () => openChartModal(standardName, qcType, analysis);
 
-  const noData = analysis.status === 'no_data' || analysis.count === 0;
+ const noData = analysis.status === 'no_data' || analysis.count === 0;
 
-  card.innerHTML = `
-    <div class="card-header">
-      <span class="card-analysis-code">${_e(analysis.analysis_code)}</span>
-      ${statusBadge}
-    </div>
-    <div class="card-stats">
-      <div><span class="label">${I18N.target}:</span> <span class="value">${_e(analysis.target || '-')}</span></div>
-      <div><span class="label">${I18N.sd}:</span> <span class="value">${_e(analysis.sd || '-')}</span></div>
-      <div><span class="label">${I18N.latest}:</span> <span class="value">${_e(analysis.latest_value || '-')}</span></div>
-      <div><span class="label">${I18N.count}:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
-    </div>
-    <div class="card-chart-container">
-      ${noData ? `<div class="text-center text-muted py-4"><i class="bi bi-inbox"></i> ${I18N.noData}</div>` : `<canvas id="${canvasId}"></canvas>`}
-    </div>
-    <div class="card-footer">
-      <span><i class="bi bi-zoom-in me-1"></i>${I18N.viewDetails}</span>
-      ${analysis.rules_violated?.length ? `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ${analysis.rules_violated.length} ${I18N.violation}</span>` : ''}
-    </div>
-  `;
+ card.innerHTML = `
+ <div class="card-header">
+ <span class="card-analysis-code">${_e(analysis.analysis_code)}</span>
+ ${statusBadge}
+ </div>
+ <div class="card-stats">
+ <div><span class="label">${I18N.target}:</span> <span class="value">${_e(analysis.target || '-')}</span></div>
+ <div><span class="label">${I18N.sd}:</span> <span class="value">${_e(analysis.sd || '-')}</span></div>
+ <div><span class="label">${I18N.latest}:</span> <span class="value">${_e(analysis.latest_value || '-')}</span></div>
+ <div><span class="label">${I18N.count}:</span> <span class="value count-display" id="count_${canvasId}">n=${noData ? 0 : '...'}</span></div>
+ </div>
+ <div class="card-chart-container">
+ ${noData ? `<div class="text-center text-muted py-4"><i class="bi bi-inbox text-[3rem] opacity-[0.5]"></i> ${I18N.noData}</div>` : `<canvas id="${canvasId}"></canvas>`}
+ </div>
+ <div class="card-footer">
+ <span><i class="bi bi-zoom-in me-1"></i>${I18N.viewDetails}</span>
+ ${analysis.rules_violated?.length ? `<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ${analysis.rules_violated.length} ${I18N.violation}</span>` : ''}
+ </div>
+ `;
 
-  return card;
+ return card;
 }
 
 async function loadMiniChart(standardName, qcType, analysis) {
-  try {
-    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
-    const data = await resp.json();
+ try {
+ const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
+ const data = await resp.json();
 
-    // Store for modal use
-    const key = `${standardName}_${analysis.analysis_code}`;
-    chartsData[key] = { ...data, standardName, qcType };
+ // Store for modal use
+ const key = `${standardName}_${analysis.analysis_code}`;
+ chartsData[key] = { ...data, standardName, qcType };
 
-    const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
-    const ctx = document.getElementById(canvasId);
+ const canvasId = 'mini_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code.replace(/[^a-zA-Z0-9]/g, '_');
+ const ctx = document.getElementById(canvasId);
 
-    if (!ctx || !data.data_points || data.data_points.length < 1) return;
+ if (!ctx || !data.data_points || data.data_points.length < 1) return;
 
-    // Filter by period
-    let points = filterByPeriod(data.data_points, currentPeriod);
-    const filteredCount = points.length;
-    points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-15);
+ // Filter by period
+ let points = filterByPeriod(data.data_points, currentPeriod);
+ const filteredCount = points.length;
+ points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-15);
 
-    // Update count
-    const countEl = document.getElementById('count_' + canvasId);
-    if (countEl) countEl.textContent = `n=${filteredCount}`;
+ // Update count
+ const countEl = document.getElementById('count_' + canvasId);
+ if (countEl) countEl.textContent = `n=${filteredCount}`;
 
-    // Show chart even with 1 point (scatter point)
-    if (points.length < 1) return;
+ // Show chart even with 1 point (scatter point)
+ if (points.length < 1) return;
 
-    const values = points.map(p => p.value);
-    const target = data.target, sd = data.sd;
-    const ucl = target + 2*sd, lcl = target - 2*sd;
-    const usl1 = target + sd, lsl1 = target - sd;
+ const values = points.map(p => p.value);
+ const target = data.target, sd = data.sd;
+ const ucl = target + 2*sd, lcl = target - 2*sd;
+ const usl1 = target + sd, lsl1 = target - sd;
 
-    const pointColors = values.map(v => {
-      if (v > ucl || v < lcl) return '#ef4444';
-      if (v > usl1 || v < lsl1) return '#f59e0b';
-      return '#22c55e';
-    });
+ const pointColors = values.map(v => {
+ if (v> ucl || v < lcl) return '#ef4444';
+ if (v> usl1 || v < lsl1) return '#f59e0b';
+ return '#22c55e';
+ });
 
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: points.map(() => ''),
-        datasets: [
-          { data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 3, pointBackgroundColor: pointColors },
-          { data: Array(values.length).fill(target), borderColor: '#000', borderWidth: 1, pointRadius: 0 },
-          { data: Array(values.length).fill(ucl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 },
-          { data: Array(values.length).fill(lcl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false }
-        }
-      }
-    });
-  } catch (err) {
-    logger.error('Mini chart error:', err);
-  }
+ new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels: points.map(() => ''),
+ datasets: [
+ { data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 3, pointBackgroundColor: pointColors },
+ { data: Array(values.length).fill(target), borderColor: '#000', borderWidth: 1, pointRadius: 0 },
+ { data: Array(values.length).fill(ucl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 },
+ { data: Array(values.length).fill(lcl), borderColor: '#ef4444', borderWidth: 1, borderDash: [3,3], pointRadius: 0 }
+ ]
+ },
+ options: {
+ responsive: true,
+ maintainAspectRatio: false,
+ plugins: { legend: { display: false } },
+ scales: {
+ x: { display: false },
+ y: { display: false }
+ }
+ }
+ });
+ } catch (err) {
+ logger.error('Mini chart error:', err);
+ }
 }
 
 async function openChartModal(standardName, qcType, analysis) {
-  const modal = new bootstrap.Modal(document.getElementById('chartModal'));
+ const modal = new bootstrap.Modal(document.getElementById('chartModal'));
 
-  // Set header info
-  document.getElementById('modalAnalysisCode').textContent = analysis.analysis_code;
+ // Set header info
+ document.getElementById('modalAnalysisCode').textContent = analysis.analysis_code;
 
-  const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success fs-6">Pass</span>' :
-                      analysis.status === 'warning' ? '<span class="badge bg-warning text-dark fs-6">Warning</span>' :
-                      analysis.status === 'reject' ? '<span class="badge bg-danger fs-6">Reject</span>' :
-                      '<span class="badge bg-secondary fs-6">N/A</span>';
-  document.getElementById('modalStatusBadge').innerHTML = statusBadge;
+ const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success fs-6">Pass</span>' :
+ analysis.status === 'warning' ? '<span class="badge bg-warning text-dark fs-6">Warning</span>' :
+ analysis.status === 'reject' ? '<span class="badge bg-danger fs-6">Reject</span>' :
+ '<span class="badge bg-secondary fs-6">N/A</span>';
+ document.getElementById('modalStatusBadge').innerHTML = statusBadge;
 
-  // Set stats
-  document.getElementById('modalTarget').textContent = analysis.target || '-';
-  document.getElementById('modalSD').textContent = analysis.sd ? `+/-${analysis.sd}` : '-';
-  document.getElementById('modalLatest').textContent = analysis.latest_value || '-';
-  document.getElementById('modalCount').textContent = analysis.count || '-';
+ // Set stats
+ document.getElementById('modalTarget').textContent = analysis.target || '-';
+ document.getElementById('modalSD').textContent = analysis.sd ? `+/-${analysis.sd}` : '-';
+ document.getElementById('modalLatest').textContent = analysis.latest_value || '-';
+ document.getElementById('modalCount').textContent = analysis.count || '-';
 
-  // Hide violations section initially (will show after detail API loads)
-  document.getElementById('modalViolations').style.display = 'none';
+ // Hide violations section initially (will show after detail API loads)
+ document.getElementById('modalViolations').style.display = 'none';
 
-  // Show auto-CA button only for reject status
-  const autoCABtn = document.getElementById('btnAutoCA');
-  autoCABtn.style.display = (analysis.status === 'reject' || analysis.status === 'fail') ? 'inline-block' : 'none';
+ // Show auto-CA button only for reject status
+ const autoCABtn = document.getElementById('btnAutoCA');
+ autoCABtn.style.display = (analysis.status === 'reject' || analysis.status === 'fail') ? 'inline-block' : 'none';
 
-  // Store context for chart type switching and export
-  currentModalContext = { standardName, qcType, analysis };
+ // Store context for chart type switching and export
+ currentModalContext = { standardName, qcType, analysis };
 
-  modal.show();
+ modal.show();
 
-  // Load full chart + advanced data (capability, cusum, ewma)
-  setTimeout(() => {
-    loadModalChart(standardName, qcType, analysis);
-    loadAdvancedData(standardName, qcType, analysis.analysis_code);
-  }, 100);
+ // Load full chart + advanced data (capability, cusum, ewma)
+ setTimeout(() => {
+ loadModalChart(standardName, qcType, analysis);
+ loadAdvancedData(standardName, qcType, analysis.analysis_code);
+ }, 100);
 }
 
 async function loadModalChart(standardName, qcType, analysis) {
-  const key = `${standardName}_${analysis.analysis_code}`;
-  let data = chartsData[key];
+ const key = `${standardName}_${analysis.analysis_code}`;
+ let data = chartsData[key];
 
-  if (!data) {
-    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
-    data = await resp.json();
-  }
+ if (!data) {
+ const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName));
+ data = await resp.json();
+ }
 
-  // Show Westgard violations in detail
-  const violationsDiv = document.getElementById('modalViolations');
-  const violationsList = document.getElementById('violationsList');
-  if (data.violations && data.violations.length > 0) {
-    violationsDiv.style.display = 'block';
-    violationsList.innerHTML = data.violations.map(v => {
-      const icon = v.severity === 'reject' ? 'x-octagon text-danger' : 'exclamation-triangle text-warning';
-      const badge = v.severity === 'reject' ? 'bg-danger' : 'bg-warning text-dark';
-      return `<div class="violation-item d-flex align-items-center gap-2 mb-2">
-        <span class="badge ${badge}">${_e(v.rule)}</span>
-        <i class="bi bi-${icon}"></i>
-        <span>${_e(v.description)}</span>
-      </div>`;
-    }).join('');
-  } else {
-    violationsDiv.style.display = 'none';
-  }
+ // Show Westgard violations in detail
+ const violationsDiv = document.getElementById('modalViolations');
+ const violationsList = document.getElementById('violationsList');
+ if (data.violations && data.violations.length> 0) {
+ violationsDiv.style.display = 'block';
+ violationsList.innerHTML = data.violations.map(v => {
+ const icon = v.severity === 'reject' ? 'x-octagon text-danger' : 'exclamation-triangle text-warning';
+ const badge = v.severity === 'reject' ? 'bg-danger' : 'bg-warning text-dark';
+ return `<div class="violation-item d-flex align-items-center gap-2 mb-2">
+ <span class="badge ${badge}">${_e(v.rule)}</span>
+ <i class="bi bi-${icon}"></i>
+ <span>${_e(v.description)}</span>
+ </div>`;
+ }).join('');
+ } else {
+ violationsDiv.style.display = 'none';
+ }
 
-  const ctx = document.getElementById('modalChart');
+ const ctx = document.getElementById('modalChart');
 
-  if (modalChart) {
-    modalChart.destroy();
-    modalChart = null;
-  }
+ if (modalChart) {
+ modalChart.destroy();
+ modalChart = null;
+ }
 
-  if (!data.data_points || data.data_points.length < 1) {
-    ctx.parentElement.innerHTML = `<div class="text-center text-muted py-5">${I18N.notEnoughData}</div>`;
-    return;
-  }
+ if (!data.data_points || data.data_points.length < 1) {
+ ctx.parentElement.innerHTML = `<div class="text-center text-muted py-5">${I18N.notEnoughData}</div>`;
+ return;
+ }
 
-  // Filter by period
-  let points = filterByPeriod(data.data_points, currentPeriod);
-  const filteredCount = points.length;
-  points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
+ // Filter by period
+ let points = filterByPeriod(data.data_points, currentPeriod);
+ const filteredCount = points.length;
+ points = points.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
 
-  // Show filtered count in modal
-  document.getElementById('modalCount').textContent = filteredCount;
+ // Show filtered count in modal
+ document.getElementById('modalCount').textContent = filteredCount;
 
-  // Show chart even with 1 point
-  if (points.length < 1) return;
+ // Show chart even with 1 point
+ if (points.length < 1) return;
 
-  const labels = points.map(p => {
-    if (!p.date) return '';
-    const d = new Date(p.date);
-    return `${d.getMonth()+1}/${d.getDate()}`;
-  });
-  const values = points.map(p => p.value);
-  const target = data.target, sd = data.sd;
-  const ucl = target + 2*sd, lcl = target - 2*sd;
-  const ucl3 = target + 3*sd, lcl3 = target - 3*sd;
-  const usl1 = target + sd, lsl1 = target - sd;
+ const labels = points.map(p => {
+ if (!p.date) return '';
+ const d = new Date(p.date);
+ return `${d.getMonth()+1}/${d.getDate()}`;
+ });
+ const values = points.map(p => p.value);
+ const target = data.target, sd = data.sd;
+ const ucl = target + 2*sd, lcl = target - 2*sd;
+ const ucl3 = target + 3*sd, lcl3 = target - 3*sd;
+ const usl1 = target + sd, lsl1 = target - sd;
 
-  const pointColors = values.map(v => {
-    if (v > ucl || v < lcl) return '#ef4444';
-    if (v > usl1 || v < lsl1) return '#f59e0b';
-    return '#22c55e';
-  });
+ const pointColors = values.map(v => {
+ if (v> ucl || v < lcl) return '#ef4444';
+ if (v> usl1 || v < lsl1) return '#f59e0b';
+ return '#22c55e';
+ });
 
-  // Build datasets with zone shading
-  const datasets = [
-    // Zone fills (background)
-    { label: '+/-1SD Zone', data: Array(labels.length).fill(usl1), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: { target: '+1', above: 'rgba(34,197,94,0.08)', below: 'rgba(34,197,94,0.08)' }, pointRadius: 0, order: 10 },
-    { label: '+/-2SD Zone', data: Array(labels.length).fill(ucl), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.06)', fill: { target: '-1', above: 'rgba(249,115,22,0.06)' }, pointRadius: 0, order: 11 },
-    // Control lines
-    { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
-    { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
-    { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
-    { label: '+2SD (UCL)', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
-    { label: '-2SD (LCL)', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
-    { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
-    { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 },
-    // Measured values (on top)
-    { label: 'Measured', data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 6, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
-  ];
+ // Build datasets with zone shading
+ const datasets = [
+ // Zone fills (background)
+ { label: '+/-1SD Zone', data: Array(labels.length).fill(usl1), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: { target: '+1', above: 'rgba(34,197,94,0.08)', below: 'rgba(34,197,94,0.08)' }, pointRadius: 0, order: 10 },
+ { label: '+/-2SD Zone', data: Array(labels.length).fill(ucl), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.06)', fill: { target: '-1', above: 'rgba(249,115,22,0.06)' }, pointRadius: 0, order: 11 },
+ // Control lines
+ { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
+ { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
+ { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
+ { label: '+2SD (UCL)', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
+ { label: '-2SD (LCL)', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
+ { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
+ { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 },
+ // Measured values (on top)
+ { label: 'Measured', data: values, borderColor: '#1e40af', borderWidth: 2, tension: 0.1, pointRadius: 6, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
+ ];
 
-  // Add moving average if advanced data available
-  if (advancedData && advancedData.moving_average) {
-    const maSlice = advancedData.moving_average.slice(-points.length);
-    if (maSlice.length === values.length) {
-      datasets.push({
-        label: 'MA(' + (advancedData.ma_window || 5) + ')',
-        data: maSlice,
-        borderColor: '#f97316',
-        borderWidth: 2,
-        borderDash: [6, 3],
-        pointRadius: 0,
-        tension: 0.3,
-        order: 0
-      });
-    }
-  }
+ // Add moving average if advanced data available
+ if (advancedData && advancedData.moving_average) {
+ const maSlice = advancedData.moving_average.slice(-points.length);
+ if (maSlice.length === values.length) {
+ datasets.push({
+ label: 'MA(' + (advancedData.ma_window || 5) + ')',
+ data: maSlice,
+ borderColor: '#f97316',
+ borderWidth: 2,
+ borderDash: [6, 3],
+ pointRadius: 0,
+ tension: 0.3,
+ order: 0
+ });
+ }
+ }
 
-  modalChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const val = context.parsed.y != null ? context.parsed.y.toFixed(4) : '-';
-              if (context.datasetIndex === 0) {
-                const point = points[context.dataIndex];
-                return `${val} (${point.sample_code || ''})`;
-              }
-              return `${context.dataset.label}: ${val}`;
-            }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: false,
-          title: { display: true, text: analysis.analysis_code + ' %', font: { weight: 'bold' } }
-        },
-        x: {
-          title: { display: true, text: I18N.date }
-        }
-      }
-    }
-  });
+ modalChart = new Chart(ctx, {
+ type: 'line',
+ data: { labels, datasets },
+ options: {
+ responsive: true,
+ maintainAspectRatio: false,
+ plugins: {
+ legend: { display: false },
+ tooltip: {
+ callbacks: {
+ label: function(context) {
+ const val = context.parsed.y != null ? context.parsed.y.toFixed(4) : '-';
+ if (context.datasetIndex === 0) {
+ const point = points[context.dataIndex];
+ return `${val} (${point.sample_code || ''})`;
+ }
+ return `${context.dataset.label}: ${val}`;
+ }
+ }
+ }
+ },
+ scales: {
+ y: {
+ beginAtZero: false,
+ title: { display: true, text: analysis.analysis_code + ' %', font: { weight: 'bold' } }
+ },
+ x: {
+ title: { display: true, text: I18N.date }
+ }
+ }
+ }
+ });
 }
 
 // ========== Chart type toggle ==========
@@ -906,198 +906,198 @@ let currentModalContext = null; // {standardName, qcType, analysis}
 let advancedData = null;
 
 document.querySelectorAll('[data-chart-type]').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    const chartType = this.dataset.chartType;
-    if (currentModalContext) {
-      renderModalByType(chartType);
-    }
-  });
+ btn.addEventListener('click', function() {
+ document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
+ this.classList.add('active');
+ const chartType = this.dataset.chartType;
+ if (currentModalContext) {
+ renderModalByType(chartType);
+ }
+ });
 });
 
 async function loadAdvancedData(standardName, qcType, analysisCode) {
-  try {
-    const resp = await fetch('/quality/api/chart_advanced/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysisCode) + '?standard_name=' + encodeURIComponent(standardName));
-    const data = await resp.json();
-    if (data.success) {
-      advancedData = data.data;
-      showCapability(advancedData.capability);
-    }
-  } catch(e) { /* ignore */ }
+ try {
+ const resp = await fetch('/quality/api/chart_advanced/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysisCode) + '?standard_name=' + encodeURIComponent(standardName));
+ const data = await resp.json();
+ if (data.success) {
+ advancedData = data.data;
+ showCapability(advancedData.capability);
+ }
+ } catch(e) { /* ignore */ }
 }
 
 function showCapability(cap) {
-  if (!cap || cap.n < 2) {
-    document.getElementById('capabilityGrid').style.display = 'none';
-    return;
-  }
-  document.getElementById('capabilityGrid').style.display = 'grid';
+ if (!cap || cap.n < 2) {
+ document.getElementById('capabilityGrid').style.display = 'none';
+ return;
+ }
+ document.getElementById('capabilityGrid').style.display = 'grid';
 
-  const cpEl = document.getElementById('capCp');
-  const cpkEl = document.getElementById('capCpk');
-  const rsdEl = document.getElementById('capRsd');
-  const biasEl = document.getElementById('capBias');
+ const cpEl = document.getElementById('capCp');
+ const cpkEl = document.getElementById('capCpk');
+ const rsdEl = document.getElementById('capRsd');
+ const biasEl = document.getElementById('capBias');
 
-  cpEl.textContent = cap.cp != null ? cap.cp.toFixed(2) : '-';
-  cpEl.className = 'cap-value ' + (cap.cp >= 1.33 ? 'good' : cap.cp >= 1.0 ? 'marginal' : 'poor');
+ cpEl.textContent = cap.cp != null ? cap.cp.toFixed(2) : '-';
+ cpEl.className = 'cap-value ' + (cap.cp>= 1.33 ? 'good' : cap.cp>= 1.0 ? 'marginal' : 'poor');
 
-  cpkEl.textContent = cap.cpk != null ? cap.cpk.toFixed(2) : '-';
-  cpkEl.className = 'cap-value ' + (cap.cpk >= 1.33 ? 'good' : cap.cpk >= 1.0 ? 'marginal' : 'poor');
+ cpkEl.textContent = cap.cpk != null ? cap.cpk.toFixed(2) : '-';
+ cpkEl.className = 'cap-value ' + (cap.cpk>= 1.33 ? 'good' : cap.cpk>= 1.0 ? 'marginal' : 'poor');
 
-  rsdEl.textContent = cap.rsd_percent != null ? cap.rsd_percent.toFixed(1) + '%' : '-';
-  rsdEl.className = 'cap-value ' + (cap.rsd_percent <= 2 ? 'good' : cap.rsd_percent <= 5 ? 'marginal' : 'poor');
+ rsdEl.textContent = cap.rsd_percent != null ? cap.rsd_percent.toFixed(1) + '%' : '-';
+ rsdEl.className = 'cap-value ' + (cap.rsd_percent <= 2 ? 'good' : cap.rsd_percent <= 5 ? 'marginal' : 'poor');
 
-  biasEl.textContent = cap.bias_percent != null ? cap.bias_percent.toFixed(1) + '%' : '-';
-  const absBias = Math.abs(cap.bias_percent || 0);
-  biasEl.className = 'cap-value ' + (absBias <= 1 ? 'good' : absBias <= 3 ? 'marginal' : 'poor');
+ biasEl.textContent = cap.bias_percent != null ? cap.bias_percent.toFixed(1) + '%' : '-';
+ const absBias = Math.abs(cap.bias_percent || 0);
+ biasEl.className = 'cap-value ' + (absBias <= 1 ? 'good' : absBias <= 3 ? 'marginal' : 'poor');
 }
 
 function renderModalByType(chartType) {
-  if (!currentModalContext) return;
-  const key = `${currentModalContext.standardName}_${currentModalContext.analysis.analysis_code}`;
-  const data = chartsData[key];
-  if (!data) return;
+ if (!currentModalContext) return;
+ const key = `${currentModalContext.standardName}_${currentModalContext.analysis.analysis_code}`;
+ const data = chartsData[key];
+ if (!data) return;
 
-  if (chartType === 'cusum' && advancedData) {
-    renderCusumChart(data, advancedData.cusum);
-  } else if (chartType === 'ewma' && advancedData) {
-    renderEwmaChart(data, advancedData.ewma);
-  } else {
-    // Shewhart with zone shading + moving average
-    loadModalChart(currentModalContext.standardName, currentModalContext.qcType, currentModalContext.analysis);
-    document.getElementById('modalLegend').innerHTML = `
-      <div class="legend-item"><div class="legend-line target"></div>Target</div>
-      <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
-      <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD (Warning)</div>
-      <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD (Reject)</div>
-      <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>MA</div>
-    `;
-  }
+ if (chartType === 'cusum' && advancedData) {
+ renderCusumChart(data, advancedData.cusum);
+ } else if (chartType === 'ewma' && advancedData) {
+ renderEwmaChart(data, advancedData.ewma);
+ } else {
+ // Shewhart with zone shading + moving average
+ loadModalChart(currentModalContext.standardName, currentModalContext.qcType, currentModalContext.analysis);
+ document.getElementById('modalLegend').innerHTML = `
+ <div class="legend-item"><div class="legend-line target"></div>Target</div>
+ <div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div>
+ <div class="legend-item"><div class="legend-line sd2"></div>+/-2SD (Warning)</div>
+ <div class="legend-item"><div class="legend-line sd3"></div>+/-3SD (Reject)</div>
+ <div class="legend-item"><div class="legend-line bg-[#f97316]"></div>MA</div>
+ `;
+ }
 }
 
 function renderCusumChart(baseData, cusumData) {
-  const ctx = document.getElementById('modalChart');
-  if (modalChart) { modalChart.destroy(); modalChart = null; }
-  if (!cusumData || !cusumData.cusum_pos) return;
+ const ctx = document.getElementById('modalChart');
+ if (modalChart) { modalChart.destroy(); modalChart = null; }
+ if (!cusumData || !cusumData.cusum_pos) return;
 
-  const n = cusumData.cusum_pos.length;
-  const labels = Array.from({length: n}, (_, i) => i + 1);
+ const n = cusumData.cusum_pos.length;
+ const labels = Array.from({length: n}, (_, i) => i + 1);
 
-  modalChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'CUSUM+', data: cusumData.cusum_pos, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.1 },
-        { label: 'CUSUM-', data: cusumData.cusum_neg, borderColor: '#dc2626', borderWidth: 2, pointRadius: 3, tension: 0.1 },
-        { label: 'H+', data: Array(n).fill(cusumData.h_upper), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
-        { label: 'H-', data: Array(n).fill(cusumData.h_lower), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
-        { label: 'Zero', data: Array(n).fill(0), borderColor: '#94a3b8', borderWidth: 1, pointRadius: 0 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
-      scales: { y: { title: { display: true, text: 'CUSUM' } }, x: { title: { display: true, text: 'Observation #' } } }
-    }
-  });
+ modalChart = new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels,
+ datasets: [
+ { label: 'CUSUM+', data: cusumData.cusum_pos, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.1 },
+ { label: 'CUSUM-', data: cusumData.cusum_neg, borderColor: '#dc2626', borderWidth: 2, pointRadius: 3, tension: 0.1 },
+ { label: 'H+', data: Array(n).fill(cusumData.h_upper), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
+ { label: 'H-', data: Array(n).fill(cusumData.h_lower), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0 },
+ { label: 'Zero', data: Array(n).fill(0), borderColor: '#94a3b8', borderWidth: 1, pointRadius: 0 }
+ ]
+ },
+ options: {
+ responsive: true, maintainAspectRatio: false,
+ plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
+ scales: { y: { title: { display: true, text: 'CUSUM' } }, x: { title: { display: true, text: 'Observation #' } } }
+ }
+ });
 
-  // Update legend
-  document.getElementById('modalLegend').innerHTML = `
-    <div class="legend-item"><div class="legend-line" style="background:#1e40af"></div>CUSUM+</div>
-    <div class="legend-item"><div class="legend-line" style="background:#dc2626"></div>CUSUM-</div>
-    <div class="legend-item"><div class="legend-line" style="background:#9333ea"></div>Decision (H)</div>
-  `;
+ // Update legend
+ document.getElementById('modalLegend').innerHTML = `
+ <div class="legend-item"><div class="legend-line bg-brand-primary"></div>CUSUM+</div>
+ <div class="legend-item"><div class="legend-line bg-fail-rose"></div>CUSUM-</div>
+ <div class="legend-item"><div class="legend-line bg-[#9333ea]"></div>Decision (H)</div>
+ `;
 }
 
 function renderEwmaChart(baseData, ewmaData) {
-  const ctx = document.getElementById('modalChart');
-  if (modalChart) { modalChart.destroy(); modalChart = null; }
-  if (!ewmaData || !ewmaData.ewma) return;
+ const ctx = document.getElementById('modalChart');
+ if (modalChart) { modalChart.destroy(); modalChart = null; }
+ if (!ewmaData || !ewmaData.ewma) return;
 
-  const n = ewmaData.ewma.length;
-  const labels = Array.from({length: n}, (_, i) => i + 1);
+ const n = ewmaData.ewma.length;
+ const labels = Array.from({length: n}, (_, i) => i + 1);
 
-  modalChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'EWMA', data: ewmaData.ewma, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.3 },
-        { label: 'UCL', data: ewmaData.ucl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
-        { label: 'LCL', data: ewmaData.lcl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
-        { label: 'Target', data: Array(n).fill(ewmaData.target), borderColor: '#000', borderWidth: 2, pointRadius: 0 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
-      scales: { y: { title: { display: true, text: 'EWMA' } }, x: { title: { display: true, text: 'Observation #' } } }
-    }
-  });
+ modalChart = new Chart(ctx, {
+ type: 'line',
+ data: {
+ labels,
+ datasets: [
+ { label: 'EWMA', data: ewmaData.ewma, borderColor: '#1e40af', borderWidth: 2, pointRadius: 3, tension: 0.3 },
+ { label: 'UCL', data: ewmaData.ucl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
+ { label: 'LCL', data: ewmaData.lcl, borderColor: '#ef4444', borderWidth: 1.5, borderDash: [4,4], pointRadius: 0 },
+ { label: 'Target', data: Array(n).fill(ewmaData.target), borderColor: '#000', borderWidth: 2, pointRadius: 0 }
+ ]
+ },
+ options: {
+ responsive: true, maintainAspectRatio: false,
+ plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
+ scales: { y: { title: { display: true, text: 'EWMA' } }, x: { title: { display: true, text: 'Observation #' } } }
+ }
+ });
 
-  document.getElementById('modalLegend').innerHTML = `
-    <div class="legend-item"><div class="legend-line" style="background:#1e40af"></div>EWMA</div>
-    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div>UCL/LCL</div>
-    <div class="legend-item"><div class="legend-line target"></div>Target</div>
-  `;
+ document.getElementById('modalLegend').innerHTML = `
+ <div class="legend-item"><div class="legend-line bg-brand-primary"></div>EWMA</div>
+ <div class="legend-item"><div class="legend-line bg-fail"></div>UCL/LCL</div>
+ <div class="legend-item"><div class="legend-line target"></div>Target</div>
+ `;
 }
 
 // ========== Export buttons ==========
 document.getElementById('btnExportCsv').addEventListener('click', () => {
-  if (!currentModalContext) return;
-  const {standardName, qcType, analysis} = currentModalContext;
-  window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=csv');
+ if (!currentModalContext) return;
+ const {standardName, qcType, analysis} = currentModalContext;
+ window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=csv');
 });
 
 document.getElementById('btnExportJson').addEventListener('click', () => {
-  if (!currentModalContext) return;
-  const {standardName, qcType, analysis} = currentModalContext;
-  window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=json');
+ if (!currentModalContext) return;
+ const {standardName, qcType, analysis} = currentModalContext;
+ window.open('/quality/api/chart_export/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code) + '?standard_name=' + encodeURIComponent(standardName) + '&format=json');
 });
 
 // ========== Auto Corrective Action ==========
 document.getElementById('btnAutoCA').addEventListener('click', async () => {
-  if (!currentModalContext) return;
-  const {standardName, analysis} = currentModalContext;
-  const key = `${standardName}_${analysis.analysis_code}`;
-  const data = chartsData[key];
-  if (!data || !data.violations) return;
+ if (!currentModalContext) return;
+ const {standardName, analysis} = currentModalContext;
+ const key = `${standardName}_${analysis.analysis_code}`;
+ const data = chartsData[key];
+ if (!data || !data.violations) return;
 
-  if (!confirm('QC REJECT - Засвар арга хэмжээ (Corrective Action) автоматаар үүсгэх үү?')) return;
+ if (!confirm('QC REJECT - Засвар арга хэмжээ (Corrective Action) автоматаар үүсгэх үү?')) return;
 
-  try {
-    const resp = await fetch('/quality/api/chart_auto_ca', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''},
-      body: JSON.stringify({
-        standard_name: standardName,
-        analysis_code: analysis.analysis_code,
-        violations: data.violations
-      })
-    });
-    const result = await resp.json();
-    if (result.success) {
-      alert(result.message + ' (CA ID: ' + result.data.ca_id + ')');
-    } else {
-      alert(result.message);
-    }
-  } catch(e) { alert('Error: ' + e.message); }
+ try {
+ const resp = await fetch('/quality/api/chart_auto_ca', {
+ method: 'POST',
+ headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || ''},
+ body: JSON.stringify({
+ standard_name: standardName,
+ analysis_code: analysis.analysis_code,
+ violations: data.violations
+ })
+ });
+ const result = await resp.json();
+ if (result.success) {
+ alert(result.message + ' (CA ID: ' + result.data.ca_id + ')');
+ } else {
+ alert(result.message);
+ }
+ } catch(e) { alert('Error: ' + e.message); }
 });
 
 // Cleanup on modal close
 document.getElementById('chartModal').addEventListener('hidden.bs.modal', function() {
-  if (modalChart) {
-    modalChart.destroy();
-    modalChart = null;
-  }
-  currentModalContext = null;
-  advancedData = null;
-  document.getElementById('capabilityGrid').style.display = 'none';
-  // Reset chart type toggle
-  document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
-  document.querySelector('[data-chart-type="shewhart"]').classList.add('active');
+ if (modalChart) {
+ modalChart.destroy();
+ modalChart = null;
+ }
+ currentModalContext = null;
+ advancedData = null;
+ document.getElementById('capabilityGrid').style.display = 'none';
+ // Reset chart type toggle
+ document.querySelectorAll('[data-chart-type]').forEach(b => b.classList.remove('active'));
+ document.querySelector('[data-chart-type="shewhart"]').classList.add('active');
 });
 </script>
 {% endblock %}

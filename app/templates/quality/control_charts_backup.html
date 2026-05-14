@@ -2,113 +2,113 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
-  .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
-  .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
-  .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
-  .standard-section { background: white; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .standard-header { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
-  .standard-header.gbw { background: linear-gradient(90deg, #0891b2 0%, #06b6d4 100%); color: white; }
-  .standard-header.cm { background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
-  .standard-title { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-  .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; }
-  .chart-container { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
-  .chart-container:last-child { border-bottom: none; }
-  .chart-label { font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
-  .chart-stats { font-size: 0.75rem; color: #64748b; }
-  .chart-stats span { margin-left: 1rem; }
-  .westgard-legend { display: flex; gap: 1.5rem; font-size: 0.7rem; color: #64748b; padding: 0.5rem 1rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-  .legend-item { display: flex; align-items: center; gap: 4px; }
-  .legend-line { width: 20px; height: 2px; }
-  .legend-line.target { background: #000; }
-  .legend-line.sd1 { background: #22c55e; }
-  .legend-line.sd2 { background: #ef4444; }
-  .legend-line.sd3 { background: #9333ea; }
-  .empty-state { text-align: center; padding: 3rem; color: #64748b; }
-  .loading-state { text-align: center; padding: 2rem; }
+ .qc-page { padding: 1.5rem; background: #f8fafc; min-height: calc(100vh - 60px); }
+ .qc-header { background: white; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+ .qc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+ .qc-subtitle { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+ .standard-section { background: white; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+ .standard-header { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+ .standard-header.gbw { background: linear-gradient(90deg, #0891b2 0%, #06b6d4 100%); color: white; }
+ .standard-header.cm { background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
+ .standard-title { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+ .standard-badge { font-size: 0.75rem; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; }
+ .chart-container { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
+ .chart-container:last-child { border-bottom: none; }
+ .chart-label { font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+ .chart-stats { font-size: 0.75rem; color: #64748b; }
+ .chart-stats span { margin-left: 1rem; }
+ .westgard-legend { display: flex; gap: 1.5rem; font-size: 0.7rem; color: #64748b; padding: 0.5rem 1rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+ .legend-item { display: flex; align-items: center; gap: 4px; }
+ .legend-line { width: 20px; height: 2px; }
+ .legend-line.target { background: #000; }
+ .legend-line.sd1 { background: #22c55e; }
+ .legend-line.sd2 { background: #ef4444; }
+ .legend-line.sd3 { background: #9333ea; }
+ .empty-state { text-align: center; padding: 3rem; color: #64748b; }
+ .loading-state { text-align: center; padding: 2rem; }
 </style>
 
 <div class="qc-page">
-  <div class="qc-header">
-    <div>
-      <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>QC Control Charts</h1>
-      <div class="qc-subtitle">ISO 17025 - Levey-Jennings (All Results)</div>
-    </div>
-    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-  </div>
-  <div id="chartsContainer"><div class="loading-state"><div class="spinner-border text-primary"></div><div class="mt-2 text-muted">Loading...</div></div></div>
+ <div class="qc-header">
+ <div>
+ <h1 class="qc-title"><i class="bi bi-graph-up me-2"></i>QC Control Charts</h1>
+ <div class="qc-subtitle">ISO 17025 - Levey-Jennings (All Results)</div>
+ </div>
+ <button class="btn btn-outline-primary btn-sm" data-action="reload"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+ </div>
+ <div id="chartsContainer"><div class="loading-state"><div class="spinner-border text-primary"></div><div class="mt-2 text-muted">Loading...</div></div></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{{ vite_js_tag('src/chart.js') }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', loadAllCharts);
 const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 async function loadAllCharts() {
-  const container = document.getElementById('chartsContainer');
-  try {
-    const resp = await fetch("{{ url_for('quality.api_westgard_summary') }}");
-    const data = await resp.json();
-    if (!data.qc_samples || data.qc_samples.length === 0) {
-      container.innerHTML = '<div class="standard-section"><div class="empty-state"><i class="bi bi-inbox" style="font-size:3rem;opacity:0.5"></i><h5>No CM/GBW sample results found</h5></div></div>';
-      return;
-    }
-    const byStandard = {};
-    data.qc_samples.forEach(item => {
-      if (!byStandard[item.standard_name]) byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
-      byStandard[item.standard_name].analyses.push(item);
-    });
-    container.innerHTML = '';
-    for (const standardName of Object.keys(byStandard).sort()) {
-      const stdData = byStandard[standardName];
-      const isGbw = stdData.qc_type === 'GBW';
-      const section = document.createElement('div');
-      section.className = 'standard-section';
-      section.innerHTML = `<div class="standard-header ${isGbw ? 'gbw' : 'cm'}"><div class="standard-title"><i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>${_e(standardName)}<small style="opacity:0.8;font-weight:normal;margin-left:8px">${isGbw ? 'CRM' : 'CM'}</small></div><span class="standard-badge">${stdData.analyses.length} analyses</span></div><div class="westgard-legend"><div class="legend-item"><div class="legend-line target"></div>Target</div><div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div><div class="legend-item"><div class="legend-line sd2"></div>+/-2SD</div><div class="legend-item"><div class="legend-line sd3"></div>+/-3SD</div></div>`;
-      stdData.analyses.sort((a, b) => a.analysis_code.localeCompare(b.analysis_code));
-      for (const analysis of stdData.analyses) {
-        const chartDiv = document.createElement('div');
-        chartDiv.className = 'chart-container';
-        const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">Pass</span>' : analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">Warning</span>' : analysis.status === 'reject' ? '<span class="badge bg-danger">Reject</span>' : '<span class="badge bg-secondary">N/A</span>';
-        const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
-        chartDiv.innerHTML = `<div class="chart-label"><span>${_e(analysis.analysis_code)} ${statusBadge}</span><span class="chart-stats"><span>Target: ${_e(analysis.target || '-')}</span><span>SD: ${_e(analysis.sd || '-')}</span><span>n=${_e(analysis.count)}</span></span></div><canvas id="${canvasId}" height="100"></canvas>`;
-        section.appendChild(chartDiv);
-      }
-      container.appendChild(section);
-      for (const analysis of stdData.analyses) await loadChartData(standardName, stdData.qc_type, analysis);
-    }
-  } catch (err) { container.innerHTML = '<div class="alert alert-danger">Error: ' + _e(err.message) + '</div>'; }
+ const container = document.getElementById('chartsContainer');
+ try {
+ const resp = await fetch("{{ url_for('quality.api_westgard_summary') }}");
+ const data = await resp.json();
+ if (!data.qc_samples || data.qc_samples.length === 0) {
+ container.innerHTML = '<div class="standard-section"><div class="empty-state"><i class="bi bi-inbox text-[3rem] opacity-[0.5]"></i><h5>No CM/GBW sample results found</h5></div></div>';
+ return;
+ }
+ const byStandard = {};
+ data.qc_samples.forEach(item => {
+ if (!byStandard[item.standard_name]) byStandard[item.standard_name] = { qc_type: item.qc_type, analyses: [] };
+ byStandard[item.standard_name].analyses.push(item);
+ });
+ container.innerHTML = '';
+ for (const standardName of Object.keys(byStandard).sort()) {
+ const stdData = byStandard[standardName];
+ const isGbw = stdData.qc_type === 'GBW';
+ const section = document.createElement('div');
+ section.className = 'standard-section';
+ section.innerHTML = `<div class="standard-header ${isGbw ? 'gbw' : 'cm'}"><div class="standard-title"><i class="bi ${isGbw ? 'bi-award' : 'bi-box-seam'}"></i>${_e(standardName)}<small class="opacity-[0.8] font-normal ml-[8px]">${isGbw ? 'CRM' : 'CM'}</small></div><span class="standard-badge">${stdData.analyses.length} analyses</span></div><div class="westgard-legend"><div class="legend-item"><div class="legend-line target"></div>Target</div><div class="legend-item"><div class="legend-line sd1"></div>+/-1SD</div><div class="legend-item"><div class="legend-line sd2"></div>+/-2SD</div><div class="legend-item"><div class="legend-line sd3"></div>+/-3SD</div></div>`;
+ stdData.analyses.sort((a, b) => a.analysis_code.localeCompare(b.analysis_code));
+ for (const analysis of stdData.analyses) {
+ const chartDiv = document.createElement('div');
+ chartDiv.className = 'chart-container';
+ const statusBadge = analysis.status === 'pass' ? '<span class="badge bg-success">Pass</span>' : analysis.status === 'warning' ? '<span class="badge bg-warning text-dark">Warning</span>' : analysis.status === 'reject' ? '<span class="badge bg-danger">Reject</span>' : '<span class="badge bg-secondary">N/A</span>';
+ const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
+ chartDiv.innerHTML = `<div class="chart-label"><span>${_e(analysis.analysis_code)} ${statusBadge}</span><span class="chart-stats"><span>Target: ${_e(analysis.target || '-')}</span><span>SD: ${_e(analysis.sd || '-')}</span><span>n=${_e(analysis.count)}</span></span></div><canvas id="${canvasId}" height="100"></canvas>`;
+ section.appendChild(chartDiv);
+ }
+ container.appendChild(section);
+ for (const analysis of stdData.analyses) await loadChartData(standardName, stdData.qc_type, analysis);
+ }
+ } catch (err) { container.innerHTML = '<div class="alert alert-danger">Error: ' + _e(err.message) + '</div>'; }
 }
 
 async function loadChartData(standardName, qcType, analysis) {
-  try {
-    const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
-    const data = await resp.json();
-    const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
-    const ctx = document.getElementById(canvasId);
-    if (!ctx || !data.data_points || data.data_points.length < 2) return;
-    const points = data.data_points.filter(p => (p.sample_code || '').toUpperCase().startsWith(standardName.toUpperCase())).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
-    if (points.length < 2) { ctx.parentElement.innerHTML += '<div class="text-muted text-center py-2">Not enough data</div>'; return; }
-    const labels = points.map(p => p.date ? new Date(p.date).getMonth()+1 + '/' + new Date(p.date).getDate() : '');
-    const values = points.map(p => p.value);
-    const target = data.target, sd = data.sd;
-    const ucl = target + 2*sd, lcl = target - 2*sd, ucl3 = target + 3*sd, lcl3 = target - 3*sd, usl1 = target + sd, lsl1 = target - sd;
-    const pointColors = values.map(v => { if (v > ucl || v < lcl) return '#ef4444'; if (v > usl1 || v < lsl1) return '#f59e0b'; return '#22c55e'; });
-    new Chart(ctx, {
-      type: 'line',
-      data: { labels, datasets: [
-        { label: 'Measured', data: values, borderColor: '#1e40af', tension: 0.1, pointRadius: 5, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
-        { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
-        { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
-        { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
-        { label: '+2SD', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
-        { label: '-2SD', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
-        { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
-        { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 }
-      ]},
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, title: { display: true, text: analysis.analysis_code + ' %' } }, x: { title: { display: true, text: 'Date' } } } }
-    });
-  } catch (err) { logger.error('Error:', err); }
+ try {
+ const resp = await fetch('/quality/api/westgard_detail/' + encodeURIComponent(qcType) + '/' + encodeURIComponent(analysis.analysis_code));
+ const data = await resp.json();
+ const canvasId = 'chart_' + standardName.replace(/[^a-zA-Z0-9]/g, '_') + '_' + analysis.analysis_code;
+ const ctx = document.getElementById(canvasId);
+ if (!ctx || !data.data_points || data.data_points.length < 2) return;
+ const points = data.data_points.filter(p => (p.sample_code || '').toUpperCase().startsWith(standardName.toUpperCase())).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-30);
+ if (points.length < 2) { ctx.parentElement.innerHTML += '<div class="text-muted text-center py-2">Not enough data</div>'; return; }
+ const labels = points.map(p => p.date ? new Date(p.date).getMonth()+1 + '/' + new Date(p.date).getDate() : '');
+ const values = points.map(p => p.value);
+ const target = data.target, sd = data.sd;
+ const ucl = target + 2*sd, lcl = target - 2*sd, ucl3 = target + 3*sd, lcl3 = target - 3*sd, usl1 = target + sd, lsl1 = target - sd;
+ const pointColors = values.map(v => { if (v> ucl || v < lcl) return '#ef4444'; if (v> usl1 || v < lsl1) return '#f59e0b'; return '#22c55e'; });
+ new Chart(ctx, {
+ type: 'line',
+ data: { labels, datasets: [
+ { label: 'Measured', data: values, borderColor: '#1e40af', tension: 0.1, pointRadius: 5, pointBackgroundColor: pointColors, pointBorderColor: pointColors, order: 1 },
+ { label: 'Target', data: Array(labels.length).fill(target), borderColor: '#000', borderWidth: 2, pointRadius: 0, order: 2 },
+ { label: '+1SD', data: Array(labels.length).fill(usl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 3 },
+ { label: '-1SD', data: Array(labels.length).fill(lsl1), borderColor: '#22c55e', borderWidth: 1, pointRadius: 0, order: 4 },
+ { label: '+2SD', data: Array(labels.length).fill(ucl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 5 },
+ { label: '-2SD', data: Array(labels.length).fill(lcl), borderColor: '#ef4444', borderWidth: 2, pointRadius: 0, order: 6 },
+ { label: '+3SD', data: Array(labels.length).fill(ucl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 7 },
+ { label: '-3SD', data: Array(labels.length).fill(lcl3), borderColor: '#9333ea', borderWidth: 1, borderDash: [5,5], pointRadius: 0, order: 8 }
+ ]},
+ options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, title: { display: true, text: analysis.analysis_code + ' %' } }, x: { title: { display: true, text: 'Date' } } } }
+ });
+ } catch (err) { logger.error('Error:', err); }
 }
 </script>
 {% endblock %}

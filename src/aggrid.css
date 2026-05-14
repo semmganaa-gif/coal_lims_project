@@ -1,0 +1,11 @@
+/*
+ * AG Grid Community CSS bundle — conditional load.
+ *
+ * Ачаалах:
+ *   {{ vite_css_tag('src/aggrid.css') }}
+ *
+ * ag-grid.css = base, ag-theme-alpine.css = light theme.
+ * Quartz theme нэмэх бол энд @import нэмнэ.
+ */
+@import "ag-grid-community/styles/ag-grid.css";
+@import "ag-grid-community/styles/ag-theme-alpine.css";

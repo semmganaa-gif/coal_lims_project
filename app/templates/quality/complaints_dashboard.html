@@ -2,394 +2,394 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2><i class="bi bi-graph-up me-2"></i>{{ _("Complaint Dashboard") }}</h2>
-            <p class="text-muted mb-0">LAB.02.00.01 | ISO 17025 - 7.9</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <label class="fw-bold mb-0">{{ _("Year:") }}</label>
-            <select id="yearSelect" class="form-select form-select-sm" style="width:100px;">
-                {% for y in range(2025, 2031) %}
-                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
-                {% endfor %}
-            </select>
-            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-list me-1"></i>{{ _("List") }}
-            </a>
-            <a href="{{ url_for('quality.complaints_new') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-circle me-1"></i>{{ _("New") }}
-            </a>
-        </div>
-    </div>
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div>
+ <h2><i class="bi bi-graph-up me-2"></i>{{ _("Complaint Dashboard") }}</h2>
+ <p class="text-muted mb-0">LAB.02.00.01 | ISO 17025 - 7.9</p>
+ </div>
+ <div class="d-flex align-items-center gap-2">
+ <label class="fw-bold mb-0">{{ _("Year:") }}</label>
+ <select id="yearSelect" class="form-select form-select-sm w-[100px]">
+ {% for y in range(2025, 2031) %}
+ <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+ {% endfor %}
+ </select>
+ <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-list me-1"></i>{{ _("List") }}
+ </a>
+ <a href="{{ url_for('quality.complaints_new') }}" class="btn btn-primary btn-sm">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("New") }}
+ </a>
+ </div>
+ </div>
 
-    {# ═══ Summary Cards ═══ #}
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">{{ _("Total Complaints") }}</h6>
-                    <h2 class="fw-bold text-primary">{{ total }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">{{ _("Justified") }}</h6>
-                    <h2 class="fw-bold text-success">{{ justified_yes }}</h2>
-                    <small class="text-muted">
-                        {% if total > 0 %}{{ "%.0f"|format(justified_yes / total * 100) }}%{% else %}0%{% endif %}
-                    </small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">{{ _("Not Justified") }}</h6>
-                    <h2 class="fw-bold text-danger">{{ justified_no }}</h2>
-                    <small class="text-muted">
-                        {% if total > 0 %}{{ "%.0f"|format(justified_no / total * 100) }}%{% else %}0%{% endif %}
-                    </small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h6 class="text-muted">{{ _("Pending") }}</h6>
-                    <h2 class="fw-bold text-warning">{{ justified_pending }}</h2>
-                    <small class="text-muted">{{ _("Not reviewed") }}</small>
-                </div>
-            </div>
-        </div>
-    </div>
+ {# ═══ Summary Cards ═══ #}
+ <div class="row mb-4">
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-body text-center">
+ <h6 class="text-muted">{{ _("Total Complaints") }}</h6>
+ <h2 class="fw-bold text-primary">{{ total }}</h2>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-body text-center">
+ <h6 class="text-muted">{{ _("Justified") }}</h6>
+ <h2 class="fw-bold text-success">{{ justified_yes }}</h2>
+ <small class="text-muted">
+ {% if total> 0 %}{{ "%.0f"|format(justified_yes / total * 100) }}%{% else %}0%{% endif %}
+ </small>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-body text-center">
+ <h6 class="text-muted">{{ _("Not Justified") }}</h6>
+ <h2 class="fw-bold text-danger">{{ justified_no }}</h2>
+ <small class="text-muted">
+ {% if total> 0 %}{{ "%.0f"|format(justified_no / total * 100) }}%{% else %}0%{% endif %}
+ </small>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-body text-center">
+ <h6 class="text-muted">{{ _("Pending") }}</h6>
+ <h2 class="fw-bold text-warning">{{ justified_pending }}</h2>
+ <small class="text-muted">{{ _("Not reviewed") }}</small>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    {# ═══ Charts Row 1 ═══ #}
-    <div class="row mb-4">
-        {# Justified / Not Justified - Pie #}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0">
-                    <h6 class="fw-bold mb-0">{{ _("Justified Status") }}</h6>
-                </div>
-                <div class="card-body d-flex align-items-center justify-content-center">
-                    <canvas id="justifiedChart" style="max-height:250px;"></canvas>
-                </div>
-            </div>
-        </div>
+ {# ═══ Charts Row 1 ═══ #}
+ <div class="row mb-4">
+ {# Justified / Not Justified - Pie #}
+ <div class="col-md-4">
+ <div class="card border-0 shadow-sm h-100">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("Justified Status") }}</h6>
+ </div>
+ <div class="card-body d-flex align-items-center justify-content-center">
+ <canvas class="max-h-[250px]" id="justifiedChart"></canvas>
+ </div>
+ </div>
+ </div>
 
-        {# By Analysis Type - Bar #}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0">
-                    <h6 class="fw-bold mb-0">{{ _("By Analysis Type") }}</h6>
-                </div>
-                <div class="card-body">
-                    <canvas id="analysisChart" style="max-height:250px;"></canvas>
-                </div>
-            </div>
-        </div>
+ {# By Analysis Type - Bar #}
+ <div class="col-md-4">
+ <div class="card border-0 shadow-sm h-100">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("By Analysis Type") }}</h6>
+ </div>
+ <div class="card-body">
+ <canvas class="max-h-[250px]" id="analysisChart"></canvas>
+ </div>
+ </div>
+ </div>
 
-        {# Source - Doughnut #}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0">
-                    <h6 class="fw-bold mb-0">{{ _("Complaint Source") }}</h6>
-                </div>
-                <div class="card-body d-flex align-items-center justify-content-center">
-                    <canvas id="deptChart" style="max-height:250px;"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+ {# Source - Doughnut #}
+ <div class="col-md-4">
+ <div class="card border-0 shadow-sm h-100">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("Complaint Source") }}</h6>
+ </div>
+ <div class="card-body d-flex align-items-center justify-content-center">
+ <canvas class="max-h-[250px]" id="deptChart"></canvas>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    {# ═══ Charts Row 2 ═══ #}
-    <div class="row mb-4">
-        {# Monthly Trend - Line/Bar #}
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h6 class="fw-bold mb-0">{{ _("Monthly Trend") }} - {{ year }}</h6>
-                </div>
-                <div class="card-body">
-                    <canvas id="monthlyChart" style="max-height:300px;"></canvas>
-                </div>
-            </div>
-        </div>
+ {# ═══ Charts Row 2 ═══ #}
+ <div class="row mb-4">
+ {# Monthly Trend - Line/Bar #}
+ <div class="col-md-8">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("Monthly Trend") }} - {{ year }}</h6>
+ </div>
+ <div class="card-body">
+ <canvas class="max-h-[300px]" id="monthlyChart"></canvas>
+ </div>
+ </div>
+ </div>
 
-        {# By Senior Chemist #}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white border-0">
-                    <h6 class="fw-bold mb-0">{{ _("Investigated by Senior Chemist") }}</h6>
-                </div>
-                <div class="card-body">
-                    {% if senior_counts %}
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>{{ _("Name") }}</th><th class="text-center">{{ _("Count") }}</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for name, cnt in senior_counts.items() %}
-                            <tr>
-                                <td>{{ name }}</td>
-                                <td class="text-center"><span class="badge bg-primary">{{ cnt }}</span></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted text-center mt-3">{{ _("No data available") }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+ {# By Senior Chemist #}
+ <div class="col-md-4">
+ <div class="card border-0 shadow-sm h-100">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("Investigated by Senior Chemist") }}</h6>
+ </div>
+ <div class="card-body">
+ {% if senior_counts %}
+ <table class="table table-sm mb-0">
+ <thead class="table-light">
+ <tr><th class="whitespace-nowrap">{{ _("Name") }}</th><th class="text-center">{{ _("Count") }}</th></tr>
+ </thead>
+ <tbody>
+ {% for name, cnt in senior_counts.items() %}
+ <tr>
+ <td>{{ name }}</td>
+ <td class="text-center"><span class="badge bg-primary">{{ cnt }}</span></td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ {% else %}
+ <p class="text-muted text-center mt-3">{{ _("No data available") }}</p>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
 
-    {# ═══ Percentage Calculation ═══ #}
-    {% if total > 0 %}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
-            <h6 class="fw-bold mb-0">{{ _("Percentage Calculation") }} ({{ year }})</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm text-center mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th colspan="2">{{ _("Justified") }}</th>
-                            <th rowspan="2" class="align-middle">{{ _("Not Justified") }}</th>
-                            <th colspan="{{ analysis_counts|length or 1 }}">{{ _("Analysis Type") }}</th>
-                            <th colspan="{{ dept_counts|length or 1 }}">{{ _("Source") }}</th>
-                        </tr>
-                        <tr>
-                            <th>{{ _("Yes") }}</th>
-                            <th>%</th>
-                            {% for label in analysis_counts %}
-                            <th>{{ label }}</th>
-                            {% endfor %}
-                            {% for label in dept_counts %}
-                            <th>{{ label }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{{ justified_yes }}</td>
-                            <td>{{ "%.1f"|format(justified_yes / total * 100) }}%</td>
-                            <td>{{ "%.1f"|format(justified_no / total * 100) }}%</td>
-                            {% for label, cnt in analysis_counts.items() %}
-                            <td>{{ "%.1f"|format(cnt / total * 100) }}%</td>
-                            {% endfor %}
-                            {% for label, cnt in dept_counts.items() %}
-                            <td>{{ "%.1f"|format(cnt / total * 100) }}%</td>
-                            {% endfor %}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+ {# ═══ Percentage Calculation ═══ #}
+ {% if total> 0 %}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0">
+ <h6 class="fw-bold mb-0">{{ _("Percentage Calculation") }} ({{ year }})</h6>
+ </div>
+ <div class="card-body">
+ <div class="table-responsive">
+ <table class="table table-bordered table-sm text-center mb-0">
+ <thead class="table-light">
+ <tr>
+ <th colspan="2">{{ _("Justified") }}</th>
+ <th rowspan="2" class="align-middle">{{ _("Not Justified") }}</th>
+ <th colspan="{{ analysis_counts|length or 1 }}">{{ _("Analysis Type") }}</th>
+ <th colspan="{{ dept_counts|length or 1 }}">{{ _("Source") }}</th>
+ </tr>
+ <tr>
+ <th class="whitespace-nowrap">{{ _("Yes") }}</th>
+ <th class="whitespace-nowrap">%</th>
+ {% for label in analysis_counts %}
+ <th class="whitespace-nowrap">{{ label }}</th>
+ {% endfor %}
+ {% for label in dept_counts %}
+ <th class="whitespace-nowrap">{{ label }}</th>
+ {% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>{{ justified_yes }}</td>
+ <td>{{ "%.1f"|format(justified_yes / total * 100) }}%</td>
+ <td>{{ "%.1f"|format(justified_no / total * 100) }}%</td>
+ {% for label, cnt in analysis_counts.items() %}
+ <td>{{ "%.1f"|format(cnt / total * 100) }}%</td>
+ {% endfor %}
+ {% for label, cnt in dept_counts.items() %}
+ <td class="whitespace-nowrap">{{ "%.1f"|format(cnt / total * 100) }}%</td>
+ {% endfor %}
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ {% endif %}
 
-    <style nonce="{{ csp_nonce }}">
-      #dashTable { width: 100% !important; table-layout: fixed; }
-      #dashTable th:nth-child(1) { width: 150px; }
-      #dashTable th:nth-child(2) { width: 150px; }
-      #dashTable th:nth-child(3) { width: 130px; }
-      #dashTable th:nth-child(4) { width: 200px; }
-      #dashTable th:nth-child(5) { width: 170px; }
-      #dashTable th:nth-child(6) { width: 180px; }
-    </style>
-    {# ═══ Records Table ═══ #}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold mb-0">{{ _("Records") }} ({{ total }})</h6>
-            <button class="btn btn-sm btn-outline-success" onclick="tableToXlsx('dashTable','complaints_{{ year }}.xlsx','Records')">
-              <i class="bi bi-download me-1"></i> {{ _("Excel") }}
-            </button>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-            <table class="table table-striped table-hover table-sm mb-0 w-auto" id="dashTable">
-                <thead class="table-light">
-                    <tr>
-                        <th style="white-space:nowrap">#</th>
-                        <th style="white-space:nowrap">{{ _("Date") }}</th>
-                        <th style="white-space:nowrap">{{ _("Justified") }}</th>
-                        <th style="white-space:nowrap">{{ _("Analysis") }}</th>
-                        <th style="white-space:nowrap">{{ _("Department") }}</th>
-                        <th style="white-space:nowrap">{{ _("Investigated By") }}</th>
-                        <th>{{ _("Remarks") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in complaints %}
-                    <tr>
-                        <td style="white-space:nowrap">
-                            <a href="{{ url_for('quality.complaints_detail', id=c.id) }}">
-                                {{ c.complaint_no }}
-                            </a>
-                        </td>
-                        <td style="white-space:nowrap">{{ c.complaint_date.strftime('%Y-%m-%d') if c.complaint_date else '-' }}</td>
-                        <td>
-                            {% if c.is_justified is true %}
-                                <span class="badge bg-success">{{ _("Yes") }}</span>
-                            {% elif c.is_justified is false %}
-                                <span class="badge bg-danger">{{ _("No") }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% for code in c.get_reanalysis_codes() %}
-                                <span class="badge bg-info text-dark">{{ code }}</span>
-                            {% endfor %}
-                        </td>
-                        <td style="white-space:nowrap">{{ c.complainant_department or '-' }}</td>
-                        <td style="white-space:nowrap">{{ c.receiver_name or '-' }}</td>
-                        <td>{{ (c.complaint_content or c.description or '')[:50] }}{% if (c.complaint_content or c.description or '')|length > 50 %}...{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </div>
+ <style nonce="{{ csp_nonce }}">
+ #dashTable { width: 100% !important; table-layout: fixed; }
+ #dashTable th:nth-child(1) { width: 150px; }
+ #dashTable th:nth-child(2) { width: 150px; }
+ #dashTable th:nth-child(3) { width: 130px; }
+ #dashTable th:nth-child(4) { width: 200px; }
+ #dashTable th:nth-child(5) { width: 170px; }
+ #dashTable th:nth-child(6) { width: 180px; }
+ </style>
+ {# ═══ Records Table ═══ #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+ <h6 class="fw-bold mb-0">{{ _("Records") }} ({{ total }})</h6>
+ <button class="btn btn-sm btn-outline-success" data-action="tableToXlsx" data-arg-0="dashTable" data-arg-1="complaints_{{ year }}.xlsx" data-arg-2="Records">
+ <i class="bi bi-download me-1"></i> {{ _("Excel") }}
+ </button>
+ </div>
+ <div class="card-body p-0">
+ <div class="table-responsive">
+ <table class="table table-striped table-hover table-sm mb-0 w-auto" id="dashTable">
+ <thead class="table-light">
+ <tr>
+ <th class="whitespace-nowrap">#</th>
+ <th class="whitespace-nowrap">{{ _("Date") }}</th>
+ <th class="whitespace-nowrap">{{ _("Justified") }}</th>
+ <th class="whitespace-nowrap">{{ _("Analysis") }}</th>
+ <th class="whitespace-nowrap">{{ _("Department") }}</th>
+ <th class="whitespace-nowrap">{{ _("Investigated By") }}</th>
+ <th class="whitespace-nowrap">{{ _("Remarks") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for c in complaints %}
+ <tr>
+ <td class="whitespace-nowrap">
+ <a href="{{ url_for('quality.complaints_detail', id=c.id) }}">
+ {{ c.complaint_no }}
+ </a>
+ </td>
+ <td class="whitespace-nowrap">{{ c.complaint_date.strftime('%Y-%m-%d') if c.complaint_date else '-' }}</td>
+ <td class="whitespace-nowrap">
+ {% if c.is_justified is true %}
+ <span class="badge bg-success">{{ _("Yes") }}</span>
+ {% elif c.is_justified is false %}
+ <span class="badge bg-danger">{{ _("No") }}</span>
+ {% else %}
+ <span class="badge bg-secondary">-</span>
+ {% endif %}
+ </td>
+ <td class="whitespace-nowrap">
+ {% for code in c.get_reanalysis_codes() %}
+ <span class="badge bg-info text-dark">{{ code }}</span>
+ {% endfor %}
+ </td>
+ <td class="whitespace-nowrap">{{ c.complainant_department or '-' }}</td>
+ <td class="whitespace-nowrap">{{ c.receiver_name or '-' }}</td>
+ <td class="whitespace-nowrap">{{ (c.complaint_content or c.description or '')[:50] }}{% if (c.complaint_content or c.description or '')|length> 50 %}...{% endif %}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ vite_js_tag('src/chart.js') }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-    // Year select
-    document.getElementById('yearSelect').addEventListener('change', function() {
-        window.location.href = '{{ url_for("quality.complaints_dashboard") }}?year=' + this.value;
-    });
+ // Year select
+ document.getElementById('yearSelect').addEventListener('change', function() {
+ window.location.href = '{{ url_for("quality.complaints_dashboard") }}?year=' + this.value;
+ });
 
-    // DataTable
-    if ($.fn.DataTable) {
-        $('#dashTable').DataTable({
-            order: [[1, 'desc']],
-            pageLength: 25,
-            autoWidth: false,
-            columns: [
-                { width: '150px' },   // #
-                { width: '150px' },   // Date
-                { width: '130px' },   // Justified
-                { width: '200px' },   // Analysis
-                { width: '170px' },   // Department
-                { width: '180px' },   // Investigated By
-                { width: null }       // Remarks
-            ]
-        });
-    }
+ // DataTable
+ if ($.fn.DataTable) {
+ $('#dashTable').DataTable({
+ order: [[1, 'desc']],
+ pageLength: 25,
+ autoWidth: false,
+ columns: [
+ { width: '150px' }, // #
+ { width: '150px' }, // Date
+ { width: '130px' }, // Justified
+ { width: '200px' }, // Analysis
+ { width: '170px' }, // Department
+ { width: '180px' }, // Investigated By
+ { width: null } // Remarks
+ ]
+ });
+ }
 
-    const COLORS = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
+ const COLORS = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
 
-    // 1. Justified Pie
-    new Chart(document.getElementById('justifiedChart'), {
-        type: 'pie',
-        data: {
-            labels: ['{{ _("Yes") }}', '{{ _("No") }}', '{{ _("Pending") }}'],
-            datasets: [{
-                data: [{{ justified_yes }}, {{ justified_no }}, {{ justified_pending }}],
-                backgroundColor: ['#59a14f', '#e15759', '#bab0ac']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
+ // 1. Justified Pie
+ new Chart(document.getElementById('justifiedChart'), {
+ type: 'pie',
+ data: {
+ labels: ['{{ _("Yes") }}', '{{ _("No") }}', '{{ _("Pending") }}'],
+ datasets: [{
+ data: [{{ justified_yes }}, {{ justified_no }}, {{ justified_pending }}],
+ backgroundColor: ['#59a14f', '#e15759', '#bab0ac']
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { position: 'bottom' }
+ }
+ }
+ });
 
-    // 2. Analysis Type Bar
-    const analysisData = {{ analysis_counts | tojson | safe }};
-    const analysisLabels = Object.keys(analysisData);
-    const analysisValues = Object.values(analysisData);
-    new Chart(document.getElementById('analysisChart'), {
-        type: 'bar',
-        data: {
-            labels: analysisLabels,
-            datasets: [{
-                label: '{{ _("Count") }}',
-                data: analysisValues,
-                backgroundColor: COLORS.slice(0, analysisLabels.length)
-            }]
-        },
-        options: {
-            responsive: true,
-            indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { beginAtZero: true, ticks: { stepSize: 1 } }
-            }
-        }
-    });
+ // 2. Analysis Type Bar
+ const analysisData = {{ analysis_counts | tojson | safe }};
+ const analysisLabels = Object.keys(analysisData);
+ const analysisValues = Object.values(analysisData);
+ new Chart(document.getElementById('analysisChart'), {
+ type: 'bar',
+ data: {
+ labels: analysisLabels,
+ datasets: [{
+ label: '{{ _("Count") }}',
+ data: analysisValues,
+ backgroundColor: COLORS.slice(0, analysisLabels.length)
+ }]
+ },
+ options: {
+ responsive: true,
+ indexAxis: 'y',
+ plugins: { legend: { display: false } },
+ scales: {
+ x: { beginAtZero: true, ticks: { stepSize: 1 } }
+ }
+ }
+ });
 
-    // 3. Department Doughnut
-    const deptData = {{ dept_counts | tojson | safe }};
-    const deptLabels = Object.keys(deptData);
-    const deptValues = Object.values(deptData);
-    new Chart(document.getElementById('deptChart'), {
-        type: 'doughnut',
-        data: {
-            labels: deptLabels,
-            datasets: [{
-                data: deptValues,
-                backgroundColor: COLORS.slice(0, deptLabels.length)
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
+ // 3. Department Doughnut
+ const deptData = {{ dept_counts | tojson | safe }};
+ const deptLabels = Object.keys(deptData);
+ const deptValues = Object.values(deptData);
+ new Chart(document.getElementById('deptChart'), {
+ type: 'doughnut',
+ data: {
+ labels: deptLabels,
+ datasets: [{
+ data: deptValues,
+ backgroundColor: COLORS.slice(0, deptLabels.length)
+ }]
+ },
+ options: {
+ responsive: true,
+ plugins: {
+ legend: { position: 'bottom' }
+ }
+ }
+ });
 
-    // 4. Monthly Trend
-    const monthNames = ['{{ _("Jan") }}','{{ _("Feb") }}','{{ _("Mar") }}','{{ _("Apr") }}','{{ _("May") }}','{{ _("Jun") }}',
-                         '{{ _("Jul") }}','{{ _("Aug") }}','{{ _("Sep") }}','{{ _("Oct") }}','{{ _("Nov") }}','{{ _("Dec") }}'];
-    const monthsData = {{ months_data | tojson | safe }};
-    new Chart(document.getElementById('monthlyChart'), {
-        type: 'bar',
-        data: {
-            labels: monthNames,
-            datasets: [
-                {
-                    label: '{{ _("Total") }}',
-                    data: monthsData.map(m => m.total),
-                    backgroundColor: 'rgba(78,121,167,0.7)',
-                    order: 2
-                },
-                {
-                    label: '{{ _("Justified") }}',
-                    data: monthsData.map(m => m.justified),
-                    backgroundColor: 'rgba(89,161,79,0.7)',
-                    order: 2
-                },
-                {
-                    label: '{{ _("Not Justified") }}',
-                    data: monthsData.map(m => m.not_justified),
-                    backgroundColor: 'rgba(225,87,89,0.7)',
-                    order: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                y: { beginAtZero: true, ticks: { stepSize: 1 } }
-            }
-        }
-    });
+ // 4. Monthly Trend
+ const monthNames = ['{{ _("Jan") }}','{{ _("Feb") }}','{{ _("Mar") }}','{{ _("Apr") }}','{{ _("May") }}','{{ _("Jun") }}',
+ '{{ _("Jul") }}','{{ _("Aug") }}','{{ _("Sep") }}','{{ _("Oct") }}','{{ _("Nov") }}','{{ _("Dec") }}'];
+ const monthsData = {{ months_data | tojson | safe }};
+ new Chart(document.getElementById('monthlyChart'), {
+ type: 'bar',
+ data: {
+ labels: monthNames,
+ datasets: [
+ {
+ label: '{{ _("Total") }}',
+ data: monthsData.map(m => m.total),
+ backgroundColor: 'rgba(78,121,167,0.7)',
+ order: 2
+ },
+ {
+ label: '{{ _("Justified") }}',
+ data: monthsData.map(m => m.justified),
+ backgroundColor: 'rgba(89,161,79,0.7)',
+ order: 2
+ },
+ {
+ label: '{{ _("Not Justified") }}',
+ data: monthsData.map(m => m.not_justified),
+ backgroundColor: 'rgba(225,87,89,0.7)',
+ order: 2
+ }
+ ]
+ },
+ options: {
+ responsive: true,
+ plugins: { legend: { position: 'top' } },
+ scales: {
+ y: { beginAtZero: true, ticks: { stepSize: 1 } }
+ }
+ }
+ });
 });
 </script>
 {% endblock %}
