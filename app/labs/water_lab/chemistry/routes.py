@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import Sample, AnalysisResult, Equipment
+from app.repositories import WaterWorksheetRepository, WorksheetRowRepository
 from app.labs.water_lab.chemistry.constants import (
     ALL_WATER_PARAMS, WATER_ANALYSIS_TYPES, WATER_UNITS,
     ALL_WATER_SAMPLE_NAMES, get_mns_standards,
@@ -1234,12 +1235,10 @@ def api_standards():
 @lab_required('water_chemistry')
 def worksheet_list():
     """QC ажлын хуудасны жагсаалт."""
-    from app.models.worksheets import WaterWorksheet
     status_filter = request.args.get('status', '')
-    q = WaterWorksheet.query.order_by(WaterWorksheet.analysis_date.desc(), WaterWorksheet.id.desc())
-    if status_filter:
-        q = q.filter(WaterWorksheet.status == status_filter)
-    worksheets = q.limit(200).all()
+    worksheets = WaterWorksheetRepository.get_filtered(
+        status=status_filter or None, limit=200,
+    )
     return render_template(
         'labs/water/chemistry/worksheet_list.html',
         worksheets=worksheets,
@@ -1254,7 +1253,7 @@ def worksheet_list():
 def worksheet_new():
     """Шинэ QC ажлын хуудас үүсгэх."""
     from app.models.worksheets import WaterWorksheet
-    from app.models.chemicals import Chemical
+    from app.models.chemicals import Chemical  # noqa: F401
 
     if request.method == 'POST':
         method_code = request.form.get('method_code', '').strip()
@@ -1314,8 +1313,7 @@ def worksheet_new():
 @lab_required('water_chemistry')
 def worksheet_detail(ws_id):
     """QC ажлын хуудасны дэлгэрэнгүй."""
-    from app.models.worksheets import WaterWorksheet
-    ws = WaterWorksheet.query.get_or_404(ws_id)
+    ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     reagents = []
     try:
         from app.models.chemicals import Chemical as _Chem
@@ -1336,8 +1334,7 @@ def worksheet_detail(ws_id):
 @lab_required('water_chemistry')
 def worksheet_submit(ws_id):
     """Ажлын хуудсыг хянуулахаар илгээх."""
-    from app.models.worksheets import WaterWorksheet
-    ws = WaterWorksheet.query.get_or_404(ws_id)
+    ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     if ws.analyst_id != current_user.id and current_user.role not in ('senior', 'manager', 'admin'):
         flash(_l('Зөвхөн боловсруулсан химич илгээх боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
@@ -1359,12 +1356,11 @@ def worksheet_submit(ws_id):
 @lab_required('water_chemistry')
 def worksheet_approve(ws_id):
     """Ажлын хуудас батлах (senior / manager / admin)."""
-    from app.models.worksheets import WaterWorksheet
     from app.utils.datetime import now_local
     if current_user.role not in ('senior', 'manager', 'admin'):
         flash(_l('Зөвхөн ахлах химич/менежер батлах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
-    ws = WaterWorksheet.query.get_or_404(ws_id)
+    ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     if ws.status not in ('submitted', 'open'):
         flash(_l('Батлах боломжгүй төлөв.'), 'warning')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
@@ -1386,12 +1382,11 @@ def worksheet_approve(ws_id):
 @lab_required('water_chemistry')
 def worksheet_reject(ws_id):
     """Ажлын хуудас буцаах."""
-    from app.models.worksheets import WaterWorksheet
     from app.utils.datetime import now_local
     if current_user.role not in ('senior', 'manager', 'admin'):
         flash(_l('Зөвхөн ахлах химич/менежер буцаах боломжтой.'), 'danger')
         return redirect(url_for('water.worksheet_detail', ws_id=ws_id))
-    ws = WaterWorksheet.query.get_or_404(ws_id)
+    ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     ws.status = 'rejected'
     ws.reviewer_id = current_user.id
     ws.reviewed_at = now_local()
@@ -1410,8 +1405,8 @@ def worksheet_reject(ws_id):
 @lab_required('water_chemistry')
 def worksheet_save_rows(ws_id):
     """Мөрүүдийг AJAX-аар хадгалах."""
-    from app.models.worksheets import WaterWorksheet, WorksheetRow
-    ws = WaterWorksheet.query.get_or_404(ws_id)
+    from app.models.worksheets import WorksheetRow
+    ws = WaterWorksheetRepository.get_by_id_or_404(ws_id)
     if ws.status != 'open':
         return jsonify({'success': False, 'message': 'Зөвхөн open ажлын хуудсанд мөр нэмж болно'}), 400
 
@@ -1419,8 +1414,7 @@ def worksheet_save_rows(ws_id):
     rows_data = data.get('rows', [])
 
     # Existing rows устгаад дахин үүсгэх (simplest approach for small batches)
-    for row in list(ws.rows):
-        db.session.delete(row)
+    WorksheetRowRepository.delete_for_worksheet(ws_id)
     db.session.flush()
 
     _QC_LIMITS = {

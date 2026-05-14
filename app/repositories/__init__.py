@@ -47,6 +47,10 @@ from app.repositories.solutions_repository import (
     SolutionPreparationRepository,
     SolutionRecipeIngredientRepository,
 )
+from app.repositories.worksheets_repository import (
+    WaterWorksheetRepository,
+    WorksheetRowRepository,
+)
 
 __all__ = [
     "SampleRepository",
@@ -67,6 +71,8 @@ __all__ = [
     "SolutionRecipeRepository",
     "SolutionPreparationRepository",
     "SolutionRecipeIngredientRepository",
+    "WaterWorksheetRepository",
+    "WorksheetRowRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",

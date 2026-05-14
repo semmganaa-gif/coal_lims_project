@@ -817,13 +817,8 @@ def invalidate_results_by_lot(
     # 2. WorksheetRow-оор холбогдсон AnalysisResult-үүд
     #    (raw_data-д reagent_lot_id хадгалсан тохиолдол)
     try:
-        from app.models.worksheets import WorksheetRow
-        ws_rows = (
-            WorksheetRow.query
-            .filter_by(reagent_lot_id=lot_id)
-            .filter(WorksheetRow.analysis_result_id.isnot(None))
-            .all()
-        )
+        from app.repositories import WorksheetRowRepository
+        ws_rows = WorksheetRowRepository.get_for_lot_with_result(lot_id)
         ws_result_ids = {r.analysis_result_id for r in ws_rows}
     except Exception:
         ws_result_ids = set()
