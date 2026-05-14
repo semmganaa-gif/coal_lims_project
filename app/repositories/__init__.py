@@ -30,6 +30,12 @@ from app.repositories.maintenance_repository import MaintenanceLogRepository, Us
 from app.repositories.analysis_profile_repository import AnalysisProfileRepository
 from app.repositories.instrument_repository import InstrumentReadingRepository
 from app.repositories.planning_repository import MonthlyPlanRepository, StaffSettingsRepository
+from app.repositories.spare_parts_repository import (
+    SparePartRepository,
+    SparePartCategoryRepository,
+    SparePartUsageRepository,
+    SparePartLogRepository,
+)
 
 __all__ = [
     "SampleRepository",
@@ -39,6 +45,10 @@ __all__ = [
     "InstrumentReadingRepository",
     "MonthlyPlanRepository",
     "StaffSettingsRepository",
+    "SparePartRepository",
+    "SparePartCategoryRepository",
+    "SparePartUsageRepository",
+    "SparePartLogRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",

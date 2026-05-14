@@ -13,6 +13,12 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app.models import SparePart, SparePartUsage, SparePartLog, SparePartCategory
+from app.repositories import (
+    SparePartRepository,
+    SparePartCategoryRepository,
+    SparePartUsageRepository,
+    SparePartLogRepository,
+)
 from app.utils.converters import to_float
 from app.utils.security import escape_like_pattern
 
@@ -109,22 +115,19 @@ def log_spare_part_action(spare_part, action, user_id,
 
 def get_categories():
     """Return active categories as list of (code, name) tuples."""
-    cats = SparePartCategory.query.filter_by(is_active=True) \
-        .order_by(SparePartCategory.sort_order, SparePartCategory.name).all()
+    cats = SparePartCategoryRepository.get_active(ordered=True)
     return [(c.code, c.name) for c in cats]
 
 
 def get_categories_dict():
     """Return active categories as {code: name} dict."""
-    cats = SparePartCategory.query.filter_by(is_active=True).all()
+    cats = SparePartCategoryRepository.get_active(ordered=False)
     return {c.code: c.name for c in cats}
 
 
 def get_all_categories_ordered():
     """Return all categories ordered (for admin list)."""
-    return SparePartCategory.query.order_by(
-        SparePartCategory.sort_order, SparePartCategory.name
-    ).all()
+    return SparePartCategoryRepository.get_all_ordered()
 
 
 # =====================================================
@@ -141,8 +144,7 @@ def create_category(code, name, name_en=None, description=None,
     if not code or not name:
         return None, _l('Код болон нэр шаардлагатай.')
 
-    existing = SparePartCategory.query.filter_by(code=code).first()
-    if existing:
+    if SparePartCategoryRepository.get_by_code(code):
         return None, f"'{code}' код аль хэдийн бүртгэгдсэн байна."
 
     cat = SparePartCategory(
@@ -165,7 +167,7 @@ def update_category(category_id, name, name_en=None, description=None,
     Returns:
         (SparePartCategory, None) on success, (None, error_message) on failure.
     """
-    cat = db.session.get(SparePartCategory, category_id)
+    cat = SparePartCategoryRepository.get_by_id(category_id)
     if not cat:
         return None, 'not_found'
 
@@ -184,11 +186,11 @@ def delete_category(category_id):
     Returns:
         (name, None) on success, (None, error_message) on failure.
     """
-    cat = db.session.get(SparePartCategory, category_id)
+    cat = SparePartCategoryRepository.get_by_id(category_id)
     if not cat:
         return None, 'not_found'
 
-    count = SparePart.query.filter_by(category=cat.code).count()
+    count = SparePartRepository.count_by_category(cat.code)
     if count > 0:
         return None, f"'{cat.name}' ангилалд {count} сэлбэг бүртгэлтэй байна. Эхлээд тэдгээрийг шилжүүлнэ үү."
 
@@ -207,22 +209,7 @@ def get_spare_parts_filtered(category=None, status=None, view='all'):
     Returns:
         list of dicts ready for JSON/template rendering.
     """
-    query = SparePart.query
-
-    if category:
-        query = query.filter(SparePart.category == category)
-
-    if status:
-        query = query.filter(SparePart.status == status)
-
-    if view == 'low_stock':
-        query = query.filter(SparePart.status.in_(['low_stock', 'out_of_stock']))
-
-    # Hide disposed by default
-    if view != 'disposed' and status != 'disposed':
-        query = query.filter(SparePart.status != 'disposed')
-
-    spare_parts_rows = query.order_by(SparePart.name.asc()).all()
+    spare_parts_rows = SparePartRepository.get_filtered(category, status, view)
 
     return [{
         'id': sp.id,
@@ -246,7 +233,7 @@ def get_spare_parts_filtered(category=None, status=None, view='all'):
 
 def get_spare_parts_list_simple():
     """Return all spare parts as simple dicts (for API list endpoint)."""
-    spare_parts = SparePart.query.order_by(SparePart.name).all()
+    spare_parts = SparePartRepository.get_all_ordered()
     return [{
         'id': sp.id,
         'name': sp.name,
@@ -264,9 +251,7 @@ def get_spare_parts_list_simple():
 
 def get_low_stock_parts():
     """Return spare parts with low/out_of_stock status."""
-    spare_parts = SparePart.query.filter(
-        SparePart.status.in_(['low_stock', 'out_of_stock'])
-    ).order_by(SparePart.quantity.asc()).all()
+    spare_parts = SparePartRepository.get_low_stock()
 
     return [{
         'id': sp.id,
@@ -287,15 +272,7 @@ def search_spare_parts(query_str):
     Returns:
         list of dicts.
     """
-    if not query_str or len(query_str) < 2:
-        return []
-
-    safe_q = escape_like_pattern(query_str)
-    spare_parts = SparePart.query.filter(
-        (SparePart.name.ilike(f'%{safe_q}%')) |
-        (SparePart.name_en.ilike(f'%{safe_q}%')) |
-        (SparePart.part_number.ilike(f'%{safe_q}%'))
-    ).limit(20).all()
+    spare_parts = SparePartRepository.search(query_str)
 
     return [{
         'id': sp.id,
@@ -314,16 +291,7 @@ def search_spare_parts(query_str):
 
 def get_list_stats():
     """Get spare part stats for list page (total, low_stock, out_of_stock)."""
-    stats_row = db.session.query(
-        func.count(case((SparePart.status != 'disposed', SparePart.id))).label('total'),
-        func.count(case((SparePart.status == 'low_stock', SparePart.id))).label('low_stock'),
-        func.count(case((SparePart.status == 'out_of_stock', SparePart.id))).label('out_of_stock'),
-    ).one()
-    return {
-        'total': stats_row.total,
-        'low_stock': stats_row.low_stock,
-        'out_of_stock': stats_row.out_of_stock,
-    }
+    return SparePartRepository.get_list_stats()
 
 
 def get_full_stats():
@@ -427,7 +395,7 @@ def update_spare_part(spare_part_id, data, user_id):
     Returns:
         (SparePart, None) on success, (None, error_message) on failure.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, 'not_found'
 
@@ -494,7 +462,7 @@ def receive_stock(spare_part_id, quantity, user_id, notes=None):
     Returns:
         (dict with result info, None) on success, (None, error_message) on failure.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, 'not_found'
 
@@ -531,7 +499,7 @@ def consume_stock(spare_part_id, quantity, user_id,
     Returns:
         (dict with result info, None) on success, (None, error_message) on failure.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, 'not_found'
 
@@ -601,7 +569,7 @@ def consume_stock_bulk(items, user_id, equipment_id=None,
         spare_part_id = item.get('spare_part_id')
         quantity = float(item.get('quantity', 0))
 
-        spare_part = db.session.get(SparePart, spare_part_id)
+        spare_part = SparePartRepository.get_by_id(spare_part_id)
         if not spare_part:
             errors.append(f'ID {spare_part_id} олдсонгүй')
             continue
@@ -653,7 +621,7 @@ def dispose_spare_part(spare_part_id, user_id, reason=_l('Устгав')):
     Returns:
         (name, None) on success, (None, error_message) on failure.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, 'not_found'
 
@@ -679,7 +647,7 @@ def delete_spare_part_permanently(spare_part_id):
     Returns:
         (name, None) on success, (None, error_message) on failure.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, 'not_found'
 
@@ -698,15 +666,12 @@ def get_detail_data(spare_part_id):
     Returns:
         (spare_part, usages, logs) or (None, None, None) if not found.
     """
-    spare_part = db.session.get(SparePart, spare_part_id)
+    spare_part = SparePartRepository.get_by_id(spare_part_id)
     if not spare_part:
         return None, None, None
 
-    usages = SparePartUsage.query.filter_by(spare_part_id=spare_part_id) \
-        .order_by(SparePartUsage.used_at.desc()).limit(50).all()
-
-    logs = SparePartLog.query.filter_by(spare_part_id=spare_part_id) \
-        .order_by(SparePartLog.timestamp.desc()).limit(50).all()
+    usages = SparePartUsageRepository.get_for_spare(spare_part_id, limit=50)
+    logs = SparePartLogRepository.get_for_spare(spare_part_id, limit=50)
 
     return spare_part, usages, logs
 
@@ -717,8 +682,7 @@ def get_usage_history(spare_part_id, limit=100):
     Returns:
         list of dicts.
     """
-    usages = SparePartUsage.query.filter_by(spare_part_id=spare_part_id) \
-        .order_by(SparePartUsage.used_at.desc()).limit(limit).all()
+    usages = SparePartUsageRepository.get_for_spare(spare_part_id, limit=limit)
 
     return [{
         'id': u.id,
