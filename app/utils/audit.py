@@ -108,8 +108,13 @@ def log_audit(
         except SQLAlchemyError as e:
             db.session.rollback()
             import logging
+            # ISO 17025: Audit failure нь silent байх ёсгүй. CRITICAL log + raise.
             logger = logging.getLogger('security')
-            logger.error(f"Failed to write audit log: {e}")
+            logger.critical(
+                f"Failed to write audit log (action={action}, "
+                f"resource={resource_type}#{resource_id}): {e}"
+            )
+            raise
     # commit=False: дуудагч тал commit хийнэ (transaction consistency)
 
 

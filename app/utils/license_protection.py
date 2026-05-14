@@ -37,7 +37,14 @@ _INSTANCE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 
 
 def _load_or_generate_key(env_var: str, filename: str, length: int = 48) -> str:
-    """ENV-ээс уншиж, байхгүй бол instance/ файлд auto-generate хийнэ."""
+    """ENV-ээс уншиж, байхгүй бол instance/ файлд auto-generate хийгээд хадгална.
+
+    Ephemeral key (өмнөх хувилбар) restart-аар бүх license invalidate-д хүргэдэг
+    байсныг засаж, шинэ түлхүүрийг disk-руу бичиж тогтворжуулав. Файл бичих
+    боломжгүй (read-only filesystem гэх мэт) бол critical log + ephemeral
+    fallback (license restart-аар алдагдах эрсдэл хэвээр, гэхдээ system
+    crash-аас сэргийлнэ).
+    """
     val = os.getenv(env_var)
     if val:
         return val
@@ -45,9 +52,24 @@ def _load_or_generate_key(env_var: str, filename: str, length: int = 48) -> str:
     if os.path.exists(key_path):
         with open(key_path, 'r', encoding='utf-8') as f:
             return f.read().strip()
-    # Файл байхгүй үед import дээр бичихгүй — runtime-д түр түлхүүр ашиглана
+    # Файл байхгүй — auto-generate + persist (restart-руу тогтвортой).
     key = secrets.token_urlsafe(length)
-    logger.warning(f"{env_var} not found; using ephemeral key (not persisted).")
+    try:
+        os.makedirs(_INSTANCE_DIR, exist_ok=True)
+        with open(key_path, 'w', encoding='utf-8') as f:
+            f.write(key)
+        # File permissions: зөвхөн эзэмшигч уншина (POSIX, Windows-д noop)
+        try:
+            os.chmod(key_path, 0o600)
+        except OSError:
+            pass
+        logger.info(f"{env_var} not found; auto-generated and persisted to {key_path}")
+    except OSError as e:
+        logger.critical(
+            f"{env_var}: cannot persist to {key_path} ({e}). "
+            f"Licenses will be invalidated on restart! "
+            f"Set {env_var} env var or fix filesystem permissions."
+        )
     return key
 
 

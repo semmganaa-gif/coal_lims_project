@@ -56,8 +56,19 @@ class AnalysisResult(db.Model):
     __tablename__ = "analysis_result"
 
     id = db.Column(db.Integer, primary_key=True)
-    sample_id = db.Column(db.Integer, db.ForeignKey("sample.id"), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), index=True)
+    # Sample устгахад үр дүн мөн устгана (Sample.results-ийн ORM cascade-тэй
+    # synced DB-level constraint).
+    sample_id = db.Column(
+        db.Integer,
+        db.ForeignKey("sample.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    # User устгахад үр дүн үлдэх — audit retention (ISO 17025).
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL"),
+        index=True,
+    )
     analysis_code = db.Column(db.String(50), index=True, nullable=False)
     final_result = db.Column(db.Numeric(12, 4))
     raw_data = db.Column(db.Text)

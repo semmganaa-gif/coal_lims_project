@@ -151,7 +151,13 @@ class ChemicalUsage(db.Model):
     __tablename__ = 'chemical_usage'
 
     id = db.Column(db.Integer, primary_key=True)
-    chemical_id = db.Column(db.Integer, db.ForeignKey('chemical.id'), nullable=False, index=True)
+    # Chemical устгахад usage record устгана (тус бодис байхгүй бол хэрэглээ
+    # утгагүй). Chemical.usages-ийн ORM cascade-тэй synced.
+    chemical_id = db.Column(
+        db.Integer,
+        db.ForeignKey('chemical.id', ondelete='CASCADE'),
+        nullable=False, index=True,
+    )
 
     # Хэрэглээний мэдээлэл
     quantity_used = db.Column(db.Float, nullable=False)

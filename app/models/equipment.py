@@ -5,8 +5,9 @@ Equipment-related models.
 Separated from models.py for maintainability.
 """
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, event
 from app import db
+from app.models.mixins import HashableMixin
 from app.utils.datetime import now_local as now_mn
 
 
@@ -91,9 +92,12 @@ class Equipment(db.Model):
     )
 
 
-class MaintenanceLog(db.Model):
+class MaintenanceLog(HashableMixin, db.Model):
     """
     Засвар үйлчилгээний түүх (ISO 17025 - Equipment maintenance).
+
+    Append-only: UPDATE/DELETE хориглосон. Calibration record-ийг өөрчлөх
+    боломжгүй — шинэ row нэмж засна.
     """
     __tablename__ = 'maintenance_logs'
 
@@ -115,13 +119,26 @@ class MaintenanceLog(db.Model):
     # Audit timestamps
     created_at = db.Column(db.DateTime, default=now_mn)  # Системд бүртгэсэн огноо
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     # Холбоос
     performed_by_user = db.relationship('User', foreign_keys=[performed_by_id])
 
+    def _get_hash_data(self) -> str:
+        ts = self.action_date.strftime('%Y-%m-%d %H:%M:%S.%f') if self.action_date else ''
+        return (
+            f"{self.equipment_id}|{self.action_type}|{self.description}|"
+            f"{self.performed_by}|{self.performed_by_id}|{self.certificate_no}|"
+            f"{self.result}|{ts}|{self.file_path}"
+        )
 
-class UsageLog(db.Model):
+
+class UsageLog(HashableMixin, db.Model):
     """
     Багаж ашиглалтын хугацааг бүртгэх.
+
+    Append-only: UPDATE/DELETE хориглосон (ISO 17025 audit trail).
     """
     __tablename__ = 'usage_logs'
 
@@ -143,5 +160,40 @@ class UsageLog(db.Model):
     # Audit timestamp
     created_at = db.Column(db.DateTime, default=now_mn)
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     # Холбоос
     used_by_user = db.relationship('User', foreign_keys=[used_by_id])
+
+    def _get_hash_data(self) -> str:
+        st = self.start_time.strftime('%Y-%m-%d %H:%M:%S.%f') if self.start_time else ''
+        et = self.end_time.strftime('%Y-%m-%d %H:%M:%S.%f') if self.end_time else ''
+        return (
+            f"{self.equipment_id}|{self.sample_id}|{st}|{et}|"
+            f"{self.duration_minutes}|{self.used_by_id}|{self.purpose}"
+        )
+
+
+# ──────────────────────────────────────────
+# Append-only enforcement (ISO 17025 audit trail)
+# ──────────────────────────────────────────
+
+def _block_equipment_log_update(mapper, connection, target):
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: {type(target).__name__} #{target.id} cannot be modified. "
+        "Equipment audit records are append-only."
+    )
+
+
+def _block_equipment_log_delete(mapper, connection, target):
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: {type(target).__name__} #{target.id} cannot be deleted. "
+        "Equipment audit records are append-only."
+    )
+
+
+event.listen(MaintenanceLog, "before_update", _block_equipment_log_update)
+event.listen(MaintenanceLog, "before_delete", _block_equipment_log_delete)
+event.listen(UsageLog, "before_update", _block_equipment_log_update)
+event.listen(UsageLog, "before_delete", _block_equipment_log_delete)

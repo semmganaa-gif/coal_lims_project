@@ -749,9 +749,8 @@ class TestMaintenanceLogRepository:
             fetched = MaintenanceLogRepository.get_by_id(saved.id)
             assert fetched is not None
 
-            _db.session.delete(saved)
-            _db.session.delete(eq)
-            _db.session.commit()
+            # NOTE: MaintenanceLog нь ISO 17025-аар append-only тул explicit
+            # cleanup-аар устгахгүй. In-memory SQLite session tear-down автомат.
 
     def test_get_by_id_none(self, app):
         with app.app_context():
@@ -767,24 +766,20 @@ class TestMaintenanceLogRepository:
             _db.session.commit()
 
             assert MaintenanceLogRepository.has_records(eq.id) is True
+            # Cleanup-гүй: append-only audit record
 
-            _db.session.delete(log)
-            _db.session.delete(eq)
-            _db.session.commit()
-
-    def test_delete(self, app):
+    def test_delete_blocked(self, app):
+        """MaintenanceLog нь ISO 17025-аар append-only — DELETE хориглогдсон."""
+        import pytest
         with app.app_context():
             eq = self._make_equipment()
             log = MaintenanceLog(equipment_id=eq.id, action_type="Test")
             _db.session.add(log)
             _db.session.commit()
-            lid = log.id
 
-            MaintenanceLogRepository.delete(log)
-            assert MaintenanceLogRepository.get_by_id(lid) is None
-
-            _db.session.delete(eq)
-            _db.session.commit()
+            with pytest.raises(RuntimeError, match="AUDIT INTEGRITY"):
+                MaintenanceLogRepository.delete(log)
+            _db.session.rollback()
 
 
 class TestUsageLogRepository:
@@ -804,10 +799,7 @@ class TestUsageLogRepository:
 
             fetched = UsageLogRepository.get_by_id(saved.id)
             assert fetched is not None
-
-            _db.session.delete(saved)
-            _db.session.delete(eq)
-            _db.session.commit()
+            # UsageLog нь ISO 17025-аар append-only тул explicit delete cleanup-гүй
 
     def test_get_by_id_none(self, app):
         with app.app_context():
@@ -822,10 +814,7 @@ class TestUsageLogRepository:
 
             results = UsageLogRepository.get_by_equipment(eq.id)
             assert len(results) >= 1
-
-            _db.session.delete(log)
-            _db.session.delete(eq)
-            _db.session.commit()
+            # Append-only — cleanup-гүй
 
     def test_has_records(self, app):
         with app.app_context():
@@ -837,10 +826,7 @@ class TestUsageLogRepository:
             _db.session.commit()
 
             assert UsageLogRepository.has_records(eq.id) is True
-
-            _db.session.delete(log)
-            _db.session.delete(eq)
-            _db.session.commit()
+            # Append-only — cleanup-гүй
 
 
 # =========================================================================

@@ -185,24 +185,25 @@ class TestLogAnalysisAction:
     @patch('app.services.analysis_audit.db')
     @patch('app.services.analysis_audit.current_user')
     def test_exception_handling(self, mock_user, mock_db):
-        """Exception handling in log_analysis_action"""
+        """ISO 17025: audit log алдаа CRITICAL log + raise хийнэ (silent биш)."""
+        import pytest
         from app.services.analysis_audit import log_analysis_action
 
         mock_user.is_authenticated = True
         mock_user.id = 1
         mock_db.session.add.side_effect = SQLAlchemyError("Database error")
 
-        # Should not raise exception
-        log_analysis_action(
-            result_id=1,
-            sample_id=1,
-            analysis_code='TS',
-            action='created',
-            final_result=10.5,
-            raw_data_dict={}
-        )
+        # Audit failure нь fail-closed pattern — raise хийнэ
+        with pytest.raises(SQLAlchemyError):
+            log_analysis_action(
+                result_id=1,
+                sample_id=1,
+                analysis_code='TS',
+                action='created',
+                final_result=10.5,
+                raw_data_dict={}
+            )
 
-        # Function catches SQLAlchemyError and logs it (no rollback in current implementation)
         assert mock_db.session.add.called
 
 

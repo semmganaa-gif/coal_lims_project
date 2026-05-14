@@ -140,7 +140,11 @@ class User(UserMixin, db.Model):
 
         Security:
             Werkzeug constant-time comparison ашиглана (timing attack сэргийлэх).
+            `password_hash` тохируулагдаагүй User-д False буцаана (TypeError-аас
+            хамгаална).
         """
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
@@ -206,7 +210,12 @@ class Sample(db.Model):
     # UTC биш, Монгол
     received_date = db.Column(db.DateTime, index=True, default=now_mn)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_user_id"), index=True)
+    # User устгахад дээж үлдэнэ (audit retention — ISO 17025).
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL", name="fk_sample_user_id"),
+        index=True,
+    )
 
     status = db.Column(db.String(64), default="new", index=True)
     lab_type = db.Column(db.String(20), default='coal', index=True)  # 'coal', 'petrography', 'water_chemistry', 'microbiology'
@@ -230,7 +239,11 @@ class Sample(db.Model):
     # 🛑 Mass gate талбарууд
     mass_ready = db.Column(db.Boolean, nullable=False, default=False, index=True)
     mass_ready_at = db.Column(db.DateTime, nullable=True)
-    mass_ready_by_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_sample_mass_ready_by_id"), nullable=True)
+    mass_ready_by_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id", ondelete="SET NULL", name="fk_sample_mass_ready_by_id"),
+        nullable=True,
+    )
 
     # SLA / Turnaround tracking
     sla_hours = db.Column(db.Integer, nullable=True)  # SLA хугацаа (цагаар, жишээ: 72 = 3 хоног)

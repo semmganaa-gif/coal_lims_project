@@ -5,8 +5,9 @@ Quality management records.
 
 import json
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, event
 from app import db
+from app.models.mixins import HashableMixin
 from app.utils.datetime import now_local as now_mn
 
 class CorrectiveAction(db.Model):
@@ -80,12 +81,15 @@ class CorrectiveAction(db.Model):
 # -------------------------
 # ЧАДАМЖИЙН ШАЛГАЛТ (Proficiency Testing)
 # -------------------------
-class ProficiencyTest(db.Model):
+class ProficiencyTest(HashableMixin, db.Model):
     """
     Чадамжийн шалгалт (Proficiency Testing).
 
     ISO 17025 - Clause 7.7.2: Лаборатори PT программд оролцож,
     үр дүнгээ гадны байгууллагатай харьцуулж чадвараа батлах.
+
+    Append-only: UPDATE/DELETE хориглосон (хадгалагдсан PT result-ийг өөрчлөх
+    боломжгүй; шинэ test шалгалт нь шинэ row).
     """
     __tablename__ = "proficiency_test"
 
@@ -120,19 +124,33 @@ class ProficiencyTest(db.Model):
     tested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     tested_by = db.relationship('User', backref='pt_tests')
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     def __repr__(self):
         return f"<PT {self.pt_program} - {self.analysis_code} Z={self.z_score}>"
+
+    def _get_hash_data(self) -> str:
+        td = self.test_date.isoformat() if self.test_date else ''
+        return (
+            f"{self.pt_provider}|{self.pt_program}|{self.round_number}|"
+            f"{self.sample_code}|{self.analysis_code}|{self.our_result}|"
+            f"{self.assigned_value}|{self.z_score}|{self.performance}|"
+            f"{td}|{self.tested_by_id}"
+        )
 
 
 # -------------------------
 # ОРЧНЫ НӨХЦЛИЙН ХЯНАЛТ
 # -------------------------
-class EnvironmentalLog(db.Model):
+class EnvironmentalLog(HashableMixin, db.Model):
     """
     Орчны нөхцлийн бүртгэл (Environmental Monitoring).
 
     ISO 17025 - Clause 6.3.3: Лабораторийн орчны нөхцөл
     (температур, чийг) үр дүнд нөлөөлж болох тул хянах.
+
+    Append-only: UPDATE/DELETE хориглосон.
     """
     __tablename__ = "environmental_log"
 
@@ -162,19 +180,31 @@ class EnvironmentalLog(db.Model):
 
     notes = db.Column(db.Text)
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     def __repr__(self):
         return f"<EnvLog {self.location} T={self.temperature}°C RH={self.humidity}%>"
+
+    def _get_hash_data(self) -> str:
+        ld = self.log_date.strftime('%Y-%m-%d %H:%M:%S.%f') if self.log_date else ''
+        return (
+            f"{ld}|{self.location}|{self.temperature}|{self.humidity}|"
+            f"{self.pressure}|{self.within_limits}|{self.recorded_by_id}"
+        )
 
 
 # -------------------------
 # ЧАНАРЫН ХЯНАЛТЫН ГРАФИК (Control Chart)
 # -------------------------
-class QCControlChart(db.Model):
+class QCControlChart(HashableMixin, db.Model):
     """
     Чанарын хяналтын график өгөгдөл.
 
     ISO 17025 - Clause 7.7.1: QC дээж тогтмол шинжлэж,
     control chart-аар системийн чанарыг хянах.
+
+    Append-only: UPDATE/DELETE хориглосон (QC measurement-ийг өөрчлөх боломжгүй).
     """
     __tablename__ = "qc_control_chart"
 
@@ -203,8 +233,45 @@ class QCControlChart(db.Model):
     # Тэмдэглэл
     notes = db.Column(db.Text)
 
+    # ISO 17025: Audit log integrity hash
+    data_hash = db.Column(db.String(64), nullable=True)
+
     def __repr__(self):
         return f"<QC {self.analysis_code} - {self.qc_sample_name} = {self.measured_value}>"
+
+    def _get_hash_data(self) -> str:
+        md = self.measurement_date.isoformat() if self.measurement_date else ''
+        return (
+            f"{self.analysis_code}|{self.qc_sample_name}|{self.target_value}|"
+            f"{self.ucl}|{self.lcl}|{md}|{self.measured_value}|"
+            f"{self.in_control}|{self.operator_id}"
+        )
+
+
+# ──────────────────────────────────────────
+# Append-only enforcement (ISO 17025 audit trail)
+# ──────────────────────────────────────────
+
+def _block_quality_log_update(mapper, connection, target):
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: {type(target).__name__} #{target.id} cannot be modified. "
+        "Quality audit records are append-only (ISO 17025)."
+    )
+
+
+def _block_quality_log_delete(mapper, connection, target):
+    raise RuntimeError(
+        f"AUDIT INTEGRITY: {type(target).__name__} #{target.id} cannot be deleted. "
+        "Quality audit records are append-only (ISO 17025)."
+    )
+
+
+event.listen(ProficiencyTest, "before_update", _block_quality_log_update)
+event.listen(ProficiencyTest, "before_delete", _block_quality_log_delete)
+event.listen(EnvironmentalLog, "before_update", _block_quality_log_update)
+event.listen(EnvironmentalLog, "before_delete", _block_quality_log_delete)
+event.listen(QCControlChart, "before_update", _block_quality_log_update)
+event.listen(QCControlChart, "before_delete", _block_quality_log_delete)
 
 
 # -------------------------

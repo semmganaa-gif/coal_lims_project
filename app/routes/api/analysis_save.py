@@ -34,7 +34,7 @@ def register_save_routes(bp):
     @bp.route("/save_results", methods=["POST"])
     @login_required
     @limiter.limit("100 per minute")
-    async def save_results():
+    def save_results():
         # Role check
         if getattr(current_user, "role", None) not in ("chemist", "senior", "admin"):
             return jsonify({"success": False, "message": "Шинжилгээний үр дүн хадгалах эрхгүй"}), 403
@@ -132,7 +132,7 @@ def register_save_routes(bp):
     # -----------------------------------------------------------
     @bp.route("/update_result_status/<int:result_id>/<new_status>", methods=["POST"])
     @login_required
-    async def update_result_status(result_id, new_status):
+    def update_result_status(result_id, new_status):
         if getattr(current_user, "role", None) not in ("senior", "admin"):
             return jsonify({"message": "Хандах эрхгүй"}), 403
 

@@ -141,6 +141,8 @@ def delete_samples():
         flash('You do not have permission to delete samples.', 'danger')
         return redirect(url_for('microbiology.register_sample'))
 
+    from app.services.analysis_audit import log_analysis_action
+
     deleted = 0
     failed = []
     for sid in sample_ids:
@@ -152,6 +154,20 @@ def delete_samples():
             if current_user.role in ('senior', 'chemist') and sample.status != 'new':
                 failed.append(f'{sample.sample_code} (Боловсруулалтад орсон)')
                 continue
+
+            # ISO 17025: Үр дүн бүрд устгахаас өмнө audit log бичих.
+            for r in sample.results:
+                log_analysis_action(
+                    result_id=r.id,
+                    sample_id=sample.id,
+                    analysis_code=r.analysis_code,
+                    action='DELETED',
+                    final_result=r.final_result,
+                    raw_data_dict=r.raw_data,
+                    reason=f"Sample {sample.sample_code} устгасан (microbiology lab)",
+                    sample_code_snapshot=sample.sample_code,
+                )
+
             log_audit(
                 action='sample_deleted',
                 resource_type='Sample',

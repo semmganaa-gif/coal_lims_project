@@ -160,6 +160,12 @@ def log_analysis_action(
         )
 
     except (SQLAlchemyError, TypeError, ValueError) as e:
-        # Аудит алдаанаас болж үндсэн transaction нурахгүй байх ёстой.
-        # rollback хийхгүй — дуудагч тал шийднэ.
-        logger.error("CRITICAL ERROR in log_analysis_action: %s", e)
+        # ISO 17025: Audit log алдаа нь silent байх ёсгүй. CRITICAL log + raise.
+        # Дуудагч тал каш хийж шийдэх боломжтой (login зэрэг non-critical flow-д)
+        # — гэхдээ default нь "no audit ⇒ no operation" fail-closed pattern.
+        logger.critical(
+            "Failed to write analysis audit log (action=%s, code=%s, "
+            "sample_id=%s, result_id=%s): %s",
+            action, analysis_code, sample_id, result_id, e,
+        )
+        raise

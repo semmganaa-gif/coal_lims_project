@@ -1134,6 +1134,8 @@ def delete_samples():
         flash('You do not have permission to delete samples.', 'danger')
         return redirect(request.referrer if request.referrer and is_safe_url(request.referrer) else url_for('water.register_sample'))
 
+    from app.services.analysis_audit import log_analysis_action
+
     deleted = 0
     failed = []
     for sid in sample_ids:
@@ -1154,8 +1156,20 @@ def delete_samples():
                 failed.append(f'{sample.sample_code} (Батлагдсан үр дүнтэй)')
                 continue
 
-            # Холбогдох AnalysisResult-уудыг эхлээд устгах (orphan сэргийлэлт)
-            AnalysisResult.query.filter_by(sample_id=sample.id).delete()
+            # ISO 17025: Үр дүн бүрд устгахаас өмнө audit log бичих.
+            # Sample.results cascade="all, delete-orphan" нь хадгалахгүй мэдээллийг
+            # AnalysisResultLog-д үлдээх боломж өгдөг (ondelete="SET NULL").
+            for r in sample.results:
+                log_analysis_action(
+                    result_id=r.id,
+                    sample_id=sample.id,
+                    analysis_code=r.analysis_code,
+                    action='DELETED',
+                    final_result=r.final_result,
+                    raw_data_dict=r.raw_data,
+                    reason=f"Sample {sample.sample_code} устгасан (water lab)",
+                    sample_code_snapshot=sample.sample_code,
+                )
 
             log_audit(
                 action='sample_deleted',
@@ -1163,6 +1177,8 @@ def delete_samples():
                 resource_id=sample.id,
                 details={'sample_code': sample.sample_code, 'client_name': sample.client_name},
             )
+            # Sample.results cascade нь AnalysisResult-ыг устгана (бөөнөөр DELETE
+            # шаардлагагүй).
             db.session.delete(sample)
             deleted += 1
         except (ValueError, TypeError, SQLAlchemyError) as e:
