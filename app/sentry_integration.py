@@ -179,7 +179,8 @@ def capture_exception(error, **extra):
         logger.error(f"Exception (Sentry unavailable): {error}")
         return
 
-    with sentry_sdk.push_scope() as scope:
+    # sentry-sdk v2: `new_scope()` нь `push_scope()`-ыг орлоно (v1 deprecated)
+    with sentry_sdk.new_scope() as scope:
         for key, value in extra.items():
             scope.set_extra(key, value)
         sentry_sdk.capture_exception(error)
@@ -198,7 +199,7 @@ def capture_message(message, level='info', **extra):
         logger.log(getattr(logging, level.upper(), logging.INFO), message)
         return
 
-    with sentry_sdk.push_scope() as scope:
+    with sentry_sdk.new_scope() as scope:
         for key, value in extra.items():
             scope.set_extra(key, value)
         sentry_sdk.capture_message(message, level=level)
