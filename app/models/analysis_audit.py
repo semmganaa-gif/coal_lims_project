@@ -183,7 +183,7 @@ event.listen(AnalysisResultLog, "before_delete", _block_audit_delete)
 # Улирал бүр 3 хэмжилтээр хоосон тодорхойлолт хийж, дундаж массыг
 # тогтмол болгон хадгална (MNS GB/T 217, 7.4.1–7.4.8).
 #
-# Моделиуд:  app/models/quality.py → Bottle, BottleConstant
+# Моделиуд:  app/models/bottles.py → Bottle, BottleConstant
 # Routes:    app/routes/settings/routes.py → /settings/bottles/*
 # Tolerance: app/constants.py → BOTTLE_TOLERANCE = 0.0015g
 # API:       /settings/api/bottle/<serial_no>/active → идэвхтэй тогтмол

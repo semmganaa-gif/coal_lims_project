@@ -231,7 +231,7 @@ def validate_and_create_user(
     try:
         user.set_password(password)
     except ValueError:
-        return False, _l('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).'), None
+        return False, _l('Нууц үг шаардлагыг хангахгүй байна (10+ тэмдэгт, том/жижиг үсэг, тоо).'), None
 
     db.session.add(user)
     try:
@@ -313,7 +313,7 @@ def update_user(
         try:
             user_to_edit.set_password(password)
         except ValueError:
-            return False, _l('Нууц үг шаардлагыг хангахгүй байна (8+ тэмдэгт, том/жижиг үсэг, тоо).')
+            return False, _l('Нууц үг шаардлагыг хангахгүй байна (10+ тэмдэгт, том/жижиг үсэг, тоо).')
 
     try:
         db.session.commit()

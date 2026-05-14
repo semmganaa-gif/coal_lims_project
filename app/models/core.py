@@ -8,7 +8,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from app.utils.datetime import now_local as now_mn
 import re
-import json
 from sqlalchemy.types import Date, Text
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates
@@ -106,7 +105,7 @@ class User(UserMixin, db.Model):
 
         Example:
             >>> User.validate_password('abc')
-            ['хамгийн багадаа 8 тэмдэгт байх ёстой', 'том үсэг агуулах ёстой', ...]
+            ['хамгийн багадаа 10 тэмдэгт байх ёстой', 'том үсэг агуулах ёстой', ...]
             >>> User.validate_password('Strong123')
             []
 

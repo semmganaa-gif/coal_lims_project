@@ -1,4 +1,4 @@
-# app/labs/water/constants.py
+# app/labs/water_lab/chemistry/constants.py
 """Усны лабораторийн шинжилгээний параметрүүд."""
 
 # Физик шинжилгээ

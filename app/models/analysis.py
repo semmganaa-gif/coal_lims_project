@@ -468,9 +468,11 @@ class SampleCalculations:
             return None
         return cv_dry_val * (100 / (100 - ash_dry_val))
 
-    @property
-    def qnet_ar(self):
-        return None
+    # NOTE: qnet_ar нь SampleCalculations class-д тооцоологддоггүй — Hydrogen
+    # (H,ad) утга шаардлагатай, эдгээр нь тогтсон бус. Бодит тооцоо
+    # `app.utils.conversions.calculate_all_conversions`-д хийгддэг бөгөөд
+    # `calcs` нь template-д dict-ээр дамждаг тул `calcs.qnet_ar` Jinja-аар
+    # dict-key fallback-аар нөхөгддөг. Audit M8 (Models)-д устгасан.
 
     @property
     def ts_dry(self):

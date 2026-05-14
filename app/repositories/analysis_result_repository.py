@@ -162,7 +162,7 @@ class AnalysisResultRepository:
         Статусаар үр дүнгүүд авах.
 
         Args:
-            status: "pending", "approved", "rejected" гэх мэт
+            status: "pending_review", "approved", "rejected", "reanalysis"
 
         Returns:
             Үр дүнгүүдийн жагсаалт

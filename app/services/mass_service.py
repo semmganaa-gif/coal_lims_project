@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm.exc import StaleDataError
 
 from app import db
+from app.constants import SampleStatus
 from app.models import Sample, AnalysisResult, AnalysisResultLog
 from app.repositories import SampleRepository, AnalysisResultRepository
 from app.utils.datetime import now_local
@@ -129,7 +130,7 @@ def get_eligible_samples(include_ready: bool = False, q_text: str = "") -> list[
         Дээжүүдийн dict жагсаалт (JSON-д бэлэн)
     """
     base_filters = [
-        Sample.status.in_(["new", "New"]),
+        Sample.status == SampleStatus.NEW.value,
         _has_m_task_sql(),
     ]
 
