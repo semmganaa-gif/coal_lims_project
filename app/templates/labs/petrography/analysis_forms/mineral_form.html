@@ -3,128 +3,126 @@
 {% block title %}{{ param.name_mn }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
+
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-  <div class="d-flex align-items-center mb-3">
-    <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
-      <i class="bi bi-arrow-left"></i>
-    </a>
-    <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
-    <h5 class="mb-0">{{ param.name_mn }}</h5>
-    <small class="text-muted ms-2">{{ param.get('standard', '') }}</small>
-  </div>
+ <div class="d-flex align-items-center mb-3">
+ <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
+ <i class="bi bi-arrow-left"></i>
+ </a>
+ <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
+ <h5 class="mb-0">{{ param.name_mn }}</h5>
+ <small class="text-muted ms-2">{{ param.get('standard', '') }}</small>
+ </div>
 
-  <div class="row g-3">
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
-        <div class="card-body">
-          <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- {{ _("Select a sample") }} --</option>
-          </select>
-          <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
-            <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
-          </button>
-        </div>
-      </div>
-    </div>
+ <div class="row g-3">
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
+ <div class="card-body">
+ <select id="sampleSelect" class="form-select mb-2">
+ <option value="">-- {{ _("Select a sample") }} --</option>
+ </select>
+ <button class="btn btn-purple btn-sm w-100" data-action="loadSample">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
+ </button>
+ </div>
+ </div>
+ </div>
 
-    <div class="col-md-9">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">{{ _("Mineral Identification") }}</h6>
-          <div>
-            <button class="btn btn-outline-primary btn-sm me-1" onclick="addRow()">
-              <i class="bi bi-plus me-1"></i>{{ _("Add Row") }}
-            </button>
-            <button class="btn btn-success btn-sm" onclick="saveResults()">
-              <i class="bi bi-save me-1"></i>{{ _("Save") }}
-            </button>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <div id="mineralGrid" class="ag-theme-alpine" style="height: 500px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="col-md-9">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white d-flex justify-content-between">
+ <h6 class="mb-0">{{ _("Mineral Identification") }}</h6>
+ <div>
+ <button class="btn btn-outline-primary btn-sm me-1" data-action="addRow">
+ <i class="bi bi-plus me-1"></i>{{ _("Add Row") }}
+ </button>
+ <button class="btn btn-success btn-sm" data-action="saveResults">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </div>
+ <div class="card-body p-0">
+ <div id="mineralGrid" class="ag-theme-alpine h-[500px]"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <style nonce="{{ csp_nonce }}">
-  .btn-purple { background-color: #6f42c1; color: white; border: none; }
-  .btn-purple:hover { background-color: #5a32a3; color: white; }
-  .bg-purple { background-color: #6f42c1 !important; }
+ .btn-purple { background-color: #6f42c1; color: white; border: none; }
+ .btn-purple:hover { background-color: #5a32a3; color: white; }
+ .bg-purple { background-color: #6f42c1 !important; }
 </style>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script nonce="{{ csp_nonce }}">
 const analysisCode = "{{ analysis_code }}";
 let gridApi;
 let selectedSampleId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-  fetch(`{{ url_for('petrography.eligible_samples', code='MM') }}`.replace('MM', analysisCode))
-    .then(r => r.json())
-    .then(data => {
-      const sel = document.getElementById('sampleSelect');
-      data.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
-        sel.appendChild(opt);
-      });
-    });
+ fetch(`{{ url_for('petrography.eligible_samples', code='MM') }}`.replace('MM', analysisCode))
+ .then(r => r.json())
+ .then(data => {
+ const sel = document.getElementById('sampleSelect');
+ data.forEach(s => {
+ const opt = document.createElement('option');
+ opt.value = s.id;
+ opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
+ sel.appendChild(opt);
+ });
+ });
 
-  const gridDiv = document.getElementById('mineralGrid');
-  const gridOptions = {
-    columnDefs: [
-      { field: 'mineral_name', headerName: '{{ _("Mineral Name") }}', editable: true, flex: 2 },
-      { field: 'percentage', headerName: '%', editable: true, type: 'numericColumn', width: 100 },
-      { field: 'description', headerName: '{{ _("Description") }}', editable: true, flex: 2 },
-    ],
-    rowData: [
-      { mineral_name: '', percentage: '', description: '' },
-    ],
-    defaultColDef: { sortable: true, resizable: true },
-  };
-  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+ const gridDiv = document.getElementById('mineralGrid');
+ const gridOptions = {
+ columnDefs: [
+ { field: 'mineral_name', headerName: '{{ _("Mineral Name") }}', editable: true, flex: 2 },
+ { field: 'percentage', headerName: '%', editable: true, type: 'numericColumn', width: 100 },
+ { field: 'description', headerName: '{{ _("Description") }}', editable: true, flex: 2 },
+ ],
+ rowData: [
+ { mineral_name: '', percentage: '', description: '' },
+ ],
+ defaultColDef: { sortable: true, resizable: true },
+ };
+ gridApi = agGrid.createGrid(gridDiv, gridOptions);
 });
 
 function loadSample() {
-  selectedSampleId = document.getElementById('sampleSelect').value || null;
+ selectedSampleId = document.getElementById('sampleSelect').value || null;
 }
 
 function addRow() {
-  const rows = [];
-  gridApi.forEachNode(n => rows.push(n.data));
-  rows.push({ mineral_name: '', percentage: '', description: '' });
-  gridApi.setGridOption('rowData', rows);
+ const rows = [];
+ gridApi.forEachNode(n => rows.push(n.data));
+ rows.push({ mineral_name: '', percentage: '', description: '' });
+ gridApi.setGridOption('rowData', rows);
 }
 
 function saveResults() {
-  if (!selectedSampleId) { alert('{{ _("Please select a sample") }}'); return; }
-  const rows = [];
-  gridApi.forEachNode(n => rows.push(n.data));
+ if (!selectedSampleId) { alert('{{ _("Please select a sample") }}'); return; }
+ const rows = [];
+ gridApi.forEachNode(n => rows.push(n.data));
 
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-  fetch("{{ url_for('petrography.save_results') }}", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-    body: JSON.stringify({
-      sample_id: parseInt(selectedSampleId),
-      analysis_code: analysisCode,
-      results: { minerals: rows }
-    })
-  })
-  .then(r => r.json())
-  .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
-  .catch(e => logger.error(e));
+ const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+ fetch("{{ url_for('petrography.save_results') }}", {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+ body: JSON.stringify({
+ sample_id: parseInt(selectedSampleId),
+ analysis_code: analysisCode,
+ results: { minerals: rows }
+ })
+ })
+ .then(r => r.json())
+ .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
+ .catch(e => logger.error(e));
 }
 </script>
 {% endblock %}

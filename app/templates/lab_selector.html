@@ -1,133 +1,133 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coal LIMS - {{ _('Select Laboratory') }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style nonce="{{ csp_nonce }}">
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Noto Sans', sans-serif;
-      min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 30%, #ecfdf5 60%, #fdf4ff 100%);
-      background-attachment: fixed;
-      padding: 2rem;
-    }
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>Coal LIMS - {{ _('Select Laboratory') }}</title>
+ {{ vite_css_tag('src/styles.css') }}
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+ <style nonce="{{ csp_nonce }}">
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+ font-family: 'Noto Sans', sans-serif;
+ min-height: 100vh;
+ display: flex; flex-direction: column; align-items: center; justify-content: center;
+ background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 30%, #ecfdf5 60%, #fdf4ff 100%);
+ background-attachment: fixed;
+ padding: 2rem;
+ }
 
-    .hub-header { text-align: center; margin-bottom: 2.5rem; }
-    .hub-header h1 {
-      font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem;
-      letter-spacing: -0.5px;
-    }
-    .hub-header h1 i { color: #3b82f6; }
-    .hub-header p { font-size: 0.95rem; color: #64748b; }
-    .hub-header p strong { color: #0f172a; }
+ .hub-header { text-align: center; margin-bottom: 2.5rem; }
+ .hub-header h1 {
+ font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem;
+ letter-spacing: -0.5px;
+ }
+ .hub-header h1 i { color: #3b82f6; }
+ .hub-header p { font-size: 0.95rem; color: #64748b; }
+ .hub-header p strong { color: #0f172a; }
 
-    .lab-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem; max-width: 780px; width: 100%;
-    }
-    .lab-card {
-      display: flex; align-items: center; gap: 1.25rem;
-      background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-      border: 1px solid rgba(148,163,184,0.12);
-      border-radius: 20px; padding: 1.5rem 1.75rem;
-      text-decoration: none; color: inherit;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .lab-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-      text-decoration: none; color: inherit;
-    }
-    .lab-card:active { transform: translateY(-2px); }
-    .lab-icon {
-      width: 64px; height: 64px; border-radius: 18px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.8rem; color: #fff; flex-shrink: 0;
-    }
-    .lab-info h5 { margin: 0 0 0.3rem; font-size: 1.05rem; font-weight: 700; color: #0f172a; }
-    .lab-info p { margin: 0; font-size: 0.8rem; color: #64748b; line-height: 1.4; }
-    .lab-info .badge {
-      display: inline-block; margin-top: 0.4rem; padding: 0.2rem 0.6rem;
-      border-radius: 6px; font-size: 0.7rem; font-weight: 600; color: #fff;
-    }
+ .lab-grid {
+ display: grid; grid-template-columns: repeat(2, 1fr);
+ gap: 1.5rem; max-width: 780px; width: 100%;
+ }
+ .lab-card {
+ display: flex; align-items: center; gap: 1.25rem;
+ background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.12);
+ border-radius: 20px; padding: 1.5rem 1.75rem;
+ text-decoration: none; color: inherit;
+ box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+ transition: transform 0.2s, box-shadow 0.2s;
+ }
+ .lab-card:hover {
+ transform: translateY(-5px);
+ box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+ text-decoration: none; color: inherit;
+ }
+ .lab-card:active { transform: translateY(-2px); }
+ .lab-icon {
+ width: 64px; height: 64px; border-radius: 18px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 1.8rem; color: #fff; flex-shrink: 0;
+ }
+ .lab-info h5 { margin: 0 0 0.3rem; font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+ .lab-info p { margin: 0; font-size: 0.8rem; color: #64748b; line-height: 1.4; }
+ .lab-info .badge {
+ display: inline-block; margin-top: 0.4rem; padding: 0.2rem 0.6rem;
+ border-radius: 6px; font-size: 0.7rem; font-weight: 600; color: #fff;
+ }
 
-    @media (max-width: 640px) {
-      .lab-grid { grid-template-columns: 1fr; gap: 1rem; }
-      body { padding: 1.5rem; }
-      .hub-header h1 { font-size: 1.5rem; }
-      .lab-card { padding: 1.2rem 1.25rem; }
-      .lab-icon { width: 52px; height: 52px; font-size: 1.5rem; border-radius: 14px; }
-    }
-  </style>
+ @media (max-width: 640px) {
+ .lab-grid { grid-template-columns: 1fr; gap: 1rem; }
+ body { padding: 1.5rem; }
+ .hub-header h1 { font-size: 1.5rem; }
+ .lab-card { padding: 1.2rem 1.25rem; }
+ .lab-icon { width: 52px; height: 52px; font-size: 1.5rem; border-radius: 14px; }
+ }
+ </style>
 </head>
 <body>
 
-  <div class="hub-header">
-    <h1><i class="bi bi-building me-2"></i>Coal LIMS</h1>
-    <p>{{ _('Hello') }}, <strong>{{ current_user.username }}</strong>! {{ _('Please select a laboratory.') }}</p>
-  </div>
+ <div class="hub-header">
+ <h1><i class="bi bi-building me-2"></i>Coal LIMS</h1>
+ <p>{{ _('Hello') }}, <strong>{{ current_user.username }}</strong>! {{ _('Please select a laboratory.') }}</p>
+ </div>
 
-  {% set user_labs = current_user.allowed_labs or ['coal'] %}
-  {% set is_admin = current_user.role == 'admin' %}
-  <div class="lab-grid">
-    {% if is_admin or 'coal' in user_labs %}
-    <a href="{{ url_for('main.coal_hub') }}" class="lab-card">
-      <div class="lab-icon" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
-        <i class="bi bi-fire"></i>
-      </div>
-      <div class="lab-info">
-        <h5>{{ _('Coal Laboratory') }}</h5>
-        <p>{{ _('Proximate, Ultimate, CV, CSN, Gi, TRD...') }}</p>
-        <span class="badge" style="background:#dc3545">{{ _('19 analyses') }}</span>
-      </div>
-    </a>
-    {% endif %}
+ {% set user_labs = current_user.allowed_labs or ['coal'] %}
+ {% set is_admin = current_user.role == 'admin' %}
+ <div class="lab-grid">
+ {% if is_admin or 'coal' in user_labs %}
+ <a href="{{ url_for('main.coal_hub') }}" class="lab-card">
+ <div class="lab-icon bg-[linear-gradient(135deg,#ef4444,#b91c1c)]">
+ <i class="bi bi-fire"></i>
+ </div>
+ <div class="lab-info">
+ <h5>{{ _('Coal Laboratory') }}</h5>
+ <p>{{ _('Proximate, Ultimate, CV, CSN, Gi, TRD...') }}</p>
+ <span class="badge bg-[#dc3545]">{{ _('19 analyses') }}</span>
+ </div>
+ </a>
+ {% endif %}
 
-    {% if is_admin or 'petrography' in user_labs %}
-    <a href="{{ url_for('petrography.petro_hub') }}" class="lab-card">
-      <div class="lab-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
-        <i class="bi bi-gem"></i>
-      </div>
-      <div class="lab-info">
-        <h5>{{ _('Petrography Laboratory') }}</h5>
-        <p>{{ _('Maceral, Vitrinite Ro%%, Thin section...') }}</p>
-        <span class="badge" style="background:#6f42c1">{{ _('7 analyses') }}</span>
-      </div>
-    </a>
-    {% endif %}
+ {% if is_admin or 'petrography' in user_labs %}
+ <a href="{{ url_for('petrography.petro_hub') }}" class="lab-card">
+ <div class="lab-icon bg-[linear-gradient(135deg,#8b5cf6,#6d28d9)]">
+ <i class="bi bi-gem"></i>
+ </div>
+ <div class="lab-info">
+ <h5>{{ _('Petrography Laboratory') }}</h5>
+ <p>{{ _('Maceral, Vitrinite Ro%%, Thin section...') }}</p>
+ <span class="badge bg-[#6f42c1]">{{ _('7 analyses') }}</span>
+ </div>
+ </a>
+ {% endif %}
 
-    {% if is_admin or 'water_chemistry' in user_labs %}
-    <a href="{{ url_for('water.water_hub') }}" class="lab-card">
-      <div class="lab-icon" style="background:linear-gradient(135deg,#0284c7,#0dcaf0)">
-        <i class="bi bi-droplet-half"></i>
-      </div>
-      <div class="lab-info">
-        <h5>{{ _('Water Chemistry Laboratory') }}</h5>
-        <p>{{ _('pH, EC, metals, anions, organic parameters') }}</p>
-        <span class="badge" style="background:#0dcaf0">{{ _('Chemistry') }}</span>
-      </div>
-    </a>
-    {% endif %}
+ {% if is_admin or 'water_chemistry' in user_labs %}
+ <a href="{{ url_for('water.water_hub') }}" class="lab-card">
+ <div class="lab-icon bg-[linear-gradient(135deg,#0284c7,#0dcaf0)]">
+ <i class="bi bi-droplet-half"></i>
+ </div>
+ <div class="lab-info">
+ <h5>{{ _('Water Chemistry Laboratory') }}</h5>
+ <p>{{ _('pH, EC, metals, anions, organic parameters') }}</p>
+ <span class="badge bg-[#0dcaf0]">{{ _('Chemistry') }}</span>
+ </div>
+ </a>
+ {% endif %}
 
-    {% if is_admin or 'microbiology' in user_labs %}
-    <a href="{{ url_for('microbiology.micro_hub') }}" class="lab-card">
-      <div class="lab-icon" style="background:linear-gradient(135deg,#059669,#20c997)">
-        <i class="bi bi-bug"></i>
-      </div>
-      <div class="lab-info">
-        <h5>{{ _('Microbiology Laboratory') }}</h5>
-        <p>{{ _('Coliform, E.coli, Salmonella, air & swab tests') }}</p>
-        <span class="badge" style="background:#20c997">{{ _('Microbiology') }}</span>
-      </div>
-    </a>
-    {% endif %}
-  </div>
+ {% if is_admin or 'microbiology' in user_labs %}
+ <a href="{{ url_for('microbiology.micro_hub') }}" class="lab-card">
+ <div class="lab-icon bg-[linear-gradient(135deg,#059669,#20c997)]">
+ <i class="bi bi-bug"></i>
+ </div>
+ <div class="lab-info">
+ <h5>{{ _('Microbiology Laboratory') }}</h5>
+ <p>{{ _('Coliform, E.coli, Salmonella, air & swab tests') }}</p>
+ <span class="badge bg-pass">{{ _('Microbiology') }}</span>
+ </div>
+ </a>
+ {% endif %}
+ </div>
 
 </body>
 </html>

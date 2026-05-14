@@ -4,222 +4,221 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .petro-dash {
-    min-height: calc(100vh - 120px); padding: 1.5rem;
-    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #ede9fe 60%, #f8fafc 100%);
-    background-attachment: fixed;
-  }
-  .dash-header {
-    background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(111,66,193,0.06));
-    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(139,92,246,0.08);
-  }
-  .dash-header h1 {
-    font-size: 1.75rem; font-weight: 800;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6f42c1 50%, #6d28d9 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 0.25rem;
-  }
-  .dash-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
+ .petro-dash {
+ min-height: calc(100vh - 120px); padding: 1.5rem;
+ background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 30%, #ede9fe 60%, #f8fafc 100%);
+ background-attachment: fixed;
+ }
+ .dash-header {
+ background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(111,66,193,0.06));
+ backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
+ box-shadow: 0 4px 24px rgba(139,92,246,0.08);
+ }
+ .dash-header h1 {
+ font-size: 1.75rem; font-weight: 800;
+ background: linear-gradient(135deg, #8b5cf6 0%, #6f42c1 50%, #6d28d9 100%);
+ -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+ margin-bottom: 0.25rem;
+ }
+ .dash-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
 
-  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
-  .stat-card {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.5rem; text-align: center; transition: all 0.3s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-  }
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
-  .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-  .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
-  .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
+ .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+ .stat-card {
+ background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.5rem; text-align: center; transition: all 0.3s;
+ box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ }
+ .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+ .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+ .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+ .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
 
-  .section-title {
-    font-size: 1.1rem; font-weight: 700; color: #0f172a;
-    margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;
-  }
+ .section-title {
+ font-size: 1.1rem; font-weight: 700; color: #0f172a;
+ margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 0.5rem;
+ }
 
-  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
-  .nav-card {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.75rem; text-decoration: none; color: #0f172a;
-    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-    display: flex; align-items: center; gap: 1.25rem;
-    position: relative; overflow: hidden;
-  }
-  .nav-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #8b5cf6, #6d28d9); opacity: 0; transition: opacity 0.3s;
-  }
-  .nav-card:hover {
-    transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
-    color: #0f172a; text-decoration: none;
-  }
-  .nav-card:hover::before { opacity: 1; }
-  .nav-card-icon {
-    width: 60px; height: 60px; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem; flex-shrink: 0;
-  }
-  .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
-  .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
-  .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
-  .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
-  .nav-card-icon.purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
-  .nav-card-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .nav-card-icon.emerald { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
-  .nav-card-icon.amber { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-  .nav-card-icon.rose { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
+ .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+ .nav-card {
+ background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.75rem; text-decoration: none; color: #0f172a;
+ transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+ box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ display: flex; align-items: center; gap: 1.25rem;
+ position: relative; overflow: hidden;
+ }
+ .nav-card::before {
+ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+ background: linear-gradient(90deg, #8b5cf6, #6d28d9); opacity: 0; transition: opacity 0.3s;
+ }
+ .nav-card:hover {
+ transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+ color: #0f172a; text-decoration: none;
+ }
+ .nav-card:hover::before { opacity: 1; }
+ .nav-card-icon {
+ width: 60px; height: 60px; border-radius: 16px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 1.6rem; flex-shrink: 0;
+ }
+ .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+ .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
+ .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
+ .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
+ .nav-card-icon.purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+ .nav-card-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+ .nav-card-icon.emerald { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+ .nav-card-icon.amber { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+ .nav-card-icon.rose { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
 
-  /* Analysis type mini-cards */
-  .analysis-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1rem; margin-bottom: 1.5rem;
-  }
-  .analysis-mini {
-    background: rgba(255,255,255,0.85); border: 1px solid rgba(148,163,184,0.15);
-    border-radius: 14px; padding: 1rem 1.25rem; text-decoration: none; color: #0f172a;
-    transition: all 0.3s; display: flex; align-items: center; gap: 0.75rem;
-  }
-  .analysis-mini:hover {
-    transform: translateY(-3px); box-shadow: 0 8px 24px rgba(139,92,246,0.12);
-    border-color: rgba(139,92,246,0.3); color: #0f172a; text-decoration: none;
-  }
-  .analysis-mini .code-badge {
-    font-size: 0.7rem; font-weight: 700; color: #fff;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    padding: 0.2rem 0.5rem; border-radius: 6px;
-  }
-  .analysis-mini .name { font-size: 0.85rem; font-weight: 600; }
+ /* Analysis type mini-cards */
+ .analysis-grid {
+ display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+ gap: 1rem; margin-bottom: 1.5rem;
+ }
+ .analysis-mini {
+ background: rgba(255,255,255,0.85); border: 1px solid rgba(148,163,184,0.15);
+ border-radius: 14px; padding: 1rem 1.25rem; text-decoration: none; color: #0f172a;
+ transition: all 0.3s; display: flex; align-items: center; gap: 0.75rem;
+ }
+ .analysis-mini:hover {
+ transform: translateY(-3px); box-shadow: 0 8px 24px rgba(139,92,246,0.12);
+ border-color: rgba(139,92,246,0.3); color: #0f172a; text-decoration: none;
+ }
+ .analysis-mini .code-badge {
+ font-size: 0.7rem; font-weight: 700; color: #fff;
+ background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+ padding: 0.2rem 0.5rem; border-radius: 6px;
+ }
+ .analysis-mini .name { font-size: 0.85rem; font-weight: 600; }
 
-  @media (max-width: 768px) {
-    .petro-dash { padding: 1rem; }
-    .stat-cards { grid-template-columns: repeat(2, 1fr); }
-    .nav-cards, .analysis-grid { grid-template-columns: 1fr; }
-  }
+ @media (max-width: 768px) {
+ .petro-dash { padding: 1rem; }
+ .stat-cards { grid-template-columns: repeat(2, 1fr); }
+ .nav-cards, .analysis-grid { grid-template-columns: 1fr; }
+ }
 </style>
 
 <div class="petro-dash">
-  <div class="dash-header">
-    <h1><i class="bi bi-gem me-2"></i>{{ _("Petrography Laboratory") }}</h1>
-    <p>{{ _("Maceral, vitrinite reflectance, mineral matter, and thin section analysis") }}</p>
-  </div>
+ <div class="dash-header">
+ <h1><i class="bi bi-gem me-2"></i>{{ _("Petrography Laboratory") }}</h1>
+ <p>{{ _("Maceral, vitrinite reflectance, mineral matter, and thin section analysis") }}</p>
+ </div>
 
-  <!-- Morning start -->
-  {% include 'partials/_morning_start.html' %}
+ <!-- Morning start -->
+ {% include 'partials/_morning_start.html' %}
 
-  <!-- Statistics -->
-  <div class="stat-cards">
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-box-arrow-in-right"></i></div>
-      <div class="stat-value" style="color:#b45309">{{ pending_pe }}</div>
-      <div class="stat-label">{{ _("PE Samples (Pending)") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#8b5cf6"><i class="bi bi-inbox-fill"></i></div>
-      <div class="stat-value" style="color:#6d28d9">{{ total_petro }}</div>
-      <div class="stat-label">{{ _("Total Samples") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-hourglass-split"></i></div>
-      <div class="stat-value" style="color:#1d4ed8">{{ in_progress }}</div>
-      <div class="stat-label">{{ _("In Progress") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#22c55e"><i class="bi bi-check-circle-fill"></i></div>
-      <div class="stat-value" style="color:#15803d">{{ completed }}</div>
-      <div class="stat-label">{{ _("Completed") }}</div>
-    </div>
-  </div>
+ <!-- Statistics -->
+ <div class="stat-cards">
+ <div class="stat-card">
+ <div class="stat-icon text-warn"><i class="bi bi-box-arrow-in-right"></i></div>
+ <div class="stat-value text-warn-bold">{{ pending_pe }}</div>
+ <div class="stat-label">{{ _("PE Samples (Pending)") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-accent"><i class="bi bi-inbox-fill"></i></div>
+ <div class="stat-value text-[#6d28d9]">{{ total_petro }}</div>
+ <div class="stat-label">{{ _("Total Samples") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-info-2"><i class="bi bi-hourglass-split"></i></div>
+ <div class="stat-value text-info-2-bold">{{ in_progress }}</div>
+ <div class="stat-label">{{ _("In Progress") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-[#22c55e]"><i class="bi bi-check-circle-fill"></i></div>
+ <div class="stat-value text-pass-bold">{{ completed }}</div>
+ <div class="stat-label">{{ _("Completed") }}</div>
+ </div>
+ </div>
 
-  <!-- Analysis types -->
-  <div class="section-title">
-    <i class="bi bi-microscope" style="color:#8b5cf6"></i>
-    {{ _("Analysis Worksheets") }}
-  </div>
-  <div class="analysis-grid">
-    {% for at in analysis_types %}
-    <a href="{{ url_for('petrography.workspace', code=at.code) }}" class="analysis-mini">
-      <span class="code-badge">{{ at.code }}</span>
-      <span class="name">{{ at.name }}</span>
-    </a>
-    {% endfor %}
-  </div>
+ <!-- Analysis types -->
+ <div class="section-title">
+ <i class="bi bi-microscope text-accent"></i>
+ {{ _("Analysis Worksheets") }}
+ </div>
+ <div class="analysis-grid">
+ {% for at in analysis_types %}
+ <a href="{{ url_for('petrography.workspace', code=at.code) }}" class="analysis-mini">
+ <span class="code-badge">{{ at.code }}</span>
+ <span class="name">{{ at.name }}</span>
+ </a>
+ {% endfor %}
+ </div>
 
-  <!-- Navigation cards -->
-  <div class="section-title">
-    <i class="bi bi-grid" style="color:#8b5cf6"></i>
-    {{ _("Main Menu") }}
-  </div>
-  <div class="nav-cards">
-    <a href="{{ url_for('petrography.petro_data') }}" class="nav-card" onclick="event.preventDefault();" id="btnShowSamples">
-      <div class="nav-card-icon purple"><i class="bi bi-list-ul"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Sample List") }}</h3>
-        <p>{{ _("Samples submitted for petrographic analysis") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('equipment.equipment_list') }}" class="nav-card">
-      <div class="nav-card-icon blue"><i class="bi bi-tools"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Equipment") }}</h3>
-        <p>{{ _("Microscopes, preparation tools and instruments") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-  </div>
+ <!-- Navigation cards -->
+ <div class="section-title">
+ <i class="bi bi-grid text-accent"></i>
+ {{ _("Main Menu") }}
+ </div>
+ <div class="nav-cards">
+ <a href="{{ url_for('petrography.petro_data') }}" class="nav-card" data-action="prevent-default" id="btnShowSamples">
+ <div class="nav-card-icon purple"><i class="bi bi-list-ul"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Sample List") }}</h3>
+ <p>{{ _("Samples submitted for petrographic analysis") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('equipment.equipment_list') }}" class="nav-card">
+ <div class="nav-card-icon blue"><i class="bi bi-tools"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Equipment") }}</h3>
+ <p>{{ _("Microscopes, preparation tools and instruments") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ </div>
 
-  <!-- Recent samples (AG Grid) -->
-  <div style="background:rgba(255,255,255,0.8); border-radius:20px; padding:1.25rem; margin-top:1rem; border:1px solid rgba(148,163,184,0.15); display:none;" id="samplesPanel">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-1" style="color:#8b5cf6"></i>{{ _("Recent Samples") }}</h6>
-      <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('samplesPanel').style.display='none'">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div id="petroSamplesGrid" class="ag-theme-alpine" style="height:400px;"></div>
-  </div>
+ <!-- Recent samples (AG Grid) -->
+ <div class="bg-white/80 rounded-[20px] p-[1.25rem] mt-[1rem] border border-[rgba(148,163,184,0.15)] hidden" id="samplesPanel">
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-1 text-accent"></i>{{ _("Recent Samples") }}</h6>
+ <button class="btn btn-sm btn-outline-secondary" data-action="hide-element" data-target="#samplesPanel">
+ <i class="bi bi-x-lg"></i>
+ </button>
+ </div>
+ <div id="petroSamplesGrid" class="ag-theme-alpine h-[400px]"></div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  const gridDiv = document.getElementById('petroSamplesGrid');
-  const panel = document.getElementById('samplesPanel');
-  const btn = document.getElementById('btnShowSamples');
-  if (!gridDiv) return;
+ const gridDiv = document.getElementById('petroSamplesGrid');
+ const panel = document.getElementById('samplesPanel');
+ const btn = document.getElementById('btnShowSamples');
+ if (!gridDiv) return;
 
-  let gridReady = false;
-  const gridOptions = {
-    columnDefs: [
-      { field: 'sample_code', headerName: '{{ _("Sample Code") }}', flex: 1.5 },
-      { field: 'client_name', headerName: '{{ _("Client") }}', flex: 1 },
-      { field: 'status', headerName: '{{ _("Status") }}', flex: 0.8 },
-      { field: 'sample_date', headerName: '{{ _("Date") }}', flex: 1 },
-    ],
-    rowData: [],
-    defaultColDef: { sortable: true, filter: true, resizable: true },
-    domLayout: 'normal',
-  };
+ let gridReady = false;
+ const gridOptions = {
+ columnDefs: [
+ { field: 'sample_code', headerName: '{{ _("Sample Code") }}', flex: 1.5 },
+ { field: 'client_name', headerName: '{{ _("Client") }}', flex: 1 },
+ { field: 'status', headerName: '{{ _("Status") }}', flex: 0.8 },
+ { field: 'sample_date', headerName: '{{ _("Date") }}', flex: 1 },
+ ],
+ rowData: [],
+ defaultColDef: { sortable: true, filter: true, resizable: true },
+ domLayout: 'normal',
+ };
 
-  const grid = agGrid.createGrid(gridDiv, gridOptions);
+ const grid = agGrid.createGrid(gridDiv, gridOptions);
 
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    panel.style.display = panel.style.display === 'none' ? '' : 'none';
-    if (!gridReady) {
-      fetch("{{ url_for('petrography.petro_data') }}")
-        .then(r => r.json())
-        .then(data => { grid.setGridOption('rowData', data); gridReady = true; })
-        .catch(() => {});
-    }
-  });
+ btn.addEventListener('click', function(e) {
+ e.preventDefault();
+ panel.style.display = panel.style.display === 'none' ? '' : 'none';
+ if (!gridReady) {
+ fetch("{{ url_for('petrography.petro_data') }}")
+ .then(r => r.json())
+ .then(data => { grid.setGridOption('rowData', data); gridReady = true; })
+ .catch(() => {});
+ }
+ });
 });
 </script>
 {% endblock %}

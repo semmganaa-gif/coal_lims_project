@@ -5,455 +5,453 @@
 {% block content %}
 <div class="container-fluid mt-3 eq-journal-page">
 
-  {# ===== HEADER ===== #}
-  <div class="eqj-header mb-3">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-      <a href="{{ url_for('equipment.equipment_journal') }}" class="eqj-back-btn">
-        <i class="bi bi-arrow-left"></i>
-      </a>
-      <div class="flex-grow-1">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <h4 class="fw-bold mb-0 eqj-title">{{ eq.name }}</h4>
-          {% if eq.lab_code %}
-            <span class="eqj-lab-code">{{ eq.lab_code }}</span>
-          {% endif %}
-          {% if eq.status == 'normal' %}
-            <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
-          {% elif eq.status == 'broken' %}
-            <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Broken") }}</span>
-          {% elif eq.status == 'maintenance' %}
-            <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> {{ _("Maintenance") }}</span>
-          {% elif eq.status == 'retired' %}
-            <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
-          {% endif %}
-        </div>
-        <div class="eqj-subtitle">
-          {% if eq.manufacturer %}{{ eq.manufacturer }}{% endif %}
-          {% if eq.model %} · {{ eq.model }}{% endif %}
-          {% if eq.serial_number %} · S/N: {{ eq.serial_number }}{% endif %}
-          {% if eq.location %} · <i class="bi bi-geo-alt"></i> {{ eq.location }}{% endif %}
-        </div>
-      </div>
+ {# ===== HEADER ===== #}
+ <div class="eqj-header mb-3">
+ <div class="d-flex align-items-center gap-3 flex-wrap">
+ <a href="{{ url_for('equipment.equipment_journal') }}" class="eqj-back-btn">
+ <i class="bi bi-arrow-left"></i>
+ </a>
+ <div class="flex-grow-1">
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ <h4 class="fw-bold mb-0 eqj-title">{{ eq.name }}</h4>
+ {% if eq.lab_code %}
+ <span class="eqj-lab-code">{{ eq.lab_code }}</span>
+ {% endif %}
+ {% if eq.status == 'normal' %}
+ <span class="eqj-status eqj-status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
+ {% elif eq.status == 'broken' %}
+ <span class="eqj-status eqj-status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Broken") }}</span>
+ {% elif eq.status == 'maintenance' %}
+ <span class="eqj-status eqj-status-maint"><i class="bi bi-tools"></i> {{ _("Maintenance") }}</span>
+ {% elif eq.status == 'retired' %}
+ <span class="eqj-status eqj-status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
+ {% endif %}
+ </div>
+ <div class="eqj-subtitle">
+ {% if eq.manufacturer %}{{ eq.manufacturer }}{% endif %}
+ {% if eq.model %} · {{ eq.model }}{% endif %}
+ {% if eq.serial_number %} · S/N: {{ eq.serial_number }}{% endif %}
+ {% if eq.location %} · <i class="bi bi-geo-alt"></i> {{ eq.location }}{% endif %}
+ </div>
+ </div>
 
-      <div class="d-flex gap-2">
-        <a href="{{ url_for('equipment.equipment_detail', id=eq.id) }}"
-           class="btn btn-sm btn-outline-secondary eqj-btn-round">
-          <i class="bi bi-info-circle"></i> {{ _("Details") }}
-        </a>
-        <button class="btn btn-sm btn-primary eqj-btn-round" data-bs-toggle="collapse" data-bs-target="#addLogForm">
-          <i class="bi bi-plus-lg"></i> {{ _("Add Record") }}
-        </button>
-      </div>
-    </div>
-  </div>
+ <div class="d-flex gap-2">
+ <a href="{{ url_for('equipment.equipment_detail', id=eq.id) }}"
+ class="btn btn-sm btn-outline-secondary eqj-btn-round">
+ <i class="bi bi-info-circle"></i> {{ _("Details") }}
+ </a>
+ <button class="btn btn-sm btn-primary eqj-btn-round" data-bs-toggle="collapse" data-bs-target="#addLogForm">
+ <i class="bi bi-plus-lg"></i> {{ _("Add Record") }}
+ </button>
+ </div>
+ </div>
+ </div>
 
-  {# ===== ADD LOG FORM (Collapse) ===== #}
-  <div class="collapse mb-3" id="addLogForm">
-    <div class="eqj-add-card">
-      <div class="eqj-add-header">
-        <i class="bi bi-plus-circle me-2"></i> {{ _("Add New Record") }}
-      </div>
-      <div class="eqj-add-body">
-        <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <input type="hidden" name="next" value="{{ url_for('equipment.equipment_journal_page', id=eq.id) }}"/>
+ {# ===== ADD LOG FORM (Collapse) ===== #}
+ <div class="collapse mb-3" id="addLogForm">
+ <div class="eqj-add-card">
+ <div class="eqj-add-header">
+ <i class="bi bi-plus-circle me-2"></i> {{ _("Add New Record") }}
+ </div>
+ <div class="eqj-add-body">
+ <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <input type="hidden" name="next" value="{{ url_for('equipment.equipment_journal_page', id=eq.id) }}"/>
 
-          <div class="row g-2 mb-2">
-            <div class="col-md-2">
-              <label class="eqj-label">{{ _("Type") }}</label>
-              <select name="action_type" class="form-select form-select-sm" id="jActionType">
-                <option value="Usage">{{ _("Usage") }}</option>
-                <option value="Daily Check">{{ _("Daily Check") }}</option>
-                <option value="Maintenance">{{ _("Maintenance") }}</option>
-                {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">{{ _("Major Repair") }}</option>
-                <option value="Calibration">{{ _("Calibration") }}</option>
-                {% endif %}
-              </select>
-            </div>
-            <div class="col-md-2" id="jDurationCol">
-              <label class="eqj-label">{{ _("Duration (min)") }}</label>
-              <input type="number" name="duration_minutes" class="form-control form-control-sm" min="1" placeholder="60">
-            </div>
-            <div class="col-md-2">
-              <label class="eqj-label">{{ _("Date") }}</label>
-              <input type="date" name="action_date" class="form-control form-control-sm"
-                     value="{{ now_local().strftime('%Y-%m-%d') }}" required>
-            </div>
-            <div class="col-md-2">
-              <label class="eqj-label">{{ _("Performed By") }}</label>
-              <input type="text" name="performed_by" class="form-control form-control-sm"
-                     value="{{ current_user.username }}">
-            </div>
-            <div class="col-md-2">
-              <label class="eqj-label">{{ _("Certificate No.") }}</label>
-              <input type="text" name="certificate_no" class="form-control form-control-sm" placeholder="—">
-            </div>
-            <div class="col-md-2">
-              <label class="eqj-label">{{ _("File") }}</label>
-              <input type="file" name="certificate_file" class="form-control form-control-sm">
-            </div>
-          </div>
+ <div class="row g-2 mb-2">
+ <div class="col-md-2">
+ <label class="eqj-label">{{ _("Type") }}</label>
+ <select name="action_type" class="form-select form-select-sm" id="jActionType">
+ <option value="Usage">{{ _("Usage") }}</option>
+ <option value="Daily Check">{{ _("Daily Check") }}</option>
+ <option value="Maintenance">{{ _("Maintenance") }}</option>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <option value="Repair">{{ _("Major Repair") }}</option>
+ <option value="Calibration">{{ _("Calibration") }}</option>
+ {% endif %}
+ </select>
+ </div>
+ <div class="col-md-2" id="jDurationCol">
+ <label class="eqj-label">{{ _("Duration (min)") }}</label>
+ <input type="number" name="duration_minutes" class="form-control form-control-sm" min="1" placeholder="60">
+ </div>
+ <div class="col-md-2">
+ <label class="eqj-label">{{ _("Date") }}</label>
+ <input type="date" name="action_date" class="form-control form-control-sm"
+ value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+ </div>
+ <div class="col-md-2">
+ <label class="eqj-label">{{ _("Performed By") }}</label>
+ <input type="text" name="performed_by" class="form-control form-control-sm"
+ value="{{ current_user.username }}">
+ </div>
+ <div class="col-md-2">
+ <label class="eqj-label">{{ _("Certificate No.") }}</label>
+ <input type="text" name="certificate_no" class="form-control form-control-sm" placeholder="—">
+ </div>
+ <div class="col-md-2">
+ <label class="eqj-label">{{ _("File") }}</label>
+ <input type="file" name="certificate_file" class="form-control form-control-sm">
+ </div>
+ </div>
 
-          <div class="row g-2">
-            <div class="col">
-              <label class="eqj-label">{{ _("Notes") }}</label>
-              <div class="input-group input-group-sm">
-                <input type="text" name="description" class="form-control" placeholder="{{ _("Description of work performed...") }}">
-                <button type="submit" class="btn btn-primary">
-                  <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="row g-2">
+ <div class="col">
+ <label class="eqj-label">{{ _("Notes") }}</label>
+ <div class="input-group input-group-sm max-w-[240px]">
+ <input type="text" name="description" class="form-control" placeholder="{{ _("Description of work performed...") }}">
+ <button type="submit" class="btn btn-primary">
+ <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
+ </button>
+ </div>
+ </div>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  {# ===== DATE FILTER ===== #}
-  <div class="eqj-filter-bar mb-3">
-    <form id="jDateForm" class="d-flex flex-wrap align-items-center gap-2">
-      <label class="small text-muted mb-0 fw-semibold">{{ _("Period:") }}</label>
-      <div class="input-group input-group-sm eqj-date-input">
-        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-        <input type="date" id="jStartDate" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') }}">
-      </div>
-      <span class="small text-muted">–</span>
-      <div class="input-group input-group-sm eqj-date-input">
-        <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
-        <input type="date" id="jEndDate" class="form-control" value="{{ end_date.strftime('%Y-%m-%d') }}">
-      </div>
+ {# ===== DATE FILTER ===== #}
+ <div class="eqj-filter-bar mb-3">
+ <form id="jDateForm" class="d-flex flex-wrap align-items-center gap-2">
+ <label class="small text-muted mb-0 fw-semibold">{{ _("Period:") }}</label>
+ <div class="input-group input-group-sm eqj-date-input">
+ <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+ <input type="date" id="jStartDate" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') }}">
+ </div>
+ <span class="small text-muted">–</span>
+ <div class="input-group input-group-sm eqj-date-input">
+ <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
+ <input type="date" id="jEndDate" class="form-control" value="{{ end_date.strftime('%Y-%m-%d') }}">
+ </div>
 
-      <div class="btn-group btn-group-sm" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-range="7">{{ _("7 days") }}</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="30">{{ _("30 days") }}</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="90">{{ _("90 days") }}</button>
-        <button type="button" class="btn btn-outline-secondary" data-range="365">{{ _("1 year") }}</button>
-      </div>
+ <div class="btn-group btn-group-sm" role="group">
+ <button type="button" class="btn btn-outline-secondary" data-range="7">{{ _("7 days") }}</button>
+ <button type="button" class="btn btn-outline-secondary" data-range="30">{{ _("30 days") }}</button>
+ <button type="button" class="btn btn-outline-secondary" data-range="90">{{ _("90 days") }}</button>
+ <button type="button" class="btn btn-outline-secondary" data-range="365">{{ _("1 year") }}</button>
+ </div>
 
-      <button type="submit" class="btn btn-primary btn-sm">
-        <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
-      </button>
-    </form>
-  </div>
+ <button type="submit" class="btn btn-primary btn-sm">
+ <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
+ </button>
+ </form>
+ </div>
 
-  {# ===== STAT CARDS ===== #}
-  <div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
-      <div class="eqj-stat-card">
-        <div class="eqj-stat-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-clock-history"></i></div>
-        <div>
-          <div class="eqj-stat-value" id="statTotalHours">—</div>
-          <div class="eqj-stat-label">{{ _("Total Usage Hours") }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="eqj-stat-card">
-        <div class="eqj-stat-icon" style="background:#fef3c7;color:#b45309"><i class="bi bi-tools"></i></div>
-        <div>
-          <div class="eqj-stat-value" id="statMaintCount">—</div>
-          <div class="eqj-stat-label">{{ _("Maintenance") }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="eqj-stat-card">
-        <div class="eqj-stat-icon" style="background:#dcfce7;color:#15803d"><i class="bi bi-shield-check"></i></div>
-        <div>
-          <div class="eqj-stat-value" id="statLastCalib">
-            {{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '—' }}
-          </div>
-          <div class="eqj-stat-label">{{ _("Last Calibration") }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="eqj-stat-card">
-        <div class="eqj-stat-icon" style="background:#f3e8ff;color:#7c3aed"><i class="bi bi-journal-text"></i></div>
-        <div>
-          <div class="eqj-stat-value" id="statTotalLogs">—</div>
-          <div class="eqj-stat-label">{{ _("Total Records") }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
+ {# ===== STAT CARDS ===== #}
+ <div class="row g-3 mb-3">
+ <div class="col-6 col-md-3">
+ <div class="eqj-stat-card">
+ <div class="eqj-stat-icon bg-info-2-soft text-info-2-bold"><i class="bi bi-clock-history"></i></div>
+ <div>
+ <div class="eqj-stat-value" id="statTotalHours">—</div>
+ <div class="eqj-stat-label">{{ _("Total Usage Hours") }}</div>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="eqj-stat-card">
+ <div class="eqj-stat-icon bg-warn-soft text-warn-bold"><i class="bi bi-tools"></i></div>
+ <div>
+ <div class="eqj-stat-value" id="statMaintCount">—</div>
+ <div class="eqj-stat-label">{{ _("Maintenance") }}</div>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="eqj-stat-card">
+ <div class="eqj-stat-icon bg-[#dcfce7] text-pass-bold"><i class="bi bi-shield-check"></i></div>
+ <div>
+ <div class="eqj-stat-value" id="statLastCalib">
+ {{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '—' }}
+ </div>
+ <div class="eqj-stat-label">{{ _("Last Calibration") }}</div>
+ </div>
+ </div>
+ </div>
+ <div class="col-6 col-md-3">
+ <div class="eqj-stat-card">
+ <div class="eqj-stat-icon bg-[#f3e8ff] text-[#7c3aed]"><i class="bi bi-journal-text"></i></div>
+ <div>
+ <div class="eqj-stat-value" id="statTotalLogs">—</div>
+ <div class="eqj-stat-label">{{ _("Total Records") }}</div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  {# ===== AG GRID ===== #}
-  <div class="eqj-grid-card">
-    <div class="eqj-grid-header">
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="fw-semibold small text-muted text-uppercase me-2">
-          <i class="bi bi-journal-richtext"></i> {{ _("Journal Records") }}
-        </span>
-        <div class="eqj-filter-pills" id="typePills">
-          <button class="eqj-pill active" data-group="all">{{ _("All") }}</button>
-          <button class="eqj-pill" data-group="usage">{{ _("Usage") }}</button>
-          <button class="eqj-pill" data-group="check">{{ _("Check") }}</button>
-          <button class="eqj-pill" data-group="maint">{{ _("Maintenance") }}</button>
-          <button class="eqj-pill" data-group="repair">{{ _("Major Repair") }}</button>
-          <button class="eqj-pill" data-group="calib">{{ _("Calibration") }}</button>
-        </div>
-      </div>
-      <div class="d-flex gap-2 align-items-center">
-        <div class="input-group input-group-sm" style="max-width:240px">
-          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-          <input type="text" id="jQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
-        </div>
-        <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
-          <i class="bi bi-download"></i> CSV
-        </button>
-      </div>
-    </div>
-    <div id="journalGrid" class="ag-theme-quartz eqj-grid"></div>
-  </div>
+ {# ===== AG GRID ===== #}
+ <div class="eqj-grid-card">
+ <div class="eqj-grid-header">
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ <span class="fw-semibold small text-muted text-uppercase me-2">
+ <i class="bi bi-journal-richtext"></i> {{ _("Journal Records") }}
+ </span>
+ <div class="eqj-filter-pills" id="typePills">
+ <button class="eqj-pill active" data-group="all">{{ _("All") }}</button>
+ <button class="eqj-pill" data-group="usage">{{ _("Usage") }}</button>
+ <button class="eqj-pill" data-group="check">{{ _("Check") }}</button>
+ <button class="eqj-pill" data-group="maint">{{ _("Maintenance") }}</button>
+ <button class="eqj-pill" data-group="repair">{{ _("Major Repair") }}</button>
+ <button class="eqj-pill" data-group="calib">{{ _("Calibration") }}</button>
+ </div>
+ </div>
+ <div class="d-flex gap-2 align-items-center">
+ <div class="input-group input-group-sm max-w-[240px]">
+ <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+ <input type="text" id="jQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
+ </div>
+ <button type="button" id="btn-export-csv" class="btn btn-sm btn-outline-success">
+ <i class="bi bi-download"></i> CSV
+ </button>
+ </div>
+ </div>
+ <div id="journalGrid" class="ag-theme-quartz eqj-grid"></div>
+ </div>
 
 </div>
 {% endblock %}
 
 {% block scripts %}
-  {{ super() }}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-quartz.css">
-  <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
+ {{ super() }}
 
-  <script nonce="{{ csp_nonce }}">
-    var gridApi = null;
-    const EQUIPMENT_ID = {{ eq.id }};
+ <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
+ <script nonce="{{ csp_nonce }}">
+ var gridApi = null;
+ const EQUIPMENT_ID = {{ eq.id }};
 
-    const TYPE_MAP = {
-      'Ашиглалт':           {cls: 'eqj-type-usage', icon: 'bi-clock'},
-      'Daily Check':        {cls: 'eqj-type-check', icon: 'bi-check-square', label: '{{ _("Daily Check") }}'},
-      'Maintenance':        {cls: 'eqj-type-maint', icon: 'bi-wrench', label: '{{ _("Maintenance") }}'},
-      'Repair':             {cls: 'eqj-type-repair', icon: 'bi-tools', label: '{{ _("Major Repair") }}'},
-      'Calibration':        {cls: 'eqj-type-calib', icon: 'bi-award', label: '{{ _("Calibration") }}'},
-      'Temperature Check':  {cls: 'eqj-type-check', icon: 'bi-thermometer-half', label: '{{ _("Temp. Check") }}'},
-      'Balance Check':      {cls: 'eqj-type-check', icon: 'bi-rulers', label: '{{ _("Balance Check") }}'},
-      'Calorimeter Calibration': {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
-      'Calorimeter Check':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
-      'Sulfur Calibration': {cls: 'eqj-type-calib', icon: 'bi-droplet', label: '{{ _("Sulfur Calib.") }}'},
-      'Calibration Check':  {cls: 'eqj-type-calib', icon: 'bi-shield-check', label: '{{ _("Calib. Check") }}'},
-      'CSN Crucible Test':  {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Crucible Test") }}'},
-      'Drum Calibration':   {cls: 'eqj-type-calib', icon: 'bi-gear-wide-connected', label: '{{ _("Drum Calib.") }}'},
-      'XRF Calibration':    {cls: 'eqj-type-calib', icon: 'bi-rulers', label: '{{ _("XRF Calib.") }}'},
-    };
+ const TYPE_MAP = {
+ 'Ашиглалт': {cls: 'eqj-type-usage', icon: 'bi-clock'},
+ 'Daily Check': {cls: 'eqj-type-check', icon: 'bi-check-square', label: '{{ _("Daily Check") }}'},
+ 'Maintenance': {cls: 'eqj-type-maint', icon: 'bi-wrench', label: '{{ _("Maintenance") }}'},
+ 'Repair': {cls: 'eqj-type-repair', icon: 'bi-tools', label: '{{ _("Major Repair") }}'},
+ 'Calibration': {cls: 'eqj-type-calib', icon: 'bi-award', label: '{{ _("Calibration") }}'},
+ 'Temperature Check': {cls: 'eqj-type-check', icon: 'bi-thermometer-half', label: '{{ _("Temp. Check") }}'},
+ 'Balance Check': {cls: 'eqj-type-check', icon: 'bi-rulers', label: '{{ _("Balance Check") }}'},
+ 'Calorimeter Calibration': {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
+ 'Calorimeter Check': {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Calorimeter Calib.") }}'},
+ 'Sulfur Calibration': {cls: 'eqj-type-calib', icon: 'bi-droplet', label: '{{ _("Sulfur Calib.") }}'},
+ 'Calibration Check': {cls: 'eqj-type-calib', icon: 'bi-shield-check', label: '{{ _("Calib. Check") }}'},
+ 'CSN Crucible Test': {cls: 'eqj-type-calib', icon: 'bi-fire', label: '{{ _("Crucible Test") }}'},
+ 'Drum Calibration': {cls: 'eqj-type-calib', icon: 'bi-gear-wide-connected', label: '{{ _("Drum Calib.") }}'},
+ 'XRF Calibration': {cls: 'eqj-type-calib', icon: 'bi-rulers', label: '{{ _("XRF Calib.") }}'},
+ };
 
-    // Дэд цэсний бүлэг: action_type -> group
-    const GROUP_MAP = {
-      'Ашиглалт':           'usage',
-      'Daily Check':        'check',
-      'Temperature Check':  'check',
-      'Balance Check':      'check',
-      'Maintenance':        'maint',
-      'Repair':             'repair',
-      'Calibration':        'calib',
-      'Calorimeter Calibration': 'calib',
-      'Calorimeter Check':  'calib',
-      'Sulfur Calibration': 'calib',
-      'Calibration Check':  'calib',
-      'CSN Crucible Test':  'calib',
-      'Drum Calibration':   'calib',
-      'XRF Calibration':    'calib',
-    };
+ // Дэд цэсний бүлэг: action_type -> group
+ const GROUP_MAP = {
+ 'Ашиглалт': 'usage',
+ 'Daily Check': 'check',
+ 'Temperature Check': 'check',
+ 'Balance Check': 'check',
+ 'Maintenance': 'maint',
+ 'Repair': 'repair',
+ 'Calibration': 'calib',
+ 'Calorimeter Calibration': 'calib',
+ 'Calorimeter Check': 'calib',
+ 'Sulfur Calibration': 'calib',
+ 'Calibration Check': 'calib',
+ 'CSN Crucible Test': 'calib',
+ 'Drum Calibration': 'calib',
+ 'XRF Calibration': 'calib',
+ };
 
-    var activeGroup = 'all';
-    var allRows = [];
+ var activeGroup = 'all';
+ var allRows = [];
 
-    const columnDefs = [
-      {
-        field: 'date',
-        headerName: '{{ _("Date") }}',
-        sort: 'desc',
-        width: 150,
-        filter: 'agTextColumnFilter'
-      },
-      {
-        field: 'type',
-        headerName: '{{ _("Type") }}',
-        width: 155,
-        cellRenderer: function(p) {
-          const v = p.value || '';
-          const info = TYPE_MAP[v] || {cls: 'eqj-type-check', icon: 'bi-record-circle'};
-          const label = info.label || v;
-          return '<span class="eqj-type-chip ' + info.cls + '"><i class="bi ' + info.icon + '"></i> ' + label + '</span>';
-        },
-        filter: 'agTextColumnFilter'
-      },
-      {
-        field: 'duration',
-        headerName: '{{ _("Duration") }}',
-        width: 100,
-        filter: false
-      },
-      {
-        field: 'user',
-        headerName: '{{ _("Performed By") }}',
-        width: 130,
-        filter: 'agTextColumnFilter'
-      },
-      {
-        field: 'description',
-        headerName: '{{ _("Notes") }}',
-        flex: 2,
-        minWidth: 250,
-        filter: 'agTextColumnFilter',
-        autoHeight: true,
-        cellStyle: {'white-space': 'pre-wrap', 'line-height': '1.4', 'padding-top': '6px', 'padding-bottom': '6px'}
-      },
-      {
-        field: 'result',
-        headerName: '{{ _("Result") }}',
-        width: 90,
-        cellRenderer: function(p) {
-          const v = (p.value || '').toLowerCase();
-          if (v === 'pass') return '<span class="eqj-result-pass"><i class="bi bi-check-circle-fill"></i> Pass</span>';
-          if (v === 'fail') return '<span class="eqj-result-fail"><i class="bi bi-x-circle-fill"></i> Fail</span>';
-          return p.value || '';
-        }
-      },
-      {
-        field: 'has_file',
-        headerName: '',
-        width: 50,
-        filter: false,
-        sortable: false,
-        cellRenderer: function(p) {
-          if (!p.value || !p.data.log_id) return '';
-          return '<a href="/download_cert/' + p.data.log_id + '" title="{{ _("Download file") }}" style="color:#6366f1"><i class="bi bi-paperclip"></i></a>';
-        }
-      }
-    ];
+ const columnDefs = [
+ {
+ field: 'date',
+ headerName: '{{ _("Date") }}',
+ sort: 'desc',
+ width: 150,
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'type',
+ headerName: '{{ _("Type") }}',
+ width: 155,
+ cellRenderer: function(p) {
+ const v = p.value || '';
+ const info = TYPE_MAP[v] || {cls: 'eqj-type-check', icon: 'bi-record-circle'};
+ const label = info.label || v;
+ return '<span class="eqj-type-chip ' + info.cls + '"><i class="bi ' + info.icon + '"></i> ' + label + '</span>';
+ },
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'duration',
+ headerName: '{{ _("Duration") }}',
+ width: 100,
+ filter: false
+ },
+ {
+ field: 'user',
+ headerName: '{{ _("Performed By") }}',
+ width: 130,
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'description',
+ headerName: '{{ _("Notes") }}',
+ flex: 2,
+ minWidth: 250,
+ filter: 'agTextColumnFilter',
+ autoHeight: true,
+ cellStyle: {'white-space': 'pre-wrap', 'line-height': '1.4', 'padding-top': '6px', 'padding-bottom': '6px'}
+ },
+ {
+ field: 'result',
+ headerName: '{{ _("Result") }}',
+ width: 90,
+ cellRenderer: function(p) {
+ const v = (p.value || '').toLowerCase();
+ if (v === 'pass') return '<span class="eqj-result-pass"><i class="bi bi-check-circle-fill"></i> Pass</span>';
+ if (v === 'fail') return '<span class="eqj-result-fail"><i class="bi bi-x-circle-fill"></i> Fail</span>';
+ return p.value || '';
+ }
+ },
+ {
+ field: 'has_file',
+ headerName: '',
+ width: 50,
+ filter: false,
+ sortable: false,
+ cellRenderer: function(p) {
+ if (!p.value || !p.data.log_id) return '';
+ return '<a class="text-accent-2" href="/download_cert/' + p.data.log_id + '" title="{{ _("Download file") }}"><i class="bi bi-paperclip"></i></a>';
+ }
+ }
+ ];
 
-    const gridOptions = {
-      columnDefs: columnDefs,
-      defaultColDef: {
-        sortable: true,
-        filter: true,
-        resizable: true,
-        minWidth: 60
-      },
-      pagination: true,
-      paginationPageSize: 25,
-      rowHeight: 40,
-      animateRows: true,
-      domLayout: 'normal'
-    };
+ const gridOptions = {
+ columnDefs: columnDefs,
+ defaultColDef: {
+ sortable: true,
+ filter: true,
+ resizable: true,
+ minWidth: 60
+ },
+ pagination: true,
+ paginationPageSize: 25,
+ rowHeight: 40,
+ animateRows: true,
+ domLayout: 'normal'
+ };
 
-    function formatDate(d) {
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
+ function formatDate(d) {
+ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+ }
 
-    function applyGroupFilter() {
-      if (activeGroup === 'all') {
-        setGridRows(allRows);
-      } else {
-        setGridRows(allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === activeGroup));
-      }
-      // Pill тоо шинэчлэх
-      document.querySelectorAll('.eqj-pill[data-group]').forEach(btn => {
-        const g = btn.dataset.group;
-        if (g === 'all') {
-          btn.textContent = '{{ _("All") }} (' + allRows.length + ')';
-        } else {
-          const cnt = allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === g).length;
-          const labels = {usage:'{{ _("Usage") }}', check:'{{ _("Check") }}', maint:'{{ _("Maintenance") }}', repair:'{{ _("Major Repair") }}', calib:'{{ _("Calibration") }}'};
-          btn.textContent = labels[g] + (cnt > 0 ? ' (' + cnt + ')' : '');
-        }
-      });
-    }
+ function applyGroupFilter() {
+ if (activeGroup === 'all') {
+ setGridRows(allRows);
+ } else {
+ setGridRows(allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === activeGroup));
+ }
+ // Pill тоо шинэчлэх
+ document.querySelectorAll('.eqj-pill[data-group]').forEach(btn => {
+ const g = btn.dataset.group;
+ if (g === 'all') {
+ btn.textContent = '{{ _("All") }} (' + allRows.length + ')';
+ } else {
+ const cnt = allRows.filter(r => (GROUP_MAP[r.type] || 'maint') === g).length;
+ const labels = {usage:'{{ _("Usage") }}', check:'{{ _("Check") }}', maint:'{{ _("Maintenance") }}', repair:'{{ _("Major Repair") }}', calib:'{{ _("Calibration") }}'};
+ btn.textContent = labels[g] + (cnt> 0 ? ' (' + cnt + ')' : '');
+ }
+ });
+ }
 
-    function setGridRows(rows) {
-      gridApi.setGridOption('rowData', rows);
-    }
+ function setGridRows(rows) {
+ gridApi.setGridOption('rowData', rows);
+ }
 
-    function loadData() {
-      const start = document.getElementById('jStartDate').value;
-      const end = document.getElementById('jEndDate').value;
-      const url = '/api/equipment/journal_detailed?equipment_id=' + EQUIPMENT_ID + '&start_date=' + start + '&end_date=' + end;
+ function loadData() {
+ const start = document.getElementById('jStartDate').value;
+ const end = document.getElementById('jEndDate').value;
+ const url = '/api/equipment/journal_detailed?equipment_id=' + EQUIPMENT_ID + '&start_date=' + start + '&end_date=' + end;
 
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          allRows = data.rows || [];
-          applyGroupFilter();
+ fetch(url)
+ .then(r => r.json())
+ .then(data => {
+ allRows = data.rows || [];
+ applyGroupFilter();
 
-          // Stat-ууд тооцоолох (бүх мэдээллээр)
-          let totalMinutes = 0;
-          let maintCount = 0;
-          allRows.forEach(r => {
-            if (r.category === 'Usage' && r.duration) {
-              const m = parseInt(r.duration);
-              if (!isNaN(m)) totalMinutes += m;
-            }
-            if (r.category === 'Maintenance') maintCount++;
-          });
+ // Stat-ууд тооцоолох (бүх мэдээллээр)
+ let totalMinutes = 0;
+ let maintCount = 0;
+ allRows.forEach(r => {
+ if (r.category === 'Usage' && r.duration) {
+ const m = parseInt(r.duration);
+ if (!isNaN(m)) totalMinutes += m;
+ }
+ if (r.category === 'Maintenance') maintCount++;
+ });
 
-          document.getElementById('statTotalHours').textContent = (totalMinutes / 60).toFixed(1) + ' {{ _("hrs") }}';
-          document.getElementById('statMaintCount').textContent = maintCount;
-          document.getElementById('statTotalLogs').textContent = allRows.length;
-        });
-    }
+ document.getElementById('statTotalHours').textContent = (totalMinutes / 60).toFixed(1) + ' {{ _("hrs") }}';
+ document.getElementById('statMaintCount').textContent = maintCount;
+ document.getElementById('statTotalLogs').textContent = allRows.length;
+ });
+ }
 
-    document.addEventListener('DOMContentLoaded', function() {
-      // Init AG Grid
-      const el = document.querySelector('#journalGrid');
-      if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
-      else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
+ document.addEventListener('DOMContentLoaded', function() {
+ // Init AG Grid
+ const el = document.querySelector('#journalGrid');
+ if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
+ else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
 
-      // Quick filter
-      document.getElementById('jQuickFilter').addEventListener('input', function() {
-        if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
-        else gridApi.setGridOption('quickFilterText', this.value);
-      });
+ // Quick filter
+ document.getElementById('jQuickFilter').addEventListener('input', function() {
+ if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
+ else gridApi.setGridOption('quickFilterText', this.value);
+ });
 
-      // Date form submit
-      document.getElementById('jDateForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        loadData();
-      });
+ // Date form submit
+ document.getElementById('jDateForm').addEventListener('submit', function(e) {
+ e.preventDefault();
+ loadData();
+ });
 
-      // Quick range buttons
-      document.querySelectorAll('[data-range]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var days = parseInt(this.getAttribute('data-range'));
-          var e = new Date();
-          var s = new Date(); s.setDate(e.getDate() - days);
-          document.getElementById('jStartDate').value = formatDate(s);
-          document.getElementById('jEndDate').value = formatDate(e);
-          loadData();
-        });
-      });
+ // Quick range buttons
+ document.querySelectorAll('[data-range]').forEach(function(btn) {
+ btn.addEventListener('click', function() {
+ var days = parseInt(this.getAttribute('data-range'));
+ var e = new Date();
+ var s = new Date(); s.setDate(e.getDate() - days);
+ document.getElementById('jStartDate').value = formatDate(s);
+ document.getElementById('jEndDate').value = formatDate(e);
+ loadData();
+ });
+ });
 
-      // Type filter pills
-      document.querySelectorAll('.eqj-pill[data-group]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          document.querySelectorAll('.eqj-pill').forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-          activeGroup = this.dataset.group;
-          applyGroupFilter();
-        });
-      });
+ // Type filter pills
+ document.querySelectorAll('.eqj-pill[data-group]').forEach(function(btn) {
+ btn.addEventListener('click', function() {
+ document.querySelectorAll('.eqj-pill').forEach(b => b.classList.remove('active'));
+ this.classList.add('active');
+ activeGroup = this.dataset.group;
+ applyGroupFilter();
+ });
+ });
 
-      // Action type toggle (show/hide duration field)
-      var actionType = document.getElementById('jActionType');
-      var durationCol = document.getElementById('jDurationCol');
-      if (actionType && durationCol) {
-        function toggleDuration() {
-          durationCol.style.display = actionType.value === 'Usage' ? '' : 'none';
-        }
-        actionType.addEventListener('change', toggleDuration);
-        toggleDuration();
-      }
+ // Action type toggle (show/hide duration field)
+ var actionType = document.getElementById('jActionType');
+ var durationCol = document.getElementById('jDurationCol');
+ if (actionType && durationCol) {
+ function toggleDuration() {
+ durationCol.style.display = actionType.value === 'Usage' ? '' : 'none';
+ }
+ actionType.addEventListener('change', toggleDuration);
+ toggleDuration();
+ }
 
-      // Initial load
-      loadData();
-    });
+ // Initial load
+ loadData();
+ });
 
-    function exportCSV() {
-      if (!gridApi) return;
-      gridToXlsx(gridApi, '{{ eq.name }}_journal.xlsx', 'Журнал');
-    }
-  </script>
+ function exportCSV() {
+ if (!gridApi) return;
+ gridToXlsx(gridApi, '{{ eq.name }}_journal.xlsx', 'Журнал');
+ }
+ document.getElementById('btn-export-csv')?.addEventListener('click', exportCSV);
+ </script>
 {% endblock %}

@@ -84,6 +84,30 @@
     if (!f || !['m0', 'm1', 'vol'].includes(f)) return;
     params.api.refreshCells({ columns: cols, force: true });
   };
+
+  window._validateSaveItems = function(items) {
+    const errs = [];
+    const bySample = {};
+    window.waterGridApi.forEachNode(n => {
+      const d = n.data;
+      if (d.is_saved) return;
+      if (!bySample[d.sample_id]) bySample[d.sample_id] = {};
+      bySample[d.sample_id][d.row_type] = d;
+    });
+    for (const [sid, pair] of Object.entries(bySample)) {
+      const m1 = pair.M1, m2 = pair.M2;
+      if (!m1 || !m2) continue;
+      if ((m1.m0 != null || m1.m1 != null) && (m2.m0 == null && m2.m1 == null)) {
+        errs.push('{{ _("M2 measurement is missing for some samples. Both M1 and M2 must be filled.") }}');
+        break;
+      }
+      if (!m1.vol || m1.vol === 0) {
+        errs.push('{{ _("Volume (V) cannot be zero or empty.") }}');
+        break;
+      }
+    }
+    return errs;
+  };
 {% endblock %}
 
 {% block row_builder %}

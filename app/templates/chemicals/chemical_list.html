@@ -3,519 +3,522 @@
 {% block content %}
 <div class="container-fluid chem-page">
 
-  {# ===== HERO HEADER ===== #}
-  <div class="chem-hero">
-    <div class="chem-hero-inner">
-      <div class="chem-hero-left">
-        <div class="chem-hero-icon">
-          <i class="bi bi-droplet-fill"></i>
-        </div>
-        <div>
-          <h4 class="chem-hero-title">{{ _("Chemicals") }}</h4>
-          <p class="chem-hero-sub">{{ _("Inventory, stock and usage control") }}</p>
-        </div>
-      </div>
-      <div class="chem-hero-right">
-        <span class="chem-stat">
-          <span class="chem-stat-num">{{ stats.total }}</span>
-          <span class="chem-stat-label">{{ _("Total") }}</span>
-        </span>
-        {% if stats.low_stock > 0 %}
-        <span class="chem-stat chem-stat-warning">
-          <span class="chem-stat-num">{{ stats.low_stock }}</span>
-          <span class="chem-stat-label">{{ _("Low Stock") }}</span>
-        </span>
-        {% endif %}
-        {% if stats.expired > 0 %}
-        <span class="chem-stat chem-stat-danger">
-          <span class="chem-stat-num">{{ stats.expired }}</span>
-          <span class="chem-stat-label">{{ _("Expired") }}</span>
-        </span>
-        {% endif %}
-        {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] %}
-        <a href="{{ url_for('chemicals.add_chemical', lab=lab) }}" class="btn chem-btn-add">
-          <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# ===== HERO HEADER ===== #}
+ <div class="chem-hero">
+ <div class="chem-hero-inner">
+ <div class="chem-hero-left">
+ <div class="chem-hero-icon">
+ <i class="bi bi-droplet-fill"></i>
+ </div>
+ <div class="text-xs-2 text-[#9ca3af]">
+ <h4 class="chem-hero-title">{{ _("Chemicals") }}</h4>
+ <p class="chem-hero-sub">{{ _("Inventory, stock and usage control") }}</p>
+ </div>
+ </div>
+ <div class="chem-hero-right">
+ <span class="chem-stat">
+ <span class="chem-stat-num">{{ stats.total }}</span>
+ <span class="chem-stat-label">{{ _("Total") }}</span>
+ </span>
+ {% if stats.low_stock> 0 %}
+ <span class="chem-stat chem-stat-warning">
+ <span class="chem-stat-num">{{ stats.low_stock }}</span>
+ <span class="chem-stat-label">{{ _("Low Stock") }}</span>
+ </span>
+ {% endif %}
+ {% if stats.expired> 0 %}
+ <span class="chem-stat chem-stat-danger">
+ <span class="chem-stat-num">{{ stats.expired }}</span>
+ <span class="chem-stat-label">{{ _("Expired") }}</span>
+ </span>
+ {% endif %}
+ {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] %}
+ <a href="{{ url_for('chemicals.add_chemical', lab=lab) }}" class="btn chem-btn-add">
+ <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
+ </a>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-  {# ===== FILTER TABS ===== #}
-  <div class="chem-tabs">
-    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}"
-       class="chem-tab {{ 'chem-tab-active' if view == 'all' }}">
-      <i class="bi bi-grid-3x3-gap"></i> {{ _("All") }}
-    </a>
-    <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='low_stock') }}"
-       class="chem-tab {{ 'chem-tab-active' if view == 'low_stock' }}">
-      <i class="bi bi-exclamation-triangle"></i> {{ _("Low Stock") }}
-    </a>
-    <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='expiring') }}"
-       class="chem-tab {{ 'chem-tab-active' if view == 'expiring' }}">
-      <i class="bi bi-clock-history"></i> {{ _("Expiring") }}
-    </a>
-    <span class="chem-tab-divider"></span>
-    <a href="{{ url_for('chemicals.chemical_journal', lab=lab) }}"
-       class="chem-tab chem-tab-journal">
-      <i class="bi bi-journal-text"></i> {{ _("Journal") }}
-    </a>
-  </div>
+ {# ===== FILTER TABS ===== #}
+ <div class="chem-tabs">
+ <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}"
+ class="chem-tab {{ 'chem-tab-active' if view == 'all' }}">
+ <i class="bi bi-grid-3x3-gap"></i> {{ _("All") }}
+ </a>
+ <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='low_stock') }}"
+ class="chem-tab {{ 'chem-tab-active' if view == 'low_stock' }}">
+ <i class="bi bi-exclamation-triangle"></i> {{ _("Low Stock") }}
+ </a>
+ <a href="{{ url_for('chemicals.chemical_list', lab=lab, view='expiring') }}"
+ class="chem-tab {{ 'chem-tab-active' if view == 'expiring' }}">
+ <i class="bi bi-clock-history"></i> {{ _("Expiring") }}
+ </a>
+ <span class="chem-tab-divider"></span>
+ <a href="{{ url_for('chemicals.chemical_journal', lab=lab) }}"
+ class="chem-tab chem-tab-journal">
+ <i class="bi bi-journal-text"></i> {{ _("Journal") }}
+ </a>
+ </div>
 
-  {# ===== TOOLBAR ===== #}
-  <div class="chem-toolbar-card">
-    <div class="chem-toolbar-left">
-      <div class="chem-search">
-        <i class="bi bi-search"></i>
-        <input type="text" id="chemQuickFilter" placeholder="{{ _("Search...") }}">
-      </div>
-      <select id="labFilter" class="chem-select" onchange="filterByLab(this.value)">
-        <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
-        <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
-        <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
-        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
-        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
-      </select>
-      <select id="categoryFilter" class="chem-select">
-        <option value="">{{ _("All Categories") }}</option>
-        {% for code, label in categories %}
-        <option value="{{ code }}" {{ 'selected' if category == code }}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <select id="statusFilter" class="chem-select">
-        <option value="">{{ _("All Status") }}</option>
-        {% for code, label in status_types %}
-        <option value="{{ code }}" {{ 'selected' if status == code }}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="chem-toolbar-right">
-      <button class="btn btn-outline-secondary btn-sm" onclick="exportToExcel()">
-        <i class="bi bi-download"></i> Excel
-      </button>
-    </div>
-  </div>
+ {# ===== TOOLBAR ===== #}
+ <div class="chem-toolbar-card">
+ <div class="chem-toolbar-left">
+ <div class="chem-search">
+ <i class="bi bi-search"></i>
+ <input type="text" id="chemQuickFilter" placeholder="{{ _("Search...") }}">
+ </div>
+ <select id="labFilter" class="chem-select">
+ <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
+ <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
+ <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
+ <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
+ <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
+ </select>
+ <select id="categoryFilter" class="chem-select">
+ <option value="">{{ _("All Categories") }}</option>
+ {% for code, label in categories %}
+ <option value="{{ code }}" {{ 'selected' if category == code }}>{{ label }}</option>
+ {% endfor %}
+ </select>
+ <select id="statusFilter" class="chem-select">
+ <option value="">{{ _("All Status") }}</option>
+ {% for code, label in status_types %}
+ <option value="{{ code }}" {{ 'selected' if status == code }}>{{ label }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="chem-toolbar-right">
+ <button type="button" id="btn-export-xlsx" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-download"></i> Excel
+ </button>
+ </div>
+ </div>
 
-  {# ===== TABULATOR GRID ===== #}
-  <div class="chem-grid-card">
-    <div id="chemicalGrid" class="chem-grid-wrapper"></div>
-  </div>
+ {# ===== TABULATOR GRID ===== #}
+ <div class="chem-grid-card">
+ <div id="chemicalGrid" class="chem-grid-wrapper"></div>
+ </div>
 
 </div>
 
 <style nonce="{{ csp_nonce }}">
-  .chem-page { padding: 0; }
+ .chem-page { padding: 0; }
 
-  .chem-hero {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 1rem;
-    color: white;
-  }
-  .chem-hero-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .chem-hero-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .chem-hero-icon {
-    width: 56px;
-    height: 56px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-  }
-  .chem-hero-title {
-    margin: 0;
-    font-weight: 700;
-  }
-  .chem-hero-sub {
-    margin: 0;
-    opacity: 0.9;
-    font-size: 0.9rem;
-  }
-  .chem-hero-right {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
-  .chem-stat {
-    text-align: center;
-  }
-  .chem-stat-num {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 700;
-  }
-  .chem-stat-label {
-    font-size: 0.75rem;
-    opacity: 0.9;
-  }
-  .chem-stat-warning .chem-stat-num { color: #fbbf24; }
-  .chem-stat-danger .chem-stat-num { color: #f87171; }
-  .chem-btn-add {
-    background: white;
-    color: #0284c7;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: transform 0.2s;
-  }
-  .chem-btn-add:hover {
-    transform: translateY(-2px);
-    color: #0369a1;
-  }
+ .chem-hero {
+ background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+ border-radius: 16px;
+ padding: 1.5rem 2rem;
+ margin-bottom: 1rem;
+ color: white;
+ }
+ .chem-hero-inner {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ flex-wrap: wrap;
+ gap: 1rem;
+ }
+ .chem-hero-left {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ }
+ .chem-hero-icon {
+ width: 56px;
+ height: 56px;
+ background: rgba(255,255,255,0.2);
+ border-radius: 12px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.75rem;
+ }
+ .chem-hero-title {
+ margin: 0;
+ font-weight: 700;
+ }
+ .chem-hero-sub {
+ margin: 0;
+ opacity: 0.9;
+ font-size: 0.9rem;
+ }
+ .chem-hero-right {
+ display: flex;
+ align-items: center;
+ gap: 1.5rem;
+ }
+ .chem-stat {
+ text-align: center;
+ }
+ .chem-stat-num {
+ display: block;
+ font-size: 1.5rem;
+ font-weight: 700;
+ }
+ .chem-stat-label {
+ font-size: 0.75rem;
+ opacity: 0.9;
+ }
+ .chem-stat-warning .chem-stat-num { color: #fbbf24; }
+ .chem-stat-danger .chem-stat-num { color: #f87171; }
+ .chem-btn-add {
+ background: white;
+ color: #0284c7;
+ border: none;
+ padding: 0.5rem 1rem;
+ border-radius: 8px;
+ font-weight: 600;
+ transition: transform 0.2s;
+ }
+ .chem-btn-add:hover {
+ transform: translateY(-2px);
+ color: #0369a1;
+ }
 
-  .chem-tabs {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-  .chem-tab {
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    background: #f1f5f9;
-    color: #64748b;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-  }
-  .chem-tab:hover {
-    background: #e2e8f0;
-    color: #334155;
-  }
-  .chem-tab-active {
-    background: #0ea5e9;
-    color: white;
-  }
-  .chem-tab-active:hover {
-    background: #0284c7;
-    color: white;
-  }
-  .chem-tab-divider {
-    width: 1px;
-    background: #e2e8f0;
-    margin: 0 0.5rem;
-  }
-  .chem-tab-journal {
-    background: #f0fdf4;
-    color: #16a34a;
-  }
-  .chem-tab-journal:hover {
-    background: #dcfce7;
-  }
+ .chem-tabs {
+ display: flex;
+ gap: 0.5rem;
+ margin-bottom: 1rem;
+ flex-wrap: wrap;
+ }
+ .chem-tab {
+ padding: 0.5rem 1rem;
+ border-radius: 8px;
+ background: #f1f5f9;
+ color: #64748b;
+ text-decoration: none;
+ font-weight: 500;
+ font-size: 0.875rem;
+ display: flex;
+ align-items: center;
+ gap: 0.5rem;
+ transition: all 0.2s;
+ }
+ .chem-tab:hover {
+ background: #e2e8f0;
+ color: #334155;
+ }
+ .chem-tab-active {
+ background: #0ea5e9;
+ color: white;
+ }
+ .chem-tab-active:hover {
+ background: #0284c7;
+ color: white;
+ }
+ .chem-tab-divider {
+ width: 1px;
+ background: #e2e8f0;
+ margin: 0 0.5rem;
+ }
+ .chem-tab-journal {
+ background: #f0fdf4;
+ color: #16a34a;
+ }
+ .chem-tab-journal:hover {
+ background: #dcfce7;
+ }
 
-  .chem-toolbar-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-  .chem-toolbar-left {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .chem-search {
-    position: relative;
-  }
-  .chem-search i {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-  }
-  .chem-search input {
-    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    width: 200px;
-  }
-  .chem-select {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: white;
-    font-size: 0.875rem;
-  }
+ .chem-toolbar-card {
+ background: white;
+ border-radius: 12px;
+ padding: 1rem;
+ margin-bottom: 1rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ flex-wrap: wrap;
+ gap: 1rem;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+ }
+ .chem-toolbar-left {
+ display: flex;
+ gap: 0.75rem;
+ align-items: center;
+ flex-wrap: wrap;
+ }
+ .chem-search {
+ position: relative;
+ }
+ .chem-search i {
+ position: absolute;
+ left: 0.75rem;
+ top: 50%;
+ transform: translateY(-50%);
+ color: #94a3b8;
+ }
+ .chem-search input {
+ padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ width: 200px;
+ }
+ .chem-select {
+ padding: 0.5rem 0.75rem;
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ background: white;
+ font-size: 0.875rem;
+ }
 
-  .chem-grid-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-  .chem-grid-wrapper {
-    min-height: 500px;
-  }
+ .chem-grid-card {
+ background: white;
+ border-radius: 12px;
+ padding: 1rem;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+ }
+ .chem-grid-wrapper {
+ min-height: 500px;
+ }
 
-  /* Status badges */
-  .status-active { color: #16a34a; }
-  .status-low_stock { color: #d97706; }
-  .status-expired { color: #dc2626; }
-  .status-empty { color: #6b7280; }
-  .status-disposed { color: #9ca3af; text-decoration: line-through; }
+ /* Status badges */
+ .status-active { color: #16a34a; }
+ .status-low_stock { color: #d97706; }
+ .status-expired { color: #dc2626; }
+ .status-empty { color: #6b7280; }
+ .status-disposed { color: #9ca3af; text-decoration: line-through; }
 
-  /* Row highlighting */
-  .tabulator-row.row-low-stock { background: #fef3c7 !important; }
-  .tabulator-row.row-expired { background: #fee2e2 !important; }
-  .tabulator-row.row-expiring { background: #fef9c3 !important; }
+ /* Row highlighting */
+ .tabulator-row.row-low-stock { background: #fef3c7 !important; }
+ .tabulator-row.row-expired { background: #fee2e2 !important; }
+ .tabulator-row.row-expiring { background: #fef9c3 !important; }
 </style>
 
-<!-- Tabulator CSS & JS -->
-<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/css/tabulator.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@5.5.0/dist/js/tabulator.min.js"></script>
+<!-- Tabulator CSS & JS (Vite bundle) -->
+{{ vite_css_tag('src/tabulator.css') }}
+{{ vite_js_tag('src/tabulator.js') }}
 
 <script nonce="{{ csp_nonce }}">
 let table;
 
 document.addEventListener('DOMContentLoaded', function() {
-  const data = {{ chemicals|tojson|safe if chemicals else '[]' }};
+ const data = {{ chemicals|tojson|safe if chemicals else '[]' }};
 
-  // GHS pictogram config
-  const GHS_INFO = {
-    GHS01: { label: 'GHS01', title: 'Explosive', color: '#ef4444' },
-    GHS02: { label: 'GHS02', title: 'Flammable', color: '#f97316' },
-    GHS03: { label: 'GHS03', title: 'Oxidizing', color: '#eab308' },
-    GHS04: { label: 'GHS04', title: 'Compressed Gas', color: '#06b6d4' },
-    GHS05: { label: 'GHS05', title: 'Corrosive', color: '#a16207' },
-    GHS06: { label: 'GHS06', title: 'Toxic', color: '#1e293b' },
-    GHS07: { label: 'GHS07', title: 'Harmful/Irritant', color: '#f59e0b' },
-    GHS08: { label: 'GHS08', title: 'Health Hazard', color: '#7c3aed' },
-    GHS09: { label: 'GHS09', title: 'Environmental', color: '#16a34a' },
-  };
+ // GHS pictogram config
+ const GHS_INFO = {
+ GHS01: { label: 'GHS01', title: 'Explosive', color: '#ef4444' },
+ GHS02: { label: 'GHS02', title: 'Flammable', color: '#f97316' },
+ GHS03: { label: 'GHS03', title: 'Oxidizing', color: '#eab308' },
+ GHS04: { label: 'GHS04', title: 'Compressed Gas', color: '#06b6d4' },
+ GHS05: { label: 'GHS05', title: 'Corrosive', color: '#a16207' },
+ GHS06: { label: 'GHS06', title: 'Toxic', color: '#1e293b' },
+ GHS07: { label: 'GHS07', title: 'Harmful/Irritant', color: '#f59e0b' },
+ GHS08: { label: 'GHS08', title: 'Health Hazard', color: '#7c3aed' },
+ GHS09: { label: 'GHS09', title: 'Environmental', color: '#16a34a' },
+ };
 
-  // Transform data for display
-  const rows = data.map(c => ({
-    id: c.id,
-    name: c.name,
-    formula: c.formula || '',
-    cas_number: c.cas_number || '',
-    manufacturer: c.manufacturer || '',
-    lot_number: c.lot_number || '',
-    grade: c.grade || '',
-    quantity: c.quantity,
-    unit: c.unit,
-    reorder_level: c.reorder_level,
-    expiry_date: c.expiry_date ? c.expiry_date.split('T')[0] : '',
-    opened_expiry_date: c.opened_expiry_date ? c.opened_expiry_date.split('T')[0] : '',
-    storage_location: c.storage_location || '',
-    lab_type: c.lab_type,
-    category: c.category,
-    status: c.status,
-    ghs_pictograms: c.ghs_pictograms || [],
-    ghs_signal_word: c.ghs_signal_word || '',
-    days_until_expiry: c.days_until_expiry,
-    is_expiring_soon: c.is_expiring_soon,
-    days_alert_before_expiry: c.days_alert_before_expiry || 30,
-  }));
+ // Transform data for display
+ const rows = data.map(c => ({
+ id: c.id,
+ name: c.name,
+ formula: c.formula || '',
+ cas_number: c.cas_number || '',
+ manufacturer: c.manufacturer || '',
+ lot_number: c.lot_number || '',
+ grade: c.grade || '',
+ quantity: c.quantity,
+ unit: c.unit,
+ reorder_level: c.reorder_level,
+ expiry_date: c.expiry_date ? c.expiry_date.split('T')[0] : '',
+ opened_expiry_date: c.opened_expiry_date ? c.opened_expiry_date.split('T')[0] : '',
+ storage_location: c.storage_location || '',
+ lab_type: c.lab_type,
+ category: c.category,
+ status: c.status,
+ ghs_pictograms: c.ghs_pictograms || [],
+ ghs_signal_word: c.ghs_signal_word || '',
+ days_until_expiry: c.days_until_expiry,
+ is_expiring_soon: c.is_expiring_soon,
+ days_alert_before_expiry: c.days_alert_before_expiry || 30,
+ }));
 
-  table = new Tabulator("#chemicalGrid", {
-    data: rows,
-    layout: "fitColumns",
-    height: "calc(100vh - 380px)",
-    minHeight: 400,
-    pagination: false,
-    placeholder: "{{ _('No chemicals found') }}",
-    rowFormatter: function(row) {
-      const data = row.getData();
-      if (data.status === 'expired') {
-        row.getElement().classList.add('row-expired');
-      } else if (data.status === 'low_stock') {
-        row.getElement().classList.add('row-low-stock');
-      } else if (data.is_expiring_soon) {
-        row.getElement().classList.add('row-expiring');
-      }
-    },
-    columns: [
-      {
-        title: "{{ _('Name') }}",
-        field: "name",
-        widthGrow: 2,
-        minWidth: 150,
-        formatter: function(cell) {
-          const data = cell.getRow().getData();
-          const a = document.createElement('a');
-          a.href = '/chemicals/' + data.id;
-          a.className = 'text-decoration-none fw-semibold';
-          a.textContent = data.name;
-          return a;
-        }
-      },
-      { title: "{{ _('Formula') }}", field: "formula", width: 90 },
-      { title: "CAS", field: "cas_number", width: 100 },
-      { title: "{{ _('Manufacturer') }}", field: "manufacturer", widthGrow: 1, minWidth: 100 },
-      { title: "{{ _('Lot No.') }}", field: "lot_number", width: 90 },
-      { title: "{{ _('Grade') }}", field: "grade", width: 65 },
-      {
-        title: "{{ _('Quantity') }}",
-        field: "quantity",
-        width: 95,
-        hozAlign: "right",
-        formatter: function(cell) {
-          const data = cell.getRow().getData();
-          const span = document.createElement('span');
-          if (data.status === 'low_stock') span.className = 'text-warning fw-bold';
-          else if (data.status === 'empty') span.className = 'text-muted';
-          span.textContent = data.quantity + ' ' + data.unit;
-          return span;
-        }
-      },
-      {
-        title: "{{ _('Expiry') }}",
-        field: "expiry_date",
-        width: 130,
-        formatter: function(cell) {
-          const d = cell.getRow().getData();
-          const parts = [];
-          // Effective expiry (earliest of expiry_date / opened_expiry_date)
-          const eff = d.opened_expiry_date && (!d.expiry_date || d.opened_expiry_date < d.expiry_date)
-                      ? d.opened_expiry_date : d.expiry_date;
-          if (!eff) return '<span class="text-muted">—</span>';
-          const days = d.days_until_expiry;
-          let cls = 'text-success';
-          if (days !== null && days !== undefined) {
-            if (days < 0) cls = 'text-danger fw-bold';
-            else if (days <= (d.days_alert_before_expiry || 30)) cls = 'text-warning fw-semibold';
-          }
-          let badge = '';
-          if (days !== null && days !== undefined) {
-            if (days < 0) badge = `<span class="badge bg-danger ms-1">${-days}д хэтэрсэн</span>`;
-            else if (days <= (d.days_alert_before_expiry || 30)) badge = `<span class="badge bg-warning text-dark ms-1">${days}д үлдсэн</span>`;
-          }
-          const openedNote = d.opened_expiry_date && d.opened_expiry_date < (d.expiry_date || '9999')
-            ? `<div style="font-size:0.7rem;color:#9ca3af">Нээлт: ${d.opened_expiry_date}</div>` : '';
-          return `<span class="${cls}">${eff}</span>${badge}${openedNote}`;
-        }
-      },
-      {
-        title: "GHS",
-        field: "ghs_pictograms",
-        width: 130,
-        headerSort: false,
-        formatter: function(cell) {
-          const d = cell.getRow().getData();
-          const pics = d.ghs_pictograms || [];
-          if (!pics.length && !d.ghs_signal_word) return '<span class="text-muted small">—</span>';
-          let html = '';
-          if (d.ghs_signal_word) {
-            const sw = d.ghs_signal_word;
-            html += `<span class="badge ${sw === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'} me-1" style="font-size:0.65rem">${sw}</span>`;
-          }
-          pics.forEach(code => {
-            const info = GHS_INFO[code] || { label: code, color: '#64748b', title: code };
-            html += `<span title="${info.title}" style="display:inline-block;background:${info.color};color:#fff;border-radius:3px;padding:1px 4px;font-size:0.65rem;font-weight:700;margin:1px;">${info.label}</span>`;
-          });
-          return html;
-        }
-      },
-      { title: "{{ _('Location') }}", field: "storage_location", widthGrow: 1, minWidth: 100 },
-      {
-        title: "{{ _('Category') }}",
-        field: "category",
-        width: 90,
-        formatter: function(cell) {
-          const map = {
-            acid: "{{ _('Acid') }}", base: "{{ _('Base') }}", solvent: "{{ _('Solvent') }}",
-            indicator: "{{ _('Indicator') }}", standard: "{{ _('Standard') }}", media: "{{ _('Media') }}",
-            buffer: "{{ _('Buffer') }}", salt: "{{ _('Salt') }}", other: "{{ _('Other') }}"
-          };
-          return map[cell.getValue()] || cell.getValue();
-        }
-      },
-      {
-        title: "{{ _('Status') }}",
-        field: "status",
-        width: 100,
-        formatter: function(cell) {
-          const map = {
-            active: '<span class="badge bg-success">{{ _("Active") }}</span>',
-            low_stock: '<span class="badge bg-warning">{{ _("Low Stock") }}</span>',
-            expired: '<span class="badge bg-danger">{{ _("Expired") }}</span>',
-            empty: '<span class="badge bg-secondary">{{ _("Empty") }}</span>',
-            disposed: '<span class="badge bg-dark">{{ _("Disposed") }}</span>'
-          };
-          return map[cell.getValue()] || cell.getValue();
-        }
-      },
-      {
-        title: "",
-        width: 60,
-        hozAlign: "center",
-        formatter: function(cell) {
-          const id = cell.getRow().getData().id;
-          return `
-            <a href="/chemicals/${id}" class="btn btn-sm btn-outline-primary" title="{{ _('Details') }}">
-              <i class="bi bi-eye"></i>
-            </a>
-          `;
-        }
-      }
-    ]
-  });
+ table = new Tabulator("#chemicalGrid", {
+ data: rows,
+ layout: "fitColumns",
+ height: "calc(100vh - 380px)",
+ minHeight: 400,
+ pagination: false,
+ placeholder: "{{ _('No chemicals found') }}",
+ rowFormatter: function(row) {
+ const data = row.getData();
+ if (data.status === 'expired') {
+ row.getElement().classList.add('row-expired');
+ } else if (data.status === 'low_stock') {
+ row.getElement().classList.add('row-low-stock');
+ } else if (data.is_expiring_soon) {
+ row.getElement().classList.add('row-expiring');
+ }
+ },
+ columns: [
+ {
+ title: "{{ _('Name') }}",
+ field: "name",
+ widthGrow: 2,
+ minWidth: 150,
+ formatter: function(cell) {
+ const data = cell.getRow().getData();
+ const a = document.createElement('a');
+ a.href = '/chemicals/' + data.id;
+ a.className = 'text-decoration-none fw-semibold';
+ a.textContent = data.name;
+ return a;
+ }
+ },
+ { title: "{{ _('Formula') }}", field: "formula", width: 90 },
+ { title: "CAS", field: "cas_number", width: 100 },
+ { title: "{{ _('Manufacturer') }}", field: "manufacturer", widthGrow: 1, minWidth: 100 },
+ { title: "{{ _('Lot No.') }}", field: "lot_number", width: 90 },
+ { title: "{{ _('Grade') }}", field: "grade", width: 65 },
+ {
+ title: "{{ _('Quantity') }}",
+ field: "quantity",
+ width: 95,
+ hozAlign: "right",
+ formatter: function(cell) {
+ const data = cell.getRow().getData();
+ const span = document.createElement('span');
+ if (data.status === 'low_stock') span.className = 'text-warning fw-bold';
+ else if (data.status === 'empty') span.className = 'text-muted';
+ span.textContent = data.quantity + ' ' + data.unit;
+ return span;
+ }
+ },
+ {
+ title: "{{ _('Expiry') }}",
+ field: "expiry_date",
+ width: 130,
+ formatter: function(cell) {
+ const d = cell.getRow().getData();
+ const parts = [];
+ // Effective expiry (earliest of expiry_date / opened_expiry_date)
+ const eff = d.opened_expiry_date && (!d.expiry_date || d.opened_expiry_date < d.expiry_date)
+ ? d.opened_expiry_date : d.expiry_date;
+ if (!eff) return '<span class="text-muted">—</span>';
+ const days = d.days_until_expiry;
+ let cls = 'text-success';
+ if (days !== null && days !== undefined) {
+ if (days < 0) cls = 'text-danger fw-bold';
+ else if (days <= (d.days_alert_before_expiry || 30)) cls = 'text-warning fw-semibold';
+ }
+ let badge = '';
+ if (days !== null && days !== undefined) {
+ if (days < 0) badge = `<span class="badge bg-danger ms-1">${-days}д хэтэрсэн</span>`;
+ else if (days <= (d.days_alert_before_expiry || 30)) badge = `<span class="badge bg-warning text-dark ms-1">${days}д үлдсэн</span>`;
+ }
+ const openedNote = d.opened_expiry_date && d.opened_expiry_date < (d.expiry_date || '9999')
+ ? `<div class="text-xs-2 text-[#9ca3af]">Нээлт: ${d.opened_expiry_date}</div>` : '';
+ return `<span class="${cls}">${eff}</span>${badge}${openedNote}`;
+ }
+ },
+ {
+ title: "GHS",
+ field: "ghs_pictograms",
+ width: 130,
+ headerSort: false,
+ formatter: function(cell) {
+ const d = cell.getRow().getData();
+ const pics = d.ghs_pictograms || [];
+ if (!pics.length && !d.ghs_signal_word) return '<span class="text-muted small">—</span>';
+ let html = '';
+ if (d.ghs_signal_word) {
+ const sw = d.ghs_signal_word;
+ html += `<span class="badge ${sw === 'Danger' ? 'bg-danger' : 'bg-warning text-dark'} me-1 text-2xs">${sw}</span>`;
+ }
+ pics.forEach(code => {
+ const info = GHS_INFO[code] || { label: code, color: '#64748b', title: code };
+ html += `<span title="${info.title}" class="inline-block text-white rounded-[3px] px-[4px] py-[1px] text-2xs font-bold m-[1px]" data-bg-color="${info.color}">${info.label}</span>`;
+ });
+ return html;
+ }
+ },
+ { title: "{{ _('Location') }}", field: "storage_location", widthGrow: 1, minWidth: 100 },
+ {
+ title: "{{ _('Category') }}",
+ field: "category",
+ width: 90,
+ formatter: function(cell) {
+ const map = {
+ acid: "{{ _('Acid') }}", base: "{{ _('Base') }}", solvent: "{{ _('Solvent') }}",
+ indicator: "{{ _('Indicator') }}", standard: "{{ _('Standard') }}", media: "{{ _('Media') }}",
+ buffer: "{{ _('Buffer') }}", salt: "{{ _('Salt') }}", other: "{{ _('Other') }}"
+ };
+ return map[cell.getValue()] || cell.getValue();
+ }
+ },
+ {
+ title: "{{ _('Status') }}",
+ field: "status",
+ width: 100,
+ formatter: function(cell) {
+ const map = {
+ active: '<span class="badge bg-success">{{ _("Active") }}</span>',
+ low_stock: '<span class="badge bg-warning">{{ _("Low Stock") }}</span>',
+ expired: '<span class="badge bg-danger">{{ _("Expired") }}</span>',
+ empty: '<span class="badge bg-secondary">{{ _("Empty") }}</span>',
+ disposed: '<span class="badge bg-dark">{{ _("Disposed") }}</span>'
+ };
+ return map[cell.getValue()] || cell.getValue();
+ }
+ },
+ {
+ title: "",
+ width: 60,
+ hozAlign: "center",
+ formatter: function(cell) {
+ const id = cell.getRow().getData().id;
+ return `
+ <a href="/chemicals/${id}" class="btn btn-sm btn-outline-primary" title="{{ _('Details') }}">
+ <i class="bi bi-eye"></i>
+ </a>
+ `;
+ }
+ }
+ ]
+ });
 
-  // Quick filter
-  document.getElementById('chemQuickFilter').addEventListener('input', function(e) {
-    table.setFilter([
-      [
-        {field: "name", type: "like", value: e.target.value},
-        {field: "formula", type: "like", value: e.target.value},
-        {field: "cas_number", type: "like", value: e.target.value},
-        {field: "manufacturer", type: "like", value: e.target.value},
-      ]
-    ]);
-  });
+ // Quick filter
+ document.getElementById('chemQuickFilter').addEventListener('input', function(e) {
+ table.setFilter([
+ [
+ {field: "name", type: "like", value: e.target.value},
+ {field: "formula", type: "like", value: e.target.value},
+ {field: "cas_number", type: "like", value: e.target.value},
+ {field: "manufacturer", type: "like", value: e.target.value},
+ ]
+ ]);
+ });
 
-  // Category filter
-  document.getElementById('categoryFilter').addEventListener('change', function(e) {
-    if (e.target.value) {
-      table.setFilter("category", "=", e.target.value);
-    } else {
-      table.clearFilter();
-    }
-  });
+ // Category filter
+ document.getElementById('categoryFilter').addEventListener('change', function(e) {
+ if (e.target.value) {
+ table.setFilter("category", "=", e.target.value);
+ } else {
+ table.clearFilter();
+ }
+ });
 
-  // Status filter
-  document.getElementById('statusFilter').addEventListener('change', function(e) {
-    if (e.target.value) {
-      table.setFilter("status", "=", e.target.value);
-    } else {
-      table.clearFilter();
-    }
-  });
+ // Status filter
+ document.getElementById('statusFilter').addEventListener('change', function(e) {
+ if (e.target.value) {
+ table.setFilter("status", "=", e.target.value);
+ } else {
+ table.clearFilter();
+ }
+ });
 });
 
 function filterByLab(lab) {
-  window.location.href = `/chemicals?lab=${lab}`;
+ window.location.href = `/chemicals?lab=${lab}`;
 }
 
 function exportToExcel() {
-  table.download("xlsx", "chemicals.xlsx");
+ table.download("xlsx", "chemicals.xlsx");
 }
+
+document.getElementById('labFilter')?.addEventListener('change', function() { filterByLab(this.value); });
+document.getElementById('btn-export-xlsx')?.addEventListener('click', exportToExcel);
 </script>
 
 {% endblock %}

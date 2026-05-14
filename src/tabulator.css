@@ -1,0 +1,7 @@
+/*
+ * Tabulator-tables Bootstrap 5 CSS bundle.
+ *
+ * Ачаалах:
+ *   {{ vite_css_tag('src/tabulator.css') }}
+ */
+@import "tabulator-tables/dist/css/tabulator_bootstrap5.min.css";

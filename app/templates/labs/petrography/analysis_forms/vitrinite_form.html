@@ -3,171 +3,169 @@
 {% block title %}{{ param.name_mn }} - {{ _("Vitrinite Reflectance") }}{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-alpine.css">
+
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-  <div class="d-flex align-items-center mb-3">
-    <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
-      <i class="bi bi-arrow-left"></i>
-    </a>
-    <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
-    <h5 class="mb-0">{{ param.name_mn }}</h5>
-    <small class="text-muted ms-2">{{ param.standard }}</small>
-  </div>
+ <div class="d-flex align-items-center mb-3">
+ <a href="{{ url_for('petrography.petro_hub') }}" class="btn btn-outline-secondary btn-sm me-2">
+ <i class="bi bi-arrow-left"></i>
+ </a>
+ <span class="badge bg-purple text-white me-2">{{ analysis_code }}</span>
+ <h5 class="mb-0">{{ param.name_mn }}</h5>
+ <small class="text-muted ms-2">{{ param.standard }}</small>
+ </div>
 
-  <div class="row g-3">
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
-        <div class="card-body">
-          <select id="sampleSelect" class="form-select mb-2">
-            <option value="">-- {{ _("Select a sample") }} --</option>
-          </select>
-          <button class="btn btn-purple btn-sm w-100" onclick="loadSample()">
-            <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
-          </button>
-        </div>
-      </div>
+ <div class="row g-3">
+ <div class="col-md-3">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white"><h6 class="mb-0">{{ _("Select Sample") }}</h6></div>
+ <div class="card-body">
+ <select id="sampleSelect" class="form-select mb-2">
+ <option value="">-- {{ _("Select a sample") }} --</option>
+ </select>
+ <button class="btn btn-purple btn-sm w-100" data-action="loadSample">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}
+ </button>
+ </div>
+ </div>
 
-      <!-- Calculation -->
-      <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white"><h6 class="mb-0">{{ _("Ro%% Calculation") }}</h6></div>
-        <div class="card-body">
-          <div class="mb-2">
-            <label class="form-label small">{{ _("Ro mean:") }}</label>
-            <input type="text" id="roMean" class="form-control form-control-sm" readonly>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small">{{ _("Std Dev:") }}</label>
-            <input type="text" id="roStd" class="form-control form-control-sm" readonly>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small">{{ _("Count (n):") }}</label>
-            <input type="text" id="roCount" class="form-control form-control-sm" readonly>
-          </div>
-        </div>
-      </div>
-    </div>
+ <!-- Calculation -->
+ <div class="card border-0 shadow-sm mt-3">
+ <div class="card-header bg-white"><h6 class="mb-0">{{ _("Ro%% Calculation") }}</h6></div>
+ <div class="card-body">
+ <div class="mb-2">
+ <label class="form-label small">{{ _("Ro mean:") }}</label>
+ <input type="text" id="roMean" class="form-control form-control-sm" readonly>
+ </div>
+ <div class="mb-2">
+ <label class="form-label small">{{ _("Std Dev:") }}</label>
+ <input type="text" id="roStd" class="form-control form-control-sm" readonly>
+ </div>
+ <div class="mb-2">
+ <label class="form-label small">{{ _("Count (n):") }}</label>
+ <input type="text" id="roCount" class="form-control form-control-sm" readonly>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <div class="col-md-9">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between">
-          <h6 class="mb-0">{{ _("Vitrinite Reflectance — Measurement Points") }}</h6>
-          <div>
-            <button class="btn btn-outline-secondary btn-sm me-1" onclick="calcStats()">
-              <i class="bi bi-calculator me-1"></i>{{ _("Calculate") }}
-            </button>
-            <button class="btn btn-success btn-sm" onclick="saveResults()">
-              <i class="bi bi-save me-1"></i>{{ _("Save") }}
-            </button>
-          </div>
-        </div>
-        <div class="card-body p-0">
-          <div id="vrGrid" class="ag-theme-alpine" style="height: 500px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="col-md-9">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white d-flex justify-content-between">
+ <h6 class="mb-0">{{ _("Vitrinite Reflectance — Measurement Points") }}</h6>
+ <div>
+ <button class="btn btn-outline-secondary btn-sm me-1" data-action="calcStats">
+ <i class="bi bi-calculator me-1"></i>{{ _("Calculate") }}
+ </button>
+ <button class="btn btn-success btn-sm" data-action="saveResults">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </div>
+ <div class="card-body p-0">
+ <div id="vrGrid" class="ag-theme-alpine h-[500px]"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <style nonce="{{ csp_nonce }}">
-  .btn-purple { background-color: #6f42c1; color: white; border: none; }
-  .btn-purple:hover { background-color: #5a32a3; color: white; }
-  .bg-purple { background-color: #6f42c1 !important; }
+ .btn-purple { background-color: #6f42c1; color: white; border: none; }
+ .btn-purple:hover { background-color: #5a32a3; color: white; }
+ .bg-purple { background-color: #6f42c1 !important; }
 </style>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script nonce="{{ csp_nonce }}">
 const analysisCode = "{{ analysis_code }}";
 let gridApi;
 let selectedSampleId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-  fetch(`{{ url_for('petrography.eligible_samples', code='VR') }}`.replace('VR', analysisCode))
-    .then(r => r.json())
-    .then(data => {
-      const sel = document.getElementById('sampleSelect');
-      data.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
-        sel.appendChild(opt);
-      });
-    });
+ fetch(`{{ url_for('petrography.eligible_samples', code='VR') }}`.replace('VR', analysisCode))
+ .then(r => r.json())
+ .then(data => {
+ const sel = document.getElementById('sampleSelect');
+ data.forEach(s => {
+ const opt = document.createElement('option');
+ opt.value = s.id;
+ opt.textContent = `${s.sample_code} (${s.client_name || ''})`;
+ sel.appendChild(opt);
+ });
+ });
 
-  // 50 цэгийн grid
-  const rows = [];
-  for (let i = 1; i <= 50; i++) {
-    rows.push({ point: i, ro_value: '' });
-  }
+ // 50 цэгийн grid
+ const rows = [];
+ for (let i = 1; i <= 50; i++) {
+ rows.push({ point: i, ro_value: '' });
+ }
 
-  const gridDiv = document.getElementById('vrGrid');
-  const gridOptions = {
-    columnDefs: [
-      { field: 'point', headerName: '#', width: 60, pinned: 'left' },
-      { field: 'ro_value', headerName: '{{ _("Ro %%") }}', editable: true, type: 'numericColumn', width: 120 },
-    ],
-    rowData: rows,
-    defaultColDef: { sortable: true, resizable: true },
-  };
-  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+ const gridDiv = document.getElementById('vrGrid');
+ const gridOptions = {
+ columnDefs: [
+ { field: 'point', headerName: '#', width: 60, pinned: 'left' },
+ { field: 'ro_value', headerName: '{{ _("Ro %%") }}', editable: true, type: 'numericColumn', width: 120 },
+ ],
+ rowData: rows,
+ defaultColDef: { sortable: true, resizable: true },
+ };
+ gridApi = agGrid.createGrid(gridDiv, gridOptions);
 });
 
 function loadSample() {
-  const sel = document.getElementById('sampleSelect');
-  selectedSampleId = sel.value ? parseInt(sel.value) : null;
+ const sel = document.getElementById('sampleSelect');
+ selectedSampleId = sel.value ? parseInt(sel.value) : null;
 }
 
 function calcStats() {
-  const vals = [];
-  gridApi.forEachNode(n => {
-    const v = parseFloat(n.data.ro_value);
-    if (!isNaN(v) && v > 0) vals.push(v);
-  });
-  if (!vals.length) { alert('{{ _("Please enter measurement values") }}'); return; }
+ const vals = [];
+ gridApi.forEachNode(n => {
+ const v = parseFloat(n.data.ro_value);
+ if (!isNaN(v) && v> 0) vals.push(v);
+ });
+ if (!vals.length) { alert('{{ _("Please enter measurement values") }}'); return; }
 
-  const mean = vals.reduce((a,b) => a+b, 0) / vals.length;
-  const variance = vals.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / vals.length;
-  const std = Math.sqrt(variance);
+ const mean = vals.reduce((a,b) => a+b, 0) / vals.length;
+ const variance = vals.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / vals.length;
+ const std = Math.sqrt(variance);
 
-  document.getElementById('roMean').value = mean.toFixed(3);
-  document.getElementById('roStd').value = std.toFixed(3);
-  document.getElementById('roCount').value = vals.length;
+ document.getElementById('roMean').value = mean.toFixed(3);
+ document.getElementById('roStd').value = std.toFixed(3);
+ document.getElementById('roCount').value = vals.length;
 }
 
 function saveResults() {
-  if (!selectedSampleId) { alert('{{ _("Please select a sample") }}'); return; }
-  calcStats();
+ if (!selectedSampleId) { alert('{{ _("Please select a sample") }}'); return; }
+ calcStats();
 
-  const points = [];
-  gridApi.forEachNode(n => {
-    const v = parseFloat(n.data.ro_value);
-    if (!isNaN(v) && v > 0) points.push(v);
-  });
+ const points = [];
+ gridApi.forEachNode(n => {
+ const v = parseFloat(n.data.ro_value);
+ if (!isNaN(v) && v> 0) points.push(v);
+ });
 
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-  fetch("{{ url_for('petrography.save_results') }}", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-    body: JSON.stringify({
-      sample_id: selectedSampleId,
-      analysis_code: analysisCode,
-      results: {
-        ro_mean: document.getElementById('roMean').value,
-        ro_std: document.getElementById('roStd').value,
-        ro_count: document.getElementById('roCount').value,
-        points: points,
-      }
-    })
-  })
-  .then(r => r.json())
-  .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
-  .catch(e => logger.error(e));
+ const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+ fetch("{{ url_for('petrography.save_results') }}", {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+ body: JSON.stringify({
+ sample_id: selectedSampleId,
+ analysis_code: analysisCode,
+ results: {
+ ro_mean: document.getElementById('roMean').value,
+ ro_std: document.getElementById('roStd').value,
+ ro_count: document.getElementById('roCount').value,
+ points: points,
+ }
+ })
+ })
+ .then(r => r.json())
+ .then(d => { if (d.success) alert('{{ _("Saved successfully!") }}'); })
+ .catch(e => logger.error(e));
 }
 </script>
 {% endblock %}

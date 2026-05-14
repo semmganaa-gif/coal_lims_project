@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.4/css/dataTables.bootstrap5.min.css">
+{{ vite_css_tag('src/datatables.css') }}
 {% endblock %}
 
 {% block content %}
@@ -101,8 +101,7 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.4/js/dataTables.bootstrap5.min.js"></script>
+{{ vite_js_tag('src/datatables.js') }}
 <script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
     $('#capaTable').DataTable({

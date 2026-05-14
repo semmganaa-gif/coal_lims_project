@@ -25,6 +25,11 @@ export default defineConfig({
         aggrid: resolve(__dirname, 'src/aggrid.js'),
         'aggrid-css': resolve(__dirname, 'src/aggrid.css'),
         chart: resolve(__dirname, 'src/chart.js'),
+        datatables: resolve(__dirname, 'src/datatables.js'),
+        'datatables-css': resolve(__dirname, 'src/datatables.css'),
+        tabulator: resolve(__dirname, 'src/tabulator.js'),
+        'tabulator-css': resolve(__dirname, 'src/tabulator.css'),
+        socketio: resolve(__dirname, 'src/socketio.js'),
       },
       output: {
         entryFileNames: 'js/[name]-[hash].js',

@@ -3,391 +3,389 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .micro-ws { min-height: calc(100vh - 120px); padding: 1.5rem; background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 30%, #f8fafc 100%); background-attachment: fixed; }
-  .ws-header { background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(79,70,229,0.08)); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px rgba(99,102,241,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-  .ws-header h1 { font-size: 1.4rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #6366f1, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .ws-header p { color: #64748b; font-size: 0.85rem; margin: 0; }
-  .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
-  .grid-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(148,163,184,0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-  .grid-card .card-header { background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(79,70,229,0.04)); border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem; }
-  .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
-  .ag-theme-alpine { --ag-header-background-color: #eef2ff; --ag-odd-row-background-color: #fafbff; --ag-row-hover-color: #eef2ff; --ag-header-foreground-color: #0f172a; --ag-border-color: #e2e8f0; }
-  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
-  .ag-theme-alpine .ag-header-cell-wrap .ag-header-cell-text { white-space: pre-line !important; line-height: 1.3; text-align: center; }
-  .ag-theme-alpine .ag-header-row { height: auto !important; min-height: 80px; }
-  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
-  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .sample-list-item { cursor: pointer; transition: background 0.15s; }
-  .sample-list-item:hover { background: #eef2ff; }
-  .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
-  @media (max-width: 768px) { .micro-ws { padding: 1rem; } .ws-header { flex-direction: column; text-align: center; } }
+ .micro-ws { min-height: calc(100vh - 120px); padding: 1.5rem; background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 30%, #f8fafc 100%); background-attachment: fixed; }
+ .ws-header { background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(79,70,229,0.08)); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px rgba(99,102,241,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+ .ws-header h1 { font-size: 1.4rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #6366f1, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+ .ws-header p { color: #64748b; font-size: 0.85rem; margin: 0; }
+ .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+ .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+ .grid-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(148,163,184,0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+ .grid-card .card-header { background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(79,70,229,0.04)); border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem; }
+ .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
+ .ag-theme-alpine { --ag-header-background-color: #eef2ff; --ag-odd-row-background-color: #fafbff; --ag-row-hover-color: #eef2ff; --ag-header-foreground-color: #0f172a; --ag-border-color: #e2e8f0; }
+ .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.78rem; }
+ .ag-theme-alpine .ag-header-cell-wrap .ag-header-cell-text { white-space: pre-line !important; line-height: 1.3; text-align: center; }
+ .ag-theme-alpine .ag-header-row { height: auto !important; min-height: 80px; }
+ .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; padding: 0.75rem 1.25rem; }
+ .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
+ .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+ .sample-list-item { cursor: pointer; transition: background 0.15s; }
+ .sample-list-item:hover { background: #eef2ff; }
+ .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
+ @media (max-width: 768px) { .micro-ws { padding: 1rem; } .ws-header { flex-direction: column; text-align: center; } }
 </style>
 
 <div class="micro-ws">
-  <div class="ws-header">
-    <div>
-      <h1><i class="bi bi-wind me-2"></i>{{ title }}</h1>
-      <p>{{ _("Air Microbiology Analysis") }} — MNS 5484:2005</p>
-    </div>
-    <div class="ws-actions">
-      <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}</a>
-      <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
-      </button>
-      <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
-      </button>
-      <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
-      </button>
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}</button>
-      <button id="btnSave" class="btn text-white" style="background:#6366f1;"><i class="bi bi-save me-1"></i>{{ _("Save") }}</button>
-    </div>
-  </div>
-  {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
-  {% include 'labs/water/microbiology/analysis_forms/micro_timer_panel.html' %}
+ <div class="ws-header">
+ <div>
+ <h1><i class="bi bi-wind me-2"></i>{{ title }}</h1>
+ <p>{{ _("Air Microbiology Analysis") }} — MNS 5484:2005</p>
+ </div>
+ <div class="ws-actions">
+ <a href="{{ url_for('microbiology.analysis_hub') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}</a>
+ <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#microQuickRef">
+ <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
+ </button>
+ <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#microTimerPanel">
+ <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
+ </button>
+ <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
+ <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
+ </button>
+ <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#selectSamplesModal"><i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}</button>
+ <button id="btnSave" class="btn text-white bg-accent-2"><i class="bi bi-save me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </div>
+ {% include 'labs/water/microbiology/analysis_forms/micro_quick_ref.html' %}
+ {% include 'labs/water/microbiology/analysis_forms/micro_timer_panel.html' %}
 
-  <div class="grid-card">
-    <div class="card-header d-flex align-items-center justify-content-between">
-      <h6><i class="bi bi-table me-1" style="color:#6366f1"></i>{{ _("Air Microbiology Grid") }} <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
-    </div>
-    <div id="microGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#c7d2fe"></div> {{ _("Bacterial Count: MNS 5484:2005 (per 1m3 <3000)") }}</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#dbeafe"></div> {{ _("S.aureus: MNS 5484:2005 (per 1m3 <50)") }}</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#047857"></div> <em>{{ _("\"Not Detected\" or \"Detected\" - enter count") }}</em></div>
-    </div>
-  </div>
+ <div class="grid-card">
+ <div class="card-header d-flex align-items-center justify-content-between">
+ <h6><i class="bi bi-table me-1 text-accent-2"></i>{{ _("Air Microbiology Grid") }} <span id="rowCount" class="badge bg-secondary ms-2">0</span></h6>
+ </div>
+ <div id="microGrid" class="ag-theme-alpine h-[550px] w-full"></div>
+ <div class="legend">
+ <div class="legend-item"><div class="legend-dot bg-[#047857]"></div> {{ _("Bacterial Count: MNS 5484:2005 (per 1m3 <3000)") }}</div>
+ <div class="legend-item"><div class="legend-dot bg-[#c7d2fe]"></div> {{ _("S.aureus: MNS 5484:2005 (per 1m3 <50)") }}</div>
+ <div class="legend-item"><div class="legend-dot bg-info-2-soft"></div> <em>{{ _("\"Not Detected\" or \"Detected\" - enter count") }}</em></div>
+ </div>
+ </div>
 </div>
 
 {# --- EQUIPMENT MODAL --- #}
 <style nonce="{{ csp_nonce }}">
-  #equipmentModal .modal-header {
-    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-    color: #fff; border-bottom: 3px solid #20c997;
-  }
-  #equipmentModal .modal-header .btn-close { filter: invert(1); }
-  #equipmentModal .eq-table thead th {
-    background: #ecfdf5; color: #0f172a; font-weight: 600; font-size: 0.78rem;
-    text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #a7f3d0;
-    padding: 10px 8px; white-space: nowrap;
-  }
-  #equipmentModal .eq-table tbody tr { transition: background 0.15s; }
-  #equipmentModal .eq-table tbody tr:hover { background: #f0fdf4; }
-  #equipmentModal .eq-table tbody td { padding: 8px; vertical-align: middle; border-color: #e2e8f0; }
-  #equipmentModal .eq-lab-code { font-weight: 600; color: #047857; font-size: 0.9rem; }
-  #equipmentModal .eq-lab-name { font-size: 0.75rem; color: #64748b; }
-  #equipmentModal .eq-check-ok:checked { background-color: #20c997; border-color: #20c997; }
-  #equipmentModal .eq-repair-cb:checked { background-color: #e53e3e; border-color: #e53e3e; }
-  #equipmentModal .repair-panel {
-    background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px;
-  }
-  #equipmentModal .repair-panel .repair-date-label {
-    font-size: 0.7rem; color: #c53030; font-weight: 600; margin-bottom: 2px;
-  }
-  #equipmentModal .spare-row {
-    background: #fff; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;
-  }
-  #equipmentModal .modal-footer { background: #f0fdf4; border-top: 1px solid #d1fae5; }
-  #equipmentModal .modal-content { resize: both; overflow: auto; min-width: 500px; min-height: 300px; }
-  #equipmentModal .modal-dialog { max-width: 90vw; }
+ #equipmentModal .modal-header {
+ background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+ color: #fff; border-bottom: 3px solid #20c997;
+ }
+ #equipmentModal .modal-header .btn-close { filter: invert(1); }
+ #equipmentModal .eq-table thead th {
+ background: #ecfdf5; color: #0f172a; font-weight: 600; font-size: 0.78rem;
+ text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #a7f3d0;
+ padding: 10px 8px; white-space: nowrap;
+ }
+ #equipmentModal .eq-table tbody tr { transition: background 0.15s; }
+ #equipmentModal .eq-table tbody tr:hover { background: #f0fdf4; }
+ #equipmentModal .eq-table tbody td { padding: 8px; vertical-align: middle; border-color: #e2e8f0; }
+ #equipmentModal .eq-lab-code { font-weight: 600; color: #047857; font-size: 0.9rem; }
+ #equipmentModal .eq-lab-name { font-size: 0.75rem; color: #64748b; }
+ #equipmentModal .eq-check-ok:checked { background-color: #20c997; border-color: #20c997; }
+ #equipmentModal .eq-repair-cb:checked { background-color: #e53e3e; border-color: #e53e3e; }
+ #equipmentModal .repair-panel {
+ background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px;
+ }
+ #equipmentModal .repair-panel .repair-date-label {
+ font-size: 0.7rem; color: #c53030; font-weight: 600; margin-bottom: 2px;
+ }
+ #equipmentModal .spare-row {
+ background: #fff; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px;
+ }
+ #equipmentModal .modal-footer { background: #f0fdf4; border-top: 1px solid #d1fae5; }
+ #equipmentModal .modal-content { resize: both; overflow: auto; min-width: 500px; min-height: 300px; }
+ #equipmentModal .modal-dialog { max-width: 90vw; }
 </style>
 <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-      <div class="modal-header py-3">
-        <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
-          <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>{{ _("Equipment Usage & Maintenance") }}</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        {% if related_equipments %}
-        <div class="table-responsive">
-          <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
-            <thead>
-              <tr>
-                <th style="width: 22%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
-                <th style="width: 7%; text-align:center;">{{ _("Condition") }}</th>
-                <th style="width: 10%; text-align:center;">{{ _("Usage (min)") }}</th>
-                <th style="width: 20%;">{{ _("Notes") }}</th>
-                <th style="width: 7%; text-align:center;">{{ _("Repair") }}</th>
-                <th style="width: 34%;">{{ _("Repair Details") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for eq in related_equipments %}
-              <tr data-eq-id="{{ eq.id }}">
-                <td>
-                  <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
-                  {% if eq.lab_code and eq.name != eq.lab_code %}
-                  <div class="eq-lab-name">{{ eq.name }}</div>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-check eq-check-ok" type="checkbox"
-                         style="width: 22px; height: 22px; cursor: pointer;" checked>
-                </td>
-                <td>
-                  <input type="number" class="form-control form-control-sm text-center eq-minutes"
-                         placeholder="0" min="0" style="border-color: #cbd5e0;">
-                </td>
-                <td>
-                  <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="{{ _('Notes...') }}" style="border-color: #cbd5e0;">
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
-                         style="width: 22px; height: 22px; cursor: pointer;"
-                         onchange="toggleRepairPanel(this)">
-                </td>
-                <td class="repair-info-cell">
-                  <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
-                    <input type="date" class="form-control form-control-sm mb-2 repair-date">
-                    <div class="spare-parts-list"></div>
-                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
-                            onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>{{ _("No microbiology lab equipment registered.") }}
-        </div>
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
-        </button>
-        {% if related_equipments %}
-        <button type="button" class="btn text-white px-4" style="background:#20c997;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>{{ _("Save") }}
-        </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-xl modal-dialog-scrollable">
+ <div class="modal-content shadow-lg border-0 rounded-xl overflow-hidden">
+ <div class="modal-header py-3">
+ <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
+ <i class="bi bi-clipboard-check text-[1.3rem]"></i>
+ <span>{{ _("Equipment Usage & Maintenance") }}</span>
+ </h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body p-4">
+ {% if related_equipments %}
+ <div class="table-responsive">
+ <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
+ <thead>
+ <tr>
+ <th class="w-[34%]">{{ _("Lab Code / Name") }}</th>
+ <th class="w-[22%] min-w-[140px]">{{ _("Condition") }}</th>
+ <th class="w-[7%] text-center">{{ _("Usage (min)") }}</th>
+ <th class="w-[10%] text-center">{{ _("Notes") }}</th>
+ <th class="w-1/5">{{ _("Repair") }}</th>
+ <th class="w-[7%] text-center">{{ _("Repair Details") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for eq in related_equipments %}
+ <tr data-eq-id="{{ eq.id }}">
+ <td>
+ <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
+ {% if eq.lab_code and eq.name != eq.lab_code %}
+ <div class="eq-lab-name">{{ eq.name }}</div>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-check eq-check-ok w-[22px] h-[22px] cursor-pointer" type="checkbox"
+ checked>
+ </td>
+ <td>
+ <input type="number" class="form-control form-control-sm text-center eq-minutes border-slate-300"
+ placeholder="0" min="0">
+ </td>
+ <td>
+ <input type="text" class="form-control form-control-sm eq-note border-slate-300"
+ placeholder="{{ _('Notes...') }}">
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
+>
+ </td>
+ <td class="repair-info-cell">
+ <div class="repair-panel d-none">
+ <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
+ <input type="date" class="form-control form-control-sm mb-2 repair-date">
+ <div class="spare-parts-list"></div>
+ <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
+ data-action="add-spare-part">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
+ </button>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="alert alert-info mb-0">
+ <i class="bi bi-info-circle me-2"></i>{{ _("No microbiology lab equipment registered.") }}
+ </div>
+ {% endif %}
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+ <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
+ </button>
+ {% if related_equipments %}
+ <button type="button" class="btn text-white px-4" id="btn-submit-equipment">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 </div>
 
 <!-- Sample selection modal -->
 <div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header" style="background: linear-gradient(135deg, #eef2ff, #f0f9ff);">
-        <h5 class="modal-title"><i class="bi bi-wind me-2" style="color:#6366f1"></i>{{ _("Select Samples") }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row g-2 mb-3">
-          <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _('Sample code...') }}">
-          </div>
-          <div class="col-4">
-            <select id="filterClient" class="form-select form-select-sm"><option value="">{{ _("All clients") }}</option></select>
-          </div>
-          <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _('Clear filters') }}"><i class="bi bi-x-circle"></i></button>
-            <span id="filteredCount" class="text-muted small"></span>
-          </div>
-        </div>
-        <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">{{ _("Loading...") }}</p></div>
-        <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light sticky-top"><tr><th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th><th>{{ _("Sample Code") }}</th><th>{{ _("Client") }}</th><th>{{ _("Status") }}</th><th>{{ _("Date") }}</th></tr></thead>
-            <tbody id="sampleListBody"></tbody>
-          </table>
-        </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">{{ _("No samples found") }}</div>
-      </div>
-      <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">0 {{ _("samples selected") }}</span>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-        <button type="button" class="btn text-white" style="background:#6366f1;" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}</button>
-      </div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-[linear-gradient(135deg,#eef2ff,#f0f9ff)]">
+ <h5 class="modal-title"><i class="bi bi-wind me-2 text-accent-2"></i>{{ _("Select Samples") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="row g-2 mb-3">
+ <div class="col-5">
+ <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _('Sample code...') }}">
+ </div>
+ <div class="col-4">
+ <select id="filterClient" class="form-select form-select-sm"><option value="">{{ _("All clients") }}</option></select>
+ </div>
+ <div class="col-3 d-flex align-items-center gap-2">
+ <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _('Clear filters') }}"><i class="bi bi-x-circle"></i></button>
+ <span id="filteredCount" class="text-muted small"></span>
+ </div>
+ </div>
+ <div id="sampleListLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">{{ _("Loading...") }}</p></div>
+ <div class="hidden max-h-[400px] overflow-y-auto" id="sampleListContainer">
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light sticky-top"><tr><th><input type="checkbox" id="checkAll" class="form-check-input"></th><th>{{ _("Sample Code") }}</th><th>{{ _("Client") }}</th><th>{{ _("Status") }}</th><th class="w-[40px]">{{ _("Date") }}</th></tr></thead>
+ <tbody id="sampleListBody"></tbody>
+ </table>
+ </div>
+ <div id="sampleListEmpty" class="text-center py-4 text-muted hidden">{{ _("No samples found") }}</div>
+ </div>
+ <div class="modal-footer">
+ <span id="selectedCount" class="me-auto text-muted small">0 {{ _("samples selected") }}</span>
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="button" class="btn text-white bg-accent-2" id="btnAddSelected"><i class="bi bi-plus-circle me-1"></i>{{ _("Add") }}</button>
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lims-draft-manager.js') }}"></script>
 <script nonce="{{ csp_nonce }}">
 class DateCellEditor {
-  init(params) {
-    this.value = params.value || '';
-    this.input = document.createElement('input');
-    this.input.type = 'date';
-    this.input.value = this.value;
-    this.input.style.cssText = 'width:100%;height:100%;border:none;outline:none;padding:0 4px;font-size:0.85rem;';
-    this.input.addEventListener('change', () => { this.value = this.input.value; });
-  }
-  getGui() { return this.input; }
-  afterGuiAttached() { this.input.focus(); this.input.showPicker && this.input.showPicker(); }
-  getValue() { return this.input.value; }
-  isPopup() { return false; }
+ init(params) {
+ this.value = params.value || '';
+ this.input = document.createElement('input');
+ this.input.type = 'date';
+ this.input.value = this.value;
+ this.input.style.cssText = 'width:100%;height:100%;border:none;outline:none;padding:0 4px;font-size:0.85rem;';
+ this.input.addEventListener('change', () => { this.value = this.input.value; });
+ }
+ getGui() { return this.input; }
+ afterGuiAttached() { this.input.focus(); this.input.showPicker && this.input.showPicker(); }
+ getValue() { return this.input.value; }
+ isPopup() { return false; }
 }
 document.addEventListener('DOMContentLoaded', function() {
-  const CATEGORY = 'MICRO_AIR';
-  const draftMgr = new LIMSDraftManager(CATEGORY);
-  let rowSeq = 0;
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+ const CATEGORY = 'MICRO_AIR';
+ const draftMgr = new LIMSDraftManager(CATEGORY);
+ let rowSeq = 0;
+ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  // "Not Detected"/"Detected" select, if "Detected" then enter count
-  class PresenceNumberEditor {
-    init(params) {
-      this.params = params;
-      this.limit = params.limit || 9999;
-      this.value = params.value;
+ // "Not Detected"/"Detected" select, if "Detected" then enter count
+ class PresenceNumberEditor {
+ init(params) {
+ this.params = params;
+ this.limit = params.limit || 9999;
+ this.value = params.value;
 
-      this.container = document.createElement('div');
-      this.container.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;min-width:120px;';
+ this.container = document.createElement('div');
+ this.container.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding:4px;background:#fff;border:1px solid #e2e8f0;border-radius:6px;min-width:120px;';
 
-      // Select dropdown
-      this.select = document.createElement('select');
-      this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
-      this.select.innerHTML = '<option value="Not Detected">' + '{{ _("Not Detected") }}' + '</option><option value="Detected">' + '{{ _("Detected (enter count)") }}' + '</option>';
+ // Select dropdown
+ this.select = document.createElement('select');
+ this.select.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;cursor:pointer;';
+ this.select.innerHTML = '<option value="Not Detected">' + '{{ _("Not Detected") }}' + '</option><option value="Detected">' + '{{ _("Detected (enter count)") }}' + '</option>';
 
-      // Number input (hidden initially)
-      this.numInput = document.createElement('input');
-      this.numInput.type = 'number';
-      this.numInput.min = '0';
-      this.numInput.placeholder = '{{ _("Enter count...") }}';
-      this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
+ // Number input (hidden initially)
+ this.numInput = document.createElement('input');
+ this.numInput.type = 'number';
+ this.numInput.min = '0';
+ this.numInput.placeholder = '{{ _("Enter count...") }}';
+ this.numInput.style.cssText = 'padding:4px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;display:none;';
 
-      this.container.appendChild(this.select);
-      this.container.appendChild(this.numInput);
+ this.container.appendChild(this.select);
+ this.container.appendChild(this.numInput);
 
-      // Set initial value
-      if (this.value && this.value !== 'Not Detected') {
-        this.select.value = 'Detected';
-        this.numInput.value = this.value;
-        this.numInput.style.display = 'block';
-      }
+ // Set initial value
+ if (this.value && this.value !== 'Not Detected') {
+ this.select.value = 'Detected';
+ this.numInput.value = this.value;
+ this.numInput.style.display = 'block';
+ }
 
-      // Event listeners
-      this.select.addEventListener('change', () => {
-        if (this.select.value === 'Detected') {
-          this.numInput.style.display = 'block';
-          this.numInput.focus();
-        } else {
-          this.numInput.style.display = 'none';
-          this.numInput.value = '';
-        }
-      });
+ // Event listeners
+ this.select.addEventListener('change', () => {
+ if (this.select.value === 'Detected') {
+ this.numInput.style.display = 'block';
+ this.numInput.focus();
+ } else {
+ this.numInput.style.display = 'none';
+ this.numInput.value = '';
+ }
+ });
 
-      this.numInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { this.params.stopEditing(); }
-        if (e.key === 'Escape') { this.params.stopEditing(true); }
-      });
-    }
-    getGui() { return this.container; }
-    afterGuiAttached() { this.select.focus(); }
-    getValue() {
-      if (this.select.value === 'Not Detected') return 'Not Detected';
-      const num = parseFloat(this.numInput.value);
-      return isNaN(num) ? 'Not Detected' : num;
-    }
-    isPopup() { return true; }
-  }
+ this.numInput.addEventListener('keydown', (e) => {
+ if (e.key === 'Enter') { this.params.stopEditing(); }
+ if (e.key === 'Escape') { this.params.stopEditing(true); }
+ });
+ }
+ getGui() { return this.container; }
+ afterGuiAttached() { this.select.focus(); }
+ getValue() {
+ if (this.select.value === 'Not Detected') return 'Not Detected';
+ const num = parseFloat(this.numInput.value);
+ return isNaN(num) ? 'Not Detected' : num;
+ }
+ isPopup() { return true; }
+ }
 
-  // Micro column config
-  const microCol = (field, headerName, limit) => ({
-    field, headerName, minWidth: 120, editable: true, headerClass: 'ag-header-cell-wrap',
-    cellEditor: PresenceNumberEditor,
-    cellEditorParams: { limit },
-    cellStyle: p => {
-      if (p.value === 'Not Detected') return { color: '#047857', fontWeight: '600' };
-      const num = Number(p.value);
-      if (!isNaN(num) && limit && num >= limit) return { color: '#dc2626', fontWeight: '600', background: '#fef2f2' };
-      return { fontWeight: '500' };
-    }
-  });
+ // Micro column config
+ const microCol = (field, headerName, limit) => ({
+ field, headerName, minWidth: 120, editable: true, headerClass: 'ag-header-cell-wrap',
+ cellEditor: PresenceNumberEditor,
+ cellEditorParams: { limit },
+ cellStyle: p => {
+ if (p.value === 'Not Detected') return { color: '#047857', fontWeight: '600' };
+ const num = Number(p.value);
+ if (!isNaN(num) && limit && num>= limit) return { color: '#dc2626', fontWeight: '600', background: '#fef2f2' };
+ return { fontWeight: '500' };
+ }
+ });
 
-  function showToast(msg, type) { type=type||'success'; const c={success:'#6366f1',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
-  function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
+ function showToast(msg, type) { type=type||'success'; const c={success:'#6366f1',error:'#dc3545',warning:'#ffc107'}; const t=document.createElement('div'); t.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:'+(c[type]||c.success); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),500)},3000); }
+ function updateRowCount() { let c=0; grid.forEachNode(()=>c++); document.getElementById('rowCount').textContent=c; }
 
-  const _PLATING_METHODS = ['Pour plate', 'Spread plate', 'Membrane filtration'];
-  const columnDefs = [
-    { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
-    { field: 'sample_code', headerName: '{{ _("Sample Name") }}', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
-    { field: 'sampled_by', headerName: '{{ _("Sampled By") }}', minWidth: 110, editable: false, cellStyle: { color: '#64748b', fontStyle: 'italic', fontSize: '0.8rem' } },
-    { field: 'prev_result', headerName: '{{ _("Prev CFU") }}', minWidth: 90, editable: false, cellStyle: { color: '#94a3b8', fontStyle: 'italic', fontSize: '0.8rem', textAlign: 'right' } },
-    { field: 'start_date', headerName: '{{ _("Start Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
-    { field: 'end_date', headerName: '{{ _("End Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
-    { field: 'room_temp', headerName: 'T°C', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
-    { field: 'room_humidity', headerName: 'RH%', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
-    { field: 'plating_method', headerName: '{{ _("Plating Method") }}', minWidth: 130, editable: true, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: _PLATING_METHODS }, cellStyle: { fontSize: '0.8rem' } },
-    { field: 'media_lot', headerName: '{{ _("Media Lot") }}', minWidth: 110, editable: true, cellStyle: { fontSize: '0.8rem' } },
-    { field: 'dilution_factor', headerName: '{{ _("Dilution") }}', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
-    { field: 'volume_ml', headerName: 'V (мл)', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
-    microCol('cfu_air', '{{ _("Bacterial Count") }}\nMNS 5484:2005\n<3000/м³', 3000),
-    microCol('staphylococcus', 'S.aureus\nMNS 5484:2005\n<50/м³', 50),
-    microCol('mold_fungi', 'Мөөгөнцөр\nMNS 5484:2005', 500),
-    { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button class="btn btn-sm btn-outline-danger p-0" style="width:24px;height:24px;line-height:1" title="{{ _("Remove") }}" onclick="window._removeRow('+p.node.rowIndex+')"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
-  ];
+ const _PLATING_METHODS = ['Pour plate', 'Spread plate', 'Membrane filtration'];
+ const columnDefs = [
+ { field: 'seq', headerName: '№', maxWidth: 55, editable: false, cellStyle: { fontWeight: '700', textAlign: 'center', color: '#64748b' } },
+ { field: 'sample_code', headerName: '{{ _("Sample Name") }}', minWidth: 160, editable: false, cellStyle: { fontWeight: '600' }, headerClass: 'ag-header-cell-wrap' },
+ { field: 'sampled_by', headerName: '{{ _("Sampled By") }}', minWidth: 110, editable: false, cellStyle: { color: '#64748b', fontStyle: 'italic', fontSize: '0.8rem' } },
+ { field: 'prev_result', headerName: '{{ _("Prev CFU") }}', minWidth: 90, editable: false, cellStyle: { color: '#94a3b8', fontStyle: 'italic', fontSize: '0.8rem', textAlign: 'right' } },
+ { field: 'start_date', headerName: '{{ _("Start Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
+ { field: 'end_date', headerName: '{{ _("End Date") }}', minWidth: 130, editable: true, cellEditor: DateCellEditor },
+ { field: 'room_temp', headerName: 'T°C', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
+ { field: 'room_humidity', headerName: 'RH%', minWidth: 75, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right', color: '#7c3aed' } },
+ { field: 'plating_method', headerName: '{{ _("Plating Method") }}', minWidth: 130, editable: true, cellEditor: 'agSelectCellEditor', cellEditorParams: { values: _PLATING_METHODS }, cellStyle: { fontSize: '0.8rem' } },
+ { field: 'media_lot', headerName: '{{ _("Media Lot") }}', minWidth: 110, editable: true, cellStyle: { fontSize: '0.8rem' } },
+ { field: 'dilution_factor', headerName: '{{ _("Dilution") }}', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
+ { field: 'volume_ml', headerName: 'V (мл)', minWidth: 80, editable: true, type: 'numericColumn', valueParser: p => { const v=Number(p.newValue); return isNaN(v)?null:v; }, cellStyle: { textAlign: 'right' } },
+ microCol('cfu_air', '{{ _("Bacterial Count") }}\nMNS 5484:2005\n<3000/м³', 3000),
+ microCol('staphylococcus', 'S.aureus\nMNS 5484:2005\n<50/м³', 50),
+ microCol('mold_fungi', 'Мөөгөнцөр\nMNS 5484:2005', 500),
+ { headerName: '', maxWidth: 50, editable: false, sortable: false, cellRenderer: p => '<button type="button" class="btn btn-sm btn-outline-danger p-0 js-remove-row" title="{{ _("Remove") }}" data-row-index="'+p.node.rowIndex+'"><i class="bi bi-x"></i></button>', cellStyle: { textAlign: 'center', padding: '4px' } },
+ ];
 
-  let initialRows = [];
-  const savedDraft = draftMgr.restore();
-  if (savedDraft && savedDraft.rows && savedDraft.rows.length > 0) { initialRows = savedDraft.rows; rowSeq = initialRows.length; }
+ let initialRows = [];
+ const savedDraft = draftMgr.restore();
+ if (savedDraft && savedDraft.rows && savedDraft.rows.length> 0) { initialRows = savedDraft.rows; rowSeq = initialRows.length; }
 
-  const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
-    editableColIds: ['start_date', 'end_date', 'room_temp', 'room_humidity', 'plating_method', 'media_lot',
-                     'dilution_factor', 'volume_ml', 'cfu_air', 'staphylococcus', 'mold_fungi'],
-    undoRedoCellEditing: true, undoRedoCellEditingLimit: 20,
-    onCellValueChanged: () => saveDraft(),
-    onFirstDataRendered: p => { p.api.autoSizeAllColumns(); updateRowCount(); },
-    onRowDataUpdated: () => updateRowCount(),
-  });
+ const grid = LIMS_AGGRID.createGrid('#microGrid', columnDefs, initialRows, {
+ editableColIds: ['start_date', 'end_date', 'room_temp', 'room_humidity', 'plating_method', 'media_lot',
+ 'dilution_factor', 'volume_ml', 'cfu_air', 'staphylococcus', 'mold_fungi'],
+ undoRedoCellEditing: true, undoRedoCellEditingLimit: 20,
+ onCellValueChanged: () => saveDraft(),
+ onFirstDataRendered: p => { p.api.autoSizeAllColumns(); updateRowCount(); },
+ onRowDataUpdated: () => updateRowCount(),
+ });
 
-  function saveDraft() { const rows=[]; grid.forEachNode(n=>rows.push({...n.data})); draftMgr.save({rows},false); }
-  window._removeRow = function(i) { const n=grid.getDisplayedRowAtIndex(i); if(n){grid.applyTransaction({remove:[n.data]});saveDraft();updateRowCount();} };
+ function saveDraft() { const rows=[]; grid.forEachNode(n=>rows.push({...n.data})); draftMgr.save({rows},false); }
+ window._removeRow = function(i) { const n=grid.getDisplayedRowAtIndex(i); if(n){grid.applyTransaction({remove:[n.data]});saveDraft();updateRowCount();} };
 
-  // Sample modal
-  let allSamples = [];
-  function buildClientFilter(samples) {
-    const sel = document.getElementById('filterClient');
-    sel.innerHTML = '<option value="">' + '{{ _("All clients") }}' + '</option>';
-    [...new Set(samples.map(s=>s.client_name).filter(Boolean))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  }
-  function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}?category="+CATEGORY).then(r=>r.json()).then(s=>{allSamples=s;buildClientFilter(s);renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
-  function renderSampleList(samples) {
-    document.getElementById('sampleListLoading').style.display='none';
-    const tbody=document.getElementById('sampleListBody'); tbody.innerHTML='';
-    const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)});
-    if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';document.getElementById('filteredCount').textContent='';return;}
-    document.getElementById('sampleListContainer').style.display='';
-    const sm={'new':'{{ _("New") }}','in_progress':'{{ _("In Progress") }}','analysis':'{{ _("In Progress") }}','completed':'{{ _("Completed") }}'};
-    const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'};
-    const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    let vc=0;
-    samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${_e(s.sample_code)}" ${a?'disabled':''}></td><td class="fw-semibold">${_e(s.sample_code)}${a?' <span class="badge bg-secondary">' + '{{ _("added") }}' + '</span>':''}</td><td class="text-muted small">${_e(s.client_name||'-')}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${_e(sm[s.status]||s.status)}</span></td><td class="text-muted small">${_e(s.sample_date||'-')}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
-    document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';
-    updateSelectedCount();
-  }
-  function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' {{ _("samples selected") }}';}
-  function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';}
-  document.getElementById('sampleSearch').addEventListener('input',applyFilters);
-  document.getElementById('filterClient').addEventListener('change',applyFilters);
-  document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
-  document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
-  document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
-  document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('{{ _("Please select samples") }}','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),sampled_by:s?(s.sampled_by||''):'',prev_result:s?(s.prev_result!==undefined?s.prev_result:null):null,start_date:today,end_date:'',plating_method:'Pour plate',dilution_factor:1})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' {{ _("samples added") }}');});
+ // Sample modal
+ let allSamples = [];
+ function buildClientFilter(samples) {
+ const sel = document.getElementById('filterClient');
+ sel.innerHTML = '<option value="">' + '{{ _("All clients") }}' + '</option>';
+ [...new Set(samples.map(s=>s.client_name).filter(Boolean))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+ }
+ function loadSampleList() { document.getElementById('sampleListLoading').style.display=''; document.getElementById('sampleListContainer').style.display='none'; document.getElementById('sampleListEmpty').style.display='none'; fetch("{{ url_for('microbiology.api_samples') }}?category="+CATEGORY).then(r=>r.json()).then(s=>{allSamples=s;buildClientFilter(s);renderSampleList(s)}).catch(()=>{document.getElementById('sampleListLoading').style.display='none';document.getElementById('sampleListEmpty').style.display=''}); }
+ function renderSampleList(samples) {
+ document.getElementById('sampleListLoading').style.display='none';
+ const tbody=document.getElementById('sampleListBody'); tbody.innerHTML='';
+ const existing=new Set(); grid.forEachNode(n=>{if(n.data.sample_code)existing.add(n.data.sample_code)});
+ if(!samples.length){document.getElementById('sampleListEmpty').style.display='';document.getElementById('sampleListContainer').style.display='none';document.getElementById('filteredCount').textContent='';return;}
+ document.getElementById('sampleListContainer').style.display='';
+ const sm={'new':'{{ _("New") }}','in_progress':'{{ _("In Progress") }}','analysis':'{{ _("In Progress") }}','completed':'{{ _("Completed") }}'};
+ const sc={'new':'primary','in_progress':'warning','analysis':'warning','completed':'success'};
+ const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ let vc=0;
+ samples.forEach(s=>{const a=existing.has(s.sample_code);const tr=document.createElement('tr');tr.className='sample-list-item'+(a?' table-light':'');tr.dataset.code=(s.sample_code||'').toLowerCase();tr.dataset.client=(s.client_name||'').toLowerCase();tr.innerHTML=`<td><input type="checkbox" class="form-check-input sample-check" value="${s.id}" data-code="${_e(s.sample_code)}" ${a?'disabled':''}></td><td class="fw-semibold">${_e(s.sample_code)}${a?' <span class="badge bg-secondary">' + '{{ _("added") }}' + '</span>':''}</td><td class="text-muted small">${_e(s.client_name||'-')}</td><td><span class="badge bg-${sc[s.status]||'secondary'}">${_e(sm[s.status]||s.status)}</span></td><td class="text-muted small">${_e(s.sample_date||'-')}</td>`;tr.addEventListener('click',e=>{if(e.target.type==='checkbox')return;const cb=tr.querySelector('.sample-check');if(!cb.disabled){cb.checked=!cb.checked;updateSelectedCount();}});tbody.appendChild(tr);vc++;});
+ document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';
+ updateSelectedCount();
+ }
+ function updateSelectedCount(){document.getElementById('selectedCount').textContent=document.querySelectorAll('.sample-check:checked').length+' {{ _("samples selected") }}';}
+ function applyFilters(){const cq=(document.getElementById('sampleSearch').value||'').toLowerCase().trim();const cl=(document.getElementById('filterClient').value||'').toLowerCase();let vc=0;document.querySelectorAll('#sampleListBody tr').forEach(tr=>{const mc=!cq||((tr.dataset.code||'').includes(cq));const ml=!cl||((tr.dataset.client||'')===cl);if(mc&&ml){tr.style.display='';vc++;}else{tr.style.display='none';}});document.getElementById('filteredCount').textContent=vc+' / '+allSamples.length+' {{ _("samples") }}';}
+ document.getElementById('sampleSearch').addEventListener('input',applyFilters);
+ document.getElementById('filterClient').addEventListener('change',applyFilters);
+ document.getElementById('clearFilters').addEventListener('click',function(){document.getElementById('sampleSearch').value='';document.getElementById('filterClient').value='';applyFilters();});
+ document.getElementById('checkAll').addEventListener('change',function(){document.querySelectorAll('.sample-check:not(:disabled)').forEach(cb=>{if(cb.closest('tr').style.display!=='none')cb.checked=this.checked});updateSelectedCount();});
+ document.getElementById('selectSamplesModal').addEventListener('show.bs.modal',()=>{document.getElementById('sampleSearch').value='';loadSampleList();});
+ document.getElementById('btnAddSelected').addEventListener('click',function(){const checked=document.querySelectorAll('.sample-check:checked');if(!checked.length){showToast('{{ _("Please select samples") }}','warning');return;} const today=new Date().toISOString().slice(0,10);const map={};allSamples.forEach(s=>{map[String(s.id)]=s});const rows=[];checked.forEach(cb=>{rowSeq++;const s=map[cb.value];rows.push({seq:rowSeq,sample_id:parseInt(cb.value),sample_code:s?s.sample_code:(cb.getAttribute('data-code')||''),sampled_by:s?(s.sampled_by||''):'',prev_result:s?(s.prev_result!==undefined?s.prev_result:null):null,start_date:today,end_date:'',plating_method:'Pour plate',dilution_factor:1})});grid.applyTransaction({add:rows});saveDraft();updateRowCount();const m=bootstrap.Modal.getInstance(document.getElementById('selectSamplesModal'));if(m)m.hide();showToast(rows.length+' {{ _("samples added") }}');});
 
-  document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('{{ _("No data to save") }}','warning');return;} for(const r of rows){if(r.start_date&&r.end_date&&r.start_date>r.end_date){showToast('{{ _("Error") }}: '+r.sample_code+' — {{ _("Start date must be before end date") }}','error');return;}} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('{{ _("Saved successfully!") }} ('+d.count+' {{ _("rows") }})');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('{{ _("Error") }}: '+(d.error||''),'error');}).catch(e=>showToast('{{ _("Network error") }}: '+e.message,'error'));});
-  updateRowCount();
+ document.getElementById('btnSave').addEventListener('click',function(){const rows=[];grid.forEachNode(n=>{if(n.data.sample_code)rows.push(n.data)});if(!rows.length){showToast('{{ _("No data to save") }}','warning');return;} for(const r of rows){if(r.start_date&&r.end_date&&r.start_date>r.end_date){showToast('{{ _("Error") }}: '+r.sample_code+' — {{ _("Start date must be before end date") }}','error');return;}} const h={'Content-Type':'application/json'};if(csrfToken)h['X-CSRFToken']=csrfToken; fetch("{{ url_for('microbiology.save_batch') }}",{method:'POST',headers:h,body:JSON.stringify({category:CATEGORY,rows})}).then(r=>r.json()).then(d=>{if(d.success){showToast('{{ _("Saved successfully!") }} ('+d.count+' {{ _("rows") }})');if(d.errors&&d.errors.length)showToast(d.errors.join(', '),'warning');grid.setGridOption('rowData',[]);rowSeq=0;draftMgr.purge();updateRowCount();}else showToast('{{ _("Error") }}: '+(d.error||''),'error');}).catch(e=>showToast('{{ _("Network error") }}: '+e.message,'error'));});
+ updateRowCount();
 });
 </script>
 
@@ -397,92 +395,115 @@ let _spareParts = null;
 window.csrfToken = window.csrfToken || document.querySelector('input[name="csrf_token"]')?.value || '';
 
 function loadSpareParts() {
-  if (_spareParts) return Promise.resolve(_spareParts);
-  return fetch('/spare_parts/api/list')
-    .then(r => r.json())
-    .then(data => { _spareParts = data; return data; });
+ if (_spareParts) return Promise.resolve(_spareParts);
+ return fetch('/spare_parts/api/list')
+ .then(r => r.json())
+ .then(data => { _spareParts = data; return data; });
 }
 
 function toggleRepairPanel(cb) {
-  const panel = cb.closest('tr').querySelector('.repair-panel');
-  if (cb.checked) { panel.classList.remove('d-none'); }
-  else { panel.classList.add('d-none'); }
+ const panel = cb.closest('tr').querySelector('.repair-panel');
+ if (cb.checked) { panel.classList.remove('d-none'); }
+ else { panel.classList.add('d-none'); }
 }
 
 function addSparePart(btn) {
-  const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
-  const row = document.createElement('div');
-  row.className = 'input-group input-group-sm mb-1 spare-row';
-  row.innerHTML = `
-    <select class="form-select form-select-sm spare-select" style="flex:3">
-      <option value="">${'{{ _("Select spare part...") }}'}</option>
-    </select>
-    <input type="number" class="form-control spare-qty" placeholder="${'{{ _("Qty") }}'}" min="1" value="1" style="flex:1; max-width:60px">
-    <input type="text" class="form-control spare-user" placeholder="${'{{ _("Who") }}'}" style="flex:2">
-    <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.spare-row').remove()">
-      <i class="bi bi-x"></i>
-    </button>
-  `;
-  list.appendChild(row);
-  const sel = row.querySelector('.spare-select');
-  loadSpareParts().then(parts => {
-    parts.forEach(sp => {
-      if (sp.quantity > 0) {
-        const opt = document.createElement('option');
-        opt.value = sp.id;
-        opt.textContent = `${sp.name} (${sp.quantity} ${sp.unit || 'ш'})`;
-        opt.dataset.quantity = sp.quantity;
-        sel.appendChild(opt);
-      }
-    });
-  });
+ const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
+ const row = document.createElement('div');
+ row.className = 'input-group input-group-sm mb-1 spare-row';
+ row.innerHTML = `
+ <select class="form-select form-select-sm spare-select grow-[3]">
+ <option value="">${'{{ _("Select spare part...") }}'}</option>
+ </select>
+ <input type="number" class="form-control spare-qty flex-1 max-w-[60px]" placeholder="${'{{ _("Qty") }}'}" min="1" value="1">
+ <input type="text" class="form-control spare-user grow-[2]" placeholder="${'{{ _("Who") }}'}">
+ <button type="button" class="btn btn-outline-danger btn-sm js-remove-spare-row">
+ <i class="bi bi-x"></i>
+ </button>
+ `;
+ list.appendChild(row);
+ const sel = row.querySelector('.spare-select');
+ loadSpareParts().then(parts => {
+ parts.forEach(sp => {
+ if (sp.quantity> 0) {
+ const opt = document.createElement('option');
+ opt.value = sp.id;
+ opt.textContent = `${sp.name} (${sp.quantity} ${sp.unit || 'ш'})`;
+ opt.dataset.quantity = sp.quantity;
+ sel.appendChild(opt);
+ }
+ });
+ });
 }
 
 function submitEquipmentUsage() {
-  const rows = document.querySelectorAll('#equipmentCheckTable tbody tr');
-  const items = [];
-  rows.forEach(row => {
-    const eqId = row.dataset.eqId;
-    const isChecked = row.querySelector('.eq-check')?.checked ?? true;
-    const minutesVal = row.querySelector('.eq-minutes')?.value;
-    const note = row.querySelector('.eq-note')?.value || '';
-    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
-    const needsRepair = row.querySelector('.eq-repair')?.checked || false;
-    const item = { eq_id: eqId, is_checked: isChecked, minutes: minutes, note: note };
-    if (needsRepair) {
-      item.repair = true;
-      item.repair_date = row.querySelector('.repair-date')?.value || '';
-      const spares = [];
-      row.querySelectorAll('.spare-row').forEach(sr => {
-        const spareId = sr.querySelector('.spare-select')?.value;
-        const qty = sr.querySelector('.spare-qty')?.value;
-        const user = sr.querySelector('.spare-user')?.value || '';
-        if (spareId) spares.push({ spare_id: parseInt(spareId), qty: parseInt(qty) || 1, used_by: user });
-      });
-      item.spare_parts = spares;
-    }
-    if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair) items.push(item);
-  });
-  if (items.length === 0) { alert('{{ _("No data to record.") }}'); return; }
-  fetch('/api/log_usage_bulk', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-    body: JSON.stringify({ items: items })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.status === 'success') {
-      document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
-      document.querySelectorAll('.eq-note').forEach(i => i.value = '');
-      document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
-      const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
-      if (modal) modal.hide();
-      alert('{{ _("Equipment usage saved successfully!") }}');
-    } else {
-      alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
-    }
-  })
-  .catch(err => alert('{{ _("Network error") }}: ' + err.message));
+ const rows = document.querySelectorAll('#equipmentCheckTable tbody tr');
+ const items = [];
+ rows.forEach(row => {
+ const eqId = row.dataset.eqId;
+ const isChecked = row.querySelector('.eq-check')?.checked ?? true;
+ const minutesVal = row.querySelector('.eq-minutes')?.value;
+ const note = row.querySelector('.eq-note')?.value || '';
+ const minutes = minutesVal ? parseFloat(minutesVal) : 0;
+ const needsRepair = row.querySelector('.eq-repair')?.checked || false;
+ const item = { eq_id: eqId, is_checked: isChecked, minutes: minutes, note: note };
+ if (needsRepair) {
+ item.repair = true;
+ item.repair_date = row.querySelector('.repair-date')?.value || '';
+ const spares = [];
+ row.querySelectorAll('.spare-row').forEach(sr => {
+ const spareId = sr.querySelector('.spare-select')?.value;
+ const qty = sr.querySelector('.spare-qty')?.value;
+ const user = sr.querySelector('.spare-user')?.value || '';
+ if (spareId) spares.push({ spare_id: parseInt(spareId), qty: parseInt(qty) || 1, used_by: user });
+ });
+ item.spare_parts = spares;
+ }
+ if (isChecked || minutes> 0 || note.trim() !== '' || needsRepair) items.push(item);
+ });
+ if (items.length === 0) { alert('{{ _("No data to record.") }}'); return; }
+ fetch('/api/log_usage_bulk', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
+ body: JSON.stringify({ items: items })
+ })
+ .then(r => r.json())
+ .then(data => {
+ if (data.status === 'success') {
+ document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
+ document.querySelectorAll('.eq-note').forEach(i => i.value = '');
+ document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
+ const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
+ if (modal) modal.hide();
+ alert('{{ _("Equipment usage saved successfully!") }}');
+ } else {
+ alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
+ }
+ })
+ .catch(err => alert('{{ _("Network error") }}: ' + err.message));
 }
+
+// Delegated handlers (CSP-compatible)
+(function() {
+ document.addEventListener('change', function(e) {
+ const el = e.target;
+ if (el instanceof HTMLInputElement && el.classList.contains('eq-repair-cb')) {
+ toggleRepairPanel(el);
+ }
+ });
+ document.addEventListener('click', function(e) {
+ const t = e.target;
+ if (t.closest('[data-action="add-spare-part"]')) {
+ addSparePart(t.closest('[data-action="add-spare-part"]')); return;
+ }
+ if (t.closest('#btn-submit-equipment')) { submitEquipmentUsage(); return; }
+ const rmSpare = t.closest('.js-remove-spare-row');
+ if (rmSpare) { rmSpare.closest('.spare-row')?.remove(); return; }
+ const rmRow = t.closest('.js-remove-row');
+ if (rmRow && typeof window._removeRow === 'function') {
+ window._removeRow(parseInt(rmRow.dataset.rowIndex, 10));
+ }
+ });
+})();
 </script>
 {% endblock %}

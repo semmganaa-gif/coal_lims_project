@@ -21,8 +21,8 @@
  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}?v=9">
  <!-- Mobile CSS - Утас/таблетад зориулсан -->
  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=10">
- <!-- DataTables CSS (Sprint 2-д CDN хэвээр — DataTables нь зөвхөн audit page-уудад) -->
- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/css/dataTables.bootstrap5.min.css">
+ <!-- DataTables CSS (Vite bundle — audit page-уудад) -->
+ {{ vite_css_tag('src/datatables.css') }}
  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
  <script nonce="{{ csp_nonce }}">
@@ -614,9 +614,8 @@
  <!-- SheetJS - Excel export -->
  <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
 
- <!-- DataTables (Quality Records pages, Sprint 2-д CDN хэвээр) -->
- <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.8/js/jquery.dataTables.min.js"></script>
- <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.8/js/dataTables.bootstrap5.min.js"></script>
+ <!-- DataTables (Quality Records pages, Vite bundle) -->
+ {{ vite_js_tag('src/datatables.js') }}
 
  <script nonce="{{ csp_nonce }}">
  // Production-д console.log/debug хаах (console.warn/error хэвээрээ)

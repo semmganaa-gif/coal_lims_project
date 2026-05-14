@@ -125,7 +125,7 @@
               <option value="50" selected>50</option>
               <option value="100">100</option>
             </select>
-            <button class="btn btn-sm btn-success" onclick="exportMonthlyCSV()">
+            <button type="button" id="btn-export-monthly-csv" class="btn btn-sm btn-success">
               <i class="bi bi-download"></i> {{ _("Download CSV") }}
             </button>
           </div>
@@ -173,11 +173,8 @@
   {{ super() }}
 
   {# AG Grid (Quartz theme) #}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-quartz.css">
-  <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
 
+  <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
   <script nonce="{{ csp_nonce }}">
     // XSS escape helper
     const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -569,5 +566,6 @@
       if (!monthlyApi) return;
       gridToXlsx(monthlyApi, 'monthly_equipment_summary.xlsx', '{{ _("Monthly Summary") }}');
     }
+    document.getElementById('btn-export-monthly-csv')?.addEventListener('click', exportMonthlyCSV);
   </script>
 {% endblock %}

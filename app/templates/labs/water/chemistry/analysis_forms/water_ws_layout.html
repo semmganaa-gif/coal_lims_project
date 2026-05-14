@@ -4,943 +4,1146 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .water-ws {
-    min-height: calc(100vh - 120px); padding: 1.5rem;
-    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
-    background-attachment: fixed;
-  }
-  .ws-header {
-    background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.08));
-    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
-    box-shadow: 0 4px 24px rgba(59,130,246,0.1);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
-  }
-  .ws-header h1 {
-    font-size: 1.4rem; font-weight: 800; margin: 0;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .ws-header .ws-meta { color: #64748b; font-size: 0.85rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-  .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
-  .ws-day-filter { font-size: 0.75rem !important; padding: 0.2rem 0.6rem !important; border-radius: 8px !important; }
+ .water-ws {
+ min-height: calc(100vh - 120px); padding: 1.5rem;
+ background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 30%, #f8fafc 60%, #f0f4ff 100%);
+ background-attachment: fixed;
+ }
+ .ws-header {
+ background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.08));
+ backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+ box-shadow: 0 4px 24px rgba(59,130,246,0.1);
+ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+ }
+ .ws-header h1 {
+ font-size: 1.4rem; font-weight: 800; margin: 0;
+ background: linear-gradient(135deg, #3b82f6, #2563eb);
+ -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+ }
+ .ws-header .ws-meta { color: #64748b; font-size: 0.85rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+ .ws-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+ .ws-actions .btn { border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+ .ws-day-filter { font-size: 0.75rem !important; padding: 0.2rem 0.6rem !important; border-radius: 8px !important; }
 
-  .grid-card {
-    background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  }
-  .grid-card .card-header {
-    background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(37,99,235,0.04));
-    border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem;
-  }
-  .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
+ .grid-card {
+ background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+ }
+ .grid-card .card-header {
+ background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(37,99,235,0.04));
+ border-bottom: 1px solid rgba(148,163,184,0.12); padding: 0.75rem 1.25rem;
+ }
+ .grid-card .card-header h6 { margin: 0; font-weight: 700; font-size: 0.9rem; }
 
-  .ag-theme-alpine {
-    --ag-header-background-color: #eff6ff;
-    --ag-odd-row-background-color: #fafbff;
-    --ag-row-hover-color: #eff6ff;
-    --ag-header-foreground-color: #0f172a;
-    --ag-border-color: #e2e8f0;
-    --ag-font-size: 12.5px;
-    --ag-cell-horizontal-padding: 4px;
-    --ag-row-height: 34px;
-    --ag-header-height: 34px;
-    --ag-font-family: "Noto Sans", sans-serif;
-  }
-  .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.75rem; }
-  .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
-  .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
-  .ag-theme-alpine .ag-header-group-cell { font-size: 0.72rem; font-weight: 600; }
+ .ag-theme-alpine {
+ --ag-header-background-color: #eff6ff;
+ --ag-odd-row-background-color: #fafbff;
+ --ag-row-hover-color: #eff6ff;
+ --ag-header-foreground-color: #0f172a;
+ --ag-border-color: #e2e8f0;
+ --ag-font-size: 12.5px;
+ --ag-cell-horizontal-padding: 4px;
+ --ag-row-height: 34px;
+ --ag-header-height: 34px;
+ --ag-font-family: "Noto Sans", sans-serif;
+ }
+ .ag-theme-alpine .ag-header-cell-label { font-weight: 700; font-size: 0.75rem; }
+ .ag-theme-alpine .ag-header-cell { border-right: 1px solid #d0d0d0; }
+ .ag-theme-alpine .ag-cell { border-right: 1px solid #e9ecef; border-bottom: 1px solid #e9ecef; }
+ .ag-theme-alpine .ag-header-group-cell { font-size: 0.72rem; font-weight: 600; }
 
-  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0; padding: 0.75rem 1.25rem; }
-  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+ .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0; padding: 0.75rem 1.25rem; }
+ .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: #64748b; }
+ .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-  /* Quick reference */
-  #waterQuickRef {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(12px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 16px;
-    margin-bottom: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  }
-  #waterQuickRef .ref-body { padding: 1rem 1.25rem; }
-  #waterQuickRef table { font-size: 0.82rem; }
-  #waterQuickRef th { background: #eff6ff; font-weight: 600; }
+ /* Quick reference */
+ #waterQuickRef {
+ background: rgba(255,255,255,0.8); backdrop-filter: blur(12px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 16px;
+ margin-bottom: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+ }
+ #waterQuickRef .ref-body { padding: 1rem 1.25rem; }
+ #waterQuickRef table { font-size: 0.82rem; }
+ #waterQuickRef th { background: #eff6ff; font-weight: 600; }
 
-  /* Sample modal */
-  .sample-list-item { cursor: pointer; transition: background 0.15s; }
-  .sample-list-item:hover { background: #eff6ff; }
-  .sample-list-item.selected { background: #dbeafe; border-color: #3b82f6; }
-  .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
+ /* Sample modal */
+ .sample-list-item { cursor: pointer; transition: background 0.15s; }
+ .sample-list-item:hover { background: #eff6ff; }
+ .sample-list-item.selected { background: #dbeafe; border-color: #3b82f6; }
+ .sample-search { border-radius: 12px; border: 1px solid #e2e8f0; padding: 0.5rem 1rem; }
 
-  @media (max-width: 768px) {
-    .water-ws { padding: 1rem; }
-    .ws-header { flex-direction: column; text-align: center; }
-  }
+ @media (max-width: 768px) {
+ .water-ws { padding: 1rem; }
+ .ws-header { flex-direction: column; text-align: center; }
+ }
 </style>
 
 <div class="water-ws">
-  {# -- HEADER -- #}
-  <div class="ws-header">
-    <div>
-      <h1><i class="bi bi-droplet-fill me-2"></i>{{ param.name_mn }}</h1>
-      <div class="ws-meta">
-        <span class="badge bg-primary bg-opacity-75">{{ analysis_code }}</span>
-        {% if param.get('unit') %}<span>{{ param.unit }}</span>{% endif %}
-        {% if param.get('standard') %}<span class="badge bg-secondary bg-opacity-50">{{ param.standard }}</span>{% endif %}
-        {% if param.get('mns_limit') %}
-          <span class="badge bg-warning text-dark">MNS:
-            {% if param.mns_limit is iterable and param.mns_limit is not string %}
-              {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
-            {% else %}{{ param.mns_limit }}{% endif %}
-            {{ param.get('unit','') }}
-          </span>
-        {% endif %}
-        {% block method_badge %}{% endblock %}
-      </div>
-    </div>
-    <div class="ws-actions">
-      {# ── Огнооны шүүлтүүр ── #}
-      <div class="btn-group" id="dayFilterGroup">
-        {% set days = filter_days|default(7) %}
-        <button class="btn btn-sm {{ 'btn-primary' if days == 7 else 'btn-outline-primary' }} ws-day-filter" data-days="7">7{{ _("d") }}</button>
-        <button class="btn btn-sm {{ 'btn-primary' if days == 14 else 'btn-outline-primary' }} ws-day-filter" data-days="14">14{{ _("d") }}</button>
-        <button class="btn btn-sm {{ 'btn-primary' if days == 30 else 'btn-outline-primary' }} ws-day-filter" data-days="30">30{{ _("d") }}</button>
-        <button class="btn btn-sm {{ 'btn-primary' if days == 0 else 'btn-outline-primary' }} ws-day-filter" data-days="0">{{ _("All") }}</button>
-      </div>
-      <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
-      </a>
-      <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#waterQuickRef">
-        <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
-      </button>
-      <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel">
-        <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
-      </button>
-      <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
-        <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
-      </button>
-      <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#waterSampleModal">
-        <i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}
-      </button>
-      <button id="btnSave" class="btn text-white" style="background:#3b82f6;">
-        <i class="bi bi-save me-1"></i>{{ _("Save") }}
-      </button>
-    </div>
-  </div>
+ {# -- HEADER -- #}
+ <div class="ws-header">
+ <div>
+ <h1><i class="bi bi-droplet-fill me-2"></i>{{ param.name_mn }}</h1>
+ <div class="ws-meta">
+ <span class="badge bg-primary bg-opacity-75">{{ analysis_code }}</span>
+ {% if param.get('unit') %}<span>{{ param.unit }}</span>{% endif %}
+ {% if param.get('standard') %}<span class="badge bg-secondary bg-opacity-50">{{ param.standard }}</span>{% endif %}
+ {% if param.get('mns_limit') %}
+ <span class="badge bg-warning text-dark">MNS:
+ {% if param.mns_limit is iterable and param.mns_limit is not string %}
+ {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
+ {% else %}{{ param.mns_limit }}{% endif %}
+ {{ param.get('unit','') }}
+ </span>
+ {% endif %}
+ {% block method_badge %}{% endblock %}
+ </div>
+ </div>
+ <div class="ws-actions">
+ {# ── Огнооны шүүлтүүр ── #}
+ <div class="btn-group" id="dayFilterGroup">
+ {% set days = filter_days|default(7) %}
+ <button class="btn btn-sm {{ 'btn-primary' if days == 7 else 'btn-outline-primary' }} ws-day-filter" data-days="7">7{{ _("d") }}</button>
+ <button class="btn btn-sm {{ 'btn-primary' if days == 14 else 'btn-outline-primary' }} ws-day-filter" data-days="14">14{{ _("d") }}</button>
+ <button class="btn btn-sm {{ 'btn-primary' if days == 30 else 'btn-outline-primary' }} ws-day-filter" data-days="30">30{{ _("d") }}</button>
+ <button class="btn btn-sm {{ 'btn-primary' if days == 0 else 'btn-outline-primary' }} ws-day-filter" data-days="0">{{ _("All") }}</button>
+ </div>
+ <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-outline-secondary">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
+ </a>
+ <button class="btn btn-outline-success" data-bs-toggle="collapse" data-bs-target="#waterQuickRef">
+ <i class="bi bi-journal-bookmark me-1"></i>{{ _("Standard") }}
+ </button>
+ <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel">
+ <i class="bi bi-stopwatch me-1"></i>{{ _("Timer") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary" id="btn-open-reagent" title="{{ _('Select reagent lot used for this analysis') }}">
+ <i class="bi bi-flask me-1"></i>{{ _("Reagent") }}
+ <span id="reagentBadge" class="badge bg-warning text-dark ms-1 d-none">1</span>
+ </button>
+ <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#equipmentModal">
+ <i class="bi bi-tools me-1"></i>{{ _("Equipment") }}
+ </button>
+ <button id="btnSelectSamples" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#waterSampleModal">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Select Samples") }}
+ </button>
+ <button id="btnSave" class="btn text-white bg-info-2">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </div>
 
-  {# -- QUICK REFERENCE (collapsible) -- #}
-  <div class="collapse" id="waterQuickRef">
-    <div class="ref-body">
-      <h6 class="mb-2"><i class="bi bi-journal-bookmark me-1" style="color:#3b82f6"></i>{{ _("Standard Reference") }}</h6>
-      <table class="table table-sm table-bordered mb-0">
-        <thead><tr><th>{{ _("Parameter") }}</th><th>{{ _("Unit") }}</th><th>{{ _("MNS Limit") }}</th><th>{{ _("Standard") }}</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>{{ param.name_mn }}</td>
-            <td>{{ param.get('unit','') }}</td>
-            <td>
-              {% if param.get('mns_limit') %}
-                {% if param.mns_limit is iterable and param.mns_limit is not string %}
-                  {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
-                {% else %}{{ param.mns_limit }}{% endif %}
-              {% else %}-{% endif %}
-            </td>
-            <td>{{ param.get('standard','MNS 4586:2007') }}</td>
-          </tr>
-        </tbody>
-      </table>
-      {% block extra_ref %}{% endblock %}
-    </div>
-  </div>
+ {# -- QUICK REFERENCE (collapsible) -- #}
+ <div class="collapse" id="waterQuickRef">
+ <div class="ref-body">
+ <h6 class="mb-2"><i class="bi bi-journal-bookmark me-1 text-info-2"></i>{{ _("Standard Reference") }}</h6>
+ <table class="table table-sm table-bordered mb-0">
+ <thead><tr><th>{{ _("Parameter") }}</th><th>{{ _("Unit") }}</th><th>{{ _("MNS Limit") }}</th><th>{{ _("Standard") }}</th></tr></thead>
+ <tbody>
+ <tr>
+ <td>{{ param.name_mn }}</td>
+ <td>{{ param.get('unit','') }}</td>
+ <td>
+ {% if param.get('mns_limit') %}
+ {% if param.mns_limit is iterable and param.mns_limit is not string %}
+ {{ param.mns_limit[0] if param.mns_limit[0] is not none else '-' }} ~ {{ param.mns_limit[1] if param.mns_limit[1] is not none else '-' }}
+ {% else %}{{ param.mns_limit }}{% endif %}
+ {% else %}-{% endif %}
+ </td>
+ <td>{{ param.get('standard','MNS 4586:2007') }}</td>
+ </tr>
+ </tbody>
+ </table>
+ {% block extra_ref %}{% endblock %}
+ </div>
+ </div>
 
-  {# -- TIMER PANEL (collapsible) -- #}
-  <div class="collapse mb-3" id="waterTimerPanel">
-    <div class="card border-0 shadow-sm" style="border-radius:16px; overflow:hidden;">
-      <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between"
-           style="background:linear-gradient(135deg,#fef3c7,#fffbeb); border-bottom:1px solid #fde68a;">
-        <span class="fw-bold" style="font-size:0.9rem; color:#92400e;">
-          <i class="bi bi-stopwatch-fill me-1"></i>{{ _("Timer") }}
-        </span>
-        <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel"></button>
-      </div>
-      <div class="card-body p-3">
-        <div class="d-flex flex-wrap gap-2 mb-3" id="waterTimerPresets"></div>
-        <div id="waterTimerList" class="d-flex flex-wrap gap-3"></div>
-        <div id="waterTimerEmpty" class="text-muted small text-center py-2">
-          <i class="bi bi-info-circle me-1"></i>{{ _("Click a preset button or add a new timer.") }}
-        </div>
-      </div>
-    </div>
-  </div>
-  <style nonce="{{ csp_nonce }}">
-    .water-timer-card {
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-      padding: 0.75rem 1rem; min-width: 200px; max-width: 260px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .water-timer-card .timer-name { font-weight: 700; font-size: 0.82rem; color: #1e293b; margin-bottom: 0.25rem; }
-    .water-timer-card .timer-display { font-size: 1.4rem; font-weight: 800; font-family: 'Courier New', monospace; color: #0f172a; }
-    .water-timer-card .timer-display.timer-done { color: #dc2626; animation: wtBlink 1s infinite; }
-    @keyframes wtBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .water-timer-card .btn-group .btn { font-size: 0.75rem; padding: 2px 8px; }
-  </style>
+ {# -- TIMER PANEL (collapsible) -- #}
+ <div class="collapse mb-3" id="waterTimerPanel">
+ <div class="card border-0 shadow-sm rounded-2xl overflow-hidden">
+ <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between bg-warn-gradient border-b border-amber-200"
+>
+ <span class="fw-bold text-[0.9rem] text-[#92400e]">
+ <i class="bi bi-stopwatch-fill me-1"></i>{{ _("Timer") }}
+ </span>
+ <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#waterTimerPanel"></button>
+ </div>
+ <div class="card-body p-3">
+ <div class="d-flex flex-wrap gap-2 mb-3" id="waterTimerPresets"></div>
+ <div id="waterTimerList" class="d-flex flex-wrap gap-3"></div>
+ <div id="waterTimerEmpty" class="text-muted small text-center py-2">
+ <i class="bi bi-info-circle me-1"></i>{{ _("Click a preset button or add a new timer.") }}
+ </div>
+ </div>
+ </div>
+ </div>
+ <style nonce="{{ csp_nonce }}">
+ .water-timer-card {
+ background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+ padding: 0.75rem 1rem; min-width: 200px; max-width: 260px;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+ }
+ .water-timer-card .timer-name { font-weight: 700; font-size: 0.82rem; color: #1e293b; margin-bottom: 0.25rem; }
+ .water-timer-card .timer-display { font-size: 1.4rem; font-weight: 800; font-family: 'Courier New', monospace; color: #0f172a; }
+ .water-timer-card .timer-display.timer-done { color: #dc2626; animation: wtBlink 1s infinite; }
+ @keyframes wtBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+ .water-timer-card .btn-group .btn { font-size: 0.75rem; padding: 2px 8px; }
+ </style>
 
-  {# -- GRID CARD -- #}
-  <div class="grid-card">
-    <div class="card-header d-flex align-items-center justify-content-between">
-      <h6>
-        <i class="bi bi-table me-1" style="color:#3b82f6"></i>
-        {{ param.name_mn }} — {{ _("Analysis Table") }}
-        <span id="rowCount" class="badge bg-secondary ms-2">0</span>
-      </h6>
-    </div>
-    <div id="waterGrid" class="ag-theme-alpine" style="height: 550px; width: 100%;"></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#e0ffe0"></div> {{ _("Within MNS limit") }}</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#ffe0e0"></div> {{ _("Exceeds MNS limit") }}</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#e9ecef"></div> {{ _("Saved (not editable)") }}</div>
-    </div>
-  </div>
+ {# -- GRID CARD -- #}
+ <div class="grid-card">
+ <div class="card-header d-flex align-items-center justify-content-between">
+ <h6>
+ <i class="bi bi-table me-1 text-info-2"></i>
+ {{ param.name_mn }} — {{ _("Analysis Table") }}
+ <span id="rowCount" class="badge bg-secondary ms-2">0</span>
+ </h6>
+ </div>
+ <div id="waterGrid" class="ag-theme-alpine h-[550px] w-full"></div>
+ <div class="legend">
+ <div class="legend-item"><div class="legend-dot bg-[#e0ffe0]"></div> {{ _("Within MNS limit") }}</div>
+ <div class="legend-item"><div class="legend-dot bg-[#ffe0e0]"></div> {{ _("Exceeds MNS limit") }}</div>
+ <div class="legend-item"><div class="legend-dot bg-[#e9ecef]"></div> {{ _("Saved (not editable)") }}</div>
+ </div>
+ </div>
 </div>
 
 {# -- SAMPLE SELECT MODAL -- #}
 <div class="modal fade" id="waterSampleModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header" style="background: linear-gradient(135deg, #eff6ff, #f0f9ff);">
-        <h5 class="modal-title"><i class="bi bi-droplet me-2" style="color:#3b82f6"></i>{{ _("Select Samples") }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row g-2 mb-3">
-          <div class="col-5">
-            <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _("Search sample code...") }}">
-          </div>
-          <div class="col-4">
-            <select id="filterClient" class="form-select form-select-sm">
-              <option value="">{{ _("All Clients") }}</option>
-            </select>
-          </div>
-          <div class="col-3 d-flex align-items-center gap-2">
-            <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _("Clear") }}"><i class="bi bi-x-circle"></i></button>
-            <span id="filteredCount" class="text-muted small"></span>
-          </div>
-        </div>
-        <div id="sampleListLoading" class="text-center py-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 text-muted">{{ _("Loading...") }}</p>
-        </div>
-        <div id="sampleListContainer" style="display:none; max-height: 400px; overflow-y: auto;">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light sticky-top">
-              <tr>
-                <th style="width:40px"><input type="checkbox" id="checkAll" class="form-check-input"></th>
-                <th>{{ _("Sample Code") }}</th>
-                <th>{{ _("Client") }}</th>
-                <th>{{ _("Date") }}</th>
-              </tr>
-            </thead>
-            <tbody id="sampleListBody"></tbody>
-          </table>
-        </div>
-        <div id="sampleListEmpty" class="text-center py-4 text-muted" style="display:none;">{{ _("No eligible samples found") }}</div>
-      </div>
-      <div class="modal-footer">
-        <span id="selectedCount" class="me-auto text-muted small">{{ _("0 selected") }}</span>
-        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _("Close") }}</button>
-        <button type="button" class="btn text-white btn-sm" style="background:#3b82f6;" id="btnConfirmSamples">
-          <i class="bi bi-check-lg me-1"></i>{{ _("Add") }}
-        </button>
-      </div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-[linear-gradient(135deg,#eff6ff,#f0f9ff)]">
+ <h5 class="modal-title"><i class="bi bi-droplet me-2 text-info-2"></i>{{ _("Select Samples") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="row g-2 mb-3">
+ <div class="col-5">
+ <input type="text" id="sampleSearch" class="form-control form-control-sm" placeholder="{{ _("Search sample code...") }}">
+ </div>
+ <div class="col-4">
+ <select id="filterClient" class="form-select form-select-sm">
+ <option value="">{{ _("All Clients") }}</option>
+ </select>
+ </div>
+ <div class="col-3 d-flex align-items-center gap-2">
+ <button id="clearFilters" class="btn btn-outline-secondary btn-sm" title="{{ _("Clear") }}"><i class="bi bi-x-circle"></i></button>
+ <span id="filteredCount" class="text-muted small"></span>
+ </div>
+ </div>
+ <div id="sampleListLoading" class="text-center py-4">
+ <div class="spinner-border text-primary" role="status"></div>
+ <p class="mt-2 text-muted">{{ _("Loading...") }}</p>
+ </div>
+ <div class="hidden max-h-[400px] overflow-y-auto" id="sampleListContainer">
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light sticky-top">
+ <tr>
+ <th class="w-[40px]"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+ <th>{{ _("Sample Code") }}</th>
+ <th>{{ _("Client") }}</th>
+ <th>{{ _("Date") }}</th>
+ </tr>
+ </thead>
+ <tbody id="sampleListBody"></tbody>
+ </table>
+ </div>
+ <div id="sampleListEmpty" class="text-center py-4 text-muted hidden">{{ _("No eligible samples found") }}</div>
+ </div>
+ <div class="modal-footer">
+ <span id="selectedCount" class="me-auto text-muted small">{{ _("0 selected") }}</span>
+ <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="button" class="btn text-white btn-sm bg-info-2" id="btnConfirmSamples">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Add") }}
+ </button>
+ </div>
+ </div>
+ </div>
 </div>
 
 {# --- EQUIPMENT MODAL --- #}
 <style nonce="{{ csp_nonce }}">
-  #equipmentModal .modal-header {
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-    color: #fff; border-bottom: 3px solid #60a5fa;
-  }
-  #equipmentModal .modal-header .btn-close { filter: invert(1); }
-  #equipmentModal .eq-table thead th {
-    background: #eff6ff; color: #0f172a; font-weight: 600; font-size: 0.78rem;
-    text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #93c5fd;
-    padding: 10px 8px; white-space: nowrap;
-  }
-  #equipmentModal .eq-table tbody tr { transition: background 0.15s; }
-  #equipmentModal .eq-table tbody tr:hover { background: #eff6ff; }
-  #equipmentModal .eq-table tbody td { padding: 8px; vertical-align: middle; border-color: #e2e8f0; }
-  #equipmentModal .eq-lab-code { font-weight: 600; color: #1d4ed8; font-size: 0.9rem; }
-  #equipmentModal .eq-lab-name { font-size: 0.75rem; color: #64748b; }
-  #equipmentModal .eq-check-ok:checked { background-color: #3b82f6; border-color: #3b82f6; }
-  #equipmentModal .eq-repair-cb:checked { background-color: #e53e3e; border-color: #e53e3e; }
-  #equipmentModal .repair-panel { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px; }
-  #equipmentModal .repair-panel .repair-date-label { font-size: 0.7rem; color: #c53030; font-weight: 600; margin-bottom: 2px; }
-  #equipmentModal .spare-row { background: #fff; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; }
-  #equipmentModal .modal-footer { background: #eff6ff; border-top: 1px solid #bfdbfe; }
-  #equipmentModal .modal-content { resize: both; overflow: auto; min-width: 500px; min-height: 300px; }
-  #equipmentModal .modal-dialog { max-width: 90vw; }
-  /* Calibration Check Styles */
-  #equipmentModal .calib-btn { font-size: 0.75rem; padding: 3px 8px; }
-  #equipmentModal .calib-panel { background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 6px; padding: 10px; margin-top: 8px; }
-  #equipmentModal .calib-panel.furnace-panel { background: #fffaf0; border-color: #fbd38d; }
-  #equipmentModal .calib-panel.balance-panel { background: #ebf8ff; border-color: #90cdf4; }
-  #equipmentModal .calib-panel.analysis-panel { background: #faf5ff; border-color: #d6bcfa; }
-  #equipmentModal .calib-panel-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
-  #equipmentModal .furnace-panel .calib-panel-title { color: #c05621; }
-  #equipmentModal .balance-panel .calib-panel-title { color: #2b6cb0; }
-  #equipmentModal .analysis-panel .calib-panel-title { color: #6b46c1; }
-  #equipmentModal .calib-input-group { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
-  #equipmentModal .calib-input-group label { font-size: 0.7rem; color: #4a5568; min-width: 70px; }
-  #equipmentModal .calib-input-group input { flex: 1; font-size: 0.8rem; }
-  #equipmentModal .calib-weight-row { display: flex; gap: 4px; margin-bottom: 3px; }
-  #equipmentModal .calib-weight-row input { font-size: 0.75rem; text-align: center; }
-  #equipmentModal .calib-status { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; }
-  #equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
-  #equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
+ #equipmentModal .modal-header {
+ background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+ color: #fff; border-bottom: 3px solid #60a5fa;
+ }
+ #equipmentModal .modal-header .btn-close { filter: invert(1); }
+ #equipmentModal .eq-table thead th {
+ background: #eff6ff; color: #0f172a; font-weight: 600; font-size: 0.78rem;
+ text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #93c5fd;
+ padding: 10px 8px; white-space: nowrap;
+ }
+ #equipmentModal .eq-table tbody tr { transition: background 0.15s; }
+ #equipmentModal .eq-table tbody tr:hover { background: #eff6ff; }
+ #equipmentModal .eq-table tbody td { padding: 8px; vertical-align: middle; border-color: #e2e8f0; }
+ #equipmentModal .eq-lab-code { font-weight: 600; color: #1d4ed8; font-size: 0.9rem; }
+ #equipmentModal .eq-lab-name { font-size: 0.75rem; color: #64748b; }
+ #equipmentModal .eq-check-ok:checked { background-color: #3b82f6; border-color: #3b82f6; }
+ #equipmentModal .eq-repair-cb:checked { background-color: #e53e3e; border-color: #e53e3e; }
+ #equipmentModal .repair-panel { background: #fff5f5; border: 1px solid #feb2b2; border-radius: 6px; padding: 8px; }
+ #equipmentModal .repair-panel .repair-date-label { font-size: 0.7rem; color: #c53030; font-weight: 600; margin-bottom: 2px; }
+ #equipmentModal .spare-row { background: #fff; border-radius: 4px; border: 1px solid #e2e8f0; padding: 2px; }
+ #equipmentModal .modal-footer { background: #eff6ff; border-top: 1px solid #bfdbfe; }
+ #equipmentModal .modal-content { resize: both; overflow: auto; min-width: 500px; min-height: 300px; }
+ #equipmentModal .modal-dialog { max-width: 90vw; }
+ /* Calibration Check Styles */
+ #equipmentModal .calib-btn { font-size: 0.75rem; padding: 3px 8px; }
+ #equipmentModal .calib-panel { background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 6px; padding: 10px; margin-top: 8px; }
+ #equipmentModal .calib-panel.furnace-panel { background: #fffaf0; border-color: #fbd38d; }
+ #equipmentModal .calib-panel.balance-panel { background: #ebf8ff; border-color: #90cdf4; }
+ #equipmentModal .calib-panel.analysis-panel { background: #faf5ff; border-color: #d6bcfa; }
+ #equipmentModal .calib-panel-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+ #equipmentModal .furnace-panel .calib-panel-title { color: #c05621; }
+ #equipmentModal .balance-panel .calib-panel-title { color: #2b6cb0; }
+ #equipmentModal .analysis-panel .calib-panel-title { color: #6b46c1; }
+ #equipmentModal .calib-input-group { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+ #equipmentModal .calib-input-group label { font-size: 0.7rem; color: #4a5568; min-width: 70px; }
+ #equipmentModal .calib-input-group input { flex: 1; font-size: 0.8rem; }
+ #equipmentModal .calib-weight-row { display: flex; gap: 4px; margin-bottom: 3px; }
+ #equipmentModal .calib-weight-row input { font-size: 0.75rem; text-align: center; }
+ #equipmentModal .calib-status { font-size: 0.7rem; padding: 2px 6px; border-radius: 3px; }
+ #equipmentModal .calib-status.pass { background: #c6f6d5; color: #22543d; }
+ #equipmentModal .calib-status.fail { background: #fed7d7; color: #742a2a; }
 </style>
 <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-      <div class="modal-header py-3">
-        <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
-          <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>{{ _("Equipment Usage & Maintenance") }}</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        {% if related_equipments %}
-        <div class="table-responsive">
-          <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
-            <thead>
-              <tr>
-                <th style="width: 18%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Condition") }}<br>OK</th>
-                <th style="width: 8%; text-align:center;">{{ _("Usage") }}<br>(min)</th>
-                <th style="width: 14%;">{{ _("Notes") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Check") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Repair") }}</th>
-                <th style="width: 42%;">{{ _("Check / Repair Details") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for eq in related_equipments %}
-              <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
-                <td>
-                  <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
-                  {% if eq.lab_code and eq.name != eq.lab_code %}
-                  <div class="eq-lab-name">{{ eq.name }}</div>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-check eq-check-ok" type="checkbox" style="width: 22px; height: 22px; cursor: pointer;" checked>
-                </td>
-                <td>
-                  <input type="number" class="form-control form-control-sm text-center eq-minutes" placeholder="0" min="0" style="border-color: #cbd5e0;">
-                </td>
-                <td>
-                  <input type="text" class="form-control form-control-sm eq-note" placeholder="{{ _("Notes...") }}" style="border-color: #cbd5e0;">
-                </td>
-                <td class="text-center">
-                  {% if eq.category in ['furnace', 'balance', 'analysis', 'water'] %}
-                  <button type="button" class="btn btn-outline-success btn-sm calib-btn" onclick="toggleCalibPanel(this)" title="{{ _("Run check") }}">
-                    <i class="bi bi-thermometer-half"></i>
-                  </button>
-                  {% else %}
-                  <span class="text-muted">—</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-repair eq-repair-cb" type="checkbox" style="width: 22px; height: 22px; cursor: pointer;" onchange="toggleRepairPanel(this)">
-                </td>
-                <td class="calib-repair-cell">
-                  {% if eq.category == 'furnace' %}
-                  <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}</div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Set") }}:</label>
-                      <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Measured") }}:</label>
-                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Difference") }}:</label>
-                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% elif eq.category == 'balance' %}
-                  <div class="calib-panel balance-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> {{ _("Balance Check (weights)") }}</div>
-                    <div class="mb-2"><small class="text-muted">{{ _("Standard weight -> Measured value") }}</small></div>
-                    <div class="calib-weights-list">
-                      <div class="calib-weight-row">
-                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="{{ _("Std (g)") }}" step="0.0001" style="flex:1">
-                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
-                        <span class="calib-status d-none" style="min-width:50px;"></span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> {{ _("Add Weight") }}
-                    </button>
-                  </div>
-                  {% elif eq.category in ['analysis', 'water'] %}
-                  <div class="calib-panel analysis-panel d-none">
-                    <div class="calib-panel-title"><i class="bi bi-gear"></i> {{ _("Instrument Check") }}</div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Standard") }}:</label>
-                      <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard name") }}">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Certified") }}:</label>
-                      <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="{{ _("Value") }}" step="0.001">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Measured") }}:</label>
-                      <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001" oninput="checkAnalysisDiff(this)">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Diff (%%)") }}:</label>
-                      <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% endif %}
-                  <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
-                    <input type="date" class="form-control form-control-sm mb-2 repair-date">
-                    <div class="spare-parts-list"></div>
-                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1" onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>{{ _("No water lab equipment registered.") }}
-        </div>
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
-        </button>
-        {% if related_equipments %}
-        <button type="button" class="btn text-white px-4" style="background:#3b82f6;" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>{{ _("Save") }}
-        </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-xl modal-dialog-scrollable">
+ <div class="modal-content shadow-lg border-0 rounded-xl overflow-hidden">
+ <div class="modal-header py-3">
+ <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
+ <i class="bi bi-clipboard-check text-[1.3rem]"></i>
+ <span>{{ _("Equipment Usage & Maintenance") }}</span>
+ </h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body p-4">
+ {% if related_equipments %}
+ <div class="table-responsive">
+ <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
+ <thead>
+ <tr>
+ <th class="w-[18%] min-w-[140px]">{{ _("Lab Code / Name") }}</th>
+ <th class="w-[6%] text-center">{{ _("Condition") }}<br>OK</th>
+ <th class="w-[8%] text-center">{{ _("Usage") }}<br>(min)</th>
+ <th class="w-[14%]">{{ _("Notes") }}</th>
+ <th class="w-[6%] text-center">{{ _("Check") }}</th>
+ <th class="w-[6%] text-center">{{ _("Repair") }}</th>
+ <th class="w-[42%]">{{ _("Check / Repair Details") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for eq in related_equipments %}
+ <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
+ <td>
+ <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
+ {% if eq.lab_code and eq.name != eq.lab_code %}
+ <div class="eq-lab-name">{{ eq.name }}</div>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-check eq-check-ok w-[22px] h-[22px] cursor-pointer" type="checkbox" checked>
+ </td>
+ <td>
+ <input type="number" class="form-control form-control-sm text-center eq-minutes border-slate-300" placeholder="0" min="0">
+ </td>
+ <td>
+ <input type="text" class="form-control form-control-sm eq-note border-slate-300" placeholder="{{ _("Notes...") }}">
+ </td>
+ <td class="text-center">
+ {% if eq.category in ['furnace', 'balance', 'analysis', 'water'] %}
+ <button type="button" class="btn btn-outline-success btn-sm calib-btn" title="{{ _("Run check") }}">
+ <i class="bi bi-thermometer-half"></i>
+ </button>
+ {% else %}
+ <span class="text-muted">—</span>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-repair eq-repair-cb" type="checkbox">
+ </td>
+ <td class="calib-repair-cell">
+ {% if eq.category == 'furnace' %}
+ <div class="calib-panel furnace-panel d-none">
+ <div class="calib-panel-title"><i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}</div>
+ <div class="calib-input-group">
+ <label>{{ _("Set") }}:</label>
+ <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured") }}:</label>
+ <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Difference") }}:</label>
+ <input type="text" class="form-control form-control-sm calib-temp-diff bg-slate-50" readonly>
+ <span class="calib-status d-none"></span>
+ </div>
+ </div>
+ {% elif eq.category == 'balance' %}
+ <div class="calib-panel balance-panel d-none">
+ <div class="calib-panel-title"><i class="bi bi-speedometer2"></i> {{ _("Balance Check (weights)") }}</div>
+ <div class="mb-2"><small class="text-muted">{{ _("Standard weight -> Measured value") }}</small></div>
+ <div class="calib-weights-list">
+ <div class="calib-weight-row">
+ <input type="number" class="form-control form-control-sm calib-std-wt flex-1" placeholder="{{ _("Std (g)") }}" step="0.0001">
+ <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001">
+ <span class="calib-status d-none min-w-[50px]"></span>
+ </div>
+ </div>
+ <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1 js-add-weight-row">
+ <i class="bi bi-plus"></i> {{ _("Add Weight") }}
+ </button>
+ </div>
+ {% elif eq.category in ['analysis', 'water'] %}
+ <div class="calib-panel analysis-panel d-none">
+ <div class="calib-panel-title"><i class="bi bi-gear"></i> {{ _("Instrument Check") }}</div>
+ <div class="calib-input-group">
+ <label>{{ _("Standard") }}:</label>
+ <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard name") }}">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Certified") }}:</label>
+ <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="{{ _("Value") }}" step="0.001">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured") }}:</label>
+ <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Diff (%%)") }}:</label>
+ <input type="text" class="form-control form-control-sm calib-diff-pct bg-slate-50" readonly>
+ <span class="calib-status d-none"></span>
+ </div>
+ </div>
+ {% endif %}
+ <div class="repair-panel d-none">
+ <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
+ <input type="date" class="form-control form-control-sm mb-2 repair-date">
+ <div class="spare-parts-list"></div>
+ <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1" data-action="add-spare-part">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
+ </button>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="alert alert-info mb-0">
+ <i class="bi bi-info-circle me-2"></i>{{ _("No water lab equipment registered.") }}
+ </div>
+ {% endif %}
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+ <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
+ </button>
+ {% if related_equipments %}
+ <button type="button" class="btn text-white px-4" id="btn-submit-equipment">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+</div>
+{# -- REAGENT LOT MODAL -- #}
+<div class="modal fade" id="reagentLotModal" tabindex="-1" aria-hidden="true">
+ <div class="modal-dialog modal-md modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title"><i class="bi bi-flask me-2"></i>{{ _("Select Reagent Lot") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <p class="text-muted small mb-2">{{ _("Select the reagent lot used for this analysis batch. This will be recorded with the results.") }}</p>
+ <div id="reagentLotLoading" class="text-center py-3">
+ <div class="spinner-border spinner-border-sm text-primary"></div>
+ </div>
+ <div id="reagentLotList">
+ <div class="mb-2">
+ <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="btn-clear-reagent">
+ <i class="bi bi-x-circle me-1"></i>{{ _("Clear selection") }}
+ </button>
+ </div>
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light">
+ <tr>
+ <th></th>
+ <th>{{ _("Chemical") }}</th>
+ <th>{{ _("Lot") }}</th>
+ <th>{{ _("Expiry") }}</th>
+ </tr>
+ </thead>
+ <tbody id="reagentLotBody"></tbody>
+ </table>
+ </div>
+ <div id="reagentLotEmpty" class="text-center py-3 text-muted small">
+ {{ _("No active reagents found for water lab.") }}
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-reagent">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Select") }}
+ </button>
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 (function() {
-  'use strict';
+ 'use strict';
 
-  // ============ DAY FILTER ============
-  document.querySelectorAll('.ws-day-filter').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var days = this.dataset.days;
-      var url = new URL(window.location.href);
-      url.searchParams.set('days', days);
-      window.location.href = url.toString();
-    });
-  });
+ // ============ DAY FILTER ============
+ document.querySelectorAll('.ws-day-filter').forEach(function(btn) {
+ btn.addEventListener('click', function() {
+ var days = this.dataset.days;
+ var url = new URL(window.location.href);
+ url.searchParams.set('days', days);
+ window.location.href = url.toString();
+ });
+ });
 
-  // ============ CONSTANTS ============
-  const ANALYSIS_CODE = {{ analysis_code | tojson }};
-  const ELIGIBLE_URL = {{ url_for('water.eligible_samples', code=analysis_code) | tojson }} + '?days=' + (new URLSearchParams(window.location.search).get('days') || '7');
-  const SAVE_URL = {{ url_for('water.save_results') | tojson }};
-  const mnsLimit = {{ param.get('mns_limit', 'null') | tojson }};
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-  const storageKey = 'water_worksheet_' + ANALYSIS_CODE + '_sample_ids';
+ // ============ CONSTANTS ============
+ const ANALYSIS_CODE = {{ analysis_code | tojson }};
+ const ELIGIBLE_URL = {{ url_for('water.eligible_samples', code=analysis_code) | tojson }} + '?days=' + (new URLSearchParams(window.location.search).get('days') || '7');
+ const SAVE_URL = {{ url_for('water.save_results') | tojson }};
+ const REAGENT_LOTS_URL = {{ url_for('water.reagent_lots') | tojson }};
+ const mnsLimit = {{ param.get('mns_limit', 'null') | tojson }};
+ const _unitStr = {{ param.get('unit', '') | tojson }};
+ const _prevResults = {{ (previous_results | default({})) | tojson }};
+ const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+ let _reagentLotId = null;
+ const storageKey = 'water_worksheet_' + ANALYSIS_CODE + '_sample_ids';
 
-  {{ aggrid_macros.dataset_block() | safe }}
+ {{ aggrid_macros.dataset_block() | safe }}
 
-  const draftMgr = new LIMSDraftManager('WATER_' + ANALYSIS_CODE);
-  const numParser = LIMS_AGGRID.numParser;
-  const fmt4 = p => p.value != null ? parseFloat(p.value).toFixed(4) : '';
-  const fmt3 = p => p.value != null ? parseFloat(p.value).toFixed(3) : '';
-  const fmt2 = p => p.value != null ? parseFloat(p.value).toFixed(2) : '';
-  const fmt1 = p => p.value != null ? parseFloat(p.value).toFixed(1) : '';
+ const draftMgr = new LIMSDraftManager('WATER_' + ANALYSIS_CODE);
+ const numParser = LIMS_AGGRID.numParser;
+ const fmt4 = p => p.value != null ? parseFloat(p.value).toFixed(4) : '';
+ const fmt3 = p => p.value != null ? parseFloat(p.value).toFixed(3) : '';
+ const fmt2 = p => p.value != null ? parseFloat(p.value).toFixed(2) : '';
+ const fmt1 = p => p.value != null ? parseFloat(p.value).toFixed(1) : '';
 
-  // ============ HELPERS ============
-  function checkLimit(val) {
-    if (!mnsLimit || val == null) return {};
-    const v = parseFloat(val);
-    if (isNaN(v)) return {};
-    if (Array.isArray(mnsLimit)) {
-      const [lo, hi] = mnsLimit;
-      if ((lo !== null && v < lo) || (hi !== null && v > hi)) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
-      return { backgroundColor: '#e0ffe0' };
-    }
-    return {};
-  }
+ // ============ HELPERS ============
+ function checkLimit(val) {
+ if (!mnsLimit || val == null) return {};
+ const v = parseFloat(val);
+ if (isNaN(v)) return {};
+ if (Array.isArray(mnsLimit)) {
+ const [lo, hi] = mnsLimit;
+ if ((lo !== null && v < lo) || (hi !== null && v> hi)) return { backgroundColor: '#ffe0e0', fontWeight: 'bold' };
+ return { backgroundColor: '#e0ffe0' };
+ }
+ return {};
+ }
 
-  const editCol = {
-    editable: p => !p.data.is_saved,
-    cellEditor: 'agTextCellEditor',
-    valueParser: numParser,
-    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
-  };
+ const editCol = {
+ editable: p => !p.data.is_saved,
+ cellEditor: 'agTextCellEditor',
+ valueParser: numParser,
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+ };
 
-  function showToast(message, type) {
-    type = type || 'success';
-    const colors = { success: '#3b82f6', error: '#dc3545', warning: '#f59e0b' };
-    const el = document.createElement('div');
-    el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:' + (colors[type] || colors.success);
-    el.textContent = message;
-    document.body.appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 3000);
-  }
+ function showToast(message, type) {
+ type = type || 'success';
+ const colors = { success: '#3b82f6', error: '#dc3545', warning: '#f59e0b' };
+ const el = document.createElement('div');
+ el.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:0.9rem;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:opacity 0.5s;background:' + (colors[type] || colors.success);
+ el.textContent = message;
+ document.body.appendChild(el);
+ setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 3000);
+ }
 
-  function updateRowCount() {
-    let c = 0;
-    window.waterGridApi.forEachNode(() => c++);
-    document.getElementById('rowCount').textContent = c;
-  }
+ function updateRowCount() {
+ let c = 0;
+ window.waterGridApi.forEachNode(() => c++);
+ document.getElementById('rowCount').textContent = c;
+ }
 
-  // ============ COLUMN DEFS (from child block) ============
-  const baseCols = [
-    {
-      headerName: '{{ _("No.") }}', field: 'index', width: 55, pinned: 'left',
-      cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' }
-    },
-    {
-      headerName: '{{ _("Sample Name") }}', field: 'sample_code', width: 300, minWidth: 200, pinned: 'left', resizable: true,
-      cellRenderer: p => {
-        const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        let h = '<div style="font-weight:600">' + _esc(p.value) + '</div>';
-        const rej = rejectedInfo[p.data.sample_id];
-        if (rej) h += '<div style="font-size:0.7rem;color:#dc3545"><i class="bi bi-exclamation-triangle"></i> ' + _esc(rej.reason) + '</div>';
-        return h;
-      }
-    }
-  ];
+ // ============ COLUMN DEFS (from child block) ============
+ const baseCols = [
+ {
+ headerName: '{{ _("No.") }}', field: 'index', width: 55, pinned: 'left',
+ cellStyle: { textAlign: 'center', fontWeight: 'bold', color: '#6c757d' }
+ },
+ {
+ headerName: '{{ _("Sample Name") }}', field: 'sample_code', width: 300, minWidth: 200, pinned: 'left', resizable: true,
+ cellRenderer: p => {
+ const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ let h = '<div class="font-semibold">' + _esc(p.value) + '</div>';
+ const rej = rejectedInfo[p.data.sample_id];
+ if (rej) h += '<div class="text-xs-2 text-[#dc3545]"><i class="bi bi-exclamation-triangle"></i> ' + _esc(rej.reason) + '</div>';
+ return h;
+ }
+ },
+ {
+ headerName: '{{ _("Prev.") }}', field: 'prev_result', width: 85,
+ valueFormatter: fmt3,
+ cellStyle: { backgroundColor: '#f8f9fa', color: '#64748b', fontStyle: 'italic', fontSize: '11px', textAlign: 'right' },
+ headerTooltip: '{{ _("Last approved result for this sampling location") }}',
+ editable: false,
+ }
+ ];
 
-  const actionCol = {
-    headerName: '', width: 80, pinned: 'right',
-    cellRenderer: p => {
-      if (p.data.is_saved) return '<span class="text-muted small">&#10003;</span>';
-      return '<button class="btn btn-sm btn-outline-danger" onclick="window._waterRemove(' + p.data.sample_id + ')"><i class="bi bi-x"></i></button>';
-    },
-    cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
-  };
+ const actionCol = {
+ headerName: '', width: 80, pinned: 'right',
+ cellRenderer: p => {
+ if (p.data.is_saved) return '<span class="text-muted small">&#10003;</span>';
+ return '<button type="button" class="btn btn-sm btn-outline-danger js-water-remove" data-sample-id="' + p.data.sample_id + '"><i class="bi bi-x"></i></button>';
+ },
+ cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+ };
 
-  // -- Form-specific column defs injected by child templates --
-  {% block column_defs %}
-  // Default: ph/ec simple measurement
-  var formColumns = [
-    { headerName: '{{ _("Reading 1") }}', field: 'm1', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: '{{ _("Reading 2") }}', field: 'm2', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    { headerName: '{{ _("Reading 3") }}', field: 'm3', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
-    {
-      headerName: '{{ _("Average") }}', field: 'average', width: 110,
-      valueGetter: p => {
-        const vals = [p.data.m1, p.data.m2, p.data.m3].filter(v => v != null && !isNaN(v));
-        return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
-      },
-      valueFormatter: fmt3,
-      cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
-    }
-  ];
-  var editableFields = ['m1', 'm2', 'm3', 'notes'];
-  var computedCols = ['average'];
-  {% endblock %}
+ // -- Form-specific column defs injected by child templates --
+ {% block column_defs %}
+ // Default: ph/ec simple measurement
+ var formColumns = [
+ { headerName: '{{ _("Reading 1") }}', field: 'm1', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+ { headerName: '{{ _("Reading 2") }}', field: 'm2', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+ { headerName: '{{ _("Reading 3") }}', field: 'm3', width: 110, type: 'numericColumn', ...editCol, valueFormatter: fmt3 },
+ {
+ headerName: '{{ _("Average") }}', field: 'average', width: 110,
+ valueGetter: p => {
+ const vals = [p.data.m1, p.data.m2, p.data.m3].filter(v => v != null && !isNaN(v));
+ return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+ },
+ valueFormatter: fmt3,
+ cellStyle: p => ({ fontWeight: 'bold', ...checkLimit(p.value) })
+ }
+ ];
+ var editableFields = ['m1', 'm2', 'm3', 'notes'];
+ var computedCols = ['average'];
+ {% endblock %}
 
-  const notesCol = {
-    headerName: '{{ _("Notes") }}', field: 'notes', flex: 1,
-    editable: p => !p.data.is_saved,
-    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
-  };
+ const notesCol = {
+ headerName: '{{ _("Notes") }}', field: 'notes', flex: 1,
+ editable: p => !p.data.is_saved,
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+ };
 
-  const columnDefs = [...baseCols, ...formColumns, notesCol, actionCol];
+ const columnDefs = [...baseCols, ...formColumns, notesCol, actionCol];
 
-  // ============ ROW DATA ============
-  {% block row_builder %}
-  // Default row builder for ph/ec
-  const rowData = samples.map((s, idx) => {
-    const ex = existingResults[s.id];
-    const raw = ex?.raw_data || {};
-    return {
-      index: idx + 1, sample_id: s.id, sample_code: s.code,
-      is_saved: ex && ex.status !== 'rejected',
-      m1: raw.m1 ?? raw.value ?? null,
-      m2: raw.m2 ?? null,
-      m3: raw.m3 ?? null,
-      notes: raw.notes || ''
-    };
-  });
-  {% endblock %}
+ // Task 1: Үр дүн багананд нэгж + MNS хязгаарын tooltip нэмэх
+ (function() {
+ const _mnsStr = (() => {
+ if (!mnsLimit) return '';
+ if (Array.isArray(mnsLimit)) {
+ const lo = mnsLimit[0] != null ? mnsLimit[0] : '—';
+ const hi = mnsLimit[1] != null ? mnsLimit[1] : '—';
+ return lo + ' ~ ' + hi + (_unitStr ? ' ' + _unitStr : '');
+ }
+ return String(mnsLimit) + (_unitStr ? ' ' + _unitStr : '');
+ })();
+ columnDefs.forEach(col => {
+ if (['average', 'avg_result', 'result', 'concentration'].includes(col.field)) {
+ if (_unitStr && col.headerName && !col.headerName.includes('(')) {
+ col.headerName = col.headerName + ' (' + _unitStr + ')';
+ }
+ if (_mnsStr) col.headerTooltip = 'MNS хязгаар: ' + _mnsStr;
+ }
+ });
+ })();
 
-  // -- Restore drafts --
-  const drafts = draftMgr.restore() || {};
-  rowData.forEach(r => {
-    if (!r.is_saved) {
-      const d = drafts[r.sample_id];
-      if (d) { Object.keys(d).forEach(k => { if (d[k] != null) r[k] = d[k]; }); }
-    }
-  });
+ // ============ ROW DATA ============
+ {% block row_builder %}
+ // Default row builder for ph/ec
+ const rowData = samples.map((s, idx) => {
+ const ex = existingResults[s.id];
+ const raw = ex?.raw_data || {};
+ return {
+ index: idx + 1, sample_id: s.id, sample_code: s.code,
+ is_saved: ex && ex.status !== 'rejected',
+ m1: raw.m1 ?? raw.value ?? null,
+ m2: raw.m2 ?? null,
+ m3: raw.m3 ?? null,
+ notes: raw.notes || ''
+ };
+ });
+ {% endblock %}
 
-  // ============ CREATE GRID ============
-  window.waterGridApi = LIMS_AGGRID.createGrid('#waterGrid', columnDefs, rowData, {
-    editableColIds: editableFields,
-    onCellValueChanged: function(params) {
-      FormGuards.markDirty();
-      params.api.refreshCells({ rowNodes: [params.node], columns: computedCols });
-      if (window._waterOnCellChange) {
-        window._waterOnCellChange(params, computedCols);
-      }
-      saveDrafts();
-    },
-    onFirstDataRendered: function() { updateRowCount(); },
-    onRowDataUpdated: function() { updateRowCount(); },
-  });
-  updateRowCount();
+ // -- Restore drafts --
+ const drafts = draftMgr.restore() || {};
+ rowData.forEach(r => {
+ if (!r.is_saved) {
+ const d = drafts[r.sample_id];
+ if (d) { Object.keys(d).forEach(k => { if (d[k] != null) r[k] = d[k]; }); }
+ }
+ });
 
-  // ============ DRAFT ============
-  function saveDrafts() {
-    const d = {};
-    window.waterGridApi.forEachNode(n => {
-      if (!n.data.is_saved) {
-        const r = { ...n.data };
-        delete r.index; delete r.sample_code; delete r.is_saved; delete r.sample_id;
-        d[n.data.sample_id] = r;
-      }
-    });
-    draftMgr.save(d);
-  }
+ // ============ CREATE GRID ============
+ window.waterGridApi = LIMS_AGGRID.createGrid('#waterGrid', columnDefs, rowData, {
+ editableColIds: editableFields,
+ onCellValueChanged: function(params) {
+ FormGuards.markDirty();
+ params.api.refreshCells({ rowNodes: [params.node], columns: computedCols });
+ if (window._waterOnCellChange) {
+ window._waterOnCellChange(params, computedCols);
+ }
+ saveDrafts();
+ },
+ onFirstDataRendered: function() {
+ updateRowCount();
+ // Task 2: Өмнөх үр дүн тарих
+ if (Object.keys(_prevResults).length) {
+ const refreshNodes = [];
+ window.waterGridApi.forEachNode(n => {
+ const prev = _prevResults[n.data.sample_id];
+ if (prev != null && n.data.row_type !== 'M2') {
+ n.data.prev_result = prev;
+ refreshNodes.push(n);
+ }
+ });
+ if (refreshNodes.length) {
+ window.waterGridApi.refreshCells({ rowNodes: refreshNodes, columns: ['prev_result'], force: true });
+ }
+ }
+ },
+ onRowDataUpdated: function() { updateRowCount(); },
+ });
+ updateRowCount();
 
-  // ============ REMOVE ROW ============
-  window._waterRemove = function(sampleId) {
-    const rows = [];
-    window.waterGridApi.forEachNode(n => { if (n.data.sample_id !== sampleId) rows.push(n.data); });
-    rows.forEach((r, i) => r.index = i + 1);
-    window.waterGridApi.setGridOption('rowData', rows);
-    draftMgr.purge([sampleId]);
-    updateRowCount();
-  };
+ // ============ DRAFT ============
+ function saveDrafts() {
+ const d = {};
+ window.waterGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ const r = { ...n.data };
+ delete r.index; delete r.sample_code; delete r.is_saved; delete r.sample_id;
+ d[n.data.sample_id] = r;
+ }
+ });
+ draftMgr.save(d);
+ }
 
-  // ============ SAVE ============
-  {% block save_collector %}
-  // Default save collector for ph/ec
-  function collectSaveItems() {
-    const items = [];
-    window.waterGridApi.forEachNode(n => {
-      if (n.data.is_saved) return;
-      const d = n.data;
-      const vals = [d.m1, d.m2, d.m3].filter(v => v != null && !isNaN(v));
-      const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
-      items.push({
-        sample_id: d.sample_id,
-        raw_data: { m1: d.m1, m2: d.m2, m3: d.m3, value: avg, notes: d.notes }
-      });
-    });
-    return items;
-  }
-  {% endblock %}
+ // ============ REMOVE ROW ============
+ window._waterRemove = function(sampleId) {
+ const rows = [];
+ window.waterGridApi.forEachNode(n => { if (n.data.sample_id !== sampleId) rows.push(n.data); });
+ rows.forEach((r, i) => r.index = i + 1);
+ window.waterGridApi.setGridOption('rowData', rows);
+ draftMgr.purge([sampleId]);
+ updateRowCount();
+ };
 
-  // M-7/M-8: FormGuards — beforeunload + double-submit
-  FormGuards.guardById('btnSave', async function() {
-    const items = collectSaveItems();
-    if (!items.length) { showToast('{{ _("No data to save") }}', 'warning'); return; }
+ // ============ SAVE ============
+ {% block save_collector %}
+ // Default save collector for ph/ec
+ function collectSaveItems() {
+ const items = [];
+ window.waterGridApi.forEachNode(n => {
+ if (n.data.is_saved) return;
+ const d = n.data;
+ const vals = [d.m1, d.m2, d.m3].filter(v => v != null && !isNaN(v));
+ const avg = vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+ items.push({
+ sample_id: d.sample_id,
+ raw_data: { m1: d.m1, m2: d.m2, m3: d.m3, value: avg, notes: d.notes }
+ });
+ });
+ return items;
+ }
+ {% endblock %}
 
-    let ok = 0;
-    const savedIds = [];
-    for (const item of items) {
-      const code = item.analysis_code || ANALYSIS_CODE;
-      const results = item.results || item.raw_data;
-      try {
-        const r = await fetch(SAVE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-          body: JSON.stringify({ sample_id: item.sample_id, analysis_code: code, results: results })
-        });
-        if (!r.ok) { logger.error('HTTP error', r.status); continue; }
-        const res = await r.json();
-        if (res.success) { ok++; savedIds.push(item.sample_id); }
-      } catch(e) { logger.error(e); }
-    }
-    if (ok > 0) {
-      // CH-2: Зөвхөн амжилттай хадгалсан items-ийн draft устгана
-      draftMgr.purge(savedIds);
-      FormGuards.markClean();
-      showToast(ok + ' {{ _("sample result(s) saved successfully!") }}', 'success');
-      if (ok < items.length) {
-        showToast((items.length - ok) + ' {{ _("sample(s) failed — draft kept") }}', 'warning');
-      }
-      setTimeout(() => location.reload(), 1200);
-    } else {
-      showToast('{{ _("Error saving data") }}', 'error');
-    }
-  });
+ // ============ REAGENT LOT ============
+ let _allReagentLots = [];
+ let _selectedReagentRow = null;
 
-  // ============ SAMPLE MODAL ============
-  let allSamples = [];
-  let modalSelected = new Set();
+ function openReagentModal() {
+ const modal = new bootstrap.Modal(document.getElementById('reagentLotModal'));
+ modal.show();
+ if (_allReagentLots.length === 0) {
+ fetch(REAGENT_LOTS_URL, { headers: { 'X-CSRFToken': csrf } })
+ .then(r => r.json())
+ .then(data => {
+ _allReagentLots = data;
+ renderReagentLots(data);
+ })
+ .catch(() => renderReagentLots([]));
+ } else {
+ renderReagentLots(_allReagentLots);
+ }
+ }
 
-  // localStorage sync (graceful fallback when blocked)
-  (function syncIds() {
-    const url = new URL(window.location.href);
-    const urlIds = url.searchParams.get('sample_ids');
-    if (urlIds) {
-      try { localStorage.setItem(storageKey, urlIds); } catch(e) { /* localStorage blocked */ }
-    } else {
-      try {
-        const saved = localStorage.getItem(storageKey);
-        if (saved && saved.trim()) {
-          url.searchParams.set('sample_ids', saved);
-          window.location.href = url.toString();
-        }
-      } catch(e) { /* localStorage blocked - URL params only mode */ }
-    }
-  })();
+ function renderReagentLots(lots) {
+ document.getElementById('reagentLotLoading').style.display = 'none';
+ const body = document.getElementById('reagentLotBody');
+ if (!lots.length) {
+ document.getElementById('reagentLotEmpty').style.display = '';
+ return;
+ }
+ document.getElementById('reagentLotList').style.display = '';
+ body.innerHTML = lots.map(l => {
+ const exp = l.expiry_date ? l.expiry_date.substring(0,10) : '—';
+ const isSel = _reagentLotId === l.id;
+ const lowStock = l.status === 'low_stock';
+ return `<tr class="reagent-lot-row js-reagent-row ${isSel ? 'table-primary' : ''}" data-id="${l.id}" data-lot-id="${l.id}">
+ <td><input type="radio" class="form-check-input" ${isSel ? 'checked' : ''}></td>
+ <td><strong>${l.name}</strong></td>
+ <td><code>${l.lot_number || '—'}</code> ${lowStock ? '<span class="badge bg-warning text-dark">Бага</span>' : ''}</td>
+ <td>${exp}</td>
+ </tr>`;
+ }).join('');
+ }
 
-  function loadSampleList() {
-    document.getElementById('sampleListLoading').style.display = '';
-    document.getElementById('sampleListContainer').style.display = 'none';
-    document.getElementById('sampleListEmpty').style.display = 'none';
+ function selectReagentRow(tr, id) {
+ document.querySelectorAll('.reagent-lot-row').forEach(r => {
+ r.classList.remove('table-primary');
+ r.querySelector('input[type=radio]').checked = false;
+ });
+ tr.classList.add('table-primary');
+ tr.querySelector('input[type=radio]').checked = true;
+ _selectedReagentRow = id;
+ }
 
-    const existingIds = new Set();
-    window.waterGridApi.forEachNode(n => existingIds.add(String(n.data.sample_id)));
+ function confirmReagentLot() {
+ _reagentLotId = _selectedReagentRow;
+ const badge = document.getElementById('reagentBadge');
+ if (_reagentLotId) {
+ badge.classList.remove('d-none');
+ const lot = _allReagentLots.find(l => l.id === _reagentLotId);
+ badge.title = lot ? lot.name + ' — Lot: ' + (lot.lot_number || '—') : '';
+ } else {
+ badge.classList.add('d-none');
+ }
+ bootstrap.Modal.getInstance(document.getElementById('reagentLotModal'))?.hide();
+ }
 
-    fetch(ELIGIBLE_URL)
-      .then(r => r.json())
-      .then(list => {
-        list.sort((a, b) => (a.order_idx != null ? a.order_idx : 9999) - (b.order_idx != null ? b.order_idx : 9999));
-        allSamples = list;
-        document.getElementById('sampleListLoading').style.display = 'none';
-        if (!list.length) {
-          document.getElementById('sampleListEmpty').style.display = '';
-          return;
-        }
-        // Build client filter
-        const sel = document.getElementById('filterClient');
-        sel.innerHTML = '<option value="">{{ _("All Clients") }}</option>';
-        [...new Set(list.map(s => s.client_name).filter(Boolean))].sort().forEach(c => {
-          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
-        });
-        // Render rows
-        const tbody = document.getElementById('sampleListBody');
-        tbody.innerHTML = '';
-        list.forEach(s => {
-          const inGrid = existingIds.has(String(s.id));
-          const tr = document.createElement('tr');
-          tr.className = 'sample-list-item' + (inGrid ? ' table-secondary' : '');
-          tr.dataset.code = (s.sample_code || '').toLowerCase();
-          tr.dataset.client = (s.client_name || '').toLowerCase();
-          if (inGrid) tr.style.opacity = '0.5';
-          const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-          tr.innerHTML = '<td><input type="checkbox" class="form-check-input ws-chk" value="' + s.id + '"' + (inGrid ? ' disabled' : '') + '></td>'
-            + '<td>' + _e(s.sample_name || s.sample_code) + '</td>'
-            + '<td class="text-muted small">' + _e(s.sample_date || '-') + '</td>';
-          tr.addEventListener('click', function(e) {
-            if (e.target.tagName === 'INPUT') return;
-            const c = this.querySelector('.ws-chk');
-            if (c && !c.disabled) { c.checked = !c.checked; c.dispatchEvent(new Event('change')); }
-          });
-          tbody.appendChild(tr);
-        });
-        document.getElementById('sampleListContainer').style.display = '';
-        updateFilteredCount();
-        // Checkbox events
-        tbody.querySelectorAll('.ws-chk').forEach(c => {
-          c.addEventListener('change', function() {
-            if (this.checked) modalSelected.add(this.value); else modalSelected.delete(this.value);
-            updateSelectedCount();
-          });
-        });
-      })
-      .catch(() => {
-        document.getElementById('sampleListLoading').style.display = 'none';
-        document.getElementById('sampleListEmpty').style.display = '';
-      });
-  }
+ function clearReagentLot() {
+ _selectedReagentRow = null;
+ document.querySelectorAll('.reagent-lot-row').forEach(r => {
+ r.classList.remove('table-primary');
+ r.querySelector('input[type=radio]').checked = false;
+ });
+ }
 
-  function updateFilteredCount() {
-    let vis = 0;
-    document.querySelectorAll('#sampleListBody tr').forEach(tr => { if (tr.style.display !== 'none') vis++; });
-    document.getElementById('filteredCount').textContent = vis + ' / ' + allSamples.length;
-  }
-  function updateSelectedCount() {
-    document.getElementById('selectedCount').textContent = modalSelected.size + ' {{ _("selected") }}';
-  }
-  function applyFilters() {
-    const q = (document.getElementById('sampleSearch').value || '').toLowerCase().trim();
-    const cl = (document.getElementById('filterClient').value || '').toLowerCase();
-    document.querySelectorAll('#sampleListBody tr').forEach(tr => {
-      const mc = !q || (tr.dataset.code || '').includes(q);
-      const ml = !cl || (tr.dataset.client || '') === cl;
-      tr.style.display = (mc && ml) ? '' : 'none';
-    });
-    updateFilteredCount();
-  }
+ // ============ VALIDATION ============
+ function _baseValidate(items) {
+ const errs = [];
+ for (const it of items) {
+ const r = it.raw_data || it.results || {};
+ const hasResult = r.result != null || r.value != null || r.average != null ||
+ r.concentration != null || r.r1 != null || r.m1 != null;
+ if (!hasResult) {
+ errs.push('{{ _("Some rows have no measurements. Please fill in the data before saving.") }}');
+ break;
+ }
+ if (r.dilution === 0 || r.v_sample === 0 || r.vol === 0) {
+ errs.push('{{ _("Dilution or volume cannot be zero.") }}');
+ break;
+ }
+ }
+ return errs;
+ }
 
-  document.getElementById('sampleSearch')?.addEventListener('input', applyFilters);
-  document.getElementById('filterClient')?.addEventListener('change', applyFilters);
-  document.getElementById('clearFilters')?.addEventListener('click', function() {
-    document.getElementById('sampleSearch').value = '';
-    document.getElementById('filterClient').value = '';
-    applyFilters();
-  });
-  document.getElementById('checkAll')?.addEventListener('change', function() {
-    document.querySelectorAll('.ws-chk:not(:disabled)').forEach(c => {
-      if (c.closest('tr').style.display !== 'none') { c.checked = this.checked; if (this.checked) modalSelected.add(c.value); else modalSelected.delete(c.value); }
-    });
-    updateSelectedCount();
-  });
+ // M-7/M-8: FormGuards — beforeunload + double-submit
+ FormGuards.guardById('btnSave', async function() {
+ const items = collectSaveItems();
+ if (!items.length) { showToast('{{ _("No data to save") }}', 'warning'); return; }
 
-  document.getElementById('waterSampleModal')?.addEventListener('show.bs.modal', function() {
-    modalSelected = new Set();
-    document.getElementById('sampleSearch').value = '';
-    loadSampleList();
-  });
+ // Task 4: Validation
+ const baseErrs = _baseValidate(items);
+ if (baseErrs.length) { showToast(baseErrs[0], 'warning'); return; }
+ if (window._validateSaveItems) {
+ const customErrs = window._validateSaveItems(items);
+ if (customErrs && customErrs.length) { showToast(customErrs[0], 'warning'); return; }
+ }
 
-  document.getElementById('btnConfirmSamples')?.addEventListener('click', function() {
-    if (!modalSelected.size) { showToast('{{ _("Please select samples") }}', 'warning'); return; }
-    const url = new URL(window.location.href);
-    const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
-    const allIds = [...exist, ...[...modalSelected].filter(x => !exist.includes(x))];
-    try { localStorage.setItem(storageKey, allIds.join(',')); } catch(e) {}
-    url.searchParams.set('sample_ids', allIds.join(','));
-    window.location.href = url.toString();
-  });
+ // Task 3: Урвалжийн lot-ийг raw_data-д нэмэх
+ if (_reagentLotId) {
+ items.forEach(it => {
+ const r = it.raw_data || it.results;
+ if (r) r.reagent_lot_id = _reagentLotId;
+ });
+ }
+
+ let ok = 0;
+ const savedIds = [];
+ for (const item of items) {
+ const code = item.analysis_code || ANALYSIS_CODE;
+ const results = item.results || item.raw_data;
+ try {
+ const r = await fetch(SAVE_URL, {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+ body: JSON.stringify({ sample_id: item.sample_id, analysis_code: code, results: results })
+ });
+ if (!r.ok) { logger.error('HTTP error', r.status); continue; }
+ const res = await r.json();
+ if (res.success) { ok++; savedIds.push(item.sample_id); }
+ } catch(e) { logger.error(e); }
+ }
+ if (ok> 0) {
+ // CH-2: Зөвхөн амжилттай хадгалсан items-ийн draft устгана
+ draftMgr.purge(savedIds);
+ FormGuards.markClean();
+ showToast(ok + ' {{ _("sample result(s) saved successfully!") }}', 'success');
+ if (ok < items.length) {
+ showToast((items.length - ok) + ' {{ _("sample(s) failed — draft kept") }}', 'warning');
+ }
+ setTimeout(() => location.reload(), 1200);
+ } else {
+ showToast('{{ _("Error saving data") }}', 'error');
+ }
+ });
+
+ // ============ SAMPLE MODAL ============
+ let allSamples = [];
+ let modalSelected = new Set();
+
+ // localStorage sync (graceful fallback when blocked)
+ (function syncIds() {
+ const url = new URL(window.location.href);
+ const urlIds = url.searchParams.get('sample_ids');
+ if (urlIds) {
+ try { localStorage.setItem(storageKey, urlIds); } catch(e) { /* localStorage blocked */ }
+ } else {
+ try {
+ const saved = localStorage.getItem(storageKey);
+ if (saved && saved.trim()) {
+ url.searchParams.set('sample_ids', saved);
+ window.location.href = url.toString();
+ }
+ } catch(e) { /* localStorage blocked - URL params only mode */ }
+ }
+ })();
+
+ function loadSampleList() {
+ document.getElementById('sampleListLoading').style.display = '';
+ document.getElementById('sampleListContainer').style.display = 'none';
+ document.getElementById('sampleListEmpty').style.display = 'none';
+
+ const existingIds = new Set();
+ window.waterGridApi.forEachNode(n => existingIds.add(String(n.data.sample_id)));
+
+ fetch(ELIGIBLE_URL)
+ .then(r => r.json())
+ .then(list => {
+ list.sort((a, b) => (a.order_idx != null ? a.order_idx : 9999) - (b.order_idx != null ? b.order_idx : 9999));
+ allSamples = list;
+ document.getElementById('sampleListLoading').style.display = 'none';
+ if (!list.length) {
+ document.getElementById('sampleListEmpty').style.display = '';
+ return;
+ }
+ // Build client filter
+ const sel = document.getElementById('filterClient');
+ sel.innerHTML = '<option value="">{{ _("All Clients") }}</option>';
+ [...new Set(list.map(s => s.client_name).filter(Boolean))].sort().forEach(c => {
+ const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+ });
+ // Render rows
+ const tbody = document.getElementById('sampleListBody');
+ tbody.innerHTML = '';
+ list.forEach(s => {
+ const inGrid = existingIds.has(String(s.id));
+ const tr = document.createElement('tr');
+ tr.className = 'sample-list-item' + (inGrid ? ' table-secondary' : '');
+ tr.dataset.code = (s.sample_code || '').toLowerCase();
+ tr.dataset.client = (s.client_name || '').toLowerCase();
+ if (inGrid) tr.style.opacity = '0.5';
+ const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ tr.innerHTML = '<td><input type="checkbox" class="form-check-input ws-chk" value="' + s.id + '"' + (inGrid ? ' disabled' : '') + '></td>'
+ + '<td>' + _e(s.sample_name || s.sample_code) + '</td>'
+ + '<td class="text-muted small">' + _e(s.sample_date || '-') + '</td>';
+ tr.addEventListener('click', function(e) {
+ if (e.target.tagName === 'INPUT') return;
+ const c = this.querySelector('.ws-chk');
+ if (c && !c.disabled) { c.checked = !c.checked; c.dispatchEvent(new Event('change')); }
+ });
+ tbody.appendChild(tr);
+ });
+ document.getElementById('sampleListContainer').style.display = '';
+ updateFilteredCount();
+ // Checkbox events
+ tbody.querySelectorAll('.ws-chk').forEach(c => {
+ c.addEventListener('change', function() {
+ if (this.checked) modalSelected.add(this.value); else modalSelected.delete(this.value);
+ updateSelectedCount();
+ });
+ });
+ })
+ .catch(() => {
+ document.getElementById('sampleListLoading').style.display = 'none';
+ document.getElementById('sampleListEmpty').style.display = '';
+ });
+ }
+
+ function updateFilteredCount() {
+ let vis = 0;
+ document.querySelectorAll('#sampleListBody tr').forEach(tr => { if (tr.style.display !== 'none') vis++; });
+ document.getElementById('filteredCount').textContent = vis + ' / ' + allSamples.length;
+ }
+ function updateSelectedCount() {
+ document.getElementById('selectedCount').textContent = modalSelected.size + ' {{ _("selected") }}';
+ }
+ function applyFilters() {
+ const q = (document.getElementById('sampleSearch').value || '').toLowerCase().trim();
+ const cl = (document.getElementById('filterClient').value || '').toLowerCase();
+ document.querySelectorAll('#sampleListBody tr').forEach(tr => {
+ const mc = !q || (tr.dataset.code || '').includes(q);
+ const ml = !cl || (tr.dataset.client || '') === cl;
+ tr.style.display = (mc && ml) ? '' : 'none';
+ });
+ updateFilteredCount();
+ }
+
+ document.getElementById('sampleSearch')?.addEventListener('input', applyFilters);
+ document.getElementById('filterClient')?.addEventListener('change', applyFilters);
+ document.getElementById('clearFilters')?.addEventListener('click', function() {
+ document.getElementById('sampleSearch').value = '';
+ document.getElementById('filterClient').value = '';
+ applyFilters();
+ });
+ document.getElementById('checkAll')?.addEventListener('change', function() {
+ document.querySelectorAll('.ws-chk:not(:disabled)').forEach(c => {
+ if (c.closest('tr').style.display !== 'none') { c.checked = this.checked; if (this.checked) modalSelected.add(c.value); else modalSelected.delete(c.value); }
+ });
+ updateSelectedCount();
+ });
+
+ document.getElementById('waterSampleModal')?.addEventListener('show.bs.modal', function() {
+ modalSelected = new Set();
+ document.getElementById('sampleSearch').value = '';
+ loadSampleList();
+ });
+
+ document.getElementById('btnConfirmSamples')?.addEventListener('click', function() {
+ if (!modalSelected.size) { showToast('{{ _("Please select samples") }}', 'warning'); return; }
+ const url = new URL(window.location.href);
+ const exist = url.searchParams.get('sample_ids') ? url.searchParams.get('sample_ids').split(',') : [];
+ const allIds = [...exist, ...[...modalSelected].filter(x => !exist.includes(x))];
+ try { localStorage.setItem(storageKey, allIds.join(',')); } catch(e) {}
+ url.searchParams.set('sample_ids', allIds.join(','));
+ window.location.href = url.toString();
+ });
 
 })();
 
 // ============ TIMER ============
 (function() {
-  const STORAGE_PREFIX = 'tmr_WATER_';
-  const PRESETS = [
-    { label: '{{ _("BOD5 incubation 20C 5 days") }}', seconds: 432000 },
-    { label: '{{ _("Drying 105C 2 hrs") }}', seconds: 7200 },
-    { label: '{{ _("Ignition 550C 1 hr") }}', seconds: 3600 },
-    { label: '{{ _("Titration 30 min") }}', seconds: 1800 },
-  ];
-  let timers = [], nextId = 1;
+ const STORAGE_PREFIX = 'tmr_WATER_';
+ const PRESETS = [
+ { label: '{{ _("BOD5 incubation 20C 5 days") }}', seconds: 432000 },
+ { label: '{{ _("Drying 105C 2 hrs") }}', seconds: 7200 },
+ { label: '{{ _("Ignition 550C 1 hr") }}', seconds: 3600 },
+ { label: '{{ _("Titration 30 min") }}', seconds: 1800 },
+ ];
+ let timers = [], nextId = 1;
 
-  function saveTimers() {
-    const data = timers.map(t => ({ id:t.id, name:t.name, totalSec:t.totalSec, remaining:t.remaining, running:t.running, startedAt:t.startedAt||null }));
-    try { sessionStorage.setItem(STORAGE_PREFIX+'timers', JSON.stringify(data)); } catch(e) {}
-  }
-  function loadTimers() {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_PREFIX+'timers');
-      if (!raw) return;
-      JSON.parse(raw).forEach(d => {
-        let rem = d.remaining;
-        if (d.running && d.startedAt) { rem = Math.max(0, rem - Math.floor((Date.now()-d.startedAt)/1000)); }
-        const t = { id:d.id, name:d.name, totalSec:d.totalSec, remaining:rem, running:false, intervalId:null, startedAt:null };
-        timers.push(t);
-        if (d.running && rem > 0) startTimer(t);
-        if (nextId <= d.id) nextId = d.id + 1;
-      });
-    } catch(e) {}
-  }
-  function fmtTime(sec) {
-    if (sec <= 0) return '00:00:00';
-    const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
-    return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  }
-  function playAlarm() {
-    try {
-      const ctx = new (window.AudioContext||window.webkitAudioContext)();
-      [0,0.3,0.6].forEach(delay => {
-        const osc=ctx.createOscillator(), gain=ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value=880; osc.type='sine';
-        gain.gain.setValueAtTime(0.3, ctx.currentTime+delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+delay+0.25);
-        osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+0.25);
-      });
-    } catch(e) {}
-  }
-  function startTimer(t) {
-    if (t.running) return;
-    t.running = true; t.startedAt = Date.now();
-    t.intervalId = setInterval(() => {
-      t.remaining--;
-      if (t.remaining <= 0) { t.remaining=0; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; playAlarm(); }
-      renderTimers(); saveTimers();
-    }, 1000);
-    saveTimers();
-  }
-  function pauseTimer(t) { if (!t.running) return; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; saveTimers(); }
-  function resetTimer(t) { pauseTimer(t); t.remaining=t.totalSec; saveTimers(); renderTimers(); }
-  function removeTimer(t) { pauseTimer(t); timers=timers.filter(x=>x.id!==t.id); saveTimers(); renderTimers(); }
-  function addTimer(name, seconds) {
-    const t = { id:nextId++, name:name, totalSec:seconds, remaining:seconds, running:false, intervalId:null, startedAt:null };
-    timers.push(t); startTimer(t); renderTimers();
-  }
-  function renderTimers() {
-    const list=document.getElementById('waterTimerList'), empty=document.getElementById('waterTimerEmpty');
-    if (!list) return;
-    list.innerHTML = '';
-    if (!timers.length) { empty.style.display=''; return; }
-    empty.style.display='none';
-    timers.forEach(t => {
-      const done = t.remaining<=0 && !t.running;
-      const card = document.createElement('div');
-      card.className = 'water-timer-card';
-      card.innerHTML = '<div class="timer-name">'+t.name+'</div>'
-        +'<div class="timer-display'+(done?' timer-done':'')+'">'+fmtTime(t.remaining)+'</div>'
-        +'<div class="btn-group mt-1 w-100">'
-        +(t.running
-          ? '<button class="btn btn-outline-warning btn-sm tmr-pause"><i class="bi bi-pause-fill"></i></button>'
-          : '<button class="btn btn-outline-success btn-sm tmr-start"><i class="bi bi-play-fill"></i></button>')
-        +'<button class="btn btn-outline-secondary btn-sm tmr-reset"><i class="bi bi-arrow-counterclockwise"></i></button>'
-        +'<button class="btn btn-outline-danger btn-sm tmr-remove"><i class="bi bi-x-lg"></i></button>'
-        +'</div>';
-      const startBtn=card.querySelector('.tmr-start'), pauseBtn=card.querySelector('.tmr-pause');
-      if (startBtn) startBtn.onclick=()=>{startTimer(t);renderTimers();};
-      if (pauseBtn) pauseBtn.onclick=()=>{pauseTimer(t);renderTimers();};
-      card.querySelector('.tmr-reset').onclick=()=>resetTimer(t);
-      card.querySelector('.tmr-remove').onclick=()=>removeTimer(t);
-      list.appendChild(card);
-    });
-  }
+ function saveTimers() {
+ const data = timers.map(t => ({ id:t.id, name:t.name, totalSec:t.totalSec, remaining:t.remaining, running:t.running, startedAt:t.startedAt||null }));
+ try { sessionStorage.setItem(STORAGE_PREFIX+'timers', JSON.stringify(data)); } catch(e) {}
+ }
+ function loadTimers() {
+ try {
+ const raw = sessionStorage.getItem(STORAGE_PREFIX+'timers');
+ if (!raw) return;
+ JSON.parse(raw).forEach(d => {
+ let rem = d.remaining;
+ if (d.running && d.startedAt) { rem = Math.max(0, rem - Math.floor((Date.now()-d.startedAt)/1000)); }
+ const t = { id:d.id, name:d.name, totalSec:d.totalSec, remaining:rem, running:false, intervalId:null, startedAt:null };
+ timers.push(t);
+ if (d.running && rem> 0) startTimer(t);
+ if (nextId <= d.id) nextId = d.id + 1;
+ });
+ } catch(e) {}
+ }
+ function fmtTime(sec) {
+ if (sec <= 0) return '00:00:00';
+ const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+ return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+ }
+ function playAlarm() {
+ try {
+ const ctx = new (window.AudioContext||window.webkitAudioContext)();
+ [0,0.3,0.6].forEach(delay => {
+ const osc=ctx.createOscillator(), gain=ctx.createGain();
+ osc.connect(gain); gain.connect(ctx.destination);
+ osc.frequency.value=880; osc.type='sine';
+ gain.gain.setValueAtTime(0.3, ctx.currentTime+delay);
+ gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+delay+0.25);
+ osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+0.25);
+ });
+ } catch(e) {}
+ }
+ function startTimer(t) {
+ if (t.running) return;
+ t.running = true; t.startedAt = Date.now();
+ t.intervalId = setInterval(() => {
+ t.remaining--;
+ if (t.remaining <= 0) { t.remaining=0; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; playAlarm(); }
+ renderTimers(); saveTimers();
+ }, 1000);
+ saveTimers();
+ }
+ function pauseTimer(t) { if (!t.running) return; clearInterval(t.intervalId); t.intervalId=null; t.running=false; t.startedAt=null; saveTimers(); }
+ function resetTimer(t) { pauseTimer(t); t.remaining=t.totalSec; saveTimers(); renderTimers(); }
+ function removeTimer(t) { pauseTimer(t); timers=timers.filter(x=>x.id!==t.id); saveTimers(); renderTimers(); }
+ function addTimer(name, seconds) {
+ const t = { id:nextId++, name:name, totalSec:seconds, remaining:seconds, running:false, intervalId:null, startedAt:null };
+ timers.push(t); startTimer(t); renderTimers();
+ }
+ function renderTimers() {
+ const list=document.getElementById('waterTimerList'), empty=document.getElementById('waterTimerEmpty');
+ if (!list) return;
+ list.innerHTML = '';
+ if (!timers.length) { empty.style.display=''; return; }
+ empty.style.display='none';
+ timers.forEach(t => {
+ const done = t.remaining<=0 && !t.running;
+ const card = document.createElement('div');
+ card.className = 'water-timer-card';
+ card.innerHTML = '<div class="timer-name">'+t.name+'</div>'
+ +'<div class="timer-display'+(done?' timer-done':'')+'">'+fmtTime(t.remaining)+'</div>'
+ +'<div class="btn-group mt-1 w-100">'
+ +(t.running
+ ? '<button class="btn btn-outline-warning btn-sm tmr-pause"><i class="bi bi-pause-fill"></i></button>'
+ : '<button class="btn btn-outline-success btn-sm tmr-start"><i class="bi bi-play-fill"></i></button>')
+ +'<button class="btn btn-outline-secondary btn-sm tmr-reset"><i class="bi bi-arrow-counterclockwise"></i></button>'
+ +'<button class="btn btn-outline-danger btn-sm tmr-remove"><i class="bi bi-x-lg"></i></button>'
+ +'</div>';
+ const startBtn=card.querySelector('.tmr-start'), pauseBtn=card.querySelector('.tmr-pause');
+ if (startBtn) startBtn.onclick=()=>{startTimer(t);renderTimers();};
+ if (pauseBtn) pauseBtn.onclick=()=>{pauseTimer(t);renderTimers();};
+ card.querySelector('.tmr-reset').onclick=()=>resetTimer(t);
+ card.querySelector('.tmr-remove').onclick=()=>removeTimer(t);
+ list.appendChild(card);
+ });
+ }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const pc = document.getElementById('waterTimerPresets');
-    if (!pc) return;
-    PRESETS.forEach(p => {
-      const btn = document.createElement('button');
-      btn.className='btn btn-sm btn-outline-warning';
-      btn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
-      btn.innerHTML='<i class="bi bi-stopwatch me-1"></i>'+p.label;
-      btn.onclick=()=>addTimer(p.label,p.seconds);
-      pc.appendChild(btn);
-    });
-    const addBtn = document.createElement('button');
-    addBtn.className='btn btn-sm btn-outline-secondary';
-    addBtn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
-    addBtn.innerHTML='<i class="bi bi-plus-circle me-1"></i>{{ _("New Timer") }}';
-    addBtn.onclick=()=>{
-      const name=prompt('{{ _("Timer name:") }}','{{ _("Custom timer") }}');
-      if(!name)return;
-      const minStr=prompt('{{ _("Duration (minutes):") }}','60');
-      const mins=parseInt(minStr);
-      if(isNaN(mins)||mins<=0)return;
-      addTimer(name,mins*60);
-    };
-    pc.appendChild(addBtn);
-    loadTimers(); renderTimers();
-  });
+ document.addEventListener('DOMContentLoaded', function() {
+ const pc = document.getElementById('waterTimerPresets');
+ if (!pc) return;
+ PRESETS.forEach(p => {
+ const btn = document.createElement('button');
+ btn.className='btn btn-sm btn-outline-warning';
+ btn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
+ btn.innerHTML='<i class="bi bi-stopwatch me-1"></i>'+p.label;
+ btn.onclick=()=>addTimer(p.label,p.seconds);
+ pc.appendChild(btn);
+ });
+ const addBtn = document.createElement('button');
+ addBtn.className='btn btn-sm btn-outline-secondary';
+ addBtn.style.cssText='border-radius:10px;font-size:0.8rem;font-weight:600;';
+ addBtn.innerHTML='<i class="bi bi-plus-circle me-1"></i>{{ _("New Timer") }}';
+ addBtn.onclick=()=>{
+ const name=prompt('{{ _("Timer name:") }}','{{ _("Custom timer") }}');
+ if(!name)return;
+ const minStr=prompt('{{ _("Duration (minutes):") }}','60');
+ const mins=parseInt(minStr);
+ if(isNaN(mins)||mins<=0)return;
+ addTimer(name,mins*60);
+ };
+ pc.appendChild(addBtn);
+ loadTimers(); renderTimers();
+ });
 })();
 
 // ============ EQUIPMENT USAGE ============
@@ -949,179 +1152,229 @@ let _spareParts = null;
 const eqCsrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 function loadSpareParts() {
-  if (_spareParts) return Promise.resolve(_spareParts);
-  return fetch('/spare_parts/api/list').then(r => r.json()).then(data => { _spareParts = data; return data; });
+ if (_spareParts) return Promise.resolve(_spareParts);
+ return fetch('/spare_parts/api/list').then(r => r.json()).then(data => { _spareParts = data; return data; });
 }
 
 window.toggleRepairPanel = function(cb) {
-  const panel = cb.closest('tr').querySelector('.repair-panel');
-  if (cb.checked) { panel.classList.remove('d-none'); } else { panel.classList.add('d-none'); }
+ const panel = cb.closest('tr').querySelector('.repair-panel');
+ if (cb.checked) { panel.classList.remove('d-none'); } else { panel.classList.add('d-none'); }
 };
 
 window.toggleCalibPanel = function(btn) {
-  const row = btn.closest('tr');
-  const panel = row.querySelector('.calib-panel');
-  if (panel) { panel.classList.toggle('d-none'); btn.classList.toggle('btn-outline-success'); btn.classList.toggle('btn-success'); }
+ const row = btn.closest('tr');
+ const panel = row.querySelector('.calib-panel');
+ if (panel) { panel.classList.toggle('d-none'); btn.classList.toggle('btn-outline-success'); btn.classList.toggle('btn-success'); }
 };
 
 window.checkTempDiff = function(input) {
-  const row = input.closest('tr');
-  const setTemp = parseFloat(row.querySelector('.calib-set-temp')?.value) || 0;
-  const actualTemp = parseFloat(input.value) || 0;
-  const diffInput = row.querySelector('.calib-temp-diff');
-  const statusSpan = row.querySelector('.furnace-panel .calib-status');
-  if (setTemp > 0 && actualTemp > 0) {
-    const diff = actualTemp - setTemp;
-    diffInput.value = (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' °C';
-    statusSpan.classList.remove('d-none');
-    if (Math.abs(diff) <= 5) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
-    else { statusSpan.textContent = '{{ _("Deviation!") }}'; statusSpan.className = 'calib-status fail'; }
-  } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
+ const row = input.closest('tr');
+ const setTemp = parseFloat(row.querySelector('.calib-set-temp')?.value) || 0;
+ const actualTemp = parseFloat(input.value) || 0;
+ const diffInput = row.querySelector('.calib-temp-diff');
+ const statusSpan = row.querySelector('.furnace-panel .calib-status');
+ if (setTemp> 0 && actualTemp> 0) {
+ const diff = actualTemp - setTemp;
+ diffInput.value = (diff>= 0 ? '+' : '') + diff.toFixed(1) + ' °C';
+ statusSpan.classList.remove('d-none');
+ if (Math.abs(diff) <= 5) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+ else { statusSpan.textContent = '{{ _("Deviation!") }}'; statusSpan.className = 'calib-status fail'; }
+ } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
 };
 
 window.checkWeightDiff = function(input) {
-  const weightRow = input.closest('.calib-weight-row');
-  const stdWt = parseFloat(weightRow.querySelector('.calib-std-wt')?.value) || 0;
-  const measWt = parseFloat(input.value) || 0;
-  const statusSpan = weightRow.querySelector('.calib-status');
-  if (stdWt > 0 && measWt > 0) {
-    const diff = Math.abs(measWt - stdWt);
-    const tolerance = stdWt < 1 ? 0.0002 : 0.001;
-    statusSpan.classList.remove('d-none');
-    if (diff <= tolerance) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
-    else { statusSpan.textContent = '\u00b1' + diff.toFixed(4); statusSpan.className = 'calib-status fail'; }
-  } else { statusSpan.classList.add('d-none'); }
+ const weightRow = input.closest('.calib-weight-row');
+ const stdWt = parseFloat(weightRow.querySelector('.calib-std-wt')?.value) || 0;
+ const measWt = parseFloat(input.value) || 0;
+ const statusSpan = weightRow.querySelector('.calib-status');
+ if (stdWt> 0 && measWt> 0) {
+ const diff = Math.abs(measWt - stdWt);
+ const tolerance = stdWt < 1 ? 0.0002 : 0.001;
+ statusSpan.classList.remove('d-none');
+ if (diff <= tolerance) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+ else { statusSpan.textContent = '\u00b1' + diff.toFixed(4); statusSpan.className = 'calib-status fail'; }
+ } else { statusSpan.classList.add('d-none'); }
 };
 
 window.addWeightRow = function(btn) {
-  const list = btn.closest('.balance-panel').querySelector('.calib-weights-list');
-  const row = document.createElement('div');
-  row.className = 'calib-weight-row';
-  row.innerHTML = '<input type="number" class="form-control form-control-sm calib-std-wt" placeholder="{{ _("Std (g)") }}" step="0.0001" style="flex:1">'
-    +'<input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">'
-    +'<span class="calib-status d-none" style="min-width:50px;"></span>'
-    +'<button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest(\'.calib-weight-row\').remove()" style="padding:2px 6px;"><i class="bi bi-x"></i></button>';
-  list.appendChild(row);
+ const list = btn.closest('.balance-panel').querySelector('.calib-weights-list');
+ const row = document.createElement('div');
+ row.className = 'calib-weight-row';
+ row.innerHTML = '<input type="number" class="form-control form-control-sm calib-std-wt flex-1" placeholder="{{ _("Std (g)") }}" step="0.0001">'
+ +'<input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001">'
+ +'<span class="calib-status d-none min-w-[50px]"></span>'
+ +'<button type="button" class="btn btn-outline-secondary btn-sm js-remove-weight-row"><i class="bi bi-x"></i></button>';
+ list.appendChild(row);
 };
 
 window.checkAnalysisDiff = function(input) {
-  const row = input.closest('tr');
-  const certVal = parseFloat(row.querySelector('.calib-cert-val')?.value) || 0;
-  const measVal = parseFloat(input.value) || 0;
-  const diffInput = row.querySelector('.calib-diff-pct');
-  const statusSpan = row.querySelector('.analysis-panel .calib-status');
-  if (certVal > 0 && measVal > 0) {
-    const diffPct = ((measVal - certVal) / certVal * 100);
-    diffInput.value = (diffPct >= 0 ? '+' : '') + diffPct.toFixed(2) + ' %';
-    statusSpan.classList.remove('d-none');
-    if (Math.abs(diffPct) <= 2) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
-    else { statusSpan.textContent = '{{ _("Deviation!") }}'; statusSpan.className = 'calib-status fail'; }
-  } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
+ const row = input.closest('tr');
+ const certVal = parseFloat(row.querySelector('.calib-cert-val')?.value) || 0;
+ const measVal = parseFloat(input.value) || 0;
+ const diffInput = row.querySelector('.calib-diff-pct');
+ const statusSpan = row.querySelector('.analysis-panel .calib-status');
+ if (certVal> 0 && measVal> 0) {
+ const diffPct = ((measVal - certVal) / certVal * 100);
+ diffInput.value = (diffPct>= 0 ? '+' : '') + diffPct.toFixed(2) + ' %';
+ statusSpan.classList.remove('d-none');
+ if (Math.abs(diffPct) <= 2) { statusSpan.textContent = 'OK'; statusSpan.className = 'calib-status pass'; }
+ else { statusSpan.textContent = '{{ _("Deviation!") }}'; statusSpan.className = 'calib-status fail'; }
+ } else { diffInput.value = ''; statusSpan.classList.add('d-none'); }
 };
 
 window.addSparePart = function(btn) {
-  const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
-  const row = document.createElement('div');
-  row.className = 'input-group input-group-sm mb-1 spare-row';
-  row.innerHTML = '<select class="form-select form-select-sm spare-select" style="flex:3"><option value="">{{ _("Select spare part...") }}</option></select>'
-    +'<input type="number" class="form-control spare-qty" placeholder="{{ _("Qty") }}" min="1" value="1" style="flex:1; max-width:60px">'
-    +'<input type="text" class="form-control spare-user" placeholder="{{ _("Used by") }}" style="flex:2">'
-    +'<button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest(\'.spare-row\').remove()"><i class="bi bi-x"></i></button>';
-  list.appendChild(row);
-  const sel = row.querySelector('.spare-select');
-  loadSpareParts().then(parts => {
-    parts.forEach(sp => {
-      if (sp.quantity > 0) {
-        const opt = document.createElement('option');
-        opt.value = sp.id;
-        opt.textContent = sp.name + ' (' + sp.quantity + ' ' + (sp.unit || 'pcs') + ')';
-        opt.dataset.quantity = sp.quantity;
-        sel.appendChild(opt);
-      }
-    });
-  });
+ const list = btn.closest('.repair-panel').querySelector('.spare-parts-list');
+ const row = document.createElement('div');
+ row.className = 'input-group input-group-sm mb-1 spare-row';
+ row.innerHTML = '<select class="form-select form-select-sm spare-select grow-[3]"><option value="">{{ _("Select spare part...") }}</option></select>'
+ +'<input type="number" class="form-control spare-qty flex-1 max-w-[60px]" placeholder="{{ _("Qty") }}" min="1" value="1">'
+ +'<input type="text" class="form-control spare-user grow-[2]" placeholder="{{ _("Used by") }}">'
+ +'<button type="button" class="btn btn-outline-danger btn-sm js-remove-spare-row"><i class="bi bi-x"></i></button>';
+ list.appendChild(row);
+ const sel = row.querySelector('.spare-select');
+ loadSpareParts().then(parts => {
+ parts.forEach(sp => {
+ if (sp.quantity> 0) {
+ const opt = document.createElement('option');
+ opt.value = sp.id;
+ opt.textContent = sp.name + ' (' + sp.quantity + ' ' + (sp.unit || 'pcs') + ')';
+ opt.dataset.quantity = sp.quantity;
+ sel.appendChild(opt);
+ }
+ });
+ });
 };
 
 window.submitEquipmentUsage = function() {
-  const rows = document.querySelectorAll('#equipmentCheckTable tbody tr');
-  const items = [];
-  rows.forEach(row => {
-    const eqId = row.dataset.eqId;
-    const category = row.dataset.category;
-    const isChecked = row.querySelector('.eq-check')?.checked ?? true;
-    const minutesVal = row.querySelector('.eq-minutes')?.value;
-    const note = row.querySelector('.eq-note')?.value || '';
-    const minutes = minutesVal ? parseFloat(minutesVal) : 0;
-    const needsRepair = row.querySelector('.eq-repair')?.checked || false;
-    const item = { eq_id: eqId, is_checked: isChecked, minutes: minutes, note: note };
+ const rows = document.querySelectorAll('#equipmentCheckTable tbody tr');
+ const items = [];
+ rows.forEach(row => {
+ const eqId = row.dataset.eqId;
+ const category = row.dataset.category;
+ const isChecked = row.querySelector('.eq-check')?.checked ?? true;
+ const minutesVal = row.querySelector('.eq-minutes')?.value;
+ const note = row.querySelector('.eq-note')?.value || '';
+ const minutes = minutesVal ? parseFloat(minutesVal) : 0;
+ const needsRepair = row.querySelector('.eq-repair')?.checked || false;
+ const item = { eq_id: eqId, is_checked: isChecked, minutes: minutes, note: note };
 
-    const calibPanel = row.querySelector('.calib-panel:not(.d-none)');
-    if (calibPanel) {
-      if (category === 'furnace') {
-        const setTemp = row.querySelector('.calib-set-temp')?.value;
-        const actualTemp = row.querySelector('.calib-actual-temp')?.value;
-        if (setTemp || actualTemp) {
-          item.calibration = { type: 'temperature', set_temp: parseFloat(setTemp) || null, actual_temp: parseFloat(actualTemp) || null };
-        }
-      } else if (category === 'balance') {
-        const weights = [];
-        row.querySelectorAll('.calib-weight-row').forEach(wr => {
-          const std = wr.querySelector('.calib-std-wt')?.value;
-          const meas = wr.querySelector('.calib-meas-wt')?.value;
-          if (std || meas) { weights.push({ standard: parseFloat(std) || null, measured: parseFloat(meas) || null }); }
-        });
-        if (weights.length > 0) { item.calibration = { type: 'weight', weights: weights }; }
-      } else if (category === 'analysis' || category === 'water') {
-        const stdName = row.querySelector('.calib-std-name')?.value;
-        const certVal = row.querySelector('.calib-cert-val')?.value;
-        const measVal = row.querySelector('.calib-meas-val')?.value;
-        if (stdName || certVal || measVal) {
-          item.calibration = { type: 'analysis', standard_name: stdName || null, certified_value: parseFloat(certVal) || null, measured_value: parseFloat(measVal) || null };
-        }
-      }
-    }
+ const calibPanel = row.querySelector('.calib-panel:not(.d-none)');
+ if (calibPanel) {
+ if (category === 'furnace') {
+ const setTemp = row.querySelector('.calib-set-temp')?.value;
+ const actualTemp = row.querySelector('.calib-actual-temp')?.value;
+ if (setTemp || actualTemp) {
+ item.calibration = { type: 'temperature', set_temp: parseFloat(setTemp) || null, actual_temp: parseFloat(actualTemp) || null };
+ }
+ } else if (category === 'balance') {
+ const weights = [];
+ row.querySelectorAll('.calib-weight-row').forEach(wr => {
+ const std = wr.querySelector('.calib-std-wt')?.value;
+ const meas = wr.querySelector('.calib-meas-wt')?.value;
+ if (std || meas) { weights.push({ standard: parseFloat(std) || null, measured: parseFloat(meas) || null }); }
+ });
+ if (weights.length> 0) { item.calibration = { type: 'weight', weights: weights }; }
+ } else if (category === 'analysis' || category === 'water') {
+ const stdName = row.querySelector('.calib-std-name')?.value;
+ const certVal = row.querySelector('.calib-cert-val')?.value;
+ const measVal = row.querySelector('.calib-meas-val')?.value;
+ if (stdName || certVal || measVal) {
+ item.calibration = { type: 'analysis', standard_name: stdName || null, certified_value: parseFloat(certVal) || null, measured_value: parseFloat(measVal) || null };
+ }
+ }
+ }
 
-    if (needsRepair) {
-      item.repair = true;
-      item.repair_date = row.querySelector('.repair-date')?.value || '';
-      const spares = [];
-      row.querySelectorAll('.spare-row').forEach(sr => {
-        const spareId = sr.querySelector('.spare-select')?.value;
-        const qty = sr.querySelector('.spare-qty')?.value;
-        const user = sr.querySelector('.spare-user')?.value || '';
-        if (spareId) spares.push({ spare_id: parseInt(spareId), qty: parseInt(qty) || 1, used_by: user });
-      });
-      item.spare_parts = spares;
-    }
-    if (isChecked || minutes > 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
-  });
-  if (items.length === 0) { alert('{{ _("No data to register.") }}'); return; }
-  fetch('/api/log_usage_bulk', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': eqCsrf },
-    body: JSON.stringify({ items: items })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.status === 'success') {
-      document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
-      document.querySelectorAll('.eq-note').forEach(i => i.value = '');
-      document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
-      document.querySelectorAll('.calib-panel').forEach(p => {
-        p.classList.add('d-none');
-        p.querySelectorAll('input').forEach(i => i.value = '');
-        p.querySelectorAll('.calib-status').forEach(s => s.classList.add('d-none'));
-      });
-      document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
-      const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
-      if (modal) modal.hide();
-      alert('{{ _("Equipment usage saved successfully!") }}');
-    } else {
-      alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
-    }
-  })
-  .catch(err => alert('{{ _("Network error") }}: ' + err.message));
+ if (needsRepair) {
+ item.repair = true;
+ item.repair_date = row.querySelector('.repair-date')?.value || '';
+ const spares = [];
+ row.querySelectorAll('.spare-row').forEach(sr => {
+ const spareId = sr.querySelector('.spare-select')?.value;
+ const qty = sr.querySelector('.spare-qty')?.value;
+ const user = sr.querySelector('.spare-user')?.value || '';
+ if (spareId) spares.push({ spare_id: parseInt(spareId), qty: parseInt(qty) || 1, used_by: user });
+ });
+ item.spare_parts = spares;
+ }
+ if (isChecked || minutes> 0 || note.trim() !== '' || needsRepair || item.calibration) items.push(item);
+ });
+ if (items.length === 0) { alert('{{ _("No data to register.") }}'); return; }
+ fetch('/api/log_usage_bulk', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': eqCsrf },
+ body: JSON.stringify({ items: items })
+ })
+ .then(r => r.json())
+ .then(data => {
+ if (data.status === 'success') {
+ document.querySelectorAll('.eq-minutes').forEach(i => i.value = '');
+ document.querySelectorAll('.eq-note').forEach(i => i.value = '');
+ document.querySelectorAll('.eq-repair').forEach(cb => { cb.checked = false; toggleRepairPanel(cb); });
+ document.querySelectorAll('.calib-panel').forEach(p => {
+ p.classList.add('d-none');
+ p.querySelectorAll('input').forEach(i => i.value = '');
+ p.querySelectorAll('.calib-status').forEach(s => s.classList.add('d-none'));
+ });
+ document.querySelectorAll('.calib-btn').forEach(btn => { btn.classList.remove('btn-success'); btn.classList.add('btn-outline-success'); });
+ const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
+ if (modal) modal.hide();
+ alert('{{ _("Equipment usage saved successfully!") }}');
+ } else {
+ alert('{{ _("Error") }}: ' + (data.message || '{{ _("Unknown error") }}'));
+ }
+ })
+ .catch(err => alert('{{ _("Network error") }}: ' + err.message));
 };
+
+// Delegated handlers (CSP: inline oninput/onclick/onchange-ийг орлож байна)
+const INPUT_CLASS_HANDLERS = {
+ 'calib-actual-temp': typeof checkTempDiff === 'function' ? checkTempDiff : null,
+ 'calib-meas-wt': typeof checkWeightDiff === 'function' ? checkWeightDiff : null,
+ 'calib-meas-val': typeof checkAnalysisDiff === 'function' ? checkAnalysisDiff : null,
+};
+document.addEventListener('input', function(e) {
+ const el = e.target;
+ if (!(el instanceof HTMLInputElement)) return;
+ for (const cls in INPUT_CLASS_HANDLERS) {
+ if (el.classList.contains(cls) && INPUT_CLASS_HANDLERS[cls]) {
+ INPUT_CLASS_HANDLERS[cls](el);
+ break;
+ }
+ }
+});
+document.addEventListener('change', function(e) {
+ const el = e.target;
+ if (el instanceof HTMLInputElement && el.classList.contains('eq-repair-cb')
+ && typeof toggleRepairPanel === 'function') {
+ toggleRepairPanel(el);
+ }
+});
+document.addEventListener('click', function(e) {
+ const t = e.target;
+ if (t.closest('#btn-open-reagent') && typeof openReagentModal === 'function') { openReagentModal(); return; }
+ if (t.closest('#btn-clear-reagent') && typeof clearReagentLot === 'function') { clearReagentLot(); return; }
+ if (t.closest('#btn-confirm-reagent') && typeof confirmReagentLot === 'function') { confirmReagentLot(); return; }
+ if (t.closest('#btn-submit-equipment') && typeof submitEquipmentUsage === 'function') { submitEquipmentUsage(); return; }
+ const calibBtn = t.closest('.calib-btn');
+ if (calibBtn && typeof toggleCalibPanel === 'function') { toggleCalibPanel(calibBtn); return; }
+ const addW = t.closest('.js-add-weight-row');
+ if (addW && typeof addWeightRow === 'function') { addWeightRow(addW); return; }
+ const addS = t.closest('[data-action="add-spare-part"]');
+ if (addS && typeof addSparePart === 'function') { addSparePart(addS); return; }
+ // Dynamic HTML buttons
+ const wRm = t.closest('.js-water-remove');
+ if (wRm && typeof window._waterRemove === 'function') {
+ window._waterRemove(parseInt(wRm.dataset.sampleId, 10)); return;
+ }
+ const rgRow = t.closest('.js-reagent-row');
+ if (rgRow && typeof selectReagentRow === 'function') {
+ selectReagentRow(rgRow, parseInt(rgRow.dataset.lotId, 10)); return;
+ }
+ const rmW = t.closest('.js-remove-weight-row');
+ if (rmW) { rmW.closest('.calib-weight-row')?.remove(); return; }
+ const rmSp = t.closest('.js-remove-spare-row');
+ if (rmSp) { rmSp.closest('.spare-row')?.remove(); }
+});
 })();
 </script>
 {% endblock %}

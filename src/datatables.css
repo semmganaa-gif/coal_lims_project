@@ -1,0 +1,7 @@
+/*
+ * DataTables Bootstrap 5 CSS bundle.
+ *
+ * Ачаалах:
+ *   {{ vite_css_tag('src/datatables.css') }}
+ */
+@import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";

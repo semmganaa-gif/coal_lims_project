@@ -3,118 +3,114 @@
 {% block content %}
 <div class="container-fluid cj-page">
 
-  {# ===== HEADER ===== #}
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h4 class="mb-1">
-        <i class="bi bi-journal-text text-info me-2"></i>
-        {{ _("Chemical Journal") }}
-      </h4>
-      <p class="text-muted mb-0 small">{{ _("Usage record history") }}</p>
-    </div>
-    <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i> {{ _("Back to List") }}
-    </a>
-  </div>
+ {# ===== HEADER ===== #}
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div>
+ <h4 class="mb-1">
+ <i class="bi bi-journal-text text-info me-2"></i>
+ {{ _("Chemical Journal") }}
+ </h4>
+ <p class="text-muted mb-0 small">{{ _("Usage record history") }}</p>
+ </div>
+ <a href="{{ url_for('chemicals.chemical_list', lab=lab) }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left me-1"></i> {{ _("Back to List") }}
+ </a>
+ </div>
 
-  {# ===== FILTERS ===== #}
-  <div class="cj-filter-bar mb-3">
-    <form method="GET" class="d-flex flex-wrap align-items-center gap-2">
-      <select name="lab" class="form-select form-select-sm" style="width:130px;">
-        <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
-        <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
-        <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
-        <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
-        <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
-      </select>
-      <div class="input-group input-group-sm" style="width:150px;">
-        <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
-        <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
-      </div>
-      <span class="text-muted small">–</span>
-      <div class="input-group input-group-sm" style="width:150px;">
-        <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
-        <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
-      </div>
-      <button type="submit" class="btn btn-primary btn-sm">
-        <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
-      </button>
-    </form>
-  </div>
+ {# ===== FILTERS ===== #}
+ <div class="cj-filter-bar mb-3">
+ <form method="GET" class="d-flex flex-wrap align-items-center gap-2">
+ <select name="lab" class="form-select form-select-sm w-[130px]">
+ <option value="all" {{ 'selected' if lab == 'all' }}>{{ _("All Labs") }}</option>
+ <option value="coal" {{ 'selected' if lab == 'coal' }}>{{ _("Coal") }}</option>
+ <option value="water" {{ 'selected' if lab == 'water' }}>{{ _("Water") }}</option>
+ <option value="microbiology" {{ 'selected' if lab == 'microbiology' }}>{{ _("Microbiology") }}</option>
+ <option value="petrography" {{ 'selected' if lab == 'petrography' }}>{{ _("Petrography") }}</option>
+ </select>
+ <div class="input-group input-group-sm w-[150px]">
+ <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+ <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+ </div>
+ <span class="text-muted small">–</span>
+ <div class="input-group input-group-sm w-[150px]">
+ <span class="input-group-text"><i class="bi bi-calendar-event-fill"></i></span>
+ <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+ </div>
+ <button type="submit" class="btn btn-primary btn-sm">
+ <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
+ </button>
+ </form>
+ </div>
 
-  {# ===== AG GRID ===== #}
-  <div class="cj-grid-card">
-    <div class="cj-grid-header">
-      <span class="fw-semibold small text-muted text-uppercase">
-        <i class="bi bi-list-check"></i> {{ _("Total") }}: <span id="cjCount">0</span> {{ _("records") }}
-      </span>
-      <div class="d-flex gap-2 align-items-center">
-        <div class="input-group input-group-sm" style="max-width:220px;">
-          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-          <input type="text" id="cjQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
-        </div>
-        <button class="btn btn-sm btn-outline-success" onclick="exportCSV()">
-          <i class="bi bi-download"></i> CSV
-        </button>
-      </div>
-    </div>
-    <div id="chemJournalGrid" class="ag-theme-quartz cj-grid"></div>
-  </div>
+ {# ===== AG GRID ===== #}
+ <div class="cj-grid-card">
+ <div class="cj-grid-header">
+ <span class="fw-semibold small text-muted text-uppercase">
+ <i class="bi bi-list-check"></i> {{ _("Total") }}: <span id="cjCount">0</span> {{ _("records") }}
+ </span>
+ <div class="d-flex gap-2 align-items-center">
+ <div class="input-group input-group-sm max-w-[220px]">
+ <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+ <input type="text" id="cjQuickFilter" class="form-control border-start-0" placeholder="{{ _("Search...") }}">
+ </div>
+ <button type="button" id="btn-export-csv" class="btn btn-sm btn-outline-success">
+ <i class="bi bi-download"></i> CSV
+ </button>
+ </div>
+ </div>
+ <div id="chemJournalGrid" class="ag-theme-quartz cj-grid"></div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-grid.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/styles/ag-theme-quartz.css">
-<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.0.2/dist/ag-grid-community.min.js"></script>
-
 <style nonce="{{ csp_nonce }}">
-  .cj-filter-bar {
-    background: #f9fafb;
-    border: 1px solid rgba(148,163,184,0.15);
-    border-radius: 999px;
-    padding: 0.4rem 1rem;
-  }
-  .cj-filter-bar .input-group-text { background: #fff; }
+ .cj-filter-bar {
+ background: #f9fafb;
+ border: 1px solid rgba(148,163,184,0.15);
+ border-radius: 999px;
+ padding: 0.4rem 1rem;
+ }
+ .cj-filter-bar .input-group-text { background: #fff; }
 
-  .cj-grid-card {
-    background: #fff;
-    border: 1px solid rgba(148,163,184,0.15);
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.03);
-  }
-  .cj-grid-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: linear-gradient(90deg, #f9fafb 0%, #ecfeff 50%, #f9fafb 100%);
-    border-bottom: 1px solid #e5e7eb;
-  }
-  .cj-grid {
-    width: 100%;
-    height: 62vh;
-    min-height: 400px;
-  }
+ .cj-grid-card {
+ background: #fff;
+ border: 1px solid rgba(148,163,184,0.15);
+ border-radius: 1rem;
+ overflow: hidden;
+ box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+ }
+ .cj-grid-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ flex-wrap: wrap;
+ gap: 0.5rem;
+ padding: 0.75rem 1rem;
+ background: linear-gradient(90deg, #f9fafb 0%, #ecfeff 50%, #f9fafb 100%);
+ border-bottom: 1px solid #e5e7eb;
+ }
+ .cj-grid {
+ width: 100%;
+ height: 62vh;
+ min-height: 400px;
+ }
 
-  .cj-page .ag-theme-quartz {
-    --ag-border-radius: 0;
-    --ag-header-background-color: #f8fafc;
-    --ag-header-foreground-color: #64748b;
-    --ag-row-hover-color: #f0f9ff;
-    --ag-selected-row-background-color: #e0f2fe;
-    --ag-font-size: 12px;
-  }
-  .cj-page .ag-header-cell-label {
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-    font-size: 0.7rem;
-  }
+ .cj-page .ag-theme-quartz {
+ --ag-border-radius: 0;
+ --ag-header-background-color: #f8fafc;
+ --ag-header-foreground-color: #64748b;
+ --ag-row-hover-color: #f0f9ff;
+ --ag-selected-row-background-color: #e0f2fe;
+ --ag-font-size: 12px;
+ }
+ .cj-page .ag-header-cell-label {
+ font-weight: 600;
+ text-transform: uppercase;
+ letter-spacing: .03em;
+ font-size: 0.7rem;
+ }
 </style>
 
 <script nonce="{{ csp_nonce }}">
@@ -122,109 +118,110 @@ var gridApi = null;
 const rowData = {{ rows_json|tojson|safe }};
 
 const columnDefs = [
-  {
-    field: 'date',
-    headerName: "{{ _('Date') }}",
-    width: 200,
-    sort: 'desc',
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'chemical',
-    headerName: "{{ _('Chemical') }}",
-    minWidth: 200,
-    flex: 2,
-    filter: 'agTextColumnFilter',
-    cellRenderer: function(p) {
-      if (!p.data) return '';
-      const a = document.createElement('a');
-      a.href = '/chemicals/' + p.data.chemical_id;
-      a.textContent = p.value || '';
-      a.style.cssText = 'color:#0284c7;font-weight:600;text-decoration:none;';
-      a.onmouseenter = function() { a.style.textDecoration='underline'; };
-      a.onmouseleave = function() { a.style.textDecoration='none'; };
-      if (p.data.formula) {
-        const span = document.createElement('span');
-        span.appendChild(a);
-        const small = document.createElement('small');
-        small.textContent = ' (' + p.data.formula + ')';
-        small.style.color = '#94a3b8';
-        span.appendChild(small);
-        return span;
-      }
-      return a;
-    }
-  },
-  {
-    field: 'quantity',
-    headerName: "{{ _('Quantity') }}",
-    width: 130,
-    cellStyle: {color: '#dc2626', fontWeight: '600'}
-  },
-  {
-    field: 'purpose',
-    headerName: "{{ _('Purpose') }}",
-    minWidth: 140,
-    flex: 1,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'analysis',
-    headerName: "{{ _('Analysis') }}",
-    width: 110,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'user',
-    headerName: "{{ _('User') }}",
-    width: 120,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    headerName: "{{ _('Stock') }}",
-    width: 150,
-    valueGetter: function(p) {
-      if (!p.data) return '';
-      const b = p.data.before;
-      const a = p.data.after;
-      if (b == null && a == null) return '-';
-      return (b != null ? b : '-') + ' → ' + (a != null ? a : '-');
-    },
-    cellStyle: {color: '#64748b', fontSize: '0.8rem'}
-  }
+ {
+ field: 'date',
+ headerName: "{{ _('Date') }}",
+ width: 200,
+ sort: 'desc',
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'chemical',
+ headerName: "{{ _('Chemical') }}",
+ minWidth: 200,
+ flex: 2,
+ filter: 'agTextColumnFilter',
+ cellRenderer: function(p) {
+ if (!p.data) return '';
+ const a = document.createElement('a');
+ a.href = '/chemicals/' + p.data.chemical_id;
+ a.textContent = p.value || '';
+ a.style.cssText = 'color:#0284c7;font-weight:600;text-decoration:none;';
+ a.onmouseenter = function() { a.style.textDecoration='underline'; };
+ a.onmouseleave = function() { a.style.textDecoration='none'; };
+ if (p.data.formula) {
+ const span = document.createElement('span');
+ span.appendChild(a);
+ const small = document.createElement('small');
+ small.textContent = ' (' + p.data.formula + ')';
+ small.style.color = '#94a3b8';
+ span.appendChild(small);
+ return span;
+ }
+ return a;
+ }
+ },
+ {
+ field: 'quantity',
+ headerName: "{{ _('Quantity') }}",
+ width: 130,
+ cellStyle: {color: '#dc2626', fontWeight: '600'}
+ },
+ {
+ field: 'purpose',
+ headerName: "{{ _('Purpose') }}",
+ minWidth: 140,
+ flex: 1,
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'analysis',
+ headerName: "{{ _('Analysis') }}",
+ width: 110,
+ filter: 'agTextColumnFilter'
+ },
+ {
+ field: 'user',
+ headerName: "{{ _('User') }}",
+ width: 120,
+ filter: 'agTextColumnFilter'
+ },
+ {
+ headerName: "{{ _('Stock') }}",
+ width: 150,
+ valueGetter: function(p) {
+ if (!p.data) return '';
+ const b = p.data.before;
+ const a = p.data.after;
+ if (b == null && a == null) return '-';
+ return (b != null ? b : '-') + ' → ' + (a != null ? a : '-');
+ },
+ cellStyle: {color: '#64748b', fontSize: '0.8rem'}
+ }
 ];
 
 const gridOptions = {
-  columnDefs: columnDefs,
-  rowData: rowData,
-  defaultColDef: {
-    sortable: true,
-    resizable: true,
-    minWidth: 70
-  },
-  pagination: true,
-  paginationPageSize: 50,
-  rowHeight: 38,
-  animateRows: true,
-  domLayout: 'normal'
+ columnDefs: columnDefs,
+ rowData: rowData,
+ defaultColDef: {
+ sortable: true,
+ resizable: true,
+ minWidth: 70
+ },
+ pagination: true,
+ paginationPageSize: 50,
+ rowHeight: 38,
+ animateRows: true,
+ domLayout: 'normal'
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-  const el = document.querySelector('#chemJournalGrid');
-  if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
-  else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
+ const el = document.querySelector('#chemJournalGrid');
+ if (agGrid.createGrid) gridApi = agGrid.createGrid(el, gridOptions);
+ else { new agGrid.Grid(el, gridOptions); gridApi = gridOptions.api; }
 
-  document.getElementById('cjCount').textContent = rowData.length;
+ document.getElementById('cjCount').textContent = rowData.length;
 
-  document.getElementById('cjQuickFilter').addEventListener('input', function() {
-    if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
-    else gridApi.setGridOption('quickFilterText', this.value);
-  });
+ document.getElementById('cjQuickFilter').addEventListener('input', function() {
+ if (gridApi.setQuickFilter) gridApi.setQuickFilter(this.value);
+ else gridApi.setGridOption('quickFilterText', this.value);
+ });
 });
 
 function exportCSV() {
-  if (!gridApi) return;
-  gridToXlsx(gridApi, 'chemical_journal.xlsx', "{{ _('Journal') }}");
+ if (!gridApi) return;
+ gridToXlsx(gridApi, 'chemical_journal.xlsx', "{{ _('Journal') }}");
 }
+document.getElementById('btn-export-csv')?.addEventListener('click', exportCSV);
 </script>
 {% endblock %}

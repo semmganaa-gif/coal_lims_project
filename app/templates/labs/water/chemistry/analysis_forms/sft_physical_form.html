@@ -152,6 +152,29 @@
     if (!f || !['color_temp_m','ec_m','ph_m','f_m','clfree_m'].includes(f)) return;
     params.api.refreshCells({ columns: cols, force: true });
   };
+
+  window._validateSaveItems = function() {
+    const errs = [];
+    const bySample = {};
+    window.waterGridApi.forEachNode(n => {
+      const d = n.data;
+      if (d.is_saved) return;
+      if (!bySample[d.sample_id]) bySample[d.sample_id] = {};
+      bySample[d.sample_id][d.row_type] = d;
+    });
+    for (const pair of Object.values(bySample)) {
+      const m1 = pair.M1, m2 = pair.M2;
+      if (!m1 || !m2) continue;
+      const physFields = ['color_temp_m','ec_m','ph_m','f_m','clfree_m'];
+      const hasM1 = physFields.some(f => m1[f] != null);
+      const hasM2 = physFields.some(f => m2[f] != null);
+      if (hasM1 && !hasM2) {
+        errs.push('{{ _("M2 measurement is missing for some samples. Both M1 and M2 must be filled.") }}');
+        break;
+      }
+    }
+    return errs;
+  };
 {% endblock %}
 
 {% block row_builder %}
