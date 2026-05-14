@@ -14,6 +14,7 @@ from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
 from app.models import Chemical, ChemicalUsage, ChemicalLog
+from app.repositories import ChemicalUsageRepository, ChemicalLogRepository
 from app.repositories import ChemicalRepository
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp, LAB_TYPES, CATEGORIES, UNITS, STATUS_TYPES
@@ -74,12 +75,10 @@ def chemical_detail(id):
         abort(404)
 
     # Хэрэглээний түүх
-    usages = ChemicalUsage.query.filter_by(chemical_id=id)\
-        .order_by(ChemicalUsage.used_at.desc()).limit(50).all()
+    usages = ChemicalUsageRepository.get_for_chemical(id, limit=50)
 
     # Аудит түүх
-    logs = ChemicalLog.query.filter_by(chemical_id=id)\
-        .order_by(ChemicalLog.timestamp.desc()).limit(50).all()
+    logs = ChemicalLogRepository.get_for_chemical(id, limit=50)
 
     from datetime import date as _date
     return render_template(

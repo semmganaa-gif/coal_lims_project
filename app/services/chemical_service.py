@@ -25,6 +25,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.constants import AnalysisResultStatus
 from app.models import Chemical, ChemicalUsage, ChemicalLog
+from app.repositories import ChemicalUsageRepository
 from app.utils.security import escape_like_pattern
 from app.utils.transaction import transactional
 
@@ -378,26 +379,10 @@ def get_usage_history(chemical_id: Optional[int] = None, lab: str = "all",
     Raises:
         ValueError: on bad date format.
     """
-    query = db.session.query(ChemicalUsage, Chemical).join(Chemical)
-
-    if chemical_id is not None:
-        query = query.filter(ChemicalUsage.chemical_id == chemical_id)
-
-    if lab and lab != "all":
-        query = query.filter(
-            (Chemical.lab_type == lab) | (Chemical.lab_type == 'all')
-        )
-
-    if start_date:
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        query = query.filter(ChemicalUsage.used_at >= start_dt)
-
-    if end_date:
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-        end_dt = end_dt.replace(hour=23, minute=59, second=59)
-        query = query.filter(ChemicalUsage.used_at <= end_dt)
-
-    usages = query.order_by(ChemicalUsage.used_at.desc()).limit(limit).all()
+    usages = ChemicalUsageRepository.query_with_chemical(
+        chemical_id=chemical_id, lab=lab,
+        start_date=start_date, end_date=end_date, limit=limit,
+    )
 
     data = [{
         "id": u.id,
@@ -827,12 +812,7 @@ def invalidate_results_by_lot(
         )
 
     # 1. Тухайн lot ашигласан бүх ChemicalUsage олох
-    usages = (
-        ChemicalUsage.query
-        .filter_by(chemical_id=lot_id)
-        .filter(ChemicalUsage.sample_id.isnot(None))
-        .all()
-    )
+    usages = ChemicalUsageRepository.get_for_lot(lot_id, with_sample=True)
 
     # 2. WorksheetRow-оор холбогдсон AnalysisResult-үүд
     #    (raw_data-д reagent_lot_id хадгалсан тохиолдол)

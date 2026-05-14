@@ -16,6 +16,7 @@ from app.constants import UserRole
 from app.utils.decorators import role_required
 from app.utils.datetime import now_local
 from app.models import ChemicalWaste, ChemicalWasteRecord
+from app.repositories import ChemicalWasteRepository, ChemicalWasteRecordRepository
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp
 
@@ -60,21 +61,12 @@ def waste_list():
     lab = request.args.get("lab", "all")
     year = request.args.get("year", now_local().year, type=int)
 
-    query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
-
-    if lab and lab != "all":
-        query = query.filter(
-            (ChemicalWaste.lab_type == lab) | (ChemicalWaste.lab_type == 'all')
-        )
-
-    wastes = query.order_by(ChemicalWaste.name_mn.asc()).all()
+    wastes = ChemicalWasteRepository.get_active(lab=lab)
 
     # Сарын бүртгэл татах
     waste_data = []
     for w in wastes:
-        records = ChemicalWasteRecord.query.filter_by(
-            waste_id=w.id, year=year
-        ).all()
+        records = ChemicalWasteRecordRepository.get_for_year(w.id, year)
 
         monthly = {r.month: r.quantity for r in records}
         total = sum(monthly.values())
@@ -156,7 +148,7 @@ def add_waste():
 @role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_waste(id):
     """Хог хаягдал засах."""
-    waste = db.session.get(ChemicalWaste, id)
+    waste = ChemicalWasteRepository.get_by_id(id)
     if not waste:
         abort(404)
 
@@ -201,7 +193,7 @@ def edit_waste(id):
 @role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_waste(id):
     """Хог хаягдал устгах (идэвхгүй болгох)."""
-    waste = db.session.get(ChemicalWaste, id)
+    waste = ChemicalWasteRepository.get_by_id(id)
     if not waste:
         abort(404)
     waste.is_active = False
@@ -228,9 +220,7 @@ def save_waste_record():
         ending_balance = float(data.get("ending_balance", 0)) if data.get("ending_balance") else None
 
         # Бүртгэл байгаа эсэх шалгах
-        record = ChemicalWasteRecord.query.filter_by(
-            waste_id=waste_id, year=year, month=month
-        ).first()
+        record = ChemicalWasteRecordRepository.find(waste_id, year, month)
 
         if record:
             record.quantity = quantity
@@ -270,19 +260,11 @@ def waste_report():
     year = request.args.get("year", now_local().year, type=int)
     lab = request.args.get("lab", "all")
 
-    query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
-    if lab and lab != "all":
-        query = query.filter(
-            (ChemicalWaste.lab_type == lab) | (ChemicalWaste.lab_type == 'all')
-        )
-
-    wastes = query.order_by(ChemicalWaste.name_mn.asc()).all()
+    wastes = ChemicalWasteRepository.get_active(lab=lab)
 
     report_data = []
     for w in wastes:
-        records = ChemicalWasteRecord.query.filter_by(
-            waste_id=w.id, year=year
-        ).all()
+        records = ChemicalWasteRecordRepository.get_for_year(w.id, year)
 
         monthly = {r.month: {'qty': r.quantity, 'balance': r.ending_balance} for r in records}
         total = sum(r.quantity for r in records)

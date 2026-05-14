@@ -36,6 +36,12 @@ from app.repositories.spare_parts_repository import (
     SparePartUsageRepository,
     SparePartLogRepository,
 )
+from app.repositories.chemical_usage_repository import (
+    ChemicalUsageRepository,
+    ChemicalLogRepository,
+    ChemicalWasteRepository,
+    ChemicalWasteRecordRepository,
+)
 
 __all__ = [
     "SampleRepository",
@@ -49,6 +55,10 @@ __all__ = [
     "SparePartCategoryRepository",
     "SparePartUsageRepository",
     "SparePartLogRepository",
+    "ChemicalUsageRepository",
+    "ChemicalLogRepository",
+    "ChemicalWasteRepository",
+    "ChemicalWasteRecordRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",
