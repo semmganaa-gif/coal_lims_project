@@ -1,0 +1,65 @@
+# Coal LIMS — Windows dev / Linux prod cross-platform line-ending policy
+#
+# Зорилго: `git diff`-д CRLF→LF warning гаргахгүй болгох. Repo доторх text файл
+# бүгд **LF**-ээр хадгалагдана; Windows-ийн checkout үед `core.autocrlf=true`
+# дээр CRLF болгож гаргана. Shell скрипт болон Windows batch файлуудыг
+# заавал зөв line ending-тэй checkout хийнэ.
+
+# Default: бүх text файлыг автоматаар таних, repo-д LF-ээр normalize хийх
+* text=auto eol=lf
+
+# ── Source code (LF, eol=lf) ─────────────────────────────────────────────
+*.py        text eol=lf diff=python
+*.js        text eol=lf
+*.ts        text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.mako      text eol=lf
+*.json      text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.toml      text eol=lf
+*.cfg       text eol=lf
+*.conf      text eol=lf
+*.ini       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.sql       text eol=lf
+*.po        text eol=lf
+*.pot       text eol=lf
+*.example   text eol=lf
+
+# ── Platform-specific scripts ────────────────────────────────────────────
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# ── Binary файлууд (Git diff-ийг идэвхгүй болгоно) ───────────────────────
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.xlsx      binary
+*.xls       binary
+*.mp3       binary
+*.mp4       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.eot       binary
+*.otf       binary
+*.zip       binary
+*.gz        binary
+*.tar       binary
+*.db        binary
+*.sqlite    binary
+*.sqlite3   binary
+*.mo        binary
+
+# ── Generated / vendored — diff багасгах ─────────────────────────────────
+package-lock.json  -diff
+poetry.lock        -diff
