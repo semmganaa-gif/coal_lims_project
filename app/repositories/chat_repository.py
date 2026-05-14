@@ -64,7 +64,7 @@ class ChatMessageRepository:
         )
 
     @staticmethod
-    def mark_as_read(message_ids: list[int], commit: bool = True) -> int:
+    def mark_as_read(message_ids: list[int], commit: bool = False) -> int:
         from app.utils.datetime import now_local as now_mn
         count = (
             ChatMessage.query
@@ -79,14 +79,14 @@ class ChatMessageRepository:
         return count
 
     @staticmethod
-    def save(message: ChatMessage, commit: bool = True) -> ChatMessage:
+    def save(message: ChatMessage, commit: bool = False) -> ChatMessage:
         db.session.add(message)
         if commit:
             db.session.commit()
         return message
 
     @staticmethod
-    def soft_delete(message: ChatMessage, commit: bool = True) -> bool:
+    def soft_delete(message: ChatMessage, commit: bool = False) -> bool:
         from app.utils.datetime import now_local as now_mn
         message.is_deleted = True
         message.deleted_at = now_mn()
@@ -107,7 +107,7 @@ class UserOnlineStatusRepository:
         return UserOnlineStatus.query.filter_by(is_online=True).all()
 
     @staticmethod
-    def set_online(user_id: int, socket_id: str, commit: bool = True) -> UserOnlineStatus:
+    def set_online(user_id: int, socket_id: str, commit: bool = False) -> UserOnlineStatus:
         status = db.session.get(UserOnlineStatus, user_id)
         if not status:
             status = UserOnlineStatus(user_id=user_id)
@@ -121,7 +121,7 @@ class UserOnlineStatusRepository:
         return status
 
     @staticmethod
-    def set_offline(user_id: int, commit: bool = True) -> Optional[UserOnlineStatus]:
+    def set_offline(user_id: int, commit: bool = False) -> Optional[UserOnlineStatus]:
         status = db.session.get(UserOnlineStatus, user_id)
         if status:
             status.is_online = False

@@ -104,14 +104,14 @@ class EquipmentRepository:
         return q.order_by(Equipment.name.asc()).all()
 
     @staticmethod
-    def save(equipment: Equipment, commit: bool = True) -> Equipment:
+    def save(equipment: Equipment, commit: bool = False) -> Equipment:
         db.session.add(equipment)
         if commit:
             db.session.commit()
         return equipment
 
     @staticmethod
-    def delete(equipment: Equipment, commit: bool = True) -> bool:
+    def delete(equipment: Equipment, commit: bool = False) -> bool:
         db.session.delete(equipment)
         if commit:
             db.session.commit()

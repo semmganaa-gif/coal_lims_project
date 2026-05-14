@@ -31,14 +31,14 @@ class MaintenanceLogRepository:
         return MaintenanceLog.query.filter_by(equipment_id=equipment_id).first() is not None
 
     @staticmethod
-    def save(log: MaintenanceLog, commit: bool = True) -> MaintenanceLog:
+    def save(log: MaintenanceLog, commit: bool = False) -> MaintenanceLog:
         db.session.add(log)
         if commit:
             db.session.commit()
         return log
 
     @staticmethod
-    def delete(log: MaintenanceLog, commit: bool = True) -> bool:
+    def delete(log: MaintenanceLog, commit: bool = False) -> bool:
         db.session.delete(log)
         if commit:
             db.session.commit()
@@ -66,7 +66,7 @@ class UsageLogRepository:
         return UsageLog.query.filter_by(equipment_id=equipment_id).first() is not None
 
     @staticmethod
-    def save(log: UsageLog, commit: bool = True) -> UsageLog:
+    def save(log: UsageLog, commit: bool = False) -> UsageLog:
         db.session.add(log)
         if commit:
             db.session.commit()

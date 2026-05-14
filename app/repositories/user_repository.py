@@ -49,14 +49,14 @@ class UserRepository:
         return User.query.filter(User.role.in_(roles)).order_by(User.username).all()
 
     @staticmethod
-    def save(user: User, commit: bool = True) -> User:
+    def save(user: User, commit: bool = False) -> User:
         db.session.add(user)
         if commit:
             db.session.commit()
         return user
 
     @staticmethod
-    def delete(user: User, commit: bool = True) -> bool:
+    def delete(user: User, commit: bool = False) -> bool:
         db.session.delete(user)
         if commit:
             db.session.commit()

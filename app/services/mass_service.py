@@ -86,6 +86,13 @@ def _db_error_to_result(exc: Exception) -> ServiceResult:
 # Public service functions
 # ---------------------------------------------------------------------------
 
+@transactional()
+def _update_sample_status_atomic(sample_ids: list[int], new_status: str) -> ServiceResult:
+    """update_sample_status-ийн atomic core."""
+    count = SampleRepository.update_status(sample_ids, new_status, commit=False)
+    return ServiceResult(True, f"{count} sample status updated.", data={"count": count})
+
+
 def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
     """
     Дээжүүдийн статусыг archive/unarchive хийх.
@@ -114,12 +121,9 @@ def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
         pass  # Fallback: allow if workflow unavailable
 
     try:
-        count = SampleRepository.update_status(sample_ids, new_status)
-        return ServiceResult(True, f"{count} sample status updated.", data={"count": count})
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        logger.error("Update sample status error: %s", e)
-        return ServiceResult(False, _l("Хадгалахад алдаа гарлаа"), status_code=500)
+        return _update_sample_status_atomic(sample_ids, new_status)
+    except SQLAlchemyError as exc:
+        return _db_error_to_result(exc)
 
 
 def get_eligible_samples(include_ready: bool = False, q_text: str = "") -> list[dict]:

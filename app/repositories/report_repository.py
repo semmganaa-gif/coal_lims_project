@@ -44,14 +44,14 @@ class LabReportRepository:
         return query.order_by(LabReport.created_at.desc()).all()
 
     @staticmethod
-    def save(report: LabReport, commit: bool = True) -> LabReport:
+    def save(report: LabReport, commit: bool = False) -> LabReport:
         db.session.add(report)
         if commit:
             db.session.commit()
         return report
 
     @staticmethod
-    def delete(report: LabReport, commit: bool = True) -> bool:
+    def delete(report: LabReport, commit: bool = False) -> bool:
         db.session.delete(report)
         if commit:
             db.session.commit()
@@ -83,14 +83,14 @@ class ReportSignatureRepository:
         return ReportSignature.query.filter_by(user_id=user_id).all()
 
     @staticmethod
-    def save(sig: ReportSignature, commit: bool = True) -> ReportSignature:
+    def save(sig: ReportSignature, commit: bool = False) -> ReportSignature:
         db.session.add(sig)
         if commit:
             db.session.commit()
         return sig
 
     @staticmethod
-    def delete(sig: ReportSignature, commit: bool = True) -> bool:
+    def delete(sig: ReportSignature, commit: bool = False) -> bool:
         db.session.delete(sig)
         if commit:
             db.session.commit()

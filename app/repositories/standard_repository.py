@@ -47,14 +47,14 @@ class GbwStandardRepository:
         return count
 
     @staticmethod
-    def save(standard: GbwStandard, commit: bool = True) -> GbwStandard:
+    def save(standard: GbwStandard, commit: bool = False) -> GbwStandard:
         db.session.add(standard)
         if commit:
             db.session.commit()
         return standard
 
     @staticmethod
-    def delete(standard: GbwStandard, commit: bool = True) -> bool:
+    def delete(standard: GbwStandard, commit: bool = False) -> bool:
         db.session.delete(standard)
         if commit:
             db.session.commit()
@@ -101,14 +101,14 @@ class ControlStandardRepository:
         return count
 
     @staticmethod
-    def save(standard: ControlStandard, commit: bool = True) -> ControlStandard:
+    def save(standard: ControlStandard, commit: bool = False) -> ControlStandard:
         db.session.add(standard)
         if commit:
             db.session.commit()
         return standard
 
     @staticmethod
-    def delete(standard: ControlStandard, commit: bool = True) -> bool:
+    def delete(standard: ControlStandard, commit: bool = False) -> bool:
         db.session.delete(standard)
         if commit:
             db.session.commit()

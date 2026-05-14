@@ -38,7 +38,7 @@ class SystemSettingRepository:
             return default
 
     @staticmethod
-    def set_value(category: str, key: str, value: str, commit: bool = True) -> SystemSetting:
+    def set_value(category: str, key: str, value: str, commit: bool = False) -> SystemSetting:
         """Category + key-ээр value хадгалах (upsert)."""
         setting = SystemSetting.query.filter_by(category=category, key=key).first()
         if setting:
@@ -81,7 +81,7 @@ class SystemSettingRepository:
         ).first()
 
     @staticmethod
-    def delete(setting: SystemSetting, commit: bool = True) -> bool:
+    def delete(setting: SystemSetting, commit: bool = False) -> bool:
         db.session.delete(setting)
         if commit:
             db.session.commit()

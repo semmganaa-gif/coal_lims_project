@@ -75,7 +75,7 @@ class AuditLogRepository:
         return query.order_by(AuditLog.timestamp.desc()).all()
 
     @staticmethod
-    def save(log: AuditLog, commit: bool = True) -> AuditLog:
+    def save(log: AuditLog, commit: bool = False) -> AuditLog:
         db.session.add(log)
         if commit:
             db.session.commit()

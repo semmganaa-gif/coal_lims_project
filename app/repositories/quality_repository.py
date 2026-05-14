@@ -59,14 +59,14 @@ class ComplaintRepository:
         return f"COMP-{year}-{seq:03d}"
 
     @staticmethod
-    def save(complaint: CustomerComplaint, commit: bool = True) -> CustomerComplaint:
+    def save(complaint: CustomerComplaint, commit: bool = False) -> CustomerComplaint:
         db.session.add(complaint)
         if commit:
             db.session.commit()
         return complaint
 
     @staticmethod
-    def delete(complaint: CustomerComplaint, commit: bool = True) -> bool:
+    def delete(complaint: CustomerComplaint, commit: bool = False) -> bool:
         db.session.delete(complaint)
         if commit:
             db.session.commit()
@@ -96,14 +96,14 @@ class CAPARepository:
         return query.order_by(CorrectiveAction.issue_date.desc()).all()
 
     @staticmethod
-    def save(capa: CorrectiveAction, commit: bool = True) -> CorrectiveAction:
+    def save(capa: CorrectiveAction, commit: bool = False) -> CorrectiveAction:
         db.session.add(capa)
         if commit:
             db.session.commit()
         return capa
 
     @staticmethod
-    def delete(capa: CorrectiveAction, commit: bool = True) -> bool:
+    def delete(capa: CorrectiveAction, commit: bool = False) -> bool:
         db.session.delete(capa)
         if commit:
             db.session.commit()
@@ -133,14 +133,14 @@ class NonConformityRepository:
         return query.order_by(NonConformityRecord.record_date.desc()).all()
 
     @staticmethod
-    def save(record: NonConformityRecord, commit: bool = True) -> NonConformityRecord:
+    def save(record: NonConformityRecord, commit: bool = False) -> NonConformityRecord:
         db.session.add(record)
         if commit:
             db.session.commit()
         return record
 
     @staticmethod
-    def delete(record: NonConformityRecord, commit: bool = True) -> bool:
+    def delete(record: NonConformityRecord, commit: bool = False) -> bool:
         db.session.delete(record)
         if commit:
             db.session.commit()
@@ -170,14 +170,14 @@ class ImprovementRepository:
         return query.order_by(ImprovementRecord.record_date.desc()).all()
 
     @staticmethod
-    def save(record: ImprovementRecord, commit: bool = True) -> ImprovementRecord:
+    def save(record: ImprovementRecord, commit: bool = False) -> ImprovementRecord:
         db.session.add(record)
         if commit:
             db.session.commit()
         return record
 
     @staticmethod
-    def delete(record: ImprovementRecord, commit: bool = True) -> bool:
+    def delete(record: ImprovementRecord, commit: bool = False) -> bool:
         db.session.delete(record)
         if commit:
             db.session.commit()
@@ -213,14 +213,14 @@ class ProficiencyTestRepository:
         )
 
     @staticmethod
-    def save(test: ProficiencyTest, commit: bool = True) -> ProficiencyTest:
+    def save(test: ProficiencyTest, commit: bool = False) -> ProficiencyTest:
         db.session.add(test)
         if commit:
             db.session.commit()
         return test
 
     @staticmethod
-    def delete(test: ProficiencyTest, commit: bool = True) -> bool:
+    def delete(test: ProficiencyTest, commit: bool = False) -> bool:
         db.session.delete(test)
         if commit:
             db.session.commit()
@@ -248,7 +248,7 @@ class EnvironmentalLogRepository:
         )
 
     @staticmethod
-    def save(log: EnvironmentalLog, commit: bool = True) -> EnvironmentalLog:
+    def save(log: EnvironmentalLog, commit: bool = False) -> EnvironmentalLog:
         db.session.add(log)
         if commit:
             db.session.commit()

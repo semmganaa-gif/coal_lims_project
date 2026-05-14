@@ -45,14 +45,14 @@ class BottleRepository:
         return Bottle.query.filter_by(is_active=True).all()
 
     @staticmethod
-    def save(bottle: Bottle, commit: bool = True) -> Bottle:
+    def save(bottle: Bottle, commit: bool = False) -> Bottle:
         db.session.add(bottle)
         if commit:
             db.session.commit()
         return bottle
 
     @staticmethod
-    def delete(bottle: Bottle, commit: bool = True) -> bool:
+    def delete(bottle: Bottle, commit: bool = False) -> bool:
         db.session.delete(bottle)
         if commit:
             db.session.commit()
@@ -76,7 +76,7 @@ class BottleConstantRepository:
         )
 
     @staticmethod
-    def save(constant: BottleConstant, commit: bool = True) -> BottleConstant:
+    def save(constant: BottleConstant, commit: bool = False) -> BottleConstant:
         db.session.add(constant)
         if commit:
             db.session.commit()

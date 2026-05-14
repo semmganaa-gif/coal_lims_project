@@ -177,7 +177,7 @@ class AnalysisResultRepository:
         ).all()
 
     @staticmethod
-    def update_status(result_ids: list[int], new_status: str, commit: bool = True) -> int:
+    def update_status(result_ids: list[int], new_status: str, commit: bool = False) -> int:
         """
         Олон үр дүнгийн статус шинэчлэх.
 
@@ -296,7 +296,7 @@ class AnalysisResultRepository:
     # =========================================================================
 
     @staticmethod
-    def save(result: AnalysisResult, commit: bool = True) -> AnalysisResult:
+    def save(result: AnalysisResult, commit: bool = False) -> AnalysisResult:
         """
         Үр дүн хадгалах.
 
@@ -312,7 +312,7 @@ class AnalysisResultRepository:
         return result
 
     @staticmethod
-    def delete(result: AnalysisResult, commit: bool = True) -> bool:
+    def delete(result: AnalysisResult, commit: bool = False) -> bool:
         """
         Үр дүн устгах.
 

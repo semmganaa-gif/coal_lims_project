@@ -142,7 +142,7 @@ class SampleRepository:
         return query.order_by(Sample.received_date.desc()).all()
 
     @staticmethod
-    def update_status(sample_ids: list[int], new_status: str, commit: bool = True) -> int:
+    def update_status(sample_ids: list[int], new_status: str, commit: bool = False) -> int:
         """
         Олон дээжний статус шинэчлэх.
 
@@ -259,7 +259,7 @@ class SampleRepository:
     # =========================================================================
 
     @staticmethod
-    def save(sample: Sample, commit: bool = True) -> Sample:
+    def save(sample: Sample, commit: bool = False) -> Sample:
         """
         Дээж хадгалах (create эсвэл update).
 
@@ -275,7 +275,7 @@ class SampleRepository:
         return sample
 
     @staticmethod
-    def delete(sample: Sample, commit: bool = True) -> bool:
+    def delete(sample: Sample, commit: bool = False) -> bool:
         """
         Дээж устгах.
 

@@ -65,14 +65,14 @@ class ChemicalRepository:
         )
 
     @staticmethod
-    def save(chemical: Chemical, commit: bool = True) -> Chemical:
+    def save(chemical: Chemical, commit: bool = False) -> Chemical:
         db.session.add(chemical)
         if commit:
             db.session.commit()
         return chemical
 
     @staticmethod
-    def delete(chemical: Chemical, commit: bool = True) -> bool:
+    def delete(chemical: Chemical, commit: bool = False) -> bool:
         db.session.delete(chemical)
         if commit:
             db.session.commit()

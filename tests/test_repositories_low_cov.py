@@ -67,7 +67,7 @@ class TestChatMessageRepository:
         with app.app_context():
             u = _get_user()
             msg = ChatMessage(sender_id=u.id, message="hello")
-            saved = ChatMessageRepository.save(msg)
+            saved = ChatMessageRepository.save(msg, commit=True)
             assert saved.id is not None
 
             fetched = ChatMessageRepository.get_by_id(saved.id)
@@ -139,7 +139,7 @@ class TestChatMessageRepository:
             _db.session.add(m)
             _db.session.commit()
 
-            updated = ChatMessageRepository.mark_as_read([m.id])
+            updated = ChatMessageRepository.mark_as_read([m.id], commit=True)
             assert updated == 1
 
             refreshed = ChatMessageRepository.get_by_id(m.id)
@@ -156,7 +156,7 @@ class TestChatMessageRepository:
             _db.session.add(m)
             _db.session.commit()
 
-            updated = ChatMessageRepository.mark_as_read([m.id])
+            updated = ChatMessageRepository.mark_as_read([m.id], commit=True)
             assert updated == 0
 
             _db.session.delete(m)
@@ -169,7 +169,7 @@ class TestChatMessageRepository:
             _db.session.add(m)
             _db.session.commit()
 
-            result = ChatMessageRepository.soft_delete(m)
+            result = ChatMessageRepository.soft_delete(m, commit=True)
             assert result is True
             assert m.is_deleted is True
             assert m.deleted_at is not None
@@ -203,7 +203,7 @@ class TestUserOnlineStatusRepository:
                 _db.session.delete(existing)
                 _db.session.commit()
 
-            status = UserOnlineStatusRepository.set_online(u.id, "sock-123")
+            status = UserOnlineStatusRepository.set_online(u.id, "sock-123", commit=True)
             assert status.is_online is True
             assert status.socket_id == "sock-123"
 
@@ -218,8 +218,8 @@ class TestUserOnlineStatusRepository:
                 _db.session.delete(existing)
                 _db.session.commit()
 
-            UserOnlineStatusRepository.set_online(u.id, "sock-1")
-            status = UserOnlineStatusRepository.set_online(u.id, "sock-2")
+            UserOnlineStatusRepository.set_online(u.id, "sock-1", commit=True)
+            status = UserOnlineStatusRepository.set_online(u.id, "sock-2", commit=True)
             assert status.socket_id == "sock-2"
 
             _db.session.delete(status)
@@ -233,8 +233,8 @@ class TestUserOnlineStatusRepository:
                 _db.session.delete(existing)
                 _db.session.commit()
 
-            UserOnlineStatusRepository.set_online(u.id, "sock-1")
-            status = UserOnlineStatusRepository.set_offline(u.id)
+            UserOnlineStatusRepository.set_online(u.id, "sock-1", commit=True)
+            status = UserOnlineStatusRepository.set_offline(u.id, commit=True)
             assert status is not None
             assert status.is_online is False
 
@@ -243,7 +243,7 @@ class TestUserOnlineStatusRepository:
 
     def test_set_offline_nonexistent(self, app):
         with app.app_context():
-            result = UserOnlineStatusRepository.set_offline(999999)
+            result = UserOnlineStatusRepository.set_offline(999999, commit=True)
             assert result is None
 
     def test_get_by_user_id(self, app):
@@ -254,7 +254,7 @@ class TestUserOnlineStatusRepository:
                 _db.session.delete(existing)
                 _db.session.commit()
 
-            UserOnlineStatusRepository.set_online(u.id, "sock-abc")
+            UserOnlineStatusRepository.set_online(u.id, "sock-abc", commit=True)
             fetched = UserOnlineStatusRepository.get_by_user_id(u.id)
             assert fetched is not None
             assert fetched.socket_id == "sock-abc"
@@ -270,7 +270,7 @@ class TestUserOnlineStatusRepository:
                 _db.session.delete(existing)
                 _db.session.commit()
 
-            UserOnlineStatusRepository.set_online(u.id, "sock-x")
+            UserOnlineStatusRepository.set_online(u.id, "sock-x", commit=True)
             online = UserOnlineStatusRepository.get_online_users()
             assert any(s.user_id == u.id for s in online)
 
@@ -452,10 +452,10 @@ class TestEquipmentRepository:
     def test_save_and_delete(self, app):
         with app.app_context():
             eq = Equipment(name="ToDelete", category="other", status="normal")
-            saved = EquipmentRepository.save(eq)
+            saved = EquipmentRepository.save(eq, commit=True)
             assert saved.id is not None
 
-            result = EquipmentRepository.delete(saved)
+            result = EquipmentRepository.delete(saved, commit=True)
             assert result is True
 
 
@@ -476,7 +476,7 @@ class TestAuditLogRepository:
     def test_save_and_get_by_id(self, app):
         with app.app_context():
             log = AuditLog(action="login", user_id=_get_user().id)
-            saved = AuditLogRepository.save(log)
+            saved = AuditLogRepository.save(log, commit=True)
             assert saved.id is not None
 
             fetched = AuditLogRepository.get_by_id(saved.id)
@@ -652,7 +652,7 @@ class TestLabReportRepository:
         with app.app_context():
             rpt = self._make_report()
             rid = rpt.id
-            result = LabReportRepository.delete(rpt)
+            result = LabReportRepository.delete(rpt, commit=True)
             assert result is True
             assert LabReportRepository.get_by_id(rid) is None
 
@@ -723,7 +723,7 @@ class TestReportSignatureRepository:
         with app.app_context():
             sig = self._make_sig()
             sid = sig.id
-            ReportSignatureRepository.delete(sig)
+            ReportSignatureRepository.delete(sig, commit=True)
             assert ReportSignatureRepository.get_by_id(sid) is None
 
 
@@ -743,7 +743,7 @@ class TestMaintenanceLogRepository:
         with app.app_context():
             eq = self._make_equipment()
             log = MaintenanceLog(equipment_id=eq.id, action_type="Calibration", description="test")
-            saved = MaintenanceLogRepository.save(log)
+            saved = MaintenanceLogRepository.save(log, commit=True)
             assert saved.id is not None
 
             fetched = MaintenanceLogRepository.get_by_id(saved.id)
@@ -778,7 +778,7 @@ class TestMaintenanceLogRepository:
             _db.session.commit()
 
             with pytest.raises(RuntimeError, match="AUDIT INTEGRITY"):
-                MaintenanceLogRepository.delete(log)
+                MaintenanceLogRepository.delete(log, commit=True)
             _db.session.rollback()
 
 
@@ -794,7 +794,7 @@ class TestUsageLogRepository:
         with app.app_context():
             eq = self._make_equipment()
             log = UsageLog(equipment_id=eq.id, start_time=datetime.utcnow())
-            saved = UsageLogRepository.save(log)
+            saved = UsageLogRepository.save(log, commit=True)
             assert saved.id is not None
 
             fetched = UsageLogRepository.get_by_id(saved.id)
@@ -986,7 +986,7 @@ class TestAnalysisResultRepository:
             s = self._make_sample()
             ar = self._make_result(s.id, status="pending_review")
 
-            count = AnalysisResultRepository.update_status([ar.id], "approved")
+            count = AnalysisResultRepository.update_status([ar.id], "approved", commit=True)
             assert count == 1
 
             _db.session.expire_all()
@@ -994,7 +994,7 @@ class TestAnalysisResultRepository:
             assert refreshed.status == "approved"
 
             # empty list
-            assert AnalysisResultRepository.update_status([], "approved") == 0
+            assert AnalysisResultRepository.update_status([], "approved", commit=True) == 0
 
             _db.session.delete(refreshed)
             _db.session.delete(s)
@@ -1063,10 +1063,10 @@ class TestAnalysisResultRepository:
         with app.app_context():
             s = self._make_sample()
             ar = AnalysisResult(sample_id=s.id, analysis_code="Del", status="pending_review")
-            saved = AnalysisResultRepository.save(ar)
+            saved = AnalysisResultRepository.save(ar, commit=True)
             assert saved.id is not None
 
-            result = AnalysisResultRepository.delete(saved)
+            result = AnalysisResultRepository.delete(saved, commit=True)
             assert result is True
 
             _db.session.delete(s)
@@ -1094,7 +1094,7 @@ class TestSystemSettingRepository:
     def test_set_value_creates_new(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            setting = SystemSettingRepository.set_value(cat, key, "hello")
+            setting = SystemSettingRepository.set_value(cat, key, "hello", commit=True)
             assert setting.id is not None
             assert setting.value == "hello"
 
@@ -1104,8 +1104,8 @@ class TestSystemSettingRepository:
     def test_set_value_updates_existing(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            SystemSettingRepository.set_value(cat, key, "first")
-            setting = SystemSettingRepository.set_value(cat, key, "second")
+            SystemSettingRepository.set_value(cat, key, "first", commit=True)
+            setting = SystemSettingRepository.set_value(cat, key, "second", commit=True)
             assert setting.value == "second"
 
             _db.session.delete(setting)
@@ -1114,7 +1114,7 @@ class TestSystemSettingRepository:
     def test_get(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            SystemSettingRepository.set_value(cat, key, "val")
+            SystemSettingRepository.set_value(cat, key, "val", commit=True)
 
             fetched = SystemSettingRepository.get(cat, key)
             assert fetched is not None
@@ -1128,7 +1128,7 @@ class TestSystemSettingRepository:
     def test_get_value(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            SystemSettingRepository.set_value(cat, key, "myval")
+            SystemSettingRepository.set_value(cat, key, "myval", commit=True)
 
             val = SystemSettingRepository.get_value(cat, key)
             assert val == "myval"
@@ -1143,14 +1143,14 @@ class TestSystemSettingRepository:
     def test_get_json(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            SystemSettingRepository.set_value(cat, key, '{"a": 1}')
+            SystemSettingRepository.set_value(cat, key, '{"a": 1}', commit=True)
 
             val = SystemSettingRepository.get_json(cat, key)
             assert val == {"a": 1}
 
             # invalid json
             cat2, key2 = _unique("cat"), _unique("key")
-            SystemSettingRepository.set_value(cat2, key2, "not json{{{")
+            SystemSettingRepository.set_value(cat2, key2, "not json{{{", commit=True)
             val2 = SystemSettingRepository.get_json(cat2, key2, default="def")
             assert val2 == "def"
 
@@ -1167,8 +1167,8 @@ class TestSystemSettingRepository:
     def test_get_all_by_category(self, app):
         with app.app_context():
             cat = _unique("cat")
-            SystemSettingRepository.set_value(cat, "k1", "v1")
-            SystemSettingRepository.set_value(cat, "k2", "v2")
+            SystemSettingRepository.set_value(cat, "k1", "v1", commit=True)
+            SystemSettingRepository.set_value(cat, "k2", "v2", commit=True)
 
             results = SystemSettingRepository.get_all_by_category(cat)
             assert len(results) == 2
@@ -1187,8 +1187,8 @@ class TestSystemSettingRepository:
 
     def test_get_email_recipients_with_data(self, app):
         with app.app_context():
-            SystemSettingRepository.set_value("email", "report_recipients_to", "a@b.com")
-            SystemSettingRepository.set_value("email", "report_recipients_cc", "c@d.com")
+            SystemSettingRepository.set_value("email", "report_recipients_to", "a@b.com", commit=True)
+            SystemSettingRepository.set_value("email", "report_recipients_cc", "c@d.com", commit=True)
 
             to_val, cc_val = SystemSettingRepository.get_email_recipients()
             assert to_val == "a@b.com"
@@ -1215,9 +1215,9 @@ class TestSystemSettingRepository:
     def test_delete(self, app):
         with app.app_context():
             cat, key = _unique("cat"), _unique("key")
-            setting = SystemSettingRepository.set_value(cat, key, "to_delete")
+            setting = SystemSettingRepository.set_value(cat, key, "to_delete", commit=True)
             sid = setting.id
-            SystemSettingRepository.delete(setting)
+            SystemSettingRepository.delete(setting, commit=True)
             assert SystemSettingRepository.get(cat, key) is None
 
 
@@ -1336,10 +1336,10 @@ class TestChemicalRepository:
     def test_save_and_delete(self, app):
         with app.app_context():
             c = Chemical(name="ToDelete", status="active", quantity=1, unit="g")
-            saved = ChemicalRepository.save(c)
+            saved = ChemicalRepository.save(c, commit=True)
             assert saved.id is not None
 
-            result = ChemicalRepository.delete(saved)
+            result = ChemicalRepository.delete(saved, commit=True)
             assert result is True
 
 
@@ -1416,10 +1416,10 @@ class TestUserRepository:
         with app.app_context():
             u = User(username=_unique("usr"), role="chemist")
             u.set_password("TestPass123")
-            saved = UserRepository.save(u)
+            saved = UserRepository.save(u, commit=True)
             assert saved.id is not None
 
-            result = UserRepository.delete(saved)
+            result = UserRepository.delete(saved, commit=True)
             assert result is True
 
     def test_save_no_commit(self, app):
