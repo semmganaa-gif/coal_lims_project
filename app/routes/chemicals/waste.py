@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
+from app.utils.datetime import now_local
 from app.models import ChemicalWaste, ChemicalWasteRecord
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp
@@ -57,7 +58,7 @@ LAB_TYPES = {
 def waste_list():
     """Хог хаягдлын жагсаалт."""
     lab = request.args.get("lab", "all")
-    year = request.args.get("year", datetime.now().year, type=int)
+    year = request.args.get("year", now_local().year, type=int)
 
     query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))
 
@@ -235,7 +236,7 @@ def save_waste_record():
             record.quantity = quantity
             if ending_balance is not None:
                 record.ending_balance = ending_balance
-            record.recorded_at = datetime.now()
+            record.recorded_at = now_local()
             record.recorded_by_id = current_user.id
         else:
             record = ChemicalWasteRecord(
@@ -270,7 +271,7 @@ def save_waste_record():
 @login_required
 def waste_report():
     """Хог хаягдлын жилийн тайлан."""
-    year = request.args.get("year", datetime.now().year, type=int)
+    year = request.args.get("year", now_local().year, type=int)
     lab = request.args.get("lab", "all")
 
     query = ChemicalWaste.query.filter(ChemicalWaste.is_active.is_(True))

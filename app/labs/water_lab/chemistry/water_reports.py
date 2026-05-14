@@ -16,6 +16,7 @@ from app.labs.water_lab.chemistry.constants import (
     WATER_ANALYSIS_TYPES, WATER_UNITS,
 )
 from app.utils.decorators import lab_required
+from app.utils.datetime import now_local
 from app.labs.water_lab.chemistry.routes import water_bp
 
 _WATER_LAB_TYPES = ['water_chemistry']
@@ -34,7 +35,7 @@ def _active_chem_codes():
 @lab_required('water_chemistry')
 def water_dashboard():
     """Усны хими Dashboard - KPI, тренд."""
-    now = datetime.now()
+    now = now_local()
     year = now.year
     month = now.month
 
@@ -174,7 +175,7 @@ def water_dashboard():
 @lab_required('water_chemistry')
 def water_consumption():
     """Усны хими Consumption тайлан."""
-    now = datetime.now()
+    now = now_local()
     try:
         year = int(request.args.get('year', now.year))
         if not (2000 <= year <= 2100):
@@ -327,7 +328,7 @@ def water_monthly_plan():
     """Усны хими Monthly Plan."""
     from calendar import monthrange
 
-    now = datetime.now()
+    now = now_local()
     try:
         year = int(request.args.get('year', now.year))
         month = int(request.args.get('month', now.month))

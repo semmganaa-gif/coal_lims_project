@@ -14,6 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.utils.datetime import now_local
 from app.models import LabReport, Sample, AnalysisResult, ReportSignature
 
 # Optional import - xhtml2pdf дутуу байж болно
@@ -296,7 +297,7 @@ def generate_water_coa(sample_id: int, created_by_id: int):
         sample=sample,
         chem_results=chem_rows,
         micro_results=micro_rows,
-        now=datetime.now(),
+        now=now_local(),
         font_path=font_path,
         company_logo=company_logo,
     )
@@ -466,7 +467,7 @@ def generate_pdf_file(report, samples, results_data):
         report=report,
         samples=samples,
         results_data=results_data,
-        now=datetime.now(),
+        now=now_local(),
         font_path=font_path,
         company_logo=company_logo,
         mnas_logo=mnas_logo,
@@ -520,7 +521,7 @@ def regenerate_pdf(report):
         report=report,
         samples=samples,
         results_data=results_data,
-        now=datetime.now(),
+        now=now_local(),
         font_path=font_path,
         company_logo=company_logo,
         mnas_logo=mnas_logo,

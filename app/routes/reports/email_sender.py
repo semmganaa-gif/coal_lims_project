@@ -17,6 +17,7 @@ from flask_babel import lazy_gettext as _l
 from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
+from app.utils.datetime import now_local
 from app.models import LabReport
 from app.repositories import LabReportRepository
 from app.routes.reports import pdf_reports_bp
@@ -129,7 +130,7 @@ def send_email(id):
 
         if success:
             report.email_sent = True
-            report.email_sent_at = datetime.now()
+            report.email_sent_at = now_local()
             report.email_recipients = recipients_str
             report.status = 'sent'
             safe_commit("Имэйл амжилттай илгээгдлэн.", "Имэйл статус хадгалахад алдаа гарлаа")

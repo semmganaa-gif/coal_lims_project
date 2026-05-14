@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.constants import UserRole
 from app.utils.decorators import role_required
+from app.utils.datetime import now_local
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
 from app.repositories import LabReportRepository, ReportSignatureRepository
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
@@ -240,7 +241,7 @@ def approve_report(id):
 
     report.status = 'approved'
     report.approved_by_id = current_user.id
-    report.approved_at = datetime.now()
+    report.approved_at = now_local()
 
     if not safe_commit("Тайлан зөвшөөрөгдлөө.", "Тайлан баталгаажуулахад алдаа гарлаа."):
         return redirect(url_for("pdf_reports.report_detail", id=id))
@@ -308,7 +309,7 @@ def delete_report(id):
 # -------------------------------------------------
 def get_next_report_number(lab_type):
     """Дараагийн тайлангийн дугаар авах."""
-    year = datetime.now().year
+    year = now_local().year
 
     # Сүүлийн тайлангийн дугаар
     last_report = LabReport.query.filter(
