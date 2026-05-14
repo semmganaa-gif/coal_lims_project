@@ -48,6 +48,7 @@ from flask_babel import lazy_gettext as _l
 
 from app.bootstrap.extensions import db
 from app.models.settings import SystemSetting
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -525,6 +526,7 @@ def get_workflow_config(workflow_name: str) -> dict:
     return engine.config
 
 
+@transactional()
 def save_workflow_config(workflow_name: str, config: dict,
                          user_id: int = None) -> bool:
     """
@@ -570,10 +572,10 @@ def save_workflow_config(workflow_name: str, config: dict,
         )
         db.session.add(setting)
 
-    db.session.commit()
     return True
 
 
+@transactional()
 def reset_workflow_config(workflow_name: str) -> bool:
     """Reset workflow to default by deactivating custom config."""
     setting = SystemSetting.query.filter_by(
@@ -583,7 +585,6 @@ def reset_workflow_config(workflow_name: str) -> bool:
 
     if setting:
         setting.is_active = False
-        db.session.commit()
     return True
 
 

@@ -42,6 +42,7 @@ from app.models.core import Sample, User
 from app.models.analysis import AnalysisResult, AnalysisType
 from app.models.settings import SystemSetting
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 logger = logging.getLogger(__name__)
 
@@ -345,6 +346,7 @@ def export_report_json(config: dict) -> str:
 # Report template management
 # ──────────────────────────────────────────
 
+@transactional()
 def save_report_template(name: str, config: dict, user_id: int,
                          description: str = "") -> int:
     """Save report template to SystemSetting."""
@@ -370,7 +372,7 @@ def save_report_template(name: str, config: dict, user_id: int,
         )
         db.session.add(setting)
 
-    db.session.commit()
+    db.session.flush()  # @transactional commit-аас өмнө id-г унших
     return setting.id
 
 
@@ -418,6 +420,7 @@ def list_report_templates() -> list[dict]:
     return result
 
 
+@transactional()
 def delete_report_template(name: str) -> bool:
     """Soft-delete report template."""
     setting = SystemSetting.query.filter_by(
@@ -427,7 +430,6 @@ def delete_report_template(name: str) -> bool:
 
     if setting:
         setting.is_active = False
-        db.session.commit()
         return True
     return False
 

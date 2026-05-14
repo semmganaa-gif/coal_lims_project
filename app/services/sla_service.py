@@ -60,6 +60,7 @@ def get_sla_config_all() -> list[dict]:
     return result
 
 
+@transactional()
 def set_sla_config(client_name: str, sample_type: str, hours: int,
                    description: str = "", user_id: int = None) -> SystemSetting:
     """SLA тохиргоо хадгалах (upsert)."""
@@ -83,11 +84,10 @@ def set_sla_config(client_name: str, sample_type: str, hours: int,
             updated_by_id=user_id,
         )
         db.session.add(setting)
-
-    db.session.commit()
     return setting
 
 
+@transactional()
 def delete_sla_config(config_id: int) -> bool:
     """SLA тохиргоо устгах."""
     setting = SystemSetting.query.filter_by(
@@ -96,7 +96,6 @@ def delete_sla_config(config_id: int) -> bool:
     if not setting:
         return False
     db.session.delete(setting)
-    db.session.commit()
     return True
 
 

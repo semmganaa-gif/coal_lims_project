@@ -17,6 +17,7 @@ from app.bootstrap.extensions import db
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
 from app.utils.datetime import now_local
+from app.utils.transaction import transactional
 
 
 @dataclass
@@ -209,6 +210,7 @@ def export_chart_data(data_points: list[dict], analysis_code: str,
     return "\n".join(lines)
 
 
+@transactional()
 def create_corrective_action_from_violation(
     standard_name: str,
     analysis_code: str,
@@ -256,6 +258,4 @@ def create_corrective_action_from_violation(
         responsible_person_id=user_id,
     )
     db.session.add(ca)
-    db.session.commit()
-
     return ca.id
