@@ -7,6 +7,7 @@ flask create-user, flask import-equipment зэрэг командуудыг то
 
 from app import db
 from app.models import User, Equipment, SystemSetting
+from app.repositories import SystemLicenseRepository
 from app.utils.repeatability_loader import clear_cache
 from sqlalchemy import select
 import click
@@ -347,7 +348,7 @@ def register_commands(app):
         """Одоогийн лицензийн мэдээлэл харах."""
         from app.models import SystemLicense
 
-        lic = db.session.execute(select(SystemLicense).filter_by(is_active=True)).scalars().first()
+        lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("Идэвхтэй лиценз олдсонгүй.")
             return
@@ -381,7 +382,7 @@ def register_commands(app):
             click.echo("Алдаа: --days эсвэл --expiry-н аль нэгийг заана уу.")
             return
 
-        lic = db.session.execute(select(SystemLicense).filter_by(is_active=True)).scalars().first()
+        lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("Идэвхтэй лиценз олдсонгүй.")
             return
@@ -426,9 +427,7 @@ def register_commands(app):
         import json as _json
         from app.models import SystemLicense
 
-        lic = db.session.execute(
-            select(SystemLicense).filter_by(is_active=True)
-        ).scalars().first()
+        lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
             return
@@ -471,9 +470,7 @@ def register_commands(app):
         """tampering_detected flag-ыг арилгах (false alarm-ыг солих)."""
         from app.models import SystemLicense
 
-        lic = db.session.execute(
-            select(SystemLicense).filter_by(is_active=True)
-        ).scalars().first()
+        lic = SystemLicenseRepository.get_active()
         if not lic:
             click.echo("❌ Идэвхтэй лиценз олдсонгүй.")
             return

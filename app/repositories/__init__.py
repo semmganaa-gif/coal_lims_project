@@ -52,6 +52,10 @@ from app.repositories.worksheets_repository import (
     WorksheetRowRepository,
 )
 from app.repositories.qc_chart_repository import QCControlChartRepository
+from app.repositories.license_repository import (
+    SystemLicenseRepository,
+    LicenseLogRepository,
+)
 
 __all__ = [
     "SampleRepository",
@@ -75,6 +79,8 @@ __all__ = [
     "WaterWorksheetRepository",
     "WorksheetRowRepository",
     "QCControlChartRepository",
+    "SystemLicenseRepository",
+    "LicenseLogRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",
