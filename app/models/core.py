@@ -258,7 +258,7 @@ class Sample(db.Model):
             "client_name IN ('CHPP','UHG-Geo','BN-Geo','QC','WTL','Proc','LAB',"
             "'uutsb','negdsen_office','tsagaan_khad','tsetsii',"
             "'naymant','naimdai','malchdyn_hudag',"
-            "'hyanalт','tsf','uarp','shine_camp','busad',"
+            "'hyanalt','tsf','uarp','shine_camp','busad',"
             "'dotood_air','dotood_swab',"
             "'naimdain','maiga','sum','uurhaichin','gallerey','sbutsb')",
             name="ck_sample_client_name",

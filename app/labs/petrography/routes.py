@@ -43,10 +43,10 @@ def _pe_samples(statuses):
 @lab_required('petrography')
 def petro_hub():
     """Петрограф лабораторийн төв хуудас."""
-    all_statuses = ['new', 'in_progress', 'analysis', 'prepared', 'completed']
+    all_statuses = ['new', 'in_progress', 'analysis', 'completed']
     pending_pe = _pe_samples(['new', 'in_progress', 'analysis']).count()
     total_petro = _pe_samples(all_statuses).count()
-    in_progress = _pe_samples(['in_progress', 'analysis', 'prepared']).count()
+    in_progress = _pe_samples(['in_progress', 'analysis']).count()
     completed = _pe_samples(['completed']).count()
     return render_template(
         'labs/petrography/petro_hub.html',
@@ -103,7 +103,7 @@ def eligible_samples(code):
     """
     # ✅ Pagination limit нэмсэн
     samples = _pe_samples(
-        ['new', 'in_progress', 'analysis', 'prepared']
+        ['new', 'in_progress', 'analysis']
     ).order_by(Sample.received_date.desc()).limit(500).all()
     result = []
     for s in samples:
@@ -170,7 +170,7 @@ def save_results():
 def petro_data():
     """Петрограф дээжийн жагсаалт (PE төрлийн дээжүүд)."""
     samples = _pe_samples(
-        ['new', 'in_progress', 'analysis', 'prepared', 'completed']
+        ['new', 'in_progress', 'analysis', 'completed']
     ).order_by(Sample.received_date.desc()).limit(200).all()
 
     result = []

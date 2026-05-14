@@ -2,298 +2,298 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="bi bi-chat-left-dots me-2"></i>{{ _("Complaint Register") }}</h2>
-    <p class="text-muted">LAB.02.00.01 | ISO 17025 - 7.9</p>
+ <h2><i class="bi bi-chat-left-dots me-2"></i>{{ _("Complaint Register") }}</h2>
+ <p class="text-muted">LAB.02.00.01 | ISO 17025 - 7.9</p>
 
-    <form method="POST" class="mt-3">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <input type="hidden" name="related_sample_id" id="related_sample_id" value="">
-        <input type="hidden" name="reanalysis_codes" id="reanalysis_codes" value="">
-        <input type="hidden" name="original_results_snapshot" id="original_results_snapshot" value="">
+ <form method="POST" class="mt-3">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <input type="hidden" name="related_sample_id" id="related_sample_id" value="">
+ <input type="hidden" name="reanalysis_codes" id="reanalysis_codes" value="">
+ <input type="hidden" name="original_results_snapshot" id="original_results_snapshot" value="">
 
-        <div class="row mb-2">
-            <div class="col-md-6">
-                <label class="form-label fw-bold">{{ _("Date:") }}</label>
-                <input type="date" name="complaint_date" class="form-control"
-                       value="{{ today }}" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold">{{ _("No.:") }}</label>
-                <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
-            </div>
-        </div>
+ <div class="row mb-2">
+ <div class="col-md-6">
+ <label class="form-label fw-bold">{{ _("Date:") }}</label>
+ <input type="date" name="complaint_date" class="form-control"
+ value="{{ today }}" required>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label fw-bold">{{ _("No.:") }}</label>
+ <input type="text" class="form-control" value="{{ _("Auto-generated") }}" disabled>
+ </div>
+ </div>
 
-        {# ═══ Related Sample ═══ #}
-        <div class="card mt-3">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>{{ _("Related Sample") }}</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ _("Search sample code") }}</label>
-                        <input type="text" id="sampleSearch" class="form-control"
-                               placeholder="{{ _("Enter sample code... (2+ characters)") }}" autocomplete="off">
-                        <div id="sampleResults" class="border rounded mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">{{ _("Selected sample") }}</label>
-                        <div id="selectedSample" class="border rounded p-2 bg-light" style="min-height:38px;">
-                            <span class="text-muted">{{ _("Not selected") }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+ {# ═══ Related Sample ═══ #}
+ <div class="card mt-3">
+ <div class="card-header bg-secondary text-white">
+ <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>{{ _("Related Sample") }}</h5>
+ </div>
+ <div class="card-body">
+ <div class="row">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Search sample code") }}</label>
+ <input type="text" id="sampleSearch" class="form-control"
+ placeholder="{{ _("Enter sample code... (2+ characters)") }}" autocomplete="off">
+ <div id="sampleResults" class="border rounded mt-1 hidden max-h-[200px] overflow-y-auto"></div>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Selected sample") }}</label>
+ <div id="selectedSample" class="border rounded p-2 bg-light min-h-[38px]">
+ <span class="text-muted">{{ _("Not selected") }}</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-        {# ═══ Re-analysis Selection ═══ #}
-        <div class="card mt-3" id="reanalysisCard" style="display:none;">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>{{ _("Request Re-analysis") }}</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-2">{{ _("Select analyses for re-analysis. Only") }} <strong>{{ _("approved") }}</strong> {{ _("results can be selected.") }}</p>
-                <div id="analysisLoading" class="text-center py-3" style="display:none;">
-                    <div class="spinner-border spinner-border-sm text-primary"></div> {{ _("Loading...") }}
-                </div>
-                <table class="table table-sm table-bordered mb-0" id="analysisTable" style="display:none;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center" style="width:40px;">
-                                <input type="checkbox" id="selectAllAnalysis" class="form-check-input" title="{{ _("Select all") }}">
-                            </th>
-                            <th>{{ _("Analysis") }}</th>
-                            <th>{{ _("Result") }}</th>
-                            <th>{{ _("Status") }}</th>
-                            <th>{{ _("Analyst") }}</th>
-                            <th>{{ _("Date") }}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="analysisBody"></tbody>
-                </table>
-                <div id="noAnalysisMsg" class="text-muted" style="display:none;">
-                    {{ _("No analysis results found") }}
-                </div>
-                <div class="mt-2" id="selectedInfo" style="display:none;">
-                    <span class="badge bg-danger" id="selectedBadge">{{ _("0 selected") }}</span>
-                </div>
-            </div>
-        </div>
+ {# ═══ Re-analysis Selection ═══ #}
+ <div class="card mt-3 hidden" id="reanalysisCard">
+ <div class="card-header bg-danger text-white">
+ <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>{{ _("Request Re-analysis") }}</h5>
+ </div>
+ <div class="card-body">
+ <p class="text-muted mb-2">{{ _("Select analyses for re-analysis. Only") }} <strong>{{ _("approved") }}</strong> {{ _("results can be selected.") }}</p>
+ <div id="analysisLoading" class="text-center py-3 hidden">
+ <div class="spinner-border spinner-border-sm text-primary"></div> {{ _("Loading...") }}
+ </div>
+ <table class="table table-sm table-bordered mb-0 hidden" id="analysisTable">
+ <thead class="table-light">
+ <tr>
+ <th class="text-center w-[40px]">
+ <input type="checkbox" id="selectAllAnalysis" class="form-check-input" title="{{ _("Select all") }}">
+ </th>
+ <th>{{ _("Analysis") }}</th>
+ <th>{{ _("Result") }}</th>
+ <th>{{ _("Status") }}</th>
+ <th>{{ _("Analyst") }}</th>
+ <th>{{ _("Date") }}</th>
+ </tr>
+ </thead>
+ <tbody id="analysisBody"></tbody>
+ </table>
+ <div id="noAnalysisMsg" class="text-muted hidden">
+ {{ _("No analysis results found") }}
+ </div>
+ <div class="mt-2 hidden" id="selectedInfo">
+ <span class="badge bg-danger" id="selectedBadge">{{ _("0 selected") }}</span>
+ </div>
+ </div>
+ </div>
 
-        {# ═══ Section 1: Complainant ═══ #}
-        <div class="card mt-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Complainant Section") }}</h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
-                        <input type="text" name="complainant_name" class="form-control"
-                               placeholder="{{ _("E.g.: B.Bold, Analyst") }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">{{ _("Department / Unit") }}</label>
-                        <select name="complainant_department" class="form-select">
-                            <option value="">-- {{ _("Select") }} --</option>
-                            <optgroup label="{{ _("Coal Laboratory") }}">
-                                <option value="CHPP">{{ _("CHPP - Washing Plant") }}</option>
-                                <option value="UHG-Geo">{{ _("UHG Geology") }}</option>
-                                <option value="BN-Geo">{{ _("BN Geology") }}</option>
-                                <option value="QC">{{ _("QC - Quality Control") }}</option>
-                                <option value="Proc">{{ _("Process") }}</option>
-                                <option value="WTL">{{ _("WTL - BS Lab") }}</option>
-                                <option value="LAB">{{ _("Laboratory") }}</option>
-                            </optgroup>
-                            <optgroup label="{{ _("Water Laboratory") }}">
-                                <option value="uutsb">{{ _("UUTSB") }}</option>
-                                <option value="negdsen_office">{{ _("Central Office") }}</option>
-                                <option value="tsagaan_khad">{{ _("Tsagaan Khad") }}</option>
-                                <option value="tsetsii">{{ _("Tsetsii District") }}</option>
-                                <option value="naymant">{{ _("Naymant Deep Well") }}</option>
-                                <option value="naimdai">{{ _("Naimdai Valley") }}</option>
-                                <option value="malchdyn_hudag">{{ _("Herders' Well") }}</option>
-                            </optgroup>
-                            <optgroup label="{{ _("Other") }}">
-                                <option value="hyanalт">{{ _("Monitoring") }}</option>
-                                <option value="tsf">{{ _("TSF") }}</option>
-                                <option value="uarp">{{ _("UARP") }}</option>
-                                <option value="shine_camp">{{ _("New Camp") }}</option>
-                                <option value="gallerey">{{ _("Gallery") }}</option>
-                                <option value="sbutsb">{{ _("SBUTSB") }}</option>
-                                <option value="busad">{{ _("Other") }}</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
+ {# ═══ Section 1: Complainant ═══ #}
+ <div class="card mt-3">
+ <div class="card-header bg-primary text-white">
+ <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Complainant Section") }}</h5>
+ </div>
+ <div class="card-body">
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
+ <input type="text" name="complainant_name" class="form-control"
+ placeholder="{{ _("E.g.: B.Bold, Analyst") }}" required>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Department / Unit") }}</label>
+ <select name="complainant_department" class="form-select">
+ <option value="">-- {{ _("Select") }} --</option>
+ <optgroup label="{{ _("Coal Laboratory") }}">
+ <option value="CHPP">{{ _("CHPP - Washing Plant") }}</option>
+ <option value="UHG-Geo">{{ _("UHG Geology") }}</option>
+ <option value="BN-Geo">{{ _("BN Geology") }}</option>
+ <option value="QC">{{ _("QC - Quality Control") }}</option>
+ <option value="Proc">{{ _("Process") }}</option>
+ <option value="WTL">{{ _("WTL - BS Lab") }}</option>
+ <option value="LAB">{{ _("Laboratory") }}</option>
+ </optgroup>
+ <optgroup label="{{ _("Water Laboratory") }}">
+ <option value="uutsb">{{ _("UUTSB") }}</option>
+ <option value="negdsen_office">{{ _("Central Office") }}</option>
+ <option value="tsagaan_khad">{{ _("Tsagaan Khad") }}</option>
+ <option value="tsetsii">{{ _("Tsetsii District") }}</option>
+ <option value="naymant">{{ _("Naymant Deep Well") }}</option>
+ <option value="naimdai">{{ _("Naimdai Valley") }}</option>
+ <option value="malchdyn_hudag">{{ _("Herders' Well") }}</option>
+ </optgroup>
+ <optgroup label="{{ _("Other") }}">
+ <option value="hyanalt">{{ _("Monitoring") }}</option>
+ <option value="tsf">{{ _("TSF") }}</option>
+ <option value="uarp">{{ _("UARP") }}</option>
+ <option value="shine_camp">{{ _("New Camp") }}</option>
+ <option value="gallerey">{{ _("Gallery") }}</option>
+ <option value="sbutsb">{{ _("SBUTSB") }}</option>
+ <option value="busad">{{ _("Other") }}</option>
+ </optgroup>
+ </select>
+ </div>
+ </div>
 
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Complaint description, remarks, and documented evidence") }} <span class="text-danger">*</span></label>
-                    <textarea name="complaint_content" class="form-control" rows="5"
-                              placeholder="{{ _("Detailed description of the complaint...") }}" required></textarea>
-                </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Complaint description, remarks, and documented evidence") }} <span class="text-danger">*</span></label>
+ <textarea name="complaint_content" class="form-control" rows="5"
+ placeholder="{{ _("Detailed description of the complaint...") }}" required></textarea>
+ </div>
 
-                <div class="border-top pt-3">
-                    <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
-                    <p class="text-muted mb-0">
-                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }}
-                        ({{ current_user.role }})
-                    </p>
-                </div>
-            </div>
-        </div>
+ <div class="border-top pt-3">
+ <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
+ <p class="text-muted mb-0">
+ <i class="bi bi-person-check me-1"></i>{{ current_user.username }}
+ ({{ current_user.role }})
+ </p>
+ </div>
+ </div>
+ </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="bi bi-save me-1"></i> {{ _("Register") }}
-            </button>
-            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary btn-lg ms-2">
-                <i class="bi bi-x-lg me-1"></i> {{ _("Cancel") }}
-            </a>
-        </div>
-    </form>
+ <div class="mt-4">
+ <button type="submit" class="btn btn-primary btn-lg">
+ <i class="bi bi-save me-1"></i> {{ _("Register") }}
+ </button>
+ <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-secondary btn-lg ms-2">
+ <i class="bi bi-x-lg me-1"></i> {{ _("Cancel") }}
+ </a>
+ </div>
+ </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
-    const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    let searchTimer;
-    $('#sampleSearch').on('input', function() {
-        clearTimeout(searchTimer);
-        const q = $(this).val().trim();
-        if (q.length < 2) {
-            $('#sampleResults').hide();
-            return;
-        }
-        searchTimer = setTimeout(function() {
-            $.getJSON('/api/search_samples_json', {q: q}, function(data) {
-                if (!data.length) {
-                    $('#sampleResults').html('<div class="p-2 text-muted">{{ _("Not found") }}</div>').show();
-                    return;
-                }
-                let html = '';
-                data.forEach(function(s) {
-                    html += `<a href="#" class="list-group-item list-group-item-action py-2 sample-pick"
-                                data-id="${s.id}" data-code="${_e(s.sample_code)}" data-client="${_e(s.client_name)}">
-                        <strong>${_e(s.sample_code)}</strong>
-                        <small class="text-muted ms-2">${_e(s.client_name)}</small>
-                        <span class="badge bg-secondary float-end">${_e(s.lab_type)}</span>
-                    </a>`;
-                });
-                $('#sampleResults').html('<div class="list-group list-group-flush">' + html + '</div>').show();
-            });
-        }, 300);
-    });
+ const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ let searchTimer;
+ $('#sampleSearch').on('input', function() {
+ clearTimeout(searchTimer);
+ const q = $(this).val().trim();
+ if (q.length < 2) {
+ $('#sampleResults').hide();
+ return;
+ }
+ searchTimer = setTimeout(function() {
+ $.getJSON('/api/search_samples_json', {q: q}, function(data) {
+ if (!data.length) {
+ $('#sampleResults').html('<div class="p-2 text-muted">{{ _("Not found") }}</div>').show();
+ return;
+ }
+ let html = '';
+ data.forEach(function(s) {
+ html += `<a href="#" class="list-group-item list-group-item-action py-2 sample-pick"
+ data-id="${s.id}" data-code="${_e(s.sample_code)}" data-client="${_e(s.client_name)}">
+ <strong>${_e(s.sample_code)}</strong>
+ <small class="text-muted ms-2">${_e(s.client_name)}</small>
+ <span class="badge bg-secondary float-end">${_e(s.lab_type)}</span>
+ </a>`;
+ });
+ $('#sampleResults').html('<div class="list-group list-group-flush">' + html + '</div>').show();
+ });
+ }, 300);
+ });
 
-    $(document).on('click', '.sample-pick', function(e) {
-        e.preventDefault();
-        const id = $(this).data('id');
-        const code = $(this).data('code');
-        const client = $(this).data('client');
-        $('#related_sample_id').val(id);
-        $('#selectedSample').html(
-            `<strong>${_e(code)}</strong> <small class="text-muted ms-2">${_e(client)}</small>
-             <button type="button" class="btn btn-sm btn-outline-danger float-end clear-sample">
-                <i class="bi bi-x"></i>
-             </button>`
-        );
-        $('#sampleResults').hide();
-        $('#sampleSearch').val('');
-        loadAnalysisResults(id);
-    });
+ $(document).on('click', '.sample-pick', function(e) {
+ e.preventDefault();
+ const id = $(this).data('id');
+ const code = $(this).data('code');
+ const client = $(this).data('client');
+ $('#related_sample_id').val(id);
+ $('#selectedSample').html(
+ `<strong>${_e(code)}</strong> <small class="text-muted ms-2">${_e(client)}</small>
+ <button type="button" class="btn btn-sm btn-outline-danger float-end clear-sample">
+ <i class="bi bi-x"></i>
+ </button>`
+ );
+ $('#sampleResults').hide();
+ $('#sampleSearch').val('');
+ loadAnalysisResults(id);
+ });
 
-    $(document).on('click', '.clear-sample', function() {
-        $('#related_sample_id').val('');
-        $('#selectedSample').html('<span class="text-muted">{{ _("Not selected") }}</span>');
-        $('#reanalysisCard').hide();
-        $('#reanalysis_codes').val('');
-        $('#original_results_snapshot').val('');
-    });
+ $(document).on('click', '.clear-sample', function() {
+ $('#related_sample_id').val('');
+ $('#selectedSample').html('<span class="text-muted">{{ _("Not selected") }}</span>');
+ $('#reanalysisCard').hide();
+ $('#reanalysis_codes').val('');
+ $('#original_results_snapshot').val('');
+ });
 
-    // ═══ Load analysis results ═══
-    function loadAnalysisResults(sampleId) {
-        $('#reanalysisCard').show();
-        $('#analysisLoading').show();
-        $('#analysisTable').hide();
-        $('#noAnalysisMsg').hide();
-        $('#selectedInfo').hide();
+ // ═══ Load analysis results ═══
+ function loadAnalysisResults(sampleId) {
+ $('#reanalysisCard').show();
+ $('#analysisLoading').show();
+ $('#analysisTable').hide();
+ $('#noAnalysisMsg').hide();
+ $('#selectedInfo').hide();
 
-        $.getJSON('/api/sample_analysis_results/' + sampleId, function(resp) {
-            $('#analysisLoading').hide();
-            if (!resp.success || !resp.data.length) {
-                $('#noAnalysisMsg').show();
-                return;
-            }
-            const statusMap = {
-                'approved': '<span class="badge bg-success">{{ _("Approved") }}</span>',
-                'rejected': '<span class="badge bg-danger">{{ _("Rejected") }}</span>',
-                'pending_review': '<span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>',
-                'draft': '<span class="badge bg-secondary">{{ _("Draft") }}</span>'
-            };
-            let html = '';
-            resp.data.forEach(function(r) {
-                const isApproved = r.status === 'approved';
-                const rowClass = isApproved ? '' : 'table-secondary';
-                html += '<tr class="' + rowClass + '">';
-                html += '<td class="text-center">';
-                if (isApproved) {
-                    html += '<input type="checkbox" class="form-check-input analysis-check" data-code="' +
-                        r.analysis_code + '" data-id="' + r.id + '" data-result="' +
-                        (r.final_result !== null ? r.final_result : '') + '">';
-                }
-                html += '</td>';
-                html += '<td><strong>' + r.analysis_code + '</strong></td>';
-                html += '<td>' + (r.final_result !== null ? r.final_result : '-') + '</td>';
-                html += '<td>' + (statusMap[r.status] || '<span class="badge bg-secondary">' + r.status + '</span>') + '</td>';
-                html += '<td>' + (r.user || '-') + '</td>';
-                html += '<td>' + (r.created_at || '-') + '</td>';
-                html += '</tr>';
-            });
-            $('#analysisBody').html(html);
-            $('#analysisTable').show();
-            $('#selectedInfo').show();
-            updateReanalysisSelection();
-        });
-    }
+ $.getJSON('/api/sample_analysis_results/' + sampleId, function(resp) {
+ $('#analysisLoading').hide();
+ if (!resp.success || !resp.data.length) {
+ $('#noAnalysisMsg').show();
+ return;
+ }
+ const statusMap = {
+ 'approved': '<span class="badge bg-success">{{ _("Approved") }}</span>',
+ 'rejected': '<span class="badge bg-danger">{{ _("Rejected") }}</span>',
+ 'pending_review': '<span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>',
+ 'draft': '<span class="badge bg-secondary">{{ _("Draft") }}</span>'
+ };
+ let html = '';
+ resp.data.forEach(function(r) {
+ const isApproved = r.status === 'approved';
+ const rowClass = isApproved ? '' : 'table-secondary';
+ html += '<tr class="' + rowClass + '">';
+ html += '<td class="text-center">';
+ if (isApproved) {
+ html += '<input type="checkbox" class="form-check-input analysis-check" data-code="' +
+ r.analysis_code + '" data-id="' + r.id + '" data-result="' +
+ (r.final_result !== null ? r.final_result : '') + '">';
+ }
+ html += '</td>';
+ html += '<td><strong>' + r.analysis_code + '</strong></td>';
+ html += '<td>' + (r.final_result !== null ? r.final_result : '-') + '</td>';
+ html += '<td>' + (statusMap[r.status] || '<span class="badge bg-secondary">' + r.status + '</span>') + '</td>';
+ html += '<td>' + (r.user || '-') + '</td>';
+ html += '<td>' + (r.created_at || '-') + '</td>';
+ html += '</tr>';
+ });
+ $('#analysisBody').html(html);
+ $('#analysisTable').show();
+ $('#selectedInfo').show();
+ updateReanalysisSelection();
+ });
+ }
 
-    // Select all
-    $(document).on('change', '#selectAllAnalysis', function() {
-        $('.analysis-check').prop('checked', this.checked);
-        updateReanalysisSelection();
-    });
+ // Select all
+ $(document).on('change', '#selectAllAnalysis', function() {
+ $('.analysis-check').prop('checked', this.checked);
+ updateReanalysisSelection();
+ });
 
-    $(document).on('change', '.analysis-check', function() {
-        const total = $('.analysis-check').length;
-        const checked = $('.analysis-check:checked').length;
-        $('#selectAllAnalysis').prop('checked', checked === total && total > 0);
-        updateReanalysisSelection();
-    });
+ $(document).on('change', '.analysis-check', function() {
+ const total = $('.analysis-check').length;
+ const checked = $('.analysis-check:checked').length;
+ $('#selectAllAnalysis').prop('checked', checked === total && total> 0);
+ updateReanalysisSelection();
+ });
 
-    function updateReanalysisSelection() {
-        const codes = [];
-        const snapshot = {};
-        $('.analysis-check:checked').each(function() {
-            const code = $(this).data('code');
-            const id = $(this).data('id');
-            const result = $(this).data('result');
-            codes.push(code);
-            snapshot[code] = {
-                final_result: result !== '' ? result : null,
-                analysis_result_id: id
-            };
-        });
-        $('#reanalysis_codes').val(codes.length ? JSON.stringify(codes) : '');
-        $('#original_results_snapshot').val(Object.keys(snapshot).length ? JSON.stringify(snapshot) : '');
-        $('#selectedBadge').text(codes.length + ' {{ _("selected") }}');
-    }
+ function updateReanalysisSelection() {
+ const codes = [];
+ const snapshot = {};
+ $('.analysis-check:checked').each(function() {
+ const code = $(this).data('code');
+ const id = $(this).data('id');
+ const result = $(this).data('result');
+ codes.push(code);
+ snapshot[code] = {
+ final_result: result !== '' ? result : null,
+ analysis_result_id: id
+ };
+ });
+ $('#reanalysis_codes').val(codes.length ? JSON.stringify(codes) : '');
+ $('#original_results_snapshot').val(Object.keys(snapshot).length ? JSON.stringify(snapshot) : '');
+ $('#selectedBadge').text(codes.length + ' {{ _("selected") }}');
+ }
 
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('#sampleSearch, #sampleResults').length) {
-            $('#sampleResults').hide();
-        }
-    });
+ $(document).on('click', function(e) {
+ if (!$(e.target).closest('#sampleSearch, #sampleResults').length) {
+ $('#sampleResults').hide();
+ }
+ });
 });
 </script>
 {% endblock %}

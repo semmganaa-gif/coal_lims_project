@@ -1,441 +1,441 @@
 {% extends "base.html" %}
 
 {% set dept_names = {
-    'CHPP': 'CHPP - Washing Plant', 'UHG-Geo': 'UHG Geology', 'BN-Geo': 'BN Geology',
-    'QC': 'QC - Quality Control', 'Proc': 'Process', 'WTL': 'WTL - BS Lab', 'LAB': 'Laboratory',
-    'uutsb': 'UUTSB', 'negdsen_office': 'Central Office', 'tsagaan_khad': 'Tsagaan Khad',
-    'tsetsii': 'Tsetsii District', 'naymant': 'Naymant Deep Well', 'naimdai': 'Naimdai Valley',
-    'malchdyn_hudag': "Herders' Well", 'hyanalт': 'Monitoring', 'tsf': 'TSF', 'uarp': 'UARP',
-    'shine_camp': 'New Camp', 'gallerey': 'Gallery', 'sbutsb': 'SBUTSB', 'busad': 'Other'
+ 'CHPP': 'CHPP - Washing Plant', 'UHG-Geo': 'UHG Geology', 'BN-Geo': 'BN Geology',
+ 'QC': 'QC - Quality Control', 'Proc': 'Process', 'WTL': 'WTL - BS Lab', 'LAB': 'Laboratory',
+ 'uutsb': 'UUTSB', 'negdsen_office': 'Central Office', 'tsagaan_khad': 'Tsagaan Khad',
+ 'tsetsii': 'Tsetsii District', 'naymant': 'Naymant Deep Well', 'naimdai': 'Naimdai Valley',
+ 'malchdyn_hudag': "Herders' Well", 'hyanalt': 'Monitoring', 'tsf': 'TSF', 'uarp': 'UARP',
+ 'shine_camp': 'New Camp', 'gallerey': 'Gallery', 'sbutsb': 'SBUTSB', 'busad': 'Other'
 } %}
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2><i class="bi bi-chat-left-dots me-2"></i>{{ _("Complaint Register") }}</h2>
-            <p class="text-muted mb-0">LAB.02.00.01 | {{ complaint.complaint_no }}</p>
-        </div>
-        <div>
-            {% if complaint.status == 'draft' %}
-                <span class="badge bg-secondary fs-6">{{ _("Draft") }}</span>
-            {% elif complaint.status == 'received' %}
-                <span class="badge bg-warning text-dark fs-6">{{ _("Received") }}</span>
-            {% elif complaint.status == 'resolved' %}
-                <span class="badge bg-primary fs-6">{{ _("Resolved") }}</span>
-            {% else %}
-                <span class="badge bg-success fs-6">{{ _("Closed") }}</span>
-            {% endif %}
-            <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-outline-secondary ms-2">
-                <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
-            </a>
-        </div>
-    </div>
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div>
+ <h2><i class="bi bi-chat-left-dots me-2"></i>{{ _("Complaint Register") }}</h2>
+ <p class="text-muted mb-0">LAB.02.00.01 | {{ complaint.complaint_no }}</p>
+ </div>
+ <div>
+ {% if complaint.status == 'draft' %}
+ <span class="badge bg-secondary fs-6">{{ _("Draft") }}</span>
+ {% elif complaint.status == 'received' %}
+ <span class="badge bg-warning text-dark fs-6">{{ _("Received") }}</span>
+ {% elif complaint.status == 'resolved' %}
+ <span class="badge bg-primary fs-6">{{ _("Resolved") }}</span>
+ {% else %}
+ <span class="badge bg-success fs-6">{{ _("Closed") }}</span>
+ {% endif %}
+ <a href="{{ url_for('quality.complaints_list') }}" class="btn btn-outline-secondary ms-2">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
+ </a>
+ </div>
+ </div>
 
-    <div class="row mb-3">
-        <div class="col-md-3"><strong>{{ _("Date:") }}</strong> {{ complaint.complaint_date.strftime('%Y-%m-%d') if complaint.complaint_date else '-' }}</div>
-        <div class="col-md-3"><strong>{{ _("No.:") }}</strong> {{ complaint.complaint_no }}</div>
-    </div>
+ <div class="row mb-3">
+ <div class="col-md-3"><strong>{{ _("Date:") }}</strong> {{ complaint.complaint_date.strftime('%Y-%m-%d') if complaint.complaint_date else '-' }}</div>
+ <div class="col-md-3"><strong>{{ _("No.:") }}</strong> {{ complaint.complaint_no }}</div>
+ </div>
 
-    {# ═══ Related Sample + Analysis Results ═══ #}
-    {% if complaint.related_sample %}
-    <div class="card mb-3">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0">
-                <i class="bi bi-box-seam me-2"></i>{{ _("Related Sample:") }}
-                <strong>{{ complaint.related_sample.sample_code }}</strong>
-                <small class="ms-2">{{ complaint.related_sample.client_name or '' }}</small>
-            </h5>
-        </div>
-        <div class="card-body">
-            {% if analysis_results %}
-            <table class="table table-sm table-bordered mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>{{ _("Analysis") }}</th>
-                        <th>{{ _("Result") }}</th>
-                        <th>{{ _("Status") }}</th>
-                        <th>{{ _("Analyst") }}</th>
-                        <th>{{ _("Date") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ar in analysis_results %}
-                    <tr class="{% if ar.status == 'rejected' %}table-danger{% elif ar.status == 'approved' %}table-success{% endif %}">
-                        <td>
-                            <strong>{{ ar.analysis_code }}</strong>
-                            {% if ar.analysis_code in reanalysis_codes %}
-                                <span class="badge bg-danger ms-1" title="{{ _("Re-analysis") }}"><i class="bi bi-arrow-repeat"></i></span>
-                            {% endif %}
-                        </td>
-                        <td>{{ ar.final_result if ar.final_result is not none else '-' }}</td>
-                        <td>
-                            {% if ar.status == 'approved' %}
-                                <span class="badge bg-success">{{ _("Approved") }}</span>
-                            {% elif ar.status == 'rejected' %}
-                                <span class="badge bg-danger">{{ _("Rejected") }}</span>
-                            {% elif ar.status == 'pending_review' %}
-                                <span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">{{ ar.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ ar.user.username if ar.user else '-' }}</td>
-                        <td>{{ ar.created_at.strftime('%Y-%m-%d') if ar.created_at else '-' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+ {# ═══ Related Sample + Analysis Results ═══ #}
+ {% if complaint.related_sample %}
+ <div class="card mb-3">
+ <div class="card-header bg-secondary text-white">
+ <h5 class="mb-0">
+ <i class="bi bi-box-seam me-2"></i>{{ _("Related Sample:") }}
+ <strong>{{ complaint.related_sample.sample_code }}</strong>
+ <small class="ms-2">{{ complaint.related_sample.client_name or '' }}</small>
+ </h5>
+ </div>
+ <div class="card-body">
+ {% if analysis_results %}
+ <table class="table table-sm table-bordered mb-0">
+ <thead class="table-light">
+ <tr>
+ <th>{{ _("Analysis") }}</th>
+ <th>{{ _("Result") }}</th>
+ <th>{{ _("Status") }}</th>
+ <th>{{ _("Analyst") }}</th>
+ <th>{{ _("Date") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for ar in analysis_results %}
+ <tr class="{% if ar.status == 'rejected' %}table-danger{% elif ar.status == 'approved' %}table-success{% endif %}">
+ <td>
+ <strong>{{ ar.analysis_code }}</strong>
+ {% if ar.analysis_code in reanalysis_codes %}
+ <span class="badge bg-danger ms-1" title="{{ _("Re-analysis") }}"><i class="bi bi-arrow-repeat"></i></span>
+ {% endif %}
+ </td>
+ <td>{{ ar.final_result if ar.final_result is not none else '-' }}</td>
+ <td>
+ {% if ar.status == 'approved' %}
+ <span class="badge bg-success">{{ _("Approved") }}</span>
+ {% elif ar.status == 'rejected' %}
+ <span class="badge bg-danger">{{ _("Rejected") }}</span>
+ {% elif ar.status == 'pending_review' %}
+ <span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>
+ {% else %}
+ <span class="badge bg-secondary">{{ ar.status }}</span>
+ {% endif %}
+ </td>
+ <td>{{ ar.user.username if ar.user else '-' }}</td>
+ <td>{{ ar.created_at.strftime('%Y-%m-%d') if ar.created_at else '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
 
-            {# Re-analysis status #}
-            {% if reanalysis_codes %}
-            <div class="mt-3">
-                {% if reanalysis_complete %}
-                    <div class="alert alert-success mb-0 py-2">
-                        <i class="bi bi-check-circle me-1"></i>
-                        {{ _("Re-analysis completed") }}
-                        <span class="ms-2">
-                            {% for code in reanalysis_codes %}
-                                <span class="badge bg-success">{{ code }}</span>
-                            {% endfor %}
-                        </span>
-                    </div>
-                {% else %}
-                    <div class="alert alert-warning mb-0 py-2">
-                        <i class="bi bi-hourglass-split me-1"></i>
-                        {{ _("Re-analysis not completed") }}
-                        <span class="ms-2">
-                            {% for item in comparison_data %}
-                                {% if item.new_status == 'approved' %}
-                                    <span class="badge bg-success">{{ item.analysis_code }}</span>
-                                {% elif item.new_status == 'pending_review' %}
-                                    <span class="badge bg-warning text-dark">{{ item.analysis_code }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger">{{ item.analysis_code }}</span>
-                                {% endif %}
-                            {% endfor %}
-                        </span>
-                    </div>
-                {% endif %}
-            </div>
-            {% endif %}
+ {# Re-analysis status #}
+ {% if reanalysis_codes %}
+ <div class="mt-3">
+ {% if reanalysis_complete %}
+ <div class="alert alert-success mb-0 py-2">
+ <i class="bi bi-check-circle me-1"></i>
+ {{ _("Re-analysis completed") }}
+ <span class="ms-2">
+ {% for code in reanalysis_codes %}
+ <span class="badge bg-success">{{ code }}</span>
+ {% endfor %}
+ </span>
+ </div>
+ {% else %}
+ <div class="alert alert-warning mb-0 py-2">
+ <i class="bi bi-hourglass-split me-1"></i>
+ {{ _("Re-analysis not completed") }}
+ <span class="ms-2">
+ {% for item in comparison_data %}
+ {% if item.new_status == 'approved' %}
+ <span class="badge bg-success">{{ item.analysis_code }}</span>
+ {% elif item.new_status == 'pending_review' %}
+ <span class="badge bg-warning text-dark">{{ item.analysis_code }}</span>
+ {% else %}
+ <span class="badge bg-danger">{{ item.analysis_code }}</span>
+ {% endif %}
+ {% endfor %}
+ </span>
+ </div>
+ {% endif %}
+ </div>
+ {% endif %}
 
-            {% else %}
-            <p class="text-muted mb-0">{{ _("No analysis results found") }}</p>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+ {% else %}
+ <p class="text-muted mb-0">{{ _("No analysis results found") }}</p>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
 
-    {# ═══ Section 1: Complainant ═══ #}
-    <div class="card mb-3">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Complainant Section") }}</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered mb-0">
-                <tr>
-                    <th style="width:30%" class="table-light">{{ _("Full name, position") }}</th>
-                    <td>{{ complaint.complainant_name or complaint.client_name or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Department / Unit") }}</th>
-                    <td>{{ dept_names.get(complaint.complainant_department, complaint.complainant_department) or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Complaint description, remarks, and documented evidence") }}</th>
-                    <td style="white-space: pre-wrap;">{{ complaint.complaint_content or complaint.description or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Signature") }}</th>
-                    <td>
-                        <i class="bi bi-person-check me-1"></i>
-                        {{ complaint.complainant_user.username if complaint.complainant_user else '-' }}
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
+ {# ═══ Section 1: Complainant ═══ #}
+ <div class="card mb-3">
+ <div class="card-header bg-primary text-white">
+ <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Complainant Section") }}</h5>
+ </div>
+ <div class="card-body">
+ <table class="table table-bordered mb-0">
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Full name, position") }}</th>
+ <td>{{ complaint.complainant_name or complaint.client_name or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Department / Unit") }}</th>
+ <td>{{ dept_names.get(complaint.complainant_department, complaint.complainant_department) or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Complaint description, remarks, and documented evidence") }}</th>
+ <td class="whitespace-pre-wrap">{{ complaint.complaint_content or complaint.description or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Signature") }}</th>
+ <td class="whitespace-pre-wrap">
+ <i class="bi bi-person-check me-1"></i>
+ {{ complaint.complainant_user.username if complaint.complainant_user else '-' }}
+ </td>
+ </tr>
+ </table>
+ </div>
+ </div>
 
-    {# ═══ Section 2: Receiver ═══ #}
-    {% if complaint.status in ['received', 'resolved', 'closed'] %}
-    <div class="card mb-3">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i>{{ _("Complaint Receiver Section") }}</h5>
-        </div>
-        <div class="card-body">
-            {% if complaint.receiver_name %}
-            {# Filled - display #}
-            <table class="table table-bordered mb-0">
-                <tr>
-                    <th style="width:30%" class="table-light">{{ _("Full name, position") }}</th>
-                    <td>{{ complaint.receiver_name }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Actions taken in response to the complaint") }}</th>
-                    <td style="white-space: pre-wrap;">{{ complaint.action_taken or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Documented evidence, additional remarks") }}</th>
-                    <td style="white-space: pre-wrap;">{{ complaint.receiver_documentation or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Is the complaint justified?") }}</th>
-                    <td>
-                        {% if complaint.is_justified is not none %}
-                            {% if complaint.is_justified %}
-                                <span class="fw-bold text-decoration-underline text-success">{{ _("Yes") }}</span> / {{ _("No") }}
-                            {% else %}
-                                {{ _("Yes") }} / <span class="fw-bold text-decoration-underline text-danger">{{ _("No") }}</span>
-                            {% endif %}
-                        {% else %}-{% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Response provided to the complaint") }}</th>
-                    <td style="white-space: pre-wrap;">{{ complaint.response_detail or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Signature") }}</th>
-                    <td>
-                        <i class="bi bi-person-check me-1"></i>
-                        {{ complaint.receiver_user.username if complaint.receiver_user else '-' }}
-                    </td>
-                </tr>
-            </table>
+ {# ═══ Section 2: Receiver ═══ #}
+ {% if complaint.status in ['received', 'resolved', 'closed'] %}
+ <div class="card mb-3">
+ <div class="card-header bg-warning text-dark">
+ <h5 class="mb-0"><i class="bi bi-person-workspace me-2"></i>{{ _("Complaint Receiver Section") }}</h5>
+ </div>
+ <div class="card-body">
+ {% if complaint.receiver_name %}
+ {# Filled - display #}
+ <table class="table table-bordered mb-0">
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Full name, position") }}</th>
+ <td class="whitespace-pre-wrap">{{ complaint.receiver_name }}</td>
+ </tr>
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Actions taken in response to the complaint") }}</th>
+ <td class="whitespace-pre-wrap">{{ complaint.action_taken or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Documented evidence, additional remarks") }}</th>
+ <td class="whitespace-pre-wrap">{{ complaint.receiver_documentation or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Is the complaint justified?") }}</th>
+ <td class="whitespace-pre-wrap">
+ {% if complaint.is_justified is not none %}
+ {% if complaint.is_justified %}
+ <span class="fw-bold text-decoration-underline text-success">{{ _("Yes") }}</span> / {{ _("No") }}
+ {% else %}
+ {{ _("Yes") }} / <span class="fw-bold text-decoration-underline text-danger">{{ _("No") }}</span>
+ {% endif %}
+ {% else %}-{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Response provided to the complaint") }}</th>
+ <td class="whitespace-pre-wrap">{{ complaint.response_detail or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Signature") }}</th>
+ <td class="whitespace-pre-wrap">
+ <i class="bi bi-person-check me-1"></i>
+ {{ complaint.receiver_user.username if complaint.receiver_user else '-' }}
+ </td>
+ </tr>
+ </table>
 
-            {% else %}
-            {# Not filled - show form #}
-            <form method="POST" action="{{ url_for('quality.complaints_receive', id=complaint.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
-                    <input type="text" name="receiver_name" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Actions taken in response to the complaint") }}</label>
-                    <textarea name="action_taken" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Documented evidence, additional remarks") }}</label>
-                    <textarea name="receiver_documentation" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Is the complaint justified?") }} <span class="text-danger">*</span></label>
-                    <div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" name="is_justified" value="1" class="form-check-input" id="justified_yes" required>
-                            <label class="form-check-label" for="justified_yes">{{ _("Yes") }}</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="radio" name="is_justified" value="0" class="form-check-input" id="justified_no">
-                            <label class="form-check-label" for="justified_no">{{ _("No") }}</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Response provided to the complaint") }}</label>
-                    <textarea name="response_detail" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="border-top pt-3 mb-3">
-                    <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
-                    <p class="text-muted">
-                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
-                    </p>
-                </div>
-                <button type="submit" class="btn btn-warning">
-                    <i class="bi bi-check-lg me-1"></i>{{ _("Receive") }}
-                </button>
-            </form>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+ {% else %}
+ {# Not filled - show form #}
+ <form method="POST" action="{{ url_for('quality.complaints_receive', id=complaint.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Full name, position") }} <span class="text-danger">*</span></label>
+ <input type="text" name="receiver_name" class="form-control" required>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Actions taken in response to the complaint") }}</label>
+ <textarea name="action_taken" class="form-control" rows="3"></textarea>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Documented evidence, additional remarks") }}</label>
+ <textarea name="receiver_documentation" class="form-control" rows="3"></textarea>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Is the complaint justified?") }} <span class="text-danger">*</span></label>
+ <div>
+ <div class="form-check form-check-inline">
+ <input type="radio" name="is_justified" value="1" class="form-check-input" id="justified_yes" required>
+ <label class="form-check-label" for="justified_yes">{{ _("Yes") }}</label>
+ </div>
+ <div class="form-check form-check-inline">
+ <input type="radio" name="is_justified" value="0" class="form-check-input" id="justified_no">
+ <label class="form-check-label" for="justified_no">{{ _("No") }}</label>
+ </div>
+ </div>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Response provided to the complaint") }}</label>
+ <textarea name="response_detail" class="form-control" rows="3"></textarea>
+ </div>
+ <div class="border-top pt-3 mb-3">
+ <p class="mb-1"><strong>{{ _("Signature:") }}</strong></p>
+ <p class="text-muted">
+ <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+ </p>
+ </div>
+ <button type="submit" class="btn btn-warning">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Receive") }}
+ </button>
+ </form>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
 
-    {# ═══ Section 3: Control ═══ #}
-    {# Section 3 condition: receiver_name filled + (no reanalysis_codes OR reanalysis completed) #}
-    {% set can_show_section3 = complaint.receiver_name and (not reanalysis_codes or reanalysis_complete) %}
-    {% if complaint.receiver_name and reanalysis_codes and not reanalysis_complete %}
-    <div class="card mb-3">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section") }}</h5>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-warning mb-0">
-                <i class="bi bi-hourglass-split me-2"></i>
-                <strong>{{ _("Re-analysis not yet completed.") }}</strong>
-                {{ _("The control section will be activated once all re-analyses are finished.") }}
-                <div class="mt-2">
-                    {% for item in comparison_data %}
-                        {% if item.new_status == 'approved' %}
-                            <span class="badge bg-success">{{ item.analysis_code }} - {{ _("completed") }}</span>
-                        {% elif item.new_status == 'pending_review' %}
-                            <span class="badge bg-warning text-dark">{{ item.analysis_code }} - {{ _("under review") }}</span>
-                        {% else %}
-                            <span class="badge bg-danger">{{ item.analysis_code }} - {{ _("pending") }}</span>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+ {# ═══ Section 3: Control ═══ #}
+ {# Section 3 condition: receiver_name filled + (no reanalysis_codes OR reanalysis completed) #}
+ {% set can_show_section3 = complaint.receiver_name and (not reanalysis_codes or reanalysis_complete) %}
+ {% if complaint.receiver_name and reanalysis_codes and not reanalysis_complete %}
+ <div class="card mb-3">
+ <div class="card-header bg-info text-white">
+ <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section") }}</h5>
+ </div>
+ <div class="card-body">
+ <div class="alert alert-warning mb-0">
+ <i class="bi bi-hourglass-split me-2"></i>
+ <strong>{{ _("Re-analysis not yet completed.") }}</strong>
+ {{ _("The control section will be activated once all re-analyses are finished.") }}
+ <div class="mt-2">
+ {% for item in comparison_data %}
+ {% if item.new_status == 'approved' %}
+ <span class="badge bg-success">{{ item.analysis_code }} - {{ _("completed") }}</span>
+ {% elif item.new_status == 'pending_review' %}
+ <span class="badge bg-warning text-dark">{{ item.analysis_code }} - {{ _("under review") }}</span>
+ {% else %}
+ <span class="badge bg-danger">{{ item.analysis_code }} - {{ _("pending") }}</span>
+ {% endif %}
+ {% endfor %}
+ </div>
+ </div>
+ </div>
+ </div>
+ {% endif %}
 
-    {% if can_show_section3 %}
-    <div class="card mb-3">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section") }}</h5>
-        </div>
-        <div class="card-body">
-            {# ═══ Comparison Table ═══ #}
-            {% if comparison_data %}
-            <h6 class="fw-bold mb-2"><i class="bi bi-arrow-left-right me-1"></i>{{ _("Original vs New Results") }}</h6>
-            <table class="table table-sm table-bordered mb-4">
-                <thead class="table-light">
-                    <tr>
-                        <th>{{ _("Analysis") }}</th>
-                        <th class="text-end">{{ _("Original Result") }}</th>
-                        <th class="text-end">{{ _("New Result") }}</th>
-                        <th class="text-end">{{ _("Difference") }}</th>
-                        <th>{{ _("Status") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in comparison_data %}
-                    <tr>
-                        <td><strong>{{ item.analysis_code }}</strong></td>
-                        <td class="text-end">{{ item.original_result if item.original_result is not none else '-' }}</td>
-                        <td class="text-end">{{ item.new_result if item.new_result is not none else '-' }}</td>
-                        <td class="text-end">
-                            {% if item.diff is not none %}
-                                {% if item.diff > 0 %}
-                                    <span class="text-danger">+{{ item.diff }}</span>
-                                {% elif item.diff < 0 %}
-                                    <span class="text-primary">{{ item.diff }}</span>
-                                {% else %}
-                                    <span class="text-success">0</span>
-                                {% endif %}
-                            {% else %}-{% endif %}
-                        </td>
-                        <td>
-                            {% if item.new_status == 'approved' %}
-                                <span class="badge bg-success">{{ _("Approved") }}</span>
-                            {% elif item.new_status == 'pending_review' %}
-                                <span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>
-                            {% else %}
-                                <span class="badge bg-danger">{{ _("Pending") }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}
+ {% if can_show_section3 %}
+ <div class="card mb-3">
+ <div class="card-header bg-info text-white">
+ <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section") }}</h5>
+ </div>
+ <div class="card-body">
+ {# ═══ Comparison Table ═══ #}
+ {% if comparison_data %}
+ <h6 class="fw-bold mb-2"><i class="bi bi-arrow-left-right me-1"></i>{{ _("Original vs New Results") }}</h6>
+ <table class="table table-sm table-bordered mb-4">
+ <thead class="table-light">
+ <tr>
+ <th class="w-1/2">{{ _("Analysis") }}</th>
+ <th class="text-end">{{ _("Original Result") }}</th>
+ <th class="text-end">{{ _("New Result") }}</th>
+ <th class="text-end">{{ _("Difference") }}</th>
+ <th class="w-1/2">{{ _("Status") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for item in comparison_data %}
+ <tr>
+ <td><strong>{{ item.analysis_code }}</strong></td>
+ <td class="text-end">{{ item.original_result if item.original_result is not none else '-' }}</td>
+ <td class="text-end">{{ item.new_result if item.new_result is not none else '-' }}</td>
+ <td class="text-end">
+ {% if item.diff is not none %}
+ {% if item.diff> 0 %}
+ <span class="text-danger">+{{ item.diff }}</span>
+ {% elif item.diff < 0 %}
+ <span class="text-primary">{{ item.diff }}</span>
+ {% else %}
+ <span class="text-success">0</span>
+ {% endif %}
+ {% else %}-{% endif %}
+ </td>
+ <td>
+ {% if item.new_status == 'approved' %}
+ <span class="badge bg-success">{{ _("Approved") }}</span>
+ {% elif item.new_status == 'pending_review' %}
+ <span class="badge bg-warning text-dark">{{ _("Under Review") }}</span>
+ {% else %}
+ <span class="badge bg-danger">{{ _("Pending") }}</span>
+ {% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ {% endif %}
 
-            <p class="fw-bold mb-3">{{ _("If the complaint is determined to be justified, register it in the nonconformity log and implement the following measures.") }}</p>
+ <p class="fw-bold mb-3">{{ _("If the complaint is determined to be justified, register it in the nonconformity log and implement the following measures.") }}</p>
 
-            {% if complaint.quality_manager_id %}
-            {# Filled #}
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:50%">{{ _("Measure") }}</th>
-                        <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
-                        <th class="text-center" style="width:25%">{{ _("No") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>{{ _("Corrective Action") }}</strong></td>
-                        <td class="text-center">
-                            {% if complaint.action_corrective %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not complaint.action_corrective %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ _("Improvement") }}</strong></td>
-                        <td class="text-center">
-                            {% if complaint.action_improvement %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not complaint.action_improvement %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ _("Partial Audit") }}</strong></td>
-                        <td class="text-center">
-                            {% if complaint.action_partial_audit %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not complaint.action_partial_audit %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="border-top pt-3">
-                <p class="mb-1"><strong>{{ _("Signature: Quality Manager") }}</strong></p>
-                <p class="text-muted mb-0">
-                    <i class="bi bi-person-check me-1"></i>
-                    {{ complaint.quality_manager.username if complaint.quality_manager else '-' }}
-                </p>
-            </div>
-            {% else %}
-            {# Not filled - form #}
-            <form method="POST" action="{{ url_for('quality.complaints_control', id=complaint.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:50%">{{ _("Measure") }}</th>
-                            <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
-                            <th class="text-center" style="width:25%">{{ _("No") }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>{{ _("Corrective Action") }}</strong></td>
-                            <td class="text-center">
-                                <input type="radio" name="action_corrective" value="1" class="form-check-input">
-                            </td>
-                            <td class="text-center">
-                                <input type="radio" name="action_corrective" value="0" class="form-check-input" checked>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>{{ _("Improvement") }}</strong></td>
-                            <td class="text-center">
-                                <input type="radio" name="action_improvement" value="1" class="form-check-input">
-                            </td>
-                            <td class="text-center">
-                                <input type="radio" name="action_improvement" value="0" class="form-check-input" checked>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>{{ _("Partial Audit") }}</strong></td>
-                            <td class="text-center">
-                                <input type="radio" name="action_partial_audit" value="1" class="form-check-input">
-                            </td>
-                            <td class="text-center">
-                                <input type="radio" name="action_partial_audit" value="0" class="form-check-input" checked>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="border-top pt-3 mb-3">
-                    <p class="mb-1"><strong>{{ _("Signature: Quality Manager") }}</strong></p>
-                    <p class="text-muted">
-                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
-                    </p>
-                </div>
-                <button type="submit" class="btn btn-info text-white">
-                    <i class="bi bi-check2-square me-1"></i>{{ _("Submit Review") }}
-                </button>
-            </form>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+ {% if complaint.quality_manager_id %}
+ {# Filled #}
+ <table class="table table-bordered">
+ <thead class="table-light">
+ <tr>
+ <th class="w-1/2">{{ _("Measure") }}</th>
+ <th class="text-center w-1/4">{{ _("Yes") }}</th>
+ <th class="text-center w-1/4">{{ _("No") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>{{ _("Corrective Action") }}</strong></td>
+ <td class="text-center">
+ {% if complaint.action_corrective %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not complaint.action_corrective %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Improvement") }}</strong></td>
+ <td class="text-center">
+ {% if complaint.action_improvement %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not complaint.action_improvement %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Partial Audit") }}</strong></td>
+ <td class="text-center">
+ {% if complaint.action_partial_audit %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not complaint.action_partial_audit %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ </tbody>
+ </table>
+ <div class="border-top pt-3">
+ <p class="mb-1"><strong>{{ _("Signature: Quality Manager") }}</strong></p>
+ <p class="text-muted mb-0">
+ <i class="bi bi-person-check me-1"></i>
+ {{ complaint.quality_manager.username if complaint.quality_manager else '-' }}
+ </p>
+ </div>
+ {% else %}
+ {# Not filled - form #}
+ <form method="POST" action="{{ url_for('quality.complaints_control', id=complaint.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <table class="table table-bordered">
+ <thead class="table-light">
+ <tr>
+ <th class="w-1/2">{{ _("Measure") }}</th>
+ <th class="text-center w-1/4">{{ _("Yes") }}</th>
+ <th class="text-center w-1/4">{{ _("No") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>{{ _("Corrective Action") }}</strong></td>
+ <td class="text-center">
+ <input type="radio" name="action_corrective" value="1" class="form-check-input">
+ </td>
+ <td class="text-center">
+ <input type="radio" name="action_corrective" value="0" class="form-check-input" checked>
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Improvement") }}</strong></td>
+ <td class="text-center">
+ <input type="radio" name="action_improvement" value="1" class="form-check-input">
+ </td>
+ <td class="text-center">
+ <input type="radio" name="action_improvement" value="0" class="form-check-input" checked>
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Partial Audit") }}</strong></td>
+ <td class="text-center">
+ <input type="radio" name="action_partial_audit" value="1" class="form-check-input">
+ </td>
+ <td class="text-center">
+ <input type="radio" name="action_partial_audit" value="0" class="form-check-input" checked>
+ </td>
+ </tr>
+ </tbody>
+ </table>
+ <div class="border-top pt-3 mb-3">
+ <p class="mb-1"><strong>{{ _("Signature: Quality Manager") }}</strong></p>
+ <p class="text-muted">
+ <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+ </p>
+ </div>
+ <button type="submit" class="btn btn-info text-white">
+ <i class="bi bi-check2-square me-1"></i>{{ _("Submit Review") }}
+ </button>
+ </form>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
 </div>
 {% endblock %}
 

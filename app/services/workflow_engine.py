@@ -22,12 +22,12 @@ Workflow config JSON формат:
     "transitions": [
         {
             "from": "pending_review", "to": "approved",
-            "label": "Батлах", "roles": ["senior_analyst", "admin", "manager"],
+            "label": "Батлах", "roles": ["senior", "admin", "manager"],
             "conditions": []
         },
         {
             "from": "pending_review", "to": "rejected",
-            "label": "Татгалзах", "roles": ["senior_analyst", "admin", "manager"],
+            "label": "Татгалзах", "roles": ["senior", "admin", "manager"],
             "conditions": ["require_comment"]
         },
         ...
@@ -96,7 +96,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "approved",
                 "label": "Батлах",
                 "label_en": "Approve",
-                "roles": ["senior", "senior_analyst", "admin", "manager"],
+                "roles": ["senior", "admin", "manager"],
                 "conditions": [],
             },
             {
@@ -104,7 +104,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "rejected",
                 "label": "Татгалзах",
                 "label_en": "Reject",
-                "roles": ["senior", "senior_analyst", "admin", "manager"],
+                "roles": ["senior", "admin", "manager"],
                 "conditions": ["require_comment"],
             },
             {
@@ -112,7 +112,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "pending_review",
                 "label": "Дахин илгээх",
                 "label_en": "Resubmit",
-                "roles": ["analyst", "senior", "senior_analyst", "admin", "manager"],
+                "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
             },
             {
@@ -128,7 +128,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "reanalysis",
                 "label": "Дахин шинжлэх",
                 "label_en": "Request Reanalysis",
-                "roles": ["senior", "senior_analyst", "admin", "manager"],
+                "roles": ["senior", "admin", "manager"],
                 "conditions": ["require_comment"],
             },
             {
@@ -136,7 +136,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "pending_review",
                 "label": "Илгээх",
                 "label_en": "Submit",
-                "roles": ["analyst", "senior", "senior_analyst", "admin", "manager"],
+                "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
             },
             {
@@ -144,7 +144,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "pending_review",
                 "label": "Буцаах",
                 "label_en": "Return to Review",
-                "roles": ["senior", "senior_analyst", "admin", "manager"],
+                "roles": ["senior", "admin", "manager"],
                 "conditions": [],
             },
         ],
@@ -203,7 +203,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "in_progress",
                 "label": "Эхлэх",
                 "label_en": "Start",
-                "roles": ["analyst", "senior_analyst", "admin", "manager"],
+                "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
             },
             {
@@ -211,7 +211,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "analysis",
                 "label": "Шинжилгээнд оруулах",
                 "label_en": "Begin Analysis",
-                "roles": ["analyst", "senior_analyst", "admin", "manager"],
+                "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
             },
             {
@@ -219,7 +219,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "completed",
                 "label": "Дуусгах",
                 "label_en": "Complete",
-                "roles": ["senior_analyst", "admin", "manager"],
+                "roles": ["senior", "admin", "manager"],
                 "conditions": ["all_results_approved"],
             },
             {
@@ -243,7 +243,7 @@ DEFAULT_WORKFLOWS = {
                 "to": "analysis",
                 "label": "Шууд шинжлэх",
                 "label_en": "Direct Analysis",
-                "roles": ["analyst", "senior_analyst", "admin", "manager"],
+                "roles": ["chemist", "senior", "admin", "manager"],
                 "conditions": [],
             },
         ],
@@ -269,7 +269,7 @@ class WorkflowEngine:
 
     Usage:
         engine = WorkflowEngine("analysis_result")
-        result = engine.can_transition("pending_review", "approved", user_role="senior_analyst")
+        result = engine.can_transition("pending_review", "approved", user_role="senior")
         if result.allowed:
             engine.execute_transition(entity, "approved", user)
     """

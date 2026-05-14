@@ -437,7 +437,7 @@ WATER_UNITS = {
             'Малчдын худаг- Адгийн ус',
         ],
     },
-    'hyanalт': {
+    'hyanalt': {
         'name': 'Хяналтын цооног',
         'short_name': 'Хяналтын цооног',
         'icon': 'bi-eyeglasses',

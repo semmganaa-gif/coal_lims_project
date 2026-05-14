@@ -8,7 +8,6 @@
 """
 
 import logging
-from functools import wraps
 
 from flask import render_template, flash, redirect, url_for, request, abort, Blueprint, jsonify
 from flask_login import login_required, current_user
@@ -21,6 +20,7 @@ from app.repositories import (
     AnalysisTypeRepository, GbwStandardRepository,
     ControlStandardRepository, UserRepository,
 )
+from app.utils.decorators import admin_required, senior_or_admin_required
 from app.services.admin_service import (
     seed_analysis_types,
     auto_populate_profiles,
@@ -44,27 +44,8 @@ logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-# --- Админ шаардлагатай үйлдлүүдийг хялбарчлах декоратор ---
-
-
-def admin_required(f):
-    """Зөвхөн admin эрхтэй хэрэглэгчид (хэрэглэгч удирдлага)"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def senior_or_admin_required(f):
-    """Senior, Admin эрхтэй хэрэглэгчид (тохиргоо, стандарт гэх мэт засвар хийх эрх)"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role not in ['senior', 'admin']:
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
+# admin_required, senior_or_admin_required нь `app.utils.decorators`-аас
+# импорт хийгдсэн (өмнө нь хоёр газар хуулбарласан байсныг нэгтгэв).
 
 
 # ==============================================================================

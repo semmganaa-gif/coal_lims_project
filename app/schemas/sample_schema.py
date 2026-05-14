@@ -23,7 +23,7 @@ from marshmallow import (
 ALLOWED_CLIENT_NAMES = [
     "CHPP", "UHG-Geo", "BN-Geo", "QC", "WTL", "Proc", "LAB",
     "uutsb", "negdsen_office", "tsagaan_khad", "tsetsii", "naymant",
-    "naimdai", "malchdyn_hudag", "hyanalт", "tsf", "uarp",
+    "naimdai", "malchdyn_hudag", "hyanalt", "tsf", "uarp",
     "shine_camp", "busad", "dotood_air", "dotood_swab", "naimdain",
     "maiga", "sum", "uurhaichin", "gallerey", "sbutsb",
 ]

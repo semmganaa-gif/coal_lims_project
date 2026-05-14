@@ -13,14 +13,10 @@ from flask_login import current_user
 
 def role_required(*allowed_roles: str) -> Callable:
     """
-    Эрх шалгах decorator. Тухайн route-д зөвхөн зөвшөөрөгдсөн эрхтэй
-    хэрэглэгч нэвтрэх боломжтой.
+    Эрх шалгах decorator. Зөвхөн зөвшөөрөгдсөн role-той хэрэглэгчийг хүлээн авна.
 
     Args:
-        *allowed_roles: Зөвшөөрөгдсөн эрхүүд (ж: 'admin', 'senior', 'chemist')
-
-    Returns:
-        Decorated function
+        *allowed_roles: Зөвшөөрөгдсөн эрхүүд (ж: 'admin', 'senior', 'chemist').
 
     Example:
         >>> @bp.route('/equipment/edit/<int:eq_id>')
@@ -30,24 +26,18 @@ def role_required(*allowed_roles: str) -> Callable:
         >>>     ...
 
     Raises:
-        403 Forbidden: Хэрэглэгчийн эрх хүрэлцэхгүй бол
+        403 Forbidden: role хангахгүй бол.
 
     Notes:
-        - Flask-Login @login_required дээр нэмж ашиглана
-        - current_user.role шалгана
-        - Эрх хүрэлцэхгүй бол 403 error буцаана
+        - `@login_required`-тэй хамт ашиглах (нэвтрэх шалгалт энд хийгдэхгүй).
+        - HTML + JSON API хоёуланд тогтвортой 403 буцаана (errors/403.html
+          template HTML route-д render-дэнэ).
     """
     def decorator(f: Callable) -> Callable:
         @wraps(f)
         def decorated_function(*args: Any, **kwargs: Any) -> Any:
-            if not current_user.is_authenticated:
-                flash('Please log in first.', 'warning')
-                return redirect(url_for('auth.login'))
-
-            if current_user.role not in allowed_roles:
-                flash(f'You do not have access to this page. Required role: {", ".join(allowed_roles)}', 'danger')
+            if getattr(current_user, "role", None) not in allowed_roles:
                 abort(403)
-
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -57,29 +47,32 @@ def admin_required(f: Callable) -> Callable:
     """
     Зөвхөн админ эрхтэй хэрэглэгчид зориулсан decorator.
 
-    Args:
-        f: Decorated function
-
-    Returns:
-        Decorated function
-
     Example:
         >>> @bp.route('/admin/users')
         >>> @login_required
         >>> @admin_required
         >>> def list_users():
         >>>     ...
+
+    Notes:
+        - `@login_required`-тэй хамт ашиглах.
+        - Async route-уудтай хамт ажиллана (sync decorator + async fn pattern,
+          Flask-Login `@login_required`-тэй ижил).
     """
     @wraps(f)
     def decorated_function(*args: Any, **kwargs: Any) -> Any:
-        if not current_user.is_authenticated:
-            flash('Please log in first.', 'warning')
-            return redirect(url_for('auth.login'))
-
-        if current_user.role != 'admin':
-            flash('Admin access only.', 'danger')
+        if getattr(current_user, "role", None) != "admin":
             abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
+
+def senior_or_admin_required(f: Callable) -> Callable:
+    """Senior эсвэл admin эрхтэй хэрэглэгчид зориулсан decorator."""
+    @wraps(f)
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
+        if getattr(current_user, "role", None) not in ("senior", "admin"):
+            abort(403)
         return f(*args, **kwargs)
     return decorated_function
 

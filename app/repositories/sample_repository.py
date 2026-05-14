@@ -115,7 +115,10 @@ class SampleRepository:
         Статусаар дээжүүд авах.
 
         Args:
-            status: "new", "archived", "disposed" гэх мэт
+            status: Sample.status CheckConstraint утга
+                    ('new','in_progress','analysis','completed','archived').
+                    NOTE: 'disposed' нь status биш — `disposal_date` талбараар
+                    хянагдана.
 
         Returns:
             Дээжүүдийн жагсаалт
@@ -194,7 +197,7 @@ class SampleRepository:
     @staticmethod
     def get_expired_retention(reference_date: datetime) -> list[Sample]:
         """
-        Хадгалах хугацаа дууссан дээжүүд.
+        Хадгалах хугацаа дууссан, гэвч устгагдаагүй дээжүүд.
 
         Args:
             reference_date: Харьцуулах огноо
@@ -205,7 +208,7 @@ class SampleRepository:
         return Sample.query.filter(
             Sample.retention_date.isnot(None),
             Sample.retention_date < reference_date,
-            Sample.status != "disposed",
+            Sample.disposal_date.is_(None),
         ).all()
 
     @staticmethod
@@ -214,7 +217,7 @@ class SampleRepository:
         end_date: datetime
     ) -> list[Sample]:
         """
-        Удахгүй дуусах дээжүүд.
+        Удахгүй дуусах, устгагдаагүй дээжүүд.
 
         Args:
             start_date: Эхлэх огноо
@@ -227,28 +230,28 @@ class SampleRepository:
             Sample.retention_date.isnot(None),
             Sample.retention_date >= start_date,
             Sample.retention_date <= end_date,
-            Sample.status != "disposed",
+            Sample.disposal_date.is_(None),
         ).all()
 
     @staticmethod
     def get_disposed() -> list[Sample]:
-        """Устгагдсан дээжүүд авах."""
-        return Sample.query.filter(Sample.status == "disposed").all()
+        """Устгагдсан дээжүүд авах (disposal_date тэмдэглэгдсэн)."""
+        return Sample.query.filter(Sample.disposal_date.isnot(None)).all()
 
     @staticmethod
     def get_no_retention() -> list[Sample]:
-        """Хадгалах хугацаа тодорхойгүй дээжүүд."""
+        """Хадгалах хугацаа тодорхойгүй, устгагдаагүй дээжүүд."""
         return Sample.query.filter(
             Sample.retention_date.is_(None),
-            Sample.status != "disposed",
+            Sample.disposal_date.is_(None),
         ).all()
 
     @staticmethod
     def get_return_samples() -> list[Sample]:
-        """Буцаах дээжүүд."""
+        """Буцаах дээжүүд (устгагдаагүй)."""
         return Sample.query.filter(
             Sample.return_sample.is_(True),
-            Sample.status != "disposed",
+            Sample.disposal_date.is_(None),
         ).all()
 
     # =========================================================================
