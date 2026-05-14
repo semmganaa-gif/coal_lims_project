@@ -18,7 +18,8 @@
 - **DB:** PostgreSQL 15 (prod) / SQLite (dev)
 - **Real-time:** Flask-SocketIO (chat)
 - **Cache:** Redis / SimpleCache
-- **Test:** pytest (657+ critical test pass, 0 fail, 89% coverage)
+- **Test:** pytest (657+ critical test pass, **0 fail**, 89% coverage)
+- **Build (frontend):** Vite 6 + Tailwind v4 (`npm install && npm run build`)
 
 ## Архитектурын давхарга — заавал баримтлах
 
@@ -102,6 +103,11 @@ gunicorn -w 4 -b 0.0.0.0:8000 "app:create_app()"
 
 # Production (Windows) — waitress
 
+# Frontend bundle (Vite)
+npm install                # Эхний удаа эсвэл package.json өөрчилсний дараа
+npm run build              # Production bundle → app/static/dist/
+npm run dev                # Dev mode (HMR, port 5173)
+
 # Тест
 pytest
 pytest --cov=app --cov-report=html
@@ -117,7 +123,7 @@ flask license generate --company X --expiry YYYY-MM-DD
 
 ## Архитектурын төлөв (2026-05-14 байдлаар)
 
-### ✅ ДУУССАН Sprint 1-5
+### ✅ ДУУССАН — Sprint 1, 2, 3, 4, 5 + test cleanup
 
 **Sprint 1 (Security/CSP):** S1.1a-e, S1.3, S1.4 (өмнө хийсэн)
 
@@ -147,6 +153,24 @@ flask license generate --company X --expiry YYYY-MM-DD
   - `license_repository.py`
   - `analysis_audit_repository.py`
 
+**Sprint 2 — Vite bundle (CDN → local bundle):**
+- 10 Vite entry: `main.js` (Bootstrap + jQuery + Alpine + collapse + htmx),
+  `styles.css`, `aggrid.{js,css}`, `chart.js`, `datatables.{js,css}`,
+  `tabulator.{js,css}`, `socketio.js`
+- ~30 template-ийн CDN ref устгасан (29 уникальн CDN URL → 1 үлдсэн)
+- Үлдсэн: DataTables i18n JSON data URL (runtime fetch хийдэг data, script биш)
+- Build командууд: `npm install && npm run build` → `app/static/dist/` гарна
+  (gitignored)
+- Vite manifest helper: `app/utils/vite_assets.py` (vite_asset / vite_css_tag
+  / vite_js_tag — base.html-аас autoload Jinja context-д)
+
+**Sprint 3 — Dependency cleanup:**
+- `sentry-sdk` 1.39.1 → 2.60.0 (major upgrade, `push_scope()` → `new_scope()`)
+- Flask 3.1.2 → 3.1.3, SQLAlchemy 2.0.44 → 2.0.49, Flask-SocketIO 5.6.0 → 5.6.1
+- `pytz` хадгалсан (Flask-Babel transitive dep)
+- `gevent` (Linux gunicorn worker) + `waitress` (Windows server) хоёулаа
+  хадгалсан — платформ тус бүрд хэрэгцээтэй
+
 **Test cleanup:**
 - 37 pre-existing test failure-ийг 0 болгосон
 - Root cause: `get_locale` request context, LazyString → DB binding, legacy
@@ -154,11 +178,6 @@ flask license generate --company X --expiry YYYY-MM-DD
 
 ### 🔜 Үлдсэн ажил
 
-- **Sprint 2** — Vite bundle (CDN-ыг local bundle руу). `app/utils/vite_
-  assets.py`, `vite.config.js`, `src/styles.css` бэлэн боловч integration
-  дуусаагүй.
-- **Sprint 3** — Dependency cleanup (sentry-sdk 1→2, pytz хасах, gevent vs
-  waitress).
 - **`api/analysis_save.py`** — StaleDataError 409 vs SQLAlchemyError 500
   тусгай error handling-той тул `safe_commit`-аар орлоогүй, route-д
   үлдсэн.
@@ -167,6 +186,8 @@ flask license generate --company X --expiry YYYY-MM-DD
   тул `safe_commit`-аар орлоогүй.
 - **`import_service`** — Зориудаар batch-р commit хийдэг (large CSV
   memory + partial-failure tolerance), `@transactional` applicable биш.
+- **Major dep upgrades** — celery 5.4→5.6 (minor), redis 5→7 (major),
+  gunicorn 24→26 (major). Тус тусын session-д careful upgrade.
 
 ## Conventions
 
@@ -194,6 +215,14 @@ flask license generate --company X --expiry YYYY-MM-DD
   сэргийлэх).
 - **`get_locale` request context-аас гадуур:** `has_request_context()`
   шалгалттай тул CLI/тест/background task-д default 'en'-ийг буцаана.
+- **Vite build шаардлагатай:** Deploy эсвэл шинэ clone хийсэний дараа
+  `npm install && npm run build` → `app/static/dist/` дотор хэшлэгдсэн
+  JS/CSS гаргадаг. Энэ folder `.gitignore`-д орсон тул git-аас татагдахгүй.
+  CSS/JS өөрчилсний дараа дахин `npm run build` хийх (dev mode-д
+  `npm run dev` HMR-той ажиллана).
+- **sentry-sdk v2 API:** `push_scope()` deprecated → `new_scope()`-ээр
+  context manager бичнэ. `set_user`, `set_extra`, `add_breadcrumb`
+  хэвээр ажиллана.
 - **`instance/logs/security.log` болон `logs/audit.log`** бараг хоосон —
   production audit logging тохиргоо ажиллахгүй байх магадлалтай. Шалгах
   хэрэгтэй.
@@ -209,5 +238,9 @@ flask license generate --company X --expiry YYYY-MM-DD
 3. Шинэ Repository ашиглахаас өмнө `app/repositories/__init__.py` —
    бүх 45 repository-ийн экспорт нэгдсэн index
 4. `app/utils/transaction.py` — @transactional pattern reference
-5. `docs_all/README.md` — албан ёсны баримтын index
-6. Зөвхөн хийх ажилд хамаатай файлуудыг (тэр үед нь)
+5. Frontend ажил хийх бол:
+   - `vite.config.js` — 10 Vite entry-ийн жагсаалт
+   - `src/main.js` — vendor bundle (Bootstrap, jQuery, Alpine, htmx)
+   - `app/utils/vite_assets.py` — Jinja helper (vite_css_tag, vite_js_tag)
+6. `docs_all/README.md` — албан ёсны баримтын index
+7. Зөвхөн хийх ажилд хамаатай файлуудыг (тэр үед нь)
