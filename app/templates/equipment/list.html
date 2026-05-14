@@ -4,350 +4,350 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# ===== HERO HEADER ===== #}
-  <div class="eq-hero">
-    <div class="eq-hero-inner">
-      <div class="eq-hero-left">
-        <div class="eq-hero-icon">
-          <i class="bi bi-cpu"></i>
-        </div>
-        <div>
-          <h4 class="eq-hero-title">{{ _("Equipment") }}</h4>
-          <p class="eq-hero-sub">{{ _("Records, Calibration, Maintenance") }}</p>
-        </div>
-      </div>
-      <div class="eq-hero-right">
-        <span class="eq-stat">
-          <span class="eq-stat-num">{{ equipments|length }}</span>
-          <span class="eq-stat-label">{{ _("Total") }}</span>
-        </span>
-        {% if current_user.role == 'admin' %}
-        <button class="btn eq-btn-add" data-bs-toggle="modal" data-bs-target="#addEqModal">
-          <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
-        </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# ===== HERO HEADER ===== #}
+ <div class="eq-hero">
+ <div class="eq-hero-inner">
+ <div class="eq-hero-left">
+ <div class="eq-hero-icon">
+ <i class="bi bi-cpu"></i>
+ </div>
+ <div>
+ <h4 class="eq-hero-title">{{ _("Equipment") }}</h4>
+ <p class="eq-hero-sub">{{ _("Records, Calibration, Maintenance") }}</p>
+ </div>
+ </div>
+ <div class="eq-hero-right">
+ <span class="eq-stat">
+ <span class="eq-stat-num">{{ equipments|length }}</span>
+ <span class="eq-stat-label">{{ _("Total") }}</span>
+ </span>
+ {% if current_user.role == 'admin' %}
+ <button class="btn eq-btn-add" data-bs-toggle="modal" data-bs-target="#addEqModal">
+ <i class="bi bi-plus-lg"></i> {{ _("New Record") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-  {# ===== VIEW TABS ===== #}
-  {% set view_items = [
-    ('all', _('All Equipment'), 'bi-grid-3x3-gap'),
-    ('coal', _('Coal'), 'bi-fire'),
-    ('water', _('Water'), 'bi-droplet'),
-    ('micro', _('Micro'), 'bi-bug'),
-  ] %}
+ {# ===== VIEW TABS ===== #}
+ {% set view_items = [
+ ('all', _('All Equipment'), 'bi-grid-3x3-gap'),
+ ('coal', _('Coal'), 'bi-fire'),
+ ('water', _('Water'), 'bi-droplet'),
+ ('micro', _('Micro'), 'bi-bug'),
+ ] %}
 
-  {% set register_items = [
-    ('measurement', _('Measuring Instruments Register'), 'bi-rulers'),
-    ('glassware', _('Glassware Register'), 'bi-cup-straw'),
-    ('internal_check', _('Internal Check & Adjustment'), 'bi-clipboard-check'),
-    ('new_equipment', _('New Equipment Register'), 'bi-box-arrow-in-right'),
-    ('out_of_service', _('Out of Service'), 'bi-x-circle'),
-    ('balances_register', _('Balance'), 'bi-speedometer'),
-  ] %}
+ {% set register_items = [
+ ('measurement', _('Measuring Instruments Register'), 'bi-rulers'),
+ ('glassware', _('Glassware Register'), 'bi-cup-straw'),
+ ('internal_check', _('Internal Check & Adjustment'), 'bi-clipboard-check'),
+ ('new_equipment', _('New Equipment Register'), 'bi-box-arrow-in-right'),
+ ('out_of_service', _('Out of Service'), 'bi-x-circle'),
+ ('balances_register', _('Balance'), 'bi-speedometer'),
+ ] %}
 
-  <div class="eq-tabs">
-    {% for key, label, icon in view_items %}
-      {% set is_active = (view == key) %}
-      <a href="{{ url_for('equipment.equipment_list', view=key) }}"
-         class="eq-tab {{ 'eq-tab-active' if is_active }}">
-        <i class="bi {{ icon }}"></i>
-        <span>{{ label }}</span>
-      </a>
-    {% endfor %}
-    <span class="eq-tab-divider"></span>
-    {% for code, label, icon in register_items %}
-      <a href="{{ url_for('equipment.equipment_journal_special', journal_type=code) }}"
-         class="eq-tab eq-tab-register">
-        <i class="bi {{ icon }}"></i>
-        <span>{{ label }}</span>
-      </a>
-    {% endfor %}
-  </div>
+ <div class="eq-tabs">
+ {% for key, label, icon in view_items %}
+ {% set is_active = (view == key) %}
+ <a href="{{ url_for('equipment.equipment_list', view=key) }}"
+ class="eq-tab {{ 'eq-tab-active' if is_active }}">
+ <i class="bi {{ icon }}"></i>
+ <span class="text-slate-300">{{ label }}</span>
+ </a>
+ {% endfor %}
+ <span class="eq-tab-divider"></span>
+ {% for code, label, icon in register_items %}
+ <a href="{{ url_for('equipment.equipment_journal_special', journal_type=code) }}"
+ class="eq-tab eq-tab-register">
+ <i class="bi {{ icon }}"></i>
+ <span class="text-slate-300">{{ label }}</span>
+ </a>
+ {% endfor %}
+ </div>
 
-  {# ===== TOOLBAR ===== #}
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <div class="eq-search">
-        <i class="bi bi-search"></i>
-        <input type="text" id="eqQuickFilter" placeholder="{{ _("Search...") }}">
-      </div>
-      <select id="statusFilter" class="eq-select">
-        <option value="">{{ _("All Status") }}</option>
-        <option value="normal">{{ _("Normal") }}</option>
-        <option value="maintenance">{{ _("Under Maintenance") }}</option>
-        <option value="needs_spare">{{ _("Spare Parts Required") }}</option>
-        <option value="broken">{{ _("Out of Order") }}</option>
-      </select>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role == 'admin' %}
-      <button class="btn btn-outline-primary btn-sm" id="btn-edit-selected" onclick="editSelected()" disabled>
-        <i class="bi bi-pencil-square"></i> {{ _("Edit") }}
-      </button>
-      <button class="btn btn-outline-danger btn-sm" id="btn-delete-selected" disabled>
-        <i class="bi bi-trash3"></i> {{ _("Delete") }}
-        <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
-      </button>
-      {% endif %}
-    </div>
-  </div>
+ {# ===== TOOLBAR ===== #}
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <div class="eq-search">
+ <i class="bi bi-search"></i>
+ <input type="text" id="eqQuickFilter" placeholder="{{ _("Search...") }}">
+ </div>
+ <select id="statusFilter" class="eq-select">
+ <option value="">{{ _("All Status") }}</option>
+ <option value="normal">{{ _("Normal") }}</option>
+ <option value="maintenance">{{ _("Under Maintenance") }}</option>
+ <option value="needs_spare">{{ _("Spare Parts Required") }}</option>
+ <option value="broken">{{ _("Out of Order") }}</option>
+ </select>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role == 'admin' %}
+ <button type="button" class="btn btn-outline-primary btn-sm" id="btn-edit-selected" disabled>
+ <i class="bi bi-pencil-square"></i> {{ _("Edit") }}
+ </button>
+ <button class="btn btn-outline-danger btn-sm" id="btn-delete-selected" disabled>
+ <i class="bi bi-trash3"></i> {{ _("Delete") }}
+ <span class="badge bg-danger ms-1 d-none" id="selected-count-badge">0</span>
+ </button>
+ {% endif %}
+ </div>
+ </div>
 
-  {# ===== TABULATOR GRID ===== #}
-  <div class="eq-grid-card">
-    <div id="equipmentGrid" class="eq-grid-wrapper"></div>
-  </div>
+ {# ===== TABULATOR GRID ===== #}
+ <div class="eq-grid-card">
+ <div id="equipmentGrid" class="eq-grid-wrapper"></div>
+ </div>
 
-  {# ===== HIDDEN FORMS ===== #}
-  <form id="bulk-action-form" method="POST" action="{{ url_for('equipment.bulk_delete') }}" style="display:none;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  </form>
-  <form id="delete-form-single" method="POST" style="display:none;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  </form>
+ {# ===== HIDDEN FORMS ===== #}
+ <form class="hidden" id="bulk-action-form" method="POST" action="{{ url_for('equipment.bulk_delete') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ </form>
+ <form class="hidden" id="delete-form-single" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ </form>
 
-  {# ===== ADD MODAL ===== #}
-  <div class="modal fade" id="addEqModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <form action="{{ url_for('equipment.add_equipment') }}" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-content eq-modal">
-          <div class="modal-header eq-modal-header">
-            <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("New Equipment") }}</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body p-4">
-            <div class="row g-3">
-              <div class="col-md-8">
-                <label class="eq-label">{{ _("Name") }} <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" required placeholder="{{ _("e.g. Analytic Balance") }}">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Category") }}</label>
-                <select name="category" id="addEqCategory" class="form-select">
-                  {{ category_options('other') }}
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Register Type") }}</label>
-                <select name="register_type" id="addEqRegType" class="form-select">
-                  {{ register_type_options('') }}
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="eq-label">{{ _("Manufacturer") }}</label>
-                <input type="text" name="manufacturer" class="form-control">
-              </div>
-              <div class="col-md-6">
-                <label class="eq-label">{{ _("Model") }}</label>
-                <input type="text" name="model" class="form-control">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Serial No.") }}</label>
-                <input type="text" name="serial" class="form-control">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Lab Code") }}</label>
-                <input type="text" name="lab_code" class="form-control">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Location") }}</label>
-                <input type="text" name="location" class="form-control">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Quantity") }}</label>
-                <input type="number" name="quantity" class="form-control" value="1" min="1">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Calibration Cycle (days)") }}</label>
-                <input type="number" name="cycle" id="addCycle" class="form-control" value="365">
-              </div>
-              <div class="col-md-4">
-                <label class="eq-label">{{ _("Room No.") }}</label>
-                <input type="text" name="room" class="form-control">
-              </div>
+ {# ===== ADD MODAL ===== #}
+ <div class="modal fade" id="addEqModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <form action="{{ url_for('equipment.add_equipment') }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-content eq-modal">
+ <div class="modal-header eq-modal-header">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("New Equipment") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body p-4">
+ <div class="row g-3">
+ <div class="col-md-8">
+ <label class="eq-label">{{ _("Name") }} <span class="text-danger">*</span></label>
+ <input type="text" name="name" class="form-control" required placeholder="{{ _("e.g. Analytic Balance") }}">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Category") }}</label>
+ <select name="category" id="addEqCategory" class="form-select">
+ {{ category_options('other') }}
+ </select>
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Register Type") }}</label>
+ <select name="register_type" id="addEqRegType" class="form-select">
+ {{ register_type_options('') }}
+ </select>
+ </div>
+ <div class="col-md-6">
+ <label class="eq-label">{{ _("Manufacturer") }}</label>
+ <input type="text" name="manufacturer" class="form-control">
+ </div>
+ <div class="col-md-6">
+ <label class="eq-label">{{ _("Model") }}</label>
+ <input type="text" name="model" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Serial No.") }}</label>
+ <input type="text" name="serial" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Lab Code") }}</label>
+ <input type="text" name="lab_code" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Location") }}</label>
+ <input type="text" name="location" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Quantity") }}</label>
+ <input type="number" name="quantity" class="form-control" value="1" min="1">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Calibration Cycle (days)") }}</label>
+ <input type="number" name="cycle" id="addCycle" class="form-control" value="365">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Room No.") }}</label>
+ <input type="text" name="room" class="form-control">
+ </div>
 
-              {# Calibration dates #}
-              <div class="col-md-6">
-                <label class="eq-label text-success">
-                  <i class="bi bi-calendar-check me-1"></i>{{ _("Last Calibrated") }}
-                </label>
-                <input type="date" name="calibration_date" id="addCalibDate" class="form-control">
-                <div class="form-text small">{{ _("Next due date will be calculated automatically") }}</div>
-              </div>
-              <div class="col-md-6">
-                <label class="eq-label text-danger">
-                  <i class="bi bi-calendar-event me-1"></i>{{ _("Next Due") }}
-                  <span class="badge bg-secondary-subtle text-secondary ms-1" id="addCalcBadge" style="display:none"></span>
-                </label>
-                <input type="date" name="next_calibration_date" id="addNextCalibDate" class="form-control">
-                <div class="form-text small">
-                  <a href="#" id="addCalcNextDateBtn" class="text-decoration-none">
-                    <i class="bi bi-calculator"></i> {{ _("Calculate from cycle") }}
-                  </a>
-                </div>
-              </div>
+ {# Calibration dates #}
+ <div class="col-md-6">
+ <label class="eq-label text-success">
+ <i class="bi bi-calendar-check me-1"></i>{{ _("Last Calibrated") }}
+ </label>
+ <input type="date" name="calibration_date" id="addCalibDate" class="form-control">
+ <div class="form-text small">{{ _("Next due date will be calculated automatically") }}</div>
+ </div>
+ <div class="col-md-6">
+ <label class="eq-label text-danger">
+ <i class="bi bi-calendar-event me-1"></i>{{ _("Next Due") }}
+ <span class="badge bg-secondary-subtle text-secondary ms-1 hidden" id="addCalcBadge"></span>
+ </label>
+ <input type="date" name="next_calibration_date" id="addNextCalibDate" class="form-control">
+ <div class="form-text small">
+ <a href="#" id="addCalcNextDateBtn" class="text-decoration-none">
+ <i class="bi bi-calculator"></i> {{ _("Calculate from cycle") }}
+ </a>
+ </div>
+ </div>
 
-              <div class="col-md-6">
-                <label class="eq-label">{{ _("Manufactured Date") }}</label>
-                <input type="text" name="manufactured_info" class="form-control" placeholder="{{ _("e.g. 2023.06") }}">
-              </div>
-              <div class="col-md-6">
-                <label class="eq-label">{{ _("Commissioned Date") }}</label>
-                <input type="text" name="commissioned_info" class="form-control" placeholder="{{ _("e.g. 2024.01") }}">
-              </div>
-              <div class="col-md-6">
-                <label class="eq-label">{{ _("Check & Adjustment") }}</label>
-                <div class="d-flex gap-3 mt-1">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="chk_checked" id="chkChecked" value="checked">
-                    <label class="form-check-label" for="chkChecked">{{ _("Checked") }}</label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="chk_calibrated" id="chkCalibrated" value="calibrated">
-                    <label class="form-check-label" for="chkCalibrated">{{ _("Calibrated") }}</label>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <label class="eq-label">{{ _("Related Analysis") }}</label>
-                <input type="text" name="related" class="form-control" placeholder="{{ _("e.g. Ash, Moist, CV...") }}">
-              </div>
-              <div class="col-12">
-                <label class="eq-label">{{ _("Remarks") }}</label>
-                <input type="text" name="remark" class="form-control">
-              </div>
+ <div class="col-md-6">
+ <label class="eq-label">{{ _("Manufactured Date") }}</label>
+ <input type="text" name="manufactured_info" class="form-control" placeholder="{{ _("e.g. 2023.06") }}">
+ </div>
+ <div class="col-md-6">
+ <label class="eq-label">{{ _("Commissioned Date") }}</label>
+ <input type="text" name="commissioned_info" class="form-control" placeholder="{{ _("e.g. 2024.01") }}">
+ </div>
+ <div class="col-md-6">
+ <label class="eq-label">{{ _("Check & Adjustment") }}</label>
+ <div class="d-flex gap-3 mt-1">
+ <div class="form-check">
+ <input class="form-check-input" type="checkbox" name="chk_checked" id="chkChecked" value="checked">
+ <label class="form-check-label" for="chkChecked">{{ _("Checked") }}</label>
+ </div>
+ <div class="form-check">
+ <input class="form-check-input" type="checkbox" name="chk_calibrated" id="chkCalibrated" value="calibrated">
+ <label class="form-check-label" for="chkCalibrated">{{ _("Calibrated") }}</label>
+ </div>
+ </div>
+ </div>
+ <div class="col-12">
+ <label class="eq-label">{{ _("Related Analysis") }}</label>
+ <input type="text" name="related" class="form-control" placeholder="{{ _("e.g. Ash, Moist, CV...") }}">
+ </div>
+ <div class="col-12">
+ <label class="eq-label">{{ _("Remarks") }}</label>
+ <input type="text" name="remark" class="form-control">
+ </div>
 
-              {# ===== DYNAMIC EXTRA FIELDS (by register_type) ===== #}
+ {# ===== DYNAMIC EXTRA FIELDS (by register_type) ===== #}
 
-              {# --- Balance Register --- #}
-              <div class="col-12 reg-fields reg-balances_register" style="display:none">
-                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-speedometer me-1"></i>{{ _("Balance Additional Info") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-4">
-                    <label class="eq-label">{{ _("Measurement Range") }}</label>
-                    <input type="text" name="range" class="form-control" placeholder="{{ _("e.g. 0-220g") }}">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="eq-label">{{ _("Purpose") }}</label>
-                    <select name="purpose" class="form-select">
-                      {{ lab_purpose_options('') }}
-                    </select>
-                  </div>
-                </div>
-              </div>
+ {# --- Balance Register --- #}
+ <div class="col-12 reg-fields reg-balances_register hidden">
+ <hr><h6 class="fw-bold text-primary small"><i class="bi bi-speedometer me-1"></i>{{ _("Balance Additional Info") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Measurement Range") }}</label>
+ <input type="text" name="range" class="form-control" placeholder="{{ _("e.g. 0-220g") }}">
+ </div>
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Purpose") }}</label>
+ <select name="purpose" class="form-select">
+ {{ lab_purpose_options('') }}
+ </select>
+ </div>
+ </div>
+ </div>
 
-              {# --- Measuring Instrument --- #}
-              <div class="col-12 reg-fields reg-measurement" style="display:none">
-                <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>{{ _("Measuring Instrument Details") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-4">
-                    <label class="eq-label">{{ _("Group") }}</label>
-                    <select name="group" class="form-select">
-                      {{ measurement_group_options('') }}
-                    </select>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="eq-label">{{ _("No.") }}</label>
-                    <input type="text" name="no" class="form-control">
-                  </div>
-                  <div class="col-md-3">
-                    <label class="eq-label">{{ _("Purpose") }}</label>
-                    <select name="purpose" class="form-select">
-                      {{ lab_purpose_options('') }}
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="eq-label">{{ _("Measurement Unit") }}</label>
-                    <select name="unit" class="form-select">
-                      {{ measurement_unit_options('') }}
-                    </select>
-                  </div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Cert. Meas. Range") }}</label><input type="text" name="cert_range" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Cert. Accuracy") }}</label><input type="text" name="cert_accuracy" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Check Meas. Range") }}</label><input type="text" name="chk_range" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Check Accuracy") }}</label><input type="text" name="chk_accuracy" class="form-control"></div>
-                  <div class="col-md-3">
-                    <label class="eq-label">{{ _("Frequency (Cert.)") }}</label>
-                    <select name="freq_cert" class="form-select">{{ freq_cert_options('') }}</select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="eq-label">{{ _("Frequency (Check)") }}</label>
-                    <select name="freq_check" class="form-select">{{ freq_check_options('') }}</select>
-                  </div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Reference Standard Type") }}</label><input type="text" name="etalon_type" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Reference Cert. Date") }}</label><input type="text" name="etalon_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Calibration Date") }}</label><input type="text" name="cert_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Next Calibration") }}</label><input type="text" name="next_cert" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">{{ _("Responsible Person") }}</label><input type="text" name="responsible" class="form-control"></div>
-                </div>
-              </div>
+ {# --- Measuring Instrument --- #}
+ <div class="col-12 reg-fields reg-measurement hidden">
+ <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>{{ _("Measuring Instrument Details") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-4">
+ <label class="eq-label">{{ _("Group") }}</label>
+ <select name="group" class="form-select">
+ {{ measurement_group_options('') }}
+ </select>
+ </div>
+ <div class="col-md-2">
+ <label class="eq-label">{{ _("No.") }}</label>
+ <input type="text" name="no" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="eq-label">{{ _("Purpose") }}</label>
+ <select name="purpose" class="form-select">
+ {{ lab_purpose_options('') }}
+ </select>
+ </div>
+ <div class="col-md-3">
+ <label class="eq-label">{{ _("Measurement Unit") }}</label>
+ <select name="unit" class="form-select">
+ {{ measurement_unit_options('') }}
+ </select>
+ </div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Cert. Meas. Range") }}</label><input type="text" name="cert_range" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Cert. Accuracy") }}</label><input type="text" name="cert_accuracy" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Check Meas. Range") }}</label><input type="text" name="chk_range" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Check Accuracy") }}</label><input type="text" name="chk_accuracy" class="form-control"></div>
+ <div class="col-md-3">
+ <label class="eq-label">{{ _("Frequency (Cert.)") }}</label>
+ <select name="freq_cert" class="form-select">{{ freq_cert_options('') }}</select>
+ </div>
+ <div class="col-md-3">
+ <label class="eq-label">{{ _("Frequency (Check)") }}</label>
+ <select name="freq_check" class="form-select">{{ freq_check_options('') }}</select>
+ </div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Reference Standard Type") }}</label><input type="text" name="etalon_type" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Reference Cert. Date") }}</label><input type="text" name="etalon_date" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Calibration Date") }}</label><input type="text" name="cert_date" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Next Calibration") }}</label><input type="text" name="next_cert" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control"></div>
+ <div class="col-md-6"><label class="eq-label">{{ _("Responsible Person") }}</label><input type="text" name="responsible" class="form-control"></div>
+ </div>
+ </div>
 
-              {# --- Glassware --- #}
-              <div class="col-12 reg-fields reg-glassware" style="display:none">
-                <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>{{ _("Glassware Details") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-3"><label class="eq-label">{{ _("Group") }}</label><input type="text" name="group" class="form-control" placeholder="{{ _("Flask, Cylinder...") }}"></div>
-                  <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Volume (mL)") }}</label><input type="text" name="volume" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Calibration Date") }}</label><input type="text" name="cert_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Certification Expiry") }}</label><input type="text" name="cert_expire" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Recalibration Date") }}</label><input type="text" name="recert_date" class="form-control"></div>
-                </div>
-              </div>
+ {# --- Glassware --- #}
+ <div class="col-12 reg-fields reg-glassware hidden">
+ <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>{{ _("Glassware Details") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-3"><label class="eq-label">{{ _("Group") }}</label><input type="text" name="group" class="form-control" placeholder="{{ _("Flask, Cylinder...") }}"></div>
+ <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Volume (mL)") }}</label><input type="text" name="volume" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Calibration Date") }}</label><input type="text" name="cert_date" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Certification Expiry") }}</label><input type="text" name="cert_expire" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Recalibration Date") }}</label><input type="text" name="recert_date" class="form-control"></div>
+ </div>
+ </div>
 
-              {# --- Internal Check --- #}
-              <div class="col-12 reg-fields reg-internal_check" style="display:none">
-                <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>{{ _("Internal Check Details") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Check Date") }}</label><input type="text" name="check_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Next Check Date") }}</label><input type="text" name="next_check_date" class="form-control"></div>
-                </div>
-              </div>
+ {# --- Internal Check --- #}
+ <div class="col-12 reg-fields reg-internal_check hidden">
+ <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>{{ _("Internal Check Details") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Check Date") }}</label><input type="text" name="check_date" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Next Check Date") }}</label><input type="text" name="next_check_date" class="form-control"></div>
+ </div>
+ </div>
 
-              {# --- New Equipment --- #}
-              <div class="col-12 reg-fields reg-new_equipment" style="display:none">
-                <hr><h6 class="fw-bold text-warning small"><i class="bi bi-box-arrow-in-right me-1"></i>{{ _("New Equipment Details") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Manufactured Date") }}</label><input type="text" name="manufactured_date" class="form-control"></div>
-                  <div class="col-md-3"><label class="eq-label">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">{{ _("Checked By") }}</label><input type="text" name="checked_by" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">{{ _("Approved By") }}</label><input type="text" name="approved_by" class="form-control"></div>
-                </div>
-              </div>
+ {# --- New Equipment --- #}
+ <div class="col-12 reg-fields reg-new_equipment hidden">
+ <hr><h6 class="fw-bold text-warning small"><i class="bi bi-box-arrow-in-right me-1"></i>{{ _("New Equipment Details") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Manufactured Date") }}</label><input type="text" name="manufactured_date" class="form-control"></div>
+ <div class="col-md-3"><label class="eq-label">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control"></div>
+ <div class="col-md-6"><label class="eq-label">{{ _("Checked By") }}</label><input type="text" name="checked_by" class="form-control"></div>
+ <div class="col-md-6"><label class="eq-label">{{ _("Approved By") }}</label><input type="text" name="approved_by" class="form-control"></div>
+ </div>
+ </div>
 
-              {# --- Out of Service --- #}
-              <div class="col-12 reg-fields reg-out_of_service" style="display:none">
-                <hr><h6 class="fw-bold text-danger small"><i class="bi bi-x-circle me-1"></i>{{ _("Out of Service Details") }}</h6>
-                <div class="row g-3">
-                  <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
-                  <div class="col-md-6"><label class="eq-label">{{ _("Damage") }}</label><input type="text" name="damage" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Repairable") }}</label><select name="repairable" class="form-select"><option value="">--</option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Removed Date") }}</label><input type="text" name="removed_date" class="form-control"></div>
-                  <div class="col-md-4"><label class="eq-label">{{ _("Retired Date") }}</label><input type="text" name="retired_date" class="form-control"></div>
-                </div>
-              </div>
+ {# --- Out of Service --- #}
+ <div class="col-12 reg-fields reg-out_of_service hidden">
+ <hr><h6 class="fw-bold text-danger small"><i class="bi bi-x-circle me-1"></i>{{ _("Out of Service Details") }}</h6>
+ <div class="row g-3">
+ <div class="col-md-2"><label class="eq-label">{{ _("No.") }}</label><input type="text" name="no" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control"></div>
+ <div class="col-md-6"><label class="eq-label">{{ _("Damage") }}</label><input type="text" name="damage" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Repairable") }}</label><select name="repairable" class="form-select"><option value="">--</option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Removed Date") }}</label><input type="text" name="removed_date" class="form-control"></div>
+ <div class="col-md-4"><label class="eq-label">{{ _("Retired Date") }}</label><input type="text" name="retired_date" class="form-control"></div>
+ </div>
+ </div>
 
 
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Register") }}</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Register") }}</button>
+ </div>
+ </div>
+ </form>
+ </div>
+ </div>
 
 </div>
 {% endblock %}
@@ -360,298 +360,299 @@
 <script src="{{ url_for('static', filename='js/tabulator.min.js') }}"></script>
 
 <style nonce="{{ csp_nonce }}">
-  /* Page-specific overrides - register tabs with accent color */
-  .eq-tab-register { color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-bottom:none; }
-  .eq-tab-register:hover { color:#0c4a6e; background:#e0f2fe; }
+ /* Page-specific overrides - register tabs with accent color */
+ .eq-tab-register { color:#0369a1; background:#f0f9ff; border:1px solid #bae6fd; border-bottom:none; }
+ .eq-tab-register:hover { color:#0c4a6e; background:#e0f2fe; }
 </style>
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function () {
-  var gridDiv = document.querySelector('#equipmentGrid');
-  if (!gridDiv || typeof Tabulator === 'undefined') return;
+ var gridDiv = document.querySelector('#equipmentGrid');
+ if (!gridDiv || typeof Tabulator === 'undefined') return;
 
-  var rowData = [
-    {% for eq in equipments %}
-    {
-      id: {{ eq.id }},
-      name: {{ (eq.name or '')|tojson }},
-      manufacturer: {{ (eq.manufacturer or '')|tojson }},
-      model: {{ (eq.model or '')|tojson }},
-      serial_number: {{ (eq.serial_number or '')|tojson }},
-      lab_code: {{ (eq.lab_code or '')|tojson }},
-      quantity: {{ (eq.quantity or 0) }},
-      location: {{ (eq.location or '')|tojson }},
-      calibration_date: {{ (eq.calibration_date|string if eq.calibration_date else '')|tojson }},
-      next_calibration_date: {{ (eq.next_calibration_date|string if eq.next_calibration_date else '')|tojson }},
-      status: {{ (eq.status or 'normal')|tojson }},
-      category: {{ (eq.category or 'other')|tojson }},
-      calibration_note: {{ (eq.calibration_note or '')|tojson }},
-      related_analysis: {{ (eq.related_analysis or '')|tojson }},
-      manufactured_info: {{ (eq.manufactured_info or '')|tojson }},
-      commissioned_info: {{ (eq.commissioned_info or '')|tojson }},
-      remark: {{ (eq.remark or '')|tojson }},
-      detail_url: {{ url_for('equipment.equipment_detail', id=eq.id)|tojson }}
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ];
+ var rowData = [
+ {% for eq in equipments %}
+ {
+ id: {{ eq.id }},
+ name: {{ (eq.name or '')|tojson }},
+ manufacturer: {{ (eq.manufacturer or '')|tojson }},
+ model: {{ (eq.model or '')|tojson }},
+ serial_number: {{ (eq.serial_number or '')|tojson }},
+ lab_code: {{ (eq.lab_code or '')|tojson }},
+ quantity: {{ (eq.quantity or 0) }},
+ location: {{ (eq.location or '')|tojson }},
+ calibration_date: {{ (eq.calibration_date|string if eq.calibration_date else '')|tojson }},
+ next_calibration_date: {{ (eq.next_calibration_date|string if eq.next_calibration_date else '')|tojson }},
+ status: {{ (eq.status or 'normal')|tojson }},
+ category: {{ (eq.category or 'other')|tojson }},
+ calibration_note: {{ (eq.calibration_note or '')|tojson }},
+ related_analysis: {{ (eq.related_analysis or '')|tojson }},
+ manufactured_info: {{ (eq.manufactured_info or '')|tojson }},
+ commissioned_info: {{ (eq.commissioned_info or '')|tojson }},
+ remark: {{ (eq.remark or '')|tojson }},
+ detail_url: {{ url_for('equipment.equipment_detail', id=eq.id)|tojson }}
+ }{% if not loop.last %},{% endif %}
+ {% endfor %}
+ ];
 
-  var todayStr = '{{ today|string }}';
-  function parseDate(str) {
-    if (!str) return null;
-    var parts = str.trim().split(' ')[0].split('-');
-    if (parts.length !== 3) return null;
-    var y = Number(parts[0]), m = Number(parts[1]), d = Number(parts[2]);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
-  }
-  var today = parseDate(todayStr);
+ var todayStr = '{{ today|string }}';
+ function parseDate(str) {
+ if (!str) return null;
+ var parts = str.trim().split(' ')[0].split('-');
+ if (parts.length !== 3) return null;
+ var y = Number(parts[0]), m = Number(parts[1]), d = Number(parts[2]);
+ if (!y || !m || !d) return null;
+ return new Date(y, m - 1, d);
+ }
+ var today = parseDate(todayStr);
 
-  var _e = function(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+ var _e = function(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 
-  var categoryMap = {
-    furnace: '{{ _("Coal Lab") }}', prep: '{{ _("Coal Lab") }}', analysis: '{{ _("Coal Lab") }}',
-    water: '{{ _("Water Lab") }}', micro: '{{ _("Micro Lab") }}', wtl: '{{ _("WTL Lab") }}',
-    balance: '{{ _("Balance") }}', other: '{{ _("Other") }}'
-  };
+ var categoryMap = {
+ furnace: '{{ _("Coal Lab") }}', prep: '{{ _("Coal Lab") }}', analysis: '{{ _("Coal Lab") }}',
+ water: '{{ _("Water Lab") }}', micro: '{{ _("Micro Lab") }}', wtl: '{{ _("WTL Lab") }}',
+ balance: '{{ _("Balance") }}', other: '{{ _("Other") }}'
+ };
 
-  function statusFormatter(cell) {
-    var s = cell.getValue() || 'normal';
-    var m = {
-      broken:     ['eq-status-broken',  'bi-x-circle-fill',             '{{ _("Out of Order") }}'],
-      needs_spare:['eq-status-spare',   'bi-exclamation-triangle-fill', '{{ _("Spare Parts") }}'],
-      maintenance:['eq-status-maint',   'bi-wrench-adjustable',         '{{ _("Maintenance") }}'],
-      retired:    ['eq-status-retired',  'bi-archive',                   '{{ _("Retired") }}'],
-      normal:     ['eq-status-normal',   'bi-check-circle-fill',         '{{ _("Normal") }}'],
-    };
-    var info = m[s] || m.normal;
-    return '<span class="eq-status-badge ' + info[0] + '"><i class="bi ' + info[1] + '"></i> ' + info[2] + '</span>';
-  }
+ function statusFormatter(cell) {
+ var s = cell.getValue() || 'normal';
+ var m = {
+ broken: ['eq-status-broken', 'bi-x-circle-fill', '{{ _("Out of Order") }}'],
+ needs_spare:['eq-status-spare', 'bi-exclamation-triangle-fill', '{{ _("Spare Parts") }}'],
+ maintenance:['eq-status-maint', 'bi-wrench-adjustable', '{{ _("Maintenance") }}'],
+ retired: ['eq-status-retired', 'bi-archive', '{{ _("Retired") }}'],
+ normal: ['eq-status-normal', 'bi-check-circle-fill', '{{ _("Normal") }}'],
+ };
+ var info = m[s] || m.normal;
+ return '<span class="eq-status-badge ' + info[0] + '"><i class="bi ' + info[1] + '"></i> ' + info[2] + '</span>';
+ }
 
-  function nameFormatter(cell) {
-    var d = cell.getRow().getData();
-    var html = '<div class="eq-name-main">' + _e(d.name) + '</div>';
-    if (d.manufacturer) html += '<div class="eq-name-sub">' + _e(d.manufacturer) + '</div>';
-    return html;
-  }
+ function nameFormatter(cell) {
+ var d = cell.getRow().getData();
+ var html = '<div class="eq-name-main">' + _e(d.name) + '</div>';
+ if (d.manufacturer) html += '<div class="eq-name-sub">' + _e(d.manufacturer) + '</div>';
+ return html;
+ }
 
-  function labCodeFormatter(cell) {
-    var v = cell.getValue();
-    if (!v) return '<span style="color:#cbd5e1">—</span>';
-    return '<span class="eq-lab-code">' + _e(v) + '</span>';
-  }
+ function labCodeFormatter(cell) {
+ var v = cell.getValue();
+ if (!v) return '<span class="text-slate-300">—</span>';
+ return '<span class="eq-lab-code">' + _e(v) + '</span>';
+ }
 
-  function serialFormatter(cell) {
-    var v = cell.getValue();
-    if (!v) return '<span style="color:#cbd5e1">—</span>';
-    return '<span class="eq-serial">' + _e(v) + '</span>';
-  }
+ function serialFormatter(cell) {
+ var v = cell.getValue();
+ if (!v) return '<span class="text-slate-300">—</span>';
+ return '<span class="eq-serial">' + _e(v) + '</span>';
+ }
 
-  function qtyFormatter(cell) {
-    return '<span class="eq-qty-badge">' + (cell.getValue() || 0) + '</span>';
-  }
+ function qtyFormatter(cell) {
+ return '<span class="eq-qty-badge">' + (cell.getValue() || 0) + '</span>';
+ }
 
-  function purposeFormatter(cell) {
-    var cat = cell.getRow().getData().category || 'other';
-    var label = categoryMap[cat] || cat;
-    var colors = {
-      '{{ _("Coal Lab") }}':['#fef3c7','#92400e'], '{{ _("Water Lab") }}':['#dbeafe','#1e40af'],
-      '{{ _("Micro Lab") }}':['#ede9fe','#6d28d9'], '{{ _("WTL Lab") }}':['#fce7f3','#be185d'],
-      '{{ _("Balance") }}':['#ecfdf5','#059669'], '{{ _("Other") }}':['#f1f5f9','#475569']
-    };
-    var c = colors[label] || colors['{{ _("Other") }}'];
-    return '<span style="background:'+c[0]+';color:'+c[1]+';padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700">'+label+'</span>';
-  }
+ function purposeFormatter(cell) {
+ var cat = cell.getRow().getData().category || 'other';
+ var label = categoryMap[cat] || cat;
+ var colors = {
+ '{{ _("Coal Lab") }}':['#fef3c7','#92400e'], '{{ _("Water Lab") }}':['#dbeafe','#1e40af'],
+ '{{ _("Micro Lab") }}':['#ede9fe','#6d28d9'], '{{ _("WTL Lab") }}':['#fce7f3','#be185d'],
+ '{{ _("Balance") }}':['#ecfdf5','#059669'], '{{ _("Other") }}':['#f1f5f9','#475569']
+ };
+ var c = colors[label] || colors['{{ _("Other") }}'];
+ return '<span class="px-[8px] py-[3px] rounded-md text-[0.74rem] font-bold" data-bg-color="'+c[0]+'" data-text-color="'+c[1]+'">'+label+'</span>';
+ }
 
-  function statusCheckFormatter(field) {
-    return function(cell) {
-      var s = cell.getRow().getData().status || 'normal';
-      if (field === 'normal') return s === 'normal' ? '✔' : '';
-      if (field === 'broken') return s === 'broken' ? '✔' : '';
-      if (field === 'needs_spare') return (s === 'needs_spare' || s === 'broken') ? '✔' : '';
-      return '';
-    };
-  }
+ function statusCheckFormatter(field) {
+ return function(cell) {
+ var s = cell.getRow().getData().status || 'normal';
+ if (field === 'normal') return s === 'normal' ? '✔' : '';
+ if (field === 'broken') return s === 'broken' ? '✔' : '';
+ if (field === 'needs_spare') return (s === 'needs_spare' || s === 'broken') ? '✔' : '';
+ return '';
+ };
+ }
 
-  var currentView = {{ view|tojson }};
+ var currentView = {{ view|tojson }};
 
-  var colChk = {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}};
-  var colNo = {title:'{{ _("No.") }}', formatter:'rownum', width:55, frozen:true, headerSort:false};
+ var colChk = {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}};
+ var colNo = {title:'{{ _("No.") }}', formatter:'rownum', width:55, frozen:true, headerSort:false};
 
-  var columnsByView = {
-    'all': [
-      colChk,
-      colNo,
-      {title:'{{ _("Equipment Name") }}', field:'name', minWidth:170, formatter:nameFormatter, frozen:true},
-      {title:'{{ _("Manufacturer") }}', field:'manufacturer', minWidth:100},
-      {title:'{{ _("Model") }}', field:'model', minWidth:100},
-      {title:'{{ _("Serial No.") }}', field:'serial_number', minWidth:100, formatter:serialFormatter},
-      {title:'{{ _("Lab Code") }}', field:'lab_code', minWidth:90, formatter:labCodeFormatter},
-      {title:'{{ _("Purpose") }}', field:'category', minWidth:95, formatter:purposeFormatter},
-      {title:'{{ _("Check & Adjustment") }}', field:'calibration_note', minWidth:110},
-      {title:'{{ _("Quantity") }}', field:'quantity', width:80, formatter:qtyFormatter},
-      {title:'{{ _("Manufactured Date") }}', field:'manufactured_info', minWidth:120},
-      {title:'{{ _("Commissioned Date") }}', field:'commissioned_info', minWidth:130},
-      {title:'{{ _("Remarks") }}', field:'remark', minWidth:100},
-    ],
-    'coal': [
-      colChk,
-      {title:'{{ _("No.") }}', formatter:'rownum', width:55, frozen:true, headerSort:false},
-      {title:'{{ _("Equipment Name") }}', field:'name', minWidth:170, frozen:true},
-      {title:'{{ _("Manufacturer") }}', field:'manufacturer', minWidth:120},
-      {title:'{{ _("Model No.") }}', field:'model', width:120},
-      {title:'{{ _("Lab Code") }}', field:'lab_code', width:120, formatter:labCodeFormatter},
-      {title:'{{ _("Serial No.") }}', field:'serial_number', width:110, formatter:serialFormatter},
-      {title:'{{ _("Quantity") }}', field:'quantity', width:80, formatter:qtyFormatter},
-      {title:'{{ _("Commissioned Date") }}', field:'commissioned_info', minWidth:130},
-      {title:'{{ _("Location") }}', field:'location', width:100},
-      {title:'{{ _("Operational Status") }}', columns:[
-        {title:'{{ _("Normal") }}', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
-        {title:'{{ _("Out of Order") }}', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
-        {title:'{{ _("Spare Parts Required") }}', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
-      ]},
-      {title:'{{ _("Remarks") }}', field:'remark', minWidth:120},
-    ],
-  };
+ var columnsByView = {
+ 'all': [
+ colChk,
+ colNo,
+ {title:'{{ _("Equipment Name") }}', field:'name', minWidth:170, formatter:nameFormatter, frozen:true},
+ {title:'{{ _("Manufacturer") }}', field:'manufacturer', minWidth:100},
+ {title:'{{ _("Model") }}', field:'model', minWidth:100},
+ {title:'{{ _("Serial No.") }}', field:'serial_number', minWidth:100, formatter:serialFormatter},
+ {title:'{{ _("Lab Code") }}', field:'lab_code', minWidth:90, formatter:labCodeFormatter},
+ {title:'{{ _("Purpose") }}', field:'category', minWidth:95, formatter:purposeFormatter},
+ {title:'{{ _("Check & Adjustment") }}', field:'calibration_note', minWidth:110},
+ {title:'{{ _("Quantity") }}', field:'quantity', width:80, formatter:qtyFormatter},
+ {title:'{{ _("Manufactured Date") }}', field:'manufactured_info', minWidth:120},
+ {title:'{{ _("Commissioned Date") }}', field:'commissioned_info', minWidth:130},
+ {title:'{{ _("Remarks") }}', field:'remark', minWidth:100},
+ ],
+ 'coal': [
+ colChk,
+ {title:'{{ _("No.") }}', formatter:'rownum', width:55, frozen:true, headerSort:false},
+ {title:'{{ _("Equipment Name") }}', field:'name', minWidth:170, frozen:true},
+ {title:'{{ _("Manufacturer") }}', field:'manufacturer', minWidth:120},
+ {title:'{{ _("Model No.") }}', field:'model', width:120},
+ {title:'{{ _("Lab Code") }}', field:'lab_code', width:120, formatter:labCodeFormatter},
+ {title:'{{ _("Serial No.") }}', field:'serial_number', width:110, formatter:serialFormatter},
+ {title:'{{ _("Quantity") }}', field:'quantity', width:80, formatter:qtyFormatter},
+ {title:'{{ _("Commissioned Date") }}', field:'commissioned_info', minWidth:130},
+ {title:'{{ _("Location") }}', field:'location', width:100},
+ {title:'{{ _("Operational Status") }}', columns:[
+ {title:'{{ _("Normal") }}', field:'_chk_normal', width:70, hozAlign:'center', formatter:statusCheckFormatter('normal'), headerSort:false},
+ {title:'{{ _("Out of Order") }}', field:'_chk_broken', width:80, hozAlign:'center', formatter:statusCheckFormatter('broken'), headerSort:false},
+ {title:'{{ _("Spare Parts Required") }}', field:'_chk_spare', width:110, hozAlign:'center', formatter:statusCheckFormatter('needs_spare'), headerSort:false},
+ ]},
+ {title:'{{ _("Remarks") }}', field:'remark', minWidth:120},
+ ],
+ };
 
-  columnsByView['water'] = columnsByView['coal'];
-  columnsByView['micro'] = columnsByView['coal'];
-  columnsByView['petro'] = columnsByView['coal'];
-  columnsByView['wtl'] = columnsByView['coal'];
+ columnsByView['water'] = columnsByView['coal'];
+ columnsByView['micro'] = columnsByView['coal'];
+ columnsByView['petro'] = columnsByView['coal'];
+ columnsByView['wtl'] = columnsByView['coal'];
 
-  var columns = columnsByView[currentView] || columnsByView['all'];
+ var columns = columnsByView[currentView] || columnsByView['all'];
 
-  var table = new Tabulator("#equipmentGrid", {
-    data: rowData,
-    columns: columns,
-    layout: "fitColumns",
-    height: "calc(100vh - 280px)",
-    selectable: true,
-    rowDblClick: function(e, row) {
-      var d = row.getData();
-      if (d.detail_url) window.location.href = d.detail_url;
-    },
-  });
+ var table = new Tabulator("#equipmentGrid", {
+ data: rowData,
+ columns: columns,
+ layout: "fitColumns",
+ height: "calc(100vh - 280px)",
+ selectable: true,
+ rowDblClick: function(e, row) {
+ var d = row.getData();
+ if (d.detail_url) window.location.href = d.detail_url;
+ },
+ });
 
-  // Quick filter
-  document.getElementById('eqQuickFilter').addEventListener('input', function() {
-    var val = this.value.toLowerCase();
-    if (!val) { table.clearFilter(); return; }
-    table.setFilter(function(data) {
-      return Object.values(data).some(function(v) {
-        return v && String(v).toLowerCase().indexOf(val) >= 0;
-      });
-    });
-  });
+ // Quick filter
+ document.getElementById('eqQuickFilter').addEventListener('input', function() {
+ var val = this.value.toLowerCase();
+ if (!val) { table.clearFilter(); return; }
+ table.setFilter(function(data) {
+ return Object.values(data).some(function(v) {
+ return v && String(v).toLowerCase().indexOf(val)>= 0;
+ });
+ });
+ });
 
-  // Status filter
-  document.getElementById('statusFilter').addEventListener('change', function() {
-    var v = this.value;
-    if (!v) { table.clearFilter(); }
-    else { table.setFilter('status', '=', v); }
-  });
+ // Status filter
+ document.getElementById('statusFilter').addEventListener('change', function() {
+ var v = this.value;
+ if (!v) { table.clearFilter(); }
+ else { table.setFilter('status', '=', v); }
+ });
 
-  // Bulk actions
-  var bulkBtn = document.getElementById('btn-delete-selected');
-  var editBtn = document.getElementById('btn-edit-selected');
-  var badge = document.getElementById('selected-count-badge');
+ // Bulk actions
+ var bulkBtn = document.getElementById('btn-delete-selected');
+ var editBtn = document.getElementById('btn-edit-selected');
+ var badge = document.getElementById('selected-count-badge');
 
-  window.editSelected = function() {
-    var sel = table.getSelectedData();
-    if (sel.length === 1 && sel[0].detail_url) window.location.href = sel[0].detail_url;
-    else if (sel.length > 1) alert('{{ _("Please select only 1 row.") }}');
-  };
+ window.editSelected = function() {
+ var sel = table.getSelectedData();
+ if (sel.length === 1 && sel[0].detail_url) window.location.href = sel[0].detail_url;
+ else if (sel.length> 1) alert('{{ _("Please select only 1 row.") }}');
+ };
+ if (editBtn) editBtn.addEventListener('click', window.editSelected);
 
-  table.on('rowSelectionChanged', function(data) {
-    var count = data.length;
-    if (editBtn) editBtn.disabled = (count !== 1);
-    if (bulkBtn) bulkBtn.disabled = (!count);
-    if (badge) { badge.textContent = count; badge.classList.toggle('d-none', !count); }
-  });
+ table.on('rowSelectionChanged', function(data) {
+ var count = data.length;
+ if (editBtn) editBtn.disabled = (count !== 1);
+ if (bulkBtn) bulkBtn.disabled = (!count);
+ if (badge) { badge.textContent = count; badge.classList.toggle('d-none', !count); }
+ });
 
-  if (bulkBtn) {
-    bulkBtn.addEventListener('click', function() {
-      var sel = table.getSelectedData();
-      if (!sel.length || !confirm('{{ _("Delete") }} ' + sel.length + ' {{ _("equipment?") }}')) return;
-      var form = document.getElementById('bulk-action-form');
-      form.querySelectorAll('input[name="equipment_ids"]').forEach(function(el) { el.remove(); });
-      sel.forEach(function(row) {
-        var inp = document.createElement('input');
-        inp.type = 'hidden'; inp.name = 'equipment_ids'; inp.value = row.id;
-        form.appendChild(inp);
-      });
-      form.submit();
-    });
-  }
+ if (bulkBtn) {
+ bulkBtn.addEventListener('click', function() {
+ var sel = table.getSelectedData();
+ if (!sel.length || !confirm('{{ _("Delete") }} ' + sel.length + ' {{ _("equipment?") }}')) return;
+ var form = document.getElementById('bulk-action-form');
+ form.querySelectorAll('input[name="equipment_ids"]').forEach(function(el) { el.remove(); });
+ sel.forEach(function(row) {
+ var inp = document.createElement('input');
+ inp.type = 'hidden'; inp.name = 'equipment_ids'; inp.value = row.id;
+ form.appendChild(inp);
+ });
+ form.submit();
+ });
+ }
 
-  window.confirmDelete = function(id, name) {
-    if (!confirm('{{ _("Delete") }} "' + name + '"?')) return;
-    var form = document.getElementById('delete-form-single');
-    form.action = '/equipment/delete/' + id;
-    form.submit();
-  };
+ window.confirmDelete = function(id, name) {
+ if (!confirm('{{ _("Delete") }} "' + name + '"?')) return;
+ var form = document.getElementById('delete-form-single');
+ form.action = '/equipment/delete/' + id;
+ form.submit();
+ };
 
-  // --- Show dynamic fields based on register type selection ---
-  var regTypeSelect = document.getElementById('addEqRegType');
-  if (regTypeSelect) {
-    regTypeSelect.addEventListener('change', function() {
-      document.querySelectorAll('.reg-fields').forEach(function(el) {
-        el.style.display = 'none';
-        // Disable inputs in hidden sections (won't be sent with form)
-        el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
-      });
-      var sel = this.value;
-      if (sel && sel !== 'main') {
-        var target = document.querySelector('.reg-' + sel);
-        if (target) {
-          target.style.display = '';
-          target.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = false; });
-        }
-      }
-    });
-    // Initial state: disable all extra fields
-    document.querySelectorAll('.reg-fields').forEach(function(el) {
-      el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
-    });
-  }
+ // --- Show dynamic fields based on register type selection ---
+ var regTypeSelect = document.getElementById('addEqRegType');
+ if (regTypeSelect) {
+ regTypeSelect.addEventListener('change', function() {
+ document.querySelectorAll('.reg-fields').forEach(function(el) {
+ el.style.display = 'none';
+ // Disable inputs in hidden sections (won't be sent with form)
+ el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
+ });
+ var sel = this.value;
+ if (sel && sel !== 'main') {
+ var target = document.querySelector('.reg-' + sel);
+ if (target) {
+ target.style.display = '';
+ target.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = false; });
+ }
+ }
+ });
+ // Initial state: disable all extra fields
+ document.querySelectorAll('.reg-fields').forEach(function(el) {
+ el.querySelectorAll('input, select').forEach(function(inp) { inp.disabled = true; });
+ });
+ }
 
-  // --- Auto-calculate calibration date (Add Modal) ---
-  const addCalibDate = document.getElementById('addCalibDate');
-  const addNextCalibDate = document.getElementById('addNextCalibDate');
-  const addCycle = document.getElementById('addCycle');
-  const addCalcBtn = document.getElementById('addCalcNextDateBtn');
-  const addCalcBadge = document.getElementById('addCalcBadge');
+ // --- Auto-calculate calibration date (Add Modal) ---
+ const addCalibDate = document.getElementById('addCalibDate');
+ const addNextCalibDate = document.getElementById('addNextCalibDate');
+ const addCycle = document.getElementById('addCycle');
+ const addCalcBtn = document.getElementById('addCalcNextDateBtn');
+ const addCalcBadge = document.getElementById('addCalcBadge');
 
-  function calcAddNextDate() {
-    const calibDate = addCalibDate?.value;
-    const cycleDays = parseInt(addCycle?.value) || 365;
-    if (calibDate) {
-      const date = new Date(calibDate);
-      date.setDate(date.getDate() + cycleDays);
-      addNextCalibDate.value = date.toISOString().split('T')[0];
-      if (addCalcBadge) {
-        addCalcBadge.style.display = '';
-        addCalcBadge.textContent = '+' + cycleDays + ' {{ _("days") }}';
-      }
-    }
-  }
+ function calcAddNextDate() {
+ const calibDate = addCalibDate?.value;
+ const cycleDays = parseInt(addCycle?.value) || 365;
+ if (calibDate) {
+ const date = new Date(calibDate);
+ date.setDate(date.getDate() + cycleDays);
+ addNextCalibDate.value = date.toISOString().split('T')[0];
+ if (addCalcBadge) {
+ addCalcBadge.style.display = '';
+ addCalcBadge.textContent = '+' + cycleDays + ' {{ _("days") }}';
+ }
+ }
+ }
 
-  if (addCalibDate) {
-    addCalibDate.addEventListener('change', calcAddNextDate);
-  }
-  if (addCycle) {
-    addCycle.addEventListener('change', function() {
-      if (addCalibDate?.value) calcAddNextDate();
-    });
-  }
-  if (addCalcBtn) {
-    addCalcBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (!addCalibDate?.value) {
-        addCalibDate.value = new Date().toISOString().split('T')[0];
-      }
-      calcAddNextDate();
-    });
-  }
+ if (addCalibDate) {
+ addCalibDate.addEventListener('change', calcAddNextDate);
+ }
+ if (addCycle) {
+ addCycle.addEventListener('change', function() {
+ if (addCalibDate?.value) calcAddNextDate();
+ });
+ }
+ if (addCalcBtn) {
+ addCalcBtn.addEventListener('click', function(e) {
+ e.preventDefault();
+ if (!addCalibDate?.value) {
+ addCalibDate.value = new Date().toISOString().split('T')[0];
+ }
+ calcAddNextDate();
+ });
+ }
 });
 </script>
 {% endblock %}

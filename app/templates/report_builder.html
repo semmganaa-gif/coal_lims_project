@@ -352,7 +352,7 @@ function addFilterRow() {
       <option value="contains">{{ _("Contains") }}</option>
     </select>
     <input type="text" class="filter-val filter-val-input" placeholder="{{ _('Value') }}">
-    <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.filter-row').remove()">
+    <button class="btn btn-sm btn-outline-danger" data-action="remove-closest" data-selector=".filter-row">
       <i class="bi bi-x"></i>
     </button>
   `;

@@ -2,217 +2,217 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2><i class="bi bi-tools me-2"></i>{{ _("Corrective Action Register") }}</h2>
-            <p class="text-muted mb-0">LAB.02.00.04 | {{ record.ca_number }}</p>
-        </div>
-        <div>
-            {% if record.status == 'open' %}
-                <span class="badge bg-danger fs-6">{{ _("Open") }}</span>
-            {% elif record.status == 'in_progress' %}
-                <span class="badge bg-warning text-dark fs-6">{{ _("In Progress") }}</span>
-            {% elif record.status == 'reviewed' %}
-                <span class="badge bg-primary fs-6">{{ _("Reviewed") }}</span>
-            {% else %}
-                <span class="badge bg-success fs-6">{{ _("Closed") }}</span>
-            {% endif %}
-            <a href="{{ url_for('quality.capa_list') }}" class="btn btn-outline-secondary ms-2">
-                <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
-            </a>
-        </div>
-    </div>
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div>
+ <h2><i class="bi bi-tools me-2"></i>{{ _("Corrective Action Register") }}</h2>
+ <p class="text-muted mb-0">LAB.02.00.04 | {{ record.ca_number }}</p>
+ </div>
+ <div>
+ {% if record.status == 'open' %}
+ <span class="badge bg-danger fs-6">{{ _("Open") }}</span>
+ {% elif record.status == 'in_progress' %}
+ <span class="badge bg-warning text-dark fs-6">{{ _("In Progress") }}</span>
+ {% elif record.status == 'reviewed' %}
+ <span class="badge bg-primary fs-6">{{ _("Reviewed") }}</span>
+ {% else %}
+ <span class="badge bg-success fs-6">{{ _("Closed") }}</span>
+ {% endif %}
+ <a href="{{ url_for('quality.capa_list') }}" class="btn btn-outline-secondary ms-2">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
+ </a>
+ </div>
+ </div>
 
-    <div class="row mb-3">
-        <div class="col-md-3"><strong>{{ _("Date:") }}</strong> {{ record.issue_date.strftime('%Y-%m-%d') if record.issue_date else '-' }}</div>
-        <div class="col-md-3"><strong>{{ _("No.:") }}</strong> {{ record.ca_number }}</div>
-        <div class="col-md-3"><strong>{{ _("Responsible:") }}</strong> {{ record.responsible_person.username if record.responsible_person else '-' }}</div>
-    </div>
+ <div class="row mb-3">
+ <div class="col-md-3"><strong>{{ _("Date:") }}</strong> {{ record.issue_date.strftime('%Y-%m-%d') if record.issue_date else '-' }}</div>
+ <div class="col-md-3"><strong>{{ _("No.:") }}</strong> {{ record.ca_number }}</div>
+ <div class="col-md-3"><strong>{{ _("Responsible:") }}</strong> {{ record.responsible_person.username if record.responsible_person else '-' }}</div>
+ </div>
 
-    {# ═══ Section 1: Implementer Section ═══ #}
-    <div class="card mb-3">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Corrective Action Implementer Section") }}</h5>
-        </div>
-        <div class="card-body">
-            {% if record.status == 'open' and not record.corrective_action %}
-            {# Implementer fill form #}
-            <form method="POST" action="{{ url_for('quality.capa_fill', id=record.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">{{ _("Nonconformity description") }}</label>
-                    <textarea name="issue_description" class="form-control" rows="4">{{ record.issue_description or '' }}</textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">{{ _("Corrective action / Plan") }} <span class="text-danger">*</span></label>
-                    <textarea name="corrective_action" class="form-control" rows="3"
-                              placeholder="{{ _("Action measures, plan...") }}" required></textarea>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">{{ _("Deadline") }}</label>
-                        <input type="date" name="target_date" class="form-control"
-                               value="{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '' }}">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">{{ _("Documented evidence, additional remarks") }}</label>
-                    <textarea name="notes" class="form-control" rows="2">{{ record.notes or '' }}</textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-save me-1"></i>{{ _("Save") }}
-                </button>
-            </form>
-            {% else %}
-            {# Filled - read-only #}
-            <table class="table table-bordered mb-0">
-                <tr>
-                    <th style="width:30%" class="table-light">{{ _("Nonconformity description") }}</th>
-                    <td style="white-space: pre-wrap;">{{ record.issue_description or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Corrective action / Plan") }}</th>
-                    <td style="white-space: pre-wrap;">{{ record.corrective_action or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Deadline") }}</th>
-                    <td>{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Documentation, additional remarks") }}</th>
-                    <td style="white-space: pre-wrap;">{{ record.notes or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Signature") }}</th>
-                    <td><i class="bi bi-person-check me-1"></i>{{ record.responsible_person.username if record.responsible_person else '-' }}</td>
-                </tr>
-            </table>
-            {% endif %}
-        </div>
-    </div>
+ {# ═══ Section 1: Implementer Section ═══ #}
+ <div class="card mb-3">
+ <div class="card-header bg-primary text-white">
+ <h5 class="mb-0"><i class="bi bi-person me-2"></i>{{ _("Corrective Action Implementer Section") }}</h5>
+ </div>
+ <div class="card-body">
+ {% if record.status == 'open' and not record.corrective_action %}
+ {# Implementer fill form #}
+ <form method="POST" action="{{ url_for('quality.capa_fill', id=record.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <div class="mb-3">
+ <label class="form-label fw-bold">{{ _("Nonconformity description") }}</label>
+ <textarea name="issue_description" class="form-control" rows="4">{{ record.issue_description or '' }}</textarea>
+ </div>
+ <div class="mb-3">
+ <label class="form-label fw-bold">{{ _("Corrective action / Plan") }} <span class="text-danger">*</span></label>
+ <textarea name="corrective_action" class="form-control" rows="3"
+ placeholder="{{ _("Action measures, plan...") }}" required></textarea>
+ </div>
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label fw-bold">{{ _("Deadline") }}</label>
+ <input type="date" name="target_date" class="form-control"
+ value="{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '' }}">
+ </div>
+ </div>
+ <div class="mb-3">
+ <label class="form-label fw-bold">{{ _("Documented evidence, additional remarks") }}</label>
+ <textarea name="notes" class="form-control" rows="2">{{ record.notes or '' }}</textarea>
+ </div>
+ <button type="submit" class="btn btn-primary">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ </form>
+ {% else %}
+ {# Filled - read-only #}
+ <table class="table table-bordered mb-0">
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Nonconformity description") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.issue_description or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Corrective action / Plan") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.corrective_action or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Deadline") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.target_date.strftime('%Y-%m-%d') if record.target_date else '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Documentation, additional remarks") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.notes or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Signature") }}</th>
+ <td class="whitespace-pre-wrap"><i class="bi bi-person-check me-1"></i>{{ record.responsible_person.username if record.responsible_person else '-' }}</td>
+ </tr>
+ </table>
+ {% endif %}
+ </div>
+ </div>
 
-    {# ═══ Section 2: Control (Technical Manager) ═══ #}
-    <div class="card mb-3">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section: Results After Corrective Action Implementation") }}</h5>
-        </div>
-        <div class="card-body">
-            {% if record.technical_manager_id %}
-            {# Reviewed - read-only #}
-            <table class="table table-bordered">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:50%">{{ _("Criteria") }}</th>
-                        <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
-                        <th class="text-center" style="width:25%">{{ _("No") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>{{ _("Corrected within the established deadline?") }}</strong></td>
-                        <td class="text-center">
-                            {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ _("Corrective action fully resolved?") }}</strong></td>
-                        <td class="text-center">
-                            {% if record.fully_resolved %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not record.fully_resolved %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ _("Residual risk exists?") }}</strong></td>
-                        <td class="text-center">
-                            {% if record.residual_risk_exists %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not record.residual_risk_exists %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ _("Management system change required?") }}</strong></td>
-                        <td class="text-center">
-                            {% if record.management_change_needed %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% if not record.management_change_needed %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered mb-0">
-                <tr>
-                    <th style="width:30%" class="table-light">{{ _("Additional remarks") }}</th>
-                    <td style="white-space: pre-wrap;">{{ record.control_notes or '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Date") }}</th>
-                    <td>{{ record.control_date.strftime('%Y-%m-%d') if record.control_date else '-' }}</td>
-                </tr>
-                <tr>
-                    <th class="table-light">{{ _("Signature: Technical Manager") }}</th>
-                    <td><i class="bi bi-person-check me-1"></i>{{ record.technical_manager.username if record.technical_manager else '-' }}</td>
-                </tr>
-            </table>
-            {% elif record.status in ['in_progress', 'reviewed'] or record.corrective_action %}
-            {# Not reviewed - form (only if Section 1 is filled) #}
-            <form method="POST" action="{{ url_for('quality.capa_review', id=record.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:50%">{{ _("Criteria") }}</th>
-                            <th class="text-center" style="width:25%">{{ _("Yes") }}</th>
-                            <th class="text-center" style="width:25%">{{ _("No") }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>{{ _("Corrected within the established deadline?") }}</strong></td>
-                            <td class="text-center"><input type="radio" name="completed_on_time" value="1" class="form-check-input"></td>
-                            <td class="text-center"><input type="radio" name="completed_on_time" value="0" class="form-check-input" checked></td>
-                        </tr>
-                        <tr>
-                            <td><strong>{{ _("Corrective action fully resolved?") }}</strong></td>
-                            <td class="text-center"><input type="radio" name="fully_resolved" value="1" class="form-check-input"></td>
-                            <td class="text-center"><input type="radio" name="fully_resolved" value="0" class="form-check-input" checked></td>
-                        </tr>
-                        <tr>
-                            <td><strong>{{ _("Residual risk exists?") }}</strong></td>
-                            <td class="text-center"><input type="radio" name="residual_risk_exists" value="1" class="form-check-input"></td>
-                            <td class="text-center"><input type="radio" name="residual_risk_exists" value="0" class="form-check-input" checked></td>
-                        </tr>
-                        <tr>
-                            <td><strong>{{ _("Management system change required?") }}</strong></td>
-                            <td class="text-center"><input type="radio" name="management_change_needed" value="1" class="form-check-input"></td>
-                            <td class="text-center"><input type="radio" name="management_change_needed" value="0" class="form-check-input" checked></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="mb-3">
-                    <label class="form-label">{{ _("Additional remarks:") }}</label>
-                    <textarea name="control_notes" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="border-top pt-3 mb-3">
-                    <p class="mb-1"><strong>{{ _("Signature: Technical Manager") }}</strong></p>
-                    <p class="text-muted">
-                        <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
-                    </p>
-                </div>
-                <button type="submit" class="btn btn-info text-white">
-                    <i class="bi bi-check2-square me-1"></i>{{ _("Submit Review") }}
-                </button>
-            </form>
-            {% else %}
-            <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>{{ _("Review will be available after Section 1 is completed.") }}</p>
-            {% endif %}
-        </div>
-    </div>
+ {# ═══ Section 2: Control (Technical Manager) ═══ #}
+ <div class="card mb-3">
+ <div class="card-header bg-info text-white">
+ <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>{{ _("Control Section: Results After Corrective Action Implementation") }}</h5>
+ </div>
+ <div class="card-body">
+ {% if record.technical_manager_id %}
+ {# Reviewed - read-only #}
+ <table class="table table-bordered">
+ <thead class="table-light">
+ <tr>
+ <th class="w-1/2">{{ _("Criteria") }}</th>
+ <th class="text-center w-1/4">{{ _("Yes") }}</th>
+ <th class="text-center w-1/4">{{ _("No") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td class="whitespace-pre-wrap"><strong>{{ _("Corrected within the established deadline?") }}</strong></td>
+ <td class="text-center">
+ {% if record.completed_on_time %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not record.completed_on_time %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Corrective action fully resolved?") }}</strong></td>
+ <td class="text-center">
+ {% if record.fully_resolved %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not record.fully_resolved %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Residual risk exists?") }}</strong></td>
+ <td class="text-center">
+ {% if record.residual_risk_exists %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not record.residual_risk_exists %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Management system change required?") }}</strong></td>
+ <td class="text-center">
+ {% if record.management_change_needed %}<span class="text-success fw-bold text-decoration-underline">{{ _("Yes") }}</span>{% endif %}
+ </td>
+ <td class="text-center">
+ {% if not record.management_change_needed %}<span class="text-danger fw-bold text-decoration-underline">{{ _("No") }}</span>{% endif %}
+ </td>
+ </tr>
+ </tbody>
+ </table>
+ <table class="table table-bordered mb-0">
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Additional remarks") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.control_notes or '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light w-[30%]">{{ _("Date") }}</th>
+ <td class="whitespace-pre-wrap">{{ record.control_date.strftime('%Y-%m-%d') if record.control_date else '-' }}</td>
+ </tr>
+ <tr>
+ <th class="table-light">{{ _("Signature: Technical Manager") }}</th>
+ <td><i class="bi bi-person-check me-1"></i>{{ record.technical_manager.username if record.technical_manager else '-' }}</td>
+ </tr>
+ </table>
+ {% elif record.status in ['in_progress', 'reviewed'] or record.corrective_action %}
+ {# Not reviewed - form (only if Section 1 is filled) #}
+ <form method="POST" action="{{ url_for('quality.capa_review', id=record.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <table class="table table-bordered">
+ <thead class="table-light">
+ <tr>
+ <th class="w-1/2">{{ _("Criteria") }}</th>
+ <th class="text-center w-1/4">{{ _("Yes") }}</th>
+ <th class="text-center w-1/4">{{ _("No") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><strong>{{ _("Corrected within the established deadline?") }}</strong></td>
+ <td class="text-center"><input type="radio" name="completed_on_time" value="1" class="form-check-input"></td>
+ <td class="text-center"><input type="radio" name="completed_on_time" value="0" class="form-check-input" checked></td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Corrective action fully resolved?") }}</strong></td>
+ <td class="text-center"><input type="radio" name="fully_resolved" value="1" class="form-check-input"></td>
+ <td class="text-center"><input type="radio" name="fully_resolved" value="0" class="form-check-input" checked></td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Residual risk exists?") }}</strong></td>
+ <td class="text-center"><input type="radio" name="residual_risk_exists" value="1" class="form-check-input"></td>
+ <td class="text-center"><input type="radio" name="residual_risk_exists" value="0" class="form-check-input" checked></td>
+ </tr>
+ <tr>
+ <td><strong>{{ _("Management system change required?") }}</strong></td>
+ <td class="text-center"><input type="radio" name="management_change_needed" value="1" class="form-check-input"></td>
+ <td class="text-center"><input type="radio" name="management_change_needed" value="0" class="form-check-input" checked></td>
+ </tr>
+ </tbody>
+ </table>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Additional remarks:") }}</label>
+ <textarea name="control_notes" class="form-control" rows="3"></textarea>
+ </div>
+ <div class="border-top pt-3 mb-3">
+ <p class="mb-1"><strong>{{ _("Signature: Technical Manager") }}</strong></p>
+ <p class="text-muted">
+ <i class="bi bi-person-check me-1"></i>{{ current_user.username }} ({{ current_user.role }})
+ </p>
+ </div>
+ <button type="submit" class="btn btn-info text-white">
+ <i class="bi bi-check2-square me-1"></i>{{ _("Submit Review") }}
+ </button>
+ </form>
+ {% else %}
+ <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>{{ _("Review will be available after Section 1 is completed.") }}</p>
+ {% endif %}
+ </div>
+ </div>
 </div>
 {% endblock %}

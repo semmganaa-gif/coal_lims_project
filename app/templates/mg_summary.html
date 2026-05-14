@@ -2,175 +2,175 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .mg-summary-wrap { padding: 12px 16px; }
-  .mg-summary-wrap h1 { font-size: 1.3rem; }
-  .mg-tbl { font-size: 0.82rem; }
-  .mg-tbl th { background: #f8f9fa; vertical-align: middle; text-align: center; white-space: nowrap; }
-  .mg-tbl td { vertical-align: middle; text-align: center; }
-  .mg-tbl .sample-name { text-align: left; font-weight: 600; white-space: nowrap; }
-  .mg-tbl .frac-label { text-align: left; font-size: 0.78rem; color: #555; }
-  .mg-tbl .total-row { background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 600; }
-  .mg-val { font-weight: 600; }
-  .mg-val-muted { color: #999; }
-  .mg-cell { position: relative; }
-  .mg-cell .mg-return {
-    display: none; position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
-    border: none; background: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; padding: 0 2px;
-  }
-  .mg-cell:hover .mg-return { display: inline-block; }
-  .mg-cell .mg-return:hover { color: #ef4444; }
-  .mg-pending { background: #fef3c7 !important; }
+ .mg-summary-wrap { padding: 12px 16px; }
+ .mg-summary-wrap h1 { font-size: 1.3rem; }
+ .mg-tbl { font-size: 0.82rem; }
+ .mg-tbl th { background: #f8f9fa; vertical-align: middle; text-align: center; white-space: nowrap; }
+ .mg-tbl td { vertical-align: middle; text-align: center; }
+ .mg-tbl .sample-name { text-align: left; font-weight: 600; white-space: nowrap; }
+ .mg-tbl .frac-label { text-align: left; font-size: 0.78rem; color: #555; }
+ .mg-tbl .total-row { background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 600; }
+ .mg-val { font-weight: 600; }
+ .mg-val-muted { color: #999; }
+ .mg-cell { position: relative; }
+ .mg-cell .mg-return {
+ display: none; position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+ border: none; background: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; padding: 0 2px;
+ }
+ .mg-cell:hover .mg-return { display: inline-block; }
+ .mg-cell .mg-return:hover { color: #ef4444; }
+ .mg-pending { background: #fef3c7 !important; }
 </style>
 
 <div class="mg-summary-wrap">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <h1 class="mb-0"><i class="bi bi-magnet text-primary me-2"></i>{{ title }}</h1>
-      <span class="badge bg-light text-dark">{{ samples|length }} {{ _("samples") }}</span>
-    </div>
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ <h1 class="mb-0"><i class="bi bi-magnet text-primary me-2"></i>{{ title }}</h1>
+ <span class="badge bg-light text-dark">{{ samples|length }} {{ _("samples") }}</span>
+ </div>
 
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      {% if current_user.role in ['senior', 'admin'] %}
-      <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
-        <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">{{ _("Archive") }}</span>
-      </button>
-      {% endif %}
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ {% if current_user.role in ['senior', 'admin'] %}
+ <button type="button" class="btn btn-sm btn-info text-white" id="btnMgArchive" disabled>
+ <i class="bi bi-archive-fill me-1"></i><span id="archiveBtnLabel">{{ _("Archive") }}</span>
+ </button>
+ {% endif %}
 
-      <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-success" id="btnExportMgSummary">
-          <i class="bi bi-file-earmark-excel me-1"></i>Excel
-        </button>
-        <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-primary">
-          <i class="bi bi-arrow-left me-1"></i>{{ _("Summary") }}
-        </a>
-      </div>
-    </div>
-  </div>
+ <div class="btn-group">
+ <button type="button" class="btn btn-sm btn-success" id="btnExportMgSummary">
+ <i class="bi bi-file-earmark-excel me-1"></i>Excel
+ </button>
+ <a href="{{ url_for('api.sample_summary') }}" class="btn btn-sm btn-outline-primary">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Summary") }}
+ </a>
+ </div>
+ </div>
+ </div>
 
-  {% if not samples %}
-  <div class="alert alert-info">
-    <i class="bi bi-info-circle me-1"></i> {{ _("No MG analysis results found.") }}
-  </div>
-  {% else %}
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover mg-tbl mb-0" id="mgSummaryTable">
-      <thead>
-        <tr>
-          <th rowspan="2" style="width:30px">
-            <input type="checkbox" id="mgCheckAll" class="form-check-input" title="{{ _("Select all") }}">
-          </th>
-          <th rowspan="2" style="width:35px">No.</th>
-          <th rowspan="2" style="min-width:160px">{{ _("Sample") }}</th>
-          <th rowspan="2" style="width:70px">MT, %</th>
-          <th rowspan="2" style="width:70px">TRD</th>
-          <th colspan="4" style="background:#e0f2fe">{{ _("Size Distribution") }}</th>
-          <th colspan="4" style="background:#fef3c7">{{ _("Magnetic Test") }}</th>
-        </tr>
-        <tr>
-          <th style="width:60px;background:#e0f2fe">{{ _("Init, g") }}</th>
-          <th style="width:100px;background:#e0f2fe">{{ _("Fraction") }}</th>
-          <th style="width:65px;background:#e0f2fe">{{ _("Mass, g") }}</th>
-          <th style="width:55px;background:#e0f2fe">%</th>
-          <th style="width:65px;background:#fef3c7">{{ _("Init, g") }}</th>
-          <th style="width:80px;background:#fef3c7">{{ _("MG, g") }}</th>
-          <th style="width:90px;background:#fef3c7">{{ _("Non-MG, g") }}</th>
-          <th style="width:70px;background:#fef3c7">{{ _("MG, %%") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% set fractions = ['+0.2', '-0.2+0.074', '-0.074+0.053', '-0.053+0.045', '-0.045+0.038', '-0.038'] %}
-        {% set ns = namespace(row_num=0) %}
-        {% for sample in samples %}
-          {% set ns.row_num = ns.row_num + 1 %}
-          {% set data = mg_data.get(sample.id, {}) %}
-          {% set mt = data.get('MT', {}) %}
-          {% set trd = data.get('TRD', {}) %}
-          {% set mg = data.get('MG', {}) %}
-          {% set size = data.get('MG_SIZE', {}) %}
-          {% set size_raw = size.get('raw_data', {}) %}
-          {% set mg_raw = mg.get('raw_data', {}) %}
-          {% set size_fracs = size_raw.get('fractions', []) %}
-          {% set frac_count = fractions|length %}
+ {% if not samples %}
+ <div class="alert alert-info">
+ <i class="bi bi-info-circle me-1"></i> {{ _("No MG analysis results found.") }}
+ </div>
+ {% else %}
+ <div class="table-responsive">
+ <table class="table table-bordered table-hover mg-tbl mb-0" id="mgSummaryTable">
+ <thead>
+ <tr>
+ <th class="w-[30px]" rowspan="2">
+ <input type="checkbox" id="mgCheckAll" class="form-check-input" title="{{ _("Select all") }}">
+ </th>
+ <th class="w-[35px]" rowspan="2">No.</th>
+ <th class="min-w-[160px]" rowspan="2">{{ _("Sample") }}</th>
+ <th class="w-[70px]" rowspan="2">MT, %</th>
+ <th class="w-[70px]" rowspan="2">TRD</th>
+ <th class="bg-[#e0f2fe]" colspan="4">{{ _("Size Distribution") }}</th>
+ <th class="bg-warn-soft" colspan="4">{{ _("Magnetic Test") }}</th>
+ </tr>
+ <tr>
+ <th class="w-[60px] bg-[#e0f2fe]">{{ _("Init, g") }}</th>
+ <th class="w-[100px] bg-[#e0f2fe]">{{ _("Fraction") }}</th>
+ <th class="w-[65px] bg-[#e0f2fe]">{{ _("Mass, g") }}</th>
+ <th class="w-[55px] bg-[#e0f2fe]">%</th>
+ <th class="w-[65px] bg-warn-soft">{{ _("Init, g") }}</th>
+ <th class="w-[80px] bg-warn-soft">{{ _("MG, g") }}</th>
+ <th class="w-[90px] bg-warn-soft">{{ _("Non-MG, g") }}</th>
+ <th class="w-[70px] bg-warn-soft">{{ _("MG, %%") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% set fractions = ['+0.2', '-0.2+0.074', '-0.074+0.053', '-0.053+0.045', '-0.045+0.038', '-0.038'] %}
+ {% set ns = namespace(row_num=0) %}
+ {% for sample in samples %}
+ {% set ns.row_num = ns.row_num + 1 %}
+ {% set data = mg_data.get(sample.id, {}) %}
+ {% set mt = data.get('MT', {}) %}
+ {% set trd = data.get('TRD', {}) %}
+ {% set mg = data.get('MG', {}) %}
+ {% set size = data.get('MG_SIZE', {}) %}
+ {% set size_raw = size.get('raw_data', {}) %}
+ {% set mg_raw = mg.get('raw_data', {}) %}
+ {% set size_fracs = size_raw.get('fractions', []) %}
+ {% set frac_count = fractions|length %}
 
-          {% for frac_label in fractions %}
-            <tr data-sample-id="{{ sample.id }}">
-              {% if loop.first %}
-                <td rowspan="{{ frac_count }}" class="align-middle">
-                  <input type="checkbox" class="form-check-input mg-sample-check" value="{{ sample.id }}">
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle fw-bold">{{ ns.row_num }}</td>
-                <td rowspan="{{ frac_count }}" class="align-middle sample-name">
-                  {{ sample.sample_code or sample.id }}
+ {% for frac_label in fractions %}
+ <tr data-sample-id="{{ sample.id }}">
+ {% if loop.first %}
+ <td rowspan="{{ frac_count }}" class="align-middle">
+ <input type="checkbox" class="form-check-input mg-sample-check" value="{{ sample.id }}">
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle fw-bold">{{ ns.row_num }}</td>
+ <td rowspan="{{ frac_count }}" class="align-middle sample-name">
+ {{ sample.sample_code or sample.id }}
 
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if mt.get('status') == 'pending_review' }}">
-                  {% if mt.get('final_result') is not none %}
-                    {{ "%.2f"|format(mt['final_result']) }}
-                    {% if current_user.role in ['senior', 'admin'] and mt.get('id') %}
-                    <button class="mg-return" data-rid="{{ mt['id'] }}" title="{{ _("Return") }}">↩</button>
-                    {% endif %}
-                  {% else %}<span class="mg-val-muted">-</span>{% endif %}
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if trd.get('status') == 'pending_review' }}">
-                  {% if trd.get('final_result') is not none %}
-                    {{ "%.3f"|format(trd['final_result']) }}
-                    {% if current_user.role in ['senior', 'admin'] and trd.get('id') %}
-                    <button class="mg-return" data-rid="{{ trd['id'] }}" title="{{ _("Return") }}">↩</button>
-                    {% endif %}
-                  {% else %}<span class="mg-val-muted">-</span>{% endif %}
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-cell{{ ' mg-pending' if size.get('status') == 'pending_review' }}">
-                  {{ size_raw.get('total_mass', 50) }}
-                  {% if current_user.role in ['senior', 'admin'] and size.get('id') %}
-                  <button class="mg-return" data-rid="{{ size['id'] }}" title="{{ _("Return SIZE") }}">↩</button>
-                  {% endif %}
-                </td>
-              {% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if mt.get('status') == 'pending_review' }}">
+ {% if mt.get('final_result') is not none %}
+ {{ "%.2f"|format(mt['final_result']) }}
+ {% if current_user.role in ['senior', 'admin'] and mt.get('id') %}
+ <button class="mg-return" data-rid="{{ mt['id'] }}" title="{{ _("Return") }}">↩</button>
+ {% endif %}
+ {% else %}<span class="mg-val-muted">-</span>{% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle mg-val mg-cell{{ ' mg-pending' if trd.get('status') == 'pending_review' }}">
+ {% if trd.get('final_result') is not none %}
+ {{ "%.3f"|format(trd['final_result']) }}
+ {% if current_user.role in ['senior', 'admin'] and trd.get('id') %}
+ <button class="mg-return" data-rid="{{ trd['id'] }}" title="{{ _("Return") }}">↩</button>
+ {% endif %}
+ {% else %}<span class="mg-val-muted">-</span>{% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle mg-cell{{ ' mg-pending' if size.get('status') == 'pending_review' }}">
+ {{ size_raw.get('total_mass', 50) }}
+ {% if current_user.role in ['senior', 'admin'] and size.get('id') %}
+ <button class="mg-return" data-rid="{{ size['id'] }}" title="{{ _("Return SIZE") }}">↩</button>
+ {% endif %}
+ </td>
+ {% endif %}
 
-              {% if size_fracs and loop.index0 < size_fracs|length %}
-                {% set f = size_fracs[loop.index0] %}
-                <td class="frac-label">{{ f.get('label', frac_label) }}</td>
-                <td>{% if f.get('m1') is not none %}{{ "%.1f"|format(f['m1']) }}{% else %}-{% endif %}</td>
-                <td>{% if f.get('pct') is not none %}{{ "%.1f"|format(f['pct']) }}{% else %}-{% endif %}</td>
-              {% else %}
-                <td class="frac-label">{{ frac_label }}</td>
-                <td>-</td>
-                <td>-</td>
-              {% endif %}
+ {% if size_fracs and loop.index0 < size_fracs|length %}
+ {% set f = size_fracs[loop.index0] %}
+ <td class="frac-label">{{ f.get('label', frac_label) }}</td>
+ <td>{% if f.get('m1') is not none %}{{ "%.1f"|format(f['m1']) }}{% else %}-{% endif %}</td>
+ <td>{% if f.get('pct') is not none %}{{ "%.1f"|format(f['pct']) }}{% else %}-{% endif %}</td>
+ {% else %}
+ <td class="frac-label">{{ frac_label }}</td>
+ <td>-</td>
+ <td>-</td>
+ {% endif %}
 
-              {% if loop.first %}
-                <td rowspan="{{ frac_count }}" class="align-middle">
-                  {% if mg_raw.get('sample_mass') is not none %}{{ "%.1f"|format(mg_raw['sample_mass']) }}{% else %}-{% endif %}
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val">
-                  {% if mg_raw.get('mg_mass') is not none %}{{ "%.2f"|format(mg_raw['mg_mass']) }}{% else %}-{% endif %}
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle">
-                  {% if mg_raw.get('nomg_mass') is not none %}{{ "%.2f"|format(mg_raw['nomg_mass']) }}{% else %}-{% endif %}
-                </td>
-                <td rowspan="{{ frac_count }}" class="align-middle mg-val text-success mg-cell{{ ' mg-pending' if mg.get('status') == 'pending_review' }}">
-                  {% if mg.get('final_result') is not none %}
-                    {{ "%.2f"|format(mg['final_result']) }}
-                    {% if current_user.role in ['senior', 'admin'] and mg.get('id') %}
-                    <button class="mg-return" data-rid="{{ mg['id'] }}" title="{{ _("Return") }}">↩</button>
-                    {% endif %}
-                  {% else %}-{% endif %}
-                </td>
-              {% endif %}
-            </tr>
-          {% endfor %}
+ {% if loop.first %}
+ <td rowspan="{{ frac_count }}" class="align-middle">
+ {% if mg_raw.get('sample_mass') is not none %}{{ "%.1f"|format(mg_raw['sample_mass']) }}{% else %}-{% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle mg-val">
+ {% if mg_raw.get('mg_mass') is not none %}{{ "%.2f"|format(mg_raw['mg_mass']) }}{% else %}-{% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle">
+ {% if mg_raw.get('nomg_mass') is not none %}{{ "%.2f"|format(mg_raw['nomg_mass']) }}{% else %}-{% endif %}
+ </td>
+ <td rowspan="{{ frac_count }}" class="align-middle mg-val text-success mg-cell{{ ' mg-pending' if mg.get('status') == 'pending_review' }}">
+ {% if mg.get('final_result') is not none %}
+ {{ "%.2f"|format(mg['final_result']) }}
+ {% if current_user.role in ['senior', 'admin'] and mg.get('id') %}
+ <button class="mg-return" data-rid="{{ mg['id'] }}" title="{{ _("Return") }}">↩</button>
+ {% endif %}
+ {% else %}-{% endif %}
+ </td>
+ {% endif %}
+ </tr>
+ {% endfor %}
 
-          <tr class="total-row">
-            <td colspan="7" class="text-end">{{ _("Total") }}</td>
-            <td>{{ size_raw.get('total_mass', 50) }}</td>
-            <td>100.0</td>
-            <td colspan="4"></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
+ <tr class="total-row">
+ <td colspan="7" class="text-end">{{ _("Total") }}</td>
+ <td>{{ size_raw.get('total_mass', 50) }}</td>
+ <td>100.0</td>
+ <td colspan="4"></td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% endif %}
 </div>
 {% endblock %}
 
@@ -178,85 +178,85 @@
 <script src="{{ url_for('static', filename='js/xlsx.full.min.js') }}"></script>
 <script nonce="{{ csp_nonce }}">
 (function() {
-  'use strict';
-  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+ 'use strict';
+ const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
-  // Checkbox: select all
-  const checkAll = document.getElementById('mgCheckAll');
-  const checks = () => document.querySelectorAll('.mg-sample-check');
-  if (checkAll) {
-    checkAll.addEventListener('change', function() {
-      checks().forEach(c => c.checked = this.checked);
-      updateActionBtns();
-    });
-  }
-  document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('mg-sample-check')) updateActionBtns();
-  });
+ // Checkbox: select all
+ const checkAll = document.getElementById('mgCheckAll');
+ const checks = () => document.querySelectorAll('.mg-sample-check');
+ if (checkAll) {
+ checkAll.addEventListener('change', function() {
+ checks().forEach(c => c.checked = this.checked);
+ updateActionBtns();
+ });
+ }
+ document.addEventListener('change', function(e) {
+ if (e.target.classList.contains('mg-sample-check')) updateActionBtns();
+ });
 
-  function getSelectedIds() {
-    return [...checks()].filter(c => c.checked).map(c => parseInt(c.value));
-  }
+ function getSelectedIds() {
+ return [...checks()].filter(c => c.checked).map(c => parseInt(c.value));
+ }
 
-  function updateActionBtns() {
-    const ids = getSelectedIds();
-    const archiveBtn = document.getElementById('btnMgArchive');
-    if (archiveBtn) archiveBtn.disabled = ids.length === 0;
-  }
+ function updateActionBtns() {
+ const ids = getSelectedIds();
+ const archiveBtn = document.getElementById('btnMgArchive');
+ if (archiveBtn) archiveBtn.disabled = ids.length === 0;
+ }
 
-  // Archive/Unarchive
-  const archiveBtn = document.getElementById('btnMgArchive');
-  if (archiveBtn) {
-    archiveBtn.addEventListener('click', function() {
-      const ids = getSelectedIds();
-      if (!ids.length) return;
-      const action = 'archive';
-      const msg = ids.length + " {{ _('samples to archive?') }}";
-      if (!confirm(msg)) return;
+ // Archive/Unarchive
+ const archiveBtn = document.getElementById('btnMgArchive');
+ if (archiveBtn) {
+ archiveBtn.addEventListener('click', function() {
+ const ids = getSelectedIds();
+ if (!ids.length) return;
+ const action = 'archive';
+ const msg = ids.length + " {{ _('samples to archive?') }}";
+ if (!confirm(msg)) return;
 
-      fetch('{{ url_for("api.mg_summary") }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-        body: JSON.stringify({ sample_ids: ids, action: action })
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) location.reload();
-        else alert(data.message || "{{ _('An error occurred') }}");
-      })
-      .catch(() => alert("{{ _('Could not connect to server') }}"));
-    });
-  }
+ fetch('{{ url_for("api.mg_summary") }}', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+ body: JSON.stringify({ sample_ids: ids, action: action })
+ })
+ .then(r => r.json())
+ .then(data => {
+ if (data.success) location.reload();
+ else alert(data.message || "{{ _('An error occurred') }}");
+ })
+ .catch(() => alert("{{ _('Could not connect to server') }}"));
+ });
+ }
 
-  // Per-cell return button
-  document.addEventListener('click', function(e) {
-    if (!e.target.classList.contains('mg-return')) return;
-    const rid = e.target.dataset.rid;
-    if (!rid) return;
-    if (!confirm("{{ _('Return this result?') }}")) return;
+ // Per-cell return button
+ document.addEventListener('click', function(e) {
+ if (!e.target.classList.contains('mg-return')) return;
+ const rid = e.target.dataset.rid;
+ if (!rid) return;
+ if (!confirm("{{ _('Return this result?') }}")) return;
 
-    fetch('/api/update_result_status/' + rid + '/rejected', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }
-    })
-    .then(r => r.json())
-    .then(data => { if (data.message) location.reload(); })
-    .catch(() => alert("{{ _('An error occurred') }}"));
-  });
+ fetch('/api/update_result_status/' + rid + '/rejected', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf }
+ })
+ .then(r => r.json())
+ .then(data => { if (data.message) location.reload(); })
+ .catch(() => alert("{{ _('An error occurred') }}"));
+ });
 
-  // Excel export
-  document.getElementById('btnExportMgSummary')?.addEventListener('click', function() {
-    if (typeof tableToXlsx === 'function') {
-      tableToXlsx('mgSummaryTable', 'MG_Summary');
-    } else {
-      const table = document.getElementById('mgSummaryTable');
-      if (!table) return;
-      const wb = XLSX.utils.table_to_book(table, { sheet: 'MG Summary' });
-      XLSX.writeFile(wb, 'MG_Summary.xlsx');
-    }
-  });
+ // Excel export
+ document.getElementById('btnExportMgSummary')?.addEventListener('click', function() {
+ if (typeof tableToXlsx === 'function') {
+ tableToXlsx('mgSummaryTable', 'MG_Summary');
+ } else {
+ const table = document.getElementById('mgSummaryTable');
+ if (!table) return;
+ const wb = XLSX.utils.table_to_book(table, { sheet: 'MG Summary' });
+ XLSX.writeFile(wb, 'MG_Summary.xlsx');
+ }
+ });
 
-  updateActionBtns();
+ updateActionBtns();
 })();
 </script>
 {% endblock %}

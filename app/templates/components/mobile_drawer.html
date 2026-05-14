@@ -1,126 +1,126 @@
 {# ================================================================
-   MOBILE OFF-CANVAS DRAWER COMPONENT
-   Alpine.js + Tailwind CSS
-   ================================================================ #}
+ MOBILE OFF-CANVAS DRAWER COMPONENT
+ Alpine.js + Tailwind CSS
+ ================================================================ #}
 
 {# Backdrop #}
 <div x-show="drawerOpen"
-     x-transition:enter="tw-transition tw-ease-out tw-duration-300"
-     x-transition:enter-start="tw-opacity-0"
-     x-transition:enter-end="tw-opacity-100"
-     x-transition:leave="tw-transition tw-ease-in tw-duration-200"
-     x-transition:leave-start="tw-opacity-100"
-     x-transition:leave-end="tw-opacity-0"
-     @click="drawerOpen = false"
-     class="tw-fixed tw-inset-0 tw-bg-black/50 tw-z-drawer-backdrop"
-     style="display: none;">
+ x-transition:enter="tw-transition tw-ease-out tw-duration-300"
+ x-transition:enter-start="tw-opacity-0"
+ x-transition:enter-end="tw-opacity-100"
+ x-transition:leave="tw-transition tw-ease-in tw-duration-200"
+ x-transition:leave-start="tw-opacity-100"
+ x-transition:leave-end="tw-opacity-0"
+ @click="drawerOpen = false"
+ 
+>
 </div>
 
 {# Drawer Panel #}
 <aside x-show="drawerOpen"
-       x-transition:enter="tw-transition tw-ease-out tw-duration-300"
-       x-transition:enter-start="tw--translate-x-full"
-       x-transition:enter-end="tw-translate-x-0"
-       x-transition:leave="tw-transition tw-ease-in tw-duration-200"
-       x-transition:leave-start="tw-translate-x-0"
-       x-transition:leave-end="tw--translate-x-full"
-       @keydown.escape.window="drawerOpen = false"
-       class="tw-fixed tw-inset-y-0 tw-left-0 tw-z-drawer tw-w-72 tw-bg-white tw-shadow-drawer tw-flex tw-flex-col"
-       style="display: none;">
+ x-transition:enter="tw-transition tw-ease-out tw-duration-300"
+ x-transition:enter-start="tw--translate-x-full"
+ x-transition:enter-end="tw-translate-x-0"
+ x-transition:leave="tw-transition tw-ease-in tw-duration-200"
+ x-transition:leave-start="tw-translate-x-0"
+ x-transition:leave-end="tw--translate-x-full"
+ @keydown.escape.window="drawerOpen = false"
+ 
+>
 
-  {# ---- DRAWER HEADER ---- #}
-  <div class="tw-drawer-header">
-    <div class="tw-flex tw-items-center tw-gap-3">
-      <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}"
-           alt="ER Lab"
-           class="tw-h-8 tw-w-auto tw-brightness-0 tw-invert"
-           onerror="this.style.display='none'">
-      <div class="tw-text-white">
-        <span class="tw-font-bold tw-text-lg">LIMS</span>
-        <div class="tw-text-xs tw-text-white/80">Corelink</div>
-      </div>
-    </div>
-    <button @click="drawerOpen = false"
-            class="tw-p-2 tw-rounded-lg tw-text-white/80 hover:tw-text-white hover:tw-bg-white/10 tw-transition"
-            aria-label="Close">
-      <i class="bi bi-x-lg tw-text-xl"></i>
-    </button>
-  </div>
+ {# ---- DRAWER HEADER ---- #}
+ <div>
+ <div>
+ <img src="{{ url_for('static', filename='images/energy_resources_logo.png') }}"
+ alt="ER Lab"
 
-  {# ---- DRAWER BODY ---- #}
-  <div class="tw-drawer-body">
-    {% block drawer_content %}
-    {# Sidebar content will be injected here #}
+ data-error-action="hide-self">
+ <div>
+ <span>LIMS</span>
+ <div>Corelink</div>
+ </div>
+ </div>
+ <button @click="drawerOpen = false"
+ class="hover: hover:"
+ aria-label="Close">
+ <i class="bi bi-x-lg"></i>
+ </button>
+ </div>
 
-    {# Quick Reference Card #}
-    <div class="tw-mobile-card" x-data="{ expanded: true }">
-      <button @click="expanded = !expanded"
-              class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-info-circle tw-mr-2 tw-text-er-blue"></i>{{ _("Quick Reference") }}</span>
-        <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-      </button>
-      <div x-show="expanded" x-collapse class="tw-mt-3">
-        <div id="drawer-quick-ref">
-          {# Content loaded dynamically or via include #}
-        </div>
-      </div>
-    </div>
+ {# ---- DRAWER BODY ---- #}
+ <div>
+ {% block drawer_content %}
+ {# Sidebar content will be injected here #}
 
-    {# Timer Panel Card #}
-    <div class="tw-mobile-card" x-data="{ expanded: true }">
-      <button @click="expanded = !expanded"
-              class="tw-w-full tw-flex tw-items-center tw-justify-between tw-text-left tw-font-semibold tw-text-gray-700">
-        <span><i class="bi bi-stopwatch tw-mr-2 tw-text-er-orange"></i>{{ _("Timer") }}</span>
-        <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-      </button>
-      <div x-show="expanded" x-collapse class="tw-mt-3">
-        <div id="drawer-timer-panel">
-          {# Timer content loaded dynamically or via include #}
-        </div>
-      </div>
-    </div>
+ {# Quick Reference Card #}
+ <div x-data="{ expanded: true }">
+ <button @click="expanded = !expanded"
+>
+ <span><i class="bi bi-info-circle"></i>{{ _("Quick Reference") }}</span>
+ <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+ </button>
+ <div x-show="expanded" x-collapse>
+ <div id="drawer-quick-ref">
+ {# Content loaded dynamically or via include #}
+ </div>
+ </div>
+ </div>
 
-    {# Navigation Links #}
-    <div class="tw-mobile-card">
-      <div class="tw-font-semibold tw-text-gray-700 tw-mb-3">
-        <i class="bi bi-grid tw-mr-2 tw-text-er-blue"></i>{{ _("Analysis") }}
-      </div>
-      <nav class="tw-space-y-1">
-        <a href="{{ url_for('analysis.analysis_hub') }}"
-           class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
-          <i class="bi bi-house"></i>
-          <span>{{ _("Analysis Hub") }}</span>
-        </a>
-        <a href="{{ url_for('main.index') }}"
-           class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
-          <i class="bi bi-box"></i>
-          <span>{{ _("Samples") }}</span>
-        </a>
-        <a href="{{ url_for('quality.complaints_list') }}"
-           class="tw-flex tw-items-center tw-gap-3 tw-px-3 tw-py-2 tw-rounded-lg tw-text-gray-600 hover:tw-bg-gray-100 tw-transition">
-          <i class="bi bi-check-circle"></i>
-          <span>{{ _("Quality") }}</span>
-        </a>
-      </nav>
-    </div>
+ {# Timer Panel Card #}
+ <div x-data="{ expanded: true }">
+ <button @click="expanded = !expanded"
+>
+ <span><i class="bi bi-stopwatch"></i>{{ _("Timer") }}</span>
+ <i class="bi" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+ </button>
+ <div x-show="expanded" x-collapse>
+ <div id="drawer-timer-panel">
+ {# Timer content loaded dynamically or via include #}
+ </div>
+ </div>
+ </div>
 
-    {% endblock %}
-  </div>
+ {# Navigation Links #}
+ <div>
+ <div>
+ <i class="bi bi-grid"></i>{{ _("Analysis") }}
+ </div>
+ <nav>
+ <a href="{{ url_for('analysis.analysis_hub') }}"
+ class="hover:">
+ <i class="bi bi-house"></i>
+ <span>{{ _("Analysis Hub") }}</span>
+ </a>
+ <a href="{{ url_for('main.index') }}"
+ class="hover:">
+ <i class="bi bi-box"></i>
+ <span>{{ _("Samples") }}</span>
+ </a>
+ <a href="{{ url_for('quality.complaints_list') }}"
+ class="hover:">
+ <i class="bi bi-check-circle"></i>
+ <span>{{ _("Quality") }}</span>
+ </a>
+ </nav>
+ </div>
 
-  {# ---- DRAWER FOOTER ---- #}
-  <div class="tw-drawer-footer tw-safe-area-bottom">
-    <div class="tw-flex tw-items-center tw-justify-between tw-text-sm">
-      <div class="tw-text-gray-500">
-        <i class="bi bi-person-circle tw-mr-1"></i>
-        {{ current_user.name if current_user.is_authenticated else _('Guest') }}
-      </div>
-      <a href="{{ url_for('main.logout') }}"
-         class="tw-text-red-500 hover:tw-text-red-600 tw-transition">
-        <i class="bi bi-box-arrow-right"></i> {{ _("Logout") }}
-      </a>
-    </div>
-    <div class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">
-      CORELINK LIMS v1.0
-    </div>
-  </div>
+ {% endblock %}
+ </div>
+
+ {# ---- DRAWER FOOTER ---- #}
+ <div>
+ <div>
+ <div>
+ <i class="bi bi-person-circle"></i>
+ {{ current_user.name if current_user.is_authenticated else _('Guest') }}
+ </div>
+ <a href="{{ url_for('main.logout') }}"
+ class="hover:">
+ <i class="bi bi-box-arrow-right"></i> {{ _("Logout") }}
+ </a>
+ </div>
+ <div>
+ CORELINK LIMS v1.0
+ </div>
+ </div>
 </aside>

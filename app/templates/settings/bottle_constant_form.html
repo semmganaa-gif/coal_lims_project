@@ -14,7 +14,7 @@
         7.4.1&ndash;7.4.8: 20 &plusmn; 0.5 °C, {{ _("3 measurements, concordance deviation") }} ≤ <code>0.0015 g</code>.
       </div>
 
-      <form method="post" oninput="calcAvg()">
+      <form method="post" id="bottleConstForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="row g-3">
           <div class="col-md-6">
@@ -98,5 +98,6 @@ function calcAvg(){
   const h=document.getElementById('hint'); h.textContent = msg;
   h.className = 'small ' + (msg.includes('> 0.0015') ? 'warn' : 'muted');
 }
+document.getElementById('bottleConstForm').addEventListener('input', calcAvg);
 </script>
 {% endblock %}

@@ -5,67 +5,67 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id removed #}
-  {% include "equipment/partials/hero_tabs.html" %}
+ {# add_modal_id removed #}
+ {% include "equipment/partials/hero_tabs.html" %}
 
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-x-circle text-danger"></i> {{ _("Out of Service") }}</span>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addOosModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
-      {% endif %}
-      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
-      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
-    </div>
-  </div>
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <span class="fw-bold"><i class="bi bi-x-circle text-danger"></i> {{ _("Out of Service") }}</span>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role in ['senior','manager','admin'] %}
+ <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addOosModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-warning" id="btn-edit-row" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-row" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
+ {% endif %}
+ <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+ <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
+ </div>
+ </div>
 
-  <div class="eq-grid-card">
-    <div id="oosGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
-  </div>
+ <div class="eq-grid-card">
+ <div class="w-full h-[calc(100vh_-_280px)] min-h-[450px]" id="oosGrid"></div>
+ </div>
 
-  <div class="modal fade" id="addOosModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Out of Service") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='out_of_service') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body p-4">
-          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
-          <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="oos_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="oos_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="oos_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Model No.") }}</label><input type="text" id="oos_mark" name="mark" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Quantity") }}</label><input type="text" id="oos_qty" name="quantity" class="form-control" value="1"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" id="oos_commissioned_date" name="commissioned_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Damage") }}</label><input type="text" id="oos_damage" name="damage" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Broken Parts") }}</label><input type="text" id="oos_broken_parts" name="broken_parts" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Repairable") }}</label><select id="oos_repairable" name="repairable" class="form-select"><option value=""></option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Use as Spare") }}</label><select id="oos_use_as_spare" name="use_as_spare" class="form-select"><option value=""></option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Removed Date") }}</label><input type="text" id="oos_removed_date" name="removed_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Retired Date") }}</label><input type="text" id="oos_retired_date" name="retired_date" class="form-control"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="modal fade" id="addOosModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-brand-gradient text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Out of Service") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='out_of_service') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body p-4">
+ <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+ <div class="row g-3">
+ <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="oos_no" name="no" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="oos_name" name="name" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="oos_manufacturer" name="manufacturer" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Model No.") }}</label><input type="text" id="oos_mark" name="mark" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Quantity") }}</label><input type="text" id="oos_qty" name="quantity" class="form-control" value="1"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" id="oos_commissioned_date" name="commissioned_date" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Damage") }}</label><input type="text" id="oos_damage" name="damage" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Broken Parts") }}</label><input type="text" id="oos_broken_parts" name="broken_parts" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Repairable") }}</label><select id="oos_repairable" name="repairable" class="form-select"><option value=""></option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Use as Spare") }}</label><select id="oos_use_as_spare" name="use_as_spare" class="form-select"><option value=""></option><option>{{ _("Yes") }}</option><option>{{ _("No") }}</option></select></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Removed Date") }}</label><input type="text" id="oos_removed_date" name="removed_date" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Retired Date") }}</label><input type="text" id="oos_retired_date" name="retired_date" class="form-control"></div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="register_type" value="out_of_service">
-  </form>
+ <form class="hidden" id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="register_type" value="out_of_service">
+ </form>
 </div>
 {% endblock %}
 
@@ -80,58 +80,58 @@
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  var rowData = {{ items | tojson }};
+ var rowData = {{ items | tojson }};
 
-  var table = new Tabulator("#oosGrid", {
-    data: rowData,
-    layout: "fitColumns",
-    height: "78vh",
-    selectable: true,
-    columns: [
-      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:'{{ _("No.") }}', field:"no", width:55, frozen:true},
-      {title:'{{ _("Equipment Name") }}', field:"name", minWidth:180, frozen:true},
-      {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140},
-      {title:'{{ _("Model No.") }}', field:"mark", width:120},
-      {title:'{{ _("Quantity") }}', field:"quantity", width:90},
-      {title:'{{ _("Commissioned Date") }}', field:"commissioned_date", width:140},
-      {title:'{{ _("Damage Information") }}', columns:[
-        {title:'{{ _("Damage") }}', field:"damage", minWidth:160},
-        {title:'{{ _("Broken Parts Register") }}', field:"broken_parts", minWidth:180},
-        {title:'{{ _("Repairable") }}', field:"repairable", width:140},
-        {title:'{{ _("Use as Spare") }}', field:"use_as_spare", width:150},
-      ]},
-      {title:'{{ _("Removed Date") }}', field:"removed_date", width:150},
-      {title:'{{ _("Retired Date") }}', field:"retired_date", width:130},
-    ],
-  });
+ var table = new Tabulator("#oosGrid", {
+ data: rowData,
+ layout: "fitColumns",
+ height: "78vh",
+ selectable: true,
+ columns: [
+ {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+ {title:'{{ _("No.") }}', field:"no", width:55, frozen:true},
+ {title:'{{ _("Equipment Name") }}', field:"name", minWidth:180, frozen:true},
+ {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140},
+ {title:'{{ _("Model No.") }}', field:"mark", width:120},
+ {title:'{{ _("Quantity") }}', field:"quantity", width:90},
+ {title:'{{ _("Commissioned Date") }}', field:"commissioned_date", width:140},
+ {title:'{{ _("Damage Information") }}', columns:[
+ {title:'{{ _("Damage") }}', field:"damage", minWidth:160},
+ {title:'{{ _("Broken Parts Register") }}', field:"broken_parts", minWidth:180},
+ {title:'{{ _("Repairable") }}', field:"repairable", width:140},
+ {title:'{{ _("Use as Spare") }}', field:"use_as_spare", width:150},
+ ]},
+ {title:'{{ _("Removed Date") }}', field:"removed_date", width:150},
+ {title:'{{ _("Retired Date") }}', field:"retired_date", width:130},
+ ],
+ });
 
-  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
+ initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  window.editSelectedRow = function() {
-    var sel = table.getSelectedData();
-    if (sel.length !== 1) return;
-    var d = sel[0];
-    var fields = ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'];
-    fields.forEach(function(f) {
-      var el=document.getElementById('oos_'+f); if(!el) return;
-      if(el.tagName==='SELECT'){for(var i=0;i<el.options.length;i++){if(el.options[i].value===(d[f]||'')){el.selectedIndex=i;break;}}} else el.value=d[f]||'';
-    });
-    var qtyEl = document.getElementById('oos_qty'); if(qtyEl) qtyEl.value = d.quantity||'1';
-    if (d.id) {
-      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
-    }
-    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
-    new bootstrap.Modal(document.getElementById('addOosModal')).show();
-  };
+ window.editSelectedRow = function() {
+ var sel = table.getSelectedData();
+ if (sel.length !== 1) return;
+ var d = sel[0];
+ var fields = ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'];
+ fields.forEach(function(f) {
+ var el=document.getElementById('oos_'+f); if(!el) return;
+ if(el.tagName==='SELECT'){for(var i=0;i<el.options.length;i++){if(el.options[i].value===(d[f]||'')){el.selectedIndex=i;break;}}} else el.value=d[f]||'';
+ });
+ var qtyEl = document.getElementById('oos_qty'); if(qtyEl) qtyEl.value = d.quantity||'1';
+ if (d.id) {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+ }
+ document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
+ new bootstrap.Modal(document.getElementById('addOosModal')).show();
+ };
 
-  document.getElementById('addOosModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='out_of_service') }}";
-    document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Out of Service") }}';
-    ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'].forEach(function(f) {
-      var el=document.getElementById('oos_'+f); if(el){ if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }
-    });
-  });
+ document.getElementById('addOosModal').addEventListener('hidden.bs.modal', function() {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='out_of_service') }}";
+ document.querySelector('#addOosModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Out of Service") }}';
+ ['no','name','manufacturer','mark','qty','commissioned_date','damage','broken_parts','repairable','use_as_spare','removed_date','retired_date'].forEach(function(f) {
+ var el=document.getElementById('oos_'+f); if(el){ if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; }
+ });
+ });
 });
 </script>
 {% endblock %}

@@ -4,203 +4,203 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .water-dash {
-    min-height: calc(100vh - 120px);
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 30%, #f0f9ff 60%, #f8fafc 100%);
-    background-attachment: fixed;
-  }
-  .dash-header {
-    background: linear-gradient(135deg, rgba(13,202,240,0.1), rgba(32,201,151,0.08));
-    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(13,202,240,0.1);
-  }
-  .dash-header h1 {
-    font-size: 1.75rem; font-weight: 800;
-    background: linear-gradient(135deg, #0dcaf0 0%, #20c997 50%, #0891b2 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 0.25rem;
-  }
-  .dash-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
+ .water-dash {
+ min-height: calc(100vh - 120px);
+ padding: 1.5rem;
+ background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 30%, #f0f9ff 60%, #f8fafc 100%);
+ background-attachment: fixed;
+ }
+ .dash-header {
+ background: linear-gradient(135deg, rgba(13,202,240,0.1), rgba(32,201,151,0.08));
+ backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 24px; padding: 2rem; margin-bottom: 1.5rem;
+ box-shadow: 0 4px 24px rgba(13,202,240,0.1);
+ }
+ .dash-header h1 {
+ font-size: 1.75rem; font-weight: 800;
+ background: linear-gradient(135deg, #0dcaf0 0%, #20c997 50%, #0891b2 100%);
+ -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+ margin-bottom: 0.25rem;
+ }
+ .dash-header p { color: #64748b; font-size: 0.9rem; margin: 0; }
 
-  .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
-  .stat-card {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.5rem; text-align: center; transition: all 0.3s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-  }
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
-  .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-  .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
-  .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
+ .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+ .stat-card {
+ background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.5rem; text-align: center; transition: all 0.3s;
+ box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ }
+ .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+ .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+ .stat-value { font-size: 2.2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+ .stat-label { font-size: 0.82rem; color: #64748b; font-weight: 600; }
 
-  .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
-  .nav-card {
-    background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
-    border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
-    padding: 1.75rem; text-decoration: none; color: #0f172a;
-    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-    display: flex; align-items: center; gap: 1.25rem;
-    position: relative; overflow: hidden;
-  }
-  .nav-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    opacity: 0; transition: opacity 0.3s;
-  }
-  .nav-card:hover {
-    transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
-    color: #0f172a; text-decoration: none;
-  }
-  .nav-card:hover::before { opacity: 1; }
-  .nav-card-icon {
-    width: 60px; height: 60px; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem; flex-shrink: 0;
-  }
-  .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
-  .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
-  .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
-  .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
+ .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+ .nav-card {
+ background: rgba(255,255,255,0.8); backdrop-filter: blur(16px);
+ border: 1px solid rgba(148,163,184,0.15); border-radius: 20px;
+ padding: 1.75rem; text-decoration: none; color: #0f172a;
+ transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+ box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+ display: flex; align-items: center; gap: 1.25rem;
+ position: relative; overflow: hidden;
+ }
+ .nav-card::before {
+ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+ opacity: 0; transition: opacity 0.3s;
+ }
+ .nav-card:hover {
+ transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+ color: #0f172a; text-decoration: none;
+ }
+ .nav-card:hover::before { opacity: 1; }
+ .nav-card-icon {
+ width: 60px; height: 60px; border-radius: 16px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 1.6rem; flex-shrink: 0;
+ }
+ .nav-card-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.2rem; }
+ .nav-card-content p { font-size: 0.82rem; color: #64748b; margin: 0; }
+ .nav-card .arrow { color: #94a3b8; font-size: 1.3rem; margin-left: auto; opacity: 0; transition: all 0.3s; }
+ .nav-card:hover .arrow { opacity: 1; transform: translateX(4px); }
 
-  .section-title {
-    font-size: 1.1rem; font-weight: 700; color: #0f172a;
-    margin: 1.5rem 0 1rem;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .section-badge {
-    font-size: 0.65rem; font-weight: 700; color: #fff; padding: 0.15rem 0.6rem;
-    border-radius: 6px; text-transform: uppercase;
-  }
+ .section-title {
+ font-size: 1.1rem; font-weight: 700; color: #0f172a;
+ margin: 1.5rem 0 1rem;
+ display: flex; align-items: center; gap: 0.5rem;
+ }
+ .section-badge {
+ font-size: 0.65rem; font-weight: 700; color: #fff; padding: 0.15rem 0.6rem;
+ border-radius: 6px; text-transform: uppercase;
+ }
 
-  .nc-register::before { background: linear-gradient(90deg, #0dcaf0, #06b6d4); }
-  .nc-register .nav-card-icon { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
-  .nc-water::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
-  .nc-water .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .nc-summary::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
-  .nc-summary .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
-  .nc-equipment::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-  .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
-  .nc-dashboard::before { background: linear-gradient(90deg, #0dcaf0, #0891b2); }
-  .nc-dashboard .nav-card-icon { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
-  .nc-consumption::before { background: linear-gradient(90deg, #20c997, #14b8a6); }
-  .nc-consumption .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
-  .nc-monthly::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
-  .nc-monthly .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+ .nc-register::before { background: linear-gradient(90deg, #0dcaf0, #06b6d4); }
+ .nc-register .nav-card-icon { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
+ .nc-water::before { background: linear-gradient(90deg, #3b82f6, #6366f1); }
+ .nc-water .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+ .nc-summary::before { background: linear-gradient(90deg, #8b5cf6, #a855f7); }
+ .nc-summary .nav-card-icon { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+ .nc-equipment::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+ .nc-equipment .nav-card-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+ .nc-dashboard::before { background: linear-gradient(90deg, #0dcaf0, #0891b2); }
+ .nc-dashboard .nav-card-icon { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+ .nc-consumption::before { background: linear-gradient(90deg, #20c997, #14b8a6); }
+ .nc-consumption .nav-card-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #047857; }
+ .nc-monthly::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+ .nc-monthly .nav-card-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
 
-  @media (max-width: 768px) {
-    .water-dash { padding: 1rem; }
-    .stat-cards { grid-template-columns: repeat(2, 1fr); }
-    .nav-cards { grid-template-columns: 1fr; }
-  }
+ @media (max-width: 768px) {
+ .water-dash { padding: 1rem; }
+ .stat-cards { grid-template-columns: repeat(2, 1fr); }
+ .nav-cards { grid-template-columns: 1fr; }
+ }
 </style>
 
 <div class="water-dash">
-  <div class="dash-header">
-    <h1><i class="bi bi-droplet-half me-2"></i>{{ _("Chemistry Lab") }}</h1>
-    <p>{{ _("Water physico-chemical analysis management dashboard") }}</p>
-  </div>
+ <div class="dash-header">
+ <h1><i class="bi bi-droplet-half me-2"></i>{{ _("Chemistry Lab") }}</h1>
+ <p>{{ _("Water physico-chemical analysis management dashboard") }}</p>
+ </div>
 
-  <!-- Morning start -->
-  {% include 'partials/_morning_start.html' %}
+ <!-- Morning start -->
+ {% include 'partials/_morning_start.html' %}
 
-  <!-- Statistics -->
-  <div class="stat-cards">
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#0dcaf0"><i class="bi bi-inbox-fill"></i></div>
-      <div class="stat-value" style="color:#0891b2">{{ total_samples }}</div>
-      <div class="stat-label">{{ _("Total Samples") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#3b82f6"><i class="bi bi-plus-circle-fill"></i></div>
-      <div class="stat-value" style="color:#1d4ed8">{{ new_samples }}</div>
-      <div class="stat-label">{{ _("New Samples") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-hourglass-split"></i></div>
-      <div class="stat-value" style="color:#b45309">{{ in_progress }}</div>
-      <div class="stat-label">{{ _("In Progress") }}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#20c997"><i class="bi bi-check-circle-fill"></i></div>
-      <div class="stat-value" style="color:#047857">{{ completed }}</div>
-      <div class="stat-label">{{ _("Completed") }}</div>
-    </div>
-  </div>
+ <!-- Statistics -->
+ <div class="stat-cards">
+ <div class="stat-card">
+ <div class="stat-icon text-[#0dcaf0]"><i class="bi bi-inbox-fill"></i></div>
+ <div class="stat-value text-[#0891b2]">{{ total_samples }}</div>
+ <div class="stat-label">{{ _("Total Samples") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-info-2"><i class="bi bi-plus-circle-fill"></i></div>
+ <div class="stat-value text-info-2-bold">{{ new_samples }}</div>
+ <div class="stat-label">{{ _("New Samples") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-warn"><i class="bi bi-hourglass-split"></i></div>
+ <div class="stat-value text-warn-bold">{{ in_progress }}</div>
+ <div class="stat-label">{{ _("In Progress") }}</div>
+ </div>
+ <div class="stat-card">
+ <div class="stat-icon text-pass"><i class="bi bi-check-circle-fill"></i></div>
+ <div class="stat-value text-[#047857]">{{ completed }}</div>
+ <div class="stat-label">{{ _("Completed") }}</div>
+ </div>
+ </div>
 
-  <!-- Main Menu -->
-  <div class="section-title">
-    <i class="bi bi-clipboard-data" style="color:#0dcaf0"></i>
-    {{ _("Main Menu") }}
-  </div>
-  <div class="nav-cards">
-    <a href="{{ url_for('water.register_sample') }}" class="nav-card nc-register">
-      <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Sample Registration") }}</h3>
-        <p>{{ _("Register water and microbiology samples, view list") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-water">
-      <div class="nav-card-icon"><i class="bi bi-clipboard-data"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Analysis") }}</h3>
-        <p>{{ water_analysis_count }} {{ _("types of water quality analysis") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('water.water_summary') }}" class="nav-card nc-summary">
-      <div class="nav-card-icon"><i class="bi bi-table"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Summary") }}</h3>
-        <p>{{ _("Water chemistry + microbiology — combined results summary") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}" class="nav-card nc-equipment">
-      <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Equipment") }}</h3>
-        <p>{{ _("Chemistry lab equipment usage and maintenance journal") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-  </div>
+ <!-- Main Menu -->
+ <div class="section-title">
+ <i class="bi bi-clipboard-data text-[#0dcaf0]"></i>
+ {{ _("Main Menu") }}
+ </div>
+ <div class="nav-cards">
+ <a href="{{ url_for('water.register_sample') }}" class="nav-card nc-register">
+ <div class="nav-card-icon"><i class="bi bi-plus-circle"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Sample Registration") }}</h3>
+ <p>{{ _("Register water and microbiology samples, view list") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('water.water_analysis_hub') }}" class="nav-card nc-water">
+ <div class="nav-card-icon"><i class="bi bi-clipboard-data text-[#0dcaf0]"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Analysis") }}</h3>
+ <p>{{ water_analysis_count }} {{ _("types of water quality analysis") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('water.water_summary') }}" class="nav-card nc-summary">
+ <div class="nav-card-icon"><i class="bi bi-table"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Summary") }}</h3>
+ <p>{{ _("Water chemistry + microbiology — combined results summary") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('equipment.equipment_journal_grid', category='water', from_lab='water') }}" class="nav-card nc-equipment">
+ <div class="nav-card-icon"><i class="bi bi-tools"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Equipment") }}</h3>
+ <p>{{ _("Chemistry lab equipment usage and maintenance journal") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ </div>
 
-  <!-- Reports -->
-  <div class="section-title">
-    <i class="bi bi-graph-up" style="color:#0891b2"></i>
-    {{ _("Reports") }}
-    <span class="section-badge" style="background:linear-gradient(135deg,#0dcaf0,#0891b2)">{{ _("Reports") }}</span>
-  </div>
-  <div class="nav-cards">
-    <a href="{{ url_for('water.water_dashboard') }}" class="nav-card nc-dashboard">
-      <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Dashboard") }}</h3>
-        <p>{{ _("KPI, monthly trends, category distribution") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('water.water_consumption') }}" class="nav-card nc-consumption">
-      <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Analysis Summary") }}</h3>
-        <p>{{ _("Reports summarized by client, category, and month") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-    <a href="{{ url_for('water.water_monthly_plan') }}" class="nav-card nc-monthly">
-      <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
-      <div class="nav-card-content">
-        <h3>{{ _("Monthly Plan") }}</h3>
-        <p>{{ _("Weekly plan and execution") }}</p>
-      </div>
-      <i class="bi bi-arrow-right arrow"></i>
-    </a>
-  </div>
+ <!-- Reports -->
+ <div class="section-title">
+ <i class="bi bi-graph-up text-[#0891b2]"></i>
+ {{ _("Reports") }}
+ <span class="section-badge bg-[linear-gradient(135deg,#0dcaf0,#0891b2)]">{{ _("Reports") }}</span>
+ </div>
+ <div class="nav-cards">
+ <a href="{{ url_for('water.water_dashboard') }}" class="nav-card nc-dashboard">
+ <div class="nav-card-icon"><i class="bi bi-speedometer2"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Dashboard") }}</h3>
+ <p>{{ _("KPI, monthly trends, category distribution") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('water.water_consumption') }}" class="nav-card nc-consumption">
+ <div class="nav-card-icon"><i class="bi bi-journal-bookmark"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Analysis Summary") }}</h3>
+ <p>{{ _("Reports summarized by client, category, and month") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ <a href="{{ url_for('water.water_monthly_plan') }}" class="nav-card nc-monthly">
+ <div class="nav-card-icon"><i class="bi bi-calendar-check"></i></div>
+ <div class="nav-card-content">
+ <h3>{{ _("Monthly Plan") }}</h3>
+ <p>{{ _("Weekly plan and execution") }}</p>
+ </div>
+ <i class="bi bi-arrow-right arrow"></i>
+ </a>
+ </div>
 </div>
 {% endblock %}

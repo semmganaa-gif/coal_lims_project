@@ -3,533 +3,533 @@
 {% block content %}
 <div class="container-fluid">
 
-  {# ===== BACK BUTTON ===== #}
-  <div class="mb-3">
-    <a href="{{ url_for('chemicals.chemical_list', lab=chemical.lab_type) }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
-    </a>
-  </div>
+ {# ===== BACK BUTTON ===== #}
+ <div class="mb-3">
+ <a href="{{ url_for('chemicals.chemical_list', lab=chemical.lab_type) }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Back") }}
+ </a>
+ </div>
 
-  <div class="row g-4">
-    {# ===== LEFT: MAIN INFO ===== #}
-    <div class="col-lg-8">
-      {# Header Card #}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <h4 class="mb-1">
-                <i class="bi bi-droplet-fill text-info me-2"></i>
-                {{ chemical.name }}
-              </h4>
-              {% if chemical.formula %}
-              <span class="badge bg-light text-dark fs-6">{{ chemical.formula }}</span>
-              {% endif %}
-              {% if chemical.cas_number %}
-              <span class="badge bg-secondary ms-1">CAS: {{ chemical.cas_number }}</span>
-              {% endif %}
-            </div>
-            <div class="text-end">
-              {% if chemical.status == 'active' %}
-                <span class="badge bg-success fs-6">{{ _("Active") }}</span>
-              {% elif chemical.status == 'low_stock' %}
-                <span class="badge bg-warning fs-6">{{ _("Low Stock") }}</span>
-              {% elif chemical.status == 'expired' %}
-                <span class="badge bg-danger fs-6">{{ _("Expired") }}</span>
-              {% elif chemical.status == 'empty' %}
-                <span class="badge bg-secondary fs-6">{{ _("Empty") }}</span>
-              {% elif chemical.status == 'disposed' %}
-                <span class="badge bg-dark fs-6">{{ _("Disposed") }}</span>
-              {% endif %}
-            </div>
-          </div>
+ <div class="row g-4">
+ {# ===== LEFT: MAIN INFO ===== #}
+ <div class="col-lg-8">
+ {# Header Card #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-body">
+ <div class="d-flex justify-content-between align-items-start mb-3">
+ <div>
+ <h4 class="mb-1">
+ <i class="bi bi-droplet-fill text-info me-2"></i>
+ {{ chemical.name }}
+ </h4>
+ {% if chemical.formula %}
+ <span class="badge bg-light text-dark fs-6">{{ chemical.formula }}</span>
+ {% endif %}
+ {% if chemical.cas_number %}
+ <span class="badge bg-secondary ms-1">CAS: {{ chemical.cas_number }}</span>
+ {% endif %}
+ </div>
+ <div class="text-end">
+ {% if chemical.status == 'active' %}
+ <span class="badge bg-success fs-6">{{ _("Active") }}</span>
+ {% elif chemical.status == 'low_stock' %}
+ <span class="badge bg-warning fs-6">{{ _("Low Stock") }}</span>
+ {% elif chemical.status == 'expired' %}
+ <span class="badge bg-danger fs-6">{{ _("Expired") }}</span>
+ {% elif chemical.status == 'empty' %}
+ <span class="badge bg-secondary fs-6">{{ _("Empty") }}</span>
+ {% elif chemical.status == 'disposed' %}
+ <span class="badge bg-dark fs-6">{{ _("Disposed") }}</span>
+ {% endif %}
+ </div>
+ </div>
 
-          {# Quantity Display #}
-          <div class="row g-3">
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded text-center">
-                <div class="fs-2 fw-bold {{ 'text-success' if chemical.status == 'active' else 'text-warning' if chemical.status == 'low_stock' else 'text-danger' }}">
-                  {{ chemical.quantity }} {{ chemical.unit }}
-                </div>
-                <small class="text-muted">{{ _("Current Stock") }}</small>
-                {% if chemical.reorder_level %}
-                <div class="mt-1">
-                  <small class="text-muted">{{ _("Reorder Level") }}: {{ chemical.reorder_level }} {{ chemical.unit }}</small>
-                </div>
-                {% endif %}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded text-center">
-                {% if chemical.expiry_date %}
-                  {% set days_left = (chemical.expiry_date - today).days if today else 0 %}
-                  <div class="fs-2 fw-bold {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 30 else 'text-success' }}">
-                    {{ chemical.expiry_date.strftime('%Y-%m-%d') }}
-                  </div>
-                  <small class="text-muted">
-                    {% if days_left < 0 %}
-                      {{ _("Expired %(days)s days ago", days=-days_left) }}
-                    {% elif days_left == 0 %}
-                      {{ _("Expires today") }}
-                    {% else %}
-                      {{ _("%(days)s days remaining", days=days_left) }}
-                    {% endif %}
-                  </small>
-                {% else %}
-                  <div class="fs-4 text-muted">-</div>
-                  <small class="text-muted">{{ _("No Expiry") }}</small>
-                {% endif %}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="p-3 bg-light rounded text-center">
-                <div class="fs-4">
-                  {% set cat_map = {'acid': _('Acid'), 'base': _('Base'), 'solvent': _('Solvent'), 'indicator': _('Indicator'), 'standard': _('Standard'), 'media': _('Media'), 'buffer': _('Buffer'), 'salt': _('Salt'), 'other': _('Other')} %}
-                  {{ cat_map.get(chemical.category, chemical.category) }}
-                </div>
-                <small class="text-muted">{{ _("Category") }}</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+ {# Quantity Display #}
+ <div class="row g-3">
+ <div class="col-md-4">
+ <div class="p-3 bg-light rounded text-center">
+ <div class="fs-2 fw-bold {{ 'text-success' if chemical.status == 'active' else 'text-warning' if chemical.status == 'low_stock' else 'text-danger' }}">
+ {{ chemical.quantity }} {{ chemical.unit }}
+ </div>
+ <small class="text-muted">{{ _("Current Stock") }}</small>
+ {% if chemical.reorder_level %}
+ <div class="mt-1">
+ <small class="text-muted">{{ _("Reorder Level") }}: {{ chemical.reorder_level }} {{ chemical.unit }}</small>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ <div class="col-md-4">
+ <div class="p-3 bg-light rounded text-center">
+ {% if chemical.expiry_date %}
+ {% set days_left = (chemical.expiry_date - today).days if today else 0 %}
+ <div class="fs-2 fw-bold {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 30 else 'text-success' }}">
+ {{ chemical.expiry_date.strftime('%Y-%m-%d') }}
+ </div>
+ <small class="text-muted">
+ {% if days_left < 0 %}
+ {{ _("Expired %(days)s days ago", days=-days_left) }}
+ {% elif days_left == 0 %}
+ {{ _("Expires today") }}
+ {% else %}
+ {{ _("%(days)s days remaining", days=days_left) }}
+ {% endif %}
+ </small>
+ {% else %}
+ <div class="fs-4 text-muted">-</div>
+ <small class="text-muted">{{ _("No Expiry") }}</small>
+ {% endif %}
+ </div>
+ </div>
+ <div class="col-md-4">
+ <div class="p-3 bg-light rounded text-center">
+ <div class="fs-4">
+ {% set cat_map = {'acid': _('Acid'), 'base': _('Base'), 'solvent': _('Solvent'), 'indicator': _('Indicator'), 'standard': _('Standard'), 'media': _('Media'), 'buffer': _('Buffer'), 'salt': _('Salt'), 'other': _('Other')} %}
+ {{ cat_map.get(chemical.category, chemical.category) }}
+ </div>
+ <small class="text-muted">{{ _("Category") }}</small>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-      {# Details Card #}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
-          <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>{{ _("Detailed Information") }}</h6>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Manufacturer") }}</label>
-              <div class="fw-medium">{{ chemical.manufacturer or '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Supplier") }}</label>
-              <div class="fw-medium">{{ chemical.supplier or '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Catalog No.") }}</label>
-              <div class="fw-medium">{{ chemical.catalog_number or '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Lot/Batch No.") }}</label>
-              <div class="fw-medium">{{ chemical.lot_number or '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Grade") }}</label>
-              <div class="fw-medium">{{ chemical.grade or '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Lab") }}</label>
-              <div class="fw-medium">
-                {% set lab_map = {'coal': _('Coal'), 'water': _('Water'), 'microbiology': _('Microbiology'), 'petrography': _('Petrography'), 'all': _('All Labs')} %}
-                {{ lab_map.get(chemical.lab_type, chemical.lab_type) }}
-              </div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Received Date") }}</label>
-              <div class="fw-medium">{{ chemical.received_date.strftime('%Y-%m-%d') if chemical.received_date else '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Opened Date") }}</label>
-              <div class="fw-medium">{{ chemical.opened_date.strftime('%Y-%m-%d') if chemical.opened_date else '-' }}</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Location") }}</label>
-              <div class="fw-medium">{{ chemical.storage_location or '-' }}</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label text-muted small">{{ _("Storage Condition") }}</label>
-              <div class="fw-medium">{{ chemical.storage_conditions or '-' }}</div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label text-muted small">{{ _("Hazard Class") }}</label>
-              <div class="fw-medium">{{ chemical.hazard_class or '-' }}</div>
-            </div>
-            {% if chemical.notes %}
-            <div class="col-12">
-              <label class="form-label text-muted small">{{ _("Notes") }}</label>
-              <div class="fw-medium">{{ chemical.notes }}</div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+ {# Details Card #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0">
+ <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>{{ _("Detailed Information") }}</h6>
+ </div>
+ <div class="card-body">
+ <div class="row g-3">
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Manufacturer") }}</label>
+ <div class="fw-medium">{{ chemical.manufacturer or '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Supplier") }}</label>
+ <div class="fw-medium">{{ chemical.supplier or '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Catalog No.") }}</label>
+ <div class="fw-medium">{{ chemical.catalog_number or '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Lot/Batch No.") }}</label>
+ <div class="fw-medium">{{ chemical.lot_number or '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Grade") }}</label>
+ <div class="fw-medium">{{ chemical.grade or '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Lab") }}</label>
+ <div class="fw-medium">
+ {% set lab_map = {'coal': _('Coal'), 'water': _('Water'), 'microbiology': _('Microbiology'), 'petrography': _('Petrography'), 'all': _('All Labs')} %}
+ {{ lab_map.get(chemical.lab_type, chemical.lab_type) }}
+ </div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Received Date") }}</label>
+ <div class="fw-medium">{{ chemical.received_date.strftime('%Y-%m-%d') if chemical.received_date else '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Opened Date") }}</label>
+ <div class="fw-medium">{{ chemical.opened_date.strftime('%Y-%m-%d') if chemical.opened_date else '-' }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Location") }}</label>
+ <div class="fw-medium">{{ chemical.storage_location or '-' }}</div>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label text-muted small">{{ _("Storage Condition") }}</label>
+ <div class="fw-medium">{{ chemical.storage_conditions or '-' }}</div>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label text-muted small">{{ _("Hazard Class") }}</label>
+ <div class="fw-medium">{{ chemical.hazard_class or '-' }}</div>
+ </div>
+ {% if chemical.notes %}
+ <div class="col-12">
+ <label class="form-label text-muted small">{{ _("Notes") }}</label>
+ <div class="fw-medium">{{ chemical.notes }}</div>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-      {# GHS & Safety #}
-      {% if chemical.ghs_pictograms or chemical.ghs_signal_word or chemical.sds_version or chemical.shelf_life_after_opening_days %}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
-          <h6 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _("GHS / Safety Data") }}</h6>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
+ {# GHS & Safety #}
+ {% if chemical.ghs_pictograms or chemical.ghs_signal_word or chemical.sds_version or chemical.shelf_life_after_opening_days %}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0">
+ <h6 class="mb-0"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ _("GHS / Safety Data") }}</h6>
+ </div>
+ <div class="card-body">
+ <div class="row g-3">
 
-            {% if chemical.ghs_signal_word %}
-            <div class="col-12">
-              <label class="form-label text-muted small">{{ _("Signal Word") }}</label>
-              <div>
-                <span class="badge fs-6 {{ 'bg-danger' if chemical.ghs_signal_word == 'Danger' else 'bg-warning text-dark' }}">
-                  {{ chemical.ghs_signal_word }}
-                </span>
-              </div>
-            </div>
-            {% endif %}
+ {% if chemical.ghs_signal_word %}
+ <div class="col-12">
+ <label class="form-label text-muted small">{{ _("Signal Word") }}</label>
+ <div class="text-2xs text-slate-500 mt-[3px]">
+ <span class="badge fs-6 {{ 'bg-danger' if chemical.ghs_signal_word == 'Danger' else 'bg-warning text-dark' }}">
+ {{ chemical.ghs_signal_word }}
+ </span>
+ </div>
+ </div>
+ {% endif %}
 
-            {% if chemical.ghs_pictograms %}
-            <div class="col-12">
-              <label class="form-label text-muted small">{{ _("GHS Pictograms") }}</label>
-              {% set ghs_info = {
-                'GHS01': ('Тэсрэх', '#ef4444'),
-                'GHS02': ('Шатамхай', '#f97316'),
-                'GHS03': ('Исэлдүүлэгч', '#eab308'),
-                'GHS04': ('Шахсан хий', '#06b6d4'),
-                'GHS05': ('Идэмхий', '#a16207'),
-                'GHS06': ('Хортой', '#1e293b'),
-                'GHS07': ('Хортой/Цочроогч', '#f59e0b'),
-                'GHS08': ('Эрүүл мэндэд аюул', '#7c3aed'),
-                'GHS09': ('Байгальд аюул', '#16a34a'),
-              } %}
-              <div class="d-flex flex-wrap gap-2 mt-1">
-                {% for code in chemical.ghs_pictograms %}
-                {% set info = ghs_info.get(code, (code, '#64748b')) %}
-                <div class="text-center" style="width:70px;">
-                  <div style="width:60px;height:60px;background:{{ info[1] }};border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;">
-                    <span style="color:#fff;font-weight:800;font-size:0.75rem;">{{ code }}</span>
-                  </div>
-                  <div style="font-size:0.65rem;color:#64748b;margin-top:3px;">{{ info[0] }}</div>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
+ {% if chemical.ghs_pictograms %}
+ <div class="col-12">
+ <label class="form-label text-muted small">{{ _("GHS Pictograms") }}</label>
+ {% set ghs_info = {
+ 'GHS01': ('Тэсрэх', '#ef4444'),
+ 'GHS02': ('Шатамхай', '#f97316'),
+ 'GHS03': ('Исэлдүүлэгч', '#eab308'),
+ 'GHS04': ('Шахсан хий', '#06b6d4'),
+ 'GHS05': ('Идэмхий', '#a16207'),
+ 'GHS06': ('Хортой', '#1e293b'),
+ 'GHS07': ('Хортой/Цочроогч', '#f59e0b'),
+ 'GHS08': ('Эрүүл мэндэд аюул', '#7c3aed'),
+ 'GHS09': ('Байгальд аюул', '#16a34a'),
+ } %}
+ <div class="d-flex flex-wrap gap-2 mt-1">
+ {% for code in chemical.ghs_pictograms %}
+ {% set info = ghs_info.get(code, (code, '#64748b')) %}
+ <div class="text-center w-[70px]">
+ <div class="w-[60px] h-[60px] rounded-lg flex items-center justify-center mx-auto" data-bg-color="{{ info[1] }}">
+ <span class="text-white font-extrabold text-xs">{{ code }}</span>
+ </div>
+ <div class="text-2xs text-slate-500 mt-[3px]">{{ info[0] }}</div>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+ {% endif %}
 
-            {% if chemical.shelf_life_after_opening_days %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Shelf Life After Opening") }}</label>
-              <div class="fw-medium">{{ chemical.shelf_life_after_opening_days }} {{ _("days") }}</div>
-            </div>
-            {% endif %}
-            {% if chemical.opened_expiry_date %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Opened Expiry Date") }}</label>
-              {% set oed = chemical.opened_expiry_date %}
-              {% set days_left = (oed - today).days if today else 0 %}
-              <div class="fw-medium {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 30 else '' }}">
-                {{ oed.strftime('%Y-%m-%d') }}
-                {% if days_left < 0 %}
-                  <span class="badge bg-danger ms-1">{{ -days_left }}д хэтэрсэн</span>
-                {% elif days_left <= 30 %}
-                  <span class="badge bg-warning text-dark ms-1">{{ days_left }}д үлдсэн</span>
-                {% endif %}
-              </div>
-            </div>
-            {% endif %}
-            {% if chemical.sds_version %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">SDS {{ _("Version") }}</label>
-              <div class="fw-medium">{{ chemical.sds_version }}</div>
-            </div>
-            {% endif %}
-            {% if chemical.sds_revision_date %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">SDS {{ _("Revision Date") }}</label>
-              <div class="fw-medium">{{ chemical.sds_revision_date.strftime('%Y-%m-%d') }}</div>
-            </div>
-            {% endif %}
-            {% if chemical.days_alert_before_expiry %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Alert Before Expiry") }}</label>
-              <div class="fw-medium">{{ chemical.days_alert_before_expiry }} {{ _("days") }}</div>
-            </div>
-            {% endif %}
-            <div class="col-md-4">
-              <label class="form-label text-muted small">{{ _("Prevent Use If Expired") }}</label>
-              <div>
-                {% if chemical.prevent_use_if_expired %}
-                  <span class="badge bg-danger">{{ _("Yes — blocked") }}</span>
-                {% else %}
-                  <span class="badge bg-secondary">{{ _("No") }}</span>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endif %}
+ {% if chemical.shelf_life_after_opening_days %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Shelf Life After Opening") }}</label>
+ <div class="fw-medium">{{ chemical.shelf_life_after_opening_days }} {{ _("days") }}</div>
+ </div>
+ {% endif %}
+ {% if chemical.opened_expiry_date %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Opened Expiry Date") }}</label>
+ {% set oed = chemical.opened_expiry_date %}
+ {% set days_left = (oed - today).days if today else 0 %}
+ <div class="fw-medium {{ 'text-danger' if days_left < 0 else 'text-warning' if days_left <= 30 else '' }}">
+ {{ oed.strftime('%Y-%m-%d') }}
+ {% if days_left < 0 %}
+ <span class="badge bg-danger ms-1">{{ -days_left }}д хэтэрсэн</span>
+ {% elif days_left <= 30 %}
+ <span class="badge bg-warning text-dark ms-1">{{ days_left }}д үлдсэн</span>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
+ {% if chemical.sds_version %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">SDS {{ _("Version") }}</label>
+ <div class="fw-medium">{{ chemical.sds_version }}</div>
+ </div>
+ {% endif %}
+ {% if chemical.sds_revision_date %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">SDS {{ _("Revision Date") }}</label>
+ <div class="fw-medium">{{ chemical.sds_revision_date.strftime('%Y-%m-%d') }}</div>
+ </div>
+ {% endif %}
+ {% if chemical.days_alert_before_expiry %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Alert Before Expiry") }}</label>
+ <div class="fw-medium">{{ chemical.days_alert_before_expiry }} {{ _("days") }}</div>
+ </div>
+ {% endif %}
+ <div class="col-md-4">
+ <label class="form-label text-muted small">{{ _("Prevent Use If Expired") }}</label>
+ <div>
+ {% if chemical.prevent_use_if_expired %}
+ <span class="badge bg-danger">{{ _("Yes — blocked") }}</span>
+ {% else %}
+ <span class="badge bg-secondary">{{ _("No") }}</span>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ {% endif %}
 
-      {# Usage History #}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-          <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _("Usage History") }}</h6>
-        </div>
-        <div class="card-body p-0">
-          {% if usages %}
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>{{ _("Date") }}</th>
-                  <th>{{ _("Quantity") }}</th>
-                  <th>{{ _("Purpose") }}</th>
-                  <th>{{ _("User") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for usage in usages %}
-                <tr>
-                  <td>{{ usage.used_at.strftime('%Y-%m-%d %H:%M') if usage.used_at else '-' }}</td>
-                  <td class="text-danger">-{{ usage.quantity_used }} {{ usage.unit or chemical.unit }}</td>
-                  <td>{{ usage.purpose or '-' }}</td>
-                  <td>{{ usage.used_by.username if usage.used_by else '-' }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <div class="text-center py-4 text-muted">
-            <i class="bi bi-inbox fs-1"></i>
-            <p class="mt-2">{{ _("No usage history") }}</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
+ {# Usage History #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+ <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _("Usage History") }}</h6>
+ </div>
+ <div class="card-body p-0">
+ {% if usages %}
+ <div class="table-responsive">
+ <table class="table table-hover mb-0">
+ <thead class="table-light">
+ <tr>
+ <th>{{ _("Date") }}</th>
+ <th>{{ _("Quantity") }}</th>
+ <th>{{ _("Purpose") }}</th>
+ <th>{{ _("User") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for usage in usages %}
+ <tr>
+ <td>{{ usage.used_at.strftime('%Y-%m-%d %H:%M') if usage.used_at else '-' }}</td>
+ <td class="text-danger">-{{ usage.quantity_used }} {{ usage.unit or chemical.unit }}</td>
+ <td>{{ usage.purpose or '-' }}</td>
+ <td>{{ usage.used_by.username if usage.used_by else '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="text-center py-4 text-muted">
+ <i class="bi bi-inbox fs-1"></i>
+ <p class="mt-2">{{ _("No usage history") }}</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
 
-      {# Audit Log #}
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-          <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ _("Audit History") }}</h6>
-        </div>
-        <div class="card-body p-0">
-          {% if logs %}
-          <div class="table-responsive">
-            <table class="table table-sm mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>{{ _("Date") }}</th>
-                  <th>{{ _("Action") }}</th>
-                  <th>{{ _("Change") }}</th>
-                  <th>{{ _("User") }}</th>
-                  <th>{{ _("Details") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for log in logs %}
-                <tr>
-                  <td class="small">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}</td>
-                  <td>
-                    {% if log.action == 'created' %}
-                      <span class="badge bg-primary">{{ _("Created") }}</span>
-                    {% elif log.action == 'updated' %}
-                      <span class="badge bg-info">{{ _("Updated") }}</span>
-                    {% elif log.action == 'received' %}
-                      <span class="badge bg-success">{{ _("Received") }}</span>
-                    {% elif log.action == 'consumed' %}
-                      <span class="badge bg-warning">{{ _("Consumed") }}</span>
-                    {% elif log.action == 'disposed' %}
-                      <span class="badge bg-danger">{{ _("Disposed") }}</span>
-                    {% elif log.action == 'adjusted' %}
-                      <span class="badge bg-secondary">{{ _("Adjusted") }}</span>
-                    {% else %}
-                      <span class="badge bg-light text-dark">{{ log.action }}</span>
-                    {% endif %}
-                  </td>
-                  <td class="small">
-                    {% if log.quantity_change %}
-                      <span class="{{ 'text-success' if log.quantity_change > 0 else 'text-danger' }}">
-                        {{ '+' if log.quantity_change > 0 else '' }}{{ log.quantity_change }}
-                      </span>
-                      <span class="text-muted">({{ log.quantity_before }} → {{ log.quantity_after }})</span>
-                    {% else %}
-                      -
-                    {% endif %}
-                  </td>
-                  <td class="small">{{ log.user.username if log.user else '-' }}</td>
-                  <td class="small">{{ log.details or '-' }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <div class="text-center py-4 text-muted">
-            <p>{{ _("No history") }}</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+ {# Audit Log #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white border-0">
+ <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ _("Audit History") }}</h6>
+ </div>
+ <div class="card-body p-0">
+ {% if logs %}
+ <div class="table-responsive">
+ <table class="table table-sm mb-0">
+ <thead class="table-light">
+ <tr>
+ <th>{{ _("Date") }}</th>
+ <th>{{ _("Action") }}</th>
+ <th>{{ _("Change") }}</th>
+ <th>{{ _("User") }}</th>
+ <th>{{ _("Details") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for log in logs %}
+ <tr>
+ <td class="small">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else '-' }}</td>
+ <td>
+ {% if log.action == 'created' %}
+ <span class="badge bg-primary">{{ _("Created") }}</span>
+ {% elif log.action == 'updated' %}
+ <span class="badge bg-info">{{ _("Updated") }}</span>
+ {% elif log.action == 'received' %}
+ <span class="badge bg-success">{{ _("Received") }}</span>
+ {% elif log.action == 'consumed' %}
+ <span class="badge bg-warning">{{ _("Consumed") }}</span>
+ {% elif log.action == 'disposed' %}
+ <span class="badge bg-danger">{{ _("Disposed") }}</span>
+ {% elif log.action == 'adjusted' %}
+ <span class="badge bg-secondary">{{ _("Adjusted") }}</span>
+ {% else %}
+ <span class="badge bg-light text-dark">{{ log.action }}</span>
+ {% endif %}
+ </td>
+ <td class="small">
+ {% if log.quantity_change %}
+ <span class="text-white font-extrabold text-xs" class="{{ 'text-success' if log.quantity_change> 0 else 'text-danger' }}">
+ {{ '+' if log.quantity_change> 0 else '' }}{{ log.quantity_change }}
+ </span>
+ <span class="text-muted">({{ log.quantity_before }} → {{ log.quantity_after }})</span>
+ {% else %}
+ -
+ {% endif %}
+ </td>
+ <td class="small">{{ log.user.username if log.user else '-' }}</td>
+ <td class="small">{{ log.details or '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="text-center py-4 text-muted">
+ <p>{{ _("No history") }}</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-    {# ===== RIGHT: ACTIONS ===== #}
-    <div class="col-lg-4">
-      {# Action Buttons #}
-      {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] and chemical.status != 'disposed' %}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-0">
-          <h6 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>{{ _("Actions") }}</h6>
-        </div>
-        <div class="card-body d-grid gap-2">
-          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#receiveModal">
-            <i class="bi bi-plus-circle me-2"></i>{{ _("Add Stock") }}
-          </button>
-          <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#consumeModal"
-                  {% if chemical.quantity <= 0 %}disabled{% endif %}>
-            <i class="bi bi-dash-circle me-2"></i>{{ _("Record Usage") }}
-          </button>
-          <a href="{{ url_for('chemicals.edit_chemical', id=chemical.id) }}" class="btn btn-outline-primary">
-            <i class="bi bi-pencil me-2"></i>{{ _("Edit") }}
-          </a>
-          {% if current_user.role in ['senior', 'manager', 'admin'] %}
-          <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disposeModal">
-            <i class="bi bi-trash me-2"></i>{{ _("Dispose") }}
-          </button>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
+ {# ===== RIGHT: ACTIONS ===== #}
+ <div class="col-lg-4">
+ {# Action Buttons #}
+ {% if current_user.role in ['chemist', 'senior', 'manager', 'admin'] and chemical.status != 'disposed' %}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-0">
+ <h6 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>{{ _("Actions") }}</h6>
+ </div>
+ <div class="card-body d-grid gap-2">
+ <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#receiveModal">
+ <i class="bi bi-plus-circle me-2"></i>{{ _("Add Stock") }}
+ </button>
+ <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#consumeModal"
+ {% if chemical.quantity <= 0 %}disabled{% endif %}>
+ <i class="bi bi-dash-circle me-2"></i>{{ _("Record Usage") }}
+ </button>
+ <a href="{{ url_for('chemicals.edit_chemical', id=chemical.id) }}" class="btn btn-outline-primary">
+ <i class="bi bi-pencil me-2"></i>{{ _("Edit") }}
+ </a>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disposeModal">
+ <i class="bi bi-trash me-2"></i>{{ _("Dispose") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
 
-      {# Quick Stats #}
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-          <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>{{ _("Statistics") }}</h6>
-        </div>
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">{{ _("Total Usage:") }}</span>
-            <span class="fw-medium">{{ usages|length }} {{ _("times") }}</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted">{{ _("Registered By:") }}</span>
-            <span class="fw-medium">{{ chemical.created_by.username if chemical.created_by else '-' }}</span>
-          </div>
-          <div class="d-flex justify-content-between">
-            <span class="text-muted">{{ _("Created Date:") }}</span>
-            <span class="fw-medium">{{ chemical.created_at.strftime('%Y-%m-%d') if chemical.created_at else '-' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ {# Quick Stats #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white border-0">
+ <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>{{ _("Statistics") }}</h6>
+ </div>
+ <div class="card-body">
+ <div class="d-flex justify-content-between mb-2">
+ <span class="text-muted">{{ _("Total Usage:") }}</span>
+ <span class="fw-medium">{{ usages|length }} {{ _("times") }}</span>
+ </div>
+ <div class="d-flex justify-content-between mb-2">
+ <span class="text-muted">{{ _("Registered By:") }}</span>
+ <span class="fw-medium">{{ chemical.created_by.username if chemical.created_by else '-' }}</span>
+ </div>
+ <div class="d-flex justify-content-between">
+ <span class="text-muted">{{ _("Created Date:") }}</span>
+ <span class="fw-medium">{{ chemical.created_at.strftime('%Y-%m-%d') if chemical.created_at else '-' }}</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 {# ===== RECEIVE MODAL ===== #}
 <div class="modal fade" id="receiveModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="{{ url_for('chemicals.receive_chemical', id=chemical.id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-plus-circle text-success me-2"></i>{{ _("Add Stock") }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">{{ _("Quantity to Add") }} ({{ chemical.unit }}) <span class="text-danger">*</span></label>
-            <input type="number" name="quantity_add" class="form-control" required min="0.01" step="0.01">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("New Lot No.") }}</label>
-            <input type="text" name="lot_number" class="form-control" value="{{ chemical.lot_number or '' }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("New Expiry Date") }}</label>
-            <input type="date" name="expiry_date" class="form-control"
-                   value="{{ chemical.expiry_date.strftime('%Y-%m-%d') if chemical.expiry_date else '' }}">
-          </div>
-          <div class="alert alert-info mb-0">
-            <i class="bi bi-info-circle me-2"></i>
-            {{ _("Current Stock") }}: <strong>{{ chemical.quantity }} {{ chemical.unit }}</strong>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-success">
-            <i class="bi bi-check-lg me-1"></i>{{ _("Add") }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+ <div class="modal-dialog">
+ <form action="{{ url_for('chemicals.receive_chemical', id=chemical.id) }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title"><i class="bi bi-plus-circle text-success me-2"></i>{{ _("Add Stock") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="mb-3">
+ <label class="form-label">{{ _("Quantity to Add") }} ({{ chemical.unit }}) <span class="text-danger">*</span></label>
+ <input type="number" name="quantity_add" class="form-control" required min="0.01" step="0.01">
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("New Lot No.") }}</label>
+ <input type="text" name="lot_number" class="form-control" value="{{ chemical.lot_number or '' }}">
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("New Expiry Date") }}</label>
+ <input type="date" name="expiry_date" class="form-control"
+ value="{{ chemical.expiry_date.strftime('%Y-%m-%d') if chemical.expiry_date else '' }}">
+ </div>
+ <div class="alert alert-info mb-0">
+ <i class="bi bi-info-circle me-2"></i>
+ {{ _("Current Stock") }}: <strong>{{ chemical.quantity }} {{ chemical.unit }}</strong>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-success">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Add") }}
+ </button>
+ </div>
+ </div>
+ </form>
+ </div>
 </div>
 
 {# ===== CONSUME MODAL ===== #}
 <div class="modal fade" id="consumeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="{{ url_for('chemicals.consume_chemical', id=chemical.id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-dash-circle text-warning me-2"></i>{{ _("Record Usage") }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">{{ _("Quantity to Use") }} ({{ chemical.unit }}) <span class="text-danger">*</span></label>
-            <input type="number" name="quantity_used" class="form-control" required
-                   min="0.01" max="{{ chemical.quantity }}" step="0.01">
-            <small class="text-muted">{{ _("Available") }}: {{ chemical.quantity }} {{ chemical.unit }}</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Purpose") }}</label>
-            <input type="text" name="purpose" class="form-control" placeholder="{{ _("e.g. Aad analysis") }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Analysis Code") }}</label>
-            <input type="text" name="analysis_code" class="form-control" placeholder="{{ _("e.g. Aad, CV, TS") }}">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Sample Code (optional)") }}</label>
-            <input type="text" name="sample_id" class="form-control" placeholder="{{ _("Sample ID") }}">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-warning">
-            <i class="bi bi-check-lg me-1"></i>{{ _("Record") }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+ <div class="modal-dialog">
+ <form action="{{ url_for('chemicals.consume_chemical', id=chemical.id) }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title"><i class="bi bi-dash-circle text-warning me-2"></i>{{ _("Record Usage") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="mb-3">
+ <label class="form-label">{{ _("Quantity to Use") }} ({{ chemical.unit }}) <span class="text-danger">*</span></label>
+ <input type="number" name="quantity_used" class="form-control" required
+ min="0.01" max="{{ chemical.quantity }}" step="0.01">
+ <small class="text-muted">{{ _("Available") }}: {{ chemical.quantity }} {{ chemical.unit }}</small>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Purpose") }}</label>
+ <input type="text" name="purpose" class="form-control" placeholder="{{ _("e.g. Aad analysis") }}">
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Analysis Code") }}</label>
+ <input type="text" name="analysis_code" class="form-control" placeholder="{{ _("e.g. Aad, CV, TS") }}">
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Sample Code (optional)") }}</label>
+ <input type="text" name="sample_id" class="form-control" placeholder="{{ _("Sample ID") }}">
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-warning">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Record") }}
+ </button>
+ </div>
+ </div>
+ </form>
+ </div>
 </div>
 
 {# ===== DISPOSE MODAL ===== #}
 <div class="modal fade" id="disposeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <form action="{{ url_for('chemicals.dispose_chemical', id=chemical.id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ _("Dispose") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="alert alert-danger">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            {{ _("You are about to dispose") }} <strong>{{ chemical.name }}</strong>. {{ _("This action cannot be undone!") }}
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Reason for Disposal") }} <span class="text-danger">*</span></label>
-            <textarea name="reason" class="form-control" rows="3" required
-                      placeholder="{{ _("e.g. Expired, damaged, etc.") }}"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash me-1"></i>{{ _("Dispose") }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+ <div class="modal-dialog">
+ <form action="{{ url_for('chemicals.dispose_chemical', id=chemical.id) }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-content">
+ <div class="modal-header bg-danger text-white">
+ <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ _("Dispose") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="alert alert-danger">
+ <i class="bi bi-exclamation-triangle me-2"></i>
+ {{ _("You are about to dispose") }} <strong>{{ chemical.name }}</strong>. {{ _("This action cannot be undone!") }}
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Reason for Disposal") }} <span class="text-danger">*</span></label>
+ <textarea name="reason" class="form-control" rows="3" required
+ placeholder="{{ _("e.g. Expired, damaged, etc.") }}"></textarea>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-danger">
+ <i class="bi bi-trash me-1"></i>{{ _("Dispose") }}
+ </button>
+ </div>
+ </div>
+ </form>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
-  // Set today variable for template
-  const today = new Date();
+ // Set today variable for template
+ const today = new Date();
 </script>
 {% endblock %}

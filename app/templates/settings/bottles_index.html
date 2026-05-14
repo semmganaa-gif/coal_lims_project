@@ -2,79 +2,79 @@
 {% block content %}
 <div class="container-fluid">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">{{ _("Bottle Constants — List") }}</h3>
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <h3 class="mb-0">{{ _("Bottle Constants — List") }}</h3>
 
-    {% if can_create %}
-      <div class="btn-group">
-        <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
-          <i class="bi bi-plus-circle"></i> {{ _("New Constant") }}
-        </a>
-        <a class="btn btn-outline-primary" href="{{ url_for('settings.bottles_constants_bulk') }}">
-          <i class="bi bi-grid-3x3"></i> {{ _("Bulk Entry") }}
-        </a>
-      </div>
-    {% endif %}
-  </div>
+ {% if can_create %}
+ <div class="btn-group">
+ <a class="btn btn-primary" href="{{ url_for('settings.bottles_constants_new') }}">
+ <i class="bi bi-plus-circle"></i> {{ _("New Constant") }}
+ </a>
+ <a class="btn btn-outline-primary" href="{{ url_for('settings.bottles_constants_bulk') }}">
+ <i class="bi bi-grid-3x3"></i> {{ _("Bulk Entry") }}
+ </a>
+ </div>
+ {% endif %}
+ </div>
 
-  <p class="text-muted small">
-    {{ _("Chemist: view only. Senior/Admin: can add new constants.") }}
-  </p>
+ <p class="text-muted small">
+ {{ _("Chemist: view only. Senior/Admin: can add new constants.") }}
+ </p>
 
-  <div class="table-responsive">
-    <table class="table table-sm align-middle">
-      <thead>
-        <tr>
-          <th style="width:140px;">{{ _("Bottle No.") }}</th>
-          <th style="width:120px;">{{ _("Active") }}</th>
-          <th>{{ _("Last Average (m₂)") }}</th>
-          <th style="width:110px;">{{ _("Temp. (°C)") }}</th>
-          <th style="width:210px;">{{ _("Settings Valid Date") }}</th>
-          <th style="width:170px;">{{ _("Created Date") }}</th>
-          {% if can_edit_delete %}
-            <th style="width:160px;" class="text-end">{{ _("Actions") }}</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for b in bottles %}
-          {% set last = latest_by_bottle.get(b.id) %}
-          <tr>
-            <td>{{ b.serial_no }}</td>
-            <td>
-              {% if b.is_active %}
-                <span class="badge bg-success">{{ _("Active") }}</span>
-              {% else %}
-                <span class="badge bg-secondary">{{ _("Inactive") }}</span>
-              {% endif %}
-            </td>
-            <td>{{ ('%.5f' % last.avg_value) if last else '—' }}</td>
-            <td>{{ ('%.1f' % last.temperature_c) if last else '—' }}</td>
-            <td>{{ last.effective_from.strftime('%Y-%m-%d %H:%M') if last and last.effective_from else '—' }}</td>
-            <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '—' }}</td>
+ <div class="table-responsive">
+ <table class="table table-sm align-middle">
+ <thead>
+ <tr>
+ <th class="w-[140px]">{{ _("Bottle No.") }}</th>
+ <th class="w-[120px]">{{ _("Active") }}</th>
+ <th class="w-[140px]">{{ _("Last Average (m₂)") }}</th>
+ <th class="w-[110px]">{{ _("Temp. (°C)") }}</th>
+ <th class="w-[210px]">{{ _("Settings Valid Date") }}</th>
+ <th class="w-[170px]">{{ _("Created Date") }}</th>
+ {% if can_edit_delete %}
+ <th class="text-end w-[160px]">{{ _("Actions") }}</th>
+ {% endif %}
+ </tr>
+ </thead>
+ <tbody>
+ {% for b in bottles %}
+ {% set last = latest_by_bottle.get(b.id) %}
+ <tr>
+ <td>{{ b.serial_no }}</td>
+ <td>
+ {% if b.is_active %}
+ <span class="badge bg-success">{{ _("Active") }}</span>
+ {% else %}
+ <span class="badge bg-secondary">{{ _("Inactive") }}</span>
+ {% endif %}
+ </td>
+ <td>{{ ('%.5f' % last.avg_value) if last else '—' }}</td>
+ <td>{{ ('%.1f' % last.temperature_c) if last else '—' }}</td>
+ <td>{{ last.effective_from.strftime('%Y-%m-%d %H:%M') if last and last.effective_from else '—' }}</td>
+ <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else '—' }}</td>
 
-            {% if can_edit_delete %}
-              <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary"
-                   href="{{ url_for('settings.bottle_edit', bottle_id=b.id) }}">
-                  <i class="bi bi-pencil-square"></i> {{ _("Edit") }}
-                </a>
+ {% if can_edit_delete %}
+ <td class="text-end">
+ <a class="btn btn-sm btn-outline-secondary"
+ href="{{ url_for('settings.bottle_edit', bottle_id=b.id) }}">
+ <i class="bi bi-pencil-square"></i> {{ _("Edit") }}
+ </a>
 
-                <form class="d-inline" method="post"
-                      action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
-                      onsubmit="return confirm('{{ _("Are you sure you want to permanently delete bottle %(serial)s? (historical data will also be deleted)", serial=b.serial_no) }}');">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-trash"></i> {{ _("Delete") }}
-                  </button>
-                </form>
-              </td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+ <form class="d-inline" method="post"
+ action="{{ url_for('settings.bottle_delete', bottle_id=b.id) }}"
+ data-confirm="{{ _('Are you sure you want to permanently delete bottle %(serial)s? (historical data will also be deleted)', serial=b.serial_no) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <button type="submit" class="btn btn-sm btn-outline-danger">
+ <i class="bi bi-trash"></i> {{ _("Delete") }}
+ </button>
+ </form>
+ </td>
+ {% endif %}
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
 
 </div>
 {% endblock %}

@@ -1,1197 +1,1197 @@
 {# app/templates/add_sample.html - LIMS Gateway - Hub + 50/50 Layout #}
 <style nonce="{{ csp_nonce }}">
-  :root {
-    --glass-bg: rgba(255, 255, 255, 0.9);
-    --glass-border: rgba(148, 163, 184, 0.2);
-    --text-primary: #0f172a;
-    --text-muted: #64748b;
-    --accent-emerald: #10b981;
-    --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-amber: #f59e0b;
-    --accent-rose: #f43f5e;
-    --accent-cyan: #06b6d4;
-    --gradient-main: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
-  }
+ :root {
+ --glass-bg: rgba(255, 255, 255, 0.9);
+ --glass-border: rgba(148, 163, 184, 0.2);
+ --text-primary: #0f172a;
+ --text-muted: #64748b;
+ --accent-emerald: #10b981;
+ --accent-blue: #3b82f6;
+ --accent-purple: #8b5cf6;
+ --accent-amber: #f59e0b;
+ --accent-rose: #f43f5e;
+ --accent-cyan: #06b6d4;
+ --gradient-main: linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
+ }
 
-  /* ==================== MAIN CONTAINER ==================== */
-  .sample-gateway {
-    height: calc(100vh - 120px);
-    padding: 1rem 1.5rem;
-    background:
-      radial-gradient(ellipse at top left, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-      linear-gradient(180deg, #f0fdf4 0%, #f0f9ff 50%, #faf5ff 100%);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+ /* ==================== MAIN CONTAINER ==================== */
+ .sample-gateway {
+ height: calc(100vh - 120px);
+ padding: 1rem 1.5rem;
+ background:
+ radial-gradient(ellipse at top left, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+ radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+ linear-gradient(180deg, #f0fdf4 0%, #f0f9ff 50%, #faf5ff 100%);
+ display: flex;
+ flex-direction: column;
+ overflow: hidden;
+ }
 
-  /* ==================== PHASE 1: UNIT HUB ==================== */
-  .unit-hub {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.4s ease;
-  }
-  .unit-hub.hidden { display: none; }
+ /* ==================== PHASE 1: UNIT HUB ==================== */
+ .unit-hub {
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ align-items: center;
+ animation: fadeIn 0.4s ease;
+ }
+ .unit-hub.hidden { display: none; }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+ @keyframes fadeIn {
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
 
-  .hub-header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  .hub-header h1 {
-    font-size: 2rem;
-    font-weight: 900;
-    background: var(--gradient-main);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-  }
-  .hub-header h1 i {
-    font-size: 2.2rem;
-    background: var(--gradient-main);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .hub-header p {
-    color: var(--text-muted);
-    font-size: 1rem;
-  }
+ .hub-header {
+ text-align: center;
+ margin-bottom: 2rem;
+ }
+ .hub-header h1 {
+ font-size: 2rem;
+ font-weight: 900;
+ background: var(--gradient-main);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ margin-bottom: 0.5rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 12px;
+ }
+ .hub-header h1 i {
+ font-size: 2.2rem;
+ background: var(--gradient-main);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ }
+ .hub-header p {
+ color: var(--text-muted);
+ font-size: 1rem;
+ }
 
-  .hub-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    max-width: 900px;
-    width: 100%;
-    padding: 0 1rem;
-  }
+ .hub-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 1.25rem;
+ max-width: 900px;
+ width: 100%;
+ padding: 0 1rem;
+ }
 
-  .hub-card {
-    position: relative;
-    background: var(--glass-bg);
-    border: 2px solid transparent;
-    border-radius: 20px;
-    padding: 1.75rem 1.25rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-  }
-  .hub-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 20px;
-    padding: 2px;
-    background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    transition: background 0.4s ease;
-  }
-  .hub-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-  }
-  .hub-card:hover::before {
-    background: var(--card-gradient);
-  }
+ .hub-card {
+ position: relative;
+ background: var(--glass-bg);
+ border: 2px solid transparent;
+ border-radius: 20px;
+ padding: 1.75rem 1.25rem;
+ text-align: center;
+ cursor: pointer;
+ transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ overflow: hidden;
+ }
+ .hub-card::before {
+ content: '';
+ position: absolute;
+ inset: 0;
+ border-radius: 20px;
+ padding: 2px;
+ background: linear-gradient(135deg, #e2e8f0, #f1f5f9);
+ -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+ mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+ -webkit-mask-composite: xor;
+ mask-composite: exclude;
+ transition: background 0.4s ease;
+ }
+ .hub-card:hover {
+ transform: translateY(-6px);
+ box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+ }
+ .hub-card:hover::before {
+ background: var(--card-gradient);
+ }
 
-  .hub-card-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 1rem;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-    color: var(--text-muted);
-    transition: all 0.4s ease;
-  }
-  .hub-card:hover .hub-card-icon {
-    background: var(--card-gradient);
-    color: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 8px 20px var(--card-shadow);
-  }
+ .hub-card-icon {
+ width: 64px;
+ height: 64px;
+ margin: 0 auto 1rem;
+ border-radius: 16px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.75rem;
+ background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+ color: var(--text-muted);
+ transition: all 0.4s ease;
+ }
+ .hub-card:hover .hub-card-icon {
+ background: var(--card-gradient);
+ color: #fff;
+ transform: scale(1.1);
+ box-shadow: 0 8px 20px var(--card-shadow);
+ }
 
-  .hub-card-name {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-  .hub-card-desc {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-  }
+ .hub-card-name {
+ font-size: 1rem;
+ font-weight: 800;
+ color: var(--text-primary);
+ margin-bottom: 4px;
+ }
+ .hub-card-desc {
+ font-size: 0.75rem;
+ color: var(--text-muted);
+ }
 
-  /* Card Colors */
-  .hub-card[data-unit="CHPP"] { --card-gradient: linear-gradient(135deg, #3b82f6, #0ea5e9); --card-shadow: rgba(59,130,246,0.35); }
-  .hub-card[data-unit="UHG-Geo"] { --card-gradient: linear-gradient(135deg, #f43f5e, #fb7185); --card-shadow: rgba(244,63,94,0.35); }
-  .hub-card[data-unit="BN-Geo"] { --card-gradient: linear-gradient(135deg, #f97316, #fb923c); --card-shadow: rgba(249,115,22,0.35); }
-  .hub-card[data-unit="QC"] { --card-gradient: linear-gradient(135deg, #10b981, #34d399); --card-shadow: rgba(16,185,129,0.35); }
-  .hub-card[data-unit="Proc"] { --card-gradient: linear-gradient(135deg, #8b5cf6, #a78bfa); --card-shadow: rgba(139,92,246,0.35); }
-  .hub-card[data-unit="WTL"] { --card-gradient: linear-gradient(135deg, #06b6d4, #22d3ee); --card-shadow: rgba(6,182,212,0.35); }
-  .hub-card[data-unit="LAB"] { --card-gradient: linear-gradient(135deg, #ec4899, #f472b6); --card-shadow: rgba(236,72,153,0.35); }
+ /* Card Colors */
+ .hub-card[data-unit="CHPP"] { --card-gradient: linear-gradient(135deg, #3b82f6, #0ea5e9); --card-shadow: rgba(59,130,246,0.35); }
+ .hub-card[data-unit="UHG-Geo"] { --card-gradient: linear-gradient(135deg, #f43f5e, #fb7185); --card-shadow: rgba(244,63,94,0.35); }
+ .hub-card[data-unit="BN-Geo"] { --card-gradient: linear-gradient(135deg, #f97316, #fb923c); --card-shadow: rgba(249,115,22,0.35); }
+ .hub-card[data-unit="QC"] { --card-gradient: linear-gradient(135deg, #10b981, #34d399); --card-shadow: rgba(16,185,129,0.35); }
+ .hub-card[data-unit="Proc"] { --card-gradient: linear-gradient(135deg, #8b5cf6, #a78bfa); --card-shadow: rgba(139,92,246,0.35); }
+ .hub-card[data-unit="WTL"] { --card-gradient: linear-gradient(135deg, #06b6d4, #22d3ee); --card-shadow: rgba(6,182,212,0.35); }
+ .hub-card[data-unit="LAB"] { --card-gradient: linear-gradient(135deg, #ec4899, #f472b6); --card-shadow: rgba(236,72,153,0.35); }
 
-  /* ==================== PHASE 2: WORKSPACE (50/50) ==================== */
-  .workspace {
-    display: none;
-    flex: 1;
-    flex-direction: column;
-    animation: fadeIn 0.4s ease;
-    overflow: hidden;
-  }
-  .workspace.active { display: flex; }
+ /* ==================== PHASE 2: WORKSPACE (50/50) ==================== */
+ .workspace {
+ display: none;
+ flex: 1;
+ flex-direction: column;
+ animation: fadeIn 0.4s ease;
+ overflow: hidden;
+ }
+ .workspace.active { display: flex; }
 
-  /* Workspace Header */
-  .workspace-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 0;
-    margin-bottom: 0.75rem;
-    border-bottom: 1px solid var(--glass-border);
-    flex-shrink: 0;
-  }
-  .workspace-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .btn-back {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 2px solid #e2e8f0;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--text-muted);
-  }
-  .btn-back:hover {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    transform: translateX(-2px);
-  }
-  .workspace-unit-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-  .workspace-unit-badge i { font-size: 1.1rem; }
-  .workspace-unit-badge.chpp { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(14,165,233,0.1)); color: #0284c7; }
-  .workspace-unit-badge.uhg { background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(251,113,133,0.1)); color: #e11d48; }
-  .workspace-unit-badge.bn { background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1)); color: #ea580c; }
-  .workspace-unit-badge.qc { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.1)); color: #059669; }
-  .workspace-unit-badge.proc { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(167,139,250,0.1)); color: #7c3aed; }
-  .workspace-unit-badge.wtl { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(34,211,238,0.1)); color: #0891b2; }
-  .workspace-unit-badge.lab { background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(244,114,182,0.1)); color: #db2777; }
+ /* Workspace Header */
+ .workspace-header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.75rem 0;
+ margin-bottom: 0.75rem;
+ border-bottom: 1px solid var(--glass-border);
+ flex-shrink: 0;
+ }
+ .workspace-title {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ }
+ .btn-back {
+ width: 36px;
+ height: 36px;
+ border-radius: 10px;
+ border: 2px solid #e2e8f0;
+ background: #fff;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: all 0.3s ease;
+ color: var(--text-muted);
+ }
+ .btn-back:hover {
+ border-color: var(--accent-blue);
+ color: var(--accent-blue);
+ transform: translateX(-2px);
+ }
+ .workspace-unit-badge {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ padding: 6px 14px;
+ border-radius: 10px;
+ font-weight: 700;
+ font-size: 0.9rem;
+ }
+ .workspace-unit-badge i { font-size: 1.1rem; }
+ .workspace-unit-badge.chpp { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(14,165,233,0.1)); color: #0284c7; }
+ .workspace-unit-badge.uhg { background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(251,113,133,0.1)); color: #e11d48; }
+ .workspace-unit-badge.bn { background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(251,146,60,0.1)); color: #ea580c; }
+ .workspace-unit-badge.qc { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(52,211,153,0.1)); color: #059669; }
+ .workspace-unit-badge.proc { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(167,139,250,0.1)); color: #7c3aed; }
+ .workspace-unit-badge.wtl { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(34,211,238,0.1)); color: #0891b2; }
+ .workspace-unit-badge.lab { background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(244,114,182,0.1)); color: #db2777; }
 
-  .workspace-stats {
-    display: flex;
-    gap: 1rem;
-  }
-  .stat-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: rgba(248,250,252,0.9);
-    border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .stat-chip i { color: var(--accent-emerald); }
+ .workspace-stats {
+ display: flex;
+ gap: 1rem;
+ }
+ .stat-chip {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ padding: 6px 12px;
+ background: rgba(248,250,252,0.9);
+ border-radius: 8px;
+ font-size: 0.78rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ }
+ .stat-chip i { color: var(--accent-emerald); }
 
-  /* 50/50 Layout */
-  .workspace-body {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-    min-height: 0;
-    overflow: hidden;
-  }
+ /* 50/50 Layout */
+ .workspace-body {
+ flex: 1;
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 1.25rem;
+ min-height: 0;
+ overflow: hidden;
+ }
 
-  /* ==================== LEFT: CONFIG PANEL ==================== */
-  .config-panel {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .panel-header {
-    padding: 0.875rem 1.25rem;
-    border-bottom: 1px solid var(--glass-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .panel-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .panel-title i { color: var(--accent-blue); }
+ /* ==================== LEFT: CONFIG PANEL ==================== */
+ .config-panel {
+ background: var(--glass-bg);
+ border: 1px solid var(--glass-border);
+ border-radius: 16px;
+ display: flex;
+ flex-direction: column;
+ overflow: hidden;
+ }
+ .panel-header {
+ padding: 0.875rem 1.25rem;
+ border-bottom: 1px solid var(--glass-border);
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ flex-shrink: 0;
+ }
+ .panel-title {
+ font-size: 0.9rem;
+ font-weight: 700;
+ color: var(--text-primary);
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ }
+ .panel-title i { color: var(--accent-blue); }
 
-  .config-body {
-    flex: 1;
-    padding: 1rem 1.25rem;
-    overflow-y: auto;
-  }
-  .config-body::-webkit-scrollbar { width: 5px; }
-  .config-body::-webkit-scrollbar-track { background: #f1f5f9; }
-  .config-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+ .config-body {
+ flex: 1;
+ padding: 1rem 1.25rem;
+ overflow-y: auto;
+ }
+ .config-body::-webkit-scrollbar { width: 5px; }
+ .config-body::-webkit-scrollbar-track { background: #f1f5f9; }
+ .config-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-  /* Config Sections */
-  .config-section {
-    margin-bottom: 1rem;
-  }
-  .config-section:last-child { margin-bottom: 0; }
+ /* Config Sections */
+ .config-section {
+ margin-bottom: 1rem;
+ }
+ .config-section:last-child { margin-bottom: 0; }
 
-  .section-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .section-label i { font-size: 0.75rem; color: var(--accent-blue); }
+ .section-label {
+ font-size: 0.68rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.05em;
+ color: var(--text-muted);
+ margin-bottom: 0.5rem;
+ display: flex;
+ align-items: center;
+ gap: 5px;
+ }
+ .section-label i { font-size: 0.75rem; color: var(--accent-blue); }
 
-  /* Type Chips */
-  .type-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-  .type-chip { position: relative; }
-  .type-chip input { position: absolute; opacity: 0; pointer-events: none; }
-  .type-chip-label {
-    display: inline-block;
-    padding: 6px 12px;
-    background: rgba(248,250,252,0.9);
-    border: 2px solid #e2e8f0;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .type-chip-label:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
-  .type-chip input:checked + .type-chip-label {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    border-color: transparent;
-    color: #fff;
-  }
+ /* Type Chips */
+ .type-chips {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.4rem;
+ }
+ .type-chip { position: relative; }
+ .type-chip input { position: absolute; opacity: 0; pointer-events: none; }
+ .type-chip-label {
+ display: inline-block;
+ padding: 6px 12px;
+ background: rgba(248,250,252,0.9);
+ border: 2px solid #e2e8f0;
+ border-radius: 20px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.25s ease;
+ }
+ .type-chip-label:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+ .type-chip input:checked + .type-chip-label {
+ background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+ border-color: transparent;
+ color: #fff;
+ }
 
-  /* Condition Toggles */
-  .condition-row {
-    display: flex;
-    gap: 0.5rem;
-  }
-  .condition-toggle { position: relative; flex: 1; }
-  .condition-toggle input { position: absolute; opacity: 0; pointer-events: none; }
-  .condition-toggle-label {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 8px;
-    background: rgba(248,250,252,0.9);
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .condition-toggle-label:hover { border-color: var(--accent-blue); }
-  .condition-toggle input:checked + .condition-toggle-label {
-    background: rgba(59,130,246,0.1);
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-  }
+ /* Condition Toggles */
+ .condition-row {
+ display: flex;
+ gap: 0.5rem;
+ }
+ .condition-toggle { position: relative; flex: 1; }
+ .condition-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+ .condition-toggle-label {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 5px;
+ padding: 8px;
+ background: rgba(248,250,252,0.9);
+ border: 2px solid #e2e8f0;
+ border-radius: 8px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.25s ease;
+ }
+ .condition-toggle-label:hover { border-color: var(--accent-blue); }
+ .condition-toggle input:checked + .condition-toggle-label {
+ background: rgba(59,130,246,0.1);
+ border-color: var(--accent-blue);
+ color: var(--accent-blue);
+ }
 
-  /* Config Grid */
-  .config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-  }
-  .config-group { display: flex; flex-direction: column; gap: 4px; }
-  .config-group.full { grid-column: span 2; }
+ /* Config Grid */
+ .config-grid {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 0.75rem;
+ }
+ .config-group { display: flex; flex-direction: column; gap: 4px; }
+ .config-group.full { grid-column: span 2; }
 
-  .config-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .config-input {
-    padding: 8px 12px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    background: #fff;
-    transition: all 0.25s ease;
-  }
-  .config-input:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-  }
-  .config-input.highlight {
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
-    border-color: #fde68a;
-  }
-  .config-row {
-    display: flex;
-    gap: 0.75rem;
-  }
-  .config-row .config-group { flex: 1; }
+ .config-label {
+ font-size: 0.68rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ }
+ .config-input {
+ padding: 8px 12px;
+ border: 2px solid #e2e8f0;
+ border-radius: 8px;
+ font-size: 0.82rem;
+ background: #fff;
+ transition: all 0.25s ease;
+ }
+ .config-input:focus {
+ outline: none;
+ border-color: var(--accent-blue);
+ box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+ }
+ .config-input.highlight {
+ background: linear-gradient(135deg, #fffbeb, #fef3c7);
+ border-color: #fde68a;
+ }
+ .config-row {
+ display: flex;
+ gap: 0.75rem;
+ }
+ .config-row .config-group { flex: 1; }
 
-  /* Unit Options */
-  .unit-options {
-    display: none;
-    padding: 1rem;
-    margin-top: 0.75rem;
-    border-radius: 12px;
-    animation: slideDown 0.25s ease;
-  }
-  .unit-options.active { display: block; }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .unit-options.chpp { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15); }
-  .unit-options.multi { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15); }
-  .unit-options.wtl { background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.15); }
-  .unit-options.lab { background: rgba(236,72,153,0.06); border: 1px solid rgba(236,72,153,0.15); }
+ /* Unit Options */
+ .unit-options {
+ display: none;
+ padding: 1rem;
+ margin-top: 0.75rem;
+ border-radius: 12px;
+ animation: slideDown 0.25s ease;
+ }
+ .unit-options.active { display: block; }
+ @keyframes slideDown {
+ from { opacity: 0; transform: translateY(-8px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+ .unit-options.chpp { background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15); }
+ .unit-options.multi { background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15); }
+ .unit-options.wtl { background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.15); }
+ .unit-options.lab { background: rgba(236,72,153,0.06); border: 1px solid rgba(236,72,153,0.15); }
 
-  .unit-options-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+ .unit-options-title {
+ font-size: 0.8rem;
+ font-weight: 700;
+ color: var(--text-primary);
+ margin-bottom: 0.75rem;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ }
 
-  /* Module Checks */
-  .module-checks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .module-check {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.8);
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .module-check:hover { border-color: var(--accent-blue); }
-  .module-check input { width: 14px; height: 14px; accent-color: var(--accent-blue); }
-  .module-check-label { font-size: 0.72rem; font-weight: 600; color: var(--text-primary); }
+ /* Module Checks */
+ .module-checks {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.5rem;
+ }
+ .module-check {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ padding: 6px 10px;
+ background: rgba(255,255,255,0.8);
+ border: 1px solid #e2e8f0;
+ border-radius: 6px;
+ cursor: pointer;
+ transition: all 0.2s ease;
+ }
+ .module-check:hover { border-color: var(--accent-blue); }
+ .module-check input { width: 14px; height: 14px; accent-color: var(--accent-blue); }
+ .module-check-label { font-size: 0.72rem; font-weight: 600; color: var(--text-primary); }
 
-  /* Generate Button */
-  .btn-generate {
-    width: 100%;
-    margin-top: 1rem;
-    padding: 10px 20px;
-    background: linear-gradient(135deg, #0ea5e9, #3b82f6);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(14,165,233,0.3);
-  }
-  .btn-generate:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(14,165,233,0.4);
-  }
+ /* Generate Button */
+ .btn-generate {
+ width: 100%;
+ margin-top: 1rem;
+ padding: 10px 20px;
+ background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+ color: #fff;
+ border: none;
+ border-radius: 10px;
+ font-size: 0.85rem;
+ font-weight: 700;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 8px;
+ transition: all 0.3s ease;
+ box-shadow: 0 4px 15px rgba(14,165,233,0.3);
+ }
+ .btn-generate:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 6px 20px rgba(14,165,233,0.4);
+ }
 
-  /* Notes */
-  .notes-input {
-    padding: 8px 12px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
-    resize: none;
-    height: 50px;
-  }
+ /* Notes */
+ .notes-input {
+ padding: 8px 12px;
+ border: 2px solid #e2e8f0;
+ border-radius: 8px;
+ font-size: 0.82rem;
+ background: linear-gradient(135deg, #fffbeb, #fef3c7);
+ resize: none;
+ height: 50px;
+ }
 
-  /* Return checkbox */
-  .return-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: rgba(248,250,252,0.8);
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  .return-check input { width: 16px; height: 16px; accent-color: var(--accent-purple); }
-  .return-check span { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); }
+ /* Return checkbox */
+ .return-check {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ padding: 8px 12px;
+ background: rgba(248,250,252,0.8);
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ cursor: pointer;
+ }
+ .return-check input { width: 16px; height: 16px; accent-color: var(--accent-purple); }
+ .return-check span { font-size: 0.78rem; font-weight: 600; color: var(--text-primary); }
 
-  /* Retention button group */
-  .retention-btn-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .retention-btn-group .btn {
-    font-size: 0.78rem;
-    padding: 8px 14px;
-    border-radius: 8px !important;
-    font-weight: 600;
-  }
-  .retention-btn-group .btn-check:checked + .btn-outline-danger {
-    background: #dc3545;
-    border-color: #dc3545;
-    color: white;
-  }
-  .retention-btn-group .btn-check:checked + .btn-outline-warning {
-    background: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
-  }
-  .retention-btn-group .btn-check:checked + .btn-outline-success {
-    background: #198754;
-    border-color: #198754;
-    color: white;
-  }
+ /* Retention button group */
+ .retention-btn-group {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 6px;
+ }
+ .retention-btn-group .btn {
+ font-size: 0.78rem;
+ padding: 8px 14px;
+ border-radius: 8px !important;
+ font-weight: 600;
+ }
+ .retention-btn-group .btn-check:checked + .btn-outline-danger {
+ background: #dc3545;
+ border-color: #dc3545;
+ color: white;
+ }
+ .retention-btn-group .btn-check:checked + .btn-outline-warning {
+ background: #ffc107;
+ border-color: #ffc107;
+ color: #212529;
+ }
+ .retention-btn-group .btn-check:checked + .btn-outline-success {
+ background: #198754;
+ border-color: #198754;
+ color: white;
+ }
 
-  /* ==================== RIGHT: LIST PANEL ==================== */
-  .list-panel {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .list-panel .panel-header {
-    background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.05));
-  }
-  .panel-badge {
-    background: var(--gradient-main);
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 700;
-  }
+ /* ==================== RIGHT: LIST PANEL ==================== */
+ .list-panel {
+ background: var(--glass-bg);
+ border: 1px solid var(--glass-border);
+ border-radius: 16px;
+ display: flex;
+ flex-direction: column;
+ overflow: hidden;
+ }
+ .list-panel .panel-header {
+ background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.05));
+ }
+ .panel-badge {
+ background: var(--gradient-main);
+ color: #fff;
+ padding: 4px 10px;
+ border-radius: 20px;
+ font-size: 0.7rem;
+ font-weight: 700;
+ }
 
-  .list-body {
-    flex: 1;
-    padding: 0.75rem;
-    overflow-y: auto;
-    min-height: 0;
-  }
-  .list-body::-webkit-scrollbar { width: 5px; }
-  .list-body::-webkit-scrollbar-track { background: #f1f5f9; }
-  .list-body::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #10b981, #3b82f6); border-radius: 3px; }
+ .list-body {
+ flex: 1;
+ padding: 0.75rem;
+ overflow-y: auto;
+ min-height: 0;
+ }
+ .list-body::-webkit-scrollbar { width: 5px; }
+ .list-body::-webkit-scrollbar-track { background: #f1f5f9; }
+ .list-body::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #10b981, #3b82f6); border-radius: 3px; }
 
-  .sample-list-empty {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: var(--text-muted);
-  }
-  .sample-list-empty i {
-    font-size: 2.5rem;
-    background: var(--gradient-main);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    opacity: 0.4;
-    margin-bottom: 0.75rem;
-  }
-  .sample-list-empty h4 {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-  }
-  .sample-list-empty p { font-size: 0.78rem; }
+ .sample-list-empty {
+ height: 100%;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ text-align: center;
+ color: var(--text-muted);
+ }
+ .sample-list-empty i {
+ font-size: 2.5rem;
+ background: var(--gradient-main);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ opacity: 0.4;
+ margin-bottom: 0.75rem;
+ }
+ .sample-list-empty h4 {
+ font-size: 0.9rem;
+ font-weight: 700;
+ color: var(--text-primary);
+ margin-bottom: 0.25rem;
+ }
+ .sample-list-empty p { font-size: 0.78rem; }
 
-  /* Sample Table */
-  .sample-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.78rem;
-  }
-  .sample-table thead th {
-    background: #f8fafc;
-    padding: 8px 6px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    border-bottom: 2px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  .sample-table tbody tr {
-    transition: background 0.2s ease;
-  }
-  .sample-table tbody tr:hover { background: rgba(16,185,129,0.04); }
-  .sample-table tbody td {
-    padding: 8px 6px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
-  }
-  .sample-table .row-num {
-    width: 28px;
-    text-align: center;
-    color: var(--text-muted);
-    font-weight: 600;
-  }
-  .sample-code-input {
-    border: none;
-    background: transparent;
-    font-weight: 700;
-    color: var(--accent-emerald);
-    width: 100%;
-    padding: 2px 0;
-    font-size: 0.78rem;
-  }
-  .sample-code-input:focus {
-    outline: none;
-    background: rgba(16,185,129,0.08);
-    border-radius: 4px;
-    padding: 2px 6px;
-    margin: -2px -6px;
-  }
-  .sample-code-display { font-weight: 700; color: var(--accent-emerald); }
-  .analysis-badges { display: flex; flex-wrap: wrap; gap: 2px; }
-  .analysis-badge {
-    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-    color: #4338ca;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 0.6rem;
-    font-weight: 700;
-  }
-  .weight-input {
-    width: 55px;
-    padding: 4px 6px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    text-align: center;
-    -moz-appearance: textfield;
-  }
-  .weight-input::-webkit-outer-spin-button,
-  .weight-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .weight-input:focus {
-    outline: none;
-    border-color: var(--accent-emerald);
-    background: rgba(16,185,129,0.05);
-  }
+ /* Sample Table */
+ .sample-table {
+ width: 100%;
+ border-collapse: collapse;
+ font-size: 0.78rem;
+ }
+ .sample-table thead th {
+ background: #f8fafc;
+ padding: 8px 6px;
+ font-size: 0.65rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.04em;
+ color: var(--text-muted);
+ border-bottom: 2px solid #e2e8f0;
+ position: sticky;
+ top: 0;
+ z-index: 5;
+ }
+ .sample-table tbody tr {
+ transition: background 0.2s ease;
+ }
+ .sample-table tbody tr:hover { background: rgba(16,185,129,0.04); }
+ .sample-table tbody td {
+ padding: 8px 6px;
+ border-bottom: 1px solid #f1f5f9;
+ vertical-align: middle;
+ }
+ .sample-table .row-num {
+ width: 28px;
+ text-align: center;
+ color: var(--text-muted);
+ font-weight: 600;
+ }
+ .sample-code-input {
+ border: none;
+ background: transparent;
+ font-weight: 700;
+ color: var(--accent-emerald);
+ width: 100%;
+ padding: 2px 0;
+ font-size: 0.78rem;
+ }
+ .sample-code-input:focus {
+ outline: none;
+ background: rgba(16,185,129,0.08);
+ border-radius: 4px;
+ padding: 2px 6px;
+ margin: -2px -6px;
+ }
+ .sample-code-display { font-weight: 700; color: var(--accent-emerald); }
+ .analysis-badges { display: flex; flex-wrap: wrap; gap: 2px; }
+ .analysis-badge {
+ background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+ color: #4338ca;
+ padding: 1px 5px;
+ border-radius: 3px;
+ font-size: 0.6rem;
+ font-weight: 700;
+ }
+ .weight-input {
+ width: 55px;
+ padding: 4px 6px;
+ border: 1px solid #e2e8f0;
+ border-radius: 6px;
+ font-size: 0.78rem;
+ text-align: center;
+ -moz-appearance: textfield;
+ }
+ .weight-input::-webkit-outer-spin-button,
+ .weight-input::-webkit-inner-spin-button {
+ -webkit-appearance: none;
+ margin: 0;
+ }
+ .weight-input:focus {
+ outline: none;
+ border-color: var(--accent-emerald);
+ background: rgba(16,185,129,0.05);
+ }
 
-  /* CHPP Column Groups */
-  .chpp-columns {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .module-column {
-    flex: 1;
-    min-width: 120px;
-    max-width: 180px;
-    background: rgba(248,250,252,0.9);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .module-column-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 10px;
-    background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.08));
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #4338ca;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s ease;
-  }
-  .module-column-header:hover {
-    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.15));
-  }
-  .module-column-header i { font-size: 0.8rem; }
-  .module-column-header .col-count {
-    background: rgba(67,56,202,0.15);
-    padding: 1px 6px;
-    border-radius: 8px;
-    font-size: 0.6rem;
-  }
-  .module-column-header .col-check {
-    margin-left: auto;
-    width: 14px;
-    height: 14px;
-    accent-color: #4338ca;
-  }
-  .module-column-items {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    padding: 6px;
-    max-height: 280px;
-    overflow-y: auto;
-  }
-  .module-column-items::-webkit-scrollbar { width: 4px; }
-  .module-column-items::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+ /* CHPP Column Groups */
+ .chpp-columns {
+ display: flex;
+ gap: 0.75rem;
+ flex-wrap: wrap;
+ }
+ .module-column {
+ flex: 1;
+ min-width: 120px;
+ max-width: 180px;
+ background: rgba(248,250,252,0.9);
+ border: 1px solid #e2e8f0;
+ border-radius: 12px;
+ overflow: hidden;
+ }
+ .module-column-header {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 6px;
+ padding: 8px 10px;
+ background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.08));
+ border-bottom: 1px solid #e2e8f0;
+ font-size: 0.72rem;
+ font-weight: 700;
+ color: #4338ca;
+ cursor: pointer;
+ user-select: none;
+ transition: all 0.2s ease;
+ }
+ .module-column-header:hover {
+ background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.15));
+ }
+ .module-column-header i { font-size: 0.8rem; }
+ .module-column-header .col-count {
+ background: rgba(67,56,202,0.15);
+ padding: 1px 6px;
+ border-radius: 8px;
+ font-size: 0.6rem;
+ }
+ .module-column-header .col-check {
+ margin-left: auto;
+ width: 14px;
+ height: 14px;
+ accent-color: #4338ca;
+ }
+ .module-column-items {
+ display: flex;
+ flex-direction: column;
+ gap: 1px;
+ padding: 6px;
+ max-height: 280px;
+ overflow-y: auto;
+ }
+ .module-column-items::-webkit-scrollbar { width: 4px; }
+ .module-column-items::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
-  .col-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    background: #fff;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-  }
-  .col-item:hover { background: rgba(16,185,129,0.08); }
-  .col-item-check {
-    width: 14px;
-    height: 14px;
-    accent-color: #10b981;
-    flex-shrink: 0;
-  }
-  .col-item-code {
-    font-weight: 600;
-    color: var(--accent-emerald);
-    font-size: 0.72rem;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .col-item-weight {
-    width: 50px;
-  }
-  .col-item-weight .weight-input {
-    width: 100%;
-    padding: 3px 4px;
-    font-size: 0.72rem;
-  }
+ .col-item {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ padding: 6px 8px;
+ background: #fff;
+ border-radius: 6px;
+ transition: all 0.15s ease;
+ }
+ .col-item:hover { background: rgba(16,185,129,0.08); }
+ .col-item-check {
+ width: 14px;
+ height: 14px;
+ accent-color: #10b981;
+ flex-shrink: 0;
+ }
+ .col-item-code {
+ font-weight: 600;
+ color: var(--accent-emerald);
+ font-size: 0.72rem;
+ flex: 1;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ }
+ .col-item-weight {
+ width: 50px;
+ }
+ .col-item-weight .weight-input {
+ width: 100%;
+ padding: 3px 4px;
+ font-size: 0.72rem;
+ }
 
-  /* Submit Header (moved to top) */
-  .list-header-actions {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--glass-border);
-    background: linear-gradient(180deg, rgba(16,185,129,0.06), transparent);
-    flex-shrink: 0;
-  }
-  .btn-submit {
-    width: 100%;
-    padding: 12px 20px;
-    background: var(--gradient-main);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(16,185,129,0.3);
-  }
-  .btn-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(16,185,129,0.4);
-  }
+ /* Submit Header (moved to top) */
+ .list-header-actions {
+ padding: 0.75rem 1rem;
+ border-bottom: 1px solid var(--glass-border);
+ background: linear-gradient(180deg, rgba(16,185,129,0.06), transparent);
+ flex-shrink: 0;
+ }
+ .btn-submit {
+ width: 100%;
+ padding: 12px 20px;
+ background: var(--gradient-main);
+ color: #fff;
+ border: none;
+ border-radius: 10px;
+ font-size: 0.9rem;
+ font-weight: 800;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ gap: 8px;
+ transition: all 0.3s ease;
+ box-shadow: 0 6px 20px rgba(16,185,129,0.3);
+ }
+ .btn-submit:hover {
+ transform: translateY(-2px);
+ box-shadow: 0 8px 25px rgba(16,185,129,0.4);
+ }
 
-  /* Form Error */
-  .form-error {
-    background: linear-gradient(135deg, #fee2e2, #fecaca);
-    border: 1px solid #fca5a5;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-    flex-shrink: 0;
-  }
-  .form-error-title {
-    font-weight: 700;
-    color: #b91c1c;
-    font-size: 0.82rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .form-error-list { margin: 0.5rem 0 0; padding-left: 1rem; color: #dc2626; font-size: 0.78rem; }
+ /* Form Error */
+ .form-error {
+ background: linear-gradient(135deg, #fee2e2, #fecaca);
+ border: 1px solid #fca5a5;
+ border-radius: 10px;
+ padding: 0.75rem 1rem;
+ margin-bottom: 0.75rem;
+ flex-shrink: 0;
+ }
+ .form-error-title {
+ font-weight: 700;
+ color: #b91c1c;
+ font-size: 0.82rem;
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ }
+ .form-error-list { margin: 0.5rem 0 0; padding-left: 1rem; color: #dc2626; font-size: 0.78rem; }
 
-  /* ==================== RESPONSIVE ==================== */
-  @media (max-width: 1200px) {
-    .hub-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (max-width: 900px) {
-    .workspace-body { grid-template-columns: 1fr; }
-    .hub-grid { grid-template-columns: repeat(2, 1fr); }
-  }
+ /* ==================== RESPONSIVE ==================== */
+ @media (max-width: 1200px) {
+ .hub-grid { grid-template-columns: repeat(3, 1fr); }
+ }
+ @media (max-width: 900px) {
+ .workspace-body { grid-template-columns: 1fr; }
+ .hub-grid { grid-template-columns: repeat(2, 1fr); }
+ }
 </style>
 
 <form action="{{ url_for('main.index') }}?active_tab=add-pane" method="post" id="sample-form">
-  {{ form.hidden_tag() }}
+ {{ form.hidden_tag() }}
 
-  <div class="sample-gateway">
-    {# Form Errors #}
-    {% if form.errors %}
-    <div class="form-error">
-      <div class="form-error-title">
-        <i class="bi bi-exclamation-triangle-fill"></i> {{ _('Error') }}
-      </div>
-      <ul class="form-error-list">
-        {% for field_name, errors in form.errors.items() %}
-          {% for error in errors %}<li>{{ form[field_name].label.text }}: {{ error }}</li>{% endfor %}
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
+ <div class="sample-gateway">
+ {# Form Errors #}
+ {% if form.errors %}
+ <div class="form-error">
+ <div class="form-error-title">
+ <i class="bi bi-exclamation-triangle-fill"></i> {{ _('Error') }}
+ </div>
+ <ul class="form-error-list">
+ {% for field_name, errors in form.errors.items() %}
+ {% for error in errors %}<li>{{ form[field_name].label.text }}: {{ error }}</li>{% endfor %}
+ {% endfor %}
+ </ul>
+ </div>
+ {% endif %}
 
-    <!-- ==================== PHASE 1: UNIT HUB ==================== -->
-    <div class="unit-hub" id="unit-hub">
-      <div class="hub-header">
-        <h1><i class="bi bi-door-open-fill"></i> {{ _('Sample Registration') }}</h1>
-        <p>{{ _('Select a unit') }}</p>
-      </div>
-      <div class="hub-grid">
-        {% for subfield in form.client_name %}
-        <div class="hub-card" data-unit="{{ subfield.data }}" onclick="selectUnit('{{ subfield.data }}', '{{ subfield.label.text }}')">
-          <div class="hub-card-icon">
-            {% if subfield.data == 'CHPP' %}<i class="bi bi-gear-wide-connected"></i>
-            {% elif subfield.data == 'UHG-Geo' %}<i class="bi bi-geo-alt-fill"></i>
-            {% elif subfield.data == 'BN-Geo' %}<i class="bi bi-pin-map-fill"></i>
-            {% elif subfield.data == 'QC' %}<i class="bi bi-shield-check"></i>
-            {% elif subfield.data == 'Proc' %}<i class="bi bi-cpu-fill"></i>
-            {% elif subfield.data == 'WTL' %}<i class="bi bi-droplet-half"></i>
-            {% elif subfield.data == 'LAB' %}<i class="bi bi-eyedropper"></i>
-            {% else %}<i class="bi bi-box"></i>{% endif %}
-          </div>
-          <div class="hub-card-name">{{ subfield.label.text }}</div>
-          <div class="hub-card-desc">
-            {% if subfield.data == 'CHPP' %}{{ _('Coal Handling & Prep Plant') }}
-            {% elif subfield.data == 'UHG-Geo' %}{{ _('UHG Geology') }}
-            {% elif subfield.data == 'BN-Geo' %}{{ _('BN Geology') }}
-            {% elif subfield.data == 'QC' %}{{ _('Quality Control') }}
-            {% elif subfield.data == 'Proc' %}{{ _('Process') }}
-            {% elif subfield.data == 'WTL' %}{{ _('Washability Testing Lab') }}
-            {% elif subfield.data == 'LAB' %}{{ _('Laboratory') }}
-            {% else %}{{ _('Other') }}{% endif %}
-          </div>
-          {{ subfield(class="", style="display:none;") }}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
+ <!-- ==================== PHASE 1: UNIT HUB ==================== -->
+ <div class="unit-hub" id="unit-hub">
+ <div class="hub-header">
+ <h1><i class="bi bi-door-open-fill"></i> {{ _('Sample Registration') }}</h1>
+ <p>{{ _('Select a unit') }}</p>
+ </div>
+ <div class="hub-grid">
+ {% for subfield in form.client_name %}
+ <div class="hub-card" data-unit="{{ subfield.data }}" data-action="selectUnit" data-arg-0="{{ subfield.data }}" data-arg-1="{{ subfield.label.text }}">
+ <div class="hub-card-icon">
+ {% if subfield.data == 'CHPP' %}<i class="bi bi-gear-wide-connected"></i>
+ {% elif subfield.data == 'UHG-Geo' %}<i class="bi bi-geo-alt-fill"></i>
+ {% elif subfield.data == 'BN-Geo' %}<i class="bi bi-pin-map-fill"></i>
+ {% elif subfield.data == 'QC' %}<i class="bi bi-shield-check"></i>
+ {% elif subfield.data == 'Proc' %}<i class="bi bi-cpu-fill"></i>
+ {% elif subfield.data == 'WTL' %}<i class="bi bi-droplet-half"></i>
+ {% elif subfield.data == 'LAB' %}<i class="bi bi-eyedropper"></i>
+ {% else %}<i class="bi bi-box"></i>{% endif %}
+ </div>
+ <div class="hub-card-name">{{ subfield.label.text }}</div>
+ <div class="hub-card-desc">
+ {% if subfield.data == 'CHPP' %}{{ _('Coal Handling & Prep Plant') }}
+ {% elif subfield.data == 'UHG-Geo' %}{{ _('UHG Geology') }}
+ {% elif subfield.data == 'BN-Geo' %}{{ _('BN Geology') }}
+ {% elif subfield.data == 'QC' %}{{ _('Quality Control') }}
+ {% elif subfield.data == 'Proc' %}{{ _('Process') }}
+ {% elif subfield.data == 'WTL' %}{{ _('Washability Testing Lab') }}
+ {% elif subfield.data == 'LAB' %}{{ _('Laboratory') }}
+ {% else %}{{ _('Other') }}{% endif %}
+ </div>
+ {{ subfield(class="hidden") }}
+ </div>
+ {% endfor %}
+ </div>
+ </div>
 
-    <!-- ==================== PHASE 2: WORKSPACE ==================== -->
-    <div class="workspace" id="workspace">
-      <!-- Header -->
-      <div class="workspace-header">
-        <div class="workspace-title">
-          <button type="button" class="btn-back" onclick="goBackToHub()">
-            <i class="bi bi-arrow-left"></i>
-          </button>
-          <div class="workspace-unit-badge" id="unit-badge">
-            <i class="bi bi-gear"></i>
-            <span id="unit-name">CHPP</span>
-          </div>
-        </div>
-        <div class="workspace-stats">
-          <div class="stat-chip">
-            <i class="bi bi-calendar3"></i>
-            <span id="today-date"></span>
-          </div>
-        </div>
-      </div>
+ <!-- ==================== PHASE 2: WORKSPACE ==================== -->
+ <div class="workspace" id="workspace">
+ <!-- Header -->
+ <div class="workspace-header">
+ <div class="workspace-title">
+ <button type="button" class="btn-back" data-action="goBackToHub">
+ <i class="bi bi-arrow-left"></i>
+ </button>
+ <div class="workspace-unit-badge" id="unit-badge">
+ <i class="bi bi-gear"></i>
+ <span id="unit-name">CHPP</span>
+ </div>
+ </div>
+ <div class="workspace-stats">
+ <div class="stat-chip">
+ <i class="bi bi-calendar3"></i>
+ <span id="today-date"></span>
+ </div>
+ </div>
+ </div>
 
-      <!-- 50/50 Body -->
-      <div class="workspace-body">
-        <!-- LEFT: Config -->
-        <div class="config-panel">
-          <div class="panel-header">
-            <div class="panel-title">
-              <i class="bi bi-sliders"></i> {{ _('Configuration') }}
-            </div>
-          </div>
-          <div class="config-body">
-            <!-- Sample Type -->
-            <div class="config-section">
-              <div class="section-label"><i class="bi bi-tag"></i> {{ _('Sample Type') }}</div>
-              <div class="type-chips" id="sample-type-container">
-                <span style="color: var(--text-muted); font-size: 0.78rem;">{{ _('Loading types...') }}</span>
-              </div>
-            </div>
+ <!-- 50/50 Body -->
+ <div class="workspace-body">
+ <!-- LEFT: Config -->
+ <div class="config-panel">
+ <div class="panel-header">
+ <div class="panel-title">
+ <i class="bi bi-sliders"></i> {{ _('Configuration') }}
+ </div>
+ </div>
+ <div class="config-body">
+ <!-- Sample Type -->
+ <div class="config-section">
+ <div class="section-label mt-[0.75rem]"><i class="bi bi-tag"></i> {{ _('Sample Type') }}</div>
+ <div class="type-chips" id="sample-type-container">
+ <span class="text-[var(--text-muted)] text-[0.78rem]">{{ _('Loading types...') }}</span>
+ </div>
+ </div>
 
-            <!-- Condition -->
-            <div class="config-section">
-              <div class="section-label"><i class="bi bi-thermometer-half"></i> {{ _('Condition') }}</div>
-              <div class="condition-row">
-                {% for subfield in form.sample_condition %}
-                <div class="condition-toggle">
-                  {{ subfield(class="") }}
-                  <label class="condition-toggle-label" for="{{ subfield.id }}">
-                    {% if subfield.data in ['Чийгтэй', 'Шингэн'] %}<i class="bi bi-droplet"></i>{% else %}<i class="bi bi-sun"></i>{% endif %}
-                    {{ subfield.label.text }}
-                  </label>
-                </div>
-                {% endfor %}
-              </div>
-            </div>
+ <!-- Condition -->
+ <div class="config-section">
+ <div class="section-label mt-[0.75rem]"><i class="bi bi-thermometer-half"></i> {{ _('Condition') }}</div>
+ <div class="condition-row">
+ {% for subfield in form.sample_condition %}
+ <div class="condition-toggle">
+ {{ subfield(class="") }}
+ <label class="condition-toggle-label" for="{{ subfield.id }}">
+ {% if subfield.data in ['Чийгтэй', 'Шингэн'] %}<i class="bi bi-droplet"></i>{% else %}<i class="bi bi-sun"></i>{% endif %}
+ {{ subfield.label.text }}
+ </label>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
 
-            <!-- Dates & People -->
-            <div class="config-section">
-              <div class="config-grid">
-                <div class="config-group">
-                  <label class="config-label">{{ _('Date') }}</label>
-                  {{ form.sample_date(id="sample_date", class="config-input") }}
-                </div>
-                <div class="config-group">
-                  <label class="config-label">{{ _('Submitted By') }}</label>
-                  {{ form.delivered_by(class="config-input highlight", placeholder=_("Name")) }}
-                </div>
-                <div class="config-group">
-                  <label class="config-label">{{ _('Prepared Date') }}</label>
-                  {{ form.prepared_date(id="prepared_date", class="config-input") }}
-                </div>
-                <div class="config-group">
-                  <label class="config-label">{{ _('Prepared By') }}</label>
-                  {{ form.prepared_by(id="prepared_by", class="config-input highlight", placeholder=_("Name")) }}
-                </div>
-              </div>
-            </div>
+ <!-- Dates & People -->
+ <div class="config-section">
+ <div class="config-grid">
+ <div class="config-group">
+ <label class="config-label">{{ _('Date') }}</label>
+ {{ form.sample_date(id="sample_date", class="config-input") }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Submitted By') }}</label>
+ {{ form.delivered_by(class="config-input highlight", placeholder=_("Name")) }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Prepared Date') }}</label>
+ {{ form.prepared_date(id="prepared_date", class="config-input") }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Prepared By') }}</label>
+ {{ form.prepared_by(id="prepared_by", class="config-input highlight", placeholder=_("Name")) }}
+ </div>
+ </div>
+ </div>
 
-            <!-- Retention & Notes -->
-            <div class="config-section">
-              <div class="config-grid">
-                <!-- Sample retention period selection - 5 buttons -->
-                <div class="config-group full">
-                  <label class="config-label">{{ _('Select sample retention period') }}</label>
-                  <div class="btn-group retention-btn-group" role="group">
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7" checked>
-                    <label class="btn btn-outline-danger btn-sm" for="ret_7">{{ _('7 days') }}</label>
+ <!-- Retention & Notes -->
+ <div class="config-section">
+ <div class="config-grid">
+ <!-- Sample retention period selection - 5 buttons -->
+ <div class="config-group full">
+ <label class="config-label">{{ _('Select sample retention period') }}</label>
+ <div class="btn-group retention-btn-group" role="group">
+ <input type="radio" class="btn-check" name="retention_period" id="ret_7" value="7" checked>
+ <label class="btn btn-outline-danger btn-sm" for="ret_7">{{ _('7 days') }}</label>
 
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_14" value="14">
-                    <label class="btn btn-outline-danger btn-sm" for="ret_14">{{ _('14 days') }}</label>
+ <input type="radio" class="btn-check" name="retention_period" id="ret_14" value="14">
+ <label class="btn btn-outline-danger btn-sm" for="ret_14">{{ _('14 days') }}</label>
 
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_30" value="30">
-                    <label class="btn btn-outline-warning btn-sm" for="ret_30">{{ _('1 month') }}</label>
+ <input type="radio" class="btn-check" name="retention_period" id="ret_30" value="30">
+ <label class="btn btn-outline-warning btn-sm" for="ret_30">{{ _('1 month') }}</label>
 
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_730" value="730">
-                    <label class="btn btn-outline-success btn-sm" for="ret_730">{{ _('2 years') }}</label>
+ <input type="radio" class="btn-check" name="retention_period" id="ret_730" value="730">
+ <label class="btn btn-outline-success btn-sm" for="ret_730">{{ _('2 years') }}</label>
 
-                    <input type="radio" class="btn-check" name="retention_period" id="ret_1825" value="1825">
-                    <label class="btn btn-outline-success btn-sm" for="ret_1825">{{ _('5 years') }}</label>
-                  </div>
-                </div>
+ <input type="radio" class="btn-check" name="retention_period" id="ret_1825" value="1825">
+ <label class="btn btn-outline-success btn-sm" for="ret_1825">{{ _('5 years') }}</label>
+ </div>
+ </div>
 
-                <div class="config-group full">
-                  {{ form.notes(rows=2, class="notes-input", placeholder=_("Notes...")) }}
-                </div>
-              </div>
-            </div>
+ <div class="config-group full">
+ {{ form.notes(rows=2, class="notes-input", placeholder=_("Notes...")) }}
+ </div>
+ </div>
+ </div>
 
-            <!-- ===== UNIT SPECIFIC OPTIONS ===== -->
+ <!-- ===== UNIT SPECIFIC OPTIONS ===== -->
 
-            <!-- CHPP Options -->
-            <div id="chpp-options" class="unit-options chpp">
-              <div class="unit-options-title"><i class="bi bi-gear-wide-connected"></i> {{ _('CHPP Configuration') }}</div>
+ <!-- CHPP Options -->
+ <div id="chpp-options" class="unit-options chpp">
+ <div class="unit-options-title"><i class="bi bi-gear-wide-connected"></i> {{ _('CHPP Configuration') }}</div>
 
-              <div id="chpp-2-hourly-options" class="chpp-subtype" style="display:none;">
-                <div class="config-grid">
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Primary (CC)') }}</label>
-                    <select id="twoh_primary_product" class="config-input"></select>
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Secondary (TC)') }}</label>
-                    <select id="twoh_secondary_product" class="config-input"></select>
-                  </div>
-                </div>
-                <div class="section-label" style="margin-top:0.75rem;">{{ _('Modules') }}</div>
-                <div class="module-checks">
-                  <label class="module-check">{{ form.chpp_2h_mod1(id="chpp_2h_mod1") }}<span class="module-check-label">MOD I</span></label>
-                  <label class="module-check">{{ form.chpp_2h_mod2(id="chpp_2h_mod2") }}<span class="module-check-label">MOD II</span></label>
-                  <label class="module-check">{{ form.chpp_2h_mod3(id="chpp_2h_mod3") }}<span class="module-check-label">MOD III</span></label>
-                </div>
-              </div>
+ <div id="chpp-2-hourly-options" class="chpp-subtype hidden">
+ <div class="config-grid">
+ <div class="config-group">
+ <label class="config-label">{{ _('Primary (CC)') }}</label>
+ <select id="twoh_primary_product" class="config-input"></select>
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Secondary (TC)') }}</label>
+ <select id="twoh_secondary_product" class="config-input"></select>
+ </div>
+ </div>
+ <div class="section-label mt-[0.75rem]">{{ _('Modules') }}</div>
+ <div class="module-checks">
+ <label class="module-check">{{ form.chpp_2h_mod1(id="chpp_2h_mod1") }}<span class="module-check-label">MOD I</span></label>
+ <label class="module-check">{{ form.chpp_2h_mod2(id="chpp_2h_mod2") }}<span class="module-check-label">MOD II</span></label>
+ <label class="module-check">{{ form.chpp_2h_mod3(id="chpp_2h_mod3") }}<span class="module-check-label">MOD III</span></label>
+ </div>
+ </div>
 
-              <div id="chpp-4-hourly-options" class="chpp-subtype" style="display:none;">
-                <div class="config-group">
-                  <label class="config-label">{{ _('Timeslot') }}</label>
-                  {{ form.chpp_4h_timeslot(class="config-input", id="chpp_4h_timeslot") }}
-                </div>
-                <div class="section-label" style="margin-top:0.75rem;">{{ _('Modules') }}</div>
-                <div class="module-checks">
-                  <label class="module-check">{{ form.chpp_4h_mod1(id="chpp_4h_mod1") }}<span class="module-check-label">MOD I</span></label>
-                  <label class="module-check">{{ form.chpp_4h_mod2(id="chpp_4h_mod2") }}<span class="module-check-label">MOD II</span></label>
-                  <label class="module-check">{{ form.chpp_4h_mod3(id="chpp_4h_mod3") }}<span class="module-check-label">MOD III</span></label>
-                </div>
-              </div>
+ <div id="chpp-4-hourly-options" class="chpp-subtype hidden">
+ <div class="config-group">
+ <label class="config-label">{{ _('Timeslot') }}</label>
+ {{ form.chpp_4h_timeslot(class="config-input", id="chpp_4h_timeslot") }}
+ </div>
+ <div class="section-label mt-[0.75rem]">{{ _('Modules') }}</div>
+ <div class="module-checks">
+ <label class="module-check">{{ form.chpp_4h_mod1(id="chpp_4h_mod1") }}<span class="module-check-label">MOD I</span></label>
+ <label class="module-check">{{ form.chpp_4h_mod2(id="chpp_4h_mod2") }}<span class="module-check-label">MOD II</span></label>
+ <label class="module-check">{{ form.chpp_4h_mod3(id="chpp_4h_mod3") }}<span class="module-check-label">MOD III</span></label>
+ </div>
+ </div>
 
-              <div id="chpp-12-hourly-options" class="chpp-subtype" style="display:none;">
-                <div class="section-label">{{ _('Modules') }}</div>
-                <div class="module-checks">
-                  <label class="module-check">{{ form.chpp_12h_mod1(id="chpp_12h_mod1") }}<span class="module-check-label">MOD I</span></label>
-                  <label class="module-check">{{ form.chpp_12h_mod2(id="chpp_12h_mod2") }}<span class="module-check-label">MOD II</span></label>
-                  <label class="module-check">{{ form.chpp_12h_mod3(id="chpp_12h_mod3") }}<span class="module-check-label">MOD III</span></label>
-                </div>
-              </div>
+ <div id="chpp-12-hourly-options" class="chpp-subtype hidden">
+ <div class="section-label mt-[0.75rem]">{{ _('Modules') }}</div>
+ <div class="module-checks">
+ <label class="module-check">{{ form.chpp_12h_mod1(id="chpp_12h_mod1") }}<span class="module-check-label">MOD I</span></label>
+ <label class="module-check">{{ form.chpp_12h_mod2(id="chpp_12h_mod2") }}<span class="module-check-label">MOD II</span></label>
+ <label class="module-check">{{ form.chpp_12h_mod3(id="chpp_12h_mod3") }}<span class="module-check-label">MOD III</span></label>
+ </div>
+ </div>
 
-              <div id="chpp-com-options" class="chpp-subtype" style="display:none;">
-                <div class="config-grid">
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Shift') }}</label>
-                    <select id="com_shift" class="config-input">
-                      <option value="day">{{ _('Day (Dcom)') }}</option>
-                      <option value="night">{{ _('Night (Ncom)') }}</option>
-                    </select>
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Index') }}</label>
-                    <select id="com_index" class="config-input">
-                      <option value="">0</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                    </select>
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Primary (CC)') }}</label>
-                    <select id="com_primary_product" class="config-input"></select>
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Secondary (TC)') }}</label>
-                    <select id="com_secondary_product" class="config-input" multiple style="min-height:60px;"></select>
-                  </div>
-                </div>
-                <div class="section-label" style="margin-top:0.75rem;">{{ _('PF Modules') }}</div>
-                <div class="module-checks">
-                  <label class="module-check"><input type="checkbox" id="com_pf211" checked><span class="module-check-label">PF211</span></label>
-                  <label class="module-check"><input type="checkbox" id="com_pf221" checked><span class="module-check-label">PF221</span></label>
-                  <label class="module-check"><input type="checkbox" id="com_pf231" checked><span class="module-check-label">PF231</span></label>
-                </div>
-              </div>
+ <div id="chpp-com-options" class="chpp-subtype hidden">
+ <div class="config-grid">
+ <div class="config-group">
+ <label class="config-label">{{ _('Shift') }}</label>
+ <select id="com_shift" class="config-input">
+ <option value="day">{{ _('Day (Dcom)') }}</option>
+ <option value="night">{{ _('Night (Ncom)') }}</option>
+ </select>
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Index') }}</label>
+ <select id="com_index" class="config-input">
+ <option value="">0</option>
+ <option value="1">1</option>
+ <option value="2">2</option>
+ </select>
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Primary (CC)') }}</label>
+ <select id="com_primary_product" class="config-input"></select>
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Secondary (TC)') }}</label>
+ <select id="com_secondary_product" class="config-input min-h-[60px]" multiple></select>
+ </div>
+ </div>
+ <div class="section-label mt-[0.75rem]">{{ _('PF Modules') }}</div>
+ <div class="module-checks">
+ <label class="module-check"><input type="checkbox" id="com_pf211" checked><span class="module-check-label">PF211</span></label>
+ <label class="module-check"><input type="checkbox" id="com_pf221" checked><span class="module-check-label">PF221</span></label>
+ <label class="module-check"><input type="checkbox" id="com_pf231" checked><span class="module-check-label">PF231</span></label>
+ </div>
+ </div>
 
-              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> {{ _('Generate Samples') }}</button>
-            </div>
+ <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> {{ _('Generate Samples') }}</button>
+ </div>
 
-            <!-- Multi Gen (UHG/BN/QC/Proc) -->
-            <div id="multi-gen-options" class="unit-options multi">
-              <div class="unit-options-title"><i class="bi bi-collection"></i> {{ _('Generate Samples') }}</div>
-              <div class="config-grid">
-                <div class="config-group">
-                  <label class="config-label">{{ _('Location') }}</label>
-                  {{ form.location(class="config-input", id="location", placeholder="Loc") }}
-                </div>
-                <div class="config-group" id="product-field" style="display:none;">
-                  <label class="config-label">{{ _('Product') }}</label>
-                  {{ form.product(class="config-input", id="product", placeholder="Prod") }}
-                </div>
-                <div class="config-group">
-                  <label class="config-label">{{ _('Count') }}</label>
-                  {{ form.sample_count(class="config-input", type="number", min="1", id="sample_count", placeholder="1") }}
-                </div>
-              </div>
-              <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> {{ _('Generate Samples') }}</button>
-            </div>
+ <!-- Multi Gen (UHG/BN/QC/Proc) -->
+ <div id="multi-gen-options" class="unit-options multi">
+ <div class="unit-options-title"><i class="bi bi-collection"></i> {{ _('Generate Samples') }}</div>
+ <div class="config-grid">
+ <div class="config-group">
+ <label class="config-label">{{ _('Location') }}</label>
+ {{ form.location(class="config-input", id="location", placeholder="Loc") }}
+ </div>
+ <div class="config-group hidden" id="product-field">
+ <label class="config-label">{{ _('Product') }}</label>
+ {{ form.product(class="config-input", id="product", placeholder="Prod") }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Count') }}</label>
+ {{ form.sample_count(class="config-input", type="number", min="1", id="sample_count", placeholder="1") }}
+ </div>
+ </div>
+ <button type="button" class="btn-generate generate-btn"><i class="bi bi-magic"></i> {{ _('Generate Samples') }}</button>
+ </div>
 
-            <!-- WTL -->
-            <div id="wtl-options" class="unit-options wtl">
-              <div class="unit-options-title"><i class="bi bi-droplet-half"></i> {{ _('WTL Configuration') }}</div>
-              <div id="wtl-lab-number-field" class="wtl-subtype" style="display:none;">
-                <div class="config-group">
-                  <label class="config-label">{{ _('Lab number') }}</label>
-                  {{ form.lab_number(class="config-input", id="lab_number", placeholder="Lab #") }}
-                </div>
-              </div>
-              <div id="wtl-mg-field" class="wtl-subtype" style="display:none;">
-                <div class="config-row">
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Module') }}</label>
-                    {{ form.wtl_module(class="config-input", id="wtl_module") }}
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Supplier') }}</label>
-                    {{ form.wtl_supplier(class="config-input", id="wtl_supplier", placeholder="Supplier") }}
-                  </div>
-                  <div class="config-group">
-                    <label class="config-label">{{ _('Vehicle No.') }}</label>
-                    {{ form.wtl_vehicle(class="config-input", id="wtl_vehicle", placeholder="Vehicle #") }}
-                  </div>
-                </div>
-                <div class="config-group" style="margin-top: 0.5rem;">
-                  <label class="config-label">{{ _('Preview') }}</label>
-                  <input type="text" id="wtl_mg_preview" class="config-input" readonly style="background:#f1f5f9; color:#475569;">
-                </div>
-              </div>
-              <div id="wtl-other-field" class="wtl-subtype" style="display:none;">
-                <div class="config-group">
-                  <label class="config-label">{{ _('Sample name') }}</label>
-                  {{ form.sample_code(class="config-input", placeholder="Code") }}
-                </div>
-              </div>
-            </div>
+ <!-- WTL -->
+ <div id="wtl-options" class="unit-options wtl">
+ <div class="unit-options-title"><i class="bi bi-droplet-half"></i> {{ _('WTL Configuration') }}</div>
+ <div id="wtl-lab-number-field" class="wtl-subtype hidden">
+ <div class="config-group">
+ <label class="config-label">{{ _('Lab number') }}</label>
+ {{ form.lab_number(class="config-input", id="lab_number", placeholder="Lab #") }}
+ </div>
+ </div>
+ <div id="wtl-mg-field" class="wtl-subtype hidden">
+ <div class="config-row">
+ <div class="config-group">
+ <label class="config-label">{{ _('Module') }}</label>
+ {{ form.wtl_module(class="config-input", id="wtl_module") }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Supplier') }}</label>
+ {{ form.wtl_supplier(class="config-input", id="wtl_supplier", placeholder="Supplier") }}
+ </div>
+ <div class="config-group">
+ <label class="config-label">{{ _('Vehicle No.') }}</label>
+ {{ form.wtl_vehicle(class="config-input", id="wtl_vehicle", placeholder="Vehicle #") }}
+ </div>
+ </div>
+ <div class="config-group mt-[0.5rem]">
+ <label class="config-label">{{ _('Preview') }}</label>
+ <input type="text" id="wtl_mg_preview" class="config-input bg-slate-100 text-slate-600" readonly>
+ </div>
+ </div>
+ <div id="wtl-other-field" class="wtl-subtype hidden">
+ <div class="config-group mt-[0.5rem]">
+ <label class="config-label">{{ _('Sample name') }}</label>
+ {{ form.sample_code(class="config-input", placeholder="Code") }}
+ </div>
+ </div>
+ </div>
 
-            <!-- LAB -->
-            <div id="lab-options" class="unit-options lab">
-              <div class="unit-options-title"><i class="bi bi-eyedropper"></i> {{ _('Laboratory') }}</div>
-              <p style="color: var(--text-muted); font-size: 0.78rem; margin: 0;">
-                <i class="bi bi-info-circle"></i> {{ _('Sample name will be generated automatically') }}
-              </p>
-            </div>
+ <!-- LAB -->
+ <div id="lab-options" class="unit-options lab">
+ <div class="unit-options-title"><i class="bi bi-eyedropper"></i> {{ _('Laboratory') }}</div>
+ <p class="text-[var(--text-muted)] text-[0.78rem] m-0">
+ <i class="bi bi-info-circle"></i> {{ _('Sample name will be generated automatically') }}
+ </p>
+ </div>
 
-          </div>
-        </div>
+ </div>
+ </div>
 
-        <!-- RIGHT: List -->
-        <div class="list-panel">
-          <div class="panel-header">
-            <div class="panel-title"><i class="bi bi-list-check"></i> {{ _('Sample List') }}</div>
-            <span class="panel-badge" id="sample-count-badge">0 samples</span>
-          </div>
-          <div class="list-header-actions">
-            <button type="submit" class="btn-submit" id="submit-btn">
-              <i class="bi bi-check2-circle"></i> {{ _('Register') }}
-            </button>
-          </div>
-          <div class="list-body" id="sample-entry-container">
-            <div class="sample-list-empty">
-              <i class="bi bi-inbox"></i>
-              <h4>{{ _('No samples registered') }}</h4>
-              <p>{{ _('Click the "Generate Samples" button') }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- RIGHT: List -->
+ <div class="list-panel">
+ <div class="panel-header">
+ <div class="panel-title"><i class="bi bi-list-check"></i> {{ _('Sample List') }}</div>
+ <span class="panel-badge" id="sample-count-badge">0 samples</span>
+ </div>
+ <div class="list-header-actions">
+ <button type="submit" class="btn-submit" id="submit-btn">
+ <i class="bi bi-check2-circle"></i> {{ _('Register') }}
+ </button>
+ </div>
+ <div class="list-body" id="sample-entry-container">
+ <div class="sample-list-empty">
+ <i class="bi bi-inbox"></i>
+ <h4>{{ _('No samples registered') }}</h4>
+ <p class="text-[var(--text-muted)] text-[0.78rem] m-0">{{ _('Click the "Generate Samples" button') }}</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </form>
 
 <script nonce="{{ csp_nonce }}">
 const GLOBAL_DATA = {
-    sampleTypeOptions: {{ sample_type_map | tojson }},
-    all12hSamples: {{ all_12h_samples | tojson }},
-    constant12hSamples: {{ constant_12h_samples | tojson }},
-    comPrimaryProducts: {{ com_primary_products | tojson }},
-    comSecondaryMap: {{ com_secondary_map | tojson }},
-    unitAbbreviations: {{ unit_abbreviations | tojson }},
-    currentUser: "{{ current_user.username }}",
-    csrfToken: "{{ csrf_token() }}",
-    previewUrl: "{{ url_for('main.preview_sample_analyses') }}"
+ sampleTypeOptions: {{ sample_type_map | tojson }},
+ all12hSamples: {{ all_12h_samples | tojson }},
+ constant12hSamples: {{ constant_12h_samples | tojson }},
+ comPrimaryProducts: {{ com_primary_products | tojson }},
+ comSecondaryMap: {{ com_secondary_map | tojson }},
+ unitAbbreviations: {{ unit_abbreviations | tojson }},
+ currentUser: "{{ current_user.username }}",
+ csrfToken: "{{ csrf_token() }}",
+ previewUrl: "{{ url_for('main.preview_sample_analyses') }}"
 };
 
 // Hub -> Workspace navigation
 let currentUnit = null;
 
 function selectUnit(unitValue, unitLabel) {
-  currentUnit = unitValue;
+ currentUnit = unitValue;
 
-  // Check the hidden radio
-  const radio = document.querySelector(`input[name="client_name"][value="${unitValue}"]`);
-  if (radio) radio.checked = true;
+ // Check the hidden radio
+ const radio = document.querySelector(`input[name="client_name"][value="${unitValue}"]`);
+ if (radio) radio.checked = true;
 
-  // Hide hub, show workspace
-  document.getElementById('unit-hub').classList.add('hidden');
-  document.getElementById('workspace').classList.add('active');
+ // Hide hub, show workspace
+ document.getElementById('unit-hub').classList.add('hidden');
+ document.getElementById('workspace').classList.add('active');
 
-  // Update badge
-  const badge = document.getElementById('unit-badge');
-  const unitName = document.getElementById('unit-name');
-  unitName.textContent = unitLabel;
+ // Update badge
+ const badge = document.getElementById('unit-badge');
+ const unitName = document.getElementById('unit-name');
+ unitName.textContent = unitLabel;
 
-  // Set badge class
-  badge.className = 'workspace-unit-badge';
-  const classMap = {'CHPP':'chpp','UHG-Geo':'uhg','BN-Geo':'bn','QC':'qc','Proc':'proc','WTL':'wtl','LAB':'lab'};
-  if (classMap[unitValue]) badge.classList.add(classMap[unitValue]);
+ // Set badge class
+ badge.className = 'workspace-unit-badge';
+ const classMap = {'CHPP':'chpp','UHG-Geo':'uhg','BN-Geo':'bn','QC':'qc','Proc':'proc','WTL':'wtl','LAB':'lab'};
+ if (classMap[unitValue]) badge.classList.add(classMap[unitValue]);
 
-  // Update icon
-  const iconMap = {
-    'CHPP': 'bi-gear-wide-connected',
-    'UHG-Geo': 'bi-geo-alt-fill',
-    'BN-Geo': 'bi-pin-map-fill',
-    'QC': 'bi-shield-check',
-    'Proc': 'bi-cpu-fill',
-    'WTL': 'bi-droplet-half',
-    'LAB': 'bi-eyedropper'
-  };
-  badge.querySelector('i').className = 'bi ' + (iconMap[unitValue] || 'bi-box');
+ // Update icon
+ const iconMap = {
+ 'CHPP': 'bi-gear-wide-connected',
+ 'UHG-Geo': 'bi-geo-alt-fill',
+ 'BN-Geo': 'bi-pin-map-fill',
+ 'QC': 'bi-shield-check',
+ 'Proc': 'bi-cpu-fill',
+ 'WTL': 'bi-droplet-half',
+ 'LAB': 'bi-eyedropper'
+ };
+ badge.querySelector('i').className = 'bi ' + (iconMap[unitValue] || 'bi-box');
 
-  // Trigger form update
-  if (typeof updateForm === 'function') updateForm();
+ // Trigger form update
+ if (typeof updateForm === 'function') updateForm();
 }
 
 function goBackToHub() {
-  document.getElementById('workspace').classList.remove('active');
-  document.getElementById('unit-hub').classList.remove('hidden');
-  currentUnit = null;
+ document.getElementById('workspace').classList.remove('active');
+ document.getElementById('unit-hub').classList.remove('hidden');
+ currentUnit = null;
 }
 
 // Set today date in header

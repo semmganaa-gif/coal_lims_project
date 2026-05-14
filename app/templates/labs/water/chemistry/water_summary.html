@@ -7,225 +7,225 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/water_summary.css') }}">
 
 <div class="ws-page-wrap">
-  <!-- Header -->
-  <div class="ws-header">
-    <div class="ws-header-top">
-      <div class="ws-header-left">
-        <h1><i class="bi bi-droplet-half"></i> {{ _("Water Analysis Summary") }}</h1>
-        <span class="badge bg-primary" id="rowCount">0</span>
-      </div>
+ <!-- Header -->
+ <div class="ws-header">
+ <div class="ws-header-top">
+ <div class="ws-header-left">
+ <h1><i class="bi bi-droplet-half"></i> {{ _("Water Analysis Summary") }}</h1>
+ <span class="badge bg-primary" id="rowCount">0</span>
+ </div>
 
-      <div class="ws-header-actions">
-        <!-- Date filter -->
-        <div class="ws-filters">
-          <input type="date" id="dateFrom" class="form-control form-control-sm" title="{{ _('From') }}">
-          <span class="text-muted">—</span>
-          <input type="date" id="dateTo" class="form-control form-control-sm" title="{{ _('To') }}">
-          <div class="btn-group">
-            <button class="btn btn-sm btn-outline-primary ws-date-preset active" data-days="7">7{{ _("d") }}</button>
-            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="14">14{{ _("d") }}</button>
-            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="30">30{{ _("d") }}</button>
-            <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="0">{{ _("All") }}</button>
-          </div>
-        </div>
-        <div class="vr mx-1" style="height:24px;opacity:0.2"></div>
-        <!-- Export buttons -->
-        <div class="btn-group">
-          <button id="btnExportCsv" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
-          </button>
-          <button id="btnCopy" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
-            <i class="bi bi-clipboard-check me-1"></i>{{ _("Copy") }}
-          </button>
-          <button id="btnGenerateCoa" class="btn btn-sm btn-outline-primary" title="{{ _('Generate unified CoA PDF for selected sample') }}" onclick="generateCoaForSelected()">
-            <i class="bi bi-file-earmark-pdf me-1"></i>CoA
-          </button>
-        </div>
+ <div class="ws-header-actions">
+ <!-- Date filter -->
+ <div class="ws-filters">
+ <input type="date" id="dateFrom" class="form-control form-control-sm" title="{{ _('From') }}">
+ <span class="text-muted">—</span>
+ <input type="date" id="dateTo" class="form-control form-control-sm" title="{{ _('To') }}">
+ <div class="btn-group">
+ <button class="btn btn-sm btn-outline-primary ws-date-preset active" data-days="7">7{{ _("d") }}</button>
+ <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="14">14{{ _("d") }}</button>
+ <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="30">30{{ _("d") }}</button>
+ <button class="btn btn-sm btn-outline-primary ws-date-preset" data-days="0">{{ _("All") }}</button>
+ </div>
+ </div>
+ <div class="vr mx-1 h-[24px] opacity-[0.2]"></div>
+ <!-- Export buttons -->
+ <div class="btn-group">
+ <button id="btnExportCsv" class="btn btn-sm btn-success" title="{{ _("Download CSV") }}">
+ <i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV
+ </button>
+ <button id="btnCopy" class="btn btn-sm btn-outline-success" title="{{ _("Copy selected") }}">
+ <i class="bi bi-clipboard-check me-1"></i>{{ _("Copy") }}
+ </button>
+ <button id="btnGenerateCoa" class="btn btn-sm btn-outline-primary" title="{{ _('Generate unified CoA PDF for selected sample') }}" data-action="generateCoaForSelected">
+ <i class="bi bi-file-earmark-pdf me-1"></i>CoA
+ </button>
+ </div>
 
-        {% if current_user.role in ['senior', 'admin', 'manager'] %}
-        <!-- Report buttons -->
-        <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="{{ _("Water chemistry report") }}">
-          <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Report") }}
-        </button>
-        <!-- Archive button -->
-        <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="{{ _("Archive selected") }}">
-          <i class="bi bi-archive-fill me-1"></i>{{ _("Archive") }}
-        </button>
-        {% endif %}
+ {% if current_user.role in ['senior', 'admin', 'manager'] %}
+ <!-- Report buttons -->
+ <button type="button" id="btnReportWater" class="btn btn-sm btn-danger" title="{{ _("Water chemistry report") }}">
+ <i class="bi bi-file-earmark-pdf me-1"></i>{{ _("Report") }}
+ </button>
+ <!-- Archive button -->
+ <button type="button" id="btnArchive" class="btn btn-sm btn-info text-white" title="{{ _("Archive selected") }}">
+ <i class="bi bi-archive-fill me-1"></i>{{ _("Archive") }}
+ </button>
+ {% endif %}
 
-        <!-- Archive link -->
-        <a href="{{ url_for('water.water_archive', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive") }}">
-          <i class="bi bi-archive me-1"></i>{{ _("Archive") }}
-        </a>
+ <!-- Archive link -->
+ <a href="{{ url_for('water.water_archive', lab=request.args.get('lab')) }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Archive") }}">
+ <i class="bi bi-archive me-1"></i>{{ _("Archive") }}
+ </a>
 
-        <!-- Refresh & Back buttons -->
-        <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="{{ _("Refresh") }}">
-          <i class="bi bi-arrow-clockwise"></i>
-        </button>
-        <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Back") }}">
-          <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
-        </a>
-      </div>
-    </div>
+ <!-- Refresh & Back buttons -->
+ <button id="btnRefresh" class="btn btn-sm btn-outline-primary" title="{{ _("Refresh") }}">
+ <i class="bi bi-arrow-clockwise"></i>
+ </button>
+ <a href="{{ url_for('water.water_analysis_hub') }}" class="btn btn-sm btn-outline-secondary" title="{{ _("Back") }}">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Back") }}
+ </a>
+ </div>
+ </div>
 
-    <!-- MNS Standards Reference -->
-    <div class="ws-standards-row">
-      <div class="ws-std-label">
-        <i class="bi bi-shield-check"></i> MNS
-      </div>
-      <div class="ws-std-items">
-        <div class="ws-std-item">
-          <span class="std-name">Color</span>
-          <span class="std-limit">≤20</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">EC</span>
-          <span class="std-limit">≤1000</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">pH</span>
-          <span class="std-limit">6.5-8.5</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">F⁻</span>
-          <span class="std-limit">0.7-1.5</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">Cl₂</span>
-          <span class="std-limit">0.2-0.3</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">Hard</span>
-          <span class="std-limit">≤7</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">NH₄⁺</span>
-          <span class="std-limit">≤1.5</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">NO₂⁻</span>
-          <span class="std-limit">≤1</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">Fe</span>
-          <span class="std-limit">≤0.3</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">TDS</span>
-          <span class="std-limit">≤400</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">Cl⁻</span>
-          <span class="std-limit">≤350</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">PO₄³⁻</span>
-          <span class="std-limit">≤5</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">BOD</span>
-          <span class="std-limit">≤20</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">SV</span>
-          <span class="std-limit">70-80</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">SD</span>
-          <span class="std-limit">2-4</span>
-        </div>
-        <div class="ws-std-item">
-          <span class="std-name">SI</span>
-          <span class="std-limit">80-150</span>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- MNS Standards Reference -->
+ <div class="ws-standards-row">
+ <div class="ws-std-label">
+ <i class="bi bi-shield-check"></i> MNS
+ </div>
+ <div class="ws-std-items">
+ <div class="ws-std-item">
+ <span class="std-name">Color</span>
+ <span class="std-limit">≤20</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">EC</span>
+ <span class="std-limit">≤1000</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">pH</span>
+ <span class="std-limit">6.5-8.5</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">F⁻</span>
+ <span class="std-limit">0.7-1.5</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">Cl₂</span>
+ <span class="std-limit">0.2-0.3</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">Hard</span>
+ <span class="std-limit">≤7</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">NH₄⁺</span>
+ <span class="std-limit">≤1.5</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">NO₂⁻</span>
+ <span class="std-limit">≤1</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">Fe</span>
+ <span class="std-limit">≤0.3</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">TDS</span>
+ <span class="std-limit">≤400</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">Cl⁻</span>
+ <span class="std-limit">≤350</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">PO₄³⁻</span>
+ <span class="std-limit">≤5</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">BOD</span>
+ <span class="std-limit">≤20</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">SV</span>
+ <span class="std-limit">70-80</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">SD</span>
+ <span class="std-limit">2-4</span>
+ </div>
+ <div class="ws-std-item">
+ <span class="std-name">SI</span>
+ <span class="std-limit">80-150</span>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Hidden form for archive action -->
-  <form id="archiveForm" method="POST" action="{{ url_for('water.water_summary') }}" style="display:none;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="sample_ids" id="archiveSampleIds">
-    <input type="hidden" name="action" value="archive">
-  </form>
+ <!-- Hidden form for archive action -->
+ <form class="hidden" id="archiveForm" method="POST" action="{{ url_for('water.water_summary') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="sample_ids" id="archiveSampleIds">
+ <input type="hidden" name="action" value="archive">
+ </form>
 
-  <!-- Grid Card -->
-  <div class="ws-grid-wrap">
-    <div class="ws-grid-card">
-      <div class="card-header">
-        <h6>
-          <i class="bi bi-table" style="color:#3b82f6"></i> {{ _("Laboratory Test Results Sheet") }}
-        </h6>
-        <div class="ws-stats"></div>
-      </div>
-      <div class="ws-grid-body">
-        <div id="waterSummaryGrid" class="ag-theme-alpine"></div>
-      </div>
-    </div>
-  </div>
+ <!-- Grid Card -->
+ <div class="ws-grid-wrap">
+ <div class="ws-grid-card">
+ <div class="card-header">
+ <h6>
+ <i class="bi bi-table text-info-2"></i> {{ _("Laboratory Test Results Sheet") }}
+ </h6>
+ <div class="ws-stats"></div>
+ </div>
+ <div class="ws-grid-body">
+ <div id="waterSummaryGrid" class="ag-theme-alpine"></div>
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
-  // Config for WaterSummaryGrid
-  const WATER_SUMMARY_CONFIG = {
-    urls: {
-      summaryData: "{{ url_for('water.summary_data') }}",
-      retest: "{{ url_for('water.retest_result', result_id=0) }}".replace('/0', ''),
-      generateCoa: "{{ url_for('water.generate_coa', sample_id=0) }}".replace('/0', '')
-    },
-    csrfToken: "{{ csrf_token() }}"
-  };
+ // Config for WaterSummaryGrid
+ const WATER_SUMMARY_CONFIG = {
+ urls: {
+ summaryData: "{{ url_for('water.summary_data') }}",
+ retest: "{{ url_for('water.retest_result', result_id=0) }}".replace('/0', ''),
+ generateCoa: "{{ url_for('water.generate_coa', sample_id=0) }}".replace('/0', '')
+ },
+ csrfToken: "{{ csrf_token() }}"
+ };
 
-  function generateCoaForSelected() {
-    if (typeof window.waterSummaryGrid === 'undefined') {
-      alert('Grid байхгүй байна.');
-      return;
-    }
-    const selected = window.waterSummaryGrid.getSelectedRows();
-    if (!selected || selected.length === 0) {
-      alert('Нэг дээж сонгоно уу.');
-      return;
-    }
-    if (selected.length > 1) {
-      alert('CoA нэг дээжид зориулагдана. Нэг л дээж сонгоно уу.');
-      return;
-    }
-    const sampleId = selected[0].sample_id;
-    if (!sampleId) {
-      alert('Дээжийн ID олдсонгүй.');
-      return;
-    }
-    const btn = document.getElementById('btnGenerateCoa');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>CoA...';
+ function generateCoaForSelected() {
+ if (typeof window.waterSummaryGrid === 'undefined') {
+ alert('Grid байхгүй байна.');
+ return;
+ }
+ const selected = window.waterSummaryGrid.getSelectedRows();
+ if (!selected || selected.length === 0) {
+ alert('Нэг дээж сонгоно уу.');
+ return;
+ }
+ if (selected.length> 1) {
+ alert('CoA нэг дээжид зориулагдана. Нэг л дээж сонгоно уу.');
+ return;
+ }
+ const sampleId = selected[0].sample_id;
+ if (!sampleId) {
+ alert('Дээжийн ID олдсонгүй.');
+ return;
+ }
+ const btn = document.getElementById('btnGenerateCoa');
+ btn.disabled = true;
+ btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>CoA...';
 
-    fetch(WATER_SUMMARY_CONFIG.urls.generateCoa + '/' + sampleId, {
-      method: 'POST',
-      headers: { 'X-CSRFToken': WATER_SUMMARY_CONFIG.csrfToken, 'Content-Type': 'application/json' }
-    })
-    .then(r => r.json())
-    .then(res => {
-      if (res.success) {
-        const msg = res.report_number + ' CoA амжилттай үүслээ!';
-        if (res.pdf_url) {
-          if (confirm(msg + '\n\nPDF нээх үү?')) {
-            window.open(res.pdf_url, '_blank');
-          }
-        } else {
-          alert(msg);
-        }
-      } else {
-        alert('CoA алдаа: ' + (res.message || 'Тодорхойгүй алдаа'));
-      }
-    })
-    .catch(e => alert('Сүлжээний алдаа: ' + e))
-    .finally(() => {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>CoA';
-    });
-  }
+ fetch(WATER_SUMMARY_CONFIG.urls.generateCoa + '/' + sampleId, {
+ method: 'POST',
+ headers: { 'X-CSRFToken': WATER_SUMMARY_CONFIG.csrfToken, 'Content-Type': 'application/json' }
+ })
+ .then(r => r.json())
+ .then(res => {
+ if (res.success) {
+ const msg = res.report_number + ' CoA амжилттай үүслээ!';
+ if (res.pdf_url) {
+ if (confirm(msg + '\n\nPDF нээх үү?')) {
+ window.open(res.pdf_url, '_blank');
+ }
+ } else {
+ alert(msg);
+ }
+ } else {
+ alert('CoA алдаа: ' + (res.message || 'Тодорхойгүй алдаа'));
+ }
+ })
+ .catch(e => alert('Сүлжээний алдаа: ' + e))
+ .finally(() => {
+ btn.disabled = false;
+ btn.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>CoA';
+ });
+ }
 </script>
 
 <script src="{{ url_for('static', filename='js/water_utils.js') }}"></script>

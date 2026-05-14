@@ -2,60 +2,60 @@
 {# ✨ Uses: LIMS_AGGRID.createGrid(), LIMSDraftManager, ag-grid-custom.css #}
 <div class="container-fluid p-0">
 
-  <!-- Header and Actions -->
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h4 class="mb-1">{{ _("M — Mass Entry Workspace") }}</h4>
-      <div class="text-muted small">
-        {{ _("Samples with status new and \"m\" in analyses_to_perform are shown here.") }}
-      </div>
-    </div>
+ <!-- Header and Actions -->
+ <div class="d-flex align-items-center justify-content-between mb-3">
+ <div>
+ <h4 class="mb-1">{{ _("M — Mass Entry Workspace") }}</h4>
+ <div class="text-muted small">
+ {{ _("Samples with status new and \"m\" in analyses_to_perform are shown here.") }}
+ </div>
+ </div>
 
-    <div class="d-flex flex-wrap gap-2 align-items-center">
-      <!-- Connect to Balance -->
-      <button id="btnConnectBalance" class="btn btn-outline-primary">
-        <i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}
-      </button>
-      <span id="balanceStatus" class="badge bg-secondary">{{ _("Not Connected") }}</span>
+ <div class="d-flex flex-wrap gap-2 align-items-center">
+ <!-- Connect to Balance -->
+ <button id="btnConnectBalance" class="btn btn-outline-primary">
+ <i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}
+ </button>
+ <span id="balanceStatus" class="badge bg-secondary">{{ _("Not Connected") }}</span>
 
-      <div class="vr mx-2"></div>
+ <div class="vr mx-2"></div>
 
-      <div class="form-check form-switch me-2">
-        <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
-        <label class="form-check-label" for="toggleIncludeReady">{{ _("Include Ready samples") }}</label>
-      </div>
+ <div class="form-check form-switch me-2">
+ <input class="form-check-input" type="checkbox" id="toggleIncludeReady">
+ <label class="form-check-label" for="toggleIncludeReady">{{ _("Include Ready samples") }}</label>
+ </div>
 
-      <input id="searchCode" class="form-control" placeholder="{{ _("Search by sample code") }}" style="min-width:240px">
+ <input id="searchCode" class="form-control min-w-[240px]" placeholder="{{ _("Search by sample code") }}">
 
-      <div class="form-check form-switch ms-1">
-        <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
-        <label class="form-check-label" for="markReadyToggle">{{ _("Mark selected as") }} <strong>{{ _("Mass Ready") }}</strong> {{ _("on save") }}</label>
-      </div>
+ <div class="form-check form-switch ms-1">
+ <input class="form-check-input" type="checkbox" id="markReadyToggle" checked>
+ <label class="form-check-label" for="markReadyToggle">{{ _("Mark selected as") }} <strong>{{ _("Mass Ready") }}</strong> {{ _("on save") }}</label>
+ </div>
 
-      <button id="btnRefresh" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
-      </button>
-      <button id="btnSave" class="btn btn-primary">
-        <i class="bi bi-save"></i> {{ _("Save") }}
-      </button>
-    </div>
-  </div>
+ <button id="btnRefresh" class="btn btn-outline-secondary">
+ <i class="bi bi-arrow-repeat"></i> {{ _("Refresh") }}
+ </button>
+ <button id="btnSave" class="btn btn-primary">
+ <i class="bi bi-save"></i> {{ _("Save") }}
+ </button>
+ </div>
+ </div>
 
-  <!-- 📋 AG Grid -->
-  <div id="massGrid" class="ag-theme-alpine"></div>
+ <!-- 📋 AG Grid -->
+ <div id="massGrid" class="ag-theme-alpine"></div>
 
 </div>
 
 <style nonce="{{ csp_nonce }}">
-  #massGrid{
-    margin-top: 12px;
-    height: 70vh;
-    min-height: 420px;
-    width: 100%;
-  }
-  .mw-row-ready{background-color:#f7f7fb;}
-  .mw-row-ready .ag-cell{background-color:#f7f7fb !important;}
-  .mw-badge{font-size:.75rem}
+ #massGrid{
+ margin-top: 12px;
+ height: 70vh;
+ min-height: 420px;
+ width: 100%;
+ }
+ .mw-row-ready{background-color:#f7f7fb;}
+ .mw-row-ready .ag-cell{background-color:#f7f7fb !important;}
+ .mw-badge{font-size:.75rem}
 </style>
 
 <script src="{{ url_for('static', filename='js/aggrid_helpers.js') }}"></script>
@@ -63,438 +63,438 @@
 <script src="{{ url_for('static', filename='js/serial_balance.js') }}"></script>
 <script nonce="{{ csp_nonce }}">
 (() => {
-  'use strict';
+ 'use strict';
 
-  const gridEl     = document.getElementById('massGrid');
-  const $btnRefresh= document.getElementById('btnRefresh');
-  const $btnSave   = document.getElementById('btnSave');
-  const $markReady = document.getElementById('markReadyToggle');
-  const $toggleInc = document.getElementById('toggleIncludeReady');
-  const $search    = document.getElementById('searchCode');
-  const $btnConnect = document.getElementById('btnConnectBalance');
-  const $balanceStatus = document.getElementById('balanceStatus');
-  let gridApi = null;
-  let balanceIntegration = null;
+ const gridEl = document.getElementById('massGrid');
+ const $btnRefresh= document.getElementById('btnRefresh');
+ const $btnSave = document.getElementById('btnSave');
+ const $markReady = document.getElementById('markReadyToggle');
+ const $toggleInc = document.getElementById('toggleIncludeReady');
+ const $search = document.getElementById('searchCode');
+ const $btnConnect = document.getElementById('btnConnectBalance');
+ const $balanceStatus = document.getElementById('balanceStatus');
+ let gridApi = null;
+ let balanceIntegration = null;
 
-  // ✨ Draft Manager
-  let draftMgr;
+ // ✨ Draft Manager
+ let draftMgr;
 
-  const readyBadge = (isReady) => isReady
-    ? '<span class="badge text-bg-success mw-badge">{{ _("Ready") }}</span>'
-    : '<span class="badge text-bg-secondary mw-badge">{{ _("New") }}</span>';
+ const readyBadge = (isReady) => isReady
+ ? '<span class="badge text-bg-success mw-badge">{{ _("Ready") }}</span>'
+ : '<span class="badge text-bg-secondary mw-badge">{{ _("New") }}</span>';
 
-  // --- COLUMN DEFINITIONS ---
-  const columnDefs = [
-    { headerName:'ID', field:'id', width:100, pinned:'left', cellClass:'text-muted',
-      sort:'asc',
-      checkboxSelection:true,
-      headerCheckboxSelection:true,
-      headerCheckboxSelectionFilteredOnly:true
-    },
-    { headerName:'{{ _("Sample Code") }}', field:'sample_code', minWidth:300,
-      cellRenderer:p=>`<div class="d-flex flex-column gap-1">
-          <span class="fw-semibold text-primary">${p.value || '-'}</span>
-          <span class="text-muted small">${readyBadge(!!p.data.mass_ready)}</span>
-        </div>` },
-    { headerName:'{{ _("Client") }}', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'{{ _("Type") }}', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
-    { headerName:'{{ _("Received Date") }}', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
-    { headerName:'{{ _("Mass (g)") }}', field:'weight', minWidth:160,
-      editable:true,
-      cellEditor:'agTextCellEditor',
-      cellEditorParams:{ useFormatter:true },
-      valueFormatter:p => p.value != null ? Number(p.value).toFixed(4) : '',
-      valueParser: params => {
-        const raw = params.newValue;
-        if(raw === '' || raw === null || raw === undefined) return null;
-        const num = Number(raw);
-        return Number.isFinite(num) ? num : params.oldValue ?? null;
-      },
-      cellStyle:p => p.data.mass_ready ? { backgroundColor:'#f6f6f6' } : {}
-    },
-    { headerName:'{{ _("Actions") }}', field:'actions', width:220, pinned:'right',
-      cellRenderer:p=>`
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="{{ _("Save weight") }}">
-            <i class="bi bi-arrow-repeat"></i>
-          </button>
-          <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="{{ _("Unready") }}">
-            <i class="bi bi-arrow-counterclockwise"></i>
-          </button>
-          <button class="btn btn-outline-danger mass-action" data-action="delete" data-id="${p.data.id}" title="{{ _("Delete") }}">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>`,
-      cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' }
-    }
-  ];
+ // --- COLUMN DEFINITIONS ---
+ const columnDefs = [
+ { headerName:'ID', field:'id', width:100, pinned:'left', cellClass:'text-muted',
+ sort:'asc',
+ checkboxSelection:true,
+ headerCheckboxSelection:true,
+ headerCheckboxSelectionFilteredOnly:true
+ },
+ { headerName:'{{ _("Sample Code") }}', field:'sample_code', minWidth:300,
+ cellRenderer:p=>`<div class="d-flex flex-column gap-1">
+ <span class="fw-semibold text-primary">${p.value || '-'}</span>
+ <span class="text-muted small">${readyBadge(!!p.data.mass_ready)}</span>
+ </div>` },
+ { headerName:'{{ _("Client") }}', field:'client_name', minWidth:80, valueFormatter:p=>p.value || '-' },
+ { headerName:'{{ _("Type") }}', field:'sample_type', minWidth:80, valueFormatter:p=>p.value || '-' },
+ { headerName:'{{ _("Received Date") }}', field:'received_date', minWidth:140, valueFormatter:p=>p.value || '-' },
+ { headerName:'{{ _("Mass (g)") }}', field:'weight', minWidth:160,
+ editable:true,
+ cellEditor:'agTextCellEditor',
+ cellEditorParams:{ useFormatter:true },
+ valueFormatter:p => p.value != null ? Number(p.value).toFixed(4) : '',
+ valueParser: params => {
+ const raw = params.newValue;
+ if(raw === '' || raw === null || raw === undefined) return null;
+ const num = Number(raw);
+ return Number.isFinite(num) ? num : params.oldValue ?? null;
+ },
+ cellStyle:p => p.data.mass_ready ? { backgroundColor:'#f6f6f6' } : {}
+ },
+ { headerName:'{{ _("Actions") }}', field:'actions', width:220, pinned:'right',
+ cellRenderer:p=>`
+ <div class="btn-group btn-group-sm">
+ <button class="btn btn-outline-secondary mass-action" data-action="update-weight" data-id="${p.data.id}" title="{{ _("Save weight") }}">
+ <i class="bi bi-arrow-repeat"></i>
+ </button>
+ <button class="btn btn-outline-warning mass-action" data-action="unready" data-id="${p.data.id}" title="{{ _("Unready") }}">
+ <i class="bi bi-arrow-counterclockwise"></i>
+ </button>
+ <button class="btn btn-outline-danger mass-action" data-action="delete" data-id="${p.data.id}" title="{{ _("Delete") }}">
+ <i class="bi bi-trash"></i>
+ </button>
+ </div>`,
+ cellStyle:{ display:'flex', alignItems:'center', justifyContent:'center' }
+ }
+ ];
 
-  // --- DRAFT MANAGEMENT ---
+ // --- DRAFT MANAGEMENT ---
 
-  function saveDrafts() {
-    if (!gridApi || !draftMgr) return;
-    const drafts = {};
-    gridApi.forEachNode(n => {
-      if (n.data.weight != null && !n.data.mass_ready) {
-        drafts[String(n.data.id)] = { weight: n.data.weight };
-      }
-    });
-    draftMgr.save(drafts, false);
-  }
+ function saveDrafts() {
+ if (!gridApi || !draftMgr) return;
+ const drafts = {};
+ gridApi.forEachNode(n => {
+ if (n.data.weight != null && !n.data.mass_ready) {
+ drafts[String(n.data.id)] = { weight: n.data.weight };
+ }
+ });
+ draftMgr.save(drafts, false);
+ }
 
-  function restoreDrafts() {
-    if (!gridApi || !draftMgr) return;
-    try {
-      const drafts = draftMgr.restore();
-      if (!drafts || Object.keys(drafts).length === 0) return;
+ function restoreDrafts() {
+ if (!gridApi || !draftMgr) return;
+ try {
+ const drafts = draftMgr.restore();
+ if (!drafts || Object.keys(drafts).length === 0) return;
 
-      let restored = 0;
-      gridApi.forEachNode(n => {
-        const key = String(n.data.id);
-        if (drafts[key] && drafts[key].weight != null && !n.data.mass_ready) {
-          // Server-ээс ирсэн weight байхгүй бол draft-аас сэргээх
-          if (n.data.weight == null) {
-            n.data.weight = drafts[key].weight;
-            restored++;
-          }
-        }
-      });
+ let restored = 0;
+ gridApi.forEachNode(n => {
+ const key = String(n.data.id);
+ if (drafts[key] && drafts[key].weight != null && !n.data.mass_ready) {
+ // Server-ээс ирсэн weight байхгүй бол draft-аас сэргээх
+ if (n.data.weight == null) {
+ n.data.weight = drafts[key].weight;
+ restored++;
+ }
+ }
+ });
 
-      if (restored > 0) {
-        gridApi.refreshCells({ force: true });
-        logger.log(`✅ Restored ${restored} draft weights`);
-      }
-    } catch(e) {
-      logger.warn('Failed to restore drafts:', e);
-    }
-  }
+ if (restored> 0) {
+ gridApi.refreshCells({ force: true });
+ logger.log(`✅ Restored ${restored} draft weights`);
+ }
+ } catch(e) {
+ logger.warn('Failed to restore drafts:', e);
+ }
+ }
 
-  function onCellValueChanged(params) {
-    FormGuards.markDirty();
-    if (params.colDef.field === 'weight') {
-      saveDrafts();
-    }
-  }
+ function onCellValueChanged(params) {
+ FormGuards.markDirty();
+ if (params.colDef.field === 'weight') {
+ saveDrafts();
+ }
+ }
 
-  // --- DATA FETCH ---
+ // --- DATA FETCH ---
 
-  function setRowData(rows) {
-    if (gridApi) {
-      gridApi.setGridOption('rowData', rows);
-      // Data ачаалагдсаны дараа draft сэргээх
-      setTimeout(restoreDrafts, 100);
-    }
-  }
+ function setRowData(rows) {
+ if (gridApi) {
+ gridApi.setGridOption('rowData', rows);
+ // Data ачаалагдсаны дараа draft сэргээх
+ setTimeout(restoreDrafts, 100);
+ }
+ }
 
-  async function fetchEligible() {
-    const inc = $toggleInc.checked ? '1' : '0';
-    const q   = encodeURIComponent($search.value || '');
-    if(gridApi) gridApi.setGridOption('loading', true);
-    try{
-      const res = await fetch(`/api/mass/eligible?include_ready=${inc}&q=${q}`, { credentials:'same-origin' });
-      const data = await res.json();
-      setRowData(data.samples || []);
-    }catch(err){
-      logger.error(err);
-      toast('{{ _("Error loading data.") }}', 'danger');
-      setRowData([]);
-    }finally{
-      if(gridApi) gridApi.setGridOption('loading', false);
-    }
-  }
+ async function fetchEligible() {
+ const inc = $toggleInc.checked ? '1' : '0';
+ const q = encodeURIComponent($search.value || '');
+ if(gridApi) gridApi.setGridOption('loading', true);
+ try{
+ const res = await fetch(`/api/mass/eligible?include_ready=${inc}&q=${q}`, { credentials:'same-origin' });
+ const data = await res.json();
+ setRowData(data.samples || []);
+ }catch(err){
+ logger.error(err);
+ toast('{{ _("Error loading data.") }}', 'danger');
+ setRowData([]);
+ }finally{
+ if(gridApi) gridApi.setGridOption('loading', false);
+ }
+ }
 
-  // --- SAVE ---
+ // --- SAVE ---
 
-  // M-7/M-8: FormGuards double-submit protection
-  FormGuards.guardButton($btnSave, async () => {
-    if(!gridApi) return;
-    gridApi.stopEditing();
-    const selected = gridApi.getSelectedRows();
-    if(!selected.length){
-      toast('{{ _("Please select samples and enter weights before saving.") }}', 'warning');
-      return;
-    }
-    const items = selected.map(row => {
-      const payload = { sample_id: row.id };
-      if(row.weight !== null && row.weight !== undefined && !Number.isNaN(row.weight)) {
-        payload.weight = row.weight;
-      }
-      return payload;
-    });
-    try{
-      const res = await fetch('/api/mass/save', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        credentials:'same-origin',
-        body: JSON.stringify({ items, mark_ready: !!$markReady.checked })
-      });
-      const data = await res.json();
-      if(!res.ok || data.success === false){
-        toast(data.message || data.error || 'Error while saving.', 'danger');
-        return;
-      }
-      FormGuards.markClean();
-      toast(data.message || 'Saved successfully.', 'success');
+ // M-7/M-8: FormGuards double-submit protection
+ FormGuards.guardButton($btnSave, async () => {
+ if(!gridApi) return;
+ gridApi.stopEditing();
+ const selected = gridApi.getSelectedRows();
+ if(!selected.length){
+ toast('{{ _("Please select samples and enter weights before saving.") }}', 'warning');
+ return;
+ }
+ const items = selected.map(row => {
+ const payload = { sample_id: row.id };
+ if(row.weight !== null && row.weight !== undefined && !Number.isNaN(row.weight)) {
+ payload.weight = row.weight;
+ }
+ return payload;
+ });
+ try{
+ const res = await fetch('/api/mass/save', {
+ method:'POST',
+ headers:{'Content-Type':'application/json'},
+ credentials:'same-origin',
+ body: JSON.stringify({ items, mark_ready: !!$markReady.checked })
+ });
+ const data = await res.json();
+ if(!res.ok || data.success === false){
+ toast(data.message || data.error || 'Error while saving.', 'danger');
+ return;
+ }
+ FormGuards.markClean();
+ toast(data.message || 'Saved successfully.', 'success');
 
-      // Хадгалагдсан sample-ийн draft устгах
-      const savedIds = items.map(i => String(i.sample_id));
-      if (draftMgr) draftMgr.purge(savedIds);
+ // Хадгалагдсан sample-ийн draft устгах
+ const savedIds = items.map(i => String(i.sample_id));
+ if (draftMgr) draftMgr.purge(savedIds);
 
-      fetchEligible();
-    }catch(err){
-      logger.error(err); toast('Server error.', 'danger');
-    }
-  });
+ fetchEligible();
+ }catch(err){
+ logger.error(err); toast('Server error.', 'danger');
+ }
+ });
 
-  // --- ACTIONS ---
+ // --- ACTIONS ---
 
-  gridEl.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.mass-action');
-    if(!btn || !gridApi) return;
-    const id = btn.dataset.id;
-    const action = btn.dataset.action;
-    if(!id || !action) return;
-    const rowNode = gridApi.getRowNode(String(id));
-    if(!rowNode) return;
-    const row = rowNode.data || {};
+ gridEl.addEventListener('click', async (e) => {
+ const btn = e.target.closest('.mass-action');
+ if(!btn || !gridApi) return;
+ const id = btn.dataset.id;
+ const action = btn.dataset.action;
+ if(!id || !action) return;
+ const rowNode = gridApi.getRowNode(String(id));
+ if(!rowNode) return;
+ const row = rowNode.data || {};
 
-    if(action === 'update-weight'){
-      const w = Number(row.weight);
-      if(!isFinite(w)){ toast('Invalid mass value.', 'warning'); return; }
-      try{
-        const res = await fetch('/api/mass/update_weight', {
-          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-          body: JSON.stringify({ sample_id:Number(id), weight:w })
-        });
-        const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
-        toast(js.message || 'Weight updated.', 'success');
-        // Draft устгах
-        if (draftMgr) draftMgr.purge([String(id)]);
-      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
-      return;
-    }
+ if(action === 'update-weight'){
+ const w = Number(row.weight);
+ if(!isFinite(w)){ toast('Invalid mass value.', 'warning'); return; }
+ try{
+ const res = await fetch('/api/mass/update_weight', {
+ method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+ body: JSON.stringify({ sample_id:Number(id), weight:w })
+ });
+ const js = await res.json();
+ if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
+ toast(js.message || 'Weight updated.', 'success');
+ // Draft устгах
+ if (draftMgr) draftMgr.purge([String(id)]);
+ }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
+ return;
+ }
 
-    if(action === 'unready'){
-      if(!confirm('{{ _("Revert to unprepared status?") }}')) return;
-      try{
-        const res = await fetch('/api/mass/unready', {
-          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-          body: JSON.stringify({ sample_ids:[Number(id)] })
-        });
-        const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
-        toast(js.message || 'OK', 'success');
-        fetchEligible();
-      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
-      return;
-    }
+ if(action === 'unready'){
+ if(!confirm('{{ _("Revert to unprepared status?") }}')) return;
+ try{
+ const res = await fetch('/api/mass/unready', {
+ method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+ body: JSON.stringify({ sample_ids:[Number(id)] })
+ });
+ const js = await res.json();
+ if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
+ toast(js.message || 'OK', 'success');
+ fetchEligible();
+ }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
+ return;
+ }
 
-    if(action === 'delete'){
-      if(!confirm('{{ _("Permanently delete this sample?") }}')) return;
-      try{
-        const res = await fetch('/api/mass/delete', {
-          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-          body: JSON.stringify({ sample_id:Number(id) })
-        });
-        const js = await res.json();
-        if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
-        toast(js.message || 'Sample deleted.', 'success');
-        // Draft устгах
-        if (draftMgr) draftMgr.purge([String(id)]);
-        fetchEligible();
-      }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
-      return;
-    }
-  });
+ if(action === 'delete'){
+ if(!confirm('{{ _("Permanently delete this sample?") }}')) return;
+ try{
+ const res = await fetch('/api/mass/delete', {
+ method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
+ body: JSON.stringify({ sample_id:Number(id) })
+ });
+ const js = await res.json();
+ if(!res.ok || js.success === false){ toast(js.message || js.error || 'Error.', 'danger'); return; }
+ toast(js.message || 'Sample deleted.', 'success');
+ // Draft устгах
+ if (draftMgr) draftMgr.purge([String(id)]);
+ fetchEligible();
+ }catch(err){ logger.error(err); toast('Network error.', 'danger'); }
+ return;
+ }
+ });
 
-  $btnRefresh.addEventListener('click', fetchEligible);
-  $toggleInc.addEventListener('change', fetchEligible);
-  $search.addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchEligible(); });
+ $btnRefresh.addEventListener('click', fetchEligible);
+ $toggleInc.addEventListener('change', fetchEligible);
+ $search.addEventListener('keydown', (e)=>{ if(e.key==='Enter') fetchEligible(); });
 
-  function toast(msg, type='info'){
-    const el = document.createElement('div');
-    el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
-    el.style.zIndex = 1080;
-    el.innerHTML = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2500);
-  }
+ function toast(msg, type='info'){
+ const el = document.createElement('div');
+ el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
+ el.style.zIndex = 1080;
+ el.innerHTML = msg;
+ document.body.appendChild(el);
+ setTimeout(() => el.remove(), 2500);
+ }
 
-  // ============================================
-  // ЖИНТЭЙ ХОЛБОГДОХ (Web Serial API)
-  // ============================================
+ // ============================================
+ // ЖИНТЭЙ ХОЛБОГДОХ (Web Serial API)
+ // ============================================
 
-  function updateBalanceStatus(message, type = 'secondary') {
-    $balanceStatus.textContent = message;
-    $balanceStatus.className = `badge bg-${type}`;
-  }
+ function updateBalanceStatus(message, type = 'secondary') {
+ $balanceStatus.textContent = message;
+ $balanceStatus.className = `badge bg-${type}`;
+ }
 
-  $btnConnect.addEventListener('click', async () => {
-    if (!window.labBalance) {
-      toast('{{ _("Serial Balance module not loaded.") }}', 'danger');
-      return;
-    }
+ $btnConnect.addEventListener('click', async () => {
+ if (!window.labBalance) {
+ toast('{{ _("Serial Balance module not loaded.") }}', 'danger');
+ return;
+ }
 
-    if (!window.labBalance.isSupported()) {
-      toast('{{ _("Web Serial API not supported. Please use Chrome 89+.") }}', 'warning');
-      return;
-    }
+ if (!window.labBalance.isSupported()) {
+ toast('{{ _("Web Serial API not supported. Please use Chrome 89+.") }}', 'warning');
+ return;
+ }
 
-    if (window.labBalance.isConnected) {
-      await window.labBalance.disconnect();
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
-      $btnConnect.classList.remove('btn-success');
-      $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('{{ _("Not Connected") }}', 'secondary');
-      return;
-    }
+ if (window.labBalance.isConnected) {
+ await window.labBalance.disconnect();
+ $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
+ $btnConnect.classList.remove('btn-success');
+ $btnConnect.classList.add('btn-outline-primary');
+ updateBalanceStatus('{{ _("Not Connected") }}', 'secondary');
+ return;
+ }
 
-    updateBalanceStatus('{{ _("Connecting...") }}', 'warning');
-    const connected = await window.labBalance.connect();
+ updateBalanceStatus('{{ _("Connecting...") }}', 'warning');
+ const connected = await window.labBalance.connect();
 
-    if (connected) {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> {{ _("Connected") }}';
-      $btnConnect.classList.remove('btn-outline-primary');
-      $btnConnect.classList.add('btn-success');
-      updateBalanceStatus('{{ _("Connected") }}', 'success');
-      toast('{{ _("Successfully connected to balance! Press Enter in Mass column to read weight.") }}', 'success');
+ if (connected) {
+ $btnConnect.innerHTML = '<i class="bi bi-usb-plug-fill"></i> {{ _("Connected") }}';
+ $btnConnect.classList.remove('btn-outline-primary');
+ $btnConnect.classList.add('btn-success');
+ updateBalanceStatus('{{ _("Connected") }}', 'success');
+ toast('{{ _("Successfully connected to balance! Press Enter in Mass column to read weight.") }}', 'success');
 
-      if (gridApi) {
-        balanceIntegration = new BalanceGridIntegration(window.labBalance);
-        balanceIntegration.setGridApi(gridApi);
-        balanceIntegration.weightColumnField = 'weight';
-      }
-    } else {
-      updateBalanceStatus('{{ _("Connection failed") }}', 'danger');
-    }
-  });
+ if (gridApi) {
+ balanceIntegration = new BalanceGridIntegration(window.labBalance);
+ balanceIntegration.setGridApi(gridApi);
+ balanceIntegration.weightColumnField = 'weight';
+ }
+ } else {
+ updateBalanceStatus('{{ _("Connection failed") }}', 'danger');
+ }
+ });
 
-  if (window.labBalance) {
-    window.labBalance.onStatusChange = (msg) => {
-      logger.log('Balance status:', msg);
-    };
+ if (window.labBalance) {
+ window.labBalance.onStatusChange = (msg) => {
+ logger.log('Balance status:', msg);
+ };
 
-    window.labBalance.onError = (msg) => {
-      toast(msg, 'warning');
-    };
+ window.labBalance.onError = (msg) => {
+ toast(msg, 'warning');
+ };
 
-    window.labBalance.onDisconnect = () => {
-      $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
-      $btnConnect.classList.remove('btn-success');
-      $btnConnect.classList.add('btn-outline-primary');
-      updateBalanceStatus('{{ _("Disconnected") }}', 'secondary');
-    };
-  }
+ window.labBalance.onDisconnect = () => {
+ $btnConnect.innerHTML = '<i class="bi bi-usb-plug"></i> {{ _("Connect to Balance") }}';
+ $btnConnect.classList.remove('btn-success');
+ $btnConnect.classList.add('btn-outline-primary');
+ updateBalanceStatus('{{ _("Disconnected") }}', 'secondary');
+ };
+ }
 
-  // AG-Grid дээр Enter дарахад жин авах (balance холбогдсон үед)
-  async function handleWeightCellEnter(params) {
-    if (!window.labBalance || !window.labBalance.isConnected) return;
-    if (params.column.getColId() !== 'weight') return;
+ // AG-Grid дээр Enter дарахад жин авах (balance холбогдсон үед)
+ async function handleWeightCellEnter(params) {
+ if (!window.labBalance || !window.labBalance.isConnected) return;
+ if (params.column.getColId() !== 'weight') return;
 
-    updateBalanceStatus('{{ _("Reading weight...") }}', 'warning');
-    const weight = await window.labBalance.getStableWeight();
+ updateBalanceStatus('{{ _("Reading weight...") }}', 'warning');
+ const weight = await window.labBalance.getStableWeight();
 
-    if (weight !== null) {
-      params.node.setDataValue('weight', weight);
-      updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
-      toast(`Weight: ${weight.toFixed(4)} g`, 'success');
-      saveDrafts();
+ if (weight !== null) {
+ params.node.setDataValue('weight', weight);
+ updateBalanceStatus(`${weight.toFixed(4)} g`, 'success');
+ toast(`Weight: ${weight.toFixed(4)} g`, 'success');
+ saveDrafts();
 
-      const nextRowIndex = params.rowIndex + 1;
-      const nextRow = gridApi.getDisplayedRowAtIndex(nextRowIndex);
-      if (nextRow) {
-        setTimeout(() => {
-          gridApi.setFocusedCell(nextRowIndex, 'weight');
-          gridApi.startEditingCell({ rowIndex: nextRowIndex, colKey: 'weight' });
-        }, 100);
-      }
-    } else {
-      updateBalanceStatus('{{ _("Failed to read weight") }}', 'danger');
-    }
-  }
+ const nextRowIndex = params.rowIndex + 1;
+ const nextRow = gridApi.getDisplayedRowAtIndex(nextRowIndex);
+ if (nextRow) {
+ setTimeout(() => {
+ gridApi.setFocusedCell(nextRowIndex, 'weight');
+ gridApi.startEditingCell({ rowIndex: nextRowIndex, colKey: 'weight' });
+ }, 100);
+ }
+ } else {
+ updateBalanceStatus('{{ _("Failed to read weight") }}', 'danger');
+ }
+ }
 
-  gridEl.addEventListener('keydown', async (e) => {
-    if (e.key === 'Enter' && window.labBalance && window.labBalance.isConnected) {
-      const focusedCell = gridApi?.getFocusedCell();
-      if (focusedCell && focusedCell.column.getColId() === 'weight') {
-        e.preventDefault();
-        e.stopPropagation();
-        const rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
-        if (rowNode) {
-          await handleWeightCellEnter({
-            column: focusedCell.column,
-            rowIndex: focusedCell.rowIndex,
-            node: rowNode
-          });
-        }
-      }
-    }
-  });
+ gridEl.addEventListener('keydown', async (e) => {
+ if (e.key === 'Enter' && window.labBalance && window.labBalance.isConnected) {
+ const focusedCell = gridApi?.getFocusedCell();
+ if (focusedCell && focusedCell.column.getColId() === 'weight') {
+ e.preventDefault();
+ e.stopPropagation();
+ const rowNode = gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex);
+ if (rowNode) {
+ await handleWeightCellEnter({
+ column: focusedCell.column,
+ rowIndex: focusedCell.rowIndex,
+ node: rowNode
+ });
+ }
+ }
+ }
+ });
 
-  // --- INIT ---
+ // --- INIT ---
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✨ Draft Manager
-    if (typeof LIMSDraftManager !== 'undefined') {
-      draftMgr = new LIMSDraftManager('mass');
-      logger.log('✅ Mass Draft Manager initialized');
-    } else {
-      logger.warn('⚠️ LIMSDraftManager not loaded, using fallback');
-      draftMgr = {
-        save: (data) => localStorage.setItem('draft_inputs_mass', JSON.stringify(data)),
-        restore: () => JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}'),
-        purge: (ids) => {
-          if (!ids || ids.length === 0) {
-            localStorage.removeItem('draft_inputs_mass');
-          } else {
-            const existing = JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}');
-            ids.forEach(id => delete existing[String(id)]);
-            if (Object.keys(existing).length === 0) localStorage.removeItem('draft_inputs_mass');
-            else localStorage.setItem('draft_inputs_mass', JSON.stringify(existing));
-          }
-        }
-      };
-    }
+ document.addEventListener('DOMContentLoaded', () => {
+ // ✨ Draft Manager
+ if (typeof LIMSDraftManager !== 'undefined') {
+ draftMgr = new LIMSDraftManager('mass');
+ logger.log('✅ Mass Draft Manager initialized');
+ } else {
+ logger.warn('⚠️ LIMSDraftManager not loaded, using fallback');
+ draftMgr = {
+ save: (data) => localStorage.setItem('draft_inputs_mass', JSON.stringify(data)),
+ restore: () => JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}'),
+ purge: (ids) => {
+ if (!ids || ids.length === 0) {
+ localStorage.removeItem('draft_inputs_mass');
+ } else {
+ const existing = JSON.parse(localStorage.getItem('draft_inputs_mass') || '{}');
+ ids.forEach(id => delete existing[String(id)]);
+ if (Object.keys(existing).length === 0) localStorage.removeItem('draft_inputs_mass');
+ else localStorage.setItem('draft_inputs_mass', JSON.stringify(existing));
+ }
+ }
+ };
+ }
 
-    // ✨ LIMS_AGGRID.createGrid() factory ашиглах
-    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
-      gridApi = LIMS_AGGRID.createGrid('#massGrid', columnDefs, [], {
-        onCellValueChanged: onCellValueChanged,
-        rowSelection: { mode: 'multiRow', enableClickSelection: true },
-        rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
-        getRowId: params => String(params.data.id),
-        editableColIds: ['weight'],
-        enterNavigatesVerticallyAfterEdit: true
-      });
-      logger.log('✅ Mass Grid initialized with LIMS_AGGRID factory');
-    } else {
-      // Fallback: manual grid
-      logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
-      const gridOptions = {
-        columnDefs,
-        rowData: [],
-        defaultColDef: { resizable: true, sortable: true, suppressMovable: true },
-        suppressRowTransform: true,
-        singleClickEdit: true,
-        stopEditingWhenCellsLoseFocus: true,
-        enterNavigatesVertically: true,
-        enterNavigatesVerticallyAfterEdit: true,
-        onCellValueChanged: onCellValueChanged,
-        rowSelection: { mode: 'multiRow', enableClickSelection: true },
-        rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
-        getRowId: params => String(params.data.id)
-      };
-      gridApi = agGrid.createGrid(gridEl, gridOptions);
-    }
+ // ✨ LIMS_AGGRID.createGrid() factory ашиглах
+ if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+ gridApi = LIMS_AGGRID.createGrid('#massGrid', columnDefs, [], {
+ onCellValueChanged: onCellValueChanged,
+ rowSelection: { mode: 'multiRow', enableClickSelection: true },
+ rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
+ getRowId: params => String(params.data.id),
+ editableColIds: ['weight'],
+ enterNavigatesVerticallyAfterEdit: true
+ });
+ logger.log('✅ Mass Grid initialized with LIMS_AGGRID factory');
+ } else {
+ // Fallback: manual grid
+ logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
+ const gridOptions = {
+ columnDefs,
+ rowData: [],
+ defaultColDef: { resizable: true, sortable: true, suppressMovable: true },
+ suppressRowTransform: true,
+ singleClickEdit: true,
+ stopEditingWhenCellsLoseFocus: true,
+ enterNavigatesVertically: true,
+ enterNavigatesVerticallyAfterEdit: true,
+ onCellValueChanged: onCellValueChanged,
+ rowSelection: { mode: 'multiRow', enableClickSelection: true },
+ rowClassRules: { 'mw-row-ready': params => !!params.data.mass_ready },
+ getRowId: params => String(params.data.id)
+ };
+ gridApi = agGrid.createGrid(gridEl, gridOptions);
+ }
 
-    fetchEligible();
+ fetchEligible();
 
-    // Balance integration
-    if (window.labBalance && window.labBalance.isConnected) {
-      balanceIntegration = new BalanceGridIntegration(window.labBalance);
-      balanceIntegration.setGridApi(gridApi);
-    }
-  });
+ // Balance integration
+ if (window.labBalance && window.labBalance.isConnected) {
+ balanceIntegration = new BalanceGridIntegration(window.labBalance);
+ balanceIntegration.setGridApi(gridApi);
+ }
+ });
 })();
 </script>

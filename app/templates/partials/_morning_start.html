@@ -1,355 +1,355 @@
 {# ============================================================
-   MORNING START PANEL
-   Include in all lab hub pages:
-   {% include 'partials/_morning_start.html' %}
-   ============================================================ #}
+ MORNING START PANEL
+ Include in all lab hub pages:
+ {% include 'partials/_morning_start.html' %}
+ ============================================================ #}
 <style nonce="{{ csp_nonce }}">
-  .morning-panel {
-    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.95));
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(148,163,184,0.15);
-    border-radius: 24px; padding: 1.75rem; margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-  }
-  .morning-title {
-    font-size: 1.15rem; font-weight: 800; color: #0f172a;
-    display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;
-  }
-  .morning-title .sunrise-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 1.1rem;
-  }
-  .morning-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
-  }
-  @media (max-width: 992px) { .morning-grid { grid-template-columns: 1fr; } }
+ .morning-panel {
+ background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.95));
+ backdrop-filter: blur(20px);
+ border: 1px solid rgba(148,163,184,0.15);
+ border-radius: 24px; padding: 1.75rem; margin-bottom: 1.5rem;
+ box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+ }
+ .morning-title {
+ font-size: 1.15rem; font-weight: 800; color: #0f172a;
+ display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;
+ }
+ .morning-title .sunrise-icon {
+ width: 36px; height: 36px; border-radius: 10px;
+ background: linear-gradient(135deg, #fbbf24, #f59e0b);
+ display: flex; align-items: center; justify-content: center;
+ color: #fff; font-size: 1.1rem;
+ }
+ .morning-grid {
+ display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+ }
+ @media (max-width: 992px) { .morning-grid { grid-template-columns: 1fr; } }
 
-  /* SLAM Card */
-  .slam-card {
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
-    border: 1px solid rgba(251,191,36,0.2);
-    border-radius: 18px; padding: 1.25rem;
-  }
-  .slam-card h4 {
-    font-size: 0.9rem; font-weight: 700; color: #92400e;
-    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
-  }
-  .slam-list { list-style: none; padding: 0; margin: 0; }
-  .slam-list li {
-    display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.5rem 0.75rem; margin-bottom: 0.35rem;
-    border-radius: 10px; transition: background 0.2s; cursor: pointer;
-  }
-  .slam-list li:hover { background: rgba(251,191,36,0.15); }
-  .slam-list li.checked { opacity: 0.55; }
-  .slam-list li.checked .slam-text { text-decoration: line-through; }
-  .slam-check {
-    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
-    border: 2px solid #d97706; background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s; cursor: pointer;
-  }
-  .slam-check.done { background: #16a34a; border-color: #16a34a; color: #fff; }
-  .slam-letter {
-    font-weight: 800; font-size: 0.85rem; width: 28px; height: 28px;
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    color: #fff; flex-shrink: 0;
-  }
-  .slam-text { font-size: 0.82rem; color: #451a03; font-weight: 600; }
-  .slam-sub { font-size: 0.72rem; color: #92400e; font-weight: 400; }
-  .slam-progress {
-    height: 4px; background: rgba(217,119,6,0.15); border-radius: 4px;
-    margin-top: 0.75rem; overflow: hidden;
-  }
-  .slam-progress-bar {
-    height: 100%; background: linear-gradient(90deg, #f59e0b, #16a34a);
-    border-radius: 4px; transition: width 0.5s ease;
-  }
+ /* SLAM Card */
+ .slam-card {
+ background: linear-gradient(135deg, #fffbeb, #fef3c7);
+ border: 1px solid rgba(251,191,36,0.2);
+ border-radius: 18px; padding: 1.25rem;
+ }
+ .slam-card h4 {
+ font-size: 0.9rem; font-weight: 700; color: #92400e;
+ margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+ }
+ .slam-list { list-style: none; padding: 0; margin: 0; }
+ .slam-list li {
+ display: flex; align-items: center; gap: 0.75rem;
+ padding: 0.5rem 0.75rem; margin-bottom: 0.35rem;
+ border-radius: 10px; transition: background 0.2s; cursor: pointer;
+ }
+ .slam-list li:hover { background: rgba(251,191,36,0.15); }
+ .slam-list li.checked { opacity: 0.55; }
+ .slam-list li.checked .slam-text { text-decoration: line-through; }
+ .slam-check {
+ width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+ border: 2px solid #d97706; background: #fff;
+ display: flex; align-items: center; justify-content: center;
+ transition: all 0.2s; cursor: pointer;
+ }
+ .slam-check.done { background: #16a34a; border-color: #16a34a; color: #fff; }
+ .slam-letter {
+ font-weight: 800; font-size: 0.85rem; width: 28px; height: 28px;
+ border-radius: 8px; display: flex; align-items: center; justify-content: center;
+ color: #fff; flex-shrink: 0;
+ }
+ .slam-text { font-size: 0.82rem; color: #451a03; font-weight: 600; }
+ .slam-sub { font-size: 0.72rem; color: #92400e; font-weight: 400; }
+ .slam-progress {
+ height: 4px; background: rgba(217,119,6,0.15); border-radius: 4px;
+ margin-top: 0.75rem; overflow: hidden;
+ }
+ .slam-progress-bar {
+ height: 100%; background: linear-gradient(90deg, #f59e0b, #16a34a);
+ border-radius: 4px; transition: width 0.5s ease;
+ }
 
-  /* Equipment Alert Card */
-  .equip-card {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border: 1px solid rgba(59,130,246,0.15);
-    border-radius: 18px; padding: 1.25rem;
-  }
-  .equip-card h4 {
-    font-size: 0.9rem; font-weight: 700; color: #1e3a5f;
-    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
-  }
-  .equip-alert-list { max-height: 200px; overflow-y: auto; }
-  .equip-alert-item {
-    display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.4rem 0.6rem; margin-bottom: 0.3rem;
-    border-radius: 8px; font-size: 0.78rem;
-  }
-  .equip-alert-item.overdue { background: rgba(239,68,68,0.1); color: #991b1b; }
-  .equip-alert-item.due-soon { background: rgba(251,191,36,0.12); color: #92400e; }
-  .equip-alert-item.broken { background: rgba(239,68,68,0.08); color: #b91c1c; }
-  .equip-alert-item .badge-sm {
-    font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.4rem;
-    border-radius: 4px; color: #fff; flex-shrink: 0;
-  }
-  .equip-ok {
-    text-align: center; padding: 1.5rem; color: #16a34a;
-    font-size: 0.85rem; font-weight: 600;
-  }
+ /* Equipment Alert Card */
+ .equip-card {
+ background: linear-gradient(135deg, #eff6ff, #dbeafe);
+ border: 1px solid rgba(59,130,246,0.15);
+ border-radius: 18px; padding: 1.25rem;
+ }
+ .equip-card h4 {
+ font-size: 0.9rem; font-weight: 700; color: #1e3a5f;
+ margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+ }
+ .equip-alert-list { max-height: 200px; overflow-y: auto; }
+ .equip-alert-item {
+ display: flex; align-items: center; gap: 0.6rem;
+ padding: 0.4rem 0.6rem; margin-bottom: 0.3rem;
+ border-radius: 8px; font-size: 0.78rem;
+ }
+ .equip-alert-item.overdue { background: rgba(239,68,68,0.1); color: #991b1b; }
+ .equip-alert-item.due-soon { background: rgba(251,191,36,0.12); color: #92400e; }
+ .equip-alert-item.broken { background: rgba(239,68,68,0.08); color: #b91c1c; }
+ .equip-alert-item .badge-sm {
+ font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.4rem;
+ border-radius: 4px; color: #fff; flex-shrink: 0;
+ }
+ .equip-ok {
+ text-align: center; padding: 1.5rem; color: #16a34a;
+ font-size: 0.85rem; font-weight: 600;
+ }
 
-  /* Today Tasks Card */
-  .tasks-card {
-    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-    border: 1px solid rgba(16,185,129,0.15);
-    border-radius: 18px; padding: 1.25rem;
-  }
-  .tasks-card h4 {
-    font-size: 0.9rem; font-weight: 700; color: #064e3b;
-    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
-  }
-  .task-stat-row {
-    display: flex; gap: 0.75rem; flex-wrap: wrap;
-  }
-  .task-stat-box {
-    flex: 1; min-width: 80px; text-align: center;
-    background: rgba(255,255,255,0.7); border-radius: 12px;
-    padding: 0.75rem 0.5rem;
-  }
-  .task-stat-box .num {
-    font-size: 1.6rem; font-weight: 800; line-height: 1;
-  }
-  .task-stat-box .lbl {
-    font-size: 0.7rem; color: #64748b; font-weight: 600; margin-top: 0.15rem;
-  }
+ /* Today Tasks Card */
+ .tasks-card {
+ background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+ border: 1px solid rgba(16,185,129,0.15);
+ border-radius: 18px; padding: 1.25rem;
+ }
+ .tasks-card h4 {
+ font-size: 0.9rem; font-weight: 700; color: #064e3b;
+ margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+ }
+ .task-stat-row {
+ display: flex; gap: 0.75rem; flex-wrap: wrap;
+ }
+ .task-stat-box {
+ flex: 1; min-width: 80px; text-align: center;
+ background: rgba(255,255,255,0.7); border-radius: 12px;
+ padding: 0.75rem 0.5rem;
+ }
+ .task-stat-box .num {
+ font-size: 1.6rem; font-weight: 800; line-height: 1;
+ }
+ .task-stat-box .lbl {
+ font-size: 0.7rem; color: #64748b; font-weight: 600; margin-top: 0.15rem;
+ }
 
-  /* Reminder Card */
-  .reminder-card {
-    background: linear-gradient(135deg, #faf5ff, #f3e8ff);
-    border: 1px solid rgba(139,92,246,0.15);
-    border-radius: 18px; padding: 1.25rem;
-  }
-  .reminder-card h4 {
-    font-size: 0.9rem; font-weight: 700; color: #4c1d95;
-    margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
-  }
-  .reminder-list { list-style: none; padding: 0; margin: 0; }
-  .reminder-list li {
-    font-size: 0.8rem; color: #4c1d95; padding: 0.35rem 0;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .reminder-list li i { font-size: 0.7rem; color: #8b5cf6; }
+ /* Reminder Card */
+ .reminder-card {
+ background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+ border: 1px solid rgba(139,92,246,0.15);
+ border-radius: 18px; padding: 1.25rem;
+ }
+ .reminder-card h4 {
+ font-size: 0.9rem; font-weight: 700; color: #4c1d95;
+ margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+ }
+ .reminder-list { list-style: none; padding: 0; margin: 0; }
+ .reminder-list li {
+ font-size: 0.8rem; color: #4c1d95; padding: 0.35rem 0;
+ display: flex; align-items: center; gap: 0.5rem;
+ }
+ .reminder-list li i { font-size: 0.7rem; color: #8b5cf6; }
 </style>
 
 <div class="morning-panel" id="morningPanel">
-  <div class="morning-title">
-    <div class="sunrise-icon"><i class="bi bi-sunrise"></i></div>
-    <div>
-      <span id="morningGreeting">{{ _("Start the Day") }}</span>
-      <div style="font-size:0.72rem; font-weight:500; color:#64748b;" id="morningDate"></div>
-    </div>
-    <span style="margin-left:auto; font-size:0.7rem; color:#94a3b8; font-weight:600;" id="morningTime"></span>
-  </div>
+ <div class="morning-title">
+ <div class="sunrise-icon"><i class="bi bi-sunrise"></i></div>
+ <div>
+ <span id="morningGreeting">{{ _("Start the Day") }}</span>
+ <div class="text-xs-3 font-medium text-slate-500" id="morningDate"></div>
+ </div>
+ <span class="ml-auto text-xs-2 text-slate-400 font-semibold" id="morningTime"></span>
+ </div>
 
-  <div class="morning-grid">
-    <!-- 1. SLAM Book -->
-    <div class="slam-card">
-      <h4><i class="bi bi-shield-exclamation"></i> {{ _("SLAM - Safety Assessment") }}</h4>
-      <ul class="slam-list" id="slamList">
-        <li data-slam="S" onclick="toggleSlam(this)">
-          <div class="slam-check" id="slamS"><i class="bi bi-check-lg" style="display:none"></i></div>
-          <div class="slam-letter" style="background:#ef4444">S</div>
-          <div>
-            <div class="slam-text">{{ _("Stop") }}</div>
-            <div class="slam-sub">{{ _("Carefully observe your work environment") }}</div>
-          </div>
-        </li>
-        <li data-slam="L" onclick="toggleSlam(this)">
-          <div class="slam-check" id="slamL"><i class="bi bi-check-lg" style="display:none"></i></div>
-          <div class="slam-letter" style="background:#f59e0b">L</div>
-          <div>
-            <div class="slam-text">{{ _("Look") }}</div>
-            <div class="slam-sub">{{ _("Check for any hazards or risks") }}</div>
-          </div>
-        </li>
-        <li data-slam="A" onclick="toggleSlam(this)">
-          <div class="slam-check" id="slamA"><i class="bi bi-check-lg" style="display:none"></i></div>
-          <div class="slam-letter" style="background:#3b82f6">A</div>
-          <div>
-            <div class="slam-text">{{ _("Assess") }}</div>
-            <div class="slam-sub">{{ _("Evaluate risk level and check safety measures") }}</div>
-          </div>
-        </li>
-        <li data-slam="M" onclick="toggleSlam(this)">
-          <div class="slam-check" id="slamM"><i class="bi bi-check-lg" style="display:none"></i></div>
-          <div class="slam-letter" style="background:#16a34a">M</div>
-          <div>
-            <div class="slam-text">{{ _("Manage") }}</div>
-            <div class="slam-sub">{{ _("Take necessary measures and begin work") }}</div>
-          </div>
-        </li>
-      </ul>
-      <div class="slam-progress"><div class="slam-progress-bar" id="slamProgress" style="width:0%"></div></div>
-    </div>
+ <div class="morning-grid">
+ <!-- 1. SLAM Book -->
+ <div class="slam-card">
+ <h4><i class="bi bi-shield-exclamation"></i> {{ _("SLAM - Safety Assessment") }}</h4>
+ <ul class="slam-list" id="slamList">
+ <li data-slam="S" data-action="toggleSlam" data-arg-0="this">
+ <div class="slam-check" id="slamS"><i class="bi bi-check-lg hidden"></i></div>
+ <div class="slam-letter bg-fail">S</div>
+ <div>
+ <div class="slam-text">{{ _("Stop") }}</div>
+ <div class="slam-sub">{{ _("Carefully observe your work environment") }}</div>
+ </div>
+ </li>
+ <li data-slam="L" data-action="toggleSlam" data-arg-0="this">
+ <div class="slam-check" id="slamL"><i class="bi bi-check-lg hidden"></i></div>
+ <div class="slam-letter bg-warn">L</div>
+ <div>
+ <div class="slam-text">{{ _("Look") }}</div>
+ <div class="slam-sub">{{ _("Check for any hazards or risks") }}</div>
+ </div>
+ </li>
+ <li data-slam="A" data-action="toggleSlam" data-arg-0="this">
+ <div class="slam-check" id="slamA"><i class="bi bi-check-lg hidden"></i></div>
+ <div class="slam-letter bg-info-2">A</div>
+ <div>
+ <div class="slam-text">{{ _("Assess") }}</div>
+ <div class="slam-sub">{{ _("Evaluate risk level and check safety measures") }}</div>
+ </div>
+ </li>
+ <li data-slam="M" data-action="toggleSlam" data-arg-0="this">
+ <div class="slam-check" id="slamM"><i class="bi bi-check-lg hidden"></i></div>
+ <div class="slam-letter bg-green-600">M</div>
+ <div>
+ <div class="slam-text">{{ _("Manage") }}</div>
+ <div class="slam-sub">{{ _("Take necessary measures and begin work") }}</div>
+ </div>
+ </li>
+ </ul>
+ <div class="slam-progress"><div class="slam-progress-bar w-[0%]" id="slamProgress"></div></div>
+ </div>
 
-    <!-- 2. Equipment -->
-    <div class="equip-card">
-      <h4><i class="bi bi-tools"></i> {{ _("Equipment Alerts") }}</h4>
-      <div class="equip-alert-list" id="equipAlerts">
-        <div class="text-center py-3" style="color:#94a3b8; font-size:0.8rem;">
-          <i class="bi bi-arrow-repeat spin"></i> {{ _("Loading...") }}
-        </div>
-      </div>
-    </div>
+ <!-- 2. Equipment -->
+ <div class="equip-card">
+ <h4><i class="bi bi-tools"></i> {{ _("Equipment Alerts") }}</h4>
+ <div class="equip-alert-list" id="equipAlerts">
+ <div class="text-center py-3 text-slate-400 text-sm-1">
+ <i class="bi bi-arrow-repeat spin"></i> {{ _("Loading...") }}
+ </div>
+ </div>
+ </div>
 
-    <!-- 3. Today's work -->
-    <div class="tasks-card">
-      <h4><i class="bi bi-list-check"></i> {{ _("Today's Samples & Tasks") }}</h4>
-      <div class="task-stat-row">
-        <div class="task-stat-box">
-          <div class="num" style="color:#0891b2" id="statTodayReceived">-</div>
-          <div class="lbl">{{ _("Received Today") }}</div>
-        </div>
-        <div class="task-stat-box">
-          <div class="num" style="color:#2563eb" id="statNew">-</div>
-          <div class="lbl">{{ _("Pending") }}</div>
-        </div>
-        <div class="task-stat-box">
-          <div class="num" style="color:#d97706" id="statInProgress">-</div>
-          <div class="lbl">{{ _("In Progress") }}</div>
-        </div>
-      </div>
-    </div>
+ <!-- 3. Today's work -->
+ <div class="tasks-card">
+ <h4><i class="bi bi-list-check"></i> {{ _("Today's Samples & Tasks") }}</h4>
+ <div class="task-stat-row">
+ <div class="task-stat-box">
+ <div class="num text-[#0891b2]" id="statTodayReceived">-</div>
+ <div class="lbl">{{ _("Received Today") }}</div>
+ </div>
+ <div class="task-stat-box">
+ <div class="num text-blue-600" id="statNew">-</div>
+ <div class="lbl">{{ _("Pending") }}</div>
+ </div>
+ <div class="task-stat-box">
+ <div class="num text-[#d97706]" id="statInProgress">-</div>
+ <div class="lbl">{{ _("In Progress") }}</div>
+ </div>
+ </div>
+ </div>
 
-    <!-- 4. Reminders -->
-    <div class="reminder-card">
-      <h4><i class="bi bi-bell"></i> {{ _("Daily Reminders") }}</h4>
-      <ul class="reminder-list">
-        <li><i class="bi bi-check-circle-fill"></i> {{ _("Personal Protective Equipment (PPE) worn") }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ _("Workplace cleaning completed") }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ _("Check reagent expiration dates") }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ _("Zero-calibrate measuring instruments") }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ _("Record environmental temperature and humidity") }}</li>
-      </ul>
-    </div>
-  </div>
+ <!-- 4. Reminders -->
+ <div class="reminder-card">
+ <h4><i class="bi bi-bell"></i> {{ _("Daily Reminders") }}</h4>
+ <ul class="reminder-list">
+ <li><i class="bi bi-check-circle-fill"></i> {{ _("Personal Protective Equipment (PPE) worn") }}</li>
+ <li><i class="bi bi-check-circle-fill"></i> {{ _("Workplace cleaning completed") }}</li>
+ <li><i class="bi bi-check-circle-fill"></i> {{ _("Check reagent expiration dates") }}</li>
+ <li><i class="bi bi-check-circle-fill"></i> {{ _("Zero-calibrate measuring instruments") }}</li>
+ <li><i class="bi bi-check-circle-fill"></i> {{ _("Record environmental temperature and humidity") }}</li>
+ </ul>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 (function() {
-  const I18N_MORNING = {
-    goodMorning: '{{ _("Good Morning!") }}',
-    goodAfternoon: '{{ _("Good Afternoon!") }}',
-    goodEvening: '{{ _("Good Evening!") }}',
-    days: '{{ _("days") }}',
-    overdue: '{{ _("overdue") }}',
-    calibrationDueSoon: '{{ _("calibration due soon") }}',
-    outOfOrder: '{{ _("Out of Order") }}',
-    underMaintenance: '{{ _("Under Maintenance") }}',
-    sparePartsRequired: '{{ _("Spare Parts Required") }}',
-    allEquipmentOk: '{{ _("All equipment is in normal condition") }}',
-    failedToLoad: '{{ _("Failed to load data") }}'
-  };
+ const I18N_MORNING = {
+ goodMorning: '{{ _("Good Morning!") }}',
+ goodAfternoon: '{{ _("Good Afternoon!") }}',
+ goodEvening: '{{ _("Good Evening!") }}',
+ days: '{{ _("days") }}',
+ overdue: '{{ _("overdue") }}',
+ calibrationDueSoon: '{{ _("calibration due soon") }}',
+ outOfOrder: '{{ _("Out of Order") }}',
+ underMaintenance: '{{ _("Under Maintenance") }}',
+ sparePartsRequired: '{{ _("Spare Parts Required") }}',
+ allEquipmentOk: '{{ _("All equipment is in normal condition") }}',
+ failedToLoad: '{{ _("Failed to load data") }}'
+ };
 
-  // --- Date & greeting ---
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = hour < 12 ? I18N_MORNING.goodMorning : hour < 17 ? I18N_MORNING.goodAfternoon : I18N_MORNING.goodEvening;
-  document.getElementById('morningGreeting').textContent = greeting;
-  document.getElementById('morningDate').textContent =
-    now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
-  document.getElementById('morningTime').textContent =
-    now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+ // --- Date & greeting ---
+ const now = new Date();
+ const hour = now.getHours();
+ const greeting = hour < 12 ? I18N_MORNING.goodMorning : hour < 17 ? I18N_MORNING.goodAfternoon : I18N_MORNING.goodEvening;
+ document.getElementById('morningGreeting').textContent = greeting;
+ document.getElementById('morningDate').textContent =
+ now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+ document.getElementById('morningTime').textContent =
+ now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
 
-  // --- Detect lab type from URL ---
-  const path = window.location.pathname;
-  let labType = 'coal';
-  if (path.startsWith('/labs/water-lab/microbiology')) labType = 'micro';
-  else if (path.startsWith('/labs/water-lab/chemistry') || path.startsWith('/labs/water-lab')) labType = 'water';
-  else if (path.startsWith('/labs/petrography')) labType = 'petro';
+ // --- Detect lab type from URL ---
+ const path = window.location.pathname;
+ let labType = 'coal';
+ if (path.startsWith('/labs/water-lab/microbiology')) labType = 'micro';
+ else if (path.startsWith('/labs/water-lab/chemistry') || path.startsWith('/labs/water-lab')) labType = 'water';
+ else if (path.startsWith('/labs/petrography')) labType = 'petro';
 
-  // --- SLAM localStorage (reset daily) ---
-  const slamKey = 'slam_' + labType + '_' + now.toISOString().slice(0,10);
-  let slamState = JSON.parse(localStorage.getItem(slamKey) || '{}');
+ // --- SLAM localStorage (reset daily) ---
+ const slamKey = 'slam_' + labType + '_' + now.toISOString().slice(0,10);
+ let slamState = JSON.parse(localStorage.getItem(slamKey) || '{}');
 
-  // Clear old days (keep only today's keys)
-  const todayStr = now.toISOString().slice(0,10);
-  Object.keys(localStorage).forEach(k => {
-    if (k.startsWith('slam_') && !k.endsWith(todayStr)) localStorage.removeItem(k);
-  });
+ // Clear old days (keep only today's keys)
+ const todayStr = now.toISOString().slice(0,10);
+ Object.keys(localStorage).forEach(k => {
+ if (k.startsWith('slam_') && !k.endsWith(todayStr)) localStorage.removeItem(k);
+ });
 
-  function renderSlam() {
-    ['S','L','A','M'].forEach(letter => {
-      const li = document.querySelector(`[data-slam="${letter}"]`);
-      const check = document.getElementById('slam' + letter);
-      if (slamState[letter]) {
-        li.classList.add('checked');
-        check.classList.add('done');
-        check.querySelector('i').style.display = '';
-      } else {
-        li.classList.remove('checked');
-        check.classList.remove('done');
-        check.querySelector('i').style.display = 'none';
-      }
-    });
-    const done = Object.values(slamState).filter(Boolean).length;
-    document.getElementById('slamProgress').style.width = (done / 4 * 100) + '%';
-  }
+ function renderSlam() {
+ ['S','L','A','M'].forEach(letter => {
+ const li = document.querySelector(`[data-slam="${letter}"]`);
+ const check = document.getElementById('slam' + letter);
+ if (slamState[letter]) {
+ li.classList.add('checked');
+ check.classList.add('done');
+ check.querySelector('i').style.display = '';
+ } else {
+ li.classList.remove('checked');
+ check.classList.remove('done');
+ check.querySelector('i').style.display = 'none';
+ }
+ });
+ const done = Object.values(slamState).filter(Boolean).length;
+ document.getElementById('slamProgress').style.width = (done / 4 * 100) + '%';
+ }
 
-  window.toggleSlam = function(li) {
-    const letter = li.dataset.slam;
-    slamState[letter] = !slamState[letter];
-    localStorage.setItem(slamKey, JSON.stringify(slamState));
-    renderSlam();
-  };
-  renderSlam();
+ window.toggleSlam = function(li) {
+ const letter = li.dataset.slam;
+ slamState[letter] = !slamState[letter];
+ localStorage.setItem(slamKey, JSON.stringify(slamState));
+ renderSlam();
+ };
+ renderSlam();
 
-  // --- Fetch morning data ---
-  fetch('/api/morning_dashboard?lab=' + labType)
-    .then(r => r.json())
-    .then(data => {
-      // Equipment alerts
-      const el = document.getElementById('equipAlerts');
-      const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-      let html = '';
-      if (data.calibration_overdue && data.calibration_overdue.length) {
-        data.calibration_overdue.forEach(e => {
-          html += `<div class="equip-alert-item overdue">
-            <span class="badge-sm" style="background:#dc2626">${_e(e.days_overdue)} ${I18N_MORNING.days}</span>
-            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.overdue}</em>
-          </div>`;
-        });
-      }
-      if (data.calibration_due && data.calibration_due.length) {
-        data.calibration_due.forEach(e => {
-          html += `<div class="equip-alert-item due-soon">
-            <span class="badge-sm" style="background:#d97706">${_e(e.days_left)} ${I18N_MORNING.days}</span>
-            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.calibrationDueSoon}</em>
-          </div>`;
-        });
-      }
-      if (data.broken_equipment && data.broken_equipment.length) {
-        const statusMap = { broken: I18N_MORNING.outOfOrder, maintenance: I18N_MORNING.underMaintenance, needs_spare: I18N_MORNING.sparePartsRequired };
-        data.broken_equipment.forEach(e => {
-          html += `<div class="equip-alert-item broken">
-            <span class="badge-sm" style="background:#b91c1c"><i class="bi bi-exclamation-triangle"></i></span>
-            <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — ${_e(statusMap[e.status] || e.status)}
-          </div>`;
-        });
-      }
-      if (!html) {
-        html = `<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> ${I18N_MORNING.allEquipmentOk}</div>`;
-      }
-      el.innerHTML = html;
+ // --- Fetch morning data ---
+ fetch('/api/morning_dashboard?lab=' + labType)
+ .then(r => r.json())
+ .then(data => {
+ // Equipment alerts
+ const el = document.getElementById('equipAlerts');
+ const _e = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+ let html = '';
+ if (data.calibration_overdue && data.calibration_overdue.length) {
+ data.calibration_overdue.forEach(e => {
+ html += `<div class="equip-alert-item overdue">
+ <span class="badge-sm bg-fail-rose">${_e(e.days_overdue)} ${I18N_MORNING.days}</span>
+ <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.overdue}</em>
+ </div>`;
+ });
+ }
+ if (data.calibration_due && data.calibration_due.length) {
+ data.calibration_due.forEach(e => {
+ html += `<div class="equip-alert-item due-soon">
+ <span class="badge-sm bg-[#d97706]">${_e(e.days_left)} ${I18N_MORNING.days}</span>
+ <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — <em>${I18N_MORNING.calibrationDueSoon}</em>
+ </div>`;
+ });
+ }
+ if (data.broken_equipment && data.broken_equipment.length) {
+ const statusMap = { broken: I18N_MORNING.outOfOrder, maintenance: I18N_MORNING.underMaintenance, needs_spare: I18N_MORNING.sparePartsRequired };
+ data.broken_equipment.forEach(e => {
+ html += `<div class="equip-alert-item broken">
+ <span class="badge-sm bg-[#b91c1c]"><i class="bi bi-exclamation-triangle"></i></span>
+ <strong>${_e(e.lab_code)}</strong> ${_e(e.name)} — ${_e(statusMap[e.status] || e.status)}
+ </div>`;
+ });
+ }
+ if (!html) {
+ html = `<div class="equip-ok"><i class="bi bi-check-circle-fill me-1"></i> ${I18N_MORNING.allEquipmentOk}</div>`;
+ }
+ el.innerHTML = html;
 
-      // Sample stats
-      if (data.samples) {
-        document.getElementById('statTodayReceived').textContent = data.samples.today_received;
-        document.getElementById('statNew').textContent = data.samples.new;
-        document.getElementById('statInProgress').textContent = data.samples.in_progress;
-      }
-    })
-    .catch(() => {
-      document.getElementById('equipAlerts').innerHTML =
-        `<div class="text-center py-2" style="color:#94a3b8; font-size:0.8rem;">${I18N_MORNING.failedToLoad}</div>`;
-    });
+ // Sample stats
+ if (data.samples) {
+ document.getElementById('statTodayReceived').textContent = data.samples.today_received;
+ document.getElementById('statNew').textContent = data.samples.new;
+ document.getElementById('statInProgress').textContent = data.samples.in_progress;
+ }
+ })
+ .catch(() => {
+ document.getElementById('equipAlerts').innerHTML =
+ `<div class="text-center py-2 text-slate-400 text-sm-1">${I18N_MORNING.failedToLoad}</div>`;
+ });
 })();
 </script>

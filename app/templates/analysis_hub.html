@@ -426,7 +426,7 @@
        data-code="{{ (a.code or '')|lower }}"
        data-badge="{{ (disp_badge or '')|lower }}"
        data-cat="{{ cat }}"
-       style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+       data-anim-delay-index="{{ loop.index0 }}">
       <div class="card-icon {{ icon_class }}">
         <i class="bi {{ icon_name }}"></i>
       </div>

@@ -4,363 +4,363 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  :root {
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(148, 163, 184, 0.2);
-    --text-primary: #0f172a;
-    --text-muted: #64748b;
-    --accent-cyan: #0dcaf0;
-    --accent-teal: #20c997;
-  }
-  .water-hub {
-    min-height: calc(100vh - 120px); padding: 1.5rem;
-    background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 30%, #f0f9ff 60%, #f8fafc 100%);
-    background-attachment: fixed;
-  }
-  .hub-header {
-    background: linear-gradient(135deg, rgba(13,202,240,0.1), rgba(32,201,151,0.08));
-    backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 24px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(13,202,240,0.1);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
-  }
-  .hub-header-content h1 {
-    font-size: 1.75rem; font-weight: 800;
-    background: linear-gradient(135deg, #0dcaf0 0%, #20c997 50%, #0891b2 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.25rem;
-  }
-  .hub-header-content p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
-  .hub-header-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
-  .hub-search { position: relative; min-width: 250px; }
-  .hub-search input {
-    width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem;
-    border: 2px solid rgba(148,163,184,0.2); border-radius: 50px;
-    font-size: 0.85rem; background: rgba(255,255,255,0.8); transition: all 0.3s;
-  }
-  .hub-search input:focus {
-    outline: none; border-color: var(--accent-cyan);
-    box-shadow: 0 0 0 4px rgba(13,202,240,0.15); background: #fff;
-  }
-  .hub-search i { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+ :root {
+ --glass-bg: rgba(255, 255, 255, 0.7);
+ --glass-border: rgba(148, 163, 184, 0.2);
+ --text-primary: #0f172a;
+ --text-muted: #64748b;
+ --accent-cyan: #0dcaf0;
+ --accent-teal: #20c997;
+ }
+ .water-hub {
+ min-height: calc(100vh - 120px); padding: 1.5rem;
+ background: linear-gradient(135deg, #ecfeff 0%, #f0fdfa 30%, #f0f9ff 60%, #f8fafc 100%);
+ background-attachment: fixed;
+ }
+ .hub-header {
+ background: linear-gradient(135deg, rgba(13,202,240,0.1), rgba(32,201,151,0.08));
+ backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 24px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+ box-shadow: 0 4px 24px rgba(13,202,240,0.1);
+ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+ }
+ .hub-header-content h1 {
+ font-size: 1.75rem; font-weight: 800;
+ background: linear-gradient(135deg, #0dcaf0 0%, #20c997 50%, #0891b2 100%);
+ -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.25rem;
+ }
+ .hub-header-content p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+ .hub-header-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+ .hub-search { position: relative; min-width: 250px; }
+ .hub-search input {
+ width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem;
+ border: 2px solid rgba(148,163,184,0.2); border-radius: 50px;
+ font-size: 0.85rem; background: rgba(255,255,255,0.8); transition: all 0.3s;
+ }
+ .hub-search input:focus {
+ outline: none; border-color: var(--accent-cyan);
+ box-shadow: 0 0 0 4px rgba(13,202,240,0.15); background: #fff;
+ }
+ .hub-search i { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 
-  .category-tabs {
-    display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;
-  }
-  .cat-tab {
-    padding: 0.6rem 1.5rem; background: var(--glass-bg); backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border); border-radius: 50px;
-    font-weight: 600; font-size: 0.85rem; color: var(--text-muted);
-    cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 6px;
-  }
-  .cat-tab:hover { background: rgba(13,202,240,0.1); border-color: rgba(13,202,240,0.3); color: #0891b2; transform: translateY(-2px); }
-  .cat-tab.active {
-    background: linear-gradient(135deg, #0dcaf0, #20c997);
-    color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(13,202,240,0.4);
-  }
-  .cat-tab .tab-count { background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+ .category-tabs {
+ display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;
+ }
+ .cat-tab {
+ padding: 0.6rem 1.5rem; background: var(--glass-bg); backdrop-filter: blur(12px);
+ border: 1px solid var(--glass-border); border-radius: 50px;
+ font-weight: 600; font-size: 0.85rem; color: var(--text-muted);
+ cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 6px;
+ }
+ .cat-tab:hover { background: rgba(13,202,240,0.1); border-color: rgba(13,202,240,0.3); color: #0891b2; transform: translateY(-2px); }
+ .cat-tab.active {
+ background: linear-gradient(135deg, #0dcaf0, #20c997);
+ color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(13,202,240,0.4);
+ }
+ .cat-tab .tab-count { background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
 
-  .cards-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem; max-width: 1400px; margin: 0 auto;
-  }
-  .analysis-card {
-    background: var(--glass-bg); backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); border-radius: 20px;
-    padding: 1.25rem; text-decoration: none; color: var(--text-primary);
-    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-    display: flex; align-items: center; gap: 1rem;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04); position: relative; overflow: hidden;
-    animation: cardFadeIn 0.5s ease backwards;
-  }
-  .analysis-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #0dcaf0, #20c997); opacity: 0; transition: opacity 0.3s;
-  }
-  .analysis-card:hover {
-    transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
-    border-color: rgba(13,202,240,0.3); color: var(--text-primary); text-decoration: none;
-  }
-  .analysis-card:hover::before { opacity: 1; }
-  .card-icon {
-    width: 52px; height: 52px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; flex-shrink: 0; transition: transform 0.3s;
-  }
-  .analysis-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
-  .icon-cyan { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
-  .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-  .icon-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
-  .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
-  .icon-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
-  .icon-teal { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
+ .cards-grid {
+ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+ gap: 1.25rem; max-width: 1400px; margin: 0 auto;
+ }
+ .analysis-card {
+ background: var(--glass-bg); backdrop-filter: blur(16px);
+ border: 1px solid var(--glass-border); border-radius: 20px;
+ padding: 1.25rem; text-decoration: none; color: var(--text-primary);
+ transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+ display: flex; align-items: center; gap: 1rem;
+ box-shadow: 0 4px 16px rgba(0,0,0,0.04); position: relative; overflow: hidden;
+ animation: cardFadeIn 0.5s ease backwards;
+ }
+ .analysis-card::before {
+ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+ background: linear-gradient(90deg, #0dcaf0, #20c997); opacity: 0; transition: opacity 0.3s;
+ }
+ .analysis-card:hover {
+ transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.1);
+ border-color: rgba(13,202,240,0.3); color: var(--text-primary); text-decoration: none;
+ }
+ .analysis-card:hover::before { opacity: 1; }
+ .card-icon {
+ width: 52px; height: 52px; border-radius: 14px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 1.4rem; flex-shrink: 0; transition: transform 0.3s;
+ }
+ .analysis-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
+ .icon-cyan { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
+ .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+ .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+ .icon-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+ .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+ .icon-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+ .icon-teal { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0d9488; }
 
-  .card-content { flex: 1; min-width: 0; }
-  .card-code {
-    font-size: 0.7rem; font-weight: 700; color: #fff;
-    background: linear-gradient(135deg, #0dcaf0, #20c997);
-    padding: 0.15rem 0.5rem; border-radius: 5px;
-    display: inline-block; margin-bottom: 0.3rem; text-transform: uppercase;
-  }
-  .card-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.15rem; }
-  .card-unit { font-size: 0.78rem; color: var(--text-muted); }
-  .card-limit { font-size: 0.72rem; color: #ef4444; font-weight: 600; margin-top: 0.2rem; }
-  .card-arrow {
-    color: var(--text-muted); font-size: 1.2rem; opacity: 0;
-    transform: translateX(-10px); transition: all 0.3s; flex-shrink: 0;
-  }
-  .analysis-card:hover .card-arrow { opacity: 1; transform: translateX(0); color: #0dcaf0; }
+ .card-content { flex: 1; min-width: 0; }
+ .card-code {
+ font-size: 0.7rem; font-weight: 700; color: #fff;
+ background: linear-gradient(135deg, #0dcaf0, #20c997);
+ padding: 0.15rem 0.5rem; border-radius: 5px;
+ display: inline-block; margin-bottom: 0.3rem; text-transform: uppercase;
+ }
+ .card-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.15rem; }
+ .card-unit { font-size: 0.78rem; color: var(--text-muted); }
+ .card-limit { font-size: 0.72rem; color: #ef4444; font-weight: 600; margin-top: 0.2rem; }
+ .card-arrow {
+ color: var(--text-muted); font-size: 1.2rem; opacity: 0;
+ transform: translateX(-10px); transition: all 0.3s; flex-shrink: 0;
+ }
+ .analysis-card:hover .card-arrow { opacity: 1; transform: translateX(0); color: #0dcaf0; }
 
-  .no-results { display: none; text-align: center; padding: 3rem; color: var(--text-muted); }
-  .no-results.show { display: block; }
-  .no-results i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+ .no-results { display: none; text-align: center; padding: 3rem; color: var(--text-muted); }
+ .no-results.show { display: block; }
+ .no-results i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
 
-  @keyframes cardFadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @media (max-width: 768px) {
-    .water-hub { padding: 1rem; }
-    .hub-header { flex-direction: column; text-align: center; padding: 1.25rem; }
-    .hub-search { min-width: 100%; }
-    .cards-grid { grid-template-columns: 1fr; }
-  }
+ @keyframes cardFadeIn {
+ from { opacity: 0; transform: translateY(20px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+ @media (max-width: 768px) {
+ .water-hub { padding: 1rem; }
+ .hub-header { flex-direction: column; text-align: center; padding: 1.25rem; }
+ .hub-search { min-width: 100%; }
+ .cards-grid { grid-template-columns: 1fr; }
+ }
 </style>
 
 <div class="water-hub">
-  <div class="hub-header">
-    <div class="hub-header-content">
-      <h1><i class="bi bi-clipboard-data me-2"></i>{{ _("Water Analysis Center") }}</h1>
-      <p>{{ analysis_types|length }} water quality analyses ({{ sample_count }} samples)</p>
-    </div>
-    <div class="hub-header-actions">
-      <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-primary" style="border-radius:12px;font-weight:600;">
-        <i class="bi bi-table me-1"></i>{{ _("Summary") }}
-      </a>
-      <a href="{{ url_for('water.worksheet_list') }}" class="btn btn-sm btn-outline-info" style="border-radius:12px;font-weight:600;">
-        <i class="bi bi-clipboard2-check me-1"></i>QC Worksheet
-      </a>
-      <div class="hub-search">
-        <i class="bi bi-search"></i>
-        <input type="text" id="analysis-search" placeholder="{{ _("Search... (pH, Iron, SO4)") }}">
-      </div>
-    </div>
-  </div>
+ <div class="hub-header">
+ <div class="hub-header-content">
+ <h1><i class="bi bi-clipboard-data me-2"></i>{{ _("Water Analysis Center") }}</h1>
+ <p>{{ analysis_types|length }} water quality analyses ({{ sample_count }} samples)</p>
+ </div>
+ <div class="hub-header-actions">
+ <a href="{{ url_for('water.water_summary') }}" class="btn btn-sm btn-outline-primary rounded-xl font-semibold">
+ <i class="bi bi-table me-1"></i>{{ _("Summary") }}
+ </a>
+ <a href="{{ url_for('water.worksheet_list') }}" class="btn btn-sm btn-outline-info rounded-xl font-semibold">
+ <i class="bi bi-clipboard2-check me-1"></i>QC Worksheet
+ </a>
+ <div class="hub-search">
+ <i class="bi bi-search"></i>
+ <input type="text" id="analysis-search" placeholder="{{ _("Search... (pH, Iron, SO4)") }}">
+ </div>
+ </div>
+ </div>
 
-  <div class="category-tabs">
-    <div class="cat-tab active" data-cat="drinking">
-      <i class="bi bi-cup-straw"></i> {{ _("Drinking") }}
-      <span class="tab-count">0</span>
-    </div>
-    <div class="cat-tab" data-cat="wastewater">
-      <i class="bi bi-water"></i> {{ _("Domestic") }}
-      <span class="tab-count">0</span>
-    </div>
-    <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots"></i> {{ _("Other") }}
-      <span class="tab-count">0</span>
-    </div>
-  </div>
+ <div class="category-tabs">
+ <div class="cat-tab active" data-cat="drinking">
+ <i class="bi bi-cup-straw"></i> {{ _("Drinking") }}
+ <span class="tab-count">0</span>
+ </div>
+ <div class="cat-tab" data-cat="wastewater">
+ <i class="bi bi-water"></i> {{ _("Domestic") }}
+ <span class="tab-count">0</span>
+ </div>
+ <div class="cat-tab" data-cat="other">
+ <i class="bi bi-three-dots"></i> {{ _("Other") }}
+ <span class="tab-count">0</span>
+ </div>
+ </div>
 
-  <div class="no-results" id="no-results">
-    <i class="bi bi-search"></i>
-    <h4>{{ _("No results found") }}</h4>
-    <p>{{ _("Please try a different search term") }}</p>
-  </div>
+ <div class="no-results" id="no-results">
+ <i class="bi bi-search"></i>
+ <h4>{{ _("No results found") }}</h4>
+ <p>{{ _("Please try a different search term") }}</p>
+ </div>
 
-  <div class="cards-grid" id="analysis-list">
-    <a href="{{ url_for('water.sft_workspace') }}"
-       class="analysis-card"
-       data-name="sft"
-       data-code="sft"
-       data-cats="drinking"
-       style="animation-delay: 0s;">
-      <div class="card-icon icon-cyan">
-        <i class="bi bi-table"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">SFT</div>
-        <div class="card-title">СФТ (NH4/NO2/NO3/Fe)</div>
-        <div class="card-unit">mg/L</div>
-      </div>
-      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
-    </a>
+ <div class="cards-grid" id="analysis-list">
+ <a href="{{ url_for('water.sft_workspace') }}"
+ class="analysis-card tw-[animation-delay:0ms]"
+ data-name="sft"
+ data-code="sft"
+ data-cats="drinking"
+>
+ <div class="card-icon icon-cyan">
+ <i class="bi bi-table"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">SFT</div>
+ <div class="card-title">СФТ (NH4/NO2/NO3/Fe)</div>
+ <div class="card-unit">mg/L</div>
+ </div>
+ <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+ </a>
 
-    <a href="{{ url_for('water.sfm_workspace') }}"
-       class="analysis-card"
-       data-name="sfm"
-       data-code="sfm"
-       data-cats="wastewater"
-       style="animation-delay: 0.03s;">
-      <div class="card-icon icon-teal">
-        <i class="bi bi-table"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">SFM</div>
-        <div class="card-title">СФМ (NH4/NO2/PO4/Fe)</div>
-        <div class="card-unit">mg/L</div>
-      </div>
-      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
-    </a>
+ <a href="{{ url_for('water.sfm_workspace') }}"
+ class="analysis-card tw-[animation-delay:30ms]"
+ data-name="sfm"
+ data-code="sfm"
+ data-cats="wastewater"
+>
+ <div class="card-icon icon-teal">
+ <i class="bi bi-table"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">SFM</div>
+ <div class="card-title">СФМ (NH4/NO2/PO4/Fe)</div>
+ <div class="card-unit">mg/L</div>
+ </div>
+ <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+ </a>
 
-    <a href="{{ url_for('water.phys_wastewater_workspace') }}"
-       class="analysis-card"
-       data-name="phys"
-       data-code="phys-ww"
-       data-cats="wastewater"
-       style="animation-delay: 0.04s;">
-      <div class="card-icon icon-blue">
-        <i class="bi bi-thermometer-half"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">PHYS</div>
-        <div class="card-title">Физик (Өнгө/Градус/EC/pH/F/Cl)</div>
-        <div class="card-unit"></div>
-      </div>
-      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
-    </a>
+ <a href="{{ url_for('water.phys_wastewater_workspace') }}"
+ class="analysis-card tw-[animation-delay:40ms]"
+ data-name="phys"
+ data-code="phys-ww"
+ data-cats="wastewater"
+>
+ <div class="card-icon icon-blue">
+ <i class="bi bi-thermometer-half"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">PHYS</div>
+ <div class="card-title">Физик (Өнгө/Градус/EC/pH/F/Cl)</div>
+ <div class="card-unit"></div>
+ </div>
+ <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+ </a>
 
-    <a href="{{ url_for('water.sludge_workspace') }}"
-       class="analysis-card"
-       data-name="sludge"
-       data-code="sludge"
-       data-cats="wastewater"
-       style="animation-delay: 0.06s;">
-      <div class="card-icon icon-orange">
-        <i class="bi bi-layers"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">SLUDGE</div>
-        <div class="card-title">Лаг (SV/SD/SI)</div>
-        <div class="card-unit"></div>
-      </div>
-      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
-    </a>
+ <a href="{{ url_for('water.sludge_workspace') }}"
+ class="analysis-card tw-[animation-delay:60ms]"
+ data-name="sludge"
+ data-code="sludge"
+ data-cats="wastewater"
+>
+ <div class="card-icon icon-orange">
+ <i class="bi bi-layers"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">SLUDGE</div>
+ <div class="card-title">Лаг (SV/SD/SI)</div>
+ <div class="card-unit"></div>
+ </div>
+ <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+ </a>
 
-    <a href="{{ url_for('water.sft_physical_workspace') }}"
-       class="analysis-card"
-       data-name="phys"
-       data-code="sft-phys"
-       data-cats="drinking"
-       style="animation-delay: 0.05s;">
-      <div class="card-icon icon-blue">
-        <i class="bi bi-thermometer-half"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">PHYS</div>
-        <div class="card-title">Физик (Өнгө/Темп/EC/pH/Ф/Cl)</div>
-        <div class="card-unit"></div>
-      </div>
-      <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
-    </a>
+ <a href="{{ url_for('water.sft_physical_workspace') }}"
+ class="analysis-card tw-[animation-delay:50ms]"
+ data-name="phys"
+ data-code="sft-phys"
+ data-cats="drinking"
+>
+ <div class="card-icon icon-blue">
+ <i class="bi bi-thermometer-half"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">PHYS</div>
+ <div class="card-title">Физик (Өнгө/Темп/EC/pH/Ф/Cl)</div>
+ <div class="card-unit"></div>
+ </div>
+ <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+ </a>
 
-    {% for at in analysis_types %}
-    {% if 'summary_only' in (at.categories|default([])) %}
-    {% else %}
-    {% set cats = at.categories|default(['other'])|join(',') %}
+ {% for at in analysis_types %}
+ {% if 'summary_only' in (at.categories|default([])) %}
+ {% else %}
+ {% set cats = at.categories|default(['other'])|join(',') %}
 
-    {% set ic = 'icon-cyan' %}{% set ii = 'bi-droplet' %}
-    {% if at.code == 'PH' %}{% set ic = 'icon-blue' %}{% set ii = 'bi-speedometer2' %}
-    {% elif at.code == 'EC' %}{% set ic = 'icon-purple' %}{% set ii = 'bi-lightning' %}
-    {% elif at.code == 'TURB' %}{% set ic = 'icon-orange' %}{% set ii = 'bi-cloud-haze' %}
-    {% elif at.code == 'TSS' %}{% set ic = 'icon-teal' %}{% set ii = 'bi-funnel' %}
-    {% elif at.code == 'COLOR' %}{% set ic = 'icon-purple' %}{% set ii = 'bi-palette' %}
-    {% elif at.code == 'TEMP' %}{% set ic = 'icon-red' %}{% set ii = 'bi-thermometer-half' %}
-    {% elif at.code in ['CA','MG','HARD','ALK'] %}{% set ic = 'icon-blue' %}{% set ii = 'bi-gem' %}
-    {% elif at.code in ['CL_W','SO4','NO3','CN_W'] %}{% set ic = 'icon-green' %}{% set ii = 'bi-diagram-3' %}
-    {% elif at.code in ['FE_W','MN_W','CU_W','ZN_W'] %}{% set ic = 'icon-orange' %}{% set ii = 'bi-shield-exclamation' %}
-    {% elif at.code in ['PB_W','AS_W','CD_W','CR_W','HG_W'] %}{% set ic = 'icon-red' %}{% set ii = 'bi-exclamation-triangle' %}
-    {% elif at.code in ['BOD','COD','DO_W'] %}{% set ic = 'icon-teal' %}{% set ii = 'bi-water' %}
-    {% elif at.code == 'ODOR' %}{% set ic = 'icon-orange' %}{% set ii = 'bi-wind' %}
-    {% endif %}
+ {% set ic = 'icon-cyan' %}{% set ii = 'bi-droplet' %}
+ {% if at.code == 'PH' %}{% set ic = 'icon-blue' %}{% set ii = 'bi-speedometer2' %}
+ {% elif at.code == 'EC' %}{% set ic = 'icon-purple' %}{% set ii = 'bi-lightning' %}
+ {% elif at.code == 'TURB' %}{% set ic = 'icon-orange' %}{% set ii = 'bi-cloud-haze' %}
+ {% elif at.code == 'TSS' %}{% set ic = 'icon-teal' %}{% set ii = 'bi-funnel' %}
+ {% elif at.code == 'COLOR' %}{% set ic = 'icon-purple' %}{% set ii = 'bi-palette' %}
+ {% elif at.code == 'TEMP' %}{% set ic = 'icon-red' %}{% set ii = 'bi-thermometer-half' %}
+ {% elif at.code in ['CA','MG','HARD','ALK'] %}{% set ic = 'icon-blue' %}{% set ii = 'bi-gem' %}
+ {% elif at.code in ['CL_W','SO4','NO3','CN_W'] %}{% set ic = 'icon-green' %}{% set ii = 'bi-diagram-3' %}
+ {% elif at.code in ['FE_W','MN_W','CU_W','ZN_W'] %}{% set ic = 'icon-orange' %}{% set ii = 'bi-shield-exclamation' %}
+ {% elif at.code in ['PB_W','AS_W','CD_W','CR_W','HG_W'] %}{% set ic = 'icon-red' %}{% set ii = 'bi-exclamation-triangle' %}
+ {% elif at.code in ['BOD','COD','DO_W'] %}{% set ic = 'icon-teal' %}{% set ii = 'bi-water' %}
+ {% elif at.code == 'ODOR' %}{% set ic = 'icon-orange' %}{% set ii = 'bi-wind' %}
+ {% endif %}
 
-    <a href="{{ url_for('water.workspace', code=at.code) }}"
-       class="analysis-card"
-       data-name="{{ at.name|lower }}"
-       data-code="{{ at.code|lower }}"
-       data-cats="{{ cats }}"
-       style="animation-delay: {{ loop.index0 * 0.05 }}s;">
-      <div class="card-icon {{ ic }}">
-        <i class="bi {{ ii }}"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-code">{{ at.code }}</div>
-        <div class="card-title">{{ at.name }}</div>
-        {% if at.code in params %}
-        <div class="card-unit">{{ params[at.code].get('unit', '') }}</div>
-          {% if params[at.code].get('mns_limit') %}
-          <div class="card-limit">
-            MNS:
-            {% if params[at.code]['mns_limit'][0] is not none %}{{ params[at.code]['mns_limit'][0] }} – {% endif %}
-            {% if params[at.code]['mns_limit'][1] is not none %}{{ params[at.code]['mns_limit'][1] }}{% endif %}
-            {{ params[at.code].get('unit', '') }}
-          </div>
-          {% endif %}
-        {% endif %}
-      </div>
-      <i class="bi bi-arrow-right card-arrow"></i>
-    </a>
-    {% endif %}
-    {% endfor %}
-  </div>
+ <a href="{{ url_for('water.workspace', code=at.code) }}"
+ class="analysis-card"
+ data-name="{{ at.name|lower }}"
+ data-code="{{ at.code|lower }}"
+ data-cats="{{ cats }}"
+ data-anim-delay-index="{{ loop.index0 }}">
+ <div class="card-icon {{ ic }}">
+ <i class="bi {{ ii }}"></i>
+ </div>
+ <div class="card-content">
+ <div class="card-code">{{ at.code }}</div>
+ <div class="card-title">{{ at.name }}</div>
+ {% if at.code in params %}
+ <div class="card-unit">{{ params[at.code].get('unit', '') }}</div>
+ {% if params[at.code].get('mns_limit') %}
+ <div class="card-limit">
+ MNS:
+ {% if params[at.code]['mns_limit'][0] is not none %}{{ params[at.code]['mns_limit'][0] }} – {% endif %}
+ {% if params[at.code]['mns_limit'][1] is not none %}{{ params[at.code]['mns_limit'][1] }}{% endif %}
+ {{ params[at.code].get('unit', '') }}
+ </div>
+ {% endif %}
+ {% endif %}
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
+ {% endif %}
+ {% endfor %}
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  const searchInput = document.getElementById('analysis-search');
-  const cards = document.querySelectorAll('#analysis-list .analysis-card');
-  const tabs = document.querySelectorAll('.cat-tab');
-  const noResults = document.getElementById('no-results');
-  let currentCat = 'drinking';
+ const searchInput = document.getElementById('analysis-search');
+ const cards = document.querySelectorAll('#analysis-list .analysis-card');
+ const tabs = document.querySelectorAll('.cat-tab');
+ const noResults = document.getElementById('no-results');
+ let currentCat = 'drinking';
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      tabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      currentCat = this.dataset.cat;
-      filterCards();
-    });
-  });
-  filterCards();
+ tabs.forEach(tab => {
+ tab.addEventListener('click', function() {
+ tabs.forEach(t => t.classList.remove('active'));
+ this.classList.add('active');
+ currentCat = this.dataset.cat;
+ filterCards();
+ });
+ });
+ filterCards();
 
-  if (searchInput) searchInput.addEventListener('input', () => filterCards());
+ if (searchInput) searchInput.addEventListener('input', () => filterCards());
 
-  function getCats(card) { return (card.dataset.cats || '').split(','); }
+ function getCats(card) { return (card.dataset.cats || '').split(','); }
 
-  function filterCards() {
-    const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
-    let visible = 0;
-    cards.forEach(card => {
-      const name = card.dataset.name || '';
-      const code = card.dataset.code || '';
-      const cats = getCats(card);
-      const match = (!q || name.includes(q) || code.includes(q)) && cats.includes(currentCat);
-      card.style.display = match ? '' : 'none';
-      if (match) { card.style.animationDelay = (visible * 0.05) + 's'; visible++; }
-    });
-    if (noResults) noResults.classList.toggle('show', visible === 0);
-    updateCounts();
-  }
+ function filterCards() {
+ const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+ let visible = 0;
+ cards.forEach(card => {
+ const name = card.dataset.name || '';
+ const code = card.dataset.code || '';
+ const cats = getCats(card);
+ const match = (!q || name.includes(q) || code.includes(q)) && cats.includes(currentCat);
+ card.style.display = match ? '' : 'none';
+ if (match) { card.style.animationDelay = (visible * 0.05) + 's'; visible++; }
+ });
+ if (noResults) noResults.classList.toggle('show', visible === 0);
+ updateCounts();
+ }
 
-  function updateCounts() {
-    const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
-    const counts = { drinking: 0, wastewater: 0, other: 0 };
-    cards.forEach(card => {
-      const name = card.dataset.name || '';
-      const code = card.dataset.code || '';
-      const cats = getCats(card);
-      if (!q || name.includes(q) || code.includes(q)) {
-        cats.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
-      }
-    });
-    tabs.forEach(tab => {
-      const el = tab.querySelector('.tab-count');
-      if (el) el.textContent = counts[tab.dataset.cat] || 0;
-    });
-  }
-  updateCounts();
+ function updateCounts() {
+ const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+ const counts = { drinking: 0, wastewater: 0, other: 0 };
+ cards.forEach(card => {
+ const name = card.dataset.name || '';
+ const code = card.dataset.code || '';
+ const cats = getCats(card);
+ if (!q || name.includes(q) || code.includes(q)) {
+ cats.forEach(c => { if (counts[c] !== undefined) counts[c]++; });
+ }
+ });
+ tabs.forEach(tab => {
+ const el = tab.querySelector('.tab-count');
+ if (el) el.textContent = counts[tab.dataset.cat] || 0;
+ });
+ }
+ updateCounts();
 });
 </script>
 {% endblock %}

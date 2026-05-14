@@ -4,679 +4,679 @@
 {% block content %}
 {% set is_mass_page = (analysis.code|lower == 'm') %}
 <script nonce="{{ csp_nonce }}">
-    // Энэ мөрийг нэмснээр JavaScript токен авах боломжтой болно
-    window.csrfToken = "{{ csrf_token() }}";
-    window.userRole = "{{ current_user.role }}";
+ // Энэ мөрийг нэмснээр JavaScript токен авах боломжтой болно
+ window.csrfToken = "{{ csrf_token() }}";
+ window.userRole = "{{ current_user.role }}";
 </script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/analysis_page.css') }}">
 
 {% if is_mass_page %}
 <style nonce="{{ csp_nonce }}">
-  #save-analysis-results, .btn-save-results, [data-action="save-results"]{ display:none !important; }
+ #save-analysis-results, .btn-save-results, [data-action="save-results"]{ display:none !important; }
 </style>
 {% endif %}
 
 {# Alpine.js state for mobile drawer #}
 <div class="container-fluid" x-data="{ drawerOpen: false }">
 
-  {# --- MOBILE DRAWER (зөвхөн mobile дээр) --- #}
-  {% include "components/mobile_drawer.html" %}
+ {# --- MOBILE DRAWER (зөвхөн mobile дээр) --- #}
+ {% include "components/mobile_drawer.html" %}
 
-  {# --- STICKY CONTROLS --- #}
-  <div class="sticky-controls">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="d-flex align-items-center gap-2">
-        {# Mobile drawer toggle (зөвхөн mobile) #}
-        <button @click="drawerOpen = true" class="btn btn-outline-secondary btn-sm d-md-none">
-          <i class="bi bi-list"></i>
-        </button>
-        <h2 class="mb-0 fs-5">{{ title }}</h2>
-      </div>
-      {# Desktop товчнууд (mobile дээр нуух) #}
-      <div class="d-none d-md-flex gap-2">
-        <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> {{ _("Back") }}
-        </a>
-        <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="{{ _("Equipment") }}">
-          <i class="bi bi-tools"></i> {{ _("Equipment") }}
-        </button>
-        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> {% if is_mass_page %}{{ _("Sample (M)") }}{% else %}{{ _("Sample") }}{% endif %}
-        </button>
-        {% if not is_mass_page %}
-        <button class="btn btn-success btn-sm" id="save-analysis-results" data-action="save-results">
-          <i class="bi bi-check-lg"></i> {{ _("Save") }}
-        </button>
-        {% endif %}
-      </div>
-      {# Mobile: Sample + Save buttons #}
-      <div class="d-md-none d-flex gap-2">
-        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
-          <i class="bi bi-plus-circle"></i> {{ _("Sample") }}
-        </button>
-        {% if not is_mass_page %}
-        <button class="btn btn-success btn-sm" id="save-analysis-results-mobile" data-action="save-results">
-          <i class="bi bi-check-lg"></i> {{ _("Save") }}
-        </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# --- STICKY CONTROLS --- #}
+ <div class="sticky-controls">
+ <div class="d-flex justify-content-between align-items-center">
+ <div class="d-flex align-items-center gap-2">
+ {# Mobile drawer toggle (зөвхөн mobile) #}
+ <button @click="drawerOpen = true" class="btn btn-outline-secondary btn-sm d-md-none">
+ <i class="bi bi-list"></i>
+ </button>
+ <h2 class="mb-0 fs-5">{{ title }}</h2>
+ </div>
+ {# Desktop товчнууд (mobile дээр нуух) #}
+ <div class="d-none d-md-flex gap-2">
+ <a href="{{ url_for('analysis.analysis_hub') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Back") }}
+ </a>
+ <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#equipmentModal" title="{{ _("Equipment") }}">
+ <i class="bi bi-tools"></i> {{ _("Equipment") }}
+ </button>
+ <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+ <i class="bi bi-plus-circle"></i> {% if is_mass_page %}{{ _("Sample (M)") }}{% else %}{{ _("Sample") }}{% endif %}
+ </button>
+ {% if not is_mass_page %}
+ <button class="btn btn-success btn-sm" id="save-analysis-results" data-action="save-results">
+ <i class="bi bi-check-lg"></i> {{ _("Save") }}
+ </button>
+ {% endif %}
+ </div>
+ {# Mobile: Sample + Save buttons #}
+ <div class="d-md-none d-flex gap-2">
+ <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#selectSamplesModal">
+ <i class="bi bi-plus-circle"></i> {{ _("Sample") }}
+ </button>
+ {% if not is_mass_page %}
+ <button class="btn btn-success btn-sm" id="save-analysis-results-mobile" data-action="save-results">
+ <i class="bi bi-check-lg"></i> {{ _("Save") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-  {# --- MAIN CONTENT --- #}
-  <div class="row g-3">
-    {# Sidebar - Hidden on mobile, visible in drawer #}
-    <div class="col-12 col-lg-3 d-none d-lg-block">
-      <div class="analysis-sidebar-sticky">
-        <div class="card mb-3">
-          <div class="card-body p-3">{% include "analysis/partials/quick_ref.html" %}</div>
-        </div>
-        <div class="card">
-          <div class="card-body p-3">{% include "analysis/partials/timer_panel.html" %}</div>
-        </div>
-      </div>
-    </div>
+ {# --- MAIN CONTENT --- #}
+ <div class="row g-3">
+ {# Sidebar - Hidden on mobile, visible in drawer #}
+ <div class="col-12 col-lg-3 d-none d-lg-block">
+ <div class="analysis-sidebar-sticky">
+ <div class="card mb-3">
+ <div class="card-body p-3">{% include "analysis/partials/quick_ref.html" %}</div>
+ </div>
+ <div class="card">
+ <div class="card-body p-3">{% include "analysis/partials/timer_panel.html" %}</div>
+ </div>
+ </div>
+ </div>
 
-    {# Analysisний хүснэгт - Full width on mobile #}
-    <div class="col-12 col-lg-9">
-      <div class="card shadow-sm mb-3 border-0">
-        <div class="card-body p-0">
-          {% if config.template %}
-            <div class="table-scroll-wrap">
-                {% include config.template %}
-            </div>
-          {% else %}
-            <div class="alert alert-warning m-3">{{ _("Template not found.") }}</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+ {# Analysisний хүснэгт - Full width on mobile #}
+ <div class="col-12 col-lg-9">
+ <div class="card shadow-sm mb-3 border-0">
+ <div class="card-body p-0">
+ {% if config.template %}
+ <div class="table-scroll-wrap">
+ {% include config.template %}
+ </div>
+ {% else %}
+ <div class="alert alert-warning m-3">{{ _("Template not found.") }}</div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
 </div>{# end container-fluid with x-data #}
 
 <div class="modal fade" id="selectSamplesModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">{{ _("Select Samples") }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body"><p class="text-center">{{ _("Loading...") }}</p></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-        <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">{{ _("Add") }}</button>
-      </div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title">{{ _("Select Samples") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body"><p class="text-center">{{ _("Loading...") }}</p></div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="button" class="btn btn-primary" id="add-selected-samples-to-worksheet">{{ _("Add") }}</button>
+ </div>
+ </div>
+ </div>
 </div>
 
 {# --- EQUIPMENT MODAL --- #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/equipment_modal.css') }}">
 <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-      <div class="modal-header py-3">
-        <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
-          <i class="bi bi-clipboard-check" style="font-size: 1.3rem;"></i>
-          <span>{{ _("Equipment Usage & Repair") }}</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        {% if related_equipments %}
-        <div class="table-responsive">
-          <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
-            <thead>
-              <tr>
-                <th style="width: 18%; min-width:140px;">{{ _("Lab Code / Name") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Condition") }}<br>OK</th>
-                <th style="width: 8%; text-align:center;">{{ _("Usage") }}<br>({{ _("min") }})</th>
-                <th style="width: 14%;">{{ _("Notes") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Calibration") }}</th>
-                <th style="width: 6%; text-align:center;">{{ _("Repair") }}</th>
-                <th style="width: 42%;">{{ _("Calibration / Repair Details") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for eq in related_equipments %}
-              <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
-                <td>
-                  <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
-                  {% if eq.lab_code and eq.name != eq.lab_code %}
-                  <div class="eq-lab-name">{{ eq.name }}</div>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-check eq-check-ok" type="checkbox"
-                         style="width: 22px; height: 22px; cursor: pointer;" checked>
-                </td>
-                <td>
-                  <input type="number" class="form-control form-control-sm text-center eq-minutes"
-                         placeholder="0" min="0" style="border-color: #cbd5e0;">
-                </td>
-                <td>
-                  <input type="text" class="form-control form-control-sm eq-note"
-                         placeholder="{{ _("Notes...") }}" style="border-color: #cbd5e0;">
-                </td>
-                <td class="text-center">
-                  {% if eq.category in ['furnace', 'balance', 'analysis', 'prep', 'dryer'] or 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
-                  <button type="button" class="btn btn-outline-success btn-sm calib-btn"
-                          onclick="toggleCalibPanel(this)" title="{{ _("Run Calibration") }}">
-                    <i class="bi bi-thermometer-half"></i>
-                  </button>
-                  {% else %}
-                  <span class="text-muted">—</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
-                         style="width: 22px; height: 22px; cursor: pointer;"
-                         onchange="toggleRepairPanel(this)">
-                </td>
-                <td class="calib-repair-cell">
-                  {# Calibration Panel - Category based #}
-                  {% if eq.category == 'furnace' %}
-                  <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Set Temp:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Measured:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Diff:") }}</label>
-                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% elif eq.category == 'dryer' %}
-                  <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-half"></i> {{ _("Drying Cabinet — Temperature Check") }}
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Set Temp:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-set-temp" value="105" placeholder="°C" step="1">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Measured:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Diff:") }}</label>
-                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% elif 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
-                  <div class="calib-panel furnace-panel d-none">
-                    <div class="calib-panel-title">
-                      <i class="bi bi-thermometer-half"></i> {{ _("Thermostat — Temperature Check") }}
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Set Temp:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Measured:") }}</label>
-                      <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1" oninput="checkTempDiff(this)">
-                    </div>
-                    <div class="calib-input-group">
-                      <label>{{ _("Diff:") }}</label>
-                      <input type="text" class="form-control form-control-sm calib-temp-diff" readonly style="background:#f7fafc;">
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% elif eq.category == 'balance' %}
-                  <div class="calib-panel balance-panel d-none">
-                    <div class="calib-panel-title">
-                      <i class="bi bi-speedometer2"></i> {{ _("Balance Check (Weights)") }}
-                    </div>
-                    <div class="mb-2">
-                      <small class="text-muted">{{ _("Standard Weight -> Measured Value") }}</small>
-                    </div>
-                    <div class="calib-weights-list">
-                      <div class="calib-weight-row">
-                        <input type="number" class="form-control form-control-sm calib-std-wt" placeholder="{{ _("Std (g)") }}" step="0.0001" style="flex:1">
-                        <input type="number" class="form-control form-control-sm calib-meas-wt" placeholder="{{ _("Measured") }}" step="0.0001" style="flex:1" oninput="checkWeightDiff(this)">
-                        <span class="calib-status d-none" style="min-width:50px;"></span>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1" onclick="addWeightRow(this)">
-                      <i class="bi bi-plus"></i> {{ _("Add Weight") }}
-                    </button>
-                    <hr class="my-2" style="border-color:#dee2e6;">
-                    <div class="calib-panel-title" style="font-size:0.82rem;">
-                      <i class="bi bi-droplet"></i> {{ _("Ethanol Pycnometer Test") }}
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap align-items-end mb-1">
-                      <div class="calib-input-group" style="flex:0 0 75px;">
-                        <label>{{ _("Temp (°C):") }}</label>
-                        <input type="number" class="form-control form-control-sm ethanol-temp" placeholder="20" step="0.1" value="20" oninput="calcEthanol(this)">
-                      </div>
-                      <div class="calib-input-group" style="flex:0 0 90px;">
-                        <label>{{ _("Density (g/mL):") }}</label>
-                        <input type="number" class="form-control form-control-sm ethanol-density" placeholder="0.7893" step="0.0001" value="0.7893" oninput="calcEthanol(this)">
-                      </div>
-                      <div class="calib-input-group" style="flex:0 0 85px;">
-                        <label>{{ _("Volume (mL):") }}</label>
-                        <input type="number" class="form-control form-control-sm ethanol-volume" placeholder="mL" step="0.01" oninput="calcEthanol(this)">
-                      </div>
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap align-items-end">
-                      <div class="calib-input-group" style="flex:0 0 100px;">
-                        <label>{{ _("Calculated (g):") }}</label>
-                        <input type="text" class="form-control form-control-sm ethanol-expected" readonly style="background:#f7fafc;">
-                      </div>
-                      <div class="calib-input-group" style="flex:0 0 100px;">
-                        <label>{{ _("Measured (g):") }}</label>
-                        <input type="number" class="form-control form-control-sm ethanol-measured" placeholder="g" step="0.0001" oninput="calcEthanol(this)">
-                      </div>
-                      <div class="calib-input-group" style="flex:0 0 70px;">
-                        <label>{{ _("Difference:") }}</label>
-                        <input type="text" class="form-control form-control-sm ethanol-diff" readonly style="background:#f7fafc;">
-                      </div>
-                      <span class="ethanol-status d-none" style="min-width:50px;"></span>
-                    </div>
-                  </div>
-                  {% elif eq.category == 'prep' %}
-                  <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
-                    <div class="calib-panel-title">
-                      <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration") }}
-                    </div>
-                    <div class="mb-2"><small class="text-muted">{{ _("Revolution count — before and after") }}</small></div>
-                    <div class="d-flex gap-3 align-items-end flex-wrap">
-                      <div class="calib-input-group">
-                        <label>{{ _("Duration:") }}</label>
-                        <input type="text" class="form-control form-control-sm drum-duration" placeholder="min" style="width:60px;">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Before:") }}</label>
-                        <input type="number" class="form-control form-control-sm drum-before" placeholder="RPM" step="1" style="width:70px;" oninput="checkDrumDiff(this)">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("After:") }}</label>
-                        <input type="number" class="form-control form-control-sm drum-after" placeholder="RPM" step="1" style="width:70px;" oninput="checkDrumDiff(this)">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Diff:") }}</label>
-                        <input type="text" class="form-control form-control-sm drum-diff" readonly style="width:55px; background:#f7fafc;">
-                      </div>
-                      <span class="calib-status d-none"></span>
-                    </div>
-                  </div>
-                  {% elif eq.category == 'analysis' %}
-                    {# Sulfur багаж - 5 стандартаар калибровка #}
-                    {% if 'хүхэр' in (eq.name|lower) or 'sulfur' in (eq.name|lower) or 's-144' in (eq.name|lower) or '5e-irs' in (eq.name|lower) %}
-                    <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="sulfur">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-droplet-half"></i> {{ _("Sulfur Analyzer Calibration") }}
-                      </div>
+ <div class="modal-dialog modal-xl modal-dialog-scrollable">
+ <div class="modal-content shadow-lg border-0 rounded-xl overflow-hidden">
+ <div class="modal-header py-3">
+ <h5 class="modal-title d-flex align-items-center gap-2 mb-0">
+ <i class="bi bi-clipboard-check text-[1.3rem]"></i>
+ <span class="text-xs-2 min-w-[18px] text-accent-2 font-bold">{{ _("Equipment Usage & Repair") }}</span>
+ </h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body p-4">
+ {% if related_equipments %}
+ <div class="table-responsive">
+ <table class="table table-sm align-middle eq-table mb-0" id="equipmentCheckTable">
+ <thead>
+ <tr class="border-b border-slate-200">
+ <th class="w-[18%] min-w-[140px]">{{ _("Lab Code / Name") }}</th>
+ <th class="w-[6%] text-center">{{ _("Condition") }}<br>OK</th>
+ <th class="w-[8%] text-center">{{ _("Usage") }}<br>({{ _("min") }})</th>
+ <th class="w-[14%]">{{ _("Notes") }}</th>
+ <th class="w-[6%] text-center">{{ _("Calibration") }}</th>
+ <th class="w-[6%] text-center">{{ _("Repair") }}</th>
+ <th class="w-[42%]">{{ _("Calibration / Repair Details") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for eq in related_equipments %}
+ <tr data-eq-id="{{ eq.id }}" data-category="{{ eq.category or 'other' }}" data-eq-name="{{ eq.name }}">
+ <td>
+ <div class="eq-lab-code">{{ eq.lab_code or eq.name }}</div>
+ {% if eq.lab_code and eq.name != eq.lab_code %}
+ <div class="eq-lab-name">{{ eq.name }}</div>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-check eq-check-ok w-[22px] h-[22px] cursor-pointer" type="checkbox"
+ checked>
+ </td>
+ <td>
+ <input type="number" class="form-control form-control-sm text-center eq-minutes border-slate-300"
+ placeholder="0" min="0">
+ </td>
+ <td>
+ <input type="text" class="form-control form-control-sm eq-note border-slate-300"
+ placeholder="{{ _("Notes...") }}">
+ </td>
+ <td class="text-center">
+ {% if eq.category in ['furnace', 'balance', 'analysis', 'prep', 'dryer'] or 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
+ <button type="button" class="btn btn-outline-success btn-sm calib-btn"
+ title="{{ _("Run Calibration") }}">
+ <i class="bi bi-thermometer-half"></i>
+ </button>
+ {% else %}
+ <span class="text-muted">—</span>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ <input class="form-check-input eq-repair eq-repair-cb" type="checkbox"
+ 
+>
+ </td>
+ <td class="calib-repair-cell">
+ {# Calibration Panel - Category based #}
+ {% if eq.category == 'furnace' %}
+ <div class="calib-panel furnace-panel d-none">
+ <div class="calib-panel-title">
+ <i class="bi bi-thermometer-sun"></i> {{ _("Temperature Check") }}
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Set Temp:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Diff:") }}</label>
+ <input type="text" class="form-control form-control-sm calib-temp-diff bg-slate-50" readonly>
+ <span class="calib-status d-none"></span>
+ </div>
+ </div>
+ {% elif eq.category == 'dryer' %}
+ <div class="calib-panel furnace-panel d-none">
+ <div class="calib-panel-title">
+ <i class="bi bi-thermometer-half"></i> {{ _("Drying Cabinet — Temperature Check") }}
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Set Temp:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-set-temp" value="105" placeholder="°C" step="1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Diff:") }}</label>
+ <input type="text" class="form-control form-control-sm calib-temp-diff bg-slate-50" readonly>
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ </div>
+ {% elif 'термостат' in (eq.name|lower) or 'thermostat' in (eq.name|lower) %}
+ <div class="calib-panel furnace-panel d-none">
+ <div class="calib-panel-title">
+ <i class="bi bi-thermometer-half"></i> {{ _("Thermostat — Temperature Check") }}
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Set Temp:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-set-temp" placeholder="°C" step="1">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-actual-temp" placeholder="°C" step="0.1">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[75px]">
+ <label>{{ _("Diff:") }}</label>
+ <input type="text" class="form-control form-control-sm calib-temp-diff bg-slate-50" readonly>
+ <span class="calib-status d-none min-w-[50px]"></span>
+ </div>
+ </div>
+ {% elif eq.category == 'balance' %}
+ <div class="calib-panel balance-panel d-none">
+ <div class="calib-panel-title text-sm-2">
+ <i class="bi bi-speedometer2"></i> {{ _("Balance Check (Weights)") }}
+ </div>
+ <div class="mb-2">
+ <small class="text-muted flex-1">{{ _("Standard Weight -> Measured Value") }}</small>
+ </div>
+ <div class="calib-weights-list">
+ <div class="calib-weight-row">
+ <input type="number" class="form-control form-control-sm calib-std-wt flex-1" placeholder="{{ _("Std (g)") }}" step="0.0001">
+ <input type="number" class="form-control form-control-sm calib-meas-wt flex-1" placeholder="{{ _("Measured") }}" step="0.0001">
+ <span class="calib-status d-none min-w-[50px]"></span>
+ </div>
+ </div>
+ <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-1 js-add-weight-row">
+ <i class="bi bi-plus"></i> {{ _("Add Weight") }}
+ </button>
+ <hr class="my-2 border-[#dee2e6]">
+ <div class="calib-panel-title text-sm-2">
+ <i class="bi bi-droplet"></i> {{ _("Ethanol Pycnometer Test") }}
+ </div>
+ <div class="d-flex gap-2 flex-wrap align-items-end mb-1">
+ <div class="calib-input-group grow-0 shrink-0 basis-[75px]">
+ <label>{{ _("Temp (°C):") }}</label>
+ <input type="number" class="form-control form-control-sm ethanol-temp" placeholder="20" step="0.1" value="20">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[90px]">
+ <label>{{ _("Density (g/mL):") }}</label>
+ <input type="number" class="form-control form-control-sm ethanol-density" placeholder="0.7893" step="0.0001" value="0.7893">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[85px]">
+ <label>{{ _("Volume (mL):") }}</label>
+ <input type="number" class="form-control form-control-sm ethanol-volume" placeholder="mL" step="0.01">
+ </div>
+ </div>
+ <div class="d-flex gap-2 flex-wrap align-items-end">
+ <div class="calib-input-group grow-0 shrink-0 basis-[100px]">
+ <label>{{ _("Calculated (g):") }}</label>
+ <input type="text" class="form-control form-control-sm ethanol-expected bg-slate-50" readonly>
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[100px]">
+ <label>{{ _("Measured (g):") }}</label>
+ <input type="number" class="form-control form-control-sm ethanol-measured" placeholder="g" step="0.0001">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[70px]">
+ <label>{{ _("Difference:") }}</label>
+ <input type="text" class="form-control form-control-sm ethanol-diff bg-slate-50" readonly>
+ </div>
+ <span class="ethanol-status d-none min-w-[50px]"></span>
+ </div>
+ </div>
+ {% elif eq.category == 'prep' %}
+ <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
+ <div class="calib-panel-title">
+ <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration") }}
+ </div>
+ <div class="mb-2"><small class="text-muted grow-[1.5]">{{ _("Revolution count — before and after") }}</small></div>
+ <div class="d-flex gap-3 align-items-end flex-wrap">
+ <div class="calib-input-group grow-0 shrink-0 basis-[90px]">
+ <label>{{ _("Duration:") }}</label>
+ <input type="text" class="form-control form-control-sm drum-duration w-[60px]" placeholder="min">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[85px]">
+ <label>{{ _("Before:") }}</label>
+ <input type="number" class="form-control form-control-sm drum-before w-[70px]" placeholder="RPM" step="1">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[100px]">
+ <label>{{ _("After:") }}</label>
+ <input type="number" class="form-control form-control-sm drum-after w-[70px]" placeholder="RPM" step="1">
+ </div>
+ <div class="calib-input-group grow-0 shrink-0 basis-[100px]">
+ <label>{{ _("Diff:") }}</label>
+ <input type="text" class="form-control form-control-sm drum-diff w-[55px] bg-slate-50" readonly>
+ </div>
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ </div>
+ {% elif eq.category == 'analysis' %}
+ {# Sulfur багаж - 5 стандартаар калибровка #}
+ {% if 'хүхэр' in (eq.name|lower) or 'sulfur' in (eq.name|lower) or 's-144' in (eq.name|lower) or '5e-irs' in (eq.name|lower) %}
+ <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="sulfur">
+ <div class="calib-panel-title">
+ <i class="bi bi-droplet-half"></i> {{ _("Sulfur Analyzer Calibration") }}
+ </div>
 
-                      {# Curve type + Ээлж #}
-                      <div class="d-flex gap-3 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
-                        <div class="calib-input-group">
-                          <label>{{ _("Curve type:") }}</label>
-                          <select class="form-select form-select-sm sulfur-curve-type" style="width:130px;">
-                            <option value="single">{{ _("Single") }}</option>
-                            <option value="linear">{{ _("Linear") }}</option>
-                            <option value="quadratic">{{ _("Quadratic") }}</option>
-                            <option value="cubic">{{ _("Cubic") }}</option>
-                          </select>
-                        </div>
-                        <div class="calib-input-group">
-                          <label>{{ _("RMS Error:") }}</label>
-                          <input type="text" class="form-control form-control-sm sulfur-rms" readonly
-                                 style="width:90px; background:#f7fafc; font-weight:700;">
-                        </div>
-                      </div>
+ {# Curve type + Ээлж #}
+ <div class="d-flex gap-3 mb-2 align-items-end flex-wrap py-[6px] px-[8px] bg-white/60 rounded-lg">
+ <div class="calib-input-group grow-0 shrink-0 basis-[70px]">
+ <label>{{ _("Curve type:") }}</label>
+ <select class="form-select form-select-sm sulfur-curve-type w-[130px]">
+ <option value="single">{{ _("Single") }}</option>
+ <option value="linear">{{ _("Linear") }}</option>
+ <option value="quadratic">{{ _("Quadratic") }}</option>
+ <option value="cubic">{{ _("Cubic") }}</option>
+ </select>
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("RMS Error:") }}</label>
+ <input type="text" class="form-control form-control-sm sulfur-rms w-[90px] bg-slate-50 font-bold" readonly
+>
+ </div>
+ </div>
 
-                      {# 1. Калибровкийн стандартууд #}
-                      <div class="mb-1">
-                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
-                      </div>
-                      <div style="display:flex; gap:4px; margin-bottom:2px; padding:0 0 0 22px;">
-                        <small class="text-muted" style="flex:1.5">Std ID</small>
-                        <small class="text-muted" style="flex:1">Weight,g</small>
-                        <small class="text-muted" style="flex:0.7">M,%</small>
-                        <small class="text-muted" style="flex:0.8">St,d %</small>
-                        <small class="text-muted" style="flex:0.8">Cert %</small>
-                        <small style="min-width:45px;"></small>
-                      </div>
-                      <div class="sulfur-stds-list mb-1">
-                        {% for i in range(1, 6) %}
-                        <div class="calib-std-row mb-1" style="display:flex; gap:4px; align-items:center;">
-                          <span style="font-size:0.7rem; min-width:18px; color:#6366f1; font-weight:700;">{{ i }}.</span>
-                          <input type="text" class="form-control form-control-sm sulfur-std-name" placeholder="—" style="flex:1.5">
-                          <input type="number" class="form-control form-control-sm sulfur-weight" placeholder="—" step="0.0001" style="flex:1">
-                          <input type="number" class="form-control form-control-sm sulfur-moisture" placeholder="—" step="0.01" style="flex:0.7">
-                          <input type="number" class="form-control form-control-sm sulfur-meas-val" placeholder="—" step="0.001" style="flex:0.8" oninput="checkSulfurRow(this)">
-                          <input type="number" class="form-control form-control-sm sulfur-cert-val" placeholder="—" step="0.001" style="flex:0.8">
-                          <span class="calib-status d-none" style="min-width:45px;"></span>
-                        </div>
-                        {% endfor %}
-                      </div>
-                      <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="addSulfurStdRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> {{ _("Add Standard") }}
-                      </button>
+ {# 1. Калибровкийн стандартууд #}
+ <div class="mb-1">
+ <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
+ </div>
+ <div class="flex gap-[4px] mb-[2px] pl-[22px]">
+ <small class="text-muted grow-[1.5]">Std ID</small>
+ <small class="text-muted flex-1">Weight,g</small>
+ <small class="text-muted grow-[0.7]">M,%</small>
+ <small class="text-muted grow-[0.8]">St,d %</small>
+ <small class="text-muted grow-[0.8]">Cert %</small>
+ <small class="min-w-[45px]"></small>
+ </div>
+ <div class="sulfur-stds-list mb-1">
+ {% for i in range(1, 6) %}
+ <div class="calib-std-row mb-1 flex gap-[4px] items-center">
+ <span class="text-xs-2 min-w-[18px] text-accent-2 font-bold">{{ i }}.</span>
+ <input type="text" class="form-control form-control-sm sulfur-std-name grow-[1.5]" placeholder="—">
+ <input type="number" class="form-control form-control-sm sulfur-weight flex-1" placeholder="—" step="0.0001">
+ <input type="number" class="form-control form-control-sm sulfur-moisture grow-[0.7]" placeholder="—" step="0.01">
+ <input type="number" class="form-control form-control-sm sulfur-meas-val grow-[0.8]" placeholder="—" step="0.001">
+ <input type="number" class="form-control form-control-sm sulfur-cert-val grow-[0.8]" placeholder="—" step="0.001">
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ {% endfor %}
+ </div>
+ <button type="button" class="btn btn-outline-primary btn-sm mb-2 js-add-sulfur-std">
+ <i class="bi bi-plus"></i> {{ _("Add Standard") }}
+ </button>
 
-                      {# 2. Калибровкийн дараах шалгалт #}
-                      <div class="mb-1">
-                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
-                      </div>
-                      <div class="sulfur-check-list">
-                        {% for i in range(1, 4) %}
-                        <div class="sulfur-check-row mb-1" style="display:flex; gap:4px; align-items:center;">
-                          <span style="font-size:0.7rem; min-width:18px; color:#15803d; font-weight:700;">{{ i }}.</span>
-                          <input type="text" class="form-control form-control-sm sulfur-chk-name" placeholder="Std ID" style="flex:1.5">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-weight" placeholder="Wt,g" step="0.0001" style="flex:1">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-moisture" placeholder="M,%" step="0.01" style="flex:0.7">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-meas" placeholder="St,d%" step="0.001" style="flex:0.8" oninput="checkSulfurVerifyRow(this)">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-cert" placeholder="Cert%" step="0.001" style="flex:0.8">
-                          <span class="calib-status d-none" style="min-width:45px;"></span>
-                        </div>
-                        {% endfor %}
-                      </div>
-                      <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="addSulfurCheckRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> {{ _("Add Verification") }}
-                      </button>
+ {# 2. Калибровкийн дараах шалгалт #}
+ <div class="mb-1">
+ <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
+ </div>
+ <div class="sulfur-check-list">
+ {% for i in range(1, 4) %}
+ <div class="sulfur-check-row mb-1 flex gap-[4px] items-center">
+ <span class="text-xs-2 min-w-[18px] text-pass-bold font-bold">{{ i }}.</span>
+ <input type="text" class="form-control form-control-sm sulfur-chk-name grow-[1.5]" placeholder="Std ID">
+ <input type="number" class="form-control form-control-sm sulfur-chk-weight flex-1" placeholder="Wt,g" step="0.0001">
+ <input type="number" class="form-control form-control-sm sulfur-chk-moisture grow-[0.7]" placeholder="M,%" step="0.01">
+ <input type="number" class="form-control form-control-sm sulfur-chk-meas grow-[0.8]" placeholder="St,d%" step="0.001">
+ <input type="number" class="form-control form-control-sm sulfur-chk-cert grow-[0.8]" placeholder="Cert%" step="0.001">
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ {% endfor %}
+ </div>
+ <button type="button" class="btn btn-outline-success btn-sm mb-2 js-add-sulfur-check">
+ <i class="bi bi-plus"></i> {{ _("Add Verification") }}
+ </button>
 
-                      {# Нийт үр дүн #}
-                      <div class="sulfur-final-status mt-1" style="font-size:0.8rem; font-weight:600; text-align:center;"></div>
-                    </div>
-                    {# Фосфор, Фтор, Хлор багаж — XRF калибровка #}
-                    {% elif 'фосфор' in (eq.name|lower) or 'phosph' in (eq.name|lower) or 'фтор' in (eq.name|lower) or 'fluor' in (eq.name|lower) or 'хлор' in (eq.name|lower) or 'chlor' in (eq.name|lower) or 'fl2350' in (eq.lab_code|default('')|lower) %}
-                    <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="xrf_calib">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-rulers"></i>
-                        {% if 'фосфор' in (eq.name|lower) or 'phosph' in (eq.name|lower) %}
-                          {{ _("Phosphorus (P) Calibration") }}
-                        {% elif 'фтор' in (eq.name|lower) or 'fluor' in (eq.name|lower) %}
-                          {{ _("Fluorine (F) Calibration") }}
-                        {% elif 'хлор' in (eq.name|lower) or 'chlor' in (eq.name|lower) %}
-                          {{ _("Chlorine (Cl) Calibration") }}
-                        {% else %}
-                          {{ eq.name }} {{ _("Calibration") }}
-                        {% endif %}
-                      </div>
+ {# Нийт үр дүн #}
+ <div class="sulfur-final-status mt-1 text-sm-1 font-semibold text-center"></div>
+ </div>
+ {# Фосфор, Фтор, Хлор багаж — XRF калибровка #}
+ {% elif 'фосфор' in (eq.name|lower) or 'phosph' in (eq.name|lower) or 'фтор' in (eq.name|lower) or 'fluor' in (eq.name|lower) or 'хлор' in (eq.name|lower) or 'chlor' in (eq.name|lower) or 'fl2350' in (eq.lab_code|default('')|lower) %}
+ <div class="calib-panel analysis-panel sulfur-panel d-none" data-calib-type="xrf_calib">
+ <div class="calib-panel-title">
+ <i class="bi bi-rulers"></i>
+ {% if 'фосфор' in (eq.name|lower) or 'phosph' in (eq.name|lower) %}
+ {{ _("Phosphorus (P) Calibration") }}
+ {% elif 'фтор' in (eq.name|lower) or 'fluor' in (eq.name|lower) %}
+ {{ _("Fluorine (F) Calibration") }}
+ {% elif 'хлор' in (eq.name|lower) or 'chlor' in (eq.name|lower) %}
+ {{ _("Chlorine (Cl) Calibration") }}
+ {% else %}
+ {{ eq.name }} {{ _("Calibration") }}
+ {% endif %}
+ </div>
 
-                      {# Curve type + RMS #}
-                      <div class="d-flex gap-3 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
-                        <div class="calib-input-group">
-                          <label>{{ _("Curve type:") }}</label>
-                          <select class="form-select form-select-sm sulfur-curve-type" style="width:130px;">
-                            <option value="single">{{ _("Single") }}</option>
-                            <option value="linear">{{ _("Linear") }}</option>
-                            <option value="quadratic">{{ _("Quadratic") }}</option>
-                            <option value="cubic">{{ _("Cubic") }}</option>
-                          </select>
-                        </div>
-                        <div class="calib-input-group">
-                          <label>{{ _("RMS Error:") }}</label>
-                          <input type="text" class="form-control form-control-sm sulfur-rms" readonly
-                                 style="width:90px; background:#f7fafc; font-weight:700;">
-                        </div>
-                      </div>
+ {# Curve type + RMS #}
+ <div class="d-flex gap-3 mb-2 align-items-end flex-wrap py-[6px] px-[8px] bg-white/60 rounded-lg">
+ <div class="calib-input-group">
+ <label>{{ _("Curve type:") }}</label>
+ <select class="form-select form-select-sm sulfur-curve-type w-[130px]">
+ <option value="single">{{ _("Single") }}</option>
+ <option value="linear">{{ _("Linear") }}</option>
+ <option value="quadratic">{{ _("Quadratic") }}</option>
+ <option value="cubic">{{ _("Cubic") }}</option>
+ </select>
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("RMS Error:") }}</label>
+ <input type="text" class="form-control form-control-sm sulfur-rms w-[90px] bg-slate-50 font-bold" readonly
+>
+ </div>
+ </div>
 
-                      {# 1. Калибровкийн стандартууд #}
-                      <div class="mb-1">
-                        <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
-                      </div>
-                      <div style="display:flex; gap:4px; margin-bottom:2px; padding:0 0 0 22px;">
-                        <small class="text-muted" style="flex:1.5">Std ID</small>
-                        <small class="text-muted" style="flex:1">Weight,g</small>
-                        <small class="text-muted" style="flex:0.7">M,%</small>
-                        <small class="text-muted" style="flex:0.8">{{ _("Measured%%") }}</small>
-                        <small class="text-muted" style="flex:0.8">Cert %</small>
-                        <small style="min-width:45px;"></small>
-                      </div>
-                      <div class="sulfur-stds-list mb-1">
-                        {% for i in range(1, 6) %}
-                        <div class="calib-std-row mb-1" style="display:flex; gap:4px; align-items:center;">
-                          <span style="font-size:0.7rem; min-width:18px; color:#6366f1; font-weight:700;">{{ i }}.</span>
-                          <input type="text" class="form-control form-control-sm sulfur-std-name" placeholder="—" style="flex:1.5">
-                          <input type="number" class="form-control form-control-sm sulfur-weight" placeholder="—" step="0.0001" style="flex:1">
-                          <input type="number" class="form-control form-control-sm sulfur-moisture" placeholder="—" step="0.01" style="flex:0.7">
-                          <input type="number" class="form-control form-control-sm sulfur-meas-val" placeholder="—" step="0.001" style="flex:0.8" oninput="checkSulfurRow(this)">
-                          <input type="number" class="form-control form-control-sm sulfur-cert-val" placeholder="—" step="0.001" style="flex:0.8">
-                          <span class="calib-status d-none" style="min-width:45px;"></span>
-                        </div>
-                        {% endfor %}
-                      </div>
-                      <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="addSulfurStdRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> {{ _("Add Standard") }}
-                      </button>
+ {# 1. Калибровкийн стандартууд #}
+ <div class="mb-1">
+ <small class="fw-semibold text-primary"><i class="bi bi-1-circle me-1"></i>{{ _("Calibration") }}</small>
+ </div>
+ <div class="flex gap-[4px] mb-[2px] pl-[22px]">
+ <small class="text-muted grow-[1.5]">Std ID</small>
+ <small class="text-muted flex-1">Weight,g</small>
+ <small class="text-muted grow-[0.7]">M,%</small>
+ <small class="text-muted grow-[0.8]">{{ _("Measured%%") }}</small>
+ <small class="text-muted grow-[0.8]">Cert %</small>
+ <small class="min-w-[45px]"></small>
+ </div>
+ <div class="sulfur-stds-list mb-1">
+ {% for i in range(1, 6) %}
+ <div class="calib-std-row mb-1 flex gap-[4px] items-center">
+ <span class="text-xs-2 min-w-[18px] text-accent-2 font-bold">{{ i }}.</span>
+ <input type="text" class="form-control form-control-sm sulfur-std-name grow-[1.5]" placeholder="—">
+ <input type="number" class="form-control form-control-sm sulfur-weight flex-1" placeholder="—" step="0.0001">
+ <input type="number" class="form-control form-control-sm sulfur-moisture grow-[0.7]" placeholder="—" step="0.01">
+ <input type="number" class="form-control form-control-sm sulfur-meas-val grow-[0.8]" placeholder="—" step="0.001">
+ <input type="number" class="form-control form-control-sm sulfur-cert-val grow-[0.8]" placeholder="—" step="0.001">
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ {% endfor %}
+ </div>
+ <button type="button" class="btn btn-outline-primary btn-sm mb-2 js-add-sulfur-std">
+ <i class="bi bi-plus"></i> {{ _("Add Standard") }}
+ </button>
 
-                      {# 2. Калибровкийн дараах шалгалт #}
-                      <div class="mb-1">
-                        <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
-                      </div>
-                      <div class="sulfur-check-list">
-                        {% for i in range(1, 4) %}
-                        <div class="sulfur-check-row mb-1" style="display:flex; gap:4px; align-items:center;">
-                          <span style="font-size:0.7rem; min-width:18px; color:#15803d; font-weight:700;">{{ i }}.</span>
-                          <input type="text" class="form-control form-control-sm sulfur-chk-name" placeholder="Std ID" style="flex:1.5">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-weight" placeholder="Wt,g" step="0.0001" style="flex:1">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-moisture" placeholder="M,%" step="0.01" style="flex:0.7">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-meas" placeholder="%" step="0.001" style="flex:0.8" oninput="checkSulfurVerifyRow(this)">
-                          <input type="number" class="form-control form-control-sm sulfur-chk-cert" placeholder="Cert%" step="0.001" style="flex:0.8">
-                          <span class="calib-status d-none" style="min-width:45px;"></span>
-                        </div>
-                        {% endfor %}
-                      </div>
-                      <button type="button" class="btn btn-outline-success btn-sm mb-2" onclick="addSulfurCheckRow(this)" style="font-size:0.72rem;">
-                        <i class="bi bi-plus"></i> {{ _("Add Verification") }}
-                      </button>
+ {# 2. Калибровкийн дараах шалгалт #}
+ <div class="mb-1">
+ <small class="fw-semibold text-success"><i class="bi bi-2-circle me-1"></i>{{ _("Verification (post-calibration)") }}</small>
+ </div>
+ <div class="sulfur-check-list">
+ {% for i in range(1, 4) %}
+ <div class="sulfur-check-row mb-1 flex gap-[4px] items-center">
+ <span class="text-xs-2 min-w-[18px] text-pass-bold font-bold">{{ i }}.</span>
+ <input type="text" class="form-control form-control-sm sulfur-chk-name grow-[1.5]" placeholder="Std ID">
+ <input type="number" class="form-control form-control-sm sulfur-chk-weight flex-1" placeholder="Wt,g" step="0.0001">
+ <input type="number" class="form-control form-control-sm sulfur-chk-moisture grow-[0.7]" placeholder="M,%" step="0.01">
+ <input type="number" class="form-control form-control-sm sulfur-chk-meas grow-[0.8]" placeholder="%" step="0.001">
+ <input type="number" class="form-control form-control-sm sulfur-chk-cert grow-[0.8]" placeholder="Cert%" step="0.001">
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ {% endfor %}
+ </div>
+ <button type="button" class="btn btn-outline-success btn-sm mb-2 js-add-sulfur-check">
+ <i class="bi bi-plus"></i> {{ _("Add Verification") }}
+ </button>
 
-                      <div class="sulfur-final-status mt-1" style="font-size:0.8rem; font-weight:600; text-align:center;"></div>
-                    </div>
-                    {# Илчлэг багаж - 1 дээж, 5 хэмжилт #}
-                    {% elif 'илчлэг' in (eq.name|lower) or 'calorimeter' in (eq.name|lower) or 'c2000' in (eq.name|lower) or 'c5000' in (eq.name|lower) or 'c6000' in (eq.name|lower) %}
-                    <div class="calib-panel analysis-panel calorimeter-panel d-none" data-calib-type="calorimeter">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-fire"></i> {{ _("Calorimeter Calibration") }}
-                      </div>
-                      <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                        <div class="calib-input-group">
-                          <label>{{ _("Vessel:") }}</label>
-                          <select class="form-select form-select-sm cal-vessel" style="width:100px;">
-                            <option value="1">{{ _("Vessel") }}-1</option>
-                            <option value="2">{{ _("Vessel") }}-2</option>
-                            <option value="3">{{ _("Vessel") }}-3</option>
-                            <option value="4">{{ _("Vessel") }}-4</option>
-                            <option value="5">{{ _("Vessel") }}-5</option>
-                          </select>
-                        </div>
-                        <div class="calib-input-group">
-                          <label>{{ _("Standard:") }}</label>
-                          <input type="text" class="form-control form-control-sm cal-std-name" value="Benzoic Acid" style="width:100px;">
-                        </div>
-                        <div class="calib-input-group">
-                          <label>{{ _("Cert (J/g):") }}</label>
-                          <input type="number" class="form-control form-control-sm cal-cert-val" value="26460" step="1" style="width:75px;">
-                        </div>
-                      </div>
-                      <div class="mb-1"><small class="text-muted">{{ _("5 measurements:") }}</small></div>
-                      <div class="cal-measurements mb-2" style="display:flex; gap:4px; flex-wrap:wrap;">
-                        {% for i in range(1, 6) %}
-                        <div style="text-align:center;">
-                          <div style="font-size:0.65rem; color:#94a3b8;">{{ i }}</div>
-                          <input type="number" class="form-control form-control-sm cal-meas" step="1" style="width:72px;" oninput="checkCalorimeter(this)">
-                        </div>
-                        {% endfor %}
-                      </div>
-                      <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span style="font-size:0.75rem;">Avg:</span>
-                        <input type="text" class="form-control form-control-sm cal-avg" readonly style="width:70px; background:#f7fafc;">
-                        <span style="font-size:0.75rem;">RSD:</span>
-                        <input type="text" class="form-control form-control-sm cal-rsd" readonly style="width:55px; background:#f7fafc;">
-                        <span style="font-size:0.75rem;">Max err:</span>
-                        <input type="text" class="form-control form-control-sm cal-max-err" readonly style="width:55px; background:#f7fafc;">
-                        <span style="font-size:0.75rem;">{{ _("Prev C:") }}</span>
-                        <input type="number" class="form-control form-control-sm cal-prev-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="{{ _("Previous bomb heat capacity") }}">
-                        <span style="font-size:0.75rem;">C:</span>
-                        <input type="number" class="form-control form-control-sm cal-bomb-capacity" placeholder="J/°C" step="0.1" style="width:75px;" title="{{ _("Bomb heat capacity") }}">
-                        <span class="calib-status d-none"></span>
-                      </div>
-                    </div>
-                    {# CSN / Хөөлтийн зэрэг багаж - хоосон тигелийн туршилт #}
-                    {% elif 'хөөлт' in (eq.name|lower) or 'csn' in (eq.name|lower) or 'swelling' in (eq.name|lower) or 'csi' in (eq.name|lower) %}
-                    <div class="calib-panel analysis-panel csn-panel d-none" data-calib-type="csn_crucible">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-clipboard-check"></i> {{ _("Empty Crucible Test") }}
-                      </div>
-                      <div class="mb-2"><small class="text-muted">{{ _("MNS ISO 501 — Furnace temperature profile check") }}</small></div>
+ <div class="sulfur-final-status mt-1 text-sm-1 font-semibold text-center"></div>
+ </div>
+ {# Илчлэг багаж - 1 дээж, 5 хэмжилт #}
+ {% elif 'илчлэг' in (eq.name|lower) or 'calorimeter' in (eq.name|lower) or 'c2000' in (eq.name|lower) or 'c5000' in (eq.name|lower) or 'c6000' in (eq.name|lower) %}
+ <div class="calib-panel analysis-panel calorimeter-panel d-none" data-calib-type="calorimeter">
+ <div class="calib-panel-title">
+ <i class="bi bi-fire"></i> {{ _("Calorimeter Calibration") }}
+ </div>
+ <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+ <div class="calib-input-group">
+ <label>{{ _("Vessel:") }}</label>
+ <select class="form-select form-select-sm cal-vessel w-[100px]">
+ <option value="1">{{ _("Vessel") }}-1</option>
+ <option value="2">{{ _("Vessel") }}-2</option>
+ <option value="3">{{ _("Vessel") }}-3</option>
+ <option value="4">{{ _("Vessel") }}-4</option>
+ <option value="5">{{ _("Vessel") }}-5</option>
+ </select>
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Standard:") }}</label>
+ <input type="text" class="form-control form-control-sm cal-std-name w-[100px]" value="Benzoic Acid">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Cert (J/g):") }}</label>
+ <input type="number" class="form-control form-control-sm cal-cert-val w-[75px]" value="26460" step="1">
+ </div>
+ </div>
+ <div class="mb-1"><small class="text-muted grow-[0.7]">{{ _("5 measurements:") }}</small></div>
+ <div class="cal-measurements mb-2 flex gap-[4px] flex-wrap">
+ {% for i in range(1, 6) %}
+ <div class="text-center">
+ <div class="text-2xs text-slate-400">{{ i }}</div>
+ <input type="number" class="form-control form-control-sm cal-meas w-[72px]" step="1">
+ </div>
+ {% endfor %}
+ </div>
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ <span class="text-xs">Avg:</span>
+ <input type="text" class="form-control form-control-sm cal-avg w-[70px] bg-slate-50" readonly>
+ <span class="text-xs">RSD:</span>
+ <input type="text" class="form-control form-control-sm cal-rsd w-[55px] bg-slate-50 w-[70px]" readonly>
+ <span class="text-xs">Max err:</span>
+ <input type="text" class="form-control form-control-sm cal-max-err w-[55px] bg-slate-50" readonly>
+ <span class="text-xs">{{ _("Prev C:") }}</span>
+ <input type="number" class="form-control form-control-sm cal-prev-capacity w-[75px]" placeholder="J/°C" step="0.1" title="{{ _("Previous bomb heat capacity") }}">
+ <span class="text-xs">C:</span>
+ <input type="number" class="form-control form-control-sm cal-bomb-capacity w-[75px]" placeholder="J/°C" step="0.1" title="{{ _("Bomb heat capacity") }}">
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ </div>
+ {# CSN / Хөөлтийн зэрэг багаж - хоосон тигелийн туршилт #}
+ {% elif 'хөөлт' in (eq.name|lower) or 'csn' in (eq.name|lower) or 'swelling' in (eq.name|lower) or 'csi' in (eq.name|lower) %}
+ <div class="calib-panel analysis-panel csn-panel d-none" data-calib-type="csn_crucible">
+ <div class="calib-panel-title">
+ <i class="bi bi-clipboard-check text-[1.3rem]"></i> {{ _("Empty Crucible Test") }}
+ </div>
+ <div class="mb-2"><small class="text-muted grow-[0.8]">{{ _("MNS ISO 501 — Furnace temperature profile check") }}</small></div>
 
-                      {# Тохиргоо #}
-                      <div class="d-flex gap-2 mb-2 align-items-end flex-wrap csn-settings-row" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
-                        <div>
-                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">{{ _("Start Temp. °C") }}</div>
-                          <input type="number" class="form-control form-control-sm csn-start-temp" placeholder="°C" step="1" style="width:70px;">
-                        </div>
-                        <div>
-                          <div style="font-size:0.65rem; color:#64748b; font-weight:600;">{{ _("Max current (sec)") }}</div>
-                          <input type="number" class="form-control form-control-sm csn-max-current" placeholder="sec" step="1" style="width:70px;">
-                        </div>
-                      </div>
+ {# Тохиргоо #}
+ <div class="d-flex gap-2 mb-2 align-items-end flex-wrap csn-settings-row py-[6px] px-[8px] bg-white/60 rounded-lg">
+ <div class="flex gap-[4px] mb-[2px] pl-[22px]">
+ <div class="text-2xs text-slate-500 font-semibold">{{ _("Start Temp. °C") }}</div>
+ <input type="number" class="form-control form-control-sm csn-start-temp w-[70px]" placeholder="°C" step="1">
+ </div>
+ <div class="flex gap-[4px] mb-[2px] pl-[22px]">
+ <div class="text-2xs text-slate-500 font-semibold">{{ _("Max current (sec)") }}</div>
+ <input type="number" class="form-control form-control-sm csn-max-current w-[70px]" placeholder="sec" step="1">
+ </div>
+ </div>
 
-                      {# Туршилтын мөрүүд #}
-                      <div style="font-size:0.65rem; color:#94a3b8; display:flex; gap:4px; padding:0 0 2px 22px;">
-                        <span style="flex:1; text-align:center;">{{ _("1 min") }}</span>
-                        <span style="flex:1; text-align:center;">1:30 <b style="color:#64748b;">(800±10)</b></span>
-                        <span style="flex:1; text-align:center;">2:30 <b style="color:#64748b;">(820±5)</b></span>
-                        <span style="flex:0.7; text-align:center;"></span>
-                      </div>
-                      <div class="csn-crucible-list">
-                        <div class="csn-crucible-row mb-1" style="display:flex; gap:4px; align-items:center;">
-                          <span style="font-size:0.7rem; min-width:18px; color:#dc2626;" title="1-р туршилт">T1</span>
-                          <input type="number" class="form-control form-control-sm csn-temp-1min" placeholder="°C" step="0.1" style="flex:1" oninput="checkCsnTemp(this)">
-                          <input type="number" class="form-control form-control-sm csn-temp-1m30" placeholder="°C" step="0.1" style="flex:1" oninput="checkCsnTemp(this)">
-                          <input type="number" class="form-control form-control-sm csn-temp-2m30" placeholder="°C" step="0.1" style="flex:1" oninput="checkCsnTemp(this)">
-                          <span class="csn-row-status" style="flex:0.7; font-size:0.7rem; font-weight:600; text-align:center;">—</span>
-                        </div>
-                      </div>
+ {# Туршилтын мөрүүд #}
+ <div class="text-2xs text-slate-400 flex gap-[4px] pb-[2px] pl-[22px]">
+ <span class="flex-1 text-center">{{ _("1 min") }}</span>
+ <span class="flex-1 text-center">1:30 <b class="text-slate-500">(800±10)</b></span>
+ <span class="flex-1 text-center">2:30 <b class="text-slate-500">(820±5)</b></span>
+ <span class="grow-[0.7] text-center"></span>
+ </div>
+ <div class="csn-crucible-list">
+ <div class="csn-crucible-row mb-1 flex gap-[4px] items-center">
+ <span class="text-xs-2 min-w-[18px] text-fail-rose" title="1-р туршилт">T1</span>
+ <input type="number" class="form-control form-control-sm csn-temp-1min flex-1" placeholder="°C" step="0.1">
+ <input type="number" class="form-control form-control-sm csn-temp-1m30 flex-1" placeholder="°C" step="0.1">
+ <input type="number" class="form-control form-control-sm csn-temp-2m30 flex-1" placeholder="°C" step="0.1">
+ <span class="csn-row-status grow-[0.7] text-xs-2 font-semibold text-center">—</span>
+ </div>
+ </div>
 
-                      {# Тохируулга хийсэн бол дахин туршилт нэмэх #}
-                      <div class="d-flex gap-2 mt-2">
-                        <button type="button" class="btn btn-outline-warning btn-sm flex-fill" onclick="addCsnRetest(this)">
-                          <i class="bi bi-arrow-repeat"></i> {{ _("Adjustment + Retest") }}
-                        </button>
-                      </div>
+ {# Тохируулга хийсэн бол дахин туршилт нэмэх #}
+ <div class="d-flex gap-2 mt-2">
+ <button type="button" class="btn btn-outline-warning btn-sm flex-fill js-add-csn-retest">
+ <i class="bi bi-arrow-repeat"></i> {{ _("Adjustment + Retest") }}
+ </button>
+ </div>
 
-                      {# Нийт үр дүн #}
-                      <div class="csn-final-status mt-2 d-none" style="padding:6px 10px; border-radius:8px; font-size:0.8rem; font-weight:600; text-align:center;">
-                      </div>
-                    </div>
-                    {# Барабан / Drum (Gi index) #}
-                    {% elif 'барабан' in (eq.name|lower) or 'drum' in (eq.name|lower) or 'roga' in (eq.name|lower) %}
-                    <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration (Gi)") }}
-                      </div>
-                      <div class="mb-2"><small class="text-muted">{{ _("Initial revolution: 1 min: 50, 5 min: 250 required") }}</small></div>
+ {# Нийт үр дүн #}
+ <div class="csn-final-status mt-2 d-none py-[6px] px-[10px] rounded-lg text-sm-1 font-semibold text-center">
+ </div>
+ </div>
+ {# Барабан / Drum (Gi index) #}
+ {% elif 'барабан' in (eq.name|lower) or 'drum' in (eq.name|lower) or 'roga' in (eq.name|lower) %}
+ <div class="calib-panel prep-panel drum-panel d-none" data-calib-type="drum">
+ <div class="calib-panel-title">
+ <i class="bi bi-arrow-repeat"></i> {{ _("Drum Calibration (Gi)") }}
+ </div>
+ <div class="mb-2"><small class="text-muted grow-[0.8]">{{ _("Initial revolution: 1 min: 50, 5 min: 250 required") }}</small></div>
 
-                      {# Эхний эргэлт #}
-                      <div class="d-flex gap-2 mb-2 align-items-end flex-wrap" style="padding:6px 8px; background:rgba(255,255,255,0.6); border-radius:8px;">
-                        <div class="calib-input-group">
-                          <label>{{ _("Initial RPM:") }}</label>
-                          <input type="number" class="form-control form-control-sm drum-initial" placeholder="RPM" step="1" style="width:80px;">
-                        </div>
-                      </div>
+ {# Эхний эргэлт #}
+ <div class="d-flex gap-2 mb-2 align-items-end flex-wrap py-[6px] px-[8px] bg-white/60 rounded-lg">
+ <div class="calib-input-group">
+ <label>{{ _("Initial RPM:") }}</label>
+ <input type="number" class="form-control form-control-sm drum-initial w-[80px]" placeholder="RPM" step="1">
+ </div>
+ </div>
 
-                      {# Шалгалтын мөрүүд #}
-                      <table class="table table-sm table-borderless mb-2" style="font-size:0.78rem;">
-                        <thead>
-                          <tr style="border-bottom:1px solid #e2e8f0;">
-                            <th style="width:80px;">{{ _("Duration") }}</th>
-                            <th style="width:90px;">{{ _("Target") }}</th>
-                            <th style="width:90px;">{{ _("Measured") }}</th>
-                            <th style="width:60px;">{{ _("Result") }}</th>
-                          </tr>
-                        </thead>
-                        <tbody class="drum-test-body">
-                          <tr class="drum-test-row">
-                            <td><span class="fw-semibold">{{ _("1 min") }}</span></td>
-                            <td><span class="text-muted">50</span></td>
-                            <td><input type="number" class="form-control form-control-sm drum-meas-1min" placeholder="RPM" step="1" style="width:80px;" oninput="checkDrumRow(this)"></td>
-                            <td><span class="drum-status-1min"></span></td>
-                          </tr>
-                          <tr class="drum-test-row">
-                            <td><span class="fw-semibold">{{ _("5 min") }}</span></td>
-                            <td><span class="text-muted">250</span></td>
-                            <td><input type="number" class="form-control form-control-sm drum-meas-5min" placeholder="RPM" step="1" style="width:80px;" oninput="checkDrumRow(this)"></td>
-                            <td><span class="drum-status-5min"></span></td>
-                          </tr>
-                        </tbody>
-                      </table>
+ {# Шалгалтын мөрүүд #}
+ <table class="table table-sm table-borderless mb-2 text-[0.78rem]">
+ <thead>
+ <tr class="border-b border-slate-200">
+ <th class="w-[80px]">{{ _("Duration") }}</th>
+ <th class="w-[90px]">{{ _("Target") }}</th>
+ <th class="w-[90px]">{{ _("Measured") }}</th>
+ <th class="w-[60px]">{{ _("Result") }}</th>
+ </tr>
+ </thead>
+ <tbody class="drum-test-body">
+ <tr class="drum-test-row">
+ <td><span class="fw-semibold">{{ _("1 min") }}</span></td>
+ <td><span class="text-muted">50</span></td>
+ <td><input type="number" class="form-control form-control-sm drum-meas-1min w-[80px]" placeholder="RPM" step="1"></td>
+ <td><span class="drum-status-1min"></span></td>
+ </tr>
+ <tr class="drum-test-row">
+ <td><span class="fw-semibold">{{ _("5 min") }}</span></td>
+ <td><span class="text-muted">250</span></td>
+ <td><input type="number" class="form-control form-control-sm drum-meas-5min w-[80px]" placeholder="RPM" step="1"></td>
+ <td><span class="drum-status-5min"></span></td>
+ </tr>
+ </tbody>
+ </table>
 
-                      {# Нийт үр дүн #}
-                      <div class="drum-final-status" style="font-size:0.8rem; font-weight:600; text-align:center;"></div>
-                    </div>
-                    {# Бусад шинжилгээний багаж #}
-                    {% else %}
-                    <div class="calib-panel analysis-panel d-none" data-calib-type="general">
-                      <div class="calib-panel-title">
-                        <i class="bi bi-gear"></i> {{ _("Instrument Calibration") }}
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Standard:") }}</label>
-                        <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard Name") }}">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Certified:") }}</label>
-                        <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="{{ _("Value") }}" step="0.001">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Measured:") }}</label>
-                        <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001" oninput="checkAnalysisDiff(this)">
-                      </div>
-                      <div class="calib-input-group">
-                        <label>{{ _("Diff (%%):") }}</label>
-                        <input type="text" class="form-control form-control-sm calib-diff-pct" readonly style="background:#f7fafc;">
-                        <span class="calib-status d-none"></span>
-                      </div>
-                    </div>
-                    {% endif %}
-                  {% endif %}
-                  {# Repair Panel #}
-                  <div class="repair-panel d-none">
-                    <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
-                    <input type="date" class="form-control form-control-sm mb-2 repair-date">
-                    <div class="spare-parts-list"></div>
-                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
-                            onclick="addSparePart(this)">
-                      <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% else %}
-        <div class="alert alert-info mb-0">
-          <i class="bi bi-info-circle me-2"></i>{{ _("No equipment associated with this analysis.") }}
-        </div>
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
-        </button>
-        {% if related_equipments %}
-        <button type="button" class="btn btn-success px-4" onclick="submitEquipmentUsage()">
-          <i class="bi bi-save me-1"></i>{{ _("Save") }}
-        </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# Нийт үр дүн #}
+ <div class="drum-final-status text-sm-1 font-semibold text-center"></div>
+ </div>
+ {# Бусад шинжилгээний багаж #}
+ {% else %}
+ <div class="calib-panel analysis-panel d-none" data-calib-type="general">
+ <div class="calib-panel-title">
+ <i class="bi bi-gear"></i> {{ _("Instrument Calibration") }}
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Standard:") }}</label>
+ <input type="text" class="form-control form-control-sm calib-std-name" placeholder="{{ _("Standard Name") }}">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Certified:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-cert-val" placeholder="{{ _("Value") }}" step="0.001">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Measured:") }}</label>
+ <input type="number" class="form-control form-control-sm calib-meas-val" placeholder="{{ _("Value") }}" step="0.001">
+ </div>
+ <div class="calib-input-group">
+ <label>{{ _("Diff (%%):") }}</label>
+ <input type="text" class="form-control form-control-sm calib-diff-pct bg-slate-50" readonly>
+ <span class="calib-status d-none min-w-[45px]"></span>
+ </div>
+ </div>
+ {% endif %}
+ {% endif %}
+ {# Repair Panel #}
+ <div class="repair-panel d-none">
+ <div class="repair-date-label"><i class="bi bi-calendar-event me-1"></i>{{ _("Repair Date") }}</div>
+ <input type="date" class="form-control form-control-sm mb-2 repair-date">
+ <div class="spare-parts-list"></div>
+ <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-1"
+ data-action="add-spare-part">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add Spare Part") }}
+ </button>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="alert alert-info mb-0">
+ <i class="bi bi-info-circle me-2"></i>{{ _("No equipment associated with this analysis.") }}
+ </div>
+ {% endif %}
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+ <i class="bi bi-x-lg me-1"></i>{{ _("Close") }}
+ </button>
+ {% if related_equipments %}
+ <button type="button" class="btn btn-success px-4" id="btn-submit-equipment">
+ <i class="bi bi-save me-1"></i>{{ _("Save") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
@@ -685,60 +685,60 @@
 
 <script src="{{ url_for('static', filename='js/repeatability.js') }}"></script>
 <script nonce="{{ csp_nonce }}">
-  window.LIMS_ANALYSIS_CODE_RAW     = "{{ analysis.code }}";
-  window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
-  window.REJECTED_SAMPLES = window.REJECTED_SAMPLES || {{ rejected_samples_info|tojson|safe }};
-  window.EXISTING_RESULTS = window.EXISTING_RESULTS || {{ existing_results_map|tojson|safe }};
-  window.TIMER_CONFIG     = {{ (timer_config|default({}))|tojson|safe }};
-  window.GI_RETEST_MODES  = {{ gi_retest_modes | tojson | safe }};
-  window.S_BY_SAMPLE      = {{ (sulfur_by_sample|default({}))|tojson|safe }};
-  window.ERROR_LABELS     = {{ error_labels | tojson | safe | default("{}") }};
+ window.LIMS_ANALYSIS_CODE_RAW = "{{ analysis.code }}";
+ window.LIMS_ANALYSIS_CODE_DISPLAY = "{{ analysis.code | fmt_code }}";
+ window.REJECTED_SAMPLES = window.REJECTED_SAMPLES || {{ rejected_samples_info|tojson|safe }};
+ window.EXISTING_RESULTS = window.EXISTING_RESULTS || {{ existing_results_map|tojson|safe }};
+ window.TIMER_CONFIG = {{ (timer_config|default({}))|tojson|safe }};
+ window.GI_RETEST_MODES = {{ gi_retest_modes | tojson | safe }};
+ window.S_BY_SAMPLE = {{ (sulfur_by_sample|default({}))|tojson|safe }};
+ window.ERROR_LABELS = {{ error_labels | tojson | safe | default("{}") }};
 </script>
 
 <script nonce="{{ csp_nonce }}">
-  window.LIMS_ANALYSIS_CODE = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
-  (function(){
-    const ls = window.localStorage, ss = window.sessionStorage;
-    const isLimsKey = (k)=> typeof k==='string' && k.startsWith('analysis_');
-    const _set = ss.setItem.bind(ss), _get = ss.getItem.bind(ss), _rem = ss.removeItem.bind(ss);
-    ss.setItem = function(k,v){ try{ if(isLimsKey(k)) ls.setItem(k,v) }catch(e){}; return _set(k,v) };
-    ss.getItem = function(k){ try{ if(isLimsKey(k)){ const v = ls.getItem(k); if(v!==null) return v } }catch(e){}; return _get(k) };
-    ss.removeItem = function(k){ try{ if(isLimsKey(k)) ls.removeItem(k) }catch(e){}; return _rem(k) };
-  })();
+ window.LIMS_ANALYSIS_CODE = window.LIMS_ANALYSIS_CODE_RAW || window.LIMS_ANALYSIS_CODE_DISPLAY;
+ (function(){
+ const ls = window.localStorage, ss = window.sessionStorage;
+ const isLimsKey = (k)=> typeof k==='string' && k.startsWith('analysis_');
+ const _set = ss.setItem.bind(ss), _get = ss.getItem.bind(ss), _rem = ss.removeItem.bind(ss);
+ ss.setItem = function(k,v){ try{ if(isLimsKey(k)) ls.setItem(k,v) }catch(e){}; return _set(k,v) };
+ ss.getItem = function(k){ try{ if(isLimsKey(k)){ const v = ls.getItem(k); if(v!==null) return v } }catch(e){}; return _get(k) };
+ ss.removeItem = function(k){ try{ if(isLimsKey(k)) ls.removeItem(k) }catch(e){}; return _rem(k) };
+ })();
 </script>
 
 <script nonce="{{ csp_nonce }}">
-  // ===== STICKY CONTROLS SCROLL EFFECT =====
-  (function() {
-    const stickyControls = document.querySelector('.sticky-controls');
-    if (!stickyControls) return;
+ // ===== STICKY CONTROLS SCROLL EFFECT =====
+ (function() {
+ const stickyControls = document.querySelector('.sticky-controls');
+ if (!stickyControls) return;
 
-    let lastScroll = 0;
-    let ticking = false;
+ let lastScroll = 0;
+ let ticking = false;
 
-    function updateStickyState() {
-      const scrollY = window.scrollY || window.pageYOffset;
+ function updateStickyState() {
+ const scrollY = window.scrollY || window.pageYOffset;
 
-      // 50px-с их scroll хийсэн бол "scrolled" класс нэмэх
-      if (scrollY > 50) {
-        stickyControls.classList.add('scrolled');
-      } else {
-        stickyControls.classList.remove('scrolled');
-      }
+ // 50px-с их scroll хийсэн бол "scrolled" класс нэмэх
+ if (scrollY> 50) {
+ stickyControls.classList.add('scrolled');
+ } else {
+ stickyControls.classList.remove('scrolled');
+ }
 
-      ticking = false;
-    }
+ ticking = false;
+ }
 
-    window.addEventListener('scroll', function() {
-      if (!ticking) {
-        window.requestAnimationFrame(updateStickyState);
-        ticking = true;
-      }
-    }, { passive: true });
+ window.addEventListener('scroll', function() {
+ if (!ticking) {
+ window.requestAnimationFrame(updateStickyState);
+ ticking = true;
+ }
+ }, { passive: true });
 
-    // Initial check
-    updateStickyState();
-  })();
+ // Initial check
+ updateStickyState();
+ })();
 </script>
 
 {# Calculator JS файлууд устгагдсан — бүх тооцоолол aggrid template дотор #}
@@ -747,40 +747,40 @@
 
 {# serial_balance.js — aggrid_macros.html macro-аас ачаалагдана #}
 <script nonce="{{ csp_nonce }}">
-  window.EQ_I18N = {
-    balanceNotLoaded: "{{ _('Balance module not loaded.') }}",
-    webSerialNotSupported: "{{ _('Web Serial API is not supported. Please use Chrome 89+.') }}",
-    connectBalance: "{{ _('Connect Balance') }}",
-    notConnected: "{{ _('Not Connected') }}",
-    connecting: "{{ _('Connecting...') }}",
-    connected: "{{ _('Connected') }}",
-    error: "{{ _('Error') }}",
-    disconnected: "{{ _('Disconnected') }}",
-    fetchingWeight: "{{ _('Fetching weight...') }}",
-    failedGetWeight: "{{ _('Failed to get weight') }}",
-    selectSparePart: "{{ _('Select spare part...') }}",
-    qty: "{{ _('Qty') }}",
-    who: "{{ _('Who') }}",
-    daily: "{{ _('Daily') }}",
-    monthly: "{{ _('Monthly') }}",
-    adjustment: "{{ _('Adjustment') }}",
-    adjustmentColon: "{{ _('Adjustment:') }}",
-    temp: "{{ _('Temp:') }}",
-    current: "{{ _('Current:') }}",
-    stdG: "{{ _('Std (g)') }}",
-    measured: "{{ _('Measured') }}",
-    calibComplete: "{{ _('Calibration complete — ready for analysis') }}",
-    pleaseAdjustRetest: "{{ _('Please adjust and retest') }}",
-    calibrationComplete: "{{ _('Calibration complete') }}",
-    pleaseAdjust: "{{ _('Please adjust') }}",
-    calibVerified: "{{ _('Calibration verified') }}",
-    verifyFailed: "{{ _('Verification failed — recalibrate') }}",
-    noDataToSave: "{{ _('No data to save.') }}",
-    savedSuccess: "{{ _('Equipment usage saved successfully!') }}",
-    errorColon: "{{ _('Error:') }}",
-    unknownError: "{{ _('Unknown error') }}",
-    serverError: "{{ _('Server error!') }}"
-  };
+ window.EQ_I18N = {
+ balanceNotLoaded: "{{ _('Balance module not loaded.') }}",
+ webSerialNotSupported: "{{ _('Web Serial API is not supported. Please use Chrome 89+.') }}",
+ connectBalance: "{{ _('Connect Balance') }}",
+ notConnected: "{{ _('Not Connected') }}",
+ connecting: "{{ _('Connecting...') }}",
+ connected: "{{ _('Connected') }}",
+ error: "{{ _('Error') }}",
+ disconnected: "{{ _('Disconnected') }}",
+ fetchingWeight: "{{ _('Fetching weight...') }}",
+ failedGetWeight: "{{ _('Failed to get weight') }}",
+ selectSparePart: "{{ _('Select spare part...') }}",
+ qty: "{{ _('Qty') }}",
+ who: "{{ _('Who') }}",
+ daily: "{{ _('Daily') }}",
+ monthly: "{{ _('Monthly') }}",
+ adjustment: "{{ _('Adjustment') }}",
+ adjustmentColon: "{{ _('Adjustment:') }}",
+ temp: "{{ _('Temp:') }}",
+ current: "{{ _('Current:') }}",
+ stdG: "{{ _('Std (g)') }}",
+ measured: "{{ _('Measured') }}",
+ calibComplete: "{{ _('Calibration complete — ready for analysis') }}",
+ pleaseAdjustRetest: "{{ _('Please adjust and retest') }}",
+ calibrationComplete: "{{ _('Calibration complete') }}",
+ pleaseAdjust: "{{ _('Please adjust') }}",
+ calibVerified: "{{ _('Calibration verified') }}",
+ verifyFailed: "{{ _('Verification failed — recalibrate') }}",
+ noDataToSave: "{{ _('No data to save.') }}",
+ savedSuccess: "{{ _('Equipment usage saved successfully!') }}",
+ errorColon: "{{ _('Error:') }}",
+ unknownError: "{{ _('Unknown error') }}",
+ serverError: "{{ _('Server error!') }}"
+ };
 </script>
 <script src="{{ url_for('static', filename='js/analysis_balance_ui.js') }}"></script>
 

@@ -3,124 +3,124 @@
 {% block title %}{{ _('Edit Waste Record') if mode == 'edit' else _('New Waste Record') }}{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 700px;">
-  <div class="card border-0 shadow-sm mt-4">
-    <div class="card-header bg-white border-0 py-3">
-      <h5 class="mb-0">
-        <i class="bi bi-{{ 'pencil' if mode == 'edit' else 'plus-circle' }} text-primary me-2"></i>
-        {{ _('Edit Waste Record') if mode == 'edit' else _('Add New Waste Record') }}
-      </h5>
-    </div>
-    <div class="card-body">
-      <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        {# Name #}
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Mongolian Name") }} <span class="text-danger">*</span></label>
-            <input type="text" name="name_mn" class="form-control" required
-                   value="{{ waste.name_mn if waste else '' }}"
-                   placeholder="{{ _("e.g. Sulfuric acid") }}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">{{ _("International Name") }}</label>
-            <input type="text" name="name_en" class="form-control"
-                   value="{{ waste.name_en if waste else '' }}"
-                   placeholder="{{ _("e.g. Sulfuric acid") }}">
-          </div>
-        </div>
+<div class="container max-w-[700px]">
+ <div class="card border-0 shadow-sm mt-4">
+ <div class="card-header bg-white border-0 py-3">
+ <h5 class="mb-0">
+ <i class="bi bi-{{ 'pencil' if mode == 'edit' else 'plus-circle' }} text-primary me-2"></i>
+ {{ _('Edit Waste Record') if mode == 'edit' else _('Add New Waste Record') }}
+ </h5>
+ </div>
+ <div class="card-body">
+ <form method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ {# Name #}
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Mongolian Name") }} <span class="text-danger">*</span></label>
+ <input type="text" name="name_mn" class="form-control" required
+ value="{{ waste.name_mn if waste else '' }}"
+ placeholder="{{ _("e.g. Sulfuric acid") }}">
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("International Name") }}</label>
+ <input type="text" name="name_en" class="form-control"
+ value="{{ waste.name_en if waste else '' }}"
+ placeholder="{{ _("e.g. Sulfuric acid") }}">
+ </div>
+ </div>
 
-        {# Quantity #}
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Monthly Average Amount") }}</label>
-            <input type="number" step="0.01" name="monthly_amount" class="form-control"
-                   value="{{ waste.monthly_amount if waste else '' }}"
-                   placeholder="0.00">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Unit") }}</label>
-            <select name="unit" class="form-select">
-              <option value="л" {{ 'selected' if waste and waste.unit == 'л' }}>{{ _("liter (L)") }}</option>
-              <option value="мл" {{ 'selected' if waste and waste.unit == 'мл' }}>{{ _("milliliter (mL)") }}</option>
-              <option value="кг" {{ 'selected' if waste and waste.unit == 'кг' }}>{{ _("kilogram (kg)") }}</option>
-              <option value="г" {{ 'selected' if waste and waste.unit == 'г' }}>{{ _("gram (g)") }}</option>
-              <option value="ш" {{ 'selected' if waste and waste.unit == 'ш' }}>{{ _("piece (pc)") }}</option>
-            </select>
-          </div>
-        </div>
+ {# Quantity #}
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Monthly Average Amount") }}</label>
+ <input type="number" step="0.01" name="monthly_amount" class="form-control"
+ value="{{ waste.monthly_amount if waste else '' }}"
+ placeholder="0.00">
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Unit") }}</label>
+ <select name="unit" class="form-select">
+ <option value="л" {{ 'selected' if waste and waste.unit == 'л' }}>{{ _("liter (L)") }}</option>
+ <option value="мл" {{ 'selected' if waste and waste.unit == 'мл' }}>{{ _("milliliter (mL)") }}</option>
+ <option value="кг" {{ 'selected' if waste and waste.unit == 'кг' }}>{{ _("kilogram (kg)") }}</option>
+ <option value="г" {{ 'selected' if waste and waste.unit == 'г' }}>{{ _("gram (g)") }}</option>
+ <option value="ш" {{ 'selected' if waste and waste.unit == 'ш' }}>{{ _("piece (pc)") }}</option>
+ </select>
+ </div>
+ </div>
 
-        {# Disposal info #}
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Disposal Method") }}</label>
-            <select name="disposal_method" class="form-select">
-              <option value="">-- {{ _("Select") }} --</option>
-              {% for key, val in disposal_methods.items() %}
-              <option value="{{ key }}" {{ 'selected' if waste and waste.disposal_method == key }}>{{ val }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Disposal Location") }}</label>
-            <input type="text" name="disposal_location" class="form-control"
-                   value="{{ waste.disposal_location if waste else '' }}"
-                   placeholder="{{ _("e.g. Sewage line") }}">
-          </div>
-        </div>
+ {# Disposal info #}
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Disposal Method") }}</label>
+ <select name="disposal_method" class="form-select">
+ <option value="">-- {{ _("Select") }} --</option>
+ {% for key, val in disposal_methods.items() %}
+ <option value="{{ key }}" {{ 'selected' if waste and waste.disposal_method == key }}>{{ val }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Disposal Location") }}</label>
+ <input type="text" name="disposal_location" class="form-control"
+ value="{{ waste.disposal_location if waste else '' }}"
+ placeholder="{{ _("e.g. Sewage line") }}">
+ </div>
+ </div>
 
-        {# Hazard classification #}
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <div class="form-check mt-4">
-              <input type="checkbox" class="form-check-input" name="is_hazardous" id="isHazardous"
-                     {{ 'checked' if waste and waste.is_hazardous else 'checked' }}>
-              <label class="form-check-label" for="isHazardous">
-                <i class="bi bi-exclamation-triangle text-warning me-1"></i>
-                {{ _("Hazardous Waste") }}
-              </label>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">{{ _("Hazard Type") }}</label>
-            <select name="hazard_type" class="form-select">
-              <option value="">-- {{ _("Select") }} --</option>
-              {% for key, val in hazard_types.items() %}
-              <option value="{{ key }}" {{ 'selected' if waste and waste.hazard_type == key }}>{{ val }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
+ {# Hazard classification #}
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <div class="form-check mt-4">
+ <input type="checkbox" class="form-check-input" name="is_hazardous" id="isHazardous"
+ {{ 'checked' if waste and waste.is_hazardous else 'checked' }}>
+ <label class="form-check-label" for="isHazardous">
+ <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+ {{ _("Hazardous Waste") }}
+ </label>
+ </div>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Hazard Type") }}</label>
+ <select name="hazard_type" class="form-select">
+ <option value="">-- {{ _("Select") }} --</option>
+ {% for key, val in hazard_types.items() %}
+ <option value="{{ key }}" {{ 'selected' if waste and waste.hazard_type == key }}>{{ val }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ </div>
 
-        {# Lab #}
-        <div class="mb-3">
-          <label class="form-label">{{ _("Laboratory") }}</label>
-          <select name="lab_type" class="form-select">
-            {% for key, val in lab_types.items() %}
-            <option value="{{ key }}" {{ 'selected' if waste and waste.lab_type == key }}>{{ val }}</option>
-            {% endfor %}
-          </select>
-        </div>
+ {# Lab #}
+ <div class="mb-3">
+ <label class="form-label">{{ _("Laboratory") }}</label>
+ <select name="lab_type" class="form-select">
+ {% for key, val in lab_types.items() %}
+ <option value="{{ key }}" {{ 'selected' if waste and waste.lab_type == key }}>{{ val }}</option>
+ {% endfor %}
+ </select>
+ </div>
 
-        {# Notes #}
-        <div class="mb-4">
-          <label class="form-label">{{ _("Notes") }}</label>
-          <textarea name="notes" class="form-control" rows="3"
-                    placeholder="{{ _("Additional notes...") }}">{{ waste.notes if waste else '' }}</textarea>
-        </div>
+ {# Notes #}
+ <div class="mb-4">
+ <label class="form-label">{{ _("Notes") }}</label>
+ <textarea name="notes" class="form-control" rows="3"
+ placeholder="{{ _("Additional notes...") }}">{{ waste.notes if waste else '' }}</textarea>
+ </div>
 
-        {# Buttons #}
-        <div class="d-flex justify-content-between">
-          <a href="{{ url_for('chemicals.waste_list') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
-          </a>
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-lg me-1"></i>
-            {{ _('Save') if mode == 'edit' else _('Add') }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+ {# Buttons #}
+ <div class="d-flex justify-content-between">
+ <a href="{{ url_for('chemicals.waste_list') }}" class="btn btn-outline-secondary">
+ <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
+ </a>
+ <button type="submit" class="btn btn-primary">
+ <i class="bi bi-check-lg me-1"></i>
+ {{ _('Save') if mode == 'edit' else _('Add') }}
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
 </div>
 {% endblock %}

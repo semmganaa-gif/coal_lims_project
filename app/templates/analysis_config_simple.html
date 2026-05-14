@@ -5,262 +5,262 @@
 <style nonce="{{ csp_nonce }}">
 /* Main layout */
 .config-container {
-  max-width: 1400px;
-  margin: 0 auto;
+ max-width: 1400px;
+ margin: 0 auto;
 }
 
 /* Client Cards */
 .client-card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: box-shadow 0.2s;
-  margin-bottom: 1rem;
+ border: none;
+ border-radius: 12px;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+ transition: box-shadow 0.2s;
+ margin-bottom: 1rem;
 }
 .client-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+ box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .client-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem 1.25rem;
-  border-radius: 12px 12px 0 0;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+ color: white;
+ padding: 1rem 1.25rem;
+ border-radius: 12px 12px 0 0;
+ cursor: pointer;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
 }
 .client-header.chpp {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 .client-header h5 {
-  margin: 0;
-  font-weight: 600;
-  font-size: 1rem;
+ margin: 0;
+ font-weight: 600;
+ font-size: 1rem;
 }
 .client-header .badge {
-  font-size: 0.7rem;
+ font-size: 0.7rem;
 }
 
 /* Sample type accordion */
 .sample-type-item {
-  border-bottom: 1px solid #e5e7eb;
+ border-bottom: 1px solid #e5e7eb;
 }
 .sample-type-item:last-child {
-  border-bottom: none;
+ border-bottom: none;
 }
 .sample-type-header {
-  padding: 0.75rem 1.25rem;
-  background: #f9fafb;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background 0.2s;
+ padding: 0.75rem 1.25rem;
+ background: #f9fafb;
+ cursor: pointer;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ transition: background 0.2s;
 }
 .sample-type-header:hover {
-  background: #f3f4f6;
+ background: #f3f4f6;
 }
 .sample-type-header .type-name {
-  font-weight: 500;
-  color: #374151;
-  font-size: 0.9rem;
+ font-weight: 500;
+ color: #374151;
+ font-size: 0.9rem;
 }
 .sample-type-header .count-badge {
-  background: #e0e7ff;
-  color: #4338ca;
-  padding: 0.2rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+ background: #e0e7ff;
+ color: #4338ca;
+ padding: 0.2rem 0.5rem;
+ border-radius: 20px;
+ font-size: 0.75rem;
+ font-weight: 600;
 }
 .sample-type-header .chevron {
-  transition: transform 0.2s;
-  color: #9ca3af;
+ transition: transform 0.2s;
+ color: #9ca3af;
 }
 .sample-type-header.collapsed .chevron {
-  transform: rotate(-90deg);
+ transform: rotate(-90deg);
 }
 
 /* Analysis grid */
 .analysis-grid {
-  padding: 1rem 1.25rem;
-  background: white;
-  display: none;
+ padding: 1rem 1.25rem;
+ background: white;
+ display: none;
 }
 .analysis-grid.show {
-  display: block;
+ display: block;
 }
 
 .analysis-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.5rem;
 }
 
 /* Analysis chip - toggle style */
 .analysis-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: 2px solid #e5e7eb;
-  background: white;
-  color: #6b7280;
-  user-select: none;
+ display: inline-flex;
+ align-items: center;
+ padding: 0.4rem 0.75rem;
+ border-radius: 20px;
+ font-size: 0.8rem;
+ font-weight: 500;
+ cursor: pointer;
+ transition: all 0.2s;
+ border: 2px solid #e5e7eb;
+ background: white;
+ color: #6b7280;
+ user-select: none;
 }
 .analysis-chip:hover {
-  border-color: #c7d2fe;
-  background: #f5f3ff;
+ border-color: #c7d2fe;
+ background: #f5f3ff;
 }
 .analysis-chip.selected {
-  border-color: #6366f1;
-  background: #6366f1;
-  color: white;
+ border-color: #6366f1;
+ background: #6366f1;
+ color: white;
 }
 .analysis-chip input {
-  display: none;
+ display: none;
 }
 
 /* Quick action buttons */
 .quick-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+ display: flex;
+ gap: 0.5rem;
+ margin-bottom: 0.75rem;
 }
 .quick-btn {
-  padding: 0.3rem 0.6rem;
-  font-size: 0.7rem;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.15s;
+ padding: 0.3rem 0.6rem;
+ font-size: 0.7rem;
+ border-radius: 4px;
+ border: 1px solid #d1d5db;
+ background: white;
+ color: #6b7280;
+ cursor: pointer;
+ transition: all 0.15s;
 }
 .quick-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+ background: #f3f4f6;
+ border-color: #9ca3af;
 }
 .quick-btn.active {
-  background: #4f46e5;
-  color: white;
-  border-color: #4f46e5;
+ background: #4f46e5;
+ color: white;
+ border-color: #4f46e5;
 }
 
 /* Gi Modal */
 .gi-modal-body {
-  padding: 1.5rem;
+ padding: 1.5rem;
 }
 .gi-pf-section {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f9fafb;
-  border-radius: 8px;
+ margin-bottom: 1.5rem;
+ padding: 1rem;
+ background: #f9fafb;
+ border-radius: 8px;
 }
 .gi-pf-title {
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+ font-weight: 600;
+ color: #374151;
+ margin-bottom: 0.75rem;
+ display: flex;
+ align-items: center;
+ gap: 0.5rem;
 }
 .gi-shifts-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.5rem;
+ display: grid;
+ grid-template-columns: repeat(6, 1fr);
+ gap: 0.5rem;
 }
 .gi-shift-btn {
-  padding: 0.5rem;
-  text-align: center;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-size: 0.85rem;
-  font-weight: 500;
+ padding: 0.5rem;
+ text-align: center;
+ border: 2px solid #e5e7eb;
+ border-radius: 8px;
+ background: white;
+ cursor: pointer;
+ transition: all 0.15s;
+ font-size: 0.85rem;
+ font-weight: 500;
 }
 .gi-shift-btn:hover {
-  border-color: #a5b4fc;
+ border-color: #a5b4fc;
 }
 .gi-shift-btn.selected {
-  background: #4f46e5;
-  border-color: #4f46e5;
-  color: white;
+ background: #4f46e5;
+ border-color: #4f46e5;
+ color: white;
 }
 .gi-shift-btn.day {
-  border-color: #93c5fd;
+ border-color: #93c5fd;
 }
 .gi-shift-btn.day.selected {
-  background: #3b82f6;
-  border-color: #3b82f6;
+ background: #3b82f6;
+ border-color: #3b82f6;
 }
 .gi-shift-btn.night {
-  border-color: #fcd34d;
+ border-color: #fcd34d;
 }
 .gi-shift-btn.night.selected {
-  background: #f59e0b;
-  border-color: #f59e0b;
+ background: #f59e0b;
+ border-color: #f59e0b;
 }
 
 /* Floating save button */
 .floating-save {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  z-index: 1000;
+ position: fixed;
+ bottom: 2rem;
+ right: 2rem;
+ z-index: 1000;
 }
 .floating-save .btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+ padding: 0.75rem 1.5rem;
+ border-radius: 50px;
+ box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
 }
 
 /* SLA inline input */
 .sla-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: rgba(255,255,255,0.6);
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
+ display: inline-flex;
+ align-items: center;
+ gap: 3px;
+ background: rgba(255,255,255,0.6);
+ padding: 2px 6px;
+ border-radius: 6px;
+ border: 1px solid #e5e7eb;
 }
 .sla-type-input {
-  width: 50px;
-  padding: 1px 4px;
-  font-size: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  text-align: center;
-  background: #fff;
+ width: 50px;
+ padding: 1px 4px;
+ font-size: 0.75rem;
+ border: 1px solid #d1d5db;
+ border-radius: 4px;
+ text-align: center;
+ background: #fff;
 }
 .sla-type-input:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+ outline: none;
+ border-color: #6366f1;
+ box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
 }
 .sla-type-input::placeholder {
-  color: #c0c4cc;
-  font-size: 0.7rem;
+ color: #c0c4cc;
+ font-size: 0.7rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .analysis-chips {
-    gap: 0.4rem;
-  }
-  .analysis-chip {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-  }
+ .analysis-chips {
+ gap: 0.4rem;
+ }
+ .analysis-chip {
+ padding: 0.3rem 0.6rem;
+ font-size: 0.75rem;
+ }
 }
 </style>
 {% endblock %}
@@ -268,240 +268,240 @@
 {% block content %}
 <div class="container-fluid px-4 mt-4 pb-5 config-container">
 
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="mb-1 fw-bold text-primary">
-        <i class="bi bi-sliders me-2"></i>{{ _("Analysis Configuration") }}
-      </h4>
-      <p class="text-muted small mb-0">
-        {{ _("Configure analyses for each unit and type. Click chips to select/deselect.") }}
-      </p>
-    </div>
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#giModal">
-        <i class="bi bi-gear me-1"></i>{{ _("Gi Shifts") }}
-      </button>
-    </div>
-  </div>
+ <!-- Header -->
+ <div class="d-flex justify-content-between align-items-center mb-4">
+ <div>
+ <h4 class="mb-1 fw-bold text-primary">
+ <i class="bi bi-sliders me-2"></i>{{ _("Analysis Configuration") }}
+ </h4>
+ <p class="text-muted small mb-0">
+ {{ _("Configure analyses for each unit and type. Click chips to select/deselect.") }}
+ </p>
+ </div>
+ <div class="d-flex gap-2">
+ <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#giModal">
+ <i class="bi bi-gear me-1"></i>{{ _("Gi Shifts") }}
+ </button>
+ </div>
+ </div>
 
-  <form id="configForm" action="{{ url_for('admin.analysis_config_simple_save') }}" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <form id="configForm" action="{{ url_for('admin.analysis_config_simple_save') }}" method="post">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <!-- CHPP Section -->
-    {% if chpp_profiles %}
-    <div class="client-card">
-      <div class="client-header chpp" data-bs-toggle="collapse" data-bs-target="#chpp-content">
-        <h5><i class="bi bi-building-fill me-2"></i>{{ _("CHPP (Coal Handling & Preparation Plant)") }}</h5>
-        <span class="badge bg-light text-dark">{{ chpp_profiles|length }} {{ _("configs") }}</span>
-      </div>
-      <div id="chpp-content" class="collapse show">
-        {% set current_type = namespace(value='') %}
-        {% for profile in chpp_profiles %}
-          {% if profile.sample_type != current_type.value %}
-            {% if current_type.value != '' %}
-              </div></div>
-            {% endif %}
-            {% set current_type.value = profile.sample_type %}
-            {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
-            {% set sla_key = 'CHPP:' ~ profile.sample_type %}
-            {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
-            <div class="sample-type-item">
-              <div class="sample-type-header collapsed" onclick="toggleSection(this)">
-                <span class="type-name"><i class="bi bi-clock me-2"></i>{{ display_name }}</span>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="sla-inline" onclick="event.stopPropagation()">
-                    <i class="bi bi-clock-history text-muted" style="font-size:0.7rem;"></i>
-                    <input type="number" class="sla-type-input"
-                           name="sla_hours[{{ sla_key }}]"
-                           value="{{ sla_val }}"
-                           placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
-                           min="1" max="8760"
-                           title="{{ _('SLA hours') }}">
-                    <span style="font-size:0.65rem;color:#9ca3af;">{{ _("hrs") }}</span>
-                  </span>
-                  <i class="bi bi-chevron-down chevron"></i>
-                </div>
-              </div>
-              <div class="analysis-grid">
-          {% endif %}
+ <!-- CHPP Section -->
+ {% if chpp_profiles %}
+ <div class="client-card">
+ <div class="client-header chpp" data-bs-toggle="collapse" data-bs-target="#chpp-content">
+ <h5><i class="bi bi-building-fill me-2"></i>{{ _("CHPP (Coal Handling & Preparation Plant)") }}</h5>
+ <span class="badge bg-light text-dark">{{ chpp_profiles|length }} {{ _("configs") }}</span>
+ </div>
+ <div id="chpp-content" class="collapse show">
+ {% set current_type = namespace(value='') %}
+ {% for profile in chpp_profiles %}
+ {% if profile.sample_type != current_type.value %}
+ {% if current_type.value != '' %}
+ </div></div>
+ {% endif %}
+ {% set current_type.value = profile.sample_type %}
+ {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
+ {% set sla_key = 'CHPP:' ~ profile.sample_type %}
+ {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
+ <div class="sample-type-item">
+ <div class="sample-type-header collapsed" role="button">
+ <span class="type-name"><i class="bi bi-clock me-2"></i>{{ display_name }}</span>
+ <div class="d-flex align-items-center gap-2">
+ <span class="sla-inline">
+ <i class="bi bi-clock-history text-muted text-xs-2"></i>
+ <input type="number" class="sla-type-input"
+ name="sla_hours[{{ sla_key }}]"
+ value="{{ sla_val }}"
+ placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
+ min="1" max="8760"
+ title="{{ _('SLA hours') }}">
+ <span class="text-2xs text-[#9ca3af]">{{ _("hrs") }}</span>
+ </span>
+ <i class="bi bi-chevron-down chevron"></i>
+ </div>
+ </div>
+ <div class="analysis-grid">
+ {% endif %}
 
-          <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="fw-medium text-secondary" style="font-size: 0.85rem;">
-                <i class="bi bi-tag me-1"></i>{{ profile.pattern }}
-              </span>
-              <div class="quick-actions">
-                <button type="button" class="quick-btn" onclick="selectAll(this, 'chpp-{{ profile.id }}')">{{ _("All") }}</button>
-                <button type="button" class="quick-btn" onclick="selectStandard(this, 'chpp-{{ profile.id }}')">{{ _("Standard") }}</button>
-                <button type="button" class="quick-btn" onclick="selectNone(this, 'chpp-{{ profile.id }}')">{{ _("None") }}</button>
-              </div>
-            </div>
-            <div class="analysis-chips" data-profile="chpp-{{ profile.id }}">
-              {% for analysis in analysis_types %}
-              <label class="analysis-chip {% if analysis.code in profile.get_analyses() %}selected{% endif %}">
-                <input type="checkbox"
-                       name="chpp-{{ profile.id }}-analyses"
-                       value="{{ analysis.code }}"
-                       {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
-                {{ analysis.code }}
-              </label>
-              {% endfor %}
-            </div>
-          </div>
+ <div class="mb-3">
+ <div class="d-flex justify-content-between align-items-center mb-2">
+ <span class="fw-medium text-secondary text-sm-3">
+ <i class="bi bi-tag me-1"></i>{{ profile.pattern }}
+ </span>
+ <div class="quick-actions">
+ <button type="button" class="quick-btn" data-qa="all" data-profile="chpp-{{ profile.id }}">{{ _("All") }}</button>
+ <button type="button" class="quick-btn" data-qa="standard" data-profile="chpp-{{ profile.id }}">{{ _("Standard") }}</button>
+ <button type="button" class="quick-btn" data-qa="none" data-profile="chpp-{{ profile.id }}">{{ _("None") }}</button>
+ </div>
+ </div>
+ <div class="analysis-chips" data-profile="chpp-{{ profile.id }}">
+ {% for analysis in analysis_types %}
+ <label class="analysis-chip {% if analysis.code in profile.get_analyses() %}selected{% endif %}">
+ <input type="checkbox"
+ name="chpp-{{ profile.id }}-analyses"
+ value="{{ analysis.code }}"
+ {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
+ {{ analysis.code }}
+ </label>
+ {% endfor %}
+ </div>
+ </div>
 
-          {% if loop.last %}
-            </div></div>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
+ {% if loop.last %}
+ </div></div>
+ {% endif %}
+ {% endfor %}
+ </div>
+ </div>
+ {% endif %}
 
-    <!-- Other Clients -->
-    {% for client_name, profiles in grouped_profiles.items() %}
-    <div class="client-card">
-      <div class="client-header" data-bs-toggle="collapse" data-bs-target="#client-{{ loop.index }}-content">
-        <h5><i class="bi bi-building me-2"></i>{{ client_name }}</h5>
-        <span class="badge bg-light text-dark">{{ profiles|length }} {{ _("types") }}</span>
-      </div>
-      <div id="client-{{ loop.index }}-content" class="collapse show">
-        {% for profile in profiles %}
-        <div class="sample-type-item">
-          {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
-          {% set type_sla = sla_config_map.get(type_sla_key, '') %}
-          <div class="sample-type-header collapsed" onclick="toggleSection(this)">
-            <div class="d-flex align-items-center gap-2">
-              <span class="type-name">{{ profile.sample_type }}</span>
-              <span class="count-badge">{{ profile.get_analyses()|length }} {{ _("analyses") }}</span>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="sla-inline" onclick="event.stopPropagation()">
-                <i class="bi bi-clock-history text-muted" style="font-size:0.7rem;"></i>
-                <input type="number" class="sla-type-input"
-                       name="sla_hours[{{ type_sla_key }}]"
-                       value="{{ type_sla }}"
-                       placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
-                       min="1" max="8760"
-                       title="{{ _('SLA hours for') }} {{ profile.client_name }}/{{ profile.sample_type }}">
-                <span style="font-size:0.65rem;color:#9ca3af;">{{ _("hrs") }}</span>
-              </span>
-              <i class="bi bi-chevron-down chevron"></i>
-            </div>
-          </div>
-          <div class="analysis-grid">
-            <div class="quick-actions">
-              <button type="button" class="quick-btn" onclick="selectAll(this, 'simple-{{ profile.id }}')">{{ _("All") }}</button>
-              <button type="button" class="quick-btn" onclick="selectStandard(this, 'simple-{{ profile.id }}')">{{ _("Standard") }}</button>
-              <button type="button" class="quick-btn" onclick="selectNone(this, 'simple-{{ profile.id }}')">{{ _("None") }}</button>
-            </div>
-            <div class="analysis-chips" data-profile="simple-{{ profile.id }}">
-              {% for analysis in analysis_types %}
-              <label class="analysis-chip {% if analysis.code in profile.get_analyses() %}selected{% endif %}">
-                <input type="checkbox"
-                       name="simple-{{ profile.id }}-analyses"
-                       value="{{ analysis.code }}"
-                       {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
-                {{ analysis.code }}
-              </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
+ <!-- Other Clients -->
+ {% for client_name, profiles in grouped_profiles.items() %}
+ <div class="client-card">
+ <div class="client-header" data-bs-toggle="collapse" data-bs-target="#client-{{ loop.index }}-content">
+ <h5><i class="bi bi-building me-2"></i>{{ client_name }}</h5>
+ <span class="badge bg-light text-dark">{{ profiles|length }} {{ _("types") }}</span>
+ </div>
+ <div id="client-{{ loop.index }}-content" class="collapse show">
+ {% for profile in profiles %}
+ <div class="sample-type-item">
+ {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
+ {% set type_sla = sla_config_map.get(type_sla_key, '') %}
+ <div class="sample-type-header collapsed" role="button">
+ <div class="d-flex align-items-center gap-2">
+ <span class="type-name">{{ profile.sample_type }}</span>
+ <span class="count-badge">{{ profile.get_analyses()|length }} {{ _("analyses") }}</span>
+ </div>
+ <div class="d-flex align-items-center gap-2">
+ <span class="sla-inline">
+ <i class="bi bi-clock-history text-muted text-xs-2"></i>
+ <input type="number" class="sla-type-input"
+ name="sla_hours[{{ type_sla_key }}]"
+ value="{{ type_sla }}"
+ placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
+ min="1" max="8760"
+ title="{{ _('SLA hours for') }} {{ profile.client_name }}/{{ profile.sample_type }}">
+ <span class="text-2xs text-[#9ca3af]">{{ _("hrs") }}</span>
+ </span>
+ <i class="bi bi-chevron-down chevron"></i>
+ </div>
+ </div>
+ <div class="analysis-grid">
+ <div class="quick-actions">
+ <button type="button" class="quick-btn" data-qa="all" data-profile="simple-{{ profile.id }}">{{ _("All") }}</button>
+ <button type="button" class="quick-btn" data-qa="standard" data-profile="simple-{{ profile.id }}">{{ _("Standard") }}</button>
+ <button type="button" class="quick-btn" data-qa="none" data-profile="simple-{{ profile.id }}">{{ _("None") }}</button>
+ </div>
+ <div class="analysis-chips" data-profile="simple-{{ profile.id }}">
+ {% for analysis in analysis_types %}
+ <label class="analysis-chip {% if analysis.code in profile.get_analyses() %}selected{% endif %}">
+ <input type="checkbox"
+ name="simple-{{ profile.id }}-analyses"
+ value="{{ analysis.code }}"
+ {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
+ {{ analysis.code }}
+ </label>
+ {% endfor %}
+ </div>
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+ {% endfor %}
 
-    <!-- Hidden inputs for Gi shifts -->
-    <div id="gi-hidden-inputs">
-      {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
-        {% for shift in gi_shift_config.get(pf_code, []) %}
-        <input type="hidden" name="gi_shifts_{{ pf_code }}" value="{{ shift }}">
-        {% endfor %}
-      {% endfor %}
-    </div>
+ <!-- Hidden inputs for Gi shifts -->
+ <div id="gi-hidden-inputs">
+ {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
+ {% for shift in gi_shift_config.get(pf_code, []) %}
+ <input type="hidden" name="gi_shifts_{{ pf_code }}" value="{{ shift }}">
+ {% endfor %}
+ {% endfor %}
+ </div>
 
-    <!-- Floating Save Button -->
-    <div class="floating-save">
-      <button type="submit" class="btn btn-primary btn-lg">
-        <i class="bi bi-check-lg me-2"></i>{{ _("Save") }}
-      </button>
-    </div>
-  </form>
+ <!-- Floating Save Button -->
+ <div class="floating-save">
+ <button type="submit" class="btn btn-primary btn-lg">
+ <i class="bi bi-check-lg me-2"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </form>
 </div>
 
 <!-- Gi Shift Modal -->
 <div class="modal fade" id="giModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="bi bi-calendar-week me-2"></i>{{ _("Gi Shift Configuration") }}
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="gi-modal-body">
-        <p class="text-muted small mb-4">
-          {{ _("Select shifts to perform Gi analysis for each PF code. Gi will be automatically excluded for unselected shifts.") }}
-        </p>
+ <div class="modal-dialog modal-lg">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title">
+ <i class="bi bi-calendar-week me-2"></i>{{ _("Gi Shift Configuration") }}
+ </h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="gi-modal-body">
+ <p class="text-muted small mb-4">
+ {{ _("Select shifts to perform Gi analysis for each PF code. Gi will be automatically excluded for unselected shifts.") }}
+ </p>
 
-        {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
-        <div class="gi-pf-section">
-          <div class="gi-pf-title">
-            <span class="badge bg-primary">{{ pf_code }}</span>
-            <span class="text-muted small">- {{ _("select shifts") }}</span>
-          </div>
+ {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
+ <div class="gi-pf-section">
+ <div class="gi-pf-title">
+ <span class="badge bg-primary">{{ pf_code }}</span>
+ <span class="text-muted small">- {{ _("select shifts") }}</span>
+ </div>
 
-          <div class="mb-2">
-            <small class="text-info fw-medium">{{ _("Day (D)") }}</small>
-          </div>
-          <div class="gi-shifts-grid mb-3">
-            {% for i in range(1, 7) %}
-            <div class="gi-shift-btn day {% if 'D' ~ i in gi_shift_config.get(pf_code, []) %}selected{% endif %}"
-                 data-pf="{{ pf_code }}" data-shift="D{{ i }}" onclick="toggleGiShift(this)">
-              D{{ i }}
-            </div>
-            {% endfor %}
-          </div>
+ <div class="mb-2">
+ <small class="text-info fw-medium">{{ _("Day (D)") }}</small>
+ </div>
+ <div class="gi-shifts-grid mb-3">
+ {% for i in range(1, 7) %}
+ <div class="gi-shift-btn day {% if 'D' ~ i in gi_shift_config.get(pf_code, []) %}selected{% endif %}"
+ data-pf="{{ pf_code }}" data-shift="D{{ i }}">
+ D{{ i }}
+ </div>
+ {% endfor %}
+ </div>
 
-          <div class="mb-2">
-            <small class="text-warning fw-medium">{{ _("Night (N)") }}</small>
-          </div>
-          <div class="gi-shifts-grid">
-            {% for i in range(1, 7) %}
-            <div class="gi-shift-btn night {% if 'N' ~ i in gi_shift_config.get(pf_code, []) %}selected{% endif %}"
-                 data-pf="{{ pf_code }}" data-shift="N{{ i }}" onclick="toggleGiShift(this)">
-              N{{ i }}
-            </div>
-            {% endfor %}
-          </div>
+ <div class="mb-2">
+ <small class="text-warning fw-medium">{{ _("Night (N)") }}</small>
+ </div>
+ <div class="gi-shifts-grid">
+ {% for i in range(1, 7) %}
+ <div class="gi-shift-btn night {% if 'N' ~ i in gi_shift_config.get(pf_code, []) %}selected{% endif %}"
+ data-pf="{{ pf_code }}" data-shift="N{{ i }}">
+ N{{ i }}
+ </div>
+ {% endfor %}
+ </div>
 
-          <div class="mt-3 d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'odd')">
-              {{ _("Odd (1,3,5)") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'even')">
-              {{ _("Even (2,4,6)") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'all')">
-              {{ _("All") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setGiPattern('{{ pf_code }}', 'none')">
-              {{ _("Clear") }}
-            </button>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-        <button type="button" class="btn btn-primary" onclick="saveGiConfig()" data-bs-dismiss="modal">
-          <i class="bi bi-check-lg me-1"></i>{{ _("Save") }}
-        </button>
-      </div>
-    </div>
-  </div>
+ <div class="mt-3 d-flex gap-2">
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-gi-pf="{{ pf_code }}" data-gi-pattern="odd">
+ {{ _("Odd (1,3,5)") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-gi-pf="{{ pf_code }}" data-gi-pattern="even">
+ {{ _("Even (2,4,6)") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-gi-pf="{{ pf_code }}" data-gi-pattern="all">
+ {{ _("All") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-gi-pf="{{ pf_code }}" data-gi-pattern="none">
+ {{ _("Clear") }}
+ </button>
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="button" class="btn btn-primary" id="btn-save-gi" data-bs-dismiss="modal">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
@@ -510,110 +510,150 @@ const STANDARD_ANALYSES = ['MT', 'Mad', 'Aad', 'Vad', 'TS', 'CV'];
 
 // Toggle section expand/collapse
 function toggleSection(header) {
-  header.classList.toggle('collapsed');
-  const grid = header.nextElementSibling;
-  grid.classList.toggle('show');
+ header.classList.toggle('collapsed');
+ const grid = header.nextElementSibling;
+ grid.classList.toggle('show');
 }
 
 // Analysis chip click handler
 document.querySelectorAll('.analysis-chip').forEach(chip => {
-  chip.addEventListener('click', function(e) {
-    e.preventDefault();
-    const checkbox = this.querySelector('input');
-    checkbox.checked = !checkbox.checked;
-    this.classList.toggle('selected', checkbox.checked);
-    updateCountBadge(this);
-  });
+ chip.addEventListener('click', function(e) {
+ e.preventDefault();
+ const checkbox = this.querySelector('input');
+ checkbox.checked = !checkbox.checked;
+ this.classList.toggle('selected', checkbox.checked);
+ updateCountBadge(this);
+ });
 });
 
 // Update count badge
 function updateCountBadge(chip) {
-  const container = chip.closest('.analysis-grid');
-  if (!container) return;
-  const count = container.querySelectorAll('.analysis-chip.selected').length;
-  const header = container.previousElementSibling;
-  if (header) {
-    const badge = header.querySelector('.count-badge');
-    if (badge) badge.textContent = count + " {{ _('analyses') }}";
-  }
+ const container = chip.closest('.analysis-grid');
+ if (!container) return;
+ const count = container.querySelectorAll('.analysis-chip.selected').length;
+ const header = container.previousElementSibling;
+ if (header) {
+ const badge = header.querySelector('.count-badge');
+ if (badge) badge.textContent = count + " {{ _('analyses') }}";
+ }
 }
 
 // Quick action: Select All
 function selectAll(btn, profileId) {
-  const container = document.querySelector(`[data-profile="${profileId}"]`);
-  container.querySelectorAll('.analysis-chip').forEach(chip => {
-    chip.classList.add('selected');
-    chip.querySelector('input').checked = true;
-  });
-  updateCountBadge(container.querySelector('.analysis-chip'));
+ const container = document.querySelector(`[data-profile="${profileId}"]`);
+ container.querySelectorAll('.analysis-chip').forEach(chip => {
+ chip.classList.add('selected');
+ chip.querySelector('input').checked = true;
+ });
+ updateCountBadge(container.querySelector('.analysis-chip'));
 }
 
 // Quick action: Select Standard
 function selectStandard(btn, profileId) {
-  const container = document.querySelector(`[data-profile="${profileId}"]`);
-  container.querySelectorAll('.analysis-chip').forEach(chip => {
-    const code = chip.querySelector('input').value;
-    const isStandard = STANDARD_ANALYSES.includes(code);
-    chip.classList.toggle('selected', isStandard);
-    chip.querySelector('input').checked = isStandard;
-  });
-  updateCountBadge(container.querySelector('.analysis-chip'));
+ const container = document.querySelector(`[data-profile="${profileId}"]`);
+ container.querySelectorAll('.analysis-chip').forEach(chip => {
+ const code = chip.querySelector('input').value;
+ const isStandard = STANDARD_ANALYSES.includes(code);
+ chip.classList.toggle('selected', isStandard);
+ chip.querySelector('input').checked = isStandard;
+ });
+ updateCountBadge(container.querySelector('.analysis-chip'));
 }
 
 // Quick action: Select None
 function selectNone(btn, profileId) {
-  const container = document.querySelector(`[data-profile="${profileId}"]`);
-  container.querySelectorAll('.analysis-chip').forEach(chip => {
-    chip.classList.remove('selected');
-    chip.querySelector('input').checked = false;
-  });
-  updateCountBadge(container.querySelector('.analysis-chip'));
+ const container = document.querySelector(`[data-profile="${profileId}"]`);
+ container.querySelectorAll('.analysis-chip').forEach(chip => {
+ chip.classList.remove('selected');
+ chip.querySelector('input').checked = false;
+ });
+ updateCountBadge(container.querySelector('.analysis-chip'));
 }
 
 // Gi shift toggle
 function toggleGiShift(btn) {
-  btn.classList.toggle('selected');
+ btn.classList.toggle('selected');
 }
 
 // Set Gi pattern (odd/even/all/none)
 function setGiPattern(pfCode, pattern) {
-  const buttons = document.querySelectorAll(`.gi-shift-btn[data-pf="${pfCode}"]`);
-  buttons.forEach(btn => {
-    const shift = btn.dataset.shift;
-    const num = parseInt(shift.substring(1));
-    let selected = false;
+ const buttons = document.querySelectorAll(`.gi-shift-btn[data-pf="${pfCode}"]`);
+ buttons.forEach(btn => {
+ const shift = btn.dataset.shift;
+ const num = parseInt(shift.substring(1));
+ let selected = false;
 
-    if (pattern === 'odd') selected = num % 2 === 1;
-    else if (pattern === 'even') selected = num % 2 === 0;
-    else if (pattern === 'all') selected = true;
-    else if (pattern === 'none') selected = false;
+ if (pattern === 'odd') selected = num % 2 === 1;
+ else if (pattern === 'even') selected = num % 2 === 0;
+ else if (pattern === 'all') selected = true;
+ else if (pattern === 'none') selected = false;
 
-    btn.classList.toggle('selected', selected);
-  });
+ btn.classList.toggle('selected', selected);
+ });
 }
 
 // Save Gi config to hidden inputs
 function saveGiConfig() {
-  const container = document.getElementById('gi-hidden-inputs');
-  container.innerHTML = '';
+ const container = document.getElementById('gi-hidden-inputs');
+ container.innerHTML = '';
 
-  ['PF211', 'PF221', 'PF231'].forEach(pfCode => {
-    document.querySelectorAll(`.gi-shift-btn[data-pf="${pfCode}"].selected`).forEach(btn => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = `gi_shifts_${pfCode}`;
-      input.value = btn.dataset.shift;
-      container.appendChild(input);
-    });
-  });
+ ['PF211', 'PF221', 'PF231'].forEach(pfCode => {
+ document.querySelectorAll(`.gi-shift-btn[data-pf="${pfCode}"].selected`).forEach(btn => {
+ const input = document.createElement('input');
+ input.type = 'hidden';
+ input.name = `gi_shifts_${pfCode}`;
+ input.value = btn.dataset.shift;
+ container.appendChild(input);
+ });
+ });
 }
 
 // Initialize count badges on page load
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.analysis-grid').forEach(grid => {
-    const firstChip = grid.querySelector('.analysis-chip');
-    if (firstChip) updateCountBadge(firstChip);
-  });
+ document.querySelectorAll('.analysis-grid').forEach(grid => {
+ const firstChip = grid.querySelector('.analysis-chip');
+ if (firstChip) updateCountBadge(firstChip);
+ });
+});
+
+// Delegated click handlers (CSP: inline onclick-ийг орлож байна)
+document.addEventListener('click', function(e) {
+ // Section toggle (sample-type-header)
+ const header = e.target.closest('.sample-type-header');
+ if (header && !e.target.closest('.sla-inline')) {
+ toggleSection(header);
+ return;
+ }
+ // SLA inline input — header toggle-оос хамгаалах
+ if (e.target.closest('.sla-inline')) {
+ e.stopPropagation();
+ }
+ // Quick action buttons
+ const qaBtn = e.target.closest('[data-qa]');
+ if (qaBtn) {
+ const mode = qaBtn.dataset.qa;
+ const prefix = qaBtn.dataset.profile;
+ if (mode === 'all') selectAll(qaBtn, prefix);
+ else if (mode === 'standard') selectStandard(qaBtn, prefix);
+ else if (mode === 'none') selectNone(qaBtn, prefix);
+ return;
+ }
+ // Gi shift toggle
+ const giBtn = e.target.closest('.gi-shift-btn');
+ if (giBtn) {
+ toggleGiShift(giBtn);
+ return;
+ }
+ // Gi pattern quick buttons
+ const giPat = e.target.closest('[data-gi-pattern]');
+ if (giPat) {
+ setGiPattern(giPat.dataset.giPf, giPat.dataset.giPattern);
+ return;
+ }
+ // Save Gi config
+ if (e.target.closest('#btn-save-gi')) {
+ saveGiConfig();
+ }
 });
 </script>
 {% endblock %}

@@ -3,262 +3,262 @@
 
 {% block head_extra %}
 <style nonce="{{ csp_nonce }}">
-  /* Calendar Cards */
-  .calendar-card {
-    background: #fff;
-    border: 1px solid rgba(148,163,184,0.2);
-    border-radius: 12px;
-    min-width: 220px;
-    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
-  }
-  .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0.75rem 0.25rem;
-  }
-  .calendar-title { font-size: 0.7rem; font-weight: 700; color: #0f172a; }
-  .calendar-sub { font-size: 0.6rem; color: #64748b; }
-  .calendar-nav button {
-    border: none;
-    background: transparent;
-    color: #64748b;
-    font-size: 0.75rem;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .calendar-nav button:hover { background: #f1f5f9; }
-  .calendar-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 2px;
-    padding: 0 0.5rem 0.5rem;
-  }
-  .calendar-table thead th {
-    text-align: center;
-    font-size: 0.55rem;
-    font-weight: 500;
-    color: #64748b;
-    padding-bottom: 4px;
-  }
-  .calendar-day {
-    text-align: center;
-    font-size: 0.7rem;
-    padding: 5px 0;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    color: #334155;
-    transition: all 0.15s;
-  }
-  .calendar-day:hover { background: #f8fafc; }
-  .calendar-day.selected {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: #fff;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(59,130,246,0.35);
-  }
+ /* Calendar Cards */
+ .calendar-card {
+ background: #fff;
+ border: 1px solid rgba(148,163,184,0.2);
+ border-radius: 12px;
+ min-width: 220px;
+ box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+ }
+ .calendar-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 0.5rem 0.75rem 0.25rem;
+ }
+ .calendar-title { font-size: 0.7rem; font-weight: 700; color: #0f172a; }
+ .calendar-sub { font-size: 0.6rem; color: #64748b; }
+ .calendar-nav button {
+ border: none;
+ background: transparent;
+ color: #64748b;
+ font-size: 0.75rem;
+ width: 22px;
+ height: 22px;
+ border-radius: 50%;
+ cursor: pointer;
+ transition: background 0.15s;
+ }
+ .calendar-nav button:hover { background: #f1f5f9; }
+ .calendar-table {
+ width: 100%;
+ border-collapse: separate;
+ border-spacing: 2px;
+ padding: 0 0.5rem 0.5rem;
+ }
+ .calendar-table thead th {
+ text-align: center;
+ font-size: 0.55rem;
+ font-weight: 500;
+ color: #64748b;
+ padding-bottom: 4px;
+ }
+ .calendar-day {
+ text-align: center;
+ font-size: 0.7rem;
+ padding: 5px 0;
+ border-radius: 6px;
+ cursor: pointer;
+ font-weight: 500;
+ color: #334155;
+ transition: all 0.15s;
+ }
+ .calendar-day:hover { background: #f8fafc; }
+ .calendar-day.selected {
+ background: linear-gradient(135deg, #3b82f6, #2563eb);
+ color: #fff;
+ font-weight: 700;
+ box-shadow: 0 2px 6px rgba(59,130,246,0.35);
+ }
 
-  /* Grid Container */
-  .grid-wrapper {
-    height: calc(100vh - 260px);
-    width: 100%;
-    border-radius: 0 0 12px 12px;
-    overflow: hidden;
-  }
-  .ag-theme-alpine {
-    --ag-font-size: 12px;
-    --ag-header-height: 32px;
-    --ag-row-height: 34px;
-    --ag-header-background-color: #f8fafc;
-  }
+ /* Grid Container */
+ .grid-wrapper {
+ height: calc(100vh - 260px);
+ width: 100%;
+ border-radius: 0 0 12px 12px;
+ overflow: hidden;
+ }
+ .ag-theme-alpine {
+ --ag-font-size: 12px;
+ --ag-header-height: 32px;
+ --ag-row-height: 34px;
+ --ag-header-background-color: #f8fafc;
+ }
 
-  /* Tab Styling */
-  .nav-tabs .nav-link {
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 8px 8px 0 0;
-    color: #64748b;
-  }
-  .nav-tabs .nav-link.active {
-    background: #fff;
-    color: #0f172a;
-    border-bottom-color: #fff;
-  }
+ /* Tab Styling */
+ .nav-tabs .nav-link {
+ font-size: 0.85rem;
+ font-weight: 600;
+ padding: 0.5rem 1rem;
+ border-radius: 8px 8px 0 0;
+ color: #64748b;
+ }
+ .nav-tabs .nav-link.active {
+ background: #fff;
+ color: #0f172a;
+ border-bottom-color: #fff;
+ }
 
-  /* Welcome Header */
-  .welcome-header {
-    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.06));
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-  }
-  .welcome-header h2 { font-size: 1rem; margin: 0; color: #0f172a; }
-  .welcome-header p { font-size: 0.75rem; margin: 0; color: #64748b; }
+ /* Welcome Header */
+ .welcome-header {
+ background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.06));
+ border-radius: 12px;
+ padding: 0.75rem 1rem;
+ margin-bottom: 0.75rem;
+ }
+ .welcome-header h2 { font-size: 1rem; margin: 0; color: #0f172a; }
+ .welcome-header p { font-size: 0.75rem; margin: 0; color: #64748b; }
 
 
-  /* Action Buttons */
-  .action-btn {
-    padding: 0.35rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
+ /* Action Buttons */
+ .action-btn {
+ padding: 0.35rem 0.75rem;
+ font-size: 0.75rem;
+ font-weight: 600;
+ border-radius: 8px;
+ display: inline-flex;
+ align-items: center;
+ gap: 0.35rem;
+ }
 
-  /* Filter Bar */
-  .filter-bar {
-    background: #fafbfc;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    padding: 0.75rem;
-    border-radius: 12px 12px 0 0;
-  }
+ /* Filter Bar */
+ .filter-bar {
+ background: #fafbfc;
+ border-bottom: 1px solid rgba(0,0,0,0.05);
+ padding: 0.75rem;
+ border-radius: 12px 12px 0 0;
+ }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid px-3">
 
-  <!-- Welcome Header -->
-  <div class="welcome-header d-flex justify-content-between align-items-center">
-    <div>
-      <h2><i class="bi bi-person-circle me-2"></i>{{ _('Hello') }}, {{ current_user.username }}!</h2>
-      <p>{{ _('Role') }}: <strong>{{ current_user.role }}</strong></p>
-    </div>
-    <input type="hidden" id="dateFilterStart">
-    <input type="hidden" id="dateFilterEnd">
-  </div>
+ <!-- Welcome Header -->
+ <div class="welcome-header d-flex justify-content-between align-items-center">
+ <div>
+ <h2><i class="bi bi-person-circle me-2"></i>{{ _('Hello') }}, {{ current_user.username }}!</h2>
+ <p>{{ _('Role') }}: <strong>{{ current_user.role }}</strong></p>
+ </div>
+ <input type="hidden" id="dateFilterStart">
+ <input type="hidden" id="dateFilterEnd">
+ </div>
 
-  <!-- Tabs -->
-  <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link {% if active_tab == 'list-pane' %}active{% endif %}"
-              id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
-        <i class="bi bi-list-ul me-1"></i>{{ _('Sample List') }}
-      </button>
-    </li>
-    {% if current_user.role in ['prep', 'admin', 'senior', 'manager'] %}
-    <li class="nav-item" role="presentation">
-      <button class="nav-link {% if active_tab == 'add-pane' %}active{% endif %}"
-              id="add-tab" data-bs-toggle="tab" data-bs-target="#add-pane" type="button" role="tab">
-        <i class="bi bi-plus-circle me-1"></i>{{ _('New Sample') }}
-      </button>
-    </li>
-    {% endif %}
-    <li class="nav-item" role="presentation">
-      <button class="nav-link {% if active_tab == 'sla-pane' %}active{% endif %}"
-              id="sla-tab" data-bs-toggle="tab" data-bs-target="#sla-pane" type="button" role="tab">
-        <i class="bi bi-clock-history me-1"></i>{{ _('SLA Dashboard') }}
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link {% if active_tab == 'retention-pane' %}active{% endif %}"
-              id="retention-tab" data-bs-toggle="tab" data-bs-target="#retention-pane" type="button" role="tab">
-        <i class="bi bi-archive me-1"></i>{{ _('Sample Retention') }}
-      </button>
-    </li>
-  </ul>
+ <!-- Tabs -->
+ <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
+ <li class="nav-item" role="presentation">
+ <button class="nav-link {% if active_tab == 'list-pane' %}active{% endif %}"
+ id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
+ <i class="bi bi-list-ul me-1"></i>{{ _('Sample List') }}
+ </button>
+ </li>
+ {% if current_user.role in ['prep', 'admin', 'senior', 'manager'] %}
+ <li class="nav-item" role="presentation">
+ <button class="nav-link {% if active_tab == 'add-pane' %}active{% endif %}"
+ id="add-tab" data-bs-toggle="tab" data-bs-target="#add-pane" type="button" role="tab">
+ <i class="bi bi-plus-circle me-1"></i>{{ _('New Sample') }}
+ </button>
+ </li>
+ {% endif %}
+ <li class="nav-item" role="presentation">
+ <button class="nav-link {% if active_tab == 'sla-pane' %}active{% endif %}"
+ id="sla-tab" data-bs-toggle="tab" data-bs-target="#sla-pane" type="button" role="tab">
+ <i class="bi bi-clock-history me-1"></i>{{ _('SLA Dashboard') }}
+ </button>
+ </li>
+ <li class="nav-item" role="presentation">
+ <button class="nav-link {% if active_tab == 'retention-pane' %}active{% endif %}"
+ id="retention-tab" data-bs-toggle="tab" data-bs-target="#retention-pane" type="button" role="tab">
+ <i class="bi bi-archive me-1"></i>{{ _('Sample Retention') }}
+ </button>
+ </li>
+ </ul>
 
-  <div class="tab-content" id="myTabContent">
+ <div class="tab-content" id="myTabContent">
 
-    <!-- Sample List Tab -->
-    <div class="tab-pane fade {% if active_tab == 'list-pane' %}show active{% endif %}" id="list-pane" role="tabpanel">
-      <div class="card border-0 shadow-sm" style="border-radius: 0 12px 12px 12px;">
+ <!-- Sample List Tab -->
+ <div class="tab-pane fade {% if active_tab == 'list-pane' %}show active{% endif %}" id="list-pane" role="tabpanel">
+ <div class="card border-0 shadow-sm rounded-[0_12px_12px_12px]">
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-          <div class="d-flex flex-wrap gap-3 align-items-start justify-content-between">
+ <!-- Filter Bar -->
+ <div class="filter-bar">
+ <div class="d-flex flex-wrap gap-3 align-items-start justify-content-between">
 
-            <!-- Calendars -->
-            <div class="d-flex gap-2">
-              <div class="calendar-card">
-                <div class="calendar-header">
-                  <div>
-                    <div class="calendar-title">{{ _('Start') }}</div>
-                    <div class="calendar-sub" id="startCalLabel">---</div>
-                  </div>
-                  <div class="calendar-nav">
-                    <button type="button" data-dir="-1" data-cal="start">&#8249;</button>
-                    <button type="button" data-dir="1" data-cal="start">&#8250;</button>
-                  </div>
-                </div>
-                <table class="calendar-table" id="startCalendar"></table>
-              </div>
+ <!-- Calendars -->
+ <div class="d-flex gap-2">
+ <div class="calendar-card">
+ <div class="calendar-header">
+ <div>
+ <div class="calendar-title">{{ _('Start') }}</div>
+ <div class="calendar-sub" id="startCalLabel">---</div>
+ </div>
+ <div class="calendar-nav">
+ <button type="button" data-dir="-1" data-cal="start">&#8249;</button>
+ <button type="button" data-dir="1" data-cal="start">&#8250;</button>
+ </div>
+ </div>
+ <table class="calendar-table" id="startCalendar"></table>
+ </div>
 
-              <div class="calendar-card">
-                <div class="calendar-header">
-                  <div>
-                    <div class="calendar-title">{{ _('End') }}</div>
-                    <div class="calendar-sub" id="endCalLabel">---</div>
-                  </div>
-                  <div class="calendar-nav">
-                    <button type="button" data-dir="-1" data-cal="end">&#8249;</button>
-                    <button type="button" data-dir="1" data-cal="end">&#8250;</button>
-                  </div>
-                </div>
-                <table class="calendar-table" id="endCalendar"></table>
-              </div>
-            </div>
+ <div class="calendar-card">
+ <div class="calendar-header">
+ <div>
+ <div class="calendar-title">{{ _('End') }}</div>
+ <div class="calendar-sub" id="endCalLabel">---</div>
+ </div>
+ <div class="calendar-nav">
+ <button type="button" data-dir="-1" data-cal="end">&#8249;</button>
+ <button type="button" data-dir="1" data-cal="end">&#8250;</button>
+ </div>
+ </div>
+ <table class="calendar-table" id="endCalendar"></table>
+ </div>
+ </div>
 
-            <!-- Actions -->
-            <div class="d-flex flex-column gap-2">
-              <div class="btn-group">
-                <button id="btnLoadData" class="action-btn btn btn-primary">
-                  <i class="bi bi-arrow-clockwise"></i>{{ _('Load') }}
-                </button>
-                {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <button id="btnExportCsv" class="action-btn btn btn-success">
-                  <i class="bi bi-file-earmark-excel"></i>{{ _('Excel') }}
-                </button>
-                {% endif %}
-              </div>
+ <!-- Actions -->
+ <div class="d-flex flex-column gap-2">
+ <div class="btn-group">
+ <button id="btnLoadData" class="action-btn btn btn-primary">
+ <i class="bi bi-arrow-clockwise"></i>{{ _('Load') }}
+ </button>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <button id="btnExportCsv" class="action-btn btn btn-success">
+ <i class="bi bi-file-earmark-excel"></i>{{ _('Excel') }}
+ </button>
+ {% endif %}
+ </div>
 
-              <form id="deleteSelectedForm" action="{{ url_for('main.delete_selected_samples') }}" method="post">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <input type="hidden" name="sample_ids" id="hidden_delete_ids">
-                <button type="button" id="btnDeleteSelected" class="action-btn btn btn-outline-danger w-100">
-                  <i class="bi bi-trash"></i>{{ _('Delete') }}
-                </button>
-              </form>
-            </div>
+ <form id="deleteSelectedForm" action="{{ url_for('main.delete_selected_samples') }}" method="post">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <input type="hidden" name="sample_ids" id="hidden_delete_ids">
+ <button type="button" id="btnDeleteSelected" class="action-btn btn btn-outline-danger w-100">
+ <i class="bi bi-trash"></i>{{ _('Delete') }}
+ </button>
+ </form>
+ </div>
 
-          </div>
-        </div>
+ </div>
+ </div>
 
-        <!-- AG Grid -->
-        <div id="myGrid" class="ag-theme-alpine grid-wrapper"></div>
+ <!-- AG Grid -->
+ <div id="myGrid" class="ag-theme-alpine grid-wrapper"></div>
 
-      </div>
-    </div>
+ </div>
+ </div>
 
-    <!-- Add Sample Tab -->
-    {% if current_user.role in ['prep', 'admin', 'senior', 'manager'] %}
-    <div class="tab-pane fade {% if active_tab == 'add-pane' %}show active{% endif %}" id="add-pane" role="tabpanel">
-      {% include 'add_sample.html' %}
-    </div>
-    {% endif %}
+ <!-- Add Sample Tab -->
+ {% if current_user.role in ['prep', 'admin', 'senior', 'manager'] %}
+ <div class="tab-pane fade {% if active_tab == 'add-pane' %}show active{% endif %}" id="add-pane" role="tabpanel">
+ {% include 'add_sample.html' %}
+ </div>
+ {% endif %}
 
-    <!-- SLA Dashboard Tab -->
-    <div class="tab-pane fade {% if active_tab == 'sla-pane' %}show active{% endif %}" id="sla-pane" role="tabpanel">
-      <div class="card border-0 shadow-sm p-3" style="border-radius: 0 12px 12px 12px;">
-        {% include 'partials/_sla_dashboard_content.html' %}
-      </div>
-    </div>
+ <!-- SLA Dashboard Tab -->
+ <div class="tab-pane fade {% if active_tab == 'sla-pane' %}show active{% endif %}" id="sla-pane" role="tabpanel">
+ <div class="card border-0 shadow-sm p-3 rounded-[0_12px_12px_12px]">
+ {% include 'partials/_sla_dashboard_content.html' %}
+ </div>
+ </div>
 
-    <!-- Sample Retention Tab -->
-    <div class="tab-pane fade {% if active_tab == 'retention-pane' %}show active{% endif %}" id="retention-pane" role="tabpanel">
-      <div class="card border-0 shadow-sm p-3" style="border-radius: 0 12px 12px 12px;">
-        {% include 'partials/_sample_disposal_content.html' %}
-      </div>
-    </div>
+ <!-- Sample Retention Tab -->
+ <div class="tab-pane fade {% if active_tab == 'retention-pane' %}show active{% endif %}" id="retention-pane" role="tabpanel">
+ <div class="card border-0 shadow-sm p-3 rounded-[0_12px_12px_12px]">
+ {% include 'partials/_sample_disposal_content.html' %}
+ </div>
+ </div>
 
-  </div>
+ </div>
 </div>
 {% endblock %}
 
@@ -266,25 +266,25 @@
 <script nonce="{{ csp_nonce }}">
 window.LIMS_ACTIVE_TAB = '{{ active_tab | default("list-pane") }}';
 window.LIMS_I18N = {
-  sampleCode: "{{ _('Sample Code') }}",
-  client: "{{ _('Client') }}",
-  type: "{{ _('Type') }}",
-  condition: "{{ _('Condition') }}",
-  weightKg: "{{ _('Weight (kg)') }}",
-  submittedBy: "{{ _('Submitted By') }}",
-  preparedBy: "{{ _('Prepared By') }}",
-  preparedDate: "{{ _('Prepared Date') }}",
-  registered: "{{ _('Registered') }}",
-  comment: "{{ _('Comment') }}",
-  storage: "{{ _('Storage') }}",
-  status: "{{ _('Status') }}",
-  action: "{{ _('Action') }}",
-  assignments: "{{ _('Assignments') }}",
-  approved: "{{ _('Approved') }}",
-  rejected: "{{ _('Rejected') }}",
-  review: "{{ _('Review') }}",
-  new_status: "{{ _('New') }}",
-  archived: "{{ _('Archived') }}"
+ sampleCode: "{{ _('Sample Code') }}",
+ client: "{{ _('Client') }}",
+ type: "{{ _('Type') }}",
+ condition: "{{ _('Condition') }}",
+ weightKg: "{{ _('Weight (kg)') }}",
+ submittedBy: "{{ _('Submitted By') }}",
+ preparedBy: "{{ _('Prepared By') }}",
+ preparedDate: "{{ _('Prepared Date') }}",
+ registered: "{{ _('Registered') }}",
+ comment: "{{ _('Comment') }}",
+ storage: "{{ _('Storage') }}",
+ status: "{{ _('Status') }}",
+ action: "{{ _('Action') }}",
+ assignments: "{{ _('Assignments') }}",
+ approved: "{{ _('Approved') }}",
+ rejected: "{{ _('Rejected') }}",
+ review: "{{ _('Review') }}",
+ new_status: "{{ _('New') }}",
+ archived: "{{ _('Archived') }}"
 };
 </script>
 <script src="{{ url_for('static', filename='js/calendar-module.js') }}"></script>

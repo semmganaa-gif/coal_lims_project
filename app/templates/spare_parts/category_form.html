@@ -3,101 +3,101 @@
 
 {% block content %}
 <div class="container">
-  <div class="mb-3">
-    <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
-    </a>
-  </div>
+ <div class="mb-3">
+ <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Back") }}
+ </a>
+ </div>
 
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header py-3"
-             style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: #fff;">
-          <h5 class="mb-0">
-            <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
-            {{ _('Edit Category') if mode == 'edit' else _('Add New Category') }}
-          </h5>
-        </div>
+ <div class="row justify-content-center">
+ <div class="col-lg-8">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header py-3 bg-brand-deep-gradient text-white"
+>
+ <h5 class="mb-0">
+ <i class="bi bi-{{ 'pencil-square' if mode == 'edit' else 'plus-circle' }} me-2"></i>
+ {{ _('Edit Category') if mode == 'edit' else _('Add New Category') }}
+ </h5>
+ </div>
 
-        <form method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="card-body p-4">
-            <div class="row g-3">
-              {% if mode == 'add' %}
-              <div class="col-md-6">
-                <label class="form-label">{{ _("Code") }} <span class="text-danger">*</span></label>
-                <input type="text" name="code" class="form-control" required
-                       placeholder="{{ _("e.g. muffle_zf300") }}"
-                       title="{{ _("Lowercase letters, numbers, underscore (_)") }}">
-                <small class="text-muted">{{ _("Lowercase letters, numbers, underscore (_)") }}</small>
-              </div>
-              {% else %}
-              <div class="col-md-6">
-                <label class="form-label">{{ _("Code") }}</label>
-                <input type="text" class="form-control" value="{{ category.code }}" readonly disabled>
-              </div>
-              {% endif %}
+ <form method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="card-body p-4">
+ <div class="row g-3">
+ {% if mode == 'add' %}
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Code") }} <span class="text-danger">*</span></label>
+ <input type="text" name="code" class="form-control" required
+ placeholder="{{ _("e.g. muffle_zf300") }}"
+ title="{{ _("Lowercase letters, numbers, underscore (_)") }}">
+ <small class="text-muted">{{ _("Lowercase letters, numbers, underscore (_)") }}</small>
+ </div>
+ {% else %}
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Code") }}</label>
+ <input type="text" class="form-control" value="{{ category.code }}" readonly disabled>
+ </div>
+ {% endif %}
 
-              <div class="col-md-6">
-                <label class="form-label">{{ _("Name") }} <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" required
-                       value="{{ category.name if category else '' }}"
-                       placeholder="{{ _("e.g. Muffle Furnace ZF-300") }}">
-              </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Name") }} <span class="text-danger">*</span></label>
+ <input type="text" name="name" class="form-control" required
+ value="{{ category.name if category else '' }}"
+ placeholder="{{ _("e.g. Muffle Furnace ZF-300") }}">
+ </div>
 
-              <div class="col-md-6">
-                <label class="form-label">{{ _("English Name / Model") }}</label>
-                <input type="text" name="name_en" class="form-control"
-                       value="{{ category.name_en if category else '' }}"
-                       placeholder="{{ _("e.g. ZF-300") }}">
-              </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("English Name / Model") }}</label>
+ <input type="text" name="name_en" class="form-control"
+ value="{{ category.name_en if category else '' }}"
+ placeholder="{{ _("e.g. ZF-300") }}">
+ </div>
 
-              <div class="col-md-12">
-                <label class="form-label">{{ _("Equipment") }}</label>
-                <select name="equipment_id" class="form-select">
-                  <option value="">-- {{ _("Not Selected") }} --</option>
-                  {% for eq in equipments %}
-                  <option value="{{ eq.id }}" {{ 'selected' if category and category.equipment_id == eq.id }}>
-                    {{ eq.name }}{% if eq.model %} ({{ eq.model }}){% endif %}
-                  </option>
-                  {% endfor %}
-                </select>
-                <small class="text-muted">{{ _("Link to equipment (optional)") }}</small>
-              </div>
+ <div class="col-md-12">
+ <label class="form-label">{{ _("Equipment") }}</label>
+ <select name="equipment_id" class="form-select">
+ <option value="">-- {{ _("Not Selected") }} --</option>
+ {% for eq in equipments %}
+ <option value="{{ eq.id }}" {{ 'selected' if category and category.equipment_id == eq.id }}>
+ {{ eq.name }}{% if eq.model %} ({{ eq.model }}){% endif %}
+ </option>
+ {% endfor %}
+ </select>
+ <small class="text-muted">{{ _("Link to equipment (optional)") }}</small>
+ </div>
 
-              <div class="col-md-3">
-                <label class="form-label">{{ _("Sort Order") }}</label>
-                <input type="number" name="sort_order" class="form-control"
-                       value="{{ category.sort_order if category else 0 }}" min="0">
-              </div>
+ <div class="col-md-3">
+ <label class="form-label">{{ _("Sort Order") }}</label>
+ <input type="number" name="sort_order" class="form-control"
+ value="{{ category.sort_order if category else 0 }}" min="0">
+ </div>
 
-              <div class="col-md-3">
-                <label class="form-label">{{ _("Status") }}</label>
-                <div class="form-check form-switch mt-2">
-                  <input class="form-check-input" type="checkbox" name="is_active" id="isActive"
-                         {{ 'checked' if not category or category.is_active }}>
-                  <label class="form-check-label" for="isActive">{{ _("Active") }}</label>
-                </div>
-              </div>
+ <div class="col-md-3">
+ <label class="form-label">{{ _("Status") }}</label>
+ <div class="form-check form-switch mt-2">
+ <input class="form-check-input" type="checkbox" name="is_active" id="isActive"
+ {{ 'checked' if not category or category.is_active }}>
+ <label class="form-check-label" for="isActive">{{ _("Active") }}</label>
+ </div>
+ </div>
 
-              <div class="col-12">
-                <label class="form-label">{{ _("Remarks") }}</label>
-                <textarea name="description" class="form-control" rows="2"
-                          placeholder="{{ _("Detailed equipment information") }}">{{ category.description if category else '' }}</textarea>
-              </div>
-            </div>
-          </div>
+ <div class="col-12">
+ <label class="form-label">{{ _("Remarks") }}</label>
+ <textarea name="description" class="form-control" rows="2"
+ placeholder="{{ _("Detailed equipment information") }}">{{ category.description if category else '' }}</textarea>
+ </div>
+ </div>
+ </div>
 
-          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
-            <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary">{{ _("Cancel") }}</a>
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-check-lg me-1"></i>{{ _('Save') if mode == 'edit' else _('Add') }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+ <a href="{{ url_for('spare_parts.category_list') }}" class="btn btn-outline-secondary">{{ _("Cancel") }}</a>
+ <button type="submit" class="btn btn-primary">
+ <i class="bi bi-check-lg me-1"></i>{{ _('Save') if mode == 'edit' else _('Add') }}
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}

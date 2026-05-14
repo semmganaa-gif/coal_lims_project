@@ -4,264 +4,264 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .wf-page {
-    min-height: calc(100vh - 140px);
-    padding-bottom: 20px;
-  }
-  .wf-header {
-    background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(148,163,184,0.2);
-    border-radius: 14px;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  .wf-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
+ .wf-page {
+ min-height: calc(100vh - 140px);
+ padding-bottom: 20px;
+ }
+ .wf-header {
+ background: linear-gradient(90deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+ backdrop-filter: blur(12px);
+ border: 1px solid rgba(148,163,184,0.2);
+ border-radius: 14px;
+ padding: 12px 16px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ margin-bottom: 12px;
+ }
+ .wf-header h5 { margin: 0; font-size: 1rem; font-weight: 700; }
 
-  /* Workflow selector */
-  .wf-selector {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .wf-btn {
-    padding: 8px 16px; border-radius: 10px;
-    font-size: 0.8rem; font-weight: 500;
-    cursor: pointer; border: 1px solid #cbd5e1;
-    background: #fff; color: #334155;
-    transition: all 0.15s;
-  }
-  .wf-btn:hover { border-color: #3b82f6; }
-  .wf-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
+ /* Workflow selector */
+ .wf-selector {
+ display: flex; gap: 8px; flex-wrap: wrap;
+ margin-bottom: 12px;
+ }
+ .wf-btn {
+ padding: 8px 16px; border-radius: 10px;
+ font-size: 0.8rem; font-weight: 500;
+ cursor: pointer; border: 1px solid #cbd5e1;
+ background: #fff; color: #334155;
+ transition: all 0.15s;
+ }
+ .wf-btn:hover { border-color: #3b82f6; }
+ .wf-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
 
-  /* Two-column layout */
-  .wf-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media (max-width: 992px) { .wf-layout { grid-template-columns: 1fr; } }
+ /* Two-column layout */
+ .wf-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+ @media (max-width: 992px) { .wf-layout { grid-template-columns: 1fr; } }
 
-  /* Cards */
-  .wf-card {
-    background: #fff; border: 1px solid #e2e8f0;
-    border-radius: 14px; padding: 16px;
-  }
-  .wf-card h6 { font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; }
+ /* Cards */
+ .wf-card {
+ background: #fff; border: 1px solid #e2e8f0;
+ border-radius: 14px; padding: 16px;
+ }
+ .wf-card h6 { font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; }
 
-  /* State list */
-  .state-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px; border: 1px solid #e2e8f0;
-    border-radius: 8px; margin-bottom: 6px;
-    font-size: 0.8rem; background: #fafafa;
-  }
-  .state-dot {
-    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
-  }
-  .state-label { font-weight: 600; }
-  .state-key { font-size: 0.7rem; color: #94a3b8; font-family: monospace; }
-  .state-order { font-size: 0.65rem; color: #94a3b8; margin-left: auto; }
+ /* State list */
+ .state-item {
+ display: flex; align-items: center; gap: 8px;
+ padding: 8px 12px; border: 1px solid #e2e8f0;
+ border-radius: 8px; margin-bottom: 6px;
+ font-size: 0.8rem; background: #fafafa;
+ }
+ .state-dot {
+ width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+ }
+ .state-label { font-weight: 600; }
+ .state-key { font-size: 0.7rem; color: #94a3b8; font-family: monospace; }
+ .state-order { font-size: 0.65rem; color: #94a3b8; margin-left: auto; }
 
-  /* Transition list */
-  .transition-item {
-    display: flex; align-items: center; gap: 6px;
-    padding: 8px 12px; border: 1px solid #e2e8f0;
-    border-radius: 8px; margin-bottom: 6px;
-    font-size: 0.8rem; background: #fafafa;
-  }
-  .transition-arrow { color: #3b82f6; font-weight: 700; }
-  .transition-roles {
-    display: flex; gap: 3px; margin-left: auto;
-  }
-  .role-tag {
-    padding: 1px 6px; border-radius: 3px;
-    font-size: 0.6rem; font-weight: 600;
-    background: #e0e7ff; color: #3730a3;
-  }
+ /* Transition list */
+ .transition-item {
+ display: flex; align-items: center; gap: 6px;
+ padding: 8px 12px; border: 1px solid #e2e8f0;
+ border-radius: 8px; margin-bottom: 6px;
+ font-size: 0.8rem; background: #fafafa;
+ }
+ .transition-arrow { color: #3b82f6; font-weight: 700; }
+ .transition-roles {
+ display: flex; gap: 3px; margin-left: auto;
+ }
+ .role-tag {
+ padding: 1px 6px; border-radius: 3px;
+ font-size: 0.6rem; font-weight: 600;
+ background: #e0e7ff; color: #3730a3;
+ }
 
-  /* Visual diagram */
-  .wf-diagram {
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 12px; padding: 16px;
-    min-height: 200px; position: relative;
-    overflow: auto;
-  }
-  .diagram-node {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 14px; border-radius: 20px;
-    font-size: 0.75rem; font-weight: 600;
-    border: 2px solid; margin: 4px;
-    cursor: pointer;
-  }
-  .diagram-node i { font-size: 0.8rem; }
-  .diagram-flow {
-    display: flex; align-items: center; flex-wrap: wrap;
-    gap: 4px; padding: 10px;
-  }
-  .flow-arrow {
-    color: #94a3b8; font-size: 1.2rem; margin: 0 2px;
-  }
+ /* Visual diagram */
+ .wf-diagram {
+ background: #f8fafc; border: 1px solid #e2e8f0;
+ border-radius: 12px; padding: 16px;
+ min-height: 200px; position: relative;
+ overflow: auto;
+ }
+ .diagram-node {
+ display: inline-flex; align-items: center; gap: 6px;
+ padding: 6px 14px; border-radius: 20px;
+ font-size: 0.75rem; font-weight: 600;
+ border: 2px solid; margin: 4px;
+ cursor: pointer;
+ }
+ .diagram-node i { font-size: 0.8rem; }
+ .diagram-flow {
+ display: flex; align-items: center; flex-wrap: wrap;
+ gap: 4px; padding: 10px;
+ }
+ .flow-arrow {
+ color: #94a3b8; font-size: 1.2rem; margin: 0 2px;
+ }
 
-  /* Add forms */
-  .add-form {
-    background: #fffbeb; border: 1px solid #fde68a;
-    border-radius: 10px; padding: 12px;
-    margin-top: 10px;
-  }
-  .add-form label { font-size: 0.7rem; font-weight: 600; color: #64748b; }
-  .add-form input, .add-form select {
-    font-size: 0.8rem; padding: 4px 8px;
-    border: 1px solid #cbd5e1; border-radius: 6px;
-  }
+ /* Add forms */
+ .add-form {
+ background: #fffbeb; border: 1px solid #fde68a;
+ border-radius: 10px; padding: 12px;
+ margin-top: 10px;
+ }
+ .add-form label { font-size: 0.7rem; font-weight: 600; color: #64748b; }
+ .add-form input, .add-form select {
+ font-size: 0.8rem; padding: 4px 8px;
+ border: 1px solid #cbd5e1; border-radius: 6px;
+ }
 
-  /* Edit/delete buttons */
-  .item-actions {
-    margin-left: auto;
-    display: flex; gap: 2px;
-  }
-  .item-actions button {
-    border: none; background: none; cursor: pointer;
-    padding: 2px 4px; border-radius: 4px; font-size: 0.7rem;
-    color: #94a3b8; transition: all 0.15s;
-  }
-  .item-actions button:hover { background: #f1f5f9; color: #334155; }
-  .item-actions .btn-del:hover { color: #ef4444; background: #fef2f2; }
+ /* Edit/delete buttons */
+ .item-actions {
+ margin-left: auto;
+ display: flex; gap: 2px;
+ }
+ .item-actions button {
+ border: none; background: none; cursor: pointer;
+ padding: 2px 4px; border-radius: 4px; font-size: 0.7rem;
+ color: #94a3b8; transition: all 0.15s;
+ }
+ .item-actions button:hover { background: #f1f5f9; color: #334155; }
+ .item-actions .btn-del:hover { color: #ef4444; background: #fef2f2; }
 
-  /* Inline edit form */
-  .inline-edit {
-    background: #fffbeb; border: 1px solid #fde68a;
-    border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
-  }
-  .inline-edit label { font-size: 0.65rem; font-weight: 600; color: #64748b; display: block; }
-  .inline-edit input, .inline-edit select {
-    font-size: 0.75rem; padding: 3px 6px;
-    border: 1px solid #cbd5e1; border-radius: 5px; width: 100%;
-  }
-  .inline-edit .ie-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: end; }
-  .inline-edit .ie-col { flex: 1; min-width: 80px; }
-  .inline-edit .ie-btns { display: flex; gap: 4px; margin-top: 6px; }
+ /* Inline edit form */
+ .inline-edit {
+ background: #fffbeb; border: 1px solid #fde68a;
+ border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+ }
+ .inline-edit label { font-size: 0.65rem; font-weight: 600; color: #64748b; display: block; }
+ .inline-edit input, .inline-edit select {
+ font-size: 0.75rem; padding: 3px 6px;
+ border: 1px solid #cbd5e1; border-radius: 5px; width: 100%;
+ }
+ .inline-edit .ie-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: end; }
+ .inline-edit .ie-col { flex: 1; min-width: 80px; }
+ .inline-edit .ie-btns { display: flex; gap: 4px; margin-top: 6px; }
 
-  /* Utility */
-  .txt-sm { font-size: 0.8rem; }
-  .txt-xs { font-size: 0.75rem; }
-  .add-form-hidden { display: none; }
+ /* Utility */
+ .txt-sm { font-size: 0.8rem; }
+ .txt-xs { font-size: 0.75rem; }
+ .add-form-hidden { display: none; }
 
-  /* Add-form field widths */
-  .w-100px { width: 100px; }
-  .w-110px { width: 110px; }
-  .w-120px { width: 120px; }
-  .w-40px  { width: 40px; }
-  .h-30px  { height: 30px; }
+ /* Add-form field widths */
+ .w-100px { width: 100px; }
+ .w-110px { width: 110px; }
+ .w-120px { width: 120px; }
+ .w-40px { width: 40px; }
+ .h-30px { height: 30px; }
 
-  /* Transition label annotation */
-  .trans-label-note { font-size: 0.7rem; color: #64748b; margin-left: 6px; }
+ /* Transition label annotation */
+ .trans-label-note { font-size: 0.7rem; color: #64748b; margin-left: 6px; }
 
-  /* Diagram summary block */
-  .diagram-summary { margin-top: 10px; padding: 8px; font-size: 0.7rem; color: #64748b; }
+ /* Diagram summary block */
+ .diagram-summary { margin-top: 10px; padding: 8px; font-size: 0.7rem; color: #64748b; }
 </style>
 
 <div class="container-fluid wf-page mt-2">
-  <!-- Header -->
-  <div class="wf-header">
-    <div class="d-flex align-items-center gap-2">
-      <h5><i class="bi bi-diagram-3 me-1 text-purple"></i>{{ _("Workflow Configuration") }}</h5>
-    </div>
-    <div class="d-flex gap-2">
-      {% if current_user.role == 'admin' %}
-      <button class="btn btn-sm btn-outline-danger" id="btnReset">
-        <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _("Reset to Default") }}
-      </button>
-      {% endif %}
-      <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
-        <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
-      </button>
-    </div>
-  </div>
+ <!-- Header -->
+ <div class="wf-header">
+ <div class="d-flex align-items-center gap-2">
+ <h5><i class="bi bi-diagram-3 me-1 text-purple"></i>{{ _("Workflow Configuration") }}</h5>
+ </div>
+ <div class="d-flex gap-2">
+ {% if current_user.role == 'admin' %}
+ <button class="btn btn-sm btn-outline-danger" id="btnReset">
+ <i class="bi bi-arrow-counterclockwise me-1"></i>{{ _("Reset to Default") }}
+ </button>
+ {% endif %}
+ <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
+ <i class="bi bi-arrow-clockwise me-1"></i>{{ _("Refresh") }}
+ </button>
+ </div>
+ </div>
 
-  <!-- Workflow selector -->
-  <div class="wf-selector" id="wfSelector">
-    <span class="text-muted txt-sm">{{ _("Loading workflows...") }}</span>
-  </div>
+ <!-- Workflow selector -->
+ <div class="wf-selector" id="wfSelector">
+ <span class="text-muted txt-sm">{{ _("Loading workflows...") }}</span>
+ </div>
 
-  <!-- Visual flow diagram -->
-  <div class="wf-card mb-3">
-    <h6><i class="bi bi-bezier2 me-1"></i>{{ _("Workflow Flow") }}</h6>
-    <div class="wf-diagram" id="wfDiagram">
-      <div class="text-muted text-center py-4 txt-sm">{{ _("Select a workflow") }}</div>
-    </div>
-  </div>
+ <!-- Visual flow diagram -->
+ <div class="wf-card mb-3">
+ <h6><i class="bi bi-bezier2 me-1"></i>{{ _("Workflow Flow") }}</h6>
+ <div class="wf-diagram" id="wfDiagram">
+ <div class="text-muted text-center py-4 txt-sm">{{ _("Select a workflow") }}</div>
+ </div>
+ </div>
 
-  <!-- Two column layout -->
-  <div class="wf-layout">
-    <!-- States -->
-    <div class="wf-card">
-      <h6><i class="bi bi-circle me-1"></i>{{ _("States") }} <span class="badge bg-secondary" id="stateCount">0</span></h6>
-      <div id="statesList"></div>
+ <!-- Two column layout -->
+ <div class="wf-layout">
+ <!-- States -->
+ <div class="wf-card">
+ <h6><i class="bi bi-circle me-1"></i>{{ _("States") }} <span class="badge bg-secondary" id="stateCount">0</span></h6>
+ <div id="statesList"></div>
 
-      {% if current_user.role == 'admin' %}
-      <div class="add-form add-form-hidden" id="addStateForm">
-        <div class="d-flex gap-2 flex-wrap align-items-end">
-          <div>
-            <label>Key</label>
-            <input type="text" id="newStateKey" placeholder="e.g. review" class="w-100px">
-          </div>
-          <div>
-            <label>{{ _("Label") }}</label>
-            <input type="text" id="newStateLabel" placeholder="{{ _('Display name') }}" class="w-120px">
-          </div>
-          <div>
-            <label>{{ _("Color") }}</label>
-            <input type="color" id="newStateColor" value="#94a3b8" class="w-40px h-30px">
-          </div>
-          <div>
-            <label>{{ _("Icon") }}</label>
-            <select id="newStateIcon" class="w-120px"></select>
-          </div>
-          <button class="btn btn-sm btn-primary" id="btnDoAddState">{{ _("Add") }}</button>
-        </div>
-      </div>
-      <button class="btn btn-sm btn-outline-primary mt-2 txt-xs" id="btnToggleAddState">
-        <i class="bi bi-plus me-1"></i>{{ _("Add State") }}
-      </button>
-      {% endif %}
-    </div>
+ {% if current_user.role == 'admin' %}
+ <div class="add-form add-form-hidden" id="addStateForm">
+ <div class="d-flex gap-2 flex-wrap align-items-end">
+ <div>
+ <label>Key</label>
+ <input type="text" id="newStateKey" placeholder="e.g. review" class="w-100px">
+ </div>
+ <div>
+ <label>{{ _("Label") }}</label>
+ <input type="text" id="newStateLabel" placeholder="{{ _('Display name') }}" class="w-120px">
+ </div>
+ <div>
+ <label>{{ _("Color") }}</label>
+ <input type="color" id="newStateColor" value="#94a3b8" class="w-40px h-30px">
+ </div>
+ <div>
+ <label>{{ _("Icon") }}</label>
+ <select id="newStateIcon" class="w-120px"></select>
+ </div>
+ <button class="btn btn-sm btn-primary" id="btnDoAddState">{{ _("Add") }}</button>
+ </div>
+ </div>
+ <button class="btn btn-sm btn-outline-primary mt-2 txt-xs" id="btnToggleAddState">
+ <i class="bi bi-plus me-1"></i>{{ _("Add State") }}
+ </button>
+ {% endif %}
+ </div>
 
-    <!-- Transitions -->
-    <div class="wf-card">
-      <h6><i class="bi bi-arrow-right me-1"></i>{{ _("Transitions") }} <span class="badge bg-secondary" id="transitionCount">0</span></h6>
-      <div id="transitionsList"></div>
+ <!-- Transitions -->
+ <div class="wf-card">
+ <h6><i class="bi bi-arrow-right me-1"></i>{{ _("Transitions") }} <span class="badge bg-secondary" id="transitionCount">0</span></h6>
+ <div id="transitionsList"></div>
 
-      {% if current_user.role == 'admin' %}
-      <div class="add-form add-form-hidden" id="addTransitionForm">
-        <div class="d-flex gap-2 flex-wrap align-items-end">
-          <div>
-            <label>{{ _("From") }}</label>
-            <select id="newTransFrom" class="w-110px"></select>
-          </div>
-          <div>
-            <label>{{ _("To") }}</label>
-            <select id="newTransTo" class="w-110px"></select>
-          </div>
-          <div>
-            <label>{{ _("Label") }}</label>
-            <input type="text" id="newTransLabel" class="w-120px">
-          </div>
-          <div>
-            <label>{{ _("Roles") }}</label>
-            <div id="newTransRolesBox" class="d-flex flex-wrap gap-1"></div>
-          </div>
-          <div>
-            <label>{{ _("Conditions") }}</label>
-            <div id="newTransCondBox" class="d-flex flex-wrap gap-1"></div>
-          </div>
-          <button class="btn btn-sm btn-primary" id="btnDoAddTransition">{{ _("Add") }}</button>
-        </div>
-      </div>
-      <button class="btn btn-sm btn-outline-primary mt-2 txt-xs" id="btnToggleAddTransition">
-        <i class="bi bi-plus me-1"></i>{{ _("Add Transition") }}
-      </button>
-      {% endif %}
-    </div>
-  </div>
+ {% if current_user.role == 'admin' %}
+ <div class="add-form add-form-hidden" id="addTransitionForm">
+ <div class="d-flex gap-2 flex-wrap align-items-end">
+ <div>
+ <label>{{ _("From") }}</label>
+ <select id="newTransFrom" class="w-110px"></select>
+ </div>
+ <div>
+ <label>{{ _("To") }}</label>
+ <select id="newTransTo" class="w-110px"></select>
+ </div>
+ <div>
+ <label>{{ _("Label") }}</label>
+ <input type="text" id="newTransLabel" class="w-120px">
+ </div>
+ <div class="mt-[6px]">
+ <label>{{ _("Roles") }}</label>
+ <div id="newTransRolesBox" class="d-flex flex-wrap gap-1"></div>
+ </div>
+ <div class="mt-[6px]">
+ <label>{{ _("Conditions") }}</label>
+ <div id="newTransCondBox" class="d-flex flex-wrap gap-1"></div>
+ </div>
+ <button class="btn btn-sm btn-primary" id="btnDoAddTransition">{{ _("Add") }}</button>
+ </div>
+ </div>
+ <button class="btn btn-sm btn-outline-primary mt-2 txt-xs" id="btnToggleAddTransition">
+ <i class="bi bi-plus me-1"></i>{{ _("Add Transition") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
 </div>
 {% endblock %}
 
@@ -271,384 +271,403 @@ const API = '/api/v1/workflow';
 const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
 const ALL_ROLES = ['admin', 'manager', 'senior', 'senior_analyst', 'analyst', 'chemist', 'prep'];
 const ALL_CONDITIONS = [
-  { key: 'require_comment', label: '{{ _("Тайлбар шаардах") }}' },
-  { key: 'all_results_approved', label: '{{ _("Бүх үр дүн батлагдсан") }}' },
-  { key: 'require_reanalysis_reason', label: '{{ _("Дахин шинжлэх шалтгаан") }}' },
-  { key: 'min_results:1', label: '{{ _("Хамгийн багадаа 1 үр дүн") }}' },
-  { key: 'min_results:2', label: '{{ _("Хамгийн багадаа 2 үр дүн") }}' },
+ { key: 'require_comment', label: '{{ _("Тайлбар шаардах") }}' },
+ { key: 'all_results_approved', label: '{{ _("Бүх үр дүн батлагдсан") }}' },
+ { key: 'require_reanalysis_reason', label: '{{ _("Дахин шинжлэх шалтгаан") }}' },
+ { key: 'min_results:1', label: '{{ _("Хамгийн багадаа 1 үр дүн") }}' },
+ { key: 'min_results:2', label: '{{ _("Хамгийн багадаа 2 үр дүн") }}' },
 ];
 const ALL_ICONS = [
-  'bi-circle', 'bi-clock', 'bi-check-circle', 'bi-x-circle', 'bi-arrow-repeat',
-  'bi-plus-circle', 'bi-gear', 'bi-flask', 'bi-archive', 'bi-eye',
-  'bi-pencil', 'bi-shield-check', 'bi-exclamation-triangle', 'bi-hourglass',
-  'bi-flag', 'bi-star', 'bi-lightning', 'bi-clipboard-check',
+ 'bi-circle', 'bi-clock', 'bi-check-circle', 'bi-x-circle', 'bi-arrow-repeat',
+ 'bi-plus-circle', 'bi-gear', 'bi-flask', 'bi-archive', 'bi-eye',
+ 'bi-pencil', 'bi-shield-check', 'bi-exclamation-triangle', 'bi-hourglass',
+ 'bi-flag', 'bi-star', 'bi-lightning', 'bi-clipboard-check',
 ];
 let currentWorkflow = '';
 let currentConfig = null;
 
 async function apiFetch(path, opts = {}) {
-  const resp = await fetch(API + path, {
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
-    ...opts
-  });
-  return resp.json();
+ const resp = await fetch(API + path, {
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF, ...opts.headers },
+ ...opts
+ });
+ return resp.json();
 }
 
 // ── Load workflows ──
 async function loadWorkflows() {
-  const data = await apiFetch('/list');
-  const container = document.getElementById('wfSelector');
-  if (!data.success || !data.data || !data.data.length) {
-    container.innerHTML = '<span class="text-muted txt-sm">{{ _("No workflows found") }}</span>';
-    return;
-  }
-  container.innerHTML = data.data.map(w => {
-    const key = w.key || w.name || w;
-    const label = w.label || w.name || w;
-    return `<button class="wf-btn" data-wf="${key}">${label}</button>`;
-  }).join('');
+ const data = await apiFetch('/list');
+ const container = document.getElementById('wfSelector');
+ if (!data.success || !data.data || !data.data.length) {
+ container.innerHTML = '<span class="text-muted txt-sm">{{ _("No workflows found") }}</span>';
+ return;
+ }
+ container.innerHTML = data.data.map(w => {
+ const key = w.key || w.name || w;
+ const label = w.label || w.name || w;
+ return `<button class="wf-btn" data-wf="${key}">${label}</button>`;
+ }).join('');
 
-  container.querySelectorAll('.wf-btn').forEach(btn => {
-    btn.addEventListener('click', () => selectWorkflow(btn.dataset.wf));
-  });
+ container.querySelectorAll('.wf-btn').forEach(btn => {
+ btn.addEventListener('click', () => selectWorkflow(btn.dataset.wf));
+ });
 
-  // Auto-select first
-  const firstKey = data.data[0].key || data.data[0].name || data.data[0];
-  selectWorkflow(firstKey);
+ // Auto-select first
+ const firstKey = data.data[0].key || data.data[0].name || data.data[0];
+ selectWorkflow(firstKey);
 }
 
 // ── Select workflow ──
 async function selectWorkflow(name) {
-  currentWorkflow = name;
-  document.querySelectorAll('.wf-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.wf === name);
-  });
+ currentWorkflow = name;
+ document.querySelectorAll('.wf-btn').forEach(b => {
+ b.classList.toggle('active', b.dataset.wf === name);
+ });
 
-  const data = await apiFetch(`/${encodeURIComponent(name)}`);
-  if (!data.success) {
-    document.getElementById('statesList').innerHTML = `<div class="text-danger">${data.message}</div>`;
-    return;
-  }
-  currentConfig = data.data;
-  renderStates();
-  renderTransitions();
-  renderDiagram();
+ const data = await apiFetch(`/${encodeURIComponent(name)}`);
+ if (!data.success) {
+ document.getElementById('statesList').innerHTML = `<div class="text-danger">${data.message}</div>`;
+ return;
+ }
+ currentConfig = data.data;
+ renderStates();
+ renderTransitions();
+ renderDiagram();
 }
 
 // ── Render states ──
 function renderStates() {
-  const states = currentConfig.states || {};
-  const entries = Object.entries(states).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
-  document.getElementById('stateCount').textContent = entries.length;
+ const states = currentConfig.states || {};
+ const entries = Object.entries(states).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+ document.getElementById('stateCount').textContent = entries.length;
 
-  document.getElementById('statesList').innerHTML = entries.map(([key, s]) => `
-    <div class="state-item" id="state-${key}">
-      <div class="state-dot" style="background: ${s.color || '#94a3b8'}"></div>
-      <span class="state-label">${s.label || key}</span>
-      <span class="state-key">${key}</span>
-      ${s.icon ? `<i class="bi ${s.icon}" style="color: ${s.color || '#94a3b8'}; font-size: 0.8rem;"></i>` : ''}
-      <span class="state-order">#${s.order || '-'}</span>
-      {% if current_user.role == 'admin' %}
-      <div class="item-actions">
-        <button onclick="editState('${key}')" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></button>
-        <button class="btn-del" onclick="deleteState('${key}')" title="{{ _('Delete') }}"><i class="bi bi-trash"></i></button>
-      </div>
-      {% endif %}
-    </div>
-  `).join('');
+ document.getElementById('statesList').innerHTML = entries.map(([key, s]) => `
+ <div class="state-item" id="state-${key}">
+ <div class="state-dot" data-bg-color="${s.color || '#94a3b8'}"></div>
+ <span class="state-label">${s.label || key}</span>
+ <span class="state-key">${key}</span>
+ ${s.icon ? `<i class="bi ${s.icon} text-sm-1" data-text-color="${s.color || '#94a3b8'}"></i>` : ''}
+ <span class="state-order">#${s.order || '-'}</span>
+ {% if current_user.role == 'admin' %}
+ <div class="item-actions">
+ <button type="button" data-wf-action="edit-state" data-key="${key}" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></button>
+ <button type="button" class="btn-del" data-wf-action="delete-state" data-key="${key}" title="{{ _('Delete') }}"><i class="bi bi-trash"></i></button>
+ </div>
+ {% endif %}
+ </div>
+ `).join('');
 
-  // Update transition selects
-  const opts = entries.map(([key, s]) => `<option value="${key}">${s.label || key}</option>`).join('');
-  const fromSel = document.getElementById('newTransFrom');
-  const toSel = document.getElementById('newTransTo');
-  if (fromSel) fromSel.innerHTML = opts;
-  if (toSel) toSel.innerHTML = opts;
+ // Update transition selects
+ const opts = entries.map(([key, s]) => `<option value="${key}">${s.label || key}</option>`).join('');
+ const fromSel = document.getElementById('newTransFrom');
+ const toSel = document.getElementById('newTransTo');
+ if (fromSel) fromSel.innerHTML = opts;
+ if (toSel) toSel.innerHTML = opts;
 }
 
 // ── Render transitions ──
 function renderTransitions() {
-  const transitions = currentConfig.transitions || [];
-  document.getElementById('transitionCount').textContent = transitions.length;
-  const states = currentConfig.states || {};
+ const transitions = currentConfig.transitions || [];
+ document.getElementById('transitionCount').textContent = transitions.length;
+ const states = currentConfig.states || {};
 
-  document.getElementById('transitionsList').innerHTML = transitions.map((t, idx) => {
-    const fromLabel = states[t.from]?.label || t.from;
-    const toLabel = states[t.to]?.label || t.to;
-    const fromColor = states[t.from]?.color || '#94a3b8';
-    const toColor = states[t.to]?.color || '#94a3b8';
-    const roles = (t.roles || []).map(r => `<span class="role-tag">${r}</span>`).join('');
-    const conditions = (t.conditions || []).map(c => `<span class="role-tag" style="background:#fef3c7;color:#92400e;">${c}</span>`).join('');
+ document.getElementById('transitionsList').innerHTML = transitions.map((t, idx) => {
+ const fromLabel = states[t.from]?.label || t.from;
+ const toLabel = states[t.to]?.label || t.to;
+ const fromColor = states[t.from]?.color || '#94a3b8';
+ const toColor = states[t.to]?.color || '#94a3b8';
+ const roles = (t.roles || []).map(r => `<span class="role-tag bg-warn-soft text-[#92400e]">${r}</span>`).join('');
+ const conditions = (t.conditions || []).map(c => `<span class="role-tag bg-warn-soft text-[#92400e]">${c}</span>`).join('');
 
-    return `<div class="transition-item" id="trans-${idx}">
-      <div class="state-dot" style="background: ${fromColor}; width: 8px; height: 8px;"></div>
-      <span>${fromLabel}</span>
-      <span class="transition-arrow"><i class="bi bi-arrow-right"></i></span>
-      <div class="state-dot" style="background: ${toColor}; width: 8px; height: 8px;"></div>
-      <span>${toLabel}</span>
-      <span class="trans-label-note">${t.label || ''}</span>
-      ${conditions}
-      <div class="transition-roles">${roles}</div>
-      {% if current_user.role == 'admin' %}
-      <div class="item-actions">
-        <button onclick="editTransition(${idx})" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></button>
-        <button class="btn-del" onclick="deleteTransition(${idx})" title="{{ _('Delete') }}"><i class="bi bi-trash"></i></button>
-      </div>
-      {% endif %}
-    </div>`;
-  }).join('');
+ return `<div class="transition-item" id="trans-${idx}">
+ <div class="state-dot w-[8px] h-[8px]" data-bg-color="${fromColor}"></div>
+ <span>${fromLabel}</span>
+ <span class="transition-arrow"><i class="bi bi-arrow-right"></i></span>
+ <div class="state-dot w-[8px] h-[8px]" data-bg-color="${toColor}"></div>
+ <span>${toLabel}</span>
+ <span class="trans-label-note">${t.label || ''}</span>
+ ${conditions}
+ <div class="transition-roles">${roles}</div>
+ {% if current_user.role == 'admin' %}
+ <div class="item-actions">
+ <button type="button" data-wf-action="edit-trans" data-idx="${idx}" title="{{ _('Edit') }}"><i class="bi bi-pencil"></i></button>
+ <button type="button" class="btn-del" data-wf-action="delete-trans" data-idx="${idx}" title="{{ _('Delete') }}"><i class="bi bi-trash"></i></button>
+ </div>
+ {% endif %}
+ </div>`;
+ }).join('');
 }
 
 // ── Render visual diagram ──
 function renderDiagram() {
-  const states = currentConfig.states || {};
-  const transitions = currentConfig.transitions || [];
-  const diagram = document.getElementById('wfDiagram');
+ const states = currentConfig.states || {};
+ const transitions = currentConfig.transitions || [];
+ const diagram = document.getElementById('wfDiagram');
 
-  const entries = Object.entries(states).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
-  if (!entries.length) {
-    diagram.innerHTML = '<div class="text-muted text-center py-4">{{ _("No states defined") }}</div>';
-    return;
-  }
+ const entries = Object.entries(states).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+ if (!entries.length) {
+ diagram.innerHTML = '<div class="text-muted text-center py-4">{{ _("No states defined") }}</div>';
+ return;
+ }
 
-  let html = '<div class="diagram-flow">';
-  entries.forEach(([key, s], i) => {
-    if (i > 0) html += '<span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>';
-    const icon = s.icon || 'bi-circle';
-    html += `<div class="diagram-node" style="border-color: ${s.color || '#94a3b8'}; color: ${s.color || '#94a3b8'};" title="${key}">
-      <i class="bi ${icon}"></i> ${s.label || key}
-    </div>`;
-  });
-  html += '</div>';
+ let html = '<div class="diagram-flow">';
+ entries.forEach(([key, s], i) => {
+ if (i> 0) html += '<span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>';
+ const icon = s.icon || 'bi-circle';
+ html += `<div class="diagram-node" data-border-color="${s.color || '#94a3b8'}" data-text-color="${s.color || '#94a3b8'}" title="${key}">
+ <i class="bi ${icon}"></i> ${s.label || key}
+ </div>`;
+ });
+ html += '</div>';
 
-  // Summary of transitions
-  if (transitions.length) {
-    html += '<div class="diagram-summary">';
-    html += `<strong>${transitions.length}</strong> {{ _("transitions defined") }}`;
-    const uniqueRoles = [...new Set(transitions.flatMap(t => t.roles || []))];
-    if (uniqueRoles.length) {
-      html += ` &middot; {{ _("Roles") }}: ${uniqueRoles.map(r => `<span class="role-tag">${r}</span>`).join(' ')}`;
-    }
-    html += '</div>';
-  }
+ // Summary of transitions
+ if (transitions.length) {
+ html += '<div class="diagram-summary">';
+ html += `<strong>${transitions.length}</strong> {{ _("transitions defined") }}`;
+ const uniqueRoles = [...new Set(transitions.flatMap(t => t.roles || []))];
+ if (uniqueRoles.length) {
+ html += ` &middot; {{ _("Roles") }}: ${uniqueRoles.map(r => `<span class="role-tag">${r}</span>`).join(' ')}`;
+ }
+ html += '</div>';
+ }
 
-  diagram.innerHTML = html;
+ diagram.innerHTML = html;
 }
 
 // ── Admin actions ──
 {% if current_user.role == 'admin' %}
 async function addState() {
-  const key = document.getElementById('newStateKey').value.trim();
-  const label = document.getElementById('newStateLabel').value.trim();
-  const color = document.getElementById('newStateColor').value;
-  const icon = document.getElementById('newStateIcon').value.trim();
-  if (!key) return alert('{{ _("State key required") }}');
+ const key = document.getElementById('newStateKey').value.trim();
+ const label = document.getElementById('newStateLabel').value.trim();
+ const color = document.getElementById('newStateColor').value;
+ const icon = document.getElementById('newStateIcon').value.trim();
+ if (!key) return alert('{{ _("State key required") }}');
 
-  const data = await apiFetch(`/${currentWorkflow}/add_state`, {
-    method: 'POST',
-    body: JSON.stringify({ key, label: label || key, color, icon: icon || 'bi-circle' })
-  });
-  if (data.success) {
-    selectWorkflow(currentWorkflow);
-    document.getElementById('newStateKey').value = '';
-    document.getElementById('newStateLabel').value = '';
-  } else {
-    alert(data.message);
-  }
+ const data = await apiFetch(`/${currentWorkflow}/add_state`, {
+ method: 'POST',
+ body: JSON.stringify({ key, label: label || key, color, icon: icon || 'bi-circle' })
+ });
+ if (data.success) {
+ selectWorkflow(currentWorkflow);
+ document.getElementById('newStateKey').value = '';
+ document.getElementById('newStateLabel').value = '';
+ } else {
+ alert(data.message);
+ }
 }
 
 async function addTransition() {
-  const from = document.getElementById('newTransFrom').value;
-  const to = document.getElementById('newTransTo').value;
-  const label = document.getElementById('newTransLabel').value.trim();
-  const roles = [];
-  document.querySelectorAll('#newTransRolesBox input:checked').forEach(cb => roles.push(cb.value));
-  if (!roles.length) return alert('{{ _("Select at least one role") }}');
+ const from = document.getElementById('newTransFrom').value;
+ const to = document.getElementById('newTransTo').value;
+ const label = document.getElementById('newTransLabel').value.trim();
+ const roles = [];
+ document.querySelectorAll('#newTransRolesBox input:checked').forEach(cb => roles.push(cb.value));
+ if (!roles.length) return alert('{{ _("Select at least one role") }}');
 
-  const conditions = [];
-  document.querySelectorAll('#newTransCondBox input:checked').forEach(cb => conditions.push(cb.value));
+ const conditions = [];
+ document.querySelectorAll('#newTransCondBox input:checked').forEach(cb => conditions.push(cb.value));
 
-  const data = await apiFetch(`/${currentWorkflow}/add_transition`, {
-    method: 'POST',
-    body: JSON.stringify({ from, to, label, roles, conditions })
-  });
-  if (data.success) {
-    selectWorkflow(currentWorkflow);
-    document.getElementById('newTransLabel').value = '';
-  } else {
-    alert(data.message);
-  }
+ const data = await apiFetch(`/${currentWorkflow}/add_transition`, {
+ method: 'POST',
+ body: JSON.stringify({ from, to, label, roles, conditions })
+ });
+ if (data.success) {
+ selectWorkflow(currentWorkflow);
+ document.getElementById('newTransLabel').value = '';
+ } else {
+ alert(data.message);
+ }
 }
 
 function renderCheckboxes(containerId, items, selectedKeys) {
-  const box = document.getElementById(containerId);
-  if (!box) return;
-  box.innerHTML = items.map(item => {
-    const key = typeof item === 'string' ? item : item.key;
-    const label = typeof item === 'string' ? item : item.label;
-    const checked = selectedKeys.includes(key) ? 'checked' : '';
-    return `<label style="font-size:0.7rem;cursor:pointer;display:inline-flex;align-items:center;gap:2px;padding:1px 5px;border:1px solid #cbd5e1;border-radius:4px;background:${checked ? '#e0e7ff' : '#fff'}">
-      <input type="checkbox" value="${key}" ${checked} style="width:12px;height:12px;"> ${label}
-    </label>`;
-  }).join('');
+ const box = document.getElementById(containerId);
+ if (!box) return;
+ box.innerHTML = items.map(item => {
+ const key = typeof item === 'string' ? item : item.key;
+ const label = typeof item === 'string' ? item : item.label;
+ const checked = selectedKeys.includes(key) ? 'checked' : '';
+ return `<label class="text-xs-2 cursor-pointer inline-flex items-center gap-[2px] px-[5px] py-[1px] border border-slate-300 rounded-[4px]" data-bg-color="${checked ? '#e0e7ff' : '#fff'}">
+ <input class="w-[12px] h-[12px]" type="checkbox" value="${key}" ${checked}> ${label}
+ </label>`;
+ }).join('');
 }
 function renderRoleCheckboxes(containerId, selectedRoles) {
-  renderCheckboxes(containerId, ALL_ROLES, selectedRoles);
+ renderCheckboxes(containerId, ALL_ROLES, selectedRoles);
 }
 function renderConditionCheckboxes(containerId, selectedConds) {
-  renderCheckboxes(containerId, ALL_CONDITIONS, selectedConds);
+ renderCheckboxes(containerId, ALL_CONDITIONS, selectedConds);
 }
 function renderIconSelect(selectId, selectedIcon) {
-  const sel = document.getElementById(selectId);
-  if (!sel) return;
-  sel.innerHTML = ALL_ICONS.map(ic =>
-    `<option value="${ic}" ${ic === selectedIcon ? 'selected' : ''}>${ic.replace('bi-', '')}</option>`
-  ).join('');
+ const sel = document.getElementById(selectId);
+ if (!sel) return;
+ sel.innerHTML = ALL_ICONS.map(ic =>
+ `<option value="${ic}" ${ic === selectedIcon ? 'selected' : ''}>${ic.replace('bi-', '')}</option>`
+ ).join('');
 }
 
 // ── Edit state ──
 function editState(key) {
-  const s = currentConfig.states[key];
-  if (!s) return;
-  const container = document.getElementById(`state-${key}`);
-  // Toggle: if already editing, close
-  if (container.nextElementSibling?.classList.contains('inline-edit')) {
-    container.nextElementSibling.remove();
-    return;
-  }
-  const html = `<div class="inline-edit" id="edit-state-${key}">
-    <div class="ie-row">
-      <div class="ie-col"><label>{{ _("Label") }}</label><input id="es-label-${key}" value="${s.label || key}"></div>
-      <div class="ie-col"><label>{{ _("Label EN") }}</label><input id="es-label-en-${key}" value="${s.label_en || key}"></div>
-      <div class="ie-col" style="max-width:60px"><label>{{ _("Color") }}</label><input type="color" id="es-color-${key}" value="${s.color || '#94a3b8'}"></div>
-      <div class="ie-col"><label>{{ _("Icon") }}</label><select id="es-icon-${key}"></select></div>
-      <div class="ie-col" style="max-width:50px"><label>{{ _("Order") }}</label><input type="number" id="es-order-${key}" value="${s.order || 1}"></div>
-    </div>
-    <div class="ie-btns">
-      <button class="btn btn-sm btn-primary" onclick="saveState('${key}')">{{ _("Save") }}</button>
-      <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('edit-state-${key}').remove()">{{ _("Cancel") }}</button>
-    </div>
-  </div>`;
-  container.insertAdjacentHTML('afterend', html);
-  renderIconSelect(`es-icon-${key}`, s.icon || 'bi-circle');
+ const s = currentConfig.states[key];
+ if (!s) return;
+ const container = document.getElementById(`state-${key}`);
+ // Toggle: if already editing, close
+ if (container.nextElementSibling?.classList.contains('inline-edit')) {
+ container.nextElementSibling.remove();
+ return;
+ }
+ const html = `<div class="inline-edit" id="edit-state-${key}">
+ <div class="ie-row">
+ <div class="ie-col"><label>{{ _("Label") }}</label><input id="es-label-${key}" value="${s.label || key}"></div>
+ <div class="ie-col max-w-[50px]"><label>{{ _("Label EN") }}</label><input id="es-label-en-${key}" value="${s.label_en || key}"></div>
+ <div class="ie-col max-w-[60px]"><label>{{ _("Color") }}</label><input type="color" id="es-color-${key}" value="${s.color || '#94a3b8'}"></div>
+ <div class="ie-col max-w-[60px]"><label>{{ _("Icon") }}</label><select id="es-icon-${key}"></select></div>
+ <div class="ie-col max-w-[50px]"><label>{{ _("Order") }}</label><input type="number" id="es-order-${key}" value="${s.order || 1}"></div>
+ </div>
+ <div class="ie-btns">
+ <button type="button" class="btn btn-sm btn-primary" data-wf-action="save-state" data-key="${key}">{{ _("Save") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-secondary" data-wf-action="cancel-state" data-key="${key}">{{ _("Cancel") }}</button>
+ </div>
+ </div>`;
+ container.insertAdjacentHTML('afterend', html);
+ renderIconSelect(`es-icon-${key}`, s.icon || 'bi-circle');
 }
 
 async function saveState(key) {
-  const data = await apiFetch(`/${currentWorkflow}/update_state`, {
-    method: 'POST',
-    body: JSON.stringify({
-      key,
-      label: document.getElementById(`es-label-${key}`).value,
-      label_en: document.getElementById(`es-label-en-${key}`).value,
-      color: document.getElementById(`es-color-${key}`).value,
-      icon: document.getElementById(`es-icon-${key}`).value,
-      order: parseInt(document.getElementById(`es-order-${key}`).value) || 1,
-    })
-  });
-  if (data.success) selectWorkflow(currentWorkflow);
-  else alert(data.message);
+ const data = await apiFetch(`/${currentWorkflow}/update_state`, {
+ method: 'POST',
+ body: JSON.stringify({
+ key,
+ label: document.getElementById(`es-label-${key}`).value,
+ label_en: document.getElementById(`es-label-en-${key}`).value,
+ color: document.getElementById(`es-color-${key}`).value,
+ icon: document.getElementById(`es-icon-${key}`).value,
+ order: parseInt(document.getElementById(`es-order-${key}`).value) || 1,
+ })
+ });
+ if (data.success) selectWorkflow(currentWorkflow);
+ else alert(data.message);
 }
 
 async function deleteState(key) {
-  if (!confirm(`{{ _("Delete state") }} "${key}"?`)) return;
-  const data = await apiFetch(`/${currentWorkflow}/delete_state`, {
-    method: 'POST', body: JSON.stringify({ key })
-  });
-  if (data.success) selectWorkflow(currentWorkflow);
-  else alert(data.message);
+ if (!confirm(`{{ _("Delete state") }} "${key}"?`)) return;
+ const data = await apiFetch(`/${currentWorkflow}/delete_state`, {
+ method: 'POST', body: JSON.stringify({ key })
+ });
+ if (data.success) selectWorkflow(currentWorkflow);
+ else alert(data.message);
 }
 
 // ── Edit transition ──
 function editTransition(idx) {
-  const t = currentConfig.transitions[idx];
-  if (!t) return;
-  const container = document.getElementById(`trans-${idx}`);
-  if (container.nextElementSibling?.classList.contains('inline-edit')) {
-    container.nextElementSibling.remove();
-    return;
-  }
-  const html = `<div class="inline-edit" id="edit-trans-${idx}">
-    <div class="ie-row">
-      <div class="ie-col"><label>{{ _("Label") }}</label><input id="et-label-${idx}" value="${t.label || ''}"></div>
-      <div class="ie-col"><label>{{ _("Label EN") }}</label><input id="et-label-en-${idx}" value="${t.label_en || ''}"></div>
-    </div>
-    <div style="margin-top:6px">
-      <label>{{ _("Roles") }}</label>
-      <div id="et-roles-box-${idx}" class="d-flex flex-wrap gap-1"></div>
-    </div>
-    <div style="margin-top:6px">
-      <label>{{ _("Conditions") }}</label>
-      <div id="et-cond-box-${idx}" class="d-flex flex-wrap gap-1"></div>
-    </div>
-    <div class="ie-btns">
-      <button class="btn btn-sm btn-primary" onclick="saveTransition(${idx})">{{ _("Save") }}</button>
-      <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('edit-trans-${idx}').remove()">{{ _("Cancel") }}</button>
-    </div>
-  </div>`;
-  container.insertAdjacentHTML('afterend', html);
-  renderRoleCheckboxes(`et-roles-box-${idx}`, t.roles || []);
-  renderConditionCheckboxes(`et-cond-box-${idx}`, t.conditions || []);
+ const t = currentConfig.transitions[idx];
+ if (!t) return;
+ const container = document.getElementById(`trans-${idx}`);
+ if (container.nextElementSibling?.classList.contains('inline-edit')) {
+ container.nextElementSibling.remove();
+ return;
+ }
+ const html = `<div class="inline-edit" id="edit-trans-${idx}">
+ <div class="ie-row">
+ <div class="ie-col"><label>{{ _("Label") }}</label><input id="et-label-${idx}" value="${t.label || ''}"></div>
+ <div class="ie-col"><label>{{ _("Label EN") }}</label><input id="et-label-en-${idx}" value="${t.label_en || ''}"></div>
+ </div>
+ <div class="mt-[6px]">
+ <label>{{ _("Roles") }}</label>
+ <div id="et-roles-box-${idx}" class="d-flex flex-wrap gap-1"></div>
+ </div>
+ <div class="mt-[6px]">
+ <label>{{ _("Conditions") }}</label>
+ <div id="et-cond-box-${idx}" class="d-flex flex-wrap gap-1"></div>
+ </div>
+ <div class="ie-btns">
+ <button type="button" class="btn btn-sm btn-primary" data-wf-action="save-trans" data-idx="${idx}">{{ _("Save") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-secondary" data-wf-action="cancel-trans" data-idx="${idx}">{{ _("Cancel") }}</button>
+ </div>
+ </div>`;
+ container.insertAdjacentHTML('afterend', html);
+ renderRoleCheckboxes(`et-roles-box-${idx}`, t.roles || []);
+ renderConditionCheckboxes(`et-cond-box-${idx}`, t.conditions || []);
 }
 
 async function saveTransition(idx) {
-  const roles = [];
-  document.querySelectorAll(`#et-roles-box-${idx} input:checked`).forEach(cb => roles.push(cb.value));
-  if (!roles.length) return alert('{{ _("Select at least one role") }}');
-  const conditions = [];
-  document.querySelectorAll(`#et-cond-box-${idx} input:checked`).forEach(cb => conditions.push(cb.value));
-  const data = await apiFetch(`/${currentWorkflow}/update_transition`, {
-    method: 'POST',
-    body: JSON.stringify({
-      index: idx,
-      label: document.getElementById(`et-label-${idx}`).value,
-      label_en: document.getElementById(`et-label-en-${idx}`).value,
-      roles,
-      conditions,
-    })
-  });
-  if (data.success) selectWorkflow(currentWorkflow);
-  else alert(data.message);
+ const roles = [];
+ document.querySelectorAll(`#et-roles-box-${idx} input:checked`).forEach(cb => roles.push(cb.value));
+ if (!roles.length) return alert('{{ _("Select at least one role") }}');
+ const conditions = [];
+ document.querySelectorAll(`#et-cond-box-${idx} input:checked`).forEach(cb => conditions.push(cb.value));
+ const data = await apiFetch(`/${currentWorkflow}/update_transition`, {
+ method: 'POST',
+ body: JSON.stringify({
+ index: idx,
+ label: document.getElementById(`et-label-${idx}`).value,
+ label_en: document.getElementById(`et-label-en-${idx}`).value,
+ roles,
+ conditions,
+ })
+ });
+ if (data.success) selectWorkflow(currentWorkflow);
+ else alert(data.message);
 }
 
 async function deleteTransition(idx) {
-  const t = currentConfig.transitions[idx];
-  if (!confirm(`{{ _("Delete transition") }} "${t.from} → ${t.to}"?`)) return;
-  const data = await apiFetch(`/${currentWorkflow}/delete_transition`, {
-    method: 'POST', body: JSON.stringify({ index: idx })
-  });
-  if (data.success) selectWorkflow(currentWorkflow);
-  else alert(data.message);
+ const t = currentConfig.transitions[idx];
+ if (!confirm(`{{ _("Delete transition") }} "${t.from} → ${t.to}"?`)) return;
+ const data = await apiFetch(`/${currentWorkflow}/delete_transition`, {
+ method: 'POST', body: JSON.stringify({ index: idx })
+ });
+ if (data.success) selectWorkflow(currentWorkflow);
+ else alert(data.message);
 }
 
 async function resetWorkflow() {
-  if (!confirm('{{ _("Reset this workflow to default configuration?") }}')) return;
-  const data = await apiFetch(`/${currentWorkflow}/reset`, { method: 'POST' });
-  if (data.success) selectWorkflow(currentWorkflow);
-  else alert(data.message);
+ if (!confirm('{{ _("Reset this workflow to default configuration?") }}')) return;
+ const data = await apiFetch(`/${currentWorkflow}/reset`, { method: 'POST' });
+ if (data.success) selectWorkflow(currentWorkflow);
+ else alert(data.message);
 }
 {% endif %}
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadWorkflows();
+ await loadWorkflows();
 
-  document.getElementById('btnRefresh').addEventListener('click', () => {
-    if (currentWorkflow) selectWorkflow(currentWorkflow);
-  });
+ document.getElementById('btnRefresh').addEventListener('click', () => {
+ if (currentWorkflow) selectWorkflow(currentWorkflow);
+ });
 
-  {% if current_user.role == 'admin' %}
-  document.getElementById('btnReset').addEventListener('click', resetWorkflow);
-  document.getElementById('btnToggleAddState').addEventListener('click', () => {
-    document.getElementById('addStateForm').classList.toggle('add-form-hidden');
-  });
-  document.getElementById('btnToggleAddTransition').addEventListener('click', () => {
-    document.getElementById('addTransitionForm').classList.toggle('add-form-hidden');
-  });
-  document.getElementById('btnDoAddState').addEventListener('click', addState);
-  document.getElementById('btnDoAddTransition').addEventListener('click', addTransition);
-  renderRoleCheckboxes('newTransRolesBox', ['admin']);
-  renderConditionCheckboxes('newTransCondBox', []);
-  renderIconSelect('newStateIcon', 'bi-circle');
-  {% endif %}
+ {% if current_user.role == 'admin' %}
+ document.getElementById('btnReset').addEventListener('click', resetWorkflow);
+ document.getElementById('btnToggleAddState').addEventListener('click', () => {
+ document.getElementById('addStateForm').classList.toggle('add-form-hidden');
+ });
+ document.getElementById('btnToggleAddTransition').addEventListener('click', () => {
+ document.getElementById('addTransitionForm').classList.toggle('add-form-hidden');
+ });
+ document.getElementById('btnDoAddState').addEventListener('click', addState);
+ document.getElementById('btnDoAddTransition').addEventListener('click', addTransition);
+ renderRoleCheckboxes('newTransRolesBox', ['admin']);
+ renderConditionCheckboxes('newTransCondBox', []);
+ renderIconSelect('newStateIcon', 'bi-circle');
+ {% endif %}
+
+ // Delegated click handlers for dynamically rendered buttons (CSP-compatible)
+ document.addEventListener('click', function(e) {
+ const btn = e.target.closest('[data-wf-action]');
+ if (!btn) return;
+ const action = btn.dataset.wfAction;
+ const key = btn.dataset.key;
+ const idx = btn.dataset.idx;
+ switch (action) {
+ case 'edit-state': editState(key); break;
+ case 'delete-state': deleteState(key); break;
+ case 'save-state': saveState(key); break;
+ case 'cancel-state': document.getElementById(`edit-state-${key}`)?.remove(); break;
+ case 'edit-trans': editTransition(parseInt(idx, 10)); break;
+ case 'delete-trans': deleteTransition(parseInt(idx, 10)); break;
+ case 'save-trans': saveTransition(parseInt(idx, 10)); break;
+ case 'cancel-trans': document.getElementById(`edit-trans-${idx}`)?.remove(); break;
+ }
+ });
 });
 </script>
 {% endblock %}

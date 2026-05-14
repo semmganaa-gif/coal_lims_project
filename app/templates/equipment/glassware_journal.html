@@ -5,64 +5,64 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id removed #}
-  {% include "equipment/partials/hero_tabs.html" %}
+ {# add_modal_id removed #}
+ {% include "equipment/partials/hero_tabs.html" %}
 
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-cup-straw text-success"></i> {{ _("Glassware Register") }}</span>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addGlassModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
-      {% endif %}
-      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
-      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
-    </div>
-  </div>
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <span class="fw-bold"><i class="bi bi-cup-straw text-success"></i> {{ _("Glassware Register") }}</span>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role in ['senior','manager','admin'] %}
+ <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addGlassModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-warning" id="btn-edit-row" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-row" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
+ {% endif %}
+ <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+ <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
+ </div>
+ </div>
 
-  <div class="eq-grid-card">
-    <div id="glasswareGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
-  </div>
+ <div class="eq-grid-card">
+ <div class="w-full h-[calc(100vh_-_280px)] min-h-[450px]" id="glasswareGrid"></div>
+ </div>
 
-  <div class="modal fade" id="addGlassModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Glassware") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='glassware') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body p-4">
-          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
-          <div class="row g-3">
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Group") }}</label><input type="text" id="g_group" name="group" class="form-control" placeholder="Flask, Cylinder..."></div>
-            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="g_no" name="no" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="g_name" name="name" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Volume (mL)") }}</label><input type="text" id="g_volume" name="volume" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer / Model") }}</label><input type="text" id="g_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Certificate No.") }}</label><input type="text" id="g_cert_no" name="cert_no" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Calibration Date") }}</label><input type="text" id="g_cert_date" name="cert_date" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Certification Expiry") }}</label><input type="text" id="g_cert_expire" name="cert_expire" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Recalibration Date") }}</label><input type="text" id="g_recert_date" name="recert_date" class="form-control"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="modal fade" id="addGlassModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-brand-gradient text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Glassware") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='glassware') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body p-4">
+ <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+ <div class="row g-3">
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Group") }}</label><input type="text" id="g_group" name="group" class="form-control" placeholder="Flask, Cylinder..."></div>
+ <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="g_no" name="no" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="g_name" name="name" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Volume (mL)") }}</label><input type="text" id="g_volume" name="volume" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer / Model") }}</label><input type="text" id="g_manufacturer" name="manufacturer" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Certificate No.") }}</label><input type="text" id="g_cert_no" name="cert_no" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Calibration Date") }}</label><input type="text" id="g_cert_date" name="cert_date" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Certification Expiry") }}</label><input type="text" id="g_cert_expire" name="cert_expire" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Recalibration Date") }}</label><input type="text" id="g_recert_date" name="recert_date" class="form-control"></div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="register_type" value="glassware">
-  </form>
+ <form class="hidden" id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="register_type" value="glassware">
+ </form>
 </div>
 {% endblock %}
 
@@ -77,49 +77,49 @@
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  var rowData = {{ items | tojson }};
+ var rowData = {{ items | tojson }};
 
-  var table = new Tabulator("#glasswareGrid", {
-    data: rowData,
-    layout: "fitColumns",
-    height: "75vh",
-    groupBy: "group",
-    groupStartOpen: true,
-    selectable: true,
-    columns: [
-      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"№", field:"no", width:55, frozen:true},
-      {title:'{{ _("Glassware Name") }}', field:"name", minWidth:200, frozen:true},
-      {title:'{{ _("Volume (mL)") }}', field:"volume", width:110},
-      {title:'{{ _("Manufacturer / Model") }}', field:"manufacturer", minWidth:180},
-      {title:'{{ _("Certificate No.") }}', field:"cert_no", minWidth:150},
-      {title:'{{ _("Calibration Date") }}', field:"cert_date", width:150},
-      {title:'{{ _("Certification Expiry") }}', field:"cert_expire", width:160},
-      {title:'{{ _("Recalibration Date") }}', field:"recert_date", width:170},
-    ],
-  });
+ var table = new Tabulator("#glasswareGrid", {
+ data: rowData,
+ layout: "fitColumns",
+ height: "75vh",
+ groupBy: "group",
+ groupStartOpen: true,
+ selectable: true,
+ columns: [
+ {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+ {title:"№", field:"no", width:55, frozen:true},
+ {title:'{{ _("Glassware Name") }}', field:"name", minWidth:200, frozen:true},
+ {title:'{{ _("Volume (mL)") }}', field:"volume", width:110},
+ {title:'{{ _("Manufacturer / Model") }}', field:"manufacturer", minWidth:180},
+ {title:'{{ _("Certificate No.") }}', field:"cert_no", minWidth:150},
+ {title:'{{ _("Calibration Date") }}', field:"cert_date", width:150},
+ {title:'{{ _("Certification Expiry") }}', field:"cert_expire", width:160},
+ {title:'{{ _("Recalibration Date") }}', field:"recert_date", width:170},
+ ],
+ });
 
-  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
+ initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  window.editSelectedRow = function() {
-    var sel = table.getSelectedData();
-    if (sel.length !== 1) return;
-    var d = sel[0];
-    ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) {
-      var el = document.getElementById('g_'+f); if(el) el.value = d[f]||'';
-    });
-    if (d.id) {
-      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
-    }
-    document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
-    new bootstrap.Modal(document.getElementById('addGlassModal')).show();
-  };
+ window.editSelectedRow = function() {
+ var sel = table.getSelectedData();
+ if (sel.length !== 1) return;
+ var d = sel[0];
+ ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) {
+ var el = document.getElementById('g_'+f); if(el) el.value = d[f]||'';
+ });
+ if (d.id) {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+ }
+ document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
+ new bootstrap.Modal(document.getElementById('addGlassModal')).show();
+ };
 
-  document.getElementById('addGlassModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='glassware') }}";
-    document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Glassware") }}';
-    ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) { document.getElementById('g_'+f).value=''; });
-  });
+ document.getElementById('addGlassModal').addEventListener('hidden.bs.modal', function() {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='glassware') }}";
+ document.querySelector('#addGlassModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Glassware") }}';
+ ['group','no','name','volume','manufacturer','cert_no','cert_date','cert_expire','recert_date'].forEach(function(f) { document.getElementById('g_'+f).value=''; });
+ });
 });
 </script>
 {% endblock %}

@@ -3,319 +3,319 @@
 
 {% block content %}
 <div class="container">
-  {# Back button #}
-  <div class="mb-3">
-    <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
-    </a>
-  </div>
+ {# Back button #}
+ <div class="mb-3">
+ <a href="{{ url_for('spare_parts.spare_part_list') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Back") }}
+ </a>
+ </div>
 
-  <div class="row">
-    {# Left: Info + Actions #}
-    <div class="col-lg-7">
-      {# Main Info Card #}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center"
-             style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); color: #fff;">
-          <div>
-            <h5 class="mb-1">{{ spare_part.name }}</h5>
-            {% if spare_part.name_en %}
-            <small class="text-light">{{ spare_part.name_en }}</small>
-            {% endif %}
-          </div>
-          <div>
-            {% if spare_part.status == 'out_of_stock' %}
-            <span class="badge bg-danger fs-6">{{ _("Out of Stock") }}</span>
-            {% elif spare_part.status == 'low_stock' %}
-            <span class="badge bg-warning text-dark fs-6">{{ _("Low Stock") }}</span>
-            {% else %}
-            <span class="badge bg-success fs-6">{{ _("Normal") }}</span>
-            {% endif %}
-          </div>
-        </div>
+ <div class="row">
+ {# Left: Info + Actions #}
+ <div class="col-lg-7">
+ {# Main Info Card #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header py-3 d-flex justify-content-between align-items-center bg-brand-deep-gradient text-white"
+>
+ <div>
+ <h5 class="mb-1">{{ spare_part.name }}</h5>
+ {% if spare_part.name_en %}
+ <small class="text-light">{{ spare_part.name_en }}</small>
+ {% endif %}
+ </div>
+ <div>
+ {% if spare_part.status == 'out_of_stock' %}
+ <span class="badge bg-danger fs-6">{{ _("Out of Stock") }}</span>
+ {% elif spare_part.status == 'low_stock' %}
+ <span class="badge bg-warning text-dark fs-6">{{ _("Low Stock") }}</span>
+ {% else %}
+ <span class="badge bg-success fs-6">{{ _("Normal") }}</span>
+ {% endif %}
+ </div>
+ </div>
 
-        <div class="card-body">
-          {# Image #}
-          {% if spare_part.image_path %}
-          <div class="text-center mb-3">
-            <img src="{{ url_for('static', filename=spare_part.image_path) }}"
-                 alt="{{ spare_part.name }}"
-                 class="img-fluid rounded shadow-sm"
-                 style="max-height: 200px; object-fit: contain;">
-          </div>
-          {% endif %}
+ <div class="card-body">
+ {# Image #}
+ {% if spare_part.image_path %}
+ <div class="text-center mb-3">
+ <img src="{{ url_for('static', filename=spare_part.image_path) }}"
+ alt="{{ spare_part.name }}"
+ class="img-fluid rounded shadow-sm max-h-[200px] object-contain"
+>
+ </div>
+ {% endif %}
 
-          <div class="row g-3">
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Stock") }}</small>
-              <span class="fs-4 fw-bold {{ 'text-danger' if spare_part.quantity <= 0 else ('text-warning' if spare_part.quantity <= (spare_part.reorder_level or 0) else 'text-success') }}">
-                {{ spare_part.quantity }} {{ spare_part.unit }}
-              </span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Reorder Level") }}</small>
-              <span class="fs-5">{{ spare_part.reorder_level or '-' }} {{ spare_part.unit }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Unit Price") }}</small>
-              <span class="fs-5">{{ spare_part.unit_price|default('-', true) }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Part No.") }}</small>
-              <span>{{ spare_part.part_number or '-' }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Manufacturer") }}</small>
-              <span>{{ spare_part.manufacturer or '-' }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Supplier") }}</small>
-              <span>{{ spare_part.supplier or '-' }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Location") }}</small>
-              <span>{{ spare_part.storage_location or '-' }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Service Life") }}</small>
-              <span>{{ spare_part.usage_life_months or '-' }} {{ _("months") }}</span>
-            </div>
-            <div class="col-6 col-md-4">
-              <small class="text-muted d-block">{{ _("Category") }}</small>
-              {% set cat_name = categories|selectattr('0', 'equalto', spare_part.category)|map(attribute='1')|first %}
-              <span>{{ cat_name or spare_part.category or '-' }}</span>
-            </div>
-            <div class="col-6 col-md-8">
-              <small class="text-muted d-block">{{ _("Compatible Equipment") }}</small>
-              <span>{{ spare_part.compatible_equipment or '-' }}</span>
-            </div>
-          </div>
-        </div>
+ <div class="row g-3">
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Stock") }}</small>
+ <span class="fs-4 fw-bold {{ 'text-danger' if spare_part.quantity <= 0 else ('text-warning' if spare_part.quantity <= (spare_part.reorder_level or 0) else 'text-success') }}">
+ {{ spare_part.quantity }} {{ spare_part.unit }}
+ </span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Reorder Level") }}</small>
+ <span class="fs-5">{{ spare_part.reorder_level or '-' }} {{ spare_part.unit }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Unit Price") }}</small>
+ <span class="fs-5">{{ spare_part.unit_price|default('-', true) }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Part No.") }}</small>
+ <span>{{ spare_part.part_number or '-' }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Manufacturer") }}</small>
+ <span>{{ spare_part.manufacturer or '-' }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Supplier") }}</small>
+ <span>{{ spare_part.supplier or '-' }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Location") }}</small>
+ <span>{{ spare_part.storage_location or '-' }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Service Life") }}</small>
+ <span>{{ spare_part.usage_life_months or '-' }} {{ _("months") }}</span>
+ </div>
+ <div class="col-6 col-md-4">
+ <small class="text-muted d-block">{{ _("Category") }}</small>
+ {% set cat_name = categories|selectattr('0', 'equalto', spare_part.category)|map(attribute='1')|first %}
+ <span>{{ cat_name or spare_part.category or '-' }}</span>
+ </div>
+ <div class="col-6 col-md-8">
+ <small class="text-muted d-block">{{ _("Compatible Equipment") }}</small>
+ <span>{{ spare_part.compatible_equipment or '-' }}</span>
+ </div>
+ </div>
+ </div>
 
-        <div class="card-footer bg-light">
-          <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#receiveModal">
-              <i class="bi bi-plus-circle me-1"></i>{{ _("Add Stock") }}
-            </button>
-            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#consumeModal">
-              <i class="bi bi-dash-circle me-1"></i>{{ _("Consume") }}
-            </button>
-            <a href="{{ url_for('spare_parts.edit_spare_part', id=spare_part.id) }}" class="btn btn-outline-primary btn-sm">
-              <i class="bi bi-pencil me-1"></i>{{ _("Edit") }}
-            </a>
-            {% if current_user.role in ['senior', 'manager', 'admin'] and spare_part.status != 'disposed' %}
-            <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#disposeModal">
-              <i class="bi bi-trash me-1"></i>{{ _("Delete") }}
-            </button>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+ <div class="card-footer bg-light">
+ <div class="d-flex gap-2 flex-wrap">
+ <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#receiveModal">
+ <i class="bi bi-plus-circle me-1"></i>{{ _("Add Stock") }}
+ </button>
+ <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#consumeModal">
+ <i class="bi bi-dash-circle me-1"></i>{{ _("Consume") }}
+ </button>
+ <a href="{{ url_for('spare_parts.edit_spare_part', id=spare_part.id) }}" class="btn btn-outline-primary btn-sm">
+ <i class="bi bi-pencil me-1"></i>{{ _("Edit") }}
+ </a>
+ {% if current_user.role in ['senior', 'manager', 'admin'] and spare_part.status != 'disposed' %}
+ <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#disposeModal">
+ <i class="bi bi-trash me-1"></i>{{ _("Delete") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-      {# Usage History #}
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _("Usage History") }}</h6>
-        </div>
-        <div class="card-body p-0">
-          {% if usages %}
-          <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>{{ _("Date") }}</th>
-                  <th>{{ _("Qty") }}</th>
-                  <th>{{ _("Purpose") }}</th>
-                  <th>{{ _("Equipment") }}</th>
-                  <th>{{ _("User") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for u in usages %}
-                <tr>
-                  <td>{{ u.used_at.strftime('%Y-%m-%d %H:%M') if u.used_at else '-' }}</td>
-                  <td class="text-danger">-{{ u.quantity_used }} {{ u.unit }}</td>
-                  <td>{{ u.purpose or '-' }}</td>
-                  <td>{{ u.equipment.name if u.equipment else '-' }}</td>
-                  <td>{{ u.used_by.username if u.used_by else '-' }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <div class="text-center py-4 text-muted">
-            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-            <p class="mt-2 mb-0">{{ _("No usage history") }}</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+ {# Usage History #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-light">
+ <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ _("Usage History") }}</h6>
+ </div>
+ <div class="card-body p-0 max-h-[600px] overflow-y-auto">
+ {% if usages %}
+ <div class="table-responsive">
+ <table class="table table-sm table-hover mb-0">
+ <thead class="table-light">
+ <tr>
+ <th>{{ _("Date") }}</th>
+ <th>{{ _("Qty") }}</th>
+ <th>{{ _("Purpose") }}</th>
+ <th>{{ _("Equipment") }}</th>
+ <th>{{ _("User") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for u in usages %}
+ <tr>
+ <td>{{ u.used_at.strftime('%Y-%m-%d %H:%M') if u.used_at else '-' }}</td>
+ <td class="text-danger">-{{ u.quantity_used }} {{ u.unit }}</td>
+ <td>{{ u.purpose or '-' }}</td>
+ <td>{{ u.equipment.name if u.equipment else '-' }}</td>
+ <td>{{ u.used_by.username if u.used_by else '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="text-center py-4 text-muted">
+ <i class="bi bi-inbox text-[2rem]"></i>
+ <p class="mt-2 mb-0">{{ _("No usage history") }}</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-    {# Right: Audit Log #}
-    <div class="col-lg-5">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-light">
-          <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ _("Audit Log") }}</h6>
-        </div>
-        <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
-          {% if logs %}
-          <div class="list-group list-group-flush">
-            {% for log in logs %}
-            <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  {% if log.action == 'created' %}
-                  <span class="badge bg-info me-1">{{ _("Created") }}</span>
-                  {% elif log.action == 'received' %}
-                  <span class="badge bg-success me-1">{{ _("Received") }}</span>
-                  {% elif log.action == 'consumed' %}
-                  <span class="badge bg-warning text-dark me-1">{{ _("Consumed") }}</span>
-                  {% elif log.action == 'adjusted' %}
-                  <span class="badge bg-secondary me-1">{{ _("Adjusted") }}</span>
-                  {% else %}
-                  <span class="badge bg-dark me-1">{{ log.action }}</span>
-                  {% endif %}
-                  <small>{{ log.user.username if log.user else '-' }}</small>
-                </div>
-                <small class="text-muted">{{ log.timestamp.strftime('%m-%d %H:%M') if log.timestamp else '' }}</small>
-              </div>
-              {% if log.quantity_change %}
-              <div class="mt-1">
-                <small class="{{ 'text-success' if log.quantity_change > 0 else 'text-danger' }}">
-                  {{ '+' if log.quantity_change > 0 else '' }}{{ log.quantity_change }}
-                </small>
-                <small class="text-muted">({{ log.quantity_before }} → {{ log.quantity_after }})</small>
-              </div>
-              {% endif %}
-              {% if log.details %}
-              <small class="text-muted d-block">{{ log.details }}</small>
-              {% endif %}
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <div class="text-center py-4 text-muted">
-            <p class="mb-0">{{ _("No logs") }}</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+ {# Right: Audit Log #}
+ <div class="col-lg-5">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-light">
+ <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ _("Audit Log") }}</h6>
+ </div>
+ <div class="card-body p-0 max-h-[600px] overflow-y-auto">
+ {% if logs %}
+ <div class="list-group list-group-flush">
+ {% for log in logs %}
+ <div class="list-group-item">
+ <div class="d-flex justify-content-between align-items-start">
+ <div>
+ {% if log.action == 'created' %}
+ <span class="badge bg-info me-1">{{ _("Created") }}</span>
+ {% elif log.action == 'received' %}
+ <span class="badge bg-success me-1">{{ _("Received") }}</span>
+ {% elif log.action == 'consumed' %}
+ <span class="badge bg-warning text-dark me-1">{{ _("Consumed") }}</span>
+ {% elif log.action == 'adjusted' %}
+ <span class="badge bg-secondary me-1">{{ _("Adjusted") }}</span>
+ {% else %}
+ <span class="badge bg-dark me-1">{{ log.action }}</span>
+ {% endif %}
+ <small>{{ log.user.username if log.user else '-' }}</small>
+ </div>
+ <small class="text-muted">{{ log.timestamp.strftime('%m-%d %H:%M') if log.timestamp else '' }}</small>
+ </div>
+ {% if log.quantity_change %}
+ <div class="mt-1">
+ <small class="{{ 'text-success' if log.quantity_change> 0 else 'text-danger' }}">
+ {{ '+' if log.quantity_change> 0 else '' }}{{ log.quantity_change }}
+ </small>
+ <small class="text-muted">({{ log.quantity_before }} → {{ log.quantity_after }})</small>
+ </div>
+ {% endif %}
+ {% if log.details %}
+ <small class="text-muted d-block">{{ log.details }}</small>
+ {% endif %}
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="text-center py-4 text-muted">
+ <p class="mb-0">{{ _("No logs") }}</p>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 {# Receive Modal #}
 <div class="modal fade" id="receiveModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Stock") }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" action="{{ url_for('spare_parts.receive_spare_part', id=spare_part.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">{{ _("Quantity") }} <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01">
-              <span class="input-group-text">{{ spare_part.unit }}</span>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Notes") }}</label>
-            <input type="text" name="notes" class="form-control" placeholder="{{ _("e.g. Newly purchased") }}">
-          </div>
-          <div class="alert alert-info small mb-0">
-            <i class="bi bi-info-circle me-1"></i>
-            {{ _("Current stock:") }} <strong>{{ spare_part.quantity }} {{ spare_part.unit }}</strong>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-success">{{ _("Add") }}</button>
-        </div>
-      </form>
-    </div>
-  </div>
+ <div class="modal-dialog">
+ <div class="modal-content">
+ <div class="modal-header bg-success text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Stock") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form method="POST" action="{{ url_for('spare_parts.receive_spare_part', id=spare_part.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body">
+ <div class="mb-3">
+ <label class="form-label">{{ _("Quantity") }} <span class="text-danger">*</span></label>
+ <div class="input-group">
+ <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01">
+ <span class="input-group-text">{{ spare_part.unit }}</span>
+ </div>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Notes") }}</label>
+ <input type="text" name="notes" class="form-control" placeholder="{{ _("e.g. Newly purchased") }}">
+ </div>
+ <div class="alert alert-info small mb-0">
+ <i class="bi bi-info-circle me-1"></i>
+ {{ _("Current stock:") }} <strong>{{ spare_part.quantity }} {{ spare_part.unit }}</strong>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-success">{{ _("Add") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
 </div>
 
 {# Consume Modal #}
 <div class="modal fade" id="consumeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title"><i class="bi bi-dash-circle me-2"></i>{{ _("Consume") }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" action="{{ url_for('spare_parts.consume_spare_part', id=spare_part.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">{{ _("Quantity") }} <span class="text-danger">*</span></label>
-            <div class="input-group">
-              <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01"
-                     max="{{ spare_part.quantity }}">
-              <span class="input-group-text">{{ spare_part.unit }}</span>
-            </div>
-            <small class="text-muted">{{ _("Maximum:") }} {{ spare_part.quantity }}</small>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Purpose") }}</label>
-            <select name="purpose" class="form-select">
-              <option value="Repair">{{ _("Repair") }}</option>
-              <option value="Replacement">{{ _("Replacement") }}</option>
-              <option value="Preventive Maintenance">{{ _("Preventive Maintenance") }}</option>
-              <option value="Other">{{ _("Other") }}</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Notes") }}</label>
-            <input type="text" name="notes" class="form-control">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-warning">{{ _("Consume") }}</button>
-        </div>
-      </form>
-    </div>
-  </div>
+ <div class="modal-dialog">
+ <div class="modal-content">
+ <div class="modal-header bg-warning text-dark">
+ <h5 class="modal-title"><i class="bi bi-dash-circle me-2"></i>{{ _("Consume") }}</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+ </div>
+ <form method="POST" action="{{ url_for('spare_parts.consume_spare_part', id=spare_part.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body">
+ <div class="mb-3">
+ <label class="form-label">{{ _("Quantity") }} <span class="text-danger">*</span></label>
+ <div class="input-group">
+ <input type="number" name="quantity" class="form-control" required min="0.01" step="0.01"
+ max="{{ spare_part.quantity }}">
+ <span class="input-group-text">{{ spare_part.unit }}</span>
+ </div>
+ <small class="text-muted">{{ _("Maximum:") }} {{ spare_part.quantity }}</small>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Purpose") }}</label>
+ <select name="purpose" class="form-select">
+ <option value="Repair">{{ _("Repair") }}</option>
+ <option value="Replacement">{{ _("Replacement") }}</option>
+ <option value="Preventive Maintenance">{{ _("Preventive Maintenance") }}</option>
+ <option value="Other">{{ _("Other") }}</option>
+ </select>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Notes") }}</label>
+ <input type="text" name="notes" class="form-control">
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-warning">{{ _("Consume") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
 </div>
 
 {# Dispose Modal #}
 <div class="modal fade" id="disposeModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ _("Delete") }}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" action="{{ url_for('spare_parts.dispose_spare_part', id=spare_part.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body">
-          <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            {{ _("You are about to delete") }} <strong>{{ spare_part.name }}</strong>. {{ _("This action cannot be undone!") }}
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Reason") }}</label>
-            <select name="reason" class="form-select">
-              <option value="Damaged">{{ _("Damaged") }}</option>
-              <option value="Expired">{{ _("Expired") }}</option>
-              <option value="Does not meet requirements">{{ _("Does not meet requirements") }}</option>
-              <option value="Other">{{ _("Other") }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-danger">{{ _("Delete") }}</button>
-        </div>
-      </form>
-    </div>
-  </div>
+ <div class="modal-dialog">
+ <div class="modal-content">
+ <div class="modal-header bg-danger text-white">
+ <h5 class="modal-title"><i class="bi bi-trash me-2"></i>{{ _("Delete") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form method="POST" action="{{ url_for('spare_parts.dispose_spare_part', id=spare_part.id) }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body">
+ <div class="alert alert-warning">
+ <i class="bi bi-exclamation-triangle me-2"></i>
+ {{ _("You are about to delete") }} <strong>{{ spare_part.name }}</strong>. {{ _("This action cannot be undone!") }}
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Reason") }}</label>
+ <select name="reason" class="form-select">
+ <option value="Damaged">{{ _("Damaged") }}</option>
+ <option value="Expired">{{ _("Expired") }}</option>
+ <option value="Does not meet requirements">{{ _("Does not meet requirements") }}</option>
+ <option value="Other">{{ _("Other") }}</option>
+ </select>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-danger">{{ _("Delete") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
 </div>
 {% endblock %}

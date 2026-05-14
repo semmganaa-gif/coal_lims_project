@@ -5,64 +5,64 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id removed #}
-  {% include "equipment/partials/hero_tabs.html" %}
+ {# add_modal_id removed #}
+ {% include "equipment/partials/hero_tabs.html" %}
 
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-speedometer text-success"></i> {{ _("Balance Register") }}</span>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addBalanceModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
-      {% endif %}
-      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
-      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
-    </div>
-  </div>
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <span class="fw-bold"><i class="bi bi-speedometer text-success"></i> {{ _("Balance Register") }}</span>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role in ['senior','manager','admin'] %}
+ <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addBalanceModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-warning" id="btn-edit-row" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-row" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
+ {% endif %}
+ <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+ <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
+ </div>
+ </div>
 
-  <div class="eq-grid-card">
-    <div id="balancesGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
-  </div>
+ <div class="eq-grid-card">
+ <div class="w-full h-[calc(100vh_-_280px)] min-h-[450px]" id="balancesGrid"></div>
+ </div>
 
-  <div class="modal fade" id="addBalanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='balances_register') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body p-4">
-          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
-          <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="bl_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="bl_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="bl_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Model") }}</label><input type="text" id="bl_model_name" name="model" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Serial No.") }}</label><input type="text" id="bl_serial_no" name="serial_number" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Measurement Range") }}</label><input type="text" id="bl_range" name="range" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Lab Code") }}</label><input type="text" id="bl_lab_code" name="lab_code" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Purpose") }}</label><input type="text" id="bl_purpose" name="purpose" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Location") }}</label><input type="text" id="bl_location" name="location" class="form-control"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="modal fade" id="addBalanceModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-brand-gradient text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='balances_register') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body p-4">
+ <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+ <div class="row g-3">
+ <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="bl_no" name="no" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Name") }}</label><input type="text" id="bl_name" name="name" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="bl_manufacturer" name="manufacturer" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Model") }}</label><input type="text" id="bl_model_name" name="model" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Serial No.") }}</label><input type="text" id="bl_serial_no" name="serial_number" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Measurement Range") }}</label><input type="text" id="bl_range" name="range" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Lab Code") }}</label><input type="text" id="bl_lab_code" name="lab_code" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Purpose") }}</label><input type="text" id="bl_purpose" name="purpose" class="form-control"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Location") }}</label><input type="text" id="bl_location" name="location" class="form-control"></div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="register_type" value="balances_register">
-  </form>
+ <form class="hidden" id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="register_type" value="balances_register">
+ </form>
 </div>
 {% endblock %}
 
@@ -77,51 +77,51 @@
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  var rowData = {{ items | tojson }};
+ var rowData = {{ items | tojson }};
 
-  var table = new Tabulator("#balancesGrid", {
-    data: rowData,
-    layout: "fitColumns",
-    height: "78vh",
-    selectable: true,
-    columns: [
-      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"№", field:"no", width:55, frozen:true, headerFilter:"input"},
-      {title:'{{ _("Name") }}', field:"name", minWidth:160, frozen:true},
-      {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140, headerFilter:"input"},
-      {title:'{{ _("Model") }}', field:"model", width:120, headerFilter:"input"},
-      {title:'{{ _("Serial No.") }}', field:"serial_number", minWidth:130, headerFilter:"input"},
-      {title:'{{ _("Measurement Range") }}', field:"range", minWidth:140, headerFilter:"input"},
-      {title:'{{ _("Lab Code") }}', field:"lab_code", width:110, headerFilter:"input"},
-      {title:'{{ _("Purpose") }}', field:"purpose", minWidth:140, headerFilter:"input"},
-      {title:'{{ _("Location") }}', field:"location", minWidth:120, headerFilter:"input"},
-    ],
-  });
+ var table = new Tabulator("#balancesGrid", {
+ data: rowData,
+ layout: "fitColumns",
+ height: "78vh",
+ selectable: true,
+ columns: [
+ {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+ {title:"№", field:"no", width:55, frozen:true, headerFilter:"input"},
+ {title:'{{ _("Name") }}', field:"name", minWidth:160, frozen:true},
+ {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140, headerFilter:"input"},
+ {title:'{{ _("Model") }}', field:"model", width:120, headerFilter:"input"},
+ {title:'{{ _("Serial No.") }}', field:"serial_number", minWidth:130, headerFilter:"input"},
+ {title:'{{ _("Measurement Range") }}', field:"range", minWidth:140, headerFilter:"input"},
+ {title:'{{ _("Lab Code") }}', field:"lab_code", width:110, headerFilter:"input"},
+ {title:'{{ _("Purpose") }}', field:"purpose", minWidth:140, headerFilter:"input"},
+ {title:'{{ _("Location") }}', field:"location", minWidth:120, headerFilter:"input"},
+ ],
+ });
 
-  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
+ initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  window.editSelectedRow = function() {
-    var sel = table.getSelectedData();
-    if (sel.length !== 1) return;
-    var d = sel[0];
-    ['no','name','manufacturer','lab_code','purpose','location'].forEach(function(f) {
-      var el=document.getElementById('bl_'+f); if(el) el.value=d[f]||'';
-    });
-    var modelEl = document.getElementById('bl_model_name'); if(modelEl) modelEl.value = d.model||'';
-    var serialEl = document.getElementById('bl_serial_no'); if(serialEl) serialEl.value = d.serial_number||'';
-    var rangeEl = document.getElementById('bl_range'); if(rangeEl) rangeEl.value = d.range||'';
-    if (d.id) {
-      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
-    }
-    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
-    new bootstrap.Modal(document.getElementById('addBalanceModal')).show();
-  };
+ window.editSelectedRow = function() {
+ var sel = table.getSelectedData();
+ if (sel.length !== 1) return;
+ var d = sel[0];
+ ['no','name','manufacturer','lab_code','purpose','location'].forEach(function(f) {
+ var el=document.getElementById('bl_'+f); if(el) el.value=d[f]||'';
+ });
+ var modelEl = document.getElementById('bl_model_name'); if(modelEl) modelEl.value = d.model||'';
+ var serialEl = document.getElementById('bl_serial_no'); if(serialEl) serialEl.value = d.serial_number||'';
+ var rangeEl = document.getElementById('bl_range'); if(rangeEl) rangeEl.value = d.range||'';
+ if (d.id) {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+ }
+ document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
+ new bootstrap.Modal(document.getElementById('addBalanceModal')).show();
+ };
 
-  document.getElementById('addBalanceModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='balances_register') }}";
-    document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}';
-    ['no','name','manufacturer','model_name','serial_no','range','lab_code','purpose','location'].forEach(function(f) { var el=document.getElementById('bl_'+f); if(el) el.value=''; });
-  });
+ document.getElementById('addBalanceModal').addEventListener('hidden.bs.modal', function() {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='balances_register') }}";
+ document.querySelector('#addBalanceModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Balance") }}';
+ ['no','name','manufacturer','model_name','serial_no','range','lab_code','purpose','location'].forEach(function(f) { var el=document.getElementById('bl_'+f); if(el) el.value=''; });
+ });
 });
 </script>
 {% endblock %}

@@ -49,4 +49,16 @@ function initRegisterTable(table, confirmMsg) {
     });
     form.submit();
   };
+
+  // CSP-compatible click handlers (inline onclick-ийг орлоно).
+  // editSelectedRow нь template бүрт өөрөөр тодорхойлогдох тул click үед
+  // шалгаж дуудна.
+  if (editBtn) {
+    editBtn.addEventListener('click', function() {
+      if (typeof window.editSelectedRow === 'function') window.editSelectedRow();
+    });
+  }
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', window.deleteSelectedRows);
+  }
 }

@@ -4,176 +4,176 @@
 <style nonce="{{ csp_nonce }}">
 #envTable th:first-child,
 #envTable td:first-child {
-    min-width: 200px !important;
-    width: 200px !important;
+ min-width: 200px !important;
+ width: 200px !important;
 }
 </style>
 <div class="container-fluid mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2><i class="fas fa-thermometer-half"></i> {{ _("Environmental Conditions Monitoring") }}</h2>
-            <p class="text-muted">ISO 17025 - 6.3.3: {{ _("Temperature, Humidity Records") }}</p>
-        </div>
-        <div class="col-md-4 text-right">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEnvModal">
-                <i class="bi bi-plus-lg"></i> {{ _("Add Measurement") }}
-            </button>
-        </div>
-    </div>
+ <div class="row mb-3">
+ <div class="col-md-8">
+ <h2><i class="fas fa-thermometer-half"></i> {{ _("Environmental Conditions Monitoring") }}</h2>
+ <p class="text-muted">ISO 17025 - 6.3.3: {{ _("Temperature, Humidity Records") }}</p>
+ </div>
+ <div class="col-md-4 text-right">
+ <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEnvModal">
+ <i class="bi bi-plus-lg"></i> {{ _("Add Measurement") }}
+ </button>
+ </div>
+ </div>
 
-    <!-- Recent Measurements -->
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped" id="envTable">
-                <thead>
-                    <tr>
-                        <th>{{ _("Date/Time") }}</th>
-                        <th>{{ _("Location") }}</th>
-                        <th>{{ _("Temperature (C)") }}</th>
-                        <th>{{ _("Humidity (%%)") }}</th>
-                        <th>{{ _("Limit (T)") }}</th>
-                        <th>{{ _("Limit (RH)") }}</th>
-                        <th>{{ _("Status") }}</th>
-                        <th>{{ _("Recorded By") }}</th>
-                        <th>{{ _("Notes") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr class="{{ 'table-danger' if not log.within_limits else '' }}">
-                        <td>{{ log.log_date.strftime('%Y-%m-%d %H:%M') if log.log_date else '-' }}</td>
-                        <td><strong>{{ log.location }}</strong></td>
-                        <td>
-                            <span style="font-size: 1.2em; font-weight: bold">
-                                {{ "%.1f"|format(log.temperature) if log.temperature else '-' }}C
-                            </span>
-                        </td>
-                        <td>
-                            <span style="font-size: 1.2em; font-weight: bold">
-                                {{ "%.1f"|format(log.humidity) if log.humidity else '-' }}%
-                            </span>
-                        </td>
-                        <td>
-                            <small>{{ "%.1f"|format(log.temp_min) if log.temp_min else '-' }} -
-                                   {{ "%.1f"|format(log.temp_max) if log.temp_max else '-' }}</small>
-                        </td>
-                        <td>
-                            <small>{{ "%.1f"|format(log.humidity_min) if log.humidity_min else '-' }} -
-                                   {{ "%.1f"|format(log.humidity_max) if log.humidity_max else '-' }}</small>
-                        </td>
-                        <td>
-                            {% if log.within_limits %}
-                                <span class="badge bg-success">{{ _("Normal") }}</span>
-                            {% else %}
-                                <span class="badge bg-danger">{{ _("Out of Range") }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ log.recorded_by.username if log.recorded_by else '-' }}</td>
-                        <td>{{ log.notes[:50] if log.notes else '-' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+ <!-- Recent Measurements -->
+ <div class="card">
+ <div class="card-body">
+ <table class="table table-striped" id="envTable">
+ <thead>
+ <tr>
+ <th>{{ _("Date/Time") }}</th>
+ <th>{{ _("Location") }}</th>
+ <th>{{ _("Temperature (C)") }}</th>
+ <th>{{ _("Humidity (%%)") }}</th>
+ <th>{{ _("Limit (T)") }}</th>
+ <th>{{ _("Limit (RH)") }}</th>
+ <th>{{ _("Status") }}</th>
+ <th>{{ _("Recorded By") }}</th>
+ <th>{{ _("Notes") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for log in logs %}
+ <tr class="{{ 'table-danger' if not log.within_limits else '' }}">
+ <td>{{ log.log_date.strftime('%Y-%m-%d %H:%M') if log.log_date else '-' }}</td>
+ <td><strong>{{ log.location }}</strong></td>
+ <td>
+ <span class="text-[1.2em] font-bold">
+ {{ "%.1f"|format(log.temperature) if log.temperature else '-' }}C
+ </span>
+ </td>
+ <td>
+ <span class="text-[1.2em] font-bold">
+ {{ "%.1f"|format(log.humidity) if log.humidity else '-' }}%
+ </span>
+ </td>
+ <td>
+ <small>{{ "%.1f"|format(log.temp_min) if log.temp_min else '-' }} -
+ {{ "%.1f"|format(log.temp_max) if log.temp_max else '-' }}</small>
+ </td>
+ <td>
+ <small>{{ "%.1f"|format(log.humidity_min) if log.humidity_min else '-' }} -
+ {{ "%.1f"|format(log.humidity_max) if log.humidity_max else '-' }}</small>
+ </td>
+ <td>
+ {% if log.within_limits %}
+ <span class="badge bg-success">{{ _("Normal") }}</span>
+ {% else %}
+ <span class="badge bg-danger">{{ _("Out of Range") }}</span>
+ {% endif %}
+ </td>
+ <td>{{ log.recorded_by.username if log.recorded_by else '-' }}</td>
+ <td>{{ log.notes[:50] if log.notes else '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
 </div>
 
 <!-- Add Environmental Log Modal -->
 <div class="modal fade" id="addEnvModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('quality.environmental_add') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">{{ _("Add Environmental Measurement") }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>{{ _("Location") }} *</label>
-                        <select name="location" class="form-control" required>
-                            <option value="Sample Storage">{{ _("Sample Storage Room") }}</option>
-                            <option value="Analysis Room">{{ _("Analysis Room") }}</option>
-                            <option value="Furnace Room">{{ _("Furnace Room") }}</option>
-                            <option value="Balance Room">{{ _("Balance Room") }}</option>
-                            <option value="Preparation Room">{{ _("Preparation Room") }}</option>
-                        </select>
-                    </div>
+ <div class="modal-dialog">
+ <div class="modal-content">
+ <form method="POST" action="{{ url_for('quality.environmental_add') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <div class="modal-header bg-primary text-white">
+ <h5 class="modal-title">{{ _("Add Environmental Measurement") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body">
+ <div class="form-group">
+ <label>{{ _("Location") }} *</label>
+ <select name="location" class="form-control" required>
+ <option value="Sample Storage">{{ _("Sample Storage Room") }}</option>
+ <option value="Analysis Room">{{ _("Analysis Room") }}</option>
+ <option value="Furnace Room">{{ _("Furnace Room") }}</option>
+ <option value="Balance Room">{{ _("Balance Room") }}</option>
+ <option value="Preparation Room">{{ _("Preparation Room") }}</option>
+ </select>
+ </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("Temperature (C)") }} *</label>
-                                <input type="number" step="0.1" name="temperature" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("Humidity (%%)") }} *</label>
-                                <input type="number" step="0.1" name="humidity" class="form-control" required>
-                            </div>
-                        </div>
-                    </div>
+ <div class="row">
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("Temperature (C)") }} *</label>
+ <input type="number" step="0.1" name="temperature" class="form-control" required>
+ </div>
+ </div>
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("Humidity (%%)") }} *</label>
+ <input type="number" step="0.1" name="humidity" class="form-control" required>
+ </div>
+ </div>
+ </div>
 
-                    <hr>
-                    <h6>{{ _("Normal Limits:") }}</h6>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("T Min (C)") }}</label>
-                                <input type="number" step="0.1" name="temp_min" class="form-control" value="15">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("T Max (C)") }}</label>
-                                <input type="number" step="0.1" name="temp_max" class="form-control" value="30">
-                            </div>
-                        </div>
-                    </div>
+ <hr>
+ <h6>{{ _("Normal Limits:") }}</h6>
+ <div class="row">
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("T Min (C)") }}</label>
+ <input type="number" step="0.1" name="temp_min" class="form-control" value="15">
+ </div>
+ </div>
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("T Max (C)") }}</label>
+ <input type="number" step="0.1" name="temp_max" class="form-control" value="30">
+ </div>
+ </div>
+ </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("RH Min (%%)") }}</label>
-                                <input type="number" step="0.1" name="humidity_min" class="form-control" value="20">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label>{{ _("RH Max (%%)") }}</label>
-                                <input type="number" step="0.1" name="humidity_max" class="form-control" value="70">
-                            </div>
-                        </div>
-                    </div>
+ <div class="row">
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("RH Min (%%)") }}</label>
+ <input type="number" step="0.1" name="humidity_min" class="form-control" value="20">
+ </div>
+ </div>
+ <div class="col-md-6">
+ <div class="form-group">
+ <label>{{ _("RH Max (%%)") }}</label>
+ <input type="number" step="0.1" name="humidity_max" class="form-control" value="70">
+ </div>
+ </div>
+ </div>
 
-                    <div class="form-group">
-                        <label>{{ _("Notes") }}</label>
-                        <textarea name="notes" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-                    <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
-                </div>
-            </form>
-        </div>
-    </div>
+ <div class="form-group">
+ <label>{{ _("Notes") }}</label>
+ <textarea name="notes" class="form-control" rows="2"></textarea>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
-    $('#envTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 50,
-        autoWidth: false,
-        columnDefs: [
-            { width: '200px', targets: 0 }
-        ],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json'
-        }
-    });
+ $('#envTable').DataTable({
+ order: [[0, 'desc']],
+ pageLength: 50,
+ autoWidth: false,
+ columnDefs: [
+ { width: '200px', targets: 0 }
+ ],
+ language: {
+ url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json'
+ }
+ });
 });
 </script>
 {% endblock %}

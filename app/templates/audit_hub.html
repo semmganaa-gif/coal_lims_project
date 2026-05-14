@@ -2,569 +2,569 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  :root {
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(148, 163, 184, 0.2);
-    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
-    --text-primary: #0f172a;
-    --text-muted: #64748b;
-    --accent-blue: #3b82f6;
-    --accent-green: #22c55e;
-    --accent-purple: #8b5cf6;
-    --accent-orange: #f59e0b;
-  }
+ :root {
+ --glass-bg: rgba(255, 255, 255, 0.7);
+ --glass-border: rgba(148, 163, 184, 0.2);
+ --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.08);
+ --text-primary: #0f172a;
+ --text-muted: #64748b;
+ --accent-blue: #3b82f6;
+ --accent-green: #22c55e;
+ --accent-purple: #8b5cf6;
+ --accent-orange: #f59e0b;
+ }
 
-  .audit-hub {
-    min-height: calc(100vh - 120px);
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 50%, #fff7ed 100%);
-  }
+ .audit-hub {
+ min-height: calc(100vh - 120px);
+ padding: 1.5rem;
+ background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 50%, #fff7ed 100%);
+ }
 
-  /* Header */
-  .hub-header {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-soft);
-    text-align: center;
-  }
-  .hub-header h1 {
-    font-size: 1.75rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, #1e40af, #7c3aed, #db2777);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.25rem;
-  }
-  .hub-header p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin: 0;
-  }
+ /* Header */
+ .hub-header {
+ background: var(--glass-bg);
+ backdrop-filter: blur(16px);
+ -webkit-backdrop-filter: blur(16px);
+ border: 1px solid var(--glass-border);
+ border-radius: 20px;
+ padding: 1.5rem 2rem;
+ margin-bottom: 1.5rem;
+ box-shadow: var(--shadow-soft);
+ text-align: center;
+ }
+ .hub-header h1 {
+ font-size: 1.75rem;
+ font-weight: 800;
+ background: linear-gradient(135deg, #1e40af, #7c3aed, #db2777);
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ background-clip: text;
+ margin-bottom: 0.25rem;
+ }
+ .hub-header p {
+ color: var(--text-muted);
+ font-size: 0.9rem;
+ margin: 0;
+ }
 
-  /* Category Tabs */
-  .category-tabs {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-  }
-  .cat-tab {
-    padding: 0.6rem 1.5rem;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .cat-tab:hover {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.3);
-    color: var(--accent-blue);
-    transform: translateY(-2px);
-  }
-  .cat-tab.active {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  }
+ /* Category Tabs */
+ .category-tabs {
+ display: flex;
+ gap: 0.75rem;
+ justify-content: center;
+ margin-bottom: 1.5rem;
+ flex-wrap: wrap;
+ }
+ .cat-tab {
+ padding: 0.6rem 1.5rem;
+ background: var(--glass-bg);
+ backdrop-filter: blur(12px);
+ border: 1px solid var(--glass-border);
+ border-radius: 50px;
+ font-weight: 600;
+ font-size: 0.85rem;
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.3s ease;
+ }
+ .cat-tab:hover {
+ background: rgba(59, 130, 246, 0.1);
+ border-color: rgba(59, 130, 246, 0.3);
+ color: var(--accent-blue);
+ transform: translateY(-2px);
+ }
+ .cat-tab.active {
+ background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+ color: #fff;
+ border-color: transparent;
+ box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+ }
 
-  /* Cards Grid */
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+ /* Cards Grid */
+ .cards-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+ gap: 1.25rem;
+ max-width: 1400px;
+ margin: 0 auto;
+ }
 
-  /* Analysis Card */
-  .analysis-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 1.25rem;
-    text-decoration: none;
-    color: var(--text-primary);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  }
-  .analysis-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-    border-color: rgba(59, 130, 246, 0.3);
-    color: var(--text-primary);
-    text-decoration: none;
-  }
+ /* Analysis Card */
+ .analysis-card {
+ background: var(--glass-bg);
+ backdrop-filter: blur(16px);
+ -webkit-backdrop-filter: blur(16px);
+ border: 1px solid var(--glass-border);
+ border-radius: 16px;
+ padding: 1.25rem;
+ text-decoration: none;
+ color: var(--text-primary);
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+ }
+ .analysis-card:hover {
+ transform: translateY(-4px);
+ box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+ border-color: rgba(59, 130, 246, 0.3);
+ color: var(--text-primary);
+ text-decoration: none;
+ }
 
-  /* Card Icon */
-  .card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-  }
-  .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
-  .icon-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
-  .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
-  .icon-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
-  .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-  .icon-cyan { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
-  .icon-pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
-  .icon-indigo { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4338ca; }
+ /* Card Icon */
+ .card-icon {
+ width: 56px;
+ height: 56px;
+ border-radius: 14px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.5rem;
+ flex-shrink: 0;
+ }
+ .icon-blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+ .icon-green { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+ .icon-purple { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #7c3aed; }
+ .icon-orange { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #c2410c; }
+ .icon-red { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+ .icon-cyan { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
+ .icon-pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #be185d; }
+ .icon-indigo { background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4338ca; }
 
-  /* Card Content */
-  .card-content {
-    flex: 1;
-    min-width: 0;
-  }
-  .card-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 0.15rem;
-    color: var(--text-primary);
-  }
-  .card-code {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    background: rgba(100, 116, 139, 0.1);
-    padding: 0.15rem 0.5rem;
-    border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 0.35rem;
-  }
-  .card-desc {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    line-height: 1.3;
-  }
+ /* Card Content */
+ .card-content {
+ flex: 1;
+ min-width: 0;
+ }
+ .card-title {
+ font-size: 1rem;
+ font-weight: 700;
+ margin-bottom: 0.15rem;
+ color: var(--text-primary);
+ }
+ .card-code {
+ font-size: 0.75rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ background: rgba(100, 116, 139, 0.1);
+ padding: 0.15rem 0.5rem;
+ border-radius: 4px;
+ display: inline-block;
+ margin-bottom: 0.35rem;
+ }
+ .card-desc {
+ font-size: 0.78rem;
+ color: var(--text-muted);
+ line-height: 1.3;
+ }
 
-  /* Card Arrow */
-  .card-arrow {
-    color: var(--text-muted);
-    font-size: 1.2rem;
-    opacity: 0;
-    transform: translateX(-8px);
-    transition: all 0.3s ease;
-  }
-  .analysis-card:hover .card-arrow {
-    opacity: 1;
-    transform: translateX(0);
-    color: var(--accent-blue);
-  }
+ /* Card Arrow */
+ .card-arrow {
+ color: var(--text-muted);
+ font-size: 1.2rem;
+ opacity: 0;
+ transform: translateX(-8px);
+ transition: all 0.3s ease;
+ }
+ .analysis-card:hover .card-arrow {
+ opacity: 1;
+ transform: translateX(0);
+ color: var(--accent-blue);
+ }
 
-  /* Category Section (for non-tab view) */
-  .category-section {
-    display: none;
-  }
-  .category-section.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+ /* Category Section (for non-tab view) */
+ .category-section {
+ display: none;
+ }
+ .category-section.active {
+ display: block;
+ animation: fadeIn 0.3s ease;
+ }
+ @keyframes fadeIn {
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
 
-  /* Responsive */
-  @media (max-width: 768px) {
-    .audit-hub { padding: 1rem; }
-    .hub-header { padding: 1rem 1.25rem; }
-    .hub-header h1 { font-size: 1.4rem; }
-    .cards-grid { grid-template-columns: 1fr; }
-    .analysis-card { padding: 1rem; }
-    .card-icon { width: 48px; height: 48px; font-size: 1.25rem; }
-  }
+ /* Responsive */
+ @media (max-width: 768px) {
+ .audit-hub { padding: 1rem; }
+ .hub-header { padding: 1rem 1.25rem; }
+ .hub-header h1 { font-size: 1.4rem; }
+ .cards-grid { grid-template-columns: 1fr; }
+ .analysis-card { padding: 1rem; }
+ .card-icon { width: 48px; height: 48px; font-size: 1.25rem; }
+ }
 </style>
 
 <div class="audit-hub">
-  <!-- Header -->
-  <div class="hub-header">
-    <h1><i class="bi bi-shield-check me-2"></i>{{ _("Audit Center") }}</h1>
-    <p>{{ _("Review and verify analysis history records") }}</p>
-    <a href="{{ url_for('api.system_audit') }}" class="btn btn-outline-primary btn-sm mt-1">
-      <i class="bi bi-shield-lock me-1"></i>{{ _("System Audit") }}
-    </a>
+ <!-- Header -->
+ <div class="hub-header">
+ <h1><i class="bi bi-shield-check me-2"></i>{{ _("Audit Center") }}</h1>
+ <p>{{ _("Review and verify analysis history records") }}</p>
+ <a href="{{ url_for('api.system_audit') }}" class="btn btn-outline-primary btn-sm mt-1">
+ <i class="bi bi-shield-lock me-1"></i>{{ _("System Audit") }}
+ </a>
 
-    <!-- Quick Search -->
-    <div class="mt-3">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input type="text" id="auditSearchInput" class="form-control" placeholder="{{ _("Search by sample code, chemist name...") }}">
-            <button class="btn btn-primary" type="button" onclick="searchAudit()">{{ _("Search") }}</button>
-            {% if current_user.role in ['senior', 'manager', 'admin'] %}
-            <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              <i class="bi bi-download"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url_for('api.export_audit') }}?limit=1000">
-                <i class="bi bi-file-earmark-excel me-2"></i>{{ _("Excel (Last 1000)") }}
-              </a></li>
-            </ul>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Quick Search -->
+ <div class="mt-3">
+ <div class="row justify-content-center">
+ <div class="col-md-6">
+ <div class="input-group">
+ <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+ <input type="text" id="auditSearchInput" class="form-control" placeholder="{{ _("Search by sample code, chemist name...") }}">
+ <button class="btn btn-primary" type="button" data-action="searchAudit">{{ _("Search") }}</button>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+ <i class="bi bi-download"></i>
+ </button>
+ <ul class="dropdown-menu dropdown-menu-end">
+ <li><a class="dropdown-item" href="{{ url_for('api.export_audit') }}?limit=1000">
+ <i class="bi bi-file-earmark-excel me-2"></i>{{ _("Excel (Last 1000)") }}
+ </a></li>
+ </ul>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Search Results -->
-  <div id="searchResults" class="mb-4" style="display: none;">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-search me-2"></i>{{ _("Search Results") }}</span>
-        <button class="btn btn-sm btn-outline-secondary" onclick="clearSearch()">
-          <i class="bi bi-x"></i> {{ _("Close") }}
-        </button>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover" id="searchResultsTable">
-            <thead>
-              <tr>
-                <th>{{ _("Date") }}</th>
-                <th>{{ _("Sample") }}</th>
-                <th>{{ _("Analysis") }}</th>
-                <th>{{ _("Action") }}</th>
-                <th>{{ _("Chemist") }}</th>
-                <th>{{ _("Result") }}</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Search Results -->
+ <div id="searchResults" class="mb-4 hidden">
+ <div class="card">
+ <div class="card-header d-flex justify-content-between align-items-center">
+ <span><i class="bi bi-search me-2"></i>{{ _("Search Results") }}</span>
+ <button class="btn btn-sm btn-outline-secondary" data-action="clearSearch">
+ <i class="bi bi-x"></i> {{ _("Close") }}
+ </button>
+ </div>
+ <div class="card-body">
+ <div class="table-responsive">
+ <table class="table table-sm table-hover" id="searchResultsTable">
+ <thead>
+ <tr>
+ <th>{{ _("Date") }}</th>
+ <th>{{ _("Sample") }}</th>
+ <th>{{ _("Analysis") }}</th>
+ <th>{{ _("Action") }}</th>
+ <th>{{ _("Chemist") }}</th>
+ <th>{{ _("Result") }}</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Category Tabs -->
-  <div class="category-tabs">
-    <div class="cat-tab active" data-cat="tech">
-      <i class="bi bi-speedometer2 me-1"></i>{{ _("Proximate Analysis") }}
-    </div>
-    <div class="cat-tab" data-cat="element">
-      <i class="bi bi-diagram-3 me-1"></i>{{ _("Ultimate Analysis") }}
-    </div>
-    <div class="cat-tab" data-cat="coking">
-      <i class="bi bi-fire me-1"></i>{{ _("Coking Properties") }}
-    </div>
-    <div class="cat-tab" data-cat="other">
-      <i class="bi bi-three-dots me-1"></i>{{ _("Other") }}
-    </div>
-  </div>
+ <!-- Category Tabs -->
+ <div class="category-tabs">
+ <div class="cat-tab active" data-cat="tech">
+ <i class="bi bi-speedometer2 me-1"></i>{{ _("Proximate Analysis") }}
+ </div>
+ <div class="cat-tab" data-cat="element">
+ <i class="bi bi-diagram-3 me-1"></i>{{ _("Ultimate Analysis") }}
+ </div>
+ <div class="cat-tab" data-cat="coking">
+ <i class="bi bi-fire me-1"></i>{{ _("Coking Properties") }}
+ </div>
+ <div class="cat-tab" data-cat="other">
+ <i class="bi bi-three-dots me-1"></i>{{ _("Other") }}
+ </div>
+ </div>
 
-  <!-- Proximate Analysis: MT, Mad, Aad, Vad, CV -->
-  <div class="category-section active" id="cat-tech">
-    <div class="cards-grid">
-      <a href="{{ url_for('api.audit_log_page', analysis_code='MT') }}" class="analysis-card">
-        <div class="card-icon icon-blue"><i class="bi bi-droplet-half"></i></div>
-        <div class="card-content">
-          <div class="card-code">MT</div>
-          <div class="card-title">{{ _("Total Moisture") }}</div>
-          <div class="card-desc">{{ _("Total Moisture - Coal total moisture content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <!-- Proximate Analysis: MT, Mad, Aad, Vad, CV -->
+ <div class="category-section active" id="cat-tech">
+ <div class="cards-grid">
+ <a href="{{ url_for('api.audit_log_page', analysis_code='MT') }}" class="analysis-card">
+ <div class="card-icon icon-blue"><i class="bi bi-droplet-half"></i></div>
+ <div class="card-content">
+ <div class="card-code">MT</div>
+ <div class="card-title">{{ _("Total Moisture") }}</div>
+ <div class="card-desc">{{ _("Total Moisture - Coal total moisture content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Mad') }}" class="analysis-card">
-        <div class="card-icon icon-cyan"><i class="bi bi-moisture"></i></div>
-        <div class="card-content">
-          <div class="card-code">Mad</div>
-          <div class="card-title">{{ _("Analytical Moisture") }}</div>
-          <div class="card-desc">{{ _("Moisture (air-dried) - Air-dried moisture content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Mad') }}" class="analysis-card">
+ <div class="card-icon icon-cyan"><i class="bi bi-moisture"></i></div>
+ <div class="card-content">
+ <div class="card-code">Mad</div>
+ <div class="card-title">{{ _("Analytical Moisture") }}</div>
+ <div class="card-desc">{{ _("Moisture (air-dried) - Air-dried moisture content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Aad') }}" class="analysis-card">
-        <div class="card-icon icon-orange"><i class="bi bi-fire"></i></div>
-        <div class="card-content">
-          <div class="card-code">Aad</div>
-          <div class="card-title">{{ _("Ash Content") }}</div>
-          <div class="card-desc">{{ _("Ash content - Residue after combustion") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Aad') }}" class="analysis-card">
+ <div class="card-icon icon-orange"><i class="bi bi-fire"></i></div>
+ <div class="card-content">
+ <div class="card-code">Aad</div>
+ <div class="card-title">{{ _("Ash Content") }}</div>
+ <div class="card-desc">{{ _("Ash content - Residue after combustion") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Vad') }}" class="analysis-card">
-        <div class="card-icon icon-purple"><i class="bi bi-wind"></i></div>
-        <div class="card-content">
-          <div class="card-code">Vad</div>
-          <div class="card-title">{{ _("Volatile Matter") }}</div>
-          <div class="card-desc">{{ _("Volatile Matter - Gas released upon heating") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Vad') }}" class="analysis-card">
+ <div class="card-icon icon-purple"><i class="bi bi-wind"></i></div>
+ <div class="card-content">
+ <div class="card-code">Vad</div>
+ <div class="card-title">{{ _("Volatile Matter") }}</div>
+ <div class="card-desc">{{ _("Volatile Matter - Gas released upon heating") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='CV') }}" class="analysis-card">
-        <div class="card-icon icon-pink"><i class="bi bi-thermometer-high"></i></div>
-        <div class="card-content">
-          <div class="card-code">CV / Qgr,ad</div>
-          <div class="card-title">{{ _("Calorific Value") }}</div>
-          <div class="card-desc">{{ _("Calorific Value - Heat energy (MJ/kg)") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
-    </div>
-  </div>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='CV') }}" class="analysis-card">
+ <div class="card-icon icon-pink"><i class="bi bi-thermometer-high"></i></div>
+ <div class="card-content">
+ <div class="card-code">CV / Qgr,ad</div>
+ <div class="card-title">{{ _("Calorific Value") }}</div>
+ <div class="card-desc">{{ _("Calorific Value - Heat energy (MJ/kg)") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
+ </div>
+ </div>
 
-  <!-- Ultimate Analysis: TS, P, F, Cl -->
-  <div class="category-section" id="cat-element">
-    <div class="cards-grid">
-      <a href="{{ url_for('api.audit_log_page', analysis_code='TS') }}" class="analysis-card">
-        <div class="card-icon icon-red"><i class="bi bi-radioactive"></i></div>
-        <div class="card-content">
-          <div class="card-code">TS / St,ad</div>
-          <div class="card-title">{{ _("Total Sulfur") }}</div>
-          <div class="card-desc">{{ _("Total Sulfur - Sulfur content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <!-- Ultimate Analysis: TS, P, F, Cl -->
+ <div class="category-section" id="cat-element">
+ <div class="cards-grid">
+ <a href="{{ url_for('api.audit_log_page', analysis_code='TS') }}" class="analysis-card">
+ <div class="card-icon icon-red"><i class="bi bi-radioactive"></i></div>
+ <div class="card-content">
+ <div class="card-code">TS / St,ad</div>
+ <div class="card-title">{{ _("Total Sulfur") }}</div>
+ <div class="card-desc">{{ _("Total Sulfur - Sulfur content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='P') }}" class="analysis-card">
-        <div class="card-icon icon-orange"><i class="bi bi-lightbulb"></i></div>
-        <div class="card-content">
-          <div class="card-code">P</div>
-          <div class="card-title">{{ _("Phosphorus") }}</div>
-          <div class="card-desc">{{ _("Phosphorus content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='P') }}" class="analysis-card">
+ <div class="card-icon icon-orange"><i class="bi bi-lightbulb"></i></div>
+ <div class="card-content">
+ <div class="card-code">P</div>
+ <div class="card-title">{{ _("Phosphorus") }}</div>
+ <div class="card-desc">{{ _("Phosphorus content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='F') }}" class="analysis-card">
-        <div class="card-icon icon-cyan"><i class="bi bi-brightness-high"></i></div>
-        <div class="card-content">
-          <div class="card-code">F</div>
-          <div class="card-title">{{ _("Fluorine") }}</div>
-          <div class="card-desc">{{ _("Fluorine content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='F') }}" class="analysis-card">
+ <div class="card-icon icon-cyan"><i class="bi bi-brightness-high"></i></div>
+ <div class="card-content">
+ <div class="card-code">F</div>
+ <div class="card-title">{{ _("Fluorine") }}</div>
+ <div class="card-desc">{{ _("Fluorine content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Cl') }}" class="analysis-card">
-        <div class="card-icon icon-green"><i class="bi bi-virus"></i></div>
-        <div class="card-content">
-          <div class="card-code">Cl</div>
-          <div class="card-title">{{ _("Chlorine") }}</div>
-          <div class="card-desc">{{ _("Chlorine content") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
-    </div>
-  </div>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Cl') }}" class="analysis-card">
+ <div class="card-icon icon-green"><i class="bi bi-virus"></i></div>
+ <div class="card-content">
+ <div class="card-code">Cl</div>
+ <div class="card-title">{{ _("Chlorine") }}</div>
+ <div class="card-desc">{{ _("Chlorine content") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
+ </div>
+ </div>
 
-  <!-- Coking Properties: CSN, Gi, X, Y, CRI, CSR -->
-  <div class="category-section" id="cat-coking">
-    <div class="cards-grid">
-      <a href="{{ url_for('api.audit_log_page', analysis_code='CSN') }}" class="analysis-card">
-        <div class="card-icon icon-purple"><i class="bi bi-bar-chart-fill"></i></div>
-        <div class="card-content">
-          <div class="card-code">CSN</div>
-          <div class="card-title">{{ _("Swelling Number") }}</div>
-          <div class="card-desc">{{ _("Crucible Swelling Number") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <!-- Coking Properties: CSN, Gi, X, Y, CRI, CSR -->
+ <div class="category-section" id="cat-coking">
+ <div class="cards-grid">
+ <a href="{{ url_for('api.audit_log_page', analysis_code='CSN') }}" class="analysis-card">
+ <div class="card-icon icon-purple"><i class="bi bi-bar-chart-fill"></i></div>
+ <div class="card-content">
+ <div class="card-code">CSN</div>
+ <div class="card-title">{{ _("Swelling Number") }}</div>
+ <div class="card-desc">{{ _("Crucible Swelling Number") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Gi') }}" class="analysis-card">
-        <div class="card-icon icon-green"><i class="bi bi-layers"></i></div>
-        <div class="card-content">
-          <div class="card-code">Gi / GI</div>
-          <div class="card-title">{{ _("Caking Index") }}</div>
-          <div class="card-desc">{{ _("Caking Index") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Gi') }}" class="analysis-card">
+ <div class="card-icon icon-green"><i class="bi bi-layers"></i></div>
+ <div class="card-content">
+ <div class="card-code">Gi / GI</div>
+ <div class="card-title">{{ _("Caking Index") }}</div>
+ <div class="card-desc">{{ _("Caking Index") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='X') }}" class="analysis-card">
-        <div class="card-icon icon-orange"><i class="bi bi-arrows-expand"></i></div>
-        <div class="card-content">
-          <div class="card-code">X</div>
-          <div class="card-title">{{ _("Plasticity - X") }}</div>
-          <div class="card-desc">{{ _("Plasticity X value") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='X') }}" class="analysis-card">
+ <div class="card-icon icon-orange"><i class="bi bi-arrows-expand"></i></div>
+ <div class="card-content">
+ <div class="card-code">X</div>
+ <div class="card-title">{{ _("Plasticity - X") }}</div>
+ <div class="card-desc">{{ _("Plasticity X value") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Y') }}" class="analysis-card">
-        <div class="card-icon icon-cyan"><i class="bi bi-arrows-angle-expand"></i></div>
-        <div class="card-content">
-          <div class="card-code">Y</div>
-          <div class="card-title">{{ _("Plasticity - Y") }}</div>
-          <div class="card-desc">{{ _("Plasticity Y value") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Y') }}" class="analysis-card">
+ <div class="card-icon icon-cyan"><i class="bi bi-arrows-angle-expand"></i></div>
+ <div class="card-content">
+ <div class="card-code">Y</div>
+ <div class="card-title">{{ _("Plasticity - Y") }}</div>
+ <div class="card-desc">{{ _("Plasticity Y value") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='CRI') }}" class="analysis-card">
-        <div class="card-icon icon-red"><i class="bi bi-arrow-down-circle"></i></div>
-        <div class="card-content">
-          <div class="card-code">CRI</div>
-          <div class="card-title">{{ _("Reactivity Index") }}</div>
-          <div class="card-desc">{{ _("Coke Reactivity Index") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='CRI') }}" class="analysis-card">
+ <div class="card-icon icon-red"><i class="bi bi-arrow-down-circle"></i></div>
+ <div class="card-content">
+ <div class="card-code">CRI</div>
+ <div class="card-title">{{ _("Reactivity Index") }}</div>
+ <div class="card-desc">{{ _("Coke Reactivity Index") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='CSR') }}" class="analysis-card">
-        <div class="card-icon icon-green"><i class="bi bi-shield-check"></i></div>
-        <div class="card-content">
-          <div class="card-code">CSR</div>
-          <div class="card-title">{{ _("Strength Index") }}</div>
-          <div class="card-desc">{{ _("Coke Strength after Reaction") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
-    </div>
-  </div>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='CSR') }}" class="analysis-card">
+ <div class="card-icon icon-green"><i class="bi bi-shield-check"></i></div>
+ <div class="card-content">
+ <div class="card-code">CSR</div>
+ <div class="card-title">{{ _("Strength Index") }}</div>
+ <div class="card-desc">{{ _("Coke Strength after Reaction") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
+ </div>
+ </div>
 
-  <!-- Other: FM, TRD, Solid -->
-  <div class="category-section" id="cat-other">
-    <div class="cards-grid">
-      <a href="{{ url_for('api.audit_log_page', analysis_code='FM') }}" class="analysis-card">
-        <div class="card-icon icon-blue"><i class="bi bi-droplet"></i></div>
-        <div class="card-content">
-          <div class="card-code">FM</div>
-          <div class="card-title">{{ _("Free Moisture") }}</div>
-          <div class="card-desc">{{ _("Free Moisture - Surface moisture") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <!-- Other: FM, TRD, Solid -->
+ <div class="category-section" id="cat-other">
+ <div class="cards-grid">
+ <a href="{{ url_for('api.audit_log_page', analysis_code='FM') }}" class="analysis-card">
+ <div class="card-icon icon-blue"><i class="bi bi-droplet"></i></div>
+ <div class="card-content">
+ <div class="card-code">FM</div>
+ <div class="card-title">{{ _("Free Moisture") }}</div>
+ <div class="card-desc">{{ _("Free Moisture - Surface moisture") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='TRD') }}" class="analysis-card">
-        <div class="card-icon icon-indigo"><i class="bi bi-box"></i></div>
-        <div class="card-content">
-          <div class="card-code">TRD</div>
-          <div class="card-title">{{ _("True Relative Density") }}</div>
-          <div class="card-desc">{{ _("True Relative Density") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='TRD') }}" class="analysis-card">
+ <div class="card-icon icon-indigo"><i class="bi bi-box"></i></div>
+ <div class="card-content">
+ <div class="card-code">TRD</div>
+ <div class="card-title">{{ _("True Relative Density") }}</div>
+ <div class="card-desc">{{ _("True Relative Density") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='Solid') }}" class="analysis-card">
-        <div class="card-icon icon-purple"><i class="bi bi-gem"></i></div>
-        <div class="card-content">
-          <div class="card-code">SOLID</div>
-          <div class="card-title">{{ _("Solid Residue") }}</div>
-          <div class="card-desc">{{ _("Solid residue determination") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='Solid') }}" class="analysis-card">
+ <div class="card-icon icon-purple"><i class="bi bi-gem"></i></div>
+ <div class="card-content">
+ <div class="card-code">SOLID</div>
+ <div class="card-title">{{ _("Solid Residue") }}</div>
+ <div class="card-desc">{{ _("Solid residue determination") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='MG') }}" class="analysis-card">
-        <div class="card-icon icon-pink"><i class="bi bi-magnet"></i></div>
-        <div class="card-content">
-          <div class="card-code">MG</div>
-          <div class="card-title">{{ _("Magnetic Fraction") }}</div>
-          <div class="card-desc">{{ _("WTL Magnetic separation test") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='MG') }}" class="analysis-card">
+ <div class="card-icon icon-pink"><i class="bi bi-magnet"></i></div>
+ <div class="card-content">
+ <div class="card-code">MG</div>
+ <div class="card-title">{{ _("Magnetic Fraction") }}</div>
+ <div class="card-desc">{{ _("WTL Magnetic separation test") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
 
-      <a href="{{ url_for('api.audit_log_page', analysis_code='MG_SIZE') }}" class="analysis-card">
-        <div class="card-icon icon-cyan"><i class="bi bi-grid-3x3"></i></div>
-        <div class="card-content">
-          <div class="card-code">MG_SIZE</div>
-          <div class="card-title">{{ _("Size Distribution") }}</div>
-          <div class="card-desc">{{ _("WTL particle size distribution") }}</div>
-        </div>
-        <i class="bi bi-arrow-right card-arrow"></i>
-      </a>
-    </div>
-  </div>
+ <a href="{{ url_for('api.audit_log_page', analysis_code='MG_SIZE') }}" class="analysis-card">
+ <div class="card-icon icon-cyan"><i class="bi bi-grid-3x3"></i></div>
+ <div class="card-content">
+ <div class="card-code">MG_SIZE</div>
+ <div class="card-title">{{ _("Size Distribution") }}</div>
+ <div class="card-desc">{{ _("WTL particle size distribution") }}</div>
+ </div>
+ <i class="bi bi-arrow-right card-arrow"></i>
+ </a>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  const tabs = document.querySelectorAll('.cat-tab');
-  const sections = document.querySelectorAll('.category-section');
+ const tabs = document.querySelectorAll('.cat-tab');
+ const sections = document.querySelectorAll('.category-section');
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      // Remove active from all
-      tabs.forEach(t => t.classList.remove('active'));
-      sections.forEach(s => s.classList.remove('active'));
+ tabs.forEach(tab => {
+ tab.addEventListener('click', function() {
+ // Remove active from all
+ tabs.forEach(t => t.classList.remove('active'));
+ sections.forEach(s => s.classList.remove('active'));
 
-      // Add active to clicked
-      this.classList.add('active');
-      const catId = 'cat-' + this.dataset.cat;
-      document.getElementById(catId).classList.add('active');
-    });
-  });
+ // Add active to clicked
+ this.classList.add('active');
+ const catId = 'cat-' + this.dataset.cat;
+ document.getElementById(catId).classList.add('active');
+ });
+ });
 
-  // Enter key to search
-  document.getElementById('auditSearchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') searchAudit();
-  });
+ // Enter key to search
+ document.getElementById('auditSearchInput').addEventListener('keypress', function(e) {
+ if (e.key === 'Enter') searchAudit();
+ });
 });
 
 function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function searchAudit() {
-  const q = document.getElementById('auditSearchInput').value.trim();
-  if (!q) return;
+ const q = document.getElementById('auditSearchInput').value.trim();
+ if (!q) return;
 
-  const resultsDiv = document.getElementById('searchResults');
-  const tbody = document.querySelector('#searchResultsTable tbody');
+ const resultsDiv = document.getElementById('searchResults');
+ const tbody = document.querySelector('#searchResultsTable tbody');
 
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div> {{ _("Searching...") }}</td></tr>';
-  resultsDiv.style.display = 'block';
+ tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm"></div> {{ _("Searching...") }}</td></tr>';
+ resultsDiv.style.display = 'block';
 
-  fetch(`/api/audit_search?q=${encodeURIComponent(q)}&limit=100`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.results.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{{ _("No results found") }}</td></tr>';
-        return;
-      }
+ fetch(`/api/audit_search?q=${encodeURIComponent(q)}&limit=100`)
+ .then(res => res.json())
+ .then(data => {
+ if (data.results.length === 0) {
+ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{{ _("No results found") }}</td></tr>';
+ return;
+ }
 
-      tbody.innerHTML = data.results.map(r => {
-        const actionClass = (r.action||'').includes('APPROVED') ? 'text-success' :
-                           (r.action||'').includes('REJECTED') ? 'text-danger' : '';
-        return `
-          <tr>
-            <td><small>${_e(r.timestamp || '-')}</small></td>
-            <td><strong>${_e(r.sample_code)}</strong></td>
-            <td><span class="badge bg-secondary">${_e(r.analysis_code)}</span></td>
-            <td><span class="${actionClass}">${_e(r.action)}</span></td>
-            <td>${_e(r.user)}</td>
-            <td>${_e(r.final_result || '-')}</td>
-          </tr>
-        `;
-      }).join('');
-    })
-    .catch(err => {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">{{ _("An error occurred") }}</td></tr>';
-      console.error(err);
-    });
+ tbody.innerHTML = data.results.map(r => {
+ const actionClass = (r.action||'').includes('APPROVED') ? 'text-success' :
+ (r.action||'').includes('REJECTED') ? 'text-danger' : '';
+ return `
+ <tr>
+ <td><small>${_e(r.timestamp || '-')}</small></td>
+ <td><strong>${_e(r.sample_code)}</strong></td>
+ <td><span class="badge bg-secondary">${_e(r.analysis_code)}</span></td>
+ <td><span class="${actionClass}">${_e(r.action)}</span></td>
+ <td>${_e(r.user)}</td>
+ <td>${_e(r.final_result || '-')}</td>
+ </tr>
+ `;
+ }).join('');
+ })
+ .catch(err => {
+ tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">{{ _("An error occurred") }}</td></tr>';
+ console.error(err);
+ });
 }
 
 function clearSearch() {
-  document.getElementById('searchResults').style.display = 'none';
-  document.getElementById('auditSearchInput').value = '';
+ document.getElementById('searchResults').style.display = 'none';
+ document.getElementById('auditSearchInput').value = '';
 }
 </script>
 {% endblock %}

@@ -4,224 +4,237 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .waste-page { padding: 1.5rem; }
-  .month-input {
-    width: 60px; text-align: center; padding: 0.25rem;
-    border: 1px solid #dee2e6; border-radius: 4px;
-  }
-  .month-input:focus { border-color: #0d6efd; outline: none; }
-  .total-cell { font-weight: 600; background: #f8f9fa; }
-  .waste-table { table-layout: fixed; width: 100%; }
-  .waste-table th { font-size: 0.8rem; white-space: nowrap; }
-  .waste-table td { font-size: 0.85rem; vertical-align: middle; }
-  .waste-table td:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .badge-hazard { background: #dc3545; }
-  .badge-safe { background: #198754; }
+ .waste-page { padding: 1.5rem; }
+ .month-input {
+ width: 60px; text-align: center; padding: 0.25rem;
+ border: 1px solid #dee2e6; border-radius: 4px;
+ }
+ .month-input:focus { border-color: #0d6efd; outline: none; }
+ .total-cell { font-weight: 600; background: #f8f9fa; }
+ .waste-table { table-layout: fixed; width: 100%; }
+ .waste-table th { font-size: 0.8rem; white-space: nowrap; }
+ .waste-table td { font-size: 0.85rem; vertical-align: middle; }
+ .waste-table td:first-child {
+ overflow: hidden;
+ text-overflow: ellipsis;
+ white-space: nowrap;
+ }
+ .badge-hazard { background: #dc3545; }
+ .badge-safe { background: #198754; }
 </style>
 
 <div class="waste-page">
-  {# Header #}
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="mb-1">
-        <i class="bi bi-trash3 text-warning me-2"></i>
-        {{ _("Waste Management") }}
-      </h4>
-      <p class="text-muted mb-0">{{ _("Monthly record of chemical hazardous waste") }}</p>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{{ url_for('chemicals.waste_report', year=year, lab=lab) }}" class="btn btn-outline-info">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> {{ _("Report") }}
-      </a>
-      <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
-      </a>
-    </div>
-  </div>
+ {# Header #}
+ <div class="d-flex justify-content-between align-items-center mb-4">
+ <div>
+ <h4 class="mb-1">
+ <i class="bi bi-trash3 text-warning me-2"></i>
+ {{ _("Waste Management") }}
+ </h4>
+ <p class="text-muted mb-0">{{ _("Monthly record of chemical hazardous waste") }}</p>
+ </div>
+ <div class="d-flex gap-2">
+ <a href="{{ url_for('chemicals.waste_report', year=year, lab=lab) }}" class="btn btn-outline-info">
+ <i class="bi bi-file-earmark-spreadsheet me-1"></i> {{ _("Report") }}
+ </a>
+ <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
+ <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
+ </a>
+ </div>
+ </div>
 
-  {# Filters #}
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body py-2">
-      <form method="GET" class="row g-2 align-items-center">
-        <div class="col-auto">
-          <label class="form-label mb-0 small">{{ _("Year:") }}</label>
-        </div>
-        <div class="col-auto">
-          <select name="year" class="form-select form-select-sm" onchange="this.form.submit()">
-            {% for y in range(2024, 2030) %}
-            <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-auto">
-          <label class="form-label mb-0 small">{{ _("Lab:") }}</label>
-        </div>
-        <div class="col-auto">
-          <select name="lab" class="form-select form-select-sm" onchange="this.form.submit()">
-            {% for key, val in lab_types.items() %}
-            <option value="{{ key }}" {{ 'selected' if key == lab }}>{{ val }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </form>
-    </div>
-  </div>
+ {# Filters #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-body py-2">
+ <form method="GET" class="row g-2 align-items-center">
+ <div class="col-auto">
+ <label class="form-label mb-0 small">{{ _("Year:") }}</label>
+ </div>
+ <div class="col-auto">
+ <select name="year" class="form-select form-select-sm" data-autosubmit>
+ {% for y in range(2024, 2030) %}
+ <option value="{{ y }}" {{ 'selected' if y == year }}>{{ y }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="col-auto">
+ <label class="form-label mb-0 small">{{ _("Lab:") }}</label>
+ </div>
+ <div class="col-auto">
+ <select name="lab" class="form-select form-select-sm" data-autosubmit>
+ {% for key, val in lab_types.items() %}
+ <option value="{{ key }}" {{ 'selected' if key == lab }}>{{ val }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ </form>
+ </div>
+ </div>
 
-  {# Table #}
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-      {% if waste_data %}
-      <div class="table-responsive">
-        <table class="table table-bordered table-hover mb-0 waste-table">
-          <thead class="table-light">
-            <tr>
-              <th rowspan="2" style="width: 180px;">{{ _("Waste Name") }}</th>
-              <th rowspan="2" style="width: 100px;">{{ _("Monthly Output") }}</th>
-              <th rowspan="2" style="width: 120px;">{{ _("Disposal Location") }}</th>
-              <th colspan="12" class="text-center">{{ _("Monthly Record") }} ({{ year }})</th>
-              <th rowspan="2" class="text-center">{{ _("Total") }}</th>
-              <th rowspan="2" class="text-center">{{ _("Remaining") }}</th>
-              <th rowspan="2"></th>
-            </tr>
-            <tr>
-              {% for m in range(1, 13) %}
-              <th class="text-center" style="width: 55px;">{{ m }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in waste_data %}
-            <tr data-waste-id="{{ item.waste.id }}">
-              <td>
-                <div class="fw-medium">{{ item.waste.name_mn }}</div>
-                {% if item.waste.name_en %}
-                <small class="text-muted">{{ item.waste.name_en }}</small>
-                {% endif %}
-                {% if item.waste.is_hazardous %}
-                <span class="badge badge-hazard ms-1">{{ _("Hazardous") }}</span>
-                {% endif %}
-              </td>
-              <td class="text-center">
-                {{ item.waste.monthly_amount or '-' }} {{ item.waste.unit }}
-              </td>
-              <td class="small">{{ item.waste.disposal_location or '-' }}</td>
-              {% for m in range(1, 13) %}
-              <td class="text-center p-1">
-                <input type="number" step="0.01" min="0"
-                       class="month-input"
-                       data-month="{{ m }}"
-                       value="{{ item.monthly.get(m, '') or '' }}"
-                       onchange="saveRecord({{ item.waste.id }}, {{ year }}, {{ m }}, this.value)">
-              </td>
-              {% endfor %}
-              <td class="text-center total-cell">{{ '%.2f'|format(item.total) if item.total else '0' }}</td>
-              <td class="text-center">
-                <input type="number" step="0.01" min="0"
-                       class="month-input"
-                       style="width: 70px;"
-                       value="{{ item.ending_balance or '' }}"
-                       onchange="saveBalance({{ item.waste.id }}, {{ year }}, this.value)">
-              </td>
-              <td class="text-center">
-                <div class="dropdown">
-                  <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
-                    <i class="bi bi-three-dots-vertical"></i>
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a class="dropdown-item" href="{{ url_for('chemicals.edit_waste', id=item.waste.id) }}">
-                        <i class="bi bi-pencil me-2"></i>{{ _("Edit") }}
-                      </a>
-                    </li>
-                    <li>
-                      <form action="{{ url_for('chemicals.delete_waste', id=item.waste.id) }}" method="POST"
-                            onsubmit="return confirm('{{ _("Are you sure you want to delete?") }}')">
-                        <button type="submit" class="dropdown-item text-danger">
-                          <i class="bi bi-trash me-2"></i>{{ _("Delete") }}
-                        </button>
-                      </form>
-                    </li>
-                  </ul>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <div class="text-center py-5 text-muted">
-        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>{{ _("No records found") }}</p>
-        <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
-        </a>
-      </div>
-      {% endif %}
-    </div>
-  </div>
+ {# Table #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-body p-0">
+ {% if waste_data %}
+ <div class="table-responsive">
+ <table class="table table-bordered table-hover mb-0 waste-table">
+ <thead class="table-light">
+ <tr>
+ <th class="w-[180px]" rowspan="2">{{ _("Waste Name") }}</th>
+ <th class="w-[100px]" rowspan="2">{{ _("Monthly Output") }}</th>
+ <th class="w-[120px]" rowspan="2">{{ _("Disposal Location") }}</th>
+ <th colspan="12" class="text-center">{{ _("Monthly Record") }} ({{ year }})</th>
+ <th rowspan="2" class="text-center">{{ _("Total") }}</th>
+ <th rowspan="2" class="text-center">{{ _("Remaining") }}</th>
+ <th class="w-[180px]" rowspan="2"></th>
+ </tr>
+ <tr>
+ {% for m in range(1, 13) %}
+ <th class="text-center w-[55px]">{{ m }}</th>
+ {% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ {% for item in waste_data %}
+ <tr data-waste-id="{{ item.waste.id }}">
+ <td>
+ <div class="fw-medium">{{ item.waste.name_mn }}</div>
+ {% if item.waste.name_en %}
+ <small class="text-muted">{{ item.waste.name_en }}</small>
+ {% endif %}
+ {% if item.waste.is_hazardous %}
+ <span class="badge badge-hazard ms-1">{{ _("Hazardous") }}</span>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ {{ item.waste.monthly_amount or '-' }} {{ item.waste.unit }}
+ </td>
+ <td class="small">{{ item.waste.disposal_location or '-' }}</td>
+ {% for m in range(1, 13) %}
+ <td class="text-center p-1">
+ <input type="number" step="0.01" min="0"
+ class="month-input js-save-record"
+ data-month="{{ m }}"
+ value="{{ item.monthly.get(m, '') or '' }}">
+ </td>
+ {% endfor %}
+ <td class="text-center total-cell">{{ '%.2f'|format(item.total) if item.total else '0' }}</td>
+ <td class="text-center">
+ <input type="number" step="0.01" min="0"
+ class="month-input js-save-balance"
+ 
+ value="{{ item.ending_balance or '' }}">
+ </td>
+ <td class="text-center">
+ <div class="dropdown">
+ <button class="btn btn-sm btn-link" data-bs-toggle="dropdown">
+ <i class="bi bi-three-dots-vertical"></i>
+ </button>
+ <ul class="dropdown-menu dropdown-menu-end">
+ <li>
+ <a class="dropdown-item" href="{{ url_for('chemicals.edit_waste', id=item.waste.id) }}">
+ <i class="bi bi-pencil me-2"></i>{{ _("Edit") }}
+ </a>
+ </li>
+ <li>
+ <form action="{{ url_for('chemicals.delete_waste', id=item.waste.id) }}" method="POST"
+ data-confirm="{{ _('Are you sure you want to delete?') }}">
+ <button type="submit" class="dropdown-item text-danger">
+ <i class="bi bi-trash me-2"></i>{{ _("Delete") }}
+ </button>
+ </form>
+ </li>
+ </ul>
+ </div>
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <div class="text-center py-5 text-muted">
+ <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+ <p>{{ _("No records found") }}</p>
+ <a href="{{ url_for('chemicals.add_waste') }}" class="btn btn-primary">
+ <i class="bi bi-plus-lg me-1"></i> {{ _("Add New") }}
+ </a>
+ </div>
+ {% endif %}
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 const _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+const _WASTE_YEAR = {{ year }};
 function saveRecord(wasteId, year, month, value) {
-  fetch('{{ url_for("chemicals.save_waste_record") }}', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrfToken },
-    body: JSON.stringify({
-      waste_id: wasteId,
-      year: year,
-      month: month,
-      quantity: parseFloat(value) || 0
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      // Update total
-      updateRowTotal(wasteId);
-    } else {
-      alert("{{ _('Error') }}" + ': ' + data.error);
-    }
-  })
-  .catch(err => logger.error(err));
+ fetch('{{ url_for("chemicals.save_waste_record") }}', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrfToken },
+ body: JSON.stringify({
+ waste_id: wasteId,
+ year: year,
+ month: month,
+ quantity: parseFloat(value) || 0
+ })
+ })
+ .then(r => r.json())
+ .then(data => {
+ if (data.success) {
+ // Update total
+ updateRowTotal(wasteId);
+ } else {
+ alert("{{ _('Error') }}" + ': ' + data.error);
+ }
+ })
+ .catch(err => logger.error(err));
 }
 
 function saveBalance(wasteId, year, value) {
-  fetch('{{ url_for("chemicals.save_waste_record") }}', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrfToken },
-    body: JSON.stringify({
-      waste_id: wasteId,
-      year: year,
-      month: 12,
-      quantity: 0,
-      ending_balance: parseFloat(value) || 0
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (!data.success) alert("{{ _('Error') }}" + ': ' + data.error);
-  })
-  .catch(err => logger.error(err));
+ fetch('{{ url_for("chemicals.save_waste_record") }}', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrfToken },
+ body: JSON.stringify({
+ waste_id: wasteId,
+ year: year,
+ month: 12,
+ quantity: 0,
+ ending_balance: parseFloat(value) || 0
+ })
+ })
+ .then(r => r.json())
+ .then(data => {
+ if (!data.success) alert("{{ _('Error') }}" + ': ' + data.error);
+ })
+ .catch(err => logger.error(err));
 }
 
 function updateRowTotal(wasteId) {
-  const row = document.querySelector(`tr[data-waste-id="${wasteId}"]`);
-  if (!row) return;
+ const row = document.querySelector(`tr[data-waste-id="${wasteId}"]`);
+ if (!row) return;
 
-  const inputs = row.querySelectorAll('input[data-month]');
-  let total = 0;
-  inputs.forEach(inp => {
-    total += parseFloat(inp.value) || 0;
-  });
+ const inputs = row.querySelectorAll('input[data-month]');
+ let total = 0;
+ inputs.forEach(inp => {
+ total += parseFloat(inp.value) || 0;
+ });
 
-  const totalCell = row.querySelector('.total-cell');
-  if (totalCell) totalCell.textContent = total.toFixed(2);
+ const totalCell = row.querySelector('.total-cell');
+ if (totalCell) totalCell.textContent = total.toFixed(2);
 }
+
+// Delegated change handlers (CSP: inline onchange-ийг орлож байна)
+document.addEventListener('change', function(e) {
+ const el = e.target;
+ if (!(el instanceof HTMLInputElement)) return;
+ const row = el.closest('tr[data-waste-id]');
+ if (!row) return;
+ const wasteId = parseInt(row.dataset.wasteId, 10);
+ if (el.classList.contains('js-save-record')) {
+ saveRecord(wasteId, _WASTE_YEAR, parseInt(el.dataset.month, 10), el.value);
+ } else if (el.classList.contains('js-save-balance')) {
+ saveBalance(wasteId, _WASTE_YEAR, el.value);
+ }
+});
 </script>
 {% endblock %}

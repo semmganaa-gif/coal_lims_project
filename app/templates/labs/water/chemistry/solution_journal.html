@@ -3,190 +3,190 @@
 {% block content %}
 <div class="container-fluid">
 
-  {# ===== HEADER ===== #}
-  <div class="solution-hero mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-      <div class="d-flex align-items-center gap-3">
-        <div class="solution-hero-icon">
-          <i class="bi bi-droplet-half"></i>
-        </div>
-        <div>
-          <h4 class="mb-0 text-white">{{ _("Solution Preparation Journal") }}</h4>
-          <small class="text-white-50">{{ _("Water Chemistry Laboratory") }}</small>
-        </div>
-      </div>
-      <div class="d-flex align-items-center gap-3">
-        <div class="text-center text-white">
-          <div class="fs-4 fw-bold">{{ stats.total }}</div>
-          <small class="text-white-50">{{ _("Total") }}</small>
-        </div>
-        <div class="text-center text-white">
-          <div class="fs-4 fw-bold text-success">{{ stats.active }}</div>
-          <small class="text-white-50">{{ _("Active") }}</small>
-        </div>
-        {% if current_user.role in ['chemist', 'senior', 'admin'] %}
-        <a href="{{ url_for('water.add_solution') }}" class="btn btn-light">
-          <i class="bi bi-plus-lg me-1"></i> {{ _("New Solution") }}
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# ===== HEADER ===== #}
+ <div class="solution-hero mb-4">
+ <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+ <div class="d-flex align-items-center gap-3">
+ <div class="solution-hero-icon">
+ <i class="bi bi-droplet-half"></i>
+ </div>
+ <div>
+ <h4 class="mb-0 text-white">{{ _("Solution Preparation Journal") }}</h4>
+ <small class="text-white-50">{{ _("Water Chemistry Laboratory") }}</small>
+ </div>
+ </div>
+ <div class="d-flex align-items-center gap-3">
+ <div class="text-center text-white">
+ <div class="fs-4 fw-bold">{{ stats.total }}</div>
+ <small class="text-white-50">{{ _("Total") }}</small>
+ </div>
+ <div class="text-center text-white">
+ <div class="fs-4 fw-bold text-success">{{ stats.active }}</div>
+ <small class="text-white-50">{{ _("Active") }}</small>
+ </div>
+ {% if current_user.role in ['chemist', 'senior', 'admin'] %}
+ <a href="{{ url_for('water.add_solution') }}" class="btn btn-light">
+ <i class="bi bi-plus-lg me-1"></i> {{ _("New Solution") }}
+ </a>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 
-  {# ===== FILTERS ===== #}
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-      <form method="GET" class="row g-3 align-items-end">
-        <div class="col-md-2">
-          <label class="form-label small text-muted">{{ _("Start Date") }}</label>
-          <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label small text-muted">{{ _("End Date") }}</label>
-          <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label small text-muted">{{ _("Status") }}</label>
-          <select name="status" class="form-select">
-            <option value="all">{{ _("All") }}</option>
-            <option value="active" {{ 'selected' if status == 'active' }}>{{ _("Active") }}</option>
-            <option value="expired" {{ 'selected' if status == 'expired' }}>{{ _("Expired") }}</option>
-            <option value="empty" {{ 'selected' if status == 'empty' }}>{{ _("Empty") }}</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <button type="submit" class="btn btn-primary w-100">
-            <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
-          </button>
-        </div>
-        <div class="col-md-2">
-          <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary w-100">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> {{ _("Reset") }}
-          </a>
-        </div>
-      </form>
-    </div>
-  </div>
+ {# ===== FILTERS ===== #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-body">
+ <form method="GET" class="row g-3 align-items-end">
+ <div class="col-md-2">
+ <label class="form-label small text-muted">{{ _("Start Date") }}</label>
+ <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small text-muted">{{ _("End Date") }}</label>
+ <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small text-muted">{{ _("Status") }}</label>
+ <select name="status" class="form-select">
+ <option value="all">{{ _("All") }}</option>
+ <option value="active" {{ 'selected' if status == 'active' }}>{{ _("Active") }}</option>
+ <option value="expired" {{ 'selected' if status == 'expired' }}>{{ _("Expired") }}</option>
+ <option value="empty" {{ 'selected' if status == 'empty' }}>{{ _("Empty") }}</option>
+ </select>
+ </div>
+ <div class="col-md-2">
+ <button type="submit" class="btn btn-primary w-100">
+ <i class="bi bi-funnel me-1"></i> {{ _("Filter") }}
+ </button>
+ </div>
+ <div class="col-md-2">
+ <a href="{{ url_for('water.solution_journal') }}" class="btn btn-outline-secondary w-100">
+ <i class="bi bi-arrow-counterclockwise me-1"></i> {{ _("Reset") }}
+ </a>
+ </div>
+ </form>
+ </div>
+ </div>
 
-  {# ===== TABLE ===== #}
-  <div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-      {% if solutions %}
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 50px;">{{ _("No.") }}</th>
-              <th>{{ _("Solution Name") }}</th>
-              <th class="text-center">{{ _("Concentration") }}</th>
-              <th class="text-center">{{ _("Volume (mL)") }}</th>
-              <th class="text-center">{{ _("Used (mg)") }}</th>
-              <th class="text-center">{{ _("Date") }}</th>
-              <th class="text-center">V1</th>
-              <th class="text-center">V2</th>
-              <th class="text-center">{{ _("V avg") }}</th>
-              <th class="text-center">{{ _("Titer Coef") }}</th>
-              <th class="text-center">{{ _("Status") }}</th>
-              <th style="width: 100px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for s in solutions %}
-            <tr>
-              <td class="text-muted">{{ loop.index }}</td>
-              <td>
-                <strong>{{ s.solution_name }}</strong>
-                {% if s.preparation_notes %}
-                <i class="bi bi-chat-left-text text-muted ms-1" title="{{ s.preparation_notes }}"></i>
-                {% endif %}
-              </td>
-              <td class="text-center">
-                {% if s.concentration %}
-                {{ s.concentration }} {{ s.concentration_unit or '' }}
-                {% else %}-{% endif %}
-              </td>
-              <td class="text-center">{{ s.volume_ml or '-' }}</td>
-              <td class="text-center">{{ s.chemical_used_mg or '-' }}</td>
-              <td class="text-center">{{ s.prepared_date.strftime('%Y-%m-%d') if s.prepared_date else '-' }}</td>
-              <td class="text-center">{{ s.v1 if s.v1 else '-' }}</td>
-              <td class="text-center">{{ s.v2 if s.v2 else '-' }}</td>
-              <td class="text-center fw-medium">{{ '%.4f'|format(s.v_avg) if s.v_avg else '-' }}</td>
-              <td class="text-center">
-                {% if s.titer_coefficient %}
-                <span class="badge bg-info">{{ '%.4f'|format(s.titer_coefficient) }}</span>
-                {% else %}-{% endif %}
-              </td>
-              <td class="text-center">
-                {% if s.status == 'active' %}
-                <span class="badge bg-success">{{ _("Active") }}</span>
-                {% elif s.status == 'expired' %}
-                <span class="badge bg-danger">{{ _("Expired") }}</span>
-                {% elif s.status == 'empty' %}
-                <span class="badge bg-secondary">{{ _("Empty") }}</span>
-                {% endif %}
-              </td>
-              <td class="text-end">
-                <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('water.edit_solution', id=s.id) }}" class="btn btn-outline-primary" title="{{ _('Edit') }}">
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  {% if current_user.role in ['senior', 'admin'] %}
-                  <form action="{{ url_for('water.delete_solution', id=s.id) }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('{{ _("Are you sure you want to delete?") }}')">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-outline-danger" title="{{ _('Delete') }}">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </form>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-            {% if s.preparation_notes %}
-            <tr class="table-light">
-              <td></td>
-              <td colspan="11" class="small text-muted py-1">
-                <i class="bi bi-journal-text me-1"></i>{{ s.preparation_notes }}
-              </td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <div class="card-footer bg-white border-0 text-muted small">
-        {{ _("Total") }} {{ solutions|length }} {{ _("records") }}
-      </div>
-      {% else %}
-      <div class="text-center py-5 text-muted">
-        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-        <p>{{ _("No records found") }}</p>
-        <a href="{{ url_for('water.add_solution') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> {{ _("Register New Solution") }}
-        </a>
-      </div>
-      {% endif %}
-    </div>
-  </div>
+ {# ===== TABLE ===== #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-body p-0">
+ {% if solutions %}
+ <div class="table-responsive">
+ <table class="table table-hover align-middle mb-0">
+ <thead class="table-light">
+ <tr>
+ <th class="w-[50px]">{{ _("No.") }}</th>
+ <th class="w-[50px]">{{ _("Solution Name") }}</th>
+ <th class="text-center">{{ _("Concentration") }}</th>
+ <th class="text-center">{{ _("Volume (mL)") }}</th>
+ <th class="text-center">{{ _("Used (mg)") }}</th>
+ <th class="text-center">{{ _("Date") }}</th>
+ <th class="text-center">V1</th>
+ <th class="text-center">V2</th>
+ <th class="text-center">{{ _("V avg") }}</th>
+ <th class="text-center">{{ _("Titer Coef") }}</th>
+ <th class="text-center">{{ _("Status") }}</th>
+ <th class="w-[100px]"></th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for s in solutions %}
+ <tr>
+ <td class="text-muted">{{ loop.index }}</td>
+ <td>
+ <strong>{{ s.solution_name }}</strong>
+ {% if s.preparation_notes %}
+ <i class="bi bi-chat-left-text text-muted ms-1" title="{{ s.preparation_notes }}"></i>
+ {% endif %}
+ </td>
+ <td class="text-center">
+ {% if s.concentration %}
+ {{ s.concentration }} {{ s.concentration_unit or '' }}
+ {% else %}-{% endif %}
+ </td>
+ <td class="text-center">{{ s.volume_ml or '-' }}</td>
+ <td class="text-center">{{ s.chemical_used_mg or '-' }}</td>
+ <td class="text-center">{{ s.prepared_date.strftime('%Y-%m-%d') if s.prepared_date else '-' }}</td>
+ <td class="text-center">{{ s.v1 if s.v1 else '-' }}</td>
+ <td class="text-center">{{ s.v2 if s.v2 else '-' }}</td>
+ <td class="text-center fw-medium">{{ '%.4f'|format(s.v_avg) if s.v_avg else '-' }}</td>
+ <td class="text-center">
+ {% if s.titer_coefficient %}
+ <span class="badge bg-info">{{ '%.4f'|format(s.titer_coefficient) }}</span>
+ {% else %}-{% endif %}
+ </td>
+ <td class="text-center">
+ {% if s.status == 'active' %}
+ <span class="badge bg-success">{{ _("Active") }}</span>
+ {% elif s.status == 'expired' %}
+ <span class="badge bg-danger">{{ _("Expired") }}</span>
+ {% elif s.status == 'empty' %}
+ <span class="badge bg-secondary">{{ _("Empty") }}</span>
+ {% endif %}
+ </td>
+ <td class="text-end">
+ <div class="btn-group btn-group-sm">
+ <a href="{{ url_for('water.edit_solution', id=s.id) }}" class="btn btn-outline-primary" title="{{ _('Edit') }}">
+ <i class="bi bi-pencil"></i>
+ </a>
+ {% if current_user.role in ['senior', 'admin'] %}
+ <form action="{{ url_for('water.delete_solution', id=s.id) }}" method="POST" class="d-inline"
+ data-confirm='{{ _("Are you sure you want to delete?") }}'>
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <button type="submit" class="btn btn-outline-danger" title="{{ _('Delete') }}">
+ <i class="bi bi-trash"></i>
+ </button>
+ </form>
+ {% endif %}
+ </div>
+ </td>
+ </tr>
+ {% if s.preparation_notes %}
+ <tr class="table-light">
+ <td></td>
+ <td colspan="11" class="small text-muted py-1">
+ <i class="bi bi-journal-text me-1"></i>{{ s.preparation_notes }}
+ </td>
+ </tr>
+ {% endif %}
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ <div class="card-footer bg-white border-0 text-muted small">
+ {{ _("Total") }} {{ solutions|length }} {{ _("records") }}
+ </div>
+ {% else %}
+ <div class="text-center py-5 text-muted">
+ <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+ <p>{{ _("No records found") }}</p>
+ <a href="{{ url_for('water.add_solution') }}" class="btn btn-primary">
+ <i class="bi bi-plus-lg me-1"></i> {{ _("Register New Solution") }}
+ </a>
+ </div>
+ {% endif %}
+ </div>
+ </div>
 
 </div>
 
 <style nonce="{{ csp_nonce }}">
 .solution-hero {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
-  border-radius: 16px;
-  padding: 1.5rem 2rem;
+ background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+ border-radius: 16px;
+ padding: 1.5rem 2rem;
 }
 .solution-hero-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.75rem;
-  color: white;
+ width: 56px;
+ height: 56px;
+ background: rgba(255,255,255,0.2);
+ border-radius: 12px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.75rem;
+ color: white;
 }
 </style>
 {% endblock %}

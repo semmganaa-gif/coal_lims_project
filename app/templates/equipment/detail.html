@@ -7,585 +7,585 @@
 <link href="{{ url_for('static', filename='css/equipment.css') }}" rel="stylesheet">
 
 <div class="eq-detail-page eq-page">
-  {# ================= HEADER ================= #}
-  {% set category_label = category_labels[eq.category] | default(_('Other')) %}
+ {# ================= HEADER ================= #}
+ {% set category_label = category_labels[eq.category] | default(_('Other')) %}
 
-  <div class="eq-header">
-    <div class="eq-header-left">
-      <a href="{{ url_for('equipment.equipment_list') }}" class="eq-back-btn">
-        <i class="bi bi-arrow-left"></i>
-      </a>
-      <div>
-        <h1 class="eq-title">{{ eq.name }}</h1>
-        <div class="eq-subtitle">
-          <i class="bi bi-folder2-open"></i> {{ category_label }}
-          {% if eq.lab_code %}
-            <span class="eq-lab-code">{{ eq.lab_code }}</span>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      {% if eq.status == 'normal' %}
-        <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
-      {% elif eq.status == 'broken' %}
-        <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Order") }}</span>
-      {% elif eq.status == 'maintenance' %}
-        <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> {{ _("Under Maintenance") }}</span>
-      {% elif eq.status == 'needs_spare' %}
-        <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> {{ _("Spare Parts Required") }}</span>
-      {% elif eq.status == 'retired' %}
-        <span class="status-pill status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
-      {% endif %}
+ <div class="eq-header">
+ <div class="eq-header-left">
+ <a href="{{ url_for('equipment.equipment_list') }}" class="eq-back-btn">
+ <i class="bi bi-arrow-left"></i>
+ </a>
+ <div class="mt-[0.75rem] p-[0.75rem] bg-black/2 rounded-[10px]">
+ <h1 class="eq-title">{{ eq.name }}</h1>
+ <div class="eq-subtitle">
+ <i class="bi bi-folder2-open"></i> {{ category_label }}
+ {% if eq.lab_code %}
+ <span class="eq-lab-code">{{ eq.lab_code }}</span>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ <div class="d-flex align-items-center gap-2 flex-wrap">
+ {% if eq.status == 'normal' %}
+ <span class="status-pill status-normal"><i class="bi bi-check-circle-fill"></i> {{ _("Normal") }}</span>
+ {% elif eq.status == 'broken' %}
+ <span class="status-pill status-broken"><i class="bi bi-x-circle-fill"></i> {{ _("Out of Order") }}</span>
+ {% elif eq.status == 'maintenance' %}
+ <span class="status-pill status-maintenance"><i class="bi bi-tools"></i> {{ _("Under Maintenance") }}</span>
+ {% elif eq.status == 'needs_spare' %}
+ <span class="status-pill status-needs_spare"><i class="bi bi-exclamation-triangle-fill"></i> {{ _("Spare Parts Required") }}</span>
+ {% elif eq.status == 'retired' %}
+ <span class="status-pill status-retired"><i class="bi bi-archive"></i> {{ _("Retired") }}</span>
+ {% endif %}
 
-      {% if current_user.role in ['senior', 'manager', 'admin'] %}
-        <button class="btn btn-sm btn-outline-secondary" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#editEqModal">
-          <i class="bi bi-pencil"></i> {{ _("Edit") }}
-        </button>
-      {% endif %}
-    </div>
-  </div>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <button class="btn btn-sm btn-outline-secondary rounded-[10px]" data-bs-toggle="modal" data-bs-target="#editEqModal">
+ <i class="bi bi-pencil"></i> {{ _("Edit") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
 
-  <div class="row g-4">
-    {# ============= LEFT COLUMN ============= #}
-    <div class="col-lg-4">
-      {# 1. Basic Information #}
-      <div class="eq-card mb-4">
-        <div class="eq-card-header">
-          <i class="bi bi-info-circle" style="color:#6366f1"></i>
-          {{ _("Basic Information") }}
-        </div>
-        <div class="eq-card-body">
-          <div class="info-row">
-            <span class="info-label">{{ _("Manufacturer") }}</span>
-            <span class="info-value">{{ eq.manufacturer or '-' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Model") }}</span>
-            <span class="info-value">{{ eq.model or '-' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Serial No.") }}</span>
-            <span class="info-value font-monospace" style="font-size:0.8rem">{{ eq.serial_number or '-' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Location") }}</span>
-            <span class="info-value">
-              {{ eq.location or '-' }}
-              {% if eq.room_number %}<span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>{% endif %}
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Quantity") }}</span>
-            <span class="info-value">{{ eq.quantity or 1 }}</span>
-          </div>
-          {% if eq.related_analysis %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Related Analysis") }}</span>
-            <span class="info-value">
-              <span class="badge bg-primary-subtle text-primary-emphasis">{{ eq.related_analysis }}</span>
-            </span>
-          </div>
-          {% endif %}
-        </div>
-      </div>
+ <div class="row g-4">
+ {# ============= LEFT COLUMN ============= #}
+ <div class="col-lg-4">
+ {# 1. Basic Information #}
+ <div class="eq-card mb-4">
+ <div class="eq-card-header">
+ <i class="bi bi-info-circle text-accent-2"></i>
+ {{ _("Basic Information") }}
+ </div>
+ <div class="eq-card-body">
+ <div class="info-row">
+ <span class="info-label">{{ _("Manufacturer") }}</span>
+ <span class="info-value">{{ eq.manufacturer or '-' }}</span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Model") }}</span>
+ <span class="info-value">{{ eq.model or '-' }}</span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Serial No.") }}</span>
+ <span class="info-value font-monospace text-sm-1">{{ eq.serial_number or '-' }}</span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Location") }}</span>
+ <span class="info-value">
+ {{ eq.location or '-' }}
+ {% if eq.room_number %}<span class="badge bg-light text-dark border ms-1">{{ eq.room_number }}</span>{% endif %}
+ </span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Quantity") }}</span>
+ <span class="info-value">{{ eq.quantity or 1 }}</span>
+ </div>
+ {% if eq.related_analysis %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Related Analysis") }}</span>
+ <span class="info-value">
+ <span class="badge bg-primary-subtle text-primary-emphasis">{{ eq.related_analysis }}</span>
+ </span>
+ </div>
+ {% endif %}
+ </div>
+ </div>
 
-      {# 2. Calibration #}
-      <div class="eq-card mb-4">
-        <div class="eq-card-header">
-          <i class="bi bi-shield-check" style="color:#22c55e"></i>
-          {{ _("Calibration") }}
-        </div>
-        <div class="eq-card-body">
-          <div class="info-row">
-            <span class="info-label">{{ _("Last Calibrated") }}</span>
-            <span class="info-value">{{ eq.calibration_date or '-' }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Cycle") }}</span>
-            <span class="info-value">{{ eq.calibration_cycle_days or 365 }} {{ _("days") }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">{{ _("Next Due") }}</span>
-            <span class="info-value">
-              {% if eq.next_calibration_date %}
-                {{ eq.next_calibration_date }}
-              {% else %}
-                -
-              {% endif %}
-            </span>
-          </div>
-          {% if eq.calibration_note %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Notes") }}</span>
-            <span class="info-value" style="max-width:180px">{{ eq.calibration_note }}</span>
-          </div>
-          {% endif %}
+ {# 2. Calibration #}
+ <div class="eq-card mb-4">
+ <div class="eq-card-header">
+ <i class="bi bi-shield-check text-[#22c55e]"></i>
+ {{ _("Calibration") }}
+ </div>
+ <div class="eq-card-body">
+ <div class="info-row">
+ <span class="info-label">{{ _("Last Calibrated") }}</span>
+ <span class="info-value">{{ eq.calibration_date or '-' }}</span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Cycle") }}</span>
+ <span class="info-value">{{ eq.calibration_cycle_days or 365 }} {{ _("days") }}</span>
+ </div>
+ <div class="info-row">
+ <span class="info-label">{{ _("Next Due") }}</span>
+ <span class="info-value max-w-[180px]">
+ {% if eq.next_calibration_date %}
+ {{ eq.next_calibration_date }}
+ {% else %}
+ -
+ {% endif %}
+ </span>
+ </div>
+ {% if eq.calibration_note %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Notes") }}</span>
+ <span class="info-value max-w-[180px]">{{ eq.calibration_note }}</span>
+ </div>
+ {% endif %}
 
-          {# Calibration alert #}
-          {% if eq.next_calibration_date %}
-            {% set days_left = (eq.next_calibration_date - now_local().date()).days %}
-            {% if days_left < 0 %}
-              <div class="cal-alert cal-danger">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                {{ _("Expired %(days)s days ago!", days=-days_left) }}
-              </div>
-            {% elif days_left <= 7 %}
-              <div class="cal-alert cal-warn">
-                <i class="bi bi-clock-fill"></i>
-                {{ _("Expires in %(days)s days", days=days_left) }}
-              </div>
-            {% elif days_left <= 30 %}
-              <div class="cal-alert cal-ok">
-                <i class="bi bi-check-circle-fill"></i>
-                {{ _("%(days)s days remaining", days=days_left) }}
-              </div>
-            {% endif %}
-          {% endif %}
-        </div>
-      </div>
+ {# Calibration alert #}
+ {% if eq.next_calibration_date %}
+ {% set days_left = (eq.next_calibration_date - now_local().date()).days %}
+ {% if days_left < 0 %}
+ <div class="cal-alert cal-danger">
+ <i class="bi bi-exclamation-triangle-fill"></i>
+ {{ _("Expired %(days)s days ago!", days=-days_left) }}
+ </div>
+ {% elif days_left <= 7 %}
+ <div class="cal-alert cal-warn">
+ <i class="bi bi-clock-fill"></i>
+ {{ _("Expires in %(days)s days", days=days_left) }}
+ </div>
+ {% elif days_left <= 30 %}
+ <div class="cal-alert cal-ok">
+ <i class="bi bi-check-circle-fill"></i>
+ {{ _("%(days)s days remaining", days=days_left) }}
+ </div>
+ {% endif %}
+ {% endif %}
+ </div>
+ </div>
 
-      {# 3. Additional Information #}
-      {% if eq.manufactured_info or eq.commissioned_info or eq.initial_price or eq.remark %}
-      <div class="eq-card mb-4">
-        <div class="eq-card-header">
-          <i class="bi bi-building" style="color:#f59e0b"></i>
-          {{ _("Additional Information") }}
-        </div>
-        <div class="eq-card-body">
-          {% if eq.manufactured_info %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Manufactured") }}</span>
-            <span class="info-value">{{ eq.manufactured_info }}</span>
-          </div>
-          {% endif %}
-          {% if eq.commissioned_info %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Commissioned") }}</span>
-            <span class="info-value">{{ eq.commissioned_info }}</span>
-          </div>
-          {% endif %}
-          {% if eq.initial_price %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Initial Price") }}</span>
-            <span class="info-value">{{ "{:,.0f}".format(eq.initial_price) }}₮</span>
-          </div>
-          {% endif %}
-          {% if eq.residual_price %}
-          <div class="info-row">
-            <span class="info-label">{{ _("Residual Price") }}</span>
-            <span class="info-value">{{ "{:,.0f}".format(eq.residual_price) }}₮</span>
-          </div>
-          {% endif %}
-          {% if eq.remark %}
-          <div style="margin-top:0.75rem; padding:0.75rem; background:rgba(0,0,0,0.02); border-radius:10px;">
-            <div class="info-label" style="margin-bottom:0.25rem">{{ _("Remarks") }}</div>
-            <div style="font-size:0.8rem; color:var(--text-primary)">{{ eq.remark }}</div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
+ {# 3. Additional Information #}
+ {% if eq.manufactured_info or eq.commissioned_info or eq.initial_price or eq.remark %}
+ <div class="eq-card mb-4">
+ <div class="eq-card-header">
+ <i class="bi bi-building text-warn"></i>
+ {{ _("Additional Information") }}
+ </div>
+ <div class="eq-card-body">
+ {% if eq.manufactured_info %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Manufactured") }}</span>
+ <span class="info-value">{{ eq.manufactured_info }}</span>
+ </div>
+ {% endif %}
+ {% if eq.commissioned_info %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Commissioned") }}</span>
+ <span class="info-value">{{ eq.commissioned_info }}</span>
+ </div>
+ {% endif %}
+ {% if eq.initial_price %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Initial Price") }}</span>
+ <span class="info-value">{{ "{:,.0f}".format(eq.initial_price) }}₮</span>
+ </div>
+ {% endif %}
+ {% if eq.residual_price %}
+ <div class="info-row">
+ <span class="info-label">{{ _("Residual Price") }}</span>
+ <span class="info-value">{{ "{:,.0f}".format(eq.residual_price) }}₮</span>
+ </div>
+ {% endif %}
+ {% if eq.remark %}
+ <div class="mt-[0.75rem] p-[0.75rem] bg-black/2 rounded-[10px]">
+ <div class="info-label mb-[0.25rem]">{{ _("Remarks") }}</div>
+ <div class="text-sm-1 text-[var(--text-primary)]">{{ eq.remark }}</div>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ {% endif %}
 
-      {# 4. Add Log / Maintenance form #}
-      <div class="eq-card add-form-card">
-        <div class="eq-card-header">
-          <i class="bi bi-plus-circle"></i>
-          {{ _("Add Log / Maintenance") }}
-        </div>
-        <div class="eq-card-body">
-          <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ {# 4. Add Log / Maintenance form #}
+ <div class="eq-card add-form-card">
+ <div class="eq-card-header">
+ <i class="bi bi-plus-circle"></i>
+ {{ _("Add Log / Maintenance") }}
+ </div>
+ <div class="eq-card-body">
+ <form action="{{ url_for('equipment.add_maintenance_log', id=eq.id) }}" method="POST" enctype="multipart/form-data">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-            <div class="form-floating-sm">
-              <label>{{ _("Type") }}</label>
-              <select name="action_type" class="form-select" id="actionTypeSelect">
-                <option value="Usage">{{ _("Usage") }}</option>
-                <option value="Daily Check">{{ _("Daily Check") }}</option>
-                <option value="Maintenance">{{ _("Maintenance") }}</option>
-                {% if current_user.role in ['senior', 'manager', 'admin'] %}
-                <option value="Repair">{{ _("Major Repair") }}</option>
-                <option value="Calibration">{{ _("Calibration") }}</option>
-                {% endif %}
-              </select>
-            </div>
+ <div class="form-floating-sm">
+ <label>{{ _("Type") }}</label>
+ <select name="action_type" class="form-select" id="actionTypeSelect">
+ <option value="Usage">{{ _("Usage") }}</option>
+ <option value="Daily Check">{{ _("Daily Check") }}</option>
+ <option value="Maintenance">{{ _("Maintenance") }}</option>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <option value="Repair">{{ _("Major Repair") }}</option>
+ <option value="Calibration">{{ _("Calibration") }}</option>
+ {% endif %}
+ </select>
+ </div>
 
-            <div class="form-floating-sm" id="usageFields">
-              <label>{{ _("Usage Duration (minutes)") }}</label>
-              <input type="number" name="duration_minutes" class="form-control" min="1" placeholder="60">
-            </div>
+ <div class="form-floating-sm" id="usageFields">
+ <label>{{ _("Usage Duration (minutes)") }}</label>
+ <input type="number" name="duration_minutes" class="form-control" min="1" placeholder="60">
+ </div>
 
-            <div class="row">
-              <div class="col-6">
-                <div class="form-floating-sm">
-                  <label>{{ _("Date") }}</label>
-                  <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="form-floating-sm">
-                  <label>{{ _("Performed By") }}</label>
-                  <input type="text" name="performed_by" class="form-control" value="{{ current_user.username }}">
-                </div>
-              </div>
-            </div>
+ <div class="row">
+ <div class="col-6">
+ <div class="form-floating-sm">
+ <label>{{ _("Date") }}</label>
+ <input type="date" name="action_date" class="form-control" value="{{ now_local().strftime('%Y-%m-%d') }}" required>
+ </div>
+ </div>
+ <div class="col-6">
+ <div class="form-floating-sm">
+ <label>{{ _("Performed By") }}</label>
+ <input type="text" name="performed_by" class="form-control" value="{{ current_user.username }}">
+ </div>
+ </div>
+ </div>
 
-            <div class="form-floating-sm">
-              <label>{{ _("Certificate No.") }}</label>
-              <input type="text" name="certificate_no" class="form-control" placeholder="{{ _("Certificate number") }}">
-            </div>
+ <div class="form-floating-sm">
+ <label>{{ _("Certificate No.") }}</label>
+ <input type="text" name="certificate_no" class="form-control" placeholder="{{ _("Certificate number") }}">
+ </div>
 
-            <div class="form-floating-sm">
-              <label>{{ _("Certificate / File") }}</label>
-              <input type="file" name="certificate_file" class="form-control">
-            </div>
+ <div class="form-floating-sm">
+ <label>{{ _("Certificate / File") }}</label>
+ <input type="file" name="certificate_file" class="form-control">
+ </div>
 
-            <div class="form-floating-sm">
-              <label>{{ _("Description / Result") }}</label>
-              <textarea name="description" class="form-control" rows="2" placeholder="{{ _("Description of work performed...") }}"></textarea>
-            </div>
+ <div class="form-floating-sm">
+ <label>{{ _("Description / Result") }}</label>
+ <textarea name="description" class="form-control" rows="2" placeholder="{{ _("Description of work performed...") }}"></textarea>
+ </div>
 
-            <button type="submit" class="btn-submit">
-              <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+ <button type="submit" class="btn-submit">
+ <i class="bi bi-check2-circle me-1"></i> {{ _("Save") }}
+ </button>
+ </form>
+ </div>
+ </div>
+ </div>
 
-    {# ============= RIGHT COLUMN: TIMELINE ============= #}
-    <div class="col-lg-8">
-      <div class="eq-card timeline-section">
-        <div class="eq-card-header">
-          <i class="bi bi-clock-history" style="color:#8b5cf6"></i>
-          {{ _("Journal") }}
-          <span class="badge bg-light text-dark border ms-2">{{ eq.logs.count() + (usage_logs|default([])|length) }}</span>
-        </div>
-        <div class="eq-card-body">
-          {# Filters #}
-          <div class="timeline-filters">
-            <span class="filter-chip active" data-type="all">{{ _("All") }}</span>
-            <span class="filter-chip" data-type="Usage">
-              <i class="bi bi-clock"></i> {{ _("Usage") }}
-            </span>
-            <span class="filter-chip" data-type="Daily Check">
-              <i class="bi bi-check-square"></i> {{ _("Check") }}
-            </span>
-            <span class="filter-chip" data-type="Maintenance">
-              <i class="bi bi-wrench"></i> {{ _("Maintenance") }}
-            </span>
-            <span class="filter-chip" data-type="Repair">
-              <i class="bi bi-tools"></i> {{ _("Major Repair") }}
-            </span>
-            <span class="filter-chip" data-type="Calibration">
-              <i class="bi bi-award"></i> {{ _("Calibration") }}
-            </span>
-          </div>
+ {# ============= RIGHT COLUMN: TIMELINE ============= #}
+ <div class="col-lg-8">
+ <div class="eq-card timeline-section">
+ <div class="eq-card-header">
+ <i class="bi bi-clock-history text-accent"></i>
+ {{ _("Journal") }}
+ <span class="badge bg-light text-dark border ms-2">{{ eq.logs.count() + (usage_logs|default([])|length) }}</span>
+ </div>
+ <div class="eq-card-body">
+ {# Filters #}
+ <div class="timeline-filters">
+ <span class="filter-chip active" data-type="all">{{ _("All") }}</span>
+ <span class="filter-chip" data-type="Usage">
+ <i class="bi bi-clock"></i> {{ _("Usage") }}
+ </span>
+ <span class="filter-chip" data-type="Daily Check">
+ <i class="bi bi-check-square"></i> {{ _("Check") }}
+ </span>
+ <span class="filter-chip" data-type="Maintenance">
+ <i class="bi bi-wrench"></i> {{ _("Maintenance") }}
+ </span>
+ <span class="filter-chip" data-type="Repair">
+ <i class="bi bi-tools"></i> {{ _("Major Repair") }}
+ </span>
+ <span class="filter-chip" data-type="Calibration">
+ <i class="bi bi-award"></i> {{ _("Calibration") }}
+ </span>
+ </div>
 
-          {# Search #}
-          <div class="timeline-search">
-            <i class="bi bi-search"></i>
-            <input type="text" id="timelineSearch" placeholder="{{ _("Search... (description, performer, certificate)") }}">
-          </div>
+ {# Search #}
+ <div class="timeline-search">
+ <i class="bi bi-search"></i>
+ <input type="text" id="timelineSearch" placeholder="{{ _("Search... (description, performer, certificate)") }}">
+ </div>
 
-          {# Timeline list #}
-          {% set ns = namespace(all_items=[]) %}
-          {% for log in eq.logs %}
-            {% set _ = ns.all_items.append({'type': 'maint', 'date': log.action_date, 'obj': log}) %}
-          {% endfor %}
-          {% for ul in usage_logs|default([]) %}
-            {% set _ = ns.all_items.append({'type': 'usage', 'date': ul.start_time, 'obj': ul}) %}
-          {% endfor %}
+ {# Timeline list #}
+ {% set ns = namespace(all_items=[]) %}
+ {% for log in eq.logs %}
+ {% set _ = ns.all_items.append({'type': 'maint', 'date': log.action_date, 'obj': log}) %}
+ {% endfor %}
+ {% for ul in usage_logs|default([]) %}
+ {% set _ = ns.all_items.append({'type': 'usage', 'date': ul.start_time, 'obj': ul}) %}
+ {% endfor %}
 
-          <div class="timeline-list" id="timelineList">
-            {% for item in ns.all_items|sort(attribute='date', reverse=true) %}
-              {% if item.type == 'usage' %}
-                {% set ul = item.obj %}
-                <div class="timeline-item"
-                     data-type="Usage"
-                     data-search="{{ ul.start_time.strftime('%Y-%m-%d') }} Usage {{ ul.used_by or '' }} {{ ul.purpose or '' }}">
-                  <div class="timeline-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1d4ed8">
-                    <i class="bi bi-clock"></i>
-                  </div>
-                  <div class="timeline-header">
-                    <span class="timeline-type" style="background:rgba(59,130,246,0.12);color:#1d4ed8">{{ _("Usage") }}</span>
-                    <span class="timeline-date">
-                      <i class="bi bi-calendar3"></i>
-                      {{ ul.start_time.strftime('%Y-%m-%d %H:%M') }}
-                    </span>
-                  </div>
-                  {% if ul.used_by %}
-                  <div class="timeline-performer">
-                    <i class="bi bi-person-fill" style="color:#3b82f6"></i>
-                    {{ ul.used_by }}
-                  </div>
-                  {% endif %}
-                  <div class="timeline-desc">
-                    <strong>{{ ul.duration_minutes or 0 }} {{ _("minutes") }}</strong>
-                    {% if ul.purpose %} — {{ ul.purpose }}{% endif %}
-                  </div>
-                </div>
+ <div class="timeline-list" id="timelineList">
+ {% for item in ns.all_items|sort(attribute='date', reverse=true) %}
+ {% if item.type == 'usage' %}
+ {% set ul = item.obj %}
+ <div class="timeline-item"
+ data-type="Usage"
+ data-search="{{ ul.start_time.strftime('%Y-%m-%d') }} Usage {{ ul.used_by or '' }} {{ ul.purpose or '' }}">
+ <div class="timeline-icon bg-info-gradient text-info-2-bold">
+ <i class="bi bi-clock"></i>
+ </div>
+ <div class="timeline-header">
+ <span class="timeline-type bg-[rgba(59,130,246,0.12)] text-info-2-bold">{{ _("Usage") }}</span>
+ <span class="timeline-date">
+ <i class="bi bi-calendar3"></i>
+ {{ ul.start_time.strftime('%Y-%m-%d %H:%M') }}
+ </span>
+ </div>
+ {% if ul.used_by %}
+ <div class="timeline-performer">
+ <i class="bi bi-person-fill text-info-2"></i>
+ {{ ul.used_by }}
+ </div>
+ {% endif %}
+ <div class="timeline-desc">
+ <strong>{{ ul.duration_minutes or 0 }} {{ _("minutes") }}</strong>
+ {% if ul.purpose %} — {{ ul.purpose }}{% endif %}
+ </div>
+ </div>
 
-              {% else %}
-                {% set log = item.obj %}
-                <div class="timeline-item"
-                     data-type="{{ log.action_type }}"
-                     data-search="{{ log.action_date.strftime('%Y-%m-%d') }} {{ log.action_type }} {{ log.performed_by or '' }} {{ log.description or '' }} {{ log.certificate_no or '' }}">
+ {% else %}
+ {% set log = item.obj %}
+ <div class="timeline-item"
+ data-type="{{ log.action_type }}"
+ data-search="{{ log.action_date.strftime('%Y-%m-%d') }} {{ log.action_type }} {{ log.performed_by or '' }} {{ log.description or '' }} {{ log.certificate_no or '' }}">
 
-                  {% if log.action_type == 'Calibration' %}
-                    <div class="timeline-icon icon-calib"><i class="bi bi-award"></i></div>
-                  {% elif log.action_type == 'Repair' %}
-                    <div class="timeline-icon icon-repair"><i class="bi bi-tools"></i></div>
-                  {% elif log.action_type == 'Maintenance' %}
-                    <div class="timeline-icon icon-maint"><i class="bi bi-wrench"></i></div>
-                  {% else %}
-                    <div class="timeline-icon icon-check"><i class="bi bi-check-lg"></i></div>
-                  {% endif %}
+ {% if log.action_type == 'Calibration' %}
+ <div class="timeline-icon icon-calib"><i class="bi bi-award"></i></div>
+ {% elif log.action_type == 'Repair' %}
+ <div class="timeline-icon icon-repair"><i class="bi bi-tools"></i></div>
+ {% elif log.action_type == 'Maintenance' %}
+ <div class="timeline-icon icon-maint"><i class="bi bi-wrench"></i></div>
+ {% else %}
+ <div class="timeline-icon icon-check"><i class="bi bi-check-lg"></i></div>
+ {% endif %}
 
-                  <div class="timeline-header">
-                    {% if log.action_type == 'Calibration' %}
-                      <span class="timeline-type type-calib">{{ _("Calibration") }}</span>
-                    {% elif log.action_type == 'Repair' %}
-                      <span class="timeline-type type-repair">{{ _("Major Repair") }}</span>
-                    {% elif log.action_type == 'Maintenance' %}
-                      <span class="timeline-type type-maint">{{ _("Maintenance") }}</span>
-                    {% else %}
-                      <span class="timeline-type type-check">{{ _("Daily Check") }}</span>
-                    {% endif %}
+ <div class="timeline-header">
+ {% if log.action_type == 'Calibration' %}
+ <span class="timeline-type type-calib">{{ _("Calibration") }}</span>
+ {% elif log.action_type == 'Repair' %}
+ <span class="timeline-type type-repair">{{ _("Major Repair") }}</span>
+ {% elif log.action_type == 'Maintenance' %}
+ <span class="timeline-type type-maint">{{ _("Maintenance") }}</span>
+ {% else %}
+ <span class="timeline-type type-check">{{ _("Daily Check") }}</span>
+ {% endif %}
 
-                    <span class="timeline-date">
-                      <i class="bi bi-calendar3"></i>
-                      {{ log.action_date.strftime('%Y-%m-%d') }}
-                    </span>
-                  </div>
+ <span class="timeline-date">
+ <i class="bi bi-calendar3"></i>
+ {{ log.action_date.strftime('%Y-%m-%d') }}
+ </span>
+ </div>
 
-                  {% if log.performed_by %}
-                  <div class="timeline-performer">
-                    <i class="bi bi-person-fill" style="color:#6366f1"></i>
-                    {{ log.performed_by }}
-                  </div>
-                  {% endif %}
+ {% if log.performed_by %}
+ <div class="timeline-performer">
+ <i class="bi bi-person-fill text-accent-2"></i>
+ {{ log.performed_by }}
+ </div>
+ {% endif %}
 
-                  {% if log.description %}
-                  <div class="timeline-desc">{{ log.description }}</div>
-                  {% endif %}
+ {% if log.description %}
+ <div class="timeline-desc">{{ log.description }}</div>
+ {% endif %}
 
-                  {% if log.file_path or log.certificate_no %}
-                  <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
-                     class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
-                    <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
-                    {{ log.certificate_no or _('Download file') }}
-                  </a>
-                  {% endif %}
-                </div>
-              {% endif %}
-            {% else %}
-            <div class="timeline-empty" id="timelineEmpty">
-              <i class="bi bi-clock-history d-block"></i>
-              <h5>{{ _("No records") }}</h5>
-              <p class="mb-0">{{ _("No records have been made for this equipment.") }}</p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+ {% if log.file_path or log.certificate_no %}
+ <a href="{% if log.file_path %}{{ url_for('equipment.download_certificate', log_id=log.id) }}{% else %}#{% endif %}"
+ class="timeline-cert" {% if log.file_path %}target="_blank"{% endif %}>
+ <i class="bi bi-{% if log.file_path %}paperclip{% else %}file-earmark-text{% endif %}"></i>
+ {{ log.certificate_no or _('Download file') }}
+ </a>
+ {% endif %}
+ </div>
+ {% endif %}
+ {% else %}
+ <div class="timeline-empty" id="timelineEmpty">
+ <i class="bi bi-clock-history d-block"></i>
+ <h5>{{ _("No records") }}</h5>
+ <p class="mb-0">{{ _("No records have been made for this equipment.") }}</p>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 {# ========================= EDIT MODAL ========================= #}
 <div class="modal fade" id="editEqModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <form action="{{ url_for('equipment.edit_equipment', id=eq.id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-      <div class="modal-content" style="border-radius:20px; overflow:hidden;">
-        <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none;">
-          <h5 class="modal-title fw-bold">
-            <i class="bi bi-pencil-square me-2"></i>{{ _("Edit Equipment") }}
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
-          <div class="mb-3">
-            <label class="fw-bold small">{{ _("Name") }}</label>
-            <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
-          </div>
+ <div class="modal-dialog modal-lg">
+ <form action="{{ url_for('equipment.edit_equipment', id=eq.id) }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <div class="modal-content rounded-[20px] overflow-hidden">
+ <div class="modal-header bg-accent-gradient text-white border-0">
+ <h5 class="modal-title fw-bold">
+ <i class="bi bi-pencil-square me-2"></i>{{ _("Edit Equipment") }}
+ </h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body max-h-[70vh] overflow-y-auto">
+ <div class="mb-3">
+ <label class="fw-bold small">{{ _("Name") }}</label>
+ <input type="text" name="name" class="form-control" value="{{ eq.name }}" required>
+ </div>
 
-          <div class="row">
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Category") }}</label>
-              <select name="category" class="form-select">
-                {{ category_options(eq.category or 'other') }}
-              </select>
-            </div>
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Register Type") }}</label>
-              <select name="register_type" class="form-select">
-                {{ register_type_options(eq.register_type or '') }}
-              </select>
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Category") }}</label>
+ <select name="category" class="form-select">
+ {{ category_options(eq.category or 'other') }}
+ </select>
+ </div>
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Register Type") }}</label>
+ <select name="register_type" class="form-select">
+ {{ register_type_options(eq.register_type or '') }}
+ </select>
+ </div>
+ </div>
 
-          <div class="row">
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Manufacturer") }}</label>
-              <input type="text" name="manufacturer" class="form-control" value="{{ eq.manufacturer or '' }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Model") }}</label>
-              <input type="text" name="model" class="form-control" value="{{ eq.model or '' }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Serial No.") }}</label>
-              <input type="text" name="serial" class="form-control" value="{{ eq.serial_number or '' }}">
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Manufacturer") }}</label>
+ <input type="text" name="manufacturer" class="form-control" value="{{ eq.manufacturer or '' }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Model") }}</label>
+ <input type="text" name="model" class="form-control" value="{{ eq.model or '' }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Serial No.") }}</label>
+ <input type="text" name="serial" class="form-control" value="{{ eq.serial_number or '' }}">
+ </div>
+ </div>
 
-          <div class="row">
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Lab Code") }}</label>
-              <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Location") }}</label>
-              <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Room No.") }}</label>
-              <input type="text" name="room" class="form-control" value="{{ eq.room_number or '' }}">
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Lab Code") }}</label>
+ <input type="text" name="lab_code" class="form-control" value="{{ eq.lab_code or '' }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Location") }}</label>
+ <input type="text" name="location" class="form-control" value="{{ eq.location or '' }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Room No.") }}</label>
+ <input type="text" name="room" class="form-control" value="{{ eq.room_number or '' }}">
+ </div>
+ </div>
 
-          <div class="row">
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Quantity") }}</label>
-              <input type="number" name="quantity" class="form-control" value="{{ eq.quantity or 1 }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Cycle (days)") }}</label>
-              <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
-            </div>
-            <div class="col-4 mb-3">
-              <label class="fw-bold small">{{ _("Status") }}</label>
-              <select name="status" class="form-select">
-                {{ status_options(eq.status or 'normal') }}
-              </select>
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Quantity") }}</label>
+ <input type="number" name="quantity" class="form-control" value="{{ eq.quantity or 1 }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Cycle (days)") }}</label>
+ <input type="number" name="cycle" class="form-control" value="{{ eq.calibration_cycle_days or 365 }}">
+ </div>
+ <div class="col-4 mb-3">
+ <label class="fw-bold small">{{ _("Status") }}</label>
+ <select name="status" class="form-select">
+ {{ status_options(eq.status or 'normal') }}
+ </select>
+ </div>
+ </div>
 
-          <div class="mb-3">
-            <label class="fw-bold small text-primary">{{ _("Related Analysis") }}</label>
-            <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="{{ _("e.g. Aad,Mad") }}">
-          </div>
+ <div class="mb-3">
+ <label class="fw-bold small text-primary">{{ _("Related Analysis") }}</label>
+ <input type="text" name="related" class="form-control" value="{{ eq.related_analysis or '' }}" placeholder="{{ _("e.g. Aad,Mad") }}">
+ </div>
 
-          <div class="mb-3">
-            <label class="fw-bold small">{{ _("Check & Adjustment Notes") }}</label>
-            <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
-          </div>
+ <div class="mb-3">
+ <label class="fw-bold small">{{ _("Check & Adjustment Notes") }}</label>
+ <input type="text" name="calibration_note" class="form-control" value="{{ eq.calibration_note or '' }}">
+ </div>
 
-          {# Calibration dates #}
-          <div class="row">
-            <div class="col-6 mb-3">
-              <label class="fw-bold small text-success">
-                <i class="bi bi-calendar-check me-1"></i>{{ _("Last Calibrated") }}
-              </label>
-              <input type="date" name="calibration_date" id="editCalibDate" class="form-control"
-                     value="{{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '' }}">
-              <div class="form-text small">{{ _("Next due date will be calculated automatically") }}</div>
-            </div>
-            <div class="col-6 mb-3">
-              <label class="fw-bold small text-danger">
-                <i class="bi bi-calendar-event me-1"></i>{{ _("Next Due") }}
-                <span class="badge bg-secondary-subtle text-secondary ms-1" id="calcBadge" style="display:none">auto</span>
-              </label>
-              <input type="date" name="next_calibration_date" id="editNextCalibDate" class="form-control"
-                     value="{{ eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else '' }}">
-              <div class="form-text small">
-                <a href="#" id="calcNextDateBtn" class="text-decoration-none">
-                  <i class="bi bi-calculator"></i> {{ _("Calculate from cycle") }}
-                </a>
-              </div>
-            </div>
-          </div>
+ {# Calibration dates #}
+ <div class="row">
+ <div class="col-6 mb-3">
+ <label class="fw-bold small text-success">
+ <i class="bi bi-calendar-check me-1"></i>{{ _("Last Calibrated") }}
+ </label>
+ <input type="date" name="calibration_date" id="editCalibDate" class="form-control"
+ value="{{ eq.calibration_date.strftime('%Y-%m-%d') if eq.calibration_date else '' }}">
+ <div class="form-text small">{{ _("Next due date will be calculated automatically") }}</div>
+ </div>
+ <div class="col-6 mb-3">
+ <label class="fw-bold small text-danger">
+ <i class="bi bi-calendar-event me-1"></i>{{ _("Next Due") }}
+ <span class="badge bg-secondary-subtle text-secondary ms-1 hidden" id="calcBadge">auto</span>
+ </label>
+ <input type="date" name="next_calibration_date" id="editNextCalibDate" class="form-control"
+ value="{{ eq.next_calibration_date.strftime('%Y-%m-%d') if eq.next_calibration_date else '' }}">
+ <div class="form-text small">
+ <a href="#" id="calcNextDateBtn" class="text-decoration-none">
+ <i class="bi bi-calculator"></i> {{ _("Calculate from cycle") }}
+ </a>
+ </div>
+ </div>
+ </div>
 
-          <hr>
+ <hr>
 
-          <div class="row">
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Manufactured Date") }}</label>
-              <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}">
-            </div>
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Commissioned Date") }}</label>
-              <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}">
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Manufactured Date") }}</label>
+ <input type="text" name="manufactured_info" class="form-control" value="{{ eq.manufactured_info or '' }}">
+ </div>
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Commissioned Date") }}</label>
+ <input type="text" name="commissioned_info" class="form-control" value="{{ eq.commissioned_info or '' }}">
+ </div>
+ </div>
 
-          <div class="row">
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Initial Price") }}</label>
-              <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
-            </div>
-            <div class="col-6 mb-3">
-              <label class="fw-bold small">{{ _("Residual Price") }}</label>
-              <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
-            </div>
-          </div>
+ <div class="row">
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Initial Price") }}</label>
+ <input type="number" step="0.01" name="initial_price" class="form-control" value="{{ eq.initial_price or '' }}">
+ </div>
+ <div class="col-6 mb-3">
+ <label class="fw-bold small">{{ _("Residual Price") }}</label>
+ <input type="number" step="0.01" name="residual_price" class="form-control" value="{{ eq.residual_price or '' }}">
+ </div>
+ </div>
 
-          <div class="mb-3">
-            <label class="fw-bold small">{{ _("Remarks") }}</label>
-            <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
-          </div>
+ <div class="mb-3">
+ <label class="fw-bold small">{{ _("Remarks") }}</label>
+ <textarea name="remark" class="form-control" rows="2">{{ eq.remark or '' }}</textarea>
+ </div>
 
-          {# ===== REGISTER TYPE EXTRA FIELDS ===== #}
-          {% set ed = eq.extra_data or {} %}
+ {# ===== REGISTER TYPE EXTRA FIELDS ===== #}
+ {% set ed = eq.extra_data or {} %}
 
-          <div class="edit-reg-fields edit-reg-measurement" style="display:{% if eq.register_type == 'measurement' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>{{ _("Measuring Instrument Details") }}</h6>
-            <div class="row g-2">
-              <div class="col-md-4">
-                <label class="fw-bold small">{{ _("Group") }}</label>
-                <select name="group" class="form-select form-select-sm">{{ measurement_group_options(ed.get('group', '')) }}</select>
-              </div>
-              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-3">
-                <label class="fw-bold small">{{ _("Purpose") }}</label>
-                <select name="purpose" class="form-select form-select-sm">{{ lab_purpose_options(ed.get('purpose', '')) }}</select>
-              </div>
-              <div class="col-md-3">
-                <label class="fw-bold small">{{ _("Measurement Unit") }}</label>
-                <select name="unit" class="form-select form-select-sm">{{ measurement_unit_options(ed.get('unit', '')) }}</select>
-              </div>
-            </div>
-          </div>
+ <div class="edit-reg-fields edit-reg-measurement {% if eq.register_type == 'measurement' %}block{% else %}hidden{% endif %}">
+ <hr><h6 class="fw-bold text-info small"><i class="bi bi-rulers me-1"></i>{{ _("Measuring Instrument Details") }}</h6>
+ <div class="row g-2">
+ <div class="col-md-4">
+ <label class="fw-bold small">{{ _("Group") }}</label>
+ <select name="group" class="form-select form-select-sm">{{ measurement_group_options(ed.get('group', '')) }}</select>
+ </div>
+ <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+ <div class="col-md-3">
+ <label class="fw-bold small">{{ _("Purpose") }}</label>
+ <select name="purpose" class="form-select form-select-sm">{{ lab_purpose_options(ed.get('purpose', '')) }}</select>
+ </div>
+ <div class="col-md-3">
+ <label class="fw-bold small">{{ _("Measurement Unit") }}</label>
+ <select name="unit" class="form-select form-select-sm">{{ measurement_unit_options(ed.get('unit', '')) }}</select>
+ </div>
+ </div>
+ </div>
 
-          <div class="edit-reg-fields edit-reg-glassware" style="display:{% if eq.register_type == 'glassware' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>{{ _("Glassware Details") }}</h6>
-            <div class="row g-2">
-              <div class="col-md-3"><label class="fw-bold small">{{ _("Group") }}</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
-              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">{{ _("Volume (mL)") }}</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
-            </div>
-          </div>
+ <div class="edit-reg-fields edit-reg-glassware {% if eq.register_type == 'glassware' %}block{% else %}hidden{% endif %}">
+ <hr><h6 class="fw-bold text-success small"><i class="bi bi-cup-straw me-1"></i>{{ _("Glassware Details") }}</h6>
+ <div class="row g-2">
+ <div class="col-md-3"><label class="fw-bold small">{{ _("Group") }}</label><input type="text" name="group" class="form-control form-control-sm" value="{{ ed.get('group','') }}"></div>
+ <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+ <div class="col-md-3"><label class="fw-bold small">{{ _("Volume (mL)") }}</label><input type="text" name="volume" class="form-control form-control-sm" value="{{ ed.get('volume','') }}"></div>
+ <div class="col-md-4"><label class="fw-bold small">{{ _("Certificate No.") }}</label><input type="text" name="cert_no" class="form-control form-control-sm" value="{{ ed.get('cert_no','') }}"></div>
+ </div>
+ </div>
 
-          <div class="edit-reg-fields edit-reg-internal_check" style="display:{% if eq.register_type == 'internal_check' %}block{% else %}none{% endif %}">
-            <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>{{ _("Internal Check Details") }}</h6>
-            <div class="row g-2">
-              <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
-              <div class="col-md-4"><label class="fw-bold small">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
-              <div class="col-md-3"><label class="fw-bold small">{{ _("Check Date") }}</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-          <button type="submit" class="btn btn-primary" style="background:linear-gradient(135deg,#6366f1,#8b5cf6); border:none;">{{ _("Save") }}</button>
-        </div>
-      </div>
-    </form>
-  </div>
+ <div class="edit-reg-fields edit-reg-internal_check {% if eq.register_type == 'internal_check' %}block{% else %}hidden{% endif %}">
+ <hr><h6 class="fw-bold text-primary small"><i class="bi bi-clipboard-check me-1"></i>{{ _("Internal Check Details") }}</h6>
+ <div class="row g-2">
+ <div class="col-md-2"><label class="fw-bold small">{{ _("No.") }}</label><input type="text" name="no" class="form-control form-control-sm" value="{{ ed.get('no','') }}"></div>
+ <div class="col-md-4"><label class="fw-bold small">{{ _("Model No.") }}</label><input type="text" name="mark" class="form-control form-control-sm" value="{{ ed.get('mark','') }}"></div>
+ <div class="col-md-3"><label class="fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" name="commissioned_date" class="form-control form-control-sm" value="{{ ed.get('commissioned_date','') }}"></div>
+ <div class="col-md-3"><label class="fw-bold small">{{ _("Check Date") }}</label><input type="text" name="check_date" class="form-control form-control-sm" value="{{ ed.get('check_date','') }}"></div>
+ </div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
+ <button type="submit" class="btn btn-primary bg-accent-gradient border-0">{{ _("Save") }}</button>
+ </div>
+ </div>
+ </form>
+ </div>
 </div>
 {% endblock %}
 
@@ -593,129 +593,129 @@
 {{ super() }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  // Action type -> usage fields toggle
-  const actionSelect = document.getElementById('actionTypeSelect');
-  const usageFields = document.getElementById('usageFields');
-  if (actionSelect && usageFields) {
-    function toggleUsageFields() {
-      usageFields.style.display = actionSelect.value === 'Usage' ? '' : 'none';
-    }
-    actionSelect.addEventListener('change', toggleUsageFields);
-    toggleUsageFields();
-  }
+ // Action type -> usage fields toggle
+ const actionSelect = document.getElementById('actionTypeSelect');
+ const usageFields = document.getElementById('usageFields');
+ if (actionSelect && usageFields) {
+ function toggleUsageFields() {
+ usageFields.style.display = actionSelect.value === 'Usage' ? '' : 'none';
+ }
+ actionSelect.addEventListener('change', toggleUsageFields);
+ toggleUsageFields();
+ }
 
-  // Timeline filtering
-  const filterChips = document.querySelectorAll('.filter-chip');
-  const searchInput = document.getElementById('timelineSearch');
-  const timelineItems = document.querySelectorAll('.timeline-item');
-  const emptyState = document.getElementById('timelineEmpty');
+ // Timeline filtering
+ const filterChips = document.querySelectorAll('.filter-chip');
+ const searchInput = document.getElementById('timelineSearch');
+ const timelineItems = document.querySelectorAll('.timeline-item');
+ const emptyState = document.getElementById('timelineEmpty');
 
-  let currentFilter = 'all';
+ let currentFilter = 'all';
 
-  function applyFilters() {
-    const query = (searchInput?.value || '').toLowerCase().trim();
-    let visibleCount = 0;
+ function applyFilters() {
+ const query = (searchInput?.value || '').toLowerCase().trim();
+ let visibleCount = 0;
 
-    timelineItems.forEach(item => {
-      const type = item.dataset.type || '';
-      const searchText = (item.dataset.search || '').toLowerCase();
+ timelineItems.forEach(item => {
+ const type = item.dataset.type || '';
+ const searchText = (item.dataset.search || '').toLowerCase();
 
-      const typeMatch = currentFilter === 'all' || type === currentFilter;
-      const searchMatch = !query || searchText.includes(query);
+ const typeMatch = currentFilter === 'all' || type === currentFilter;
+ const searchMatch = !query || searchText.includes(query);
 
-      if (typeMatch && searchMatch) {
-        item.style.display = '';
-        visibleCount++;
-      } else {
-        item.style.display = 'none';
-      }
-    });
+ if (typeMatch && searchMatch) {
+ item.style.display = '';
+ visibleCount++;
+ } else {
+ item.style.display = 'none';
+ }
+ });
 
-    // Show/hide empty state
-    if (emptyState) {
-      emptyState.style.display = visibleCount === 0 ? '' : 'none';
-    }
-  }
+ // Show/hide empty state
+ if (emptyState) {
+ emptyState.style.display = visibleCount === 0 ? '' : 'none';
+ }
+ }
 
-  filterChips.forEach(chip => {
-    chip.addEventListener('click', function() {
-      filterChips.forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      currentFilter = this.dataset.type || 'all';
-      applyFilters();
-    });
-  });
+ filterChips.forEach(chip => {
+ chip.addEventListener('click', function() {
+ filterChips.forEach(c => c.classList.remove('active'));
+ this.classList.add('active');
+ currentFilter = this.dataset.type || 'all';
+ applyFilters();
+ });
+ });
 
-  if (searchInput) {
-    searchInput.addEventListener('input', applyFilters);
-  }
+ if (searchInput) {
+ searchInput.addEventListener('input', applyFilters);
+ }
 
-  // Edit modal: toggle extra fields
-  const editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
-  if (editRegSelect) {
-    function toggleEditRegFields() {
-      document.querySelectorAll('.edit-reg-fields').forEach(el => el.style.display = 'none');
-      const val = editRegSelect.value;
-      if (val) {
-        const section = document.querySelector('.edit-reg-' + val);
-        if (section) section.style.display = 'block';
-      }
-    }
-    editRegSelect.addEventListener('change', toggleEditRegFields);
-    document.getElementById('editEqModal').addEventListener('shown.bs.modal', toggleEditRegFields);
-    toggleEditRegFields();
+ // Edit modal: toggle extra fields
+ const editRegSelect = document.querySelector('#editEqModal select[name="register_type"]');
+ if (editRegSelect) {
+ function toggleEditRegFields() {
+ document.querySelectorAll('.edit-reg-fields').forEach(el => el.style.display = 'none');
+ const val = editRegSelect.value;
+ if (val) {
+ const section = document.querySelector('.edit-reg-' + val);
+ if (section) section.style.display = 'block';
+ }
+ }
+ editRegSelect.addEventListener('change', toggleEditRegFields);
+ document.getElementById('editEqModal').addEventListener('shown.bs.modal', toggleEditRegFields);
+ toggleEditRegFields();
 
-    // Clear hidden section inputs on submit
-    document.querySelector('#editEqModal form').addEventListener('submit', function() {
-      document.querySelectorAll('.edit-reg-fields').forEach(el => {
-        if (el.style.display === 'none') {
-          el.querySelectorAll('input, select').forEach(inp => inp.removeAttribute('name'));
-        }
-      });
-    });
-  }
+ // Clear hidden section inputs on submit
+ document.querySelector('#editEqModal form').addEventListener('submit', function() {
+ document.querySelectorAll('.edit-reg-fields').forEach(el => {
+ if (el.style.display === 'none') {
+ el.querySelectorAll('input, select').forEach(inp => inp.removeAttribute('name'));
+ }
+ });
+ });
+ }
 
-  // Calibration date auto-calculate
-  const calibDateInput = document.getElementById('editCalibDate');
-  const nextCalibDateInput = document.getElementById('editNextCalibDate');
-  const cycleInput = document.querySelector('#editEqModal input[name="cycle"]');
-  const calcBtn = document.getElementById('calcNextDateBtn');
-  const calcBadge = document.getElementById('calcBadge');
+ // Calibration date auto-calculate
+ const calibDateInput = document.getElementById('editCalibDate');
+ const nextCalibDateInput = document.getElementById('editNextCalibDate');
+ const cycleInput = document.querySelector('#editEqModal input[name="cycle"]');
+ const calcBtn = document.getElementById('calcNextDateBtn');
+ const calcBadge = document.getElementById('calcBadge');
 
-  function calculateNextCalibDate() {
-    const calibDate = calibDateInput?.value;
-    const cycleDays = parseInt(cycleInput?.value) || 365;
+ function calculateNextCalibDate() {
+ const calibDate = calibDateInput?.value;
+ const cycleDays = parseInt(cycleInput?.value) || 365;
 
-    if (calibDate) {
-      const date = new Date(calibDate);
-      date.setDate(date.getDate() + cycleDays);
-      const nextDate = date.toISOString().split('T')[0];
-      nextCalibDateInput.value = nextDate;
-      if (calcBadge) {
-        calcBadge.style.display = '';
-        calcBadge.textContent = `+${cycleDays} {{ _("days") }}`;
-      }
-    }
-  }
+ if (calibDate) {
+ const date = new Date(calibDate);
+ date.setDate(date.getDate() + cycleDays);
+ const nextDate = date.toISOString().split('T')[0];
+ nextCalibDateInput.value = nextDate;
+ if (calcBadge) {
+ calcBadge.style.display = '';
+ calcBadge.textContent = `+${cycleDays} {{ _("days") }}`;
+ }
+ }
+ }
 
-  if (calibDateInput) {
-    calibDateInput.addEventListener('change', calculateNextCalibDate);
-  }
-  if (cycleInput) {
-    cycleInput.addEventListener('change', function() {
-      if (calibDateInput?.value) calculateNextCalibDate();
-    });
-  }
-  if (calcBtn) {
-    calcBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (!calibDateInput?.value) {
-        // Calculate from today's date
-        calibDateInput.value = new Date().toISOString().split('T')[0];
-      }
-      calculateNextCalibDate();
-    });
-  }
+ if (calibDateInput) {
+ calibDateInput.addEventListener('change', calculateNextCalibDate);
+ }
+ if (cycleInput) {
+ cycleInput.addEventListener('change', function() {
+ if (calibDateInput?.value) calculateNextCalibDate();
+ });
+ }
+ if (calcBtn) {
+ calcBtn.addEventListener('click', function(e) {
+ e.preventDefault();
+ if (!calibDateInput?.value) {
+ // Calculate from today's date
+ calibDateInput.value = new Date().toISOString().split('T')[0];
+ }
+ calculateNextCalibDate();
+ });
+ }
 });
 </script>
 {% endblock %}

@@ -2,52 +2,52 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>{{ _("Edit Sample") }} "{{ sample.sample_code }}"</h1>
-    <hr>
-    <form action="" method="post" novalidate>
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {# Sample code edit section #}
-        <div class="mb-3">
-            <label for="sample_code" class="form-label">{{ _("Sample Code:") }}</label>
-            <input type="text" id="sample_code" name="sample_code" value="{{ sample.sample_code }}"
-                   class="form-control" required
-                   style="text-transform: uppercase;"
-                   oninput="this.value = this.value.toUpperCase()"
-                   pattern="[A-Za-z0-9_\-/.,+ ]+"
-                   title="{{ _("Only Latin letters, numbers, _ - / . , + are allowed") }}">
-            <small class="text-muted">{{ _("Only Latin letters (A-Z), numbers (0-9), special characters (_ - / . , +)") }}</small>
-        </div>
+ <h1>{{ _("Edit Sample") }} "{{ sample.sample_code }}"</h1>
+ <hr>
+ <form action="" method="post" novalidate>
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ {# Sample code edit section #}
+ <div class="mb-3">
+ <label for="sample_code" class="form-label">{{ _("Sample Code:") }}</label>
+ <input type="text" id="sample_code" name="sample_code" value="{{ sample.sample_code }}"
+ class="form-control" required
+ 
+ data-input-action="uppercase"
+ pattern="[A-Za-z0-9_\-/.,+ ]+"
+ title="{{ _("Only Latin letters, numbers, _ - / . , + are allowed") }}">
+ <small class="text-muted">{{ _("Only Latin letters (A-Z), numbers (0-9), special characters (_ - / . , +)") }}</small>
+ </div>
 
-        {# Analysis assignment edit section #}
-        <div class="mb-3">
-            <label class="form-label">{{ _("Analysis Assignment:") }}</label>
-            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
-                <div class="row">
-                    {% for analysis in all_analysis_types %}
-                    <div class="col-md-4 col-sm-6">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="analyses"
-                                   value="{{ analysis.code }}"
-                                   id="analysis-{{ analysis.code }}"
-                                   {% if analysis.code in current_analyses %}checked{% endif %}>
-                            <label class="form-check-label" for="analysis-{{ analysis.code }}">
-                                {{ analysis.name }} ({{ analysis.code }})
-                            </label>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">{{ _("No analysis types found.") }}</p>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+ {# Analysis assignment edit section #}
+ <div class="mb-3">
+ <label class="form-label">{{ _("Analysis Assignment:") }}</label>
+ <div class="border rounded p-3 max-h-[300px] overflow-y-auto">
+ <div class="row">
+ {% for analysis in all_analysis_types %}
+ <div class="col-md-4 col-sm-6">
+ <div class="form-check">
+ <input class="form-check-input" type="checkbox"
+ name="analyses"
+ value="{{ analysis.code }}"
+ id="analysis-{{ analysis.code }}"
+ {% if analysis.code in current_analyses %}checked{% endif %}>
+ <label class="form-check-label" for="analysis-{{ analysis.code }}">
+ {{ analysis.name }} ({{ analysis.code }})
+ </label>
+ </div>
+ </div>
+ {% else %}
+ <p class="text-muted">{{ _("No analysis types found.") }}</p>
+ {% endfor %}
+ </div>
+ </div>
+ </div>
 
-        {# Buttons #}
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
-            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">{{ _("Back") }}</a>
-        </div>
-    </form>
+ {# Buttons #}
+ <div class="mt-4">
+ <button type="submit" class="btn btn-primary">{{ _("Save") }}</button>
+ <a href="{{ url_for('main.index') }}" class="btn btn-secondary">{{ _("Back") }}</a>
+ </div>
+ </form>
 </div>
 {% endblock %}

@@ -4,154 +4,154 @@
 <style nonce="{{ csp_nonce }}">
 #ptTable th:first-child,
 #ptTable td:first-child {
-    min-width: 200px !important;
-    width: 200px !important;
+ min-width: 200px !important;
+ width: 200px !important;
 }
 </style>
 <div class="container-fluid mt-4">
-    <div class="row mb-3">
-        <div class="col-md-8">
-            <h2><i class="fas fa-award"></i> {{ _("Proficiency Testing") }}</h2>
-            <p class="text-muted">ISO 17025 - 7.7.2: {{ _("Laboratory Proficiency Testing") }}</p>
-        </div>
-        <div class="col-md-4 text-right">
-            <a href="{{ url_for('quality.proficiency_new') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> {{ _("New PT Record") }}
-            </a>
-        </div>
-    </div>
+ <div class="row mb-3">
+ <div class="col-md-8">
+ <h2><i class="fas fa-award"></i> {{ _("Proficiency Testing") }}</h2>
+ <p class="text-muted">ISO 17025 - 7.7.2: {{ _("Laboratory Proficiency Testing") }}</p>
+ </div>
+ <div class="col-md-4 text-right">
+ <a href="{{ url_for('quality.proficiency_new') }}" class="btn btn-primary">
+ <i class="fas fa-plus"></i> {{ _("New PT Record") }}
+ </a>
+ </div>
+ </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">{{ _("Total") }}</h5>
-                    <h2>{{ stats.total }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">{{ _("Satisfactory") }}</h5>
-                    <h2>{{ stats.satisfactory }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5 class="card-title">{{ _("Questionable") }}</h5>
-                    <h2>{{ stats.questionable }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h5 class="card-title">{{ _("Unsatisfactory") }}</h5>
-                    <h2>{{ stats.unsatisfactory }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+ <!-- Statistics Cards -->
+ <div class="row mb-4">
+ <div class="col-md-3">
+ <div class="card bg-info text-white">
+ <div class="card-body">
+ <h5 class="card-title">{{ _("Total") }}</h5>
+ <h2>{{ stats.total }}</h2>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card bg-success text-white">
+ <div class="card-body">
+ <h5 class="card-title">{{ _("Satisfactory") }}</h5>
+ <h2>{{ stats.satisfactory }}</h2>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card bg-warning text-dark">
+ <div class="card-body">
+ <h5 class="card-title">{{ _("Questionable") }}</h5>
+ <h2>{{ stats.questionable }}</h2>
+ </div>
+ </div>
+ </div>
+ <div class="col-md-3">
+ <div class="card bg-danger text-white">
+ <div class="card-body">
+ <h5 class="card-title">{{ _("Unsatisfactory") }}</h5>
+ <h2>{{ stats.unsatisfactory }}</h2>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <!-- PT Table -->
-    <div class="card">
-        <div class="card-body">
-            <table class="table table-striped table-hover" id="ptTable">
-                <thead>
-                    <tr>
-                        <th>{{ _("PT Program") }}</th>
-                        <th>{{ _("Round") }}</th>
-                        <th>{{ _("Sample Code") }}</th>
-                        <th>{{ _("Analysis") }}</th>
-                        <th>{{ _("Our Result") }}</th>
-                        <th>{{ _("Assigned Value") }}</th>
-                        <th>{{ _("Z-Score") }}</th>
-                        <th>{{ _("Performance") }}</th>
-                        <th>{{ _("Test Date") }}</th>
-                        <th>{{ _("Operator") }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pt in pts %}
-                    <tr>
-                        <td><strong>{{ pt.pt_program }}</strong><br>
-                            <small class="text-muted">{{ pt.pt_provider }}</small>
-                        </td>
-                        <td>{{ pt.round_number }}</td>
-                        <td><code>{{ pt.sample_code }}</code></td>
-                        <td><span class="badge bg-info text-dark">{{ pt.analysis_code }}</span></td>
-                        <td>{{ "%.3f"|format(pt.our_result) if pt.our_result else '-' }}</td>
-                        <td>{{ "%.3f"|format(pt.assigned_value) if pt.assigned_value else '-' }}</td>
-                        <td>
-                            <strong style="font-size: 1.1em">
-                                {% if pt.z_score %}
-                                    {{ "%.2f"|format(pt.z_score) }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </strong>
-                        </td>
-                        <td>
-                            {% if pt.performance == 'satisfactory' %}
-                                <span class="badge bg-success">{{ _("Satisfactory") }}</span>
-                            {% elif pt.performance == 'questionable' %}
-                                <span class="badge bg-warning text-dark">{{ _("Questionable") }}</span>
-                            {% elif pt.performance == 'unsatisfactory' %}
-                                <span class="badge bg-danger">{{ _("Unsatisfactory") }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ pt.test_date.strftime('%Y-%m-%d') if pt.test_date else '-' }}</td>
-                        <td>{{ pt.tested_by.username if pt.tested_by else '-' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+ <!-- PT Table -->
+ <div class="card">
+ <div class="card-body">
+ <table class="table table-striped table-hover" id="ptTable">
+ <thead>
+ <tr>
+ <th>{{ _("PT Program") }}</th>
+ <th>{{ _("Round") }}</th>
+ <th>{{ _("Sample Code") }}</th>
+ <th>{{ _("Analysis") }}</th>
+ <th>{{ _("Our Result") }}</th>
+ <th>{{ _("Assigned Value") }}</th>
+ <th>{{ _("Z-Score") }}</th>
+ <th>{{ _("Performance") }}</th>
+ <th>{{ _("Test Date") }}</th>
+ <th>{{ _("Operator") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for pt in pts %}
+ <tr>
+ <td><strong class="text-[1.1em]">{{ pt.pt_program }}</strong><br>
+ <small class="text-muted">{{ pt.pt_provider }}</small>
+ </td>
+ <td>{{ pt.round_number }}</td>
+ <td><code>{{ pt.sample_code }}</code></td>
+ <td><span class="badge bg-info text-dark">{{ pt.analysis_code }}</span></td>
+ <td>{{ "%.3f"|format(pt.our_result) if pt.our_result else '-' }}</td>
+ <td>{{ "%.3f"|format(pt.assigned_value) if pt.assigned_value else '-' }}</td>
+ <td>
+ <strong class="text-[1.1em]">
+ {% if pt.z_score %}
+ {{ "%.2f"|format(pt.z_score) }}
+ {% else %}
+ -
+ {% endif %}
+ </strong>
+ </td>
+ <td>
+ {% if pt.performance == 'satisfactory' %}
+ <span class="badge bg-success">{{ _("Satisfactory") }}</span>
+ {% elif pt.performance == 'questionable' %}
+ <span class="badge bg-warning text-dark">{{ _("Questionable") }}</span>
+ {% elif pt.performance == 'unsatisfactory' %}
+ <span class="badge bg-danger">{{ _("Unsatisfactory") }}</span>
+ {% else %}
+ <span class="badge bg-secondary">-</span>
+ {% endif %}
+ </td>
+ <td>{{ pt.test_date.strftime('%Y-%m-%d') if pt.test_date else '-' }}</td>
+ <td>{{ pt.tested_by.username if pt.tested_by else '-' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
 
-    <!-- Z-Score Guide -->
-    <div class="card mt-3">
-        <div class="card-header">
-            <h5>{{ _("Z-Score Evaluation Criteria") }}</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <span class="badge bg-success">{{ _("Satisfactory") }}</span>
-                    <p><strong>|Z| <= 2.0</strong> - {{ _("Normal result") }}</p>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-warning text-dark">{{ _("Questionable") }}</span>
-                    <p><strong>2.0 < |Z| <= 3.0</strong> - {{ _("Requires attention") }}</p>
-                </div>
-                <div class="col-md-4">
-                    <span class="badge bg-danger">{{ _("Unsatisfactory") }}</span>
-                    <p><strong>|Z| > 3.0</strong> - {{ _("Corrective action required") }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
+ <!-- Z-Score Guide -->
+ <div class="card mt-3">
+ <div class="card-header">
+ <h5>{{ _("Z-Score Evaluation Criteria") }}</h5>
+ </div>
+ <div class="card-body">
+ <div class="row">
+ <div class="col-md-4">
+ <span class="badge bg-success">{{ _("Satisfactory") }}</span>
+ <p><strong>|Z| <= 2.0</strong> - {{ _("Normal result") }}</p>
+ </div>
+ <div class="col-md-4">
+ <span class="badge bg-warning text-dark">{{ _("Questionable") }}</span>
+ <p><strong>2.0 < |Z| <= 3.0</strong> - {{ _("Requires attention") }}</p>
+ </div>
+ <div class="col-md-4">
+ <span class="badge bg-danger">{{ _("Unsatisfactory") }}</span>
+ <p><strong>|Z|> 3.0</strong> - {{ _("Corrective action required") }}</p>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 $(document).ready(function() {
-    $('#ptTable').DataTable({
-        order: [[8, 'desc']],
-        pageLength: 25,
-        autoWidth: false,
-        columnDefs: [
-            { width: '200px', targets: 0 }
-        ],
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json'
-        }
-    });
+ $('#ptTable').DataTable({
+ order: [[8, 'desc']],
+ pageLength: 25,
+ autoWidth: false,
+ columnDefs: [
+ { width: '200px', targets: 0 }
+ ],
+ language: {
+ url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/en-GB.json'
+ }
+ });
 });
 </script>
 {% endblock %}

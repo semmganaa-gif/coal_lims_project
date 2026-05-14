@@ -5,200 +5,200 @@
 {% block content %}
 <div class="container-fluid mt-3">
 
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h3 class="mb-1">{{ _("Bottle Constants — New Entry (Blank Determination 7.4.1)") }}</h3>
-      <div class="text-muted small">
-        {{ _("At 20 °C ±0.5 conditions, enter the 3 monthly blank determination measurements (m₁,m₂,m₃) and the average will be calculated automatically.") }}
-      </div>
-    </div>
-    <div class="d-flex gap-2">
-      <a class="btn btn-outline-secondary" href="{{ url_for('main.index') }}">{{ _("Back") }}</a>
-      <button id="btnSave" class="btn btn-primary"><i class="bi bi-save"></i> {{ _("Save") }}</button>
-    </div>
-  </div>
+ <div class="d-flex align-items-center justify-content-between mb-3">
+ <div>
+ <h3 class="mb-1">{{ _("Bottle Constants — New Entry (Blank Determination 7.4.1)") }}</h3>
+ <div class="text-muted small">
+ {{ _("At 20 °C ±0.5 conditions, enter the 3 monthly blank determination measurements (m₁,m₂,m₃) and the average will be calculated automatically.") }}
+ </div>
+ </div>
+ <div class="d-flex gap-2">
+ <a class="btn btn-outline-secondary" href="{{ url_for('main.index') }}">{{ _("Back") }}</a>
+ <button id="btnSave" class="btn btn-primary"><i class="bi bi-save"></i> {{ _("Save") }}</button>
+ </div>
+ </div>
 
-  <div class="alert alert-info py-2">
-    <ul class="small mb-0">
-      <li>{{ _("Enter the pycnometer bottle number and write your 3 measurements; the average will be calculated automatically.") }}</li>
-      <li>{{ _("Temperature defaults to 20.0 °C. If it deviates from 20±0.5, a warning will appear (saving is not blocked).") }}</li>
-      <li>{{ _("Active/New constant means the effective_to field is empty (the most recent record).") }}</li>
-    </ul>
-  </div>
+ <div class="alert alert-info py-2">
+ <ul class="small mb-0">
+ <li>{{ _("Enter the pycnometer bottle number and write your 3 measurements; the average will be calculated automatically.") }}</li>
+ <li>{{ _("Temperature defaults to 20.0 °C. If it deviates from 20±0.5, a warning will appear (saving is not blocked).") }}</li>
+ <li>{{ _("Active/New constant means the effective_to field is empty (the most recent record).") }}</li>
+ </ul>
+ </div>
 
-  <div class="row g-3">
-    <div class="col-12 col-xl-9">
-      <div class="table-responsive">
-        <table class="table table-sm align-middle" id="tbl">
-          <thead class="table-light">
-            <tr>
-              <th style="width:40px"></th>
-              <th style="min-width:140px">{{ _("Bottle No.") }}</th>
-              <th style="min-width:120px" class="text-center">m₁</th>
-              <th style="min-width:120px" class="text-center">m₂</th>
-              <th style="min-width:120px" class="text-center">m₃</th>
-              <th style="min-width:130px" class="text-center">{{ _("Average") }}</th>
-              <th style="min-width:120px" class="text-center">{{ _("Temp (°C)") }}</th>
-              <th style="min-width:190px">{{ _("Eff. from") }}</th>
-              <th style="min-width:220px">{{ _("Remarks") }}</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-          </tbody>
-        </table>
-      </div>
-      <button id="btnAdd" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-plus-circle"></i> {{ _("Add Row") }}
-      </button>
-      <button id="btnDel" class="btn btn-outline-danger btn-sm">
-        <i class="bi bi-trash"></i> {{ _("Delete Selected Row") }}
-      </button>
-    </div>
+ <div class="row g-3">
+ <div class="col-12 col-xl-9">
+ <div class="table-responsive">
+ <table class="table table-sm align-middle" id="tbl">
+ <thead class="table-light">
+ <tr>
+ <th class="w-[40px]"></th>
+ <th class="min-w-[140px]">{{ _("Bottle No.") }}</th>
+ <th class="text-center min-w-[120px]">m₁</th>
+ <th class="text-center min-w-[120px]">m₂</th>
+ <th class="text-center min-w-[120px]">m₃</th>
+ <th class="text-center min-w-[130px]">{{ _("Average") }}</th>
+ <th class="text-center min-w-[120px]">{{ _("Temp (°C)") }}</th>
+ <th class="min-w-[190px]">{{ _("Eff. from") }}</th>
+ <th class="min-w-[220px]">{{ _("Remarks") }}</th>
+ </tr>
+ </thead>
+ <tbody id="tbody">
+ </tbody>
+ </table>
+ </div>
+ <button id="btnAdd" class="btn btn-outline-primary btn-sm">
+ <i class="bi bi-plus-circle"></i> {{ _("Add Row") }}
+ </button>
+ <button id="btnDel" class="btn btn-outline-danger btn-sm">
+ <i class="bi bi-trash"></i> {{ _("Delete Selected Row") }}
+ </button>
+ </div>
 
-    <div class="col-12 col-xl-3">
-      <div class="card">
-        <div class="card-header py-2"><strong>{{ _("Active Bottle List") }}</strong></div>
-        <div class="card-body p-2">
-          {% if bottles %}
-            <ul class="list-group list-group-flush small">
-              {% for b in bottles %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  <span class="fw-semibold">{{ b.serial_no }}</span>
-                  <span class="text-muted">{{ b.label or "" }}</span>
-                </li>
-              {% endfor %}
-            </ul>
-          {% else %}
-            <div class="text-muted small">{{ _("No active bottles found.") }}</div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="col-12 col-xl-3">
+ <div class="card">
+ <div class="card-header py-2"><strong>{{ _("Active Bottle List") }}</strong></div>
+ <div class="card-body p-2">
+ {% if bottles %}
+ <ul class="list-group list-group-flush small">
+ {% for b in bottles %}
+ <li class="list-group-item d-flex justify-content-between align-items-center">
+ <span class="fw-semibold">{{ b.serial_no }}</span>
+ <span class="text-muted">{{ b.label or "" }}</span>
+ </li>
+ {% endfor %}
+ </ul>
+ {% else %}
+ <div class="text-muted small">{{ _("No active bottles found.") }}</div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ </div>
 
 </div>
 
 <script nonce="{{ csp_nonce }}">
 (() => {
-  const $tbody = document.getElementById('tbody');
-  const $btnAdd = document.getElementById('btnAdd');
-  const $btnDel = document.getElementById('btnDel');
-  const $btnSave = document.getElementById('btnSave');
+ const $tbody = document.getElementById('tbody');
+ const $btnAdd = document.getElementById('btnAdd');
+ const $btnDel = document.getElementById('btnDel');
+ const $btnSave = document.getElementById('btnSave');
 
-  function addRow(prefill={}) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="checkbox" class="rowchk"></td>
-      <td><input type="text" class="form-control form-control-sm serial" placeholder="{{ _("e.g. PY-001") }}" value="${esc(prefill.serial||'')}"></td>
-      <td><input type="number" step="0.00001" class="form-control form-control-sm t1" value="${esc(prefill.t1??'')}"></td>
-      <td><input type="number" step="0.00001" class="form-control form-control-sm t2" value="${esc(prefill.t2??'')}"></td>
-      <td><input type="number" step="0.00001" class="form-control form-control-sm t3" value="${esc(prefill.t3??'')}"></td>
-      <td><input type="text" class="form-control form-control-sm avg" value="" readonly></td>
-      <td>
-        <input type="number" step="0.01" class="form-control form-control-sm temp" value="${esc(prefill.temp??'20.0')}">
-        <div class="form-text small text-danger d-none warn">{{ _("Deviated from 20±0.5") }}</div>
-      </td>
-      <td><input type="datetime-local" class="form-control form-control-sm eff" value="${nowLocal()}"></td>
-      <td><input type="text" class="form-control form-control-sm remarks" maxlength="255"></td>
-    `;
-    $tbody.appendChild(tr);
-    hookRow(tr);
-    recompute(tr);
-  }
+ function addRow(prefill={}) {
+ const tr = document.createElement('tr');
+ tr.innerHTML = `
+ <td><input type="checkbox" class="rowchk"></td>
+ <td><input type="text" class="form-control form-control-sm serial" placeholder="{{ _("e.g. PY-001") }}" value="${esc(prefill.serial||'')}"></td>
+ <td><input type="number" step="0.00001" class="form-control form-control-sm t1" value="${esc(prefill.t1??'')}"></td>
+ <td><input type="number" step="0.00001" class="form-control form-control-sm t2" value="${esc(prefill.t2??'')}"></td>
+ <td><input type="number" step="0.00001" class="form-control form-control-sm t3" value="${esc(prefill.t3??'')}"></td>
+ <td><input type="text" class="form-control form-control-sm avg" value="" readonly></td>
+ <td>
+ <input type="number" step="0.01" class="form-control form-control-sm temp" value="${esc(prefill.temp??'20.0')}">
+ <div class="form-text small text-danger d-none warn">{{ _("Deviated from 20±0.5") }}</div>
+ </td>
+ <td><input type="datetime-local" class="form-control form-control-sm eff" value="${nowLocal()}"></td>
+ <td><input type="text" class="form-control form-control-sm remarks" maxlength="255"></td>
+ `;
+ $tbody.appendChild(tr);
+ hookRow(tr);
+ recompute(tr);
+ }
 
-  function hookRow(tr){
-    ['t1','t2','t3'].forEach(cls => {
-      tr.querySelector('.'+cls).addEventListener('input', () => recompute(tr));
-    });
-    tr.querySelector('.temp').addEventListener('input', () => recompute(tr));
-  }
+ function hookRow(tr){
+ ['t1','t2','t3'].forEach(cls => {
+ tr.querySelector('.'+cls).addEventListener('input', () => recompute(tr));
+ });
+ tr.querySelector('.temp').addEventListener('input', () => recompute(tr));
+ }
 
-  function recompute(tr){
-    const g = (cls) => parseFloat(tr.querySelector('.'+cls).value);
-    const t1 = g('t1'); const t2 = g('t2'); const t3 = g('t3');
-    const avgEl = tr.querySelector('.avg');
-    if ([t1,t2,t3].every(v => !Number.isNaN(v))){
-      const avg = (t1 + t2 + t3)/3;
-      avgEl.value = avg.toFixed(5);
-    } else {
-      avgEl.value = '';
-    }
-    const temp = parseFloat(tr.querySelector('.temp').value);
-    const warn = tr.querySelector('.warn');
-    if (!Number.isNaN(temp) && (temp < 19.5 || temp > 20.5)) warn.classList.remove('d-none');
-    else warn.classList.add('d-none');
-  }
+ function recompute(tr){
+ const g = (cls) => parseFloat(tr.querySelector('.'+cls).value);
+ const t1 = g('t1'); const t2 = g('t2'); const t3 = g('t3');
+ const avgEl = tr.querySelector('.avg');
+ if ([t1,t2,t3].every(v => !Number.isNaN(v))){
+ const avg = (t1 + t2 + t3)/3;
+ avgEl.value = avg.toFixed(5);
+ } else {
+ avgEl.value = '';
+ }
+ const temp = parseFloat(tr.querySelector('.temp').value);
+ const warn = tr.querySelector('.warn');
+ if (!Number.isNaN(temp) && (temp < 19.5 || temp> 20.5)) warn.classList.remove('d-none');
+ else warn.classList.add('d-none');
+ }
 
-  function collect(){
-    const rows = [];
-    [...$tbody.querySelectorAll('tr')].forEach(tr => {
-      const serial = tr.querySelector('.serial').value.trim();
-      const t1 = tr.querySelector('.t1').value;
-      const t2 = tr.querySelector('.t2').value;
-      const t3 = tr.querySelector('.t3').value;
-      const tmp = tr.querySelector('.temp').value;
-      const eff = tr.querySelector('.eff').value;
-      const remarks = tr.querySelector('.remarks').value;
-      if (!serial || t1==='' || t2==='' || t3==='') return;
-      rows.push({
-        serial: serial,
-        trial_1: Number(t1),
-        trial_2: Number(t2),
-        trial_3: Number(t3),
-        temperature_c: tmp ? Number(tmp) : 20.0,
-        effective_from: eff || null,
-        remarks: remarks
-      });
-    });
-    return rows;
-  }
+ function collect(){
+ const rows = [];
+ [...$tbody.querySelectorAll('tr')].forEach(tr => {
+ const serial = tr.querySelector('.serial').value.trim();
+ const t1 = tr.querySelector('.t1').value;
+ const t2 = tr.querySelector('.t2').value;
+ const t3 = tr.querySelector('.t3').value;
+ const tmp = tr.querySelector('.temp').value;
+ const eff = tr.querySelector('.eff').value;
+ const remarks = tr.querySelector('.remarks').value;
+ if (!serial || t1==='' || t2==='' || t3==='') return;
+ rows.push({
+ serial: serial,
+ trial_1: Number(t1),
+ trial_2: Number(t2),
+ trial_3: Number(t3),
+ temperature_c: tmp ? Number(tmp) : 20.0,
+ effective_from: eff || null,
+ remarks: remarks
+ });
+ });
+ return rows;
+ }
 
-  function toast(msg, type='info'){
-    const el = document.createElement('div');
-    el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
-    el.style.zIndex = 1080;
-    el.textContent = msg;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 2600);
-  }
+ function toast(msg, type='info'){
+ const el = document.createElement('div');
+ el.className = `alert alert-${type} position-fixed top-0 end-0 m-3 shadow`;
+ el.style.zIndex = 1080;
+ el.textContent = msg;
+ document.body.appendChild(el);
+ setTimeout(() => el.remove(), 2600);
+ }
 
-  function nowLocal(){
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0,16);
-  }
+ function nowLocal(){
+ const d = new Date();
+ d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+ return d.toISOString().slice(0,16);
+ }
 
-  function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+ function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-  // events
-  $btnAdd.addEventListener('click', () => addRow());
-  $btnDel.addEventListener('click', () => {
-    [...$tbody.querySelectorAll('.rowchk:checked')].forEach(chk => chk.closest('tr').remove());
-  });
-  FormGuards.guardButton($btnSave, async () => {
-    const rows = collect();
-    if (!rows.length){ toast('{{ _("No rows to save.") }}', 'warning'); return; }
-    const res = await fetch('{{ url_for("settings.bottles_constants_bulk_save") }}', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      credentials: 'same-origin',
-      body: JSON.stringify({rows})
-    });
-    const data = await res.json();
-    if (!res.ok || data.success === false){ toast(data.message || data.error || '{{ _("An error occurred") }}', 'danger'); return; }
-    const result = data.data || data;
-    if (result.errors && result.errors.length){
-      toast(`{{ _("Success") }}: ${result.created}. {{ _("Errors") }}: ${result.errors.length}.`, 'warning');
-      console.warn('Errors:', result.errors);
-    } else {
-      toast(`{{ _("Saved successfully") }} (${result.created}).`, 'success');
-    }
-    $tbody.innerHTML = '';
-    addRow();
-  });
+ // events
+ $btnAdd.addEventListener('click', () => addRow());
+ $btnDel.addEventListener('click', () => {
+ [...$tbody.querySelectorAll('.rowchk:checked')].forEach(chk => chk.closest('tr').remove());
+ });
+ FormGuards.guardButton($btnSave, async () => {
+ const rows = collect();
+ if (!rows.length){ toast('{{ _("No rows to save.") }}', 'warning'); return; }
+ const res = await fetch('{{ url_for("settings.bottles_constants_bulk_save") }}', {
+ method: 'POST',
+ headers: {'Content-Type':'application/json'},
+ credentials: 'same-origin',
+ body: JSON.stringify({rows})
+ });
+ const data = await res.json();
+ if (!res.ok || data.success === false){ toast(data.message || data.error || '{{ _("An error occurred") }}', 'danger'); return; }
+ const result = data.data || data;
+ if (result.errors && result.errors.length){
+ toast(`{{ _("Success") }}: ${result.created}. {{ _("Errors") }}: ${result.errors.length}.`, 'warning');
+ console.warn('Errors:', result.errors);
+ } else {
+ toast(`{{ _("Saved successfully") }} (${result.created}).`, 'success');
+ }
+ $tbody.innerHTML = '';
+ addRow();
+ });
 
-  // start with one row
-  addRow();
+ // start with one row
+ addRow();
 })();
 </script>
 {% endblock %}

@@ -3,103 +3,103 @@
 {% block title %}{{ _("Signatures & Stamps") }}{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 900px;">
-  <div class="py-4">
-    {# Header #}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h4 class="mb-1">
-          <i class="bi bi-pen text-primary me-2"></i>
-          {{ _("Signatures & Stamps") }}
-        </h4>
-        <p class="text-muted mb-0">{{ _("Signature and stamp images for PDF reports") }}</p>
-      </div>
-      <div class="d-flex gap-2">
-        <a href="{{ url_for('pdf_reports.report_list') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
-        </a>
-        <a href="{{ url_for('pdf_reports.add_signature') }}" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i> {{ _("Add") }}
-        </a>
-      </div>
-    </div>
+<div class="container max-w-[900px]">
+ <div class="py-4">
+ {# Header #}
+ <div class="d-flex justify-content-between align-items-center mb-4">
+ <div>
+ <h4 class="mb-1">
+ <i class="bi bi-pen text-primary me-2"></i>
+ {{ _("Signatures & Stamps") }}
+ </h4>
+ <p class="text-muted mb-0">{{ _("Signature and stamp images for PDF reports") }}</p>
+ </div>
+ <div class="d-flex gap-2">
+ <a href="{{ url_for('pdf_reports.report_list') }}" class="btn btn-outline-secondary">
+ <i class="bi bi-arrow-left me-1"></i> {{ _("Back") }}
+ </a>
+ <a href="{{ url_for('pdf_reports.add_signature') }}" class="btn btn-primary">
+ <i class="bi bi-plus-lg me-1"></i> {{ _("Add") }}
+ </a>
+ </div>
+ </div>
 
-    {# Signatures #}
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white">
-        <h6 class="mb-0"><i class="bi bi-pen me-2"></i>{{ _("Signatures") }}</h6>
-      </div>
-      <div class="card-body">
-        {% if signatures %}
-        <div class="row g-3">
-          {% for sig in signatures %}
-          <div class="col-md-4">
-            <div class="border rounded p-3 h-100">
-              {% if sig.image_path %}
-              <img src="{{ url_for('static', filename=sig.image_path) }}"
-                   alt="{{ sig.name }}" class="img-fluid mb-2" style="max-height: 80px;">
-              {% else %}
-              <div class="bg-light rounded p-3 text-center mb-2">
-                <i class="bi bi-image text-muted fs-1"></i>
-              </div>
-              {% endif %}
-              <div class="fw-medium">{{ sig.name }}</div>
-              <div class="text-muted small">{{ sig.position or '-' }}</div>
-              <div class="mt-2">
-                <form action="{{ url_for('pdf_reports.delete_signature', id=sig.id) }}" method="POST"
-                      class="d-inline" onsubmit="return confirm('{{ _("Delete?") }}')">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-muted mb-0">{{ _("No signatures registered") }}</p>
-        {% endif %}
-      </div>
-    </div>
+ {# Signatures #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white">
+ <h6 class="mb-0"><i class="bi bi-pen me-2"></i>{{ _("Signatures") }}</h6>
+ </div>
+ <div class="card-body">
+ {% if signatures %}
+ <div class="row g-3">
+ {% for sig in signatures %}
+ <div class="col-md-4">
+ <div class="border rounded p-3 h-100">
+ {% if sig.image_path %}
+ <img src="{{ url_for('static', filename=sig.image_path) }}"
+ alt="{{ sig.name }}" class="img-fluid mb-2 max-h-[80px]">
+ {% else %}
+ <div class="bg-light rounded p-3 text-center mb-2">
+ <i class="bi bi-image text-muted fs-1"></i>
+ </div>
+ {% endif %}
+ <div class="fw-medium">{{ sig.name }}</div>
+ <div class="text-muted small">{{ sig.position or '-' }}</div>
+ <div class="mt-2">
+ <form action="{{ url_for('pdf_reports.delete_signature', id=sig.id) }}" method="POST"
+ class="d-inline" data-confirm='{{ _("Delete?") }}'>
+ <button type="submit" class="btn btn-sm btn-outline-danger">
+ <i class="bi bi-trash"></i>
+ </button>
+ </form>
+ </div>
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <p class="text-muted mb-0">{{ _("No signatures registered") }}</p>
+ {% endif %}
+ </div>
+ </div>
 
-    {# Stamps #}
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white">
-        <h6 class="mb-0"><i class="bi bi-stamp me-2"></i>{{ _("Stamps") }}</h6>
-      </div>
-      <div class="card-body">
-        {% if stamps %}
-        <div class="row g-3">
-          {% for stamp in stamps %}
-          <div class="col-md-4">
-            <div class="border rounded p-3 h-100">
-              {% if stamp.image_path %}
-              <img src="{{ url_for('static', filename=stamp.image_path) }}"
-                   alt="{{ stamp.name }}" class="img-fluid mb-2" style="max-height: 100px;">
-              {% else %}
-              <div class="bg-light rounded p-3 text-center mb-2">
-                <i class="bi bi-image text-muted fs-1"></i>
-              </div>
-              {% endif %}
-              <div class="fw-medium">{{ stamp.name }}</div>
-              <div class="mt-2">
-                <form action="{{ url_for('pdf_reports.delete_signature', id=stamp.id) }}" method="POST"
-                      class="d-inline" onsubmit="return confirm('{{ _("Delete?") }}')">
-                  <button type="submit" class="btn btn-sm btn-outline-danger">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-muted mb-0">{{ _("No stamps registered") }}</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# Stamps #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white">
+ <h6 class="mb-0"><i class="bi bi-stamp me-2"></i>{{ _("Stamps") }}</h6>
+ </div>
+ <div class="card-body">
+ {% if stamps %}
+ <div class="row g-3">
+ {% for stamp in stamps %}
+ <div class="col-md-4">
+ <div class="border rounded p-3 h-100">
+ {% if stamp.image_path %}
+ <img src="{{ url_for('static', filename=stamp.image_path) }}"
+ alt="{{ stamp.name }}" class="img-fluid mb-2 max-h-[100px]">
+ {% else %}
+ <div class="bg-light rounded p-3 text-center mb-2">
+ <i class="bi bi-image text-muted fs-1"></i>
+ </div>
+ {% endif %}
+ <div class="fw-medium">{{ stamp.name }}</div>
+ <div class="mt-2">
+ <form action="{{ url_for('pdf_reports.delete_signature', id=stamp.id) }}" method="POST"
+ class="d-inline" data-confirm='{{ _("Delete?") }}'>
+ <button type="submit" class="btn btn-sm btn-outline-danger">
+ <i class="bi bi-trash"></i>
+ </button>
+ </form>
+ </div>
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <p class="text-muted mb-0">{{ _("No stamps registered") }}</p>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 </div>
 {% endblock %}

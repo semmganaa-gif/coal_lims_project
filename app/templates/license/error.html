@@ -1,153 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ _("License Error") }} - Coal LIMS</title>
-    <style nonce="{{ csp_nonce }}">
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-            color: white;
-            padding: 50px 40px;
-        }
-        .icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        .content {
-            padding: 40px;
-        }
-        .error-box {
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-        .error-box h3 {
-            color: #92400e;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-        .error-box p {
-            color: #78350f;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        .reasons {
-            text-align: left;
-            background: #f3f4f6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-        .reasons h4 {
-            color: #374151;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        .reasons ul {
-            color: #6b7280;
-            font-size: 13px;
-            padding-left: 20px;
-        }
-        .reasons li {
-            margin-bottom: 8px;
-        }
-        .hardware-id {
-            background: #fee2e2;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
-            font-family: monospace;
-            font-size: 13px;
-            color: #991b1b;
-        }
-        .contact-info {
-            color: #6b7280;
-            font-size: 13px;
-        }
-        .contact-info a {
-            color: #667eea;
-            text-decoration: none;
-        }
-        .contact-info p {
-            margin-bottom: 8px;
-        }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>{{ _("License Error") }} - Coal LIMS</title>
+ <style nonce="{{ csp_nonce }}">
+ * {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ }
+ body {
+ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+ background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+ min-height: 100vh;
+ display: flex;
+ justify-content: center;
+ align-items: center;
+ padding: 20px;
+ }
+ .container {
+ background: white;
+ border-radius: 16px;
+ box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+ max-width: 500px;
+ width: 100%;
+ text-align: center;
+ overflow: hidden;
+ }
+ .header {
+ background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+ color: white;
+ padding: 50px 40px;
+ }
+ .icon {
+ font-size: 80px;
+ margin-bottom: 20px;
+ }
+ .header h1 {
+ font-size: 24px;
+ margin-bottom: 10px;
+ }
+ .header p {
+ opacity: 0.9;
+ font-size: 14px;
+ }
+ .content {
+ padding: 40px;
+ }
+ .error-box {
+ background: #fef3c7;
+ border: 1px solid #fcd34d;
+ border-radius: 8px;
+ padding: 20px;
+ margin-bottom: 24px;
+ }
+ .error-box h3 {
+ color: #92400e;
+ font-size: 16px;
+ margin-bottom: 12px;
+ }
+ .error-box p {
+ color: #78350f;
+ font-size: 14px;
+ line-height: 1.6;
+ }
+ .reasons {
+ text-align: left;
+ background: #f3f4f6;
+ border-radius: 8px;
+ padding: 20px;
+ margin-bottom: 24px;
+ }
+ .reasons h4 {
+ color: #374151;
+ font-size: 14px;
+ margin-bottom: 12px;
+ }
+ .reasons ul {
+ color: #6b7280;
+ font-size: 13px;
+ padding-left: 20px;
+ }
+ .reasons li {
+ margin-bottom: 8px;
+ }
+ .hardware-id {
+ background: #fee2e2;
+ border-radius: 8px;
+ padding: 16px;
+ margin-bottom: 24px;
+ font-family: monospace;
+ font-size: 13px;
+ color: #991b1b;
+ }
+ .contact-info {
+ color: #6b7280;
+ font-size: 13px;
+ }
+ .contact-info a {
+ color: #667eea;
+ text-decoration: none;
+ }
+ .contact-info p {
+ margin-bottom: 8px;
+ }
+ </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="icon">⚠️</div>
-            <h1>{{ _("License Error Detected") }}</h1>
-            <p>{{ _("The system is currently unavailable") }}</p>
-        </div>
+ <div class="container">
+ <div class="header">
+ <div class="icon">⚠️</div>
+ <h1>{{ _("License Error Detected") }}</h1>
+ <p>{{ _("The system is currently unavailable") }}</p>
+ </div>
 
-        <div class="content">
-            <div class="error-box">
-                <h3>{{ _("What happened?") }}</h3>
-                <p>
-                    {{ _("Your license has become invalid on this computer.") }}
-                    {{ _("This can occur due to several reasons.") }}
-                </p>
-            </div>
+ <div class="content">
+ <div class="error-box">
+ <h3>{{ _("What happened?") }}</h3>
+ <p>
+ {{ _("Your license has become invalid on this computer.") }}
+ {{ _("This can occur due to several reasons.") }}
+ </p>
+ </div>
 
-            <div class="reasons">
-                <h4>{{ _("Possible reasons:") }}</h4>
-                <ul>
-                    <li>{{ _("The license was transferred to another computer") }}</li>
-                    <li>{{ _("Computer hardware has been changed") }}</li>
-                    <li>{{ _("The system was copied without authorization") }}</li>
-                    <li>{{ _("The license file is corrupted") }}</li>
-                </ul>
-            </div>
+ <div class="reasons">
+ <h4>{{ _("Possible reasons:") }}</h4>
+ <ul>
+ <li>{{ _("The license was transferred to another computer") }}</li>
+ <li>{{ _("Computer hardware has been changed") }}</li>
+ <li>{{ _("The system was copied without authorization") }}</li>
+ <li>{{ _("The license file is corrupted") }}</li>
+ </ul>
+ </div>
 
-            <div class="hardware-id">
-                <strong>{{ _("Current Hardware ID:") }}</strong><br>
-                {{ hardware_id }}
-            </div>
+ <div class="hardware-id">
+ <strong>{{ _("Current Hardware ID:") }}</strong><br>
+ {{ hardware_id }}
+ </div>
 
-            <div class="contact-info">
-                <p><strong>{{ _("To resolve this issue:") }}</strong></p>
-                <p>{{ _("Contact") }} <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
-                <p>80872013</p>
-                <p style="margin-top: 16px; font-size: 12px;">
-                    {{ _("Please send the Hardware ID to the email address above") }}
-                </p>
-            </div>
-        </div>
-    </div>
+ <div class="contact-info">
+ <p><strong>{{ _("To resolve this issue:") }}</strong></p>
+ <p>{{ _("Contact") }} <a href="mailto:semmganaa@gmail.com">semmganaa@gmail.com</a></p>
+ <p class="mt-[16px] text-[12px]">80872013</p>
+ <p class="mt-[16px] text-[12px]">
+ {{ _("Please send the Hardware ID to the email address above") }}
+ </p>
+ </div>
+ </div>
+ </div>
 </body>
 </html>

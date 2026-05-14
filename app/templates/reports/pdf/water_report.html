@@ -1,260 +1,260 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <style nonce="{{ csp_nonce }}">
-    @page {
-      size: A4;
-      margin: 1.5cm;
-    }
-    body {
-      font-family: 'DejaVuSans', Arial, sans-serif;
-      font-size: 11pt;
-      line-height: 1.4;
-      color: #000;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .header-title {
-      font-size: 14pt;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .header-address {
-      font-size: 9pt;
-      color: #333;
-    }
-    .report-title {
-      text-align: center;
-      font-size: 16pt;
-      font-weight: bold;
-      margin: 25px 0 15px 0;
-    }
-    .report-number {
-      text-align: center;
-      font-size: 12pt;
-      margin-bottom: 20px;
-    }
-    .meta-row {
-      text-align: right;
-      font-size: 10pt;
-      margin-bottom: 5px;
-    }
-    .info-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 15px;
-    }
-    .info-table td, .info-table th {
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: center;
-      font-size: 10pt;
-    }
-    .info-table th {
-      background-color: #f0f0f0;
-    }
-    .sample-list {
-      margin: 15px 0;
-    }
-    .sample-list p {
-      margin: 3px 0;
-      font-size: 10pt;
-    }
-    .sample-info-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-    .sample-info-table td {
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: center;
-      font-size: 10pt;
-    }
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-    .results-table th, .results-table td {
-      border: 1px solid #000;
-      padding: 5px;
-      text-align: center;
-      font-size: 8pt;
-    }
-    .results-table th {
-      background-color: #f0f0f0;
-    }
-    .results-label {
-      font-weight: bold;
-      margin: 15px 0 10px 0;
-      font-size: 10pt;
-    }
-    .footer-note {
-      text-align: center;
-      font-size: 9pt;
-      margin: 20px 0;
-      font-style: italic;
-    }
-    .signature-section {
-      margin-top: 30px;
-    }
-    .signature-img {
-      height: 50px;
-      margin: 5px 0;
-    }
-    .watermark {
-      text-align: center;
-      font-size: 8pt;
-      color: #666;
-      margin-top: 30px;
-      border-top: 1px solid #ccc;
-      padding-top: 10px;
-    }
-  </style>
+ <meta charset="UTF-8">
+ <style nonce="{{ csp_nonce }}">
+ @page {
+ size: A4;
+ margin: 1.5cm;
+ }
+ body {
+ font-family: 'DejaVuSans', Arial, sans-serif;
+ font-size: 11pt;
+ line-height: 1.4;
+ color: #000;
+ }
+ .header {
+ text-align: center;
+ margin-bottom: 20px;
+ }
+ .header-title {
+ font-size: 14pt;
+ font-weight: bold;
+ margin-bottom: 5px;
+ }
+ .header-address {
+ font-size: 9pt;
+ color: #333;
+ }
+ .report-title {
+ text-align: center;
+ font-size: 16pt;
+ font-weight: bold;
+ margin: 25px 0 15px 0;
+ }
+ .report-number {
+ text-align: center;
+ font-size: 12pt;
+ margin-bottom: 20px;
+ }
+ .meta-row {
+ text-align: right;
+ font-size: 10pt;
+ margin-bottom: 5px;
+ }
+ .info-table {
+ width: 100%;
+ border-collapse: collapse;
+ margin-bottom: 15px;
+ }
+ .info-table td, .info-table th {
+ border: 1px solid #000;
+ padding: 8px;
+ text-align: center;
+ font-size: 10pt;
+ }
+ .info-table th {
+ background-color: #f0f0f0;
+ }
+ .sample-list {
+ margin: 15px 0;
+ }
+ .sample-list p {
+ margin: 3px 0;
+ font-size: 10pt;
+ }
+ .sample-info-table {
+ width: 100%;
+ border-collapse: collapse;
+ margin: 15px 0;
+ }
+ .sample-info-table td {
+ border: 1px solid #000;
+ padding: 8px;
+ text-align: center;
+ font-size: 10pt;
+ }
+ .results-table {
+ width: 100%;
+ border-collapse: collapse;
+ margin: 15px 0;
+ }
+ .results-table th, .results-table td {
+ border: 1px solid #000;
+ padding: 5px;
+ text-align: center;
+ font-size: 8pt;
+ }
+ .results-table th {
+ background-color: #f0f0f0;
+ }
+ .results-label {
+ font-weight: bold;
+ margin: 15px 0 10px 0;
+ font-size: 10pt;
+ }
+ .footer-note {
+ text-align: center;
+ font-size: 9pt;
+ margin: 20px 0;
+ font-style: italic;
+ }
+ .signature-section {
+ margin-top: 30px;
+ }
+ .signature-img {
+ height: 50px;
+ margin: 5px 0;
+ }
+ .watermark {
+ text-align: center;
+ font-size: 8pt;
+ color: #666;
+ margin-top: 30px;
+ border-top: 1px solid #ccc;
+ padding-top: 10px;
+ }
+ </style>
 </head>
 <body>
-  <!-- Header -->
-  <div class="header">
-    <div class="header-title">{{ _("Water Analysis Laboratory") }}</div>
-    <div class="header-address">
-      {{ _("Umnugovi province, Tsogttsetsii soum, Ukhaa Khudeg coal mine") }}<br>
-      {{ _("Email") }}: laboratory@mmc.mn
-    </div>
-  </div>
+ <!-- Header -->
+ <div class="header">
+ <div class="header-title">{{ _("Water Analysis Laboratory") }}</div>
+ <div class="header-address">
+ {{ _("Umnugovi province, Tsogttsetsii soum, Ukhaa Khudeg coal mine") }}<br>
+ {{ _("Email") }}: laboratory@mmc.mn
+ </div>
+ </div>
 
-  <!-- Report Title -->
-  <div class="report-title">{{ _("Test Report") }}</div>
-  <div class="report-number">{{ _("No") }}: {{ report.report_number }}</div>
+ <!-- Report Title -->
+ <div class="report-title">{{ _("Test Report") }}</div>
+ <div class="report-number">{{ _("No") }}: {{ report.report_number }}</div>
 
-  <!-- Meta info -->
-  <div class="meta-row">{{ _("Print date") }}: {{ now.strftime('%Y.%m.%d') }}</div>
-  <div class="meta-row">{{ _("Page number") }}: 1/1</div>
+ <!-- Meta info -->
+ <div class="meta-row">{{ _("Print date") }}: {{ now.strftime('%Y.%m.%d') }}</div>
+ <div class="meta-row">{{ _("Page number") }}: 1/1</div>
 
-  <!-- Info table -->
-  <table class="info-table">
-    <tr>
-      <th>{{ _("Lab ID") }}</th>
-      <th>{{ _("Technical Standard") }}</th>
-      <th>{{ _("Sample Type") }}</th>
-      <th>{{ _("Sampling Method") }}</th>
-    </tr>
-    <tr>
-      <td>
-        {% if samples %}
-          {{ samples[0].chem_lab_id or samples[0].sample_code }} - {{ samples[-1].chem_lab_id or samples[-1].sample_code }}
-        {% endif %}
-      </td>
-      <td>MNS 4586:2007</td>
-      <td>{{ _("Drinking water") }}</td>
-      <td>MNS ISO 5667-5:2001</td>
-    </tr>
-  </table>
+ <!-- Info table -->
+ <table class="info-table">
+ <tr>
+ <th>{{ _("Lab ID") }}</th>
+ <th>{{ _("Technical Standard") }}</th>
+ <th>{{ _("Sample Type") }}</th>
+ <th>{{ _("Sampling Method") }}</th>
+ </tr>
+ <tr>
+ <td>
+ {% if samples %}
+ {{ samples[0].chem_lab_id or samples[0].sample_code }} - {{ samples[-1].chem_lab_id or samples[-1].sample_code }}
+ {% endif %}
+ </td>
+ <td>MNS 4586:2007</td>
+ <td>{{ _("Drinking water") }}</td>
+ <td>MNS ISO 5667-5:2001</td>
+ </tr>
+ </table>
 
-  <!-- Sample list -->
-  <div class="sample-list">
-    <strong>{{ _("Sample names") }}:</strong>
-    {% for item in results_data %}
-    <p>{{ loop.index }}. {{ item.sample.chem_lab_id or '' }} {{ item.sample.sample_code }}</p>
-    {% endfor %}
-  </div>
+ <!-- Sample list -->
+ <div class="sample-list">
+ <strong>{{ _("Sample names") }}:</strong>
+ {% for item in results_data %}
+ <p>{{ loop.index }}. {{ item.sample.chem_lab_id or '' }} {{ item.sample.sample_code }}</p>
+ {% endfor %}
+ </div>
 
-  <p><strong>{{ _("Sampled by") }}:</strong> {{ _("Water Supply Technician") }}</p>
+ <p><strong>{{ _("Sampled by") }}:</strong> {{ _("Water Supply Technician") }}</p>
 
-  <!-- Sample info -->
-  <table class="sample-info-table">
-    <tr>
-      <td><strong>{{ _("Sample volume") }}</strong><br>{{ _("1L each") }}</td>
-      <td><strong>{{ _("Sampling date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
-      <td><strong>{{ _("Analysis date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
-    </tr>
-  </table>
+ <!-- Sample info -->
+ <table class="sample-info-table">
+ <tr>
+ <td><strong>{{ _("Sample volume") }}</strong><br>{{ _("1L each") }}</td>
+ <td><strong>{{ _("Sampling date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }}</td>
+ <td><strong>{{ _("Analysis date") }}</strong><br>{{ report.date_from.strftime('%Y.%m.%d') if report.date_from else '-' }} - {{ report.date_to.strftime('%Y.%m.%d') if report.date_to else '-' }}</td>
+ </tr>
+ </table>
 
-  <!-- Results -->
-  <div class="results-label">{{ _("Analysis Results") }}:</div>
-  <table class="results-table">
-    <thead>
-      <tr>
-        <th>{{ _("No") }}</th>
-        <th>{{ _("Parameter") }}</th>
-        <th>{{ _("Unit") }}</th>
-        <th>{{ _("MNS Limit") }}</th>
-        {% for item in results_data %}
-        <th>{{ item.sample.chem_lab_id or loop.index }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% set params = [
-        ('PH', 'pH', '-', '6.5-8.5'),
-        ('EC', 'Conductivity (EC)', 'uS/cm', '<=1000'),
-        ('COLOR', 'Color', 'degree', '<=20'),
-        ('HARD', 'Total Hardness', 'mg-eq/L', '<=7'),
-        ('TDS', 'Total Dissolved Solids', 'mg/L', '<=1000'),
-        ('NH4', 'Ammonium (NH4+)', 'mg/L', '<=1.5'),
-        ('NO2', 'Nitrite (NO2-)', 'mg/L', '<=1'),
-        ('NO3', 'Nitrate (NO3-)', 'mg/L', '<=50'),
-        ('FE_W', 'Iron (Fe)', 'mg/L', '<=0.3'),
-        ('F_W', 'Fluoride (F-)', 'mg/L', '0.7-1.5'),
-        ('CL_FREE', 'Free Residual Chlorine', 'mg/L', '0.3-0.5'),
-      ] %}
-      {% for code, name, unit, limit in params %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td style="text-align: left;">{{ name }}</td>
-        <td>{{ unit }}</td>
-        <td>{{ limit }}</td>
-        {% for item in results_data %}
-        <td>{{ item.results.get(code).final_result if item.results.get(code) else '-' }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+ <!-- Results -->
+ <div class="results-label">{{ _("Analysis Results") }}:</div>
+ <table class="results-table">
+ <thead>
+ <tr>
+ <th>{{ _("No") }}</th>
+ <th>{{ _("Parameter") }}</th>
+ <th>{{ _("Unit") }}</th>
+ <th>{{ _("MNS Limit") }}</th>
+ {% for item in results_data %}
+ <th>{{ item.sample.chem_lab_id or loop.index }}</th>
+ {% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ {% set params = [
+ ('PH', 'pH', '-', '6.5-8.5'),
+ ('EC', 'Conductivity (EC)', 'uS/cm', '<=1000'),
+ ('COLOR', 'Color', 'degree', '<=20'),
+ ('HARD', 'Total Hardness', 'mg-eq/L', '<=7'),
+ ('TDS', 'Total Dissolved Solids', 'mg/L', '<=1000'),
+ ('NH4', 'Ammonium (NH4+)', 'mg/L', '<=1.5'),
+ ('NO2', 'Nitrite (NO2-)', 'mg/L', '<=1'),
+ ('NO3', 'Nitrate (NO3-)', 'mg/L', '<=50'),
+ ('FE_W', 'Iron (Fe)', 'mg/L', '<=0.3'),
+ ('F_W', 'Fluoride (F-)', 'mg/L', '0.7-1.5'),
+ ('CL_FREE', 'Free Residual Chlorine', 'mg/L', '0.3-0.5'),
+ ] %}
+ {% for code, name, unit, limit in params %}
+ <tr>
+ <td>{{ loop.index }}</td>
+ <td class="text-left">{{ name }}</td>
+ <td class="text-left">{{ unit }}</td>
+ <td class="text-right">{{ limit }}</td>
+ {% for item in results_data %}
+ <td class="w-3/5">{{ item.results.get(code).final_result if item.results.get(code) else '-' }}</td>
+ {% endfor %}
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
 
-  <div class="footer-note">{{ _("This test result is valid only for the tested sample.") }}</div>
+ <div class="footer-note">{{ _("This test result is valid only for the tested sample.") }}</div>
 
-  <!-- Signatures -->
-  <div class="signature-section">
-    <table style="width: 100%;">
-      <tr>
-        <td style="width: 60%;">
-          <strong>{{ _("Analyzed by") }}:</strong> {{ _("Chemist") }}
-        </td>
-        <td style="width: 40%; text-align: right;">
-          {% if report.analyst_signature and report.analyst_signature.image_path %}
-          <img src="{{ url_for('static', filename=report.analyst_signature.image_path) }}" class="signature-img">
-          {% endif %}
-          /{{ report.analyst_signature.name if report.analyst_signature else '________________' }}/
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <strong>{{ _("Approved by") }}:</strong> {{ _("Quality Manager") }}
-        </td>
-        <td style="text-align: right;">
-          {% if report.manager_signature and report.manager_signature.image_path %}
-          <img src="{{ url_for('static', filename=report.manager_signature.image_path) }}" class="signature-img">
-          {% endif %}
-          /{{ report.manager_signature.name if report.manager_signature else '________________' }}/
-        </td>
-      </tr>
-    </table>
-  </div>
+ <!-- Signatures -->
+ <div class="signature-section">
+ <table class="w-full">
+ <tr>
+ <td class="w-3/5">
+ <strong>{{ _("Analyzed by") }}:</strong> {{ _("Chemist") }}
+ </td>
+ <td class="w-2/5 text-right">
+ {% if report.analyst_signature and report.analyst_signature.image_path %}
+ <img src="{{ url_for('static', filename=report.analyst_signature.image_path) }}" class="signature-img">
+ {% endif %}
+ /{{ report.analyst_signature.name if report.analyst_signature else '________________' }}/
+ </td>
+ </tr>
+ <tr>
+ <td class="w-2/5 text-right">
+ <strong>{{ _("Approved by") }}:</strong> {{ _("Quality Manager") }}
+ </td>
+ <td class="text-right">
+ {% if report.manager_signature and report.manager_signature.image_path %}
+ <img src="{{ url_for('static', filename=report.manager_signature.image_path) }}" class="signature-img">
+ {% endif %}
+ /{{ report.manager_signature.name if report.manager_signature else '________________' }}/
+ </td>
+ </tr>
+ </table>
+ </div>
 
-  <!-- Stamp -->
-  {% if report.stamp and report.stamp.image_path %}
-  <div style="position: relative;">
-    <img src="{{ url_for('static', filename=report.stamp.image_path) }}"
-         style="position: absolute; right: 50px; top: -80px; width: 100px; opacity: 0.9;">
-  </div>
-  {% endif %}
+ <!-- Stamp -->
+ {% if report.stamp and report.stamp.image_path %}
+ <div class="relative">
+ <img class="absolute right-[50px] top-[-80px] w-[100px] opacity-[0.9]" src="{{ url_for('static', filename=report.stamp.image_path) }}"
+>
+ </div>
+ {% endif %}
 
-  <div class="watermark">
-    {{ _("Unauthorized copying is prohibited.") }}
-  </div>
+ <div class="watermark">
+ {{ _("Unauthorized copying is prohibited.") }}
+ </div>
 </body>
 </html>

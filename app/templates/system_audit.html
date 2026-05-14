@@ -2,538 +2,538 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .system-audit-page {
-    padding: 1rem 1.5rem;
-    min-height: calc(100vh - 120px);
-  }
-  .filter-bar {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .stat-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.6rem 0.75rem;
-    text-align: center;
-  }
-  .stat-card .stat-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-  .stat-card .stat-label {
-    font-size: 0.72rem;
-    color: #64748b;
-  }
-  #auditGrid {
-    height: calc(100vh - 310px);
-    min-height: 400px;
-  }
-  /* Compact rows */
-  #auditGrid .ag-row { font-size: 0.82rem; }
-  #auditGrid .ag-header-cell-label { font-size: 0.8rem; font-weight: 600; }
-  #auditGrid .ag-cell { line-height: 1.4; padding-top: 4px; padding-bottom: 4px; }
+ .system-audit-page {
+ padding: 1rem 1.5rem;
+ min-height: calc(100vh - 120px);
+ }
+ .filter-bar {
+ background: #fff;
+ border: 1px solid #e2e8f0;
+ border-radius: 12px;
+ padding: 1rem 1.25rem;
+ margin-bottom: 1rem;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ }
+ .stat-card {
+ background: #fff;
+ border: 1px solid #e2e8f0;
+ border-radius: 10px;
+ padding: 0.6rem 0.75rem;
+ text-align: center;
+ }
+ .stat-card .stat-value {
+ font-size: 1.4rem;
+ font-weight: 700;
+ line-height: 1.2;
+ }
+ .stat-card .stat-label {
+ font-size: 0.72rem;
+ color: #64748b;
+ }
+ #auditGrid {
+ height: calc(100vh - 310px);
+ min-height: 400px;
+ }
+ /* Compact rows */
+ #auditGrid .ag-row { font-size: 0.82rem; }
+ #auditGrid .ag-header-cell-label { font-size: 0.8rem; font-weight: 600; }
+ #auditGrid .ag-cell { line-height: 1.4; padding-top: 4px; padding-bottom: 4px; }
 
-  .action-badge {
-    padding: 1px 7px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .action-login { background: #dcfce7; color: #15803d; }
-  .action-logout { background: #e0e7ff; color: #4338ca; }
-  .action-delete { background: #fee2e2; color: #dc2626; }
-  .action-create { background: #dbeafe; color: #1d4ed8; }
-  .action-update { background: #fef3c7; color: #b45309; }
-  .action-approve { background: #d1fae5; color: #047857; }
-  .action-reject { background: #fce7f3; color: #be185d; }
-  .action-password { background: #fef9c3; color: #854d0e; }
-  .action-default { background: #f1f5f9; color: #475569; }
-  .hash-ok { color: #16a34a; }
-  .hash-fail { color: #dc2626; }
-  .hash-na { color: #d1d5db; }
-  .detail-key { color: #6b7280; font-size: 0.73rem; }
-  .detail-val { color: #1e293b; }
-  .browser-tag { font-size: 0.7rem; color: #94a3b8; }
+ .action-badge {
+ padding: 1px 7px;
+ border-radius: 4px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ white-space: nowrap;
+ }
+ .action-login { background: #dcfce7; color: #15803d; }
+ .action-logout { background: #e0e7ff; color: #4338ca; }
+ .action-delete { background: #fee2e2; color: #dc2626; }
+ .action-create { background: #dbeafe; color: #1d4ed8; }
+ .action-update { background: #fef3c7; color: #b45309; }
+ .action-approve { background: #d1fae5; color: #047857; }
+ .action-reject { background: #fce7f3; color: #be185d; }
+ .action-password { background: #fef9c3; color: #854d0e; }
+ .action-default { background: #f1f5f9; color: #475569; }
+ .hash-ok { color: #16a34a; }
+ .hash-fail { color: #dc2626; }
+ .hash-na { color: #d1d5db; }
+ .detail-key { color: #6b7280; font-size: 0.73rem; }
+ .detail-val { color: #1e293b; }
+ .browser-tag { font-size: 0.7rem; color: #94a3b8; }
 
-  /* Detail modal */
-  #detailModal .modal-body pre {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 1rem;
-    font-size: 0.82rem;
-    max-height: 400px;
-    overflow: auto;
-  }
-  #detailModal .info-row {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid #f1f5f9;
-  }
-  #detailModal .info-label {
-    color: #64748b;
-    font-weight: 600;
-    min-width: 100px;
-    font-size: 0.85rem;
-  }
-  #detailModal .info-value { font-size: 0.85rem; }
+ /* Detail modal */
+ #detailModal .modal-body pre {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 8px;
+ padding: 1rem;
+ font-size: 0.82rem;
+ max-height: 400px;
+ overflow: auto;
+ }
+ #detailModal .info-row {
+ display: flex;
+ gap: 0.5rem;
+ padding: 0.35rem 0;
+ border-bottom: 1px solid #f1f5f9;
+ }
+ #detailModal .info-label {
+ color: #64748b;
+ font-weight: 600;
+ min-width: 100px;
+ font-size: 0.85rem;
+ }
+ #detailModal .info-value { font-size: 0.85rem; }
 </style>
 
 <div class="system-audit-page">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h4 class="mb-0 fw-bold">
-        <i class="bi bi-shield-lock me-2"></i>{{ _("System Audit") }}
-      </h4>
-      <small class="text-muted">{{ _("All system actions — login, data changes, approvals") }}</small>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{{ url_for('api.audit_hub') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>{{ _("Analysis Audit") }}
-      </a>
-      {% if current_user.role in ['senior', 'manager', 'admin'] %}
-      <button class="btn btn-success btn-sm" onclick="exportExcel()">
-        <i class="bi bi-file-earmark-excel me-1"></i>{{ _("Excel") }}
-      </button>
-      {% endif %}
-    </div>
-  </div>
+ <!-- Header -->
+ <div class="d-flex justify-content-between align-items-center mb-3">
+ <div>
+ <h4 class="mb-0 fw-bold">
+ <i class="bi bi-shield-lock me-2"></i>{{ _("System Audit") }}
+ </h4>
+ <small class="text-muted">{{ _("All system actions — login, data changes, approvals") }}</small>
+ </div>
+ <div class="d-flex gap-2">
+ <a href="{{ url_for('api.audit_hub') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left me-1"></i>{{ _("Analysis Audit") }}
+ </a>
+ {% if current_user.role in ['senior', 'manager', 'admin'] %}
+ <button class="btn btn-success btn-sm" data-action="exportExcel">
+ <i class="bi bi-file-earmark-excel me-1"></i>{{ _("Excel") }}
+ </button>
+ {% endif %}
+ </div>
+ </div>
 
-  <!-- Filter bar -->
-  <div class="filter-bar">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-2">
-        <label class="form-label small mb-1">{{ _("Start Date") }}</label>
-        <input type="date" id="filterStartDate" class="form-control form-control-sm">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label small mb-1">{{ _("End Date") }}</label>
-        <input type="date" id="filterEndDate" class="form-control form-control-sm">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label small mb-1">{{ _("Action") }}</label>
-        <select id="filterAction" class="form-select form-select-sm">
-          <option value="">{{ _("All") }}</option>
-          <option value="login_success">Login</option>
-          <option value="logout">Logout</option>
-          <option value="login_failed">Login Failed</option>
-          <option value="create">Create</option>
-          <option value="update">Update</option>
-          <option value="delete">Delete</option>
-          <option value="approve">Approve</option>
-          <option value="reject">Reject</option>
-          <option value="password">Password</option>
-          <option value="calibration">Calibration</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label small mb-1">{{ _("User") }}</label>
-        <select id="filterUser" class="form-select form-select-sm">
-          <option value="">{{ _("All") }}</option>
-          {% for u in users %}
-          <option value="{{ u.id }}">{{ u.username }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label small mb-1">{{ _("Search") }}</label>
-        <input type="text" id="filterSearch" class="form-control form-control-sm"
-               placeholder="{{ _('IP, details...') }}">
-      </div>
-      <div class="col-md-2 d-flex gap-1">
-        <button class="btn btn-primary btn-sm flex-grow-1" onclick="loadData()">
-          <i class="bi bi-search me-1"></i>{{ _("Search") }}
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="{{ _('Reset') }}">
-          <i class="bi bi-arrow-counterclockwise"></i>
-        </button>
-      </div>
-    </div>
-  </div>
+ <!-- Filter bar -->
+ <div class="filter-bar">
+ <div class="row g-2 align-items-end">
+ <div class="col-md-2">
+ <label class="form-label small mb-1">{{ _("Start Date") }}</label>
+ <input type="date" id="filterStartDate" class="form-control form-control-sm">
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small mb-1">{{ _("End Date") }}</label>
+ <input type="date" id="filterEndDate" class="form-control form-control-sm">
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small mb-1">{{ _("Action") }}</label>
+ <select id="filterAction" class="form-select form-select-sm">
+ <option value="">{{ _("All") }}</option>
+ <option value="login_success">Login</option>
+ <option value="logout">Logout</option>
+ <option value="login_failed">Login Failed</option>
+ <option value="create">Create</option>
+ <option value="update">Update</option>
+ <option value="delete">Delete</option>
+ <option value="approve">Approve</option>
+ <option value="reject">Reject</option>
+ <option value="password">Password</option>
+ <option value="calibration">Calibration</option>
+ </select>
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small mb-1">{{ _("User") }}</label>
+ <select id="filterUser" class="form-select form-select-sm">
+ <option value="">{{ _("All") }}</option>
+ {% for u in users %}
+ <option value="{{ u.id }}">{{ u.username }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="col-md-2">
+ <label class="form-label small mb-1">{{ _("Search") }}</label>
+ <input type="text" id="filterSearch" class="form-control form-control-sm"
+ placeholder="{{ _('IP, details...') }}">
+ </div>
+ <div class="col-md-2 d-flex gap-1">
+ <button class="btn btn-primary btn-sm flex-grow-1" data-action="loadData">
+ <i class="bi bi-search me-1"></i>{{ _("Search") }}
+ </button>
+ <button class="btn btn-outline-secondary btn-sm" data-action="resetFilters" title="{{ _('Reset') }}">
+ <i class="bi bi-arrow-counterclockwise"></i>
+ </button>
+ </div>
+ </div>
+ </div>
 
-  <!-- Stats row -->
-  <div class="row g-2 mb-2" id="statsRow" style="display: none;">
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value text-primary" id="statTotal">0</div>
-        <div class="stat-label">{{ _("Total") }}</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value text-success" id="statLogin">0</div>
-        <div class="stat-label">Login</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value text-danger" id="statDelete">0</div>
-        <div class="stat-label">Delete</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value text-warning" id="statUpdate">0</div>
-        <div class="stat-label">Update</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value text-info" id="statApprove">0</div>
-        <div class="stat-label">Approve</div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="stat-card">
-        <div class="stat-value" id="statHash">-</div>
-        <div class="stat-label">{{ _("Hash") }}</div>
-      </div>
-    </div>
-  </div>
+ <!-- Stats row -->
+ <div class="row g-2 mb-2 hidden" id="statsRow">
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value text-primary" id="statTotal">0</div>
+ <div class="stat-label">{{ _("Total") }}</div>
+ </div>
+ </div>
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value text-success" id="statLogin">0</div>
+ <div class="stat-label">Login</div>
+ </div>
+ </div>
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value text-danger" id="statDelete">0</div>
+ <div class="stat-label">Delete</div>
+ </div>
+ </div>
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value text-warning" id="statUpdate">0</div>
+ <div class="stat-label">Update</div>
+ </div>
+ </div>
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value text-info" id="statApprove">0</div>
+ <div class="stat-label">Approve</div>
+ </div>
+ </div>
+ <div class="col">
+ <div class="stat-card">
+ <div class="stat-value" id="statHash">-</div>
+ <div class="stat-label">{{ _("Hash") }}</div>
+ </div>
+ </div>
+ </div>
 
-  <!-- AG-Grid -->
-  <div id="auditGrid" class="ag-theme-alpine"></div>
+ <!-- AG-Grid -->
+ <div id="auditGrid" class="ag-theme-alpine"></div>
 </div>
 
 <!-- Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header py-2">
-        <h6 class="modal-title"><i class="bi bi-info-circle me-2"></i>{{ _("Audit Detail") }}</h6>
-        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="detailModalBody"></div>
-    </div>
-  </div>
+ <div class="modal-dialog modal-lg">
+ <div class="modal-content">
+ <div class="modal-header py-2">
+ <h6 class="modal-title"><i class="bi bi-info-circle me-2"></i>{{ _("Audit Detail") }}</h6>
+ <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body" id="detailModalBody"></div>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('filterStartDate').value = today;
-  document.getElementById('filterEndDate').value = today;
+ const today = new Date().toISOString().split('T')[0];
+ document.getElementById('filterStartDate').value = today;
+ document.getElementById('filterEndDate').value = today;
 
-  initGrid();
-  loadData();
+ initGrid();
+ loadData();
 
-  document.getElementById('filterSearch').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') loadData();
-  });
+ document.getElementById('filterSearch').addEventListener('keypress', function(e) {
+ if (e.key === 'Enter') loadData();
+ });
 });
 
 let gridApi = null;
 let allRows = [];
 
 const ACTION_LABELS = {
-  'login_success': 'Нэвтэрсэн',
-  'login_failed': 'Нэвтрэх амжилтгүй',
-  'logout': 'Гарсан',
-  'delete_sample': 'Дээж устгасан',
-  'create_sample': 'Дээж үүсгэсэн',
-  'update_sample': 'Дээж засварласан',
-  'create_user': 'Хэрэглэгч үүсгэсэн',
-  'delete_user': 'Хэрэглэгч устгасан',
-  'update_user': 'Хэрэглэгч засварласан',
-  'approve_result': 'Үр дүн баталсан',
-  'reject_result': 'Үр дүн буцаасан',
-  'update_settings': 'Тохиргоо өөрчилсөн',
-  'password_change': 'Нууц үг солисон',
-  'create_equipment': 'Багаж бүртгэсэн',
-  'update_equipment': 'Багаж засварласан',
-  'delete_equipment': 'Багаж устгасан',
-  'calibration_update': 'Шалгалт тохируулга',
+ 'login_success': 'Нэвтэрсэн',
+ 'login_failed': 'Нэвтрэх амжилтгүй',
+ 'logout': 'Гарсан',
+ 'delete_sample': 'Дээж устгасан',
+ 'create_sample': 'Дээж үүсгэсэн',
+ 'update_sample': 'Дээж засварласан',
+ 'create_user': 'Хэрэглэгч үүсгэсэн',
+ 'delete_user': 'Хэрэглэгч устгасан',
+ 'update_user': 'Хэрэглэгч засварласан',
+ 'approve_result': 'Үр дүн баталсан',
+ 'reject_result': 'Үр дүн буцаасан',
+ 'update_settings': 'Тохиргоо өөрчилсөн',
+ 'password_change': 'Нууц үг солисон',
+ 'create_equipment': 'Багаж бүртгэсэн',
+ 'update_equipment': 'Багаж засварласан',
+ 'delete_equipment': 'Багаж устгасан',
+ 'calibration_update': 'Шалгалт тохируулга',
 };
 
 function getActionClass(action) {
-  if (!action) return 'action-default';
-  const a = action.toLowerCase();
-  if (a === 'login_success') return 'action-login';
-  if (a === 'login_failed') return 'action-reject';
-  if (a.includes('logout')) return 'action-logout';
-  if (a.includes('delete') || a.includes('remove')) return 'action-delete';
-  if (a.includes('create') || a.includes('add') || a.includes('register')) return 'action-create';
-  if (a.includes('update') || a.includes('edit') || a.includes('change')) return 'action-update';
-  if (a.includes('approve') || a.includes('accept')) return 'action-approve';
-  if (a.includes('reject') || a.includes('deny')) return 'action-reject';
-  if (a.includes('password')) return 'action-password';
-  return 'action-default';
+ if (!action) return 'action-default';
+ const a = action.toLowerCase();
+ if (a === 'login_success') return 'action-login';
+ if (a === 'login_failed') return 'action-reject';
+ if (a.includes('logout')) return 'action-logout';
+ if (a.includes('delete') || a.includes('remove')) return 'action-delete';
+ if (a.includes('create') || a.includes('add') || a.includes('register')) return 'action-create';
+ if (a.includes('update') || a.includes('edit') || a.includes('change')) return 'action-update';
+ if (a.includes('approve') || a.includes('accept')) return 'action-approve';
+ if (a.includes('reject') || a.includes('deny')) return 'action-reject';
+ if (a.includes('password')) return 'action-password';
+ return 'action-default';
 }
 
 function parseBrowser(ua) {
-  if (!ua) return '';
-  if (ua.includes('Firefox')) return 'Firefox';
-  if (ua.includes('Edg/')) return 'Edge';
-  if (ua.includes('Chrome')) return 'Chrome';
-  if (ua.includes('Safari')) return 'Safari';
-  if (ua.includes('python') || ua.includes('Python')) return 'Python';
-  return '';
+ if (!ua) return '';
+ if (ua.includes('Firefox')) return 'Firefox';
+ if (ua.includes('Edg/')) return 'Edge';
+ if (ua.includes('Chrome')) return 'Chrome';
+ if (ua.includes('Safari')) return 'Safari';
+ if (ua.includes('python') || ua.includes('Python')) return 'Python';
+ return '';
 }
 
 function initGrid() {
-  const columnDefs = [
-    {
-      headerName: '#',
-      valueGetter: 'node.rowIndex + 1',
-      width: 50,
-      pinned: 'left',
-      sortable: false,
-      filter: false,
-    },
-    {
-      headerName: '{{ _("Date") }}',
-      field: 'timestamp',
-      width: 150,
-      sort: 'desc',
-    },
-    {
-      headerName: '{{ _("User") }}',
-      field: 'user',
-      width: 110,
-    },
-    {
-      headerName: '{{ _("Action") }}',
-      field: 'action',
-      width: 180,
-      cellRenderer: function(params) {
-        const cls = getActionClass(params.value);
-        const label = ACTION_LABELS[params.value] || params.value || '-';
-        return '<span class="action-badge ' + cls + '">' + _e(label) + '</span>';
-      },
-      filterValueGetter: function(params) {
-        return (ACTION_LABELS[params.data.action] || '') + ' ' + (params.data.action || '');
-      }
-    },
-    {
-      headerName: '{{ _("Resource") }}',
-      field: 'resource_type',
-      width: 110,
-    },
-    {
-      headerName: 'ID',
-      field: 'resource_id',
-      width: 60,
-    },
-    {
-      headerName: '{{ _("Details") }}',
-      field: 'details',
-      flex: 1,
-      minWidth: 200,
-      cellRenderer: function(params) {
-        if (!params.value) return '<span class="text-muted">-</span>';
-        try {
-          const obj = JSON.parse(params.value);
-          const parts = [];
-          for (const [k, v] of Object.entries(obj)) {
-            if (k.startsWith('_')) continue;
-            const val = typeof v === 'object' ? JSON.stringify(v) : v;
-            parts.push('<span class="detail-key">' + _e(k) + ':</span> <span class="detail-val">' + _e(String(val)) + '</span>');
-          }
-          return parts.join(' &middot; ');
-        } catch {
-          return _e(params.value);
-        }
-      },
-    },
-    {
-      headerName: 'IP',
-      field: 'ip_address',
-      width: 115,
-    },
-    {
-      headerName: '{{ _("Browser") }}',
-      field: 'user_agent',
-      width: 85,
-      cellRenderer: function(params) {
-        const b = parseBrowser(params.value);
-        if (!b) return '<span class="text-muted">-</span>';
-        return '<span class="browser-tag">' + _e(b) + '</span>';
-      },
-      filterValueGetter: function(params) {
-        return parseBrowser(params.data.user_agent);
-      }
-    },
-    {
-      headerName: '{{ _("Hash") }}',
-      field: 'hash_valid',
-      width: 60,
-      cellRenderer: function(params) {
-        if (params.value === true) return '<i class="bi bi-check-circle-fill hash-ok" title="OK"></i>';
-        if (params.value === false) return '<i class="bi bi-exclamation-triangle-fill hash-fail" title="TAMPERED"></i>';
-        return '<i class="bi bi-dash hash-na"></i>';
-      },
-      cellClass: 'text-center',
-    },
-    {
-      headerName: '',
-      width: 40,
-      sortable: false,
-      filter: false,
-      cellRenderer: function(params) {
-        return '<i class="bi bi-eye text-muted" style="cursor:pointer" title="{{ _("Details") }}"></i>';
-      },
-      onCellClicked: function(params) {
-        showDetail(params.data);
-      },
-    },
-  ];
+ const columnDefs = [
+ {
+ headerName: '#',
+ valueGetter: 'node.rowIndex + 1',
+ width: 50,
+ pinned: 'left',
+ sortable: false,
+ filter: false,
+ },
+ {
+ headerName: '{{ _("Date") }}',
+ field: 'timestamp',
+ width: 150,
+ sort: 'desc',
+ },
+ {
+ headerName: '{{ _("User") }}',
+ field: 'user',
+ width: 110,
+ },
+ {
+ headerName: '{{ _("Action") }}',
+ field: 'action',
+ width: 180,
+ cellRenderer: function(params) {
+ const cls = getActionClass(params.value);
+ const label = ACTION_LABELS[params.value] || params.value || '-';
+ return '<span class="action-badge ' + cls + '">' + _e(label) + '</span>';
+ },
+ filterValueGetter: function(params) {
+ return (ACTION_LABELS[params.data.action] || '') + ' ' + (params.data.action || '');
+ }
+ },
+ {
+ headerName: '{{ _("Resource") }}',
+ field: 'resource_type',
+ width: 110,
+ },
+ {
+ headerName: 'ID',
+ field: 'resource_id',
+ width: 60,
+ },
+ {
+ headerName: '{{ _("Details") }}',
+ field: 'details',
+ flex: 1,
+ minWidth: 200,
+ cellRenderer: function(params) {
+ if (!params.value) return '<span class="text-muted">-</span>';
+ try {
+ const obj = JSON.parse(params.value);
+ const parts = [];
+ for (const [k, v] of Object.entries(obj)) {
+ if (k.startsWith('_')) continue;
+ const val = typeof v === 'object' ? JSON.stringify(v) : v;
+ parts.push('<span class="detail-key">' + _e(k) + ':</span> <span class="detail-val">' + _e(String(val)) + '</span>');
+ }
+ return parts.join(' &middot; ');
+ } catch {
+ return _e(params.value);
+ }
+ },
+ },
+ {
+ headerName: 'IP',
+ field: 'ip_address',
+ width: 115,
+ },
+ {
+ headerName: '{{ _("Browser") }}',
+ field: 'user_agent',
+ width: 85,
+ cellRenderer: function(params) {
+ const b = parseBrowser(params.value);
+ if (!b) return '<span class="text-muted">-</span>';
+ return '<span class="browser-tag">' + _e(b) + '</span>';
+ },
+ filterValueGetter: function(params) {
+ return parseBrowser(params.data.user_agent);
+ }
+ },
+ {
+ headerName: '{{ _("Hash") }}',
+ field: 'hash_valid',
+ width: 60,
+ cellRenderer: function(params) {
+ if (params.value === true) return '<i class="bi bi-check-circle-fill hash-ok" title="OK"></i>';
+ if (params.value === false) return '<i class="bi bi-exclamation-triangle-fill hash-fail" title="TAMPERED"></i>';
+ return '<i class="bi bi-dash hash-na"></i>';
+ },
+ cellClass: 'text-center',
+ },
+ {
+ headerName: '',
+ width: 40,
+ sortable: false,
+ filter: false,
+ cellRenderer: function(params) {
+ return '<i class="bi bi-eye text-muted cursor-pointer" title="{{ _("Details") }}"></i>';
+ },
+ onCellClicked: function(params) {
+ showDetail(params.data);
+ },
+ },
+ ];
 
-  const gridOptions = {
-    columnDefs: columnDefs,
-    rowData: [],
-    rowHeight: 34,
-    headerHeight: 36,
-    defaultColDef: {
-      sortable: true,
-      filter: true,
-      resizable: true,
-      floatingFilter: true,
-    },
-    animateRows: true,
-    enableBrowserTooltips: true,
-    suppressPaginationPanel: true,
-    overlayNoRowsTemplate: '<span class="text-muted">{{ _("No data") }}</span>',
-    overlayLoadingTemplate: '<span><div class="spinner-border spinner-border-sm me-2"></div>{{ _("Loading...") }}</span>',
-  };
+ const gridOptions = {
+ columnDefs: columnDefs,
+ rowData: [],
+ rowHeight: 34,
+ headerHeight: 36,
+ defaultColDef: {
+ sortable: true,
+ filter: true,
+ resizable: true,
+ floatingFilter: true,
+ },
+ animateRows: true,
+ enableBrowserTooltips: true,
+ suppressPaginationPanel: true,
+ overlayNoRowsTemplate: '<span class="text-muted">{{ _("No data") }}</span>',
+ overlayLoadingTemplate: '<span><div class="spinner-border spinner-border-sm me-2"></div>{{ _("Loading...") }}</span>',
+ };
 
-  const gridDiv = document.getElementById('auditGrid');
-  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+ const gridDiv = document.getElementById('auditGrid');
+ gridApi = agGrid.createGrid(gridDiv, gridOptions);
 }
 
 function loadData() {
-  if (!gridApi) return;
+ if (!gridApi) return;
 
-  const params = new URLSearchParams({ format: 'json' });
+ const params = new URLSearchParams({ format: 'json' });
 
-  const startDate = document.getElementById('filterStartDate').value;
-  const endDate = document.getElementById('filterEndDate').value;
-  const action = document.getElementById('filterAction').value;
-  const userId = document.getElementById('filterUser').value;
-  const q = document.getElementById('filterSearch').value.trim();
+ const startDate = document.getElementById('filterStartDate').value;
+ const endDate = document.getElementById('filterEndDate').value;
+ const action = document.getElementById('filterAction').value;
+ const userId = document.getElementById('filterUser').value;
+ const q = document.getElementById('filterSearch').value.trim();
 
-  if (startDate) params.set('start_date', startDate);
-  if (endDate) params.set('end_date', endDate);
-  if (action) params.set('action', action);
-  if (userId) params.set('user_id', userId);
-  if (q) params.set('q', q);
+ if (startDate) params.set('start_date', startDate);
+ if (endDate) params.set('end_date', endDate);
+ if (action) params.set('action', action);
+ if (userId) params.set('user_id', userId);
+ if (q) params.set('q', q);
 
-  gridApi.setGridOption('loading', true);
+ gridApi.setGridOption('loading', true);
 
-  fetch('/api/system_audit?' + params.toString())
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        allRows = data.data;
-        gridApi.setGridOption('rowData', allRows);
-        updateStats(allRows);
-      } else {
-        gridApi.setGridOption('rowData', []);
-      }
-    })
-    .catch(err => {
-      console.error('System audit load error:', err);
-      gridApi.setGridOption('rowData', []);
-    });
+ fetch('/api/system_audit?' + params.toString())
+ .then(res => res.json())
+ .then(data => {
+ if (data.success) {
+ allRows = data.data;
+ gridApi.setGridOption('rowData', allRows);
+ updateStats(allRows);
+ } else {
+ gridApi.setGridOption('rowData', []);
+ }
+ })
+ .catch(err => {
+ console.error('System audit load error:', err);
+ gridApi.setGridOption('rowData', []);
+ });
 }
 
 function updateStats(rows) {
-  document.getElementById('statsRow').style.display = '';
-  document.getElementById('statTotal').textContent = rows.length;
+ document.getElementById('statsRow').style.display = '';
+ document.getElementById('statTotal').textContent = rows.length;
 
-  let loginCount = 0, deleteCount = 0, updateCount = 0, approveCount = 0;
-  let hashOk = 0, hashFail = 0, hashTotal = 0;
+ let loginCount = 0, deleteCount = 0, updateCount = 0, approveCount = 0;
+ let hashOk = 0, hashFail = 0, hashTotal = 0;
 
-  rows.forEach(r => {
-    const a = (r.action || '').toLowerCase();
-    if (a.includes('login')) loginCount++;
-    if (a.includes('delete')) deleteCount++;
-    if (a.includes('update') || a.includes('edit') || a.includes('change')) updateCount++;
-    if (a.includes('approve')) approveCount++;
-    if (r.hash_valid !== null) {
-      hashTotal++;
-      if (r.hash_valid) hashOk++;
-      else hashFail++;
-    }
-  });
+ rows.forEach(r => {
+ const a = (r.action || '').toLowerCase();
+ if (a.includes('login')) loginCount++;
+ if (a.includes('delete')) deleteCount++;
+ if (a.includes('update') || a.includes('edit') || a.includes('change')) updateCount++;
+ if (a.includes('approve')) approveCount++;
+ if (r.hash_valid !== null) {
+ hashTotal++;
+ if (r.hash_valid) hashOk++;
+ else hashFail++;
+ }
+ });
 
-  document.getElementById('statLogin').textContent = loginCount;
-  document.getElementById('statDelete').textContent = deleteCount;
-  document.getElementById('statUpdate').textContent = updateCount;
-  document.getElementById('statApprove').textContent = approveCount;
+ document.getElementById('statLogin').textContent = loginCount;
+ document.getElementById('statDelete').textContent = deleteCount;
+ document.getElementById('statUpdate').textContent = updateCount;
+ document.getElementById('statApprove').textContent = approveCount;
 
-  const hashEl = document.getElementById('statHash');
-  if (hashTotal === 0) {
-    hashEl.textContent = '-';
-    hashEl.className = 'stat-value text-muted';
-  } else if (hashFail > 0) {
-    hashEl.textContent = hashFail + ' FAIL';
-    hashEl.className = 'stat-value text-danger';
-  } else {
-    hashEl.textContent = hashOk + '/' + hashTotal;
-    hashEl.className = 'stat-value text-success';
-  }
+ const hashEl = document.getElementById('statHash');
+ if (hashTotal === 0) {
+ hashEl.textContent = '-';
+ hashEl.className = 'stat-value text-muted';
+ } else if (hashFail> 0) {
+ hashEl.textContent = hashFail + ' FAIL';
+ hashEl.className = 'stat-value text-danger';
+ } else {
+ hashEl.textContent = hashOk + '/' + hashTotal;
+ hashEl.className = 'stat-value text-success';
+ }
 }
 
 function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function showDetail(row) {
-  let detailsHtml = '';
-  try {
-    const obj = JSON.parse(row.details);
-    detailsHtml = '<pre>' + _e(JSON.stringify(obj, null, 2)) + '</pre>';
-  } catch {
-    detailsHtml = row.details ? '<pre>' + _e(row.details) + '</pre>' : '<span class="text-muted">-</span>';
-  }
+ let detailsHtml = '';
+ try {
+ const obj = JSON.parse(row.details);
+ detailsHtml = '<pre>' + _e(JSON.stringify(obj, null, 2)) + '</pre>';
+ } catch {
+ detailsHtml = row.details ? '<pre>' + _e(row.details) + '</pre>' : '<span class="text-muted">-</span>';
+ }
 
-  const actionLabel = ACTION_LABELS[row.action] || row.action;
+ const actionLabel = ACTION_LABELS[row.action] || row.action;
 
-  const html = `
-    <div class="info-row"><span class="info-label">ID</span><span class="info-value">#${parseInt(row.id) || 0}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Date") }}</span><span class="info-value">${_e(row.timestamp || '-')}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("User") }}</span><span class="info-value">${_e(row.user || '-')}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Action") }}</span><span class="info-value"><span class="action-badge ${getActionClass(row.action)}">${_e(actionLabel)}</span></span></div>
-    <div class="info-row"><span class="info-label">{{ _("Resource") }}</span><span class="info-value">${_e(row.resource_type || '-')} ${row.resource_id ? '#' + parseInt(row.resource_id) : ''}</span></div>
-    <div class="info-row"><span class="info-label">IP</span><span class="info-value">${_e(row.ip_address || '-')}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Browser") }}</span><span class="info-value">${_e(row.user_agent || '-')}</span></div>
-    <div class="info-row"><span class="info-label">{{ _("Hash") }}</span><span class="info-value">${row.hash_valid === true ? '<i class="bi bi-check-circle-fill hash-ok"></i> OK' : row.hash_valid === false ? '<i class="bi bi-exclamation-triangle-fill hash-fail"></i> TAMPERED' : '-'}</span></div>
-    <hr class="my-2">
-    <strong class="small">{{ _("Details") }}</strong>
-    ${detailsHtml}
-  `;
+ const html = `
+ <div class="info-row"><span class="info-label">ID</span><span class="info-value">#${parseInt(row.id) || 0}</span></div>
+ <div class="info-row"><span class="info-label">{{ _("Date") }}</span><span class="info-value">${_e(row.timestamp || '-')}</span></div>
+ <div class="info-row"><span class="info-label">{{ _("User") }}</span><span class="info-value">${_e(row.user || '-')}</span></div>
+ <div class="info-row"><span class="info-label">{{ _("Action") }}</span><span class="info-value"><span class="action-badge ${getActionClass(row.action)}">${_e(actionLabel)}</span></span></div>
+ <div class="info-row"><span class="info-label">{{ _("Resource") }}</span><span class="info-value">${_e(row.resource_type || '-')} ${row.resource_id ? '#' + parseInt(row.resource_id) : ''}</span></div>
+ <div class="info-row"><span class="info-label">IP</span><span class="info-value">${_e(row.ip_address || '-')}</span></div>
+ <div class="info-row"><span class="info-label">{{ _("Browser") }}</span><span class="info-value">${_e(row.user_agent || '-')}</span></div>
+ <div class="info-row"><span class="info-label">{{ _("Hash") }}</span><span class="info-value">${row.hash_valid === true ? '<i class="bi bi-check-circle-fill hash-ok"></i> OK' : row.hash_valid === false ? '<i class="bi bi-exclamation-triangle-fill hash-fail"></i> TAMPERED' : '-'}</span></div>
+ <hr class="my-2">
+ <strong class="small">{{ _("Details") }}</strong>
+ ${detailsHtml}
+ `;
 
-  document.getElementById('detailModalBody').innerHTML = html;
-  new bootstrap.Modal(document.getElementById('detailModal')).show();
+ document.getElementById('detailModalBody').innerHTML = html;
+ new bootstrap.Modal(document.getElementById('detailModal')).show();
 }
 
 function resetFilters() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('filterStartDate').value = today;
-  document.getElementById('filterEndDate').value = today;
-  document.getElementById('filterAction').value = '';
-  document.getElementById('filterUser').value = '';
-  document.getElementById('filterSearch').value = '';
-  loadData();
+ const today = new Date().toISOString().split('T')[0];
+ document.getElementById('filterStartDate').value = today;
+ document.getElementById('filterEndDate').value = today;
+ document.getElementById('filterAction').value = '';
+ document.getElementById('filterUser').value = '';
+ document.getElementById('filterSearch').value = '';
+ loadData();
 }
 
 function exportExcel() {
-  const params = new URLSearchParams();
-  const startDate = document.getElementById('filterStartDate').value;
-  const endDate = document.getElementById('filterEndDate').value;
-  const action = document.getElementById('filterAction').value;
-  if (startDate) params.set('start_date', startDate);
-  if (endDate) params.set('end_date', endDate);
-  if (action) params.set('action', action);
-  params.set('limit', '5000');
-  window.location.href = '/api/export/audit?' + params.toString();
+ const params = new URLSearchParams();
+ const startDate = document.getElementById('filterStartDate').value;
+ const endDate = document.getElementById('filterEndDate').value;
+ const action = document.getElementById('filterAction').value;
+ if (startDate) params.set('start_date', startDate);
+ if (endDate) params.set('end_date', endDate);
+ if (action) params.set('action', action);
+ params.set('limit', '5000');
+ window.location.href = '/api/export/audit?' + params.toString();
 }
 </script>
 {% endblock %}

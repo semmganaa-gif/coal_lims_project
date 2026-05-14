@@ -1028,12 +1028,7 @@
     selectSample: selectSample
   };
 
-  // Toast animation CSS
-  (function() {
-    const style = document.createElement('style');
-    style.textContent = '@keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}';
-    document.head.appendChild(style);
-  })();
+  // Toast animation @keyframes нь src/styles.css-д тогтсон (CSP-safe).
 
   // Initialize when DOM ready
   if (document.readyState === 'loading') {

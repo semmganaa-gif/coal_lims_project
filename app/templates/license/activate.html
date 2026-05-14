@@ -202,7 +202,7 @@
                     <span class="label">{{ _("Hardware ID:") }}</span>
                     <span class="value">
                         {{ hardware_info.short_id }}
-                        <button class="copy-btn" onclick="copyToClipboard('{{ hardware_info.short_id }}')">
+                        <button class="copy-btn" data-action="copyToClipboard" data-arg-0="{{ hardware_info.short_id }}">
                             {{ _("Copy") }}
                         </button>
                     </span>

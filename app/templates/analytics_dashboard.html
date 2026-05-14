@@ -18,7 +18,7 @@
                         <i class="fas fa-flask me-2"></i>{{ _("Analysis (Last 1000)") }}
                     </a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" onclick="showExportModal()">
+                    <li><a class="dropdown-item" href="#" data-action="showExportModal">
                         <i class="fas fa-filter me-2"></i>{{ _("Filtered export...") }}
                     </a></li>
                 </ul>
@@ -72,7 +72,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _("Close") }}</button>
-                <button type="button" class="btn btn-success" onclick="doExport()">
+                <button type="button" class="btn btn-success" data-action="doExport">
                     <i class="fas fa-download me-1"></i> {{ _("Download") }}
                 </button>
             </div>

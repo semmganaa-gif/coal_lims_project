@@ -12,705 +12,705 @@
 
 <script nonce="{{ csp_nonce }}">
 (function() {
-  'use strict';
-
-  // --- 1. CONFIG ---
-  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CSN';
-
-  // Backend Data
-  {{ aggrid_macros.dataset_block() | safe }}
-
-  // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
-  let draftMgr;
-
-  // --- 2. HELPERS ---
-
-  // ✨ CSN - Average calculation for 5 values
-  function calcAvg(values) {
-    const nums = values.filter(v => v != null && isFinite(v));
-    if (nums.length === 0) return null;
-    const sum = nums.reduce((a, b) => a + b, 0);
-    return sum / nums.length;
-  }
-
-  // ✨ CSN - 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
-  function roundToHalf(value) {
-    if (value === null || !isFinite(value)) return null;
-    return Math.round(value * 2) / 2;
-  }
-
-  // ✨ CSN тохирцын хязгаар - app/config/repeatability.py-аас авна
-  function getCSNRepeatabilityLimit() {
-    // window.getRepeatabilityLimit() нь repeatability.js-аас ирдэг
-    if (typeof window.getRepeatabilityLimit === 'function') {
-      const limit = window.getRepeatabilityLimit('CSN');
-      if (limit !== null) return limit;
-    }
-    // Fallback (repeatability.py-д CSN: single.limit = 0.50)
-    return 0.50;
-  }
-
-  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
-  const numParser = window.LIMS_AGGRID?.numParser || (p => {
-    const v = parseFloat(p.newValue);
-    return isNaN(v) ? null : v;
-  });
-  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
-  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
-  const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
-  const numFmt1 = p => (p.value != null) ? parseFloat(p.value).toFixed(1) : '';  // CSN-д хэрэгтэй
-
-  // Editable column тохиргоо (CSN uses numFmt1)
-  const editCol = {
-    editable: p => !p.data.is_saved,
-    cellEditor: 'agTextCellEditor',
-    cellEditorParams: { useFormatter: true },
-    valueParser: numParser,
-    valueFormatter: numFmt1,
-    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
-  };
-
-  // --- 3. COLUMN DEFINITIONS ---
-  const columnDefs = [
-    {
-      headerName: '№',
-      field: 'index',
-      width: 60,
-      pinned: 'left',
-      cellStyle: {
-        textAlign: 'center',
-        color: '#6c757d',
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      },
-      valueFormatter: p => p.value
-    },
-    {
-      headerName: '{{ _("Sample Name") }}',
-      field: 'sample_code',
-      width: 300,
-      pinned: 'left',
-      cellStyle: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        lineHeight: '1.2'
-      },
-      cellRenderer: p => {
-        let h = `<div style="font-weight:600;color:#0d6efd;text-shadow:0 1px 0 rgba(255,255,255,0.8)">${_escHtml(p.value)}</div>`;
-        const rej = rejectedInfo[p.data.sample_id];
-        if (rej) {
-          h += `<div style="font-size:0.7em;padding:3px 6px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:4px;display:inline-block;margin-top:4px"><i class="bi bi-exclamation-triangle"></i> ${
-            _escHtml(errorLabels[rej.reason_code] || rej.reason)
-          }</div>`;
-        }
-        return h;
-      }
-    },
-    {
-      headerName: 'v1',
-      field: 'v1',
-      width: 90,
-      ...editCol
-    },
-    {
-      headerName: 'v2',
-      field: 'v2',
-      width: 90,
-      ...editCol
-    },
-    {
-      headerName: 'v3',
-      field: 'v3',
-      width: 90,
-      ...editCol
-    },
-    {
-      headerName: 'v4',
-      field: 'v4',
-      width: 90,
-      ...editCol
-    },
-    {
-      headerName: 'v5',
-      field: 'v5',
-      width: 90,
-      ...editCol
-    },
-    {
-      headerName: '{{ _("Average") }}',
-      field: 'average',
-      width: 110,
-      valueFormatter: p => {
-        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
-        if (p.data.is_saved && p.value != null) {
-          return numFmt2(p);
-        }
-        return '-';
-      },
-      cellStyle: p => {
-        if (!p.data.is_saved) {
-          return {
-            color: '#ccc',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          };
-        }
-        return {
-          fontWeight: 'bold',
-          color: '#198754',
-          backgroundColor: '#d1e7dd',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        };
-      }
-    },
-    {
-      headerName: '{{ _("Action") }}',
-      width: 90,
-      pinned: 'right',
-      cellRenderer: p => {
-        if (p.data.is_saved) {
-          return '<span class="text-muted small">{{ _("Saved") }}</span>';
-        }
-
-        return `
-          <button type="button"
-                  class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
-                  data-sample-id="${p.data.sample_id}"
-                  title="{{ _("Remove sample") }}">
-            <i class="bi bi-x"></i>
-          </button>
-        `;
-      },
-      cellStyle: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }
-  ];
-
-  // --- 4. ROW DATA ---
-  const rowData = samples.map((sample, idx) => {
-    const existing = existingResults[sample.id];
-    const rejected = rejectedInfo[sample.id];
-
-    // ✅ Буцаах логик:
-    // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
-    // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
-    // - pending_review → locked (хадгалагдсан гэсэн үг)
-    const isRejected = existing?.status === 'rejected';
-
-    const base = {
-      index: idx + 1,
-      sample_id: sample.id,
-      sample_code: sample.code,
-      is_saved: existing && !isRejected,  // ✅ Rejected дээж editable
-      is_rejected: isRejected,
-      rejection_reason: rejected?.reason || ''
-    };
-
-    if (existing) {
-      // Хадгалагдсан үр дүн байна
-      const rd = existing.raw_data || {};
-      const v1 = rd.v1 ?? null;
-      const v2 = rd.v2 ?? null;
-      const v3 = rd.v3 ?? null;
-      const v4 = rd.v4 ?? null;
-      const v5 = rd.v5 ?? null;
-      const values = [v1, v2, v3, v4, v5].map(x => x != null ? parseFloat(x) : null);
-      const avg = rd.avg ?? calcAvg(values);
-
-      return {
-        ...base,
-        v1: values[0],
-        v2: values[1],
-        v3: values[2],
-        v4: values[3],
-        v5: values[4],
-        average: avg
-      };
-    } else {
-      // New дээж
-      return {
-        ...base,
-        v1: null,
-        v2: null,
-        v3: null,
-        v4: null,
-        v5: null,
-        average: null
-      };
-    }
-  });
-
-  // --- 5. DRAFT MANAGEMENT ---
-
-  function saveDrafts() {
-    if (!window.csnGridApi || !draftMgr) return;
-
-    const drafts = {};
-    window.csnGridApi.forEachNode(n => {
-      if (!n.data.is_saved) {
-        const k = `${n.data.sample_id}`;
-        drafts[k] = {
-          v1: n.data.v1,
-          v2: n.data.v2,
-          v3: n.data.v3,
-          v4: n.data.v4,
-          v5: n.data.v5
-        };
-      }
-    });
-
-    draftMgr.save(drafts);
-  }
-
-  function restoreDrafts() {
-    if (!window.csnGridApi || !draftMgr) return;
-
-    try {
-      const drafts = draftMgr.restore();
-      window.csnGridApi.forEachNode(n => {
-        if (!n.data.is_saved) {
-          const k = `${n.data.sample_id}`;
-          if (drafts[k]) {
-            n.data.v1 = drafts[k].v1;
-            n.data.v2 = drafts[k].v2;
-            n.data.v3 = drafts[k].v3;
-            n.data.v4 = drafts[k].v4;
-            n.data.v5 = drafts[k].v5;
-
-            // Recalculate average
-            const values = [n.data.v1, n.data.v2, n.data.v3, n.data.v4, n.data.v5].map(x => x != null ? parseFloat(x) : null);
-            n.data.average = calcAvg(values);
-          }
-        }
-      });
-
-      window.csnGridApi.refreshCells({ force: true });
-    } catch (e) {
-      logger.warn('Failed to restore drafts', e);
-    }
-  }
-
-  function onCellValueChanged(params) {
-    if (['v1', 'v2', 'v3', 'v4', 'v5'].includes(params.colDef.field)) {
-      const d = params.data;
-      const values = [d.v1, d.v2, d.v3, d.v4, d.v5].map(x => x != null ? parseFloat(x) : null);
-      d.average = calcAvg(values);
-
-      // ❌ NO REAL-TIME TOLERANCE DISPLAY - ISO 17025 зөрчил!
-      // Зөвхөн тухайн мөрийн дундажийг л refresh хийнэ (хадгалсны дараа харагдана)
-      // Don't refresh average column - it only shows after save
-    }
-    saveDrafts();
-  }
-
-  // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
-    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlIds = urlParams.get('sample_ids');
-
-    if (urlIds) {
-      // URL дээр байвал localStorage-д хадгалах
-      try {
-        localStorage.setItem(STORAGE_KEY, urlIds);
-        logger.log('Sample IDs saved to localStorage:', urlIds);
-      } catch(e) {
-        logger.warn('localStorage save failed:', e);
-      }
-    } else {
-      // URL дээр байхгүй бол localStorage-аас сэргээх
-      try {
-        const savedIds = localStorage.getItem(STORAGE_KEY);
-        if (savedIds) {
-          logger.log('URL has no sample_ids, restoring from localStorage:', savedIds);
-          const url = new URL(window.location.href);
-          url.searchParams.set('sample_ids', savedIds);
-
-          // ❌ БУУ: window.location.href = url.toString(); // Full reload!
-          // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
-          window.history.replaceState({}, '', url.toString());
-          logger.log('URL updated with sample_ids from localStorage (no reload)');
-
-          // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
-          // Энэ тохиолдолд reload хийх хэрэгтэй
-          logger.warn('Reloading page to fetch samples from backend...');
-          window.location.reload();
-          return;
-        }
-      } catch(e) {
-        logger.warn('localStorage restore failed:', e);
-      }
-    }
-
-    const el = document.querySelector('#csnGrid');
-    if (!el) {
-      logger.error('csnGrid element not found');
-      return;
-    }
-
-    // ✨ Initialize Draft Manager (after scripts loaded)
-    if (typeof LIMSDraftManager !== 'undefined') {
-      draftMgr = new LIMSDraftManager(ANALY_CODE);
-      logger.log('Draft Manager initialized');
-    } else {
-      logger.error('LIMSDraftManager not loaded!');
-      // Fallback to localStorage directly
-      draftMgr = {
-        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
-        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
-        purge: (ids) => {
-          if (!ids || ids.length === 0) {
-            localStorage.removeItem(`draft_${ANALY_CODE}`);
-          }
-        }
-      };
-    }
-
-    // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
-    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
-      // Factory pattern ашиглах
-      window.csnGridApi = LIMS_AGGRID.createGrid('#csnGrid', columnDefs, rowData, {
-        onCellValueChanged: onCellValueChanged,
-        enterNavigatesVerticallyAfterEdit: true,
-        editableColIds: ['v1', 'v2', 'v3', 'v4', 'v5']
-      });
-      logger.log('Using LIMS_AGGRID.createGrid() factory');
-    } else {
-      // Fallback: Manual grid creation
-      logger.warn('LIMS_AGGRID not available, using fallback');
-      const gridOptions = {
-        columnDefs: columnDefs,
-        rowData: rowData,
-        defaultColDef: {
-          sortable: true,
-          resizable: true,
-          editable: false,
-          suppressMovable: true,
-          wrapHeaderText: true,
-          autoHeaderHeight: true
-        },
-        suppressRowTransform: true,
-        singleClickEdit: true,
-        stopEditingWhenCellsLoseFocus: true,
-        enterNavigatesVertically: true,
-        enterNavigatesVerticallyAfterEdit: true,
-        onCellValueChanged: onCellValueChanged
-      };
-      window.csnGridApi = agGrid.createGrid(el, gridOptions);
-    }
-
-    // Draft сэргээх
-    setTimeout(restoreDrafts, 100);
-
-    // Remove sample button handler
-    el.addEventListener('click', (e) => {
-      const btn = e.target.closest('.remove-sample-from-worksheet');
-      if (!btn) return;
-
-      const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
-
-      const url = new URL(window.location.href);
-      let ids = (url.searchParams.get('sample_ids') || '').split(',');
-      ids = ids.filter(x => x.trim() && parseInt(x) !== sampleId);
-
-      if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
-      else url.searchParams.delete('sample_ids');
-
-      window.location.href = url.toString();
-    });
-
-    logger.log('CSN Grid initialized with factory pattern');
-  });
-
-  // --- 7. ACTIONS ---
-
-  window.removeSample = function(id) {
-    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
-    const url = new URL(window.location.href);
-    let ids = (url.searchParams.get('sample_ids') || '').split(',');
-    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
-    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
-    else url.searchParams.delete('sample_ids');
-    window.location.href = url.toString();
-  };
-
-  window.collectCsnGridData = function() {
-    if (!window.csnGridApi) return [];
-
-    const payload = [];
-    const incomplete = [];  // ✅ Дутуу дээжүүдийг хадгалах
-    const tooFewValues = [];  // ✅ 2-оос бага утгатай дээжүүд
-    const exceededRepeatability = [];  // ✅ Tolerance давсан дээжүүд
-
-    window.csnGridApi.forEachNode(n => {
-      const d = n.data;
-
-      // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
-      if (d.is_saved) return;
-
-      // Validate өгөгдөл
-      const values = [d.v1, d.v2, d.v3, d.v4, d.v5].map(x => {
-        if (x === null || x === undefined || x === '') return null;
-        const parsed = parseFloat(x);
-        return isNaN(parsed) ? null : parsed;
-      });
-      // null биш тоон утгуудыг л авна (CSN 0 утга авч болно)
-      const validValues = values.filter(v => v !== null);
-
-      if (validValues.length === 0) {
-        logger.warn(`Sample ${d.sample_code || d.sample_id}: incomplete data`);
-        incomplete.push(d.sample_code || d.sample_id);
-        return;
-      }
-
-      // ✅ CSN: Хамгийн багадаа 2 утга оруулсан байх шаардлага
-      if (validValues.length < 2) {
-        logger.warn(`Sample ${d.sample_code || d.sample_id}: requires at least 2 values`);
-        tooFewValues.push(d.sample_code || d.sample_id);
-        return;
-      }
-
-      // ✅ Calculate repeatability (range = max - min)
-      const range = Math.max(...validValues) - Math.min(...validValues);
-
-      logger.log(`Sample ${d.sample_code}: values=${JSON.stringify(values)}, validValues=${JSON.stringify(validValues)}, max=${Math.max(...validValues)}, min=${Math.min(...validValues)}, range=${range}`);
-
-      // ✅ Toleranceын хязгаарыг config-оос авна
-      const repeatabilityLimit = getCSNRepeatabilityLimit();
-
-      // ✅ Toleranceын шалгалт: range <= repeatabilityLimit
-      // Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
-      const EPSILON = 1e-6;
-      const t_exceeded = (range - repeatabilityLimit) > EPSILON;
-      if (t_exceeded) {
-        logger.warn(`Sample ${d.sample_code || d.sample_id}: repeatability exceeded (${range.toFixed(2)} > ${repeatabilityLimit})`);
-        exceededRepeatability.push(d.sample_code || d.sample_id);
-      }
-
-      // ✅ Average тооцоолох
-      const rawAvg = calcAvg(values);
-
-      // ✅ CSN: 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
-      const avg = roundToHalf(rawAvg);
-
-      payload.push({
-        sample_id: parseInt(d.sample_id),
-        analysis_code: ANALY_CODE,
-        final_result: avg,
-        raw_data: {
-          avg: avg,  // ✅ 0.5 алхамаар дугуйлсан дундаж
-          raw_avg: rawAvg,  // ✅ Дугуйлаагүй дундаж
-          v1: d.v1,
-          v2: d.v2,
-          v3: d.v3,
-          v4: d.v4,
-          v5: d.v5,
-          diff: range,  // ✅ Tolerance (max - min)
-          t_exceeded: t_exceeded,  // ✅ Tolerance давсан эсэх
-          repeatability: {
-            average: avg,
-            raw_average: rawAvg,
-            range: range,  // ✅ Range (max - min)
-            limit: repeatabilityLimit,  // ✅ Config-оос авсан хязгаар
-            exceeded: t_exceeded
-          }
-        }
-      });
-    });
-
-    // ✅ Toleranceын хязгаарыг alert-д харуулахад ашиглах
-    const configLimit = getCSNRepeatabilityLimit();
-
-    logger.log('CSN Collect Summary:', {
-      total_samples: payload.length + tooFewValues.length + incomplete.length,
-      valid_payload: payload.length,
-      too_few_values: tooFewValues.length,
-      incomplete: incomplete.length,
-      exceeded_repeatability: exceededRepeatability.length,
-      tooFewValues: tooFewValues,
-      configLimit: configLimit
-    });
-
-    // ✅ No saveable samples
-    if (payload.length === 0) {
-      const reasons = [];
-      if (incomplete.length > 0) reasons.push(`${incomplete.length} {{ _("samples have no values") }}`);
-      if (tooFewValues.length > 0) reasons.push(`${tooFewValues.length} {{ _("samples have fewer than 2 values") }}`);
-      alert(`{{ _("CSN: No samples available to save!") }}\n\n${reasons.join('\n')}`);
-      return [];
-    }
-
-    // ✅ Warning about incomplete samples (but ready samples can still be saved)
-    let warningMessage = '';
-    if (tooFewValues.length > 0) {
-      warningMessage += `⚠️ ${tooFewValues.length} {{ _("samples have fewer than 2 values (will not be saved)") }}:\n${tooFewValues.join(', ')}\n\n`;
-    }
-    if (incomplete.length > 0) {
-      warningMessage += `⚠️ ${incomplete.length} {{ _("samples have no values (will not be saved)") }}:\n${incomplete.join(', ')}\n\n`;
-    }
-
-    // ✅ Repeatability exceeded warning
-    if (exceededRepeatability.length > 0) {
-      warningMessage += `⚠️ ${exceededRepeatability.length} {{ _("samples exceeded tolerance") }} (diff > ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
-    }
-
-    // ✅ Confirm if there are warnings
-    if (warningMessage) {
-      const proceed = confirm(
-        `${warningMessage}` +
-        `✅ ${payload.length} {{ _("samples ready to save.") }}\n\n` +
-        `{{ _("Continue?") }}`
-      );
-      if (!proceed) {
-        logger.warn('CSN: User cancelled save');
-        return [];
-      }
-    }
-
-    logger.log(`CSN: ${payload.length} samples ready to save`);
-    return payload;
-  };
-
-  // ✅ AfterSave callback - MT form-ын логик ашиглана
-  window.updateCsnGridAfterSave = function(savedPayload) {
-    if (!window.csnGridApi || !savedPayload || savedPayload.length === 0) return;
-
-    logger.log('CSN afterSave called with', savedPayload.length, 'samples');
-
-    const savedSampleIds = savedPayload.map(r => r.sample_id);
-
-    // ✅ CRITICAL: Sample IDs-ийг worksheet-д хадгалах логик
-    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
-
-    // Status-based filtering
-    const approvedIds = [];   // Батлагдсан → арилах
-    const pendingIds = [];    // Хүлээгдэж буй → үлдэх
-
-    savedPayload.forEach(saved => {
-      if (saved.status === 'approved') {
-        approvedIds.push(saved.sample_id);
-      } else if (saved.status === 'pending_review') {
-        pendingIds.push(saved.sample_id);
-      }
-    });
-
-    // ✅ Grid-ээс БҮХ sample IDs цуглуулах (хадгалагдсан болон хадгалагдаагүй)
-    const allSampleIds = [];
-    window.csnGridApi.forEachNode(n => {
-      if (!allSampleIds.includes(n.data.sample_id)) {
-        allSampleIds.push(n.data.sample_id);
-      }
-    });
-
-    // ✅ CRITICAL LOGIC: Хадгалагдаагүй + pending дээжүүдийг үлдээх
-    // Approved байгаа бол арилгах, бусад бүх дээжийг үлдээх
-    const remainingIds = allSampleIds.filter(id =>
-      !approvedIds.includes(id) || pendingIds.includes(id)
-    );
-
-    logger.log(`All samples in grid: ${allSampleIds.length} -`, allSampleIds);
-    logger.log(`Saved samples: ${savedSampleIds.length} -`, savedSampleIds);
-    logger.log(`Approved (will remove): ${approvedIds.length} -`, approvedIds);
-    logger.log(`Pending (will keep): ${pendingIds.length} -`, pendingIds);
-    logger.log(`Remaining (will stay): ${remainingIds.length} -`, remainingIds);
-
-    // ✅ URL ба localStorage шинэчлэх
-    if (remainingIds.length > 0) {
-      const idsString = remainingIds.join(',');
-
-      try {
-        localStorage.setItem(STORAGE_KEY, idsString);
-        logger.log(`localStorage UPDATED: sample_ids=${idsString}`);
-      } catch (e) {
-        logger.warn('localStorage update failed:', e);
-      }
-
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('sample_ids', idsString);
-        window.history.replaceState({}, '', url.toString());
-        logger.log(`URL UPDATED: sample_ids=${idsString}`);
-      } catch (e) {
-        logger.warn('URL update failed:', e);
-      }
-    } else {
-      // Бүх дээж approved - worksheet цэвэрлэх
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        const url = new URL(window.location.href);
-        url.searchParams.delete('sample_ids');
-        window.history.replaceState({}, '', url.toString());
-        logger.log('All approved - worksheet cleared');
-      } catch (e) {}
-    }
-
-    // ✅ Draft устгах (зөвхөн хадгалагдсан дээжүүдийн)
-    if (draftMgr) {
-      draftMgr.purge(savedSampleIds);
-    }
-
-    // ✅ Grid update - хадгалагдсан дээжүүдийг locked болгох
-    window.csnGridApi.forEachNode(n => {
-      if (savedSampleIds.includes(n.data.sample_id)) {
-        n.data.is_saved = true;
-
-        const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
-        if (saved && saved.raw_data) {
-          const raw = saved.raw_data;
-          n.data.v1 = raw.v1;
-          n.data.v2 = raw.v2;
-          n.data.v3 = raw.v3;
-          n.data.v4 = raw.v4;
-          n.data.v5 = raw.v5;
-          n.data.average = raw.avg ?? saved.final_result;
-        }
-      }
-    });
-
-    // ✅ Approved дээжүүдийг grid-ээс УСТГАХ
-    if (approvedIds.length > 0) {
-      const rowsToRemove = [];
-      window.csnGridApi.forEachNode(n => {
-        if (approvedIds.includes(n.data.sample_id)) {
-          rowsToRemove.push(n);
-        }
-      });
-
-      if (rowsToRemove.length > 0) {
-        window.csnGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        logger.log(`Removed ${approvedIds.length} approved samples from grid`);
-      }
-    }
-
-    // ✅ Grid refresh
-    window.csnGridApi.refreshCells({ force: true });
-
-    logger.log(`CSN afterSave complete: ${savedSampleIds.length} saved, ${approvedIds.length} removed, ${remainingIds.length} remaining`);
-  };
-
-  // ✅ Register collector AND afterSave in LIMS_CALC namespace
-  window.LIMS_CALC = window.LIMS_CALC || {};
-  window.LIMS_CALC[ANALY_CODE] = {
-    collect: window.collectCsnGridData,
-    afterSave: window.updateCsnGridAfterSave
-  };
-  window.LIMS_CALC['CSN'] = {
-    collect: window.collectCsnGridData,
-    afterSave: window.updateCsnGridAfterSave
-  };
-  logger.log('CSN collector & afterSave registered in LIMS_CALC namespace');
+ 'use strict';
+
+ // --- 1. CONFIG ---
+ const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CSN';
+
+ // Backend Data
+ {{ aggrid_macros.dataset_block() | safe }}
+
+ // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
+ let draftMgr;
+
+ // --- 2. HELPERS ---
+
+ // ✨ CSN - Average calculation for 5 values
+ function calcAvg(values) {
+ const nums = values.filter(v => v != null && isFinite(v));
+ if (nums.length === 0) return null;
+ const sum = nums.reduce((a, b) => a + b, 0);
+ return sum / nums.length;
+ }
+
+ // ✨ CSN - 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
+ function roundToHalf(value) {
+ if (value === null || !isFinite(value)) return null;
+ return Math.round(value * 2) / 2;
+ }
+
+ // ✨ CSN тохирцын хязгаар - app/config/repeatability.py-аас авна
+ function getCSNRepeatabilityLimit() {
+ // window.getRepeatabilityLimit() нь repeatability.js-аас ирдэг
+ if (typeof window.getRepeatabilityLimit === 'function') {
+ const limit = window.getRepeatabilityLimit('CSN');
+ if (limit !== null) return limit;
+ }
+ // Fallback (repeatability.py-д CSN: single.limit = 0.50)
+ return 0.50;
+ }
+
+ // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+ const numParser = window.LIMS_AGGRID?.numParser || (p => {
+ const v = parseFloat(p.newValue);
+ return isNaN(v) ? null : v;
+ });
+ const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+ const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+ const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
+ const numFmt1 = p => (p.value != null) ? parseFloat(p.value).toFixed(1) : ''; // CSN-д хэрэгтэй
+
+ // Editable column тохиргоо (CSN uses numFmt1)
+ const editCol = {
+ editable: p => !p.data.is_saved,
+ cellEditor: 'agTextCellEditor',
+ cellEditorParams: { useFormatter: true },
+ valueParser: numParser,
+ valueFormatter: numFmt1,
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : {}
+ };
+
+ // --- 3. COLUMN DEFINITIONS ---
+ const columnDefs = [
+ {
+ headerName: '№',
+ field: 'index',
+ width: 60,
+ pinned: 'left',
+ cellStyle: {
+ textAlign: 'center',
+ color: '#6c757d',
+ fontWeight: 'bold',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ },
+ valueFormatter: p => p.value
+ },
+ {
+ headerName: '{{ _("Sample Name") }}',
+ field: 'sample_code',
+ width: 300,
+ pinned: 'left',
+ cellStyle: {
+ display: 'flex',
+ flexDirection: 'column',
+ justifyContent: 'center',
+ lineHeight: '1.2'
+ },
+ cellRenderer: p => {
+ let h = `<div class="tw-[text-shadow:0_1px_0_rgba(255,255,255,0.8)] font-semibold text-[#0d6efd] [text-shadow:0_1px_0_rgba(255,255,255,0.8)]">${_escHtml(p.value)}</div>`;
+ const rej = rejectedInfo[p.data.sample_id];
+ if (rej) {
+ h += `<div class="text-[0.7em] py-[3px] px-[6px] bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb] rounded-md inline-block mt-[4px]"><i class="bi bi-exclamation-triangle"></i> ${
+ _escHtml(errorLabels[rej.reason_code] || rej.reason)
+ }</div>`;
+ }
+ return h;
+ }
+ },
+ {
+ headerName: 'v1',
+ field: 'v1',
+ width: 90,
+ ...editCol
+ },
+ {
+ headerName: 'v2',
+ field: 'v2',
+ width: 90,
+ ...editCol
+ },
+ {
+ headerName: 'v3',
+ field: 'v3',
+ width: 90,
+ ...editCol
+ },
+ {
+ headerName: 'v4',
+ field: 'v4',
+ width: 90,
+ ...editCol
+ },
+ {
+ headerName: 'v5',
+ field: 'v5',
+ width: 90,
+ ...editCol
+ },
+ {
+ headerName: '{{ _("Average") }}',
+ field: 'average',
+ width: 110,
+ valueFormatter: p => {
+ // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+ if (p.data.is_saved && p.value != null) {
+ return numFmt2(p);
+ }
+ return '-';
+ },
+ cellStyle: p => {
+ if (!p.data.is_saved) {
+ return {
+ color: '#ccc',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ };
+ }
+ return {
+ fontWeight: 'bold',
+ color: '#198754',
+ backgroundColor: '#d1e7dd',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ };
+ }
+ },
+ {
+ headerName: '{{ _("Action") }}',
+ width: 90,
+ pinned: 'right',
+ cellRenderer: p => {
+ if (p.data.is_saved) {
+ return '<span class="text-muted small">{{ _("Saved") }}</span>';
+ }
+
+ return `
+ <button type="button"
+ class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+ data-sample-id="${p.data.sample_id}"
+ title="{{ _("Remove sample") }}">
+ <i class="bi bi-x"></i>
+ </button>
+ `;
+ },
+ cellStyle: {
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ }
+ }
+ ];
+
+ // --- 4. ROW DATA ---
+ const rowData = samples.map((sample, idx) => {
+ const existing = existingResults[sample.id];
+ const rejected = rejectedInfo[sample.id];
+
+ // ✅ Буцаах логик:
+ // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
+ // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
+ // - pending_review → locked (хадгалагдсан гэсэн үг)
+ const isRejected = existing?.status === 'rejected';
+
+ const base = {
+ index: idx + 1,
+ sample_id: sample.id,
+ sample_code: sample.code,
+ is_saved: existing && !isRejected, // ✅ Rejected дээж editable
+ is_rejected: isRejected,
+ rejection_reason: rejected?.reason || ''
+ };
+
+ if (existing) {
+ // Хадгалагдсан үр дүн байна
+ const rd = existing.raw_data || {};
+ const v1 = rd.v1 ?? null;
+ const v2 = rd.v2 ?? null;
+ const v3 = rd.v3 ?? null;
+ const v4 = rd.v4 ?? null;
+ const v5 = rd.v5 ?? null;
+ const values = [v1, v2, v3, v4, v5].map(x => x != null ? parseFloat(x) : null);
+ const avg = rd.avg ?? calcAvg(values);
+
+ return {
+ ...base,
+ v1: values[0],
+ v2: values[1],
+ v3: values[2],
+ v4: values[3],
+ v5: values[4],
+ average: avg
+ };
+ } else {
+ // New дээж
+ return {
+ ...base,
+ v1: null,
+ v2: null,
+ v3: null,
+ v4: null,
+ v5: null,
+ average: null
+ };
+ }
+ });
+
+ // --- 5. DRAFT MANAGEMENT ---
+
+ function saveDrafts() {
+ if (!window.csnGridApi || !draftMgr) return;
+
+ const drafts = {};
+ window.csnGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ const k = `${n.data.sample_id}`;
+ drafts[k] = {
+ v1: n.data.v1,
+ v2: n.data.v2,
+ v3: n.data.v3,
+ v4: n.data.v4,
+ v5: n.data.v5
+ };
+ }
+ });
+
+ draftMgr.save(drafts);
+ }
+
+ function restoreDrafts() {
+ if (!window.csnGridApi || !draftMgr) return;
+
+ try {
+ const drafts = draftMgr.restore();
+ window.csnGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ const k = `${n.data.sample_id}`;
+ if (drafts[k]) {
+ n.data.v1 = drafts[k].v1;
+ n.data.v2 = drafts[k].v2;
+ n.data.v3 = drafts[k].v3;
+ n.data.v4 = drafts[k].v4;
+ n.data.v5 = drafts[k].v5;
+
+ // Recalculate average
+ const values = [n.data.v1, n.data.v2, n.data.v3, n.data.v4, n.data.v5].map(x => x != null ? parseFloat(x) : null);
+ n.data.average = calcAvg(values);
+ }
+ }
+ });
+
+ window.csnGridApi.refreshCells({ force: true });
+ } catch (e) {
+ logger.warn('Failed to restore drafts', e);
+ }
+ }
+
+ function onCellValueChanged(params) {
+ if (['v1', 'v2', 'v3', 'v4', 'v5'].includes(params.colDef.field)) {
+ const d = params.data;
+ const values = [d.v1, d.v2, d.v3, d.v4, d.v5].map(x => x != null ? parseFloat(x) : null);
+ d.average = calcAvg(values);
+
+ // ❌ NO REAL-TIME TOLERANCE DISPLAY - ISO 17025 зөрчил!
+ // Зөвхөн тухайн мөрийн дундажийг л refresh хийнэ (хадгалсны дараа харагдана)
+ // Don't refresh average column - it only shows after save
+ }
+ saveDrafts();
+ }
+
+ // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
+
+ document.addEventListener('DOMContentLoaded', () => {
+ // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
+ const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+ const urlParams = new URLSearchParams(window.location.search);
+ const urlIds = urlParams.get('sample_ids');
+
+ if (urlIds) {
+ // URL дээр байвал localStorage-д хадгалах
+ try {
+ localStorage.setItem(STORAGE_KEY, urlIds);
+ logger.log('Sample IDs saved to localStorage:', urlIds);
+ } catch(e) {
+ logger.warn('localStorage save failed:', e);
+ }
+ } else {
+ // URL дээр байхгүй бол localStorage-аас сэргээх
+ try {
+ const savedIds = localStorage.getItem(STORAGE_KEY);
+ if (savedIds) {
+ logger.log('URL has no sample_ids, restoring from localStorage:', savedIds);
+ const url = new URL(window.location.href);
+ url.searchParams.set('sample_ids', savedIds);
+
+ // ❌ БУУ: window.location.href = url.toString(); // Full reload!
+ // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
+ window.history.replaceState({}, '', url.toString());
+ logger.log('URL updated with sample_ids from localStorage (no reload)');
+
+ // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
+ // Энэ тохиолдолд reload хийх хэрэгтэй
+ logger.warn('Reloading page to fetch samples from backend...');
+ window.location.reload();
+ return;
+ }
+ } catch(e) {
+ logger.warn('localStorage restore failed:', e);
+ }
+ }
+
+ const el = document.querySelector('#csnGrid');
+ if (!el) {
+ logger.error('csnGrid element not found');
+ return;
+ }
+
+ // ✨ Initialize Draft Manager (after scripts loaded)
+ if (typeof LIMSDraftManager !== 'undefined') {
+ draftMgr = new LIMSDraftManager(ANALY_CODE);
+ logger.log('Draft Manager initialized');
+ } else {
+ logger.error('LIMSDraftManager not loaded!');
+ // Fallback to localStorage directly
+ draftMgr = {
+ save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+ restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+ purge: (ids) => {
+ if (!ids || ids.length === 0) {
+ localStorage.removeItem(`draft_${ANALY_CODE}`);
+ }
+ }
+ };
+ }
+
+ // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
+ if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+ // Factory pattern ашиглах
+ window.csnGridApi = LIMS_AGGRID.createGrid('#csnGrid', columnDefs, rowData, {
+ onCellValueChanged: onCellValueChanged,
+ enterNavigatesVerticallyAfterEdit: true,
+ editableColIds: ['v1', 'v2', 'v3', 'v4', 'v5']
+ });
+ logger.log('Using LIMS_AGGRID.createGrid() factory');
+ } else {
+ // Fallback: Manual grid creation
+ logger.warn('LIMS_AGGRID not available, using fallback');
+ const gridOptions = {
+ columnDefs: columnDefs,
+ rowData: rowData,
+ defaultColDef: {
+ sortable: true,
+ resizable: true,
+ editable: false,
+ suppressMovable: true,
+ wrapHeaderText: true,
+ autoHeaderHeight: true
+ },
+ suppressRowTransform: true,
+ singleClickEdit: true,
+ stopEditingWhenCellsLoseFocus: true,
+ enterNavigatesVertically: true,
+ enterNavigatesVerticallyAfterEdit: true,
+ onCellValueChanged: onCellValueChanged
+ };
+ window.csnGridApi = agGrid.createGrid(el, gridOptions);
+ }
+
+ // Draft сэргээх
+ setTimeout(restoreDrafts, 100);
+
+ // Remove sample button handler
+ el.addEventListener('click', (e) => {
+ const btn = e.target.closest('.remove-sample-from-worksheet');
+ if (!btn) return;
+
+ const sampleId = parseInt(btn.dataset.sampleId);
+ if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
+
+ const url = new URL(window.location.href);
+ let ids = (url.searchParams.get('sample_ids') || '').split(',');
+ ids = ids.filter(x => x.trim() && parseInt(x) !== sampleId);
+
+ if (ids.length> 0) url.searchParams.set('sample_ids', ids.join(','));
+ else url.searchParams.delete('sample_ids');
+
+ window.location.href = url.toString();
+ });
+
+ logger.log('CSN Grid initialized with factory pattern');
+ });
+
+ // --- 7. ACTIONS ---
+
+ window.removeSample = function(id) {
+ if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
+ const url = new URL(window.location.href);
+ let ids = (url.searchParams.get('sample_ids') || '').split(',');
+ ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+ if (ids.length> 0) url.searchParams.set('sample_ids', ids.join(','));
+ else url.searchParams.delete('sample_ids');
+ window.location.href = url.toString();
+ };
+
+ window.collectCsnGridData = function() {
+ if (!window.csnGridApi) return [];
+
+ const payload = [];
+ const incomplete = []; // ✅ Дутуу дээжүүдийг хадгалах
+ const tooFewValues = []; // ✅ 2-оос бага утгатай дээжүүд
+ const exceededRepeatability = []; // ✅ Tolerance давсан дээжүүд
+
+ window.csnGridApi.forEachNode(n => {
+ const d = n.data;
+
+ // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
+ if (d.is_saved) return;
+
+ // Validate өгөгдөл
+ const values = [d.v1, d.v2, d.v3, d.v4, d.v5].map(x => {
+ if (x === null || x === undefined || x === '') return null;
+ const parsed = parseFloat(x);
+ return isNaN(parsed) ? null : parsed;
+ });
+ // null биш тоон утгуудыг л авна (CSN 0 утга авч болно)
+ const validValues = values.filter(v => v !== null);
+
+ if (validValues.length === 0) {
+ logger.warn(`Sample ${d.sample_code || d.sample_id}: incomplete data`);
+ incomplete.push(d.sample_code || d.sample_id);
+ return;
+ }
+
+ // ✅ CSN: Хамгийн багадаа 2 утга оруулсан байх шаардлага
+ if (validValues.length < 2) {
+ logger.warn(`Sample ${d.sample_code || d.sample_id}: requires at least 2 values`);
+ tooFewValues.push(d.sample_code || d.sample_id);
+ return;
+ }
+
+ // ✅ Calculate repeatability (range = max - min)
+ const range = Math.max(...validValues) - Math.min(...validValues);
+
+ logger.log(`Sample ${d.sample_code}: values=${JSON.stringify(values)}, validValues=${JSON.stringify(validValues)}, max=${Math.max(...validValues)}, min=${Math.min(...validValues)}, range=${range}`);
+
+ // ✅ Toleranceын хязгаарыг config-оос авна
+ const repeatabilityLimit = getCSNRepeatabilityLimit();
+
+ // ✅ Toleranceын шалгалт: range <= repeatabilityLimit
+ // Floating point tolerance: 1e-6 (яг тэнцүү бол тохирсон гэж үзнэ)
+ const EPSILON = 1e-6;
+ const t_exceeded = (range - repeatabilityLimit)> EPSILON;
+ if (t_exceeded) {
+ logger.warn(`Sample ${d.sample_code || d.sample_id}: repeatability exceeded (${range.toFixed(2)}> ${repeatabilityLimit})`);
+ exceededRepeatability.push(d.sample_code || d.sample_id);
+ }
+
+ // ✅ Average тооцоолох
+ const rawAvg = calcAvg(values);
+
+ // ✅ CSN: 0.5 алхамаар дугуйлах (0.5, 1.0, 1.5, 2.0, ...)
+ const avg = roundToHalf(rawAvg);
+
+ payload.push({
+ sample_id: parseInt(d.sample_id),
+ analysis_code: ANALY_CODE,
+ final_result: avg,
+ raw_data: {
+ avg: avg, // ✅ 0.5 алхамаар дугуйлсан дундаж
+ raw_avg: rawAvg, // ✅ Дугуйлаагүй дундаж
+ v1: d.v1,
+ v2: d.v2,
+ v3: d.v3,
+ v4: d.v4,
+ v5: d.v5,
+ diff: range, // ✅ Tolerance (max - min)
+ t_exceeded: t_exceeded, // ✅ Tolerance давсан эсэх
+ repeatability: {
+ average: avg,
+ raw_average: rawAvg,
+ range: range, // ✅ Range (max - min)
+ limit: repeatabilityLimit, // ✅ Config-оос авсан хязгаар
+ exceeded: t_exceeded
+ }
+ }
+ });
+ });
+
+ // ✅ Toleranceын хязгаарыг alert-д харуулахад ашиглах
+ const configLimit = getCSNRepeatabilityLimit();
+
+ logger.log('CSN Collect Summary:', {
+ total_samples: payload.length + tooFewValues.length + incomplete.length,
+ valid_payload: payload.length,
+ too_few_values: tooFewValues.length,
+ incomplete: incomplete.length,
+ exceeded_repeatability: exceededRepeatability.length,
+ tooFewValues: tooFewValues,
+ configLimit: configLimit
+ });
+
+ // ✅ No saveable samples
+ if (payload.length === 0) {
+ const reasons = [];
+ if (incomplete.length> 0) reasons.push(`${incomplete.length} {{ _("samples have no values") }}`);
+ if (tooFewValues.length> 0) reasons.push(`${tooFewValues.length} {{ _("samples have fewer than 2 values") }}`);
+ alert(`{{ _("CSN: No samples available to save!") }}\n\n${reasons.join('\n')}`);
+ return [];
+ }
+
+ // ✅ Warning about incomplete samples (but ready samples can still be saved)
+ let warningMessage = '';
+ if (tooFewValues.length> 0) {
+ warningMessage += `⚠️ ${tooFewValues.length} {{ _("samples have fewer than 2 values (will not be saved)") }}:\n${tooFewValues.join(', ')}\n\n`;
+ }
+ if (incomplete.length> 0) {
+ warningMessage += `⚠️ ${incomplete.length} {{ _("samples have no values (will not be saved)") }}:\n${incomplete.join(', ')}\n\n`;
+ }
+
+ // ✅ Repeatability exceeded warning
+ if (exceededRepeatability.length> 0) {
+ warningMessage += `⚠️ ${exceededRepeatability.length} {{ _("samples exceeded tolerance") }} (diff> ${configLimit}):\n${exceededRepeatability.join(', ')}\n\n`;
+ }
+
+ // ✅ Confirm if there are warnings
+ if (warningMessage) {
+ const proceed = confirm(
+ `${warningMessage}` +
+ `✅ ${payload.length} {{ _("samples ready to save.") }}\n\n` +
+ `{{ _("Continue?") }}`
+ );
+ if (!proceed) {
+ logger.warn('CSN: User cancelled save');
+ return [];
+ }
+ }
+
+ logger.log(`CSN: ${payload.length} samples ready to save`);
+ return payload;
+ };
+
+ // ✅ AfterSave callback - MT form-ын логик ашиглана
+ window.updateCsnGridAfterSave = function(savedPayload) {
+ if (!window.csnGridApi || !savedPayload || savedPayload.length === 0) return;
+
+ logger.log('CSN afterSave called with', savedPayload.length, 'samples');
+
+ const savedSampleIds = savedPayload.map(r => r.sample_id);
+
+ // ✅ CRITICAL: Sample IDs-ийг worksheet-д хадгалах логик
+ const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+
+ // Status-based filtering
+ const approvedIds = []; // Батлагдсан → арилах
+ const pendingIds = []; // Хүлээгдэж буй → үлдэх
+
+ savedPayload.forEach(saved => {
+ if (saved.status === 'approved') {
+ approvedIds.push(saved.sample_id);
+ } else if (saved.status === 'pending_review') {
+ pendingIds.push(saved.sample_id);
+ }
+ });
+
+ // ✅ Grid-ээс БҮХ sample IDs цуглуулах (хадгалагдсан болон хадгалагдаагүй)
+ const allSampleIds = [];
+ window.csnGridApi.forEachNode(n => {
+ if (!allSampleIds.includes(n.data.sample_id)) {
+ allSampleIds.push(n.data.sample_id);
+ }
+ });
+
+ // ✅ CRITICAL LOGIC: Хадгалагдаагүй + pending дээжүүдийг үлдээх
+ // Approved байгаа бол арилгах, бусад бүх дээжийг үлдээх
+ const remainingIds = allSampleIds.filter(id =>
+ !approvedIds.includes(id) || pendingIds.includes(id)
+ );
+
+ logger.log(`All samples in grid: ${allSampleIds.length} -`, allSampleIds);
+ logger.log(`Saved samples: ${savedSampleIds.length} -`, savedSampleIds);
+ logger.log(`Approved (will remove): ${approvedIds.length} -`, approvedIds);
+ logger.log(`Pending (will keep): ${pendingIds.length} -`, pendingIds);
+ logger.log(`Remaining (will stay): ${remainingIds.length} -`, remainingIds);
+
+ // ✅ URL ба localStorage шинэчлэх
+ if (remainingIds.length> 0) {
+ const idsString = remainingIds.join(',');
+
+ try {
+ localStorage.setItem(STORAGE_KEY, idsString);
+ logger.log(`localStorage UPDATED: sample_ids=${idsString}`);
+ } catch (e) {
+ logger.warn('localStorage update failed:', e);
+ }
+
+ try {
+ const url = new URL(window.location.href);
+ url.searchParams.set('sample_ids', idsString);
+ window.history.replaceState({}, '', url.toString());
+ logger.log(`URL UPDATED: sample_ids=${idsString}`);
+ } catch (e) {
+ logger.warn('URL update failed:', e);
+ }
+ } else {
+ // Бүх дээж approved - worksheet цэвэрлэх
+ try {
+ localStorage.removeItem(STORAGE_KEY);
+ const url = new URL(window.location.href);
+ url.searchParams.delete('sample_ids');
+ window.history.replaceState({}, '', url.toString());
+ logger.log('All approved - worksheet cleared');
+ } catch (e) {}
+ }
+
+ // ✅ Draft устгах (зөвхөн хадгалагдсан дээжүүдийн)
+ if (draftMgr) {
+ draftMgr.purge(savedSampleIds);
+ }
+
+ // ✅ Grid update - хадгалагдсан дээжүүдийг locked болгох
+ window.csnGridApi.forEachNode(n => {
+ if (savedSampleIds.includes(n.data.sample_id)) {
+ n.data.is_saved = true;
+
+ const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
+ if (saved && saved.raw_data) {
+ const raw = saved.raw_data;
+ n.data.v1 = raw.v1;
+ n.data.v2 = raw.v2;
+ n.data.v3 = raw.v3;
+ n.data.v4 = raw.v4;
+ n.data.v5 = raw.v5;
+ n.data.average = raw.avg ?? saved.final_result;
+ }
+ }
+ });
+
+ // ✅ Approved дээжүүдийг grid-ээс УСТГАХ
+ if (approvedIds.length> 0) {
+ const rowsToRemove = [];
+ window.csnGridApi.forEachNode(n => {
+ if (approvedIds.includes(n.data.sample_id)) {
+ rowsToRemove.push(n);
+ }
+ });
+
+ if (rowsToRemove.length> 0) {
+ window.csnGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+ logger.log(`Removed ${approvedIds.length} approved samples from grid`);
+ }
+ }
+
+ // ✅ Grid refresh
+ window.csnGridApi.refreshCells({ force: true });
+
+ logger.log(`CSN afterSave complete: ${savedSampleIds.length} saved, ${approvedIds.length} removed, ${remainingIds.length} remaining`);
+ };
+
+ // ✅ Register collector AND afterSave in LIMS_CALC namespace
+ window.LIMS_CALC = window.LIMS_CALC || {};
+ window.LIMS_CALC[ANALY_CODE] = {
+ collect: window.collectCsnGridData,
+ afterSave: window.updateCsnGridAfterSave
+ };
+ window.LIMS_CALC['CSN'] = {
+ collect: window.collectCsnGridData,
+ afterSave: window.updateCsnGridAfterSave
+ };
+ logger.log('CSN collector & afterSave registered in LIMS_CALC namespace');
 
 })();
 </script>

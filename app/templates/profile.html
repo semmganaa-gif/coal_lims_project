@@ -3,184 +3,184 @@
 
 {% block content %}
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                    <i class="bi bi-person-circle text-primary fs-1"></i>
-                </div>
-                <div>
-                    <h3 class="mb-1">{{ current_user.username }}</h3>
-                    <span class="badge bg-{{ 'primary' if current_user.role == 'admin' else 'success' if current_user.role == 'senior' else 'secondary' }}">
-                        {{ current_user.role|title }}
-                    </span>
-                </div>
-            </div>
+ <div class="row justify-content-center">
+ <div class="col-lg-8">
+ <!-- Header -->
+ <div class="d-flex align-items-center mb-4">
+ <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+ <i class="bi bi-person-circle text-primary fs-1"></i>
+ </div>
+ <div class="font-[Arial,_sans-serif] text-[12px] text-[#333]">
+ <h3 class="mb-1">{{ current_user.username }}</h3>
+ <span class="badge bg-{{ 'primary' if current_user.role == 'admin' else 'success' if current_user.role == 'senior' else 'secondary' }}">
+ {{ current_user.role|title }}
+ </span>
+ </div>
+ </div>
 
-            <!-- Profile information -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>{{ _("Email Signature Information") }}</h5>
-                    <small class="text-muted">{{ _("Your information will be included when sending reports") }}</small>
-                    <div class="mt-2">
-                        <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>{{ _("Latin characters only") }}</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('main.profile') }}" id="profileForm">
-                        {{ form.hidden_tag() }}
+ <!-- Profile information -->
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-white border-bottom py-3">
+ <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>{{ _("Email Signature Information") }}</h5>
+ <small class="text-muted">{{ _("Your information will be included when sending reports") }}</small>
+ <div class="mt-2">
+ <span class="badge bg-info"><i class="bi bi-info-circle me-1"></i>{{ _("Latin characters only") }}</span>
+ </div>
+ </div>
+ <div class="card-body">
+ <form method="POST" action="{{ url_for('main.profile') }}" id="profileForm">
+ {{ form.hidden_tag() }}
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">{{ _("Username") }}</label>
-                                <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">{{ _("Role") }}</label>
-                                <input type="text" class="form-control" value="{{ current_user.role|title }}" disabled>
-                            </div>
-                        </div>
+ <div class="row mb-3">
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Username") }}</label>
+ <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Role") }}</label>
+ <input type="text" class="form-control" value="{{ current_user.role|title }}" disabled>
+ </div>
+ </div>
 
-                        <hr class="my-4">
+ <hr class="my-4">
 
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="full_name" class="form-label">
-                                    <i class="bi bi-person me-1"></i>{{ _("Full Name (Latin)") }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.full_name(class="form-control", placeholder=_("e.g. GANTULGA Ulziibuyan")) }}
-                                <small class="text-muted">{{ _("Displayed in email signature") }}</small>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="position" class="form-label">
-                                    <i class="bi bi-briefcase me-1"></i>{{ _("Position (Latin)") }}
-                                </label>
-                                {{ form.position(class="form-control", placeholder=_("e.g. Senior Chemist, Laboratory")) }}
-                            </div>
-                        </div>
+ <div class="row g-3">
+ <div class="col-md-6">
+ <label for="full_name" class="form-label">
+ <i class="bi bi-person me-1"></i>{{ _("Full Name (Latin)") }} <span class="text-danger">*</span>
+ </label>
+ {{ form.full_name(class="form-control", placeholder=_("e.g. GANTULGA Ulziibuyan")) }}
+ <small class="text-muted">{{ _("Displayed in email signature") }}</small>
+ </div>
+ <div class="col-md-6">
+ <label for="position" class="form-label">
+ <i class="bi bi-briefcase me-1"></i>{{ _("Position (Latin)") }}
+ </label>
+ {{ form.position(class="form-control", placeholder=_("e.g. Senior Chemist, Laboratory")) }}
+ </div>
+ </div>
 
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label for="email" class="form-label">
-                                    <i class="bi bi-envelope me-1"></i>{{ _("Work Email") }} <span class="text-danger">*</span>
-                                </label>
-                                {{ form.email(class="form-control", placeholder=_("e.g. gantulga.u@mmc.mn")) }}
-                            </div>
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label">
-                                    <i class="bi bi-telephone me-1"></i>{{ _("Phone Number") }}
-                                </label>
-                                {{ form.phone(class="form-control", placeholder=_("e.g. 80872013")) }}
-                            </div>
-                        </div>
+ <div class="row g-3 mt-2">
+ <div class="col-md-6">
+ <label for="email" class="form-label">
+ <i class="bi bi-envelope me-1"></i>{{ _("Work Email") }} <span class="text-danger">*</span>
+ </label>
+ {{ form.email(class="form-control", placeholder=_("e.g. gantulga.u@mmc.mn")) }}
+ </div>
+ <div class="col-md-6">
+ <label for="phone" class="form-label">
+ <i class="bi bi-telephone me-1"></i>{{ _("Phone Number") }}
+ </label>
+ {{ form.phone(class="form-control", placeholder=_("e.g. 80872013")) }}
+ </div>
+ </div>
 
-                        <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg me-1"></i>{{ _("Save") }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+ <div class="d-flex justify-content-end mt-4">
+ <button type="submit" class="btn btn-primary">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Save") }}
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
 
-            <!-- Email Signature Preview -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>{{ _("Signature Preview") }}</h5>
-                </div>
-                <div class="card-body" id="signaturePreview">
-                    <div style="font-family: Arial, sans-serif; font-size: 12px; color: #333;">
-                        <p style="margin: 0 0 10px 0;">Regards,</p>
+ <!-- Email Signature Preview -->
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-white border-bottom py-3">
+ <h5 class="mb-0"><i class="bi bi-eye me-2"></i>{{ _("Signature Preview") }}</h5>
+ </div>
+ <div class="card-body" id="signaturePreview">
+ <div class="font-[Arial,_sans-serif] text-[12px] text-[#333]">
+ <p class="mb-[10px]">Regards,</p>
 
-                        <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;" id="previewName">
-                            {{ current_user.full_name or current_user.username }}
-                        </p>
-                        <p style="margin: 0 0 15px 0; color: #666;" id="previewPosition">
-                            {{ current_user.position or 'Senior Chemist, Laboratory' }}
-                        </p>
+ <p class="mb-[3px] font-bold text-[#1a4480]" id="previewName">
+ {{ current_user.full_name or current_user.username }}
+ </p>
+ <p class="mb-[15px] text-[#666]" id="previewPosition">
+ {{ current_user.position or 'Senior Chemist, Laboratory' }}
+ </p>
 
-                        <div style="font-size: 11px;">
-                            <p style="margin: 0 0 3px 0; font-weight: bold; color: #1a4480;">ENERGY RESOURCES LLC</p>
-                            <p style="margin: 0 0 3px 0; color: #666;">
-                                | Ukhaa Khudag Branch, Tsogttsetsii soum, Umnugobi province 46040, MONGOLIA |
-                            </p>
-                            <p style="margin: 0 0 3px 0; color: #666;" id="previewPhone">
-                                | Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279
-                                {% if current_user.phone %}| Mobile: {{ current_user.phone }}{% endif %} |
-                            </p>
-                            <p style="margin: 0 0 3px 0;" id="previewEmail">
-                                {% if current_user.email %}
-                                | <a href="mailto:{{ current_user.email }}" style="color: #0066cc; text-decoration: none;">{{ current_user.email }}</a> |
-                                {% endif %}
-                                <a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |
-                            </p>
-                        </div>
+ <div class="text-[11px]">
+ <p class="mb-[3px] font-bold text-[#1a4480]">ENERGY RESOURCES LLC</p>
+ <p class="mb-[3px] text-[#666]">
+ | Ukhaa Khudag Branch, Tsogttsetsii soum, Umnugobi province 46040, MONGOLIA |
+ </p>
+ <p class="mb-[3px] text-[#666]" id="previewPhone">
+ | Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279
+ {% if current_user.phone %}| Mobile: {{ current_user.phone }}{% endif %} |
+ </p>
+ <p class="mb-[3px]" id="previewEmail">
+ {% if current_user.email %}
+ | <a class="text-[#0066cc] no-underline" href="mailto:{{ current_user.email }}">{{ current_user.email }}</a> |
+ {% endif %}
+ <a class="text-[#0066cc] no-underline" href="http://www.mmc.mn/">http://www.mmc.mn/</a> |
+ </p>
+ </div>
 
-                        <hr style="border: none; border-top: 1px solid #ccc; margin: 15px 0;">
+ <hr class="border-0 border-t border-[#ccc] my-[15px] mx-0">
 
-                        <p style="margin: 0 0 8px 0; font-size: 10px; color: #666;">
-                            <em>This email was automatically sent from Coal LIMS (Laboratory Information Management System)</em>
-                        </p>
+ <p class="mb-[8px] text-[10px] text-[#666]">
+ <em>This email was automatically sent from Coal LIMS (Laboratory Information Management System)</em>
+ </p>
 
-                        <p style="margin: 0; font-size: 10px; color: #999; font-style: italic;">
-                            This email is CONFIDENTIAL and is intended only for the use of the person to whom it is addressed.
-                            Any distribution, copying or other use by anyone else is strictly prohibited.
-                        </p>
-                    </div>
-                </div>
-            </div>
+ <p class="m-0 text-[10px] text-[#999] italic">
+ This email is CONFIDENTIAL and is intended only for the use of the person to whom it is addressed.
+ Any distribution, copying or other use by anyone else is strictly prohibited.
+ </p>
+ </div>
+ </div>
+ </div>
 
-        </div>
-    </div>
+ </div>
+ </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-    // Live preview update
-    const nameInput = document.getElementById('full_name');
-    const positionInput = document.getElementById('position');
-    const emailInput = document.getElementById('email');
-    const phoneInput = document.getElementById('phone');
+ // Live preview update
+ const nameInput = document.getElementById('full_name');
+ const positionInput = document.getElementById('position');
+ const emailInput = document.getElementById('email');
+ const phoneInput = document.getElementById('phone');
 
-    const previewName = document.getElementById('previewName');
-    const previewPosition = document.getElementById('previewPosition');
-    const previewEmail = document.getElementById('previewEmail');
-    const previewPhone = document.getElementById('previewPhone');
+ const previewName = document.getElementById('previewName');
+ const previewPosition = document.getElementById('previewPosition');
+ const previewEmail = document.getElementById('previewEmail');
+ const previewPhone = document.getElementById('previewPhone');
 
-    function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+ function _e(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    function updatePreview() {
-        if (previewName) previewName.textContent = nameInput.value || '{{ current_user.username }}';
-        if (previewPosition) previewPosition.textContent = positionInput.value || 'Senior Chemist, Laboratory';
+ function updatePreview() {
+ if (previewName) previewName.textContent = nameInput.value || '{{ current_user.username }}';
+ if (previewPosition) previewPosition.textContent = positionInput.value || 'Senior Chemist, Laboratory';
 
-        // Phone update
-        if (previewPhone) {
-            let phoneHtml = '| Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279';
-            if (phoneInput.value) {
-                phoneHtml += ' | Mobile: ' + _e(phoneInput.value);
-            }
-            phoneHtml += ' |';
-            previewPhone.innerHTML = phoneHtml;
-        }
+ // Phone update
+ if (previewPhone) {
+ let phoneHtml = '| Tel.: (976)7012 2279, 7013 2279 | Fax: (976) 11 322279';
+ if (phoneInput.value) {
+ phoneHtml += ' | Mobile: ' + _e(phoneInput.value);
+ }
+ phoneHtml += ' |';
+ previewPhone.innerHTML = phoneHtml;
+ }
 
-        // Email update
-        if (previewEmail) {
-            let emailHtml = '';
-            if (emailInput.value) {
-                var safeEmail = _e(emailInput.value);
-                emailHtml = '| <a href="mailto:' + encodeURI(emailInput.value) + '" style="color: #0066cc; text-decoration: none;">' + safeEmail + '</a> | ';
-            }
-            emailHtml += '<a href="http://www.mmc.mn/" style="color: #0066cc; text-decoration: none;">http://www.mmc.mn/</a> |';
-            previewEmail.innerHTML = emailHtml;
-        }
-    }
+ // Email update
+ if (previewEmail) {
+ let emailHtml = '';
+ if (emailInput.value) {
+ var safeEmail = _e(emailInput.value);
+ emailHtml = '| <a class="text-[#0066cc] no-underline" href="mailto:' + encodeURI(emailInput.value) + '">' + safeEmail + '</a> | ';
+ }
+ emailHtml += '<a class="text-[#0066cc] no-underline" href="http://www.mmc.mn/">http://www.mmc.mn/</a> |';
+ previewEmail.innerHTML = emailHtml;
+ }
+ }
 
-    [nameInput, positionInput, emailInput, phoneInput].forEach(function(input) {
-        if (input) input.addEventListener('input', updatePreview);
-    });
+ [nameInput, positionInput, emailInput, phoneInput].forEach(function(input) {
+ if (input) input.addEventListener('input', updatePreview);
+ });
 });
 </script>
 {% endblock %}

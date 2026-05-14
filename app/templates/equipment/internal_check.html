@@ -5,75 +5,75 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id removed #}
-  {% include "equipment/partials/hero_tabs.html" %}
+ {# add_modal_id removed #}
+ {% include "equipment/partials/hero_tabs.html" %}
 
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-clipboard-check text-primary"></i> {{ _("Internal Check & Adjustment") }}</span>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCheckModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
-      {% endif %}
-      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
-      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
-    </div>
-  </div>
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <span class="fw-bold"><i class="bi bi-clipboard-check text-primary"></i> {{ _("Internal Check & Adjustment") }}</span>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role in ['senior','manager','admin'] %}
+ <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCheckModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-warning" id="btn-edit-row" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-row" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
+ {% endif %}
+ <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+ <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
+ </div>
+ </div>
 
-  <div class="eq-grid-card">
-    <div id="internalCheckGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
-  </div>
+ <div class="eq-grid-card">
+ <div class="w-full h-[calc(100vh_-_280px)] min-h-[450px]" id="internalCheckGrid"></div>
+ </div>
 
-  <div class="modal fade" id="addCheckModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Internal Check") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='internal_check') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body p-4">
-          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
-          <div class="row g-3">
-            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="ic_no" name="no" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Equipment Name") }}</label><input type="text" id="ic_name" name="name" class="form-control"></div>
-            <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="ic_manufacturer" name="manufacturer" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Model No.") }}</label><input type="text" id="ic_mark" name="mark" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Lab Code") }}</label><input type="text" id="ic_lab_code" name="lab_code" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label fw-bold small">{{ _("Quantity") }}</label><input type="text" id="ic_qty" name="qty" class="form-control" value="1"></div>
-            <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" id="ic_commissioned_date" name="commissioned_date" class="form-control"></div>
-            <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Location") }}</label><input type="text" id="ic_location" name="location" class="form-control"></div>
-            <div class="col-12"><label class="form-label fw-bold small">{{ _("Check & Adjustment Type") }}</label>
-              <div class="d-flex gap-3 flex-wrap">
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_asz" name="chk_asz" value="true"><label class="form-check-label small" for="ic_chk_asz">{{ _("CRM Check") }}</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ic_chk_temp">{{ _("Temperature") }}</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_rpm" name="chk_rpm" value="true"><label class="form-check-label small" for="ic_chk_rpm">{{ _("RPM / Rotation Speed") }}</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_oil" name="chk_oil" value="true"><label class="form-check-label small" for="ic_chk_oil">{{ _("Oil / Lubrication") }}</label></div>
-                <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_clean" name="chk_clean" value="true"><label class="form-check-label small" for="ic_chk_clean">{{ _("Inspection & Cleaning") }}</label></div>
-              </div>
-            </div>
-            <div class="col-12"><label class="form-label fw-bold small">{{ _("Remarks") }}</label><input type="text" id="ic_remark" name="remark" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Check Date") }}</label><input type="text" id="ic_check_date" name="check_date" class="form-control"></div>
-            <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Next Check Date") }}</label><input type="text" id="ic_next_check_date" name="next_check_date" class="form-control"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <div class="modal fade" id="addCheckModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-brand-gradient text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Internal Check") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='internal_check') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body p-4">
+ <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+ <div class="row g-3">
+ <div class="col-md-2"><label class="form-label fw-bold small">{{ _("No.") }}</label><input type="text" id="ic_no" name="no" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Equipment Name") }}</label><input type="text" id="ic_name" name="name" class="form-control"></div>
+ <div class="col-md-5"><label class="form-label fw-bold small">{{ _("Manufacturer") }}</label><input type="text" id="ic_manufacturer" name="manufacturer" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Model No.") }}</label><input type="text" id="ic_mark" name="mark" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Lab Code") }}</label><input type="text" id="ic_lab_code" name="lab_code" class="form-control"></div>
+ <div class="col-md-2"><label class="form-label fw-bold small">{{ _("Quantity") }}</label><input type="text" id="ic_qty" name="qty" class="form-control" value="1"></div>
+ <div class="col-md-4"><label class="form-label fw-bold small">{{ _("Commissioned Date") }}</label><input type="text" id="ic_commissioned_date" name="commissioned_date" class="form-control"></div>
+ <div class="col-md-3"><label class="form-label fw-bold small">{{ _("Location") }}</label><input type="text" id="ic_location" name="location" class="form-control"></div>
+ <div class="col-12"><label class="form-label fw-bold small">{{ _("Check & Adjustment Type") }}</label>
+ <div class="d-flex gap-3 flex-wrap">
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_asz" name="chk_asz" value="true"><label class="form-check-label small" for="ic_chk_asz">{{ _("CRM Check") }}</label></div>
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_temp" name="chk_temp" value="true"><label class="form-check-label small" for="ic_chk_temp">{{ _("Temperature") }}</label></div>
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_rpm" name="chk_rpm" value="true"><label class="form-check-label small" for="ic_chk_rpm">{{ _("RPM / Rotation Speed") }}</label></div>
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_oil" name="chk_oil" value="true"><label class="form-check-label small" for="ic_chk_oil">{{ _("Oil / Lubrication") }}</label></div>
+ <div class="form-check"><input class="form-check-input" type="checkbox" id="ic_chk_clean" name="chk_clean" value="true"><label class="form-check-label small" for="ic_chk_clean">{{ _("Inspection & Cleaning") }}</label></div>
+ </div>
+ </div>
+ <div class="col-12"><label class="form-label fw-bold small">{{ _("Remarks") }}</label><input type="text" id="ic_remark" name="remark" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Check Date") }}</label><input type="text" id="ic_check_date" name="check_date" class="form-control"></div>
+ <div class="col-md-6"><label class="form-label fw-bold small">{{ _("Next Check Date") }}</label><input type="text" id="ic_next_check_date" name="next_check_date" class="form-control"></div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="register_type" value="internal_check">
-  </form>
+ <form class="hidden" id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="register_type" value="internal_check">
+ </form>
 </div>
 {% endblock %}
 
@@ -88,64 +88,64 @@
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  var rowData = {{ items | tojson }};
-  rowData.forEach(function(r) {
-    ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'].forEach(function(f) {
-      r[f] = r[f] === true || r[f] === 'true';
-    });
-  });
+ var rowData = {{ items | tojson }};
+ rowData.forEach(function(r) {
+ ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'].forEach(function(f) {
+ r[f] = r[f] === true || r[f] === 'true';
+ });
+ });
 
-  var table = new Tabulator("#internalCheckGrid", {
-    data: rowData,
-    layout: "fitColumns",
-    height: "78vh",
-    selectable: true,
-    columns: [
-      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"№", field:"no", width:55, frozen:true},
-      {title:'{{ _("Equipment Name") }}', field:"name", minWidth:180, frozen:true},
-      {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140},
-      {title:'{{ _("Model No.") }}', field:"mark", width:120},
-      {title:'{{ _("Lab Code") }}', field:"lab_code", width:130},
-      {title:'{{ _("Quantity") }}', field:"qty", width:90},
-      {title:'{{ _("Commissioned Date") }}', field:"commissioned_date", width:140},
-      {title:'{{ _("Location") }}', field:"location", width:100},
-      {title:'{{ _("Check & Adjustment Type") }}', columns:[
-        {title:'{{ _("CRM Check") }}', field:"chk_asz", width:110, formatter:"tickCross"},
-        {title:'{{ _("Temperature") }}', field:"chk_temp", width:110, formatter:"tickCross"},
-        {title:'{{ _("RPM / Rotation") }}', field:"chk_rpm", width:120, formatter:"tickCross"},
-        {title:'{{ _("Oil / Lubrication") }}', field:"chk_oil", width:120, formatter:"tickCross"},
-        {title:'{{ _("Inspection & Cleaning") }}', field:"chk_clean", width:130, formatter:"tickCross"},
-      ]},
-      {title:'{{ _("Remarks") }}', field:"remark", minWidth:140},
-      {title:'{{ _("Check Date") }}', field:"check_date", width:160},
-      {title:'{{ _("Next Check Date") }}', field:"next_check_date", width:170},
-    ],
-  });
+ var table = new Tabulator("#internalCheckGrid", {
+ data: rowData,
+ layout: "fitColumns",
+ height: "78vh",
+ selectable: true,
+ columns: [
+ {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+ {title:"№", field:"no", width:55, frozen:true},
+ {title:'{{ _("Equipment Name") }}', field:"name", minWidth:180, frozen:true},
+ {title:'{{ _("Manufacturer") }}', field:"manufacturer", minWidth:140},
+ {title:'{{ _("Model No.") }}', field:"mark", width:120},
+ {title:'{{ _("Lab Code") }}', field:"lab_code", width:130},
+ {title:'{{ _("Quantity") }}', field:"qty", width:90},
+ {title:'{{ _("Commissioned Date") }}', field:"commissioned_date", width:140},
+ {title:'{{ _("Location") }}', field:"location", width:100},
+ {title:'{{ _("Check & Adjustment Type") }}', columns:[
+ {title:'{{ _("CRM Check") }}', field:"chk_asz", width:110, formatter:"tickCross"},
+ {title:'{{ _("Temperature") }}', field:"chk_temp", width:110, formatter:"tickCross"},
+ {title:'{{ _("RPM / Rotation") }}', field:"chk_rpm", width:120, formatter:"tickCross"},
+ {title:'{{ _("Oil / Lubrication") }}', field:"chk_oil", width:120, formatter:"tickCross"},
+ {title:'{{ _("Inspection & Cleaning") }}', field:"chk_clean", width:130, formatter:"tickCross"},
+ ]},
+ {title:'{{ _("Remarks") }}', field:"remark", minWidth:140},
+ {title:'{{ _("Check Date") }}', field:"check_date", width:160},
+ {title:'{{ _("Next Check Date") }}', field:"next_check_date", width:170},
+ ],
+ });
 
-  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
+ initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  window.editSelectedRow = function() {
-    var sel = table.getSelectedData();
-    if (sel.length !== 1) return;
-    var d = sel[0];
-    var fields = ['no','name','manufacturer','mark','lab_code','qty','commissioned_date','location','remark','check_date','next_check_date'];
-    var chkFields = ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'];
-    fields.forEach(function(f) { var el=document.getElementById('ic_'+f); if(el) el.value=d[f]||''; });
-    chkFields.forEach(function(f) { var el=document.getElementById('ic_'+f); if(el) el.checked=!!d[f]; });
-    if (d.id) {
-      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
-    }
-    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
-    new bootstrap.Modal(document.getElementById('addCheckModal')).show();
-  };
+ window.editSelectedRow = function() {
+ var sel = table.getSelectedData();
+ if (sel.length !== 1) return;
+ var d = sel[0];
+ var fields = ['no','name','manufacturer','mark','lab_code','qty','commissioned_date','location','remark','check_date','next_check_date'];
+ var chkFields = ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'];
+ fields.forEach(function(f) { var el=document.getElementById('ic_'+f); if(el) el.value=d[f]||''; });
+ chkFields.forEach(function(f) { var el=document.getElementById('ic_'+f); if(el) el.checked=!!d[f]; });
+ if (d.id) {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+ }
+ document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
+ new bootstrap.Modal(document.getElementById('addCheckModal')).show();
+ };
 
-  document.getElementById('addCheckModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='internal_check') }}";
-    document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Internal Check") }}';
-    ['no','name','manufacturer','mark','lab_code','qty','commissioned_date','location','remark','check_date','next_check_date'].forEach(function(f) { document.getElementById('ic_'+f).value=''; });
-    ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'].forEach(function(f) { document.getElementById('ic_'+f).checked=false; });
-  });
+ document.getElementById('addCheckModal').addEventListener('hidden.bs.modal', function() {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='internal_check') }}";
+ document.querySelector('#addCheckModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Internal Check") }}';
+ ['no','name','manufacturer','mark','lab_code','qty','commissioned_date','location','remark','check_date','next_check_date'].forEach(function(f) { document.getElementById('ic_'+f).value=''; });
+ ['chk_asz','chk_temp','chk_rpm','chk_oil','chk_clean'].forEach(function(f) { document.getElementById('ic_'+f).checked=false; });
+ });
 });
 </script>
 {% endblock %}

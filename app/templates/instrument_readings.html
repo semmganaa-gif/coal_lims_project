@@ -240,10 +240,10 @@ function statusRenderer(params) {
 // ── Action buttons renderer ──
 function actionRenderer(params) {
   if (params.data.status !== 'pending') return '';
-  return `<button class="btn btn-sm btn-outline-success py-0 px-1 me-1" onclick="approveOne(${params.data.id})" title="{{ _('Approve') }}">
+  return `<button class="btn btn-sm btn-outline-success py-0 px-1 me-1" data-action="approveOne" data-arg-0="${params.data.id}" title="{{ _('Approve') }}">
     <i class="bi bi-check"></i>
   </button>
-  <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="rejectOne(${params.data.id})" title="{{ _('Reject') }}">
+  <button class="btn btn-sm btn-outline-danger py-0 px-1" data-action="rejectOne" data-arg-0="${params.data.id}" title="{{ _('Reject') }}">
     <i class="bi bi-x"></i>
   </button>`;
 }

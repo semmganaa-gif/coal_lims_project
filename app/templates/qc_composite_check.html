@@ -2,414 +2,414 @@
 
 {% block content %}
 <style nonce="{{ csp_nonce }}">
-  .qc-page {
-    min-height: calc(100vh - 80px);
-    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-    padding: 1.5rem;
-  }
+ .qc-page {
+ min-height: calc(100vh - 80px);
+ background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+ padding: 1.5rem;
+ }
 
-  .qc-wrapper {
-    max-width: 1500px;
-    margin: 0 auto;
-  }
+ .qc-wrapper {
+ max-width: 1500px;
+ margin: 0 auto;
+ }
 
-  /* Header */
-  .qc-header {
-    background: rgba(255,255,255,0.95);
-    border-radius: 16px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-  }
+ /* Header */
+ .qc-header {
+ background: rgba(255,255,255,0.95);
+ border-radius: 16px;
+ padding: 1.25rem 1.5rem;
+ margin-bottom: 1.5rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+ }
 
-  .qc-header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
+ .qc-header-left {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ }
 
-  .qc-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
-  }
+ .qc-icon {
+ width: 48px;
+ height: 48px;
+ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+ border-radius: 12px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: white;
+ font-size: 1.25rem;
+ box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+ }
 
-  .qc-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-  }
+ .qc-title {
+ font-size: 1.15rem;
+ font-weight: 700;
+ color: #1e293b;
+ margin: 0;
+ }
 
-  .qc-subtitle {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 2px;
-  }
+ .qc-subtitle {
+ font-size: 0.8rem;
+ color: #64748b;
+ margin-top: 2px;
+ }
 
-  .qc-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
+ .qc-actions {
+ display: flex;
+ gap: 0.5rem;
+ }
 
-  /* Stream Card */
-  .stream-card {
-    background: white;
-    border-radius: 16px;
-    margin-bottom: 1.25rem;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  }
+ /* Stream Card */
+ .stream-card {
+ background: white;
+ border-radius: 16px;
+ margin-bottom: 1.25rem;
+ overflow: hidden;
+ box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+ }
 
-  .stream-header {
-    background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
-    padding: 1rem 1.25rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-  }
+ .stream-header {
+ background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+ padding: 1rem 1.25rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ border-bottom: 1px solid #e2e8f0;
+ }
 
-  .stream-family {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+ .stream-family {
+ display: flex;
+ align-items: center;
+ gap: 0.75rem;
+ }
 
-  .stream-family-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1rem;
-  }
+ .stream-family-icon {
+ width: 36px;
+ height: 36px;
+ background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+ border-radius: 10px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: white;
+ font-size: 1rem;
+ }
 
-  .stream-family-name {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #1e293b;
-  }
+ .stream-family-name {
+ font-weight: 700;
+ font-size: 1rem;
+ color: #1e293b;
+ }
 
-  .stream-meta {
-    display: flex;
-    gap: 1.25rem;
-  }
+ .stream-meta {
+ display: flex;
+ gap: 1.25rem;
+ }
 
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    color: #64748b;
-    background: white;
-    padding: 0.35rem 0.75rem;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-  }
+ .meta-item {
+ display: flex;
+ align-items: center;
+ gap: 0.4rem;
+ font-size: 0.8rem;
+ color: #64748b;
+ background: white;
+ padding: 0.35rem 0.75rem;
+ border-radius: 8px;
+ border: 1px solid #e2e8f0;
+ }
 
-  .meta-item i { color: #94a3b8; }
+ .meta-item i { color: #94a3b8; }
 
-  /* Table */
-  .stream-table-wrap {
-    overflow-x: auto;
-    padding: 0;
-  }
+ /* Table */
+ .stream-table-wrap {
+ overflow-x: auto;
+ padding: 0;
+ }
 
-  .qc-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.82rem;
-  }
+ .qc-table {
+ width: 100%;
+ border-collapse: collapse;
+ font-size: 0.82rem;
+ }
 
-  .qc-table thead th {
-    background: #f8fafc;
-    color: #475569;
-    font-weight: 600;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.6rem 0.5rem;
-    text-align: center;
-    border-bottom: 2px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-  }
+ .qc-table thead th {
+ background: #f8fafc;
+ color: #475569;
+ font-weight: 600;
+ font-size: 0.7rem;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ padding: 0.6rem 0.5rem;
+ text-align: center;
+ border-bottom: 2px solid #e2e8f0;
+ position: sticky;
+ top: 0;
+ }
 
-  .qc-table thead th.param-header {
-    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-    border-left: 1px solid #e2e8f0;
-  }
+ .qc-table thead th.param-header {
+ background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+ border-left: 1px solid #e2e8f0;
+ }
 
-  .qc-table tbody td {
-    padding: 0.5rem;
-    border-bottom: 1px solid #f1f5f9;
-    text-align: center;
-    vertical-align: middle;
-  }
+ .qc-table tbody td {
+ padding: 0.5rem;
+ border-bottom: 1px solid #f1f5f9;
+ text-align: center;
+ vertical-align: middle;
+ }
 
-  .qc-table tbody tr:hover { background: #fafbfc; }
+ .qc-table tbody tr:hover { background: #fafbfc; }
 
-  /* Row Types */
-  .row-hourly td { background: white; }
+ /* Row Types */
+ .row-hourly td { background: white; }
 
-  .row-avg {
-    background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 100%) !important;
-  }
-  .row-avg td {
-    font-weight: 600;
-    color: #334155;
-    border-top: 2px solid #cbd5e1;
-    background: transparent !important;
-  }
+ .row-avg {
+ background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+ }
+ .row-avg td {
+ font-weight: 600;
+ color: #334155;
+ border-top: 2px solid #cbd5e1;
+ background: transparent !important;
+ }
 
-  .row-comp {
-    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%) !important;
-  }
-  .row-comp td {
-    font-weight: 600;
-    color: #92400e;
-    border-top: 2px solid #fbbf24;
-    background: transparent !important;
-  }
+ .row-comp {
+ background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%) !important;
+ }
+ .row-comp td {
+ font-weight: 600;
+ color: #92400e;
+ border-top: 2px solid #fbbf24;
+ background: transparent !important;
+ }
 
-  /* Cell Styles */
-  .cell-num {
-    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
-    font-size: 0.8rem;
-    text-align: right;
-    padding-right: 0.75rem !important;
-  }
+ /* Cell Styles */
+ .cell-num {
+ font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+ font-size: 0.8rem;
+ text-align: right;
+ padding-right: 0.75rem !important;
+ }
 
-  .cell-delta {
-    font-size: 0.7rem;
-    color: #94a3b8;
-    text-align: center;
-    min-width: 45px;
-  }
+ .cell-delta {
+ font-size: 0.7rem;
+ color: #94a3b8;
+ text-align: center;
+ min-width: 45px;
+ }
 
-  .cell-code {
-    text-align: left;
-    padding-left: 1rem !important;
-    font-weight: 500;
-  }
+ .cell-code {
+ text-align: left;
+ padding-left: 1rem !important;
+ font-weight: 500;
+ }
 
-  .cell-code a {
-    color: #1e293b;
-    text-decoration: none;
-    transition: color 0.15s;
-  }
-  .cell-code a:hover { color: #3b82f6; }
+ .cell-code a {
+ color: #1e293b;
+ text-decoration: none;
+ transition: color 0.15s;
+ }
+ .cell-code a:hover { color: #3b82f6; }
 
-  .cell-slot {
-    font-weight: 600;
-    color: #3b82f6;
-    font-size: 0.75rem;
-  }
+ .cell-slot {
+ font-weight: 600;
+ color: #3b82f6;
+ font-size: 0.75rem;
+ }
 
-  /* Status */
-  .status-fail {
-    background: #fee2e2 !important;
-    color: #b91c1c !important;
-    font-weight: 700;
-    border-radius: 4px;
-  }
+ /* Status */
+ .status-fail {
+ background: #fee2e2 !important;
+ color: #b91c1c !important;
+ font-weight: 700;
+ border-radius: 4px;
+ }
 
-  .delta-fail {
-    background: #fecaca !important;
-    color: #dc2626 !important;
-    font-weight: 700;
-    border-radius: 4px;
-  }
+ .delta-fail {
+ background: #fecaca !important;
+ color: #dc2626 !important;
+ font-weight: 700;
+ border-radius: 4px;
+ }
 
-  /* Label Row */
-  .label-avg {
-    background: #475569;
-    color: white;
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
+ /* Label Row */
+ .label-avg {
+ background: #475569;
+ color: white;
+ padding: 0.25rem 0.6rem;
+ border-radius: 6px;
+ font-size: 0.65rem;
+ font-weight: 600;
+ letter-spacing: 0.5px;
+ }
 
-  .label-comp {
-    background: #d97706;
-    color: white;
-    padding: 0.25rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
+ .label-comp {
+ background: #d97706;
+ color: white;
+ padding: 0.25rem 0.6rem;
+ border-radius: 6px;
+ font-size: 0.65rem;
+ font-weight: 600;
+ letter-spacing: 0.5px;
+ }
 
-  /* Empty State */
-  .empty-state {
-    background: white;
-    border-radius: 16px;
-    padding: 3rem;
-    text-align: center;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  }
-  .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; }
-  .empty-state h3 { font-size: 1.1rem; color: #64748b; margin: 0; }
+ /* Empty State */
+ .empty-state {
+ background: white;
+ border-radius: 16px;
+ padding: 3rem;
+ text-align: center;
+ box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+ }
+ .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 1rem; }
+ .empty-state h3 { font-size: 1.1rem; color: #64748b; margin: 0; }
 </style>
 
 <div class="qc-page">
-  <div class="qc-wrapper">
+ <div class="qc-wrapper">
 
-    <!-- Header -->
-    <div class="qc-header">
-      <div class="qc-header-left">
-        <div class="qc-icon">
-          <i class="bi bi-clipboard2-check"></i>
-        </div>
-        <div>
-          <h1 class="qc-title">{{ _("Composite Check") }}</h1>
-          <div class="qc-subtitle">{{ _("COM vs Hourly average comparison") }}</div>
-        </div>
-      </div>
+ <!-- Header -->
+ <div class="qc-header">
+ <div class="qc-header-left">
+ <div class="qc-icon">
+ <i class="bi bi-clipboard2-check"></i>
+ </div>
+ <div>
+ <h1 class="qc-title">{{ _("Composite Check") }}</h1>
+ <div class="qc-subtitle">{{ _("COM vs Hourly average comparison") }}</div>
+ </div>
+ </div>
 
-      <div class="qc-actions">
-        <a href="{{ url_for('analysis.qc_norm_limit', ids=raw_ids) }}" class="btn btn-danger btn-sm">
-          <i class="bi bi-rulers"></i> {{ _("Norm Limit") }}
-        </a>
-        <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-arrow-left"></i> {{ _("Summary") }}
-        </a>
-      </div>
-    </div>
+ <div class="qc-actions">
+ <a href="{{ url_for('analysis.qc_norm_limit', ids=raw_ids) }}" class="btn btn-danger btn-sm">
+ <i class="bi bi-rulers"></i> {{ _("Norm Limit") }}
+ </a>
+ <a href="{{ url_for('api.sample_summary') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Summary") }}
+ </a>
+ </div>
+ </div>
 
-    {% if streams|length == 0 %}
-      <div class="empty-state">
-        <i class="bi bi-inbox"></i>
-        <h3>{{ _("No streams found for QC check") }}</h3>
-      </div>
-    {% endif %}
+ {% if streams|length == 0 %}
+ <div class="empty-state">
+ <i class="bi bi-inbox"></i>
+ <h3>{{ _("No streams found for QC check") }}</h3>
+ </div>
+ {% endif %}
 
-    <!-- Stream Cards -->
-    {% for stream in streams %}
-    <div class="stream-card">
-      <div class="stream-header">
-        <div class="stream-family">
-          <div class="stream-family-icon">
-            <i class="bi bi-layers"></i>
-          </div>
-          <span class="stream-family-name">{{ stream.family }}</span>
-        </div>
-        <div class="stream-meta">
-          <div class="meta-item">
-            <i class="bi bi-building"></i>
-            {{ stream.unit or "—" }}
-          </div>
-          <div class="meta-item">
-            <i class="bi bi-calendar3"></i>
-            {{ stream.date or "—" }}
-          </div>
-          <div class="meta-item">
-            <i class="bi bi-collection"></i>
-            n={{ stream.n_hourly }}
-          </div>
-        </div>
-      </div>
+ <!-- Stream Cards -->
+ {% for stream in streams %}
+ <div class="stream-card">
+ <div class="stream-header">
+ <div class="stream-family">
+ <div class="stream-family-icon">
+ <i class="bi bi-layers"></i>
+ </div>
+ <span class="stream-family-name">{{ stream.family }}</span>
+ </div>
+ <div class="stream-meta">
+ <div class="meta-item">
+ <i class="bi bi-building"></i>
+ {{ stream.unit or "—" }}
+ </div>
+ <div class="meta-item">
+ <i class="bi bi-calendar3"></i>
+ {{ stream.date or "—" }}
+ </div>
+ <div class="meta-item">
+ <i class="bi bi-collection"></i>
+ n={{ stream.n_hourly }}
+ </div>
+ </div>
+ </div>
 
-      <div class="stream-table-wrap">
-        <table class="qc-table">
-          <thead>
-            <tr>
-              <th style="width:35px">#</th>
-              <th style="width:60px">{{ _("Slot") }}</th>
-              <th style="text-align:left; padding-left:1rem; min-width:140px;">{{ _("Sample") }}</th>
-              {% for code in param_codes %}
-              <th colspan="2" class="param-header">{{ code }}</th>
-              {% endfor %}
-            </tr>
-            <tr>
-              <th></th>
-              <th></th>
-              <th></th>
-              {% for code in param_codes %}
-              <th style="font-size:0.6rem; color:#94a3b8;">{{ _("Val") }}</th>
-              <th style="font-size:0.6rem; color:#94a3b8;">Δ</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {# Hourly Samples #}
-            {% for row in stream.hourly_rows %}
-            <tr class="row-hourly">
-              <td class="text-muted">{{ loop.index }}</td>
-              <td class="cell-slot">{{ row.slot or "-" }}</td>
-              <td class="cell-code">
-                <a href="{{ url_for('api.sample_report', sample_id=row.sample.id) }}">
-                  {{ row.sample.sample_code }}
-                </a>
-              </td>
-              {% for code in param_codes %}
-                {% set v = row["values"].get(code) %}
-                <td class="cell-num">{{ "%.2f"|format(v) if v is not none else "—" }}</td>
-                <td class="cell-delta">—</td>
-              {% endfor %}
-            </tr>
-            {% endfor %}
+ <div class="stream-table-wrap">
+ <table class="qc-table">
+ <thead>
+ <tr>
+ <th class="w-[35px]">#</th>
+ <th class="w-[60px]">{{ _("Slot") }}</th>
+ <th class="text-left pl-[1rem] min-w-[140px]">{{ _("Sample") }}</th>
+ {% for code in param_codes %}
+ <th colspan="2" class="param-header">{{ code }}</th>
+ {% endfor %}
+ </tr>
+ <tr>
+ <th class="w-[35px]"></th>
+ <th class="w-[60px]"></th>
+ <th class="text-left pl-[1rem] min-w-[140px]"></th>
+ {% for code in param_codes %}
+ <th class="text-3xs text-slate-400">{{ _("Val") }}</th>
+ <th class="text-3xs text-slate-400">Δ</th>
+ {% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ {# Hourly Samples #}
+ {% for row in stream.hourly_rows %}
+ <tr class="row-hourly">
+ <td class="text-muted">{{ loop.index }}</td>
+ <td class="cell-slot">{{ row.slot or "-" }}</td>
+ <td class="cell-code">
+ <a class="text-[#92400e]" href="{{ url_for('api.sample_report', sample_id=row.sample.id) }}">
+ {{ row.sample.sample_code }}
+ </a>
+ </td>
+ {% for code in param_codes %}
+ {% set v = row["values"].get(code) %}
+ <td class="cell-num">{{ "%.2f"|format(v) if v is not none else "—" }}</td>
+ <td class="cell-delta">—</td>
+ {% endfor %}
+ </tr>
+ {% endfor %}
 
-            {# Hourly Average #}
-            <tr class="row-avg">
-              <td colspan="3" style="text-align:right; padding-right:1rem;">
-                <span class="label-avg">{{ _("HOURLY AVG") }}</span>
-              </td>
-              {% for code in param_codes %}
-                {% set v_avg = stream.avg_row["values"].get(code) %}
-                <td class="cell-num">{{ "%.2f"|format(v_avg) if v_avg is not none else "—" }}</td>
-                <td class="cell-delta">—</td>
-              {% endfor %}
-            </tr>
+ {# Hourly Average #}
+ <tr class="row-avg">
+ <td class="text-right pr-[1rem]" colspan="3">
+ <span class="label-avg">{{ _("HOURLY AVG") }}</span>
+ </td>
+ {% for code in param_codes %}
+ {% set v_avg = stream.avg_row["values"].get(code) %}
+ <td class="cell-num">{{ "%.2f"|format(v_avg) if v_avg is not none else "—" }}</td>
+ <td class="cell-delta">—</td>
+ {% endfor %}
+ </tr>
 
-            {# Composite #}
-            <tr class="row-comp">
-              <td colspan="2" style="text-align:center;">
-                <span class="label-comp">{{ _("COMPOSITE") }}</span>
-              </td>
-              <td class="cell-code">
-                {% if stream.comp_row.sample %}
-                  <a href="{{ url_for('api.sample_report', sample_id=stream.comp_row.sample.id) }}" style="color:#92400e;">
-                    {{ stream.comp_row.sample.sample_code }}
-                  </a>
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              {% for code in param_codes %}
-                {% set v_comp = stream.comp_row["values"].get(code) %}
-                {% set d = stream.comp_row["delta"].get(code) %}
-                {% set is_fail = stream.comp_row["tol_flags"].get(code) %}
-                <td class="cell-num {% if is_fail %}status-fail{% endif %}">
-                  {{ "%.2f"|format(v_comp) if v_comp is not none else "—" }}
-                </td>
-                <td class="cell-delta {% if is_fail %}delta-fail{% endif %}">
-                  {{ "%+.2f"|format(d) if d is not none else "" }}
-                </td>
-              {% endfor %}
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endfor %}
+ {# Composite #}
+ <tr class="row-comp">
+ <td class="text-center" colspan="2">
+ <span class="label-comp">{{ _("COMPOSITE") }}</span>
+ </td>
+ <td class="cell-code">
+ {% if stream.comp_row.sample %}
+ <a class="text-[#92400e]" href="{{ url_for('api.sample_report', sample_id=stream.comp_row.sample.id) }}">
+ {{ stream.comp_row.sample.sample_code }}
+ </a>
+ {% else %}
+ <span class="text-muted">—</span>
+ {% endif %}
+ </td>
+ {% for code in param_codes %}
+ {% set v_comp = stream.comp_row["values"].get(code) %}
+ {% set d = stream.comp_row["delta"].get(code) %}
+ {% set is_fail = stream.comp_row["tol_flags"].get(code) %}
+ <td class="cell-num {% if is_fail %}status-fail{% endif %}">
+ {{ "%.2f"|format(v_comp) if v_comp is not none else "—" }}
+ </td>
+ <td class="cell-delta {% if is_fail %}delta-fail{% endif %}">
+ {{ "%+.2f"|format(d) if d is not none else "" }}
+ </td>
+ {% endfor %}
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+ {% endfor %}
 
-  </div>
+ </div>
 </div>
 {% endblock %}

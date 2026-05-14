@@ -10,993 +10,993 @@
 
 {# CV batch constants input fields #}
 <div class="row g-3 mb-3">
-  <div class="col-md-4">
-    <label class="form-label">{{ _("Bomb Heat Capacity (E)") }} <span class="text-danger">*</span></label>
-    <input type="number" step="0.01" class="form-control" id="batch_calorific_system" placeholder="9081" required>
-    <div class="form-text">{{ _("Unit: J/K. Reference: 9081.") }}</div>
-  </div>
-  <div class="col-md-4">
-    <label class="form-label">{{ _("Fuse Wire Heat (q1)") }} <span class="text-danger">*</span></label>
-    <input type="number" step="0.1" class="form-control" id="batch_fuse_correction" placeholder="90.0" required>
-    <div class="form-text">{{ _("Unit: J. Reference: 90.0.") }}</div>
-  </div>
-  <div class="col-md-4">
-    <label class="form-label">{{ _("Additional Heat (q2)") }} <span class="text-muted">({{ _("optional") }})</span></label>
-    <input type="number" step="0.1" class="form-control" id="batch_acid_correction" placeholder="0">
-    <div class="form-text">{{ _("Unit: J. If none, enter 0.") }}</div>
-  </div>
+ <div class="col-md-4">
+ <label class="form-label">{{ _("Bomb Heat Capacity (E)") }} <span class="text-danger">*</span></label>
+ <input type="number" step="0.01" class="form-control" id="batch_calorific_system" placeholder="9081" required>
+ <div class="form-text">{{ _("Unit: J/K. Reference: 9081.") }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label">{{ _("Fuse Wire Heat (q1)") }} <span class="text-danger">*</span></label>
+ <input type="number" step="0.1" class="form-control" id="batch_fuse_correction" placeholder="90.0" required>
+ <div class="form-text">{{ _("Unit: J. Reference: 90.0.") }}</div>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label">{{ _("Additional Heat (q2)") }} <span class="text-muted">({{ _("optional") }})</span></label>
+ <input type="number" step="0.1" class="form-control" id="batch_acid_correction" placeholder="0">
+ <div class="form-text">{{ _("Unit: J. If none, enter 0.") }}</div>
+ </div>
 </div>
 
 {{ aggrid_macros.grid_container('cvGrid') | safe }}
 
 <script nonce="{{ csp_nonce }}">
 (function() {
-  'use strict';
-
-  // --- 1. CONFIG ---
-  const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CV';
-
-  // Backend Data
-  {{ aggrid_macros.dataset_block() | safe }}
-
-  const sulfurMap = {{ sulfur_by_sample | tojson | safe }};
-
-  // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
-  let draftMgr;
-
-  // --- 2. HELPERS ---
-
-  // ✨ CV calculation constants
-  const J_PER_CAL = 4.1868;      // Joule -> Cal conversion
-  const S_CORR_FACTOR = 94.1;    // Sulfur correction coefficient
-
-  /**
-   * ✨ CV Calculation #1: Alpha correction based on Qb range
-   * Qb_MJkg <= 16.70 → 0.0010
-   * 16.70 < Qb_MJkg <= 25.10 → 0.0012
-   * Qb_MJkg > 25.10 → 0.0016
-   */
-  function getAlpha(Qb_Jg) {
-    const Qb_MJkg = Qb_Jg / 1000.0;
-    if (Qb_MJkg <= 16.70) return 0.0010;
-    if (Qb_MJkg <= 25.10) return 0.0012;
-    return 0.0016;
-  }
-
-  /**
-   * ✨ CV Calculation #2: Main calculation with 3 corrections
-   * 1. Qb_Jg = ((E * dT) - q1 - q2) / m
-   * 2. alpha = getAlpha(Qb_Jg)
-   * 3. acid_corr = alpha * Qb_Jg
-   * 4. S_corr = S_CORR_FACTOR * S
-   * 5. Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr)
-   * 6. Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL
-   */
-  function computeResult(m, dT, E, q1, q2, S) {
-    if (m == null || dT == null || E == null || q1 == null) return null;
-    if (!isFinite(m) || !isFinite(dT) || !isFinite(E) || !isFinite(q1)) return null;
-
-    const Sval = (S == null || !isFinite(S)) ? 0 : S;
-    if (m === 0) return null;
-    const q2v = (!isFinite(q2) || q2 == null) ? 0 : q2;
-
-    // Step 1: Gross calorific value
-    const Qb_Jg = ((E * dT) - q1 - q2v) / m;
-
-    // Step 2: Alpha correction (depends on Qb range)
-    const alpha = getAlpha(Qb_Jg);
-    const acid_corr = alpha * Qb_Jg;
-
-    // Step 3: Sulfur correction
-    const S_corr = S_CORR_FACTOR * Sval;
-
-    // Step 4: Net calorific value (ad basis)
-    const Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr);
-
-    // Step 5: Convert to cal/g
-    const Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL;
-
-    return isFinite(Qgr_cal_g) ? Qgr_cal_g : null;
-  }
-
-  /**
-   * ✨ Get current batch constants from UI inputs
-   */
-  function currentBatch() {
-    const toNumber = v => { const n = parseFloat(v); return (isNaN(n) || !isFinite(n)) ? null : n; };
-    const E = toNumber(document.getElementById('batch_calorific_system')?.value ?? '');
-    const q1 = toNumber(document.getElementById('batch_fuse_correction')?.value ?? '');
-    const q2 = toNumber(document.getElementById('batch_acid_correction')?.value ?? '');
-    return { E, q1, q2 };
-  }
-
-  // Parallel background color
-  function parallelBg(p) {
-    return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
-  }
-
-  // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
-  const numParser = window.LIMS_AGGRID?.numParser || (p => {
-    const v = parseFloat(p.newValue);
-    return isNaN(v) ? null : v;
-  });
-  const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
-  const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
-  const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
-  const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
-
-  // Editable column тохиргоо (CV uses numFmt3)
-  const editCol = {
-    editable: p => !p.data.is_saved,
-    cellEditor: 'agTextCellEditor',
-    cellEditorParams: { useFormatter: true },
-    valueParser: numParser,
-    valueFormatter: numFmt3,
-    cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
-  };
-
-  // --- 3. COLUMN DEFINITIONS ---
-  const columnDefs = [
-    {
-      headerName: '№',
-      field: 'index',
-      width: 50,
-      pinned: 'left',
-      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
-      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      cellStyle: {
-        textAlign: 'center',
-        color: '#6c757d',
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      },
-      valueFormatter: p => p.data.parallel === 1 ? p.value : ''
-    },
-    {
-      headerName: '{{ _("Sample Name") }}',
-      field: 'sample_code',
-      width: 250,
-      pinned: 'left',
-      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
-      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      cellStyle: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        lineHeight: '1.2'
-      },
-      // ✅ Угтвар (SC, TBS гэх мэт) + ээлжийн кодоор эрэмбэлэх
-      comparator: (a, b) => {
-        if (!a || !b) return (a || '').localeCompare(b || '');
-        const prefixPattern = /^([A-Za-z]+)/;
-        const prefixA = (a.match(prefixPattern) || ['', ''])[1].toUpperCase();
-        const prefixB = (b.match(prefixPattern) || ['', ''])[1].toUpperCase();
-        if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
-        const shiftPattern = /_([DN])(\d*)$/i;
-        const matchA = a.match(shiftPattern);
-        const matchB = b.match(shiftPattern);
-        if (matchA && matchB) {
-          const typeA = matchA[1].toUpperCase();
-          const typeB = matchB[1].toUpperCase();
-          if (typeA !== typeB) return typeA === 'D' ? -1 : 1;
-          const numA = parseInt(matchA[2]) || 0, numB = parseInt(matchB[2]) || 0;
-          if (numA !== numB) return numA - numB;
-        }
-        return a.localeCompare(b);
-      },
-      cellRenderer: p => {
-        if (p.data.parallel !== 1) return '';
-        let h = `<div style="font-weight:600;color:#0d6efd;text-shadow:0 1px 0 rgba(255,255,255,0.8)">${_escHtml(p.value)}</div>`;
-        const rej = rejectedInfo[p.data.sample_id];
-        if (rej) {
-          h += `<div style="font-size:0.7em;padding:3px 6px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:4px;display:inline-block;margin-top:4px"><i class="bi bi-exclamation-triangle"></i> ${
-            _escHtml(errorLabels[rej.reason_code] || rej.reason)
-          }</div>`;
-        }
-        return h;
-      }
-    },
-    {
-      headerName: 'm',
-      field: 'm',
-      width: 110,
-      editable: p => !p.data.is_saved,
-      cellEditor: 'agTextCellEditor',
-      cellEditorParams: { useFormatter: true },
-      valueParser: numParser,
-      valueFormatter: numFmt4,  // 4 орон
-      cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
-    },
-    {
-      headerName: 'dT',
-      field: 'dT',
-      width: 120,
-      editable: p => !p.data.is_saved,
-      cellEditor: 'agTextCellEditor',
-      valueParser: numParser,
-      valueFormatter: p => (p.value != null) ? String(p.value) : '',  // Limitгүй орон
-      cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
-    },
-    {
-      headerName: 'S',
-      field: 'S',
-      width: 80,
-      valueFormatter: p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '-',
-      cellStyle: {
-        textAlign: 'center',
-        color: '#6c757d',
-        backgroundColor: '#f8f9fa'
-      }
-    },
-    {
-      headerName: '{{ _("Result") }}',
-      field: 'result',
-      width: 120,
-      valueFormatter: p =>
-        p.data.is_saved && p.value != null ? parseFloat(p.value).toFixed(2) : '-',
-      cellStyle: p => {
-        const base = { backgroundColor: parallelBg(p) };
-        return p.data.is_saved
-          ? { ...base, fontWeight: 'bold', backgroundColor: '#e7f5ff' }
-          : { ...base, color: '#ccc' };
-      }
-    },
-    {
-      headerName: '{{ _("Tolerance") }}',
-      field: 'tolerance',
-      width: 120,
-      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
-      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      valueFormatter: p => {
-        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
-        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
-          return parseFloat(p.value).toFixed(2);
-        }
-        return '';
-      },
-      cellStyle: p => {
-        if (!p.data.is_saved) {
-          return {
-            color: '#ccc',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          };
-        }
-        // Хадгалагдсан: улаан (t_exceeded) эсвэл саарал
-        return {
-          color: p.data.t_exceeded ? '#dc3545' : '#6c757d',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        };
-      }
-    },
-    {
-      headerName: '{{ _("Average") }}',
-      field: 'average',
-      width: 90,
-      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
-      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      valueFormatter: p => {
-        // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
-        if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
-          return parseFloat(p.value).toFixed(2);
-        }
-        return '';
-      },
-      cellStyle: p => ({
-        color: p.data.is_saved ? '#198754' : '#ccc',
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      })
-    },
-    {
-      headerName: '{{ _("Action") }}',
-      width: 90,
-      pinned: 'right',
-      rowSpan: p => p.data.parallel === 1 ? 2 : 1,
-      cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
-      cellRenderer: p => {
-        // Only show button in first parallel row
-        if (p.data.parallel !== 1) return '';
-
-        // Hide button if sample is already saved (locked)
-        if (p.data.is_saved) {
-          return '<span class="text-muted small">{{ _("Saved") }}</span>';
-        }
-
-        return `
-          <button type="button"
-                  class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
-                  data-sample-id="${p.data.sample_id}"
-                  title="{{ _("Remove sample") }}">
-            <i class="bi bi-x"></i>
-          </button>
-        `;
-      },
-      cellStyle: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }
-  ];
-
-  // --- 4. ROW DATA ---
-  const rowData = samples.flatMap((sample, idx) => {
-    const existing = existingResults[sample.id];
-    const rejected = rejectedInfo[sample.id];
-
-    // ✅ Буцаах логик:
-    // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
-    // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
-    // - pending_review → locked (хадгалагдсан гэсэн үг)
-    const isRejected = existing?.status === 'rejected';
-
-    const base = {
-      index: idx + 1,
-      sample_id: sample.id,
-      sample_code: sample.code,
-      is_saved: existing && !isRejected,  // ✅ Rejected дээж editable
-      is_rejected: isRejected,
-      rejection_reason: rejected?.reason || ''
-    };
-
-    // Get sulfur value for this sample
-    const S_used = existing?.raw_data?.s_used ?? sulfurMap[String(sample.id)] ?? sulfurMap[sample.id] ?? 0;
-
-    if (existing) {
-      // Хадгалагдсан үр дүн байна
-      const p1 = existing.raw_data?.p1 || {};
-      const p2 = existing.raw_data?.p2 || {};
-      const batch = existing.raw_data?.batch || {};
-
-      // Batch constants from saved data or current UI
-      const batchNow = currentBatch();
-      const batchE = batch.E ?? batchNow.E;
-      const batchQ1 = batch.q1 ?? batchNow.q1;
-      const batchQ2 = batch.q2 ?? batchNow.q2;
-
-      return [
-        {
-          ...base,
-          parallel: 1,
-          m: p1.m,
-          dT: p1.delta_t,
-          S: S_used,
-          result: p1.result,
-          _p1: p1.result,
-          _p2: p2.result,
-          tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
-          average: existing.raw_data?.avg ?? existing.final_result,
-          t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
-          batchE: batchE,
-          batchQ1: batchQ1,
-          batchQ2: batchQ2
-        },
-        {
-          ...base,
-          parallel: 2,
-          m: p2.m,
-          dT: p2.delta_t,
-          S: S_used,
-          result: p2.result,
-          _p1: p1.result,
-          _p2: p2.result,
-          tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
-          average: existing.raw_data?.avg ?? existing.final_result,
-          t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
-          batchE: batchE,
-          batchQ1: batchQ1,
-          batchQ2: batchQ2
-        }
-      ];
-    } else {
-      // New дээж
-      const batchNow = currentBatch();
-      return [
-        {
-          ...base,
-          parallel: 1,
-          m: null,
-          dT: null,
-          S: S_used,
-          result: null,
-          _p1: null,
-          _p2: null,
-          tolerance: null,
-          average: null,
-          t_exceeded: false,
-          batchE: batchNow.E,
-          batchQ1: batchNow.q1,
-          batchQ2: batchNow.q2
-        },
-        {
-          ...base,
-          parallel: 2,
-          m: null,
-          dT: null,
-          S: S_used,
-          result: null,
-          _p1: null,
-          _p2: null,
-          tolerance: null,
-          average: null,
-          t_exceeded: false,
-          batchE: batchNow.E,
-          batchQ1: batchNow.q1,
-          batchQ2: batchNow.q2
-        }
-      ];
-    }
-  });
-
-  // --- 5. DRAFT MANAGEMENT ---
-
-  function saveDrafts() {
-    if (!window.cvGridApi || !draftMgr) return;
-
-    const drafts = {};
-    const batchNow = currentBatch();
-
-    window.cvGridApi.forEachNode(n => {
-      if (!n.data.is_saved) {
-        const k = `${n.data.sample_id}_${n.data.parallel}`;
-        drafts[k] = {
-          m: n.data.m,
-          dT: n.data.dT,
-          batchE: n.data.batchE ?? batchNow.E,
-          batchQ1: n.data.batchQ1 ?? batchNow.q1,
-          batchQ2: n.data.batchQ2 ?? batchNow.q2
-        };
-      }
-    });
-
-    draftMgr.save(drafts);
-  }
-
-  function restoreDrafts() {
-    if (!window.cvGridApi || !draftMgr) return;
-
-    try {
-      const drafts = draftMgr.restore();
-      window.cvGridApi.forEachNode(n => {
-        if (!n.data.is_saved) {
-          const k = `${n.data.sample_id}_${n.data.parallel}`;
-          if (drafts[k]) {
-            n.data.m = drafts[k].m;
-            n.data.dT = drafts[k].dT;
-            n.data.batchE = drafts[k].batchE;
-            n.data.batchQ1 = drafts[k].batchQ1;
-            n.data.batchQ2 = drafts[k].batchQ2;
-
-            const E = n.data.batchE;
-            const q1 = n.data.batchQ1;
-            const q2 = n.data.batchQ2;
-            const S = n.data.S;
-
-            const r = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
-            if (n.data.parallel === 1) n.data._p1 = r;
-            else n.data._p2 = r;
-            n.data.result = r;
-          }
-        }
-      });
-
-      window.cvGridApi.refreshCells({ force: true });
-    } catch (e) {
-      logger.warn('Failed to restore drafts', e);
-    }
-  }
-
-  function onCellValueChanged(params) {
-    if (['m', 'dT'].includes(params.colDef.field)) {
-      const d = params.data;
-      const E = d.batchE ?? currentBatch().E;
-      const q1 = d.batchQ1 ?? currentBatch().q1;
-      const q2 = d.batchQ2 ?? currentBatch().q2;
-      const S = d.S;
-
-      const res = computeResult(d.m, d.dT, E, q1, q2, S);
-      d.result = res;
-      if (d.parallel === 1) d._p1 = res;
-      else d._p2 = res;
-
-      // ❌ NO REAL-TIME TOLERANCE/AVERAGE - ISO 17025 зөрчил!
-      // Зөвхөн тухайн мөрийн үр дүнг л refresh хийнэ
-      window.cvGridApi.refreshCells({
-        rowNodes: [params.node],
-        columns: ['result']
-      });
-    }
-    saveDrafts();
-  }
-
-  // Listen to batch constant changes
-  document.addEventListener('DOMContentLoaded', () => {
-    ['batch_calorific_system', 'batch_fuse_correction', 'batch_acid_correction'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('change', () => {
-          const batch = currentBatch();
-          if (window.cvGridApi) {
-            window.cvGridApi.forEachNode(n => {
-              if (!n.data.is_saved) {
-                n.data.batchE = batch.E;
-                n.data.batchQ1 = batch.q1;
-                n.data.batchQ2 = batch.q2;
-
-                const E = batch.E;
-                const q1 = batch.q1;
-                const q2 = batch.q2;
-                const S = n.data.S;
-
-                const res = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
-                n.data.result = res;
-                if (n.data.parallel === 1) n.data._p1 = res;
-                else n.data._p2 = res;
-              }
-            });
-            window.cvGridApi.refreshCells({ columns: ['result'], force: true });
-            saveDrafts();
-          }
-        });
-      }
-    });
-  });
-
-  // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
-    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlIds = urlParams.get('sample_ids');
-
-    if (urlIds) {
-      // URL дээр байвал localStorage-д хадгалах
-      try {
-        localStorage.setItem(STORAGE_KEY, urlIds);
-        logger.log('✅ Sample IDs saved to localStorage:', urlIds);
-      } catch(e) {
-        logger.warn('localStorage save failed:', e);
-      }
-    } else {
-      // URL дээр байхгүй бол localStorage-аас сэргээх
-      try {
-        const savedIds = localStorage.getItem(STORAGE_KEY);
-        if (savedIds) {
-          logger.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
-          const url = new URL(window.location.href);
-          url.searchParams.set('sample_ids', savedIds);
-
-          // ❌ БУУ: window.location.href = url.toString(); // Full reload!
-          // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
-          window.history.replaceState({}, '', url.toString());
-          logger.log('✅ URL updated with sample_ids from localStorage (no reload)');
-
-          // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
-          // Энэ тохиолдолд reload хийх хэрэгтэй
-          logger.warn('⚠️ Reloading page to fetch samples from backend...');
-          window.location.reload();
-          return;
-        }
-      } catch(e) {
-        logger.warn('localStorage restore failed:', e);
-      }
-    }
-
-    const el = document.querySelector('#cvGrid');
-    if (!el) {
-      logger.error('cvGrid element not found');
-      return;
-    }
-
-    // ✨ Initialize Draft Manager (after scripts loaded)
-    if (typeof LIMSDraftManager !== 'undefined') {
-      draftMgr = new LIMSDraftManager(ANALY_CODE);
-      logger.log('✅ Draft Manager initialized');
-    } else {
-      logger.error('❌ LIMSDraftManager not loaded!');
-      // Fallback to localStorage directly
-      draftMgr = {
-        save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
-        restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
-        purge: (ids) => {
-          if (!ids || ids.length === 0) {
-            localStorage.removeItem(`draft_${ANALY_CODE}`);
-          }
-        }
-      };
-    }
-
-    // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
-    if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
-      // Factory pattern ашиглах
-      window.cvGridApi = LIMS_AGGRID.createGrid('#cvGrid', columnDefs, rowData, {
-        onCellValueChanged: onCellValueChanged,
-        enterNavigatesVerticallyAfterEdit: true,
-        editableColIds: ['m', 'dT']
-      });
-      logger.log('✅ Using LIMS_AGGRID.createGrid() factory');
-    } else {
-      // Fallback: Manual grid creation
-      logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
-      const gridOptions = {
-        columnDefs: columnDefs,
-        rowData: rowData,
-        defaultColDef: {
-          sortable: true,
-          resizable: true,
-          editable: false,
-          suppressMovable: true,
-          wrapHeaderText: true,
-          autoHeaderHeight: true
-        },
-        suppressRowTransform: true,
-        singleClickEdit: true,
-        stopEditingWhenCellsLoseFocus: true,
-        enterNavigatesVertically: true,
-        enterNavigatesVerticallyAfterEdit: true,
-        onCellValueChanged: onCellValueChanged
-      };
-      window.cvGridApi = agGrid.createGrid(el, gridOptions);
-    }
-
-    // Draft сэргээх
-    setTimeout(restoreDrafts, 100);
-
-    // Remove sample button handler
-    el.addEventListener('click', (e) => {
-      const btn = e.target.closest('.remove-sample-from-worksheet');
-      if (!btn) return;
-
-      const sampleId = parseInt(btn.dataset.sampleId);
-      if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
-
-      const url = new URL(window.location.href);
-      let ids = (url.searchParams.get('sample_ids') || '').split(',');
-      ids = ids.filter(x => x.trim() && parseInt(x) !== sampleId);
-
-      if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
-      else url.searchParams.delete('sample_ids');
-
-      window.location.href = url.toString();
-    });
-
-    logger.log('✅ CV Grid initialized with factory pattern');
-  });
-
-  // --- 7. ACTIONS ---
-
-  window.removeSample = function(id) {
-    if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
-    const url = new URL(window.location.href);
-    let ids = (url.searchParams.get('sample_ids') || '').split(',');
-    ids = ids.filter(x => x.trim() && parseInt(x) !== id);
-    if (ids.length > 0) url.searchParams.set('sample_ids', ids.join(','));
-    else url.searchParams.delete('sample_ids');
-    window.location.href = url.toString();
-  };
-
-  window.collectCvGridData = function() {
-    if (!window.cvGridApi) return [];
-
-    // ✅ Batch constants шалгах
-    const batch = currentBatch();
-    if (batch.E == null || batch.E === 0) {
-      alert('{{ _("Please enter Bomb Heat Capacity (E)!") }}');
-      document.getElementById('batch_calorific_system')?.focus();
-      return [];
-    }
-    if (batch.q1 == null) {
-      alert('{{ _("Please enter Fuse Wire Heat (q1)!") }}');
-      document.getElementById('batch_fuse_correction')?.focus();
-      return [];
-    }
-
-    const map = {};
-    window.cvGridApi.forEachNode(n => {
-      // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
-      if (n.data.is_saved) return;
-
-      if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
-      map[n.data.sample_id][n.data.parallel] = n.data;
-    });
-
-    const payload = [];
-    const incomplete = [];  // ✅ Дутуу дээжүүдийг хадгалах
-
-    Object.keys(map).forEach(sid => {
-      const p1 = map[sid][1];
-      const p2 = map[sid][2];
-
-      // ✅ Validation шалгалт
-      const hasP1 = p1 && p1.m != null && p1.dT != null;
-      const hasP2 = p2 && p2.m != null && p2.dT != null;
-
-      if (hasP1 && hasP2) {
-        const batchNow = currentBatch();
-        const E = p1.batchE ?? batchNow.E;
-        const q1 = p1.batchQ1 ?? batchNow.q1;
-        const q2 = p1.batchQ2 ?? batchNow.q2;
-        const S = p1.S ?? sulfurMap[String(sid)] ?? sulfurMap[sid] ?? null;
-
-        // ✅ Sulfur (S) заавал байх ёстой - Vad-д Mad шаарддагтай адил
-        if (S == null || S === 0) {
-          logger.warn(`⚠️ Sample "${p1.sample_code || sid}": Хүхрийн (S) үр дүн байхгүй - CV тооцоолох боломжгүй`);
-          incomplete.push(`${p1.sample_code || sid} (S байхгүй)`);
-          return;
-        }
-
-        const res1 = computeResult(p1.m, p1.dT, E, q1, q2, S);
-        const res2 = computeResult(p2.m, p2.dT, E, q1, q2, S);
-
-        if (res1 == null || res2 == null) {
-          logger.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
-          incomplete.push(p1.sample_code || sid);
-          return;
-        }
-
-        // Сөрөг CV — оролтын алдаа (dT бага эсвэл q1 хэт их)
-        if (res1 < 0 || res2 < 0) {
-          logger.warn(`⚠️ Sample ${p1.sample_code || sid}: сөрөг CV (${res1?.toFixed(2)}, ${res2?.toFixed(2)}) — оролтыг шалгана уу`);
-          incomplete.push(`${p1.sample_code || sid} (CV < 0)`);
-          return;
-        }
-
-        const avg = (res1 + res2) / 2;
-        const diff = Math.abs(res1 - res2);
-
-        // ✅ Backend expectation: top-level diff/avg болон repeatability object
-        payload.push({
-          sample_id: parseInt(sid),
-          analysis_code: ANALY_CODE,
-          final_result: avg,
-          raw_data: {
-            // ✅ Top-level summary fields (ахлахын хяналт + аудит логт харагдана)
-            diff: diff,
-            avg: avg,
-
-            // Parallel data
-            p1: {
-              m: p1.m,
-              delta_t: p1.dT,
-              result: res1
-            },
-            p2: {
-              m: p2.m,
-              delta_t: p2.dT,
-              result: res2
-            },
-
-            // Sulfur and batch constants
-            s_used: S,
-            batch: {
-              E: E,
-              q1: q1,
-              q2: q2
-            },
-
-            // ✅ Repeatability (backend тооцоолол хийж, limit шалгаж, t_exceeded тогтооно)
-            repeatability: {
-              difference: diff
-              // Backend repeatability.py-ээс limit авч, t_exceeded тогтооно
-            },
-
-            formula: 'Qgr_ad = ((E*dT - q1 - q2)/m - S_corr - acid_corr) / 4.1868'
-          }
-        });
-      } else {
-        // ✅ Дутуу дээж - мэдээлэл хадгалах
-        const sampleCode = p1?.sample_code || p2?.sample_code || sid;
-        const missing = [];
-        if (!hasP1) missing.push('Parallel 1');
-        if (!hasP2) missing.push('Parallel 2');
-        logger.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
-        incomplete.push(sampleCode);
-      }
-    });
-
-    // ✅ Summary logging
-    if (incomplete.length > 0) {
-      logger.log(`📊 Total: ${Object.keys(map).length} дээж`);
-      logger.log(`✅ Хадгалагдах: ${payload.length} дээж`);
-      logger.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
-    } else {
-      logger.log(`✅ ${payload.length} дээж бэлэн`);
-    }
-
-    return payload;
-  };
-
-  // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
-  window.updateCvGridAfterSave = function(savedPayload, failedItems = []) {
-    logger.log('✅ afterSave called, updating grid without reload');
-
-    const savedSampleIds = savedPayload.map(r => r.sample_id);
-    const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
-
-    // ✅ Errorтай дээжийн мэдээлэл
-    if (failedItems.length > 0) {
-      logger.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
-      failedItems.forEach(err => {
-        logger.warn(`   - Sample ${err.sample_id}: ${err.error}`);
-      });
-    }
-
-    // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
-    const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
-
-    // savedPayload-ээс status шалгах
-    const approvedIds = [];  // Батлагдсан (тохирц OK) → арилах
-    const pendingIds = [];   // Хүлээгдэж буй (тохирц зөрүү) → үлдэх
-
-    savedPayload.forEach(saved => {
-      if (saved.status === 'approved') {
-        approvedIds.push(saved.sample_id);
-      } else if (saved.status === 'pending_review') {
-        pendingIds.push(saved.sample_id);
-      }
-    });
-
-    // Grid-ээс бүх sample IDs-ийг цуглуулах
-    const allSampleIds = [];
-    if (window.cvGridApi) {
-      window.cvGridApi.forEachNode(n => {
-        if (!allSampleIds.includes(n.data.sample_id)) {
-          allSampleIds.push(n.data.sample_id);
-        }
-      });
-    }
-
-    // Хадгалагдаагүй + pending_review дээжүүдийг үлдээх
-    const remainingIds = allSampleIds.filter(id =>
-      !approvedIds.includes(id) || pendingIds.includes(id)
-    );
-
-    logger.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
-    logger.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
-    logger.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
-
-    if (remainingIds.length > 0) {
-      const idsString = remainingIds.join(',');
-
-      // ✅ localStorage сэргээх
-      try {
-        localStorage.setItem(STORAGE_KEY, idsString);
-        logger.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
-      } catch(e) {
-        logger.warn('localStorage update failed:', e);
-      }
-
-      // ✅ URL сэргээх
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('sample_ids', idsString);
-        window.history.replaceState({}, '', url.toString());
-        logger.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
-      } catch(e) {
-        logger.warn('URL update failed:', e);
-      }
-    } else {
-      // Бүх дээж approved болсон - worksheet цэвэрлэх
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        const url = new URL(window.location.href);
-        url.searchParams.delete('sample_ids');
-        window.history.replaceState({}, '', url.toString());
-        logger.log(`✅ All approved - cleared worksheet`);
-      } catch(e) {}
-    }
-
-    // Draft устгах (зөвхөн хадгалагдсан)
-    draftMgr.purge(
-      savedSampleIds.flatMap(id => [`${id}_1`, `${id}_2`])
-    );
-
-    // Grid update - хадгалагдсан дээжүүдийг locked болгох
-    window.cvGridApi.forEachNode(n => {
-      if (savedSampleIds.includes(n.data.sample_id)) {
-        n.data.is_saved = true;
-
-        // Backend-ээс ирсэн үр дүнг тохируулах
-        const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
-
-        if (saved && saved.raw_data) {
-          const raw = saved.raw_data;
-
-          // ✅ Parallel 1 дээр тохирц/дундаж тохируулах
-          if (n.data.parallel === 1) {
-            // ✅ Backend response-оос top-level fields авах (бид одоо илгээж байна!)
-            let tolerance = raw.diff ?? raw.repeatability?.difference;
-            let average = raw.avg ?? saved.final_result;
-
-            // ✅ Хэрэв backend буцаагаагүй бол ӨӨРӨӨ тооцоолох (fallback)
-            if ((tolerance == null || average == null) && raw.p1?.result != null && raw.p2?.result != null) {
-              const p1Result = raw.p1.result;
-              const p2Result = raw.p2.result;
-
-              average = average ?? (p1Result + p2Result) / 2;
-              tolerance = tolerance ?? Math.abs(p1Result - p2Result);
-            }
-
-            const t_exceeded = raw.t_exceeded ?? raw.repeatability?.t_exceeded ?? false;
-
-            n.data.tolerance = tolerance;
-            n.data.average = average;
-            n.data.t_exceeded = t_exceeded;
-          }
-
-          // Resultгийн утгуудыг тохируулах
-          const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
-          if (pData) {
-            n.data.m = pData.m;
-            n.data.dT = pData.delta_t;
-            n.data.result = pData.result;
-            if (n.data.parallel === 1) n.data._p1 = pData.result;
-            else n.data._p2 = pData.result;
-          }
-
-          // Batch constants
-          if (raw.batch) {
-            n.data.batchE = raw.batch.E;
-            n.data.batchQ1 = raw.batch.q1;
-            n.data.batchQ2 = raw.batch.q2;
-          }
-
-          // Sulfur
-          if (raw.s_used != null) {
-            n.data.S = raw.s_used;
-          }
-        }
-      }
-    });
-
-    // ✅ Approved дээжүүдийг grid-ээс устгах
-    if (approvedIds.length > 0) {
-      const rowsToRemove = [];
-      window.cvGridApi.forEachNode(n => {
-        if (approvedIds.includes(n.data.sample_id)) {
-          rowsToRemove.push(n);
-        }
-      });
-
-      if (rowsToRemove.length > 0) {
-        window.cvGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
-        logger.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
-      }
-    }
-
-    // Grid refresh
-    window.cvGridApi.refreshCells({ force: true });
-
-    logger.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
-    if (approvedIds.length > 0) {
-      logger.log(`   → ${approvedIds.length} approved - worksheet-ээс арилсан`);
-    }
-    if (pendingIds.length > 0) {
-      logger.log(`   → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
-    }
-  };
-
-  // ✅ Register collector AND afterSave in LIMS_CALC namespace
-  window.LIMS_CALC = window.LIMS_CALC || {};
-  window.LIMS_CALC[ANALY_CODE] = {
-    collect: window.collectCvGridData,
-    afterSave: window.updateCvGridAfterSave
-  };
-  window.LIMS_CALC['CV'] = {
-    collect: window.collectCvGridData,
-    afterSave: window.updateCvGridAfterSave
-  };
-  logger.log('✅ CV collector & afterSave registered in LIMS_CALC namespace');
+ 'use strict';
+
+ // --- 1. CONFIG ---
+ const ANALY_CODE = window.LIMS_ANALYSIS_CODE_RAW || 'CV';
+
+ // Backend Data
+ {{ aggrid_macros.dataset_block() | safe }}
+
+ const sulfurMap = {{ sulfur_by_sample | tojson | safe }};
+
+ // ✨ Draft Manager (declare here, initialize in DOMContentLoaded)
+ let draftMgr;
+
+ // --- 2. HELPERS ---
+
+ // ✨ CV calculation constants
+ const J_PER_CAL = 4.1868; // Joule -> Cal conversion
+ const S_CORR_FACTOR = 94.1; // Sulfur correction coefficient
+
+ /**
+ * ✨ CV Calculation #1: Alpha correction based on Qb range
+ * Qb_MJkg <= 16.70 → 0.0010
+ * 16.70 < Qb_MJkg <= 25.10 → 0.0012
+ * Qb_MJkg> 25.10 → 0.0016
+ */
+ function getAlpha(Qb_Jg) {
+ const Qb_MJkg = Qb_Jg / 1000.0;
+ if (Qb_MJkg <= 16.70) return 0.0010;
+ if (Qb_MJkg <= 25.10) return 0.0012;
+ return 0.0016;
+ }
+
+ /**
+ * ✨ CV Calculation #2: Main calculation with 3 corrections
+ * 1. Qb_Jg = ((E * dT) - q1 - q2) / m
+ * 2. alpha = getAlpha(Qb_Jg)
+ * 3. acid_corr = alpha * Qb_Jg
+ * 4. S_corr = S_CORR_FACTOR * S
+ * 5. Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr)
+ * 6. Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL
+ */
+ function computeResult(m, dT, E, q1, q2, S) {
+ if (m == null || dT == null || E == null || q1 == null) return null;
+ if (!isFinite(m) || !isFinite(dT) || !isFinite(E) || !isFinite(q1)) return null;
+
+ const Sval = (S == null || !isFinite(S)) ? 0 : S;
+ if (m === 0) return null;
+ const q2v = (!isFinite(q2) || q2 == null) ? 0 : q2;
+
+ // Step 1: Gross calorific value
+ const Qb_Jg = ((E * dT) - q1 - q2v) / m;
+
+ // Step 2: Alpha correction (depends on Qb range)
+ const alpha = getAlpha(Qb_Jg);
+ const acid_corr = alpha * Qb_Jg;
+
+ // Step 3: Sulfur correction
+ const S_corr = S_CORR_FACTOR * Sval;
+
+ // Step 4: Net calorific value (ad basis)
+ const Qgr_ad_Jg = Qb_Jg - (S_corr + acid_corr);
+
+ // Step 5: Convert to cal/g
+ const Qgr_cal_g = Qgr_ad_Jg / J_PER_CAL;
+
+ return isFinite(Qgr_cal_g) ? Qgr_cal_g : null;
+ }
+
+ /**
+ * ✨ Get current batch constants from UI inputs
+ */
+ function currentBatch() {
+ const toNumber = v => { const n = parseFloat(v); return (isNaN(n) || !isFinite(n)) ? null : n; };
+ const E = toNumber(document.getElementById('batch_calorific_system')?.value ?? '');
+ const q1 = toNumber(document.getElementById('batch_fuse_correction')?.value ?? '');
+ const q2 = toNumber(document.getElementById('batch_acid_correction')?.value ?? '');
+ return { E, q1, q2 };
+ }
+
+ // Parallel background color
+ function parallelBg(p) {
+ return p.data.parallel === 1 ? '#e3f2fd' : '#fff3e0';
+ }
+
+ // ✅ REFACTORED: LIMS_AGGRID-ийн нийтлэг formatters ашиглаж байна
+ const numParser = window.LIMS_AGGRID?.numParser || (p => {
+ const v = parseFloat(p.newValue);
+ return isNaN(v) ? null : v;
+ });
+ const numFmt4 = window.LIMS_AGGRID?.numFmt4 || (p => (p.value != null) ? parseFloat(p.value).toFixed(4) : '');
+ const numFmt3 = window.LIMS_AGGRID?.numFmt3 || (p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '');
+ const numFmt2 = window.LIMS_AGGRID?.numFmt2 || (p => (p.value != null) ? parseFloat(p.value).toFixed(2) : '');
+ const numFmt0 = window.LIMS_AGGRID?.numFmt0 || (p => (p.value != null) ? parseFloat(p.value).toFixed(0) : '');
+
+ // Editable column тохиргоо (CV uses numFmt3)
+ const editCol = {
+ editable: p => !p.data.is_saved,
+ cellEditor: 'agTextCellEditor',
+ cellEditorParams: { useFormatter: true },
+ valueParser: numParser,
+ valueFormatter: numFmt3,
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
+ };
+
+ // --- 3. COLUMN DEFINITIONS ---
+ const columnDefs = [
+ {
+ headerName: '№',
+ field: 'index',
+ width: 50,
+ pinned: 'left',
+ rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+ cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+ cellStyle: {
+ textAlign: 'center',
+ color: '#6c757d',
+ fontWeight: 'bold',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ },
+ valueFormatter: p => p.data.parallel === 1 ? p.value : ''
+ },
+ {
+ headerName: '{{ _("Sample Name") }}',
+ field: 'sample_code',
+ width: 250,
+ pinned: 'left',
+ rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+ cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+ cellStyle: {
+ display: 'flex',
+ flexDirection: 'column',
+ justifyContent: 'center',
+ lineHeight: '1.2'
+ },
+ // ✅ Угтвар (SC, TBS гэх мэт) + ээлжийн кодоор эрэмбэлэх
+ comparator: (a, b) => {
+ if (!a || !b) return (a || '').localeCompare(b || '');
+ const prefixPattern = /^([A-Za-z]+)/;
+ const prefixA = (a.match(prefixPattern) || ['', ''])[1].toUpperCase();
+ const prefixB = (b.match(prefixPattern) || ['', ''])[1].toUpperCase();
+ if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
+ const shiftPattern = /_([DN])(\d*)$/i;
+ const matchA = a.match(shiftPattern);
+ const matchB = b.match(shiftPattern);
+ if (matchA && matchB) {
+ const typeA = matchA[1].toUpperCase();
+ const typeB = matchB[1].toUpperCase();
+ if (typeA !== typeB) return typeA === 'D' ? -1 : 1;
+ const numA = parseInt(matchA[2]) || 0, numB = parseInt(matchB[2]) || 0;
+ if (numA !== numB) return numA - numB;
+ }
+ return a.localeCompare(b);
+ },
+ cellRenderer: p => {
+ if (p.data.parallel !== 1) return '';
+ let h = `<div class="tw-[text-shadow:0_1px_0_rgba(255,255,255,0.8)] font-semibold text-[#0d6efd] [text-shadow:0_1px_0_rgba(255,255,255,0.8)]">${_escHtml(p.value)}</div>`;
+ const rej = rejectedInfo[p.data.sample_id];
+ if (rej) {
+ h += `<div class="text-[0.7em] py-[3px] px-[6px] bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb] rounded-md inline-block mt-[4px]"><i class="bi bi-exclamation-triangle"></i> ${
+ _escHtml(errorLabels[rej.reason_code] || rej.reason)
+ }</div>`;
+ }
+ return h;
+ }
+ },
+ {
+ headerName: 'm',
+ field: 'm',
+ width: 110,
+ editable: p => !p.data.is_saved,
+ cellEditor: 'agTextCellEditor',
+ cellEditorParams: { useFormatter: true },
+ valueParser: numParser,
+ valueFormatter: numFmt4, // 4 орон
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
+ },
+ {
+ headerName: 'dT',
+ field: 'dT',
+ width: 120,
+ editable: p => !p.data.is_saved,
+ cellEditor: 'agTextCellEditor',
+ valueParser: numParser,
+ valueFormatter: p => (p.value != null) ? String(p.value) : '', // Limitгүй орон
+ cellStyle: p => p.data.is_saved ? { backgroundColor: '#e9ecef' } : { backgroundColor: parallelBg(p) }
+ },
+ {
+ headerName: 'S',
+ field: 'S',
+ width: 80,
+ valueFormatter: p => (p.value != null) ? parseFloat(p.value).toFixed(3) : '-',
+ cellStyle: {
+ textAlign: 'center',
+ color: '#6c757d',
+ backgroundColor: '#f8f9fa'
+ }
+ },
+ {
+ headerName: '{{ _("Result") }}',
+ field: 'result',
+ width: 120,
+ valueFormatter: p =>
+ p.data.is_saved && p.value != null ? parseFloat(p.value).toFixed(2) : '-',
+ cellStyle: p => {
+ const base = { backgroundColor: parallelBg(p) };
+ return p.data.is_saved
+ ? { ...base, fontWeight: 'bold', backgroundColor: '#e7f5ff' }
+ : { ...base, color: '#ccc' };
+ }
+ },
+ {
+ headerName: '{{ _("Tolerance") }}',
+ field: 'tolerance',
+ width: 120,
+ rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+ cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+ valueFormatter: p => {
+ // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+ if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+ return parseFloat(p.value).toFixed(2);
+ }
+ return '';
+ },
+ cellStyle: p => {
+ if (!p.data.is_saved) {
+ return {
+ color: '#ccc',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ };
+ }
+ // Хадгалагдсан: улаан (t_exceeded) эсвэл саарал
+ return {
+ color: p.data.t_exceeded ? '#dc3545' : '#6c757d',
+ fontWeight: 'bold',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ };
+ }
+ },
+ {
+ headerName: '{{ _("Average") }}',
+ field: 'average',
+ width: 90,
+ rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+ cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+ valueFormatter: p => {
+ // ✅ ISO 17025: Зөвхөн хадгалагдсан үр дүнг харуулна
+ if (p.data.parallel === 1 && p.data.is_saved && p.value != null) {
+ return parseFloat(p.value).toFixed(2);
+ }
+ return '';
+ },
+ cellStyle: p => ({
+ color: p.data.is_saved ? '#198754' : '#ccc',
+ fontWeight: 'bold',
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ })
+ },
+ {
+ headerName: '{{ _("Action") }}',
+ width: 90,
+ pinned: 'right',
+ rowSpan: p => p.data.parallel === 1 ? 2 : 1,
+ cellClassRules: { 'ag-cell-span': p => p.data.parallel === 1 },
+ cellRenderer: p => {
+ // Only show button in first parallel row
+ if (p.data.parallel !== 1) return '';
+
+ // Hide button if sample is already saved (locked)
+ if (p.data.is_saved) {
+ return '<span class="text-muted small">{{ _("Saved") }}</span>';
+ }
+
+ return `
+ <button type="button"
+ class="btn btn-sm btn-outline-danger remove-sample-from-worksheet"
+ data-sample-id="${p.data.sample_id}"
+ title="{{ _("Remove sample") }}">
+ <i class="bi bi-x"></i>
+ </button>
+ `;
+ },
+ cellStyle: {
+ display: 'flex',
+ alignItems: 'center',
+ justifyContent: 'center'
+ }
+ }
+ ];
+
+ // --- 4. ROW DATA ---
+ const rowData = samples.flatMap((sample, idx) => {
+ const existing = existingResults[sample.id];
+ const rejected = rejectedInfo[sample.id];
+
+ // ✅ Буцаах логик:
+ // - rejected + data_entry → editable + raw data хадгална (backend-ээс ирсэн)
+ // - rejected + бусад → editable + raw data хоосон (backend-ээс хоосон ирнэ)
+ // - pending_review → locked (хадгалагдсан гэсэн үг)
+ const isRejected = existing?.status === 'rejected';
+
+ const base = {
+ index: idx + 1,
+ sample_id: sample.id,
+ sample_code: sample.code,
+ is_saved: existing && !isRejected, // ✅ Rejected дээж editable
+ is_rejected: isRejected,
+ rejection_reason: rejected?.reason || ''
+ };
+
+ // Get sulfur value for this sample
+ const S_used = existing?.raw_data?.s_used ?? sulfurMap[String(sample.id)] ?? sulfurMap[sample.id] ?? 0;
+
+ if (existing) {
+ // Хадгалагдсан үр дүн байна
+ const p1 = existing.raw_data?.p1 || {};
+ const p2 = existing.raw_data?.p2 || {};
+ const batch = existing.raw_data?.batch || {};
+
+ // Batch constants from saved data or current UI
+ const batchNow = currentBatch();
+ const batchE = batch.E ?? batchNow.E;
+ const batchQ1 = batch.q1 ?? batchNow.q1;
+ const batchQ2 = batch.q2 ?? batchNow.q2;
+
+ return [
+ {
+ ...base,
+ parallel: 1,
+ m: p1.m,
+ dT: p1.delta_t,
+ S: S_used,
+ result: p1.result,
+ _p1: p1.result,
+ _p2: p2.result,
+ tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
+ average: existing.raw_data?.avg ?? existing.final_result,
+ t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
+ batchE: batchE,
+ batchQ1: batchQ1,
+ batchQ2: batchQ2
+ },
+ {
+ ...base,
+ parallel: 2,
+ m: p2.m,
+ dT: p2.delta_t,
+ S: S_used,
+ result: p2.result,
+ _p1: p1.result,
+ _p2: p2.result,
+ tolerance: existing.raw_data?.diff ?? existing.raw_data?.repeatability?.difference,
+ average: existing.raw_data?.avg ?? existing.final_result,
+ t_exceeded: existing.raw_data?.t_exceeded ?? existing.raw_data?.repeatability?.t_exceeded ?? false,
+ batchE: batchE,
+ batchQ1: batchQ1,
+ batchQ2: batchQ2
+ }
+ ];
+ } else {
+ // New дээж
+ const batchNow = currentBatch();
+ return [
+ {
+ ...base,
+ parallel: 1,
+ m: null,
+ dT: null,
+ S: S_used,
+ result: null,
+ _p1: null,
+ _p2: null,
+ tolerance: null,
+ average: null,
+ t_exceeded: false,
+ batchE: batchNow.E,
+ batchQ1: batchNow.q1,
+ batchQ2: batchNow.q2
+ },
+ {
+ ...base,
+ parallel: 2,
+ m: null,
+ dT: null,
+ S: S_used,
+ result: null,
+ _p1: null,
+ _p2: null,
+ tolerance: null,
+ average: null,
+ t_exceeded: false,
+ batchE: batchNow.E,
+ batchQ1: batchNow.q1,
+ batchQ2: batchNow.q2
+ }
+ ];
+ }
+ });
+
+ // --- 5. DRAFT MANAGEMENT ---
+
+ function saveDrafts() {
+ if (!window.cvGridApi || !draftMgr) return;
+
+ const drafts = {};
+ const batchNow = currentBatch();
+
+ window.cvGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ const k = `${n.data.sample_id}_${n.data.parallel}`;
+ drafts[k] = {
+ m: n.data.m,
+ dT: n.data.dT,
+ batchE: n.data.batchE ?? batchNow.E,
+ batchQ1: n.data.batchQ1 ?? batchNow.q1,
+ batchQ2: n.data.batchQ2 ?? batchNow.q2
+ };
+ }
+ });
+
+ draftMgr.save(drafts);
+ }
+
+ function restoreDrafts() {
+ if (!window.cvGridApi || !draftMgr) return;
+
+ try {
+ const drafts = draftMgr.restore();
+ window.cvGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ const k = `${n.data.sample_id}_${n.data.parallel}`;
+ if (drafts[k]) {
+ n.data.m = drafts[k].m;
+ n.data.dT = drafts[k].dT;
+ n.data.batchE = drafts[k].batchE;
+ n.data.batchQ1 = drafts[k].batchQ1;
+ n.data.batchQ2 = drafts[k].batchQ2;
+
+ const E = n.data.batchE;
+ const q1 = n.data.batchQ1;
+ const q2 = n.data.batchQ2;
+ const S = n.data.S;
+
+ const r = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
+ if (n.data.parallel === 1) n.data._p1 = r;
+ else n.data._p2 = r;
+ n.data.result = r;
+ }
+ }
+ });
+
+ window.cvGridApi.refreshCells({ force: true });
+ } catch (e) {
+ logger.warn('Failed to restore drafts', e);
+ }
+ }
+
+ function onCellValueChanged(params) {
+ if (['m', 'dT'].includes(params.colDef.field)) {
+ const d = params.data;
+ const E = d.batchE ?? currentBatch().E;
+ const q1 = d.batchQ1 ?? currentBatch().q1;
+ const q2 = d.batchQ2 ?? currentBatch().q2;
+ const S = d.S;
+
+ const res = computeResult(d.m, d.dT, E, q1, q2, S);
+ d.result = res;
+ if (d.parallel === 1) d._p1 = res;
+ else d._p2 = res;
+
+ // ❌ NO REAL-TIME TOLERANCE/AVERAGE - ISO 17025 зөрчил!
+ // Зөвхөн тухайн мөрийн үр дүнг л refresh хийнэ
+ window.cvGridApi.refreshCells({
+ rowNodes: [params.node],
+ columns: ['result']
+ });
+ }
+ saveDrafts();
+ }
+
+ // Listen to batch constant changes
+ document.addEventListener('DOMContentLoaded', () => {
+ ['batch_calorific_system', 'batch_fuse_correction', 'batch_acid_correction'].forEach(id => {
+ const el = document.getElementById(id);
+ if (el) {
+ el.addEventListener('change', () => {
+ const batch = currentBatch();
+ if (window.cvGridApi) {
+ window.cvGridApi.forEachNode(n => {
+ if (!n.data.is_saved) {
+ n.data.batchE = batch.E;
+ n.data.batchQ1 = batch.q1;
+ n.data.batchQ2 = batch.q2;
+
+ const E = batch.E;
+ const q1 = batch.q1;
+ const q2 = batch.q2;
+ const S = n.data.S;
+
+ const res = computeResult(n.data.m, n.data.dT, E, q1, q2, S);
+ n.data.result = res;
+ if (n.data.parallel === 1) n.data._p1 = res;
+ else n.data._p2 = res;
+ }
+ });
+ window.cvGridApi.refreshCells({ columns: ['result'], force: true });
+ saveDrafts();
+ }
+ });
+ }
+ });
+ });
+
+ // --- 6. INIT GRID (✨ REFACTORED with Factory) ---
+
+ document.addEventListener('DOMContentLoaded', () => {
+ // ✨ Sample IDs хадгалах/сэргээх (refresh хийхэд алга болохгүй байх)
+ const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+ const urlParams = new URLSearchParams(window.location.search);
+ const urlIds = urlParams.get('sample_ids');
+
+ if (urlIds) {
+ // URL дээр байвал localStorage-д хадгалах
+ try {
+ localStorage.setItem(STORAGE_KEY, urlIds);
+ logger.log('✅ Sample IDs saved to localStorage:', urlIds);
+ } catch(e) {
+ logger.warn('localStorage save failed:', e);
+ }
+ } else {
+ // URL дээр байхгүй бол localStorage-аас сэргээх
+ try {
+ const savedIds = localStorage.getItem(STORAGE_KEY);
+ if (savedIds) {
+ logger.log('⚠️ URL has no sample_ids, restoring from localStorage:', savedIds);
+ const url = new URL(window.location.href);
+ url.searchParams.set('sample_ids', savedIds);
+
+ // ❌ БУУ: window.location.href = url.toString(); // Full reload!
+ // ✅ ЗӨӨВ: URL шинэчлэх, reload хийхгүй
+ window.history.replaceState({}, '', url.toString());
+ logger.log('✅ URL updated with sample_ids from localStorage (no reload)');
+
+ // Гэхдээ backend өгөгдөл байхгүй тул дахин ачаалах ёстой
+ // Энэ тохиолдолд reload хийх хэрэгтэй
+ logger.warn('⚠️ Reloading page to fetch samples from backend...');
+ window.location.reload();
+ return;
+ }
+ } catch(e) {
+ logger.warn('localStorage restore failed:', e);
+ }
+ }
+
+ const el = document.querySelector('#cvGrid');
+ if (!el) {
+ logger.error('cvGrid element not found');
+ return;
+ }
+
+ // ✨ Initialize Draft Manager (after scripts loaded)
+ if (typeof LIMSDraftManager !== 'undefined') {
+ draftMgr = new LIMSDraftManager(ANALY_CODE);
+ logger.log('✅ Draft Manager initialized');
+ } else {
+ logger.error('❌ LIMSDraftManager not loaded!');
+ // Fallback to localStorage directly
+ draftMgr = {
+ save: (data) => localStorage.setItem(`draft_${ANALY_CODE}`, JSON.stringify(data)),
+ restore: () => JSON.parse(localStorage.getItem(`draft_${ANALY_CODE}`) || '{}'),
+ purge: (ids) => {
+ if (!ids || ids.length === 0) {
+ localStorage.removeItem(`draft_${ANALY_CODE}`);
+ }
+ }
+ };
+ }
+
+ // ✨ NEW: LIMS_AGGRID.createGrid() factory ашиглах (if available)
+ if (typeof LIMS_AGGRID !== 'undefined' && LIMS_AGGRID.createGrid) {
+ // Factory pattern ашиглах
+ window.cvGridApi = LIMS_AGGRID.createGrid('#cvGrid', columnDefs, rowData, {
+ onCellValueChanged: onCellValueChanged,
+ enterNavigatesVerticallyAfterEdit: true,
+ editableColIds: ['m', 'dT']
+ });
+ logger.log('✅ Using LIMS_AGGRID.createGrid() factory');
+ } else {
+ // Fallback: Manual grid creation
+ logger.warn('⚠️ LIMS_AGGRID not available, using fallback');
+ const gridOptions = {
+ columnDefs: columnDefs,
+ rowData: rowData,
+ defaultColDef: {
+ sortable: true,
+ resizable: true,
+ editable: false,
+ suppressMovable: true,
+ wrapHeaderText: true,
+ autoHeaderHeight: true
+ },
+ suppressRowTransform: true,
+ singleClickEdit: true,
+ stopEditingWhenCellsLoseFocus: true,
+ enterNavigatesVertically: true,
+ enterNavigatesVerticallyAfterEdit: true,
+ onCellValueChanged: onCellValueChanged
+ };
+ window.cvGridApi = agGrid.createGrid(el, gridOptions);
+ }
+
+ // Draft сэргээх
+ setTimeout(restoreDrafts, 100);
+
+ // Remove sample button handler
+ el.addEventListener('click', (e) => {
+ const btn = e.target.closest('.remove-sample-from-worksheet');
+ if (!btn) return;
+
+ const sampleId = parseInt(btn.dataset.sampleId);
+ if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
+
+ const url = new URL(window.location.href);
+ let ids = (url.searchParams.get('sample_ids') || '').split(',');
+ ids = ids.filter(x => x.trim() && parseInt(x) !== sampleId);
+
+ if (ids.length> 0) url.searchParams.set('sample_ids', ids.join(','));
+ else url.searchParams.delete('sample_ids');
+
+ window.location.href = url.toString();
+ });
+
+ logger.log('✅ CV Grid initialized with factory pattern');
+ });
+
+ // --- 7. ACTIONS ---
+
+ window.removeSample = function(id) {
+ if (!confirm('{{ _("Remove this sample from the list?") }}')) return;
+ const url = new URL(window.location.href);
+ let ids = (url.searchParams.get('sample_ids') || '').split(',');
+ ids = ids.filter(x => x.trim() && parseInt(x) !== id);
+ if (ids.length> 0) url.searchParams.set('sample_ids', ids.join(','));
+ else url.searchParams.delete('sample_ids');
+ window.location.href = url.toString();
+ };
+
+ window.collectCvGridData = function() {
+ if (!window.cvGridApi) return [];
+
+ // ✅ Batch constants шалгах
+ const batch = currentBatch();
+ if (batch.E == null || batch.E === 0) {
+ alert('{{ _("Please enter Bomb Heat Capacity (E)!") }}');
+ document.getElementById('batch_calorific_system')?.focus();
+ return [];
+ }
+ if (batch.q1 == null) {
+ alert('{{ _("Please enter Fuse Wire Heat (q1)!") }}');
+ document.getElementById('batch_fuse_correction')?.focus();
+ return [];
+ }
+
+ const map = {};
+ window.cvGridApi.forEachNode(n => {
+ // ✅ Skip хадгалагдсан дээжүүд - дахин хадгалахгүй
+ if (n.data.is_saved) return;
+
+ if (!map[n.data.sample_id]) map[n.data.sample_id] = {};
+ map[n.data.sample_id][n.data.parallel] = n.data;
+ });
+
+ const payload = [];
+ const incomplete = []; // ✅ Дутуу дээжүүдийг хадгалах
+
+ Object.keys(map).forEach(sid => {
+ const p1 = map[sid][1];
+ const p2 = map[sid][2];
+
+ // ✅ Validation шалгалт
+ const hasP1 = p1 && p1.m != null && p1.dT != null;
+ const hasP2 = p2 && p2.m != null && p2.dT != null;
+
+ if (hasP1 && hasP2) {
+ const batchNow = currentBatch();
+ const E = p1.batchE ?? batchNow.E;
+ const q1 = p1.batchQ1 ?? batchNow.q1;
+ const q2 = p1.batchQ2 ?? batchNow.q2;
+ const S = p1.S ?? sulfurMap[String(sid)] ?? sulfurMap[sid] ?? null;
+
+ // ✅ Sulfur (S) заавал байх ёстой - Vad-д Mad шаарддагтай адил
+ if (S == null || S === 0) {
+ logger.warn(`⚠️ Sample "${p1.sample_code || sid}": Хүхрийн (S) үр дүн байхгүй - CV тооцоолох боломжгүй`);
+ incomplete.push(`${p1.sample_code || sid} (S байхгүй)`);
+ return;
+ }
+
+ const res1 = computeResult(p1.m, p1.dT, E, q1, q2, S);
+ const res2 = computeResult(p2.m, p2.dT, E, q1, q2, S);
+
+ if (res1 == null || res2 == null) {
+ logger.warn(`⚠️ Sample ${p1.sample_code || sid}: тооцоолол амжилтгүй`);
+ incomplete.push(p1.sample_code || sid);
+ return;
+ }
+
+ // Сөрөг CV — оролтын алдаа (dT бага эсвэл q1 хэт их)
+ if (res1 < 0 || res2 < 0) {
+ logger.warn(`⚠️ Sample ${p1.sample_code || sid}: сөрөг CV (${res1?.toFixed(2)}, ${res2?.toFixed(2)}) — оролтыг шалгана уу`);
+ incomplete.push(`${p1.sample_code || sid} (CV < 0)`);
+ return;
+ }
+
+ const avg = (res1 + res2) / 2;
+ const diff = Math.abs(res1 - res2);
+
+ // ✅ Backend expectation: top-level diff/avg болон repeatability object
+ payload.push({
+ sample_id: parseInt(sid),
+ analysis_code: ANALY_CODE,
+ final_result: avg,
+ raw_data: {
+ // ✅ Top-level summary fields (ахлахын хяналт + аудит логт харагдана)
+ diff: diff,
+ avg: avg,
+
+ // Parallel data
+ p1: {
+ m: p1.m,
+ delta_t: p1.dT,
+ result: res1
+ },
+ p2: {
+ m: p2.m,
+ delta_t: p2.dT,
+ result: res2
+ },
+
+ // Sulfur and batch constants
+ s_used: S,
+ batch: {
+ E: E,
+ q1: q1,
+ q2: q2
+ },
+
+ // ✅ Repeatability (backend тооцоолол хийж, limit шалгаж, t_exceeded тогтооно)
+ repeatability: {
+ difference: diff
+ // Backend repeatability.py-ээс limit авч, t_exceeded тогтооно
+ },
+
+ formula: 'Qgr_ad = ((E*dT - q1 - q2)/m - S_corr - acid_corr) / 4.1868'
+ }
+ });
+ } else {
+ // ✅ Дутуу дээж - мэдээлэл хадгалах
+ const sampleCode = p1?.sample_code || p2?.sample_code || sid;
+ const missing = [];
+ if (!hasP1) missing.push('Parallel 1');
+ if (!hasP2) missing.push('Parallel 2');
+ logger.warn(`⚠️ Sample "${sampleCode}": дутуу мэдээлэл (${missing.join(', ')})`);
+ incomplete.push(sampleCode);
+ }
+ });
+
+ // ✅ Summary logging
+ if (incomplete.length> 0) {
+ logger.log(`📊 Total: ${Object.keys(map).length} дээж`);
+ logger.log(`✅ Хадгалагдах: ${payload.length} дээж`);
+ logger.log(`⚠️ Дутуу: ${incomplete.length} дээж -`, incomplete.join(', '));
+ } else {
+ logger.log(`✅ ${payload.length} дээж бэлэн`);
+ }
+
+ return payload;
+ };
+
+ // ✅ AfterSave callback - Reload хийхгүй, grid update хийнэ
+ window.updateCvGridAfterSave = function(savedPayload, failedItems = []) {
+ logger.log('✅ afterSave called, updating grid without reload');
+
+ const savedSampleIds = savedPayload.map(r => r.sample_id);
+ const failedSampleIds = failedItems.map(err => err.sample_id).filter(id => id != null);
+
+ // ✅ Errorтай дээжийн мэдээлэл
+ if (failedItems.length> 0) {
+ logger.warn(`⚠️ ${failedItems.length} дээж хадгалагдсангүй (worksheet-д үлдэнэ)`);
+ failedItems.forEach(err => {
+ logger.warn(` - Sample ${err.sample_id}: ${err.error}`);
+ });
+ }
+
+ // ✅ ШИНЭ ЛОГИК: Зөвхөн pending_review (тохирцын зөрүүтэй) дээжүүдийг үлдээх
+ const STORAGE_KEY = `worksheet_${ANALY_CODE}_sample_ids`;
+
+ // savedPayload-ээс status шалгах
+ const approvedIds = []; // Батлагдсан (тохирц OK) → арилах
+ const pendingIds = []; // Хүлээгдэж буй (тохирц зөрүү) → үлдэх
+
+ savedPayload.forEach(saved => {
+ if (saved.status === 'approved') {
+ approvedIds.push(saved.sample_id);
+ } else if (saved.status === 'pending_review') {
+ pendingIds.push(saved.sample_id);
+ }
+ });
+
+ // Grid-ээс бүх sample IDs-ийг цуглуулах
+ const allSampleIds = [];
+ if (window.cvGridApi) {
+ window.cvGridApi.forEachNode(n => {
+ if (!allSampleIds.includes(n.data.sample_id)) {
+ allSampleIds.push(n.data.sample_id);
+ }
+ });
+ }
+
+ // Хадгалагдаагүй + pending_review дээжүүдийг үлдээх
+ const remainingIds = allSampleIds.filter(id =>
+ !approvedIds.includes(id) || pendingIds.includes(id)
+ );
+
+ logger.log(`📊 Approved (арилах): ${approvedIds.length} -`, approvedIds);
+ logger.log(`📊 Pending (үлдэх): ${pendingIds.length} -`, pendingIds);
+ logger.log(`📊 Remaining (worksheet): ${remainingIds.length} -`, remainingIds);
+
+ if (remainingIds.length> 0) {
+ const idsString = remainingIds.join(',');
+
+ // ✅ localStorage сэргээх
+ try {
+ localStorage.setItem(STORAGE_KEY, idsString);
+ logger.log(`✅ UPDATED localStorage with ${remainingIds.length} samples`);
+ } catch(e) {
+ logger.warn('localStorage update failed:', e);
+ }
+
+ // ✅ URL сэргээх
+ try {
+ const url = new URL(window.location.href);
+ url.searchParams.set('sample_ids', idsString);
+ window.history.replaceState({}, '', url.toString());
+ logger.log(`✅ UPDATED URL with ${remainingIds.length} samples`);
+ } catch(e) {
+ logger.warn('URL update failed:', e);
+ }
+ } else {
+ // Бүх дээж approved болсон - worksheet цэвэрлэх
+ try {
+ localStorage.removeItem(STORAGE_KEY);
+ const url = new URL(window.location.href);
+ url.searchParams.delete('sample_ids');
+ window.history.replaceState({}, '', url.toString());
+ logger.log(`✅ All approved - cleared worksheet`);
+ } catch(e) {}
+ }
+
+ // Draft устгах (зөвхөн хадгалагдсан)
+ draftMgr.purge(
+ savedSampleIds.flatMap(id => [`${id}_1`, `${id}_2`])
+ );
+
+ // Grid update - хадгалагдсан дээжүүдийг locked болгох
+ window.cvGridApi.forEachNode(n => {
+ if (savedSampleIds.includes(n.data.sample_id)) {
+ n.data.is_saved = true;
+
+ // Backend-ээс ирсэн үр дүнг тохируулах
+ const saved = savedPayload.find(r => r.sample_id === n.data.sample_id);
+
+ if (saved && saved.raw_data) {
+ const raw = saved.raw_data;
+
+ // ✅ Parallel 1 дээр тохирц/дундаж тохируулах
+ if (n.data.parallel === 1) {
+ // ✅ Backend response-оос top-level fields авах (бид одоо илгээж байна!)
+ let tolerance = raw.diff ?? raw.repeatability?.difference;
+ let average = raw.avg ?? saved.final_result;
+
+ // ✅ Хэрэв backend буцаагаагүй бол ӨӨРӨӨ тооцоолох (fallback)
+ if ((tolerance == null || average == null) && raw.p1?.result != null && raw.p2?.result != null) {
+ const p1Result = raw.p1.result;
+ const p2Result = raw.p2.result;
+
+ average = average ?? (p1Result + p2Result) / 2;
+ tolerance = tolerance ?? Math.abs(p1Result - p2Result);
+ }
+
+ const t_exceeded = raw.t_exceeded ?? raw.repeatability?.t_exceeded ?? false;
+
+ n.data.tolerance = tolerance;
+ n.data.average = average;
+ n.data.t_exceeded = t_exceeded;
+ }
+
+ // Resultгийн утгуудыг тохируулах
+ const pData = n.data.parallel === 1 ? raw.p1 : raw.p2;
+ if (pData) {
+ n.data.m = pData.m;
+ n.data.dT = pData.delta_t;
+ n.data.result = pData.result;
+ if (n.data.parallel === 1) n.data._p1 = pData.result;
+ else n.data._p2 = pData.result;
+ }
+
+ // Batch constants
+ if (raw.batch) {
+ n.data.batchE = raw.batch.E;
+ n.data.batchQ1 = raw.batch.q1;
+ n.data.batchQ2 = raw.batch.q2;
+ }
+
+ // Sulfur
+ if (raw.s_used != null) {
+ n.data.S = raw.s_used;
+ }
+ }
+ }
+ });
+
+ // ✅ Approved дээжүүдийг grid-ээс устгах
+ if (approvedIds.length> 0) {
+ const rowsToRemove = [];
+ window.cvGridApi.forEachNode(n => {
+ if (approvedIds.includes(n.data.sample_id)) {
+ rowsToRemove.push(n);
+ }
+ });
+
+ if (rowsToRemove.length> 0) {
+ window.cvGridApi.applyTransaction({ remove: rowsToRemove.map(n => n.data) });
+ logger.log(`🗑️ Removed ${approvedIds.length} approved samples from grid`);
+ }
+ }
+
+ // Grid refresh
+ window.cvGridApi.refreshCells({ force: true });
+
+ logger.log(`✅ ${savedSampleIds.length} дээж хадгалагдлаа`);
+ if (approvedIds.length> 0) {
+ logger.log(` → ${approvedIds.length} approved - worksheet-ээс арилсан`);
+ }
+ if (pendingIds.length> 0) {
+ logger.log(` → ${pendingIds.length} pending - worksheet-д үлдсэн (тохирцын зөрүүтэй)`);
+ }
+ };
+
+ // ✅ Register collector AND afterSave in LIMS_CALC namespace
+ window.LIMS_CALC = window.LIMS_CALC || {};
+ window.LIMS_CALC[ANALY_CODE] = {
+ collect: window.collectCvGridData,
+ afterSave: window.updateCvGridAfterSave
+ };
+ window.LIMS_CALC['CV'] = {
+ collect: window.collectCvGridData,
+ afterSave: window.updateCvGridAfterSave
+ };
+ logger.log('✅ CV collector & afterSave registered in LIMS_CALC namespace');
 
 })();
 </script>

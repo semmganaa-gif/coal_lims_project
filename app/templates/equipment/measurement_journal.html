@@ -6,147 +6,147 @@
 {% block content %}
 <div class="container-fluid eq-page">
 
-  {# add_modal_id removed - admin only #}
-  {% include "equipment/partials/hero_tabs.html" %}
+ {# add_modal_id removed - admin only #}
+ {% include "equipment/partials/hero_tabs.html" %}
 
-  <div class="eq-toolbar-card">
-    <div class="eq-toolbar-left">
-      <span class="fw-bold"><i class="bi bi-rulers text-info"></i> {{ _("Measuring Instruments Register") }}</span>
-    </div>
-    <div class="eq-toolbar-right">
-      {% if current_user.role in ['senior','manager','admin'] %}
-      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMeasModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
-      <button class="btn btn-sm btn-outline-warning" id="btn-edit-row" onclick="editSelectedRow()" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
-      <button class="btn btn-sm btn-outline-danger" id="btn-delete-row" onclick="deleteSelectedRows()" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
-      {% endif %}
-      <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
-      <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
-    </div>
-  </div>
+ <div class="eq-toolbar-card">
+ <div class="eq-toolbar-left">
+ <span class="fw-bold"><i class="bi bi-rulers text-info"></i> {{ _("Measuring Instruments Register") }}</span>
+ </div>
+ <div class="eq-toolbar-right">
+ {% if current_user.role in ['senior','manager','admin'] %}
+ <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMeasModal"><i class="bi bi-plus-lg"></i> {{ _("Add") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-warning" id="btn-edit-row" disabled><i class="bi bi-pencil"></i> {{ _("Edit") }}</button>
+ <button type="button" class="btn btn-sm btn-outline-danger" id="btn-delete-row" disabled><i class="bi bi-trash"></i> {{ _("Delete") }}</button>
+ {% endif %}
+ <span class="badge bg-primary rounded-pill d-none" id="selected-count-badge">0</span>
+ <span class="badge bg-secondary rounded-pill" id="eqTotalCount">0</span>
+ </div>
+ </div>
 
-  <div class="eq-grid-card">
-    <div id="measurementGrid" style="width:100%;height:calc(100vh - 280px);min-height:450px"></div>
-  </div>
+ <div class="eq-grid-card">
+ <div class="w-full h-[calc(100vh_-_280px)] min-h-[450px]" id="measurementGrid"></div>
+ </div>
 
-  {# ===== ADD/EDIT MODAL ===== #}
-  <div class="modal fade" id="addMeasModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e40af);color:#fff;">
-          <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Measuring Instrument") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='measurement') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body p-4">
-          <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Group") }}</label>
-              <select id="m_group" name="group" class="form-select">
-                {{ measurement_group_options('') }}
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-bold small">{{ _("No.") }}</label>
-              <input type="text" id="m_no" name="no" class="form-control">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">{{ _("Instrument Name / Type / Model") }}</label>
-              <input type="text" id="m_name" name="name" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-bold small">{{ _("Country / Manufacturer") }}</label>
-              <input type="text" id="m_manufacturer" name="manufacturer" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Purpose") }}</label>
-              <select id="m_purpose" name="purpose" class="form-select">
-                {{ lab_purpose_options('') }}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Quantity") }}</label>
-              <input type="text" id="m_qty" name="qty" class="form-control" value="1">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Measurement Unit") }}</label>
-              <select id="m_unit" name="unit" class="form-select">
-                {{ measurement_unit_options('') }}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Cert. Meas. Range") }}</label>
-              <input type="text" id="m_cert_range" name="cert_range" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Cert. Accuracy") }}</label>
-              <input type="text" id="m_cert_accuracy" name="cert_accuracy" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Check Meas. Range") }}</label>
-              <input type="text" id="m_chk_range" name="chk_range" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Check Accuracy") }}</label>
-              <input type="text" id="m_chk_accuracy" name="chk_accuracy" class="form-control">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Frequency (Cert.)") }}</label>
-              <select id="m_freq_cert" name="freq_cert" class="form-select">
-                {{ freq_cert_options('') }}
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-bold small">{{ _("Frequency (Check)") }}</label>
-              <select id="m_freq_check" name="freq_check" class="form-select">
-                {{ freq_check_options('') }}
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Reference Standard Type") }}</label>
-              <input type="text" id="m_etalon_type" name="etalon_type" class="form-control">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Reference Cert. Date") }}</label>
-              <input type="text" id="m_etalon_date" name="etalon_date" class="form-control">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Calibration Date") }}</label>
-              <input type="text" id="m_cert_date" name="cert_date" class="form-control">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Next Calibration") }}</label>
-              <input type="text" id="m_next_cert" name="next_cert" class="form-control">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Certificate No.") }}</label>
-              <input type="text" id="m_cert_no" name="cert_no" class="form-control">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label fw-bold small">{{ _("Responsible Person") }}</label>
-              <input type="text" id="m_responsible" name="responsible" class="form-control">
-            </div>
-            <div class="col-12">
-              <label class="form-label fw-bold small">{{ _("Remarks") }}</label>
-              <input type="text" id="m_remark" name="remark" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
-        </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ {# ===== ADD/EDIT MODAL ===== #}
+ <div class="modal fade" id="addMeasModal" tabindex="-1">
+ <div class="modal-dialog modal-lg modal-dialog-scrollable">
+ <div class="modal-content">
+ <div class="modal-header bg-brand-gradient text-white">
+ <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>{{ _("Add Measuring Instrument") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <form id="registerForm" method="POST" action="{{ url_for('equipment.add_register_item', register_type='measurement') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="modal-body p-4">
+ <input type="hidden" id="edit_item_id" name="edit_item_id" value="">
+ <div class="row g-3">
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Group") }}</label>
+ <select id="m_group" name="group" class="form-select">
+ {{ measurement_group_options('') }}
+ </select>
+ </div>
+ <div class="col-md-2">
+ <label class="form-label fw-bold small">{{ _("No.") }}</label>
+ <input type="text" id="m_no" name="no" class="form-control">
+ </div>
+ <div class="col-md-6">
+ <label class="form-label fw-bold small">{{ _("Instrument Name / Type / Model") }}</label>
+ <input type="text" id="m_name" name="name" class="form-control" required>
+ </div>
+ <div class="col-md-6">
+ <label class="form-label fw-bold small">{{ _("Country / Manufacturer") }}</label>
+ <input type="text" id="m_manufacturer" name="manufacturer" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Purpose") }}</label>
+ <select id="m_purpose" name="purpose" class="form-select">
+ {{ lab_purpose_options('') }}
+ </select>
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Quantity") }}</label>
+ <input type="text" id="m_qty" name="qty" class="form-control" value="1">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Measurement Unit") }}</label>
+ <select id="m_unit" name="unit" class="form-select">
+ {{ measurement_unit_options('') }}
+ </select>
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Cert. Meas. Range") }}</label>
+ <input type="text" id="m_cert_range" name="cert_range" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Cert. Accuracy") }}</label>
+ <input type="text" id="m_cert_accuracy" name="cert_accuracy" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Check Meas. Range") }}</label>
+ <input type="text" id="m_chk_range" name="chk_range" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Check Accuracy") }}</label>
+ <input type="text" id="m_chk_accuracy" name="chk_accuracy" class="form-control">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Frequency (Cert.)") }}</label>
+ <select id="m_freq_cert" name="freq_cert" class="form-select">
+ {{ freq_cert_options('') }}
+ </select>
+ </div>
+ <div class="col-md-3">
+ <label class="form-label fw-bold small">{{ _("Frequency (Check)") }}</label>
+ <select id="m_freq_check" name="freq_check" class="form-select">
+ {{ freq_check_options('') }}
+ </select>
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Reference Standard Type") }}</label>
+ <input type="text" id="m_etalon_type" name="etalon_type" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Reference Cert. Date") }}</label>
+ <input type="text" id="m_etalon_date" name="etalon_date" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Calibration Date") }}</label>
+ <input type="text" id="m_cert_date" name="cert_date" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Next Calibration") }}</label>
+ <input type="text" id="m_next_cert" name="next_cert" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Certificate No.") }}</label>
+ <input type="text" id="m_cert_no" name="cert_no" class="form-control">
+ </div>
+ <div class="col-md-4">
+ <label class="form-label fw-bold small">{{ _("Responsible Person") }}</label>
+ <input type="text" id="m_responsible" name="responsible" class="form-control">
+ </div>
+ <div class="col-12">
+ <label class="form-label fw-bold small">{{ _("Remarks") }}</label>
+ <input type="text" id="m_remark" name="remark" class="form-control">
+ </div>
+ </div>
+ </div>
+ <div class="modal-footer">
+ <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ _("Save") }}</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  {# Delete form #}
-  <form id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}" style="display:none">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="register_type" value="measurement">
-  </form>
+ {# Delete form #}
+ <form class="hidden" id="deleteForm" method="POST" action="{{ url_for('equipment.delete_register_items') }}">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <input type="hidden" name="register_type" value="measurement">
+ </form>
 </div>
 {% endblock %}
 
@@ -159,78 +159,78 @@
 
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
-  var rowData = {{ items | tojson }};
+ var rowData = {{ items | tojson }};
 
-  var table = new Tabulator("#measurementGrid", {
-    data: rowData,
-    layout: "fitColumns",
-    height: "calc(100vh - 280px)",
-    groupBy: "group",
-    groupStartOpen: true,
-    selectable: true,
-    columns: [
-      {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
-      {title:"№", field:"no", width:55, frozen:true},
-      {title:'{{ _("Instrument Name / Type / Model") }}', field:"name", minWidth:220, frozen:true},
-      {title:'{{ _("Country / Manufacturer") }}', field:"manufacturer", minWidth:180},
-      {title:'{{ _("Purpose") }}', field:"purpose", width:100},
-      {title:'{{ _("Quantity") }}', field:"qty", width:80},
-      {title:'{{ _("Measurement Unit") }}', field:"unit", width:100},
-      {title:'{{ _("Instrument Control Type") }}', columns:[
-        {title:'{{ _("Calibration") }}', columns:[
-          {title:'{{ _("Meas. Range") }}', field:"cert_range", width:120},
-          {title:'{{ _("Accuracy") }}', field:"cert_accuracy", width:110},
-        ]},
-        {title:'{{ _("Check & Adjustment") }}', columns:[
-          {title:'{{ _("Meas. Range") }}', field:"chk_range", width:120},
-          {title:'{{ _("Accuracy") }}', field:"chk_accuracy", width:110},
-        ]},
-      ]},
-      {title:'{{ _("Frequency") }}', columns:[
-        {title:'{{ _("Calibration") }}', field:"freq_cert", width:110},
-        {title:'{{ _("Check & Adjustment") }}', field:"freq_check", width:120},
-      ]},
-      {title:'{{ _("Reference Standard") }}', columns:[
-        {title:'{{ _("Standard Type") }}', field:"etalon_type", minWidth:150},
-        {title:'{{ _("Cert. Date") }}', field:"etalon_date", width:130},
-      ]},
-      {title:'{{ _("Calibration Date") }}', field:"cert_date", width:150},
-      {title:'{{ _("Next Calibration") }}', field:"next_cert", width:160},
-      {title:'{{ _("Certificate No.") }}', field:"cert_no", width:130},
-      {title:'{{ _("Remarks") }}', field:"remark", minWidth:120},
-      {title:'{{ _("Responsible Person / Position") }}', field:"responsible", minWidth:150},
-    ],
-  });
+ var table = new Tabulator("#measurementGrid", {
+ data: rowData,
+ layout: "fitColumns",
+ height: "calc(100vh - 280px)",
+ groupBy: "group",
+ groupStartOpen: true,
+ selectable: true,
+ columns: [
+ {formatter:"rowSelection", titleFormatter:"rowSelection", width:40, frozen:true, headerSort:false, cellClick:function(e,cell){cell.getRow().toggleSelect();}},
+ {title:"№", field:"no", width:55, frozen:true},
+ {title:'{{ _("Instrument Name / Type / Model") }}', field:"name", minWidth:220, frozen:true},
+ {title:'{{ _("Country / Manufacturer") }}', field:"manufacturer", minWidth:180},
+ {title:'{{ _("Purpose") }}', field:"purpose", width:100},
+ {title:'{{ _("Quantity") }}', field:"qty", width:80},
+ {title:'{{ _("Measurement Unit") }}', field:"unit", width:100},
+ {title:'{{ _("Instrument Control Type") }}', columns:[
+ {title:'{{ _("Calibration") }}', columns:[
+ {title:'{{ _("Meas. Range") }}', field:"cert_range", width:120},
+ {title:'{{ _("Accuracy") }}', field:"cert_accuracy", width:110},
+ ]},
+ {title:'{{ _("Check & Adjustment") }}', columns:[
+ {title:'{{ _("Meas. Range") }}', field:"chk_range", width:120},
+ {title:'{{ _("Accuracy") }}', field:"chk_accuracy", width:110},
+ ]},
+ ]},
+ {title:'{{ _("Frequency") }}', columns:[
+ {title:'{{ _("Calibration") }}', field:"freq_cert", width:110},
+ {title:'{{ _("Check & Adjustment") }}', field:"freq_check", width:120},
+ ]},
+ {title:'{{ _("Reference Standard") }}', columns:[
+ {title:'{{ _("Standard Type") }}', field:"etalon_type", minWidth:150},
+ {title:'{{ _("Cert. Date") }}', field:"etalon_date", width:130},
+ ]},
+ {title:'{{ _("Calibration Date") }}', field:"cert_date", width:150},
+ {title:'{{ _("Next Calibration") }}', field:"next_cert", width:160},
+ {title:'{{ _("Certificate No.") }}', field:"cert_no", width:130},
+ {title:'{{ _("Remarks") }}', field:"remark", minWidth:120},
+ {title:'{{ _("Responsible Person / Position") }}', field:"responsible", minWidth:150},
+ ],
+ });
 
-  initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
+ initRegisterTable(table, '{{ _("rows will be deleted. Continue?") }}');
 
-  window.editSelectedRow = function() {
-    var sel = table.getSelectedData();
-    if (sel.length !== 1) return;
-    var d = sel[0];
-    var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
-    fields.forEach(function(f) {
-      var el = document.getElementById('m_' + f);
-      if (!el) return;
-      if (el.tagName === 'SELECT') {
-        for (var i = 0; i < el.options.length; i++) { if (el.options[i].text === (d[f]||'') || el.options[i].value === (d[f]||'')) { el.selectedIndex = i; break; } }
-      } else { el.value = d[f] || ''; }
-    });
-    document.getElementById('edit_item_id').value = d.id || '';
-    if (d.id) {
-      document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
-    }
-    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
-    new bootstrap.Modal(document.getElementById('addMeasModal')).show();
-  };
+ window.editSelectedRow = function() {
+ var sel = table.getSelectedData();
+ if (sel.length !== 1) return;
+ var d = sel[0];
+ var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
+ fields.forEach(function(f) {
+ var el = document.getElementById('m_' + f);
+ if (!el) return;
+ if (el.tagName === 'SELECT') {
+ for (var i = 0; i < el.options.length; i++) { if (el.options[i].text === (d[f]||'') || el.options[i].value === (d[f]||'')) { el.selectedIndex = i; break; } }
+ } else { el.value = d[f] || ''; }
+ });
+ document.getElementById('edit_item_id').value = d.id || '';
+ if (d.id) {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.edit_register_item', id=0) }}".replace('/0', '/' + d.id);
+ }
+ document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-pencil-square me-2"></i>{{ _("Edit") }}';
+ new bootstrap.Modal(document.getElementById('addMeasModal')).show();
+ };
 
-  document.getElementById('addMeasModal').addEventListener('hidden.bs.modal', function() {
-    document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='measurement') }}";
-    document.getElementById('edit_item_id').value = '';
-    document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Measuring Instrument") }}';
-    var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
-    fields.forEach(function(f) { var el = document.getElementById('m_' + f); if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; });
-  });
+ document.getElementById('addMeasModal').addEventListener('hidden.bs.modal', function() {
+ document.getElementById('registerForm').action = "{{ url_for('equipment.add_register_item', register_type='measurement') }}";
+ document.getElementById('edit_item_id').value = '';
+ document.querySelector('#addMeasModal .modal-title').innerHTML = '<i class="bi bi-plus-circle me-2"></i>{{ _("Add Measuring Instrument") }}';
+ var fields = ['group','no','name','manufacturer','purpose','qty','unit','cert_range','cert_accuracy','chk_range','chk_accuracy','freq_cert','freq_check','etalon_type','etalon_date','cert_date','next_cert','cert_no','responsible','remark'];
+ fields.forEach(function(f) { var el = document.getElementById('m_' + f); if(el.tagName==='SELECT') el.selectedIndex=0; else el.value=''; });
+ });
 });
 </script>
 {% endblock %}

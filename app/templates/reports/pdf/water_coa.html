@@ -1,244 +1,244 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <style>
-    @page { size: A4; margin: 1.5cm; }
-    body { font-family: 'DejaVuSans', Arial, sans-serif; font-size: 10pt; color: #000; line-height: 1.35; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #333; padding: 4px 6px; }
-    th { background: #f0f0f0; font-weight: bold; }
+ <meta charset="UTF-8">
+ <style>
+ @page { size: A4; margin: 1.5cm; }
+ body { font-family: 'DejaVuSans', Arial, sans-serif; font-size: 10pt; color: #000; line-height: 1.35; }
+ table { border-collapse: collapse; width: 100%; }
+ th, td { border: 1px solid #333; padding: 4px 6px; }
+ th { background: #f0f0f0; font-weight: bold; }
 
-    /* Header */
-    .coa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-    .coa-lab-name { font-size: 12pt; font-weight: bold; }
-    .coa-lab-sub { font-size: 8pt; color: #444; }
-    .coa-logo { text-align: right; }
-    .coa-title { text-align: center; font-size: 15pt; font-weight: bold; margin: 8px 0 4px 0; }
-    .coa-num { text-align: center; font-size: 11pt; margin-bottom: 10px; }
-    .coa-meta { display: flex; justify-content: space-between; font-size: 8.5pt; color: #444; margin-bottom: 8px; }
+ /* Header */
+ .coa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+ .coa-lab-name { font-size: 12pt; font-weight: bold; }
+ .coa-lab-sub { font-size: 8pt; color: #444; }
+ .coa-logo { text-align: right; }
+ .coa-title { text-align: center; font-size: 15pt; font-weight: bold; margin: 8px 0 4px 0; }
+ .coa-num { text-align: center; font-size: 11pt; margin-bottom: 10px; }
+ .coa-meta { display: flex; justify-content: space-between; font-size: 8.5pt; color: #444; margin-bottom: 8px; }
 
-    /* Info table */
-    .info-tbl td:first-child { background: #f8f8f8; font-weight: bold; width: 35%; }
+ /* Info table */
+ .info-tbl td:first-child { background: #f8f8f8; font-weight: bold; width: 35%; }
 
-    /* Results */
-    .section-title { font-size: 10pt; font-weight: bold; margin: 10px 0 4px 0; border-left: 4px solid #333; padding-left: 6px; }
-    .results-tbl th { font-size: 8.5pt; text-align: center; }
-    .results-tbl td { font-size: 8.5pt; text-align: center; }
-    .results-tbl td.param-name { text-align: left; }
-    .pass  { color: #1a7a1a; font-weight: bold; }
-    .fail  { color: #cc0000; font-weight: bold; }
-    .nd    { color: #666; font-style: italic; }
+ /* Results */
+ .section-title { font-size: 10pt; font-weight: bold; margin: 10px 0 4px 0; border-left: 4px solid #333; padding-left: 6px; }
+ .results-tbl th { font-size: 8.5pt; text-align: center; }
+ .results-tbl td { font-size: 8.5pt; text-align: center; }
+ .results-tbl td.param-name { text-align: left; }
+ .pass { color: #1a7a1a; font-weight: bold; }
+ .fail { color: #cc0000; font-weight: bold; }
+ .nd { color: #666; font-style: italic; }
 
-    /* Signatures */
-    .sig-section { margin-top: 18px; }
-    .sig-table td { border: none; padding: 4px 8px; vertical-align: bottom; }
-    .sig-line { border-bottom: 1px solid #333; min-width: 130px; display: inline-block; margin-bottom: 2px; }
-    .sig-label { font-size: 8.5pt; color: #444; }
+ /* Signatures */
+ .sig-section { margin-top: 18px; }
+ .sig-table td { border: none; padding: 4px 8px; vertical-align: bottom; }
+ .sig-line { border-bottom: 1px solid #333; min-width: 130px; display: inline-block; margin-bottom: 2px; }
+ .sig-label { font-size: 8.5pt; color: #444; }
 
-    /* Footer */
-    .coa-footer { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 6px; font-size: 7.5pt; color: #666; text-align: center; }
-  </style>
+ /* Footer */
+ .coa-footer { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 6px; font-size: 7.5pt; color: #666; text-align: center; }
+ </style>
 </head>
 <body>
 
 {# ── HEADER ── #}
 <div class="coa-header">
-  <div>
-    <div class="coa-lab-name">Энержи Ресурс ХК — Усны лаборатори</div>
-    <div class="coa-lab-sub">Өмнөговь аймаг, Цогтцэций сум, Ухаа худаг</div>
-    <div class="coa-lab-sub">laboratory@mmc.mn</div>
-  </div>
-  <div class="coa-logo">
-    {% if company_logo %}
-    <img src="{{ company_logo }}" style="height: 40px;">
-    {% endif %}
-  </div>
+ <div class="text-[8.5pt]">
+ <div class="coa-lab-name">Энержи Ресурс ХК — Усны лаборатори</div>
+ <div class="coa-lab-sub">Өмнөговь аймаг, Цогтцэций сум, Ухаа худаг</div>
+ <div class="coa-lab-sub">laboratory@mmc.mn</div>
+ </div>
+ <div class="coa-logo">
+ {% if company_logo %}
+ <img class="h-[40px]" src="{{ company_logo }}">
+ {% endif %}
+ </div>
 </div>
 
 <div class="coa-title">ШИНЖИЛГЭЭНИЙ ДҮГНЭЛТ (CoA)</div>
 <div class="coa-num">№ {{ report.report_number }}</div>
 <div class="coa-meta">
-  <span>Огноо: {{ now.strftime('%Y.%m.%d') }}</span>
-  <span>Хуудас: 1/1</span>
+ <span>Огноо: {{ now.strftime('%Y.%m.%d') }}</span>
+ <span>Хуудас: 1/1</span>
 </div>
 
 {# ── SAMPLE INFO ── #}
 <div class="section-title">ДЭЭЖИЙН МЭДЭЭЛЭЛ</div>
 {% set s = sample %}
-<table class="info-tbl" style="margin-bottom:8px;">
-  <tr>
-    <td>Дээжийн нэр / код</td>
-    <td>{{ s.sample_code }}</td>
-    <td>Лаб ID (Хими)</td>
-    <td>{{ s.chem_lab_id or '—' }}</td>
-  </tr>
-  <tr>
-    <td>Авсан байршил</td>
-    <td>{{ s.sampling_location or s.client_name or '—' }}</td>
-    <td>Лаб ID (Микро)</td>
-    <td>{{ s.micro_lab_id or '—' }}</td>
-  </tr>
-  <tr>
-    <td>Дээж авсан огноо</td>
-    <td>{{ s.sample_date.strftime('%Y.%m.%d') if s.sample_date else '—' }}</td>
-    <td>Хүлээн авсан огноо</td>
-    <td>{{ s.received_date.strftime('%Y.%m.%d') if s.received_date else '—' }}</td>
-  </tr>
-  <tr>
-    <td>Авсан хүн</td>
-    <td>{{ s.sampled_by or '—' }}</td>
-    <td>Авах арга</td>
-    <td>{{ s.sampling_method or 'MNS ISO 5667-5:2001' }}</td>
-  </tr>
-  <tr>
-    <td>Захиалагч</td>
-    <td colspan="3">{{ s.client_name or '—' }}</td>
-  </tr>
+<table class="info-tbl mb-[8px]">
+ <tr>
+ <td>Дээжийн нэр / код</td>
+ <td>{{ s.sample_code }}</td>
+ <td>Лаб ID (Хими)</td>
+ <td>{{ s.chem_lab_id or '—' }}</td>
+ </tr>
+ <tr>
+ <td>Авсан байршил</td>
+ <td>{{ s.sampling_location or s.client_name or '—' }}</td>
+ <td>Лаб ID (Микро)</td>
+ <td>{{ s.micro_lab_id or '—' }}</td>
+ </tr>
+ <tr>
+ <td>Дээж авсан огноо</td>
+ <td>{{ s.sample_date.strftime('%Y.%m.%d') if s.sample_date else '—' }}</td>
+ <td>Хүлээн авсан огноо</td>
+ <td>{{ s.received_date.strftime('%Y.%m.%d') if s.received_date else '—' }}</td>
+ </tr>
+ <tr>
+ <td>Авсан хүн</td>
+ <td>{{ s.sampled_by or '—' }}</td>
+ <td>Авах арга</td>
+ <td>{{ s.sampling_method or 'MNS ISO 5667-5:2001' }}</td>
+ </tr>
+ <tr>
+ <td>Захиалагч</td>
+ <td colspan="3">{{ s.client_name or '—' }}</td>
+ </tr>
 </table>
 
 {# ── CHEMISTRY RESULTS ── #}
 {% if chem_results %}
 <div class="section-title">ХИМИЙН ШИНЖИЛГЭЭНИЙ ҮР ДҮН</div>
-<table class="results-tbl" style="margin-bottom:8px;">
-  <thead>
-    <tr>
-      <th style="width:5%">№</th>
-      <th style="width:28%;text-align:left">Параметр</th>
-      <th style="width:9%">Нэгж</th>
-      <th style="width:14%">MNS хязгаар</th>
-      <th style="width:12%">Үр дүн</th>
-      <th style="width:10%">Дүгнэлт</th>
-      <th style="width:22%;text-align:left">Стандарт арга</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in chem_results %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td class="param-name">{{ row.name_mn }}</td>
-      <td>{{ row.unit or '—' }}</td>
-      <td>
-        {% if row.limit %}
-          {% if row.limit is iterable and row.limit is not string %}
-            {{ row.limit[0] if row.limit[0] is not none else '—' }} ~ {{ row.limit[1] if row.limit[1] is not none else '—' }}
-          {% else %}
-            {{ row.limit }}
-          {% endif %}
-        {% else %}—{% endif %}
-      </td>
-      <td style="font-weight:bold">
-        {% if row.result is not none %}
-          {{ '%.3g' | format(row.result) }}
-        {% else %}
-          <span class="nd">ND</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if row.result is not none and row.limit %}
-          {% if row.pass_fail %}
-            <span class="pass">Хэвийн</span>
-          {% else %}
-            <span class="fail">Хэвийн бус</span>
-          {% endif %}
-        {% else %}—{% endif %}
-      </td>
-      <td style="text-align:left;font-size:7.5pt">{{ row.standard or 'MNS 4586:2007' }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<table class="results-tbl mb-[8px]">
+ <thead>
+ <tr>
+ <th class="w-[5%]">№</th>
+ <th class="w-[28%] text-left">Параметр</th>
+ <th class="w-[9%]">Нэгж</th>
+ <th class="w-[14%]">MNS хязгаар</th>
+ <th class="w-[12%]">Үр дүн</th>
+ <th class="w-[10%]">Дүгнэлт</th>
+ <th class="w-[22%] text-left">Стандарт арга</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for row in chem_results %}
+ <tr>
+ <td>{{ loop.index }}</td>
+ <td class="param-name">{{ row.name_mn }}</td>
+ <td>{{ row.unit or '—' }}</td>
+ <td class="w-1/3">
+ {% if row.limit %}
+ {% if row.limit is iterable and row.limit is not string %}
+ {{ row.limit[0] if row.limit[0] is not none else '—' }} ~ {{ row.limit[1] if row.limit[1] is not none else '—' }}
+ {% else %}
+ {{ row.limit }}
+ {% endif %}
+ {% else %}—{% endif %}
+ </td>
+ <td class="font-bold">
+ {% if row.result is not none %}
+ {{ '%.3g' | format(row.result) }}
+ {% else %}
+ <span class="nd">ND</span>
+ {% endif %}
+ </td>
+ <td class="font-bold">
+ {% if row.result is not none and row.limit %}
+ {% if row.pass_fail %}
+ <span class="pass">Хэвийн</span>
+ {% else %}
+ <span class="fail">Хэвийн бус</span>
+ {% endif %}
+ {% else %}—{% endif %}
+ </td>
+ <td class="text-left text-[7.5pt]">{{ row.standard or 'MNS 4586:2007' }}</td>
+ </tr>
+ {% endfor %}
+ </tbody>
 </table>
 {% endif %}
 
 {# ── MICROBIOLOGY RESULTS ── #}
 {% if micro_results %}
 <div class="section-title">МИКРОБИОЛОГИЙН ШИНЖИЛГЭЭНИЙ ҮР ДҮН</div>
-<table class="results-tbl" style="margin-bottom:8px;">
-  <thead>
-    <tr>
-      <th style="width:5%">№</th>
-      <th style="width:30%;text-align:left">Параметр</th>
-      <th style="width:12%">Нэгж</th>
-      <th style="width:14%">MNS хязгаар</th>
-      <th style="width:13%">Үр дүн</th>
-      <th style="width:10%">Дүгнэлт</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for row in micro_results %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td class="param-name">{{ row.name_mn }}</td>
-      <td>{{ row.unit or '—' }}</td>
-      <td>{{ row.limit_str or '—' }}</td>
-      <td style="font-weight:bold">
-        {% if row.result is not none %}
-          {{ row.result }}
-        {% else %}
-          <span class="nd">ND</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if row.pass_fail is not none %}
-          {% if row.pass_fail %}
-            <span class="pass">Хэвийн</span>
-          {% else %}
-            <span class="fail">Хэвийн бус</span>
-          {% endif %}
-        {% else %}—{% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<table class="results-tbl mb-[8px]">
+ <thead>
+ <tr>
+ <th class="w-[5%]">№</th>
+ <th class="w-[30%] text-left">Параметр</th>
+ <th class="w-[12%]">Нэгж</th>
+ <th class="w-[14%]">MNS хязгаар</th>
+ <th class="w-[13%]">Үр дүн</th>
+ <th class="w-[10%]">Дүгнэлт</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for row in micro_results %}
+ <tr>
+ <td class="text-left text-[7.5pt]">{{ loop.index }}</td>
+ <td class="param-name">{{ row.name_mn }}</td>
+ <td class="w-1/3">{{ row.unit or '—' }}</td>
+ <td class="font-bold">{{ row.limit_str or '—' }}</td>
+ <td class="font-bold">
+ {% if row.result is not none %}
+ {{ row.result }}
+ {% else %}
+ <span class="nd">ND</span>
+ {% endif %}
+ </td>
+ <td class="w-1/3">
+ {% if row.pass_fail is not none %}
+ {% if row.pass_fail %}
+ <span class="pass">Хэвийн</span>
+ {% else %}
+ <span class="fail">Хэвийн бус</span>
+ {% endif %}
+ {% else %}—{% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
 </table>
 {% endif %}
 
 {# ── FOOTER NOTE ── #}
-<p style="font-size:8pt;font-style:italic;margin:6px 0;">
-  * Энэхүү дүгнэлт нь дээд дурдсан дээжинд хамааралтай бөгөөд бусад дээжид хамаарахгүй.
+<p class="text-[8pt] italic my-[6px] mx-0">
+ * Энэхүү дүгнэлт нь дээд дурдсан дээжинд хамааралтай бөгөөд бусад дээжид хамаарахгүй.
 </p>
 
 {# ── SIGNATURES ── #}
 <div class="sig-section">
-  <table class="sig-table" style="width:100%">
-    <tr>
-      <td style="width:33%">
-        <div class="sig-label">Шинжилгээ хийсэн химич:</div>
-        {% if report.analyst_signature and report.analyst_signature.image_path %}
-        <img src="{{ url_for('static', filename=report.analyst_signature.image_path) }}" style="height:36px;display:block;margin:2px 0;">
-        {% endif %}
-        <div class="sig-line"></div>
-        <div style="font-size:8.5pt;">{{ report.analyst_signature.name if report.analyst_signature else '' }}</div>
-      </td>
-      <td style="width:33%">
-        <div class="sig-label">Ахлах химич:</div>
-        {% if report.senior_signature and report.senior_signature.image_path %}
-        <img src="{{ url_for('static', filename=report.senior_signature.image_path) }}" style="height:36px;display:block;margin:2px 0;">
-        {% endif %}
-        <div class="sig-line"></div>
-        <div style="font-size:8.5pt;">{{ report.senior_signature.name if report.senior_signature else '' }}</div>
-      </td>
-      <td style="width:33%">
-        <div class="sig-label">Чанарын менежер:</div>
-        {% if report.manager_signature and report.manager_signature.image_path %}
-        <img src="{{ url_for('static', filename=report.manager_signature.image_path) }}" style="height:36px;display:block;margin:2px 0;">
-        {% endif %}
-        <div class="sig-line"></div>
-        <div style="font-size:8.5pt;">{{ report.manager_signature.name if report.manager_signature else '' }}</div>
-      </td>
-    </tr>
-  </table>
+ <table class="sig-table w-full">
+ <tr>
+ <td class="w-1/3">
+ <div class="sig-label">Шинжилгээ хийсэн химич:</div>
+ {% if report.analyst_signature and report.analyst_signature.image_path %}
+ <img class="h-[36px] block my-[2px] mx-0" src="{{ url_for('static', filename=report.analyst_signature.image_path) }}">
+ {% endif %}
+ <div class="sig-line"></div>
+ <div class="text-[8.5pt]">{{ report.analyst_signature.name if report.analyst_signature else '' }}</div>
+ </td>
+ <td class="w-1/3">
+ <div class="sig-label">Ахлах химич:</div>
+ {% if report.senior_signature and report.senior_signature.image_path %}
+ <img class="h-[36px] block my-[2px] mx-0" src="{{ url_for('static', filename=report.senior_signature.image_path) }}">
+ {% endif %}
+ <div class="sig-line"></div>
+ <div class="text-[8.5pt]">{{ report.senior_signature.name if report.senior_signature else '' }}</div>
+ </td>
+ <td class="w-1/3">
+ <div class="sig-label">Чанарын менежер:</div>
+ {% if report.manager_signature and report.manager_signature.image_path %}
+ <img class="h-[36px] block my-[2px] mx-0" src="{{ url_for('static', filename=report.manager_signature.image_path) }}">
+ {% endif %}
+ <div class="sig-line"></div>
+ <div class="text-[8.5pt]">{{ report.manager_signature.name if report.manager_signature else '' }}</div>
+ </td>
+ </tr>
+ </table>
 </div>
 
 {# ── STAMP ── #}
 {% if report.stamp and report.stamp.image_path %}
-<div style="text-align:right;margin-top:-60px;">
-  <img src="{{ url_for('static', filename=report.stamp.image_path) }}" style="height:70px;opacity:0.9;">
+<div class="text-right mt-[-60px]">
+ <img class="h-[70px] opacity-[0.9]" src="{{ url_for('static', filename=report.stamp.image_path) }}">
 </div>
 {% endif %}
 
 <div class="coa-footer">
-  Зөвшөөрөлгүй хуулах хориотой. | Хэвлэсэн огноо: {{ now.strftime('%Y.%m.%d %H:%M') }}
+ Зөвшөөрөлгүй хуулах хориотой. | Хэвлэсэн огноо: {{ now.strftime('%Y.%m.%d %H:%M') }}
 </div>
 
 </body>

@@ -27,10 +27,10 @@
       <p class="text-muted mb-0">{{ _("Annual report for year %(year)s", year=year) }}</p>
     </div>
     <div class="d-flex gap-2">
-      <button onclick="window.print()" class="btn btn-outline-secondary">
+      <button type="button" data-action="print" class="btn btn-outline-secondary">
         <i class="bi bi-printer me-1"></i> {{ _("Print") }}
       </button>
-      <button onclick="exportToExcel()" class="btn btn-success">
+      <button type="button" id="btn-export-xlsx" class="btn btn-success">
         <i class="bi bi-file-earmark-excel me-1"></i> Excel
       </button>
       <a href="{{ url_for('chemicals.waste_list', year=year, lab=lab) }}" class="btn btn-outline-primary">
@@ -109,5 +109,6 @@
 function exportToExcel() {
   tableToXlsx('reportTable', 'waste_report_{{ year }}.xlsx', "{{ _('Waste') }}");
 }
+document.getElementById('btn-export-xlsx')?.addEventListener('click', exportToExcel);
 </script>
 {% endblock %}

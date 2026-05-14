@@ -3,553 +3,570 @@
 {% block head_extra %}
 {{ super() }}
 <style nonce="{{ csp_nonce }}">
-  /* --- MATRIX TABLE STYLE --- */
-  .matrix-wrapper {
-    position: relative;
-    max-height: 70vh;
-    overflow: auto;
-    border: 1px solid #dee2e6;
-    background: #fff;
-    border-radius: 8px;
-  }
+ /* --- MATRIX TABLE STYLE --- */
+ .matrix-wrapper {
+ position: relative;
+ max-height: 70vh;
+ overflow: auto;
+ border: 1px solid #dee2e6;
+ background: #fff;
+ border-radius: 8px;
+ }
 
-  table.matrix {
-    margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0;
-    table-layout: fixed;
-  }
+ table.matrix {
+ margin-bottom: 0;
+ border-collapse: separate;
+ border-spacing: 0;
+ table-layout: fixed;
+ }
 
-  /* Sticky Header */
-  .matrix thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    padding: 5px 2px;
-    overflow: hidden;
-  }
+ /* Sticky Header */
+ .matrix thead th {
+ position: sticky;
+ top: 0;
+ z-index: 10;
+ background-color: #f8f9fa;
+ border-bottom: 2px solid #dee2e6;
+ padding: 5px 2px;
+ overflow: hidden;
+ }
 
-  /* Sticky Column */
-  .matrix .sticky-col {
-    position: sticky;
-    left: 0;
-    z-index: 5;
-    background-color: #fff;
-    border-right: 2px solid #dee2e6 !important;
-    width: 160px;
-    min-width: 160px;
-    max-width: 160px;
-  }
-  .matrix thead th.sticky-col {
-    z-index: 15;
-    background-color: #f8f9fa;
-  }
+ /* Sticky Column */
+ .matrix .sticky-col {
+ position: sticky;
+ left: 0;
+ z-index: 5;
+ background-color: #fff;
+ border-right: 2px solid #dee2e6 !important;
+ width: 160px;
+ min-width: 160px;
+ max-width: 160px;
+ }
+ .matrix thead th.sticky-col {
+ z-index: 15;
+ background-color: #f8f9fa;
+ }
 
-  /* Column Header */
-  .col-header {
-    width: 36px;
-    min-width: 36px;
-    max-width: 36px;
-    text-align: center;
-    vertical-align: bottom;
-  }
+ /* Column Header */
+ .col-header {
+ width: 36px;
+ min-width: 36px;
+ max-width: 36px;
+ text-align: center;
+ vertical-align: bottom;
+ }
 
-  .rotate-wrapper {
-    height: 70px;
-    white-space: nowrap;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 5px;
-  }
-  .rotate-text {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #333;
-  }
+ .rotate-wrapper {
+ height: 70px;
+ white-space: nowrap;
+ display: flex;
+ align-items: flex-end;
+ justify-content: center;
+ padding-bottom: 5px;
+ }
+ .rotate-text {
+ writing-mode: vertical-rl;
+ transform: rotate(180deg);
+ font-size: 0.7rem;
+ font-weight: 600;
+ color: #333;
+ }
 
-  /* Checkbox Cells */
-  .matrix td.check-cell {
-    text-align: center;
-    vertical-align: middle;
-    padding: 0;
-    border-right: 1px solid #eee;
-  }
-  .matrix-check {
-    width: 17px;
-    height: 17px;
-    cursor: pointer;
-    margin: 0;
-  }
+ /* Checkbox Cells */
+ .matrix td.check-cell {
+ text-align: center;
+ vertical-align: middle;
+ padding: 0;
+ border-right: 1px solid #eee;
+ }
+ .matrix-check {
+ width: 17px;
+ height: 17px;
+ cursor: pointer;
+ margin: 0;
+ }
 
-  /* Group Header Row */
-  .group-header-row td {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 700;
-    font-size: 0.82rem;
-    padding: 6px 12px !important;
-    border: none !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .group-header-row td.sticky-col {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  }
+ /* Group Header Row */
+ .group-header-row td {
+ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+ color: white;
+ font-weight: 700;
+ font-size: 0.82rem;
+ padding: 6px 12px !important;
+ border: none !important;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ }
+ .group-header-row td.sticky-col {
+ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+ }
 
-  /* CHPP Header */
-  .chpp-header-row td {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-  }
-  .chpp-header-row td.sticky-col {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-  }
+ /* CHPP Header */
+ .chpp-header-row td {
+ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+ }
+ .chpp-header-row td.sticky-col {
+ background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+ }
 
-  /* Subgroup Header */
-  .subgroup-header-row td {
-    background: #fef3c7;
-    color: #92400e;
-    font-weight: 600;
-    font-size: 0.75rem;
-    padding: 4px 12px !important;
-    border-bottom: 1px solid #fcd34d !important;
-  }
+ /* Subgroup Header */
+ .subgroup-header-row td {
+ background: #fef3c7;
+ color: #92400e;
+ font-weight: 600;
+ font-size: 0.75rem;
+ padding: 4px 12px !important;
+ border-bottom: 1px solid #fcd34d !important;
+ }
 
-  /* Type Row */
-  .type-row td.sticky-col {
-    padding-left: 20px !important;
-    font-size: 0.78rem;
-    color: #374151;
-  }
-  .type-badge {
-    display: inline-block;
-    background: #e0e7ff;
-    color: #3730a3;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 0.7rem;
-  }
-  .chpp-badge {
-    background: #fef3c7;
-    color: #92400e;
-  }
+ /* Type Row */
+ .type-row td.sticky-col {
+ padding-left: 20px !important;
+ font-size: 0.78rem;
+ color: #374151;
+ }
+ .type-badge {
+ display: inline-block;
+ background: #e0e7ff;
+ color: #3730a3;
+ padding: 2px 6px;
+ border-radius: 4px;
+ font-weight: 600;
+ font-size: 0.7rem;
+ }
+ .chpp-badge {
+ background: #fef3c7;
+ color: #92400e;
+ }
 
-  /* Hover */
-  .matrix tbody tr.type-row:hover td { background-color: #eef2ff; }
-  .matrix tbody tr.type-row:hover td.sticky-col { background-color: #e0e7ff; }
+ /* Hover */
+ .matrix tbody tr.type-row:hover td { background-color: #eef2ff; }
+ .matrix tbody tr.type-row:hover td.sticky-col { background-color: #e0e7ff; }
 
-  /* Row Select All */
-  .row-select-all {
-    width: 15px;
-    height: 15px;
-    cursor: pointer;
-    margin-right: 5px;
-    vertical-align: middle;
-  }
+ /* Row Select All */
+ .row-select-all {
+ width: 15px;
+ height: 15px;
+ cursor: pointer;
+ margin-right: 5px;
+ vertical-align: middle;
+ }
 
-  /* Section cards */
-  .config-section {
-    margin-bottom: 1.5rem;
-  }
-  .section-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #374151;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .section-title i {
-    color: #6366f1;
-  }
-  .section-title.chpp i {
-    color: #f59e0b;
-  }
+ /* Section cards */
+ .config-section {
+ margin-bottom: 1.5rem;
+ }
+ .section-title {
+ font-size: 0.9rem;
+ font-weight: 700;
+ color: #374151;
+ margin-bottom: 0.5rem;
+ display: flex;
+ align-items: center;
+ gap: 0.5rem;
+ }
+ .section-title i {
+ color: #6366f1;
+ }
+ .section-title.chpp i {
+ color: #f59e0b;
+ }
 
-  /* SLA input in matrix */
-  .sla-input {
-    width: 52px;
-    padding: 1px 4px;
-    font-size: 0.7rem;
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 4px;
-    background: rgba(255,255,255,0.2);
-    color: inherit;
-    text-align: center;
-    font-weight: 600;
-  }
-  .sla-input:focus {
-    outline: none;
-    border-color: #fff;
-    background: rgba(255,255,255,0.35);
-  }
-  .sla-input::placeholder { color: rgba(255,255,255,0.5); font-weight: 400; }
-  .sla-label { font-size: 0.6rem; opacity: 0.8; margin-left: 2px; }
+ /* SLA input in matrix */
+ .sla-input {
+ width: 52px;
+ padding: 1px 4px;
+ font-size: 0.7rem;
+ border: 1px solid rgba(255,255,255,0.4);
+ border-radius: 4px;
+ background: rgba(255,255,255,0.2);
+ color: inherit;
+ text-align: center;
+ font-weight: 600;
+ }
+ .sla-input:focus {
+ outline: none;
+ border-color: #fff;
+ background: rgba(255,255,255,0.35);
+ }
+ .sla-input::placeholder { color: rgba(255,255,255,0.5); font-weight: 400; }
+ .sla-label { font-size: 0.6rem; opacity: 0.8; margin-left: 2px; }
 
-  /* SLA in type-row (non-header) */
-  .sla-cell {
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
-    text-align: center;
-    vertical-align: middle;
-    padding: 2px !important;
-  }
-  .sla-cell input {
-    width: 50px;
-    padding: 2px 4px;
-    font-size: 0.72rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
-    text-align: center;
-    background: #fff;
-  }
-  .sla-cell input:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
-  }
+ /* SLA in type-row (non-header) */
+ .sla-cell {
+ width: 70px;
+ min-width: 70px;
+ max-width: 70px;
+ text-align: center;
+ vertical-align: middle;
+ padding: 2px !important;
+ }
+ .sla-cell input {
+ width: 50px;
+ padding: 2px 4px;
+ font-size: 0.72rem;
+ border: 1px solid #cbd5e1;
+ border-radius: 4px;
+ text-align: center;
+ background: #fff;
+ }
+ .sla-cell input:focus {
+ outline: none;
+ border-color: #6366f1;
+ box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+ }
 
-  /* SLA header column */
-  .sla-col-header {
-    width: 70px;
-    min-width: 70px;
-    max-width: 70px;
-    text-align: center;
-    vertical-align: bottom;
-  }
+ /* SLA header column */
+ .sla-col-header {
+ width: 70px;
+ min-width: 70px;
+ max-width: 70px;
+ text-align: center;
+ vertical-align: bottom;
+ }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4 mt-4 pb-5">
 
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="mb-1 fw-bold text-primary">
-        <i class="bi bi-sliders me-2"></i>{{ _("Analysis Configuration") }}
-      </h4>
-      <p class="text-muted small mb-0">{{ _("Automatically assign analyses based on sample unit, type, and name.") }}</p>
-    </div>
-    <button type="submit" form="configForm" name="submit_simple" class="btn btn-success px-4">
-      <i class="bi bi-check-lg me-1"></i> {{ _("Save") }}
-    </button>
-  </div>
+ <div class="d-flex justify-content-between align-items-center mb-4">
+ <div>
+ <h4 class="mb-1 fw-bold text-primary">
+ <i class="bi bi-sliders me-2"></i>{{ _("Analysis Configuration") }}
+ </h4>
+ <p class="text-muted small mb-0">{{ _("Automatically assign analyses based on sample unit, type, and name.") }}</p>
+ </div>
+ <button type="submit" form="configForm" name="submit_simple" class="btn btn-success px-4">
+ <i class="bi bi-check-lg me-1"></i> {{ _("Save") }}
+ </button>
+ </div>
 
-  <form id="configForm" action="{{ url_for('admin.analysis_config') }}" method="post">
-    {{ simple_form.hidden_tag() }}
+ <form id="configForm" action="{{ url_for('admin.analysis_config') }}" method="post">
+ {{ simple_form.hidden_tag() }}
 
-    {# ============ CHPP SECTION ============ #}
-    {% if chpp_profiles %}
-    <div class="config-section">
-      <div class="section-title chpp">
-        <i class="bi bi-building-fill"></i>
-        {{ _("CHPP (Coal Handling & Preparation Plant)") }}
-      </div>
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-          <div class="matrix-wrapper">
-            <table class="table matrix">
-              <thead>
-                <tr>
-                  <th class="sticky-col p-2 align-middle shadow-sm">
-                    <span class="text-muted small">{{ _("Sample Name") }}</span>
-                  </th>
-                  {% for analysis in analysis_types %}
-                  <th class="col-header" title="{{ analysis.name }}">
-                    <div class="rotate-wrapper">
-                      <span class="rotate-text">{{ analysis.code }}</span>
-                    </div>
-                  </th>
-                  {% endfor %}
-                  <th class="sla-col-header">
-                    <div class="rotate-wrapper">
-                      <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {% set current_type = namespace(value='') %}
+ {# ============ CHPP SECTION ============ #}
+ {% if chpp_profiles %}
+ <div class="config-section">
+ <div class="section-title chpp">
+ <i class="bi bi-building-fill"></i>
+ {{ _("CHPP (Coal Handling & Preparation Plant)") }}
+ </div>
+ <div class="card border-0 shadow-sm">
+ <div class="card-body p-0">
+ <div class="matrix-wrapper">
+ <table class="table matrix">
+ <thead>
+ <tr>
+ <th class="sticky-col p-2 align-middle shadow-sm">
+ <span class="text-muted small">{{ _("Sample Name") }}</span>
+ </th>
+ {% for analysis in analysis_types %}
+ <th class="col-header" title="{{ analysis.name }}">
+ <div class="rotate-wrapper">
+ <span class="rotate-text">{{ analysis.code }}</span>
+ </div>
+ </th>
+ {% endfor %}
+ <th class="sla-col-header">
+ <div class="rotate-wrapper">
+ <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
+ </div>
+ </th>
+ </tr>
+ </thead>
+ <tbody>
+ {% set current_type = namespace(value='') %}
 
-                {% for profile in chpp_profiles %}
-                  {% if profile.sample_type != current_type.value %}
-                    {% set current_type.value = profile.sample_type %}
-                    {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
-                    {% set sla_key = 'CHPP:' ~ profile.sample_type %}
-                    {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
-                    <tr class="group-header-row chpp-header-row">
-                      <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
-                        <i class="bi bi-clock me-2"></i>{{ display_name }}
-                      </td>
-                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; text-align: center; padding: 4px !important;">
-                        <input type="number" class="sla-input"
-                               name="sla_hours[CHPP:{{ profile.sample_type }}]"
-                               value="{{ sla_val }}"
-                               placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
-                               min="1" max="8760"
-                               title="{{ _('SLA hours') }}">
-                        <span class="sla-label">{{ _("hrs") }}</span>
-                      </td>
-                    </tr>
-                  {% endif %}
+ {% for profile in chpp_profiles %}
+ {% if profile.sample_type != current_type.value %}
+ {% set current_type.value = profile.sample_type %}
+ {% set display_name = chpp_config_groups.get(profile.sample_type, {}).get('display', profile.sample_type) %}
+ {% set sla_key = 'CHPP:' ~ profile.sample_type %}
+ {% set sla_val = sla_config_map.get(sla_key, sla_config_map.get('CHPP', '')) %}
+ <tr class="group-header-row chpp-header-row">
+ <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
+ <i class="bi bi-clock me-2"></i>{{ display_name }}
+ </td>
+ <td class="bg-amber-gradient border-0 text-center p-[4px]!">
+ <input type="number" class="sla-input"
+ name="sla_hours[CHPP:{{ profile.sample_type }}]"
+ value="{{ sla_val }}"
+ placeholder="{{ sla_defaults.get('CHPP', sla_fallback) }}"
+ min="1" max="8760"
+ title="{{ _('SLA hours') }}">
+ <span class="sla-label">{{ _("hrs") }}</span>
+ </td>
+ </tr>
+ {% endif %}
 
-                  <tr class="type-row" data-profile-id="{{ profile.id }}">
-                    <td class="sticky-col px-3 py-1 align-middle">
-                      <input type="checkbox" class="row-select-all"
-                             title="{{ _("Select all") }}"
-                             onchange="toggleRow(this, 'chpp-{{ profile.id }}')">
-                      <span class="type-badge chpp-badge">{{ profile.pattern }}</span>
-                    </td>
+ <tr class="type-row" data-profile-id="{{ profile.id }}">
+ <td class="sticky-col px-3 py-1 align-middle">
+ <input type="checkbox" class="row-select-all"
+ title="{{ _("Select all") }}"
+ data-toggle-prefix="chpp-{{ profile.id }}">
+ <span class="type-badge chpp-badge">{{ profile.pattern }}</span>
+ </td>
 
-                    {% for analysis in analysis_types %}
-                    <td class="check-cell">
-                      <input type="checkbox"
-                             class="form-check-input matrix-check chpp-{{ profile.id }}"
-                             name="chpp-{{ profile.id }}-analyses"
-                             value="{{ analysis.code }}"
-                             {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
-                    </td>
-                    {% endfor %}
-                    <td class="sla-cell"></td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+ {% for analysis in analysis_types %}
+ <td class="check-cell">
+ <input type="checkbox"
+ class="form-check-input matrix-check chpp-{{ profile.id }}"
+ name="chpp-{{ profile.id }}-analyses"
+ value="{{ analysis.code }}"
+ {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
+ </td>
+ {% endfor %}
+ <td class="sla-cell"></td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+ {% endif %}
 
-    {# ============ OTHER CLIENTS SECTION ============ #}
-    {% if simple_profiles %}
-    <div class="config-section">
-      <div class="section-title">
-        <i class="bi bi-grid-3x3-gap-fill"></i>
-        {{ _("Other Units") }}
-      </div>
-      <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-          <div class="matrix-wrapper">
-            <table class="table matrix">
-              <thead>
-                <tr>
-                  <th class="sticky-col p-2 align-middle shadow-sm">
-                    <span class="text-muted small">{{ _("Unit / Type") }}</span>
-                  </th>
-                  {% for analysis in analysis_types %}
-                  <th class="col-header" title="{{ analysis.name }}">
-                    <div class="rotate-wrapper">
-                      <span class="rotate-text">{{ analysis.code }}</span>
-                    </div>
-                  </th>
-                  {% endfor %}
-                  <th class="sla-col-header">
-                    <div class="rotate-wrapper">
-                      <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {% set current_client = namespace(value='') %}
+ {# ============ OTHER CLIENTS SECTION ============ #}
+ {% if simple_profiles %}
+ <div class="config-section">
+ <div class="section-title">
+ <i class="bi bi-grid-3x3-gap-fill"></i>
+ {{ _("Other Units") }}
+ </div>
+ <div class="card border-0 shadow-sm">
+ <div class="card-body p-0">
+ <div class="matrix-wrapper">
+ <table class="table matrix">
+ <thead>
+ <tr>
+ <th class="sticky-col p-2 align-middle shadow-sm">
+ <span class="text-muted small">{{ _("Unit / Type") }}</span>
+ </th>
+ {% for analysis in analysis_types %}
+ <th class="col-header" title="{{ analysis.name }}">
+ <div class="rotate-wrapper">
+ <span class="rotate-text">{{ analysis.code }}</span>
+ </div>
+ </th>
+ {% endfor %}
+ <th class="sla-col-header">
+ <div class="rotate-wrapper">
+ <span class="rotate-text"><i class="bi bi-clock"></i> SLA</span>
+ </div>
+ </th>
+ </tr>
+ </thead>
+ <tbody>
+ {% set current_client = namespace(value='') %}
 
-                {% for profile in simple_profiles %}
-                  {% if profile.client_name != current_client.value %}
-                    {% set current_client.value = profile.client_name %}
-                    {% set client_sla = sla_config_map.get(profile.client_name, '') %}
-                    <tr class="group-header-row">
-                      <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
-                        <i class="bi bi-building me-2"></i>{{ profile.client_name }}
-                      </td>
-                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; text-align: center; padding: 4px !important;">
-                        <input type="number" class="sla-input"
-                               name="sla_hours[{{ profile.client_name }}]"
-                               value="{{ client_sla }}"
-                               placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
-                               min="1" max="8760"
-                               title="{{ _('Default SLA hours for') }} {{ profile.client_name }}">
-                        <span class="sla-label">{{ _("hrs") }}</span>
-                      </td>
-                    </tr>
-                  {% endif %}
+ {% for profile in simple_profiles %}
+ {% if profile.client_name != current_client.value %}
+ {% set current_client.value = profile.client_name %}
+ {% set client_sla = sla_config_map.get(profile.client_name, '') %}
+ <tr class="group-header-row">
+ <td class="sticky-col" colspan="{{ analysis_types|length + 1 }}">
+ <i class="bi bi-building me-2"></i>{{ profile.client_name }}
+ </td>
+ <td class="bg-purple-gradient border-0 text-center p-[4px]!">
+ <input type="number" class="sla-input"
+ name="sla_hours[{{ profile.client_name }}]"
+ value="{{ client_sla }}"
+ placeholder="{{ sla_defaults.get(profile.client_name, sla_fallback) }}"
+ min="1" max="8760"
+ title="{{ _('Default SLA hours for') }} {{ profile.client_name }}">
+ <span class="sla-label">{{ _("hrs") }}</span>
+ </td>
+ </tr>
+ {% endif %}
 
-                  {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
-                  {% set type_sla = sla_config_map.get(type_sla_key, '') %}
-                  <tr class="type-row" data-profile-id="{{ profile.id }}">
-                    <td class="sticky-col px-3 py-1 align-middle">
-                      <input type="checkbox" class="row-select-all"
-                             title="{{ _("Select all") }}"
-                             onchange="toggleRow(this, 'simple-{{ profile.id }}')">
-                      <span class="type-badge">{{ profile.sample_type }}</span>
-                    </td>
+ {% set type_sla_key = profile.client_name ~ ':' ~ profile.sample_type %}
+ {% set type_sla = sla_config_map.get(type_sla_key, '') %}
+ <tr class="type-row" data-profile-id="{{ profile.id }}">
+ <td class="sticky-col px-3 py-1 align-middle">
+ <input type="checkbox" class="row-select-all"
+ title="{{ _("Select all") }}"
+ data-toggle-prefix="simple-{{ profile.id }}">
+ <span class="type-badge">{{ profile.sample_type }}</span>
+ </td>
 
-                    {% for analysis in analysis_types %}
-                    <td class="check-cell">
-                      <input type="checkbox"
-                             class="form-check-input matrix-check simple-{{ profile.id }}"
-                             name="simple-{{ profile.id }}-analyses"
-                             value="{{ analysis.code }}"
-                             {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
-                    </td>
-                    {% endfor %}
-                    <td class="sla-cell">
-                      <input type="number"
-                             name="sla_hours[{{ type_sla_key }}]"
-                             value="{{ type_sla }}"
-                             placeholder="-"
-                             min="1" max="8760"
-                             title="{{ _('SLA hours for') }} {{ profile.client_name }} / {{ profile.sample_type }}">
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+ {% for analysis in analysis_types %}
+ <td class="check-cell">
+ <input type="checkbox"
+ class="form-check-input matrix-check simple-{{ profile.id }}"
+ name="simple-{{ profile.id }}-analyses"
+ value="{{ analysis.code }}"
+ {% if analysis.code in profile.get_analyses() %}checked{% endif %}>
+ </td>
+ {% endfor %}
+ <td class="sla-cell">
+ <input type="number"
+ name="sla_hours[{{ type_sla_key }}]"
+ value="{{ type_sla }}"
+ placeholder="-"
+ min="1" max="8760"
+ title="{{ _('SLA hours for') }} {{ profile.client_name }} / {{ profile.sample_type }}">
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+ {% endif %}
 
-    {# ============ GI SHIFT CONFIG SECTION ============ #}
-    <div class="config-section">
-      <div class="section-title">
-        <i class="bi bi-calendar-week"></i>
-        {{ _("Gi Shift Configuration") }}
-      </div>
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <p class="text-muted small mb-3">
-            {{ _("Configure which shifts to perform Gi analysis for each PF code. Gi will be automatically excluded for unselected shifts.") }}
-          </p>
+ {# ============ GI SHIFT CONFIG SECTION ============ #}
+ <div class="config-section">
+ <div class="section-title">
+ <i class="bi bi-calendar-week"></i>
+ {{ _("Gi Shift Configuration") }}
+ </div>
+ <div class="card border-0 shadow-sm">
+ <div class="card-body">
+ <p class="text-muted small mb-3">
+ {{ _("Configure which shifts to perform Gi analysis for each PF code. Gi will be automatically excluded for unselected shifts.") }}
+ </p>
 
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="text-center" style="width: 100px;">{{ _("PF Code") }}</th>
-                  <th colspan="6" class="text-center bg-info bg-opacity-10">{{ _("Day (D)") }}</th>
-                  <th colspan="6" class="text-center bg-warning bg-opacity-10">{{ _("Night (N)") }}</th>
-                </tr>
-                <tr>
-                  <th></th>
-                  {% for i in range(1, 7) %}
-                  <th class="text-center" style="width: 45px;">D{{ i }}</th>
-                  {% endfor %}
-                  {% for i in range(1, 7) %}
-                  <th class="text-center" style="width: 45px;">N{{ i }}</th>
-                  {% endfor %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
-                <tr>
-                  <td class="fw-bold text-center align-middle">
-                    <span class="badge bg-primary">{{ pf_code }}</span>
-                  </td>
-                  {% for i in range(1, 7) %}
-                  <td class="text-center">
-                    <input type="checkbox"
-                           class="form-check-input gi-shift-check"
-                           name="gi_shifts_{{ pf_code }}"
-                           value="D{{ i }}"
-                           {% if 'D' ~ i in gi_shift_config.get(pf_code, []) %}checked{% endif %}>
-                  </td>
-                  {% endfor %}
-                  {% for i in range(1, 7) %}
-                  <td class="text-center">
-                    <input type="checkbox"
-                           class="form-check-input gi-shift-check"
-                           name="gi_shifts_{{ pf_code }}"
-                           value="N{{ i }}"
-                           {% if 'N' ~ i in gi_shift_config.get(pf_code, []) %}checked{% endif %}>
-                  </td>
-                  {% endfor %}
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+ <div class="table-responsive">
+ <table class="table table-sm table-bordered mb-0">
+ <thead class="table-light">
+ <tr>
+ <th class="text-center w-[100px]">{{ _("PF Code") }}</th>
+ <th colspan="6" class="text-center bg-info bg-opacity-10">{{ _("Day (D)") }}</th>
+ <th colspan="6" class="text-center bg-warning bg-opacity-10">{{ _("Night (N)") }}</th>
+ </tr>
+ <tr>
+ <th></th>
+ {% for i in range(1, 7) %}
+ <th class="text-center w-[45px]">D{{ i }}</th>
+ {% endfor %}
+ {% for i in range(1, 7) %}
+ <th class="text-center w-[45px]">N{{ i }}</th>
+ {% endfor %}
+ </tr>
+ </thead>
+ <tbody>
+ {% for pf_code in ['PF211', 'PF221', 'PF231'] %}
+ <tr>
+ <td class="fw-bold text-center align-middle">
+ <span class="badge bg-primary">{{ pf_code }}</span>
+ </td>
+ {% for i in range(1, 7) %}
+ <td class="text-center">
+ <input type="checkbox"
+ class="form-check-input gi-shift-check"
+ name="gi_shifts_{{ pf_code }}"
+ value="D{{ i }}"
+ {% if 'D' ~ i in gi_shift_config.get(pf_code, []) %}checked{% endif %}>
+ </td>
+ {% endfor %}
+ {% for i in range(1, 7) %}
+ <td class="text-center">
+ <input type="checkbox"
+ class="form-check-input gi-shift-check"
+ name="gi_shifts_{{ pf_code }}"
+ value="N{{ i }}"
+ {% if 'N' ~ i in gi_shift_config.get(pf_code, []) %}checked{% endif %}>
+ </td>
+ {% endfor %}
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
 
-          <div class="mt-3 d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setOddShifts()">
-              <i class="bi bi-1-circle me-1"></i>{{ _("Odd (1,3,5)") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setEvenShifts()">
-              <i class="bi bi-2-circle me-1"></i>{{ _("Even (2,4,6)") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setAllShifts()">
-              <i class="bi bi-check-all me-1"></i>{{ _("All") }}
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllShifts()">
-              <i class="bi bi-x-lg me-1"></i>{{ _("Clear") }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+ <div class="mt-3 d-flex gap-2">
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-shifts="odd">
+ <i class="bi bi-1-circle me-1"></i>{{ _("Odd (1,3,5)") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-shifts="even">
+ <i class="bi bi-2-circle me-1"></i>{{ _("Even (2,4,6)") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-shifts="all">
+ <i class="bi bi-check-all me-1"></i>{{ _("All") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" data-shifts="clear">
+ <i class="bi bi-x-lg me-1"></i>{{ _("Clear") }}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  </form>
+ </form>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 // Gi shift helper functions
 function setOddShifts() {
-  const oddShifts = ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'];
-  document.querySelectorAll('.gi-shift-check').forEach(cb => {
-    cb.checked = oddShifts.includes(cb.value);
-  });
+ const oddShifts = ['D1', 'D3', 'D5', 'N1', 'N3', 'N5'];
+ document.querySelectorAll('.gi-shift-check').forEach(cb => {
+ cb.checked = oddShifts.includes(cb.value);
+ });
 }
 
 function setEvenShifts() {
-  const evenShifts = ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'];
-  document.querySelectorAll('.gi-shift-check').forEach(cb => {
-    cb.checked = evenShifts.includes(cb.value);
-  });
+ const evenShifts = ['D2', 'D4', 'D6', 'N2', 'N4', 'N6'];
+ document.querySelectorAll('.gi-shift-check').forEach(cb => {
+ cb.checked = evenShifts.includes(cb.value);
+ });
 }
 
 function setAllShifts() {
-  document.querySelectorAll('.gi-shift-check').forEach(cb => {
-    cb.checked = true;
-  });
+ document.querySelectorAll('.gi-shift-check').forEach(cb => {
+ cb.checked = true;
+ });
 }
 
 function clearAllShifts() {
-  document.querySelectorAll('.gi-shift-check').forEach(cb => {
-    cb.checked = false;
-  });
+ document.querySelectorAll('.gi-shift-check').forEach(cb => {
+ cb.checked = false;
+ });
 }
 
 function toggleRow(masterCheckbox, prefix) {
-  const checkboxes = document.querySelectorAll('.' + prefix);
-  checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+ const checkboxes = document.querySelectorAll('.' + prefix);
+ checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
 }
 
+// Delegated handlers (CSP: inline onclick/onchange-ийг орлож байна)
+document.addEventListener('change', function(e) {
+ const cb = e.target;
+ if (cb && cb.dataset && cb.dataset.togglePrefix) {
+ toggleRow(cb, cb.dataset.togglePrefix);
+ }
+});
+document.addEventListener('click', function(e) {
+ const btn = e.target.closest('[data-shifts]');
+ if (!btn) return;
+ const mode = btn.dataset.shifts;
+ if (mode === 'odd') setOddShifts();
+ else if (mode === 'even') setEvenShifts();
+ else if (mode === 'all') setAllShifts();
+ else if (mode === 'clear') clearAllShifts();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.type-row').forEach(row => {
-    const profileId = row.dataset.profileId;
-    const masterCb = row.querySelector('.row-select-all');
-    if (!masterCb) return;
+ document.querySelectorAll('.type-row').forEach(row => {
+ const profileId = row.dataset.profileId;
+ const masterCb = row.querySelector('.row-select-all');
+ if (!masterCb) return;
 
-    const checkboxes = row.querySelectorAll('.matrix-check');
+ const checkboxes = row.querySelectorAll('.matrix-check');
 
-    const updateMaster = () => {
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-      masterCb.checked = allChecked;
-      masterCb.indeterminate = someChecked && !allChecked;
-    };
+ const updateMaster = () => {
+ const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+ const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+ masterCb.checked = allChecked;
+ masterCb.indeterminate = someChecked && !allChecked;
+ };
 
-    updateMaster();
-    checkboxes.forEach(cb => cb.addEventListener('change', updateMaster));
-  });
+ updateMaster();
+ checkboxes.forEach(cb => cb.addEventListener('change', updateMaster));
+ });
 });
 </script>
 {% endblock %}

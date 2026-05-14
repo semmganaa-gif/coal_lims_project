@@ -3,286 +3,286 @@
 {% block content %}
 <div class="container">
 
-  {# ===== BACK BUTTON ===== #}
-  <div class="mb-3">
-    <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left"></i> {{ _("Back") }}
-    </a>
-  </div>
+ {# ===== BACK BUTTON ===== #}
+ <div class="mb-3">
+ <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary btn-sm">
+ <i class="bi bi-arrow-left"></i> {{ _("Back") }}
+ </a>
+ </div>
 
-  <div class="row">
-    {# ===== LEFT: Recipe Info + Prepare Form ===== #}
-    <div class="col-lg-7">
-      {# Recipe Header Card #}
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-gradient text-white py-3"
-             style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h4 class="mb-1">{{ recipe.name }}</h4>
-              {% if recipe.concentration %}
-              <span class="badge bg-light text-dark">
-                {{ recipe.concentration }} {{ recipe.concentration_unit or 'N' }}
-              </span>
-              {% endif %}
-            </div>
-            <a href="{{ url_for('water.edit_recipe', id=recipe.id) }}" class="btn btn-light btn-sm">
-              <i class="bi bi-pencil me-1"></i>{{ _("Edit") }}
-            </a>
-          </div>
-        </div>
+ <div class="row">
+ {# ===== LEFT: Recipe Info + Prepare Form ===== #}
+ <div class="col-lg-7">
+ {# Recipe Header Card #}
+ <div class="card border-0 shadow-sm mb-4">
+ <div class="card-header bg-gradient text-white py-3 bg-sky-gradient"
+>
+ <div class="d-flex justify-content-between align-items-center">
+ <div>
+ <h4 class="mb-1">{{ recipe.name }}</h4>
+ {% if recipe.concentration %}
+ <span class="badge bg-light text-dark">
+ {{ recipe.concentration }} {{ recipe.concentration_unit or 'N' }}
+ </span>
+ {% endif %}
+ </div>
+ <a href="{{ url_for('water.edit_recipe', id=recipe.id) }}" class="btn btn-light btn-sm">
+ <i class="bi bi-pencil me-1"></i>{{ _("Edit") }}
+ </a>
+ </div>
+ </div>
 
-        <div class="card-body">
-          {# Preparation Notes #}
-          {% if recipe.preparation_notes %}
-          <div class="mb-4">
-            <h6 class="text-primary mb-2">
-              <i class="bi bi-journal-text me-2"></i>{{ _("Preparation Procedure") }}
-            </h6>
-            <div class="bg-light rounded p-3">
-              <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ recipe.preparation_notes }}</pre>
-            </div>
-          </div>
-          {% endif %}
+ <div class="card-body">
+ {# Preparation Notes #}
+ {% if recipe.preparation_notes %}
+ <div class="mb-4">
+ <h6 class="text-primary mb-2">
+ <i class="bi bi-journal-text me-2"></i>{{ _("Preparation Procedure") }}
+ </h6>
+ <div class="bg-light rounded p-3">
+ <pre class="mb-0 whitespace-pre-wrap font-[inherit]">{{ recipe.preparation_notes }}</pre>
+ </div>
+ </div>
+ {% endif %}
 
-          {# Ingredients #}
-          <h6 class="text-primary mb-3">
-            <i class="bi bi-list-check me-2"></i>{{ _("Ingredients") }} ({{ recipe.standard_volume_ml or 1000 }} {{ _("mL") }})
-          </h6>
+ {# Ingredients #}
+ <h6 class="text-primary mb-3">
+ <i class="bi bi-list-check me-2"></i>{{ _("Ingredients") }} ({{ recipe.standard_volume_ml or 1000 }} {{ _("mL") }})
+ </h6>
 
-          {% if ingredients_info %}
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead class="table-light">
-                <tr>
-                  <th>{{ _("Chemical") }}</th>
-                  <th class="text-end">{{ _("Amount") }}</th>
-                  <th class="text-end">{{ _("Stock") }}</th>
-                  <th class="text-center">{{ _("Status") }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for info in ingredients_info %}
-                <tr>
-                  <td>{{ info.chemical.name }}</td>
-                  <td class="text-end">{{ info.ingredient.amount }} {{ info.ingredient.unit }}</td>
-                  <td class="text-end">{{ "%.4f"|format(info.stock) }} {{ info.stock_unit }}</td>
-                  <td class="text-center">
-                    {% set converted = info.ingredient.amount %}
-                    {% if info.ingredient.unit == 'g' and info.stock_unit == 'kg' %}
-                      {% set converted = info.ingredient.amount / 1000 %}
-                    {% elif info.ingredient.unit == 'mg' and info.stock_unit == 'g' %}
-                      {% set converted = info.ingredient.amount / 1000 %}
-                    {% endif %}
-                    {% if converted <= info.stock %}
-                    <span class="badge bg-success">OK</span>
-                    {% else %}
-                    <span class="badge bg-danger">{{ _("Shortage") }}</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% else %}
-          <p class="text-muted fst-italic">{{ _("No ingredients defined.") }}</p>
-          {% endif %}
-        </div>
-      </div>
+ {% if ingredients_info %}
+ <div class="table-responsive">
+ <table class="table table-sm">
+ <thead class="table-light">
+ <tr>
+ <th>{{ _("Chemical") }}</th>
+ <th class="text-end">{{ _("Amount") }}</th>
+ <th class="text-end">{{ _("Stock") }}</th>
+ <th class="text-center">{{ _("Status") }}</th>
+ </tr>
+ </thead>
+ <tbody>
+ {% for info in ingredients_info %}
+ <tr>
+ <td>{{ info.chemical.name }}</td>
+ <td class="text-end">{{ info.ingredient.amount }} {{ info.ingredient.unit }}</td>
+ <td class="text-end">{{ "%.4f"|format(info.stock) }} {{ info.stock_unit }}</td>
+ <td class="text-center">
+ {% set converted = info.ingredient.amount %}
+ {% if info.ingredient.unit == 'g' and info.stock_unit == 'kg' %}
+ {% set converted = info.ingredient.amount / 1000 %}
+ {% elif info.ingredient.unit == 'mg' and info.stock_unit == 'g' %}
+ {% set converted = info.ingredient.amount / 1000 %}
+ {% endif %}
+ {% if converted <= info.stock %}
+ <span class="badge bg-success">OK</span>
+ {% else %}
+ <span class="badge bg-danger">{{ _("Shortage") }}</span>
+ {% endif %}
+ </td>
+ </tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ {% else %}
+ <p class="text-muted fst-italic">{{ _("No ingredients defined.") }}</p>
+ {% endif %}
+ </div>
+ </div>
 
-      {# ===== PREPARE FORM ===== #}
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-success text-white py-3">
-          <h5 class="mb-0">
-            <i class="bi bi-eyedropper me-2"></i>{{ _("Prepare Solution") }}
-          </h5>
-        </div>
+ {# ===== PREPARE FORM ===== #}
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-success text-white py-3">
+ <h5 class="mb-0">
+ <i class="bi bi-eyedropper me-2"></i>{{ _("Prepare Solution") }}
+ </h5>
+ </div>
 
-        <form action="{{ url_for('water.prepare_from_recipe', id=recipe.id) }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="card-body">
+ <form action="{{ url_for('water.prepare_from_recipe', id=recipe.id) }}" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+ <div class="card-body">
 
-            <div class="row g-3">
-              {# Volume #}
-              <div class="col-md-6">
-                <label class="form-label">{{ _("Preparation Volume (mL)") }} <span class="text-danger">*</span></label>
-                <input type="number" name="volume_ml" class="form-control" required
-                       value="{{ recipe.standard_volume_ml or 1000 }}"
-                       step="0.1" min="1" id="targetVolume" onchange="calculateRequired()">
-                <small class="text-muted">{{ _("Standard") }}: {{ recipe.standard_volume_ml or 1000 }} {{ _("mL") }}</small>
-              </div>
+ <div class="row g-3">
+ {# Volume #}
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Preparation Volume (mL)") }} <span class="text-danger">*</span></label>
+ <input type="number" name="volume_ml" class="form-control" required
+ value="{{ recipe.standard_volume_ml or 1000 }}"
+ step="0.1" min="1" id="targetVolume" data-change-action="calculateRequired">
+ <small class="text-muted">{{ _("Standard") }}: {{ recipe.standard_volume_ml or 1000 }} {{ _("mL") }}</small>
+ </div>
 
-              {# Expiry date #}
-              <div class="col-md-6">
-                <label class="form-label">{{ _("Expiry Date") }}</label>
-                <input type="date" name="expiry_date" class="form-control">
-              </div>
+ {# Expiry date #}
+ <div class="col-md-6">
+ <label class="form-label">{{ _("Expiry Date") }}</label>
+ <input type="date" name="expiry_date" class="form-control">
+ </div>
 
-              {# Required chemicals info #}
-              <div class="col-12">
-                <div class="alert alert-info small mb-0" id="requiredInfo">
-                  <i class="bi bi-calculator me-2"></i>
-                  <span id="requiredText">{{ _("Required chemicals for standard volume shown above.") }}</span>
-                </div>
-              </div>
-            </div>
+ {# Required chemicals info #}
+ <div class="col-12">
+ <div class="alert alert-info small mb-0" id="requiredInfo">
+ <i class="bi bi-calculator me-2"></i>
+ <span id="requiredText">{{ _("Required chemicals for standard volume shown above.") }}</span>
+ </div>
+ </div>
+ </div>
 
-            {# Titration section (collapsible) #}
-            <div class="mt-4">
-              <a class="text-decoration-none" data-bs-toggle="collapse" href="#titrationSection">
-                <i class="bi bi-chevron-down me-1"></i>{{ _("Titer Determination (optional)") }}
-              </a>
-              <div class="collapse mt-3" id="titrationSection">
-                <div class="row g-3">
-                  <div class="col-md-3">
-                    <label class="form-label">V1</label>
-                    <input type="number" name="v1" class="form-control" step="0.0001" placeholder="0.0000">
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">V2</label>
-                    <input type="number" name="v2" class="form-control" step="0.0001" placeholder="0.0000">
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">V3</label>
-                    <input type="number" name="v3" class="form-control" step="0.0001" placeholder="0.0000">
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">{{ _("Titer Coefficient (K)") }}</label>
-                    <input type="number" name="titer_coefficient" class="form-control" step="0.0001" placeholder="0.9985">
-                  </div>
-                </div>
-              </div>
-            </div>
+ {# Titration section (collapsible) #}
+ <div class="mt-4">
+ <a class="text-decoration-none" data-bs-toggle="collapse" href="#titrationSection">
+ <i class="bi bi-chevron-down me-1"></i>{{ _("Titer Determination (optional)") }}
+ </a>
+ <div class="collapse mt-3" id="titrationSection">
+ <div class="row g-3">
+ <div class="col-md-3">
+ <label class="form-label">V1</label>
+ <input type="number" name="v1" class="form-control" step="0.0001" placeholder="0.0000">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label">V2</label>
+ <input type="number" name="v2" class="form-control" step="0.0001" placeholder="0.0000">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label">V3</label>
+ <input type="number" name="v3" class="form-control" step="0.0001" placeholder="0.0000">
+ </div>
+ <div class="col-md-3">
+ <label class="form-label">{{ _("Titer Coefficient (K)") }}</label>
+ <input type="number" name="titer_coefficient" class="form-control" step="0.0001" placeholder="0.9985">
+ </div>
+ </div>
+ </div>
+ </div>
 
-            {# Notes #}
-            <div class="mt-3">
-              <label class="form-label">{{ _("Notes") }}</label>
-              <textarea name="notes" class="form-control" rows="2" placeholder="{{ _('Additional notes...') }}"></textarea>
-            </div>
+ {# Notes #}
+ <div class="mt-3">
+ <label class="form-label">{{ _("Notes") }}</label>
+ <textarea name="notes" class="form-control" rows="2" placeholder="{{ _('Additional notes...') }}"></textarea>
+ </div>
 
-          </div>
+ </div>
 
-          <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
-            <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary">
-              {{ _("Cancel") }}
-            </a>
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check-lg me-1"></i>{{ _("Prepare") }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+ <div class="card-footer bg-light d-flex justify-content-end gap-2 py-3">
+ <a href="{{ url_for('water.solution_recipes') }}" class="btn btn-outline-secondary">
+ {{ _("Cancel") }}
+ </a>
+ <button type="submit" class="btn btn-success">
+ <i class="bi bi-check-lg me-1"></i>{{ _("Prepare") }}
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
 
-    {# ===== RIGHT: History ===== #}
-    <div class="col-lg-5">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-light py-3">
-          <h6 class="mb-0">
-            <i class="bi bi-clock-history me-2"></i>{{ _("Recent Preparations") }}
-          </h6>
-        </div>
-        <div class="card-body p-0">
-          {% if recent_preps %}
-          <div class="list-group list-group-flush">
-            {% for prep in recent_preps %}
-            <div class="list-group-item">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="fw-medium">{{ prep.volume_ml or '-' }} {{ _("mL") }}</div>
-                  <small class="text-muted">
-                    {{ prep.prepared_date.strftime('%Y-%m-%d') }} &bull;
-                    {{ prep.prepared_by.username if prep.prepared_by else '-' }}
-                  </small>
-                </div>
-                <div class="text-end">
-                  {% if prep.titer_coefficient %}
-                  <span class="badge bg-info">K={{ prep.titer_coefficient }}</span>
-                  {% endif %}
-                  {% if prep.v_avg %}
-                  <br><small class="text-muted">{{ _("V avg") }}={{ "%.4f"|format(prep.v_avg) }}</small>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <div class="text-center py-4 text-muted">
-            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-            <p class="mt-2 mb-0">{{ _("No preparation history") }}</p>
-          </div>
-          {% endif %}
-        </div>
-        {% if recent_preps %}
-        <div class="card-footer text-center">
-          <a href="{{ url_for('water.solution_journal') }}?recipe={{ recipe.id }}" class="small text-decoration-none">
-            {{ _("View all history") }} <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+ {# ===== RIGHT: History ===== #}
+ <div class="col-lg-5">
+ <div class="card border-0 shadow-sm">
+ <div class="card-header bg-light py-3">
+ <h6 class="mb-0">
+ <i class="bi bi-clock-history me-2"></i>{{ _("Recent Preparations") }}
+ </h6>
+ </div>
+ <div class="card-body p-0">
+ {% if recent_preps %}
+ <div class="list-group list-group-flush">
+ {% for prep in recent_preps %}
+ <div class="list-group-item">
+ <div class="d-flex justify-content-between align-items-start">
+ <div>
+ <div class="fw-medium">{{ prep.volume_ml or '-' }} {{ _("mL") }}</div>
+ <small class="text-muted">
+ {{ prep.prepared_date.strftime('%Y-%m-%d') }} &bull;
+ {{ prep.prepared_by.username if prep.prepared_by else '-' }}
+ </small>
+ </div>
+ <div class="text-end">
+ {% if prep.titer_coefficient %}
+ <span class="badge bg-info">K={{ prep.titer_coefficient }}</span>
+ {% endif %}
+ {% if prep.v_avg %}
+ <br><small class="text-muted">{{ _("V avg") }}={{ "%.4f"|format(prep.v_avg) }}</small>
+ {% endif %}
+ </div>
+ </div>
+ </div>
+ {% endfor %}
+ </div>
+ {% else %}
+ <div class="text-center py-4 text-muted">
+ <i class="bi bi-inbox text-[2rem]"></i>
+ <p class="mt-2 mb-0">{{ _("No preparation history") }}</p>
+ </div>
+ {% endif %}
+ </div>
+ {% if recent_preps %}
+ <div class="card-footer text-center">
+ <a href="{{ url_for('water.solution_journal') }}?recipe={{ recipe.id }}" class="small text-decoration-none">
+ {{ _("View all history") }} <i class="bi bi-arrow-right"></i>
+ </a>
+ </div>
+ {% endif %}
+ </div>
+ </div>
+ </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 // Calculate required chemicals
 const standardVolume = {{ recipe.standard_volume_ml or 1000 }};
 const ingredients = [
-  {% for info in ingredients_info %}
-  {
-    name: "{{ info.chemical.name }}",
-    amount: {{ info.ingredient.amount }},
-    unit: "{{ info.ingredient.unit }}",
-    stock: {{ info.stock }},
-    stockUnit: "{{ info.stock_unit }}"
-  },
-  {% endfor %}
+ {% for info in ingredients_info %}
+ {
+ name: "{{ info.chemical.name }}",
+ amount: {{ info.ingredient.amount }},
+ unit: "{{ info.ingredient.unit }}",
+ stock: {{ info.stock }},
+ stockUnit: "{{ info.stock_unit }}"
+ },
+ {% endfor %}
 ];
 
 function calculateRequired() {
-  const targetVolume = parseFloat(document.getElementById('targetVolume').value) || standardVolume;
-  const ratio = targetVolume / standardVolume;
+ const targetVolume = parseFloat(document.getElementById('targetVolume').value) || standardVolume;
+ const ratio = targetVolume / standardVolume;
 
-  if (ingredients.length === 0) {
-    document.getElementById('requiredText').innerHTML = '{{ _("No ingredients defined.") }}';
-    return;
-  }
+ if (ingredients.length === 0) {
+ document.getElementById('requiredText').innerHTML = '{{ _("No ingredients defined.") }}';
+ return;
+ }
 
-  let html = '<strong>' + targetVolume + ' {{ _("mL") }}</strong> ' + '{{ _("required for preparation") }}' + ':<br>';
-  let hasShortage = false;
+ let html = '<strong>' + targetVolume + ' {{ _("mL") }}</strong> ' + '{{ _("required for preparation") }}' + ':<br>';
+ let hasShortage = false;
 
-  ingredients.forEach(ing => {
-    const required = ing.amount * ratio;
-    const requiredStr = required.toFixed(4) + ' ' + ing.unit;
+ ingredients.forEach(ing => {
+ const required = ing.amount * ratio;
+ const requiredStr = required.toFixed(4) + ' ' + ing.unit;
 
-    // Convert to stock unit for comparison
-    let requiredInStockUnit = required;
-    if (ing.unit === 'g' && ing.stockUnit === 'kg') {
-      requiredInStockUnit = required / 1000;
-    } else if (ing.unit === 'mg' && ing.stockUnit === 'g') {
-      requiredInStockUnit = required / 1000;
-    } else if (ing.unit === 'g' && ing.stockUnit === 'g') {
-      requiredInStockUnit = required;
-    }
+ // Convert to stock unit for comparison
+ let requiredInStockUnit = required;
+ if (ing.unit === 'g' && ing.stockUnit === 'kg') {
+ requiredInStockUnit = required / 1000;
+ } else if (ing.unit === 'mg' && ing.stockUnit === 'g') {
+ requiredInStockUnit = required / 1000;
+ } else if (ing.unit === 'g' && ing.stockUnit === 'g') {
+ requiredInStockUnit = required;
+ }
 
-    const isOk = requiredInStockUnit <= ing.stock;
-    if (!isOk) hasShortage = true;
+ const isOk = requiredInStockUnit <= ing.stock;
+ if (!isOk) hasShortage = true;
 
-    const statusIcon = isOk ? '<span class="text-success">OK</span>' : '<span class="text-danger">' + '{{ _("Shortage!") }}' + '</span>';
-    const _eName = String(ing.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    html += '&bull; ' + _eName + ': <strong>' + requiredStr + '</strong> ' + statusIcon + '<br>';
-  });
+ const statusIcon = isOk ? '<span class="text-success">OK</span>' : '<span class="text-danger">' + '{{ _("Shortage!") }}' + '</span>';
+ const _eName = String(ing.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ html += '&bull; ' + _eName + ': <strong>' + requiredStr + '</strong> ' + statusIcon + '<br>';
+ });
 
-  const infoDiv = document.getElementById('requiredInfo');
-  if (hasShortage) {
-    infoDiv.className = 'alert alert-danger small mb-0';
-  } else {
-    infoDiv.className = 'alert alert-info small mb-0';
-  }
-  document.getElementById('requiredText').innerHTML = html;
+ const infoDiv = document.getElementById('requiredInfo');
+ if (hasShortage) {
+ infoDiv.className = 'alert alert-danger small mb-0';
+ } else {
+ infoDiv.className = 'alert alert-info small mb-0';
+ }
+ document.getElementById('requiredText').innerHTML = html;
 }
 
 // Calculate on load

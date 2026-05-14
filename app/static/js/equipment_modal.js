@@ -806,3 +806,68 @@ function submitEquipmentUsage() {
     alert(T.serverError || 'Server error!');
   });
 }
+
+// ── Delegated CSP-compatible handlers ─────────────────────────────────────
+// analysis_page.html дээр байсан inline oninput/onclick/onchange-г орлоно.
+// Template-д зөвхөн класс/id тавьж, бүх event-ийн routing энд байрлана.
+(function () {
+  // Input handlers: class → handler function
+  const INPUT_CLASS_HANDLERS = {
+    'calib-actual-temp': checkTempDiff,
+    'calib-meas-wt':     checkWeightDiff,
+    'ethanol-temp':      calcEthanol,
+    'ethanol-density':   calcEthanol,
+    'ethanol-volume':    calcEthanol,
+    'ethanol-measured':  calcEthanol,
+    'drum-before':       checkDrumDiff,
+    'drum-after':        checkDrumDiff,
+    'sulfur-meas-val':   checkSulfurRow,
+    'sulfur-chk-meas':   checkSulfurVerifyRow,
+    'cal-meas':          checkCalorimeter,
+    'csn-temp-1min':     checkCsnTemp,
+    'csn-temp-1m30':     checkCsnTemp,
+    'csn-temp-2m30':     checkCsnTemp,
+    'drum-meas-1min':    checkDrumRow,
+    'drum-meas-5min':    checkDrumRow,
+    'calib-meas-val':    checkAnalysisDiff,
+  };
+
+  document.addEventListener('input', function (e) {
+    const el = e.target;
+    if (!(el instanceof HTMLInputElement)) return;
+    for (const cls in INPUT_CLASS_HANDLERS) {
+      if (el.classList.contains(cls)) {
+        INPUT_CLASS_HANDLERS[cls](el);
+        break;
+      }
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    const el = e.target;
+    if (el instanceof HTMLInputElement && el.classList.contains('eq-repair-cb')) {
+      toggleRepairPanel(el);
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    const t = e.target;
+    // Calibration toggle
+    const calibBtn = t.closest('.calib-btn');
+    if (calibBtn) { toggleCalibPanel(calibBtn); return; }
+    // Add-row buttons
+    const addBtn = t.closest('.js-add-weight-row, .js-add-sulfur-std, .js-add-sulfur-check, .js-add-csn-retest, [data-action="add-spare-part"]');
+    if (addBtn) {
+      if (addBtn.classList.contains('js-add-weight-row')) addWeightRow(addBtn);
+      else if (addBtn.classList.contains('js-add-sulfur-std')) addSulfurStdRow(addBtn);
+      else if (addBtn.classList.contains('js-add-sulfur-check')) addSulfurCheckRow(addBtn);
+      else if (addBtn.classList.contains('js-add-csn-retest')) addCsnRetest(addBtn);
+      else if (addBtn.dataset.action === 'add-spare-part') addSparePart(addBtn);
+      return;
+    }
+    // Submit equipment usage
+    if (t.closest('#btn-submit-equipment')) {
+      submitEquipmentUsage();
+    }
+  });
+})();

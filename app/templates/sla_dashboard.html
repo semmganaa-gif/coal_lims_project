@@ -261,7 +261,7 @@ async function loadGrid() {
         const color = v >= 100 ? '#22c55e' : v >= 50 ? '#f59e0b' : '#ef4444';
         return `<div class="pct-cell">
           <div class="pct-track">
-            <div class="pct-fill" style="width:${Math.min(v,100)}%;background:${color};"></div>
+            <div class="pct-fill" data-progress="${Math.min(v,100)}" data-bg-color="${color}"></div>
           </div>
           <span class="pct-label">${v.toFixed(0)}%</span>
         </div>`;

@@ -4,406 +4,406 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ahlah_dashboard.css') }}">
 
 <div class="ahlah-page">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h4><i class="bi bi-shield-lock-fill me-2"></i>{{ title }}</h4>
-      <div class="subtitle">{{ _("Review and approve results saved by chemists") }}</div>
-    </div>
-    <div class="live-indicator">
-      <span class="live-dot"></span>
-      <span id="metrics-refresh">{{ _("Updated") }}: -</span>
-    </div>
-  </div>
+ <!-- Header -->
+ <div class="page-header">
+ <div class="header-content">
+ <h4><i class="bi bi-shield-lock-fill me-2"></i>{{ title }}</h4>
+ <div class="subtitle">{{ _("Review and approve results saved by chemists") }}</div>
+ </div>
+ <div class="live-indicator">
+ <span class="live-dot"></span>
+ <span id="metrics-refresh">{{ _("Updated") }}: -</span>
+ </div>
+ </div>
 
-  <!-- Wide Layout: Sidebar + Main -->
-  <div class="ahlah-layout">
-    <!-- Left Sidebar - Metric Cards -->
-    <div class="ahlah-sidebar">
-      <div class="metrics-sidebar">
-        <div class="metric-card total">
-          <div class="metric-card-inner">
-            <div class="metric-icon-wrap"><i class="bi bi-stack"></i></div>
-            <div class="metric-content">
-              <div class="metric-label">{{ _("Total") }}</div>
-              <div class="metric-value" id="metric-total">0</div>
-            </div>
-          </div>
-        </div>
+ <!-- Wide Layout: Sidebar + Main -->
+ <div class="ahlah-layout">
+ <!-- Left Sidebar - Metric Cards -->
+ <div class="ahlah-sidebar">
+ <div class="metrics-sidebar">
+ <div class="metric-card total">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-stack"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Total") }}</div>
+ <div class="metric-value" id="metric-total">0</div>
+ </div>
+ </div>
+ </div>
 
-        <div class="metric-card pending">
-          <div class="metric-card-inner">
-            <div class="metric-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
-            <div class="metric-content">
-              <div class="metric-label">{{ _("Pending") }}</div>
-              <div class="metric-value" id="metric-pending">0</div>
-            </div>
-          </div>
-        </div>
+ <div class="metric-card pending">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-hourglass-split"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Pending") }}</div>
+ <div class="metric-value" id="metric-pending">0</div>
+ </div>
+ </div>
+ </div>
 
-        <div class="metric-card rejected">
-          <div class="metric-card-inner">
-            <div class="metric-icon-wrap"><i class="bi bi-exclamation-octagon"></i></div>
-            <div class="metric-content">
-              <div class="metric-label">{{ _("Rejected") }}</div>
-              <div class="metric-value" id="metric-rejected">0</div>
-            </div>
-          </div>
-          <div class="metric-sub">
-            <span class="kpi-badge red" id="kpi-shift-total">0</span> {{ _("shift") }}
-            <span class="kpi-badge yellow" id="kpi-14d-total">0</span> {{ _("14 days") }}
-          </div>
-        </div>
+ <div class="metric-card rejected">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-exclamation-octagon"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Rejected") }}</div>
+ <div class="metric-value" id="metric-rejected">0</div>
+ </div>
+ </div>
+ <div class="metric-sub">
+ <span class="kpi-badge red" id="kpi-shift-total">0</span> {{ _("shift") }}
+ <span class="kpi-badge yellow" id="kpi-14d-total">0</span> {{ _("14 days") }}
+ </div>
+ </div>
 
-        <div class="metric-card approved">
-          <div class="metric-card-inner">
-            <div class="metric-icon-wrap"><i class="bi bi-patch-check-fill"></i></div>
-            <div class="metric-content">
-              <div class="metric-label">{{ _("Approved") }}</div>
-              <div class="metric-value" id="metric-approved">0</div>
-            </div>
-          </div>
-        </div>
-      </div>
+ <div class="metric-card approved">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-patch-check-fill"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Approved") }}</div>
+ <div class="metric-value" id="metric-approved">0</div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-      <!-- Samples by Unit -->
-      <div class="metric-card samples-unit">
-        <div class="metric-card-inner">
-          <div class="metric-icon-wrap"><i class="bi bi-building"></i></div>
-          <div class="metric-content">
-            <div class="metric-label">{{ _("Samples (Unit)") }}</div>
-            <div class="metric-value" id="samples-total-badge">0</div>
-          </div>
-        </div>
-        <div class="metric-expand" id="sidebar-samples-unit">
-          <div class="metric-expand-item">{{ _("Loading...") }}</div>
-        </div>
-      </div>
+ <!-- Samples by Unit -->
+ <div class="metric-card samples-unit">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-building"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Samples (Unit)") }}</div>
+ <div class="metric-value" id="samples-total-badge">0</div>
+ </div>
+ </div>
+ <div class="metric-expand" id="sidebar-samples-unit">
+ <div class="metric-expand-item">{{ _("Loading...") }}</div>
+ </div>
+ </div>
 
-      <!-- Samples by Type -->
-      <div class="metric-card samples-type">
-        <div class="metric-card-inner">
-          <div class="metric-icon-wrap"><i class="bi bi-box-seam"></i></div>
-          <div class="metric-content">
-            <div class="metric-label">{{ _("Samples (Type)") }}</div>
-            <div class="metric-value" id="samples-type-badge">0</div>
-          </div>
-        </div>
-        <div class="metric-expand" id="sidebar-samples-type">
-          <div class="metric-expand-item">{{ _("Loading...") }}</div>
-        </div>
-      </div>
-    </div>
+ <!-- Samples by Type -->
+ <div class="metric-card samples-type">
+ <div class="metric-card-inner">
+ <div class="metric-icon-wrap"><i class="bi bi-box-seam"></i></div>
+ <div class="metric-content">
+ <div class="metric-label">{{ _("Samples (Type)") }}</div>
+ <div class="metric-value" id="samples-type-badge">0</div>
+ </div>
+ </div>
+ <div class="metric-expand" id="sidebar-samples-type">
+ <div class="metric-expand-item">{{ _("Loading...") }}</div>
+ </div>
+ </div>
+ </div>
 
-    <!-- Main Content Area -->
-    <div class="ahlah-main">
-  <!-- Stats Panels: Chemist & Analysis & AI -->
-  <div class="stats-row">
-    <!-- Chemist Statistics -->
-    <div class="stats-panel">
-      <div class="stats-panel-header">
-        <div class="stats-panel-title">
-          <i class="bi bi-people-fill"></i> {{ _("Chemist Analysis") }}
-        </div>
-        <div class="stats-panel-badge" id="chemist-total-badge">0 {{ _("chemists") }}</div>
-      </div>
-      <div class="stats-list" id="chemist-stats-list">
-        <div class="stats-empty">
-          <i class="bi bi-hourglass"></i>
-          {{ _("Loading...") }}
-        </div>
-      </div>
-    </div>
+ <!-- Main Content Area -->
+ <div class="ahlah-main">
+ <!-- Stats Panels: Chemist & Analysis & AI -->
+ <div class="stats-row">
+ <!-- Chemist Statistics -->
+ <div class="stats-panel">
+ <div class="stats-panel-header">
+ <div class="stats-panel-title">
+ <i class="bi bi-people-fill"></i> {{ _("Chemist Analysis") }}
+ </div>
+ <div class="stats-panel-badge" id="chemist-total-badge">0 {{ _("chemists") }}</div>
+ </div>
+ <div class="stats-list" id="chemist-stats-list">
+ <div class="stats-empty">
+ <i class="bi bi-hourglass"></i>
+ {{ _("Loading...") }}
+ </div>
+ </div>
+ </div>
 
-    <!-- Analysis Type Statistics -->
-    <div class="stats-panel">
-      <div class="stats-panel-header">
-        <div class="stats-panel-title">
-          <i class="bi bi-clipboard-data-fill"></i> {{ _("Analysis Type") }}
-        </div>
-        <div class="stats-panel-badge" id="analysis-total-badge">0 {{ _("types") }}</div>
-      </div>
-      <div class="stats-list" id="analysis-stats-list">
-        <div class="stats-empty">
-          <i class="bi bi-hourglass"></i>
-          {{ _("Loading...") }}
-        </div>
-      </div>
-    </div>
+ <!-- Analysis Type Statistics -->
+ <div class="stats-panel">
+ <div class="stats-panel-header">
+ <div class="stats-panel-title">
+ <i class="bi bi-clipboard-data-fill"></i> {{ _("Analysis Type") }}
+ </div>
+ <div class="stats-panel-badge" id="analysis-total-badge">0 {{ _("types") }}</div>
+ </div>
+ <div class="stats-list" id="analysis-stats-list">
+ <div class="stats-empty">
+ <i class="bi bi-hourglass"></i>
+ {{ _("Loading...") }}
+ </div>
+ </div>
+ </div>
 
-    <!-- AI Analytics Panel -->
-    <div class="stats-panel ai-panel">
-      <div class="stats-panel-header">
-        <div class="stats-panel-title">
-          <i class="bi bi-cpu" style="color: #6366f1;"></i> AI Analytics
-        </div>
-        <div class="d-flex gap-1 align-items-center">
-          <select id="aiHours" class="form-select form-select-sm" style="width: auto; font-size: 0.7rem; border-radius: 8px; padding: 2px 8px;">
-            <option value="2">2h</option>
-            <option value="8" selected>8h</option>
-            <option value="24">24h</option>
-            <option value="48">48h</option>
-          </select>
-          <button class="btn btn-sm" id="btnAiLoad"
-                  style="font-size: 0.7rem; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-radius: 8px; padding: 3px 10px;">
-            <i class="bi bi-arrow-clockwise"></i>
-          </button>
-          <div id="aiSpinner" class="spinner-border spinner-border-sm text-primary d-none" style="width: 1rem; height: 1rem;"></div>
-        </div>
-      </div>
+ <!-- AI Analytics Panel -->
+ <div class="stats-panel ai-panel">
+ <div class="stats-panel-header">
+ <div class="stats-panel-title">
+ <i class="bi bi-cpu text-accent-2"></i> AI Analytics
+ </div>
+ <div class="d-flex gap-1 align-items-center">
+ <select id="aiHours" class="form-select form-select-sm w-auto text-xs-2 rounded-lg py-[2px] px-[8px]">
+ <option value="2">2h</option>
+ <option value="8" selected>8h</option>
+ <option value="24">24h</option>
+ <option value="48">48h</option>
+ </select>
+ <button class="btn btn-sm text-xs-2 bg-indigo-gradient text-white rounded-lg py-[3px] px-[10px]" id="btnAiLoad"
+>
+ <i class="bi bi-arrow-clockwise"></i>
+ </button>
+ <div id="aiSpinner" class="spinner-border spinner-border-sm text-primary d-none w-[1rem] h-[1rem]"></div>
+ </div>
+ </div>
 
-      <!-- Quality Score -->
-      <div id="aiScoreBox" class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2"
-           style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8;">
-        <div id="aiGradeBadge" class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
-             style="width: 40px; height: 40px; font-size: 1rem; background: #94a3b8; flex-shrink: 0;">-</div>
-        <div style="min-width: 0;">
-          <div class="fw-bold" id="aiScoreText" style="font-size: 0.85rem;">Quality Score: -</div>
-          <div class="text-muted" style="font-size: 0.62rem;" id="aiScoreDetail">{{ _('Click Analyze to start') }}</div>
-          <div class="text-muted" style="font-size: 0.58rem;" id="aiScoreBreakdown"></div>
-        </div>
-      </div>
+ <!-- Quality Score -->
+ <div id="aiScoreBox" class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2 bg-slate-50 border border-slate-200 border-l-4 border-slate-400"
+>
+ <div id="aiGradeBadge" class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold w-[40px] h-[40px] text-base bg-slate-400 shrink-0"
+>-</div>
+ <div class="min-w-0">
+ <div class="fw-bold text-sm-3" id="aiScoreText">Quality Score: -</div>
+ <div class="text-muted text-[0.62rem]" id="aiScoreDetail">{{ _('Click Analyze to start') }}</div>
+ <div class="text-muted text-[0.58rem]" id="aiScoreBreakdown"></div>
+ </div>
+ </div>
 
-      <!-- Mini stats 2x2 -->
-      <div class="ai-mini-stats">
-        <div class="ai-mini-stat" style="background: #eff6ff; border-color: #bfdbfe;">
-          <div class="fw-bold text-primary" id="aiSamples">-</div>
-          <div>{{ _('Samples') }}</div>
-        </div>
-        <div class="ai-mini-stat" style="background: #f0fdf4; border-color: #bbf7d0;">
-          <div class="fw-bold text-success" id="aiAnalyses">-</div>
-          <div>{{ _('Analyses') }}</div>
-        </div>
-        <div class="ai-mini-stat" style="background: #fef2f2; border-color: #fecaca;">
-          <div class="fw-bold text-danger" id="aiCritical">0</div>
-          <div>Critical</div>
-        </div>
-        <div class="ai-mini-stat" style="background: #fffbeb; border-color: #fde68a;">
-          <div class="fw-bold text-warning" id="aiWarning">0</div>
-          <div>Warning</div>
-        </div>
-      </div>
+ <!-- Mini stats 2x2 -->
+ <div class="ai-mini-stats">
+ <div class="ai-mini-stat bg-blue-50 border-blue-200">
+ <div class="fw-bold text-primary" id="aiSamples">-</div>
+ <div class="min-w-0">{{ _('Samples') }}</div>
+ </div>
+ <div class="ai-mini-stat bg-emerald-50 border-[#bbf7d0]">
+ <div class="fw-bold text-success" id="aiAnalyses">-</div>
+ <div>{{ _('Analyses') }}</div>
+ </div>
+ <div class="ai-mini-stat bg-red-50 border-[#fecaca]">
+ <div class="fw-bold text-danger" id="aiCritical">0</div>
+ <div>Critical</div>
+ </div>
+ <div class="ai-mini-stat bg-amber-50 border-amber-200">
+ <div class="fw-bold text-warning" id="aiWarning">0</div>
+ <div>Warning</div>
+ </div>
+ </div>
 
-      <!-- Expandable details -->
-      <div id="aiDetails" class="d-none mt-2">
-        <!-- Anomalies -->
-        <div class="p-2 rounded-3 mb-2" style="background: #fff; border: 1px solid #e2e8f0; max-height: 150px; overflow-y: auto;">
-          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-exclamation-triangle me-1 text-danger"></i>Anomaly Detection</div>
-          <div id="aiAnomalyList"><span class="text-muted small">-</span></div>
-        </div>
-        <!-- Trends -->
-        <div class="p-2 rounded-3 mb-2" style="background: #fff; border: 1px solid #e2e8f0;">
-          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-graph-up me-1 text-info"></i>30-Day Trends</div>
-          <div id="aiTrendList"><span class="text-muted small">-</span></div>
-        </div>
-        <!-- Insights -->
-        <div class="p-2 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
-          <div class="fw-bold mb-1" style="font-size: 0.75rem;"><i class="bi bi-lightbulb me-1 text-primary"></i>AI Insights</div>
-          <ul id="aiInsightList" class="mb-0 ps-3" style="font-size: 0.7rem;"><li class="text-muted">-</li></ul>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Expandable details -->
+ <div id="aiDetails" class="d-none mt-2">
+ <!-- Anomalies -->
+ <div class="p-2 rounded-3 mb-2 bg-white border border-slate-200 max-h-[150px] overflow-y-auto">
+ <div class="fw-bold mb-1 text-xs"><i class="bi bi-exclamation-triangle me-1 text-danger"></i>Anomaly Detection</div>
+ <div id="aiAnomalyList"><span class="text-muted small">-</span></div>
+ </div>
+ <!-- Trends -->
+ <div class="p-2 rounded-3 mb-2 bg-white border border-slate-200">
+ <div class="fw-bold mb-1 text-xs"><i class="bi bi-graph-up me-1 text-info"></i>30-Day Trends</div>
+ <div id="aiTrendList"><span class="text-muted small">-</span></div>
+ </div>
+ <!-- Insights -->
+ <div class="p-2 rounded-3 bg-blue-50 border border-blue-200">
+ <div class="fw-bold mb-1 text-xs"><i class="bi bi-lightbulb me-1 text-primary"></i>AI Insights</div>
+ <ul id="aiInsightList" class="mb-0 ps-3 text-xs-2"><li class="text-muted">-</li></ul>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Filter Card -->
-  <div class="filter-card">
-    <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}" class="filter-row">
-      <div class="filter-group">
-        <label><i class="bi bi-calendar-event me-1"></i>{{ _("Start Date") }}</label>
-        <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
-      </div>
-      <div class="filter-group">
-        <label><i class="bi bi-calendar-check me-1"></i>{{ _("End Date") }}</label>
-        <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
-      </div>
-      <div class="filter-group">
-        <label><i class="bi bi-search me-1"></i>{{ _("Sample Name") }}</label>
-        <input type="text" name="sample_name" placeholder="{{ _("Search...") }}" value="{{ request.args.get('sample_name','') }}">
-      </div>
-      <div class="filter-group">
-        <label><i class="bi bi-funnel me-1"></i>{{ _("Status") }}</label>
-        <select name="status">
-          <option value="">{{ _("All") }}</option>
-          <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>{{ _("Pending") }}</option>
-          <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>{{ _("Rejected") }}</option>
-        </select>
-      </div>
-      <div class="filter-actions">
-        <button type="submit" class="btn-filter primary">
-          <i class="bi bi-search"></i> {{ _("Filter") }}
-        </button>
-        <a href="{{ url_for('analysis.ahlah_dashboard') }}" class="btn-filter secondary">
-          <i class="bi bi-arrow-counterclockwise"></i> {{ _("Clear") }}
-        </a>
-      </div>
-    </form>
-  </div>
+ <!-- Filter Card -->
+ <div class="filter-card">
+ <form method="GET" action="{{ url_for('analysis.ahlah_dashboard') }}" class="filter-row">
+ <div class="filter-group">
+ <label><i class="bi bi-calendar-event me-1"></i>{{ _("Start Date") }}</label>
+ <input type="date" name="start_date" value="{{ request.args.get('start_date','') }}">
+ </div>
+ <div class="filter-group">
+ <label><i class="bi bi-calendar-check me-1"></i>{{ _("End Date") }}</label>
+ <input type="date" name="end_date" value="{{ request.args.get('end_date','') }}">
+ </div>
+ <div class="filter-group">
+ <label><i class="bi bi-search me-1"></i>{{ _("Sample Name") }}</label>
+ <input type="text" name="sample_name" placeholder="{{ _("Search...") }}" value="{{ request.args.get('sample_name','') }}">
+ </div>
+ <div class="filter-group">
+ <label><i class="bi bi-funnel me-1"></i>{{ _("Status") }}</label>
+ <select name="status">
+ <option value="">{{ _("All") }}</option>
+ <option value="pending_review" {{ 'selected' if request.args.get('status') == 'pending_review' }}>{{ _("Pending") }}</option>
+ <option value="rejected" {{ 'selected' if request.args.get('status') == 'rejected' }}>{{ _("Rejected") }}</option>
+ </select>
+ </div>
+ <div class="filter-actions">
+ <button type="submit" class="btn-filter primary">
+ <i class="bi bi-search"></i> {{ _("Filter") }}
+ </button>
+ <a href="{{ url_for('analysis.ahlah_dashboard') }}" class="btn-filter secondary">
+ <i class="bi bi-arrow-counterclockwise"></i> {{ _("Clear") }}
+ </a>
+ </div>
+ </form>
+ </div>
 
-  <!-- Bulk Actions Toolbar -->
-  <div id="bulk-toolbar" class="bulk-toolbar" style="display: none;">
-    <div class="bulk-info">
-      <input type="checkbox" id="select-all-results" class="form-check-input me-2">
-      <span id="selected-count">0</span> {{ _("selected") }}
-    </div>
-    <div class="bulk-actions">
-      <button type="button" class="btn btn-success btn-sm" id="bulk-approve-btn">
-        <i class="bi bi-check-all"></i> {{ _("Approve All") }}
-      </button>
-      <button type="button" class="btn btn-danger btn-sm" id="bulk-reject-btn" data-bs-toggle="modal" data-bs-target="#bulkRejectModal">
-        <i class="bi bi-x-lg"></i> {{ _("Reject All") }}
-      </button>
-      <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection-btn">
-        <i class="bi bi-x-circle"></i> {{ _("Cancel") }}
-      </button>
-    </div>
-  </div>
+ <!-- Bulk Actions Toolbar -->
+ <div id="bulk-toolbar" class="bulk-toolbar hidden">
+ <div class="bulk-info">
+ <input type="checkbox" id="select-all-results" class="form-check-input me-2">
+ <span id="selected-count">0</span> {{ _("selected") }}
+ </div>
+ <div class="bulk-actions">
+ <button type="button" class="btn btn-success btn-sm" id="bulk-approve-btn">
+ <i class="bi bi-check-all"></i> {{ _("Approve All") }}
+ </button>
+ <button type="button" class="btn btn-danger btn-sm" id="bulk-reject-btn" data-bs-toggle="modal" data-bs-target="#bulkRejectModal">
+ <i class="bi bi-x-lg"></i> {{ _("Reject All") }}
+ </button>
+ <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-selection-btn">
+ <i class="bi bi-x-circle"></i> {{ _("Cancel") }}
+ </button>
+ </div>
+ </div>
 
-  <!-- Results Container -->
-  <div id="results-container" class="results-container">
-    <div class="loading-spinner">
-      <i class="bi bi-arrow-repeat"></i>
-      <p class="mt-3 text-muted">{{ _("Loading...") }}</p>
-    </div>
-  </div>
+ <!-- Results Container -->
+ <div id="results-container" class="results-container">
+ <div class="loading-spinner">
+ <i class="bi bi-arrow-repeat"></i>
+ <p class="mt-3 text-muted">{{ _("Loading...") }}</p>
+ </div>
+ </div>
 
-  <!-- Reject Modal -->
-  <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <form id="reject-form" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <div class="modal-content premium">
-          <div class="modal-header premium">
-            <h5 class="modal-title" id="rejectModalLabel">
-              <i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Result") }}
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body premium">
-            <div class="alert" style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border: none; border-radius: 12px; padding: 1rem;">
-              <i class="bi bi-info-circle-fill me-2 text-primary"></i>
-              <span id="reject-sample-info" class="fw-bold"></span>
-            </div>
-            <input type="hidden" id="reject-result-id" name="result_id" value="">
-            <div class="mb-3">
-              <label class="form-label fw-bold">
-                <i class="bi bi-tag me-1"></i>{{ _("Rejection Reason (KPI Code)") }} <span class="text-danger">*</span>
-              </label>
-              <select name="rejection_category" id="rejection_category" class="form-select" required style="border-radius: 12px; padding: 12px;">
-                <option value="">-- {{ _("Select") }} --</option>
-                <option value="sample_prep">{{ _("1. Sample preparation error") }}</option>
-                <option value="measurement">{{ _("2. Analysis execution error") }}</option>
-                <option value="qc_fail">{{ _("3. QC / Standard sample deviation") }}</option>
-                <option value="equipment">{{ _("4. Equipment / Environmental condition") }}</option>
-                <option value="data_entry">{{ _("5. Data entry / Calculation error") }}</option>
-                <option value="method">{{ _("6. Method violation (SOP)") }}</option>
-                <option value="sample_mixup">{{ _("7. Sample mix-up / Wrong sample") }}</option>
-                <option value="customer_complaint">{{ _("8. Complaint / Control analysis") }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer premium">
-            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 10px;">{{ _("Cancel") }}</button>
-            <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; background: linear-gradient(135deg, #ef4444, #dc2626);">
-              <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
+ <!-- Reject Modal -->
+ <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered">
+ <form id="reject-form" method="POST">
+ <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+ <div class="modal-content premium">
+ <div class="modal-header premium">
+ <h5 class="modal-title" id="rejectModalLabel">
+ <i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Result") }}
+ </h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+ </div>
+ <div class="modal-body premium">
+ <div class="alert bg-slate-gradient border-0 rounded-xl p-[1rem]">
+ <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+ <span id="reject-sample-info" class="fw-bold"></span>
+ </div>
+ <input type="hidden" id="reject-result-id" name="result_id" value="">
+ <div class="mb-3">
+ <label class="form-label fw-bold">
+ <i class="bi bi-tag me-1"></i>{{ _("Rejection Reason (KPI Code)") }} <span class="text-danger">*</span>
+ </label>
+ <select name="rejection_category" id="rejection_category" class="form-select rounded-xl p-[12px]" required>
+ <option value="">-- {{ _("Select") }} --</option>
+ <option value="sample_prep">{{ _("1. Sample preparation error") }}</option>
+ <option value="measurement">{{ _("2. Analysis execution error") }}</option>
+ <option value="qc_fail">{{ _("3. QC / Standard sample deviation") }}</option>
+ <option value="equipment">{{ _("4. Equipment / Environmental condition") }}</option>
+ <option value="data_entry">{{ _("5. Data entry / Calculation error") }}</option>
+ <option value="method">{{ _("6. Method violation (SOP)") }}</option>
+ <option value="sample_mixup">{{ _("7. Sample mix-up / Wrong sample") }}</option>
+ <option value="customer_complaint">{{ _("8. Complaint / Control analysis") }}</option>
+ </select>
+ </div>
+ </div>
+ <div class="modal-footer premium">
+ <button type="button" class="btn btn-light px-4 rounded-[10px]" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="submit" class="btn btn-danger px-4 rounded-[10px] bg-fail-gradient">
+ <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
+ </button>
+ </div>
+ </div>
+ </form>
+ </div>
+ </div>
 
-  <!-- Bulk Reject Modal -->
-  <div class="modal fade" id="bulkRejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content premium">
-        <div class="modal-header premium">
-          <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Multiple Results") }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body premium">
-          <div class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <span id="bulk-reject-count">0</span> {{ _("results will be rejected.") }}
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">{{ _("Rejection Reason") }}</label>
-            <select id="bulk-rejection-category" class="form-select" required>
-              <option value="">-- {{ _("Select") }} --</option>
-              {% for key, label in error_labels.items() %}
-              <option value="{{ key }}">{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">{{ _("Additional Remarks") }}</label>
-            <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="{{ _("Additional remarks...") }}"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer premium">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
-          <button type="button" class="btn btn-danger" id="confirm-bulk-reject-btn">
-            <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Bulk Reject Modal -->
+ <div class="modal fade" id="bulkRejectModal" tabindex="-1" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered">
+ <div class="modal-content premium">
+ <div class="modal-header premium">
+ <h5 class="modal-title"><i class="bi bi-x-octagon-fill me-2"></i>{{ _("Reject Multiple Results") }}</h5>
+ <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ </div>
+ <div class="modal-body premium">
+ <div class="alert alert-warning">
+ <i class="bi bi-exclamation-triangle me-2"></i>
+ <span id="bulk-reject-count">0</span> {{ _("results will be rejected.") }}
+ </div>
+ <div class="mb-3">
+ <label class="form-label fw-bold">{{ _("Rejection Reason") }}</label>
+ <select id="bulk-rejection-category" class="form-select" required>
+ <option value="">-- {{ _("Select") }} --</option>
+ {% for key, label in error_labels.items() %}
+ <option value="{{ key }}">{{ label }}</option>
+ {% endfor %}
+ </select>
+ </div>
+ <div class="mb-3">
+ <label class="form-label">{{ _("Additional Remarks") }}</label>
+ <textarea id="bulk-rejection-comment" class="form-control" rows="2" placeholder="{{ _("Additional remarks...") }}"></textarea>
+ </div>
+ </div>
+ <div class="modal-footer premium">
+ <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ _("Cancel") }}</button>
+ <button type="button" class="btn btn-danger" id="confirm-bulk-reject-btn">
+ <i class="bi bi-x-circle me-1"></i> {{ _("Reject") }}
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    </div><!-- /.ahlah-main -->
-  </div><!-- /.ahlah-layout -->
+ </div><!-- /.ahlah-main -->
+ </div><!-- /.ahlah-layout -->
 </div>
 
 <!-- API URLs -->
 <script nonce="{{ csp_nonce }}">
-  window.AHLAH_KPI_SUMMARY_URL = "{{ url_for('analysis.kpi_summary_for_ahlah') }}";
-  window.AHLAH_STATS_URL = "{{ url_for('analysis.api_ahlah_stats') }}";
-  window.AHLAH_DATA_URL = "/api/ahlah_data";
+ window.AHLAH_KPI_SUMMARY_URL = "{{ url_for('analysis.kpi_summary_for_ahlah') }}";
+ window.AHLAH_STATS_URL = "{{ url_for('analysis.api_ahlah_stats') }}";
+ window.AHLAH_DATA_URL = "/api/ahlah_data";
 </script>
 
 <!-- Config -->
 <script nonce="{{ csp_nonce }}">
-  window.ERROR_LABELS = {{ error_labels | tojson | safe }};
+ window.ERROR_LABELS = {{ error_labels | tojson | safe }};
 </script>
 
 <script nonce="{{ csp_nonce }}">
-  /* i18n translation strings for JS */
-  const I18N = {
-    updated: "{{ _('Updated') }}",
-    errorOccurred: "{{ _('An error occurred') }}",
-    couldNotLoadData: "{{ _('Could not load data. Please try again.') }}",
-    noResultsToReview: "{{ _('No results to review') }}",
-    noResultsCurrently: "{{ _('There are currently no results that need review.') }}",
-    rejected: "{{ _('Rejected') }}",
-    pending: "{{ _('Pending') }}",
-    parallelMeasurements: "{{ _('Parallel Measurements') }}",
-    average: "{{ _('Average') }}",
-    toleranceT: "{{ _('Tolerance (T)') }}",
-    finalResult: "{{ _('Final Result') }}",
-    approve: "{{ _('Approve') }}",
-    reject: "{{ _('Reject') }}",
-    approveThisResult: "{{ _('Approve this result?') }}",
-    noSamplesRegisteredToday: "{{ _('No samples registered today') }}",
-    chemists: "{{ _('chemists') }}",
-    types: "{{ _('types') }}",
-    samples: "{{ _('samples') }}",
-    noAnalysesPerformedToday: "{{ _('No analyses performed today') }}",
-    noAnalysesToday: "{{ _('No analyses today') }}",
-    total: "{{ _('Total') }}",
-    approved: "{{ _('Approved') }}",
-    pendingTitle: "{{ _('Pending') }}",
-    rejectedTitle: "{{ _('Rejected') }}",
-    selectRejectionReason: "{{ _('Please select a rejection reason') }}",
-    processing: "{{ _('Processing...') }}",
-    pleaseWait: "{{ _('Please wait...') }}",
-    approveAll: "{{ _('Approve All') }}",
-    approveResultsConfirm: "{{ _('Approve selected results?') }}",
-    error: "{{ _('Error') }}",
-    emptyWeight: "{{ _('Empty(g)') }}",
-    sampleWeight: "{{ _('Sample(g)') }}",
-    driedWeight: "{{ _('Dried(g)') }}",
-    fraction: "{{ _('Fraction') }}",
-    result: "{{ _('Result') }}",
-  };
+ /* i18n translation strings for JS */
+ const I18N = {
+ updated: "{{ _('Updated') }}",
+ errorOccurred: "{{ _('An error occurred') }}",
+ couldNotLoadData: "{{ _('Could not load data. Please try again.') }}",
+ noResultsToReview: "{{ _('No results to review') }}",
+ noResultsCurrently: "{{ _('There are currently no results that need review.') }}",
+ rejected: "{{ _('Rejected') }}",
+ pending: "{{ _('Pending') }}",
+ parallelMeasurements: "{{ _('Parallel Measurements') }}",
+ average: "{{ _('Average') }}",
+ toleranceT: "{{ _('Tolerance (T)') }}",
+ finalResult: "{{ _('Final Result') }}",
+ approve: "{{ _('Approve') }}",
+ reject: "{{ _('Reject') }}",
+ approveThisResult: "{{ _('Approve this result?') }}",
+ noSamplesRegisteredToday: "{{ _('No samples registered today') }}",
+ chemists: "{{ _('chemists') }}",
+ types: "{{ _('types') }}",
+ samples: "{{ _('samples') }}",
+ noAnalysesPerformedToday: "{{ _('No analyses performed today') }}",
+ noAnalysesToday: "{{ _('No analyses today') }}",
+ total: "{{ _('Total') }}",
+ approved: "{{ _('Approved') }}",
+ pendingTitle: "{{ _('Pending') }}",
+ rejectedTitle: "{{ _('Rejected') }}",
+ selectRejectionReason: "{{ _('Please select a rejection reason') }}",
+ processing: "{{ _('Processing...') }}",
+ pleaseWait: "{{ _('Please wait...') }}",
+ approveAll: "{{ _('Approve All') }}",
+ approveResultsConfirm: "{{ _('Approve selected results?') }}",
+ error: "{{ _('Error') }}",
+ emptyWeight: "{{ _('Empty(g)') }}",
+ sampleWeight: "{{ _('Sample(g)') }}",
+ driedWeight: "{{ _('Dried(g)') }}",
+ fraction: "{{ _('Fraction') }}",
+ result: "{{ _('Result') }}",
+ };
 </script>
 
 
@@ -412,99 +412,100 @@
 <script nonce="{{ csp_nonce }}">
 // ── AI Analytics ──
 (function() {
-  const $ = id => document.getElementById(id);
-  const API = '/api/v1/analytics/report';
+ const $ = id => document.getElementById(id);
+ const API = '/api/v1/analytics/report';
 
-  loadAI();
-  $('btnAiLoad').addEventListener('click', loadAI);
+ loadAI();
+ $('btnAiLoad').addEventListener('click', loadAI);
 
-  async function loadAI() {
-    const hours = $('aiHours').value;
-    $('aiSpinner').classList.remove('d-none');
-    try {
-      const resp = await fetch(API + '?hours=' + hours + '&client=CHPP');
-      const json = await resp.json();
-      if (!json.success) return;
-      const d = json.data;
+ async function loadAI() {
+ const hours = $('aiHours').value;
+ $('aiSpinner').classList.remove('d-none');
+ try {
+ const resp = await fetch(API + '?hours=' + hours + '&client=CHPP');
+ const json = await resp.json();
+ if (!json.success) return;
+ const d = json.data;
 
-      // Score
-      const qs = d.quality_score;
-      $('aiGradeBadge').textContent = qs.grade;
-      $('aiGradeBadge').style.background = qs.color;
-      $('aiScoreText').textContent = 'Quality Score: ' + qs.score + '/100';
-      $('aiScoreDetail').textContent = qs.message;
-      $('aiScoreBox').style.borderLeftColor = qs.color;
-      const bd = qs.breakdown;
-      $('aiScoreBreakdown').textContent =
-        'Completeness: ' + (bd.completeness||0).toFixed(0) + '/30 | ' +
-        'Accuracy: ' + (bd.accuracy||0).toFixed(0) + '/30 | ' +
-        'Timeliness: ' + (bd.timeliness||0).toFixed(0) + '/20 | ' +
-        'Consistency: ' + (bd.consistency||0).toFixed(0) + '/20';
+ // Score
+ const qs = d.quality_score;
+ $('aiGradeBadge').textContent = qs.grade;
+ $('aiGradeBadge').style.background = qs.color;
+ $('aiScoreText').textContent = 'Quality Score: ' + qs.score + '/100';
+ $('aiScoreDetail').textContent = qs.message;
+ $('aiScoreBox').style.borderLeftColor = qs.color;
+ const bd = qs.breakdown;
+ $('aiScoreBreakdown').textContent =
+ 'Completeness: ' + (bd.completeness||0).toFixed(0) + '/30 | ' +
+ 'Accuracy: ' + (bd.accuracy||0).toFixed(0) + '/30 | ' +
+ 'Timeliness: ' + (bd.timeliness||0).toFixed(0) + '/20 | ' +
+ 'Consistency: ' + (bd.consistency||0).toFixed(0) + '/20';
 
-      // Stats
-      $('aiSamples').textContent = d.sample_count;
-      $('aiAnalyses').textContent = d.analysis_count;
-      const crit = d.anomalies.filter(a => a.severity === 'critical').length;
-      const warn = d.anomalies.filter(a => a.severity === 'warning').length;
-      $('aiCritical').textContent = crit;
-      $('aiWarning').textContent = warn;
+ // Stats
+ $('aiSamples').textContent = d.sample_count;
+ $('aiAnalyses').textContent = d.analysis_count;
+ const crit = d.anomalies.filter(a => a.severity === 'critical').length;
+ const warn = d.anomalies.filter(a => a.severity === 'warning').length;
+ $('aiCritical').textContent = crit;
+ $('aiWarning').textContent = warn;
 
-      $('aiDetails').classList.remove('d-none');
-      renderAnomalies(d.anomalies);
-      renderTrends(d.trends);
-      renderInsights(d.insights);
-    } catch (e) {
-      console.error('AI Analytics error:', e);
-    } finally {
-      $('aiSpinner').classList.add('d-none');
-    }
-  }
+ $('aiDetails').classList.remove('d-none');
+ renderAnomalies(d.anomalies);
+ renderTrends(d.trends);
+ renderInsights(d.insights);
+ } catch (e) {
+ console.error('AI Analytics error:', e);
+ } finally {
+ $('aiSpinner').classList.add('d-none');
+ }
+ }
 
-  function renderAnomalies(list) {
-    const el = $('aiAnomalyList');
-    if (!list.length) {
-      el.innerHTML = '<div class="text-success small"><i class="bi bi-check-circle me-1"></i>All results within normal range</div>';
-      return;
-    }
-    let h = '<table class="table table-sm mb-0" style="font-size:0.7rem;"><thead><tr><th>Level</th><th>Sample</th><th>Analysis</th><th>Value</th><th>Z</th><th>Action</th></tr></thead><tbody>';
-    list.slice(0, 8).forEach(a => {
-      const cls = a.severity === 'critical' ? 'table-danger' : 'table-warning';
-      const badge = a.severity === 'critical'
-        ? '<span class="badge bg-danger" style="font-size:0.55rem">CRIT</span>'
-        : '<span class="badge bg-warning text-dark" style="font-size:0.55rem">WARN</span>';
-      h += '<tr class="' + cls + '"><td>' + badge + '</td><td class="fw-bold">' + a.sample_code +
-        '</td><td>' + a.analysis_code + '</td><td class="fw-bold">' + a.value +
-        '</td><td>z=' + (a.z_score > 0 ? '+' : '') + a.z_score.toFixed(1) +
-        '</td><td class="text-muted" style="font-size:0.65rem">' + (a.recommendation || '') + '</td></tr>';
-    });
-    h += '</tbody></table>';
-    if (list.length > 8) h += '<div class="text-muted small mt-1">+' + (list.length - 8) + ' more...</div>';
-    el.innerHTML = h;
-  }
+ function renderAnomalies(list) {
+ const el = $('aiAnomalyList');
+ if (!list.length) {
+ el.innerHTML = '<div class="text-success small"><i class="bi bi-check-circle me-1"></i>All results within normal range</div>';
+ return;
+ }
+ let h = '<table class="table table-sm mb-0 text-xs-2"><thead><tr><th>Level</th><th>Sample</th><th>Analysis</th><th>Value</th><th>Z</th><th>Action</th></tr></thead><tbody>';
+ list.slice(0, 8).forEach(a => {
+ const cls = a.severity === 'critical' ? 'table-danger' : 'table-warning';
+ const badge = a.severity === 'critical'
+ ? '<span class="badge bg-danger text-[0.55rem]">CRIT</span>'
+ : '<span class="badge bg-warning text-dark text-[0.55rem]">WARN</span>';
+ h += '<tr class="' + cls + '"><td>' + badge + '</td><td class="fw-bold">' + a.sample_code +
+ '</td><td>' + a.analysis_code + '</td><td class="fw-bold">' + a.value +
+ '</td><td>z=' + (a.z_score> 0 ? '+' : '') + a.z_score.toFixed(1) +
+ '</td><td class="text-muted text-2xs">' + (a.recommendation || '') + '</td></tr>';
+ });
+ h += '</tbody></table>';
+ if (list.length> 8) h += '<div class="text-muted small mt-1">+' + (list.length - 8) + ' more...</div>';
+ el.innerHTML = h;
+ }
 
-  function renderTrends(trends) {
-    const el = $('aiTrendList');
-    if (!trends.length) { el.innerHTML = '<span class="text-muted small">Not enough data</span>'; return; }
-    let h = '<div class="d-flex flex-wrap gap-1">';
-    trends.forEach(t => {
-      let icon, color;
-      if (t.direction === 'stable') { icon = '\u2192'; color = '#22c55e'; }
-      else if (t.direction === 'increasing') { icon = '\u2191'; color = '#f59e0b'; }
-      else { icon = '\u2193'; color = '#3b82f6'; }
-      h += '<div class="px-2 py-1 rounded-2" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:0.72rem;">' +
-        '<span style="color:' + color + ';font-weight:bold;font-size:0.95rem;">' + icon + '</span> ' +
-        '<b>' + t.analysis_code + '</b>: ' + (t.change_pct > 0 ? '+' : '') + t.change_pct.toFixed(1) + '% ' +
-        '<span class="text-muted" style="font-size:0.55rem;">(R\u00b2=' + t.r_squared.toFixed(2) + ')</span></div>';
-    });
-    h += '</div>';
-    el.innerHTML = h;
-  }
+ function renderTrends(trends) {
+ const el = $('aiTrendList');
+ if (!trends.length) { el.innerHTML = '<span class="text-muted small">Not enough data</span>'; return; }
+ let h = '<div class="d-flex flex-wrap gap-1">';
+ trends.forEach(t => {
+ let icon, color;
+ if (t.direction === 'stable') { icon = '\u2192'; color = '#22c55e'; }
+ else if (t.direction === 'increasing') { icon = '\u2191'; color = '#f59e0b'; }
+ else { icon = '\u2193'; color = '#3b82f6'; }
+ h += '<div class="px-2 py-1 rounded-2 bg-slate-50 border border-slate-200 text-xs-3">' +
+ '<span class="font-bold text-[0.95rem]" data-text-color="' + color + '">' + icon + '</span> ' +
+ '<b>' + t.analysis_code + '</b>: ' + (t.change_pct> 0 ? '+' : '') + t.change_pct.toFixed(1) + '% ' +
+ '<span class="text-muted text-[0.55rem]">(R\u00b2=' + t.r_squared.toFixed(2) + ')</span></div>';
+ });
+ h += '</div>';
+ el.innerHTML = h;
+ if (window.applyDynamicStyles) window.applyDynamicStyles(el);
+ }
 
-  function renderInsights(insights) {
-    const el = $('aiInsightList');
-    if (!insights.length) { el.innerHTML = '<li class="text-muted">-</li>'; return; }
-    el.innerHTML = insights.map(i => '<li style="margin-bottom:3px;">' + i + '</li>').join('');
-  }
+ function renderInsights(insights) {
+ const el = $('aiInsightList');
+ if (!insights.length) { el.innerHTML = '<li class="text-muted">-</li>'; return; }
+ el.innerHTML = insights.map(i => '<li class="mb-[3px]">' + i + '</li>').join('');
+ }
 })();
 </script>
 
