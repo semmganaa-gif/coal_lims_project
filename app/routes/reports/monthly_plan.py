@@ -66,7 +66,7 @@ def api_get_monthly_plan():
     Сарын төлөвлөгөө авах.
     Query params: year, month
     """
-    from app import models as M
+    from app.repositories import MonthlyPlanRepository
 
     year = request.args.get("year", type=int)
     month = request.args.get("month", type=int)
@@ -74,7 +74,7 @@ def api_get_monthly_plan():
     if not year or not month:
         return jsonify({"error": "year болон month шаардлагатай"}), 400
 
-    plans = M.MonthlyPlan.query.filter_by(year=year, month=month).all()
+    plans = MonthlyPlanRepository.get_by_month(year, month)
 
     result = {}
     for p in plans:

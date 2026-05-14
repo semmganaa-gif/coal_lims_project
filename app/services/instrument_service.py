@@ -13,6 +13,7 @@ from app.bootstrap.extensions import db
 from app.models.instrument import InstrumentReading
 from app.models.core import Sample
 from app.models.analysis import AnalysisResult
+from app.repositories.instrument_repository import InstrumentReadingRepository
 from app.instrument_parsers import get_parser, PARSER_REGISTRY
 from app.utils.datetime import now_local
 from app.utils.transaction import transactional
@@ -38,7 +39,7 @@ def parse_instrument_file(file_path: str, instrument_type: str,
         file_hash = hashlib.sha256(f.read()).hexdigest()
 
     # Check for duplicate file
-    existing = InstrumentReading.query.filter_by(file_hash=file_hash).first()
+    existing = InstrumentReadingRepository.get_by_file_hash(file_hash)
     if existing:
         raise ValueError(
             f"File already imported (hash match). "
@@ -84,10 +85,7 @@ def import_instrument_file(file_path: str, instrument_type: str,
 def get_pending_readings(instrument_type: str = None,
                          limit: int = 100) -> list[InstrumentReading]:
     """Get pending readings for review."""
-    query = InstrumentReading.query.filter_by(status="pending")
-    if instrument_type:
-        query = query.filter_by(instrument_type=instrument_type)
-    return query.order_by(InstrumentReading.created_at.desc()).limit(limit).all()
+    return InstrumentReadingRepository.get_pending(instrument_type, limit)
 
 
 @transactional()
@@ -167,17 +165,7 @@ def bulk_reject(reading_ids: list[int], user_id: int,
 
 def get_reading_stats() -> dict:
     """Get summary statistics of instrument readings."""
-    from sqlalchemy import func
-    stats = db.session.query(
-        InstrumentReading.status,
-        func.count(InstrumentReading.id)
-    ).group_by(InstrumentReading.status).all()
-
-    result = {"pending": 0, "approved": 0, "rejected": 0, "total": 0}
-    for status, count in stats:
-        result[status] = count
-        result["total"] += count
-    return result
+    return InstrumentReadingRepository.get_status_counts()
 
 
 def get_supported_instruments() -> list[dict]:

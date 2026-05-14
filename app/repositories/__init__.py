@@ -28,12 +28,17 @@ from app.repositories.quality_repository import (
 from app.repositories.report_repository import LabReportRepository, ReportSignatureRepository
 from app.repositories.maintenance_repository import MaintenanceLogRepository, UsageLogRepository
 from app.repositories.analysis_profile_repository import AnalysisProfileRepository
+from app.repositories.instrument_repository import InstrumentReadingRepository
+from app.repositories.planning_repository import MonthlyPlanRepository, StaffSettingsRepository
 
 __all__ = [
     "SampleRepository",
     "AnalysisResultRepository",
     "AnalysisTypeRepository",
     "AnalysisProfileRepository",
+    "InstrumentReadingRepository",
+    "MonthlyPlanRepository",
+    "StaffSettingsRepository",
     "GbwStandardRepository",
     "ControlStandardRepository",
     "EquipmentRepository",

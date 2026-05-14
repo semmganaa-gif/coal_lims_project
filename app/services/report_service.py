@@ -16,6 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
 from app import models as M
+from app.repositories import MonthlyPlanRepository, StaffSettingsRepository
 from app.utils.datetime import now_local
 from app.utils.transaction import transactional
 
@@ -136,7 +137,7 @@ def build_monthly_plan_context(year, month):
         })
 
     # Planned тоонууд (DB-с)
-    plans_db = M.MonthlyPlan.query.filter_by(year=year, month=month).all()
+    plans_db = MonthlyPlanRepository.get_by_month(year, month)
     plans = {}
     for p in plans_db:
         key = f"{p.client_name}|{p.sample_type}|{p.week}"
@@ -227,7 +228,7 @@ def build_monthly_plan_context(year, month):
     grand_total['daily_perf'] = round(grand_total['perf'] / total_days, 1) if total_days > 0 else 0
 
     # Staff settings
-    staff_settings = M.StaffSettings.query.filter_by(year=year, month=month).first()
+    staff_settings = StaffSettingsRepository.find_by_month(year, month)
     staff_preparers = staff_settings.preparers if staff_settings else 6
     staff_chemists = staff_settings.chemists if staff_settings else 10
 
@@ -261,10 +262,9 @@ def _save_monthly_plans_atomic(plans_dict, year, month, user_id):
         client_name, sample_type, week = parts
         week = int(week)
 
-        existing = M.MonthlyPlan.query.filter_by(
-            year=year, month=month, week=week,
-            client_name=client_name, sample_type=sample_type
-        ).first()
+        existing = MonthlyPlanRepository.find_for_week(
+            year, month, week, client_name, sample_type
+        )
 
         if existing:
             existing.planned_count = planned_count
@@ -307,7 +307,7 @@ def save_monthly_plans(plans_dict, year, month, user_id):
 
 @transactional()
 def _save_staff_settings_atomic(year, month, preparers, chemists):
-    existing = M.StaffSettings.query.filter_by(year=year, month=month).first()
+    existing = StaffSettingsRepository.find_by_month(year, month)
 
     if existing:
         existing.preparers = preparers
