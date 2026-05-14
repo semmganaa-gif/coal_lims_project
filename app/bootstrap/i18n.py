@@ -5,8 +5,15 @@ from app.bootstrap.extensions import babel
 
 
 def get_locale():
-    """Select user's preferred language from session or profile."""
-    from flask import session
+    """Select user's preferred language from session or profile.
+
+    Request context-аас гадуур (CLI, тест, background task) ажиллахаар
+    default 'en'-ийг буцаана — `_l()` LazyString-ийг str() болгох үед
+    `Working outside of request context` алдаа гарахаас сэргийлнэ.
+    """
+    from flask import session, has_request_context
+    if not has_request_context():
+        return 'en'
     lang = session.get('language')
     if lang in ('en', 'mn'):
         return lang

@@ -17,11 +17,16 @@ from sqlalchemy.exc import SQLAlchemyError
 
 @pytest.fixture()
 def app():
-    """Minimal Flask app with db mock."""
+    """Minimal Flask app with db mock. Babel-ийг initialize хийнэ — service
+    функцэд `_l()` LazyString-ийг str()-ээр хөрвүүлэхэд request context
+    шаардахгүй болгох."""
     from flask import Flask
+    from flask_babel import Babel
     _app = Flask(__name__)
     _app.config['TESTING'] = True
     _app.config['SECRET_KEY'] = 'test'
+    _app.config['BABEL_DEFAULT_LOCALE'] = 'mn'
+    Babel(_app)
     return _app
 
 

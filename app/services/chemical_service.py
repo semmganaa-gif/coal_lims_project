@@ -571,14 +571,14 @@ def update_chemical(chemical: Chemical, data: dict, user_id: int) -> None:
             quantity_change=new_quantity - old_quantity,
             quantity_before=old_quantity,
             quantity_after=new_quantity,
-            details=_l("Тоо хэмжээ засварлав")
+            details=str(_l("Тоо хэмжээ засварлав"))
         )
 
     chemical.update_status()
 
     create_chemical_log(
         chemical.id, user_id, 'updated',
-        details=_l("Мэдээлэл шинэчлэв")
+        details=str(_l("Мэдээлэл шинэчлэв"))
     )
 
 

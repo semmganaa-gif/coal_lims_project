@@ -195,34 +195,64 @@ class TestUpdateSampleStatus:
         )
         assert resp.status_code == 302
 
-    def test_archive_ajax(self, admin_client, mass_app, sample_in_db):
+    def test_archive_ajax(self, admin_client, mass_app):
+        # Sample workflow: archive-д орохын тулд `completed` төлвөөс гарах ёстой.
+        # Тестийг сэлгүүлэхийн тулд бие даасан sample үүсгэе.
+        import uuid
+        with mass_app.app_context():
+            user = User.query.filter_by(username='mschemist').first()
+            s = Sample(
+                sample_code=f'MS-A-{uuid.uuid4().hex[:6]}',
+                user_id=user.id, client_name='QC', sample_type='Coal',
+                lab_type='coal', status='completed',
+                received_date=datetime.now(),
+            )
+            _db.session.add(s)
+            _db.session.commit()
+            sid = s.id
+
         resp = admin_client.post(
             '/api/mass/update_sample_status',
-            data={'action': 'archive', 'sample_ids': [str(sample_in_db.id)]},
+            data={'action': 'archive', 'sample_ids': [str(sid)]},
             headers={'X-Requested-With': 'XMLHttpRequest'},
         )
         assert resp.status_code == 200
         data = resp.get_json()
         assert 'updated' in data.get('message', '').lower() or '1' in data.get('message', '')
-        # restore
+
         with mass_app.app_context():
-            s = _db.session.get(Sample, sample_in_db.id)
-            if s:
-                s.status = 'new'
+            obj = _db.session.get(Sample, sid)
+            if obj:
+                _db.session.delete(obj)
                 _db.session.commit()
 
-    def test_unarchive_ajax(self, admin_client, mass_app, sample_in_db):
+    def test_unarchive_ajax(self, admin_client, mass_app):
+        # Sample workflow: archived → completed transition
+        import uuid
         with mass_app.app_context():
-            s = _db.session.get(Sample, sample_in_db.id)
-            s.status = 'archived'
+            user = User.query.filter_by(username='mschemist').first()
+            s = Sample(
+                sample_code=f'MS-U-{uuid.uuid4().hex[:6]}',
+                user_id=user.id, client_name='QC', sample_type='Coal',
+                lab_type='coal', status='archived',
+                received_date=datetime.now(),
+            )
+            _db.session.add(s)
             _db.session.commit()
+            sid = s.id
 
         resp = admin_client.post(
             '/api/mass/update_sample_status',
-            data={'action': 'unarchive', 'sample_ids': [str(sample_in_db.id)]},
+            data={'action': 'unarchive', 'sample_ids': [str(sid)]},
             headers={'X-Requested-With': 'XMLHttpRequest'},
         )
         assert resp.status_code == 200
+
+        with mass_app.app_context():
+            obj = _db.session.get(Sample, sid)
+            if obj:
+                _db.session.delete(obj)
+                _db.session.commit()
 
     def test_invalid_sample_ids(self, admin_client):
         resp = admin_client.post(
@@ -233,15 +263,33 @@ class TestUpdateSampleStatus:
         # Invalid IDs → empty list → 400 (no samples selected)
         assert resp.status_code == 400
 
-    def test_commit_error_ajax(self, admin_client, sample_in_db):
+    def test_commit_error_ajax(self, admin_client, mass_app):
         from sqlalchemy.exc import SQLAlchemyError
+        import uuid
+        with mass_app.app_context():
+            user = User.query.filter_by(username='mschemist').first()
+            s = Sample(
+                sample_code=f'MS-CE-{uuid.uuid4().hex[:6]}',
+                user_id=user.id, client_name='QC', sample_type='Coal',
+                lab_type='coal', status='completed',
+                received_date=datetime.now(),
+            )
+            _db.session.add(s)
+            _db.session.commit()
+            sid = s.id
         with patch.object(_db.session, 'commit', side_effect=SQLAlchemyError("DB error")):
             resp = admin_client.post(
                 '/api/mass/update_sample_status',
-                data={'action': 'archive', 'sample_ids': [str(sample_in_db.id)]},
+                data={'action': 'archive', 'sample_ids': [str(sid)]},
                 headers={'X-Requested-With': 'XMLHttpRequest'},
             )
             assert resp.status_code == 500
+
+        with mass_app.app_context():
+            obj = _db.session.get(Sample, sid)
+            if obj:
+                _db.session.delete(obj)
+                _db.session.commit()
 
     def test_commit_error_non_ajax(self, admin_client, sample_in_db):
         from sqlalchemy.exc import SQLAlchemyError

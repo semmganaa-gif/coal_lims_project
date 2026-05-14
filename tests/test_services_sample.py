@@ -82,38 +82,42 @@ class TestDataClasses:
 # ---------------------------------------------------------------------------
 
 class TestArchiveSamples:
+    @patch("app.utils.transaction.db")
     @patch(f"{SAMPLE_SERVICE}.log_audit")
     @patch(f"{SAMPLE_SERVICE}.SampleRepository")
-    def test_archive_success(self, mock_repo, mock_audit):
-        from app.services.sample_service import archive_samples
-        mock_repo.update_status.return_value = 2
+    def test_archive_success(self, mock_repo, mock_audit, mock_tx_db, app):
+        with app.app_context():
+            from app.services.sample_service import archive_samples
+            mock_repo.update_status.return_value = 2
 
-        result = archive_samples([1, 2], archive=True)
+            result = archive_samples([1, 2], archive=True)
 
-        assert result.success is True
-        assert result.updated_count == 2
-        assert result.error is None
-        mock_repo.update_status.assert_called_once_with([1, 2], "archived")
-        assert mock_audit.call_count == 2
-        # Verify audit args for first call
-        call_args = mock_audit.call_args_list[0]
-        assert call_args[1]["action"] == "sample_archived"
-        assert call_args[1]["resource_type"] == "Sample"
-        assert call_args[1]["resource_id"] == 1
+            assert result.success is True
+            assert result.updated_count == 2
+            assert result.error is None
+            mock_repo.update_status.assert_called_once_with([1, 2], "archived", commit=False)
+            assert mock_audit.call_count == 2
+            # Verify audit args for first call
+            call_args = mock_audit.call_args_list[0]
+            assert call_args[1]["action"] == "sample_archived"
+            assert call_args[1]["resource_type"] == "Sample"
+            assert call_args[1]["resource_id"] == 1
 
+    @patch("app.utils.transaction.db")
     @patch(f"{SAMPLE_SERVICE}.log_audit")
     @patch(f"{SAMPLE_SERVICE}.SampleRepository")
-    def test_unarchive_success(self, mock_repo, mock_audit):
-        from app.services.sample_service import archive_samples
-        mock_repo.update_status.return_value = 1
+    def test_unarchive_success(self, mock_repo, mock_audit, mock_tx_db, app):
+        with app.app_context():
+            from app.services.sample_service import archive_samples
+            mock_repo.update_status.return_value = 1
 
-        result = archive_samples([5], archive=False)
+            result = archive_samples([5], archive=False)
 
-        assert result.success is True
-        assert result.updated_count == 1
-        mock_repo.update_status.assert_called_once_with([5], "new")
-        call_args = mock_audit.call_args_list[0]
-        assert call_args[1]["action"] == "sample_unarchived"
+            assert result.success is True
+            assert result.updated_count == 1
+            mock_repo.update_status.assert_called_once_with([5], "new", commit=False)
+            call_args = mock_audit.call_args_list[0]
+            assert call_args[1]["action"] == "sample_unarchived"
 
     def test_empty_sample_ids(self):
         from app.services.sample_service import archive_samples
@@ -129,31 +133,35 @@ class TestArchiveSamples:
         assert result.success is False
         assert result.error == "NO_SAMPLES"
 
+    @patch("app.utils.transaction.db")
     @patch(f"{SAMPLE_SERVICE}.db")
     @patch(f"{SAMPLE_SERVICE}.SampleRepository")
-    def test_sqlalchemy_error_rollback(self, mock_repo, mock_db):
-        from app.services.sample_service import archive_samples
-        mock_repo.update_status.side_effect = SQLAlchemyError("connection lost")
+    def test_sqlalchemy_error_rollback(self, mock_repo, mock_db, mock_tx_db, app):
+        with app.app_context():
+            from app.services.sample_service import archive_samples
+            mock_repo.update_status.side_effect = SQLAlchemyError("connection lost")
 
-        result = archive_samples([1, 2])
+            result = archive_samples([1, 2])
 
-        assert result.success is False
-        assert result.updated_count == 0
-        assert result.error is not None
-        assert "connection lost" in result.error
-        mock_db.session.rollback.assert_called_once()
+            assert result.success is False
+            assert result.updated_count == 0
+            assert result.error is not None
+            assert "connection lost" in result.error
+            mock_tx_db.session.rollback.assert_called_once()
 
+    @patch("app.utils.transaction.db")
     @patch(f"{SAMPLE_SERVICE}.log_audit")
     @patch(f"{SAMPLE_SERVICE}.SampleRepository")
-    def test_archive_multiple_ids_audit_each(self, mock_repo, mock_audit):
-        from app.services.sample_service import archive_samples
-        mock_repo.update_status.return_value = 3
+    def test_archive_multiple_ids_audit_each(self, mock_repo, mock_audit, mock_tx_db, app):
+        with app.app_context():
+            from app.services.sample_service import archive_samples
+            mock_repo.update_status.return_value = 3
 
-        result = archive_samples([10, 20, 30], archive=True)
-        assert result.success is True
-        assert mock_audit.call_count == 3
-        audit_ids = [c[1]["resource_id"] for c in mock_audit.call_args_list]
-        assert audit_ids == [10, 20, 30]
+            result = archive_samples([10, 20, 30], archive=True)
+            assert result.success is True
+            assert mock_audit.call_count == 3
+            audit_ids = [c[1]["resource_id"] for c in mock_audit.call_args_list]
+            assert audit_ids == [10, 20, 30]
 
 
 # ---------------------------------------------------------------------------

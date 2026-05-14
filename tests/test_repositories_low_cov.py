@@ -1318,7 +1318,8 @@ class TestChemicalRepository:
 
     def test_get_for_water_lab(self, app):
         with app.app_context():
-            c_water = self._make_chemical(status="active", lab_type="water")
+            # Refactor `e206e63`: 'water' → 'water_chemistry'
+            c_water = self._make_chemical(status="active", lab_type="water_chemistry")
             c_all = self._make_chemical(status="active", lab_type="all")
             c_coal = self._make_chemical(status="active", lab_type="coal")
 

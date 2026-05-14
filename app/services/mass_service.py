@@ -104,7 +104,10 @@ def update_sample_status(sample_ids: list[int], action: str) -> ServiceResult:
     if not sample_ids:
         return ServiceResult(False, _l("Дээж сонгогдоогүй байна"), status_code=400)
 
-    new_status = "archived" if action == "archive" else "new"
+    # Sample workflow: completed → archived (Архивлах), archived → completed (Сэргээх).
+    # Unarchive нь workflow-ийн зөвшөөрөгдсөн "completed" төлөв рүү буцаана
+    # (өмнө 'new' гэж буруу тохируулсан тул workflow check failed).
+    new_status = "archived" if action == "archive" else "completed"
 
     # Validate via workflow engine
     try:

@@ -434,14 +434,14 @@ def update_spare_part(spare_part_id, data, user_id):
                 quantity_change=spare_part.quantity - old_quantity,
                 quantity_before=old_quantity,
                 quantity_after=spare_part.quantity,
-                details=_l("Гараар тохируулав"),
+                details=str(_l("Гараар тохируулав")),
             )
 
         # General update log
         log_spare_part_action(
             spare_part, 'updated',
             user_id=user_id,
-            details=_l("Мэдээлэл шинэчлэв"),
+            details=str(_l("Мэдээлэл шинэчлэв")),
         )
 
         return spare_part, None
