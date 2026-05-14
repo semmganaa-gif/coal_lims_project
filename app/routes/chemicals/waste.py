@@ -12,6 +12,8 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import ChemicalWaste, ChemicalWasteRecord
 from app.utils.database import safe_commit
 from app.routes.chemicals import chemicals_bp
@@ -105,12 +107,9 @@ def waste_list():
 # -------------------------------------------------
 @chemicals_bp.route("/waste/add", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_waste():
     """Шинэ хог хаягдал нэмэх."""
-    if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.waste_list"))
-
     if request.method == "POST":
         try:
             waste = ChemicalWaste(
@@ -153,12 +152,9 @@ def add_waste():
 # -------------------------------------------------
 @chemicals_bp.route("/waste/edit/<int:id>", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_waste(id):
     """Хог хаягдал засах."""
-    if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.waste_list"))
-
     waste = db.session.get(ChemicalWaste, id)
     if not waste:
         abort(404)
@@ -201,12 +197,9 @@ def edit_waste(id):
 # -------------------------------------------------
 @chemicals_bp.route("/waste/delete/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_waste(id):
     """Хог хаягдал устгах (идэвхгүй болгох)."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.waste_list"))
-
     waste = db.session.get(ChemicalWaste, id)
     if not waste:
         abort(404)

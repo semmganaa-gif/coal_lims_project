@@ -4,6 +4,8 @@ License Routes - Лицензийн хуудсууд
 """
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from flask_babel import lazy_gettext as _l
 
 from app.utils.license_protection import license_manager
@@ -14,11 +16,9 @@ license_bp = Blueprint('license', __name__, url_prefix='/license')
 
 @license_bp.route('/activate', methods=['GET', 'POST'])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def activate():
     """Лиценз идэвхжүүлэх хуудас"""
-    if current_user.role != 'admin':
-        flash(_l('Зөвхөн админ лиценз идэвхжүүлэх боломжтой.'), 'danger')
-        return redirect(url_for('main.index'))
     hardware_info = get_hardware_info()
 
     if request.method == 'POST':
@@ -89,10 +89,9 @@ def check():
 
 @license_bp.route('/hardware-id')
 @login_required
+@role_required(UserRole.ADMIN.value)
 def hardware_id():
     """Hardware ID авах (идэвхжүүлэхэд хэрэгтэй) — зөвхөн админ"""
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Хандах эрхгүй'}), 403
     info = get_hardware_info()
     return jsonify({
         'hardware_id': info['hardware_id'],

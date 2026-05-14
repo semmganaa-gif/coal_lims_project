@@ -11,6 +11,8 @@ from datetime import datetime
 
 from flask import render_template, jsonify, request, Response
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 
 from app.models import Sample, AnalysisResult, ControlStandard, GbwStandard
 from app.repositories import ControlStandardRepository, GbwStandardRepository
@@ -627,11 +629,9 @@ def register_routes(bp):
 
     @bp.route("/api/chart_auto_ca", methods=["POST"])
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
     def api_chart_auto_ca():
         """Auto-create Corrective Action from QC violation."""
-        if current_user.role not in ("admin", "manager", "senior_analyst"):
-            return jsonify(success=False, message="Эрх хүрэлцэхгүй"), 403
-
         data = request.json or {}
         standard_name = data.get("standard_name", "")
         analysis_code = data.get("analysis_code", "")

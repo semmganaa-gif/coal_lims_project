@@ -6,6 +6,8 @@ Workflow Engine API — configure workflows, query transitions.
 
 from flask import request, jsonify
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from flask_babel import gettext as _
 
 from app.bootstrap.extensions import db
@@ -105,11 +107,9 @@ def workflow_can_transition(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/save", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_save(workflow_name):
     """Save custom workflow configuration (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ тохируулж болно")), 403
-
     config = request.json
     if not config:
         return jsonify(success=False, message=_("Config шаардлагатай")), 400
@@ -123,22 +123,18 @@ def workflow_save(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/reset", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_reset(workflow_name):
     """Reset workflow to default (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     reset_workflow_config(workflow_name)
     return jsonify(success=True, message=_("'%(name)s' workflow default болгогдлоо") % {"name": workflow_name})
 
 
 @api_bp.route("/workflow/<workflow_name>/add_state", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_add_state(workflow_name):
     """Add a new state to workflow (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     state_key = data.get("key", "").strip()
     if not state_key:
@@ -166,11 +162,9 @@ def workflow_add_state(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/add_transition", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_add_transition(workflow_name):
     """Add a new transition to workflow (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     from_state = data.get("from", "").strip()
     to_state = data.get("to", "").strip()
@@ -213,11 +207,9 @@ def workflow_add_transition(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/update_state", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_update_state(workflow_name):
     """Update an existing state (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     state_key = data.get("key", "").strip()
     if not state_key:
@@ -249,11 +241,9 @@ def workflow_update_state(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/delete_state", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_delete_state(workflow_name):
     """Delete a state and its transitions (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     state_key = data.get("key", "").strip()
     if not state_key:
@@ -284,11 +274,9 @@ def workflow_delete_state(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/update_transition", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_update_transition(workflow_name):
     """Update an existing transition (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     idx = data.get("index")
     if idx is None:
@@ -328,11 +316,9 @@ def workflow_update_transition(workflow_name):
 
 @api_bp.route("/workflow/<workflow_name>/delete_transition", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def workflow_delete_transition(workflow_name):
     """Delete a transition by index (admin only)."""
-    if current_user.role != "admin":
-        return jsonify(success=False, message=_("Зөвхөн админ")), 403
-
     data = request.json or {}
     idx = data.get("index")
     if idx is None:

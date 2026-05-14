@@ -15,6 +15,8 @@ from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import LabReport
 from app.repositories import LabReportRepository
 from app.routes.reports import pdf_reports_bp
@@ -103,12 +105,9 @@ def send_report_email(report, recipients, subject=None, body=None):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/send_email", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def send_email(id):
     """Тайлан имэйлээр илгээх."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.report_detail", id=id))
-
     report = LabReportRepository.get_by_id_or_404(id)
 
     if report.status not in ['approved', 'sent']:

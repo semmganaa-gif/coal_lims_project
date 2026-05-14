@@ -11,6 +11,8 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import Chemical, ChemicalUsage, ChemicalLog
 from app.repositories import ChemicalRepository
 from app.utils.database import safe_commit
@@ -99,12 +101,9 @@ def chemical_detail(id):
 
 @chemicals_bp.route("/add", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_chemical():
     """Шинэ химийн бодис нэмэх."""
-    if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.chemical_list"))
-
     if request.method == "POST":
         try:
             data = {
@@ -172,12 +171,9 @@ def add_chemical():
 
 @chemicals_bp.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_chemical(id):
     """Химийн бодис засварлах."""
-    if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.chemical_detail", id=id))
-
     chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
@@ -247,12 +243,9 @@ def edit_chemical(id):
 
 @chemicals_bp.route("/receive/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def receive_chemical(id):
     """Химийн бодисын нөөц нэмэх."""
-    if current_user.role not in ["chemist", "senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.chemical_detail", id=id))
-
     chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)
@@ -342,12 +335,9 @@ def consume_chemical(id):
 
 @chemicals_bp.route("/dispose/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def dispose_chemical(id):
     """Химийн бодис устгах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("chemicals.chemical_detail", id=id))
-
     chemical = ChemicalRepository.get_by_id(id)
     if not chemical:
         abort(404)

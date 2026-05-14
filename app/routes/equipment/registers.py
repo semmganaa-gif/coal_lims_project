@@ -13,6 +13,8 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import Equipment
 from app.repositories import EquipmentRepository
 from app.utils.shifts import get_shift_date
@@ -119,12 +121,9 @@ def equipment_journal_special(journal_type):
 
 @equipment_bp.route("/add_register_item/<register_type>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_register_item(register_type):
     """Бүртгэлд шинэ мөр нэмэх."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("equipment.equipment_journal_special", journal_type=register_type))
-
     data = request.form.to_dict()
     data.pop('csrf_token', None)
     data.pop('edit_item_id', None)
@@ -167,12 +166,9 @@ def add_register_item(register_type):
 
 @equipment_bp.route("/edit_register_item/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_register_item(id):
     """Бүртгэлийн мөр засах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("equipment.equipment_list"))
-
     item = EquipmentRepository.get_by_id(id)
     if not item:
         abort(404)
@@ -215,12 +211,9 @@ def edit_register_item(id):
 
 @equipment_bp.route("/delete_register_items", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_register_items():
     """Бүртгэлийн мөрүүд устгах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("equipment.equipment_list"))
-
     ids = request.form.getlist('item_ids')
     register_type = request.form.get('register_type', 'measurement')
 

@@ -6,6 +6,8 @@ Ad-hoc Report Builder API — build, preview, save, export custom reports.
 
 from flask import request, jsonify, Response
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from flask_babel import gettext as _
 
 from app.routes.api import api_bp
@@ -150,11 +152,9 @@ def rb_template_save():
 
 @api_bp.route("/report-builder/templates/<name>/delete", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value)
 def rb_template_delete(name):
     """Delete a report template."""
-    if current_user.role not in ("admin", "manager"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     deleted = delete_report_template(name)
     if deleted:
         return jsonify(success=True, message=_("'%(name)s' template устгагдлаа") % {"name": name})

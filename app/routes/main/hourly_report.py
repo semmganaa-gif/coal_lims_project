@@ -16,6 +16,8 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font
 
 from app import db, mail
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import Sample, SystemSetting
 from app.repositories import SystemSettingRepository
 from app.utils.datetime import now_local
@@ -50,12 +52,9 @@ def get_report_email_recipients():
 
 @main_bp.route("/send-hourly-report")
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.ADMIN.value)
 def send_hourly_report():
     """Цагийн тайлан илгээх - зөвхөн senior, admin"""
-    if current_user.role not in ['senior', 'admin']:
-        flash(_l('Энэ үйлдлийг гүйцэтгэх эрхгүй байна.'), 'error')
-        return redirect(url_for('main.index'))
-
     try:
         current_app.logger.debug("HOURLY REPORT STARTED (FIXED POSITIONING)")
 

@@ -8,6 +8,8 @@ All backend APIs are in app/routes/api/ — these routes only serve templates.
 
 from flask import render_template
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from werkzeug.exceptions import abort
 
 
@@ -22,10 +24,9 @@ def register_routes(bp):
 
     @bp.route("/instrument-readings")
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
     def instrument_readings():
         """Instrument Readings review UI."""
-        if current_user.role not in ("admin", "manager", "senior_analyst", "senior"):
-            abort(403)
         return render_template("instrument_readings.html", title="Instrument Readings")
 
     @bp.route("/sla-dashboard")
@@ -36,8 +37,7 @@ def register_routes(bp):
 
     @bp.route("/workflow-admin")
     @login_required
+    @role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
     def workflow_admin():
         """Workflow configuration admin page."""
-        if current_user.role not in ("admin", "manager", "senior"):
-            abort(403)
         return render_template("workflow_admin.html", title="Workflow Configuration")

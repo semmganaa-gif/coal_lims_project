@@ -14,6 +14,8 @@ from flask_babel import lazy_gettext as _l
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.services.import_service import process_csv_import
 
 logger = logging.getLogger(__name__)
@@ -23,11 +25,8 @@ import_bp = Blueprint("importer", __name__, url_prefix="/admin/import")
 
 @import_bp.route("/historical_csv", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def import_historical_csv():
-    if current_user.role != 'admin':
-        flash(_l('Зөвхөн админ CSV импорт хийх боломжтой.'), 'danger')
-        return redirect(url_for('main.index'))
-
     if request.method == "GET":
         return render_template("admin/import_historical.html", title="Түүхэн CSV импорт")
 

@@ -5,8 +5,10 @@ from flask import render_template, request, redirect, url_for, flash, current_ap
 from flask_login import login_required, current_user
 from flask_babel import lazy_gettext as _l
 
+from app.constants import UserRole
 from app.repositories import EquipmentRepository
 from app.routes.spare_parts import spare_parts_bp, UNITS, STATUS_TYPES
+from app.utils.decorators import role_required
 from app.services.spare_parts_service import (
     get_categories, get_categories_dict, get_all_categories_ordered,
     create_category, update_category, delete_category as svc_delete_category,
@@ -27,12 +29,9 @@ from app.utils.database import safe_commit
 
 @spare_parts_bp.route('/categories')
 @login_required
+@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def category_list():
     """Категорийн жагсаалт."""
-    if current_user.role not in ['manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_list'))
-
     categories = get_all_categories_ordered()
 
     return render_template(
@@ -43,12 +42,9 @@ def category_list():
 
 @spare_parts_bp.route('/categories/add', methods=['GET', 'POST'])
 @login_required
+@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_category():
     """Шинэ категори нэмэх."""
-    if current_user.role not in ['manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.category_list'))
-
     if request.method == 'POST':
         code = request.form.get('code', '').strip().lower().replace(' ', '_')
         name = request.form.get('name', '').strip()
@@ -75,12 +71,9 @@ def add_category():
 
 @spare_parts_bp.route('/categories/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
+@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_category(id):
     """Категори засварлах."""
-    if current_user.role not in ['manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.category_list'))
-
     if request.method == 'POST':
         equipment_id_raw = request.form.get('equipment_id')
         cat, error = update_category(
@@ -114,12 +107,9 @@ def edit_category(id):
 
 @spare_parts_bp.route('/categories/delete/<int:id>', methods=['POST'])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def delete_category(id):
     """Категори устгах."""
-    if current_user.role != 'admin':
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.category_list'))
-
     name, error = svc_delete_category(id)
     if error == 'not_found':
         abort(404)
@@ -182,12 +172,9 @@ def spare_part_detail(id):
 
 @spare_parts_bp.route('/add', methods=['GET', 'POST'])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_spare_part():
     """Шинэ сэлбэг нэмэх."""
-    if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_list'))
-
     if request.method == 'POST':
         data = {
             'name': request.form.get('name'),
@@ -237,12 +224,9 @@ def add_spare_part():
 
 @spare_parts_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_spare_part(id):
     """Сэлбэг засварлах."""
-    if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_detail', id=id))
-
     from app import db
     from app.models import SparePart as SparePartModel
     spare_part = db.session.get(SparePartModel, id)
@@ -310,12 +294,9 @@ def edit_spare_part(id):
 
 @spare_parts_bp.route('/receive/<int:id>', methods=['POST'])
 @login_required
+@role_required(UserRole.CHEMIST.value, UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def receive_spare_part(id):
     """Сэлбэг нөөц нэмэх (шинээр ирсэн)."""
-    if current_user.role not in ['chemist', 'senior', 'manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_detail', id=id))
-
     try:
         quantity = float(request.form.get('quantity', 0))
         notes = request.form.get('notes', 'Шинээр ирсэн')
@@ -379,12 +360,9 @@ def consume_spare_part(id):
 
 @spare_parts_bp.route('/dispose/<int:id>', methods=['POST'])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def dispose_spare_part(id):
     """Сэлбэг устгах (disposal)."""
-    if current_user.role not in ['senior', 'manager', 'admin']:
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_detail', id=id))
-
     reason = request.form.get('reason', 'Устгав')
     name, error = svc_dispose(id, user_id=current_user.id, reason=reason)
     if error == 'not_found':
@@ -399,12 +377,9 @@ def dispose_spare_part(id):
 
 @spare_parts_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required
+@role_required(UserRole.ADMIN.value)
 def delete_spare_part(id):
     """Сэлбэг бүрмөсөн устгах (зөвхөн admin)."""
-    if current_user.role != 'admin':
-        flash(_l('Хандах эрхгүй.'), 'danger')
-        return redirect(url_for('spare_parts.spare_part_list'))
-
     name, error = delete_spare_part_permanently(id)
     if error == 'not_found':
         abort(404)

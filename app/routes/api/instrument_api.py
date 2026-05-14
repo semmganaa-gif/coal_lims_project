@@ -9,6 +9,8 @@ import tempfile
 
 from flask import request, jsonify
 from flask_login import login_required, current_user
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from flask_babel import gettext as _
 from werkzeug.utils import secure_filename
 
@@ -27,11 +29,9 @@ from app.services.instrument_service import (
 
 @api_bp.route("/instrument/upload", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
 def instrument_upload():
     """Upload and parse an instrument output file."""
-    if current_user.role not in ("admin", "manager", "senior_analyst"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     file = request.files.get("file")
     instrument_type = request.form.get("instrument_type", "generic_csv")
     instrument_name = request.form.get("instrument_name", "")
@@ -84,11 +84,9 @@ def instrument_pending():
 
 @api_bp.route("/instrument/approve/<int:reading_id>", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
 def instrument_approve(reading_id):
     """Approve a single reading."""
-    if current_user.role not in ("admin", "manager", "senior_analyst"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     try:
         reading = approve_reading(reading_id, current_user.id)
         return jsonify(success=True, message=f"Reading {reading.id} approved",
@@ -99,11 +97,9 @@ def instrument_approve(reading_id):
 
 @api_bp.route("/instrument/reject/<int:reading_id>", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
 def instrument_reject(reading_id):
     """Reject a single reading."""
-    if current_user.role not in ("admin", "manager", "senior_analyst"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     reason = (request.json or {}).get("reason", "")
     try:
         reading = reject_reading(reading_id, current_user.id, reason)
@@ -115,11 +111,9 @@ def instrument_reject(reading_id):
 
 @api_bp.route("/instrument/bulk-approve", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
 def instrument_bulk_approve():
     """Approve multiple readings."""
-    if current_user.role not in ("admin", "manager", "senior_analyst"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     ids = (request.json or {}).get("ids", [])
     if not ids or len(ids) > 500:
         return jsonify(success=False, message=_("1-500 хэмжилт сонгоно уу")), 400
@@ -131,11 +125,9 @@ def instrument_bulk_approve():
 
 @api_bp.route("/instrument/bulk-reject", methods=["POST"])
 @login_required
+@role_required(UserRole.ADMIN.value, UserRole.MANAGER.value, UserRole.SENIOR.value)
 def instrument_bulk_reject():
     """Reject multiple readings."""
-    if current_user.role not in ("admin", "manager", "senior_analyst"):
-        return jsonify(success=False, message=_("Эрх хүрэлцэхгүй")), 403
-
     data = request.json or {}
     ids = data.get("ids", [])
     reason = data.get("reason", "")

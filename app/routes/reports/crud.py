@@ -17,6 +17,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import SQLAlchemyError
 
 from app import db
+from app.constants import UserRole
+from app.utils.decorators import role_required
 from app.models import LabReport, ReportSignature, Sample, AnalysisResult, User
 from app.repositories import LabReportRepository, ReportSignatureRepository
 from app.routes.reports import pdf_reports_bp, LAB_TYPES, REPORT_STATUSES
@@ -69,12 +71,9 @@ def report_list():
 # -------------------------------------------------
 @pdf_reports_bp.route("/signatures")
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def signature_list():
     """Гарын үсэг, тамгын жагсаалт."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.report_list"))
-
     signatures = ReportSignature.query.filter_by(is_active=True).all()
     stamps = [s for s in signatures if s.signature_type == 'stamp']
     sigs = [s for s in signatures if s.signature_type == 'signature']
@@ -89,12 +88,9 @@ def signature_list():
 
 @pdf_reports_bp.route("/signatures/add", methods=["GET", "POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_signature():
     """Гарын үсэг/тамга нэмэх."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.signature_list"))
-
     if request.method == "POST":
         try:
             sig_type = request.form.get("signature_type", "signature")
@@ -177,12 +173,9 @@ def add_signature():
 
 @pdf_reports_bp.route("/signatures/delete/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_signature(id):
     """Гарын үсэг/тамга устгах."""
-    if current_user.role not in ["manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.signature_list"))
-
     sig = ReportSignatureRepository.get_by_id(id)
     if not sig:
         abort(404)
@@ -228,12 +221,9 @@ def report_detail(id):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/approve", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def approve_report(id):
     """Тайлан баталгаажуулах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.report_detail", id=id))
-
     report = LabReportRepository.get_by_id_or_404(id)
 
     # Гарын үсэг, тамга сонгох
@@ -297,12 +287,9 @@ def download_report(id):
 # -------------------------------------------------
 @pdf_reports_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
+@role_required(UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_report(id):
     """Тайлан устгах."""
-    if current_user.role not in ["manager", "admin"]:
-        flash(_l("Хандах эрхгүй."), "danger")
-        return redirect(url_for("pdf_reports.report_list"))
-
     report = LabReportRepository.get_by_id_or_404(id)
 
     # PDF файл устгах

@@ -15,10 +15,12 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.utils import secure_filename
 
 from app import db
+from app.constants import UserRole
 from app.models import Equipment, MaintenanceLog, UsageLog
 from app.repositories import EquipmentRepository, MaintenanceLogRepository
 from app.utils.audit import log_audit
 from app.utils.datetime import now_local
+from app.utils.decorators import role_required
 from app.utils.shifts import get_shift_date
 from app.routes.equipment import equipment_bp, MAX_FILE_SIZE, ALLOWED_EXTENSIONS
 
@@ -234,12 +236,9 @@ def equipment_journal_page(id):
 
 @equipment_bp.route("/add_equipment", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def add_equipment():
     """Шинэ төхөөрөмж нэмэх."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
-        return redirect(url_for("equipment.equipment_list"))
-
     new_eq = Equipment(status="normal")
     new_eq.created_by_id = current_user.id
     _populate_equipment(new_eq, request.form)
@@ -253,12 +252,9 @@ def add_equipment():
 
 @equipment_bp.route("/edit_equipment/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def edit_equipment(id):
     """Төхөөрөмжийн мэдээлэл засах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
-        return redirect(url_for("equipment.equipment_detail", id=id))
-
     eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
@@ -275,12 +271,9 @@ def edit_equipment(id):
 
 @equipment_bp.route("/equipment/delete/<int:id>", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def delete_equipment(id):
     """Төхөөрөмж устгах (түүхтэй бол retired болгоно)."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
-        return redirect(url_for("equipment.equipment_list"))
-
     eq = EquipmentRepository.get_by_id(id)
     if not eq:
         abort(404)
@@ -307,12 +300,9 @@ def delete_equipment(id):
 
 @equipment_bp.route("/bulk_delete", methods=["POST"])
 @login_required
+@role_required(UserRole.SENIOR.value, UserRole.MANAGER.value, UserRole.ADMIN.value)
 def bulk_delete():
     """Олон төхөөрөмж нэг дор устгах."""
-    if current_user.role not in ["senior", "manager", "admin"]:
-        flash(_l("Эрх хүрэлцэхгүй байна."), "danger")
-        return redirect(url_for("equipment.equipment_list"))
-
     ids = request.form.getlist("equipment_ids")
     if not ids:
         flash(_l("Багаж сонгогдоогүй байна."), "warning")
