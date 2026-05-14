@@ -72,9 +72,13 @@ def init_jinja(app):
         from app.utils.repeatability_loader import load_limit_rules
         from app.labs import LAB_TYPES
         from app.bootstrap.i18n import get_locale
+        from app.utils.vite_assets import vite_asset, vite_css_tag, vite_js_tag
         return dict(
             now_local=now_local,
             LIMS_LIMIT_RULES=load_limit_rules(),
             LAB_TYPES=LAB_TYPES,
             get_locale=get_locale,
+            vite_asset=vite_asset,
+            vite_css_tag=vite_css_tag,
+            vite_js_tag=vite_js_tag,
         )
